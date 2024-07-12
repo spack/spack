@@ -373,7 +373,7 @@ class TestSpecSemantics:
         https://github.com/spack/spack/pull/2386#issuecomment-282147639
         is handled correctly.
         """
-        a = Spec("a foobar=bar")
+        a = Spec("pkg-a foobar=bar")
         a.concretize()
 
         assert a.satisfies("foobar=bar")
@@ -390,21 +390,21 @@ class TestSpecSemantics:
         assert "foo=bar" in a
 
         # Check that conditional dependencies are treated correctly
-        assert "^b" in a
+        assert "^pkg-b" in a
 
     def test_unsatisfied_single_valued_variant(self):
-        a = Spec("a foobar=baz")
+        a = Spec("pkg-a foobar=baz")
         a.concretize()
-        assert "^b" not in a
+        assert "^pkg-b" not in a
 
         mv = Spec("multivalue-variant")
         mv.concretize()
-        assert "a@1.0" not in mv
+        assert "pkg-a@1.0" not in mv
 
     def test_indirect_unsatisfied_single_valued_variant(self):
         spec = Spec("singlevalue-variant-dependent")
         spec.concretize()
-        assert "a@1.0" not in spec
+        assert "pkg-a@1.0" not in spec
 
     def test_unsatisfiable_multi_value_variant(self, default_mock_concretization):
         # Semantics for a multi-valued variant is different
@@ -986,8 +986,8 @@ class TestSpecSemantics:
             spec.splice(dep, transitive)
 
     def test_spec_override(self):
-        init_spec = Spec("a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
-        change_spec = Spec("a foo=fee cflags=-O2")
+        init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
+        change_spec = Spec("pkg-a foo=fee cflags=-O2")
         new_spec = Spec.override(init_spec, change_spec)
         new_spec.concretize()
         assert "foo=fee" in new_spec
@@ -1269,15 +1269,15 @@ def test_spec_installed(default_mock_concretization, database):
     spec = Spec("not-a-real-package")
     assert not spec.installed
 
-    # 'a' is not in the mock DB and is not installed
-    spec = default_mock_concretization("a")
+    # pkg-a is not in the mock DB and is not installed
+    spec = default_mock_concretization("pkg-a")
     assert not spec.installed
 
 
 @pytest.mark.regression("30678")
 def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, default_mock_concretization):
     # create a concrete spec
-    a = default_mock_concretization("a")
+    a = default_mock_concretization("pkg-a")
     dag_hashes = {spec.name: spec.dag_hash() for spec in a.traverse()}
 
     # make it look like an old DAG hash spec with no package hash on the spec.
@@ -1336,8 +1336,8 @@ def test_unsupported_compiler():
 
 
 def test_package_hash_affects_dunder_and_dag_hash(mock_packages, default_mock_concretization):
-    a1 = default_mock_concretization("a")
-    a2 = default_mock_concretization("a")
+    a1 = default_mock_concretization("pkg-a")
+    a2 = default_mock_concretization("pkg-a")
 
     assert hash(a1) == hash(a2)
     assert a1.dag_hash() == a2.dag_hash()
@@ -1361,8 +1361,8 @@ def test_intersects_and_satisfies_on_concretized_spec(default_mock_concretizatio
     """Test that a spec obtained by concretizing an abstract spec, satisfies the abstract spec
     but not vice-versa.
     """
-    a1 = default_mock_concretization("a@1.0")
-    a2 = Spec("a@1.0")
+    a1 = default_mock_concretization("pkg-a@1.0")
+    a2 = Spec("pkg-a@1.0")
 
     assert a1.intersects(a2)
     assert a2.intersects(a1)
@@ -1488,17 +1488,17 @@ def test_constrain(factory, lhs_str, rhs_str, result, constrained_str):
 
 
 def test_abstract_hash_intersects_and_satisfies(default_mock_concretization):
-    concrete: Spec = default_mock_concretization("a")
+    concrete: Spec = default_mock_concretization("pkg-a")
     hash = concrete.dag_hash()
     hash_5 = hash[:5]
     hash_6 = hash[:6]
     # abstract hash that doesn't have a common prefix with the others.
     hash_other = f"{'a' if hash_5[0] == 'b' else 'b'}{hash_5[1:]}"
 
-    abstract_5 = Spec(f"a/{hash_5}")
-    abstract_6 = Spec(f"a/{hash_6}")
-    abstract_none = Spec(f"a/{hash_other}")
-    abstract = Spec("a")
+    abstract_5 = Spec(f"pkg-a/{hash_5}")
+    abstract_6 = Spec(f"pkg-a/{hash_6}")
+    abstract_none = Spec(f"pkg-a/{hash_other}")
+    abstract = Spec("pkg-a")
 
     def assert_subset(a: Spec, b: Spec):
         assert a.intersects(b) and b.intersects(a) and a.satisfies(b) and not b.satisfies(a)
@@ -1535,6 +1535,6 @@ def test_edge_equality_does_not_depend_on_virtual_order():
 
 
 def test_old_format_strings_trigger_error(default_mock_concretization):
-    s = Spec("a").concretized()
+    s = Spec("pkg-a").concretized()
     with pytest.raises(SpecFormatStringError):
         s.format("${PACKAGE}-${VERSION}-${HASH}")

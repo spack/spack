@@ -5,9 +5,9 @@
 from spack.package import *
 
 
-class A(Package):
+class PkgA(Package):
     homepage = "http://www.example.com"
     has_code = False
 
     version("1.0")
-    depends_on("b")
+    depends_on("pkg-b")
