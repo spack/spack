@@ -51,6 +51,11 @@ class ClingoBootstrapConcretizer:
         candidates = spack.compilers.compilers_for_spec(
             compiler_name, arch_spec=self.host_architecture
         )
+        if not candidates:
+            raise RuntimeError(
+                f"Cannot find any version of {compiler_name} to bootstrap clingo from sources"
+            )
+        candidates.sort(key=lambda x: x.spec.version, reverse=True)
         return candidates[0]
 
     def _externals_from_yaml(
