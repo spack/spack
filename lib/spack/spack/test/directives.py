@@ -30,7 +30,7 @@ def test_true_directives_exist(mock_packages):
 
     assert cls.dependencies
     assert spack.spec.Spec() in cls.dependencies["extendee"]
-    assert spack.spec.Spec() in cls.dependencies["b"]
+    assert spack.spec.Spec() in cls.dependencies["pkg-b"]
 
     assert cls.resources
     assert spack.spec.Spec() in cls.resources
@@ -43,7 +43,7 @@ def test_constraints_from_context(mock_packages):
     pkg_cls = spack.repo.PATH.get_pkg_class("with-constraint-met")
 
     assert pkg_cls.dependencies
-    assert spack.spec.Spec("@1.0") in pkg_cls.dependencies["b"]
+    assert spack.spec.Spec("@1.0") in pkg_cls.dependencies["pkg-b"]
 
     assert pkg_cls.conflicts
     assert (spack.spec.Spec("+foo@1.0"), None) in pkg_cls.conflicts["%gcc"]
@@ -54,7 +54,7 @@ def test_constraints_from_context_are_merged(mock_packages):
     pkg_cls = spack.repo.PATH.get_pkg_class("with-constraint-met")
 
     assert pkg_cls.dependencies
-    assert spack.spec.Spec("@0.14:15 ^b@3.8:4.0") in pkg_cls.dependencies["c"]
+    assert spack.spec.Spec("@0.14:15 ^pkg-b@3.8:4.0") in pkg_cls.dependencies["pkg-c"]
 
 
 @pytest.mark.regression("27754")
@@ -68,7 +68,7 @@ def test_extends_spec(config, mock_packages):
 
 @pytest.mark.regression("34368")
 def test_error_on_anonymous_dependency(config, mock_packages):
-    pkg = spack.repo.PATH.get_pkg_class("a")
+    pkg = spack.repo.PATH.get_pkg_class("pkg-a")
     with pytest.raises(spack.directives.DependencyError):
         spack.directives._depends_on(pkg, "@4.5")
 

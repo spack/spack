@@ -69,7 +69,7 @@ def test_spec_installed_upstream(
 
     # a known installed spec should say that it's installed
     with spack.repo.use_repositories(mock_custom_repository):
-        spec = spack.spec.Spec("c").concretized()
+        spec = spack.spec.Spec("pkg-c").concretized()
         assert not spec.installed
         assert not spec.installed_upstream
 
@@ -813,7 +813,7 @@ def test_query_virtual_spec(database):
 
 def test_failed_spec_path_error(database):
     """Ensure spec not concrete check is covered."""
-    s = spack.spec.Spec("a")
+    s = spack.spec.Spec("pkg-a")
     with pytest.raises(AssertionError, match="concrete spec required"):
         spack.store.STORE.failure_tracker.mark(s)
 
@@ -828,7 +828,7 @@ def test_clear_failure_keep(mutable_database, monkeypatch, capfd):
     # Pretend the spec has been failure locked
     monkeypatch.setattr(spack.database.FailureTracker, "lock_taken", _is)
 
-    s = spack.spec.Spec("a").concretized()
+    s = spack.spec.Spec("pkg-a").concretized()
     spack.store.STORE.failure_tracker.clear(s)
     out = capfd.readouterr()[0]
     assert "Retaining failure marking" in out
@@ -846,7 +846,7 @@ def test_clear_failure_forced(default_mock_concretization, mutable_database, mon
     # Ensure raise OSError when try to remove the non-existent marking
     monkeypatch.setattr(spack.database.FailureTracker, "persistent_mark", _is)
 
-    s = default_mock_concretization("a")
+    s = spack.spec.Spec("pkg-a").concretized()
     spack.store.STORE.failure_tracker.clear(s, force=True)
     out = capfd.readouterr()[1]
     assert "Removing failure marking despite lock" in out
@@ -860,15 +860,16 @@ def test_mark_failed(default_mock_concretization, mutable_database, monkeypatch,
     def _raise_exc(lock):
         raise lk.LockTimeoutError("write", "/mock-lock", 1.234, 10)
 
-    # Ensure attempt to acquire write lock on the mark raises the exception
-    monkeypatch.setattr(lk.Lock, "acquire_write", _raise_exc)
-
     with tmpdir.as_cwd():
-        s = default_mock_concretization("a")
+        s = spack.spec.Spec("pkg-a").concretized()
+
+        # Ensure attempt to acquire write lock on the mark raises the exception
+        monkeypatch.setattr(lk.Lock, "acquire_write", _raise_exc)
+
         spack.store.STORE.failure_tracker.mark(s)
 
         out = str(capsys.readouterr()[1])
-        assert "Unable to mark a as failed" in out
+        assert "Unable to mark pkg-a as failed" in out
 
     spack.store.STORE.failure_tracker.clear_all()
 
@@ -877,7 +878,7 @@ def test_mark_failed(default_mock_concretization, mutable_database, monkeypatch,
 def test_prefix_failed(default_mock_concretization, mutable_database, monkeypatch):
     """Add coverage to failed operation."""
 
-    s = default_mock_concretization("a")
+    s = spack.spec.Spec("pkg-a").concretized()
 
     # Confirm the spec is not already marked as failed
     assert not spack.store.STORE.failure_tracker.has_failed(s)
@@ -901,7 +902,7 @@ def test_prefix_write_lock_error(default_mock_concretization, mutable_database, 
     def _raise(db, spec):
         raise lk.LockError("Mock lock error")
 
-    s = default_mock_concretization("a")
+    s = spack.spec.Spec("pkg-a").concretized()
 
     # Ensure subsequent lock operations fail
     monkeypatch.setattr(lk.Lock, "acquire_write", _raise)

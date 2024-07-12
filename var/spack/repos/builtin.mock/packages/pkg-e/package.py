@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class E(Package):
+class PkgE(Package):
     """Simple package with no dependencies"""
 
     homepage = "http://www.example.com"
