@@ -669,7 +669,7 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
         # because LLVM has kindly named compilers
         variants, compilers = ["+clang"], {}
         lld_found, lldb_found = False, False
-        for exe in sorted(exes):
+        for exe in sorted(exes, key=len):
             name = os.path.basename(exe)
             if "clang++" in name:
                 compilers.setdefault("cxx", exe)
