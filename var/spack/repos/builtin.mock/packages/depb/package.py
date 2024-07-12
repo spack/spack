@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Depb(AutotoolsPackage):
+class Depb(Package):
     """Simple package with one build dependency"""
 
     homepage = "http://www.example.com"
