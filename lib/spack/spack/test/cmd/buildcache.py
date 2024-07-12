@@ -48,11 +48,6 @@ def mock_get_specs_multiarch(database, monkeypatch):
     monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: specs)
 
 
-def test_buildcache_preview_just_runs():
-    # TODO: remove in Spack 0.21
-    buildcache("preview", "mpileaks")
-
-
 @pytest.mark.db
 @pytest.mark.regression("13757")
 def test_buildcache_list_duplicates(mock_get_specs, capsys):
