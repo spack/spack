@@ -35,6 +35,7 @@ from llnl.util.link_tree import LinkTree
 
 import spack.compilers
 import spack.config
+import spack.dependency
 import spack.deptypes as dt
 import spack.directives
 import spack.directory_layout

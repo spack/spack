@@ -33,8 +33,8 @@ def test_view_with_spec_not_contributing_files(mock_packages, tmpdir):
     layout = DirectoryLayout(view_dir)
     view = SimpleFilesystemView(view_dir, layout)
 
-    a = Spec("a")
-    b = Spec("b")
+    a = Spec("pkg-a")
+    b = Spec("pkg-b")
     a.prefix = os.path.join(tmpdir, "a")
     b.prefix = os.path.join(tmpdir, "b")
     a._mark_concrete()
