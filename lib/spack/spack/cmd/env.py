@@ -460,6 +460,10 @@ def env_add_setup_parser(subparser):
 
 def env_add(args):
     src_path = os.path.abspath(args.dir)
+    if not os.path.exists(src_path):
+        msg = f"cannot add the environment {src_path} does not exist"
+        raise ev.SpackEnvironmentError(msg)
+
     name = os.path.basename(src_path)
     if args.name:
         name = args.name
@@ -469,7 +473,7 @@ def env_add(args):
     try:
         symlink(src_path, dst_path)
     except SymlinkError as exc:
-        msg = f"cannot add the environment {src_path} does not exist"
+        msg = f"cannot add the environment {src_path} unable to create symlink"
         raise ev.SpackEnvironmentError(msg) from exc
 
     tty.msg(f"Linked environment in {src_path}")
