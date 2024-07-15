@@ -407,7 +407,7 @@ class Libpressio(CMakePackage, CudaPackage):
 
     @run_after("install")
     def copy_test_sources(self):
-        if self.spec.satisfies("@0.88.2"):
+        if self.spec.satisfies("@:0.88.2"):
             raise SkipTest("Package must be installed as version @0.88.3 or later")
         srcs = [
             join_path("test", "smoke_test", "smoke_test.cc"),
@@ -417,7 +417,7 @@ class Libpressio(CMakePackage, CudaPackage):
 
     def test_cmake(self):
         """Test cmake config"""
-        if self.spec.satisfies("@0.88.2"):
+        if self.spec.satisfies("@:0.88.2"):
             raise SkipTest("Package must be installed as version @0.88.3 or later")
 
         args = self.cmake_args()
@@ -434,14 +434,14 @@ class Libpressio(CMakePackage, CudaPackage):
     def test_build(self):
         """Cmake build test"""
         # this works for cmake@3.14: which is required for this package
-        if self.spec.satisfies("@0.88.2"):
+        if self.spec.satisfies("@:0.88.2"):
             raise SkipTest("Package must be installed as version @0.88.3 or later")
         exe = which("cmake")
         exe("--build", ".")
 
     def test_smoke(self):
         """Run smoke test"""
-        if self.spec.satisfies("@0.88.2"):
+        if self.spec.satisfies("@:0.88.2"):
             raise SkipTest("Package must be installed as version @0.88.3 or later")
         exe = which("./pressio_smoke_tests")
         out = exe()
