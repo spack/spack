@@ -70,12 +70,12 @@ class Mptensor(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(".")
 
-        with working_dir(join_path(install_test_root(pkg), "tests"), create=False):
+        with working_dir(join_path(install_test_root(self), "tests"), create=False):
             make("clean")
             makefile = FileFilter("Makefile")
             makefile.filter("g++", f"{spack_cxx}", string=True)
 
-        with working_dir(join_path(install_test_root(pkg)), create=False):
+        with working_dir(join_path(install_test_root(self)), create=False):
             makefile = FileFilter("Makefile.option")
             makefile.filter("CXX =.*", f"CXX ={self.spec['mpi'].mpicxx}")
             makefile.filter("CXXFLAGS =.*", f"CXXFLAGS ={self.compiler.cxx11_flag}")
@@ -87,7 +87,7 @@ class Mptensor(CMakePackage):
 
         math_libs = self.spec["scalapack"].libs + self.spec["lapack"].libs + self.spec["blas"].libs
 
-        with working_dir(join_path(install_test_root(pkg), "tests"), create=False):
+        with working_dir(join_path(install_test_root(self), "tests"), create=False):
             make(f"LDFLAGS={math_libs.ld_flags}")
 
             mpirun = self.spec["mpi"].prefix.bin.mpirun
