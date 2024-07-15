@@ -21,6 +21,7 @@ class PyShapely(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.0.5", sha256="bff2366bc786bfa6cb353d6b47d0443c570c32776612e527ee47b6df63fcfe32")
     version("2.0.4", sha256="5dc736127fac70009b8d309a0eeb74f3e08979e530cf7017f2f507ef62e6cfb8")
     version("2.0.3", sha256="4d65d0aa7910af71efa72fd6447e02a8e5dd44da81a983de9d736d6e6ccbe674")
     version("2.0.2", sha256="1713cc04c171baffc5b259ba8531c58acc2a301707b7f021d88a15ed090649e7")
