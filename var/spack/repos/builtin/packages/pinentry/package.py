@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 from spack.package import *
 
 
@@ -94,8 +93,6 @@ class Pinentry(AutotoolsPackage):
         return args
 
     def check_version(self, gui):
-        if "gui=" + gui not in self.spec:
-            raise SkipTest(f"Package must be installed with {gui}")
 
         exe = which(self.prefix.bin.pinentry + "-" + gui)
         out = exe("--version", output=str.split, error=str.split)
@@ -110,5 +107,9 @@ class Pinentry(AutotoolsPackage):
     def test_guis(self):
         """Check gui versions"""
         for gui in self.supported_guis:
-            with test_part(self, "test_guis_" + gui, purpose="Check " + gui):
+            with test_part(
+                self, "test_guis_" + gui, purpose="Check " + gui + "and os path basename"
+            ):
+                if "gui=" + gui not in self.spec:
+                    raise SkipTest(f"Package must be installed with {gui}")
                 self.check_version(gui)
