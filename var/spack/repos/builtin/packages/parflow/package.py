@@ -65,19 +65,16 @@ class Parflow(CMakePackage):
 
     examples_dir = "examples"
 
-    def test_parflow(self):
-        """Perform smoke test on installed ParFlow package."""
-        # Run the single phase flow test
+    def test_single_phase_flow(self):
+        """Run the single phase flow test"""
         run_path = join_path(self.spec.prefix, self.examples_dir)
-        if os.path.isdir(run_path):
-            options = ["default_single.tcl", "1", "1" "1"]
-            with working_dir(run_path):
-                exe = which("{0}/tclsh".format(self.spec["tcl"].prefix.bin))
-                exe(*options)
-        else:
-            # If examples are not installed test if exe executes
-            exes = [join_path(self.prefix.bin, "parflow")]
-            for exe in exes:
-                exe = which(exe)
-                out = exe("-v", output=str.split, error=str.split)
-                assert self.spec.version in out
+        options = ["default_single.tcl", "1", "1" "1"]
+        with working_dir(run_path):
+            exe = which(f"{self.spec['tcl'].prefix.bin}/tclsh")
+            exe(*options)
+
+    def test_check_version(self):
+        """Test if exe executes"""
+        exe = which(join_path(self.prefix.bin, "parflow"))
+        out = exe("-v", output=str.split, error=str.split)
+        assert str(self.spec.version) in out
