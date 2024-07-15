@@ -131,7 +131,8 @@ class Migraphx(CMakePackage):
             )
         return args
 
-    def test_dirvers(self):
+    def test_drivers(self):
+        """Test drivers"""
         if self.spec.satisfies("@:5.5.0"):
             raise SkipTest("Package must be installed as version @5.5.1 or later")
         exe = which("migraphx-driver", "migraphx-hiprtc-driver")
