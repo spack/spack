@@ -16,6 +16,7 @@ class PyPytorchLightning(PythonPackage):
 
     license("Apache-2.0")
 
+    version("2.0.7", sha256="4e6bc1e1f7b0c69016ea2fe0616b18fa62bd3d8661c7ff02c11d317746cfc5f5")
     version("2.0.0", sha256="632dec9af8036f726904e691c505d7650658ef0f4054a062c9e6a940ca09dfd8")
     version("1.9.4", sha256="188a7f4468acf23512e7f4903253d86fc7929a49f0c09d699872e364162001e8")
     version("1.9.3", sha256="479164caea190d49ee2a218eef7e001888be56db912b417639b047e8f9ca8a07")
