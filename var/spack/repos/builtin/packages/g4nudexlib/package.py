@@ -32,6 +32,4 @@ class G4nudexlib(Package):
 
     def url_for_version(self, version):
         """Handle version string."""
-        return (
-            "http://geant4-data.web.cern.ch/geant4-data/datasets/G4NUDEXLIB.%s.tar.gz" % version
-        )
+        return "http://geant4-data.web.cern.ch/geant4-data/datasets/G4NUDEXLIB.%s.tar.gz" % version
