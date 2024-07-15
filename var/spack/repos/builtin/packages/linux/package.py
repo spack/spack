@@ -24,23 +24,27 @@ from spack.package import *
 
 
 class Linux(MakefilePackage):
-    """FIXME: Put a proper description of your package here."""
+    """Linux is a clone of the operating system Unix and aims towards POSIX and 
+    Single UNIX Specification compliance. It has all the features you would expect 
+    in a modern fully-fledged Unix, including true multitasking, virtual memory, 
+    shared libraries, demand loading, shared copy-on-write executables, proper memory 
+    management, and multistack networking including IPv4 and IPv6."""
 
     homepage = "https://github.com/torvalds/linux"
-    url = "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.9.9.tar.xz"
+    url = "https://github.com/fleshling/linux/archive/refs/heads/master.zip"
 
     maintainers("fleshling", "rountree", "rountree-alt")
 
     license("GPL-2.0-only", checked_by="fleshling")
 
-    version("6.9.9", sha256="2be05b487eb239a3bf687d628a8f104177d09c310f00bcc2a5e50f1733421eb9")
+    version("6.9.9", sha256="19e8dd54db1e338d59c17102d81edba7a988f9e1c7224c69165a9d442df8aac3")
+
+    patch ("configured-linux.patch", when="@6.9.9:")
 
     # FIXME: Add dependencies if required.
     # depends_on("foo")
 
     def edit(self, spec, prefix):
-        # FIXME: Edit the Makefile if necessary
-        # FIXME: If not needed delete this function
         # makefile = FileFilter("Makefile")
         # makefile.filter("CC = .*", "CC = cc")
         pass
