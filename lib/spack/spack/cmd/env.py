@@ -460,13 +460,14 @@ def env_add_setup_parser(subparser):
 
 def env_add(args):
     src_path = os.path.abspath(args.dir)
-    if not os.path.exists(src_path):
-        msg = f"cannot add the environment {src_path} does not exist"
+    if not ev.is_env_dir(src_path):
+        msg = f"cannot add environment {src_path} doesn't contain an environment"
         raise ev.SpackEnvironmentError(msg)
 
-    name = os.path.basename(src_path)
     if args.name:
         name = args.name
+    else:
+        name = os.path.basename(src_path)
 
     dst_path = ev.environment_dir_from_name(name, exists_ok=False)
 
