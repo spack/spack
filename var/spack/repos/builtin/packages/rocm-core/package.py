@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
-
 from spack.package import *
 
 
@@ -44,11 +42,6 @@ class RocmCore(CMakePackage):
             env.set("CC", self.spec["llvm-amdgpu"].prefix + "/bin/clang")
             env.set("CXX", self.spec["llvm-amdgpu"].prefix + "/bin/clang++")
             env.set("ASAN_OPTIONS", "detect_leaks=0")
-
-            for root, _, files in os.walk(self.spec["llvm-amdgpu"].prefix):
-                if "libclang_rt.asan-x86_64.so" in files:
-                    asan_lib_path = root
-            env.prepend_path("LD_LIBRARY_PATH", asan_lib_path)
             env.set("CFLAGS", "-fsanitize=address -shared-libasan")
             env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
             env.set("LDFLAGS", "-fuse-ld=lld")
