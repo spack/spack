@@ -178,11 +178,13 @@ class Sqlite(AutotoolsPackage, NMakePackage):
         return all_variants
 
     def url_for_version(self, version):
-        full_version = list(version.version) + [0 * (4 - len(version.version))]
-        version_string = str(full_version[0]) + "".join(["%02d" % v for v in full_version[1:]])
+        if len(version) < 3:
+            raise ValueError(f"Unsupported sqlite version: {version}")
         # See https://www.sqlite.org/chronology.html for version -> year
         # correspondence.
-        if version >= Version("3.41.0"):
+        if version >= Version("3.45.0"):
+            year = "2024"
+        elif version >= Version("3.41.0"):
             year = "2023"
         elif version >= Version("3.37.2"):
             year = "2022"
@@ -205,8 +207,8 @@ class Sqlite(AutotoolsPackage, NMakePackage):
         elif version >= Version("3.7.16"):
             year = "2013"
         else:
-            raise ValueError("Unsupported version {0}".format(version))
-        return "https://www.sqlite.org/{0}/sqlite-autoconf-{1}.tar.gz".format(year, version_string)
+            raise ValueError(f"Unsupported sqlite version {version}")
+        return f"https://www.sqlite.org/{year}/sqlite-autoconf-{version[0]}{version[1]:02}{version[2]:02}00.tar.gz"
 
     @property
     def libs(self):
