@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Depb(Package):
-    """Simple package with one build dependency"""
+    """Simple package with one dependency"""
 
     homepage = "http://www.example.com"
     url = "http://www.example.com/a-1.0.tar.gz"
@@ -18,5 +18,5 @@ class Depb(Package):
 
     def install(self, spec, prefix):
         # sanity_check_prefix requires something in the install directory
-        # Test requires overriding the one provided by `AutotoolsPackage`
+        # Test requires overriding the one provided by `Package`
         mkdirp(prefix.bin)
