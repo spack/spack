@@ -16,7 +16,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://hpx.stellar-group.org/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/v0.0.0.tar.gz"
     git = "https://github.com/STEllAR-GROUP/hpx.git"
-    maintainers("msimberg", "albestro", "teonnik", "hkaiser")
+    maintainers("msimberg", "albestro", "teonnik", "hkaiser", "diehlpk")
 
     license("BSL-1.0")
 
@@ -66,7 +66,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
         values=lambda x: isinstance(x, str) and (x.isdigit() or x == "auto"),
     )
 
-    instrumentation_values = ("apex", "google_perftools", "papi", "valgrind")
+    instrumentation_values = ("apex", "google_perftools", "papi", "valgrind", "thread_debug")
     variant(
         "instrumentation",
         values=any_combination_of(*instrumentation_values),
@@ -265,6 +265,12 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
         # Instrumentation
         args += self.instrumentation_args()
+
+        if "instrumentation=thread_debug" in spec:
+            args += [
+                self.define("HPX_WITH_THREAD_DEBUG_INFO", True),
+                self.define("HPX_WITH_LOGGING", True),
+            ]
 
         if "instrumentation=apex" in spec:
             args += [
