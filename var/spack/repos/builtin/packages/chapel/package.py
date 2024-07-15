@@ -298,6 +298,15 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     )
 
     variant(
+        "libfabric",
+        default="unset",
+        description="Control the libfabric version used for multi-locale communication",
+        values=("bundled", "spack", "unset"),
+        multi=False,
+        when="comm=gasnet comm_substrate=ofi",
+    )
+
+    variant(
         "llvm",
         default="spack",
         description="LLVM backend type. The 'spack' value can use an external "
