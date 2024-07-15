@@ -51,6 +51,8 @@ class RocmOpencl(CMakePackage):
         version("5.3.3", sha256="cab394e6ef16c35bab8de29a66b96a7dc0e7d1297aaacba3718fa1d369233c9f")
         version("5.3.0", sha256="d251e2efe95dc12f536ce119b2587bed64bbda013969fa72be58062788044a9e")
 
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
     depends_on("cmake@3:", type="build")
     depends_on("gl@4.5:", type="link")
     depends_on("numactl", type="link")
@@ -145,8 +147,26 @@ class RocmOpencl(CMakePackage):
         if self.spec.satisfies("@5.7:"):
             args.append(self.define("CLR_BUILD_HIP", False))
             args.append(self.define("CLR_BUILD_OCL", True))
+        if self.spec.satisfies("+asan"):
+            args.append(
+                self.define(
+                    "CMAKE_CXX_FLAGS",
+                    f"-I{self.spec['libx11'].prefix.include} "
+                    f"-I{self.spec['mesa'].prefix.include} "
+                    f"-I{self.spec['xproto'].prefix.include}",
+                )
+            )
 
         return args
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+asan"):
+            env.set("CC", self.spec["llvm-amdgpu"].prefix + "/bin/clang")
+            env.set("CXX", self.spec["llvm-amdgpu"].prefix + "/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     def setup_run_environment(self, env):
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib),
