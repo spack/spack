@@ -207,7 +207,7 @@ class Wrf(Package):
 
     patch("patches/4.3/Makefile.patch", when="@4.3:4.5.1")
     patch("patches/4.3/arch.postamble.patch", when="@4.3:4.3.3")
-    patch("patches/4.3/fujitsu.patch", when="@4.3: %fj")
+    patch("patches/4.3/fujitsu.patch", when="@4.3:4.4 %fj")
     # Syntax errors in physics routines
     patch(
         "https://github.com/wrf-model/WRF/commit/7c6fd575b7a8fe5715b07b38db160e606c302956.patch?full_index=1",
