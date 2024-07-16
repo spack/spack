@@ -21,7 +21,6 @@ spack:
     gcc-runtime:
       require: "%gcc target=x86_64_v3"
     hdf5:
-      require: "%gcc target=x86_64_v3"
       variants: +fortran +hl +shared
     libfabric:
       variants: fabrics=sockets,tcp,udp,rxm
