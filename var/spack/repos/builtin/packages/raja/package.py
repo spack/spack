@@ -398,7 +398,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     @property
     def build_relpath(self):
         """Relative path to the cmake build subdirectory."""
-        return join_path("..", self.build_dirname)
+        return join_path("..", self.builder.build_dirname)
 
     @run_after("install")
     def setup_build_tests(self):
@@ -409,13 +409,13 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         # Ensure the path exists since relying on a relative path at the
         # same level as the normal stage source path.
-        mkdirp(self.install_test_root)
+        mkdirp(install_test_root(self))
 
     @property
     def _extra_tests_path(self):
         # TODO: The tests should be converted to re-build and run examples
         # TODO: using the installed libraries.
-        return join_path(self.install_test_root, self.build_relpath, "bin")
+        return join_path(install_test_root(self), self.build_relpath, "bin")
 
     def test_examples(self):
         """Perform very basic checks on a subset of copied examples."""
@@ -439,12 +439,11 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         ]
         for exe, expected in checks:
             with test_part(
-                self,
-                "test_examples_" + exe,
-                purpose=f"test: checking output of {exe} for {expected}",
+                self, "test_examples_" + exe, purpose=f"Checking output of {exe} for {expected}"
             ):
                 with working_dir(self._extra_tests_path):
-                    reason = "test: checking output of {0} for {1}".format(exe, expected)
                     example_exe = which(exe)
+                    if example_exe is None:
+                        raise SkipTest(f"{exe} is not installed for version {self.version}")
                     out = example_exe([], output=str.split, error=str.split)
                     check_outputs(expected, out)
