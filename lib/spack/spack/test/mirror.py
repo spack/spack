@@ -20,10 +20,7 @@ from spack.stage import Stage
 from spack.util.executable import which
 from spack.util.spack_yaml import SpackYAMLError
 
-pytestmark = [
-    pytest.mark.not_on_windows("does not run on windows"),
-    pytest.mark.usefixtures("mutable_config", "mutable_mock_repo"),
-]
+pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_mock_repo")]
 
 # paths in repos that shouldn't be in the mirror tarballs.
 exclude = [".hg", ".git", ".svn"]
@@ -270,8 +267,8 @@ def test_mirror_cache_symlinks(tmpdir):
     """Confirm that the cosmetic symlink created in the mirror cache (which may
     be relative) targets the storage path correctly.
     """
-    cosmetic_path = "zlib/zlib-1.2.11.tar.gz"
-    global_path = "_source-cache/archive/c3/c3e5.tar.gz"
+    cosmetic_path = os.path.join("zlib", "zlib-1.2.11.tar.gz")
+    global_path = os.path.join("_source-cache", "archive", "c3", "c3e5.tar.gz")
     cache = spack.caches.MirrorCache(str(tmpdir), False)
     reference = spack.mirror.MirrorReference(cosmetic_path, global_path)
 

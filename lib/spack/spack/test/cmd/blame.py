@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 import pytest
 
 from llnl.util.filesystem import working_dir
@@ -33,11 +35,10 @@ def test_blame_by_percent(mock_packages):
     assert "EMAIL" in out
 
 
-@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_blame_file(mock_packages):
     """Sanity check the blame command to make sure it works."""
     with working_dir(spack.paths.prefix):
-        out = blame("bin/spack")
+        out = blame(os.path.join("bin", "spack"))
     assert "LAST_COMMIT" in out
     assert "AUTHOR" in out
     assert "EMAIL" in out
