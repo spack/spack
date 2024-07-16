@@ -44,6 +44,10 @@ class SuiteSparse(Package):
     version("4.5.5", sha256="80d1d9960a6ec70031fecfe9adfe5b1ccd8001a7420efb50d6fa7326ef14af91")
     version("4.5.3", sha256="b6965f9198446a502cde48fb0e02236e75fa5700b94c7306fc36599d57b563f4")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "pic",
         default=True,

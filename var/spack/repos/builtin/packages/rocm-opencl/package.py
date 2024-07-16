@@ -51,6 +51,9 @@ class RocmOpencl(CMakePackage):
         version("5.3.3", sha256="cab394e6ef16c35bab8de29a66b96a7dc0e7d1297aaacba3718fa1d369233c9f")
         version("5.3.0", sha256="d251e2efe95dc12f536ce119b2587bed64bbda013969fa72be58062788044a9e")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3:", type="build")
     depends_on("gl@4.5:", type="link")
     depends_on("numactl", type="link")

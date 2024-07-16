@@ -26,6 +26,8 @@ class PyDmTree(PythonPackage):
     version("0.1.6", sha256="6776404b23b4522c01012ffb314632aba092c9541577004ab153321e87da439a")
     version("0.1.5", sha256="a951d2239111dfcc468071bc8ff792c7b1e3192cab5a3c94d33a8b2bda3127fa")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("py-setuptools", type="build")
     depends_on("cmake", when="@0.1.7:", type="build")
     depends_on("bazel@:5", when="@:0.1.6", type="build")

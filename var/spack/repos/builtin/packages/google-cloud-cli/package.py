@@ -49,6 +49,8 @@ class GoogleCloudCli(Package):
         if system in versions[ver] and machine in versions[ver][system]:
             version(ver, sha256=versions[ver][system][machine])
 
+    depends_on("c", type="build")  # generated
+
     depends_on("python", type=("build", "run"))
 
     def url_for_version(self, version):

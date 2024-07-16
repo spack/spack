@@ -224,6 +224,9 @@ class Python(Package):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     extendable = True
 
     # Variants to avoid cyclical dependencies for concretizer

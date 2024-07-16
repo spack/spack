@@ -107,6 +107,9 @@ class Wrf(Package):
         url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "build_type",
         default="dmpar",

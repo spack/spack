@@ -29,6 +29,9 @@ class Cfitsio(AutotoolsPackage):
     version("3.41", sha256="a556ac7ea1965545dcb4d41cfef8e4915eeb8c0faa1b52f7ff70870f8bb5734c")
     version("3.37", sha256="092897c6dae4dfe42d91d35a738e45e8236aa3d8f9b3ffc7f0e6545b8319c63a")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("bzip2", default=True, description="Enable bzip2 support")
     variant("shared", default=True, description="Build shared libraries")
 

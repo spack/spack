@@ -36,6 +36,10 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     version("25.1", sha256="763344b90db4d40e9fe90c5d14748a9dbd201ce544e2cf0835ab48a0aa4a1c67")
     version("24.5", sha256="2737a6622fb2d9982e9c47fb6f2fb297bda42674e09db40fc9bcc0db4297c3b6")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("X", default=False, description="Enable an X toolkit")
     variant(
         "toolkit",

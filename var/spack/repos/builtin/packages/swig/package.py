@@ -69,6 +69,9 @@ class Swig(AutotoolsPackage, SourceforgePackage):
         url="https://github.com/swig-fortran/swig/archive/v4.0.2+fortran.tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("pcre", when="@:4.0")
     depends_on("pcre2", when="@4.1:")
     depends_on("zlib-api")

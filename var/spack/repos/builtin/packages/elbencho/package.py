@@ -33,6 +33,9 @@ class Elbencho(MakefilePackage):
     version("2.0-9", sha256="fe0f67fbb7dd7c743f8b3e0a92358f7393f2950da456474d4adb38690fab1878")
     version("2.0-7", sha256="a2e49cb2cf1ae99e46e9fa95b42ece250cb58fbadb4c393f9776b40204e8b2c0")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("s3", default=False, description="Enable support for s3 api")
     variant("cuda", default=True, description="Enable CUDA support", when="+cufile")
     variant("cuda", default=False, description="Enable CUDA support")

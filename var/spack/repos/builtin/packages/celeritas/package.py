@@ -76,6 +76,8 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+
     _cxxstd_values = ("14", "17")
 
     # Note: cuda and rocm variants are defined by mixin classes
