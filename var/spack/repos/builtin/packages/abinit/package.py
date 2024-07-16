@@ -25,10 +25,11 @@ class Abinit(AutotoolsPackage):
     """
 
     homepage = "https://www.abinit.org/"
-    url = "https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz"
+    url = "https://www.abinit.org/sites/default/files/packages/abinit-10.0.7.tar.gz"
     license("Apache-2.0")
 
     maintainers("downloadico")
+    version("10.0.7", sha256="a9fc044b33861b7defd50fafd19a73eb6f225e18ae30b23bc731d9c8009c881c")
     version("9.10.5", sha256="a9e0f0e058baa6088ea93d26ada369ccf0fe52dc9d4a865b1c38c20620148cd5")
     version("9.10.3", sha256="3f2a9aebbf1fee9855a09dd687f88d2317b8b8e04f97b2628ab96fb898dce49b")
     version("9.8.4", sha256="a086d5045f0093b432e6a044d5f71f7edf5a41a62d67b3677cb0751d330c564a")
@@ -126,7 +127,7 @@ class Abinit(AutotoolsPackage):
     )
 
     patch("rm_march_settings.patch", when="@:8")
-    patch("rm_march_settings_v9.patch", when="@9:")
+    patch("rm_march_settings_v9.patch", when="@9:9.99")
 
     # Fix detection of Fujitsu compiler
     # Fix configure not to collect the option that causes an error
