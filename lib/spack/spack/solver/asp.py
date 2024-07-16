@@ -23,6 +23,7 @@ import archspec.cpu
 
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.lang import elide_list
 
 import spack
 import spack.binary_distribution
@@ -621,8 +622,9 @@ def _external_config_with_implicit_externals(configuration):
 
 
 class ErrorHandler:
-    def __init__(self, model):
+    def __init__(self, model, input_specs: List[spack.spec.Spec]):
         self.model = model
+        self.input_specs = input_specs
         self.full_model = None
 
     def multiple_values_error(self, attribute, pkg):
@@ -709,12 +711,13 @@ class ErrorHandler:
         return msg
 
     def message(self, errors) -> str:
-        messages = [
-            f"  {idx+1: 2}. {self.handle_error(msg, *args)}"
+        input_specs = ", ".join(elide_list([f"`{s}`" for s in self.input_specs], 5))
+        header = f"failed to concretize {input_specs} for the following reasons:"
+        messages = (
+            f"    {idx+1:2}. {self.handle_error(msg, *args)}"
             for idx, (_, msg, args) in enumerate(errors)
-        ]
-        header = "concretization failed for the following reasons:\n"
-        return "\n".join([header] + messages)
+        )
+        return "\n".join((header, *messages))
 
     def raise_if_errors(self):
         initial_error_args = extract_args(self.model, "error")
@@ -750,7 +753,7 @@ class ErrorHandler:
                 f"unexpected error during concretization [{str(e)}]. "
                 f"Please report a bug at https://github.com/spack/spack/issues"
             )
-            raise spack.error.SpackError(msg)
+            raise spack.error.SpackError(msg) from e
         raise UnsatisfiableSpecError(msg)
 
 
@@ -894,7 +897,7 @@ class PyclingoDriver:
             min_cost, best_model = min(models)
 
             # first check for errors
-            error_handler = ErrorHandler(best_model)
+            error_handler = ErrorHandler(best_model, specs)
             error_handler.raise_if_errors()
 
             # build specs from spec attributes in the model
