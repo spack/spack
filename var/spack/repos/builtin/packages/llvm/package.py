@@ -860,6 +860,7 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
                     define("CUDA_SDK_ROOT_DIR", "IGNORE"),
                     define("CUDA_NVCC_EXECUTABLE", "IGNORE"),
                     define("LIBOMPTARGET_DEP_CUDA_DRIVER_LIBRARIES", "IGNORE"),
+                    define("LIBOMPTARGET_BUILD_CUDA_PLUGIN", "FALSE"),
                 ]
             )
 
