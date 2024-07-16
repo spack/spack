@@ -417,33 +417,44 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         # TODO: using the installed libraries.
         return join_path(install_test_root(self), self.build_relpath, "bin")
 
-    def test_examples(self):
-        """Perform very basic checks on a subset of copied examples."""
-        checks = [
-            (
-                "ex5_line-of-sight_solution",
-                [r"RAJA sequential", r"RAJA OpenMP", r"result -- PASS"],
-            ),
-            (
-                "ex6_stencil-offset-layout_solution",
-                [r"RAJA Views \(permuted\)", r"result -- PASS"],
-            ),
-            (
-                "ex8_tiled-matrix-transpose_solution",
-                [r"parallel top inner loop", r"collapsed inner loops", r"result -- PASS"],
-            ),
-            ("kernel-dynamic-tile", [r"Running index", r"(24,24)"]),
-            ("plugin-example", [r"Launching host kernel for the 10 time"]),
-            ("tut_batched-matrix-multiply", [r"result -- PASS"]),
-            ("wave-eqn", [r"Max Error = 2", r"Evolved solution to time"]),
-        ]
-        for exe, expected in checks:
-            with test_part(
-                self, "test_examples_" + exe, purpose=f"Checking output of {exe} for {expected}"
-            ):
-                with working_dir(self._extra_tests_path):
-                    example_exe = which(exe)
-                    if example_exe is None:
-                        raise SkipTest(f"{exe} is not installed for version {self.version}")
-                    out = example_exe([], output=str.split, error=str.split)
-                    check_outputs(expected, out)
+    def run_raja(self, exe, expected):
+        example_exe = which(exe)
+        if example_exe is None:
+            raise SkipTest(f"{exe} is not installed for version {self.version}")
+        out = example_exe([], output=str.split, error=str.split)
+        check_outputs(expected, out)
+
+    def test_sequential(self):
+        """Test raja sequential"""
+        self.run_raja(
+            "ex6_stencil-offset-layout_solution", [r"RAJA Views \(permuted\)", r"result -- PASS"]
+        )
+
+    def test_views(self):
+        """Test raja views"""
+        self.run_raja(
+            "ex6_stencil-offset-layout_solution", [r"RAJA Views \(permuted\)", r"result -- PASS"]
+        )
+
+    def test_matrix(self):
+        """Test raja matrix"""
+        self.run_raja(
+            "ex8_tiled-matrix-transpose_solution",
+            [r"parallel top inner loop", r"collapsed inner loops", r"result -- PASS"],
+        )
+
+    def test_dynamic(self):
+        """Test dynamic kernel"""
+        self.run_raja("kernel-dynamic-tile", [r"Running index", r"(24,24)"])
+
+    def test_plugin_example(self):
+        """Test plugin example"""
+        self.run_raja("plugin-example", [r"Launching host kernel for the 10 time"])
+
+    def test_tut_matrix(self):
+        """Test tut matrix"""
+        self.run_raja("tut_batched-matrix-multiply", [r"result -- PASS"])
+
+    def test_wave_equation(self):
+        """Test wave equation"""
+        self.run_raja("wave-eqn", [r"Max Error = 2", r"Evolved solution to time"])
