@@ -89,7 +89,7 @@ class Gaudi(CMakePackage):
     depends_on("tbb", when="@37.1:")
     depends_on("uuid")
     depends_on("nlohmann-json")
-    depends_on("python", type=("build", "run"))
+    depends_on("python +dbm", type=("build", "run"))
     depends_on("py-networkx", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run", "test"))
