@@ -102,8 +102,8 @@ class Povray(AutotoolsPackage):
         # We generate a generic using process owner and fqdn of build host.
         fqdn = socket.getfqdn()
         uname = getpass.getuser()
-        compiled_by = "Installed by spack <{0}@{1}>".format(uname, fqdn)
-        extra_args.append("COMPILED_BY={0}".format(compiled_by))
+        compiled_by = f"Installed by spack <{uname}@{fqdn}>"
+        extra_args.append(f"COMPILED_BY={compiled_by}")
 
         extra_args.append("--disable-silent-rules")  # Verbose make output
         extra_args += self.enable_or_disable("debug")
@@ -112,32 +112,32 @@ class Povray(AutotoolsPackage):
         extra_args += self.enable_or_disable("static")
 
         if "+boost" in self.spec:
-            extra_args.append("--with-boost={0}".format(self.spec["boost"].prefix))
+            extra_args.append(f"--with-boost={self.spec['boost'].prefix}")
         else:
             extra_args.append("--without-boost")
 
         if "+jpeg" in self.spec:
-            extra_args.append("--with-libjpeg={0}".format(self.spec["jpeg"].prefix))
+            extra_args.append(f"--with-libjpeg={self.spec['jpeg'].prefix}")
         else:
             extra_args.append("--without-libjpeg")
 
         if "+libpng" in self.spec:
-            extra_args.append("--with-libpng={0}".format(self.spec["libpng"].prefix))
+            extra_args.append(f"--with-libpng={self.spec['libpng'].prefix}")
         else:
             extra_args.append("--without-libpng")
 
         if "+libtiff" in self.spec:
-            extra_args.append("--with-libtiff={0}".format(self.spec["libtiff"].prefix))
+            extra_args.append(f"--with-libtiff={self.spec['libtiff'].prefix}")
         else:
             extra_args.append("--without-libtiff")
 
         if "+mkl" in self.spec:
-            extra_args.append("--with-libmkl={0}".format(self.spec["mkl"].prefix))
+            extra_args.append(f"--with-libmkl={self.spec['mkl'].prefix}")
         else:
             extra_args.append("--without-libmkl")
 
         if "+openexr" in self.spec:
-            extra_args.append("--with-openexr={0}".format(self.spec["openexr"].prefix))
+            extra_args.append(f"--with-openexr={self.spec['openexr'].prefix}")
         else:
             extra_args.append("--without-openexr")
 
@@ -148,11 +148,11 @@ class Povray(AutotoolsPackage):
 
         return extra_args
 
-    def test(self):
-        "Render sample file"
+    def test_render_sample(self):
+        """Render sample file"""
         povs = find(self.prefix.share, "biscuit.pov")[0]
         copy(povs, ".")
         exe = which("povray")
-        out = exe("biscuit.pov")
+        out = exe("biscuit.pov", output=str.split, error=str.split)
         expected = "POV-Ray finished"
-        assert out in expected
+        assert expected in out
