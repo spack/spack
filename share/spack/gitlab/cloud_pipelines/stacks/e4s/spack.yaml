@@ -277,7 +277,7 @@ spack:
   - cabana +cuda cuda_arch=90 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=90
   - caliper +cuda cuda_arch=90
   - chai +cuda cuda_arch=90 ^umpire ~shared
-  - cusz +cuda cuda_arch=90
+  # - cusz +cuda cuda_arch=90 # cusz: cuda-12.5.0-ndrzb7undvancjdj3fi6bhthdxdo7gr5/targets/x86_64-linux/include/cub/util_device.cuh:202:50: error: 'blockDim' was not declared in this scope
   - flecsi +cuda cuda_arch=90
   - ginkgo +cuda cuda_arch=90
   - gromacs +cuda cuda_arch=90
@@ -312,7 +312,7 @@ spack:
   # - ecp-data-vis-sdk ~rocm +adios2 +ascent +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=90 # +ascent: # ascent: https://github.com/spack/spack/issues/38045; +paraview: VTK/ThirdParty/vtkm/vtkvtkm/vtk-m/vtkm/exec/cuda/internal/ExecutionPolicy.h(121): error: namespace "thrust" has no member "sort"
   - hypre +cuda cuda_arch=90        # concretizer: hypre +cuda requires cuda@:11, but cuda_arch=90 requires cuda@12:
   # - lammps +cuda cuda_arch=90       # lammps: needs NVIDIA driver
-  - lbann +cuda cuda_arch=90        # concretizer: Cannot select a single "version" for package "lbann"
+  # - lbann +cuda cuda_arch=90      # aluminum: /usr/include/c++/11/bits/basic_string.h:1260: multiple definition of `cub::CUB_200400___CUDA_ARCH_LIST___NS::Debug(cudaError, char const*, int)'; 
   # - omega-h +cuda cuda_arch=90    # omega-h: https://github.com/spack/spack/issues/39535
   - tasmanian +cuda cuda_arch=90    # tasmanian: conflicts with cuda@12
   # - upcxx +cuda cuda_arch=90        # upcxx: needs NVIDIA driver
