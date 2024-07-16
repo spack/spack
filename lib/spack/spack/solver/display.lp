@@ -13,6 +13,7 @@
 #show attr/2.
 #show attr/3.
 #show attr/4.
+#show attr/5.
 
 % names of optimization criteria
 #show opt_criterion/2.
@@ -48,5 +49,8 @@
 #show condition_nodes/3.
 #show trigger_node/3.
 #show imposed_nodes/3.
+
+% SPLICING
+#show abi_splice_conditions_hold/4.
 
 % debug
