@@ -135,17 +135,11 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     gpu_pkgs = ["magma", "umpire"]
     for sm_ in CudaPackage.cuda_arch_values:
         for pkg in gpu_pkgs:
-            depends_on(
-                "{0}+cuda cuda_arch={1}".format(pkg, sm_),
-                when="+{0}+cuda cuda_arch={1}".format(pkg, sm_),
-            )
+            depends_on(f"{pkg}+cuda cuda_arch={sm_}", when=f"+{pkg}+cuda cuda_arch={sm_}")
 
     for gfx in ROCmPackage.amdgpu_targets:
         for pkg in gpu_pkgs:
-            depends_on(
-                "{0}+rocm amdgpu_target={1}".format(pkg, gfx),
-                when="+{0}+rocm amdgpu_target={1}".format(pkg, gfx),
-            )
+            depends_on(f"{pkg}+rocm amdgpu_target={gfx}", when=f"+{pkg}+rocm amdgpu_target={gfx}")
 
     # hypre@:2.28.0 uses deprecated cuSPARSE functions/types (e.g. csrsv2Info_t).
     depends_on("cuda@:11", when="@:2.28.0+cuda")
@@ -189,11 +183,13 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     def url_for_version(self, version):
         if version >= Version("2.12.0"):
-            url = "https://github.com/hypre-space/hypre/archive/v{0}.tar.gz"
+            url = f"https://github.com/hypre-space/hypre/archive/v{version}.tar.gz"
         else:
-            url = "http://computing.llnl.gov/project/linear_solvers/download/hypre-{0}.tar.gz"
+            url = (
+                f"http://computing.llnl.gov/project/linear_solvers/download/hypre-{version}.tar.gz"
+            )
 
-        return url.format(version)
+        return url
 
     def configure_args(self):
         spec = self.spec
@@ -216,8 +212,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 os.environ["F77"] = spec["mpi"].mpif77
                 os.environ["FC"] = spec["mpi"].mpifc
             configure_args.append("--with-MPI")
-            configure_args.append("--with-MPI-lib-dirs={0}".format(spec["mpi"].prefix.lib))
-            configure_args.append("--with-MPI-include={0}".format(spec["mpi"].prefix.include))
+            configure_args.append(f"--with-MPI-lib-dirs={spec['mpi'].prefix.lib}")
+            configure_args.append(f"--with-MPI-include={spec['mpi'].prefix.include}")
         else:
             configure_args.append("--without-MPI")
 
@@ -274,11 +270,11 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             if cuda_arch_vals:
                 cuda_arch_sorted = list(sorted(cuda_arch_vals, reverse=True))
                 cuda_arch = cuda_arch_sorted[0]
-                configure_args.append("--with-gpu-arch={0}".format(cuda_arch))
+                configure_args.append(f"--with-gpu-arch={cuda_arch}")
             # New in 2.21.0: replaces --enable-cub
             if spec.satisfies("@2.21.0:"):
                 configure_args.append("--enable-device-memory-pool")
-                configure_args.append("--with-cuda-home={0}".format(spec["cuda"].prefix))
+                configure_args.append(f"--with-cuda-home={spec['cuda'].prefix}")
             else:
                 configure_args.append("--enable-cub")
             if spec.satisfies("+cublas"):
@@ -300,14 +296,14 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                     "--with-hip",
                     "--enable-rocrand",
                     "--enable-rocsparse",
-                    "--with-extra-CUFLAGS={0}".format(rocm_inc),
+                    f"--with-extra-CUFLAGS={rocm_inc}",
                 ]
             )
             rocm_arch_vals = spec.variants["amdgpu_target"].value
             if rocm_arch_vals:
                 rocm_arch_sorted = list(sorted(rocm_arch_vals, reverse=True))
                 rocm_arch = rocm_arch_sorted[0]
-                configure_args.append("--with-gpu-arch={0}".format(rocm_arch))
+                configure_args.append(f"--with-gpu-arch={rocm_arch}")
             if spec.satisfies("+rocblas"):
                 configure_args.append("--enable-rocblas")
         else:
@@ -393,17 +389,16 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
         if "+mpi" not in self.spec:
             raise SkipTest("Package must be installed with +mpi")
 
-        with test_part(self, "test_hypre_build", purpose="Build copied and cached test examples"):
-            with working_dir(self._cached_tests_work_dir):
-                exe = which("make")
-                exe("HYPRE_DIR={0}".format(self.prefix), "bigint")
+        with working_dir(self._cached_tests_work_dir):
+            exe = which("make")
+            exe(f"HYPRE_DIR={self.prefix}", "bigint")
 
         for exeName in ["ex5big", "ex15big"]:
             with test_part(self, f"test_hypre_{exeName}", purpose=f"Ensuring {exeName} runs"):
                 with working_dir(self._cached_tests_work_dir):
-                    exe = which(exeName)
                     if not os.path.exists("./" + exeName):
                         raise SkipTest(f"{exeName} does not exist in version {self.version}")
+                    exe = which(exeName)
                     exe()
 
     @property
