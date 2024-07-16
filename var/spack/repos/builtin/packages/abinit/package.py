@@ -127,7 +127,7 @@ class Abinit(AutotoolsPackage):
     )
 
     patch("rm_march_settings.patch", when="@:8")
-    patch("rm_march_settings_v9.patch", when="@9:9.99")
+    patch("rm_march_settings_v9.patch", when="@9")
 
     # Fix detection of Fujitsu compiler
     # Fix configure not to collect the option that causes an error
