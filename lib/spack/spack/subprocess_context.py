@@ -81,6 +81,8 @@ class PackageInstallContext:
         env = pickle.load(self.serialized_env) if _SERIALIZE else self.env
         if env:
             spack.environment.activate(env)
+        # Order of operation is important, since the package might be retrieved
+        # from a repo defined within the environment configuration
         pkg = pickle.load(self.serialized_pkg) if _SERIALIZE else self.pkg
         return pkg
 
