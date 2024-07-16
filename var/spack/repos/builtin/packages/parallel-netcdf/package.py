@@ -97,10 +97,8 @@ class ParallelNetcdf(AutotoolsPackage):
         if libs:
             return libs
 
-        msg = "Unable to recursively locate {0} {1} libraries in {2}"
-        raise spack.error.NoLibrariesError(
-            msg.format("shared" if shared else "static", self.spec.name, self.spec.prefix)
-        )
+        msg = f"Unable to recursively locate {'shared' if shared else 'static'} {self.spec.name} libraries in {self.spec.prefix}"
+        raise spack.error.NoLibrariesError(msg)
 
     @when("@master")
     def autoreconf(self, spec, prefix):
@@ -130,7 +128,7 @@ class ParallelNetcdf(AutotoolsPackage):
 
         for key, value in sorted(flags.items()):
             if value:
-                args.append("{0}={1}".format(key, " ".join(value)))
+                args.append(f"{key}={' '.join(value)}")
 
         if self.version >= Version("1.8"):
             args.append("--enable-relax-coord-bound")
@@ -163,16 +161,16 @@ class ParallelNetcdf(AutotoolsPackage):
         # examples should work as well.
         test_exe = "column_wise"
         options = [
-            "{0}.cpp".format(test_exe),
+            f"{test_exe}.cpp",
             "-o",
             test_exe,
             "-lpnetcdf",
-            "-L{0}".format(self.prefix.lib),
-            "-I{0}".format(self.prefix.include),
+            f"-L{self.prefix.lib}",
+            f"-I{self.prefix.include}",
         ]
 
         with test_part(
-            self, f"test_pnetcdf_comp_link", purpose="compiling and linking pnetcdf example"
+            self, "test_pnetcdf_comp_link", purpose="compiling and linking pnetcdf example"
         ):
             with working_dir(test_dir):
                 exe = which(self.spec["mpi"].prefix.bin.mpicxx)
@@ -197,4 +195,4 @@ class ParallelNetcdf(AutotoolsPackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
         with working_dir(test_dir):
             exe = which("rm")
-            exe("-f", "column_wise")
+            exe("-f", "cmlumn_wise")
