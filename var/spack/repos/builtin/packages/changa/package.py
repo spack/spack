@@ -23,25 +23,45 @@ class Changa(AutotoolsPackage):
     license("GPL-2.0-or-later")
 
     version("master", branch="master")
+    version("3.5", sha256="8c49ab5b540a8adb23d3eaa80942621e5ac83244918e66c87886c9d3fb463d39")
     version("3.4", sha256="c2bceb6ac00025dfd704bb6960bc17c6df7c746872185845d1e75f47e6ce2a94")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     patch("fix_configure_path.patch")
+    # Version 3.5 assumes to have a git repository available to compute the current version
+    # using `git describe ...` Since we are installing from the release tarball, hardcode
+    # the version to 3.5
+    patch("fix_makefile.patch", when="@3.5")
 
     resource(
         name="utility",
         url="https://github.com/N-BodyShop/utility/archive/v3.4.tar.gz",
         sha256="19f9f09023ce9d642e848a36948788fb29cd7deb8e9346cdaac4c945f1416667",
         placement="utility",
+        when="@3.4",
+    )
+
+    resource(
+        name="utility",
+        git="https://github.com/N-BodyShop/utility.git",
+        commit="f947639f78162a68d697195e6963328f2665bf44",
+        placement="utility",
+        when="@3.5",
     )
 
     depends_on("charmpp build-target=ChaNGa")
+    depends_on("libjpeg")
+    depends_on("zlib-api")
+
+    parallel = False
+
+    def setup_build_environment(self, env):
+        env.set("CHARM_DIR", self.spec["charmpp"].prefix)
 
     def configure_args(self):
-        args = []
-        args.append("STRUCT_DIR={0}/utility/structures".format(self.stage.source_path))
-        return args
+        return [f"STRUCT_DIR={self.stage.source_path}/utility/structures"]
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
