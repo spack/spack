@@ -251,13 +251,13 @@ spack:
   - cusz +cuda cuda_arch=75         # cusz: https://github.com/spack/spack/issues/38787
   - dealii +cuda cuda_arch=75       # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=75  # embree: https://github.com/spack/spack/issues/39534
-  - lammps +cuda cuda_arch=75       # lammps: needs NVIDIA driver
-  - lbann +cuda cuda_arch=75        # lbann: https://github.com/spack/spack/issues/38788
+  # - lammps +cuda cuda_arch=75       # lammps: needs NVIDIA driver
+  # - lbann +cuda cuda_arch=75        # aluminum: include/aluminum/base.hpp:53: multiple definition of `cub::CUB_200400___CUDA_ARCH_LIST___NS::Debug(cudaError,char const*, int)'; lbann: https://github.com/spack/spack/issues/38788
   - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=75 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787
   - paraview +cuda cuda_arch=75     # Error building some cuda componets in paraview
   - py-torch +cuda cuda_arch=75     # skipped, installed by other means
   - slepc +cuda cuda_arch=75        # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
-  - upcxx +cuda cuda_arch=75        # upcxx: needs NVIDIA driver
+  # - upcxx +cuda cuda_arch=75        # upcxx: needs NVIDIA driver
 
   # CUDA 80
   - amrex +cuda cuda_arch=80
@@ -288,23 +288,23 @@ spack:
   - trilinos +cuda cuda_arch=80
   - umpire ~shared +cuda cuda_arch=80
   # INCLUDED IN ECP DAV CUDA
-  - ascent +cuda cuda_arch=80       # ascent: https://github.com/spack/spack/issues/38045
+  # - ascent +cuda cuda_arch=80       # ascent: https://github.com/spack/spack/issues/38045
   - adios2 +cuda cuda_arch=80
   - vtk-m +cuda cuda_arch=80
   - zfp +cuda cuda_arch=80
   # --
   - axom +cuda cuda_arch=80         # axom: https://github.com/spack/spack/issues/29520
-  - cp2k +mpi +cuda cuda_arch=80    # cp2k: Error: KeyError: 'Point environment variable LIBSMM_PATH to the absolute path of the libsmm.a file'
+  # - cp2k +mpi +cuda cuda_arch=80    # cp2k: Error: KeyError: 'Point environment variable LIBSMM_PATH to the absolute path of the libsmm.a file'
   - cusz +cuda cuda_arch=80         # cusz: https://github.com/spack/spack/issues/38787
   - dealii +cuda cuda_arch=80       # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=80 # embree: https://github.com/spack/spack/issues/39534
-  - lammps +cuda cuda_arch=80       # lammps: needs NVIDIA driver
-  - lbann +cuda cuda_arch=80        # lbann: https://github.com/spack/spack/issues/38788
-  - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=80 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787
+  # - lammps +cuda cuda_arch=80       # lammps: needs NVIDIA driver
+  # - lbann +cuda cuda_arch=80        # aluminum: include/aluminum/base.hpp:53: multiple definition of `cub::CUB_200400___CUDA_ARCH_LIST___NS::Debug(cudaError,char const*, int)'; lbann: https://github.com/spack/spack/issues/38788
+  # - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=80 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787
   - paraview +cuda cuda_arch=80     # Error building some cuda componets in paraview
   - py-torch +cuda cuda_arch=80     # skipped, installed by other means
   - slepc +cuda cuda_arch=80        # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
-  - upcxx +cuda cuda_arch=80        # upcxx: needs NVIDIA driver
+  # - upcxx +cuda cuda_arch=80        # upcxx: needs NVIDIA driver
 
   # CUDA 90
   - amrex +cuda cuda_arch=90
@@ -337,21 +337,21 @@ spack:
   - vtk-m +cuda cuda_arch=90
   - zfp +cuda cuda_arch=90
   # --
-  - ascent +cuda cuda_arch=90       # ascent: https://github.com/spack/spack/issues/38045
+  # - ascent +cuda cuda_arch=90       # ascent: https://github.com/spack/spack/issues/38045
   - axom +cuda cuda_arch=90         # axom: https://github.com/spack/spack/issues/29520
   # - cp2k +mpi +cuda cuda_arch=90    # cp2k: cp2k only supports cuda_arch ('35', '37', '60', '70', '80')
-  - cusz +cuda cuda_arch=90         # cusz: https://github.com/spack/spack/issues/38787
+  # - cusz +cuda cuda_arch=90         # cusz: cuda-12.5.1-pil77yk7gsseyqitybr47qmhdtszbcwa/targets/sbsa-linux/include/cub/util_device.cuh:160:63: error: 'blockIdx' was not declared in this scope
   # - dealii +cuda cuda_arch=90       # dealii: concretize conflict + https://github.com/spack/spack/issues/39532
   - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=90 # embree: https://github.com/spack/spack/issues/39534
   - hypre +cuda cuda_arch=90        # concretizer: hypre +cuda requires cuda@:11, but cuda_arch=90 requires cuda@12:
-  - lammps +cuda cuda_arch=90       # lammps: needs NVIDIA driver
-  - lbann +cuda cuda_arch=90        # concretizer: Cannot select a single "version" for package "lbann"
-  - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=90 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787
-  - omega-h +cuda cuda_arch=90      # omega-h: https://github.com/spack/spack/issues/39535
+  # - lammps +cuda cuda_arch=90       # lammps: needs NVIDIA driver
+  # - lbann +cuda cuda_arch=90        # aluminum: include/aluminum/base.hpp:53: multiple definition of `cub::CUB_200400___CUDA_ARCH_LIST___NS::Debug(cudaError,char const*, int)'; 
+  # - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf ~cusz +mgard +cuda cuda_arch=90 # libpressio: CMake Error at CMakeLists.txt:498 (find_library): Could not find CUFile_LIBRARY using the following names: cufile ; +cusz: https://github.com/spack/spack/issues/38787
+  # - omega-h +cuda cuda_arch=90      # omega-h: https://github.com/spack/spack/issues/39535
   - py-torch +cuda cuda_arch=90     # skipped, installed by other means
   - slepc +cuda cuda_arch=90        # slepc: make[1]: *** internal error: invalid --jobserver-auth string 'fifo:/tmp/GMfifo1313'.
   - tasmanian +cuda cuda_arch=90    # tasmanian: conflicts with cuda@12
-  - upcxx +cuda cuda_arch=90        # upcxx: needs NVIDIA driver
+  # - upcxx +cuda cuda_arch=90        # upcxx: needs NVIDIA driver
 
   ci:
     pipeline-gen:
