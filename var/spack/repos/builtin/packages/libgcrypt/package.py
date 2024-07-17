@@ -41,6 +41,8 @@ class Libgcrypt(AutotoolsPackage):
     depends_on("libgpg-error@1.27:", when="@1.9:")
     depends_on("libgpg-error@1.49:", when="@1.11:")
 
+    conflicts("platform=darwin", when="@1.11.0")
+
     def flag_handler(self, name, flags):
         # We should not inject optimization flags through the wrapper, because
         # the jitter entropy code should never be compiled with optimization
