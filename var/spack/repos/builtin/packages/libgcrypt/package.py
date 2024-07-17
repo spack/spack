@@ -37,9 +37,14 @@ class Libgcrypt(AutotoolsPackage):
     version("1.8.4", sha256="f638143a0672628fde0cad745e9b14deb85dffb175709cacc1f4fe24b93f2227")
     version("1.8.1", sha256="7a2875f8b1ae0301732e878c0cca2c9664ff09ef71408f085c50e332656a78b3")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libgpg-error@1.25:")
     depends_on("libgpg-error@1.27:", when="@1.9:")
     depends_on("libgpg-error@1.49:", when="@1.11:")
+
+    # See  https://dev.gnupg.org/T7170
+    conflicts("platform=darwin", when="@1.11.0")
 
     def flag_handler(self, name, flags):
         # We should not inject optimization flags through the wrapper, because

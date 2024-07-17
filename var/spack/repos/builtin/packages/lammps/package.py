@@ -369,6 +369,10 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     stable_versions = {
         "20230802.3",
         "20230802.2",

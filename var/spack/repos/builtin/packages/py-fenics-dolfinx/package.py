@@ -22,6 +22,8 @@ class PyFenicsDolfinx(PythonPackage):
     version("0.7.2", sha256="7d9ce1338ce66580593b376327f23ac464a4ce89ef63c105efc1a38e5eae5c0b")
     version("0.6.0", sha256="eb8ac2bb2f032b0d393977993e1ab6b4101a84d54023a67206e3eac1a8d79b80")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.19:", type="build")
     depends_on("hdf5", type="build")
     depends_on("pkgconfig", type="build")

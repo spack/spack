@@ -50,6 +50,8 @@ class Sqlite(AutotoolsPackage, NMakePackage):
     version("3.27.1", sha256="54a92b8ff73ff6181f89b9b0c08949119b99e8cccef93dbef90e852a8b10f4f8")
     version("3.27.0", sha256="dbfb0fb4fc32569fa427d3658e888f5e3b84a0952f706ccab1fd7c62a54f10f0")
     version("3.26.0", sha256="5daa6a3fb7d1e8c767cd59c4ded8da6e4b00c61d3b466d0685e35c4dd6d7bf5d")
+
+    depends_on("c", type="build")  # generated
     # All versions prior to 3.26.0 are vulnerable to Magellan when FTS
     # is enabled, see https://blade.tencent.com/magellan/index_en.html
 
@@ -178,11 +180,13 @@ class Sqlite(AutotoolsPackage, NMakePackage):
         return all_variants
 
     def url_for_version(self, version):
-        full_version = list(version.version) + [0 * (4 - len(version.version))]
-        version_string = str(full_version[0]) + "".join(["%02d" % v for v in full_version[1:]])
+        if len(version) < 3:
+            raise ValueError(f"Unsupported sqlite version: {version}")
         # See https://www.sqlite.org/chronology.html for version -> year
         # correspondence.
-        if version >= Version("3.41.0"):
+        if version >= Version("3.45.0"):
+            year = "2024"
+        elif version >= Version("3.41.0"):
             year = "2023"
         elif version >= Version("3.37.2"):
             year = "2022"
@@ -205,8 +209,8 @@ class Sqlite(AutotoolsPackage, NMakePackage):
         elif version >= Version("3.7.16"):
             year = "2013"
         else:
-            raise ValueError("Unsupported version {0}".format(version))
-        return "https://www.sqlite.org/{0}/sqlite-autoconf-{1}.tar.gz".format(year, version_string)
+            raise ValueError(f"Unsupported sqlite version {version}")
+        return f"https://www.sqlite.org/{year}/sqlite-autoconf-{version[0]}{version[1]:02}{version[2]:02}00.tar.gz"
 
     @property
     def libs(self):

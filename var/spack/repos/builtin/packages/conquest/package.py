@@ -24,6 +24,8 @@ class Conquest(MakefilePackage):
     version("master", branch="master")
     version("develop", branch="develop")
 
+    depends_on("fortran", type="build")  # generated
+
     depends_on("blas")
     depends_on("lapack")
     depends_on("scalapack")

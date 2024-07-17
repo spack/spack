@@ -138,6 +138,9 @@ class Mapl(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Versions later than 3.14 remove FindESMF.cmake
     # from ESMA_CMake.
     resource(
@@ -349,6 +352,8 @@ class Mapl(CMakePackage):
 
         if self.spec.satisfies("^mpich"):
             args.append(self.define("MPI_STACK", "mpich"))
+        elif self.spec.satisfies("^mvapich2"):
+            args.append(self.define("MPI_STACK", "mvapich"))
         elif self.spec.satisfies("^openmpi"):
             args.append(self.define("MPI_STACK", "openmpi"))
         elif self.spec.satisfies("^intel-oneapi-mpi"):

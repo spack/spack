@@ -32,6 +32,8 @@ class RocmCore(CMakePackage):
     version("5.5.1", sha256="bc73060432ffdc2e210394835d383890b9652476074ef4708d447473f273ce76")
     version("5.5.0", sha256="684d3312bb14f05dc280cf136f5eddff38ba340cd85c383d6a217d8e27d3d57d")
 
+    depends_on("cxx", type="build")  # generated
+
     def cmake_args(self):
         args = [self.define("ROCM_VERSION", self.spec.version)]
         return args

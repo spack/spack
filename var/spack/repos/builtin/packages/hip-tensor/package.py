@@ -25,6 +25,8 @@ class HipTensor(CMakePackage, ROCmPackage):
     version("5.7.1", sha256="96743d4e695fe865aef4097ae31d9b4e42a2d5a92135a005b0d187d9c0b17645")
     version("5.7.0", sha256="4b17f6d43b17fe2dc1d0c61e9663d4752006f7898cc94231206444a1663eb252")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     for ver in ["5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2", "master"]:

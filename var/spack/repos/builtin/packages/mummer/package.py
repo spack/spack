@@ -16,6 +16,9 @@ class Mummer(Package):
 
     version("3.23", sha256="1efad4f7d8cee0d8eaebb320a2d63745bb3a160bb513a15ef7af46f330af662f")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("gnuplot")
     depends_on("perl", type=("build", "run"))
 

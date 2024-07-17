@@ -32,6 +32,8 @@ class Hpgmg(MakefilePackage):
     )
     version("0.3", sha256="12a65da216fec91daea78594ae4b5a069c8f1a700f1ba21eed9f45a79a68c793")
 
+    depends_on("c", type="build")  # generated
+
     variant("fe", default=False, description="Build finite element solver")
     variant(
         "fv",

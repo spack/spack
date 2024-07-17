@@ -36,6 +36,9 @@ class DamaskMesh(CMakePackage):
         "3.0.0-alpha4", sha256="0bb8bde43b27d852b1fb6e359a7157354544557ad83d87987b03f5d629ce5493"
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("petsc@3.20.3:3.21", when="@3.0.0-beta")
     depends_on("petsc@3.20.2:3.21", when="@3.0.0-alpha8")
     depends_on("petsc@3.17.1:3.18", when="@3.0.0-alpha7")

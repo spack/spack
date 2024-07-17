@@ -16,6 +16,8 @@ class Medipack(CMakePackage):
     version("1.2.2", sha256="8937fa1025c6fb12f516cacf38a7f776221e7e818b30f17ce334c63f78513aa7")
     version("1.2.1", sha256="c746196b98cfe24a212584cdb88bd12ebb14f4a54728070d605e0c6d0e75db8a")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.12:", type="build", when="@1.2.2:")
 
     build_system(

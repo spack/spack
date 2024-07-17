@@ -603,7 +603,7 @@ def mutable_mock_repo(mock_repo_path, request):
 def mock_custom_repository(tmpdir, mutable_mock_repo):
     """Create a custom repository with a single package "c" and return its path."""
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("myrepo"))
-    builder.add_package("c")
+    builder.add_package("pkg-c")
     return builder.root
 
 
@@ -857,7 +857,7 @@ def _populate(mock_db):
     _install("mpileaks ^mpich")
     _install("mpileaks ^mpich2")
     _install("mpileaks ^zmpi")
-    _install("externaltest")
+    _install("externaltest ^externalvirtual")
     _install("trivial-smoke-test")
 
 
