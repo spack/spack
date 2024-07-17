@@ -91,7 +91,7 @@ def env_root_path():
     """Override default root path if the user specified it"""
     return spack.util.path.canonicalize_path(
         spack.config.get("config:environments_root", default=default_env_path),
-        replacements=spack.paths.path_replacements()
+        replacements=spack.paths.path_replacements(),
     )
 
 
@@ -480,8 +480,7 @@ class ViewDescriptor:
         self.base = base_path
         self.raw_root = root
         self.root = spack.util.path.canonicalize_path(
-            root, default_wd=base_path,
-            replacements=spack.paths.path_replacements()
+            root, default_wd=base_path, replacements=spack.paths.path_replacements()
         )
         self.projections = projections
         self.select = select
@@ -498,8 +497,7 @@ class ViewDescriptor:
     def update_root(self, new_path):
         self.raw_root = new_path
         self.root = spack.util.path.canonicalize_path(
-            new_path, default_wd=self.base,
-            replacements=spack.paths.path_replacements()
+            new_path, default_wd=self.base, replacements=spack.paths.path_replacements()
         )
 
     def __eq__(self, other):
@@ -992,8 +990,9 @@ class Environment:
         missing = []
         for i, config_path in enumerate(reversed(includes)):
             # allow paths to contain spack config/environment variables, etc.
-            config_path = substitute_path_variables(config_path,
-                                                    replacements=spack.paths.path_replacements())
+            config_path = substitute_path_variables(
+                config_path, replacements=spack.paths.path_replacements()
+            )
 
             include_url = urllib.parse.urlparse(config_path)
 
@@ -1305,8 +1304,7 @@ class Environment:
             # better if we can create the `source_path` directly into its final
             # destination.
             abspath = spack.util.path.canonicalize_path(
-                path, default_wd=self.path,
-                replacements=spack.paths.path_replacements()
+                path, default_wd=self.path, replacements=spack.paths.path_replacements()
             )
             pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
             # We construct a package class ourselves, rather than asking for

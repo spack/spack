@@ -192,8 +192,9 @@ def _root(args):
 
     root = spack.config.get("bootstrap:root", default=None, scope=args.scope)
     if root:
-        root = spack.util.path.canonicalize_path(root,
-                                                 replacements=spack.paths.path_replacements())
+        root = spack.util.path.canonicalize_path(
+            root, replacements=spack.paths.path_replacements()
+        )
     print(root)
 
 
@@ -337,8 +338,9 @@ def _add(args):
         raise RuntimeError(msg.format(args.name))
 
     # Check that the metadata file exists
-    metadata_dir = spack.util.path.canonicalize_path(args.metadata_dir,
-                                                     replacements=spack.paths.path_replacements())
+    metadata_dir = spack.util.path.canonicalize_path(
+        args.metadata_dir, replacements=spack.paths.path_replacements()
+    )
     if not os.path.exists(metadata_dir) or not os.path.isdir(metadata_dir):
         raise RuntimeError('the directory "{0}" does not exist'.format(args.metadata_dir))
 
@@ -387,8 +389,9 @@ def _remove(args):
 
 
 def _mirror(args):
-    mirror_dir = spack.util.path.canonicalize_path(os.path.join(args.root_dir, LOCAL_MIRROR_DIR),
-                                                   replacements=spack.paths.path_replacements())
+    mirror_dir = spack.util.path.canonicalize_path(
+        os.path.join(args.root_dir, LOCAL_MIRROR_DIR), replacements=spack.paths.path_replacements()
+    )
 
     # TODO: Here we are adding gnuconfig manually, but this can be fixed
     # TODO: as soon as we have an option to add to a mirror all the possible
@@ -438,19 +441,22 @@ def _mirror(args):
     if args.binary_packages:
         abs_directory, rel_directory = write_metadata(subdir="binaries", metadata=BINARY_METADATA)
         shutil.copy(
-            spack.util.path.canonicalize_path(CLINGO_JSON,
-                                              replacements=spack.paths.path_replacements()),
-            abs_directory
+            spack.util.path.canonicalize_path(
+                CLINGO_JSON, replacements=spack.paths.path_replacements()
+            ),
+            abs_directory,
         )
         shutil.copy(
-            spack.util.path.canonicalize_path(GNUPG_JSON,
-                                              replacements=spack.paths.path_replacements()),
-            abs_directory
+            spack.util.path.canonicalize_path(
+                GNUPG_JSON, replacements=spack.paths.path_replacements()
+            ),
+            abs_directory,
         )
         shutil.copy(
-            spack.util.path.canonicalize_path(PATCHELF_JSON,
-                                              replacements=spack.paths.path_replacements()),
-            abs_directory
+            spack.util.path.canonicalize_path(
+                PATCHELF_JSON, replacements=spack.paths.path_replacements()
+            ),
+            abs_directory,
         )
         instructions += cmd.format("local-binaries", rel_directory)
     print(instructions)

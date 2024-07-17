@@ -53,8 +53,9 @@ def _url_or_path_to_url(url_or_path: str) -> str:
 
     # Otherwise we interpret it as path, and we should promote it to file:// URL.
     return url_util.path_to_file_url(
-        spack.util.path.canonicalize_path(url_or_path,
-                                          replacements=spack.paths.path_replacements())
+        spack.util.path.canonicalize_path(
+            url_or_path, replacements=spack.paths.path_replacements()
+        )
     )
 
 

@@ -78,8 +78,9 @@ def make_environment(dirs: Optional[Tuple[str, ...]] = None):
         builtins = spack.config.get("config:template_dirs", ["$spack/share/spack/templates"])
         extensions = spack.extensions.get_template_dirs()
         r = spack.paths.path_replacements()
-        dirs = tuple(canonicalize_path(d, replacements=r)
-                     for d in itertools.chain(builtins, extensions))
+        dirs = tuple(
+            canonicalize_path(d, replacements=r) for d in itertools.chain(builtins, extensions)
+        )
 
     # Loader for the templates
     loader = jinja2.FileSystemLoader(dirs)

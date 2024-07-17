@@ -132,9 +132,7 @@ def gpg_create(args):
         old_sec_keys = spack.gpg.signing_keys()
 
     # Create the new key
-    spack.gpg.create(
-        name=args.name, email=args.email, comment=args.comment, expires=args.expires
-    )
+    spack.gpg.create(name=args.name, email=args.email, comment=args.comment, expires=args.expires)
     if args.export or args.secret:
         new_sec_keys = set(spack.gpg.signing_keys())
         new_keys = new_sec_keys.difference(old_sec_keys)

@@ -276,4 +276,4 @@ def add_versions_to_package(pkg: PackageBase, version_lines: str):
         tty.msg(f"Open {filename} to review the additions.")
 
     if sys.stdout.isatty():
-        editor(filename, debug=spack.config.get('config:debug'))
+        editor(filename, debug=spack.config.get("config:debug"))

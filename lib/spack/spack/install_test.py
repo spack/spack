@@ -92,7 +92,7 @@ def get_test_stage_dir():
     """
     return spack.util.path.canonicalize_path(
         spack.config.get("config:test_stage", spack.paths.default_test_path),
-        replacements=spack.paths.path_replacements()
+        replacements=spack.paths.path_replacements(),
     )
 
 

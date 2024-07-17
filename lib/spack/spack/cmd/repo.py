@@ -84,8 +84,9 @@ def repo_add(args):
     path = args.path
 
     # real_path is absolute and handles substitution.
-    canon_path = spack.util.path.canonicalize_path(path,
-                                                   replacements=spack.paths.path_replacements())
+    canon_path = spack.util.path.canonicalize_path(
+        path, replacements=spack.paths.path_replacements()
+    )
 
     # check if the path exists
     if not os.path.exists(canon_path):
@@ -117,12 +118,12 @@ def repo_remove(args):
     namespace_or_path = args.namespace_or_path
 
     # If the argument is a path, remove that repository from config.
-    canon_path = spack.util.path.canonicalize_path(namespace_or_path,
-                                                   replacements=spack.paths.path_replacements())
+    canon_path = spack.util.path.canonicalize_path(
+        namespace_or_path, replacements=spack.paths.path_replacements()
+    )
     for repo_path in repos:
         repo_canon_path = spack.util.path.canonicalize_path(
-            repo_path,
-            replacements=spack.paths.path_replacements()
+            repo_path, replacements=spack.paths.path_replacements()
         )
         if canon_path == repo_canon_path:
             repos.remove(repo_path)

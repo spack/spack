@@ -351,8 +351,7 @@ def test_missing_curl(tmpdir, monkeypatch):
 
 def test_url_fetch_text_without_url(tmpdir):
     with pytest.raises(web_util.WebError, match="URL is required"):
-        web_util.fetch_url_text(None,
-                                fetch_method=spack.config.get('config:url_fetch_method'))
+        web_util.fetch_url_text(None, fetch_method=spack.config.get("config:url_fetch_method"))
 
 
 def test_url_fetch_text_curl_failures(tmpdir, monkeypatch):
@@ -369,8 +368,9 @@ def test_url_fetch_text_curl_failures(tmpdir, monkeypatch):
 
     with spack.config.override("config:url_fetch_method", "curl"):
         with pytest.raises(web_util.WebError, match="Missing required curl"):
-            web_util.fetch_url_text("https://github.com/",
-                                    fetch_method=spack.config.get('config:url_fetch_method'))
+            web_util.fetch_url_text(
+                "https://github.com/", fetch_method=spack.config.get("config:url_fetch_method")
+            )
 
 
 def test_url_check_curl_errors():
@@ -398,8 +398,10 @@ def test_url_missing_curl(tmpdir, monkeypatch):
 
     with spack.config.override("config:url_fetch_method", "curl"):
         with pytest.raises(web_util.WebError, match="Missing required curl"):
-            web_util.url_exists("https://github.com/",
-                                fetch_method=spack.config.get('config:url_fetch_method', 'urllib'))
+            web_util.url_exists(
+                "https://github.com/",
+                fetch_method=spack.config.get("config:url_fetch_method", "urllib"),
+            )
 
 
 def test_url_fetch_text_urllib_bad_returncode(tmpdir, monkeypatch):
@@ -414,8 +416,9 @@ def test_url_fetch_text_urllib_bad_returncode(tmpdir, monkeypatch):
 
     with spack.config.override("config:url_fetch_method", "urllib"):
         with pytest.raises(web_util.WebError, match="failed with error code"):
-            web_util.fetch_url_text("https://github.com/",
-                                    fetch_method=spack.config.get('config:url_fetch_method'))
+            web_util.fetch_url_text(
+                "https://github.com/", fetch_method=spack.config.get("config:url_fetch_method")
+            )
 
 
 def test_url_fetch_text_urllib_web_error(tmpdir, monkeypatch):
@@ -426,5 +429,6 @@ def test_url_fetch_text_urllib_web_error(tmpdir, monkeypatch):
 
     with spack.config.override("config:url_fetch_method", "urllib"):
         with pytest.raises(web_util.WebError, match="fetch failed to verify"):
-            web_util.fetch_url_text("https://github.com/",
-                                    fetch_method=spack.config.get('config:url_fetch_method'))
+            web_util.fetch_url_text(
+                "https://github.com/", fetch_method=spack.config.get("config:url_fetch_method")
+            )

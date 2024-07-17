@@ -341,58 +341,48 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     r = spack.paths.path_replacements()
     assert cross_plat_join(
         os.sep + os.path.join("foo", "bar", "baz"), prefix
-    ) == spack_path.canonicalize_path("/foo/bar/baz/$spack",
-                                      replacements=r)
+    ) == spack_path.canonicalize_path("/foo/bar/baz/$spack", replacements=r)
 
     assert cross_plat_join(
         spack.paths.prefix, os.path.join("foo", "bar", "baz")
-    ) == spack_path.canonicalize_path("$spack/foo/bar/baz/",
-                                      replacements=r)
+    ) == spack_path.canonicalize_path("$spack/foo/bar/baz/", replacements=r)
 
     assert cross_plat_join(
         os.sep + os.path.join("foo", "bar", "baz"), prefix, os.path.join("foo", "bar", "baz")
-    ) == spack_path.canonicalize_path("/foo/bar/baz/$spack/foo/bar/baz/",
-                                      replacements=r)
+    ) == spack_path.canonicalize_path("/foo/bar/baz/$spack/foo/bar/baz/", replacements=r)
 
     assert cross_plat_join(
         os.sep + os.path.join("foo", "bar", "baz"), prefix
-    ) == spack_path.canonicalize_path("/foo/bar/baz/${spack}",
-                                      replacements=r)
+    ) == spack_path.canonicalize_path("/foo/bar/baz/${spack}", replacements=r)
 
     assert cross_plat_join(
         spack.paths.prefix, os.path.join("foo", "bar", "baz")
-    ) == spack_path.canonicalize_path("${spack}/foo/bar/baz/",
-                                      replacements=r)
+    ) == spack_path.canonicalize_path("${spack}/foo/bar/baz/", replacements=r)
 
     assert cross_plat_join(
         os.sep + os.path.join("foo", "bar", "baz"), prefix, os.path.join("foo", "bar", "baz")
-    ) == spack_path.canonicalize_path("/foo/bar/baz/${spack}/foo/bar/baz/",
-                                      replacements=r)
+    ) == spack_path.canonicalize_path("/foo/bar/baz/${spack}/foo/bar/baz/", replacements=r)
 
     assert cross_plat_join(
         os.sep + os.path.join("foo", "bar", "baz"), prefix, os.path.join("foo", "bar", "baz")
-    ) != spack_path.canonicalize_path("/foo/bar/baz/${spack/foo/bar/baz/",
-                                      replacements=r)
+    ) != spack_path.canonicalize_path("/foo/bar/baz/${spack/foo/bar/baz/", replacements=r)
 
     # $env replacement is a no-op when no environment is active
     assert spack_path.canonicalize_path(
-        os.sep + os.path.join("foo", "bar", "baz", "$env"),
-        replacements=r
+        os.sep + os.path.join("foo", "bar", "baz", "$env"), replacements=r
     ) == os.sep + os.path.join("foo", "bar", "baz", "$env")
 
     # Fake an active environment and $env is replaced properly
     fake_env_path = os.sep + os.path.join("quux", "quuux")
     monkeypatch.setattr(ev, "active_environment", lambda: MockEnv(fake_env_path))
-    assert spack_path.canonicalize_path("$env/foo/bar/baz",
-                                        replacements=r) == os.path.join(
+    assert spack_path.canonicalize_path("$env/foo/bar/baz", replacements=r) == os.path.join(
         fake_env_path, os.path.join("foo", "bar", "baz")
     )
 
     # relative paths without source information are relative to cwd
-    assert spack_path.canonicalize_path(os.path.join("foo", "bar", "baz"),
-                                        replacements=r) == os.path.abspath(
-        os.path.join("foo", "bar", "baz")
-    )
+    assert spack_path.canonicalize_path(
+        os.path.join("foo", "bar", "baz"), replacements=r
+    ) == os.path.abspath(os.path.join("foo", "bar", "baz"))
 
     # relative paths with source information are relative to the file
     spack.config.set(
@@ -400,22 +390,19 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     )
     spack.config.CONFIG.clear_caches()
     path = spack.config.get("modules:default:roots:lmod")
-    assert spack_path.canonicalize_path(path,
-                                        replacements=r) == os.path.normpath(
+    assert spack_path.canonicalize_path(path, replacements=r) == os.path.normpath(
         os.path.join(mock_low_high_config.scopes["low"].path, os.path.join("foo", "bar", "baz"))
     )
 
     # test architecture information is in replacements
     assert spack_path.canonicalize_path(
-        os.path.join("foo", "$platform", "bar"),
-        replacements=r
+        os.path.join("foo", "$platform", "bar"), replacements=r
     ) == os.path.abspath(os.path.join("foo", "test", "bar"))
 
     host_target = spack.platforms.host().target("default_target")
     host_target_family = str(host_target.microarchitecture.family)
     assert spack_path.canonicalize_path(
-        os.path.join("foo", "$target_family", "bar"),
-        replacements=r
+        os.path.join("foo", "$target_family", "bar"), replacements=r
     ) == os.path.abspath(os.path.join("foo", host_target_family, "bar"))
 
 
@@ -453,32 +440,32 @@ def test_substitute_user(mock_low_high_config):
         "foo", "bar"
     ) + os.sep + user + os.sep + "baz" == spack_path.canonicalize_path(
         os.sep + os.path.join("foo", "bar", "$user", "baz"),
-        replacements=spack.paths.path_replacements()
+        replacements=spack.paths.path_replacements(),
     )
 
 
 def test_substitute_user_cache(mock_low_high_config):
     user_cache_path = spack.paths.user_cache_path
     assert user_cache_path + os.sep + "baz" == spack_path.canonicalize_path(
-        os.path.join("$user_cache_path", "baz"),
-        replacements=spack.paths.path_replacements()
+        os.path.join("$user_cache_path", "baz"), replacements=spack.paths.path_replacements()
     )
 
 
 def test_substitute_tempdir(mock_low_high_config):
     tempdir = tempfile.gettempdir()
-    assert tempdir == spack_path.canonicalize_path("$tempdir",
-                                                   replacements=spack.paths.path_replacements())
+    assert tempdir == spack_path.canonicalize_path(
+        "$tempdir", replacements=spack.paths.path_replacements()
+    )
     assert tempdir + os.sep + os.path.join("foo", "bar", "baz") == spack_path.canonicalize_path(
-        os.path.join("$tempdir", "foo", "bar", "baz"),
-        replacements=spack.paths.path_replacements()
+        os.path.join("$tempdir", "foo", "bar", "baz"), replacements=spack.paths.path_replacements()
     )
 
 
 def test_substitute_date(mock_low_high_config):
     test_path = os.path.join("hello", "world", "on", "$date")
-    new_path = spack_path.canonicalize_path(test_path,
-                                            replacements=spack.paths.path_replacements())
+    new_path = spack_path.canonicalize_path(
+        test_path, replacements=spack.paths.path_replacements()
+    )
     assert "$date" in test_path
     assert date.today().strftime("%Y-%m-%d") in new_path
 

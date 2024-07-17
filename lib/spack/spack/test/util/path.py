@@ -79,7 +79,7 @@ class TestPathPadding:
         # test filtering when padding is enabled
         with spack.config.override("config:install_tree", {"padded_length": 256}):
             # tty.msg with filtering on the first argument
-            padding = spack.config.get('config:install_tree:padded_length', None)
+            padding = spack.config.get("config:install_tree:padded_length", None)
             with sup.filter_padding(padding=padding):
                 tty.msg("here is a long path: %s/with/a/suffix" % long_path)
             out, err = capfd.readouterr()

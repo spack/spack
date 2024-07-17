@@ -60,8 +60,9 @@ def executable(exe: str, args: List[str]) -> int:
     return cmd.returncode
 
 
-def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv,
-           debug: bool = False) -> bool:
+def editor(
+    *args: str, exec_fn: Callable[[str, List[str]], int] = os.execv, debug: bool = False
+) -> bool:
     """Invoke the user's editor.
 
     This will try to execute the following, in order:

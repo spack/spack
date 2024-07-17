@@ -987,4 +987,4 @@ def create(parser, args):
 
     # Optionally open up the new package file in your $EDITOR
     if not args.skip_editor:
-        editor(pkg_path, debug=spack.config.get('config:debug'))
+        editor(pkg_path, debug=spack.config.get("config:debug"))

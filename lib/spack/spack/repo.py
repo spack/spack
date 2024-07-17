@@ -930,8 +930,7 @@ class Repo:
         # Root directory, containing _repo.yaml and package dirs
         # Allow roots to by spack-relative by starting with '$spack'
         self.root = spack.util.path.canonicalize_path(
-            root,
-            replacements=spack.paths.path_replacements()
+            root, replacements=spack.paths.path_replacements()
         )
 
         # check and raise BadRepoError on fail.
@@ -1331,8 +1330,7 @@ def create_repo(root, namespace=None, subdir=packages_dir_name):
     If the namespace is not provided, use basename of root.
     Return the canonicalized path and namespace of the created repository.
     """
-    root = spack.util.path.canonicalize_path(root,
-                                             replacements=spack.paths.path_replacements())
+    root = spack.util.path.canonicalize_path(root, replacements=spack.paths.path_replacements())
     if not namespace:
         namespace = os.path.basename(root)
 

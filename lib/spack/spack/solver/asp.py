@@ -2604,9 +2604,10 @@ class SpackSolverSetup:
                 spack.spec.Spec(info["spec"]).constrained(
                     "dev_path=%s"
                     % spack.util.path.canonicalize_path(
-                        info["path"], default_wd=env.path,
-                        replacements=spack.paths.path_replacements()
-                        )
+                        info["path"],
+                        default_wd=env.path,
+                        replacements=spack.paths.path_replacements(),
+                    )
                 )
                 for name, info in env.dev_specs.items()
             )
@@ -3123,8 +3124,9 @@ def _develop_specs_from_env(spec, env):
     if not dev_info:
         return
 
-    path = spack.util.path.canonicalize_path(dev_info["path"], default_wd=env.path,
-                                             replacements=spack.paths.path_replacements())
+    path = spack.util.path.canonicalize_path(
+        dev_info["path"], default_wd=env.path, replacements=spack.paths.path_replacements()
+    )
 
     if "dev_path" in spec.variants:
         error_msg = (

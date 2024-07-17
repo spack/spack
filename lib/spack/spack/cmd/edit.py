@@ -46,7 +46,7 @@ def edit_package(name, repo_path, namespace):
     else:
         raise spack.repo.UnknownPackageError(spec.name)
 
-    editor(path, debug=spack.config.get('config:debug'))
+    editor(path, debug=spack.config.get("config:debug"))
 
 
 def setup_parser(subparser):

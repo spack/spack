@@ -78,8 +78,7 @@ def parse_install_tree(config_dict):
         tty.warn("Using deprecated format for configuring install_tree")
         unpadded_root = install_tree
         unpadded_root = spack.util.path.canonicalize_path(
-            unpadded_root,
-            replacements=spack.paths.path_replacements()
+            unpadded_root, replacements=spack.paths.path_replacements()
         )
         # construct projection from previous values for backwards compatibility
         all_projection = config_dict.get(
@@ -90,8 +89,7 @@ def parse_install_tree(config_dict):
     else:
         unpadded_root = install_tree.get("root", DEFAULT_INSTALL_TREE_ROOT)
         unpadded_root = spack.util.path.canonicalize_path(
-            unpadded_root,
-            replacements=spack.paths.path_replacements()
+            unpadded_root, replacements=spack.paths.path_replacements()
         )
 
         padded_length = install_tree.get("padded_length", False)
@@ -273,8 +271,9 @@ def _construct_upstream_dbs_from_install_roots(
     for install_root in reversed(install_roots):
         upstream_dbs = list(accumulated_upstream_dbs)
         next_db = spack.database.Database(
-            spack.util.path.canonicalize_path(install_root,
-                                              replacements=spack.paths.path_replacements()),
+            spack.util.path.canonicalize_path(
+                install_root, replacements=spack.paths.path_replacements()
+            ),
             is_upstream=True,
             upstream_dbs=upstream_dbs,
         )

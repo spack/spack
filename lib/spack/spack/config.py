@@ -1452,9 +1452,7 @@ def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) ->
         raw = raw_github_gitlab_url(url)
         tty.debug("Reading config from url {0}".format(raw))
         return web_util.fetch_url_text(
-            raw,
-            dest_dir=dest_dir,
-            fetch_method=CONFIG.get('config:url_fetch_method')
+            raw, dest_dir=dest_dir, fetch_method=CONFIG.get("config:url_fetch_method")
         )
 
     if not url:

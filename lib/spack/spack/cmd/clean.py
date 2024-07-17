@@ -135,8 +135,7 @@ def clean(parser, args):
 
     if args.bootstrap:
         bootstrap_prefix = spack.util.path.canonicalize_path(
-            spack.config.get("bootstrap:root"),
-            replacements=spack.paths.path_replacements()
+            spack.config.get("bootstrap:root"), replacements=spack.paths.path_replacements()
         )
         msg = 'Removing bootstrapped software and configuration in "{0}"'
         tty.msg(msg.format(bootstrap_prefix))

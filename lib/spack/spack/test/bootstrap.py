@@ -83,8 +83,7 @@ def test_store_path_customization(config_value, expected, mutable_config):
     # Check the store path
     current = spack.bootstrap.config.store_path()
     assert current == spack.util.path.canonicalize_path(
-        expected,
-        replacements=spack.paths.path_replacements()
+        expected, replacements=spack.paths.path_replacements()
     )
 
 

@@ -180,8 +180,9 @@ def spec_externals(spec):
             spec_str = entry["spec"]
             external_path = entry.get("prefix", None)
             if external_path:
-                external_path = canonicalize_path(external_path,
-                                                  replacements=spack.paths.path_replacements())
+                external_path = canonicalize_path(
+                    external_path, replacements=spack.paths.path_replacements()
+                )
             external_modules = entry.get("modules", None)
             external_spec = spack.spec.Spec.from_detection(
                 spack.spec.Spec(
