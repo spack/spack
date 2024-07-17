@@ -21,6 +21,10 @@ class Elmerfem(CMakePackage):
     version("9.0", sha256="08c5bf261e87ff37456c1aa0372db3c83efabe4473ea3ea0b8ec66f5944d1aa0")
     version("8.4", sha256="cc3ce807d76798361592cc14952cdc3db1ad8f9bac038017514033ce9badc5b3")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("gui", default=False, description="Enable GUI support.")
     variant("mpi", default=True, description="Enable MPI support.")
     variant("openmp", default=True, description="Enable OpenMP support.")

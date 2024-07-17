@@ -29,6 +29,9 @@ class Hpx5(AutotoolsPackage):
     version("2.1.0", sha256="675826f669eeb3eab40947715af8c8495e2b3d299223372431dc01c1f7d5d616")
     version("2.0.0", sha256="0278728557b6684aeb86228f44d548ac809302f05a0b9c8b433cdd157629e384")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # Don't second-guess what compiler we are using on Cray
     patch("configure.patch", when="@4.0.0")
 

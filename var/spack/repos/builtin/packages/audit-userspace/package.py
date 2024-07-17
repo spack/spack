@@ -21,6 +21,8 @@ class AuditUserspace(AutotoolsPackage):
     version("2.8.3", sha256="c239e3813b84bc264aaf2f796c131c1fe02960244f789ec2bd8d88aad4561b29")
     version("2.8.2", sha256="0a312a8487190d97715d46abb30aa2abd464b55f21d5c2d24428baa320ee4ce2")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")

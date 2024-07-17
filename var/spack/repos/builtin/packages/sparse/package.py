@@ -19,6 +19,8 @@ class Sparse(MakefilePackage):
 
     version("1.4b", sha256="63e6646244fd8f4d89f7f70fbf4cfd46b7688d21b22840a0ce57d294a7496d28")
 
+    depends_on("c", type="build")  # generated
+
     variant("pic", default=True, description="Build with position independent code")
 
     def edit(self, spec, prefix):

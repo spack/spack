@@ -19,6 +19,8 @@ class Xmlto(AutotoolsPackage):
 
     version("0.0.28", sha256="2f986b7c9a0e9ac6728147668e776d405465284e13c74d4146c9cbc51fd8aad3")
 
+    depends_on("c", type="build")  # generated
+
     # FIXME: missing a lot of dependencies
     depends_on("docbook-xsl", type=("build", "run"))
     depends_on("libxml2", type=("build", "run"))  # xmllint

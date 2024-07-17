@@ -20,6 +20,8 @@ class Libxxf86dga(AutotoolsPackage, XorgPackage):
     version("1.1.5", sha256="715e2bf5caf6276f0858eb4b11a1aef1a26beeb40dce2942387339da395bef69")
     version("1.1.4", sha256="e6361620a15ceba666901ca8423e8be0c6ed0271a7088742009160349173766b")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libx11")
     depends_on("libxext")
 

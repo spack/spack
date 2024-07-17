@@ -14,6 +14,8 @@ class Xsetpointer(AutotoolsPackage, XorgPackage):
 
     version("1.0.1", sha256="54be93b20fd6f1deac67246d6e214a60b02dcfbf05295e43751f7a04edb986ac")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libxi", type="link")
     depends_on("libx11", type="link")
     depends_on("inputproto@1.4:")

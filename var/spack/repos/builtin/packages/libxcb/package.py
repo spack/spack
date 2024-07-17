@@ -31,6 +31,8 @@ class Libxcb(AutotoolsPackage, XorgPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libpthread-stubs")
     depends_on("libxau@0.99.2:")
     depends_on("libxdmcp")

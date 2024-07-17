@@ -14,6 +14,8 @@ class Libxprintapputil(AutotoolsPackage, XorgPackage):
 
     version("1.0.1", sha256="5af3939ffe15508b942bc1e325a29a95b1c85e8900a5f65a896101e63048bbf7")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libx11")
     depends_on("libxp")
     depends_on("libxprintutil")

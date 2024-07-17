@@ -16,6 +16,8 @@ class Ray(CMakePackage, SourceforgePackage):
 
     version("2.3.1", sha256="3122edcdf97272af3014f959eab9a0f0e5a02c8ffc897d842b06b06ccd748036")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("mpi")
 
     @run_after("build")

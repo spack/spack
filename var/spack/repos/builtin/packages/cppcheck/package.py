@@ -30,6 +30,9 @@ class Cppcheck(CMakePackage):
     version("1.72", sha256="9460b184ff2d8dd15344f3e2f42f634c86e4dd3303e1e9b3f13dc67536aab420")
     version("1.68", sha256="add6e5e12b05ca02b356cd0ec7420ae0dcafddeaef183b4dfbdef59c617349b1")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("rules", default=False, description="Enable rules (requires PCRE)")
     variant("htmlreport", default=False, description="Install cppcheck-htmlreport")
 

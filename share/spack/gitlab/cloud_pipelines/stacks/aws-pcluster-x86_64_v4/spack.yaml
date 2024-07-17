@@ -7,7 +7,7 @@ spack:
     - lammps %intel
     - mpas-model %intel
     - openfoam %gcc
-    - palace %oneapi
+    - palace %oneapi ^superlu-dist%oneapi # hack: force fortran-rt provider through superlu-dist
     - quantum-espresso %intel
     # - wrf : While building hdf5 cmake errors out with Detecting Fortran/C Interface: Failed to compile
     # Root cause: ifort cannot deal with arbitrarily long file names.

@@ -41,6 +41,9 @@ class Kahip(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "deterministic",
         default=False,

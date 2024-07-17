@@ -22,6 +22,9 @@ class Spades(CMakePackage):
     version("3.11.1", sha256="3ab85d86bf7d595bd8adf11c971f5d258bbbd2574b7c1703b16d6639a725b474")
     version("3.10.1", sha256="d49dd9eb947767a14a9896072a1bce107fb8bf39ed64133a9e2f24fb1f240d96")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("python", type=("build", "run"))
     depends_on("zlib-api")
     depends_on("bzip2")

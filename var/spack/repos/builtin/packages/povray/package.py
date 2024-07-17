@@ -34,6 +34,9 @@ class Povray(AutotoolsPackage):
 
     version("3.7.0.8", sha256="53d11ebd2972fc452af168a00eb83aefb61387662c10784e81b63e44aa575de4")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("boost", default=True, description="Build with boost support")
     variant("debug", default=False, description="Enable compiler debugging mode")
     variant(

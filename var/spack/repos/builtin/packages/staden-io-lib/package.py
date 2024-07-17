@@ -19,6 +19,8 @@ class StadenIoLib(AutotoolsPackage):
 
     version("1.14.8", sha256="3bd560309fd6d70b14bbb8230e1baf8706b804eb6201220bb6c3d6db72003d1b")
 
+    depends_on("c", type="build")  # generated
+
     variant("curl", default=False, description="Build with curl support")
 
     depends_on("zlib-api")

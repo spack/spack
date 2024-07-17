@@ -22,6 +22,9 @@ class Mafft(Package):
     version("7.407", sha256="1840b51a0b93f40b4d6076af996ee46396428d8dbaf7ba1d847abff9cb1463e5")
     version("7.221", sha256="0bc78111966d9b00ddfa14fa217fa5bb0c593a558674a13f02dca7bcd51f7fcf")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     def install(self, spec, prefix):
         with working_dir("core"):
             make("PREFIX=%s" % prefix)

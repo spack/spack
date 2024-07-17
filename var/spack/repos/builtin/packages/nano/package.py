@@ -82,6 +82,8 @@ class Nano(AutotoolsPackage):
     version("2.6.2", sha256="22f79cc635458e0c0d110d211576f1edc03b112a62d73b914826a46547a6ac27")
     version("2.6.1", sha256="45721fa6d6128068895ad71a6967ff7398d11b064b3f888e5073c97a2b6e9a81")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("pkgconfig", type="build")
     depends_on("ncurses")
 

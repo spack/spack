@@ -25,6 +25,8 @@ class Comd(MakefilePackage):
     version("develop", branch="master")
     version("1.1", sha256="4e85f86f043681a1ef72940fc24a4c71356a36afa45446f7cfe776abad6aa252")
 
+    depends_on("c", type="build")  # generated
+
     variant("mpi", default=True, description="Build with MPI support")
     variant("openmp", default=False, description="Build with OpenMP support")
     variant("precision", default=True, description="Toggle Precesion Options")

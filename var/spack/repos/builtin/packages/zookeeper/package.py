@@ -19,5 +19,8 @@ class Zookeeper(Package):
 
     version("3.4.11", sha256="f6bd68a1c8f7c13ea4c2c99f13082d0d71ac464ffaf3bf7a365879ab6ad10e84")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     def install(self, spec, prefix):
         install_tree(".", prefix)

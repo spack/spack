@@ -15,6 +15,8 @@ class Eem(MakefilePackage):
 
     version("1.0.1", sha256="f617ea7350fce3b2581c814f70bda4427cbab83aac54a2dcadb36e8193f300bb")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("K", default=False, description="Build for K computer")
 
     depends_on("mpi")

@@ -19,6 +19,10 @@ class Chameleon(CMakePackage, CudaPackage):
     version("1.2.0", sha256="b8988ecbff19c603ae9f61441653c21bba18d040bee9bb83f7fc9077043e50b4")
     version("1.1.0", sha256="e64d0438dfaf5effb3740e53f3ab017d12744b85a138b2ef702a81df559126df")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # cmake's specific
     variant("shared", default=True, description="Build chameleon as a shared library")
 

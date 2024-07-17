@@ -21,6 +21,8 @@ class Libxres(AutotoolsPackage, XorgPackage):
     version("1.2.0", sha256="5b62feee09f276d74054787df030fceb41034de84174abec6d81c591145e043a")
     version("1.0.7", sha256="488c9fa14b38f794d1f019fe62e6b06514a39f1a7538e55ece8faf22482fefcd")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libx11")
     depends_on("libxext")
 

@@ -18,6 +18,9 @@ class Liblas(CMakePackage):
 
     version("1.8.1", sha256="9adb4a98c63b461ed2bc82e214ae522cbd809cff578f28511122efe6c7ea4e76")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # libLAS linkage of GDAL and libgeotiff enhances spatial coordinate system
     # description and provides data reprojection support.
     # Ref.: https://liblas.org/compilation.html#optional-libraries

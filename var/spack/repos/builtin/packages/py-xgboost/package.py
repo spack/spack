@@ -25,6 +25,8 @@ class PyXgboost(PythonPackage):
     version("1.5.2", sha256="404dc09dca887ef5a9bc0268f882c54b33bfc16ac365a859a11e7b24d49da387")
     version("1.3.3", sha256="397051647bb837915f3ff24afc7d49f7fca57630ffd00fb5ef66ae2a0881fb43")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("pandas", default=False, description="Enable Pandas extensions for training.")
     variant(
         "scikit-learn", default=False, description="Enable scikit-learn extensions for training."

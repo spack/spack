@@ -19,6 +19,9 @@ class P7zip(MakefilePackage):
     version("17.04", sha256="ea029a2e21d2d6ad0a156f6679bd66836204aa78148a4c5e498fe682e77127ef")
     version("16.02", sha256="5eb20ac0e2944f6cb9c2d51dd6c4518941c185347d4089ea89087ffdd6e2341f")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     patch(
         "gcc10.patch",
         when="@16.02%gcc@10:",

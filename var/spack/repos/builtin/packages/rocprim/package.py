@@ -34,6 +34,8 @@ class Rocprim(CMakePackage):
         version("5.3.3", sha256="21a6b352ad3f5b2b7d05a5ed55e612feb3c5c19d34fdb8f80260b6d25af18b2d")
         version("5.3.0", sha256="4885bd662b038c6e9f058a756fd838203dbd00227bfef6adaf31496010b100e4")
 
+    depends_on("cxx", type="build")  # generated
+
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant(

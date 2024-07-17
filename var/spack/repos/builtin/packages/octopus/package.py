@@ -44,6 +44,10 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
     version("develop", branch="main")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=True, description="Build with MPI support")
     variant("scalapack", default=False, when="+mpi", description="Compile with Scalapack")
     variant("berkeleygw", default=False, description="Compile with BerkeleyGW")

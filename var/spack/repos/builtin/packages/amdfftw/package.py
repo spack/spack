@@ -54,6 +54,9 @@ class Amdfftw(FftwBase):
     version("3.0", sha256="a69deaf45478a59a69f77c4f7e9872967f1cfe996592dd12beb6318f18ea0bcd")
     version("2.2", sha256="de9d777236fb290c335860b458131678f75aa0799c641490c644c843f0e246f8")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("shared", default=True, description="Builds a shared version of the library")
     variant("openmp", default=True, description="Enable OpenMP support")
     variant("threads", default=False, description="Enable SMP threads support")

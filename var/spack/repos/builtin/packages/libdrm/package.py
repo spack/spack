@@ -39,6 +39,8 @@ class Libdrm(Package):
     version("2.4.59", sha256="ed9d03a92c2d80e6310cc350db3430620f1659ae084a07c6824cee7bc81ae8fa")
     version("2.4.33", sha256="bd2a8fecf28616f2157ca33ede691c139cc294ed2d0c4244b62ca7d22e98e5a4")
 
+    depends_on("c", type="build")  # generated
+
     variant("docs", default=False, description="Build man pages")
 
     depends_on("pkgconfig", type="build")

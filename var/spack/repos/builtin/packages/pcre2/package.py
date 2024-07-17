@@ -26,6 +26,8 @@ class Pcre2(AutotoolsPackage):
     version("10.31", sha256="e07d538704aa65e477b6a392b32ff9fc5edf75ab9a40ddfc876186c4ff4d68ac")
     version("10.20", sha256="332e287101c9e9567d1ed55391b338b32f1f72c5b5ee7cc81ef2274a53ad487a")
 
+    depends_on("c", type="build")  # generated
+
     variant("multibyte", default=True, description="Enable support for 16 and 32 bit characters.")
     variant("jit", default=False, description="enable Just-In-Time compiling support")
 

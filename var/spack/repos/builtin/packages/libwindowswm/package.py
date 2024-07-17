@@ -21,6 +21,8 @@ class Libwindowswm(AutotoolsPackage, XorgPackage):
 
     version("1.0.1", sha256="94f9c0add3bad38ebd84bc43d854207c4deaaa74fb15339276e022546124b98a")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libx11")
     depends_on("libxext")
 

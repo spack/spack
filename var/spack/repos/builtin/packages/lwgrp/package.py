@@ -22,6 +22,8 @@ class Lwgrp(AutotoolsPackage):
     version("1.0.3", sha256="20b2fc3908bfdf04d1c177f86e227a147214cd155c548b3dd75e54c78e1c1c47")
     version("1.0.2", sha256="c9d4233946e40f01efd0b4644fd9224becec51b9b5f8cbf45f5bac3129b5b536")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("mpi")
 
     depends_on("autoconf", type="build", when="@main build_system=autotools")

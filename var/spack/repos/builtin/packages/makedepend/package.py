@@ -18,5 +18,8 @@ class Makedepend(AutotoolsPackage, XorgPackage):
     version("1.0.8", sha256="275f0d2b196bfdc740aab9f02bb48cb7a97e4dfea011a7b468ed5648d0019e54")
     version("1.0.5", sha256="503903d41fb5badb73cb70d7b3740c8b30fe1cc68c504d3b6a85e6644c4e5004")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("xproto@7.0.17:")
     depends_on("pkgconfig", type="build")

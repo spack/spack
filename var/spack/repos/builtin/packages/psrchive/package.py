@@ -29,6 +29,10 @@ class Psrchive(AutotoolsPackage):
     # as of Nov 23 2022
     version("2020-10-17", commit="ca12b4a279f3d4adcca223508116d9d270df8cc6")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=True, description="Compile with MPI")
     variant("mkl", default=False, description="Compile with MKL")
     variant("armadillo", default=False, description="Compile with armadillo")

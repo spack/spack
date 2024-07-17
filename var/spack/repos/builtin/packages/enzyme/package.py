@@ -33,6 +33,10 @@ class Enzyme(CMakePackage):
     version("0.0.14", sha256="740641eeeeadaf47942ac88cc52e62ddc0e8c25767a501bed36ec241cf258b8d")
     version("0.0.13", sha256="d4a53964ec1f763772db2c56e6734269b7656c8b2ecd41fa7a41315bcd896b5a")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("llvm@7:12", when="@0.0.13:0.0.15")
     depends_on("llvm@7:14", when="@0.0.32:0.0.47")
     depends_on("llvm@7:14", when="@0.0.48:0.0.68")

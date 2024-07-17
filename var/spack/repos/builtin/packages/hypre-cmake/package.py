@@ -26,6 +26,10 @@ class HypreCmake(CMakePackage, CudaPackage):
     version("develop", branch="master")
     version("2.22.0", sha256="2c786eb5d3e722d8d7b40254f138bef4565b2d4724041e56a8fa073bda5cfbb5")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "shared",
         default=(sys.platform != "darwin"),

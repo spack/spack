@@ -20,6 +20,8 @@ class PyMeldmd(CMakePackage, PythonExtension, CudaPackage):
     version("0.6.1", sha256="aae8e5bfbdacc1e6de61768a3298314c51575cda477a511e98dc11f5730fd918")
     version("0.4.20", sha256="8c8d2b713f8dc0ecc137d19945b3957e12063c8dda569696e47c8820eeac6c92")
 
+    depends_on("cxx", type="build")  # generated
+
     extends("python")
 
     depends_on("python@3.6:", type=("build", "run"))

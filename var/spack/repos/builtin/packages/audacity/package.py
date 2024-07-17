@@ -22,4 +22,7 @@ class Audacity(CMakePackage):
     version("2.4.1", sha256="50240f07471373a7e5c2df65cc26eeeaaced9a0850ad1f95cb795f171ea3009f")
     version("2.4.0", sha256="5d1c096d7b04ff8d5dbca3dca5b9d9f8e62093b5ea6e57ae5f821ae3132dc88f")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("wxwidgets")

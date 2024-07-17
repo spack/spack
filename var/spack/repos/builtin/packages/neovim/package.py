@@ -79,6 +79,8 @@ class Neovim(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     variant(
         "no_luajit",
         default=False,

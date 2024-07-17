@@ -19,4 +19,6 @@ class Pwgen(AutotoolsPackage):
 
     version("2.08", sha256="dab03dd30ad5a58e578c5581241a6e87e184a18eb2c3b2e0fffa8a9cf105c97b")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("coreutils", type="build")

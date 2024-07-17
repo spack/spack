@@ -43,6 +43,10 @@ class Ipopt(AutotoolsPackage):
     version("3.12.1", sha256="bde8c415136bb38d5a3c5935757399760c6cabf67e9362702e59ab6027f030ec")
     version("3.12.0", sha256="b42f44eb53540205ede4584cced5d88a7b3ec2f1fac6e173a105496307e273a0")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("coinhsl", default=False, description="Build with Coin Harwell Subroutine Libraries")
     variant("metis", default=False, description="Build with METIS partitioning support")
     variant("debug", default=False, description="Build debug instead of optimized version")

@@ -24,6 +24,8 @@ class Cli11(CMakePackage):
     version("2.0.0", sha256="2c672f17bf56e8e6223a3bfb74055a946fa7b1ff376510371902adb9cb0ab6a3")
     version("1.9.1", sha256="c780cf8cf3ba5ec2648a7eeb20a47e274493258f38a9b417628e0576f473a50b")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.4:", type="build")
 
     def cmake_args(self):

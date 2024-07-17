@@ -26,6 +26,8 @@ class Pixman(AutotoolsPackage):
     version("0.34.0", sha256="21b6b249b51c6800dc9553b65106e1e37d0e25df942c90531d4c3997aa20a88e")
     version("0.32.6", sha256="3dfed13b8060eadabf0a4945c7045b7793cc7e3e910e748a8bb0f0dc3e794904")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("pkgconfig", type="build")
     depends_on("flex", type="build")
     depends_on("bison@3:", type="build")

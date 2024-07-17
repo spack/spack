@@ -24,6 +24,8 @@ class PyConfigspace(PythonPackage):
     version("0.4.21", sha256="09c5ee343f2850865609cc91f2ab27da0a6182f7f196354f9550f6da578ea827")
     version("0.4.20", sha256="2e4ca06f5a6a61e5322a73dd7545468c79f2a3e8385cab92fdada317af41d9e9")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))

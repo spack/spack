@@ -25,6 +25,8 @@ class Exaca(CMakePackage):
     version("1.1.0", sha256="10106fb1836964a19bc5bab3f374baa24188ba786c768e554442ab896b31ff24")
     version("1.0.0", sha256="48556233360a5e15e1fc20849e57dd60739c1991c7dfc7e6b2956af06688b96a")
 
+    depends_on("cxx", type="build")  # generated
+
     _kokkos_backends = Kokkos.devices_variants
     for _backend in _kokkos_backends:
         _deflt, _descr = _kokkos_backends[_backend]

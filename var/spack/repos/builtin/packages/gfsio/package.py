@@ -21,6 +21,8 @@ class Gfsio(CMakePackage):
     version("develop", branch="develop")
     version("1.4.1", sha256="eab106302f520600decc4f9665d7c6a55e7b4901fab6d9ef40f29702b89b69b1")
 
+    depends_on("fortran", type="build")  # generated
+
     def setup_run_environment(self, env):
         lib = find_libraries("libgfsio", root=self.prefix, shared=False, recursive=True)
         # Only one library version, but still need to set _4 to make NCO happy

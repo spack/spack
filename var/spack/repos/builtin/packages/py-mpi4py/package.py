@@ -32,6 +32,10 @@ class PyMpi4py(PythonPackage):
     version("2.0.0", sha256="6543a05851a7aa1e6d165e673d422ba24e45c41e4221f0993fe1e5924a00cb81")
     version("1.3.1", sha256="e7bd2044aaac5a6ea87a87b2ecc73b310bb6efe5026031e33067ea3c2efc3507")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("py-setuptools@40.9:", type="build")
     depends_on("py-cython@0.27:2", when="@:3.1.6", type="build")
     depends_on("py-cython@0.27:3", when="@master", type="build")

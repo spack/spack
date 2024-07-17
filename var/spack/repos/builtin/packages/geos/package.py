@@ -66,6 +66,9 @@ class Geos(CMakePackage):
     version("3.3.4", sha256="cd5400aa5f3fe32246dfed5d238c5017e1808162c865c016480b3e6c07271904")
     version("3.3.3", sha256="dfcf4bd70ab212a5b7bad21d01b84748f101a545092b56dafdc3882ef3bddec9")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     generator("ninja")
     depends_on("cmake@3.13:", when="@3.10:", type="build")
     depends_on("cmake@3.8:", type="build")

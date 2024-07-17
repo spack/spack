@@ -21,6 +21,8 @@ class Lbxproxy(AutotoolsPackage, XorgPackage):
 
     version("1.0.3", sha256="db36251c9656c7da720f31e10df384f8946a9a5395915371b60d9423ad8f6a80")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libxext")
     depends_on("liblbxutil")
     depends_on("libx11")

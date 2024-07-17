@@ -32,6 +32,8 @@ class Edm4hep(CMakePackage):
     version("0.10.1", sha256="28a3bd4df899309b14ec0d441f8b6ed0065206a08a0018113bb490e9d008caed")
     version("0.10", sha256="a95c917c19793cfad6b0959854a653c5ce698c965598cabd649d544da07712c0")
 
+    depends_on("cxx", type="build")  # generated
+
     _cxxstd_values = ("17", "20")
     variant(
         "cxxstd",

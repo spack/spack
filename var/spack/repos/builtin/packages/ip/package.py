@@ -32,6 +32,9 @@ class Ip(CMakePackage):
         preferred=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("openmp", description="Enable OpenMP threading", default=True)
     variant("pic", default=True, description="Build with position-independent-code")
     variant("shared", default=False, description="Build shared library", when="@4.1:")

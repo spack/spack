@@ -39,6 +39,9 @@ class Gtkplus(MesonPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("cups", default=False, description="enable cups support")
 
     # See meson.build for version requirements

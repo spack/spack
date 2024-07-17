@@ -27,6 +27,8 @@ class Nasm(AutotoolsPackage, Package):
     version("2.13.03", sha256="23e1b679d64024863e2991e5c166e19309f0fe58a9765622b35bd31be5b2cc99")
     version("2.11.06", sha256="3a72476f3cb45294d303f4d34f20961b15323ac24e84eb41bc130714979123bb")
 
+    depends_on("c", type="build")  # generated
+
     # Fix compilation with GCC 8
     # https://bugzilla.nasm.us/show_bug.cgi?id=3392461
     patch(

@@ -22,6 +22,8 @@ class Libgain(AutotoolsPackage):
         url="https://gitlab.com/l_sim/bigdft-suite/-/raw/1.9.1/GaIn-1.0.tar.gz",
     )
 
+    depends_on("fortran", type="build")  # generated
+
     @property
     def libs(self):
         shared = "+shared" in self.spec

@@ -24,6 +24,8 @@ class Expect(AutotoolsPackage):
     version("5.45.3", sha256="c520717b7195944a69ce1492ec82ca0ac3f3baf060804e6c5ee6d505ea512be9")
     version("5.45", sha256="b28dca90428a3b30e650525cdc16255d76bb6ccd65d448be53e620d95d5cc040")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("tcl")
 
     depends_on("automake", type="build")

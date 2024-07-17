@@ -26,6 +26,8 @@ class Iproute2(AutotoolsPackage):
     version("5.6.0", sha256="be41c35eddb02e736a2040b66ccfacee41fe7ee454580588f8959568d8a3c5b3")
     version("5.5.0", sha256="5bc88876a3140f640e3318453382be5be4c673ccc17a518c05a5ce2ef9aa9a7f")
 
+    depends_on("c", type="build")  # generated
+
     def install(self, spec, prefix):
         make("install", "DESTDIR={0}".format(prefix), "PREFIX=")
 

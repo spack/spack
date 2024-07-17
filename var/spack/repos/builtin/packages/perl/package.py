@@ -186,6 +186,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     extendable = True
 
     if sys.platform != "win32":

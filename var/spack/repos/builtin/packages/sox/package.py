@@ -14,6 +14,8 @@ class Sox(AutotoolsPackage):
 
     version("14.4.2", sha256="81a6956d4330e75b5827316e44ae381e6f1e8928003c6aa45896da9041ea149c")
 
+    depends_on("c", type="build")  # generated
+
     variant("mp3", default=False, description="Build with mp3 support")
 
     depends_on("bzip2")

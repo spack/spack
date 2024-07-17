@@ -20,6 +20,9 @@ class H5zZfp(CMakePackage):
     version("1.1.1", sha256="921af7b9d1c8c46c036b46544f2785f69d405c0701abe1c1ce3aca2bd5899171")
     version("1.1.0", sha256="48a81e69d1f3b61d9a1eb07e868164fadf3b88690ec930efd849f5889681a893")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("fortran", default=True, description="Enable Fortran support")
 
     depends_on("hdf5+fortran", when="+fortran")

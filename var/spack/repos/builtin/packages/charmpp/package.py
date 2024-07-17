@@ -45,6 +45,10 @@ class Charmpp(Package):
     version("6.6.0", sha256="c916010f2d4cc2c6bd30ea19764839d0298fb56d1696d8ff08d9fa9a61dfb1c9")
     version("6.5.1", sha256="68aa43e2a6e476e116a7e80e385c25c6ac6497807348025505ba8bfa256ed34a")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Support OpenMPI; see
     # <https://github.com/UIUC-PPL/charm/issues/1206>
     # Patch is no longer needed in versions 6.8.0+

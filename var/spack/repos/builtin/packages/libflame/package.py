@@ -133,6 +133,9 @@ class Libflame(LibflameBase):
     version("5.2.0", sha256="997c860f351a5c7aaed8deec00f502167599288fd0559c92d5bfd77d0b4d475c")
     version("5.1.0", sha256="e7189b750890bd781fe773f366b374518dd1d89a6513d3d6261bf549826384d1")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     provides("flame@5.2", when="@5.2.0")
     provides("flame@5.1", when="@5.1.0")
 

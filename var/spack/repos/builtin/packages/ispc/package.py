@@ -43,6 +43,9 @@ class Ispc(CMakePackage):
     version("1.14.0", sha256="1ed72542f56738c632bb02fb0dd56ad8aec3e2487839ebbc0def8334f305a4c7")
     version("1.13.0", sha256="aca595508b51dd1ff065c406a3fd7c93822320c510077dd4d97a2b98a23f097a")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("python", type="build")
     depends_on("bison", type="build")
     depends_on("flex", type="build")

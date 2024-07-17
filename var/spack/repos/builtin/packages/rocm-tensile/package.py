@@ -36,6 +36,8 @@ class RocmTensile(CMakePackage):
         version("5.3.3", sha256="ecb99243edf1cd2bb5e953915a7dae7867c3cdb0cd8ed15b8618aaaeb2bd7b29")
         version("5.3.0", sha256="05c546986549154e6c7b4f57a0b3bfd5cb223d2393c206ff1702f89454c832f4")
 
+    depends_on("cxx", type="build")  # generated
+
     tensile_architecture = (
         "all",
         "gfx906:xnack-",

@@ -29,6 +29,8 @@ class Babl(MesonPackage):
     version("0.1.92", sha256="f667735028944b6375ad18f160a64ceb93f5c7dccaa9d8751de359777488a2c1")
     version("0.1.90", sha256="6e2ebb636f37581588e3d02499b3d2f69f9ac73e34a262f42911d7f5906a9243")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("cmake@3.4:", type="build")
     depends_on("lcms")
     depends_on("gobject-introspection")

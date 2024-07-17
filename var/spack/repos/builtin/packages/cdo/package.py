@@ -151,6 +151,10 @@ class Cdo(AutotoolsPackage):
         url="https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("netcdf", default=True, description="Enable NetCDF support")
     variant(
         "grib2",

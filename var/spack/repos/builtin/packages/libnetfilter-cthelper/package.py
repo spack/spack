@@ -18,6 +18,8 @@ class LibnetfilterCthelper(AutotoolsPackage):
         "1.2-2019Q4", sha256="15a7b13999d1428d75e720c8116318cd51bec1d365852ae1778d3c85b93a9777"
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")

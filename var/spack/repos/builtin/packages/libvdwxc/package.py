@@ -18,6 +18,9 @@ class Libvdwxc(AutotoolsPackage):
 
     version("0.4.0", sha256="3524feb5bb2be86b4688f71653502146b181e66f3f75b8bdaf23dd1ae4a56b33")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=True, description="Enable MPI support")
     variant("pfft", default=False, description="Enable support for PFFT")
 

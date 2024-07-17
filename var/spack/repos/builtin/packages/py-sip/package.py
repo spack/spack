@@ -29,6 +29,8 @@ class PySip(PythonPackage):
     version("4.19.15", sha256="02bff1ac89253e12cdf1406ad39f841d0e264b0d96a7de13dfe9e29740df2053")
     version("4.19.13", sha256="92193fcf990503bf29f03e290efc4ee1812d556efc18acf5c8b88c090177a630")
 
+    depends_on("c", type="build")  # generated
+
     variant(
         "module",
         default="sip",

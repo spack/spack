@@ -31,6 +31,9 @@ class Gimp(AutotoolsPackage):
     version("2.10.26", sha256="5ddbccf1db462a41df9a26197fcb0d24c7152753a36b3c8b8a9506b4136395f7")
     version("2.10.24", sha256="bd1bb762368c0dd3175cf05006812dd676949c3707e21f4e6857435cb435989e")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("doc", default=True, description="Build documentation with gtk-doc")
     variant("ghostscript", default=True, description="Build with ghostscript support")
     variant("jpegxl", default=True, description="Build with JPEG XL image format support")

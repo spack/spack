@@ -29,6 +29,9 @@ class W3m(AutotoolsPackage):
 
     version("0.5.3", sha256="e994d263f2fd2c22febfbe45103526e00145a7674a0fda79c822b97c2770a9e3")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # mandatory dependency
     depends_on("bdw-gc")
 

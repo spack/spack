@@ -28,6 +28,10 @@ class Casacore(CMakePackage):
     version("3.0.0", sha256="6f0e68fd77b5c96299f7583a03a53a90980ec347bff9dfb4c0abb0e2933e6bcb")
     version("2.4.1", sha256="58eccc875053b2c6fe44fe53b6463030ef169597ec29926936f18d27b5087d63")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake@3.7.1:", type="build")
 
     variant("adios2", default=False, description="Build ADIOS2 support")

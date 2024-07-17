@@ -21,6 +21,8 @@ class Sfcio(CMakePackage):
     version("develop", branch="develop")
     version("1.4.1", sha256="d9f900cf18ec1a839b4128c069b1336317ffc682086283443354896746b89c59")
 
+    depends_on("fortran", type="build")  # generated
+
     def setup_run_environment(self, env):
         lib = find_libraries("libsfcio", root=self.prefix, shared=False, recursive=True)
         # Only one library version, but still need to set _4 to make NCO happy

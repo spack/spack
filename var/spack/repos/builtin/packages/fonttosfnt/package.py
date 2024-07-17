@@ -18,6 +18,8 @@ class Fonttosfnt(AutotoolsPackage, XorgPackage):
     version("1.2.2", sha256="8111317c38f63aff08c717595e65381af7ebfc54ccc23511c2042ef1cd86c648")
     version("1.0.4", sha256="3873636be5b3b8e4160070e8f9a7a9221b5bd5efbf740d7abaa9092e10732673")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("freetype")
     depends_on("libfontenc")
 

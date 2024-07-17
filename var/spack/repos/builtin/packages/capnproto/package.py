@@ -36,6 +36,8 @@ class Capnproto(AutotoolsPackage):
     version("0.5.1.1", sha256="caf308e92683b278bc6c568d4fb5558eca78180cac1eb4a3db15d435bf25116f")
     version("0.4.1.2", sha256="6376c1910e9bc9d09dc46d53b063c5bdcb5cdf066a8210e9fffe299fb863f0d9")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("zlib-api", when="+zlib")
     depends_on("openssl", when="+tls")
 

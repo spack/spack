@@ -61,6 +61,9 @@ class NetlibLapack(CMakePackage):
     version("3.4.0", sha256="a7139ef97004d0e3c4c30f1c52d508fd7ae84b5fbaf0dd8e792c167dc306c3e9")
     version("3.3.1", sha256="56821ab51c29369a34e5085728f92c549a9aa926f26acf7eeac87b61eed329e4")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # netlib-lapack is the reference implementation of LAPACK
     for ver in [
         "3.10.1",

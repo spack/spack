@@ -20,6 +20,8 @@ class Sed(AutotoolsPackage, GNUMirrorPackage):
     version("4.8", sha256="f79b0cfea71b37a8eeec8490db6c5f7ae7719c35587f21edb0617f370eeff633")
     version("4.2.2", sha256="f048d1838da284c8bc9753e4506b85a1e0cc1ea8999d36f6995bcb9460cddbd7")
 
+    depends_on("c", type="build")  # generated
+
     # Avoid symlinking GNUMakefile to GNUMakefile
     build_directory = "spack-build"
 

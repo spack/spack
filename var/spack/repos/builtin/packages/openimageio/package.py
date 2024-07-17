@@ -19,6 +19,8 @@ class Openimageio(CMakePackage):
     version("2.2.7.0", sha256="857ac83798d6d2bda5d4d11a90618ff19486da2e5a4c4ff022c5976b5746fe8c")
     version("1.8.15", sha256="4d5b4ed3f2daaed69989f53c0f9364dd87c82dc0a09807b5b6e9008e2426e86f")
 
+    depends_on("cxx", type="build")  # generated
+
     # Core dependencies
     depends_on("cmake@3.2.2:", type="build")
     depends_on("boost@1.53:", type=("build", "link"))

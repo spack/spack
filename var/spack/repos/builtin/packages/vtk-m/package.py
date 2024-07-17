@@ -52,6 +52,8 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     version("1.2.0", sha256="607272992e05f8398d196f0acdcb4af025a4a96cd4f66614c6341f31d4561763")
     version("1.1.0", sha256="78618c81ca741b1fbba0853cb5d7af12c51973b514c268fc96dfb36b853cdb18")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=False, description="build shared libs")
 
     variant("doubleprecision", default=True, description="enable double precision")

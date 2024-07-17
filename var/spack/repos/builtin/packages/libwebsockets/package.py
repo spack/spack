@@ -21,5 +21,8 @@ class Libwebsockets(CMakePackage):
     version("2.0.3", sha256="cf0e91b564c879ab98844385c98e7c9e298cbb969dbc251a3f18a47feb94342c")
     version("1.7.9", sha256="86a5105881ea2cb206f8795483d294e9509055decf60436bcc1e746262416438")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("zlib-api")
     depends_on("openssl")

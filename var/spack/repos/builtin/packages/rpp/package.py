@@ -42,6 +42,8 @@ class Rpp(CMakePackage):
         version("0.99", sha256="f1d7ec65d0148ddb7b3ce836a7e058727036df940d72d1683dee590a913fd44a")
         version("0.98", sha256="191b5d89bf990ae22b5ef73675b89ed4371c3ce342ab9cc65383fa12ef13086e")
         version("0.97", sha256="8ce1a869ff67a29579d87d399d8b0bd97bf12ae1b6b1ca1f161cb8a262fb9939")
+
+    depends_on("cxx", type="build")  # generated
     variant(
         "build_type",
         default="Release",

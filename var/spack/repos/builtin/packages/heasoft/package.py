@@ -29,6 +29,10 @@ class Heasoft(AutotoolsPackage):
     version("6.30", sha256="7f828f6050809653319f94d715c1b6815fbc09adfdcb61f2f0f1d7a6af10684a")
     version("6.29", sha256="534fec04baa2586326fd7240805f2606620f3b7d7078a80fdd95c9c1177c9e68")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("X", default=True, description="Enable X11 support")
 
     depends_on("zlib-api")

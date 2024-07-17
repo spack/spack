@@ -34,6 +34,9 @@ class Lz4(CMakePackage, MakefilePackage):
     version("1.7.5", sha256="0190cacd63022ccb86f44fa5041dc6c3804407ad61550ca21c382827319e7e7e")
     version("1.3.1", sha256="9d4d00614d6b9dec3114b33d1224b6262b99ace24434c53487a0c8fd0b18cfed")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("valgrind", type="test")
 
     build_system("cmake", "makefile", default="makefile")

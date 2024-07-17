@@ -19,6 +19,8 @@ class Dfelibs(CMakePackage):
     version("20231012", sha256="7127069858c2e3ce663e66f45e3f7e02ede8bbca23d90f6c89f43f5b05c44dcb")
     version("20211029", sha256="65b8d536b06b550e38822905dea06d193beb703fe0e4442791f43dc087c5cbfb")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.8:", type="build")
     depends_on("boost@1.59:", type="test")
 

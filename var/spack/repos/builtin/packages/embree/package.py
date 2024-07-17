@@ -36,6 +36,9 @@ class Embree(CMakePackage):
     version("3.8.0", sha256="40cbc90640f63c318e109365d29aea00003e4bd14aaba8bb654fc1010ea5753a")
     version("3.7.0", sha256="2b6300ebe30bb3d2c6e5f23112b4e21a25a384a49c5e3c35440aa6f3c8d9fe84")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("ispc", default=True, description="Enable ISPC support")
     depends_on("ispc", when="+ispc", type="build")
 

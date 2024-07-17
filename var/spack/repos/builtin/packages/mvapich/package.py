@@ -29,6 +29,10 @@ class Mvapich(AutotoolsPackage):
     # Prefer the latest stable release
     version("3.0", sha256="ee076c4e672d18d6bf8dd2250e4a91fa96aac1db2c788e4572b5513d86936efb")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     provides("mpi")
     provides("mpi@:3.1")
 

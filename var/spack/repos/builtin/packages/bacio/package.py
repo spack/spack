@@ -22,6 +22,9 @@ class Bacio(CMakePackage):
     version("2.5.0", sha256="540a0ed73941d70dbf5d7b21d5d0a441e76fad2bfe37dfdfea0db3e98fc0fbfb")
     version("2.4.1", sha256="7b9b6ba0a288f438bfba6a08b6e47f8133f7dba472a74ac56a5454e2260a7200")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("pic", default=True, description="Build with position-independent-code")
     variant("shared", default=False, description="Build shared library", when="@2.6.0:")
 

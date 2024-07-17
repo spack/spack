@@ -58,6 +58,8 @@ class Pythia8(AutotoolsPackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "cxxstd",
         default="11",

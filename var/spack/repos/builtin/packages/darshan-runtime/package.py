@@ -50,6 +50,10 @@ class DarshanRuntime(AutotoolsPackage):
     version("3.1.0", sha256="b847047c76759054577823fbe21075cfabb478cdafad341d480274fb1cef861c")
     version("3.0.0", sha256="95232710f5631bbf665964c0650df729c48104494e887442596128d189da43e0")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("mpi", when="+mpi")
     depends_on("zlib-api")
     depends_on("hdf5", when="+hdf5")

@@ -27,6 +27,9 @@ class W3emc(CMakePackage):
     version("2.9.0", sha256="994f59635ab91e34e96cab5fbaf8de54389d09461c7bac33b3104a1187e6c98a")
     version("2.7.3", sha256="eace811a1365f69b85fdf2bcd93a9d963ba72de5a7111e6fa7c0e6578b69bfbc")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("pic", default=True, description="Build with position-independent-code")
     variant("bufr", default=False, description="Build with BUFR routines", when="@2.10:")
     variant(

@@ -87,6 +87,10 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     version("18.10", sha256="298eba03ef03d617c346079433af1089d38076d6fab2c34476c687740c1f4234")
     version("18.09.1", sha256="a065ee4d1d98324b6c492ae20ea63ba12a4a4e23432bf5b3fe9788d44aa4398e")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Config options
     variant(
         "dimensions",

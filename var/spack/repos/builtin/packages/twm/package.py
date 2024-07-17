@@ -22,6 +22,8 @@ class Twm(AutotoolsPackage, XorgPackage):
     version("1.0.10", sha256="679a1d07078c918fa32454498dc15573b299bbb0f001499e213c408e4b2170f5")
     version("1.0.9", sha256="1c325e8456a200693c816baa27ceca9c5e5e0f36af63d98f70a335853a0039e8")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libx11")
     depends_on("libxext")
     depends_on("libxt")

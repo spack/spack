@@ -14,6 +14,8 @@ class Microbiomeutil(MakefilePackage, SourceforgePackage):
 
     version("20110519", sha256="9233de80ea57bfb9e9371cbe7e3bfad2d4a51168fddaf60fa144c4046c80d823")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("perl", type=("build", "run"))
     depends_on("blast-plus")
     depends_on("cdbfasta")

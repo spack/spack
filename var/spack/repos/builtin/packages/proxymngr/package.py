@@ -17,6 +17,9 @@ class Proxymngr(AutotoolsPackage, XorgPackage):
 
     version("1.0.4", sha256="d40f2d15985ee8e8ef5320a85c0b1899a7bc95974a65137ae886e499bced86f4")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("libice")
     depends_on("libxt")
     depends_on("lbxproxy")

@@ -27,6 +27,10 @@ class GeopmService(AutotoolsPackage):
     version("develop", branch="dev", get_full_repo=True)
     version("3.0.1", sha256="32ba1948de58815ee055470dcdea64593d1113a6cad70ce00ab0286c127f8234")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("debug", default=False, description="Enable debug")
     variant("docs", default=True, description="Create man pages with Sphinx")
     variant("systemd", default=True, description="Enable use of systemd/DBus")

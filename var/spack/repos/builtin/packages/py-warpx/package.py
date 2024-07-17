@@ -50,6 +50,8 @@ class PyWarpx(PythonPackage):
     version("22.02", sha256="d74b593d6f396e037970c5fbe10c2e5d71d557a99c97d40e4255226bc6c26e42")
     version("22.01", sha256="e465ffadabb7dc360c63c4d3862dc08082b5b0e77923d3fb05570408748b0d28")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("mpi", default=True, description="Enable MPI support")
 
     for v in [

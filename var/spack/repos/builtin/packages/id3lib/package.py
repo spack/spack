@@ -16,6 +16,9 @@ class Id3lib(AutotoolsPackage):
 
     version("3.8.3", sha256="2749cc3c0cd7280b299518b1ddf5a5bcfe2d1100614519b68702230e26c7d079")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("zlib-api")
 
     # http://connie.slackware.com/~alien/slackbuilds/id3lib/build/id3lib-3.8.3_gcc4.diff

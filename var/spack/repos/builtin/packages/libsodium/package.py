@@ -36,6 +36,8 @@ class Libsodium(AutotoolsPackage):
     version("1.0.0", sha256="ced1fe3d2066953fea94f307a92f8ae41bf0643739a44309cbe43aa881dbc9a5")
     version("0.7.1", sha256="ef46bbb5bac263ef6d3fc00ccc11d4690aea83643412919fe15369b9870280a7")
 
+    depends_on("c", type="build")  # generated
+
     def patch(self):
         # Necessary on ppc64le / aarch64, because Spack tries to execute these scripts
         # to check if they work (see lib/spack/spack/build_systems/autotools.py).

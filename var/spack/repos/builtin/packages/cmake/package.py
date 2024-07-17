@@ -101,6 +101,9 @@ class Cmake(Package):
             "3.18.0", sha256="83b4ffcb9482a73961521d2bafe4a16df0168f03f56e6624c419c461e5317e29"
         )
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     variant(
         "build_type",
         default="Release",

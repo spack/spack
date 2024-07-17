@@ -24,6 +24,8 @@ class Libpfm4(MakefilePackage):
     version("4.9.0", sha256="db0fbe8ee28fd9beeb5d3e80b7cb3b104debcf6a9fcf5cb8b882f0662c79e4e2")
     version("4.8.0", sha256="9193787a73201b4254e3669243fd71d15a9550486920861912090a09f366cf68")
 
+    depends_on("c", type="build")  # generated
+
     # Fails to build libpfm4 with intel compiler version 16 and 17
     conflicts("%intel@16:17")
 

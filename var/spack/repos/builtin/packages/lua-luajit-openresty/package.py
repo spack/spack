@@ -27,6 +27,9 @@ class LuaLuajitOpenresty(LuaImplPackage):
         "2.1-20230410", sha256="77bbcbb24c3c78f51560017288f3118d995fe71240aa379f5818ff6b166712ff"
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "lualinks",
         default=True,

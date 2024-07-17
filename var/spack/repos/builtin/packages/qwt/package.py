@@ -24,6 +24,8 @@ class Qwt(QMakePackage):
     version("6.1.3", sha256="f3ecd34e72a9a2b08422fb6c8e909ca76f4ce5fa77acad7a2883b701f4309733")
     version("5.2.2", sha256="36bf2ee51ca9c74fde1322510ffd39baac0db60d5d410bb157968a78d9c1464b")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("designer", default=False, description="Build extensions to QT designer")
     variant("opengl", default=False, description="Build OpenGL plot canvas")
 

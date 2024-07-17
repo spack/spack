@@ -15,6 +15,8 @@ class Xts(AutotoolsPackage, XorgPackage):
 
     version("0.99.1", sha256="d04d987b9a9f8b3921dfe8de8577d0c2a0f21d2c4c3196948fc9805838a352e6")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libx11", type="link")
     depends_on("libxext", type="link")
     depends_on("libxi", type="link")

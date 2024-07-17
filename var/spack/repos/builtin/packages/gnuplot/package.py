@@ -44,6 +44,9 @@ class Gnuplot(AutotoolsPackage):
     version("5.0.5", sha256="25f3e0bf192e01115c580f278c3725d7a569eb848786e12b455a3fda70312053")
     version("5.0.1", sha256="7cbc557e71df581ea520123fb439dea5f073adcc9010a2885dc80d4ed28b3c47")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("wx", default=False, description="Activates wxWidgets terminal")
     variant("gd", default=True, description="Activates gd based terminal")
     variant("cairo", default=True, description="Activates cairo based terminal")

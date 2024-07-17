@@ -102,6 +102,8 @@ class Charliecloud(AutotoolsPackage):
         deprecated=True,
         sha256="15ce63353afe1fc6bcc10979496a54fcd5628f997cb13c827c9fc7afb795bdc5",
     )
+
+    depends_on("c", type="build")  # generated
     variant("docs", default=False, description="Build man pages and html docs")
     variant("squashfuse", default=True, description="Build with squashfuse support", when="@0.32:")
 

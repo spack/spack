@@ -25,6 +25,8 @@ class Libxi(AutotoolsPackage, XorgPackage):
     version("1.7.7", sha256="501f49e9c85609da17614d711aa4931fd128011042ff1cae53a16ce03e51ff5e")
     version("1.7.6", sha256="4e88fa7decd287e58140ea72238f8d54e4791de302938c83695fc0c9ac102b7e")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("pkgconfig", type="build")
     depends_on("libx11@1.6:")
     depends_on("libxext@1.0.99.1:")

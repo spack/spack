@@ -21,6 +21,8 @@ class Landsfcutil(CMakePackage):
     version("develop", branch="develop")
     version("2.4.1", sha256="831c5005a480eabe9a8542b4deec838c2650f6966863ea2711cc0cc5db51ca14")
 
+    depends_on("fortran", type="build")  # generated
+
     def setup_run_environment(self, env):
         for suffix in ("4", "d"):
             lib = find_libraries(

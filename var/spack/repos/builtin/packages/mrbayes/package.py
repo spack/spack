@@ -20,6 +20,8 @@ class Mrbayes(AutotoolsPackage):
     version("3.2.7a", sha256="1a4670be84e6b968d59382328294db4c8ceb73e0c19c702265deec6f2177815c")
     version("3.2.7", sha256="39d9eb269969b501268d5c27f77687c6eaa2c71ccf15c724e6f330fc405f24b9")
 
+    depends_on("c", type="build")  # generated
+
     variant("mpi", default=True, description="Enable MPI parallel support")
     variant("beagle", default=True, description="Enable BEAGLE library for speed benefits")
     variant(

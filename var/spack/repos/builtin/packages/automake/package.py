@@ -25,6 +25,8 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
     version("1.13.4", sha256="4c93abc0bff54b296f41f92dd3aa1e73e554265a6f719df465574983ef6f878c")
     version("1.11.6", sha256="53dbf1945401c43f4ce19c1971baecdbf8bc32e0f37fa3f49fe7b6992d0d2030")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("autoconf", type="build")
     depends_on("perl+threads", type=("build", "run"))
 

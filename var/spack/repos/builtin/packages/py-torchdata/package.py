@@ -28,6 +28,8 @@ class PyTorchdata(PythonPackage):
     version("0.4.0", sha256="b4ec446a701680faa620fcb828b98ba36a63fa79da62a1e568d4a683889172da")
     version("0.3.0", sha256="ac36188bf133cf5f1041a28ccb3ee82ba52d4b5d99617be37d64d740acd6cfd4")
 
+    depends_on("cxx", type="build")  # generated
+
     # https://github.com/pytorch/data#version-compatibility
     depends_on("python@3.8:3.11", when="@0.6:", type=("build", "run"))
     depends_on("python@3.7:3.10", when="@:0.5", type=("build", "run"))

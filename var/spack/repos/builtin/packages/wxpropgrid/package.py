@@ -17,6 +17,8 @@ class Wxpropgrid(Package, SourceforgePackage):
 
     version("1.4.15", sha256="f0c9a86656828f592c8e57d2c89401f07f0af6a45b17bbca3990e8d29121c2b8")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("wxwidgets")
 
     def install(self, spec, prefix):

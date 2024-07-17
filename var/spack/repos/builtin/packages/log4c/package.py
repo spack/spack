@@ -16,4 +16,7 @@ class Log4c(AutotoolsPackage):
 
     version("1.2.4", sha256="5991020192f52cc40fa852fbf6bbf5bd5db5d5d00aa9905c67f6f0eadeed48ea")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("expat@1.95.1:")

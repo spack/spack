@@ -19,6 +19,9 @@ class Czmq(AutotoolsPackage):
     version("4.0.2", sha256="794f80af7392ec8d361ad69646fc20aaa284d23fef92951334009771a732c810")
     version("3.0.2", sha256="e56f8498daf70310b31c42669b2f9b753c5e747eafaff6d4fdac26d72a474b27")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("libtool", type="build")
     depends_on("automake", type="build")
     depends_on("autoconf", type="build")

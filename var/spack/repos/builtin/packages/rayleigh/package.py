@@ -25,6 +25,9 @@ class Rayleigh(MakefilePackage):
     version("0.9.1", sha256="ab96445fc61822fe2d2cba8729a85b36de6b541febf5759de6d614847844573f")
     version("0.9.0", sha256="63a80d1619cb639f3cb01ab82a441b77d736eee94469c47c50ab740fa81c08f4")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("mpi")
     depends_on("fftw-api@3")
     depends_on("lapack")

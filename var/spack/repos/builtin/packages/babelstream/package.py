@@ -26,6 +26,8 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     version("main", branch="main")
     version("develop", branch="develop")
 
+    depends_on("cxx", type="build")  # generated
+
     maintainers("tomdeakin", "kaanolgu", "tom91136", "robj0nes")
 
     # Languages

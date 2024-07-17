@@ -38,6 +38,8 @@ class Openfst(AutotoolsPackage):
     version("1.4.1", sha256="e671bf6bd4425a1fed4e7543a024201b74869bfdd029bdf9d10c53a3c2818277")
     version("1.4.0", sha256="eb557f37560438f03912b4e43335c4c9e72aa486d4f2046127131185eb88f17a")
 
+    depends_on("cxx", type="build")  # generated
+
     conflicts("%intel@16:")
     conflicts("%gcc@6:", when="@:1.6.1")
 

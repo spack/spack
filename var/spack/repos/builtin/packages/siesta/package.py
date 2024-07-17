@@ -30,6 +30,9 @@ class Siesta(MakefilePackage):
         url="http://departments.icmab.es/leem/siesta/CodeAccess/Code/siesta-3.2-pl-5.tgz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     patch("configure.patch", when="@:4.0")
 
     depends_on("mpi")

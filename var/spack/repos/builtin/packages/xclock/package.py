@@ -22,6 +22,8 @@ class Xclock(AutotoolsPackage, XorgPackage):
     version("1.0.8", sha256="bb6f2439e6037759dc1682d80a3fe0232e7b55aa9b38548203e746d290b246bd")
     version("1.0.7", sha256="e730bd575938d5628ef47003a9d4d41b882621798227f5d0c12f4a26365ed1b5")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libxaw")
     depends_on("libxmu")
     depends_on("libx11")

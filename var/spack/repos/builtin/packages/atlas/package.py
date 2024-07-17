@@ -34,6 +34,9 @@ class Atlas(Package):
     )
     version("3.10.2", sha256="3aab139b118bf3fcdb4956fbd71676158d713ab0d3bccb2ae1dc3769db22102f")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # not all packages (e.g. Trilinos@12.6.3) stopped using deprecated in 3.6.0
     # Lapack routines. Stick with 3.5.0 until this is fixed.
     resource(

@@ -21,6 +21,8 @@ class PyAmrex(PythonPackage, CudaPackage, ROCmPackage):
     version("24.04", sha256="ab85695bb9644b702d0fc84e77205d264d27ba94999cab912c8a3212a7eb77fc")
     version("24.03", sha256="bf85b4ad35b623278cbaae2c07e22138545dec0732d15c4ab7c53be76a7f2315")
 
+    depends_on("cxx", type="build")  # generated
+
     for v in ["24.04", "24.03"]:
         depends_on("amrex@{0}".format(v), when="@{0}".format(v), type=("build", "link"))
 

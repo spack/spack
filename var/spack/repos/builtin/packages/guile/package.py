@@ -25,6 +25,8 @@ class Guile(AutotoolsPackage, GNUMirrorPackage):
     version("2.0.14", sha256="8aeb2f353881282fe01694cce76bb72f7ffdd296a12c7a1a39255c27b0dfe5f1")
     version("2.0.11", sha256="e6786c934346fa2e38e46d8d81a622bb1c16d130153523f6129fcd79ef1fb040")
 
+    depends_on("c", type="build")  # generated
+
     variant("readline", default=True, description="Use the readline library")
     variant(
         "threads",

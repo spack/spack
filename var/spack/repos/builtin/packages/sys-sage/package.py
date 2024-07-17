@@ -21,6 +21,8 @@ class SysSage(CMakePackage):
     version("master", branch="master")
     version("develop", branch="develop")
 
+    depends_on("cxx", type="build")  # generated
+
     conflicts("%gcc@:7", msg="gcc can be used from version 8 and above")
 
     variant(

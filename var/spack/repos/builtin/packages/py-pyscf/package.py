@@ -32,6 +32,8 @@ class PyPyscf(PythonPackage):
     version("1.7.5", sha256="52856b39f0ada2f6340757caa65dc5c1d9a3cdfceea2a6615ad8af92664a6c69")
     version("1.7.3", sha256="62a26146a222140395b276ea33182f87809a21989ddcf78e2dcb8e35ebc57af2")
 
+    depends_on("c", type="build")  # generated
+
     # dependencies
     depends_on("cmake@3.10:", type="build", when="@2.1:")
     depends_on("cmake@2.8:", type="build")

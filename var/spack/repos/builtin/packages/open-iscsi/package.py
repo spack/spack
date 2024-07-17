@@ -21,6 +21,8 @@ class OpenIscsi(MakefilePackage):
     version("2.0.877", sha256="69eb95b0c39dee2da9d0d751bfdcdb8d11f9d37390de15c1a0b4558f9d0c4a57")
     version("2.0.876", sha256="9f01327d5e100ed794dc5083fc18dc4a06a0c29c77b252e21abd1b8f56edd9a7")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("gettext")
     depends_on("uuid")
     depends_on("util-linux")

@@ -51,6 +51,9 @@ class AoclCompression(CMakePackage):
         preferred=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Build shared library")
     variant("zlib", default=True, description="Build zlib library")
     variant("bzip2", default=True, description="Build bzip2 library")

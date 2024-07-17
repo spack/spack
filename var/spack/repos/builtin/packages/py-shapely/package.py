@@ -37,6 +37,8 @@ class PyShapely(PythonPackage):
     version("1.7.0", sha256="e21a9fe1a416463ff11ae037766fe410526c95700b9e545372475d2361cc951e")
     version("1.6.4", sha256="b10bc4199cfefcf1c0e5d932eac89369550320ca4bdf40559328d85f1ca4f655")
 
+    depends_on("c", type="build")  # generated
+
     # pyproject.toml
     depends_on("py-cython", when="@2.0.2:", type="build")
     depends_on("py-cython@0.29:0", when="@2.0.0:2.0.1", type="build")

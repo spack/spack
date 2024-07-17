@@ -16,4 +16,6 @@ class Judy(AutotoolsPackage):
 
     version("1.0.5", sha256="d2704089f85fdb6f2cd7e77be21170ced4b4375c03ef1ad4cf1075bd414a63eb")
 
+    depends_on("c", type="build")  # generated
+
     parallel = False

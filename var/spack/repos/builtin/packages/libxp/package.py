@@ -17,6 +17,8 @@ class Libxp(AutotoolsPackage, XorgPackage):
     version("1.0.4", sha256="05e46af1ccb68f1752cca5879774a4fb9bf3b19fe088eb745034956e0c6fadba")
     version("1.0.3", sha256="f6b8cc4ef05d3eafc9ef5fc72819dd412024b4ed60197c0d5914758125817e9c")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libx11@1.6:")
     depends_on("libxext")
     depends_on("libxau")

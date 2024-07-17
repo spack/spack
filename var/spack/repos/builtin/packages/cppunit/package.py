@@ -24,6 +24,8 @@ class Cppunit(AutotoolsPackage):
     )
     version("1.13.2", sha256="3f47d246e3346f2ba4d7c9e882db3ad9ebd3fcbd2e8b732f946e0e3eeb9f429f")
 
+    depends_on("cxx", type="build")  # generated
+
     # https://github.com/cms-sw/cmsdist/blob/IB/CMSSW_12_6_X/master/cppunit-1.14-defaulted-function-deleted.patch
     patch("cppunit-1.14-defaulted-function-deleted.patch", when="@1.15:")
 

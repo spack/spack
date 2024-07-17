@@ -61,6 +61,8 @@ class Onnx(CMakePackage):
         "1.1.0_2018-04-19", commit="7e1bed51cc508a25b22130de459830b5d5063c41"
     )  # py-torch@0.4.0
 
+    depends_on("cxx", type="build")  # generated
+
     generator("ninja")
     depends_on("cmake@3.1:", type="build")
     depends_on("python", type="build")

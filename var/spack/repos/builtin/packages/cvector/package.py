@@ -16,6 +16,8 @@ class Cvector(MakefilePackage):
 
     version("1.0.3", sha256="d3fa92de3cd5ba8697abdbb52080248b2c252a81cf40a8ec639be301518d0ce3")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libtool", type="build")
 
     def edit(self, spec, prefix):

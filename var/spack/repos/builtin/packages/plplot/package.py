@@ -20,6 +20,10 @@ class Plplot(CMakePackage):
     version("5.12.0", sha256="8dc5da5ef80e4e19993d4c3ef2a84a24cc0e44a5dade83201fca7160a6d352ce")
     version("5.11.0", sha256="bfa8434e6e1e7139a5651203ec1256c8581e2fac3122f907f7d8d25ed3bd5f7e")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("java", default=False, description="Enable Java binding")
     variant("lua", default=False, description="Enable Lua binding")
     variant("pango", default=False, description="Enable Pango")

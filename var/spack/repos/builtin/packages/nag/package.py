@@ -30,6 +30,8 @@ class Nag(Package, CompilerPackage):
         deprecated=True,
     )
 
+    depends_on("fortran", type="build")  # generated
+
     # Licensing
     license_required = True
     license_comment = "!"

@@ -47,6 +47,10 @@ class Berkeleygw(MakefilePackage):
         expand=False,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # For parallel computing support, enable +mpi. It uses MPI and ScaLAPACK
     # which are inter-dependent in the berkeleygw code(they need each other):
     # https://github.com/spack/spack/pull/33948#issuecomment-1323805817

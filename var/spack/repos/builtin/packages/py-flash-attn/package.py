@@ -30,6 +30,8 @@ class PyFlashAttn(PythonPackage):
     version("2.5.4", sha256="d83bb427b517b07e9db655f6e5166eb2607dccf4d6ca3229e3a3528c206b0175")
     version("2.4.2", sha256="eb822a8c4219b610e9d734cbc8cd9ee4547f27433815a2b90dc1462766feefc1")
 
+    depends_on("cxx", type="build")  # generated
+
     with default_args(type="build"):
         depends_on("py-ninja")
         depends_on("py-packaging")

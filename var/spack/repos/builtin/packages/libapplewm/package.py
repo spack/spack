@@ -18,6 +18,8 @@ class Libapplewm(AutotoolsPackage, XorgPackage):
 
     version("1.4.1", sha256="d7fb098d65ad4d840f60e5c92de7f58f1725bd70d0d132755ea453462fd50049")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libx11")
     depends_on("libxext")
 

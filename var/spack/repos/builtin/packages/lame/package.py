@@ -17,6 +17,9 @@ class Lame(AutotoolsPackage):
 
     version("3.100", sha256="ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("nasm", type="build")
 
     def configure_args(self):

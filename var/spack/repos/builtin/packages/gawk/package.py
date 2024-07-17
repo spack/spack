@@ -38,6 +38,8 @@ class Gawk(AutotoolsPackage, GNUMirrorPackage):
     version("5.0.1", sha256="8e4e86f04ed789648b66f757329743a0d6dfb5294c3b91b756a474f1ce05a794")
     version("4.1.4", sha256="53e184e2d0f90def9207860531802456322be091c7b48f23fdc79cda65adc266")
 
+    depends_on("c", type="build")  # generated
+
     variant("nls", default=False, description="Enable Native Language Support")
 
     depends_on("gettext", when="+nls")

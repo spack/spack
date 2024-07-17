@@ -26,6 +26,8 @@ class Redset(CMakePackage):
     version("0.0.4", sha256="c33fce458d5582f01ad632c6fae8eb0a03eaef00e3c240c713b03bb95e2787ad")
     version("0.0.3", sha256="30ac1a960f842ae23a960a88b312af3fddc4795f2053eeeec3433a61e4666a76")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("mpi")
     depends_on("kvtree+mpi")
     depends_on("rankstr")

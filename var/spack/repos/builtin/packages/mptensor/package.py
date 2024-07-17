@@ -17,6 +17,8 @@ class Mptensor(CMakePackage):
 
     version("0.3.0", sha256="819395a91551bddb77958615042fcb935a4b67ee37f912b9a2ca5b49c71befae")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("mpi", default=False, description="Build with MPI library")
     variant("doc", default=False, description="build documentation with Doxygen")
 

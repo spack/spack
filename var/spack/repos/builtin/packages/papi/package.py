@@ -46,6 +46,10 @@ class Papi(AutotoolsPackage, ROCmPackage):
     version("5.4.1", sha256="e131c1449786fe870322a949e44f974a5963824f683232e653fb570cc65d4e87")
     version("5.3.0", sha256="99f2f36398b370e75d100b4a189d5bc0ac4f5dd66df44d441f88fd32e1421524")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("example", default=True, description="Install the example files")
     variant("infiniband", default=False, description="Enable Infiniband support")
     variant("powercap", default=False, description="Enable powercap interface support")

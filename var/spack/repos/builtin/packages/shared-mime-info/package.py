@@ -18,6 +18,8 @@ class SharedMimeInfo(AutotoolsPackage):
     version("1.9", sha256="5c0133ec4e228e41bdf52f726d271a2d821499c2ab97afd3aa3d6cf43efcdc83")
     version("1.8", sha256="2af55ef1a0319805b74ab40d331a3962c905477d76c086f49e34dc96363589e9")
 
+    depends_on("c", type="build")  # generated
+
     parallel = False
 
     depends_on("glib")

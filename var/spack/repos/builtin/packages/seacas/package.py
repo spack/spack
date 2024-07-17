@@ -144,6 +144,10 @@ class Seacas(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # ###################### Variants ##########################
     # Package options
     # The I/O libraries (exodus, IOSS) are always built

@@ -20,5 +20,8 @@ class Optipng(AutotoolsPackage, SourceforgePackage):
     license("Zlib")
 
     version("0.7.7", sha256="4f32f233cef870b3f95d3ad6428bfe4224ef34908f1b42b0badf858216654452")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     # See https://github.com/imagemin/optipng-bin/issues/97
     patch("for_aarch64.patch", when="target=aarch64:")

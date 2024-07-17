@@ -28,6 +28,8 @@ class LcFramework(CMakePackage, CudaPackage):
     version("1.2.0", commit="2d0f39a927c3487551e4f3c786c3799cada1e203")
     version("1.1.2", sha256="5ccbeaf8e2ef93894854406054210c8525055d195b39e2f141b4f81175fe2815")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("libpressio", description="build a libpressio plugin for LC", default=False)
     conflicts("+cuda", when="@:1.2.1")
     for sm in [i for i in CudaPackage.cuda_arch_values if try_le(i, 60)]:

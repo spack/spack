@@ -26,6 +26,9 @@ class Nghttp2(AutotoolsPackage):
     version("1.44.0", sha256="3e4824d02ae27eca931e0bb9788df00a26e5fd8eb672cf52cbb89c1463ba16e9")
     version("1.26.0", sha256="daf7c0ca363efa25b2cbb1e4bd925ac4287b664c3d1465f6a390359daa3f0cf1")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("pkgconfig", type="build")
     depends_on("diffutils", type="build")
 

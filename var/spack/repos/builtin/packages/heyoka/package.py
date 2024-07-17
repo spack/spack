@@ -29,6 +29,8 @@ class Heyoka(CMakePackage):
     version("0.19.0", sha256="7a7634379233be778fd6b15090df287787cc429314ec521d0336cdc1ae26642a")
     version("0.18.0", sha256="2a14a988d973d9a76424df05d38f89ae64f7a1e1c12131022e338fe2de2dcb94")
 
+    depends_on("cxx", type="build")  # generated
+
     # Define variants of the package
     variant("mppp", default=False, description="enable features relying on the mp++ library")
     variant("sleef", default=False, description="enable features relying on the SLEEF library")

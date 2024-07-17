@@ -22,6 +22,9 @@ class Libvips(AutotoolsPackage):
     version("8.9.1", sha256="45633798877839005016c9d3494e98dee065f5cb9e20f4552d3b315b8e8bce91")
     version("8.9.0", sha256="97334a5e70aff343d2587f23cb8068fc846a58cd937c89a446142ccf00ea0349")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("fftw", default=True, description="Uses FFTW3 for fourier transforms.")
 
     variant("jpeg", default=False, description="Enable JPEG support")

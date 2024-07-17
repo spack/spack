@@ -20,6 +20,8 @@ class Libxdamage(AutotoolsPackage, XorgPackage):
     version("1.1.5", sha256="630ec53abb8c2d6dac5cd9f06c1f73ffb4a3167f8118fdebd77afd639dbc2019")
     version("1.1.4", sha256="4bb3e9d917f5f593df2277d452926ee6ad96de7b7cd1017cbcf4579fe5d3442b")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libxfixes")
     depends_on("libx11")
 
