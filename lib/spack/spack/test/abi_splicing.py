@@ -159,6 +159,7 @@ def abi_splice_database(
         store.db.last_seen_verifier = ""
 
 
+@pytest.mark.only_clingo("Synthesized splices are not supported by the old concretizer")
 def test_simple_reuse(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
     monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
@@ -169,6 +170,7 @@ def test_simple_reuse(abi_splice_database, abi_splice_mock_packages, monkeypatch
     foo.package.do_uninstall()
 
 
+@pytest.mark.only_clingo("Synthesized splices are not supported by the old concretizer")
 def test_simple_dep_reuse(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
     monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
@@ -179,6 +181,7 @@ def test_simple_dep_reuse(abi_splice_database, abi_splice_mock_packages, monkeyp
     foo.package.do_uninstall()
 
 
+@pytest.mark.only_clingo("Synthesized splices are not supported by the old concretizer")
 def test_splice_installed_hash(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
     monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
@@ -194,6 +197,7 @@ def test_splice_installed_hash(abi_splice_database, abi_splice_mock_packages, mo
     assert True
 
 
+@pytest.mark.only_clingo("Synthesized splices are not supported by the old concretizer")
 def test_splice_build_dep(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
     monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
@@ -206,6 +210,7 @@ def test_splice_build_dep(abi_splice_database, abi_splice_mock_packages, monkeyp
     assert True
 
 
+@pytest.mark.only_clingo("Synthesized splices are not supported by the old concretizer")
 def test_mpi_splices(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
     monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
