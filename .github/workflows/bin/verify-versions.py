@@ -26,7 +26,7 @@ def get_modified_files(from_ref: str = "HEAD~1", to_ref: str = "HEAD") -> List[s
     git = spack.util.git.git(required=True)
 
     with fs.working_dir(spack.paths.prefix):
-        stdout = git("diff", "--name-only", "-r", from_ref, to_ref, output=str)
+        stdout = git("diff", "--name-only", from_ref, to_ref, output=str)
 
     return stdout.split()
 
