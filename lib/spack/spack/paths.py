@@ -174,10 +174,10 @@ def path_replacements():
     arch = architecture()
 
     return {
-        "spack": lambda: spack.paths.prefix,
+        "spack": lambda: prefix,
         "user": lambda: get_user(),
         "tempdir": lambda: tempfile.gettempdir(),
-        "user_cache_path": lambda: spack.paths.user_cache_path,
+        "user_cache_path": lambda: user_cache_path,
         "architecture": lambda: arch,
         "arch": lambda: arch,
         "platform": lambda: arch.platform,
