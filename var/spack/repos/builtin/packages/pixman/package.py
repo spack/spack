@@ -32,9 +32,6 @@ class Pixman(AutotoolsPackage):
     depends_on("libpng")
 
     variant("shared", default=True, description="Build shared library")
-    variant("pic", default=False, description="Enable position-independent code")
-
-    conflicts("+shared ~pic")
 
     # As discussed here:
     # https://bugs.freedesktop.org/show_bug.cgi?id=104886
@@ -70,7 +67,7 @@ class Pixman(AutotoolsPackage):
         )
 
     def configure_args(self):
-        args = ["--enable-libpng", "--disable-gtk"]
+        args = ["--enable-libpng", "--disable-gtk", "--with-pic"]
 
         if sys.platform == "darwin":
             args += ["--disable-mmx", "--disable-silent-rules"]
@@ -86,6 +83,5 @@ class Pixman(AutotoolsPackage):
             args.append("--disable-arm-a64-neon")
 
         args.extend(self.enable_or_disable("shared"))
-        args.extend(self.with_or_without("pic"))
 
         return args
