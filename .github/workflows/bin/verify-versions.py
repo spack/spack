@@ -73,7 +73,7 @@ def get_standard_version_checksum(pkg, version: StandardVersion) -> str:
     """Get a checksum for a Spack StandardVersion.
 
     Args:
-       pkg (Package): Spack package in for which to get a version checksum
+       pkg (Package): Spack package for which to get a version checksum
        version (StandardVersion): version in package to get checksum
 
     Returns:
