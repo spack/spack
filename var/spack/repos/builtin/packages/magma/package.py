@@ -79,7 +79,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
 
     # Many cuda_arch values are not yet recognized by MAGMA's CMakeLists.txt
     for target in [10, 11, 12, 13, 21, 32, 52, 53, 61, 62, 72, 86]:
-        conflicts("cuda_arch={}".format(target))
+        conflicts(f"cuda_arch={target}")
 
     # Some cuda_arch values had support added recently
     conflicts("cuda_arch=37", when="@:2.5", msg="magma: cuda_arch=37 needs a version > 2.5")
@@ -112,14 +112,14 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         gpu_target = ""
         if "+cuda" in spec:
             cuda_archs = spec.variants["cuda_arch"].value
-            gpu_target = " ".join("sm_{0}".format(i) for i in cuda_archs)
+            gpu_target = " ".join(f"sm_{i}" for i in cuda_archs)
         else:
             gpu_target = spec.variants["amdgpu_target"].value
 
         with open("make.inc", "w") as inc:
             inc.write("FORT = true\n")
-            inc.write("GPU_TARGET = {0}\n".format(gpu_target))
-            inc.write("BACKEND = {0}\n".format(backend))
+            inc.write(f"GPU_TARGET = {gpu_target}\n")
+            inc.write(f"BACKEND = {backend}\n")
 
         make("generate")
 
@@ -150,7 +150,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         if "+cuda" in spec:
             cuda_arch = spec.variants["cuda_arch"].value
             sep = "" if "@:2.2.0" in spec else "_"
-            capabilities = " ".join("sm{0}{1}".format(sep, i) for i in cuda_arch)
+            capabilities = " ".join(f"sm{sep}{i}" for i in cuda_arch)
             options.append(define("GPU_TARGET", capabilities))
             archs = ";".join("%s" % i for i in cuda_arch)
             options.append(define("CMAKE_CUDA_ARCHITECTURES", archs))
@@ -192,7 +192,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         """Run benchmark tests"""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=False):
-            pkg_config_path = "{0}/lib/pkgconfig".format(self.prefix)
+            pkg_config_path = f"{self.prefix.lib.pkgconfig}/lib/pkgconfig"
             with spack.util.environment.set_env(PKG_CONFIG_PATH=pkg_config_path):
 
                 make("c")
@@ -210,11 +210,14 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
                         exe = which("./" + test[0])
                         exe()
 
-                if "+fortran" in self.spec:
-                    with test_part(
-                        self, "test_magma_fortran", purpose="MAGMA smoke test - Fortran interface"
-                    ):
-                        make("fortran")
-                        exe_fortran = which("./example_f")
-                        exe_fortran()
                 make("clean")
+
+    def test_fortran(self):
+        """MAGMA smoke test - Fortran interface"""
+        if "+fortran" not in self.spec:
+            raise SkipTest("Package must be installed with +fortran")
+
+        make("fortran")
+        exe_fortran = which("./example_f")
+        exe_fortran()
+        make("clean")
