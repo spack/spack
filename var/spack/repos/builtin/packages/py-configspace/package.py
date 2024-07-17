@@ -13,11 +13,13 @@ class PyConfigspace(PythonPackage):
     maintainers("Kerilk")
 
     homepage = "https://automl.github.io/ConfigSpace/master/"
-    pypi = "ConfigSpace/ConfigSpace-0.4.20.tar.gz"
+    pypi = "configspace/configspace-1.0.0.tar.gz"
 
     license("BSD-3-Clause")
 
     version("main", git="https://github.com/automl/ConfigSpace.git", branch="main")
+    version("1.0.1", sha256="ffaf2c02db1df47589d5501178827e945d3f953f2812e7e44a9c3029ea13a543")
+    version("1.0.0", sha256="cc55ac8a550c86bee7853417f1eda22d46185fb911b5875754619735966e2736")
     version("0.7.1", sha256="57b5b8e28ed6ee14ecf6206fdca43ca698ef63bc1531f081d482b26acf4edf1a")
     version("0.6.1", sha256="b0a9487c7997481a041feee46f2c8fc9fb9787e1ff553250838d62624dfb0d5a")
     version("0.6.0", sha256="9b6c95d8839fcab220372673214b3129b45dcd8b1179829eb2c65746cacb72a9")
@@ -33,3 +35,11 @@ class PyConfigspace(PythonPackage):
     depends_on("py-scipy", when="@0.4.21:")
     depends_on("py-typing-extensions", when="@0.6.0:")
     depends_on("py-more-itertools", when="@0.6.1:")
+
+    def url_for_version(self, version):
+        new_url = "https://files.pythonhosted.org/packages/source/c/configspace/configspace-{0}.tar.gz"
+        old_url = "https://files.pythonhosted.org/packages/source/C/ConfigSpace/ConfigSpace-{0}.tar.gz"
+        if version >= Version("1.0.0"):
+            return new_url.format(version)
+        else:
+            return old_url.format(version)
