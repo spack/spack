@@ -14,6 +14,8 @@ class MagicEnum(CMakePackage):
     homepage = "https://github.com/Neargye/magic_enum"
     url = "https://github.com/Neargye/magic_enum/archive/refs/tags/v0.9.6.tar.gz"
 
+    maintainers("pranav-sivaraman")
+
     license("MIT", checked_by="pranav-sivaraman")
 
     version("0.9.6", sha256="814791ff32218dc869845af7eb89f898ebbcfa18e8d81aa4d682d18961e13731")
