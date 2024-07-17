@@ -48,7 +48,7 @@ class Detray(CMakePackage):
     depends_on("vecmem@1.6.0:")
     depends_on("covfie@0.10.0:")
     depends_on("nlohmann-json@3.11.0:", when="+json")
-    depends_on("dfelibs@20211029")
+    depends_on("dfelibs@20211029:")
     depends_on("acts-algebra-plugins@0.18.0: +vecmem")
     depends_on("acts-algebra-plugins +vc", when="+vc")
     depends_on("acts-algebra-plugins +eigen", when="+eigen")
