@@ -28,7 +28,7 @@ class PyConfigspace(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-cython@:0.29.36", type="build")
+    depends_on("py-cython@:0.29.36", type="build", when="@:0.9.9")
     depends_on("py-pyparsing", type=("build", "run"))
     depends_on("py-scipy", when="@0.4.21:")
     depends_on("py-typing-extensions", when="@0.6.0:")
