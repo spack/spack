@@ -516,5 +516,5 @@ mpich:
         packages.yaml doesn't fail with an error.
         """
         with spack.config.override("packages:all", {"variants": "+foo"}):
-            s = Spec("a").concretized()
+            s = Spec("pkg-a").concretized()
             assert s.satisfies("foo=bar")

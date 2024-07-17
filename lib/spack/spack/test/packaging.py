@@ -506,9 +506,7 @@ def mock_download():
     "manual,instr", [(False, False), (False, True), (True, False), (True, True)]
 )
 @pytest.mark.disable_clean_stage_check
-def test_manual_download(
-    install_mockery, mock_download, default_mock_concretization, monkeypatch, manual, instr
-):
+def test_manual_download(mock_download, default_mock_concretization, monkeypatch, manual, instr):
     """
     Ensure expected fetcher fail message based on manual download and instr.
     """
@@ -517,7 +515,7 @@ def test_manual_download(
     def _instr(pkg):
         return f"Download instructions for {pkg.spec.name}"
 
-    spec = default_mock_concretization("a")
+    spec = default_mock_concretization("pkg-a")
     spec.package.manual_download = manual
     if instr:
         monkeypatch.setattr(spack.package_base.PackageBase, "download_instr", _instr)
@@ -539,20 +537,16 @@ def fetching_not_allowed(monkeypatch):
     monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", FetchingNotAllowed())
 
 
-def test_fetch_without_code_is_noop(
-    default_mock_concretization, install_mockery, fetching_not_allowed
-):
+def test_fetch_without_code_is_noop(default_mock_concretization, fetching_not_allowed):
     """do_fetch for packages without code should be a no-op"""
-    pkg = default_mock_concretization("a").package
+    pkg = default_mock_concretization("pkg-a").package
     pkg.has_code = False
     pkg.do_fetch()
 
 
-def test_fetch_external_package_is_noop(
-    default_mock_concretization, install_mockery, fetching_not_allowed
-):
+def test_fetch_external_package_is_noop(default_mock_concretization, fetching_not_allowed):
     """do_fetch for packages without code should be a no-op"""
-    spec = default_mock_concretization("a")
+    spec = default_mock_concretization("pkg-a")
     spec.external_path = "/some/where"
     assert spec.external
     spec.package.do_fetch()

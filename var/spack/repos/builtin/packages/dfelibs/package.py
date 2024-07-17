@@ -20,3 +20,12 @@ class Dfelibs(CMakePackage):
     version("20211029", sha256="65b8d536b06b550e38822905dea06d193beb703fe0e4442791f43dc087c5cbfb")
 
     depends_on("cmake@3.8:", type="build")
+    depends_on("boost@1.59:", type="test")
+
+    def cmake_args(self):
+        args = [
+            self.define("dfelibs_BUILD_EXAMPLES", False),
+            self.define("dfelibs_BUILD_UNITTESTS", self.run_tests),
+        ]
+
+        return args
