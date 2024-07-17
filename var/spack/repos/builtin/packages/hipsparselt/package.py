@@ -55,6 +55,7 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     depends_on("py-pyyaml", type="test")
     depends_on("py-joblib")
     depends_on("googletest@1.10.0:", type="test")
+    depends_on("netlib-lapack@3.7.1:", type="test")
 
     patch("0001-update-llvm-path-add-hipsparse-include-dir-for-spack.patch", when="@6.0")
     # Below patch sets the proper path for clang++,lld and clang-offload-blunder inside the
