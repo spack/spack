@@ -797,11 +797,14 @@ class ViewDescriptor:
             pass
         except OSError as e:
             if e.errno == errno.ENOTEMPTY:
-                raise SpackEnvironmentViewError(
-                    f"The environment view in {self.root} cannot not be created because it is a "
-                    "non-empty directory."
-                ) from e
-            raise
+                msg = "it is a non-empty directory"
+            elif e.errno == errno.EACCES:
+                msg = "of insufficient permissions"
+            else:
+                raise
+            raise SpackEnvironmentViewError(
+                f"The environment view in {self.root} cannot not be created because {msg}."
+            ) from e
 
         # Create a new view
         try:
