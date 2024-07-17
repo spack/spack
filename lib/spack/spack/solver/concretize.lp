@@ -1155,7 +1155,10 @@ target_weight(Target, 0)
 node_target_weight(PackageNode, MinWeight)
  :- attr("node", PackageNode),
     attr("node_target", PackageNode, Target),
+    target(Target),
     MinWeight = #min { Weight : target_weight(Target, Weight) }.
+
+:- attr("node_target", PackageNode, Target), not node_target_weight(PackageNode, _).
 
 % compatibility rules for targets among nodes
 node_target_match(ParentNode, DependencyNode)
