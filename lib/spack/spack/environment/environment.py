@@ -844,15 +844,6 @@ class ViewDescriptor:
                 ) from e
             raise
 
-            # Give an informative error message for another error case: target directory exists
-            # and is not empty
-            if isinstance(e, IsADirectoryError):
-                raise SpackEnvironmentViewError(
-                    f"The environment view in {new_root} could not be created, "
-                    "because the target directory already exists and is not empty."
-                ) from e
-            raise
-
         # Remove the old root when it's in the same folder as the new root. This guards
         # against removal of an arbitrary path when the original symlink in self.root
         # was not created by the environment, but by the user.
