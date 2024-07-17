@@ -37,8 +37,12 @@ class PyConfigspace(PythonPackage):
     depends_on("py-more-itertools", when="@0.6.1:")
 
     def url_for_version(self, version):
-        new_url = "https://files.pythonhosted.org/packages/source/c/configspace/configspace-{0}.tar.gz"
-        old_url = "https://files.pythonhosted.org/packages/source/C/ConfigSpace/ConfigSpace-{0}.tar.gz"
+        new_url = (
+            "https://files.pythonhosted.org/packages/source/c/configspace/configspace-{0}.tar.gz"
+        )
+        old_url = (
+            "https://files.pythonhosted.org/packages/source/C/ConfigSpace/ConfigSpace-{0}.tar.gz"
+        )
         if version >= Version("1.0.0"):
             return new_url.format(version)
         else:
