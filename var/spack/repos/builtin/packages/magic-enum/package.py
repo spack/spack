@@ -33,10 +33,10 @@ class MagicEnum(CMakePackage):
 
     def cmake_args(self):
         from_variant = self.define_from_variant
-        
+
         args = [
             from_variant("MAGIC_ENUM_OPT_BUILD_EXAMPLES", "examples"),
             from_variant("MAGIC_ENUM_OPT_BUILD_TESTS", "tests"),
         ]
-        
+
         return args
