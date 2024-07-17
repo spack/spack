@@ -30,15 +30,11 @@ class Rocblas(CMakePackage):
     version("6.0.0", sha256="befa4a75f1de0ea37f2358d4c2de5406d7bce671ca9936e2294b64d3b3bafb60")
     version("5.7.1", sha256="2984a5ed0ea5a05d40996ee3fddecb24399cbe8ea3e4921fc254e54d8f52fe4f")
     version("5.7.0", sha256="024edd98de9687ee5394badc4dd4c543eef4eb3f71c96ff64100705d851e1744")
-    version("5.6.1", sha256="73896ebd445162a69af97f9fd462684609b4e0cf617eab450cd4558b4a23941e")
-    version("5.6.0", sha256="6a70b27eede02c45f46095a6ce8421af9a774a565e39f5e1074783ecf00c1ea7")
-    version("5.5.1", sha256="7916a8d238d51cc239949d799f0b61c9d5cd63c6ccaed0e16749489b89ca8ff3")
-    version("5.5.0", sha256="b5260517f199e806ae18f2c4495f163884e0d7a0a7c67af0770f7428ea50f898")
     with default_args(deprecated=True):
-        version("5.4.3", sha256="d82cd334b7a9b40d16ec4f4bb1fb5662382dcbfc86ee5e262413ed63d9e6a701")
-        version("5.4.0", sha256="261e05375024a01e68697c5d175210a07f0f5fc63a756234d996ddedffde78a2")
-        version("5.3.3", sha256="62a3b5f415bd8e0dcd0d68233d379f1a928ec0349977c32b4eea72ae5004e805")
-        version("5.3.0", sha256="8ea7269604cba949a6ea84b78dc92a44fa890427db88334da6358813f6512e34")
+        version("5.6.1", sha256="73896ebd445162a69af97f9fd462684609b4e0cf617eab450cd4558b4a23941e")
+        version("5.6.0", sha256="6a70b27eede02c45f46095a6ce8421af9a774a565e39f5e1074783ecf00c1ea7")
+        version("5.5.1", sha256="7916a8d238d51cc239949d799f0b61c9d5cd63c6ccaed0e16749489b89ca8ff3")
+        version("5.5.0", sha256="b5260517f199e806ae18f2c4495f163884e0d7a0a7c67af0770f7428ea50f898")
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
@@ -66,10 +62,6 @@ class Rocblas(CMakePackage):
     depends_on("rocm-cmake@master", type="build", when="@master:")
 
     for ver in [
-        "5.3.0",
-        "5.3.3",
-        "5.4.0",
-        "5.4.3",
         "5.5.0",
         "5.5.1",
         "5.6.0",
@@ -102,10 +94,6 @@ class Rocblas(CMakePackage):
         depends_on("procps", type="build", when="@5.6:")
 
     for t_version, t_commit in [
-        ("@5.3.0", "b33ca97af456cda14f7b1ec9bcc8aeab3ed6dd08"),
-        ("@5.3.3", "006a5d653ce0d82fecb05d5e215d053749b57c04"),
-        ("@5.4.0", "5aec08937473b27865fa969bb38a83bcf9463c2b"),
-        ("@5.4.3", "5aec08937473b27865fa969bb38a83bcf9463c2b"),
         ("@5.5.0", "38d444a9f2b6cddfeaeedcb39a5688150fa27093"),
         ("@5.5.1", "38d444a9f2b6cddfeaeedcb39a5688150fa27093"),
         ("@5.6.0", "7d0a9d040c3bbae893df7ecef6a19d9cd1c304aa"),
@@ -133,9 +121,6 @@ class Rocblas(CMakePackage):
             when=f"@{ver} +tensile",
         )
 
-    # Finding Python package and set command python as python3
-    patch("0004-Find-python.patch", when="@5.2.0:5.4")
-    patch("0006-Guard-use-of-OpenMP-to-make-it-optional-5.4.patch", when="@5.4")
     patch("0007-add-rocm-openmp-extras-include-dir.patch", when="@5.6:5.7")
 
     def setup_build_environment(self, env):
@@ -200,9 +185,7 @@ class Rocblas(CMakePackage):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
         if self.spec.satisfies("@5.3.0:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
-        if self.spec.satisfies("@:5.4"):
-            args.append(self.define("Tensile_CODE_OBJECT_VERSION", "V3"))
-        else:
+        if self.spec.satisfies("@5.5:"):
             args.append(self.define("Tensile_CODE_OBJECT_VERSION", "default"))
 
         return args

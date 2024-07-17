@@ -37,15 +37,11 @@ class Comgr(CMakePackage):
     version("6.0.0", sha256="04353d27a512642a5e5339532a39d0aabe44e0964985de37b150a2550385800a")
     version("5.7.1", sha256="3b9433b4a0527167c3e9dfc37a3c54e0550744b8d4a8e1be298c8d4bcedfee7c")
     version("5.7.0", sha256="e234bcb93d602377cfaaacb59aeac5796edcd842a618162867b7e670c3a2c42c")
-    version("5.6.1", sha256="0a85d84619f98be26ca7a32c71f94ed3c4e9866133789eabb451be64ce739300")
-    version("5.6.0", sha256="9396a7238b547ee68146c669b10b9d5de8f1d76527c649133c75d8076a185a72")
-    version("5.5.1", sha256="0fbb15fe5a95c2e141ccd360bc413e1feda283334781540a6e5095ab27fd8019")
-    version("5.5.0", sha256="97dfff03226ce0902b9d5d1c8c7bebb7a15978a81b6e9c750bf2d2473890bd42")
     with default_args(deprecated=True):
-        version("5.4.3", sha256="8af18035550977fe0aa9cca8dfacbe65fe292e971de5a0e160710bafda05a81f")
-        version("5.4.0", sha256="f4b83b27ff6195679d695c3f41fa25456e9c50bae6d978f46d3541b472aef757")
-        version("5.3.3", sha256="6a4ef69e672a077b5909977248445f0eedf5e124af9812993a4d444be030c78b")
-        version("5.3.0", sha256="072f849d79476d87d31d62b962e368762368d540a9da02ee2675963dc4942b2c")
+        version("5.6.1", sha256="0a85d84619f98be26ca7a32c71f94ed3c4e9866133789eabb451be64ce739300")
+        version("5.6.0", sha256="9396a7238b547ee68146c669b10b9d5de8f1d76527c649133c75d8076a185a72")
+        version("5.5.1", sha256="0fbb15fe5a95c2e141ccd360bc413e1feda283334781540a6e5095ab27fd8019")
+        version("5.5.0", sha256="97dfff03226ce0902b9d5d1c8c7bebb7a15978a81b6e9c750bf2d2473890bd42")
 
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
@@ -61,27 +57,9 @@ class Comgr(CMakePackage):
 
     depends_on("rocm-cmake@3.5.0:", type="build")
 
-    for ver in [
-        "5.3.0",
-        "5.3.3",
-        "5.4.0",
-        "5.4.3",
-        "5.5.0",
-        "5.5.1",
-        "5.6.0",
-        "5.6.1",
-        "5.7.0",
-        "5.7.1",
-        "6.0.0",
-        "6.0.2",
-        "6.1.0",
-        "6.1.1",
-        "6.1.2",
-        "master",
-    ]:
+    for ver in ["master"]:
         # llvm libs are linked statically, so this *could* be a build dep
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
-
         # aomp may not build rocm-device-libs as part of llvm-amdgpu, so make
         # that a conditional dependency
         depends_on(f"rocm-device-libs@{ver}", when=f"@{ver} ^llvm-amdgpu ~rocm-device-libs")
@@ -99,6 +77,12 @@ class Comgr(CMakePackage):
         "6.1.1",
         "6.1.2",
     ]:
+        # llvm libs are linked statically, so this *could* be a build dep
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
+
+        # aomp may not build rocm-device-libs as part of llvm-amdgpu, so make
+        # that a conditional dependency
+        depends_on(f"rocm-device-libs@{ver}", when=f"@{ver} ^llvm-amdgpu ~rocm-device-libs")
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     @property
@@ -109,9 +93,11 @@ class Comgr(CMakePackage):
             return join_path("amd", "comgr")
 
     def cmake_args(self):
-        args = [self.define("BUILD_TESTING", self.run_tests)]
-        if self.spec.satisfies("@5.4.3:"):
-            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+        args = [
+            self.define("BUILD_TESTING", self.run_tests),
+            self.define("CMAKE_INSTALL_LIBDIR", "lib"),
+        ]
+
         if self.spec.satisfies("@5.7:"):
             args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
         return args

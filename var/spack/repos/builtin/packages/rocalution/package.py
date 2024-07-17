@@ -34,15 +34,11 @@ class Rocalution(CMakePackage):
     version("6.0.0", sha256="cabf37691b8db00c82bda49c7dcfaefd9b9067b7d097afa43b7a5f86c45bff99")
     version("5.7.1", sha256="b95afa1285759843c5fea1ad6e1c1edf283922e0d448db03a3e1f42b6942bc24")
     version("5.7.0", sha256="48232a0d1250debce89e39a233bd0b5d52324a2454c078b99c9d44965cbbc0e9")
-    version("5.6.1", sha256="7197b3617a0c91e90adaa32003c04d247a5f585d216e77493d20984ba215addb")
-    version("5.6.0", sha256="7397a2039e9615c0cf6776c33c4083c00b185b5d5c4149c89fea25a8976a3097")
-    version("5.5.1", sha256="4612e30a0290b1732c8862eea655122abc2d22ce4345b8498fe4127697e880b4")
-    version("5.5.0", sha256="626e966b67b83a1ef79f9bf27aba998c49cf65c4208092516aa1e32a6cbd8c36")
     with default_args(deprecated=True):
-        version("5.4.3", sha256="39d00951a9b3cbdc4205a7e3ce75c026d9428c71c784815288c445f84a7f8a0e")
-        version("5.4.0", sha256="dccf004434e0fee6d0c7bedd46827f5a2af0392bc4807a08403b130e461f55eb")
-        version("5.3.3", sha256="3af022250bc25bebdee12bfb8fdbab4b60513b537b9fe15dfa82ded8850c5066")
-        version("5.3.0", sha256="f623449789a5c9c9137ae51d4dbbee5c6940d8813826629cb4b7e84f07fab494")
+        version("5.6.1", sha256="7197b3617a0c91e90adaa32003c04d247a5f585d216e77493d20984ba215addb")
+        version("5.6.0", sha256="7397a2039e9615c0cf6776c33c4083c00b185b5d5c4149c89fea25a8976a3097")
+        version("5.5.1", sha256="4612e30a0290b1732c8862eea655122abc2d22ce4345b8498fe4127697e880b4")
+        version("5.5.0", sha256="626e966b67b83a1ef79f9bf27aba998c49cf65c4208092516aa1e32a6cbd8c36")
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
@@ -56,10 +52,6 @@ class Rocalution(CMakePackage):
     depends_on("cmake@3.5:", type="build")
 
     for ver in [
-        "5.3.0",
-        "5.3.3",
-        "5.4.0",
-        "5.4.3",
         "5.5.0",
         "5.5.1",
         "5.6.0",
@@ -84,8 +76,6 @@ class Rocalution(CMakePackage):
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
 
     depends_on("googletest@1.10.0:", type="test")
-    # Fix build for most Radeon 5000 and Radeon 6000 series GPUs.
-    patch("0004-fix-navi-1x.patch", when="@5.2.0:5.3")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
