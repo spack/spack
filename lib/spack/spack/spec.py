@@ -1332,6 +1332,12 @@ def tree(
     if color is None:
         color = clr.get_color_when()
 
+    # reduce deptypes over all in-edges when covering nodes
+    if show_types and cover == "nodes":
+        deptype_lookup: Dict[str, dt.DepFlag] = collections.defaultdict(dt.DepFlag)
+        for edge in traverse.traverse_edges(specs, cover="edges", deptype=deptypes, root=False):
+            deptype_lookup[edge.spec.dag_hash()] |= edge.depflag
+
     for d, dep_spec in traverse.traverse_tree(
         sorted(specs), cover=cover, deptype=deptypes, depth_first=depth_first, key=key
     ):
@@ -1358,11 +1364,7 @@ def tree(
 
         if show_types:
             if cover == "nodes":
-                # when only covering nodes, we merge dependency types
-                # from all dependents before showing them.
-                depflag = 0
-                for ds in node.edges_from_dependents():
-                    depflag |= ds.depflag
+                depflag = deptype_lookup[dep_spec.spec.dag_hash()]
             else:
                 # when covering edges or paths, we show dependency
                 # types only for the edge through which we visited
@@ -4648,7 +4650,7 @@ class Spec:
         spec_str = " ^".join(root_str + sorted_dependencies)
         return spec_str.strip()
 
-    def install_status(self):
+    def install_status(self) -> InstallStatus:
         """Helper for tree to print DB install status."""
         if not self.concrete:
             return InstallStatus.absent

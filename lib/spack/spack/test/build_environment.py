@@ -177,7 +177,7 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
 
 
 def test_setup_dependent_package_inherited_modules(
-    config, working_env, mock_packages, install_mockery, mock_fetch
+    working_env, mock_packages, install_mockery, mock_fetch
 ):
     # This will raise on regression
     s = spack.spec.Spec("cmake-client-inheritor").concretized()
@@ -457,14 +457,14 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
     # a foobar=bar (parallel = False)
     # |
     # b (parallel =True)
-    s = default_mock_concretization("a foobar=bar")
+    s = default_mock_concretization("pkg-a foobar=bar")
 
     spack.build_environment.set_package_py_globals(s.package, context=Context.BUILD)
-    assert s["a"].package.module.make_jobs == 1
+    assert s["pkg-a"].package.module.make_jobs == 1
 
-    spack.build_environment.set_package_py_globals(s["b"].package, context=Context.BUILD)
-    assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
-        parallel=s["b"].package.parallel
+    spack.build_environment.set_package_py_globals(s["pkg-b"].package, context=Context.BUILD)
+    assert s["pkg-b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
+        parallel=s["pkg-b"].package.parallel
     )
 
 

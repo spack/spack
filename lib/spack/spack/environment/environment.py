@@ -5,7 +5,6 @@
 import collections
 import collections.abc
 import contextlib
-import copy
 import os
 import pathlib
 import re
@@ -528,8 +527,8 @@ def _read_yaml(str_or_file):
         )
 
     filename = getattr(str_or_file, "name", None)
-    default_data = spack.config.validate(data, spack.schema.env.schema, filename)
-    return data, default_data
+    spack.config.validate(data, spack.schema.env.schema, filename)
+    return data
 
 
 def _write_yaml(data, str_or_file):
@@ -957,18 +956,25 @@ class Environment:
         """Get a write lock context manager for use in a `with` block."""
         return lk.WriteTransaction(self.txlock, acquire=self._re_read)
 
-    def _process_definition(self, item):
+    def _process_definition(self, entry):
         """Process a single spec definition item."""
-        entry = copy.deepcopy(item)
-        when = _eval_conditional(entry.pop("when", "True"))
-        assert len(entry) == 1
+        when_string = entry.get("when")
+        if when_string is not None:
+            when = _eval_conditional(when_string)
+            assert len([x for x in entry if x != "when"]) == 1
+        else:
+            when = True
+            assert len(entry) == 1
+
         if when:
-            name, spec_list = next(iter(entry.items()))
-            user_specs = SpecList(name, spec_list, self.spec_lists.copy())
-            if name in self.spec_lists:
-                self.spec_lists[name].extend(user_specs)
-            else:
-                self.spec_lists[name] = user_specs
+            for name, spec_list in entry.items():
+                if name == "when":
+                    continue
+                user_specs = SpecList(name, spec_list, self.spec_lists.copy())
+                if name in self.spec_lists:
+                    self.spec_lists[name].extend(user_specs)
+                else:
+                    self.spec_lists[name] = user_specs
 
     def _process_view(self, env_view: Optional[Union[bool, str, Dict]]):
         """Process view option(s), which can be boolean, string, or None.
@@ -2767,12 +2773,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             raise SpackEnvironmentError(msg)
 
         with self.manifest_file.open() as f:
-            raw, with_defaults_added = _read_yaml(f)
+            self.yaml_content = _read_yaml(f)
 
-        #: Pristine YAML content, without defaults being added
-        self.pristine_yaml_content = raw
-        #: YAML content with defaults added by Spack, if they're missing
-        self.yaml_content = with_defaults_added
         self.changed = False
 
     def _all_matches(self, user_spec: str) -> List[str]:
@@ -2786,7 +2788,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             ValueError: if no equivalent match is found
         """
         result = []
-        for yaml_spec_str in self.pristine_configuration["specs"]:
+        for yaml_spec_str in self.configuration["specs"]:
             if Spec(yaml_spec_str) == Spec(user_spec):
                 result.append(yaml_spec_str)
 
@@ -2801,7 +2803,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Args:
             user_spec: user spec to be appended
         """
-        self.pristine_configuration.setdefault("specs", []).append(user_spec)
         self.configuration.setdefault("specs", []).append(user_spec)
         self.changed = True
 
@@ -2816,7 +2817,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         """
         try:
             for key in self._all_matches(user_spec):
-                self.pristine_configuration["specs"].remove(key)
                 self.configuration["specs"].remove(key)
         except ValueError as e:
             msg = f"cannot remove {user_spec} from {self}, no such spec exists"
@@ -2834,7 +2834,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: when the user spec cannot be overridden
         """
         try:
-            self.pristine_configuration["specs"][idx] = user_spec
             self.configuration["specs"][idx] = user_spec
         except ValueError as e:
             msg = f"cannot override {user_spec} from {self}"
@@ -2847,10 +2846,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Args:
             include_concrete: list of already existing concrete environments to include
         """
-        self.pristine_configuration[included_concrete_name] = []
+        self.configuration[included_concrete_name] = []
 
         for env_path in include_concrete:
-            self.pristine_configuration[included_concrete_name].append(env_path)
+            self.configuration[included_concrete_name].append(env_path)
 
         self.changed = True
 
@@ -2864,14 +2863,13 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Raises:
             SpackEnvironmentError: is no valid definition exists already
         """
-        defs = self.pristine_configuration.get("definitions", [])
+        defs = self.configuration.get("definitions", [])
         msg = f"cannot add {user_spec} to the '{list_name}' definition, no valid list exists"
 
         for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
             item[list_name].append(user_spec)
             break
 
-        self.configuration["definitions"][idx][list_name].append(user_spec)
         self.changed = True
 
     def remove_definition(self, user_spec: str, list_name: str) -> None:
@@ -2885,7 +2883,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: if the user spec cannot be removed from the list,
                 or the list does not exist
         """
-        defs = self.pristine_configuration.get("definitions", [])
+        defs = self.configuration.get("definitions", [])
         msg = (
             f"cannot remove {user_spec} from the '{list_name}' definition, "
             f"no valid list exists"
@@ -2898,7 +2896,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             except ValueError:
                 pass
 
-        self.configuration["definitions"][idx][list_name].remove(user_spec)
         self.changed = True
 
     def override_definition(self, user_spec: str, *, override: str, list_name: str) -> None:
@@ -2913,7 +2910,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Raises:
             SpackEnvironmentError: if the user spec cannot be overridden
         """
-        defs = self.pristine_configuration.get("definitions", [])
+        defs = self.configuration.get("definitions", [])
         msg = f"cannot override {user_spec} with {override} in the '{list_name}' definition"
 
         for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
@@ -2924,7 +2921,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             except ValueError:
                 pass
 
-        self.configuration["definitions"][idx][list_name][sub_index] = override
         self.changed = True
 
     def _iterate_on_definitions(self, definitions, *, list_name, err_msg):
@@ -2956,7 +2952,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                 True the default view is used for the environment, if False there's no view.
         """
         if isinstance(view, dict):
-            self.pristine_configuration["view"][default_view_name].update(view)
             self.configuration["view"][default_view_name].update(view)
             self.changed = True
             return
@@ -2964,15 +2959,13 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         if not isinstance(view, bool):
             view = str(view)
 
-        self.pristine_configuration["view"] = view
         self.configuration["view"] = view
         self.changed = True
 
     def remove_default_view(self) -> None:
         """Removes the default view from the manifest file"""
-        view_data = self.pristine_configuration.get("view")
+        view_data = self.configuration.get("view")
         if isinstance(view_data, collections.abc.Mapping):
-            self.pristine_configuration["view"].pop(default_view_name)
             self.configuration["view"].pop(default_view_name)
             self.changed = True
             return
@@ -2985,17 +2978,12 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             return
 
         with fs.write_tmp_and_move(os.path.realpath(self.manifest_file)) as f:
-            _write_yaml(self.pristine_yaml_content, f)
+            _write_yaml(self.yaml_content, f)
         self.changed = False
 
     @property
-    def pristine_configuration(self):
-        """Return the dictionaries in the pristine YAML, without the top level attribute"""
-        return self.pristine_yaml_content[TOP_LEVEL_KEY]
-
-    @property
     def configuration(self):
-        """Return the dictionaries in the YAML, without the top level attribute"""
+        """Return the dictionaries in the pristine YAML, without the top level attribute"""
         return self.yaml_content[TOP_LEVEL_KEY]
 
     def __len__(self):

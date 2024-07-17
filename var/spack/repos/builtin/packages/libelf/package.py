@@ -55,7 +55,7 @@ class Libelf(AutotoolsPackage):
 
     def flag_handler(self, name, flags):
         if name == "cflags":
-            if self.spec.satisfies("%clang@16:"):
+            if self.spec.satisfies("%clang@16:") or self.spec.satisfies("%gcc@14:"):
                 flags.append("-Wno-error=implicit-int")
                 flags.append("-Wno-error=implicit-function-declaration")
         return (flags, None, None)

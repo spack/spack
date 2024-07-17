@@ -60,6 +60,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
     depends_on("boost@1.64.0:1.76.0 +program_options cxxstd=14", type="test")
+    depends_on("py-pyaml", type="test", when="@6.1:")
 
     patch("remove-hipblas-clients-file-installation.patch", when="@5.5:5.7.1")
     patch("remove-hipblas-clients-file-installation-6.0.patch", when="@6.0:")
@@ -68,6 +69,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocm-cmake@4.5.0:", type="build")
     for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2"]:
         depends_on(f"rocm-cmake@{ver}", when=f"+rocm @{ver}")
+        depends_on(f"rocm-openmp-extras@{ver}", type="test", when=f"+rocm @{ver}")
 
     depends_on("hip +cuda", when="+cuda")
 
@@ -121,11 +123,13 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
         if self.spec.satisfies("@5.3.0:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+        if self.spec.satisfies("@6.1:") and self.run_tests:
+            args.append(self.define("LINK_BLIS", "OFF"))
 
         return args
 
-    @run_after("build")
-    @on_package_attributes(run_tests=True)
-    def check_build(self):
-        exe = Executable(join_path(self.build_directory, "clients", "staging", "hipblas-test"))
+    def check(self):
+        exe = Executable(
+            join_path(self.builder.build_directory, "clients", "staging", "hipblas-test")
+        )
         exe("--gtest_filter=-*known_bug*")

@@ -12,11 +12,12 @@ class Pastix(CMakePackage, CudaPackage):
     based on direct methods"""
 
     homepage = "https://gitlab.inria.fr/solverstack/pastix/blob/master/README.md"
-    url = "https://files.inria.fr/pastix/releases/v6/pastix-6.3.2.tar.gz"
+    url = "https://files.inria.fr/pastix/releases/v6/pastix-6.4.0.tar.gz"
     git = "https://gitlab.inria.fr/solverstack/pastix.git"
     maintainers("fpruvost", "mfaverge", "ramet")
 
     version("master", branch="master", submodules=True)
+    version("6.4.0", sha256="891d426188eed56c1075fb34d2d80132593a1536ffc05cf333567f68a4811e55")
     version("6.3.2", sha256="c4da8802d1933eecf8c09d7e63c014c81ccf353fe623142e9f5c5fc65ed82ee0")
     version("6.3.1", sha256="290464d73b7d43356e4735a29932bf6f23a88e94ec7139ba7744c21e42c52681")
     version("6.3.0", sha256="a6bfec32a3279d7b24c5fc05885c6632d177e467f1584707c6fd7c42a8703c3e")

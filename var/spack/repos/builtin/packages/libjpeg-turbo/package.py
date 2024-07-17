@@ -22,6 +22,9 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
 
     license("BSD-3-Clause AND IJG AND Zlib")
 
+    version("3.0.3", sha256="a649205a90e39a548863a3614a9576a3fb4465f8e8e66d54999f127957c25b21")
+    version("3.0.2", sha256="29f2197345aafe1dcaadc8b055e4cbec9f35aad2a318d61ea081f835af2eebe9")
+    version("3.0.1", sha256="5b9bbca2b2a87c6632c821799438d358e27004ab528abf798533c15d50b39f82")
     version("3.0.0", sha256="171dae5d73560bc94006a7c0c3281bd9bfde6a34f7e41e66f930a1a9162bd7df")
     version("2.1.5.1", sha256="61846251941e5791005fb7face196eec24541fce04f12570c308557529e92c75")
     version("2.1.5", sha256="254f3642b04e309fee775123133c6464181addc150499561020312ec61c1bf7c")

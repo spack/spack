@@ -105,4 +105,5 @@ class Rccl(CMakePackage):
     def test(self):
         test_dir = join_path(self.spec["rccl"].prefix, "bin")
         with working_dir(test_dir, create=True):
-            self.run_test("UnitTests")
+            exe = Executable("rccl-UnitTests")
+            exe()

@@ -63,6 +63,12 @@ from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
 
 
+@pytest.fixture(autouse=True)
+def check_config_fixture(request):
+    if "config" in request.fixturenames and "mutable_config" in request.fixturenames:
+        raise RuntimeError("'config' and 'mutable_config' are both requested")
+
+
 def ensure_configuration_fixture_run_before(request):
     """Ensure that fixture mutating the configuration run before the one where
     the function is called.
@@ -597,7 +603,7 @@ def mutable_mock_repo(mock_repo_path, request):
 def mock_custom_repository(tmpdir, mutable_mock_repo):
     """Create a custom repository with a single package "c" and return its path."""
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("myrepo"))
-    builder.add_package("c")
+    builder.add_package("pkg-c")
     return builder.root
 
 
@@ -851,7 +857,7 @@ def _populate(mock_db):
     _install("mpileaks ^mpich")
     _install("mpileaks ^mpich2")
     _install("mpileaks ^zmpi")
-    _install("externaltest")
+    _install("externaltest ^externalvirtual")
     _install("trivial-smoke-test")
 
 
@@ -990,19 +996,6 @@ def temporary_store(tmpdir, request):
     with spack.store.use_store(str(temporary_store_path)) as s:
         yield s
     temporary_store_path.remove()
-
-
-@pytest.fixture(scope="function")
-def install_mockery_mutable_config(temporary_store, mutable_config, mock_packages):
-    """Hooks a fake install directory, DB, and stage directory into Spack.
-
-    This is specifically for tests which want to use 'install_mockery' but
-    also need to modify configuration (and hence would want to use
-    'mutable config'): 'install_mockery' does not support this.
-    """
-    # We use a fake package, so temporarily disable checksumming
-    with spack.config.override("config:checksum", False):
-        yield
 
 
 @pytest.fixture()
