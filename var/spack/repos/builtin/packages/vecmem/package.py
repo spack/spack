@@ -63,6 +63,12 @@ class Vecmem(CMakePackage, CudaPackage):
     # and we can choose between always depending on googletest, or using FetchContent
     # depends_on("googletest", type="test")
 
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+sycl"):
+            env.set("SYCLCXX", self.compiler.cxx)
+            if self.spec.satisfies("%oneapi"):
+                env.set("SYCLFLAGS", "-fsycl")
+
     def cmake_args(self):
         args = [
             self.define("FETCHCONTENT_FULLY_DISCONNECTED", False),  # see FIXME above
@@ -71,6 +77,7 @@ class Vecmem(CMakePackage, CudaPackage):
             self.define_from_variant("VECMEM_BUILD_SYCL_LIBRARY", "sycl"),
             self.define("BUILD_TESTING", self.run_tests),
             self.define("VECMEM_BUILD_TESTING", self.run_tests),
+            self.define("VECMEM_USE_SYSTEM_LIBS", True),
             self.define("VECMEM_USE_SYSTEM_GOOGLETEST", False),  # see FIXME above
         ]
 

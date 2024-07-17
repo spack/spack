@@ -213,7 +213,9 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
     str(archspec.cpu.host().family) != "x86_64", reason="tests are for x86_64 uarch ranges"
 )
 def test_concretize_target_ranges(root_target_range, dep_target_range, result, monkeypatch):
-    spec = Spec(f"a %gcc@10 foobar=bar target={root_target_range} ^b target={dep_target_range}")
+    spec = Spec(
+        f"pkg-a %gcc@10 foobar=bar target={root_target_range} ^pkg-b target={dep_target_range}"
+    )
     with spack.concretize.disable_compiler_existence_check():
         spec.concretize()
-    assert spec.target == spec["b"].target == result
+    assert spec.target == spec["pkg-b"].target == result

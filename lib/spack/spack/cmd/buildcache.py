@@ -70,12 +70,6 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     push = subparsers.add_parser("push", aliases=["create"], help=push_fn.__doc__)
     push.add_argument("-f", "--force", action="store_true", help="overwrite tarball if it exists")
-    push.add_argument(
-        "--allow-root",
-        "-a",
-        action="store_true",
-        help="allow install root string in binary files after RPATH substitution",
-    )
     push_sign = push.add_mutually_exclusive_group(required=False)
     push_sign.add_argument(
         "--unsigned",
@@ -189,10 +183,6 @@ def setup_parser(subparser: argparse.ArgumentParser):
     keys.add_argument("-t", "--trust", action="store_true", help="trust all downloaded keys")
     keys.add_argument("-f", "--force", action="store_true", help="force new download of keys")
     keys.set_defaults(func=keys_fn)
-
-    preview = subparsers.add_parser("preview", help=preview_fn.__doc__)
-    arguments.add_common_arguments(preview, ["installed_specs"])
-    preview.set_defaults(func=preview_fn)
 
     # Check if binaries need to be rebuilt on remote mirror
     check = subparsers.add_parser("check", help=check_fn.__doc__)
@@ -403,11 +393,6 @@ def push_fn(args):
         roots = _matching_specs(spack.cmd.parse_specs(args.specs or args.spec_file))
     else:
         roots = spack.cmd.require_active_env(cmd_name="buildcache push").concrete_roots()
-
-    if args.allow_root:
-        tty.warn(
-            "The flag `--allow-root` is the default in Spack 0.21, will be removed in Spack 0.22"
-        )
 
     mirror: spack.mirror.Mirror = args.mirror
 
@@ -958,14 +943,6 @@ def list_fn(args):
 def keys_fn(args):
     """get public keys available on mirrors"""
     bindist.get_keys(args.install, args.trust, args.force)
-
-
-def preview_fn(args):
-    """analyze an installed spec and reports whether executables and libraries are relocatable"""
-    tty.warn(
-        "`spack buildcache preview` is deprecated since `spack buildcache push --allow-root` is "
-        "now the default. This command will be removed in Spack 0.22"
-    )
 
 
 def check_fn(args: argparse.Namespace):
