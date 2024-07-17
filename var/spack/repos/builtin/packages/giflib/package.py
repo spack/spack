@@ -75,3 +75,6 @@ class Giflib(MakefilePackage, SourceforgePackage):
         if spec.satisfies("@:5.2.0"):
             configure = Executable("./configure")
             configure("--prefix={0}".format(prefix))
+        # remove call to convert in doc makefile
+        with working_dir("doc"):
+            filter_file("^.*convert.*-resize.*$", "", "Makefile")
