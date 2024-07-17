@@ -61,7 +61,10 @@ class Changa(AutotoolsPackage):
         env.set("CHARM_DIR", self.spec["charmpp"].prefix)
 
     def configure_args(self):
-        return [f"STRUCT_DIR={self.stage.source_path}/utility/structures"]
+        args = [f"STRUCT_DIR={self.stage.source_path}/utility/structures"]
+        if "avx" in self.spec.target:
+            args.append("--enable-arch=avx")
+        return args
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
