@@ -144,6 +144,7 @@ class Warpx(CMakePackage):
     with when("+openpmd"):
         depends_on("openpmd-api@0.13.1:")
         depends_on("openpmd-api@0.14.2:", when="@21.09:")
+        depends_on("openpmd-api@0.15.1:", when="@23.05:")
         depends_on("openpmd-api ~mpi", when="~mpi")
         depends_on("openpmd-api +mpi", when="+mpi")
 
