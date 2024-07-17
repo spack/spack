@@ -1550,8 +1550,8 @@ class SpackSolverSetup:
             with spec_with_name(cond, pkg.name):
                 self.version_constraints.add((cond.name, cond.versions))
                 self.version_constraints.add((splice_spec.name, splice_spec.versions))
-                when_constraints = self.spec_clauses(cond, body=True, required_from=None)               
-                splice_constraints = self.spec_clauses(splice_spec, body=True, required_from=None) 
+                when_constraints = self.spec_clauses(cond, body=True, required_from=None)
+                splice_constraints = self.spec_clauses(splice_spec, body=True, required_from=None)
                 when_attrs = {}
                 splice_attrs = {}
                 for pred in when_constraints:
@@ -1567,14 +1567,11 @@ class SpackSolverSetup:
                         if attr == "node":
                             continue
                         sargs = splice_attrs[attr]
-                        self.gen.fact(
-                            fn.can_splice_attr(i, attr, *wargs, *sargs)
-                        )
-                        facts +=1
-                self.gen.fact(
-                    fn.splice_set_id(i, pkg.name, splice_spec.name, facts)
-                )
+                        self.gen.fact(fn.can_splice_attr(i, attr, *wargs, *sargs))
+                        facts += 1
+                self.gen.fact(fn.splice_set_id(i, pkg.name, splice_spec.name, facts))
             self.gen.newline()
+
     ###
 
     def virtual_preferences(self, pkg_name, func):
@@ -3365,7 +3362,7 @@ class SpecBuilder:
         return NodeArgument(id="0", pkg=pkg)
 
     def __init__(self, specs, hash_lookup=None):
-        self._specs : Dict[NodeArgument, spack.spec.Spec]
+        self._specs: Dict[NodeArgument, spack.spec.Spec]
         self._specs = {}
         self._result = None
         self._command_line_specs = specs
@@ -3381,17 +3378,17 @@ class SpecBuilder:
             self._specs[node] = self._hash_lookup[h]
 
     def splice_hash(
-            self, 
-            splice_node: NodeArgument, 
-            orig_name: str,
-            splice_hash: str, 
-            parent_node: NodeArgument,
-        ):
+        self,
+        splice_node: NodeArgument,
+        orig_name: str,
+        splice_hash: str,
+        parent_node: NodeArgument,
+    ):
         parent_spec = self._specs[parent_node]
         pre_splice_spec = self._hash_lookup[splice_hash]
-        assert(pre_splice_spec in parent_spec.dependencies())
+        assert pre_splice_spec in parent_spec.dependencies()
         splice_spec = self._specs[splice_node]
-        splice_spec._finalize_concretization() # splice hashes come last, so this is fine
+        splice_spec._finalize_concretization()  # splice hashes come last, so this is fine
         self._specs[parent_node] = parent_spec.splice(splice_spec, transitive=False)
         return
 
@@ -3578,7 +3575,6 @@ class SpecBuilder:
         else:
             return (-1, 0)
 
-
     def build_specs(self, function_tuples):
         # Functions don't seem to be in particular order in output.  Sort
         # them here so that directives that build objects (like node and
@@ -3588,7 +3584,7 @@ class SpecBuilder:
         for name, args in self.function_tuples:
             if SpecBuilder.ignored_attributes.match(name):
                 continue
-            
+
             action = getattr(self, name, None)
 
             # print out unknown actions so we can display them for debugging
@@ -3728,7 +3724,7 @@ def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
         return True
 
     if spec.compiler.name == "gcc" and not spec.dependencies("gcc-runtime"):
-        return False 
+        return False
 
     if spec.compiler.name == "oneapi" and not spec.dependencies("intel-oneapi-runtime"):
         return False

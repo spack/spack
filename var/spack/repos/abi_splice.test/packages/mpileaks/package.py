@@ -1,12 +1,9 @@
-
 from spack.package import *
 
 
 class Mpileaks(Package):
-
     homepage = "https://www.example.com"
     has_code = False
-
     depends_on("mpi")
     version("1.0")
     depends_on("mpi@1", when="@1.0")

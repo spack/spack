@@ -1,27 +1,35 @@
-import pytest
+import os
+
 import py
+import pytest
+
 import archspec.cpu
+
+from llnl.util.filesystem import copy_tree, mkdirp, touchp
+
 import spack.abi
 import spack.config
 import spack.package_base
 import spack.paths
-from spack.spec import Spec
-import spack.solver.asp
 import spack.repo
-import os 
+import spack.solver.asp
 import spack.spec
-from llnl.util.filesystem import copy_tree, mkdirp, touchp
+from spack.spec import Spec
+
 
 @pytest.fixture(scope="session")
 def abi_splice_mock_repo_path():
     yield spack.repo.from_path(os.path.join(spack.paths.repos_path, "abi_splice.test"))
+
 
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
     if not os.path.exists(spec.package.install_log_path):
         touchp(spec.package.install_log_path)
-@pytest.fixture 
+
+
+@pytest.fixture
 def abi_splice_mock_pkg_install(monkeypatch):
     monkeypatch.setattr(spack.package_base.PackageBase, "install", _pkg_install_fn, raising=False)
 
@@ -31,7 +39,8 @@ def abi_splice_mock_packages(abi_splice_mock_repo_path, abi_splice_mock_pkg_inst
     if "abi_splice_config" in request.fixturenames:
         request.getfixturevalue("abi_splice_config")
     with spack.repo.use_repositories(abi_splice_mock_repo_path) as mock_repo:
-        yield mock_repo   
+        yield mock_repo
+
 
 @pytest.fixture(scope="session")
 def abi_splice_config_dir(tmpdir_factory, linux_os):
@@ -66,19 +75,22 @@ def abi_splice_config_dir(tmpdir_factory, linux_os):
     t.write(content)
     yield tmpdir
 
+
 def _create_mock_configuration_scopes(abi_splice_config_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
     return [
-        #spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
+        # spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
         spack.config.DirectoryConfigScope("site", str(abi_splice_config_dir.join("site"))),
         spack.config.DirectoryConfigScope("system", str(abi_splice_config_dir.join("system"))),
         spack.config.DirectoryConfigScope("user", str(abi_splice_config_dir.join("user"))),
         spack.config.InternalConfigScope("command_line"),
     ]
 
+
 @pytest.fixture(scope="session")
 def abi_splice_mock_config_scopes(abi_splice_config_dir):
     yield _create_mock_configuration_scopes(abi_splice_config_dir)
+
 
 @pytest.fixture(scope="function")
 def abi_splice_config(tmpdir_factory, abi_splice_config_dir):
@@ -100,6 +112,7 @@ def abi_splice_store_dir_and_cache(tmpdir_factory):
     cache = tmpdir_factory.mktemp("abi_splice_mock_store_cache")
     return store, cache
 
+
 @pytest.fixture(scope="session")
 def abi_splice_mock_store(
     tmpdir_factory,
@@ -120,7 +133,7 @@ def abi_splice_mock_store(
     # If the cache does not exist populate the store and create it
     if not os.path.exists(str(store_cache.join(".spack-db"))):
         with spack.config.use_configuration(*abi_splice_mock_config_scopes):
-            with spack.store.use_store(str(store_path)) as store:
+            with spack.store.use_store(str(store_path)) as _:
                 with spack.repo.use_repositories(abi_splice_mock_repo_path):
                     None
         copy_tree(str(store_path), str(store_cache))
@@ -130,12 +143,15 @@ def abi_splice_mock_store(
 
 
 @pytest.fixture(scope="function")
-def abi_splice_database(abi_splice_mock_store, abi_splice_config, abi_splice_mock_packages, abi_splice_mock_pkg_install):
+def abi_splice_database(
+    abi_splice_mock_store, abi_splice_config, abi_splice_mock_packages, abi_splice_mock_pkg_install
+):
     """This activates the mock store and config."""
     with spack.store.use_store(str(abi_splice_mock_store)) as store:
         yield store.db
         # Force reading the database again between tests
         store.db.last_seen_verifier = ""
+
 
 def test_simple_reuse(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
@@ -146,6 +162,7 @@ def test_simple_reuse(abi_splice_database, abi_splice_mock_packages, monkeypatch
     assert foo == new_foo
     foo.package.do_uninstall()
 
+
 def test_simple_dep_reuse(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
     monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
@@ -155,6 +172,7 @@ def test_simple_dep_reuse(abi_splice_database, abi_splice_mock_packages, monkeyp
     assert foo in bar.dependencies()
     foo.package.do_uninstall()
 
+
 def test_splice_installed_hash(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
     monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
@@ -162,27 +180,20 @@ def test_splice_installed_hash(abi_splice_database, abi_splice_mock_packages, mo
     new_bar = Spec("bar@1.0.2+compat").concretized()
     old_baz.package.do_install(fake=True, explicit=True)
     new_bar.package.do_install(fake=True, explicit=True)
-    baz_config = {
-        "baz": {
-            "buildable": False
-        }
-    }
+    baz_config = {"baz": {"buildable": False}}
     spack.config.set("packages", baz_config)
     Spec("baz@1 ^bar@1.0.2+compat ^foo@1.0.0+compat").concretized()
     old_baz.package.do_uninstall()
     new_bar.package.do_uninstall()
     assert True
 
+
 def test_splice_build_dep(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
     monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
     old_baz = Spec("baz@1 ^bar@1.0.0+compat ^foo@1.0.0+compat").concretized()
     old_baz.package.do_install(fake=True, explicit=True)
-    baz_config = {
-        "baz": {
-            "buildable": False
-        }
-    }
+    baz_config = {"baz": {"buildable": False}}
     spack.config.set("packages", baz_config)
     Spec("baz@1 ^bar@1.0.2+compat ^foo@1.0.0+compat").concretized()
     old_baz.package.do_uninstall()
@@ -196,16 +207,10 @@ def test_mpi_splices(abi_splice_database, abi_splice_mock_packages, monkeypatch)
     mpileaks_mpich = Spec("mpileaks ^mpich").concretized()
     mpileaks_openmpi.package.do_install(fake=True, explicit=True)
     mpileaks_mpich.package.do_install(fake=True, explicit=True)
-    mpileaks_config = {
-        "mpileaks": {
-            "buildable": False
-        }
-    }
+    mpileaks_config = {"mpileaks": {"buildable": False}}
     spack.config.set("packages", mpileaks_config)
     Spec("mpileaks ^xmpi abi=openmpi").concretized()
     Spec("mpileaks ^xmpi abi=mpich").concretized()
     mpileaks_openmpi.package.do_uninstall()
     mpileaks_mpich.package.do_uninstall()
     assert True
-
-    

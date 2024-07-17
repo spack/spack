@@ -1,5 +1,6 @@
 from spack.package import *
 
+
 class Bar(Package):
     homepage = "https://www.example.com"
     has_code = False
