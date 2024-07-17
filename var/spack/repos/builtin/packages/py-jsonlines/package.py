@@ -18,4 +18,4 @@ class PyJsonlines(PythonPackage):
     version("4.0.0", sha256="0c6d2c09117550c089995247f605ae4cf77dd1533041d366351f6f298822ea74")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-attrs", type=("build", "run"))
+    depends_on("py-attrs@19.2.0:", type=("build", "run"))
