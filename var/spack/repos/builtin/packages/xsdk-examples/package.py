@@ -16,7 +16,6 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("balay", "luszczek", "balos1", "shuds13", "v-dobrev")
 
-    version("develop", branch="master")
     version("0.4.0", sha256="de54e02e0222420976a2f4cf0a6230e4bb625b443c66500fa1441032db206df9")
     version(
         "0.3.0",
@@ -38,7 +37,6 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
             "xsdk+rocm amdgpu_target={0}".format(ac_), when="+rocm amdgpu_target={0}".format(ac_)
         )
 
-    depends_on("xsdk@develop", when="@develop")
     # Use ^dealii~hdf5 because of HDF5 linking issue in deal.II 9.4.0.
     # Disable 'arborx' to remove the 'kokkos' dependency which conflicts with
     # the internal Kokkos used by 'trilinos':
