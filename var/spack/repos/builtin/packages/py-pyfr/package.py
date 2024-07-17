@@ -27,7 +27,7 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     version(
         "2.0.3",
         sha256="1fd2ca377596ab541d929d2c7b2d27e376e21b5dd6c4c0e7653bbb53864dee61",
-        preferred=True
+        preferred=True,
     )
     version("2.0.2", sha256="2c6bf460ffec446a933451792c09d3cd85d6703f14636d99810d61823b8d92c7")
     version("1.15.0", sha256="6a634b9d32447f45d3c24c9de0ed620a0a0a781be7cc5e57b1c1bf44a4650d8d")
