@@ -35,6 +35,7 @@ class Tamaas(SConsPackage):
         when="+python",
         description="Enables extra Scipy-based nonlinear solvers",
     )
+    variant("petsc", default=False, when="@2.8.0:", description="Additional PETSc solvers")
 
     # Python 3.6 causes unicode issues with scons
     depends_on("python@3.7:", type="build", when="~python")
@@ -62,6 +63,8 @@ class Tamaas(SConsPackage):
         depends_on("py-wheel", type="build")
         depends_on("py-pip", type="build")
 
+    depends_on("petsc", type="build", when="+petsc")
+
     def build_args(self, spec, prefix):
         args = [
             "build_type=release",
@@ -83,6 +86,9 @@ class Tamaas(SConsPackage):
 
         if spec.satisfies("+python"):
             args += ["PYBIND11_ROOT={}".format(spec["py-pybind11"].prefix)]
+
+        if spec.satisfies("+petsc"):
+            args += ["PETSC_ROOT={}".format(spec["petsc"].prefix), "use_petsc=True"]
 
         return args
 
