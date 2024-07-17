@@ -46,6 +46,8 @@ class ClingoBootstrapConcretizer:
             compiler_name = "apple-clang"
         elif str(self.host_platform) == "windows":
             compiler_name = "msvc"
+        elif str(self.host_platform) == "freebsd":
+            compiler_name = "clang"
         else:
             raise RuntimeError(f"Cannot bootstrap clingo from sources on {self.host_platform}")
         candidates = spack.compilers.compilers_for_spec(
@@ -93,7 +95,10 @@ class ClingoBootstrapConcretizer:
             if not result.exists():
                 result = parent_dir / "prototypes" / f"clingo-{self.host_platform}-aarch64.json"
 
-        if not result.exists():
+        elif str(self.host_platform) == "freebsd":
+            result = parent_dir / "prototypes" / f"clingo-{self.host_platform}-amd64.json"
+
+        elif not result.exists():
             raise RuntimeError(f"Cannot bootstrap clingo from sources on {self.host_platform}")
 
         return result
