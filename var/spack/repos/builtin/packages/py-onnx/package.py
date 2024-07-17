@@ -65,3 +65,16 @@ class PyOnnx(PythonPackage):
 
     # 'python_out' does not recognize dllexport_decl.
     patch("remove_dllexport_decl.patch", when="@:1.6.0")
+
+    # By default, ONNX always uses .setuptools-cmake-build/ under the source path,
+    # so we allow overriding with a build environment variable
+    def patch(self):
+        filter_file(
+            r"^CMAKE_BUILD_DIR = (.*)$",
+            r"CMAKE_BUILD_DIR = os.getenv('CMAKE_BUILD_DIR', default=\1)",
+            "setup.py",
+        )
+
+    def setup_build_environment(self, env):
+        # Build in a similar directory as the CMake packages
+        env.set("CMAKE_BUILD_DIR", join_path(self.stage.path, f"spack-build-{self.spec.dag_hash(7)}"))
