@@ -31,13 +31,13 @@ import spack
 import spack.binary_distribution as bindist
 import spack.config as cfg
 import spack.environment as ev
+import spack.gpg
 import spack.main
 import spack.mirror
 import spack.paths
 import spack.repo
 import spack.spec
 import spack.util.git
-import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -1454,13 +1454,13 @@ def can_sign_binaries():
     """Utility method to determine if this spack instance is capable of
     signing binary packages.  This is currently only possible if the
     spack gpg keystore contains exactly one secret key."""
-    return len(gpg_util.signing_keys()) == 1
+    return len(spack.gpg.signing_keys()) == 1
 
 
 def can_verify_binaries():
     """Utility method to determin if this spack instance is capable (at
     least in theory) of verifying signed binaries."""
-    return len(gpg_util.public_keys()) >= 1
+    return len(spack.gpg.public_keys()) >= 1
 
 
 def _push_mirror_contents(input_spec, sign_binaries, mirror_url):

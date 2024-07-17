@@ -11,8 +11,8 @@ import pytest
 from llnl.util.filesystem import getuid, group_ids
 
 import spack.config
-import spack.util.lock as lk
 import spack.util.error
+import spack.util.lock as lk
 
 
 def test_disable_locking(tmpdir):

@@ -25,8 +25,8 @@ import llnl.url
 from llnl.util import lang, tty
 from llnl.util.filesystem import mkdirp, rename, working_dir
 
-import spack.util.url as url_util
 import spack.util.error
+import spack.util.url as url_util
 
 from .executable import CommandNotFoundError, which
 from .gcs import GCSBlob, GCSBucket, GCSHandler

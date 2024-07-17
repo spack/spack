@@ -38,6 +38,7 @@ import spack.cmd
 import spack.config as config
 import spack.database as spack_db
 import spack.error
+import spack.gpg
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
@@ -53,7 +54,6 @@ import spack.store
 import spack.traverse as traverse
 import spack.util.crypto
 import spack.util.file_cache as file_cache
-import spack.util.gpg
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -833,7 +833,7 @@ def tarball_path_name(spec, ext):
 
 def select_signing_key(key=None):
     if key is None:
-        keys = spack.util.gpg.signing_keys()
+        keys = spack.gpg.signing_keys()
         if len(keys) == 1:
             key = keys[0]
 
@@ -858,7 +858,7 @@ def sign_specfile(key, force, specfile_path):
             raise NoOverwriteException(signed_specfile_path)
 
     key = select_signing_key(key)
-    spack.util.gpg.sign(key, specfile_path, signed_specfile_path, clearsign=True)
+    spack.gpg.sign(key, specfile_path, signed_specfile_path, clearsign=True)
 
 
 def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_dir, concurrency):
@@ -1566,7 +1566,7 @@ def try_verify(specfile_path):
     suppress = config.get("config:suppress_gpg_warnings", False)
 
     try:
-        spack.util.gpg.verify(specfile_path, suppress_warnings=suppress)
+        spack.gpg.verify(specfile_path, suppress_warnings=suppress)
     except Exception:
         return False
 
@@ -2037,7 +2037,7 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
         if os.path.exists("%s.asc" % specfile_path):
             suppress = config.get("config:suppress_gpg_warnings", False)
             try:
-                spack.util.gpg.verify("%s.asc" % specfile_path, specfile_path, suppress)
+                spack.gpg.verify("%s.asc" % specfile_path, specfile_path, suppress)
             except Exception:
                 raise NoVerifyException(
                     "Spack was unable to verify package "
@@ -2443,7 +2443,7 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
             tty.debug("Found key {0}".format(fingerprint))
             if install:
                 if trust:
-                    spack.util.gpg.trust(stage.save_filename)
+                    spack.gpg.trust(stage.save_filename)
                     tty.debug("Added this key to trusted keys.")
                 else:
                     tty.debug(
@@ -2461,7 +2461,7 @@ def push_keys(*mirrors, **kwargs):
     tmpdir = kwargs.get("tmpdir")
     remove_tmpdir = False
 
-    keys = spack.util.gpg.public_keys(*(keys or []))
+    keys = spack.gpg.public_keys(*(keys or []))
 
     try:
         for mirror in mirrors:
@@ -2493,7 +2493,7 @@ def push_keys(*mirrors, **kwargs):
                 export_target = os.path.join(prefix, filename)
 
                 # Export public keys (private is set to False)
-                spack.util.gpg.export_keys(export_target, [fingerprint])
+                spack.gpg.export_keys(export_target, [fingerprint])
 
                 # If mirror is local, the above export writes directly to the
                 # mirror (export_target points directly to the mirror).

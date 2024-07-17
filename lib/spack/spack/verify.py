@@ -10,8 +10,8 @@ from typing import Any, Dict
 
 import llnl.util.tty as tty
 
-import spack.package_prefs as pp
 import spack.filesystem_view
+import spack.package_prefs as pp
 import spack.store
 import spack.util.spack_json as sjson
 from spack.package_base import spack_times_log

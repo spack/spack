@@ -25,12 +25,12 @@ import spack.binary_distribution as bindist
 import spack.caches
 import spack.config
 import spack.fetch_strategy
+import spack.gpg
 import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirror
 import spack.repo
 import spack.store
-import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -344,10 +344,10 @@ def test_push_and_fetch_keys(mock_gnupghome):
 
     # dir 1: create a new key, record its fingerprint, and push it to a new
     #        mirror
-    with spack.util.gpg.gnupghome_override(gpg_dir1):
-        spack.util.gpg.create(name="test-key", email="fake@test.key", expires="0", comment=None)
+    with spack.gpg.gnupghome_override(gpg_dir1):
+        spack.gpg.create(name="test-key", email="fake@test.key", expires="0", comment=None)
 
-        keys = spack.util.gpg.public_keys()
+        keys = spack.gpg.public_keys()
         assert len(keys) == 1
         fpr = keys[0]
 
@@ -355,12 +355,12 @@ def test_push_and_fetch_keys(mock_gnupghome):
 
     # dir 2: import the key from the mirror, and confirm that its fingerprint
     #        matches the one created above
-    with spack.util.gpg.gnupghome_override(gpg_dir2):
-        assert len(spack.util.gpg.public_keys()) == 0
+    with spack.gpg.gnupghome_override(gpg_dir2):
+        assert len(spack.gpg.public_keys()) == 0
 
         bindist.get_keys(mirrors=mirrors, install=True, trust=True, force=True)
 
-        new_keys = spack.util.gpg.public_keys()
+        new_keys = spack.gpg.public_keys()
         assert len(new_keys) == 1
         assert new_keys[0] == fpr
 

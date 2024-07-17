@@ -10,9 +10,9 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.bootstrap
-import spack.util.executable
-import spack.util.gpg
+import spack.gpg
 import spack.paths
+import spack.util.executable
 from spack.main import SpackCommand
 from spack.paths import mock_gpg_data_path, mock_gpg_keys_path
 from spack.util.executable import ProcessError
@@ -46,19 +46,19 @@ def test_find_gpg(cmd_name, version, tmpdir, mock_gnupghome, monkeypatch):
 
     monkeypatch.setenv("PATH", str(tmpdir))
     if version == "undetectable" or version.endswith("1.3.4"):
-        with pytest.raises(spack.util.gpg.SpackGPGError):
-            spack.util.gpg.init(force=True, gpg_path=spack.paths.gpg_path)
+        with pytest.raises(spack.gpg.SpackGPGError):
+            spack.gpg.init(force=True, gpg_path=spack.paths.gpg_path)
     else:
-        spack.util.gpg.init(force=True, gpg_path=spack.paths.gpg_path)
-        assert spack.util.gpg.GPG is not None
-        assert spack.util.gpg.GPGCONF is not None
+        spack.gpg.init(force=True, gpg_path=spack.paths.gpg_path)
+        assert spack.gpg.GPG is not None
+        assert spack.gpg.GPGCONF is not None
 
 
 def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch, mutable_config):
     monkeypatch.setenv("PATH", str(tmpdir))
     bootstrap("disable")
     with pytest.raises(RuntimeError):
-        spack.util.gpg.init(force=True, gpg_path=spack.paths.gpg_path)
+        spack.gpg.init(force=True, gpg_path=spack.paths.gpg_path)
 
 
 @pytest.mark.maybeslow
@@ -106,7 +106,7 @@ def test_gpg(tmpdir, mutable_config, mock_gnupghome):
         "Spack testing 1",
         "spack@googlegroups.com",
     )
-    keyfp = spack.util.gpg.signing_keys()[0]
+    keyfp = spack.gpg.signing_keys()[0]
 
     # List the keys.
     # TODO: Test the output here.

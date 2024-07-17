@@ -9,6 +9,7 @@ Do not import other ``spack`` modules here. This module is used
 throughout Spack and should bring in a minimal number of external
 dependencies.
 """
+import getpass
 import os
 import tempfile
 from datetime import date
@@ -16,7 +17,7 @@ from pathlib import PurePath
 
 import llnl.util.filesystem
 
-import spack.util.path
+from spack.util.path import NOMATCH
 
 #: This file lives in $prefix/lib/spack/spack/__file__
 prefix = str(PurePath(llnl.util.filesystem.ancestor(__file__, 4)))
@@ -169,7 +170,6 @@ def get_user():
 def path_replacements():
     # break circular imports
     import spack.environment as ev
-    import spack.paths
 
     arch = architecture()
 
@@ -186,6 +186,5 @@ def path_replacements():
         "target": lambda: arch.target,
         "target_family": lambda: arch.target.microarchitecture.family,
         "date": lambda: date.today().strftime("%Y-%m-%d"),
-        "env": lambda: ev.active_environment().path if ev.active_environment() else \
-                spack.util.path.NOMATCH,
+        "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
     }

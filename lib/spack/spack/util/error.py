@@ -85,4 +85,3 @@ class UtilityError(Exception):
 
     def __reduce__(self):
         return type(self), (self.message, self.long_message)
-

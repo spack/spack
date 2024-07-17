@@ -21,10 +21,10 @@ from llnl.util.symlink import symlink
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
 import spack.error
+import spack.gpg
 import spack.package_base
 import spack.repo
 import spack.store
-import spack.util.gpg
 import spack.util.url as url_util
 from spack.fetch_strategy import URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
@@ -72,7 +72,7 @@ def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
 
         create_args = ["create", "-f", "--rebuild-index", mirror_path, pkghash]
         # Create a private key to sign package with if gpg2 available
-        spack.util.gpg.create(
+        spack.gpg.create(
             name="test key 1",
             expires="0",
             email="spack@googlegroups.com",

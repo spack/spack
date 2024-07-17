@@ -7,14 +7,14 @@ import os
 
 import pytest
 
+import spack.gpg
 import spack.paths
-import spack.util.gpg
 
 
 @pytest.fixture()
 def has_socket_dir():
-    spack.util.gpg.init(gpg_path=spack.paths.gpg_path)
-    return bool(spack.util.gpg.SOCKET_DIR)
+    spack.gpg.init(gpg_path=spack.paths.gpg_path)
+    return bool(spack.gpg.SOCKET_DIR)
 
 
 def test_parse_gpg_output_case_one():
@@ -28,7 +28,7 @@ fpr:::::::::YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY:
 uid:::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>:
 ssb::2048:1:AAAAAAAAAAAAAAAA:AAAAAAAAAA::::::::::
 """
-    keys = spack.util.gpg._parse_secret_keys_output(output)
+    keys = spack.gpg._parse_secret_keys_output(output)
 
     assert len(keys) == 2
     assert keys[0] == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -45,7 +45,7 @@ ssb:-:2048:1:AAAAAAAAA::::::esa:::+:::23:
 fpr:::::::::YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY:
 grp:::::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:
 """
-    keys = spack.util.gpg._parse_secret_keys_output(output)
+    keys = spack.gpg._parse_secret_keys_output(output)
 
     assert len(keys) == 1
     assert keys[0] == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -64,7 +64,7 @@ uid:::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>:
 ssb::2048:1:AAAAAAAAAAAAAAAA:AAAAAAAAAA::::::::::
 fpr:::::::::ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ:"""
 
-    keys = spack.util.gpg._parse_secret_keys_output(output)
+    keys = spack.gpg._parse_secret_keys_output(output)
 
     assert len(keys) == 2
     assert keys[0] == "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
@@ -84,8 +84,8 @@ def test_really_long_gnupghome_dir(tmpdir, has_socket_dir):
     tdir = tdir[:N].rstrip(os.sep)
     tdir += "0" * (N - len(tdir))
 
-    with spack.util.gpg.gnupghome_override(tdir):
-        spack.util.gpg.create(
+    with spack.gpg.gnupghome_override(tdir):
+        spack.gpg.create(
             name="Spack testing 1", email="test@spack.io", comment="Spack testing key", expires="0"
         )
-        spack.util.gpg.list(True, True)
+        spack.gpg.list(True, True)

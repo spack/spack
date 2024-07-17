@@ -8,20 +8,22 @@
 TODO: this is really part of spack.config. Consolidate it.
 """
 import contextlib
-import getpass
 import os
 import re
 import subprocess
 import sys
-import tempfile
-from datetime import date
 
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
 
 import spack.util.spack_yaml as syaml
 
-__all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path", "NOMATCH"]
+__all__ = [
+    "substitute_config_variables",
+    "substitute_path_variables",
+    "canonicalize_path",
+    "NOMATCH",
+]
 
 
 # return value for replacements with no match
@@ -118,6 +120,7 @@ def substitute_config_variables(path, replacements={}):
     replaced if there is an active environment, and should only be used in
     environment yaml files.
     """
+
     # Look up replacements
     def repl(match):
         m = match.group(0)
@@ -200,8 +203,10 @@ def canonicalize_path(path, default_wd=None, replacements=None):
         _replacements = replacements
 
     if not isinstance(_replacements, dict):
-        tty.die("Replacements returned by replacements func are of type"
-                f"{type(replacements)} and not of the expected type of dict.")
+        tty.die(
+            "Replacements returned by replacements func are of type"
+            f"{type(replacements)} and not of the expected type of dict."
+        )
 
     path = substitute_path_variables(path, replacements=_replacements)
     if not os.path.isabs(path):

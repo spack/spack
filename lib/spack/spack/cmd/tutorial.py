@@ -11,9 +11,9 @@ from llnl.util.filesystem import working_dir
 
 import spack
 import spack.config
+import spack.gpg
 import spack.paths
 import spack.util.git
-import spack.util.gpg
 from spack.cmd.common import arguments
 from spack.util.spack_yaml import syaml_dict
 
@@ -76,7 +76,7 @@ def tutorial(parser, args):
     spack.config.set("mirrors", mirror_config, scope="user")
 
     tty.msg("Ensuring that we trust tutorial binaries", f"spack gpg trust {tutorial_key}")
-    spack.util.gpg.trust(tutorial_key)
+    spack.gpg.trust(tutorial_key)
 
     # Note that checkout MUST be last. It changes Spack under our feet.
     # If you don't put this last, you'll get import errors for the code

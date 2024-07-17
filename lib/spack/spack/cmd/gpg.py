@@ -7,9 +7,9 @@ import argparse
 import os
 
 import spack.binary_distribution
+import spack.gpg
 import spack.mirror
 import spack.paths
-import spack.util.gpg
 import spack.util.url
 from spack.cmd.common import arguments
 
@@ -129,40 +129,40 @@ def setup_parser(subparser):
 def gpg_create(args):
     """create a new key"""
     if args.export or args.secret:
-        old_sec_keys = spack.util.gpg.signing_keys()
+        old_sec_keys = spack.gpg.signing_keys()
 
     # Create the new key
-    spack.util.gpg.create(
+    spack.gpg.create(
         name=args.name, email=args.email, comment=args.comment, expires=args.expires
     )
     if args.export or args.secret:
-        new_sec_keys = set(spack.util.gpg.signing_keys())
+        new_sec_keys = set(spack.gpg.signing_keys())
         new_keys = new_sec_keys.difference(old_sec_keys)
 
     if args.export:
-        spack.util.gpg.export_keys(args.export, new_keys)
+        spack.gpg.export_keys(args.export, new_keys)
     if args.secret:
-        spack.util.gpg.export_keys(args.secret, new_keys, secret=True)
+        spack.gpg.export_keys(args.secret, new_keys, secret=True)
 
 
 def gpg_export(args):
     """export a gpg key, optionally including secret key"""
     keys = args.keys
     if not keys:
-        keys = spack.util.gpg.signing_keys()
-    spack.util.gpg.export_keys(args.location, keys, args.secret)
+        keys = spack.gpg.signing_keys()
+    spack.gpg.export_keys(args.location, keys, args.secret)
 
 
 def gpg_list(args):
     """list keys available in the keyring"""
-    spack.util.gpg.list(args.trusted, args.signing)
+    spack.gpg.list(args.trusted, args.signing)
 
 
 def gpg_sign(args):
     """sign a package"""
     key = args.key
     if key is None:
-        keys = spack.util.gpg.signing_keys()
+        keys = spack.gpg.signing_keys()
         if len(keys) == 1:
             key = keys[0]
         elif not keys:
@@ -173,12 +173,12 @@ def gpg_sign(args):
     if not output:
         output = args.spec[0] + ".asc"
     # TODO: Support the package format Spack creates.
-    spack.util.gpg.sign(key, " ".join(args.spec), output, args.clearsign)
+    spack.gpg.sign(key, " ".join(args.spec), output, args.clearsign)
 
 
 def gpg_trust(args):
     """add a key to the keyring"""
-    spack.util.gpg.trust(args.keyfile)
+    spack.gpg.trust(args.keyfile)
 
 
 def gpg_init(args):
@@ -191,12 +191,12 @@ def gpg_init(args):
         for filename in filenames:
             if not filename.endswith(".key"):
                 continue
-            spack.util.gpg.trust(os.path.join(root, filename))
+            spack.gpg.trust(os.path.join(root, filename))
 
 
 def gpg_untrust(args):
     """remove a key from the keyring"""
-    spack.util.gpg.untrust(args.signing, *args.keys)
+    spack.gpg.untrust(args.signing, *args.keys)
 
 
 def gpg_verify(args):
@@ -205,7 +205,7 @@ def gpg_verify(args):
     signature = args.signature
     if signature is None:
         signature = args.spec[0] + ".asc"
-    spack.util.gpg.verify(signature, " ".join(args.spec))
+    spack.gpg.verify(signature, " ".join(args.spec))
 
 
 def gpg_publish(args):

@@ -25,8 +25,8 @@ def determine_number_of_jobs(
     *,
     parallel: bool = False,
     max_cpus: int = cpus_available(),
-    config: Optional["spack.config.Configuration"] = None,
-    config_path: str = 'config:build_jobs',
+    config=None,
+    config_path: str = "config:build_jobs",
 ) -> int:
     """
     Packages that require sequential builds need 1 job. Otherwise we use the

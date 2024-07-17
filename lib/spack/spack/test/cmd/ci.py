@@ -18,11 +18,11 @@ import spack.binary_distribution
 import spack.ci as ci
 import spack.config
 import spack.environment as ev
+import spack.gpg
 import spack.hash_types as ht
 import spack.main
 import spack.paths as spack_paths
 import spack.repo as repo
-import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.schema.buildcache_spec import schema as specfile_schema

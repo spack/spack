@@ -52,7 +52,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         return pathlib.Path(
             spack.util.path.canonicalize_path(
                 os.path.join(bootstrap_root_path, "environments", environment_dir),
-                replacements=spack.paths.path_replacements()
+                replacements=spack.paths.path_replacements(),
             )
         )
 
@@ -139,7 +139,9 @@ class BootstrapEnvironment(spack.environment.Environment):
             "-C",
             str(self.environment_root()),
             "-j",
-            str(spack.util.cpus.determine_number_of_jobs(parallel=True, config=spack.config.CONFIG)),
+            str(
+                spack.util.cpus.determine_number_of_jobs(parallel=True, config=spack.config.CONFIG)
+            ),
             **kwargs,
         )
 

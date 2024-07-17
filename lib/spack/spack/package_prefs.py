@@ -2,17 +2,17 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import stat
 import warnings
-import os
 
 import spack.error
-import spack.repo
 import spack.paths
+import spack.repo
+import spack.util.file_permissions as fp
 from spack.config import ConfigError
 from spack.util.path import canonicalize_path
 from spack.version import Version
-import spack.util.file_permissions as fp
 
 _lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": Version}
 
