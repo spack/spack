@@ -5,6 +5,7 @@
 import collections
 import collections.abc
 import contextlib
+import errno
 import os
 import pathlib
 import re
@@ -787,6 +788,20 @@ class ViewDescriptor:
 
         root_dirname = os.path.dirname(self.root)
         tmp_symlink_name = os.path.join(root_dirname, "._view_link")
+
+        # Remove self.root if is it an empty dir, since we need a symlink there. Note that rmdir
+        # fails if self.root is a symlink.
+        try:
+            os.rmdir(self.root)
+        except (FileNotFoundError, NotADirectoryError):
+            pass
+        except OSError as e:
+            if e.errno == errno.ENOTEMPTY:
+                raise SpackEnvironmentViewError(
+                    f"The environment view in {self.root} cannot not be created because it is a "
+                    "non-empty directory."
+                ) from e
+            raise
 
         # Create a new view
         try:
