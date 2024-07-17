@@ -117,7 +117,7 @@ class Rust(Package):
             version_str = match.group(1) if match else None
             return Spec.from_detection(
                 "rust@{0}".format(version_str)
-            )
+            ) if version_str else None
 
     def setup_dependent_package(self, module, dependent_spec):
         module.cargo = Executable(os.path.join(self.spec.prefix.bin, "cargo"))
