@@ -815,40 +815,29 @@ class ViewDescriptor:
 
             # mv symlink atomically over root symlink to old_root
             fs.rename(tmp_symlink_name, self.root)
-        except Exception as e:
+        except ConflictingSpecsError as e:
+            # Give an informative error message for the typical error case: two specs, same package
+            # project to same prefix.
+            spec_a = e.args[0].format(color=clr.get_color_when())
+            spec_b = e.args[1].format(color=clr.get_color_when())
+            raise SpackEnvironmentViewError(
+                f"The environment view in {self.root} could not be created, "
+                "because the following two specs project to the same prefix:\n"
+                f"    {spec_a}, and\n"
+                f"    {spec_b}.\n"
+                "    To resolve this issue:\n"
+                "        a. use `concretization:unify:true` to ensure there is only one "
+                "package per spec in the environment, or\n"
+                "        b. disable views with `view:false`, or\n"
+                "        c. create custom view projections."
+            ) from e
+        finally:
             # Clean up new view and temporary symlink on any failure.
             try:
                 shutil.rmtree(new_root, ignore_errors=True)
                 os.unlink(tmp_symlink_name)
             except OSError:
                 pass
-
-            # Give an informative error message for the typical error case: two specs, same package
-            # project to same prefix.
-            if isinstance(e, ConflictingSpecsError):
-                spec_a = e.args[0].format(color=clr.get_color_when())
-                spec_b = e.args[1].format(color=clr.get_color_when())
-                raise SpackEnvironmentViewError(
-                    f"The environment view in {self.root} could not be created, "
-                    "because the following two specs project to the same prefix:\n"
-                    f"    {spec_a}, and\n"
-                    f"    {spec_b}.\n"
-                    "    To resolve this issue:\n"
-                    "        a. use `concretization:unify:true` to ensure there is only one "
-                    "package per spec in the environment, or\n"
-                    "        b. disable views with `view:false`, or\n"
-                    "        c. create custom view projections."
-                ) from e
-            raise
-
-            # Give an informative error message for another error case: target directory exists
-            # and is not empty
-            if isinstance(e, IsADirectoryError):
-                raise SpackEnvironmentViewError(
-                    f"The environment view in {new_root} could not be created, "
-                    "because the target directory already exists and is not empty."
-                ) from e
-            raise
 
         # Remove the old root when it's in the same folder as the new root. This guards
         # against removal of an arbitrary path when the original symlink in self.root
