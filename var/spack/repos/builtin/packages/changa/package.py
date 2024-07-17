@@ -6,15 +6,10 @@
 from spack.package import *
 
 
-class Changa(AutotoolsPackage):
+class Changa(AutotoolsPackage, CudaPackage):
     """ChaNGa (Charm N-body GrAvity solver) is a code to perform collisionless
-    N-body simulations. It can perform cosmological simulations with periodic
-    boundary conditions in comoving coordinates or simulations of isolated
-    stellar systems. It also can include hydrodynamics using the Smooth
-    Particle Hydrodynamics (SPH) technique. It uses a Barnes-Hut tree to
-    calculate gravity, with hexadecapole expansion of nodes and
-    Ewald summation for periodic forces. Timestepping is done with a leapfrog
-    integrator with individual timesteps for each particle."""
+    N-body simulations.
+    """
 
     homepage = "https://faculty.washington.edu/trq/hpcc/tools/changa.html"
     url = "https://github.com/N-BodyShop/changa/archive/v3.4.tar.gz"
@@ -52,6 +47,7 @@ class Changa(AutotoolsPackage):
     )
 
     depends_on("charmpp build-target=ChaNGa")
+    depends_on("charmpp +cuda", when="+cuda")
     depends_on("libjpeg")
     depends_on("zlib-api")
 
@@ -64,6 +60,8 @@ class Changa(AutotoolsPackage):
         args = [f"STRUCT_DIR={self.stage.source_path}/utility/structures"]
         if "avx" in self.spec.target:
             args.append("--enable-arch=avx")
+        if self.spec.satisfies("+cuda"):
+            args.append(f"--with-cuda={self.spec['cuda'].prefix}")
         return args
 
     def install(self, spec, prefix):
