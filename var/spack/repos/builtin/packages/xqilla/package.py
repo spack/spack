@@ -17,6 +17,9 @@ class Xqilla(AutotoolsPackage, SourceforgePackage):
 
     version("2.3.3", sha256="8f76b9b4f966f315acc2a8e104e426d8a76ba4ea3441b0ecfdd1e39195674fd6")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("debug", default=False, description="Build a debugging version.")
     variant("shared", default=True, description="Build shared libraries.")
 

@@ -44,6 +44,10 @@ class Abinit(AutotoolsPackage):
     # Versions before 8.0.8b are not supported.
     version("8.0.8b", sha256="37ad5f0f215d2a36e596383cb6e54de3313842a0390ce8d6b48a423d3ee25af2")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=True, description="Builds with MPI support. Requires MPI2+")
     variant("openmp", default=False, description="Enables OpenMP threads. Use threaded FFTW3")
     variant("scalapack", default=False, description="Enables scalapack support. Requires MPI")

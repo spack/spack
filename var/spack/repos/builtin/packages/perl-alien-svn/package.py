@@ -22,6 +22,9 @@ class PerlAlienSvn(PerlPackage):
     version("1.7.3.0", sha256="02abbe17ad7db912001e6f1c5018cec08c3840e0c32700363a79274e144e74e5")
     version("1.6.12.1", sha256="a89d8eeff61e34aa7b3d35dee3e6752b12dfa5f0f04bf69d796846cf0391f53d")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("perl-module-build", type="build")
     depends_on("apr@1.6.2", type="build")
     depends_on("apr-util", type=("build", "link"))

@@ -17,6 +17,9 @@ class Neartree(MakefilePackage):
 
     version("3.1", sha256="07b668516f15a7c13c219fd005b14e73bced5dc6b23857edcc24d3e5cf0d3be3")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("libtool", type="build")
     depends_on("cvector")
 

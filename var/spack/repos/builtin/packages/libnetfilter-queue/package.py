@@ -18,6 +18,8 @@ class LibnetfilterQueue(AutotoolsPackage):
         "1.2-2019Q4", sha256="73b87e600b492cf9e3aa8fb6e9855e1ccc523a7bc466c1fd1a0e6ffa424d746e"
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")

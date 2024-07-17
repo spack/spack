@@ -51,6 +51,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     version("0.1.0", sha256="aa0ae2396cd264d821a73c4c7ecb118729bb3de042920c9248909d33755e7327")
     version("main", branch="main")
 
+    depends_on("cxx", type="build")  # generated
+
     generator("ninja")
 
     variant("shared", default=True, description="Build shared libraries")

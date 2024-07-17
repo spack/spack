@@ -21,6 +21,10 @@ class Cantera(SConsPackage):
     version("2.3.0", sha256="06624f0f06bdd2acc9c0dba13443d945323ba40f68a9d422d95247c02e539b57")
     version("2.2.1", sha256="c7bca241848f541466f56e479402521c618410168e8983e2b54ae48888480e1e")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("python", default=False, description="Build the Cantera Python module")
     variant("matlab", default=False, description="Build the Cantera Matlab toolbox")
     variant("sundials", default=True, description="Build with Sundials")

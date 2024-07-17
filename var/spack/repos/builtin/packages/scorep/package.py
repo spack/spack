@@ -69,6 +69,10 @@ class Scorep(AutotoolsPackage):
         deprecated="true",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     def url_for_version(self, version):
         if version < Version("7.0"):
             return "https://www.vi-hps.org/cms/upload/packages/scorep/scorep-{0}.tar.gz".format(

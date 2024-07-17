@@ -38,6 +38,8 @@ class Spiner(CMakePackage, CudaPackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+
     # When overriding/overloading varaints, the last variant is always used, except for
     # "when" clauses. Therefore, call the whens FIRST then the non-whens.
     # https://spack.readthedocs.io/en/latest/packaging_guide.html#overriding-variants

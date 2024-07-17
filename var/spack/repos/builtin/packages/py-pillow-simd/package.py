@@ -26,6 +26,8 @@ class PyPillowSimd(PyPillowBase):
         "6.2.2.post1", sha256="d29b673ac80091797f1e8334458be307e4ac4ab871b0e495cfe56cb7b1d7704e"
     )
 
+    depends_on("c", type="build")  # generated
+
     for ver in ["6.2.2.post1", "7.0.0.post3", "9.0.0.post1"]:
         provides("pil@" + ver, when="@" + ver)
 
