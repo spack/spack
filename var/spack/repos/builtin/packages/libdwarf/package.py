@@ -32,16 +32,24 @@ class Libdwarf(CMakePackage, Package):
 
     version("0.10.1", sha256="b511a2dc78b98786064889deaa2c1bc48a0c70115c187900dd838474ded1cc19")
     with default_args(deprecated=True):
-        version("20180129", sha256="8bd91b57064b0c14ade5a009d3a1ce819f1b6ec0e189fc876eb8f42a8720d8a6")
-        version("20160507", sha256="12ae39376e3915bf8fa92555989f3ad5f2f4f332b590a628541ce68987b337af")
-        version("20130729", sha256="b6455d8616baf2883e2af91f006d6cbd583128fdfff46e3d1fae460bc223bb7b")
-        version("20130207", sha256="5cb81459f0a1f6a2a10ef4635faddc2fa5e1a9e36901018c017759e491e708b8")
-        version("20130126", sha256="c23c847935f8612f4fcdcfa0b3311f1553dcbd95bb683d3d5e030440201192fe")
+        version(
+            "20180129", sha256="8bd91b57064b0c14ade5a009d3a1ce819f1b6ec0e189fc876eb8f42a8720d8a6"
+        )
+        version(
+            "20160507", sha256="12ae39376e3915bf8fa92555989f3ad5f2f4f332b590a628541ce68987b337af"
+        )
+        version(
+            "20130729", sha256="b6455d8616baf2883e2af91f006d6cbd583128fdfff46e3d1fae460bc223bb7b"
+        )
+        version(
+            "20130207", sha256="5cb81459f0a1f6a2a10ef4635faddc2fa5e1a9e36901018c017759e491e708b8"
+        )
+        version(
+            "20130126", sha256="c23c847935f8612f4fcdcfa0b3311f1553dcbd95bb683d3d5e030440201192fe"
+        )
 
     build_system(
-        conditional("generic", when="@2013:"),
-        conditional("cmake", when="@:2013"),
-        default="cmake",
+        conditional("generic", when="@2013:"), conditional("cmake", when="@:2013"), default="cmake"
     )
 
     with when("@:2013"):
@@ -51,8 +59,12 @@ class Libdwarf(CMakePackage, Package):
         variant("pic", default=False, description="Build with position indepedent code")
         variant("dwarfdump", default=True, description="Build dwarfdump")
         variant("dwarfgen", default=False, description="Build dwarfgen")
-        variant("decompression", default=True, description="Enables support for compressed debug sections if both libz/libzstd are present")
-    
+        variant(
+            "decompression",
+            default=True,
+            description="Enables support for compressed debug sections"
+        )
+
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
@@ -61,7 +73,7 @@ class Libdwarf(CMakePackage, Package):
 
     depends_on("elfutils@0.163", when="@20160507", type="link")
     depends_on("elf", when="@2013:", type="link")
-    
+
     depends_on("zlib-api", when="@2013:", type="link")
 
     with when("@:2013 +decompression"):
@@ -69,6 +81,7 @@ class Libdwarf(CMakePackage, Package):
         depends_on("zstd", type="link")
 
     parallel = False
+
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
@@ -88,6 +101,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         ]
 
         return args
+
 
 class GenericBuilder(spack.build_systems.generic.GenericBuilder):
     def patch(self):
