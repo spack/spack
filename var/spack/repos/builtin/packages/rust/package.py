@@ -109,11 +109,11 @@ class Rust(Package):
         # Both rustc and cargo must be present
         if not (rustc_candidates and cargo_candidates):
             return
-        for rustc in rustc_candidates:
-            output = Executable(rustc)("--version", output=str, error=str)
-            match = re.match(r"rustc (\S+)", output)
-            version_str = match.group(1) if match else None
-            return Spec.from_detection("rust@{0}".format(version_str)) if version_str else None
+        output = Executable(rustc_candidates[0])("--version", output=str, error=str)
+        match = re.match(r"rustc (\S+)", output)
+        if match:
+            version_str = match.group(1)
+            return Spec.from_detection(f"rust@{version_str}")
 
     def setup_dependent_package(self, module, dependent_spec):
         module.cargo = Executable(os.path.join(self.spec.prefix.bin, "cargo"))
