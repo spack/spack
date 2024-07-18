@@ -82,6 +82,11 @@ class Libdwarf(CMakePackage, Package):
 
     parallel = False
 
+    def url_for_version(self, version):
+        if version >= Version("2013"):
+            return super().url_for_version(version)
+        return f"https://www.prevanders.net/libdwarf-{version}.tar.xz"
+
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
