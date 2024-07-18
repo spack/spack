@@ -113,7 +113,7 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
     def patch(self):
         filter_file(r"^typedef struct Elf Elf;$", "", "libdwarf/libdwarf.h.in")
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         # dwarf build does not set arguments for ar properly
         make.add_default_arg("ARFLAGS=rcs")
 
