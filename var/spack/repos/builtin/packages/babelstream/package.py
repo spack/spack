@@ -122,10 +122,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         description="Which THRUST implementation to use, supported options include option",
     )
 
-    # Kokkos conflict and variant
-    conflicts(
-        "dir=none", when="+kokkos", msg="KOKKKOS requires architecture to be specfied by dir="
-    )
+    # Kokkos variant
     variant("kokkos", default=False, description="Enable KOKKOS support")
 
     # ACC conflict
@@ -241,7 +238,10 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     )
 
     # Kokkos Dependency
-    depends_on("kokkos@3.7.1", when="+kokkos")
+    cuda_archs = CudaPackage.cuda_arch_values
+    for sm_ in cuda_archs:
+        depends_on("kokkos +cuda +wrapper cuda_arch={0}".format(sm_), when="kokkos_backend=cuda cuda_arch={0}".format(sm_))
+    depends_on("kokkos +openmp", when="kokkos_backend=omp")
 
     # OpenCL Dependency
     variant(
@@ -634,15 +634,13 @@ register_flag_optional(TARGET_PROCESSOR
         # kokkos implementation is versatile and it could use cuda or omp architectures as backend
         # The usage should be spack install babelstream +kokkos backend=[cuda or omp or none]
         if "+kokkos" in self.spec:
-            args.append("-DKOKKOS_IN_TREE=" + self.spec.variants["dir"].value)
-            # kokkos needs to be build from the directory
-            # args.append("-DKOKKOS_IN_PACKAGE=" + self.spec["kokkos"].prefix)
+            args.append("-DCMAKE_C_COMPILER=" + spack_cc)
+            args.append("-DKOKKOS_IN_PACKAGE=" + self.spec["kokkos"].prefix)
             if "cuda" in self.spec.variants["kokkos_backend"].value:
+                # args.append("-DCMAKE_CXX_COMPILER=" + self.spec["cuda"].nvcc)
+                args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
                 args.append("-DKokkos_ENABLE_CUDA=ON")
-                args.append("-DCMAKE_CUDA_COMPILER=" + spack_cc)
-                args.append("-DCUDA_ARCH=sm_" + self.spec.variants["cuda_arch"].value[0])
-                cuda_arch_list = self.spec.variants["cuda_arch"].value
-                int_cuda_arch = int(cuda_arch_list[0])
+                int_cuda_arch = int(self.spec.variants["cuda_arch"].value[0])
                 # arhitecture kepler optimisations
                 if int_cuda_arch in (30, 32, 35, 37):
                     args.append("-D" + "Kokkos_ARCH_KEPLER" + str(int_cuda_arch) + "=ON")
@@ -667,6 +665,7 @@ register_flag_optional(TARGET_PROCESSOR
             args.append("-DCMAKE_CXX_COMPILER_FORCED=True")
 
         return args
+
 
 
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
