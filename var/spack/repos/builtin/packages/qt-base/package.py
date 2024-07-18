@@ -93,6 +93,8 @@ class QtBase(QtPackage):
 
     license("BSD-3-Clause")
 
+    version("6.7.2", sha256="96b96e4fd0fc306502ed8b94a34cfa0bacc8a25d43c2e958dd6772b28f6b0e42")
+    version("6.7.1", sha256="d6950597ce1fc2e1cf374c3aa70c2d72532bb74150e9853d7127af86a8a6c7b4")
     version("6.7.0", sha256="e17f016ec987092423e86d732c0f9786124598877fa00970fd806da113c02ca5")
     version("6.6.3", sha256="11abfcae323d295129f644f1828064e05af7d64d49edb0e00bfb8e8cb9691259")
     version("6.6.2", sha256="2cbdc4791c5838fddb1ce7ee693b165bb4acf3f81acd6c1bf9e56413b25050df")
