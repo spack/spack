@@ -34,6 +34,8 @@ class ComposableKernel(CMakePackage):
         version("5.4.3", commit="bb3d9546f186e39cefedc3e7f01d88924ba20168")
         version("5.4.0", commit="236bd148b98c7f1ec61ee850fcc0c5d433576305")
 
+    depends_on("cxx", type="build")  # generated
+
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
         "amdgpu_target",
@@ -87,7 +89,10 @@ class ComposableKernel(CMakePackage):
         if "auto" not in self.spec.variants["amdgpu_target"]:
             args.append(self.define_from_variant("GPU_TARGETS", "amdgpu_target"))
         if self.spec.satisfies("@5.6.0:"):
-            args.append(self.define("INSTANCES_ONLY", "ON"))
+            if self.run_tests:
+                args.append(self.define("BUILD_TESTING", "ON"))
+            else:
+                args.append(self.define("INSTANCES_ONLY", "ON"))
             args.append(self.define("CK_BUILD_JIT_LIB", "ON"))
             args.append(self.define("CMAKE_POSITION_INDEPENDENT_CODE", "ON"))
         if self.spec.satisfies("@:5.7"):

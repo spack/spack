@@ -16,5 +16,7 @@ class ProcpsNg(AutotoolsPackage):
 
     version("3.3.16", sha256="925eacd65dedcf9c98eb94e8978bbfb63f5de37294cc1047d81462ed477a20af")
 
+    depends_on("c", type="build")  # generated
+
     def setup_run_environment(self, env):
         env.prepend_path("PATH", self.prefix.sbin)

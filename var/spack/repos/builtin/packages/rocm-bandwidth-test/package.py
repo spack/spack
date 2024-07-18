@@ -35,6 +35,8 @@ class RocmBandwidthTest(CMakePackage):
         version("5.3.3", sha256="2bc079297e639d45d57c8017f6f47bc44d4ed34613ec76c80574bb703d79b498")
         version("5.3.0", sha256="a97365c04d79663db7c85027c63a12d56356abc0a351697f49c2d82bf9ef8999")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3:", type="build")
 
     for ver in [

@@ -44,6 +44,9 @@ class Ffmpeg(AutotoolsPackage):
     version("2.8.15", sha256="35647f6c1f6d4a1719bc20b76bf4c26e4ccd665f46b5676c0e91c5a04622ee21")
     version("1.0.10", sha256="1dbde434c3b5c573d3b2ffc1babe3814f781c10c4bc66193a4132a44c9715176")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # Licensing
     variant(
         "gpl",

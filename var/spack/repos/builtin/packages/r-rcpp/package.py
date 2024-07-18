@@ -47,6 +47,9 @@ class RRcpp(RPackage):
     version("0.12.6", sha256="1bb54e03b817a3d6ab5917f1bbf5250c6b33f61e466628a378022ed65a010141")
     version("0.12.5", sha256="13449481c91b5271b34d81f462864864c1905bb05021781eee11c36fdafa80ef")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # leave the r dependency also for newer versions
     # (not listed in Description for @1.0.5:)
     depends_on("r@3.0.0:", type=("build", "run"))

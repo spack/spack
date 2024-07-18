@@ -18,5 +18,7 @@ class Gmime(AutotoolsPackage):
 
     version("2.6.23", sha256="7149686a71ca42a1390869b6074815106b061aaeaaa8f2ef8c12c191d9a79f6a")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("glib@2.18.0:")
     depends_on("libgpg-error")

@@ -43,6 +43,9 @@ class Apcomp(Package):
         version("0.0.2", sha256="cb2e2c4524889408de2dd3d29665512c99763db13e6f5e35c3b55e52948c649c")
         version("0.0.1", sha256="cbf85fe58d5d5bc2f468d081386cc8b79861046b3bb7e966edfa3f8e95b998b2")
 
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("openmp", default=True, description="Build with openmp support")
     variant("mpi", default=True, description="Build with MPI support")
     variant("shared", default=True, description="Build Shared Library")

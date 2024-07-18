@@ -54,6 +54,9 @@ class RocmOpencl(CMakePackage):
 
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3:", type="build")
     depends_on("gl@4.5:", type="link")
     depends_on("numactl", type="link")

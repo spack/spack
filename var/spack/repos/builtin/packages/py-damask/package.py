@@ -36,6 +36,9 @@ class PyDamask(PythonPackage):
         "3.0.0-alpha4", sha256="0bb8bde43b27d852b1fb6e359a7157354544557ad83d87987b03f5d629ce5493"
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("py-pandas@0.24:", type=("build", "run"), when="@3.0.0-alpha8:")
     depends_on("py-numpy@1.17:", type=("build", "run"), when="@3.0.0-alpha8:")
     depends_on("py-scipy@1.2:", type=("build", "run"), when="@3.0.0-alpha8:")

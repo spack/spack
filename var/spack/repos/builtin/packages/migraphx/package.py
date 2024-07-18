@@ -39,6 +39,9 @@ class Migraphx(CMakePackage):
 
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     patch("0001-Adding-nlohmann-json-include-directory.patch", when="@:5.5")
     # Restrict Python 2.7 usage to fix the issue below
     # https://github.com/spack/spack/issues/24429

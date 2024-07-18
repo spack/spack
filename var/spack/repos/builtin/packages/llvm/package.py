@@ -94,6 +94,9 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
     version("5.0.1", sha256="84ca454abf262579814a2a2b846569f6e0cb3e16dc33ca3642b4f1dff6fbafd3")
     version("5.0.0", sha256="1f1843315657a4371d8ca37f01265fa9aae17dbcf46d2d0a95c1fdb3c6a4bab6")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     variant(
         "clang", default=True, description="Build the LLVM C/C++/Objective-C compiler frontend"
     )
