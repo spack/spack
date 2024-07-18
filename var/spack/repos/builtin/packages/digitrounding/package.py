@@ -19,6 +19,8 @@ class Digitrounding(CMakePackage):
     version("master", branch="master")
     version("2020-02-27", commit="7b18679aded7a85e6f221f7f5cd4f080f322bc33")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("zlib-api")
 
     variant("shared", default=True, description="build shared libraries")

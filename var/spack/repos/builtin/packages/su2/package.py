@@ -38,6 +38,10 @@ class Su2(MesonPackage):
     version("7.0.0", sha256="6207dcca15eaebc11ce12b2866c937b4ad9b93274edf6f23d0487948ac3963b8")
     version("6.2.0", sha256="ffc953326e8432a1a6534556a5f6cf086046d3149cfcec6b4e7390eebe30ce2e")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=False, description="Enable MPI support")
     variant("openmp", default=False, description="Enable OpenMP support")
     variant("tecio", default=True, description="Enable TECIO support")

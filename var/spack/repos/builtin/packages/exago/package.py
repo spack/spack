@@ -60,6 +60,10 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     )
     version("kpp2", tag="kpp2", commit="1da764d80a2db793f4c43ca50e50981f7ed3880a", submodules=True)
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Progrmming model options
     variant("mpi", default=True, description="Enable/Disable MPI")
     variant("raja", default=False, description="Enable/Disable RAJA")

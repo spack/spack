@@ -23,6 +23,9 @@ class MgcfdOp2(MakefilePackage):
 
     version("v1.0.0-rc1")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("mpi", default=False, description="Enable MPI support")
 
     depends_on("gmake@4.3:")

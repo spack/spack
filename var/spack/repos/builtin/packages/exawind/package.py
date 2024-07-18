@@ -21,6 +21,8 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="main", submodules=True, preferred=True)
     version("1.0.0", tag="v1.0.0", submodules=True)
 
+    depends_on("cxx", type="build")  # generated
+
     variant("amr_wind_gpu", default=False, description="Enable AMR-Wind on the GPU")
     variant("nalu_wind_gpu", default=False, description="Enable Nalu-Wind on the GPU")
     variant("sycl", default=False, description="Enable SYCL backend for AMR-Wind")

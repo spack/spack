@@ -24,6 +24,10 @@ class LlvmOpenmpOmpt(CMakePackage):
     # align-to-tr-rebased branch
     version("3.9.2b", commit="982a08bcf3df9fb5afc04ac3bada47f19cc4e3d3")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # variant for building llvm-openmp-ompt as a stand alone library
     variant(
         "standalone",

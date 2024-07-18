@@ -23,6 +23,8 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
     )
     version("develop", submodules=False, branch="develop")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("klu", default=True, description="Use KLU, AMD and COLAMD Libraries from SuiteSparse")
 
     depends_on("suite-sparse", when="+klu")

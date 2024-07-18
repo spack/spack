@@ -21,6 +21,8 @@ class Cohmm(MakefilePackage):
 
     version("develop", branch="sad")
 
+    depends_on("c", type="build")  # generated
+
     variant("openmp", default=True, description="Build with OpenMP Support")
     variant("gnuplot", default=False, description="Enable gnu plot Support")
     depends_on("gnuplot", when="+gnuplot")

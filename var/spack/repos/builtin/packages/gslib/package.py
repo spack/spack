@@ -22,6 +22,9 @@ class Gslib(Package):
     version("1.0.1", tag="v1.0.1", commit="d16685f24551b7efd69e58d96dc76aec75239ea3")
     version("1.0.0", tag="v1.0.0", commit="9533e652320a3b26a72c36487ae265b02072cd48")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=True, description="Build with MPI")
     variant("mpiio", default=True, description="Build with MPI I/O")
     variant("blas", default=False, description="Build with BLAS")

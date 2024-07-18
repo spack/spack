@@ -28,6 +28,10 @@ class Pflotran(AutotoolsPackage):
     version("xsdk-0.4.0", commit="c851cbc94fc56a32cfdb0678f3c24b9936a5584e")
     version("xsdk-0.3.0", branch="release/xsdk-0.3.0")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("rxn", default=False, description="Use inbuilt reaction code, useful with cray ftn")
 
     depends_on("mpi")

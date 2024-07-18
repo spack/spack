@@ -43,6 +43,9 @@ class Genomeworks(CMakePackage, CudaPackage):
         "0.2.0", tag="v0.2.0", commit="416af9f1817a4a70745b3f7cdb7418125159f75c", submodules=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.10.2:", type=("build"))
     depends_on("cuda@11:", type=("build", "run"))
     depends_on("python@3.6.7:", type=("build", "run"))

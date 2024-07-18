@@ -20,6 +20,8 @@ class Discotec(CMakePackage):
 
     version("main", branch="main")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("compression", default=False, description="Write sparse grid files compressed")
     variant("ft", default=False, description="DisCoTec with algorithm-based fault tolerance")
     variant("gene", default=False, description="Build for GENE (as task library)")

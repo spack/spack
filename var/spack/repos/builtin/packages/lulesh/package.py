@@ -18,6 +18,8 @@ class Lulesh(MakefilePackage):
 
     version("2.0.3", tag="2.0.3", commit="46c2a1d6db9171f9637d79f407212e0f176e8194")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("mpi", default=True, description="Build with MPI support")
     variant("openmp", default=True, description="Build with OpenMP support")
     variant("visual", default=False, description="Build with Visualization support (Silo, hdf5)")

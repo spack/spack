@@ -64,6 +64,10 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     version("2.7.0", sha256="d39fcac7175d701398e4eb209f7e92a5b30a78358d4a0c0fcc23db23c11ba104")
     version("2.6.2", sha256="d8ed0151509dd2b0f317b318a4175f8b95a174340fc3080b8c20617da8aa4d2f")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # ==========================================================================
     # Variants
     # ==========================================================================

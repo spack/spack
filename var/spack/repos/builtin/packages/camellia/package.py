@@ -18,6 +18,8 @@ class Camellia(CMakePackage):
 
     version("master", branch="master")
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "moab",
         default=True,

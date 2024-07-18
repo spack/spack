@@ -23,6 +23,9 @@ class PyDlioProfilerPy(PythonPackage):
     version("0.0.2", tag="v0.0.2", commit="b72144abf1499e03d1db87ef51e780633e9e9533")
     version("0.0.1", tag="v0.0.1", commit="28affe716211315dd6936ddc8e25ce6c43cdf491")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cpp-logger@0.0.1", when="@:0.0.1")
     depends_on("cpp-logger@0.0.2", when="@0.0.2")
     depends_on("cpp-logger@0.0.3", when="@0.0.3:")

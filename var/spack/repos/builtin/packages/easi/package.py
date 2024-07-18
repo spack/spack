@@ -25,6 +25,9 @@ class Easi(CMakePackage):
     version("1.2.0", tag="v1.2.0", commit="305a119338116a0ceac6b68b36841a50250d05b1")
     version("1.1.2", tag="v1.1.2", commit="4c87ef3b3dca9415d116ef102cb8de750ef7e1a0")
 
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("python", default=True, description="Install python bindings")
     extends("python", when="+python")
 

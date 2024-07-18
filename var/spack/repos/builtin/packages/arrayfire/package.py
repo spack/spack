@@ -29,6 +29,9 @@ class Arrayfire(CMakePackage, CudaPackage):
         "3.7.0", commit="fbea2aeb6f7f2d277dcb0ab425a77bb18ed22291", submodules=True, tag="v3.7.0"
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("forge", default=False, description="Enable graphics library")
     variant("opencl", default=False, description="Enable OpenCL backend")
 

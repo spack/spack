@@ -23,3 +23,5 @@ class TlExpected(CMakePackage):
     # so I will use the latest commit at the time of writing:
     version("2022-11-24", commit="b74fecd4448a1a5549402d17ddc51e39faa5020c")
     version("1.0.0", sha256="8f5124085a124113e75e3890b4e923e3a4de5b26a973b891b3deb40e19c03cee")
+
+    depends_on("cxx", type="build")  # generated

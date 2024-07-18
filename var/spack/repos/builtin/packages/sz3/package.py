@@ -23,6 +23,9 @@ class Sz3(CMakePackage):
     version("3.1.3.1", commit="323cb17b412d657c4be681b52c34beaf933fe7af")
     version("3.1.3", commit="695dff8dc326f3b165f6676d810f46add088a585")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("hdf5", default=False, description="enable hdf5 filter support")
     variant("mdz", default=True, description="build mdz executable")
 

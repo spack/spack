@@ -35,6 +35,8 @@ class Hipsycl(CMakePackage):
     version("0.8.0", commit="2daf8407e49dd32ebd1c266e8e944e390d28b22a", submodules=True)
     version("develop", branch="develop", submodules=True)
 
+    depends_on("cxx", type="build")  # generated
+
     variant("cuda", default=False, description="Enable CUDA backend for SYCL kernels")
 
     depends_on("cmake@3.5:", type="build")

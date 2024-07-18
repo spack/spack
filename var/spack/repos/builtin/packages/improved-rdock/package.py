@@ -23,6 +23,8 @@ class ImprovedRdock(MakefilePackage):
 
     version("main", branch="main")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("popt")
     depends_on("cppunit")
     depends_on("openbabel @3.0.0: +python", type="run")

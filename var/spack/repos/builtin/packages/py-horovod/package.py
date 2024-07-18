@@ -125,6 +125,10 @@ class PyHorovod(PythonPackage, CudaPackage):
         "0.16.2", tag="v0.16.2", commit="217774652eeccfcd60aa6e268dfd6b766d71b768", submodules=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # https://github.com/horovod/horovod/blob/master/docs/install.rst
     variant(
         "frameworks",

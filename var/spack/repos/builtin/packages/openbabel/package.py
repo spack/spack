@@ -25,6 +25,9 @@ class Openbabel(CMakePackage):
     version("2.4.1", tag="openbabel-2-4-1", commit="701f6049c483b1349118c2ff736a7f609a84dedd")
     version("2.4.0", tag="openbabel-2-4-0", commit="087f33320e6796f39e6a1da04f4de7ec46bec4af")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("python", default=True, description="Build Python bindings")
     variant("gui", default=True, description="Build with GUI")
     variant("cairo", default=True, description="Build with Cairo (PNG output support)")

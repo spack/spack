@@ -23,6 +23,10 @@ class Ipm(AutotoolsPackage):
     version("master", branch="master", preferred=True)
     version("2.0.6", tag="2.0.6", commit="b008141ee16d39b33e20bffde615564afa107575")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("papi", default=False, description="Enable PAPI")
     variant("cuda", default=False, description="Enable CUDA")
     variant("libunwind", default=False, description="Enable libunwind")

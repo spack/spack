@@ -19,6 +19,8 @@ class Channelflow(CMakePackage):
 
     version("master", branch="master")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Build shared libs")
     variant("mpi", default=True, description="Enable MPI parallelism")
     variant("hdf5", default=True, description="Enable support for HDF5 I/O")
