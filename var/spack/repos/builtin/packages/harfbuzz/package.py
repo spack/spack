@@ -121,7 +121,7 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
-    @when(":8")
+    @when("@:8")
     def patch(self):
         change_sed_delimiter("@", ";", "src/Makefile.in")
 
