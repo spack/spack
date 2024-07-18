@@ -6,6 +6,7 @@
 import os
 import platform
 import re
+import sys
 from datetime import datetime
 from glob import glob
 
@@ -64,7 +65,7 @@ def create_db_tarball(args):
     transform_args = []
     if "GNU" in tar("--version", output=str):
         transform_args = ["--transform", "s/^%s/%s/" % (base, tarball_name)]
-    else:
+    elif sys.platform != "win32":
         transform_args = ["-s", "/^%s/%s/" % (base, tarball_name)]
 
     wd = os.path.dirname(str(spack.store.STORE.root))
