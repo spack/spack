@@ -25,8 +25,6 @@ class GoBootstrap(Package):
 
     maintainers("alecbcs")
 
-    depends_on("git", type=("build", "link", "run"))
-
     executables = ["^go$"]
 
     # List binary go releases for multiple operating systems and architectures.
@@ -79,10 +77,6 @@ class GoBootstrap(Package):
         if os in go_releases[release] and target in go_releases[release][os]:
             version(release, sha256=go_releases[release][os][target])
             provides(f"go-or-gccgo-bootstrap@{release}", when=f"@{release}")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     # When the user adds a go compiler using ``spack external find go-bootstrap``,
     # this lets us get the version for packages.yaml. Then, the solver can avoid
