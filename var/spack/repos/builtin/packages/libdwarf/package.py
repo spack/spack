@@ -49,10 +49,10 @@ class Libdwarf(CMakePackage, Package):
         )
 
     build_system(
-        conditional("generic", when="@2013:"), conditional("cmake", when="@:2013"), default="cmake"
+        conditional("generic", when="@20130126:20180130"), conditional("cmake", when="@0:"), default="generic"
     )
 
-    with when("@:2013"):
+    with when("@:20130126"):
         variant("shared", default=True, description="Build shared libs")
         variant("examples", default=False, description="Build examples")
         variant("pic", default=True, description="Build with position independent code")
@@ -69,15 +69,15 @@ class Libdwarf(CMakePackage, Package):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
-    depends_on("cmake@3.5:", type="build", when="@:2013")
-    depends_on("gmake", type="build", when="@2013:")
+    depends_on("cmake@3.5:", type="build", when="@:20130126")
+    depends_on("gmake", type="build", when="@20130126:")
 
     depends_on("elfutils@0.163", when="@20160507", type="link")
-    depends_on("elf", when="@2013:", type="link")
+    depends_on("elf", when="@20130126:", type="link")
 
-    depends_on("zlib-api", when="@2013:", type="link")
+    depends_on("zlib-api", when="@20130126:", type="link")
 
-    with when("@:2013 +decompression"):
+    with when("@:20130126 +decompression"):
         depends_on("zlib-api", type="link")
         depends_on("zstd", type="link")
 
