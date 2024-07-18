@@ -55,7 +55,6 @@ class Libdwarf(CMakePackage, Package):
     with when("@:2013"):
         variant("shared", default=False, description="Build shared libs")
         variant("examples", default=False, description="Build examples")
-        variant("tests", default=True, description="Build tests")
         variant("pic", default=False, description="Build with position independent code")
         variant("dwarfdump", default=True, description="Build dwarfdump")
         variant("dwarfgen", default=False, description="Build dwarfgen")
@@ -97,7 +96,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         args = [
             from_variant("BUILD_SHARED", "shared"),
             from_variant("BUILD_DWARFEXAMPLE", "examples"),
-            from_variant("DO_TESTING", "tests"),
+            from_variant("DO_TESTING", self.run_tests),
             from_variant("PIC_ALWAYS", "pic"),
             from_variant("BUILD_DWARFDUMP", "dwarfdump"),
             from_variant("BUILD_DWARFGEN", "dwarfgen"),
