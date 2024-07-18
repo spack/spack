@@ -24,6 +24,9 @@ class Lcms(AutotoolsPackage):
     version("2.8", sha256="66d02b229d2ea9474e62c2b6cd6720fde946155cd1d0d2bffdab829790a0fb22")
     version("2.6", sha256="5172528839647c54c3da211837225e221be93e4733f5b5e9f57668f7107e14b1")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     def url_for_version(self, version):
         url = "http://downloads.sourceforge.net/project/lcms/lcms/{0}/lcms2-{1}.tar.gz"
         return url.format(version.up_to(2), version)

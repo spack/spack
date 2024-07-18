@@ -16,5 +16,7 @@ class Pslib(AutotoolsPackage):
 
     version("0.4.5", sha256="7a33928982b281660206bb3749a4a563e3ac987eea64f41696f212df345212be")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("jpeg")
     depends_on("libpng")

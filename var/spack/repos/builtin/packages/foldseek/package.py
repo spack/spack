@@ -17,6 +17,9 @@ class Foldseek(CMakePackage):
     version("8-ef4e960", sha256="c74d02c4924d20275cc567783b56fff10e76ed67f3d642f53c283f67c4180a1e")
     version("7-04e0ec8", sha256="009d722d600248a680b9e1e9dcb3bf799f8be8de41e80a598b7f39a5ced54191")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("zlib-api")
     depends_on("bzip2")
     depends_on("openmpi")

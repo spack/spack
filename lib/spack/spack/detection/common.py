@@ -252,6 +252,27 @@ def update_configuration(
     return all_new_specs
 
 
+def set_virtuals_nonbuildable(virtuals: Set[str], scope: Optional[str] = None) -> List[str]:
+    """Update packages:virtual:buildable:False for the provided virtual packages, if the property
+    is not set by the user. Returns the list of virtual packages that have been updated."""
+    packages = spack.config.get("packages")
+    new_config = {}
+    for virtual in virtuals:
+        # If the user has set the buildable prop do not override it
+        if virtual in packages and "buildable" in packages[virtual]:
+            continue
+        new_config[virtual] = {"buildable": False}
+
+    # Update the provided scope
+    spack.config.set(
+        "packages",
+        spack.config.merge_yaml(spack.config.get("packages", scope=scope), new_config),
+        scope=scope,
+    )
+
+    return list(new_config.keys())
+
+
 def _windows_drive() -> str:
     """Return Windows drive string extracted from the PROGRAMFILES environment variable,
     which is guaranteed to be defined for all logins.

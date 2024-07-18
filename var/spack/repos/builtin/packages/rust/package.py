@@ -45,6 +45,9 @@ class Rust(Package):
     version("1.65.0", sha256="5828bb67f677eabf8c384020582b0ce7af884e1c84389484f7f8d00dd82c0038")
     version("1.60.0", sha256="20ca826d1cf674daf8e22c4f8c4b9743af07973211c839b85839742314c838b7")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     variant(
         "dev",
         default=False,
@@ -54,7 +57,6 @@ class Rust(Package):
     variant("src", default=True, description="Include standard library source files.")
 
     # Core dependencies
-    depends_on("cmake@3.13.4:", type="build")
     depends_on("curl+nghttp2")
     depends_on("libgit2")
     depends_on("libssh2")
@@ -63,6 +65,12 @@ class Rust(Package):
     depends_on("pkgconfig", type="build")
     depends_on("python", type="build")
     depends_on("zlib-api")
+
+    # cmake dependency comes from LLVM. Rust has their own fork of LLVM, with tags corresponding
+    # to each Rust release, so it's easy to loop through tags and grep for "cmake_minimum_required"
+    depends_on("cmake@3.4.3:", type="build", when="@:1.51")
+    depends_on("cmake@3.13.4:", type="build", when="@1.52:1.72")
+    depends_on("cmake@3.20.0:", type="build", when="@1.73:")
 
     # Compiling Rust requires a previous version of Rust.
     # The easiest way to bootstrap a Rust environment is to

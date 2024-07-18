@@ -49,8 +49,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     version("2.16.1", sha256="c729e56efc945c6df08efe5c9f5b8b89329c7c91b8f40ad2bb3e13900bd4876d")
     version(
         "2.16-rocm-enhanced",
-        git="https://github.com/ROCm/tensorflow-upstream.git",
-        branch="r2.16-rocm-enhanced",
+        sha256="6765e85675734b8fe17bca3c0669aec2f9ee97699b413780bcf3c6f00661ce72",
+        url="https://github.com/ROCm/tensorflow-upstream/archive/refs/tags/r2.16-rocm-enhanced.tar.gz",
     )
     version("2.15.1", sha256="f36416d831f06fe866e149c7cd752da410a11178b01ff5620e9f265511ed57cf")
     version("2.15.0", sha256="9cec5acb0ecf2d47b16891f8bc5bc6fbfdffe1700bdadc0d9ebe27ea34f0c220")
@@ -118,6 +118,9 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     version("2.2.2", sha256="fb4b5d26c5b983350f7ce8297b71176a86a69e91faf66e6ebb1e58538ad3bb51")
     version("2.2.1", sha256="e6a28e64236d729e598dbeaa02152219e67d0ac94d6ed22438606026a02e0f88")
     version("2.2.0", sha256="69cd836f87b8c53506c4f706f655d423270f5a563b76dc1cfa60fbc3184185a3")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("mkl", default=False, description="Build with MKL support")
     variant("jemalloc", default=False, description="Build with jemalloc as malloc support")
@@ -418,6 +421,13 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # and https://github.com/abseil/abseil-cpp/issues/1665
     patch("absl_neon.patch", when="@2.16.1: target=aarch64:")
 
+    # reverting change otherwise the c467913 commit patch won't apply
+    patch(
+        "https://github.com/ROCm/tensorflow-upstream/commit/fd6b0a4356c66f5f30cedbc62b24f18d9e32806f.patch?full_index=1",
+        sha256="43f1519dfc618b4fb568f760d559c063234248fa12c47a35c1cf3b7114756424",
+        when="@2.16-rocm-enhanced +rocm",
+        reverse=True,
+    )
     patch(
         "https://github.com/ROCm/tensorflow-upstream/commit/c467913bf4411ce2681391f37a9adf6031d23c2c.patch?full_index=1",
         sha256="82554a84d19d99180a6bec274c6106dd217361e809b446e2e4bc4b6b979bdf7a",
@@ -428,7 +438,11 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         sha256="a4c0fd62a0af3ba113c8933fa531dd17fa6667e507202a144715cd87fbdaf476",
         when="@2.16-rocm-enhanced: +rocm",
     )
-    patch("Add_ROCm_lib_paths.patch", when="@2.16-rocm-enhanced +rocm")
+    patch(
+        "https://github.com/ROCm/tensorflow-upstream/commit/8b7fcccb2914078737689347540cb79ace579bbb.patch?full_index=1",
+        sha256="75a61a79ce3aae51fda920f677f4dc045374b20e25628626eb37ca19c3a3b4c4",
+        when="@2.16-rocm-enhanced +rocm",
+    )
     phases = ["configure", "build", "install"]
 
     # https://www.tensorflow.org/install/source

@@ -24,6 +24,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     license("LGPL-3.0-only")
 
     version("master", branch="master")
+    version("0.36.0", sha256="c20814eae65b6eb9f2c919dbcc216dd4b87f038a341cf99510cca88d43631c41")
     version("0.35.0", sha256="38fde51464f4e34ecbd1e4fbbf00267f96b639db5987257a7ad07f811e2f09d2")
     version("0.34.0", sha256="10c03d78fa2302de7ddf9599ea59fb7a2dc7ccf6f526fd9fbfc9e3ff6ba39713")
     version("0.33.1", sha256="d0a1e504226d69fa8a247e9090d94ccc5e5f5fb028aab805f9cd95379bd8b1b3")
@@ -45,6 +46,9 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     version("0.19.0", sha256="8dffa8eaec95a81286f621639ef851c52dc4c562d365971233bbd91100c31ed2")
     version("0.18.0", sha256="a4d8a6444fdb7b857b26f47fdea57992b486c9522f4ff92d5a6f547d95b586ae")
     version("0.17.0", sha256="5acfcb757e2294a92eaa91be58ba9b42736b88b42d2937de4a78f4642b1c4933")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Avoid the infinite symlink issue
     # This workaround is documented in PR #3543

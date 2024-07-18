@@ -115,6 +115,10 @@ class Tfel(CMakePackage):
     version("3.0.0", sha256="b2cfaa3d7900b4f32f327565448bf9cb8e4242763f651bff8f231f378a278f9e")
     version("2.0.4", sha256="cac078435aad73d9a795516f161b320d204d2099d6a286e786359f484355a43a")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # solvers interfaces
     variant("castem", default=True, description="Enables Cast3M interface")
     variant("aster", default=True, description="Enables Code_Aster interface")

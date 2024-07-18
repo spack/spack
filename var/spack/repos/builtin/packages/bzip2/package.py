@@ -28,6 +28,8 @@ class Bzip2(Package, SourcewarePackage):
     version("1.0.7", sha256="e768a87c5b1a79511499beb41500bcc4caf203726fff46a6f5f9ad27fe08ab2b")
     version("1.0.6", sha256="a2848f34fcd5d6cf47def00461fcb528a0484d8edef8208d6d2e2909dc61d9cd")
 
+    depends_on("c", type="build")  # generated
+
     variant(
         "shared",
         default=(sys.platform != "win32"),

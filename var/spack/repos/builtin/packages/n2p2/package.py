@@ -22,6 +22,8 @@ class N2p2(MakefilePackage):
     version("2.1.1", sha256="90fbc0756132984d0d7e6d92d2f53358c120e75f148910d90c027158163251b9")
     version("2.1.0", sha256="283c00e9a5b964f4c84a70c5f1cef7167e9b881080b50a221da08799e5ede400")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("doc", default=False, description="build documentation with Doxygen")
     variant("shared", default=False, description="build shared libraries")
 

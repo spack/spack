@@ -53,6 +53,10 @@ class PyScipy(PythonPackage):
     version("1.3.3", sha256="64bf4e8ae0db2d42b58477817f648d81e77f0b381d0ea4427385bba3f959380a")
     version("1.3.2", sha256="a03939b431994289f39373c57bbe452974a7da724ae7f9620a1beee575434da4")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Based on wheel availability on PyPI
     with default_args(type=("build", "link", "run")):
         depends_on("python@3.10:3.12", when="@1.14:")

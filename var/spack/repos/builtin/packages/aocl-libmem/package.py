@@ -41,6 +41,9 @@ class AoclLibmem(CMakePackage):
         preferred=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("logging", default=False, description="Enable/Disable logger")
     variant("tunables", default=False, description="Enable/Disable user input")
     variant("shared", default=True, description="build shared library")

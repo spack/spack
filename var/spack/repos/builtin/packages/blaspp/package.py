@@ -52,6 +52,8 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
         "2020.10.00", sha256="ce148cfe397428d507c72d7d9eba5e9d3f55ad4cd842e6e873c670183dcb7795"
     )
 
+    depends_on("cxx", type="build")  # generated
+
     variant("openmp", default=True, description="Use OpenMP internally.")
     variant("shared", default=True, description="Build shared libraries")
     variant("sycl", default=False, description="Build support for the SYCL backend")
