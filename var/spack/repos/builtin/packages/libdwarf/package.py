@@ -53,9 +53,9 @@ class Libdwarf(CMakePackage, Package):
     )
 
     with when("@:2013"):
-        variant("shared", default=False, description="Build shared libs")
+        variant("shared", default=True, description="Build shared libs")
         variant("examples", default=False, description="Build examples")
-        variant("pic", default=False, description="Build with position independent code")
+        variant("pic", default=True, description="Build with position independent code")
         variant("dwarfdump", default=True, description="Build dwarfdump")
         variant("dwarfgen", default=False, description="Build dwarfgen")
         variant(
@@ -63,6 +63,8 @@ class Libdwarf(CMakePackage, Package):
             default=True,
             description="Enables support for compressed debug sections",
         )
+
+    conflicts("+shared ~pic")
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
