@@ -16,6 +16,7 @@ class Openexr(CMakePackage, AutotoolsPackage):
     license("BSD-3-Clause")
 
     # New versions should come from github now
+    version("3.2.3", sha256="f3f6c4165694d5c09e478a791eae69847cadb1333a2948ca222aa09f145eba63")
     version("3.2.0", sha256="b1b200606640547fceff0d3ebe01ac05c4a7ae2a131be7e9b3e5b9f491ef35b3")
     version("3.1.11", sha256="06b4a20d0791b5ec0f804c855d320a0615ce8445124f293616a086e093f1f1e1")
     version("3.1.7", sha256="78dbca39115a1c526e6728588753955ee75fa7f5bb1a6e238bed5b6d66f91fd7")
@@ -68,6 +69,9 @@ class Openexr(CMakePackage, AutotoolsPackage):
         sha256="fa08ad904bf89e2968078d25d1d9817f5bc17f372d1bafabf82e8f08ca2adc20",
         url="http://download.savannah.nongnu.org/releases/openexr/openexr-1.3.2.tar.gz",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
     depends_on("imath", when="@3:")

@@ -27,6 +27,7 @@ class PyPybind11(CMakePackage, PythonExtension):
     maintainers("ax3l")
 
     version("master", branch="master")
+    version("2.12.0", sha256="bf8f242abd1abcd375d516a7067490fb71abd79519a282d22b6e4d19282185a7")
     version("2.11.1", sha256="d475978da0cdc2d43b73f30910786759d593a9d8ee05b1b6846d1eb16c6d2e0c")
     version("2.11.0", sha256="7af30a84c6810e721829c4646e31927af9d8861e085aa5dd37c3c8b8169fcda1")
     version("2.10.4", sha256="832e2f309c57da9c1e6d4542dedd34b24e4192ecb4d62f6f4866a737454c9970")
@@ -51,6 +52,8 @@ class PyPybind11(CMakePackage, PythonExtension):
     version("2.2.0", sha256="1b0fda17c650c493f5862902e90f426df6751da8c0b58c05983ab009951ed769")
     version("2.1.1", sha256="f2c6874f1ea5b4ad4ffffe352413f7d2cd1a49f9050940805c2a082348621540")
     version("2.1.0", sha256="2860f2b8d0c9f65f0698289a161385f59d099b7ead1bf64e8993c486f2b93ee0")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-pytest", type="test")
@@ -101,7 +104,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
         with working_dir("spack-test", create=True):
             # test include helper points to right location
-            python = self.spec["python"].command
             py_inc = python(
                 "-c", "import pybind11 as py; print(py.get_include())", output=str
             ).strip()

@@ -50,6 +50,8 @@ class PyWarpx(PythonPackage):
     version("22.02", sha256="d74b593d6f396e037970c5fbe10c2e5d71d557a99c97d40e4255226bc6c26e42")
     version("22.01", sha256="e465ffadabb7dc360c63c4d3862dc08082b5b0e77923d3fb05570408748b0d28")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("mpi", default=True, description="Enable MPI support")
 
     for v in [
@@ -91,9 +93,7 @@ class PyWarpx(PythonPackage):
     depends_on("py-picmistandard@0.0.18", type=("build", "run"), when="@22.01")
     depends_on("py-setuptools@42:", type="build")
     # Since we use PYWARPX_LIB_DIR to pull binaries out of the
-    # 'warpx' spack package, we don't need py-cmake as declared
-    # depends_on('py-cmake@3.15:3', type='build')
-    # depends_on('py-cmake@3.18:3', type='build', when='@22.01:')
+    # 'warpx' spack package, we don't need cmake as declared
     depends_on("warpx +lib ~mpi +shared", type=("build", "link"), when="~mpi")
     depends_on("warpx +lib +mpi +shared", type=("build", "link"), when="+mpi")
 

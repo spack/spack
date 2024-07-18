@@ -35,6 +35,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     # version("main", branch="main")
     maintainers("tomdeakin", "kaanolgu", "tom91136")
     # Previous maintainers: "robj0nes"
+    depends_on("cxx", type="build")  # generated
     build_system("cmake", "makefile", default="cmake")
     # Languages
     # Also supported variants are cuda and rocm (for HIP)

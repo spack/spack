@@ -20,6 +20,11 @@ class Onnx(CMakePackage):
     license("Apache-2.0")
 
     version("master", branch="master")
+    version("1.16.1", sha256="0e6aa2c0a59bb2d90858ad0040ea1807117cc2f05b97702170f18e6cd6b66fb3")
+    version("1.16.0", sha256="0ce153e26ce2c00afca01c331a447d86fbf21b166b640551fe04258b4acfc6a4")
+    version("1.15.0", sha256="c757132e018dd0dd171499ef74fca88b74c5430a20781ec53da19eb7f937ef68")
+    version("1.14.1", sha256="e296f8867951fa6e71417a18f2e550a730550f8829bd35e947b4df5e3e777aa1")
+    version("1.14.0", sha256="1b02ad523f79d83f9678c749d5a3f63f0bcd0934550d5e0d7b895f9a29320003")
     version(
         "1.13.1", sha256="090d3e10ec662a98a2a72f1bf053f793efc645824f0d4b779e0ce47468a0890e"
     )  # py-torch@2:
@@ -56,13 +61,15 @@ class Onnx(CMakePackage):
         "1.1.0_2018-04-19", commit="7e1bed51cc508a25b22130de459830b5d5063c41"
     )  # py-torch@0.4.0
 
+    depends_on("cxx", type="build")  # generated
+
     generator("ninja")
     depends_on("cmake@3.1:", type="build")
     depends_on("python", type="build")
     depends_on("protobuf")
 
     def patch(self):
-        if self.spec.satisfies("@1.13 ^protobuf@3.22:"):
+        if self.spec.satisfies("@1.13:1.14 ^protobuf@3.22:"):
             filter_file("CMAKE_CXX_STANDARD 11", "CMAKE_CXX_STANDARD 14", "CMakeLists.txt")
 
     def cmake_args(self):

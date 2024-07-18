@@ -19,6 +19,8 @@ class GeoipApiC(AutotoolsPackage):
     version("1.6.11", sha256="b0e5a92200b5ab540d118983f7b7191caf4faf1ae879c44afa3ff2a2abcdb0f5")
     version("1.6.10", sha256="cb44e0d0dbc45efe2e399e695864e58237ce00026fba8a74b31d85888c89c67a")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")

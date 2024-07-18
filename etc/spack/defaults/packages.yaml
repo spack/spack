@@ -15,15 +15,17 @@
 # -------------------------------------------------------------------------
 packages:
   all:
-    compiler: [gcc, intel, pgi, clang, xl, nag, fj, aocc]
+    compiler: [gcc, clang, oneapi, xl, nag, fj, aocc]
     providers:
       awk: [gawk]
+      armci: [armcimpi]
       blas: [openblas, amdblis]
       D: [ldc]
       daal: [intel-oneapi-daal]
       elf: [elfutils]
       fftw-api: [fftw, amdfftw]
       flame: [libflame, amdlibflame]
+      fortran-rt: [gcc-runtime, intel-oneapi-runtime]
       fuse: [libfuse]
       gl: [glx, osmesa]
       glu: [mesa-glu, openglu]
@@ -34,9 +36,11 @@ packages:
       java: [openjdk, jdk, ibm-java]
       jpeg: [libjpeg-turbo, libjpeg]
       lapack: [openblas, amdlibflame]
-      libglx: [mesa+glx, mesa18+glx]
+      libc: [glibc, musl]
+      libgfortran: [ gcc-runtime ]
+      libglx: [mesa+glx]
+      libifcore: [ intel-oneapi-runtime ]
       libllvm: [llvm]
-      libosmesa: [mesa+osmesa, mesa18+osmesa]
       lua-lang: [lua, lua-luajit-openresty, lua-luajit]
       luajit: [lua-luajit-openresty, lua-luajit]
       mariadb-client: [mariadb-c-client, mariadb]

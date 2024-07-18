@@ -17,7 +17,7 @@ def test_command(default_config, container_config_dir, capsys):
     with capsys.disabled():
         with fs.working_dir(container_config_dir):
             output = containerize()
-    assert "FROM spack/ubuntu-bionic" in output
+    assert "FROM spack/ubuntu-jammy" in output
 
 
 def test_listing_possible_os():

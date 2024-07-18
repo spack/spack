@@ -19,6 +19,9 @@ class PyTorchvision(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("0.18.1", sha256="347d472a9ceecc44e0bee1eda140d63cfaffc74a54ec07d4b98da7698ce75516")
+    version("0.18.0", sha256="3e61cbac33986a862a59cd733fd65da8b2c2a6160a66556cfa0e850f62fd43c7")
+    version("0.17.2", sha256="0f9304acd77aafb7cfaf3fd5e318b2986ecc73547394b971d710eacd59f3e78e")
     version("0.17.1", sha256="a01c7bce4098c41b62cd3a08d87569113e25d12994b1370f0fd5f531952b6cef")
     version("0.17.0", sha256="55e395d5c7d9bf7658c82ac633cac2224aa168e1bfe8bb5b2b2a296c792a3500")
     version("0.16.2", sha256="8c1f2951e98d8ada6e5a468f179af4be9f56d2ebc3ab057af873da61669806d7")
@@ -48,6 +51,8 @@ class PyTorchvision(PythonPackage):
     version("0.6.0", sha256="02de11b3abe6882de4032ce86dab9c7794cbc84369b44d04e667486580f0f1f7")
     version("0.5.0", sha256="eb9afc93df3d174d975ee0914057a9522f5272310b4d56c150b955c287a4d74d")
 
+    depends_on("cxx", type="build")  # generated
+
     desc = "Enable support for native encoding/decoding of {} formats in torchvision.io"
     variant("png", default=True, description=desc.format("PNG"))
     variant("jpeg", default=True, description=desc.format("JPEG"))
@@ -65,6 +70,9 @@ class PyTorchvision(PythonPackage):
 
         # https://github.com/pytorch/vision#installation
         depends_on("py-torch@main", when="@main")
+        depends_on("py-torch@2.3.1", when="@0.18.1")
+        depends_on("py-torch@2.3.0", when="@0.18.0")
+        depends_on("py-torch@2.2.2", when="@0.17.2")
         depends_on("py-torch@2.2.1", when="@0.17.1")
         depends_on("py-torch@2.2.0", when="@0.17.0")
         depends_on("py-torch@2.1.2", when="@0.16.2")
@@ -99,6 +107,8 @@ class PyTorchvision(PythonPackage):
     # setup.py
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
+    # https://github.com/pytorch/vision/issues/8460
+    depends_on("py-numpy@:1", when="@:0.18", type=("build", "run"))
     depends_on("pil@5.3:", when="@0.10:", type=("build", "run"))
     depends_on("pil@4.1.1:", type=("build", "run"))
 
@@ -146,11 +156,6 @@ class PyTorchvision(PythonPackage):
 
         if "^cuda" in self.spec:
             env.set("CUDA_HOME", self.spec["cuda"].prefix)
-            torch_cuda_arch_list = ";".join(
-                "{0:.1f}".format(float(i) / 10.0)
-                for i in self.spec["py-torch"].variants["cuda_arch"].value
-            )
-            env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch_list)
 
         for gpu in ["cuda", "mps"]:
             env.set(f"FORCE_{gpu.upper()}", int(f"+{gpu}" in self.spec["py-torch"]))

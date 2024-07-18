@@ -9,7 +9,7 @@ from spack.package import *
 class Libxrandr(AutotoolsPackage, XorgPackage):
     """libXrandr - X Resize, Rotate and Reflection extension library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXrandr"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXrandr"
     xorg_mirror_path = "lib/libXrandr-1.5.0.tar.gz"
 
     license("MIT")
@@ -19,6 +19,8 @@ class Libxrandr(AutotoolsPackage, XorgPackage):
     version("1.5.4", sha256="c72c94dc3373512ceb67f578952c5d10915b38cc9ebb0fd176a49857b8048e22")
     version("1.5.3", sha256="3ad316c1781fe2fe22574b819e81f0eff087a8560377f521ba932238b41b251f")
     version("1.5.0", sha256="1b594a149e6b124aab7149446f2fd886461e2935eca8dca43fe83a70cf8ec451")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("libx11@1.6:")
     depends_on("libxext")

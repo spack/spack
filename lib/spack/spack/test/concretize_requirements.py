@@ -103,23 +103,6 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
         yield mock_repo_path
 
 
-class MakeStage:
-    def __init__(self, stage):
-        self.stage = stage
-
-    def __call__(self, *args, **kwargs):
-        return self.stage
-
-
-@pytest.fixture
-def fake_installs(monkeypatch, tmpdir):
-    stage_path = str(tmpdir.ensure("fake-stage", dir=True))
-    universal_unused_stage = spack.stage.DIYStage(stage_path)
-    monkeypatch.setattr(
-        spack.build_systems.generic.Package, "_make_stage", MakeStage(universal_unused_stage)
-    )
-
-
 def test_one_package_multiple_reqs(concretize_scope, test_repo):
     conf_str = """\
 packages:
@@ -514,7 +497,7 @@ packages:
     assert s2.satisfies("@2.5")
 
 
-def test_reuse_oneof(concretize_scope, _create_test_repo, mutable_database, fake_installs):
+def test_reuse_oneof(concretize_scope, _create_test_repo, mutable_database, mock_fetch):
     conf_str = """\
 packages:
   y:
@@ -944,9 +927,9 @@ def test_default_requirements_semantic(packages_yaml, concretize_scope, mock_pac
         Spec("zlib ~shared").concretized()
 
     # A spec without the shared variant still concretize
-    s = Spec("a").concretized()
-    assert not s.satisfies("a +shared")
-    assert not s.satisfies("a ~shared")
+    s = Spec("pkg-a").concretized()
+    assert not s.satisfies("pkg-a +shared")
+    assert not s.satisfies("pkg-a ~shared")
 
 
 @pytest.mark.parametrize(
@@ -1176,3 +1159,46 @@ def test_forward_multi_valued_variant_using_requires(
 
     for constraint in not_expected:
         assert not s.satisfies(constraint)
+
+
+def test_strong_preferences_higher_priority_than_reuse(concretize_scope, mock_packages):
+    """Tests that strong preferences have a higher priority than reusing specs."""
+    reused_spec = Spec("adios2~bzip2").concretized()
+    reuse_nodes = list(reused_spec.traverse())
+    root_specs = [Spec("ascent+adios2")]
+
+    # Check that without further configuration adios2 is reused
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reuse_nodes)
+        ascent = result.specs[0]
+    assert ascent["adios2"].dag_hash() == reused_spec.dag_hash(), ascent
+
+    # If we stick a preference, adios2 is not reused
+    update_packages_config(
+        """
+    packages:
+      adios2:
+        prefer:
+        - "+bzip2"
+"""
+    )
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reuse_nodes)
+        ascent = result.specs[0]
+
+    assert ascent["adios2"].dag_hash() != reused_spec.dag_hash()
+    assert ascent["adios2"].satisfies("+bzip2")
+
+    # A preference is still preference, so we can override from input
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(
+            setup, [Spec("ascent+adios2 ^adios2~bzip2")], reuse=reuse_nodes
+        )
+        ascent = result.specs[0]
+    assert ascent["adios2"].dag_hash() == reused_spec.dag_hash(), ascent

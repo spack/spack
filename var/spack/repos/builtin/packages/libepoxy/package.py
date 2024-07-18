@@ -18,6 +18,8 @@ class Libepoxy(AutotoolsPackage):
 
     version("1.4.3", sha256="0b808a06c9685a62fca34b680abb8bc7fb2fda074478e329b063c1f872b826f6")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("pkgconfig", type="build")
     depends_on("gl")
     depends_on("libx11", when="+glx")

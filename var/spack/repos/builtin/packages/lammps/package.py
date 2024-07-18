@@ -5,8 +5,6 @@
 import datetime as dt
 import os
 
-import archspec
-
 from spack.package import *
 
 
@@ -31,12 +29,26 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     #   marked deprecated=True
     # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
-    version("20240207", sha256="d518f32de4eb2681f2543be63926411e72072dd7d67c1670c090b5baabed98ac")
+    version("20240627", sha256="2174a99d266279823a8c57629ee1c21ec357816aefd85f964d9f859fe9222aa5")
+    version("20240417", sha256="158b288725c251fd8b30dbcf61749e0d6a042807da92af865a7d3c413efdd8ea")
+    version(
+        "20240207.1", sha256="3ba62c2a1ed463fceedf313a1c3ea2997994aa102379a8d35b525ea424f56776"
+    )
+    version(
+        "20240207",
+        sha256="d518f32de4eb2681f2543be63926411e72072dd7d67c1670c090b5baabed98ac",
+        deprecated=True,
+    )
     version("20231121", sha256="704d8a990874a425bcdfe0245faf13d712231ba23f014a3ebc27bc14398856f1")
+    version(
+        "20230802.3",
+        sha256="6666e28cb90d3ff01cbbda6c81bdb85cf436bbb41604a87f2ab2fa559caa8510",
+        preferred=True,
+    )
     version(
         "20230802.2",
         sha256="3bcecabc9cad08d0a4e4d989b52d29c58505f7ead8ebacf43c9db8d9fd3d564a",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "20230802.1",
@@ -357,7 +369,12 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     stable_versions = {
+        "20230802.3",
         "20230802.2",
         "20230802.1",
         "20230802",
@@ -450,6 +467,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         "ml-pod": {"when": "@20221222:"},
         "ml-rann": {"when": "@20210702:"},
         "ml-snap": {"when": "@20210702:"},
+        "ml-uf3": {"when": "@20240627:"},
         "mliap": {"when": "@20200630:20210527"},
         "mofff": {"when": "@20210702:"},
         "molecule": {"default": True},
@@ -619,6 +637,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("kokkos+deprecated_code+shared@3.0.00", when="@20200303+kokkos")
     depends_on("kokkos+shared@3.1:", when="@20200505:+kokkos")
     depends_on("kokkos@3.7.01:", when="@20230208: +kokkos")
+    depends_on("kokkos@4.3.00:", when="@20240417: +kokkos")
+    depends_on("kokkos@4.3.01:", when="@20240627: +kokkos")
     depends_on("adios2", when="+user-adios")
     depends_on("adios2", when="+adios")
     depends_on("plumed", when="+user-plumed")
@@ -809,9 +829,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             args.append(self.define("CMAKE_CXX_FLAGS_RELWITHDEBINFO", cxx_flags))
 
         # Overwrite generic cpu tune option
-        cmake_tune_flags = archspec.cpu.TARGETS[spec.target.name].optimization_flags(
-            spec.compiler.name, spec.compiler.version
-        )
+        cmake_tune_flags = spec.architecture.target.optimization_flags(spec.compiler)
         args.append(self.define("CMAKE_TUNE_FLAGS", cmake_tune_flags))
 
         args.append(self.define_from_variant("LAMMPS_SIZES", "lammps_sizes"))
@@ -862,6 +880,11 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
 
         if "+rocm" in spec:
             args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+            if "@:20231121" in spec:
+                if "^hip@:5.4" in spec:
+                    args.append(self.define("HIP_PATH", f"{spec['hip'].prefix}/hip"))
+                elif "^hip@5.5:" in spec:
+                    args.append(self.define("HIP_PATH", spec["hip"].prefix))
 
         return args
 
@@ -878,6 +901,14 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             else:
                 env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
                 env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
+        if "+plugin" in self.spec:
+            env.prepend_path("LAMMPS_PLUGIN_PATH", self.prefix.lib.lammps.plugins)
+            env.prepend_path("LAMMPS_PLUGIN_PATH", self.prefix.lib64.lammps.plugins)
+
+    @run_after("install")
+    def make_plugins_directories(self):
+        os.makedirs(self.prefix.lib.lammps.plugins, exist_ok=True)
+        os.makedirs(self.prefix.lib64.lammps.plugins, exist_ok=True)
 
     @run_after("install")
     def install_python(self):

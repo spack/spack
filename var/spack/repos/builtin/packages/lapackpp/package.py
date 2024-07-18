@@ -11,6 +11,7 @@ from spack.package import *
 _versions = [
     # LAPACK++,     BLAS++
     ["master", "master"],
+    ["2024.05.31", "2024.05.31"],
     ["2023.11.05", "2023.11.05"],
     ["2023.08.25", "2023.08.25"],
     ["2023.06.00", "2023.06.00"],
@@ -36,6 +37,9 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version(
+        "2024.05.31", sha256="093646d492a4c2c6b4d7001effb559c80da7fa31fd5ba517a6d686ca8c78cd99"
+    )
     version(
         "2023.11.05", sha256="9a505ef4e76504b6714cc19eb1b58939694f9ab51427a5bb915b016d615570ca"
     )
@@ -63,6 +67,8 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     version(
         "2020.10.00", sha256="5f6ab3bd3794711818a3a50198efd29571520bf455e13ffa8ba50fa8376d7d1a"
     )
+
+    depends_on("cxx", type="build")  # generated
 
     variant("shared", default=True, description="Build shared library")
     variant("sycl", default=False, description="Build support for the SYCL backend")

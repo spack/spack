@@ -25,6 +25,7 @@ class FftwBase(AutotoolsPackage):
     )
     variant("openmp", default=False, description="Enable OpenMP support.")
     variant("mpi", default=True, description="Activate MPI support")
+    variant("shared", default=True, description="Build shared libraries")
 
     depends_on("mpi", when="+mpi")
     depends_on("llvm-openmp", when="%apple-clang +openmp")
@@ -104,7 +105,9 @@ class FftwBase(AutotoolsPackage):
 
     def configure(self, spec, prefix):
         # Base options
-        options = ["--prefix={0}".format(prefix), "--enable-shared", "--enable-threads"]
+        options = ["--prefix={0}".format(prefix), "--enable-threads"]
+        options.extend(self.enable_or_disable("shared"))
+
         if not self.compiler.f77 or not self.compiler.fc:
             options.append("--disable-fortran")
         if spec.satisfies("@:2"):
@@ -226,6 +229,9 @@ class Fftw(FftwBase):
     version("3.3.5", sha256="8ecfe1b04732ec3f5b7d279fdb8efcad536d555f9d1e8fabd027037d45ea8bcf")
     version("3.3.4", sha256="8f0cde90929bc05587c3368d2f15cd0530a60b8a9912a8e2979a72dbe5af0982")
     version("2.1.5", sha256="f8057fae1c7df8b99116783ef3e94a6a44518d49c72e2e630c24b689c6022630")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant(
         "pfft_patches",

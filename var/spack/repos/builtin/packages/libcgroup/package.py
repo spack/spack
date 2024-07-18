@@ -18,6 +18,9 @@ class Libcgroup(AutotoolsPackage):
     version("0.37", sha256="15c8f3febb546530d3495af4e4904b3189c273277ca2d8553dec882cde1cd0f6")
     version("0.36", sha256="8dcd2ae220435b3de736d3efb0023fdf1192d7a7f4032b439f3cf5342cff7b4c")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("m4", type="build")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

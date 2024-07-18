@@ -142,12 +142,8 @@ user's prompt to begin with the environment name in brackets.
    $ spack env activate -p myenv
    [myenv] $ ...
 
-The ``activate`` command can also be used to create a new environment, if it is
-not already defined, by adding the ``--create`` flag. Managed and anonymous
-environments, anonymous environments are explained in the next section,
-can both be created using the same flags that `spack env create` accepts.
-If an environment already exists then spack will simply activate it and ignore the
-create specific flags.
+The ``activate`` command can also be used to create a new environment if it does not already
+exist.
 
 .. code-block:: console
    
@@ -176,21 +172,36 @@ environment will remove the view from the user environment.
 Anonymous Environments
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Any directory can be treated as an environment if it contains a file
-``spack.yaml``. To load an anonymous environment, use:
+Apart from managed environments, Spack also supports anonymous environments.
+
+Anonymous environments can be placed in any directory of choice.
+
+.. note::
+
+   When uninstalling packages, Spack asks the user to confirm the removal of packages
+   that are still used in a managed environment. This is not the case for anonymous
+   environments.
+
+To create an anonymous environment, use one of the following commands:
 
 .. code-block:: console
 
-   $ spack env activate -d /path/to/directory
+   $ spack env create --dir my_env
+   $ spack env create ./my_env
 
-Anonymous specs can be created in place using the command:
+As a shorthand, you can also create an anonymous environment upon activation if it does not
+already exist:
 
 .. code-block:: console
 
-   $ spack env create -d .
+   $ spack env activate --create ./my_env
 
-In this case Spack simply creates a ``spack.yaml`` file in the requested
-directory.
+For convenience, Spack can also place an anonymous environment in a temporary directory for you:
+
+.. code-block:: console
+
+   $ spack env activate --temp
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Environment Sensitive Commands
@@ -448,6 +459,125 @@ This creates a file called ``loads`` in the environment directory.
 Sourcing that file in Bash will make the environment available to the
 user; and can be included in ``.bashrc`` files, etc.  The ``loads``
 file may also be copied out of the environment, renamed, etc.
+
+
+.. _environment_include_concrete:
+
+------------------------------
+Included Concrete Environments
+------------------------------
+
+Spack environments can create an environment based off of information in already
+established environments. You can think of it as a combination of existing
+environments. It will gather information from the existing environment's
+``spack.lock`` and use that during the creation of this included concrete
+environment. When an included concrete environment is created it will generate
+a ``spack.lock`` file for the newly created environment.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating included environments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To create a combined concrete environment, you must have at least one existing
+concrete environment. You will use the command ``spack env create`` with the
+argument ``--include-concrete`` followed by the name or path of the environment
+you'd like to include. Here is an example of how to create a combined environment
+from the command line.
+
+.. code-block:: console
+
+   $ spack env create myenv
+   $ spack -e myenv add python
+   $ spack -e myenv concretize
+   $ spack env create --include-concrete myenv included_env
+
+
+You can also include an environment directly in the ``spack.yaml`` file. It
+involves adding the ``include_concrete`` heading in the yaml followed by the
+absolute path to the independent environments.
+
+.. code-block:: yaml
+
+   spack:
+     specs: []
+     concretizer:
+         unify: true
+     include_concrete:
+     - /absolute/path/to/environment1
+     - /absolute/path/to/environment2
+
+
+Once the ``spack.yaml`` has been updated you must concretize the environment to
+get the concrete specs from the included environments.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Updating an included environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If changes were made to the base environment and you want that reflected in the
+included environment you will need to reconcretize both the base environment and the
+included environment for the change to be implemented. For example:
+
+.. code-block:: console
+
+   $ spack env create myenv
+   $ spack -e myenv add python
+   $ spack -e myenv concretize
+   $ spack env create --include-concrete myenv included_env
+
+
+   $ spack -e myenv find
+   ==> In environment myenv
+   ==> Root specs
+   python
+
+   ==> 0 installed packages
+
+
+   $ spack -e included_env find
+   ==> In environment included_env
+   ==> No root specs
+   ==> Included specs
+   python
+
+   ==> 0 installed packages
+
+Here we see that ``included_env`` has access to the python package through
+the ``myenv`` environment. But if we were to add another spec to ``myenv``,
+``included_env`` will not be able to access the new information.
+
+.. code-block:: console
+
+   $ spack -e myenv add perl
+   $ spack -e myenv concretize
+   $ spack -e myenv find
+   ==> In environment myenv
+   ==> Root specs
+   perl  python
+
+   ==> 0 installed packages
+
+
+   $ spack -e included_env find
+   ==> In environment included_env
+   ==> No root specs
+   ==> Included specs
+   python
+
+   ==> 0 installed packages
+
+It isn't until you run the ``spack concretize`` command that the combined
+environment will get the updated information from the reconcretized base environmennt.
+
+.. code-block:: console
+
+   $ spack -e included_env concretize
+   $ spack -e included_env find
+   ==> In environment included_env
+   ==> No root specs
+   ==> Included specs
+   perl  python
+
+   ==> 0 installed packages
 
 .. _environment-configuration:
 
@@ -800,32 +930,85 @@ For example, the following environment has three root packages:
 This allows for a much-needed reduction in redundancy between packages
 and constraints.
 
-----------------
-Filesystem Views
-----------------
 
-Spack Environments can define filesystem views, which provide a direct access point
-for software similar to the directory hierarchy that might exist under ``/usr/local``.
-Filesystem views are updated every time the environment is written out to the lock
-file ``spack.lock``, so the concrete environment and the view are always compatible.
-The files of the view's installed packages are brought into the view by symbolic or
-hard links, referencing the original Spack installation, or by copy.
+-----------------
+Environment Views
+-----------------
+
+Spack Environments can have an associated filesystem view, which is a directory
+with a more traditional structure ``<view>/bin``, ``<view>/lib``, ``<view>/include``
+in which all files of the installed packages are linked.
+
+By default a view is created for each environment, thanks to the ``view: true``
+option in the ``spack.yaml`` manifest file:
+
+.. code-block:: yaml
+
+   spack:
+     specs: [perl, python]
+     view: true
+
+The view is created in a hidden directory ``.spack-env/view`` relative to the environment.
+If you've used ``spack env activate``, you may have already interacted with this view. Spack
+prepends its ``<view>/bin`` dir to ``PATH`` when the environment is activated, so that
+you can directly run executables from all installed packages in the environment.
+
+Views are highly customizable: you can control where they are put, modify their structure,
+include and exclude specs, change how files are linked, and you can even generate multiple
+views for a single environment.
 
 .. _configuring_environment_views:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Configuration in ``spack.yaml``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Minimal view configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Spack Environment manifest file has a top-level keyword
-``view``. Each entry under that heading is a **view descriptor**, headed
-by a name. Any number of views may be defined under the ``view`` heading.
-The view descriptor contains the root of the view, and
-optionally the projections for the view, ``select`` and
-``exclude`` lists for the view and link information via ``link`` and
+The minimal configuration
+
+.. code-block:: yaml
+
+   spack:
+     # ...
+     view: true
+
+lets Spack generate a single view with default settings under the
+``.spack-env/view`` directory of the environment.
+
+Another short way to configure a view is to specify just where to put it:
+
+.. code-block:: yaml
+
+   spack:
+     # ...
+     view: /path/to/view
+
+Views can also be disabled by setting ``view: false``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Advanced view configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+One or more **view descriptors** can be defined under ``view``, keyed by a name.
+The example from the previous section with ``view: /path/to/view`` is equivalent
+to defining a view descriptor named ``default`` with a ``root`` attribute:
+
+.. code-block:: yaml
+
+   spack:
+     # ...
+     view:
+       default:  # name of the view
+         root: /path/to/view  # view descriptor attribute
+
+The ``default`` view descriptor name is special: when you ``spack env activate`` your
+environment, this view will be used to update (among other things) your ``PATH``
+variable.
+
+View descriptors must contain the root of the view, and optionally projections,
+``select`` and ``exclude`` lists and link information via ``link`` and
 ``link_type``.
 
-For example, in the following manifest
+As a more advanced example, in the following manifest
 file snippet we define a view named ``mpis``, rooted at
 ``/path/to/view`` in which all projections use the package name,
 version, and compiler name to determine the path for a given
@@ -870,59 +1053,10 @@ of ``hardlink`` or ``copy``.
    when the environment is not activated, and linked libraries will be located
    *outside* of the view thanks to rpaths.
 
-
-There are two shorthands for environments with a single view. If the
-environment at ``/path/to/env`` has a single view, with a root at
-``/path/to/env/.spack-env/view``, with default selection and exclusion
-and the default projection, we can put ``view: True`` in the
-environment manifest. Similarly, if the environment has a view with a
-different root, but default selection, exclusion, and projections, the
-manifest can say ``view: /path/to/view``. These views are
-automatically named ``default``, so that
-
-.. code-block:: yaml
-
-   spack:
-     # ...
-     view: True
-
-is equivalent to
-
-.. code-block:: yaml
-
-   spack:
-     # ...
-     view:
-       default:
-         root: .spack-env/view
-
-and
-
-.. code-block:: yaml
-
-   spack:
-     # ...
-     view: /path/to/view
-
-is equivalent to
-
-.. code-block:: yaml
-
-   spack:
-     # ...
-     view:
-       default:
-         root: /path/to/view
-
-By default, Spack environments are configured with ``view: True`` in
-the manifest. Environments can be configured without views using
-``view: False``. For backwards compatibility reasons, environments
-with no ``view`` key are treated the same as ``view: True``.
-
 From the command line, the ``spack env create`` command takes an
 argument ``--with-view [PATH]`` that sets the path for a single, default
 view. If no path is specified, the default path is used (``view:
-True``). The argument ``--without-view`` can be used to create an
+true``). The argument ``--without-view`` can be used to create an
 environment without any view configured.
 
 The ``spack env view`` command can be used to change the manage views
@@ -988,11 +1122,18 @@ the projection under ``all`` before reaching those entries.
 Activating environment views
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``spack env activate`` command will put the default view for the
-environment into the user's path, in addition to activating the
-environment for Spack commands. The arguments ``-v,--with-view`` and
-``-V,--without-view`` can be used to tune this behavior. The default
-behavior is to activate with the environment view if there is one.
+The ``spack env activate <env>`` has two effects:
+
+1. It activates the environment so that further Spack commands such
+   as ``spack install`` will run in the context of the environment.
+2. It activates the view so that environment variables such as
+   ``PATH`` are updated to include the view.
+
+Without further arguments, the ``default`` view of the environment is
+activated. If a view with a different name has to be activated,
+``spack env activate --with-view <name> <env>`` can be
+used instead. You can also activate the environment without modifying
+further environment variables using ``--without-view``.
 
 The environment variables affected by the ``spack env activate``
 command and the paths that are used to update them are determined by
@@ -1015,8 +1156,8 @@ relevant variable if the path exists. For this reason, it is not
 recommended to use non-default projections with the default view of an
 environment.
 
-The ``spack env deactivate`` command will remove the default view of
-the environment from the user's path.
+The ``spack env deactivate`` command will remove the active view of
+the Spack environment from the user's environment variables.
 
 
 .. _env-generate-depfile:
@@ -1033,7 +1174,7 @@ other targets to depend on the environment installation.
 
 A typical workflow is as follows:
 
-.. code:: console
+.. code-block:: console
 
    spack env create -d .
    spack -e . add perl
@@ -1126,7 +1267,7 @@ its dependencies. This can be useful when certain flags should only apply to
 dependencies. Below we show a use case where a spec is installed with verbose
 output (``spack install --verbose``) while its dependencies are installed silently:
 
-.. code:: console
+.. code-block:: console
 
    $ spack env depfile -o Makefile
 
@@ -1148,7 +1289,7 @@ This can be accomplished through the generated ``[<prefix>/]SPACK_PACKAGE_IDS``
 variable. Assuming we have an active and concrete environment, we generate the
 associated ``Makefile`` with a prefix ``example``:
 
-.. code:: console
+.. code-block:: console
 
    $ spack env depfile -o env.mk --make-prefix example
 
@@ -1175,7 +1316,7 @@ index once every package is pushed. Note how this target uses the generated
    example/push/%: example/install/%
    	@mkdir -p $(dir $@)
    	$(info About to push $(SPEC) to a buildcache)
-   	$(SPACK) -e . buildcache push --allow-root --only=package $(BUILDCACHE_DIR) /$(HASH)
+   	$(SPACK) -e . buildcache push --only=package $(BUILDCACHE_DIR) /$(HASH)
    	@touch $@
 
    push: $(addprefix example/push/,$(example/SPACK_PACKAGE_IDS))

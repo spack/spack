@@ -8,7 +8,7 @@ from llnl.util import tty
 from spack.package import *
 
 
-class Aocc(Package):
+class Aocc(Package, CompilerPackage):
     """
     The AOCC compiler system is a high performance, production quality code
     generation tool.  The AOCC environment provides various options to developers
@@ -28,7 +28,6 @@ class Aocc(Package):
     """
 
     _name = "aocc"
-    family = "compiler"
     homepage = "https://www.amd.com/en/developer/aocc.html"
 
     maintainers("amd-toolchain-support")
@@ -53,6 +52,8 @@ class Aocc(Package):
         sha256="8493525b3df77f48ee16f3395a68ad4c42e18233a44b4d9282b25dbb95b113ec",
         url="https://download.amd.com/developer/eula/aocc-compiler/aocc-compiler-3.2.0.tar",
     )
+
+    depends_on("c", type="build")  # generated
 
     # Licensing
     license_url = "https://www.amd.com/en/developer/aocc/aocc-compiler/eula.html"
@@ -105,3 +106,9 @@ class Aocc(Package):
             for compiler in ["clang", "clang++"]:
                 with open(join_path(self.prefix.bin, "{}.cfg".format(compiler)), "w") as f:
                     f.write(compiler_options)
+
+    compiler_version_argument = "--version"
+    compiler_version_regex = r"AOCC_(\d+[._]\d+[._]\d+)"
+    c_names = ["clang"]
+    cxx_names = ["clang++"]
+    fortran_names = ["flang"]

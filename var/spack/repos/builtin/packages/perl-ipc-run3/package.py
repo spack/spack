@@ -15,11 +15,3 @@ class PerlIpcRun3(PerlPackage):
     maintainers("EbiArnie")
 
     version("0.048", sha256="3d81c3cc1b5cff69cca9361e2c6e38df0352251ae7b41e2ff3febc850e463565")
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use IPC::Run3; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

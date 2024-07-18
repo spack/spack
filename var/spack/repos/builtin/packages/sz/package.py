@@ -46,12 +46,17 @@ class Sz(CMakePackage, AutotoolsPackage):
     version("1.4.10.0", sha256="cf23cf1ffd7c69c3d3128ae9c356b6acdc03a38f92c02db5d9bfc04f3fabc506")
     version("1.4.9.2", sha256="9dc785274d068d04c2836955fc93518a9797bfd409b46fea5733294b7c7c18f8")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     build_system(
         conditional("autotools", when="@:2.1.8.0"),
         conditional("cmake", when="@2.1.8.1:"),
         default="cmake",
     )
 
+    variant("openmp", default=False, description="build the multithreaded version using openmp")
+    variant("examples", default=False, description="build examples")
     variant("python", default=False, description="builds the python wrapper")
     variant("netcdf", default=False, description="build the netcdf reader")
     variant("hdf5", default=False, description="build the hdf5 filter")
@@ -201,6 +206,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("BUILD_STATS", "stats"),
             self.define("BUILD_TESTS", self.pkg.run_tests),
             self.define_from_variant("BUILD_PYTHON_WRAPPER", "python"),
+            self.define_from_variant("BUILD_OPENMP", "openmp"),
+            self.define_from_variant("BUILD_SZ_EXAMPLES", "examples"),
         ]
 
         if "+python" in self.spec:

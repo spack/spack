@@ -18,7 +18,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/Caliper"
     git = "https://github.com/LLNL/Caliper.git"
-    url = "https://github.com/LLNL/Caliper/archive/v2.10.0.tar.gz"
+    url = "https://github.com/LLNL/Caliper/archive/v2.11.0.tar.gz"
     tags = ["e4s", "radiuss"]
 
     maintainers("daboehme")
@@ -28,6 +28,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("2.11.0", sha256="b86b733cbb73495d5f3fe06e6a9885ec77365c8aa9195e7654581180adc2217c")
     version("2.10.0", sha256="14c4fb5edd5e67808d581523b4f8f05ace8549698c0e90d84b53171a77f58565")
     version("2.9.1", sha256="4771d630de505eff9227e0ec498d0da33ae6f9c34df23cb201b56181b8759e9e")
     version("2.9.0", sha256="507ea74be64a2dfd111b292c24c4f55f459257528ba51a5242313fa50978371f")
@@ -75,10 +76,14 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
         "1.7.0", tag="v1.7.0", commit="898277c93d884d4e7ca1ffcf3bbea81d22364f26", deprecated=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     is_linux = sys.platform.startswith("linux")
     variant("shared", default=True, description="Build shared libraries")
     variant("adiak", default=True, description="Enable Adiak support")
-    variant("mpi", default=True, description="Enable MPI wrappers")
+    variant("mpi", default=True, description="Enable MPI support")
     # libunwind has some issues on Mac
     variant(
         "libunwind", default=sys.platform != "darwin", description="Enable stack unwind support"
@@ -93,9 +98,12 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     variant("sosflow", default=False, description="Enable SOSflow support")
     variant("fortran", default=False, description="Enable Fortran support")
     variant("variorum", default=False, description="Enable Variorum support")
+    variant("vtune", default=False, description="Enable Intel Vtune support")
     variant("kokkos", default=True, when="@2.3.0:", description="Enable Kokkos profiling support")
+    variant("tests", default=False, description="Enable tests")
 
-    depends_on("adiak@0.1:0", when="@2.2: +adiak")
+    depends_on("adiak@0.1:0", when="@2.2:2.10 +adiak")
+    depends_on("adiak@0.4:0", when="@2.11: +adiak")
 
     depends_on("papi@5.3:5", when="@:2.2 +papi")
     depends_on("papi@5.3:", when="@2.3: +papi")
@@ -106,6 +114,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("unwind@1.2:1", when="+libunwind")
     depends_on("elfutils", when="+libdw")
     depends_on("variorum", when="+variorum")
+    depends_on("intel-oneapi-vtune", when="+vtune")
 
     depends_on("sosflow@spack", when="@1.0:1+sosflow")
 
@@ -113,7 +122,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("python", type="build")
 
     # sosflow support not yet in 2.0
-    conflicts("+sosflow", "@2.0.0:2.9")
+    conflicts("+sosflow", "@2.0.0:2.11")
     conflicts("+adiak", "@:2.1")
     conflicts("+libdw", "@:2.4")
     conflicts("+rocm", "@:2.7")
@@ -146,6 +155,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("WITH_ROCTRACER", "rocm"),
             self.define_from_variant("WITH_ROCTX", "rocm"),
             self.define_from_variant("WITH_VARIORUM", "variorum"),
+            self.define_from_variant("WITH_VTUNE", "vtune"),
             self.define_from_variant("WITH_KOKKOS", "kokkos"),
         ]
 
@@ -177,6 +187,10 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             # technically only works with cuda 10.2+, otherwise cupti is in
             # ${CUDA_TOOLKIT_ROOT_DIR}/extras/CUPTI
             args.append("-DCUPTI_PREFIX=%s" % spec["cuda"].prefix)
+
+        if "+vtune" in spec:
+            itt_dir = join_path(spec["intel-oneapi-vtune"].prefix, "vtune", "latest")
+            args.append("-DITT_PREFIX=%s" % itt_dir)
 
         if "+rocm" in spec:
             args.append("-DCMAKE_CXX_COMPILER={0}".format(spec["hip"].hipcc))

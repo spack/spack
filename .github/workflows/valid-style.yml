@@ -18,15 +18,15 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+    - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
       with:
         python-version: '3.11'
         cache: 'pip'
     - name: Install Python Packages
       run: |
         pip install --upgrade pip setuptools
-        pip install -r .github/workflows/style/requirements.txt
+        pip install -r .github/workflows/requirements/style/requirements.txt
     - name: vermin (Spack's Core)
       run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
@@ -35,27 +35,28 @@ jobs:
   style:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
+    - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
       with:
         python-version: '3.11'
         cache: 'pip'
     - name: Install Python packages
       run: |
         pip install --upgrade pip setuptools
-        pip install -r .github/workflows/style/requirements.txt
+        pip install -r .github/workflows/requirements/style/requirements.txt
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
         git --version
-        . .github/workflows/setup_git.sh
+        . .github/workflows/bin/setup_git.sh
     - name: Run style tests
       run: |
           share/spack/qa/run-style-tests
   audit:
     uses: ./.github/workflows/audit.yaml
+    secrets: inherit
     with:
       with_coverage: ${{ inputs.with_coverage }}
       python_version: '3.11'
@@ -69,13 +70,13 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # @v2
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       - name: Setup repo and non-root user
         run: |
           git --version
           git config --global --add safe.directory /__w/spack/spack
           git fetch --unshallow
-          . .github/workflows/setup_git.sh
+          . .github/workflows/bin/setup_git.sh
           useradd spack-test
           chown -R spack-test .
       - name: Bootstrap Spack development environment

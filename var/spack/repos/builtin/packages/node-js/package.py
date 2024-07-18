@@ -40,6 +40,9 @@ class NodeJs(Package):
     version("14.13.0", sha256="8538b2e76aa06ee0e6eb1c118426c3c5ca53b2e49d66591738eacf76e89edd61")
     version("14.10.0", sha256="7e0d7a1aa23697415e3588a1ca4f1c47496e6c88b9cf37c66be90353d3e4ac3e")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("debug", default=False, description="Include debugger support")
     variant("doc", default=False, description="Compile with documentation")
     variant(

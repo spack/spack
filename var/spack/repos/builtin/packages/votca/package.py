@@ -25,6 +25,8 @@ class Votca(CMakePackage):
     version("2022.1", sha256="358119b2645fe60f88ca621aed508c49fb61f88d29d3e3fa24b5b831ed4a66ec")
     version("2022", sha256="7991137098ff4511f4ca2c6f1b6c45f53d92d9f84e5c0d0e32fbc31768f73a83")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("mkl", default=False, description="Build with MKL support")
     variant(
         "new-gmx", default=False, description="Build against gromacs>2019 - no tabulated kernels"
@@ -39,7 +41,10 @@ class Votca(CMakePackage):
     depends_on("expat")
     depends_on("fftw-api@3")
     depends_on("eigen@3.3:")
-    depends_on("boost")
+    depends_on("boost+filesystem+system+regex+timer")
+    depends_on("boost@1.71:")
+    depends_on("boost@1.71:1.84", when="@=2024")
+    depends_on("boost@1.71:1.82", when="@:2023")
     depends_on("mkl", when="+mkl")
     depends_on("hdf5+cxx~mpi")
     depends_on("gromacs~mpi@5.1:")
