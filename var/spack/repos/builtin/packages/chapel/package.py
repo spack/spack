@@ -310,7 +310,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         requires(
             "^libfabric fabrics=cxi",
             when="libfabric=spack",
-            msg="libfabric requires cxi fabric on HPE-Cray EX machines"
+            msg="libfabric requires cxi fabric on HPE-Cray EX machines",
         )
 
     variant(
@@ -460,10 +460,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     # comm_substrate=udp gasnet_segment=unset defaults to everything,
     # which is incompatible with +pshm
-    requires(
-        "gasnet_segment=fast",
-        when="+pshm comm_substrate=udp",
-    )
+    requires("gasnet_segment=fast", when="+pshm comm_substrate=udp")
 
     conflicts(
         "^python@3.12:",
@@ -578,7 +575,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.set("CHPL_TARGET_COMPILER", "llvm")
             env.set(
                 "CHPL_LLVM_CONFIG",
-                join_path(self.spec["llvm-amdgpu"].prefix, "bin", "llvm-config")
+                join_path(self.spec["llvm-amdgpu"].prefix, "bin", "llvm-config"),
             )
             real_cc = join_path(self.spec["llvm-amdgpu"].prefix, "bin", "clang")
             real_cxx = join_path(self.spec["llvm-amdgpu"].prefix, "bin", "clang++")
@@ -590,10 +587,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         elif self.spec.satisfies("llvm=spack"):
             env.set("CHPL_TARGET_COMPILER", "llvm")
-            env.set(
-                "CHPL_LLVM_CONFIG",
-                join_path(self.spec["llvm"].prefix, "bin", "llvm-config")
-            )
+            env.set("CHPL_LLVM_CONFIG", join_path(self.spec["llvm"].prefix, "bin", "llvm-config"))
             real_cc = join_path(self.spec["llvm"].prefix, "bin", "clang")
             real_cxx = join_path(self.spec["llvm"].prefix, "bin", "clang++")
         else:
