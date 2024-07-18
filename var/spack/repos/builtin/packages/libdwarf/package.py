@@ -56,6 +56,9 @@ class Libdwarf(CMakePackage, Package):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
     
+
+    depends_on("cmake@3.5:", type="build")
+
     depends_on("elfutils@0.163", when="@20160507", type="link")
     depends_on("elf", type="link")
     depends_on("zlib-api", type="link")
