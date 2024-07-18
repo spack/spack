@@ -5,6 +5,7 @@
 
 import os
 import sys
+from pathlib import Path
 
 from spack.package import *
 
@@ -548,9 +549,7 @@ class Boost(Package):
                 # similar, but that doesn't work with the Cray compiler
                 # wrappers.  Since Boost doesn't use the MPI C++ bindings,
                 # that can be used as a compiler option instead.
-                mpi_line = "using mpi : %s" % spec["mpi"].mpicxx
-                if spec.satisfies("platform=windows"):
-                    mpi_line = mpi_line.replace("\\", "/")
+                mpi_line = "using mpi : %s" % Path(spec["mpi"].mpicxx).as_posix()
                 f.write(mpi_line + " ;\n")
 
             if "+python" in spec:
