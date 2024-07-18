@@ -8,6 +8,7 @@ import subprocess
 
 from spack.package import *
 from spack.util.environment import is_system_path, set_env
+import spack.platforms.cray
 
 
 @llnl.util.lang.memoized
