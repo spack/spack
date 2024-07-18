@@ -306,10 +306,10 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         when="comm=gasnet comm_substrate=ofi",
     )
 
-    with when(is_CrayEX()):
+    with when("libfabric=spack"):
         requires(
             "^libfabric fabrics=cxi",
-            when="libfabric=spack",
+            when=is_CrayEX(),
             msg="libfabric requires cxi fabric on HPE-Cray EX machines",
         )
 
