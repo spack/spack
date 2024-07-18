@@ -25,7 +25,7 @@ class Libdwarf(CMakePackage, Package):
     MIPS/IRIX C compiler."""
 
     homepage = "https://www.prevanders.net/dwarf.html"
-    url = "https://www.prevanders.net/libdwarf-20160507.tar.gz"
+    url = "https://www.prevanders.net/libdwarf-0.10.1.tar.xz"
     list_url = homepage
 
     license("LGPL-2.1-only")
@@ -82,9 +82,9 @@ class Libdwarf(CMakePackage, Package):
     parallel = False
 
     def url_for_version(self, version):
-        if version >= Version("2013"):
+        if version < Version("20130126"):
             return super().url_for_version(version)
-        return f"https://www.prevanders.net/libdwarf-{version}.tar.xz"
+        return f"https://www.prevanders.net/libdwarf-{version}.tar.gz"
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
