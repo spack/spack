@@ -20,6 +20,9 @@ class Maq(AutotoolsPackage):
     version("0.7.1", sha256="e1671e0408b0895f5ab943839ee8f28747cf5f55dc64032c7469b133202b6de2")
     version("0.5.0", sha256="c292c19baf291b2415b460d687d43a71ece00a7d178cc5984bc8fc30cfce2dfb")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("perl", type="run")
 
     def patch(self):

@@ -21,6 +21,8 @@ class Autogen(AutotoolsPackage, GNUMirrorPackage):
 
     version("5.18.12", sha256="805c20182f3cb0ebf1571d3b01972851c56fb34348dfdc38799fd0ec3b2badbe")
 
+    depends_on("c", type="build")  # generated
+
     variant("xml", default=True, description="Enable XML support")
 
     depends_on("pkgconfig", type="build")

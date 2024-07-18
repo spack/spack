@@ -15,6 +15,8 @@ class Rendercheck(AutotoolsPackage, XorgPackage):
 
     version("1.5", sha256="1553fef61c30f2524b597c3758cc8d3f8dc1f52eb8137417fa0667b0adc8a604")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libxrender")
     depends_on("libx11")
 

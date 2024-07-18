@@ -26,6 +26,8 @@ class PyTransformers(PythonPackage):
     version("4.6.1", sha256="83dbff763b7e7dc57cbef1a6b849655d4fcab6bffdd955c5e8bea12a4f76dc10")
     version("2.8.0", sha256="b9f29cdfd39c28f29e0806c321270dea337d6174a7aa60daf9625bf83dbb12ee")
 
+    depends_on("cxx", type="build")  # generated
+
     with default_args(type="build"):
         depends_on("py-setuptools")
 

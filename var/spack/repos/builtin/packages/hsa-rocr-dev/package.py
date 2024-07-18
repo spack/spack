@@ -41,6 +41,8 @@ class HsaRocrDev(CMakePackage):
         version("5.3.3", sha256="aca88d90f169f35bd65ce3366b8670c7cdbe3abc0a2056eab805d0192cfd7130")
         version("5.3.0", sha256="b51dbedbe73390e0be748b92158839c82d7fa0e514fede60aa7696dc498facf0")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Build shared or static library")
     variant("image", default=True, description="build with or without image support")
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")

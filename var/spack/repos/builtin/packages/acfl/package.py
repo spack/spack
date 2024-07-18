@@ -378,7 +378,10 @@ class Acfl(Package, CompilerPackage):
     def headers(self):
         armpl_dir = get_armpl_prefix(self.spec)
 
-        suffix = "include" + self.lib_suffix
+        if self.spec.satisfies("@24:"):
+            suffix = "include"
+        else:
+            suffix = "include" + self.lib_suffix
 
         incdir = join_path(armpl_dir, suffix)
 

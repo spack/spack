@@ -52,6 +52,9 @@ class Yosys(MakefilePackage):
     version("0.21", sha256="2b0e140f47d682e1069b1ca53b1fd91cbb1c1546932bd5cb95566f59a673cd8d")
     version("0.20", sha256="ee261487badf1b554616d555da8496a7c84ef21ae66a979ddd946b6949a780a4")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("abc", default=True, description="build with abc support")
     variant("ccache", default=False, description="build with ccache support")
 

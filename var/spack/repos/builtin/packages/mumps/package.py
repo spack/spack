@@ -37,6 +37,9 @@ class Mumps(Package):
     #         url='http://pkgs.fedoraproject.org/repo/pkgs/MUMPS/MUMPS_5.0.1.tar.gz/md5/b477573fdcc87babe861f62316833db0/MUMPS_5.0.1.tar.gz')
     version("5.0.1", sha256="50355b2e67873e2239b4998a46f2bbf83f70cdad6517730ab287ae3aae9340a0")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=True, description="Compile MUMPS with MPI support")
     variant("scotch", default=False, description="Activate Scotch as a possible ordering library")
     variant(

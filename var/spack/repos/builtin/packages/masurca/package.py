@@ -25,6 +25,9 @@ class Masurca(Package):
     version("3.3.1", sha256="587d0ee2c6b9fbd3436ca2a9001e19f251b677757fe5e88e7f94a0664231e020")
     version("3.2.9", sha256="795ad4bd42e15cf3ef2e5329aa7e4f2cdeb7e186ce2e350a45127e319db2904b")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("perl", type=("build", "run"))
     depends_on(Boost.with_default_variants)
     depends_on("zlib-api")

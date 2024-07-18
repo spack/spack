@@ -36,6 +36,9 @@ class Seacas(CMakePackage):
     # ###################### Versions ##########################
     version("master", branch="master")
     version(
+        "2024-07-10", sha256="b2ba6ca80359fed8ed2a8a210052582c7a3b7b837253bd1e9be941047dcab3ff"
+    )
+    version(
         "2024-06-27", sha256="a28db6aa3d03ff0a54a091210cf867661427f0b22ac08f89a4cc3bd8e0c704b2"
     )
     version(
@@ -140,6 +143,10 @@ class Seacas(CMakePackage):
         sha256="651dac832b0cfee0f63527f563415c8a65b8e4d79242735c1e2aec606f6b2e17",
         deprecated=True,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # ###################### Variants ##########################
     # Package options

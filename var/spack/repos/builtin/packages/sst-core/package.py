@@ -41,6 +41,8 @@ class SstCore(AutotoolsPackage):
     version("develop", branch="devel")
     version("master", branch="master")
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "pdes_mpi",
         default=True,

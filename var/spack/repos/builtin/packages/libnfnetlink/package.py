@@ -21,6 +21,8 @@ class Libnfnetlink(AutotoolsPackage):
     version("1.0.0", sha256="1d43456e51d5ff2e8bc84b68d8acad3bb15603cfaa806ba9693eea4f2aa1abeb")
     version("0.0.41", sha256="84381ad3aec4fc4884c020c7774a241160d92ed50c9f93a2660db94e212cbb72")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")

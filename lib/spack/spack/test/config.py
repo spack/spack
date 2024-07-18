@@ -1241,13 +1241,13 @@ def test_license_dir_config(mutable_config, mock_packages):
     expected_dir = spack.paths.default_license_dir
     assert spack.config.get("config:license_dir") == expected_dir
     assert spack.package_base.PackageBase.global_license_dir == expected_dir
-    assert spack.repo.PATH.get_pkg_class("a").global_license_dir == expected_dir
+    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == expected_dir
 
     rel_path = os.path.join(os.path.sep, "foo", "bar", "baz")
     spack.config.set("config:license_dir", rel_path)
     assert spack.config.get("config:license_dir") == rel_path
     assert spack.package_base.PackageBase.global_license_dir == rel_path
-    assert spack.repo.PATH.get_pkg_class("a").global_license_dir == rel_path
+    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == rel_path
 
 
 @pytest.mark.regression("22547")
