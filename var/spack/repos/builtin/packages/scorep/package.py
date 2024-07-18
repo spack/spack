@@ -157,6 +157,16 @@ class Scorep(AutotoolsPackage):
             return None
         return libs.directories[0]
 
+    # handle any mapping of Spack compiler names to Score-P args
+    # this should continue to exist for backward compatibility
+    def clean_compiler(self, compiler):
+        renames = {
+            "cce": "cray",
+        }
+        if compiler in renames:
+            return renames[compiler]
+        return compiler
+
     def configure_args(self):
         spec = self.spec
 
@@ -166,7 +176,8 @@ class Scorep(AutotoolsPackage):
             "--enable-shared",
         ]
 
-        cname = spec.compiler.name
+        cname = self.clean_compiler(spec.compiler.name)
+        
         config_args.append("--with-nocross-compiler-suite={0}".format(cname))
 
         if self.version >= Version("4.0"):
