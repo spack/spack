@@ -107,7 +107,7 @@ class Rust(Package):
         rustc_candidates = list(x for x in exes_in_prefix if os.path.basename(x) == "rustc")
         cargo_candidates = list(x for x in exes_in_prefix if os.path.basename(x) == "cargo")
         # Both rustc and cargo must be present
-        if not rustc_candidates or not cargo_candidates:
+        if not (rustc_candidates and cargo_candidates):
             return
         for rustc in rustc_candidates:
             output = Executable(rustc)("--version", output=str, error=str)
