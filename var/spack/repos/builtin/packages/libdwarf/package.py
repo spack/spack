@@ -12,7 +12,7 @@ from spack.package import *
 dwarf_dirs = ["libdwarf", "dwarfdump2"]
 
 
-class Libdwarf(Package):
+class Libdwarf(CMakePackage, Package):
     """The DWARF Debugging Information Format is of interest to
     programmers working on compilers and debuggers (and any one
     interested in reading or writing DWARF information). It was
@@ -40,12 +40,38 @@ class Libdwarf(Package):
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
+    build_system(
+        conditional("cmake", when="@0.10.1:"),
+        conditional("generic", when="@:0.10.1"),
+        default="cmake",
+    )
     depends_on("elfutils@0.163", when="@20160507", type="link")
     depends_on("elf", type="link")
     depends_on("zlib-api", type="link")
 
+
     parallel = False
 
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    def cmake_args(self):
+        spec = self.spec
+        define = self.define
+        from_variant = self.define_from_variant
+
+        args = [
+            from_variant("BUILD_SHARED", "shared"),
+            from_variant("BUILD_DWARFEXAMPLE", "examples"),
+            from_variant("DO_TESTING", "tests"),
+            from_variant("PIC_ALWAYS", "pic"),
+            from_variant("BUILD_DWARFDUMP", "dwarfdump"),
+            from_variant("BUILD_DWARFGEN", "dwarfgen"),
+            from_variant("ENABLE_DECOMPRESSION", "decompression"),
+            define("BUILD_NON_SHARED", "ON" if spec.satisfies("~shared") else "OFF"),
+        ]
+
+        return args
+
+class GenericBuilder(spack.build_systems.generic.GenericBuilder):
     def patch(self):
         filter_file(r"^typedef struct Elf Elf;$", "", "libdwarf/libdwarf.h.in")
 
