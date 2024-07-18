@@ -43,6 +43,15 @@ class Libdwarf(CMakePackage, Package):
         conditional("cmake", when="@:2013"),
         default="cmake",
     )
+
+    with when("@:2013"):
+        variant("shared", default=False, description="Build shared libs")
+        variant("examples", default=False, description="Build examples")
+        variant("tests", default=True, description="Build tests")
+        variant("pic", default=False, description="Build with position indepedent code")
+        variant("dwarfdump", default=True, description="Build dwarfdump")
+        variant("dwarfgen", default=False, description="Build dwarfgen")
+        variant("decompression", default=True, description="Enables support for compressed debug sections if both libz/libzstd are present")
     
     depends_on("c", type="build")
     depends_on("cxx", type="build")
