@@ -602,6 +602,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         values=("double", "mixed", "single"),
         multi=False,
     )
+    variant("tools", default=False, description="Build LAMMPS tools (msi2lmp, binary2txt, chain)")
 
     depends_on("cmake@3.16:", when="@20231121:")
     depends_on("mpi", when="+mpi")
@@ -780,6 +781,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             self.define_from_variant("LAMMPS_EXCEPTIONS", "exceptions"),
             self.define_from_variant("{}_MPI".format(mpi_prefix), "mpi"),
             self.define_from_variant("BUILD_OMP", "openmp"),
+            self.define_from_variant("BUILD_TOOLS", "tools"),
             self.define("ENABLE_TESTING", self.run_tests),
             self.define("DOWNLOAD_POTENTIALS", False),
         ]
