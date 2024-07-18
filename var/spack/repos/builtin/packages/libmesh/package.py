@@ -120,7 +120,7 @@ class Libmesh(AutotoolsPackage):
         values=("none", "pthreads", "tbb", "openmp"),
         multi=False,
     )
-    variant("shared", default=True,  description="Enables the build of shared libraries")
+    variant("shared", default=True, description="Enables the build of shared libraries")
 
     conflicts(
         "+metaphysicl",
@@ -153,9 +153,9 @@ class Libmesh(AutotoolsPackage):
         options = []
 
         if "+shared" in self.spec:
-          options.extend(["--enable-shared", "--disable-static"])
+            options.extend(["--enable-shared", "--disable-static"])
         else:
-          options.extend(["--disable-shared", "--enable-static"])
+            options.extend(["--disable-shared", "--enable-static"])
 
         # GLIBCXX debugging is not, by default, supported by other libraries,
         # so unconditionally disable it for libmesh
