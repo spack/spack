@@ -498,24 +498,20 @@ class Boost(Package):
         if spec.satisfies("@:1.58"):
             return ""
 
-        return "using python : {0} : {1} : {2} : {3} ;\n".format(
-            spec["python"].version.up_to(2),
-            spec["python"].command.path,
-            spec["python"].headers.directories[0],
-            spec["python"].libs[0],
-        )
-
-    def bjam_python_line_win(self, spec):
-        # avoid "ambiguous key" error
-        if spec.satisfies("@:1.58"):
-            return ""
-
-        return "using python : {0} : {1} : {2} : {3} ;\n".format(
-            spec["python"].version.up_to(2),
-            spec["python"].command.path.as_posix(),
-            spec["python"].prefix.include.as_posix(),
-            spec["python"].prefix.libs.as_posix(),
-        )
+        if spec.satisfies("platform=windows"):
+            return "using python : {0} : {1} : {2} : {3} ;\n".format(
+                spec["python"].version.up_to(2),
+                spec["python"].command.path.as_posix(),
+                spec["python"].prefix.include.as_posix(),
+                spec["python"].prefix.libs.as_posix(),
+            )
+        else:
+            return "using python : {0} : {1} : {2} : {3} ;\n".format(
+                spec["python"].version.up_to(2),
+                spec["python"].command.path,
+                spec["python"].headers.directories[0],
+                spec["python"].libs[0],
+            )
 
     def determine_bootstrap_options(self, spec, with_libs, options):
         boost_toolset_id = self.determine_toolset(spec)
@@ -558,10 +554,7 @@ class Boost(Package):
                 f.write(mpi_line + " ;\n")
 
             if "+python" in spec:
-                if spec.satisfies("platform=windows"):
-                    f.write(self.bjam_python_line_win(spec))
-                else:
-                    f.write(self.bjam_python_line(spec))
+                f.write(self.bjam_python_line(spec))
 
     def determine_b2_options(self, spec, options):
         if "+debug" in spec:
