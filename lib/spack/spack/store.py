@@ -371,7 +371,6 @@ def use_store(
         data.update(extra_data)
 
     # Swap the store with the one just constructed and return it
-    ensure_singleton_created()
     spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={"config": {"install_tree": data}})
     )
