@@ -46,6 +46,8 @@ class Sleef(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     generator("ninja")
     depends_on("cmake@3.18:", type="build")
 

@@ -24,6 +24,8 @@ class Amg2013(MakefilePackage):
     version("1.1", tag="1.1", commit="09fe8a78baf6ba5eaef7d2804f7b653885d60fee")
     version("1.0", tag="1.0", commit="f5b864708ca3ef48a86e1e46fcb812cbbfa80c51")
 
+    depends_on("c", type="build")  # generated
+
     variant("openmp", default=True, description="Build with OpenMP support")
     variant("optflags", default=False, description="Additional optimizations")
     variant("int64", default=False, description="Use 64-bit integers for global variables")
