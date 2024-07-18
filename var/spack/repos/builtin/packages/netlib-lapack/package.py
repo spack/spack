@@ -84,6 +84,7 @@ class NetlibLapack(CMakePackage):
         provides("lapack@" + ver, when="@" + ver)
 
     variant("shared", default=True, description="Build shared library version")
+    variant("pic", default=True, description="Produce position-independent code")
     variant("external-blas", default=False, description="Build lapack with an external blas")
 
     variant("lapacke", default=True, description="Activates the build of the LAPACKE C interface")
@@ -187,6 +188,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
             self.define_from_variant("LAPACKE", "lapacke"),
             self.define_from_variant("LAPACKE_WITH_TMG", "lapacke"),
             self.define("CBLAS", self.spec.satisfies("@3.6.0:")),
