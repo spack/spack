@@ -141,8 +141,8 @@ class Libmesh(AutotoolsPackage):
     depends_on("mpi", when="+slepc")
     # compilation dependencies depend on perl
     depends_on("perl")
-    depends_on("petsc+mpi", when="+mpi")
-    depends_on("petsc+metis", when="+metis")
+    depends_on("petsc+mpi", when="+petsc+mpi")
+    depends_on("petsc+metis", when="+petsc+metis")
     depends_on("slepc", when="+slepc")
     depends_on("petsc", when="+petsc")
     depends_on("tbb", when="threads=tbb")
