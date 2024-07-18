@@ -40,8 +40,8 @@ class IntelXed(Package):
     # The old 2019.03.01 version (before there were tags).
     version("10.2019.03", commit="b7231de4c808db821d64f4018d15412640c34113", deprecated=True)
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # XED wants the mbuild directory adjacent to xed in the same directory.
     mdir = join_path("..", "mbuild")
