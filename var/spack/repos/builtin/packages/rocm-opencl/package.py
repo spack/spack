@@ -5,6 +5,7 @@
 
 import os
 import re
+import sys
 
 from spack.package import *
 
@@ -167,13 +168,15 @@ class RocmOpencl(CMakePackage):
         with open(join_path(vendor_config_path, config_file_name), "w") as f:
             f.write("libamdocl64.so")
 
-    test_src_dir = "tests/ocltst"
+    def test_ocltst(self):
+        """Run ocltst checks"""
+        test_dir = "tests/ocltst" if sys.platform == "win32" else "share/opencl/ocltst"
 
-    def test(self):
-        test_dir = join_path(self.spec["rocm-opencl"].prefix, self.test_src_dir)
-        with working_dir(test_dir, create=True):
-            os.environ["LD_LIBRARY_PATH"] += os.pathsep + test_dir
-            args = ["-m", "liboclruntime.so", "-A", "oclruntime.exclude"]
-            self.run_test("ocltst", args)
-            args = ["-m", "liboclperf.so", "-A", "oclperf.exclude"]
-            self.run_test("ocltst", args)
+        os.environ["LD_LIBRARY_PATH"] += os.pathsep + join_path(self.prefix, test_dir)
+
+        ocltst = which(join_path(self.prefix, test_dir, "ocltst"))
+        with test_part(self, "test_ocltst_runtime", purpose="check runtime"):
+            ocltst("-m", "liboclruntime.so", "-A", "oclruntime.exclude")
+
+        with test_part(self, "test_ocltst_perf", purpose="check perf"):
+            ocltst("-m", "liboclperf.so", "-A", "oclperf.exclude")
