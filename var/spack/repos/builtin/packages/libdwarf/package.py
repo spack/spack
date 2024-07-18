@@ -56,7 +56,8 @@ class Libdwarf(CMakePackage, Package):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
-    depends_on("cmake@3.5:", type="build")
+    depends_on("cmake@3.5:", type="build", when="@:2013")
+    depends_on("gmake", type="build", when="@2013:")
 
     depends_on("elfutils@0.163", when="@20160507", type="link")
     depends_on("elf", when="@2013:", type="link")
