@@ -205,16 +205,12 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
                      C++ vectors are *zero* initialised where as aligned_alloc is \
                      uninitialised before first use.",
     )
-    # download raja from https://github.com/LLNL/RAJA
-    conflicts(
-        "dir=none",
-        when="+raja",
-        msg="RAJA implementation requires architecture to be specfied by dir=",
-    )
+    
+
     # Thrust Conflict
     depends_on("thrust", when="+thrust")
     depends_on("cuda", when="thrust_submodel=cuda")
-    depends_on("cuda", when="+raja+cuda")
+    depends_on("cuda", when="+raja raja_offload=nvidia")
     depends_on("hip", when="+hip")
     depends_on("rocthrust", when="thrust_submodel=rocm")
     depends_on("intel-tbb", when="+std +std_use_tbb")
@@ -237,11 +233,14 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
             See https://spec.oneapi.com/versions/latest/elements/oneTBB/source/algorithms.html#partitioners for more details.",
     )
 
-    # Kokkos Dependency
+    # Kokkos & RAJA Dependency
     cuda_archs = CudaPackage.cuda_arch_values
     for sm_ in cuda_archs:
-        depends_on("kokkos +cuda +wrapper cuda_arch={0}".format(sm_), when="kokkos_backend=cuda cuda_arch={0}".format(sm_))
+        depends_on("kokkos +cuda +wrapper cuda_arch={0}".format(sm_),when="kokkos_backend=cuda cuda_arch={0}".format(sm_))
+        depends_on("raja +cuda cuda_arch={0}".format(sm_), when="raja_offload=nvidia cuda_arch={0}".format(sm_))
     depends_on("kokkos +openmp", when="kokkos_backend=omp")
+    depends_on("raja +openmp", when="raja_offload=cpu")
+
 
     # OpenCL Dependency
     variant(
@@ -451,7 +450,7 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
         #             CUDA
         # ===================================
-        if self.spec.satisfies("+cuda~kokkos~acc~omp~thrust"):
+        if self.spec.satisfies("+cuda~kokkos~acc~omp~thrust~raja"):
             # Set up the cuda macros needed by the build
             cuda_arch_list = self.spec.variants["cuda_arch"].value
             # "-DCUDA_ARCH" requires sm_
@@ -593,17 +592,17 @@ register_flag_optional(TARGET_PROCESSOR
         #             RAJA
         # ===================================
         if "+raja" in self.spec:
-            args.append("-DRAJA_IN_TREE=" + self.spec.variants["dir"].value)
+            args.append("-DCMAKE_C_COMPILER=" + spack_cc)
+            args.append("-DRAJA_IN_PACKAGE=" + self.spec["raja"].prefix)
             if "nvidia" in self.spec.variants["raja_offload"].value:
                 cuda_comp = self.spec["cuda"].prefix + "/bin/nvcc"
-                args.append("-DCMAKE_CUDA_COMPILER=" + cuda_comp)
                 args.append("-DTARGET=NVIDIA")
                 cuda_arch = "sm_" + self.spec.variants["cuda_arch"].value[0]
                 args.append("-DCUDA_ARCH=" + cuda_arch)
                 args.append("-DENABLE_CUDA=ON")
-                args.append("DCUDA_TOOLKIT_ROOT_DIR=" + self.spec["cuda"].prefix)
+                args.append("-DCUDA_TOOLKIT_ROOT_DIR=" + self.spec["cuda"].prefix)
                 if self.spec.variants["flags"].value != "none":
-                    args.append("-DCUDA_EXTRA_FLAGS=" + self.spec.variants["flags"].value)
+                    args.append("-DCMAKE_CUDA_FLAGS=" + self.spec.variants["flags"].value)
 
         # ===================================
         #             THRUST
