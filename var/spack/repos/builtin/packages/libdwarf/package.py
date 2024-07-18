@@ -49,7 +49,9 @@ class Libdwarf(CMakePackage, Package):
         )
 
     build_system(
-        conditional("generic", when="@20130126:20180130"), conditional("cmake", when="@0:"), default="generic"
+        conditional("generic", when="@20130126:20180130"),
+        conditional("cmake", when="@0:"),
+        default="generic",
     )
 
     with when("@:20130126"):
