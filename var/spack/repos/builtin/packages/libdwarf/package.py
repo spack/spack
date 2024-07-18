@@ -38,13 +38,15 @@ class Libdwarf(CMakePackage, Package):
         version("20130207", sha256="5cb81459f0a1f6a2a10ef4635faddc2fa5e1a9e36901018c017759e491e708b8")
         version("20130126", sha256="c23c847935f8612f4fcdcfa0b3311f1553dcbd95bb683d3d5e030440201192fe")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
     build_system(
-        conditional("cmake", when="@0.10.1:"),
-        conditional("generic", when="@:0.10.1"),
+        conditional("generic", when="@2013:"),
+        conditional("cmake", when="@:2013"),
         default="cmake",
     )
+    
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    
     depends_on("elfutils@0.163", when="@20160507", type="link")
     depends_on("elf", type="link")
     depends_on("zlib-api", type="link")
