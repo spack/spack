@@ -139,8 +139,8 @@ class Mapl(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     # Versions later than 3.14 remove FindESMF.cmake
     # from ESMA_CMake.
