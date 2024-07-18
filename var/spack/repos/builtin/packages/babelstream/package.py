@@ -205,7 +205,6 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
                      C++ vectors are *zero* initialised where as aligned_alloc is \
                      uninitialised before first use.",
     )
-    
 
     # Thrust Conflict
     depends_on("thrust", when="+thrust")
@@ -236,11 +235,16 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     # Kokkos & RAJA Dependency
     cuda_archs = CudaPackage.cuda_arch_values
     for sm_ in cuda_archs:
-        depends_on("kokkos +cuda +wrapper cuda_arch={0}".format(sm_),when="kokkos_backend=cuda cuda_arch={0}".format(sm_))
-        depends_on("raja +cuda cuda_arch={0}".format(sm_), when="raja_offload=nvidia cuda_arch={0}".format(sm_))
+        depends_on(
+            "kokkos +cuda +wrapper cuda_arch={0}".format(sm_),
+            when="kokkos_backend=cuda cuda_arch={0}".format(sm_),
+        )
+        depends_on(
+            "raja +cuda cuda_arch={0}".format(sm_),
+            when="raja_offload=nvidia cuda_arch={0}".format(sm_),
+        )
     depends_on("kokkos +openmp", when="kokkos_backend=omp")
     depends_on("raja +openmp", when="raja_offload=cpu")
-
 
     # OpenCL Dependency
     variant(
@@ -664,7 +668,6 @@ register_flag_optional(TARGET_PROCESSOR
             args.append("-DCMAKE_CXX_COMPILER_FORCED=True")
 
         return args
-
 
 
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
