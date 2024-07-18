@@ -227,11 +227,11 @@ spack:
   # CUDA 80
   - amrex +cuda cuda_arch=80
   - arborx +cuda cuda_arch=80 ^kokkos +wrapper
+  - axom +cuda cuda_arch=80
   - cabana +cuda cuda_arch=80 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=80
   - caliper +cuda cuda_arch=80
   - chai +cuda cuda_arch=80 ^umpire ~shared
   - cusz +cuda cuda_arch=80
-  # - dealii +cuda cuda_arch=80 # dealii: conflicts with '+cuda ^cuda@12:'
   - ecp-data-vis-sdk ~rocm +adios2 ~ascent +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=80 # +ascent fails because fides fetch error
   - exago +mpi +python +raja +hiop ~rocm +cuda cuda_arch=80 ~ipopt ^hiop@1.0.0 ~sparse +mpi +raja ~rocm +cuda cuda_arch=80 #^raja@0.14.0
   - flecsi +cuda cuda_arch=80
@@ -265,39 +265,39 @@ spack:
   - vtk-m +cuda cuda_arch=80
   - zfp +cuda cuda_arch=80
   # --
-  - axom +cuda cuda_arch=80         # axom: https://github.com/spack/spack/issues/29520
-  # - lammps +cuda cuda_arch=80       # lammps: needs NVIDIA driver
+  # - dealii +cuda cuda_arch=80     # dealii: conflicts with '+cuda ^cuda@12:'
+  # - lammps +cuda cuda_arch=80     # lammps: needs NVIDIA driver
   # - lbann +cuda cuda_arch=80      # lbann: layers/transform/cereal_registration/../permute/cutensor_support.hpp:95:18: error: 'cutensorInit' was not declared in this scope; did you mean 'cutensorPlan_t'?
   # - mgard +serial +openmp +timing +unstructured +cuda cuda_arch=80 # mgard: https://github.com/spack/spack/issues/44833
-  # - upcxx +cuda cuda_arch=80        # upcxx: needs NVIDIA driver
+  # - upcxx +cuda cuda_arch=80      # upcxx: needs NVIDIA driver
 
   # CUDA 90
   - amrex +cuda cuda_arch=90
   - arborx +cuda cuda_arch=90 ^kokkos +wrapper
+  - axom +cuda cuda_arch=90
   - cabana +cuda cuda_arch=90 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=90
   - caliper +cuda cuda_arch=90
   - chai +cuda cuda_arch=90 ^umpire ~shared
-  # - cusz +cuda cuda_arch=90 # cusz: cuda-12.5.0-ndrzb7undvancjdj3fi6bhthdxdo7gr5/targets/x86_64-linux/include/cub/util_device.cuh:202:50: error: 'blockDim' was not declared in this scope
   - flecsi +cuda cuda_arch=90
   - ginkgo +cuda cuda_arch=90
   - gromacs +cuda cuda_arch=90
   - heffte +cuda cuda_arch=90
   - hpx +cuda cuda_arch=90
+  - hypre +cuda cuda_arch=90
   - kokkos +wrapper +cuda cuda_arch=90
   - kokkos-kernels +cuda cuda_arch=90 ^kokkos +wrapper +cuda cuda_arch=90
-  # - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +cusz +mgard +cuda cuda_arch=90 ^cusz +cuda cuda_arch=90 # cusz: cuda-12.5.0-e3rny44pq5z5x3nnoljynbsq5on5fnl3/targets/x86_64-linux/include/cub/util_device.cuh:202:50: error: 'blockDim' was not declared in this scope
   - magma +cuda cuda_arch=90
   - mfem +cuda cuda_arch=90
   - mgard +serial +openmp +timing +unstructured +cuda cuda_arch=90
   - parsec +cuda cuda_arch=90
   - petsc +cuda cuda_arch=90
-  # - py-torch +cuda cuda_arch=90 # py-torch: FAILED: caffe2/CMakeFiles/torch_cuda.dir/__/aten/src/ATen/native/transformers/cuda/flash_attn/kernels/flash_bwd_hdim256_bf16_sm80.cu.o
   - raja +cuda cuda_arch=90
   - slate +cuda cuda_arch=90
   - slepc +cuda cuda_arch=90
   - strumpack ~slate +cuda cuda_arch=90
   - sundials +cuda cuda_arch=90
   - superlu-dist +cuda cuda_arch=90
+  - tasmanian +cuda cuda_arch=90
   - trilinos +cuda cuda_arch=90
   - umpire ~shared +cuda cuda_arch=90
   # INCLUDED IN ECP DAV CUDA
@@ -307,14 +307,14 @@ spack:
   - vtk-m +cuda cuda_arch=90
   - zfp +cuda cuda_arch=90
   # --
-  - axom +cuda cuda_arch=90         # axom: https://github.com/spack/spack/issues/29520
-  # - dealii +cuda cuda_arch=90     # dealii: conflicts with '+cuda ^cuda@12:'; dealii: https://github.com/spack/spack/issues/39532
+  # - cusz +cuda cuda_arch=90         # cusz: cuda-12.5.0-ndrzb7undvancjdj3fi6bhthdxdo7gr5/targets/x86_64-linux/include/cub/util_device.cuh:202:50: error: 'blockDim' was not declared in this scope
+  # - dealii +cuda cuda_arch=90       # dealii: conflicts with '+cuda ^cuda@12:'; dealii: https://github.com/spack/spack/issues/39532
   # - ecp-data-vis-sdk ~rocm +adios2 +ascent +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=90 # +ascent: # ascent: https://github.com/spack/spack/issues/38045; +paraview: VTK/ThirdParty/vtkm/vtkvtkm/vtk-m/vtkm/exec/cuda/internal/ExecutionPolicy.h(121): error: namespace "thrust" has no member "sort"
-  - hypre +cuda cuda_arch=90        # concretizer: hypre +cuda requires cuda@:11, but cuda_arch=90 requires cuda@12:
   # - lammps +cuda cuda_arch=90       # lammps: needs NVIDIA driver
-  # - lbann +cuda cuda_arch=90      # aluminum: /usr/include/c++/11/bits/basic_string.h:1260: multiple definition of `cub::CUB_200400___CUDA_ARCH_LIST___NS::Debug(cudaError, char const*, int)'; 
-  # - omega-h +cuda cuda_arch=90    # omega-h: https://github.com/spack/spack/issues/39535
-  - tasmanian +cuda cuda_arch=90    # tasmanian: conflicts with cuda@12
+  # - lbann +cuda cuda_arch=90        # aluminum: /usr/include/c++/11/bits/basic_string.h:1260: multiple definition of `cub::CUB_200400___CUDA_ARCH_LIST___NS::Debug(cudaError, char const*, int)'; 
+  # - libpressio +bitgrooming +bzip2 +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp +json +remote +netcdf +cusz +mgard +cuda cuda_arch=90 ^cusz +cuda cuda_arch=90 # cusz: cuda-12.5.0-e3rny44pq5z5x3nnoljynbsq5on5fnl3/targets/x86_64-linux/include/cub/util_device.cuh:202:50: error: 'blockDim' was not declared in this scope
+  # - omega-h +cuda cuda_arch=90      # omega-h: https://github.com/spack/spack/issues/39535
+  # - py-torch +cuda cuda_arch=90     # py-torch: FAILED: caffe2/CMakeFiles/torch_cuda.dir/__/aten/src/ATen/native/transformers/cuda/flash_attn/kernels/flash_bwd_hdim256_bf16_sm80.cu.o
   # - upcxx +cuda cuda_arch=90        # upcxx: needs NVIDIA driver
 
   # ROCM NOARCH
@@ -355,7 +355,7 @@ spack:
   # - arborx +rocm amdgpu_target=gfx90a         # kokkos: https://github.com/spack/spack/issues/44832
   # - cabana +rocm amdgpu_target=gfx90a         # kokkos: https://github.com/spack/spack/issues/44832
   # - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx90a ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx90a # hiop: CMake Error at cmake/FindHiopHipLibraries.cmake:23 (find_package)
-  # - kokkos +rocm amdgpu_target=gfx90a # kokkos: https://github.com/spack/spack/issues/44832
+  # - kokkos +rocm amdgpu_target=gfx90a         # kokkos: https://github.com/spack/spack/issues/44832
   # - lbann ~cuda +rocm amdgpu_target=gfx90a    # aluminum: https://github.com/spack/spack/issues/38807
   # - legion +rocm amdgpu_target=gfx90a         # kokkos: https://github.com/spack/spack/issues/44832
   # - papi +rocm amdgpu_target=gfx90a           # papi: https://github.com/spack/spack/issues/27898
