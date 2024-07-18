@@ -100,12 +100,12 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         args = [
             from_variant("BUILD_SHARED", "shared"),
             from_variant("BUILD_DWARFEXAMPLE", "examples"),
-            from_variant("DO_TESTING", self.run_tests),
             from_variant("PIC_ALWAYS", "pic"),
             from_variant("BUILD_DWARFDUMP", "dwarfdump"),
             from_variant("BUILD_DWARFGEN", "dwarfgen"),
             from_variant("ENABLE_DECOMPRESSION", "decompression"),
             define("BUILD_NON_SHARED", "ON" if spec.satisfies("~shared") else "OFF"),
+            define("DO_TESTING", self.run_tests),
         ]
 
         return args
