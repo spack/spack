@@ -40,6 +40,7 @@ import spack.paths
 import spack.resource
 import spack.spec
 import spack.stage
+import spack.util.crypto
 import spack.util.lock
 import spack.util.path as sup
 import spack.util.pattern as pattern
@@ -1180,13 +1181,15 @@ def _fetch_and_checksum(url, options, keep_stage, action_fn=None):
         with Stage(url_or_fs, keep=keep_stage) as stage:
             # Fetch the archive
             stage.fetch()
-            if action_fn is not None:
+            archive = stage.archive_file
+            assert archive is not None, f"Archive not found for {url}"
+            if action_fn is not None and archive:
                 # Only run first_stage_function the first time,
                 # no need to run it every time
-                action_fn(stage, url)
+                action_fn(archive, url)
 
             # Checksum the archive and add it to the list
-            checksum = spack.util.crypto.checksum(hashlib.sha256, stage.archive_file)
+            checksum = spack.util.crypto.checksum(hashlib.sha256, archive)
         return checksum, None
     except FailedDownloadError:
         return None, f"[WORKER] Failed to fetch {url}"
