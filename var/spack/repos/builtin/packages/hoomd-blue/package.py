@@ -35,6 +35,9 @@ class HoomdBlue(CMakePackage):
         "2.1.6", tag="v2.1.6", commit="aa650aaf13721f2abf945e868f65b806fcc54fea", submodules=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("mpi", default=True, description="Compile with MPI enabled")
     variant("cuda", default=True, description="Compile with CUDA Toolkit")
     variant("doc", default=False, description="Generate documentation")
