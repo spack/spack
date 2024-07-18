@@ -65,6 +65,10 @@ class Pumi(CMakePackage):
         "Disable the check for testing new versions.",
     )
 
+    depends_on("cxx", type="build")
+    depends_on("c", type="build")
+    depends_on("fortran", type="build", when="+fortran")
+
     depends_on("mpi")
     depends_on("cmake@3:", type="build")
     depends_on("zoltan", when="+zoltan")
