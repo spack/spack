@@ -104,8 +104,8 @@ class Rust(Package):
 
     @classmethod
     def determine_spec_details(cls, prefix, exes_in_prefix):
-        rustc_candidates = list(x for x in exes_in_prefix if os.path.basename(x) == "rustc")
-        cargo_candidates = list(x for x in exes_in_prefix if os.path.basename(x) == "cargo")
+        rustc_candidates = [x for x in exes_in_prefix if os.path.basename(x) == "rustc"]
+        cargo_candidates = [x for x in exes_in_prefix if os.path.basename(x) == "cargo"]
         # Both rustc and cargo must be present
         if not (rustc_candidates and cargo_candidates):
             return
