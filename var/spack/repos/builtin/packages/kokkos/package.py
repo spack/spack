@@ -407,11 +407,4 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
         make = which("make")
         make()
-
-        with working_dir(cmake_path):
-            for program in ["dual_view", "hello_world", "simple_reduce"]:
-                with test_part(self, "test_run_" + program, purpose=f"Run {program}"):
-                    exe = which(program)
-                    if exe is None:
-                        raise SkipTest(f"Test {program} not found")
-                    exe()
+        make(cmake_path, "test")
