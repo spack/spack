@@ -20,8 +20,6 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
-    depends_on("cxx", type="build")  # generated
-
     # Variants are primarily backends to build on GPU systems and pass the right
     # informtion to the packages we depend on
     variant("cuda", default=False, description="Use CUDA support from subpackages")
@@ -40,6 +38,9 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("mpich +rocm", when="^[virtuals=mpi] mpich")
         depends_on("mvapich2-gdr +rocm", when="^[virtuals=mpi] mvapich2-gdr")
 
+    # BLT depdendency
+    depends_on("blt@develop", when="@develop")
+
     # Kokkos dependencies
     depends_on("kokkos @4:")
     depends_on("kokkos +cuda +cuda_lambda +cuda_constexpr", when="+cuda")
@@ -47,7 +48,7 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos +wrapper", when="%gcc+cuda")
 
     # Cabana dependencies
-    depends_on("cabana @0.6.0 +grid +heffte +silo +hdf5 +mpi")
+    depends_on("cabana @master +grid +heffte +arborx +silo +hdf5 +mpi")
     depends_on("cabana +cuda", when="+cuda")
     depends_on("cabana +rocm", when="+rocm")
 
@@ -80,6 +81,13 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     # CMake specific build functions
     def cmake_args(self):
         args = []
+
+        # Point to BLT appropriately
+        args.extend(
+            [
+                "-DBLT_SOURCE_DIR=%s" % self.spec["blt"].prefix,
+            ]
+        )
 
         # Use hipcc as the c compiler if we are compiling for rocm. Doing it this way
         # keeps the wrapper insted of changeing CMAKE_CXX_COMPILER keeps the spack wrapper
