@@ -104,7 +104,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             from_variant("BUILD_DWARFDUMP", "dwarfdump"),
             from_variant("BUILD_DWARFGEN", "dwarfgen"),
             from_variant("ENABLE_DECOMPRESSION", "decompression"),
-            define("BUILD_NON_SHARED", "ON" if spec.satisfies("~shared") else "OFF"),
+            define("BUILD_NON_SHARED", spec.satisfies("~shared")),
             define("DO_TESTING", self.pkg.run_tests),
         ]
 
