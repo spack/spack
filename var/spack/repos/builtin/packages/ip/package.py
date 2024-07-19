@@ -33,7 +33,7 @@ class Ip(CMakePackage):
         preferred=True,
     )
 
-    depends_on("c", type="build") # should be test
+    depends_on("c", type="build")  # should be test
     depends_on("fortran", type="build")
 
     variant("openmp", description="Enable OpenMP threading", default=True)
