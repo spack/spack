@@ -384,7 +384,7 @@ class Libpressio(CMakePackage, CudaPackage):
             args.append("-DCMAKE_EXE_LINKER_FLAGS=-Wl,--allow-shlib-undefined")
         # libpressio needs to know where to install the python libraries
         if "+python" in self.spec:
-            args.append("-DLIBPRESSIO_PYTHON_SITELIB={0}".format(python_platlib))
+            args.append(f"-DLIBPRESSIO_PYTHON_SITELIB={python_platlib}")
         # help ensure that libpressio finds the correct HDF5 package
         if "+hdf5" in self.spec:
             args.append("-DHDF5_ROOT=" + self.spec["hdf5"].prefix)
@@ -422,19 +422,15 @@ class Libpressio(CMakePackage, CudaPackage):
             raise SkipTest("Package must be installed as version @0.88.3 or later")
 
         args = self.cmake_args()
-        args.append(
-            "-S{}".format(join_path(self.test_suite.current_test_cache_dir, "test", "smoke_test"))
-        )
-        args.append(
-            "-DCMAKE_PREFIX_PATH={};{}".format(self.spec["libstdcompat"].prefix, self.prefix)
-        )
+        args.append(f"-S{join_path(self.test_suite.current_test_cache_dir, 'test', 'smoke_test')}")
+        args.append(f"-DCMAKE_PREFIX_PATH={self.spec['libstdcompat'].prefix};{self.prefix}")
 
         cmake = which("cmake")
         cmake(*args)
         cmake("--build", ".")
 
         exe = which("./pressio_smoke_tests")
-        out = exe()
+        out = exe(output=str.split, error=str.split)
 
         expected = "all passed"
         assert out in expected
