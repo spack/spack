@@ -25,6 +25,7 @@ import pathlib
 import socket
 import sys
 import time
+from json import JSONDecoder
 from typing import (
     Any,
     Callable,
@@ -818,7 +819,8 @@ class Database:
         """
         try:
             with open(filename, "r") as f:
-                fdata = sjson.load(f)
+                # In the future we may use a stream of JSON objects, hence `raw_decode` for compat.
+                fdata, _ = JSONDecoder().raw_decode(f.read())
         except Exception as e:
             raise CorruptDatabaseError("error parsing database:", str(e)) from e
 
@@ -833,27 +835,24 @@ class Database:
 
         # High-level file checks
         db = fdata["database"]
-        check("installs" in db, "no 'installs' in JSON DB.")
         check("version" in db, "no 'version' in JSON DB.")
-
-        installs = db["installs"]
 
         # TODO: better version checking semantics.
         version = vn.Version(db["version"])
         if version > _DB_VERSION:
             raise InvalidDatabaseVersionError(self, _DB_VERSION, version)
-        elif version < _DB_VERSION:
-            if not any(old == version and new == _DB_VERSION for old, new in _SKIP_REINDEX):
-                tty.warn(
-                    "Spack database version changed from %s to %s. Upgrading."
-                    % (version, _DB_VERSION)
-                )
+        elif version < _DB_VERSION and not any(
+            old == version and new == _DB_VERSION for old, new in _SKIP_REINDEX
+        ):
+            tty.warn(f"Spack database version changed from {version} to {_DB_VERSION}. Upgrading.")
 
-                self.reindex(spack.store.STORE.layout)
-                installs = dict(
-                    (k, v.to_dict(include_fields=self._record_fields))
-                    for k, v in self._data.items()
-                )
+            self.reindex(spack.store.STORE.layout)
+            installs = dict(
+                (k, v.to_dict(include_fields=self._record_fields)) for k, v in self._data.items()
+            )
+        else:
+            check("installs" in db, "no 'installs' in JSON DB.")
+            installs = db["installs"]
 
         spec_reader = reader(version)
 

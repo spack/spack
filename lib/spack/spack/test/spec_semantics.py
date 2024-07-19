@@ -373,7 +373,7 @@ class TestSpecSemantics:
         https://github.com/spack/spack/pull/2386#issuecomment-282147639
         is handled correctly.
         """
-        a = Spec("a foobar=bar")
+        a = Spec("pkg-a foobar=bar")
         a.concretize()
 
         assert a.satisfies("foobar=bar")
@@ -390,21 +390,21 @@ class TestSpecSemantics:
         assert "foo=bar" in a
 
         # Check that conditional dependencies are treated correctly
-        assert "^b" in a
+        assert "^pkg-b" in a
 
     def test_unsatisfied_single_valued_variant(self):
-        a = Spec("a foobar=baz")
+        a = Spec("pkg-a foobar=baz")
         a.concretize()
-        assert "^b" not in a
+        assert "^pkg-b" not in a
 
         mv = Spec("multivalue-variant")
         mv.concretize()
-        assert "a@1.0" not in mv
+        assert "pkg-a@1.0" not in mv
 
     def test_indirect_unsatisfied_single_valued_variant(self):
         spec = Spec("singlevalue-variant-dependent")
         spec.concretize()
-        assert "a@1.0" not in spec
+        assert "pkg-a@1.0" not in spec
 
     def test_unsatisfiable_multi_value_variant(self, default_mock_concretization):
         # Semantics for a multi-valued variant is different
@@ -703,22 +703,25 @@ class TestSpecSemantics:
             actual = spec.format(named_str)
             assert expected == actual
 
-    def test_spec_formatting_escapes(self, default_mock_concretization):
-        spec = default_mock_concretization("multivalue-variant cflags=-O2")
-
-        sigil_mismatches = [
+    @pytest.mark.parametrize(
+        "fmt_str",
+        [
             "{@name}",
             "{@version.concrete}",
             "{%compiler.version}",
             "{/hashd}",
             "{arch=architecture.os}",
-        ]
+        ],
+    )
+    def test_spec_formatting_sigil_mismatches(self, default_mock_concretization, fmt_str):
+        spec = default_mock_concretization("multivalue-variant cflags=-O2")
 
-        for fmt_str in sigil_mismatches:
-            with pytest.raises(SpecFormatSigilError):
-                spec.format(fmt_str)
+        with pytest.raises(SpecFormatSigilError):
+            spec.format(fmt_str)
 
-        bad_formats = [
+    @pytest.mark.parametrize(
+        "fmt_str",
+        [
             r"{}",
             r"name}",
             r"\{name}",
@@ -728,11 +731,12 @@ class TestSpecSemantics:
             r"{dag_hash}",
             r"{foo}",
             r"{+variants.debug}",
-        ]
-
-        for fmt_str in bad_formats:
-            with pytest.raises(SpecFormatStringError):
-                spec.format(fmt_str)
+        ],
+    )
+    def test_spec_formatting_bad_formats(self, default_mock_concretization, fmt_str):
+        spec = default_mock_concretization("multivalue-variant cflags=-O2")
+        with pytest.raises(SpecFormatStringError):
+            spec.format(fmt_str)
 
     def test_combination_of_wildcard_or_none(self):
         # Test that using 'none' and another value raises
@@ -982,8 +986,8 @@ class TestSpecSemantics:
             spec.splice(dep, transitive)
 
     def test_spec_override(self):
-        init_spec = Spec("a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
-        change_spec = Spec("a foo=fee cflags=-O2")
+        init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
+        change_spec = Spec("pkg-a foo=fee cflags=-O2")
         new_spec = Spec.override(init_spec, change_spec)
         new_spec.concretize()
         assert "foo=fee" in new_spec
@@ -1096,22 +1100,22 @@ class TestSpecSemantics:
 @pytest.mark.parametrize(
     "spec_str,format_str,expected",
     [
-        ("zlib@git.foo/bar", "{name}-{version}", str(pathlib.Path("zlib-git.foo_bar"))),
-        ("zlib@git.foo/bar", "{name}-{version}-{/hash}", None),
-        ("zlib@git.foo/bar", "{name}/{version}", str(pathlib.Path("zlib", "git.foo_bar"))),
+        ("git-test@git.foo/bar", "{name}-{version}", str(pathlib.Path("git-test-git.foo_bar"))),
+        ("git-test@git.foo/bar", "{name}-{version}-{/hash}", None),
+        ("git-test@git.foo/bar", "{name}/{version}", str(pathlib.Path("git-test", "git.foo_bar"))),
         (
-            "zlib@{0}=1.0%gcc".format("a" * 40),
+            "git-test@{0}=1.0%gcc".format("a" * 40),
             "{name}/{version}/{compiler}",
-            str(pathlib.Path("zlib", "{0}_1.0".format("a" * 40), "gcc")),
+            str(pathlib.Path("git-test", "{0}_1.0".format("a" * 40), "gcc")),
         ),
         (
-            "zlib@git.foo/bar=1.0%gcc",
+            "git-test@git.foo/bar=1.0%gcc",
             "{name}/{version}/{compiler}",
-            str(pathlib.Path("zlib", "git.foo_bar_1.0", "gcc")),
+            str(pathlib.Path("git-test", "git.foo_bar_1.0", "gcc")),
         ),
     ],
 )
-def test_spec_format_path(spec_str, format_str, expected):
+def test_spec_format_path(spec_str, format_str, expected, mock_git_test_package):
     _check_spec_format_path(spec_str, format_str, expected)
 
 
@@ -1129,45 +1133,57 @@ def _check_spec_format_path(spec_str, format_str, expected, path_ctor=None):
     "spec_str,format_str,expected",
     [
         (
-            "zlib@git.foo/bar",
+            "git-test@git.foo/bar",
             r"C:\\installroot\{name}\{version}",
-            r"C:\installroot\zlib\git.foo_bar",
+            r"C:\installroot\git-test\git.foo_bar",
         ),
         (
-            "zlib@git.foo/bar",
+            "git-test@git.foo/bar",
             r"\\hostname\sharename\{name}\{version}",
-            r"\\hostname\sharename\zlib\git.foo_bar",
+            r"\\hostname\sharename\git-test\git.foo_bar",
         ),
-        # Windows doesn't attribute any significance to a leading
-        # "/" so it is discarded
-        ("zlib@git.foo/bar", r"/installroot/{name}/{version}", r"installroot\zlib\git.foo_bar"),
+        # leading '/' is preserved on windows but converted to '\'
+        # note that it's still not "absolute" -- absolute windows paths start with a drive.
+        (
+            "git-test@git.foo/bar",
+            r"/installroot/{name}/{version}",
+            r"\installroot\git-test\git.foo_bar",
+        ),
     ],
 )
-def test_spec_format_path_windows(spec_str, format_str, expected):
+def test_spec_format_path_windows(spec_str, format_str, expected, mock_git_test_package):
     _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PureWindowsPath)
 
 
 @pytest.mark.parametrize(
     "spec_str,format_str,expected",
     [
-        ("zlib@git.foo/bar", r"/installroot/{name}/{version}", "/installroot/zlib/git.foo_bar"),
-        ("zlib@git.foo/bar", r"//installroot/{name}/{version}", "//installroot/zlib/git.foo_bar"),
+        (
+            "git-test@git.foo/bar",
+            r"/installroot/{name}/{version}",
+            "/installroot/git-test/git.foo_bar",
+        ),
+        (
+            "git-test@git.foo/bar",
+            r"//installroot/{name}/{version}",
+            "//installroot/git-test/git.foo_bar",
+        ),
         # This is likely unintentional on Linux: Firstly, "\" is not a
         # path separator for POSIX, so this is treated as a single path
         # component (containing literal "\" characters); secondly,
         # Spec.format treats "\" as an escape character, so is
         # discarded (unless directly following another "\")
         (
-            "zlib@git.foo/bar",
+            "git-test@git.foo/bar",
             r"C:\\installroot\package-{name}-{version}",
-            r"C__installrootpackage-zlib-git.foo_bar",
+            r"C__installrootpackage-git-test-git.foo_bar",
         ),
         # "\" is not a POSIX separator, and Spec.format treats "\{" as a literal
         # "{", which means that the resulting format string is invalid
-        ("zlib@git.foo/bar", r"package\{name}\{version}", None),
+        ("git-test@git.foo/bar", r"package\{name}\{version}", None),
     ],
 )
-def test_spec_format_path_posix(spec_str, format_str, expected):
+def test_spec_format_path_posix(spec_str, format_str, expected, mock_git_test_package):
     _check_spec_format_path(spec_str, format_str, expected, path_ctor=pathlib.PurePosixPath)
 
 
@@ -1253,15 +1269,15 @@ def test_spec_installed(default_mock_concretization, database):
     spec = Spec("not-a-real-package")
     assert not spec.installed
 
-    # 'a' is not in the mock DB and is not installed
-    spec = default_mock_concretization("a")
+    # pkg-a is not in the mock DB and is not installed
+    spec = default_mock_concretization("pkg-a")
     assert not spec.installed
 
 
 @pytest.mark.regression("30678")
 def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, default_mock_concretization):
     # create a concrete spec
-    a = default_mock_concretization("a")
+    a = default_mock_concretization("pkg-a")
     dag_hashes = {spec.name: spec.dag_hash() for spec in a.traverse()}
 
     # make it look like an old DAG hash spec with no package hash on the spec.
@@ -1320,8 +1336,8 @@ def test_unsupported_compiler():
 
 
 def test_package_hash_affects_dunder_and_dag_hash(mock_packages, default_mock_concretization):
-    a1 = default_mock_concretization("a")
-    a2 = default_mock_concretization("a")
+    a1 = default_mock_concretization("pkg-a")
+    a2 = default_mock_concretization("pkg-a")
 
     assert hash(a1) == hash(a2)
     assert a1.dag_hash() == a2.dag_hash()
@@ -1345,8 +1361,8 @@ def test_intersects_and_satisfies_on_concretized_spec(default_mock_concretizatio
     """Test that a spec obtained by concretizing an abstract spec, satisfies the abstract spec
     but not vice-versa.
     """
-    a1 = default_mock_concretization("a@1.0")
-    a2 = Spec("a@1.0")
+    a1 = default_mock_concretization("pkg-a@1.0")
+    a2 = Spec("pkg-a@1.0")
 
     assert a1.intersects(a2)
     assert a2.intersects(a1)
@@ -1472,17 +1488,17 @@ def test_constrain(factory, lhs_str, rhs_str, result, constrained_str):
 
 
 def test_abstract_hash_intersects_and_satisfies(default_mock_concretization):
-    concrete: Spec = default_mock_concretization("a")
+    concrete: Spec = default_mock_concretization("pkg-a")
     hash = concrete.dag_hash()
     hash_5 = hash[:5]
     hash_6 = hash[:6]
     # abstract hash that doesn't have a common prefix with the others.
     hash_other = f"{'a' if hash_5[0] == 'b' else 'b'}{hash_5[1:]}"
 
-    abstract_5 = Spec(f"a/{hash_5}")
-    abstract_6 = Spec(f"a/{hash_6}")
-    abstract_none = Spec(f"a/{hash_other}")
-    abstract = Spec("a")
+    abstract_5 = Spec(f"pkg-a/{hash_5}")
+    abstract_6 = Spec(f"pkg-a/{hash_6}")
+    abstract_none = Spec(f"pkg-a/{hash_other}")
+    abstract = Spec("pkg-a")
 
     def assert_subset(a: Spec, b: Spec):
         assert a.intersects(b) and b.intersects(a) and a.satisfies(b) and not b.satisfies(a)
@@ -1519,6 +1535,6 @@ def test_edge_equality_does_not_depend_on_virtual_order():
 
 
 def test_old_format_strings_trigger_error(default_mock_concretization):
-    s = Spec("a").concretized()
+    s = Spec("pkg-a").concretized()
     with pytest.raises(SpecFormatStringError):
         s.format("${PACKAGE}-${VERSION}-${HASH}")

@@ -31,6 +31,10 @@ class Hepmc3(CMakePackage):
     version("3.1.2", sha256="4133074b3928252877982f3d4b4c6c750bb7a324eb6c7bb2afc6fa256da3ecc7")
     version("3.1.1", sha256="2fcbc9964d6f9f7776289d65f9c73033f85c15bf5f0df00c429a6a1d8b8248bb")
     version("3.1.0", sha256="cd37eed619d58369041018b8627274ad790020a4714b54ac05ad1ebc1a6e7f8a")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
     # note that version 3.0.0 is not supported
     # conflicts with cmake configuration
 
@@ -44,7 +48,9 @@ class Hepmc3(CMakePackage):
     )
 
     depends_on("cmake@2.8.9:", type="build")
-    depends_on("root", when="+rootio")
+    with when("+rootio"):
+        depends_on("root")
+        depends_on("root cxxstd=11", when="@:3.2.3")
     depends_on("protobuf", when="+protobuf")
     depends_on("python", when="+python")
 
@@ -62,7 +68,7 @@ class Hepmc3(CMakePackage):
             self.define("HEPMC3_ENABLE_TEST", self.run_tests),
         ]
 
-        if "+python" in spec:
+        if spec.satisfies("+python"):
             py_ver = spec["python"].version.up_to(2)
             args.extend(
                 [
@@ -71,7 +77,11 @@ class Hepmc3(CMakePackage):
                 ]
             )
 
-        if "+rootio" in spec:
+        if spec.satisfies("+rootio"):
             args.append(self.define("ROOT_DIR", spec["root"].prefix))
+            if spec.satisfies("@3.2.4:"):
+                args.append(
+                    self.define("HEPMC3_CXX_STANDARD", spec["root"].variants["cxxstd"].value)
+                )
 
         return args

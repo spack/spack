@@ -44,10 +44,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     # Current
     version(
-        "5.0.2", sha256="ee46ad8eeee2c3ff70772160bff877cbf38c330a0bc3b3ddc811648b3396698f"
-    )  # libmpi.so.40.40.2
+        "5.0.3", sha256="990582f206b3ab32e938aa31bbf07c639368e4405dca196fabe7f0f76eeda90b"
+    )  # libmpi.so.40.40.3
 
     # Still supported
+    version(
+        "5.0.2", sha256="ee46ad8eeee2c3ff70772160bff877cbf38c330a0bc3b3ddc811648b3396698f"
+    )  # libmpi.so.40.40.2
     version(
         "5.0.1", sha256="e357043e65fd1b956a47d0dae6156a90cf0e378df759364936c1781f1a25ef80"
     )  # libmpi.so.40.40.1
@@ -385,6 +388,10 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         "1.0", sha256="cf75e56852caebe90231d295806ac3441f37dc6d9ad17b1381791ebb78e21564"
     )  # libmpi.so.0.0.0
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     patch("ad_lustre_rwcontig_open_source.patch", when="@1.6.5")
     patch("llnl-platforms.patch", when="@1.6.5")
     patch("configure.patch", when="@1.10.1")
@@ -429,6 +436,12 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     patch("accelerator-cuda-fix-bug-in-makefile.patch", when="@5.0.0")
     patch("btlsmcuda-fix-problem-with-makefile.patch", when="@5.0.0")
     patch("accelerator-build-components-as-dso-s-by-default.patch", when="@5.0.0:5.0.1")
+
+    # OpenMPI 5.0.0-5.0.3 needs to change PMIX version check to compile w/ PMIX > 4.2.5
+    # https://github.com/open-mpi/ompi/issues/12537#issuecomment-2103350910
+    # https://github.com/openpmix/prrte/pull/1957
+    patch("pmix_getline_pmix_version.patch", when="@5.0.0:5.0.3")
+    patch("pmix_getline_pmix_version-prte.patch", when="@5.0.3")
 
     variant(
         "fabrics",
@@ -842,13 +855,20 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         env.set("MPICXX", join_path(self.prefix.bin, "mpic++"))
         env.set("MPIF77", join_path(self.prefix.bin, "mpif77"))
         env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
+        # Open MPI also has had mpifort since v1.7, so we can set MPIFC to that
+        # Note: that mpif77 and mpif90 are deprecated since v1.7, but careful
+        # testing would be needed to change the MPIF77 and MPIF90 above. For now
+        # we just *add* functionality
+        if self.spec.satisfies("@1.7:"):
+            env.set("MPIFC", join_path(self.prefix.bin, "mpifort"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Use the spack compiler wrappers under MPI
-        env.set("OMPI_CC", spack_cc)
-        env.set("OMPI_CXX", spack_cxx)
-        env.set("OMPI_FC", spack_fc)
-        env.set("OMPI_F77", spack_f77)
+        dependent_module = dependent_spec.package.module
+        env.set("OMPI_CC", dependent_module.spack_cc)
+        env.set("OMPI_CXX", dependent_module.spack_cxx)
+        env.set("OMPI_FC", dependent_module.spack_fc)
+        env.set("OMPI_F77", dependent_module.spack_f77)
 
         # See https://www.open-mpi.org/faq/?category=building#installdirs
         for suffix in [
@@ -870,7 +890,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             "PKGLIBDIR",
             "PKGINCLUDEDIR",
         ]:
-            env.unset("OPAL_%s" % suffix)
+            env.unset(f"OPAL_{suffix}")
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, "mpicc")
@@ -976,6 +996,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         spec = self.spec
         config_args = ["--enable-shared", "--disable-silent-rules", "--disable-sphinx"]
 
+        # Work around incompatibility with new apple-clang linker
+        # https://github.com/open-mpi/ompi/issues/12427
+        if spec.satisfies("@5: %apple-clang@15:"):
+            config_args.append("--with-wrapper-fcflags=-Wl,-ld_classic")
+
         # All rpath flags should be appended with self.compiler.cc_rpath_arg.
         # Later, we might need to update share/openmpi/mpic++-wrapper-data.txt
         # and mpifort-wrapper-data.txt (see filter_rpaths()).
@@ -1014,7 +1039,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.extend(self.with_or_without("fabrics"))
 
         if spec.satisfies("@2.0.0:"):
-            if "fabrics=xpmem platform=cray" in spec:
+            if "fabrics=xpmem" in spec:
                 config_args.append("--with-cray-xpmem")
             else:
                 config_args.append("--without-cray-xpmem")
@@ -1022,6 +1047,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         # Schedulers
         if "schedulers=auto" not in spec:
             config_args.extend(self.with_or_without("schedulers"))
+
+        if spec.satisfies("schedulers=lsf"):
+            config_args.append("--with-lsf-libdir={0}".format(spec["lsf"].libs.directories[0]))
 
         config_args.extend(self.enable_or_disable("memchecker"))
         if spec.satisfies("+memchecker"):
@@ -1163,6 +1191,23 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         #       if spec.satisfies("@5.0.0:") and spec.satisfies("%oneapi"):
         #           config_args.append("--disable-io-romio")
+
+        # https://www.intel.com/content/www/us/en/developer/articles/release-notes/oneapi-c-compiler-release-notes.html :
+        # Key Features in Intel C++ Compiler Classic 2021.7
+        #
+        # The Intel C++ Classic Compiler is deprecated and an additional
+        # diagnostic message will be output with each invocation. This
+        # diagnostic may impact expected output during compilation. For
+        # example, using the compiler to produce preprocessed information
+        # (icpc -E) will produce the additional deprecation diagnostic,
+        # interfering with the expected preprocessed output.
+        #
+        # This output can be disabled by using -diag-disable=10441 on
+        # Linux/macOS or /Qdiag-disable:10441 on Windows. You can add this
+        # option on the command line, configuration file or option setting
+        # environment variables.
+        if spec.satisfies("%intel@2021.7.0:"):
+            config_args.append("CPPFLAGS=-diag-disable=10441")
 
         return config_args
 

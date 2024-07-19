@@ -13,7 +13,6 @@ import os
 import shutil
 import sys
 import tempfile
-import urllib.request
 from typing import Dict, List, Optional, Tuple, Union
 
 import llnl.util.tty as tty
@@ -54,6 +53,7 @@ from spack.oci.image import (
 from spack.oci.oci import (
     copy_missing_layers_with_retry,
     get_manifest_and_config_with_retry,
+    list_tags,
     upload_blob_with_retry,
     upload_manifest_with_retry,
 )
@@ -70,12 +70,6 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     push = subparsers.add_parser("push", aliases=["create"], help=push_fn.__doc__)
     push.add_argument("-f", "--force", action="store_true", help="overwrite tarball if it exists")
-    push.add_argument(
-        "--allow-root",
-        "-a",
-        action="store_true",
-        help="allow install root string in binary files after RPATH substitution",
-    )
     push_sign = push.add_mutually_exclusive_group(required=False)
     push_sign.add_argument(
         "--unsigned",
@@ -133,6 +127,11 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="when pushing to an OCI registry, tag an image containing all root specs and their "
         "runtime dependencies",
     )
+    push.add_argument(
+        "--private",
+        action="store_true",
+        help="for a private mirror, include non-redistributable packages",
+    )
     arguments.add_common_arguments(push, ["specs", "jobs"])
     push.set_defaults(func=push_fn)
 
@@ -184,10 +183,6 @@ def setup_parser(subparser: argparse.ArgumentParser):
     keys.add_argument("-t", "--trust", action="store_true", help="trust all downloaded keys")
     keys.add_argument("-f", "--force", action="store_true", help="force new download of keys")
     keys.set_defaults(func=keys_fn)
-
-    preview = subparsers.add_parser("preview", help=preview_fn.__doc__)
-    arguments.add_common_arguments(preview, ["installed_specs"])
-    preview.set_defaults(func=preview_fn)
 
     # Check if binaries need to be rebuilt on remote mirror
     check = subparsers.add_parser("check", help=check_fn.__doc__)
@@ -367,6 +362,25 @@ def _make_pool() -> MaybePool:
         return NoPool()
 
 
+def _skip_no_redistribute_for_public(specs):
+    remaining_specs = list()
+    removed_specs = list()
+    for spec in specs:
+        if spec.package.redistribute_binary:
+            remaining_specs.append(spec)
+        else:
+            removed_specs.append(spec)
+    if removed_specs:
+        colified_output = tty.colify.colified(list(s.name for s in removed_specs), indent=4)
+        tty.debug(
+            "The following specs will not be added to the binary cache"
+            " because they cannot be redistributed:\n"
+            f"{colified_output}\n"
+            "You can use `--private` to include them."
+        )
+    return remaining_specs
+
+
 def push_fn(args):
     """create a binary package and push it to a mirror"""
     if args.spec_file:
@@ -379,11 +393,6 @@ def push_fn(args):
         roots = _matching_specs(spack.cmd.parse_specs(args.specs or args.spec_file))
     else:
         roots = spack.cmd.require_active_env(cmd_name="buildcache push").concrete_roots()
-
-    if args.allow_root:
-        tty.warn(
-            "The flag `--allow-root` is the default in Spack 0.21, will be removed in Spack 0.22"
-        )
 
     mirror: spack.mirror.Mirror = args.mirror
 
@@ -417,6 +426,8 @@ def push_fn(args):
         root="package" in args.things_to_install,
         dependencies="dependencies" in args.things_to_install,
     )
+    if not args.private:
+        specs = _skip_no_redistribute_for_public(specs)
 
     # When pushing multiple specs, print the url once ahead of time, as well as how
     # many specs are being pushed.
@@ -830,10 +841,7 @@ def _config_from_tag(image_ref: ImageReference, tag: str) -> Optional[dict]:
 
 
 def _update_index_oci(image_ref: ImageReference, tmpdir: str, pool: MaybePool) -> None:
-    request = urllib.request.Request(url=image_ref.tags_url())
-    response = spack.oci.opener.urlopen(request)
-    spack.oci.opener.ensure_status(request, response, 200)
-    tags = json.load(response)["tags"]
+    tags = list_tags(image_ref)
 
     # Fetch all image config files in parallel
     spec_dicts = pool.starmap(
@@ -935,14 +943,6 @@ def list_fn(args):
 def keys_fn(args):
     """get public keys available on mirrors"""
     bindist.get_keys(args.install, args.trust, args.force)
-
-
-def preview_fn(args):
-    """analyze an installed spec and reports whether executables and libraries are relocatable"""
-    tty.warn(
-        "`spack buildcache preview` is deprecated since `spack buildcache push --allow-root` is "
-        "now the default. This command will be removed in Spack 0.22"
-    )
 
 
 def check_fn(args: argparse.Namespace):

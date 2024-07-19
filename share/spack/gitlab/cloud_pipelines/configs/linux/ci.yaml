@@ -71,7 +71,6 @@ ci:
 
     - match:
       - dealii
-      - mxnet
       - rocblas
       build-job:
         tags: [ "spack", "huge" ]
@@ -242,7 +241,6 @@ ci:
       - mvapich2
       - netlib-scalapack
       - omega-h
-      - openblas
       - openjpeg
       - openmpi
       - openpmd-api
@@ -395,7 +393,6 @@ ci:
       - ncurses
       - ninja
       - numactl
-      - openblas
       - openjdk
       - openssh
       - openssl

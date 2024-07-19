@@ -25,6 +25,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
     # openssl sha256 kokkos-kernels-x.y.z.tar.gz
     version("develop", branch="develop")
     version("master", branch="master")
+    version("4.3.01", sha256="749553a6ea715ba1e56fa0b13b42866bb9880dba7a94e343eadf40d08c68fab8")
+    version("4.3.00", sha256="03c3226ee97dbca4fa56fe69bc4eefa0673e23c37f2741943d9362424a63950e")
     version("4.2.01", sha256="058052b3a40f5d4e447b7ded5c480f1b0d4aa78373b0bc7e43804d0447c34ca8")
     version("4.2.00", sha256="c65df9a101dbbef2d8fd43c60c9ea85f2046bb3535fa1ad16e7c661ddd60401e")
     version("4.1.00", sha256="d6a4108444ea226e43bf6a9c0dfc557f223a72b1142bf81aa78dd60e16ac2d56")
@@ -44,9 +46,13 @@ class KokkosKernels(CMakePackage, CudaPackage):
     version("3.1.00", sha256="27fea241ae92f41bd5b070b1a590ba3a56a06aca750207a98bea2f64a4a40c89")
     version("3.0.00", sha256="e4b832aed3f8e785de24298f312af71217a26067aea2de51531e8c1e597ef0e6")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("kokkos")
     depends_on("kokkos@master", when="@master")
     depends_on("kokkos@develop", when="@develop")
+    depends_on("kokkos@4.3.01", when="@4.3.01")
+    depends_on("kokkos@4.3.00", when="@4.3.00")
     depends_on("kokkos@4.2.01", when="@4.2.01")
     depends_on("kokkos@4.2.00", when="@4.2.00")
     depends_on("kokkos@4.1.00", when="@4.1.00")
@@ -146,6 +152,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
         "lapacke": (False, "clapack", "LAPACKE", "@3.1.00:", "Link to LAPACKE library"),
         "rocblas": (False, "rocblas", "ROCBLAS", "@3.6.00:", "Link to AMD BLAS library"),
         "rocsparse": (False, "rocsparse", "ROCSPARSE", "@3.6.00:", "Link to AMD sparse library"),
+        "cusolver": (False, "cuda", None, "@4.3.00:", "Link to CUDA solver library"),
+        "rocsolver": (False, "rocsolver", "ROCSOLVER", "@4.3.00:", "Link to AMD solver library"),
     }
 
     for tpl in tpls:

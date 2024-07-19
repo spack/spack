@@ -27,6 +27,7 @@ The available directives are:
   * ``variant``
   * ``version``
   * ``requires``
+  * ``redistribute``
 
 """
 import collections
@@ -63,6 +64,7 @@ if TYPE_CHECKING:
 __all__ = [
     "DirectiveError",
     "DirectiveMeta",
+    "DisableRedistribute",
     "version",
     "conflicts",
     "depends_on",
@@ -75,6 +77,7 @@ __all__ = [
     "resource",
     "build_system",
     "requires",
+    "redistribute",
 ]
 
 #: These are variant names used by Spack internally; packages can't use them
@@ -87,14 +90,14 @@ directive_names = ["build_system"]
 _patch_order_index = 0
 
 
-SpecType = Union["spack.spec.Spec", str]
+SpecType = str
 DepType = Union[Tuple[str, ...], str]
 WhenType = Optional[Union["spack.spec.Spec", str, bool]]
 Patcher = Callable[[Union["spack.package_base.PackageBase", Dependency]], None]
 PatchesType = Optional[Union[Patcher, str, List[Union[Patcher, str]]]]
 
 
-SUPPORTED_LANGUAGES = ("fortran", "cxx")
+SUPPORTED_LANGUAGES = ("fortran", "cxx", "c")
 
 
 def _make_when_spec(value: WhenType) -> Optional["spack.spec.Spec"]:
@@ -472,7 +475,7 @@ def _execute_version(pkg, ver, **kwargs):
 
 def _depends_on(
     pkg: "spack.package_base.PackageBase",
-    spec: SpecType,
+    spec: "spack.spec.Spec",
     *,
     when: WhenType = None,
     type: DepType = dt.DEFAULT_TYPES,
@@ -482,11 +485,10 @@ def _depends_on(
     if not when_spec:
         return
 
-    dep_spec = spack.spec.Spec(spec)
-    if not dep_spec.name:
-        raise DependencyError("Invalid dependency specification in package '%s':" % pkg.name, spec)
-    if pkg.name == dep_spec.name:
-        raise CircularReferenceError("Package '%s' cannot depend on itself." % pkg.name)
+    if not spec.name:
+        raise DependencyError(f"Invalid dependency specification in package '{pkg.name}':", spec)
+    if pkg.name == spec.name:
+        raise CircularReferenceError(f"Package '{pkg.name}' cannot depend on itself.")
 
     depflag = dt.canonicalize(type)
 
@@ -502,7 +504,7 @@ def _depends_on(
     # ensure `Spec.virtual` is a valid thing to call in a directive.
     # For now, we comment out the following check to allow for virtual packages
     # with package files.
-    # if patches and dep_spec.virtual:
+    # if patches and spec.virtual:
     #     raise DependencyPatchError("Cannot patch a virtual dependency.")
 
     # ensure patches is a list
@@ -517,13 +519,13 @@ def _depends_on(
 
     # this is where we actually add the dependency to this package
     deps_by_name = pkg.dependencies.setdefault(when_spec, {})
-    dependency = deps_by_name.get(dep_spec.name)
+    dependency = deps_by_name.get(spec.name)
 
     if not dependency:
-        dependency = Dependency(pkg, dep_spec, depflag=depflag)
-        deps_by_name[dep_spec.name] = dependency
+        dependency = Dependency(pkg, spec, depflag=depflag)
+        deps_by_name[spec.name] = dependency
     else:
-        dependency.spec.constrain(dep_spec, deps=False)
+        dependency.spec.constrain(spec, deps=False)
         dependency.depflag |= depflag
 
     # apply patches to the dependency
@@ -588,36 +590,100 @@ def depends_on(
     @see The section "Dependency specs" in the Spack Packaging Guide.
 
     """
-    if spack.spec.Spec(spec).name in SUPPORTED_LANGUAGES:
+    dep_spec = spack.spec.Spec(spec)
+    if dep_spec.name in SUPPORTED_LANGUAGES:
         assert type == "build", "languages must be of 'build' type"
         return _language(lang_spec_str=spec, when=when)
 
     def _execute_depends_on(pkg: "spack.package_base.PackageBase"):
-        _depends_on(pkg, spec, when=when, type=type, patches=patches)
+        _depends_on(pkg, dep_spec, when=when, type=type, patches=patches)
 
     return _execute_depends_on
+
+
+#: Store whether a given Spec source/binary should not be redistributed.
+class DisableRedistribute:
+    def __init__(self, source, binary):
+        self.source = source
+        self.binary = binary
+
+
+@directive("disable_redistribute")
+def redistribute(source=None, binary=None, when: WhenType = None):
+    """Can be used inside a Package definition to declare that
+    the package source and/or compiled binaries should not be
+    redistributed.
+
+    By default, Packages allow source/binary distribution (i.e. in
+    mirrors). Because of this, and because overlapping enable/
+    disable specs are not allowed, this directive only allows users
+    to explicitly disable redistribution for specs.
+    """
+
+    return lambda pkg: _execute_redistribute(pkg, source, binary, when)
+
+
+def _execute_redistribute(
+    pkg: "spack.package_base.PackageBase", source=None, binary=None, when: WhenType = None
+):
+    if source is None and binary is None:
+        return
+    elif (source is True) or (binary is True):
+        raise DirectiveError(
+            "Source/binary distribution are true by default, they can only "
+            "be explicitly disabled."
+        )
+
+    if source is None:
+        source = True
+    if binary is None:
+        binary = True
+
+    when_spec = _make_when_spec(when)
+    if not when_spec:
+        return
+    if source is False:
+        max_constraint = spack.spec.Spec(f"{pkg.name}@{when_spec.versions}")
+        if not max_constraint.satisfies(when_spec):
+            raise DirectiveError("Source distribution can only be disabled for versions")
+
+    if when_spec in pkg.disable_redistribute:
+        disable = pkg.disable_redistribute[when_spec]
+        if not source:
+            disable.source = True
+        if not binary:
+            disable.binary = True
+    else:
+        pkg.disable_redistribute[when_spec] = DisableRedistribute(
+            source=not source, binary=not binary
+        )
 
 
 @directive(("extendees", "dependencies"))
 def extends(spec, when=None, type=("build", "run"), patches=None):
     """Same as depends_on, but also adds this package to the extendee list.
+    In case of Python, also adds a dependency on python-venv.
 
     keyword arguments can be passed to extends() so that extension
     packages can pass parameters to the extendee's extension
-    mechanism.
-
-    """
+    mechanism."""
 
     def _execute_extends(pkg):
         when_spec = _make_when_spec(when)
         if not when_spec:
             return
 
-        _depends_on(pkg, spec, when=when, type=type, patches=patches)
-        spec_obj = spack.spec.Spec(spec)
+        dep_spec = spack.spec.Spec(spec)
+
+        _depends_on(pkg, dep_spec, when=when, type=type, patches=patches)
+
+        # When extending python, also add a dependency on python-venv. This is done so that
+        # Spack environment views are Python virtual environments.
+        if dep_spec.name == "python" and not pkg.name == "python-venv":
+            _depends_on(pkg, spack.spec.Spec("python-venv"), when=when, type=("build", "run"))
 
         # TODO: the values of the extendees dictionary are not used. Remove in next refactor.
-        pkg.extendees[spec_obj.name] = (spec_obj, None)
+        pkg.extendees[dep_spec.name] = (dep_spec, None)
 
     return _execute_extends
 

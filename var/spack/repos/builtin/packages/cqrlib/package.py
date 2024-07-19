@@ -18,6 +18,9 @@ class Cqrlib(MakefilePackage):
 
     version("1.1.2", sha256="af3cf2402974579f3c6efc6a6174a5da52786db4bfee9d38d504d93bc42410fd")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("libtool", type="build")
 
     patch("cqr.patch")

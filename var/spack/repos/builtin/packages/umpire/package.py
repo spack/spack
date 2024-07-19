@@ -21,11 +21,17 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/Umpire.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers("davidbeckingsale")
+    maintainers("davidbeckingsale", "adrienbernede")
 
     license("MIT")
 
     version("develop", branch="develop", submodules=False)
+    version(
+        "2024.02.1",
+        tag="v2024.02.1",
+        commit="3058d562fc707650e904f9321b1ee9bcebad3ae2",
+        submodules=False,
+    )
     version(
         "2024.02.0",
         tag="v2024.02.0",
@@ -138,6 +144,10 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         "0.1.3", tag="v0.1.3", commit="cc347edeb17f5f30f694aa47f395d17369a2e449", submodules=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Some projects importing both camp and umpire targets end up with conflicts in BLT targets
     # import. This is not addressing the root cause, which will be addressed in BLT@5.4.0 and will
     # require adapting umpire build system.
@@ -157,15 +167,15 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     # https://github.com/LLNL/Umpire/pull/805
     patch(
-        "https://github.com/LLNL/Umpire/pull/805/commits/47ff0aa1f7a01a917c3b7ac618e8a9e44a10fd25.patch?full_index=1",
-        sha256="7ed5d2c315a3b31e339f664f6108e32d7cb4cb8e9f22e5c78a65ba02625ccc09",
+        "https://github.com/LLNL/Umpire/commit/47ff0aa1f7a01a917c3b7ac618e8a9e44a10fd25.patch?full_index=1",
+        sha256="802f074a05e1cb1f428e13d99c5fcb1435f86bd8f36a1ea2f7b6756e6625e0a0",
         when="@2022.10.0",
     )
 
     # https://github.com/LLNL/Umpire/pull/816
     patch(
-        "https://github.com/LLNL/Umpire/pull/816/commits/2292d1d6078f6d9523b7ad0886ffa053644569d5.patch?full_index=1",
-        sha256="0f43cad7cdaec3c225ab6414ab9f81bd405a1157abf5a508e515bcb6ca53326d",
+        "https://github.com/LLNL/Umpire/commit/2292d1d6078f6d9523b7ad0886ffa053644569d5.patch?full_index=1",
+        sha256="170dbcadb9ae36c7e211119c17a812695f11f4fe1be290b750f7af4fb4896192",
         when="@2022.10.0",
     )
 
@@ -306,6 +316,9 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         compiler = self.compiler
         # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super().initconfig_compiler_entries()
+
+        if "+rocm" in spec:
+            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
         option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""
 

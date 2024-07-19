@@ -21,6 +21,16 @@ from spack.util.prefix import Prefix
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    "24.5": {
+        "Linux-aarch64": (
+            "c52b5ba370e053472cbffb825ba1da5b6abaee93d4e15479ec12c32d6ebc47d5",
+            "https://developer.download.nvidia.com/hpc-sdk/24.5/nvhpc_2024_245_Linux_aarch64_cuda_multi.tar.gz",
+        ),
+        "Linux-x86_64": (
+            "e26c5027ffd83fd9e854946670a97253e950cdbacd4894a6715aea91070042ae",
+            "https://developer.download.nvidia.com/hpc-sdk/24.5/nvhpc_2024_245_Linux_x86_64_cuda_multi.tar.gz",
+        ),
+    },
     "24.3": {
         "Linux-aarch64": (
             "6385847de5f8725e5c56d2abf70c90fed5490f2e71a7bd13d3f4ada8720ef036",
@@ -370,7 +380,7 @@ _versions = {
 }
 
 
-class Nvhpc(Package):
+class Nvhpc(Package, CompilerPackage):
     """The NVIDIA HPC SDK is a comprehensive suite of compilers, libraries
     and tools essential to maximizing developer productivity and the
     performance and portability of HPC applications. The NVIDIA HPC
@@ -388,13 +398,19 @@ class Nvhpc(Package):
     maintainers("samcmill")
     tags = ["e4s"]
 
-    skip_version_audit = ["platform=darwin"]
+    skip_version_audit = ["platform=darwin", "platform=windows"]
+
+    redistribute(source=False, binary=False)
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1])
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("blas", default=True, description="Enable BLAS")
     variant(
@@ -416,6 +432,20 @@ class Nvhpc(Package):
     provides("mpi", when="+mpi")
 
     requires("%gcc", msg="nvhpc must be installed with %gcc")
+
+    # For now we only detect compiler components
+    # It will require additional work to detect mpi/lapack/blas components
+    compiler_languages = ["c", "cxx", "fortran"]
+    c_names = ["nvc"]
+    cxx_names = ["nvc++"]
+    fortran_names = ["nvfortran"]
+    compiler_version_argument = "--version"
+    compiler_version_regex = r"nv[^ ]* (?:[^ ]+ Dev-r)?([0-9.]+)(?:-[0-9]+)?"
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        # TODO: use other exes to determine default_cuda/install_type/blas/lapack/mpi variants
+        return "~blas~lapack~mpi", {"compilers": cls.determine_compiler_paths(exes=exes)}
 
     def _version_prefix(self):
         return join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version)

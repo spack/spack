@@ -10,6 +10,17 @@ from spack.package import *
 
 versions = [
     {
+        "version": "2024.2.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/6780ac84-6256-4b59-a647-330eb65f32b6/l_dpcpp-cpp-compiler_p_2024.2.0.495_offline.sh",
+            "sha256": "9463aa979314d2acc51472d414ffcee032e9869ca85ac6ff4c71d39500e5173d",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/801143de-6c01-4181-9911-57e00fe40181/l_fortran-compiler_p_2024.2.0.426_offline.sh",
+            "sha256": "fd19a302662b2f86f76fc115ef53a69f16488080278dba4c573cc705f3a52ffa",
+        },
+    },
+    {
         "version": "2024.1.0",
         "cpp": {
             "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/2e562b6e-5d0f-4001-8121-350a828332fb/l_dpcpp-cpp-compiler_p_2024.1.0.468_offline.sh",
@@ -222,15 +233,24 @@ versions = [
 
 
 @IntelOneApiPackage.update_description
-class IntelOneapiCompilers(IntelOneApiPackage):
+class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
     """Intel oneAPI Compilers. Includes: icc, icpc, ifort, icx, icpx, and ifx."""
 
     maintainers("rscohn2")
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 
+    compiler_languages = ["c", "cxx", "fortran"]
+    c_names = ["icx"]
+    cxx_names = ["icpx"]
+    fortran_names = ["ifx"]
+    compiler_version_argument = "--version"
+    compiler_version_regex = (
+        r"(?:(?:oneAPI DPC\+\+(?:\/C\+\+)? Compiler)|(?:\(IFORT\))|(?:\(IFX\))) (\S+)"
+    )
+
     # See https://github.com/spack/spack/issues/39252
-    depends_on("patchelf@:0.17", type="build")
+    depends_on("patchelf@:0.17", type="build", when="@:2024.1")
 
     # TODO: effectively gcc is a direct dependency of intel-oneapi-compilers, but we
     # cannot express that properly. For now, add conflicts for non-gcc compilers
@@ -318,6 +338,12 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         # issues. I am using the 2024 release as a milestone to stop
         # patching everything and just patching the binaries that have
         # a problem.
+
+        # 2024.2 no longer needs patching
+        if self.spec.satisfies("@2024.2:"):
+            return
+
+        # 2024 fixed all but these 2
         patchelf = which("patchelf")
         if self.spec.satisfies("@2024:"):
             patchelf.add_default_arg("--set-rpath", self.component_prefix.lib)
@@ -338,7 +364,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
             # Tolerate missing compilers.
             # Initially, we installed icx/ifx/icc/ifort into a single prefix.
             # Starting in 2024, there is no icc. 2023.2.3 does not have an ifx.
-            if os.path.exists(compiler):
+            if os.path.exists(path.join(compiler)):
                 p = path.join(compiler + ".cfg")
                 with open(p, "w") as f:
                     f.write(" ".join(flags))
@@ -422,5 +448,5 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 description=f"Add a dependency on 'libifcore' for nodes compiled with "
                 f"{str(spec)} and using the 'fortran' language",
             )
-        # The version of gcc-runtime is the same as the %gcc used to "compile" it
+        # The version of intel-oneapi-runtime is the same as the %oneapi used to "compile" it
         pkg("intel-oneapi-runtime").requires(f"@={str(spec.version)}", when=f"%{str(spec)}")

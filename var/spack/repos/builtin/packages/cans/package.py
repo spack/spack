@@ -27,6 +27,8 @@ class Cans(MakefilePackage):
     version("1.1.2", sha256="31c8d6c1f619fb60b7919922c7a3a64dd614a1a2f89f38560184f75ed0526171")
     version("1.1.0", sha256="e3fd84902e18715c6476fe780e2395ca04db9e6b0c830b55a7aa9204b1fd0886")
 
+    depends_on("fortran", type="build")  # generated
+
     depends_on("mpi")
     depends_on("fftw")
 

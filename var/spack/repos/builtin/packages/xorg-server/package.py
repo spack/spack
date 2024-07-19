@@ -19,6 +19,9 @@ class XorgServer(AutotoolsPackage, XorgPackage):
         "1.18.99.901", sha256="c8425163b588de2ee7e5c8e65b0749f2710f55a7e02a8d1dc83b3630868ceb21"
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("pixman@0.27.2:")
     depends_on("font-util")
     depends_on("libxshmfence@1.1:")

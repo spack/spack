@@ -25,6 +25,8 @@ class Rankstr(CMakePackage):
     version("0.0.3", sha256="d32052fbecd44299e13e69bf2dd7e5737c346404ccd784b8c2100ceed99d8cd3")
     version("0.0.2", sha256="b88357bf88cdda9565472543225d6b0fa50f0726f6e2d464c92d31a98b493abb")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("mpi")
 
     variant("shared", default=True, description="Build with shared libraries")
@@ -36,8 +38,5 @@ class Rankstr(CMakePackage):
 
         if spec.satisfies("@0.1.0:"):
             args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
-        else:
-            if spec.satisfies("platform=cray"):
-                args.append(self.define("RANKSTR_LINK_STATIC", True))
 
         return args

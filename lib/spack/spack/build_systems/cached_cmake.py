@@ -139,11 +139,6 @@ class CachedCMakeBuilder(CMakeBuilder):
             "endif()\n",
         ]
 
-        # We defined hipcc as top-level compiler for packages when +rocm.
-        # This avoid problems coming from rocm flags being applied to another compiler.
-        if "+rocm" in spec:
-            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
-
         flags = spec.compiler_flags
 
         # use global spack compiler flags
@@ -167,7 +162,9 @@ class CachedCMakeBuilder(CMakeBuilder):
             ld_flags = " ".join(flags["ldflags"])
             ld_format_string = "CMAKE_{0}_LINKER_FLAGS"
             # CMake has separate linker arguments for types of builds.
-            for ld_type in ["EXE", "MODULE", "SHARED", "STATIC"]:
+            # 'ldflags' should not be used with CMAKE_STATIC_LINKER_FLAGS which
+            # is used by the archiver, so don't include "STATIC" in this loop:
+            for ld_type in ["EXE", "MODULE", "SHARED"]:
                 ld_string = ld_format_string.format(ld_type)
                 entries.append(cmake_cache_string(ld_string, ld_flags))
 

@@ -43,7 +43,7 @@ import types
 from collections import defaultdict
 from enum import Flag, auto
 from itertools import chain
-from typing import List, Tuple
+from typing import Dict, List, Set, Tuple
 
 import llnl.util.tty as tty
 from llnl.string import plural
@@ -57,8 +57,10 @@ import spack.build_systems.cmake
 import spack.build_systems.meson
 import spack.build_systems.python
 import spack.builder
+import spack.compilers
 import spack.config
 import spack.deptypes as dt
+import spack.error
 import spack.main
 import spack.package_base
 import spack.paths
@@ -66,9 +68,11 @@ import spack.platforms
 import spack.repo
 import spack.schema.environment
 import spack.spec
+import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.user_environment
+import spack.util.executable
 import spack.util.path
 import spack.util.pattern
 from spack import traverse
@@ -78,7 +82,7 @@ from spack.install_test import spack_install_test_log
 from spack.installer import InstallError
 from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import (
-    SYSTEM_DIRS,
+    SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
     env_flag,
     filter_system_paths,
@@ -88,7 +92,7 @@ from spack.util.environment import (
 )
 from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
-from spack.util.module_cmd import load_module, module, path_from_modules
+from spack.util.module_cmd import load_module, path_from_modules
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -101,9 +105,13 @@ SPACK_NO_PARALLEL_MAKE = "SPACK_NO_PARALLEL_MAKE"
 # Spack's compiler wrappers.
 #
 SPACK_ENV_PATH = "SPACK_ENV_PATH"
+SPACK_MANAGED_DIRS = "SPACK_MANAGED_DIRS"
 SPACK_INCLUDE_DIRS = "SPACK_INCLUDE_DIRS"
 SPACK_LINK_DIRS = "SPACK_LINK_DIRS"
 SPACK_RPATH_DIRS = "SPACK_RPATH_DIRS"
+SPACK_STORE_INCLUDE_DIRS = "SPACK_STORE_INCLUDE_DIRS"
+SPACK_STORE_LINK_DIRS = "SPACK_STORE_LINK_DIRS"
+SPACK_STORE_RPATH_DIRS = "SPACK_STORE_RPATH_DIRS"
 SPACK_RPATH_DEPS = "SPACK_RPATH_DEPS"
 SPACK_LINK_DEPS = "SPACK_LINK_DEPS"
 SPACK_PREFIX = "SPACK_PREFIX"
@@ -183,14 +191,6 @@ class MakeExecutable(Executable):
         return super().__call__(*args, **kwargs)
 
 
-def _on_cray():
-    host_platform = spack.platforms.host()
-    host_os = host_platform.operating_system("default_os")
-    on_cray = str(host_platform) == "cray"
-    using_cnl = re.match(r"cnl\d+", str(host_os))
-    return on_cray, using_cnl
-
-
 def clean_environment():
     # Stuff in here sanitizes the build environment to eliminate
     # anything the user has set that may interfere. We apply it immediately
@@ -233,17 +233,6 @@ def clean_environment():
     for varname in os.environ.keys():
         if varname.endswith("_ROOT") and varname != "SPACK_ROOT":
             env.unset(varname)
-
-    # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
-    # interference with Spack dependencies.
-    # CNL requires these variables to be set (or at least some of them,
-    # depending on the CNL version).
-    on_cray, using_cnl = _on_cray()
-    if on_cray and not using_cnl:
-        env.unset("CRAY_LD_LIBRARY_PATH")
-        for varname in os.environ.keys():
-            if "PKGCONF" in varname:
-                env.unset(varname)
 
     # Unset the following variables because they can affect installation of
     # Autotools and CMake packages.
@@ -374,11 +363,7 @@ def set_compiler_environment_variables(pkg, env):
     _add_werror_handling(keep_werror, env)
 
     # Set the target parameters that the compiler will add
-    # Don't set on cray platform because the targeting module handles this
-    if spec.satisfies("platform=cray"):
-        isa_arg = ""
-    else:
-        isa_arg = spec.architecture.target.optimization_flags(compiler)
+    isa_arg = spec.architecture.target.optimization_flags(compiler)
     env.set("SPACK_TARGET_ARGS", isa_arg)
 
     # Trap spack-tracked compiler flags as appropriate.
@@ -416,7 +401,7 @@ def set_compiler_environment_variables(pkg, env):
 
     env.set("SPACK_COMPILER_SPEC", str(spec.compiler))
 
-    env.set("SPACK_SYSTEM_DIRS", ":".join(SYSTEM_DIRS))
+    env.set("SPACK_SYSTEM_DIRS", SYSTEM_DIR_CASE_ENTRY)
 
     compiler.setup_custom_environment(pkg, env)
 
@@ -474,10 +459,7 @@ def set_wrapper_variables(pkg, env):
 
     # Find ccache binary and hand it to build environment
     if spack.config.get("config:ccache"):
-        ccache = Executable("ccache")
-        if not ccache:
-            raise RuntimeError("No ccache binary found in PATH")
-        env.set(SPACK_CCACHE_BINARY, ccache)
+        env.set(SPACK_CCACHE_BINARY, spack.util.executable.which_string("ccache", required=True))
 
     # Gather information about various types of dependencies
     link_deps = set(pkg.spec.traverse(root=False, deptype=("link")))
@@ -544,9 +526,26 @@ def set_wrapper_variables(pkg, env):
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
     rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
 
-    env.set(SPACK_LINK_DIRS, ":".join(link_dirs))
-    env.set(SPACK_INCLUDE_DIRS, ":".join(include_dirs))
-    env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs))
+    # Spack managed directories include the stage, store and upstream stores. We extend this with
+    # their real paths to make it more robust (e.g. /tmp vs /private/tmp on macOS).
+    spack_managed_dirs: Set[str] = {
+        spack.stage.get_stage_root(),
+        spack.store.STORE.db.root,
+        *(db.root for db in spack.store.STORE.db.upstream_dbs),
+    }
+    spack_managed_dirs.update([os.path.realpath(p) for p in spack_managed_dirs])
+
+    env.set(SPACK_MANAGED_DIRS, "|".join(f'"{p}/"*' for p in sorted(spack_managed_dirs)))
+    is_spack_managed = lambda p: any(p.startswith(store) for store in spack_managed_dirs)
+    link_dirs_spack, link_dirs_system = stable_partition(link_dirs, is_spack_managed)
+    include_dirs_spack, include_dirs_system = stable_partition(include_dirs, is_spack_managed)
+    rpath_dirs_spack, rpath_dirs_system = stable_partition(rpath_dirs, is_spack_managed)
+    env.set(SPACK_LINK_DIRS, ":".join(link_dirs_system))
+    env.set(SPACK_INCLUDE_DIRS, ":".join(include_dirs_system))
+    env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs_system))
+    env.set(SPACK_STORE_LINK_DIRS, ":".join(link_dirs_spack))
+    env.set(SPACK_STORE_INCLUDE_DIRS, ":".join(include_dirs_spack))
+    env.set(SPACK_STORE_RPATH_DIRS, ":".join(rpath_dirs_spack))
 
 
 def set_package_py_globals(pkg, context: Context = Context.BUILD):
@@ -583,10 +582,22 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
     # Put spack compiler paths in module scope. (Some packages use it
     # in setup_run_environment etc, so don't put it context == build)
     link_dir = spack.paths.build_env_path
-    module.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths["cc"])
-    module.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
-    module.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
-    module.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
+    pkg_compiler = None
+    try:
+        pkg_compiler = pkg.compiler
+    except spack.compilers.NoCompilerForSpecError as e:
+        tty.debug(f"cannot set 'spack_cc': {str(e)}")
+
+    if pkg_compiler is not None:
+        module.spack_cc = os.path.join(link_dir, pkg_compiler.link_paths["cc"])
+        module.spack_cxx = os.path.join(link_dir, pkg_compiler.link_paths["cxx"])
+        module.spack_f77 = os.path.join(link_dir, pkg_compiler.link_paths["f77"])
+        module.spack_fc = os.path.join(link_dir, pkg_compiler.link_paths["fc"])
+    else:
+        module.spack_cc = None
+        module.spack_cxx = None
+        module.spack_f77 = None
+        module.spack_fc = None
 
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
@@ -694,12 +705,28 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwa
     return compiler(*compiler_args, output=compiler_output)
 
 
-def get_rpath_deps(pkg):
-    """Return immediate or transitive RPATHs depending on the package."""
-    if pkg.transitive_rpaths:
-        return [d for d in pkg.spec.traverse(root=False, deptype=("link"))]
-    else:
-        return pkg.spec.dependencies(deptype="link")
+def _get_rpath_deps_from_spec(
+    spec: spack.spec.Spec, transitive_rpaths: bool
+) -> List[spack.spec.Spec]:
+    if not transitive_rpaths:
+        return spec.dependencies(deptype=dt.LINK)
+
+    by_name: Dict[str, spack.spec.Spec] = {}
+
+    for dep in spec.traverse(root=False, deptype=dt.LINK):
+        lookup = by_name.get(dep.name)
+        if lookup is None:
+            by_name[dep.name] = dep
+        elif lookup.version < dep.version:
+            by_name[dep.name] = dep
+
+    return list(by_name.values())
+
+
+def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]:
+    """Return immediate or transitive dependencies (depending on the package) that need to be
+    rpath'ed. If a package occurs multiple times, the newest version is kept."""
+    return _get_rpath_deps_from_spec(pkg.spec, pkg.transitive_rpaths)
 
 
 def get_rpaths(pkg):
@@ -711,7 +738,9 @@ def get_rpaths(pkg):
     # Second module is our compiler mod name. We use that to get rpaths from
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
-        rpaths.append(path_from_modules([pkg.compiler.modules[1]]))
+        mod_rpath = path_from_modules([pkg.compiler.modules[1]])
+        if mod_rpath:
+            rpaths.append(mod_rpath)
     return list(dedupe(filter_system_paths(rpaths)))
 
 
@@ -780,14 +809,6 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         tty.debug("setup_package: loading compiler modules")
         for mod in pkg.compiler.modules:
             load_module(mod)
-
-    # kludge to handle cray mpich and libsci being automatically loaded by
-    # PrgEnv modules on cray platform. Module unload does no damage when
-    # unnecessary
-    on_cray, _ = _on_cray()
-    if on_cray and not dirty:
-        for mod in ["cray-mpich", "cray-libsci"]:
-            module("unload", mod)
 
     if target and target.module_name:
         load_module(target.module_name)
@@ -1452,7 +1473,7 @@ class ChildError(InstallError):
             out.write("  {0}\n".format(self.log_name))
 
         # Also output the test log path IF it exists
-        if self.context != "test":
+        if self.context != "test" and have_log:
             test_log = join_path(os.path.dirname(self.log_name), spack_install_test_log)
             if os.path.isfile(test_log):
                 out.write("\nSee test log for details:\n")

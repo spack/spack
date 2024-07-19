@@ -24,6 +24,10 @@ class Coevp(MakefilePackage):
 
     version("develop", branch="master")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=True, description="Build with MPI Support")
     variant("silo", default=False, description="Build with silo Support")
     variant("flann", default=False, description="Build with flann Support")

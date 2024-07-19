@@ -26,7 +26,7 @@ pytestmark = [
 ]
 
 
-@pytest.mark.usefixtures("config", "mock_packages", "mock_module_filename")
+@pytest.mark.usefixtures("mutable_config", "mock_packages", "mock_module_filename")
 class TestTcl:
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple Tcl module file."""
@@ -114,9 +114,6 @@ class TestTcl:
 
         assert len([x for x in content if "prereq" in x]) == 5
 
-    @pytest.mark.skipif(
-        str(archspec.cpu.host().family) != "x86_64", reason="test data is specific for x86_64"
-    )
     def test_alter_environment(self, modulefile_content, module_configuration):
         """Tests modifications to run-time environment."""
 
@@ -442,19 +439,19 @@ class TestTcl:
 
     @pytest.mark.regression("4400")
     @pytest.mark.db
-    def test_hide_implicits_no_arg(self, module_configuration, database):
+    def test_hide_implicits_no_arg(self, module_configuration, mutable_database):
         module_configuration("exclude_implicits")
 
         # mpileaks has been installed explicitly when setting up
         # the tests database
-        mpileaks_specs = database.query("mpileaks")
+        mpileaks_specs = mutable_database.query("mpileaks")
         for item in mpileaks_specs:
             writer = writer_cls(item, "default")
             assert not writer.conf.excluded
 
         # callpath is a dependency of mpileaks, and has been pulled
         # in implicitly
-        callpath_specs = database.query("callpath")
+        callpath_specs = mutable_database.query("callpath")
         for item in callpath_specs:
             writer = writer_cls(item, "default")
             assert writer.conf.excluded
@@ -476,8 +473,7 @@ class TestTcl:
         assert writer.conf.excluded
 
     @pytest.mark.regression("9624")
-    @pytest.mark.db
-    def test_autoload_with_constraints(self, modulefile_content, module_configuration, database):
+    def test_autoload_with_constraints(self, modulefile_content, module_configuration):
         """Tests the automatic loading of direct dependencies."""
 
         module_configuration("autoload_with_constraints")

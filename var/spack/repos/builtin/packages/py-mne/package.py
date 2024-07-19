@@ -41,6 +41,7 @@ class PyMne(PythonPackage):
     depends_on("py-numpy@1.18.1:", when="@1:", type=("build", "run"))  # *
     depends_on("py-numpy@1.15.4:", when="@0.23:", type=("build", "run"))
     depends_on("py-numpy@1.11.3:", type=("build", "run"))
+    depends_on("py-numpy@:1", when="@:1.6", type=("build", "run"))
     depends_on("py-scipy@1.7.1:", when="@1.6.1:", type=("build", "run"))
     depends_on("py-scipy@1.6.3:", when="@1.4:", type=("build", "run"))
     depends_on("py-scipy@1.4.1:", when="@1:", type=("build", "run"))  # *
@@ -69,7 +70,6 @@ class PyMne(PythonPackage):
         depends_on("py-matplotlib@3.0.3:", type=("build", "run"))  # *
         depends_on("py-pyqt5@5.10:,:5.15.1,5.15.4:", when="platform=linux", type=("build", "run"))
         depends_on("py-pyqt5@5.10:,:5.13", when="platform=darwin", type=("build", "run"))
-        depends_on("py-pyqt5@5.10:,:5.15.2,5.15.4:", when="platform=cray", type=("build", "run"))
         depends_on("py-pyqt5@5.10:,:5.15.2,5.15.4:", when="platform=win32", type=("build", "run"))
         depends_on("py-pyqt5-sip", type=("build", "run"))
         depends_on("py-sip", type=("build", "run"))

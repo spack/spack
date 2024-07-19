@@ -150,19 +150,21 @@ class IntelMpi(IntelPackage):
     depends_on("libfabric", when="+external-libfabric", type=("build", "link", "run"))
     depends_on("cpio", type="build")
 
-    def setup_dependent_build_environment(self, *args):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # Handle in callback, conveying client's compilers in additional arg.
         # CAUTION - DUP code in:
         #   ../intel-mpi/package.py
         #   ../intel-parallel-studio/package.py
+        dependent_module = dependent_spec.package.module
         self._setup_dependent_env_callback(
-            *args,
+            env,
+            dependent_spec,
             compilers_of_client={
-                "CC": spack_cc,
-                "CXX": spack_cxx,
-                "F77": spack_f77,
-                "F90": spack_fc,
-                "FC": spack_fc,
+                "CC": dependent_module.spack_cc,
+                "CXX": dependent_module.spack_cxx,
+                "F77": dependent_module.spack_f77,
+                "F90": dependent_module.spack_fc,
+                "FC": dependent_module.spack_fc,
             },
         )
 

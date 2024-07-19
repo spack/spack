@@ -93,6 +93,11 @@ class QtBase(QtPackage):
 
     license("BSD-3-Clause")
 
+    version("6.7.2", sha256="96b96e4fd0fc306502ed8b94a34cfa0bacc8a25d43c2e958dd6772b28f6b0e42")
+    version("6.7.1", sha256="d6950597ce1fc2e1cf374c3aa70c2d72532bb74150e9853d7127af86a8a6c7b4")
+    version("6.7.0", sha256="e17f016ec987092423e86d732c0f9786124598877fa00970fd806da113c02ca5")
+    version("6.6.3", sha256="11abfcae323d295129f644f1828064e05af7d64d49edb0e00bfb8e8cb9691259")
+    version("6.6.2", sha256="2cbdc4791c5838fddb1ce7ee693b165bb4acf3f81acd6c1bf9e56413b25050df")
     version("6.6.1", sha256="eb091c56e8c572d35d3da36f94f9e228892d43aecb559fa4728a19f0e44914c4")
     version("6.6.0", sha256="882f39ea3a40a0894cd64e515ce51711a4fab79b8c47bc0fe0279e99493a62cf")
     version("6.5.3", sha256="174021c4a630df2e7e912c2e523844ad3cb5f90967614628fd8aa15ddbab8bc5")
@@ -108,6 +113,9 @@ class QtBase(QtPackage):
     version("6.3.0", sha256="c50dc73f633e6c0f6ee3f51980c698800f1a0cadb423679bcef18e446ac72138")
     version("6.2.4", sha256="657d1405b5e15afcf322cc75b881f62d6a56f16383707742a99eb87f53cb63de")
     version("6.2.3", sha256="2dd095fa82bff9e0feb7a9004c1b2fb910f79ecc6111aa64637c95a02b7a8abb")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("dbus", default=False, description="Build with D-Bus support.")
     variant(
@@ -130,6 +138,8 @@ class QtBase(QtPackage):
     variant("widgets", default=True, when="+gui", description="Build with widgets.")
 
     # Dependencies, then variant- and version-specific dependencies
+    depends_on("cmake@3.21:", type="build", when="~shared")
+    depends_on("cmake@3.21:", type="build", when="platform=darwin")
     depends_on("double-conversion")
     depends_on("icu4c")
     depends_on("libxml2")

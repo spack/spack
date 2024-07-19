@@ -46,6 +46,9 @@ class Opencv(CMakePackage, CudaPackage):
     version("3.3.1", sha256="5dca3bb0d661af311e25a72b04a7e4c22c47c1aa86eb73e70063cd378a2aa6ee")
     version("3.3.0", sha256="8bb312b9d9fd17336dc1f8b3ac82f021ca50e2034afc866098866176d985adc6")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     contrib_vers = [
         "3.3.0",
         "3.3.1",
@@ -251,6 +254,8 @@ class Opencv(CMakePackage, CudaPackage):
         depends_on("python@3.2:", type=("build", "link", "run"))
         depends_on("py-setuptools", type="build")
         depends_on("py-numpy", type=("build", "run"))
+        # https://github.com/opencv/opencv-python/issues/943
+        depends_on("py-numpy@:1", when="@:4.10.0.83", type=("build", "run"))
         extends("python", when="+python3")
 
     with when("+stitching"):
@@ -781,41 +786,31 @@ class Opencv(CMakePackage, CudaPackage):
     # using `OCV_OPTION(WITH_* ...)`
     conflicts("+android_mediandk", when="platform=darwin", msg="Android only")
     conflicts("+android_mediandk", when="platform=linux", msg="Android only")
-    conflicts("+android_mediandk", when="platform=cray", msg="Android only")
     conflicts("+android_native_camera", when="platform=darwin", msg="Android only")
     conflicts("+android_native_camera", when="platform=linux", msg="Android only")
-    conflicts("+android_native_camera", when="platform=cray", msg="Android only")
     conflicts("+avfoundation", when="platform=linux", msg="iOS/macOS only")
-    conflicts("+avfoundation", when="platform=cray", msg="iOS/macOS only")
     conflicts("+cap_ios", when="platform=darwin", msg="iOS only")
     conflicts("+cap_ios", when="platform=linux", msg="iOS only")
-    conflicts("+cap_ios", when="platform=cray", msg="iOS only")
     conflicts("+carotene", when="target=x86:", msg="ARM/AARCH64 only")
     conflicts("+carotene", when="target=x86_64:", msg="ARM/AARCH64 only")
     conflicts("+cpufeatures", when="platform=darwin", msg="Android only")
     conflicts("+cpufeatures", when="platform=linux", msg="Android only")
-    conflicts("+cpufeatures", when="platform=cray", msg="Android only")
     conflicts("+cublas", when="~cuda")
     conflicts("+cudnn", when="~cuda")
     conflicts("+cufft", when="~cuda")
     conflicts("+directx", when="platform=darwin", msg="Windows only")
     conflicts("+directx", when="platform=linux", msg="Windows only")
-    conflicts("+directx", when="platform=cray", msg="Windows only")
     conflicts("+dshow", when="platform=darwin", msg="Windows only")
     conflicts("+dshow", when="platform=linux", msg="Windows only")
-    conflicts("+dshow", when="platform=cray", msg="Windows only")
     conflicts("+gtk", when="platform=darwin", msg="Linux only")
     conflicts("+ipp", when="target=aarch64:", msg="x86 or x86_64 only")
     conflicts("+jasper", when="+openjpeg")
     conflicts("+msmf", when="platform=darwin", msg="Windows only")
     conflicts("+msmf", when="platform=linux", msg="Windows only")
-    conflicts("+msmf", when="platform=cray", msg="Windows only")
     conflicts("+msmf_dxva", when="platform=darwin", msg="Windows only")
     conflicts("+msmf_dxva", when="platform=linux", msg="Windows only")
-    conflicts("+msmf_dxva", when="platform=cray", msg="Windows only")
     conflicts("+opencl_d3d11_nv", when="platform=darwin", msg="Windows only")
     conflicts("+opencl_d3d11_nv", when="platform=linux", msg="Windows only")
-    conflicts("+opencl_d3d11_nv", when="platform=cray", msg="Windows only")
     conflicts("+opengl", when="~qt")
     conflicts("+tengine", when="platform=darwin", msg="Linux only")
     conflicts("+tengine", when="target=x86:", msg="ARM/AARCH64 only")
@@ -823,7 +818,6 @@ class Opencv(CMakePackage, CudaPackage):
     conflicts("+v4l", when="platform=darwin", msg="Linux only")
     conflicts("+win32ui", when="platform=darwin", msg="Windows only")
     conflicts("+win32ui", when="platform=linux", msg="Windows only")
-    conflicts("+win32ui", when="platform=cray", msg="Windows only")
 
     # https://github.com/opencv/opencv/wiki/ChangeLog#version460
     conflicts("%gcc@12:", when="@:4.5")
@@ -1027,14 +1021,13 @@ class Opencv(CMakePackage, CudaPackage):
             )
 
         # Python
-        python_exe = spec["python"].command.path
         python_lib = spec["python"].libs[0]
         python_include_dir = spec["python"].headers.directories[0]
 
         if "+python3" in spec:
             args.extend(
                 [
-                    self.define("PYTHON3_EXECUTABLE", python_exe),
+                    self.define("PYTHON3_EXECUTABLE", python.path),
                     self.define("PYTHON3_LIBRARY", python_lib),
                     self.define("PYTHON3_INCLUDE_DIR", python_include_dir),
                     self.define("PYTHON2_EXECUTABLE", ""),

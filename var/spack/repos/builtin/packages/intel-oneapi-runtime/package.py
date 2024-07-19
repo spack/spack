@@ -10,11 +10,15 @@ from spack.package import *
 from spack.pkg.builtin.gcc_runtime import get_elf_libraries
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiRuntime(Package):
-    """Package for OneAPI compiler runtime libraries"""
+    """Package for OneAPI compiler runtime libraries redistributables."""
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
     has_code = False
+    license("https://intel.ly/393CijO")
+
+    maintainers("rscohn2")
 
     tags = ["runtime"]
 
@@ -40,6 +44,8 @@ class IntelOneapiRuntime(Package):
 
     conflicts("platform=windows", msg="IntelOneAPI can only be installed on Linux, and FreeBSD")
     conflicts("platform=darwin", msg="IntelOneAPI can only be installed on Linux, and FreeBSD")
+
+    depends_on("libc", type="link", when="platform=linux")
 
     def install(self, spec, prefix):
         libraries = get_elf_libraries(compiler=self.compiler, libraries=self.LIBRARIES)

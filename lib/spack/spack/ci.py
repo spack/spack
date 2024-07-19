@@ -16,11 +16,13 @@ import sys
 import tempfile
 import time
 import zipfile
-from collections import namedtuple
-from typing import List, Optional
+from collections import defaultdict, namedtuple
+from typing import Dict, List, Optional, Set, Tuple
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
+
+import ruamel.yaml
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -44,6 +46,7 @@ import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
+from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
 # See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
@@ -113,54 +116,24 @@ def _remove_reserved_tags(tags):
     return [tag for tag in tags if tag not in SPACK_RESERVED_TAGS]
 
 
-def _spec_deps_key(s):
+def _spec_ci_label(s):
     return f"{s.name}/{s.dag_hash(7)}"
 
 
-def _add_dependency(spec_label, dep_label, deps):
-    if spec_label == dep_label:
-        return
-    if spec_label not in deps:
-        deps[spec_label] = set()
-    deps[spec_label].add(dep_label)
+PlainNodes = Dict[str, spack.spec.Spec]
+PlainEdges = Dict[str, Set[str]]
 
 
-def _get_spec_dependencies(specs, deps, spec_labels):
-    spec_deps_obj = _compute_spec_deps(specs)
-
-    if spec_deps_obj:
-        dependencies = spec_deps_obj["dependencies"]
-        specs = spec_deps_obj["specs"]
-
-        for entry in specs:
-            spec_labels[entry["label"]] = entry["spec"]
-
-        for entry in dependencies:
-            _add_dependency(entry["spec"], entry["depends"], deps)
-
-
-def stage_spec_jobs(specs):
-    """Take a set of release specs and generate a list of "stages", where the
-        jobs in any stage are dependent only on jobs in previous stages.  This
-        allows us to maximize build parallelism within the gitlab-ci framework.
+def stage_spec_jobs(specs: List[spack.spec.Spec]) -> Tuple[PlainNodes, PlainEdges, List[Set[str]]]:
+    """Turn a DAG into a list of stages (set of nodes), the list is ordered topologically, so that
+    each node in a stage has dependencies only in previous stages.
 
     Arguments:
-        specs (Iterable): Specs to build
+        specs: Specs to build
 
-    Returns: A tuple of information objects describing the specs, dependencies
-        and stages:
-
-        spec_labels: A dictionary mapping the spec labels (which are formatted
-            as pkg-name/hash-prefix) to concrete specs.
-
-        deps: A dictionary where the keys should also have appeared as keys in
-            the spec_labels dictionary, and the values are the set of
-            dependencies for that spec.
-
-        stages: An ordered list of sets, each of which contains all the jobs to
-            built in that stage.  The jobs are expressed in the same format as
-            the keys in the spec_labels and deps objects.
-
+    Returns: A tuple (nodes, edges, stages) where ``nodes`` maps labels to specs, ``edges`` maps
+        labels to a set of labels of dependencies, and ``stages`` is a topologically ordered list
+        of sets of labels.
     """
 
     # The convenience method below, "_remove_satisfied_deps()", does not modify
@@ -177,17 +150,12 @@ def stage_spec_jobs(specs):
 
         return new_deps
 
-    deps = {}
-    spec_labels = {}
+    nodes, edges = _extract_dag(specs)
 
-    _get_spec_dependencies(specs, deps, spec_labels)
-
-    # Save the original deps, as we need to return them at the end of the
-    # function.  In the while loop below, the "dependencies" variable is
-    # overwritten rather than being modified each time through the loop,
-    # thus preserving the original value of "deps" saved here.
-    dependencies = deps
-    unstaged = set(spec_labels.keys())
+    # Save the original edges, as we need to return them at the end of the function. In the loop
+    # below, the "dependencies" variable is rebound rather than mutated, so "edges" is not mutated.
+    dependencies = edges
+    unstaged = set(nodes.keys())
     stages = []
 
     while dependencies:
@@ -203,7 +171,7 @@ def stage_spec_jobs(specs):
     if unstaged:
         stages.append(unstaged.copy())
 
-    return spec_labels, deps, stages
+    return nodes, edges, stages
 
 
 def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisions):
@@ -235,87 +203,22 @@ def _print_staging_summary(spec_labels, stages, mirrors_to_check, rebuild_decisi
             tty.msg(msg)
 
 
-def _compute_spec_deps(spec_list):
-    """
-    Computes all the dependencies for the spec(s) and generates a JSON
-    object which provides both a list of unique spec names as well as a
-    comprehensive list of all the edges in the dependency graph.  For
-    example, given a single spec like 'readline@7.0', this function
-    generates the following JSON object:
+def _extract_dag(specs: List[spack.spec.Spec]) -> Tuple[PlainNodes, PlainEdges]:
+    """Extract a sub-DAG as plain old Python objects with external nodes removed."""
+    nodes: PlainNodes = {}
+    edges: PlainEdges = defaultdict(set)
 
-    .. code-block:: JSON
+    for edge in traverse.traverse_edges(specs, cover="edges"):
+        if (edge.parent and edge.parent.external) or edge.spec.external:
+            continue
+        child_id = _spec_ci_label(edge.spec)
+        nodes[child_id] = edge.spec
+        if edge.parent:
+            parent_id = _spec_ci_label(edge.parent)
+            nodes[parent_id] = edge.parent
+            edges[parent_id].add(child_id)
 
-       {
-           "dependencies": [
-               {
-                   "depends": "readline/ip6aiun",
-                   "spec": "readline/ip6aiun"
-               },
-               {
-                   "depends": "ncurses/y43rifz",
-                   "spec": "readline/ip6aiun"
-               },
-               {
-                   "depends": "ncurses/y43rifz",
-                   "spec": "readline/ip6aiun"
-               },
-               {
-                   "depends": "pkgconf/eg355zb",
-                   "spec": "ncurses/y43rifz"
-               },
-               {
-                   "depends": "pkgconf/eg355zb",
-                   "spec": "readline/ip6aiun"
-               }
-           ],
-           "specs": [
-               {
-                 "spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-highs...",
-                 "label": "readline/ip6aiun"
-               },
-               {
-                 "spec": "ncurses@6.1%apple-clang@9.1.0 arch=darwin-highsi...",
-                 "label": "ncurses/y43rifz"
-               },
-               {
-                 "spec": "pkgconf@1.5.4%apple-clang@9.1.0 arch=darwin-high...",
-                 "label": "pkgconf/eg355zb"
-               }
-           ]
-       }
-
-    """
-    spec_labels = {}
-
-    specs = []
-    dependencies = []
-
-    def append_dep(s, d):
-        dependencies.append({"spec": s, "depends": d})
-
-    for spec in spec_list:
-        for s in spec.traverse(deptype="all"):
-            if s.external:
-                tty.msg(f"Will not stage external pkg: {s}")
-                continue
-
-            skey = _spec_deps_key(s)
-            spec_labels[skey] = s
-
-            for d in s.dependencies(deptype="all"):
-                dkey = _spec_deps_key(d)
-                if d.external:
-                    tty.msg(f"Will not stage external dep: {d}")
-                    continue
-
-                append_dep(skey, dkey)
-
-    for spec_label, concrete_spec in spec_labels.items():
-        specs.append({"label": spec_label, "spec": concrete_spec})
-
-    deps_json_obj = {"specs": specs, "dependencies": dependencies}
-
-    return deps_json_obj
+    return nodes, edges
 
 
 def _spec_matches(spec, match_string):
@@ -327,7 +230,7 @@ def _format_job_needs(
 ):
     needs_list = []
     for dep_job in dep_jobs:
-        dep_spec_key = _spec_deps_key(dep_job)
+        dep_spec_key = _spec_ci_label(dep_job)
         rebuild = rebuild_decisions[dep_spec_key].rebuild
 
         if not prune_dag or rebuild:
@@ -650,10 +553,9 @@ def generate_gitlab_ci_yaml(
     env,
     print_summary,
     output_file,
+    *,
     prune_dag=False,
     check_index_only=False,
-    run_optimizer=False,
-    use_dependencies=False,
     artifacts_root=None,
     remote_mirror_override=None,
 ):
@@ -674,12 +576,6 @@ def generate_gitlab_ci_yaml(
             this mode results in faster yaml generation time). Otherwise, also
             check each spec directly by url (useful if there is no index or it
             might be out of date).
-        run_optimizer (bool): If True, post-process the generated yaml to try
-            try to reduce the size (attempts to collect repeated configuration
-            and replace with definitions).)
-        use_dependencies (bool): If true, use "dependencies" rather than "needs"
-            ("needs" allows DAG scheduling).  Useful if gitlab instance cannot
-            be configured to handle more than a few "needs" per job.
         artifacts_root (str): Path where artifacts like logs, environment
             files (spack.yaml, spack.lock), etc should be written.  GitLab
             requires this to be within the project directory.
@@ -782,6 +678,22 @@ def generate_gitlab_ci_yaml(
             "deprecated ci configuration, a no-op pipeline will be generated\n",
             "instead.",
         )
+
+    def ensure_expected_target_path(path):
+        """Returns passed paths with all Windows path separators exchanged
+        for posix separators only if copy_only_pipeline is enabled
+
+        This is required as copy_only_pipelines are a unique scenario where
+        the generate job and child pipelines are run on different platforms.
+        To make this compatible w/ Windows, we cannot write Windows style path separators
+        that will be consumed on by the Posix copy job runner.
+
+        TODO (johnwparent): Refactor config + cli read/write to deal only in posix
+        style paths
+        """
+        if copy_only_pipeline and path:
+            path = path.replace("\\", "/")
+        return path
 
     pipeline_mirrors = spack.mirror.MirrorCollection(binary=True)
     deprecated_mirror_config = False
@@ -897,7 +809,8 @@ def generate_gitlab_ci_yaml(
         cli_scopes = [
             os.path.relpath(s.path, concrete_env_dir)
             for s in cfg.scopes().values()
-            if isinstance(s, cfg.ImmutableConfigScope)
+            if not s.writable
+            and isinstance(s, (cfg.DirectoryConfigScope))
             and s.path not in env_includes
             and os.path.exists(s.path)
         ]
@@ -906,7 +819,7 @@ def generate_gitlab_ci_yaml(
             if scope not in include_scopes and scope not in env_includes:
                 include_scopes.insert(0, scope)
         env_includes.extend(include_scopes)
-        env_yaml_root["spack"]["include"] = env_includes
+        env_yaml_root["spack"]["include"] = [ensure_expected_target_path(i) for i in env_includes]
 
         if "gitlab-ci" in env_yaml_root["spack"] and "ci" not in env_yaml_root["spack"]:
             env_yaml_root["spack"]["ci"] = env_yaml_root["spack"].pop("gitlab-ci")
@@ -1327,6 +1240,9 @@ def generate_gitlab_ci_yaml(
             "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
             "SPACK_REQUIRE_SIGNING": os.environ.get("SPACK_REQUIRE_SIGNING", "False"),
         }
+        output_vars = output_object["variables"]
+        for item, val in output_vars.items():
+            output_vars[item] = ensure_expected_target_path(val)
 
         # TODO: Remove this block in Spack 0.23
         if deprecated_mirror_config and remote_mirror_override:
@@ -1351,17 +1267,6 @@ def generate_gitlab_ci_yaml(
             with open(copy_specs_file, "w") as fd:
                 fd.write(json.dumps(buildcache_copies))
 
-        # TODO(opadron): remove this or refactor
-        if run_optimizer:
-            import spack.ci_optimization as ci_opt
-
-            output_object = ci_opt.optimizer(output_object)
-
-        # TODO(opadron): remove this or refactor
-        if use_dependencies:
-            import spack.ci_needs_workaround as cinw
-
-            output_object = cinw.needs_to_dependencies(output_object)
     else:
         # No jobs were generated
         noop_job = spack_ci_ir["jobs"]["noop"]["attributes"]
@@ -1383,7 +1288,6 @@ def generate_gitlab_ci_yaml(
     sorted_output = {}
     for output_key, output_value in sorted(output_object.items()):
         sorted_output[output_key] = output_value
-
     if known_broken_specs_encountered:
         tty.error("This pipeline generated hashes known to be broken on develop:")
         display_broken_spec_messages(broken_specs_url, known_broken_specs_encountered)
@@ -1391,8 +1295,11 @@ def generate_gitlab_ci_yaml(
         if not rebuild_everything:
             sys.exit(1)
 
-    with open(output_file, "w") as outf:
-        outf.write(syaml.dump(sorted_output, default_flow_style=True))
+    # Minimize yaml output size through use of anchors
+    syaml.anchorify(sorted_output)
+
+    with open(output_file, "w") as f:
+        ruamel.yaml.YAML().dump(sorted_output, f)
 
 
 def _url_encode_string(input_string):
@@ -1578,6 +1485,12 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     copy_files_to_artifacts(os.path.join(test_stage, "*", "*.txt"), job_test_dir)
 
 
+def win_quote(quote_str: str) -> str:
+    if IS_WINDOWS:
+        quote_str = f'"{quote_str}"'
+    return quote_str
+
+
 def download_and_extract_artifacts(url, work_dir):
     """Look for gitlab artifacts.zip at the given url, and attempt to download
         and extract the contents into the given work_dir
@@ -1600,7 +1513,7 @@ def download_and_extract_artifacts(url, work_dir):
     request = Request(url, headers=headers)
     request.get_method = lambda: "GET"
 
-    response = opener.open(request)
+    response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
     response_code = response.getcode()
 
     if response_code != 200:
@@ -1947,9 +1860,9 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
         entrypoint_script.append(["echo", f"Re-run install script using:\n\t{install_mechanism}"])
         # Allow interactive
         if IS_WINDOWS:
-            entrypoint_script.extend(["&", "($args -Join ' ')", "-NoExit"])
+            entrypoint_script.append(["&", "($args -Join ' ')", "-NoExit"])
         else:
-            entrypoint_script.extend(["exec", "$@"])
+            entrypoint_script.append(["exec", "$@"])
 
         process_command(
             "entrypoint", entrypoint_script, work_dir, run=False, exit_on_failure=False
@@ -2042,9 +1955,9 @@ def process_command(name, commands, repro_dir, run=True, exit_on_failure=True):
         # but we need to handle EXEs (git, etc) ourselves
         catch_exe_failure = (
             """
-if ($LASTEXITCODE -ne 0){
-    throw "Command {} has failed"
-}
+if ($LASTEXITCODE -ne 0){{
+    throw 'Command {} has failed'
+}}
 """
             if IS_WINDOWS
             else ""
@@ -2276,13 +2189,13 @@ class CDashHandler:
     def args(self):
         return [
             "--cdash-upload-url",
-            self.upload_url,
+            win_quote(self.upload_url),
             "--cdash-build",
-            self.build_name,
+            win_quote(self.build_name),
             "--cdash-site",
-            self.site,
+            win_quote(self.site),
             "--cdash-buildstamp",
-            self.build_stamp,
+            win_quote(self.build_stamp),
         ]
 
     @property  # type: ignore
@@ -2348,7 +2261,7 @@ hash={spec.dag_hash()} arch={spec.architecture} ({self.build_group})"
 
         request = Request(url, data=enc_data, headers=headers)
 
-        response = opener.open(request)
+        response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
         response_code = response.getcode()
 
         if response_code not in [200, 201]:
@@ -2394,7 +2307,7 @@ hash={spec.dag_hash()} arch={spec.architecture} ({self.build_group})"
         request = Request(url, data=enc_data, headers=headers)
         request.get_method = lambda: "PUT"
 
-        response = opener.open(request)
+        response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
         response_code = response.getcode()
 
         if response_code != 200:

@@ -1,6 +1,6 @@
 compilers:
 - compiler:
-    spec: gcc@=4.8.0
+    spec: gcc@=9.4.0
     operating_system: {linux_os.name}{linux_os.version}
     paths:
       cc: /path/to/gcc
@@ -10,7 +10,7 @@ compilers:
     modules: []
     target: {target}
 - compiler:
-    spec: gcc@=4.8.0
+    spec: gcc@=9.4.0
     operating_system: redhat6
     paths:
       cc: /path/to/gcc
@@ -20,7 +20,7 @@ compilers:
     modules: []
     target: {target}
 - compiler:
-    spec: clang@=12.0.0
+    spec: clang@=15.0.0
     operating_system: {linux_os.name}{linux_os.version}
     paths:
       cc: /path/to/clang

@@ -51,7 +51,6 @@ line is a spec for a particular installation of the mpileaks package.
 import collections
 import collections.abc
 import enum
-import io
 import itertools
 import os
 import pathlib
@@ -59,7 +58,7 @@ import platform
 import re
 import socket
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Match, Optional, Set, Tuple, Union
 
 import llnl.path
 import llnl.string
@@ -121,35 +120,43 @@ __all__ = [
     "SpecDeprecatedError",
 ]
 
+
+SPEC_FORMAT_RE = re.compile(
+    r"(?:"  # this is one big or, with matches ordered by priority
+    # OPTION 1: escaped character (needs to be first to catch opening \{)
+    # Note that an unterminated \ at the end of a string is left untouched
+    r"(?:\\(.))"
+    r"|"  # or
+    # OPTION 2: an actual format string
+    r"{"  # non-escaped open brace {
+    r"([%@/]|arch=)?"  # optional sigil (to print sigil in color)
+    r"(?:\^([^}\.]+)\.)?"  # optional ^depname. (to get attr from dependency)
+    # after the sigil or depname, we can have a hash expression or another attribute
+    r"(?:"  # one of
+    r"(hash\b)(?:\:(\d+))?"  # hash followed by :<optional length>
+    r"|"  # or
+    r"([^}]*)"  # another attribute to format
+    r")"  # end one of
+    r"(})?"  # finish format string with non-escaped close brace }, or missing if not present
+    r"|"
+    # OPTION 3: mismatched close brace (option 2 would consume a matched open brace)
+    r"(})"  # brace
+    r")",
+    re.IGNORECASE,
+)
+
 #: Valid pattern for an identifier in Spack
 
 IDENTIFIER_RE = r"\w[\w-]*"
 
+# Coloring of specs when using color output. Fields are printed with
+# different colors to enhance readability.
+# See llnl.util.tty.color for descriptions of the color codes.
 COMPILER_COLOR = "@g"  #: color for highlighting compilers
 VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
-ENABLED_VARIANT_COLOR = "@B"  #: color for highlighting enabled variants
-DISABLED_VARIANT_COLOR = "r"  #: color for highlighting disabled varaints
-DEPENDENCY_COLOR = "@."  #: color for highlighting dependencies
+VARIANT_COLOR = "@B"  #: color for highlighting variants
 HASH_COLOR = "@K"  #: color for highlighting package hashes
-
-#: This map determines the coloring of specs when using color output.
-#: We make the fields different colors to enhance readability.
-#: See llnl.util.tty.color for descriptions of the color codes.
-COLOR_FORMATS = {
-    "%": COMPILER_COLOR,
-    "@": VERSION_COLOR,
-    "=": ARCHITECTURE_COLOR,
-    "+": ENABLED_VARIANT_COLOR,
-    "~": DISABLED_VARIANT_COLOR,
-    "^": DEPENDENCY_COLOR,
-    "#": HASH_COLOR,
-}
-
-#: Regex used for splitting by spec field separators.
-#: These need to be escaped to avoid metacharacters in
-#: ``COLOR_FORMATS.keys()``.
-_SEPARATORS = "[\\%s]" % "\\".join(COLOR_FORMATS.keys())
 
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
@@ -193,26 +200,7 @@ class InstallStatus(enum.Enum):
     missing = "@r{[-]}  "
 
 
-def colorize_spec(spec):
-    """Returns a spec colorized according to the colors specified in
-    COLOR_FORMATS."""
-
-    class insert_color:
-        def __init__(self):
-            self.last = None
-
-        def __call__(self, match):
-            # ignore compiler versions (color same as compiler)
-            sep = match.group(0)
-            if self.last == "%" and sep == "@":
-                return clr.cescape(sep)
-            self.last = sep
-
-            return "%s%s" % (COLOR_FORMATS[sep], clr.cescape(sep))
-
-    return clr.colorize(re.sub(_SEPARATORS, insert_color(), str(spec)) + "@.")
-
-
+# regexes used in spec formatting
 OLD_STYLE_FMT_RE = re.compile(r"\${[A-Z]+}")
 
 
@@ -911,6 +899,9 @@ class FlagMap(lang.HashableMap):
             yield flags
 
     def __str__(self):
+        if not self:
+            return ""
+
         sorted_items = sorted((k, v) for k, v in self.items() if v)
 
         result = ""
@@ -1039,16 +1030,13 @@ class _EdgeMap(collections.abc.Mapping):
         self.edges.clear()
 
 
-def _command_default_handler(descriptor, spec, cls):
+def _command_default_handler(spec: "Spec"):
     """Default handler when looking for the 'command' attribute.
 
     Tries to search for ``spec.name`` in the ``spec.home.bin`` directory.
 
     Parameters:
-        descriptor (ForwardQueryToPackage): descriptor that triggered the call
-        spec (Spec): spec that is being queried
-        cls (type(spec)): type of spec, to match the signature of the
-            descriptor ``__get__`` method
+        spec: spec that is being queried
 
     Returns:
         Executable: An executable of the command
@@ -1061,22 +1049,17 @@ def _command_default_handler(descriptor, spec, cls):
 
     if fs.is_exe(path):
         return spack.util.executable.Executable(path)
-    else:
-        msg = "Unable to locate {0} command in {1}"
-        raise RuntimeError(msg.format(spec.name, home.bin))
+    raise RuntimeError(f"Unable to locate {spec.name} command in {home.bin}")
 
 
-def _headers_default_handler(descriptor, spec, cls):
+def _headers_default_handler(spec: "Spec"):
     """Default handler when looking for the 'headers' attribute.
 
     Tries to search for ``*.h`` files recursively starting from
     ``spec.package.home.include``.
 
     Parameters:
-        descriptor (ForwardQueryToPackage): descriptor that triggered the call
-        spec (Spec): spec that is being queried
-        cls (type(spec)): type of spec, to match the signature of the
-            descriptor ``__get__`` method
+        spec: spec that is being queried
 
     Returns:
         HeaderList: The headers in ``prefix.include``
@@ -1089,12 +1072,10 @@ def _headers_default_handler(descriptor, spec, cls):
 
     if headers:
         return headers
-    else:
-        msg = "Unable to locate {0} headers in {1}"
-        raise spack.error.NoHeadersError(msg.format(spec.name, home))
+    raise spack.error.NoHeadersError(f"Unable to locate {spec.name} headers in {home}")
 
 
-def _libs_default_handler(descriptor, spec, cls):
+def _libs_default_handler(spec: "Spec"):
     """Default handler when looking for the 'libs' attribute.
 
     Tries to search for ``lib{spec.name}`` recursively starting from
@@ -1102,10 +1083,7 @@ def _libs_default_handler(descriptor, spec, cls):
     ``{spec.name}`` instead.
 
     Parameters:
-        descriptor (ForwardQueryToPackage): descriptor that triggered the call
-        spec (Spec): spec that is being queried
-        cls (type(spec)): type of spec, to match the signature of the
-            descriptor ``__get__`` method
+        spec: spec that is being queried
 
     Returns:
         LibraryList: The libraries found
@@ -1144,27 +1122,33 @@ def _libs_default_handler(descriptor, spec, cls):
         if libs:
             return libs
 
-    msg = "Unable to recursively locate {0} libraries in {1}"
-    raise spack.error.NoLibrariesError(msg.format(spec.name, home))
+    raise spack.error.NoLibrariesError(
+        f"Unable to recursively locate {spec.name} libraries in {home}"
+    )
 
 
 class ForwardQueryToPackage:
     """Descriptor used to forward queries from Spec to Package"""
 
-    def __init__(self, attribute_name, default_handler=None):
+    def __init__(
+        self,
+        attribute_name: str,
+        default_handler: Optional[Callable[["Spec"], Any]] = None,
+        _indirect: bool = False,
+    ) -> None:
         """Create a new descriptor.
 
         Parameters:
-            attribute_name (str): name of the attribute to be
-                searched for in the Package instance
-            default_handler (callable, optional): default function to be
-                called if the attribute was not found in the Package
-                instance
+            attribute_name: name of the attribute to be searched for in the Package instance
+            default_handler: default function to be called if the attribute was not found in the
+                Package instance
+            _indirect: temporarily added to redirect a query to another package.
         """
         self.attribute_name = attribute_name
         self.default = default_handler
+        self.indirect = _indirect
 
-    def __get__(self, instance, cls):
+    def __get__(self, instance: "SpecBuildInterface", cls):
         """Retrieves the property from Package using a well defined chain
         of responsibility.
 
@@ -1186,13 +1170,18 @@ class ForwardQueryToPackage:
         indicating a query failure, e.g. that library files were not found in a
         'libs' query.
         """
-        pkg = instance.package
+        # TODO: this indirection exist solely for `spec["python"].command` to actually return
+        # spec["python-venv"].command. It should be removed when `python` is a virtual.
+        if self.indirect and instance.indirect_spec:
+            pkg = instance.indirect_spec.package
+        else:
+            pkg = instance.wrapped_obj.package
         try:
             query = instance.last_query
         except AttributeError:
             # There has been no query yet: this means
             # a spec is trying to access its own attributes
-            _ = instance[instance.name]  # NOQA: ignore=F841
+            _ = instance.wrapped_obj[instance.wrapped_obj.name]  # NOQA: ignore=F841
             query = instance.last_query
 
         callbacks_chain = []
@@ -1204,7 +1193,8 @@ class ForwardQueryToPackage:
         callbacks_chain.append(lambda: getattr(pkg, self.attribute_name))
         # Final resort : default callback
         if self.default is not None:
-            callbacks_chain.append(lambda: self.default(self, instance, cls))
+            _default = self.default  # make mypy happy
+            callbacks_chain.append(lambda: _default(instance.wrapped_obj))
 
         # Trigger the callbacks in order, the first one producing a
         # value wins
@@ -1263,30 +1253,136 @@ QueryState = collections.namedtuple("QueryState", ["name", "extra_parameters", "
 class SpecBuildInterface(lang.ObjectWrapper):
     # home is available in the base Package so no default is needed
     home = ForwardQueryToPackage("home", default_handler=None)
-
-    command = ForwardQueryToPackage("command", default_handler=_command_default_handler)
-
     headers = ForwardQueryToPackage("headers", default_handler=_headers_default_handler)
-
     libs = ForwardQueryToPackage("libs", default_handler=_libs_default_handler)
+    command = ForwardQueryToPackage(
+        "command", default_handler=_command_default_handler, _indirect=True
+    )
 
-    def __init__(self, spec, name, query_parameters):
+    def __init__(self, spec: "Spec", name: str, query_parameters: List[str], _parent: "Spec"):
         super().__init__(spec)
         # Adding new attributes goes after super() call since the ObjectWrapper
         # resets __dict__ to behave like the passed object
         original_spec = getattr(spec, "wrapped_obj", spec)
         self.wrapped_obj = original_spec
-        self.token = original_spec, name, query_parameters
+        self.token = original_spec, name, query_parameters, _parent
         is_virtual = spack.repo.PATH.is_virtual(name)
         self.last_query = QueryState(
             name=name, extra_parameters=query_parameters, isvirtual=is_virtual
         )
+
+        # TODO: this ad-hoc logic makes `spec["python"].command` return
+        # `spec["python-venv"].command` and should be removed when `python` is a virtual.
+        self.indirect_spec = None
+        if spec.name == "python":
+            python_venvs = _parent.dependencies("python-venv")
+            if not python_venvs:
+                return
+            self.indirect_spec = python_venvs[0]
 
     def __reduce__(self):
         return SpecBuildInterface, self.token
 
     def copy(self, *args, **kwargs):
         return self.wrapped_obj.copy(*args, **kwargs)
+
+
+def tree(
+    specs: List["spack.spec.Spec"],
+    *,
+    color: Optional[bool] = None,
+    depth: bool = False,
+    hashes: bool = False,
+    hashlen: Optional[int] = None,
+    cover: str = "nodes",
+    indent: int = 0,
+    format: str = DEFAULT_FORMAT,
+    deptypes: Union[Tuple[str, ...], str] = "all",
+    show_types: bool = False,
+    depth_first: bool = False,
+    recurse_dependencies: bool = True,
+    status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
+    prefix: Optional[Callable[["Spec"], str]] = None,
+    key=id,
+) -> str:
+    """Prints out specs and their dependencies, tree-formatted with indentation.
+
+    Status function may either output a boolean or an InstallStatus
+
+    Args:
+        color: if True, always colorize the tree. If False, don't colorize the tree. If None,
+            use the default from llnl.tty.color
+        depth: print the depth from the root
+        hashes: if True, print the hash of each node
+        hashlen: length of the hash to be printed
+        cover: either "nodes" or "edges"
+        indent: extra indentation for the tree being printed
+        format: format to be used to print each node
+        deptypes: dependency types to be represented in the tree
+        show_types: if True, show the (merged) dependency type of a node
+        depth_first: if True, traverse the DAG depth first when representing it as a tree
+        recurse_dependencies: if True, recurse on dependencies
+        status_fn: optional callable that takes a node as an argument and return its
+            installation status
+        prefix: optional callable that takes a node as an argument and return its
+            installation prefix
+    """
+    out = ""
+
+    if color is None:
+        color = clr.get_color_when()
+
+    # reduce deptypes over all in-edges when covering nodes
+    if show_types and cover == "nodes":
+        deptype_lookup: Dict[str, dt.DepFlag] = collections.defaultdict(dt.DepFlag)
+        for edge in traverse.traverse_edges(specs, cover="edges", deptype=deptypes, root=False):
+            deptype_lookup[edge.spec.dag_hash()] |= edge.depflag
+
+    for d, dep_spec in traverse.traverse_tree(
+        sorted(specs), cover=cover, deptype=deptypes, depth_first=depth_first, key=key
+    ):
+        node = dep_spec.spec
+
+        if prefix is not None:
+            out += prefix(node)
+        out += " " * indent
+
+        if depth:
+            out += "%-4d" % d
+
+        if status_fn:
+            status = status_fn(node)
+            if status in list(InstallStatus):
+                out += clr.colorize(status.value, color=color)
+            elif status:
+                out += clr.colorize("@g{[+]}  ", color=color)
+            else:
+                out += clr.colorize("@r{[-]}  ", color=color)
+
+        if hashes:
+            out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hashlen)
+
+        if show_types:
+            if cover == "nodes":
+                depflag = deptype_lookup[dep_spec.spec.dag_hash()]
+            else:
+                # when covering edges or paths, we show dependency
+                # types only for the edge through which we visited
+                depflag = dep_spec.depflag
+
+            type_chars = dt.flag_to_chars(depflag)
+            out += "[%s]  " % type_chars
+
+        out += "    " * d
+        if d > 0:
+            out += "^"
+        out += node.format(format, color=color) + "\n"
+
+        # Check if we wanted just the first line
+        if not recurse_dependencies:
+            break
+
+    return out
 
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
@@ -2818,9 +2914,7 @@ class Spec:
 
         # Check if we can produce an optimized binary (will throw if
         # there are declared inconsistencies)
-        # No need on platform=cray because of the targeting modules
-        if not self.satisfies("platform=cray"):
-            self.architecture.target.optimization_flags(self.compiler)
+        self.architecture.target.optimization_flags(self.compiler)
 
     def _patches_assigned(self):
         """Whether patches have been assigned to this spec by the concretizer."""
@@ -3907,9 +4001,13 @@ class Spec:
         if not self._dependencies:
             return False
 
-        # If we arrived here, then rhs is abstract. At the moment we don't care about the edge
-        # structure of an abstract DAG, so we check if any edge could satisfy the properties
-        # we ask for.
+        # If we arrived here, the lhs root node satisfies the rhs root node. Now we need to check
+        # all the edges that have an abstract parent, and verify that they match some edge in the
+        # lhs.
+        #
+        # It might happen that the rhs brings in concrete sub-DAGs. For those we don't need to
+        # verify the edge properties, cause everything is encoded in the hash of the nodes that
+        # will be verified later.
         lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
             # If we are checking for ^mpi we need to verify if there is any edge
@@ -3917,6 +4015,10 @@ class Spec:
                 rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
 
             if not rhs_edge.virtuals:
+                continue
+
+            # Skip edges from a concrete sub-DAG
+            if rhs_edge.parent.concrete:
                 continue
 
             if not lhs_edges:
@@ -4138,7 +4240,7 @@ class Spec:
             raise spack.error.SpecError("Spec version is not concrete: " + str(self))
         return self.versions[0]
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str):
         """Get a dependency from the spec by its name. This call implicitly
         sets a query state in the package being retrieved. The behavior of
         packages may be influenced by additional query parameters that are
@@ -4147,7 +4249,7 @@ class Spec:
         Note that if a virtual package is queried a copy of the Spec is
         returned while for non-virtual a reference is returned.
         """
-        query_parameters = name.split(":")
+        query_parameters: List[str] = name.split(":")
         if len(query_parameters) > 2:
             raise KeyError("key has more than one ':' symbol. At most one is admitted.")
 
@@ -4158,38 +4260,30 @@ class Spec:
             csv = query_parameters.pop().strip()
             query_parameters = re.split(r"\s*,\s*", csv)
 
-        # In some cases a package appears multiple times in the same DAG for *distinct*
-        # specs. For example, a build-type dependency may itself depend on a package
-        # the current spec depends on, but their specs may differ. Therefore we iterate
-        # in an order here that prioritizes the build, test and runtime dependencies;
-        # only when we don't find the package do we consider the full DAG.
         order = lambda: itertools.chain(
-            self.traverse(deptype="link"),
-            self.dependencies(deptype=dt.BUILD | dt.RUN | dt.TEST),
-            self.traverse(),  # fall back to a full search
+            self.traverse_edges(deptype=dt.LINK, order="breadth", cover="edges"),
+            self.edges_to_dependencies(depflag=dt.BUILD | dt.RUN | dt.TEST),
+            self.traverse_edges(deptype=dt.ALL, order="breadth", cover="edges"),
         )
 
+        # Consider runtime dependencies and direct build/test deps before transitive dependencies,
+        # and prefer matches closest to the root.
         try:
-            value = next(
-                itertools.chain(
-                    # Regular specs
-                    (x for x in order() if x.name == name),
-                    (
-                        x
-                        for x in order()
-                        if (not x.virtual)
-                        and any(name in edge.virtuals for edge in x.edges_from_dependents())
-                    ),
-                    (x for x in order() if (not x.virtual) and x.package.provides(name)),
+            child: Spec = next(
+                e.spec
+                for e in itertools.chain(
+                    (e for e in order() if e.spec.name == name or name in e.virtuals),
+                    # for historical reasons
+                    (e for e in order() if e.spec.concrete and e.spec.package.provides(name)),
                 )
             )
         except StopIteration:
             raise KeyError(f"No spec with name {name} in {self}")
 
         if self._concrete:
-            return SpecBuildInterface(value, name, query_parameters)
+            return SpecBuildInterface(child, name, query_parameters, _parent=self)
 
-        return value
+        return child
 
     def __contains__(self, spec):
         """True if this spec or some dependency satisfies the spec.
@@ -4292,10 +4386,7 @@ class Spec:
 
         yield deps
 
-    def colorized(self):
-        return colorize_spec(self)
-
-    def format(self, format_string=DEFAULT_FORMAT, **kwargs):
+    def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
         r"""Prints out particular pieces of a spec, depending on what is
         in the format string.
 
@@ -4358,79 +4449,65 @@ class Spec:
         literal ``\`` character.
 
         Args:
-            format_string (str): string containing the format to be expanded
-
-        Keyword Args:
-            color (bool): True if returned string is colored
-            transform (dict): maps full-string formats to a callable \
-                that accepts a string and returns another one
-
+            format_string: string containing the format to be expanded
+            color: True for colorized result; False for no color; None for auto color.
         """
         ensure_modern_format_string(format_string)
-        color = kwargs.get("color", False)
-        transform = kwargs.get("transform", {})
 
-        out = io.StringIO()
+        def safe_color(sigil: str, string: str, color_fmt: Optional[str]) -> str:
+            # avoid colorizing if there is no color or the string is empty
+            if (color is False) or not color_fmt or not string:
+                return sigil + string
+            # escape and add the sigil here to avoid multiple concatenations
+            if sigil == "@":
+                sigil = "@@"
+            return clr.colorize(f"{color_fmt}{sigil}{clr.cescape(string)}@.", color=color)
 
-        def write(s, c=None):
-            f = clr.cescape(s)
-            if c is not None:
-                f = COLOR_FORMATS[c] + f + "@."
-            clr.cwrite(f, stream=out, color=color)
+        def format_attribute(match_object: Match) -> str:
+            (esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
+                match_object.groups()
+            )
+            if esc:
+                return esc
+            elif unmatched_close_brace:
+                raise SpecFormatStringError(f"Unmatched close brace: '{format_string}'")
+            elif not close_brace:
+                raise SpecFormatStringError(f"Missing close brace: '{format_string}'")
 
-        def write_attribute(spec, attribute, color):
-            attribute = attribute.lower()
+            current = self if dep is None else self[dep]
 
-            sig = ""
-            if attribute.startswith(("@", "%", "/")):
-                # color sigils that are inside braces
-                sig = attribute[0]
-                attribute = attribute[1:]
-            elif attribute.startswith("arch="):
-                sig = " arch="  # include space as separator
-                attribute = attribute[5:]
-
-            current = spec
-            if attribute.startswith("^"):
-                attribute = attribute[1:]
-                dep, attribute = attribute.split(".", 1)
-                current = self[dep]
+            # Hash attributes can return early.
+            # NOTE: we currently treat abstract_hash like an attribute and ignore
+            # any length associated with it. We may want to change that.
+            if hash:
+                if sig and sig != "/":
+                    raise SpecFormatSigilError(sig, "DAG hashes", hash)
+                try:
+                    length = int(hash_len) if hash_len else None
+                except ValueError:
+                    raise SpecFormatStringError(f"Invalid hash length: '{hash_len}'")
+                return safe_color(sig or "", current.dag_hash(length), HASH_COLOR)
 
             if attribute == "":
                 raise SpecFormatStringError("Format string attributes must be non-empty")
 
+            attribute = attribute.lower()
             parts = attribute.split(".")
             assert parts
 
             # check that the sigil is valid for the attribute.
-            if sig == "@" and parts[-1] not in ("versions", "version"):
+            if not sig:
+                sig = ""
+            elif sig == "@" and parts[-1] not in ("versions", "version"):
                 raise SpecFormatSigilError(sig, "versions", attribute)
             elif sig == "%" and attribute not in ("compiler", "compiler.name"):
                 raise SpecFormatSigilError(sig, "compilers", attribute)
-            elif sig == "/" and not re.match(r"(abstract_)?hash(:\d+)?$", attribute):
+            elif sig == "/" and attribute != "abstract_hash":
                 raise SpecFormatSigilError(sig, "DAG hashes", attribute)
-            elif sig == " arch=" and attribute not in ("architecture", "arch"):
-                raise SpecFormatSigilError(sig, "the architecture", attribute)
-
-            # find the morph function for our attribute
-            morph = transform.get(attribute, lambda s, x: x)
-
-            # Special cases for non-spec attributes and hashes.
-            # These must be the only non-dep component of the format attribute
-            if attribute == "spack_root":
-                write(morph(spec, spack.paths.spack_root))
-                return
-            elif attribute == "spack_install":
-                write(morph(spec, spack.store.STORE.layout.root))
-                return
-            elif re.match(r"hash(:\d)?", attribute):
-                col = "#"
-                if ":" in attribute:
-                    _, length = attribute.split(":")
-                    write(sig + morph(spec, current.dag_hash(int(length))), col)
-                else:
-                    write(sig + morph(spec, current.dag_hash()), col)
-                return
+            elif sig == "arch=":
+                if attribute not in ("architecture", "arch"):
+                    raise SpecFormatSigilError(sig, "the architecture", attribute)
+                sig = " arch="  # include space as separator
 
             # Iterate over components using getattr to get next element
             for idx, part in enumerate(parts):
@@ -4439,7 +4516,7 @@ class Spec:
                 if part.startswith("_"):
                     raise SpecFormatStringError("Attempted to format private attribute")
                 else:
-                    if isinstance(current, vt.VariantMap):
+                    if part == "variants" and isinstance(current, vt.VariantMap):
                         # subscript instead of getattr for variant names
                         current = current[part]
                     else:
@@ -4463,68 +4540,47 @@ class Spec:
                             raise SpecFormatStringError(m)
                         if isinstance(current, vn.VersionList):
                             if current == vn.any_version:
-                                # We don't print empty version lists
-                                return
+                                # don't print empty version lists
+                                return ""
 
                     if callable(current):
                         raise SpecFormatStringError("Attempted to format callable object")
+
                     if current is None:
-                        # We're not printing anything
-                        return
+                        # not printing anything
+                        return ""
 
             # Set color codes for various attributes
-            col = None
+            color = None
             if "variants" in parts:
-                col = "+"
+                color = VARIANT_COLOR
             elif "architecture" in parts:
-                col = "="
+                color = ARCHITECTURE_COLOR
             elif "compiler" in parts or "compiler_flags" in parts:
-                col = "%"
+                color = COMPILER_COLOR
             elif "version" in parts or "versions" in parts:
-                col = "@"
+                color = VERSION_COLOR
 
-            # Finally, write the output
-            write(sig + morph(spec, str(current)), col)
+            # return colored output
+            return safe_color(sig, str(current), color)
 
-        attribute = ""
-        in_attribute = False
-        escape = False
-
-        for c in format_string:
-            if escape:
-                out.write(c)
-                escape = False
-            elif c == "\\":
-                escape = True
-            elif in_attribute:
-                if c == "}":
-                    write_attribute(self, attribute, color)
-                    attribute = ""
-                    in_attribute = False
-                else:
-                    attribute += c
-            else:
-                if c == "}":
-                    raise SpecFormatStringError(
-                        "Encountered closing } before opening { in %s" % format_string
-                    )
-                elif c == "{":
-                    in_attribute = True
-                else:
-                    out.write(c)
-        if in_attribute:
-            raise SpecFormatStringError(
-                "Format string terminated while reading attribute." "Missing terminating }."
-            )
-
-        formatted_spec = out.getvalue()
-        return formatted_spec.strip()
+        return SPEC_FORMAT_RE.sub(format_attribute, format_string).strip()
 
     def cformat(self, *args, **kwargs):
         """Same as format, but color defaults to auto instead of False."""
         kwargs = kwargs.copy()
         kwargs.setdefault("color", None)
         return self.format(*args, **kwargs)
+
+    @property
+    def spack_root(self):
+        """Special field for using ``{spack_root}`` in Spec.format()."""
+        return spack.paths.spack_root
+
+    @property
+    def spack_install(self):
+        """Special field for using ``{spack_install}`` in Spec.format()."""
+        return spack.store.STORE.layout.root
 
     def format_path(
         # self, format_string: str, _path_ctor: Optional[pathlib.PurePath] = None
@@ -4551,18 +4607,27 @@ class Spec:
 
         path_ctor = _path_ctor or pathlib.PurePath
         format_string_as_path = path_ctor(format_string)
-        if format_string_as_path.is_absolute():
+        if format_string_as_path.is_absolute() or (
+            # Paths that begin with a single "\" on windows are relative, but we still
+            # want to preserve the initial "\\" to be consistent with PureWindowsPath.
+            # Ensure that this '\' is not passed to polite_filename() so it's not converted to '_'
+            (os.name == "nt" or path_ctor == pathlib.PureWindowsPath)
+            and format_string_as_path.parts[0] == "\\"
+        ):
             output_path_components = [format_string_as_path.parts[0]]
             input_path_components = list(format_string_as_path.parts[1:])
         else:
             output_path_components = []
             input_path_components = list(format_string_as_path.parts)
+
         output_path_components += [
-            fs.polite_filename(self.format(x)) for x in input_path_components
+            fs.polite_filename(self.format(part)) for part in input_path_components
         ]
         return str(path_ctor(*output_path_components))
 
     def __str__(self):
+        if not self._dependencies:
+            return self.format()
         root_str = [self.format()]
         sorted_dependencies = sorted(
             self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
@@ -4585,7 +4650,7 @@ class Spec:
         spec_str = " ^".join(root_str + sorted_dependencies)
         return spec_str.strip()
 
-    def install_status(self):
+    def install_status(self) -> InstallStatus:
         """Helper for tree to print DB install status."""
         if not self.concrete:
             return InstallStatus.absent
@@ -4629,13 +4694,14 @@ class Spec:
         recurse_dependencies: bool = True,
         status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
         prefix: Optional[Callable[["Spec"], str]] = None,
+        key=id,
     ) -> str:
-        """Prints out this spec and its dependencies, tree-formatted
-        with indentation.
+        """Prints out this spec and its dependencies, tree-formatted with indentation.
 
-        Status function may either output a boolean or an InstallStatus
+        See multi-spec ``spack.spec.tree()`` function for details.
 
         Args:
+            specs: List of specs to format.
             color: if True, always colorize the tree. If False, don't colorize the tree. If None,
                 use the default from llnl.tty.color
             depth: print the depth from the root
@@ -4653,60 +4719,23 @@ class Spec:
             prefix: optional callable that takes a node as an argument and return its
                 installation prefix
         """
-        out = ""
-
-        if color is None:
-            color = clr.get_color_when()
-
-        for d, dep_spec in traverse.traverse_tree(
-            [self], cover=cover, deptype=deptypes, depth_first=depth_first
-        ):
-            node = dep_spec.spec
-
-            if prefix is not None:
-                out += prefix(node)
-            out += " " * indent
-
-            if depth:
-                out += "%-4d" % d
-
-            if status_fn:
-                status = status_fn(node)
-                if status in list(InstallStatus):
-                    out += clr.colorize(status.value, color=color)
-                elif status:
-                    out += clr.colorize("@g{[+]}  ", color=color)
-                else:
-                    out += clr.colorize("@r{[-]}  ", color=color)
-
-            if hashes:
-                out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hashlen)
-
-            if show_types:
-                if cover == "nodes":
-                    # when only covering nodes, we merge dependency types
-                    # from all dependents before showing them.
-                    depflag = 0
-                    for ds in node.edges_from_dependents():
-                        depflag |= ds.depflag
-                else:
-                    # when covering edges or paths, we show dependency
-                    # types only for the edge through which we visited
-                    depflag = dep_spec.depflag
-
-                type_chars = dt.flag_to_chars(depflag)
-                out += "[%s]  " % type_chars
-
-            out += "    " * d
-            if d > 0:
-                out += "^"
-            out += node.format(format, color=color) + "\n"
-
-            # Check if we wanted just the first line
-            if not recurse_dependencies:
-                break
-
-        return out
+        return tree(
+            [self],
+            color=color,
+            depth=depth,
+            hashes=hashes,
+            hashlen=hashlen,
+            cover=cover,
+            indent=indent,
+            format=format,
+            deptypes=deptypes,
+            show_types=show_types,
+            depth_first=depth_first,
+            recurse_dependencies=recurse_dependencies,
+            status_fn=status_fn,
+            prefix=prefix,
+            key=key,
+        )
 
     def __repr__(self):
         return str(self)

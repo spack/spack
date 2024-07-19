@@ -102,6 +102,8 @@ class Charliecloud(AutotoolsPackage):
         deprecated=True,
         sha256="15ce63353afe1fc6bcc10979496a54fcd5628f997cb13c827c9fc7afb795bdc5",
     )
+
+    depends_on("c", type="build")  # generated
     variant("docs", default=False, description="Build man pages and html docs")
     variant("squashfuse", default=True, description="Build with squashfuse support", when="@0.32:")
 
@@ -112,7 +114,7 @@ class Charliecloud(AutotoolsPackage):
     depends_on("libtool", type="build")
 
     # pkg-config is required for 0.36 regardless of variant.
-    depends_on("pkg-config", type="build", when="@0.36")
+    depends_on("pkgconfig", type="build", when="@0.36")
 
     # Image manipulation.
     depends_on("python@3.6:", type="run")
@@ -146,7 +148,7 @@ class Charliecloud(AutotoolsPackage):
     # approach with squashfuse could implemented in a different variant.
     with when("+squashfuse"):
         depends_on("libfuse@3:", type=("build", "run", "link"), when="@0.32:")
-        depends_on("pkg-config", type="build", when="@0.37:")
+        depends_on("pkgconfig", type="build", when="@0.37:")
         depends_on("squashfuse@0.1.105:0.2.0,0.4.0:", type="build", when="@0.36:")
         depends_on("squashfuse@0.1.105:0.2.0,0.4.0", type="build", when="@0.35")
         depends_on("squashfuse@0.1.105", type="build", when="@0.32:0.34")
