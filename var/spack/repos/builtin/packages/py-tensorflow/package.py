@@ -711,10 +711,12 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         spec = self.spec
 
         # disable the post-build remangling of rpaths using patchelf
-        filter_file("patch_so(srcs_dir)",
-                    "pass",
-                    "tensorflow/tools/pip_package/build_pip_package.py",
-                    string=True)
+        filter_file(
+            "patch_so(srcs_dir)",
+            "pass",
+            "tensorflow/tools/pip_package/build_pip_package.py",
+            string=True,
+        )
 
         # make sure xla is actually turned off
         if spec.satisfies("~xla"):
@@ -857,15 +859,19 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         bazel(*args)
 
         if self.spec.satisfies("@:2.16"):
-            build_pip_package = Executable("bazel-bin/tensorflow/tools/pip_package/build_pip_package")
+            build_pip_package = Executable(
+                "bazel-bin/tensorflow/tools/pip_package/build_pip_package"
+            )
             buildpath = join_path(self.stage.source_path, "spack-build")
             build_pip_package("--src", buildpath)
 
     def install(self, spec, prefix):
         tmp_path = env["TEST_TMPDIR"]
         if self.spec.satisfies("@2.17:"):
-            buildpath = join_path(self.stage.source_path,
-                                  "bazel-out/k8-opt/bin/tensorflow/tools/pip_package/wheel_house/")
+            buildpath = join_path(
+                self.stage.source_path,
+                "bazel-out/k8-opt/bin/tensorflow/tools/pip_package/wheel_house/",
+            )
             with working_dir(buildpath):
                 wheel = glob.glob("*.whl")[0]
                 args = std_pip_args + ["--prefix=" + prefix, wheel]
