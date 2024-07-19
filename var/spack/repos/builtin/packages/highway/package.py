@@ -24,6 +24,7 @@ class Highway(CMakePackage):
     version("1.0.1", sha256="7ca6af7dc2e3e054de9e17b9dfd88609a7fd202812b1c216f43cc41647c97311")
     version("1.0.0", sha256="ab4f5f864932268356f9f6aa86f612fa4430a7db3c8de0391076750197e876b8")
 
+    variant("shared", default=True, description="Build shared libs")
     variant("examples", default=False, description="Build examples")
 
     depends_on("cxx", type="build")  # generated
@@ -37,6 +38,7 @@ class Highway(CMakePackage):
         from_variant = self.define_from_variant
 
         args = [
+            from_variant("BUILD_SHARED_LIBS", "shared"),
             from_variant("HWY_ENABLE_EXAMPLES", "examples"),
             define("HWY_ENABLE_TESTS", self.run_tests),
             define("BUILD_TESTING", self.run_tests),
