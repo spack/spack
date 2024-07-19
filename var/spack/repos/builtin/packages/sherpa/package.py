@@ -49,11 +49,11 @@ class Sherpa(AutotoolsPackage, CMakePackage):
     variant("analysis", default=True, description="Enable analysis components")
     variant("mpi", default=False, description="Enable MPI")
     variant("python", default=False, description="Enable Python API")
-    variant("hepmc2", default=True, description="Enable HepMC (version 2.x) support")
+    variant("hepmc2", default=True, when="@:2", description="Enable HepMC (version 2.x) support")
     variant("hepmc3", default=True, description="Enable HepMC (version 3.x) support")
     variant("hepmc3root", default=False, description="Enable HepMC (version 3.1+) ROOT support")
     variant("rivet", default=False, description="Enable Rivet support")
-    variant("fastjet", default=True, description="Enable FASTJET")
+    variant("fastjet", default=True, when="@:2", description="Enable FASTJET")
     variant("openloops", default=False, description="Enable OpenLoops")
     variant("recola", default=False, description="Enable Recola")
     variant("lhole", default=False, description="Enable Les Houches One-Loop Generator interface")
@@ -80,10 +80,10 @@ class Sherpa(AutotoolsPackage, CMakePackage):
 
     # autotools dependencies are needed at runtime to compile processes
     # at least as long as sherpa is an autotools package
-    depends_on("autoconf")
-    depends_on("automake")
-    depends_on("libtool")
-    depends_on("m4")
+    depends_on("autoconf", when="@:2")
+    depends_on("automake", when="@:2")
+    depends_on("libtool", when="@:2")
+    depends_on("m4", when="@:2")
     depends_on("texinfo", type="build")
     depends_on("sqlite")
 
@@ -103,7 +103,8 @@ class Sherpa(AutotoolsPackage, CMakePackage):
     depends_on("root", when="+root")
     depends_on("lhapdf", when="+lhapdf")
     depends_on("gzip", when="+gzip")
-    depends_on("pythia6", when="+pythia")
+    depends_on("pythia6", when="+pythia @:2")
+    depends_on("pythia8", when="+pythia @3:")
     depends_on("blackhat", when="+blackhat")
     depends_on("hztool", when="+hztool")
     # depends_on('cernlib',   when='+cernlib')
@@ -163,18 +164,13 @@ class Sherpa(AutotoolsPackage, CMakePackage):
         args.extend(self.enable_or_disable("pythia"))
         hepmc_root = lambda x: self.spec["hepmc"].prefix
         args.extend(self.enable_or_disable("hepmc2", activation_value=hepmc_root))
-        if self.spec.satisfies("@3:"):
-            args.extend(self.enable_or_disable("hepmc3", activation_value="prefix"))
-            args.extend(self.enable_or_disable("rivet", activation_value="prefix"))
-            args.extend(self.enable_or_disable("lhapdf", activation_value="prefix"))
-        else:
-            # See https://gitlab.com/sherpa-team/sherpa/-/issues/348
-            if self.spec.satisfies("+hepmc3"):
-                args.append("--enable-hepmc3=" + self.spec["hepmc3"].prefix)
-            if self.spec.satisfies("+rivet"):
-                args.append("--enable-rivet=" + self.spec["rivet"].prefix)
-            if self.spec.satisfies("+lhapdf"):
-                args.append("--enable-lhapdf=" + self.spec["lhapdf"].prefix)
+        # See https://gitlab.com/sherpa-team/sherpa/-/issues/348
+        if self.spec.satisfies("+hepmc3"):
+            args.append("--enable-hepmc3=" + self.spec["hepmc3"].prefix)
+        if self.spec.satisfies("+rivet"):
+            args.append("--enable-rivet=" + self.spec["rivet"].prefix)
+        if self.spec.satisfies("+lhapdf"):
+            args.append("--enable-lhapdf=" + self.spec["lhapdf"].prefix)
 
         args.extend(self.enable_or_disable("fastjet", activation_value="prefix"))
         args.extend(self.enable_or_disable("openloops", activation_value="prefix"))
