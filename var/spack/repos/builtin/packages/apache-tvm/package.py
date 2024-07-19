@@ -22,6 +22,8 @@ class ApacheTvm(CMakePackage, CudaPackage):
 
     variant("llvm", default=True, description="Build with llvm for CPU codegen")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on("cmake@3.18:", type="build")
     depends_on("python")
     depends_on("llvm@4.0:", type="build", when="+llvm")
