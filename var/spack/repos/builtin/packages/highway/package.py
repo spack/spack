@@ -30,10 +30,12 @@ class Highway(CMakePackage):
     depends_on("googletest", type="test")
 
     def cmake_args(self):
+        define = self.define
+
         args = [
-            self.define("HWY_ENABLE_TESTS", self.run_tests),
-            self.define("BUILD_TESTING", self.run_tests),
+            define("HWY_ENABLE_TESTS", self.run_tests),
+            define("BUILD_TESTING", self.run_tests),
+            define("HWY_SYSTEM_GTEST", self.run_tests),
         ]
-        if self.run_tests:
-            args.append(self.define("HWY_SYSTEM_GTEST", True))
+
         return args
