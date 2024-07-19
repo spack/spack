@@ -18,6 +18,8 @@ class Athena(AutotoolsPackage):
     version("master", branch="master")
     version("4.2", sha256="6334848d7f1325aa44859418feac8ce223b56793ae8907103000af5b27f50e7e")
 
+    depends_on("c", type="build")  # generated
+
     # PHYSICS "packages":
     variant(
         "problem",

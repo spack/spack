@@ -16,4 +16,6 @@ class ExuberantCtags(AutotoolsPackage):
 
     version("5.8", sha256="0e44b45dcabe969e0bbbb11e30c246f81abe5d32012db37395eb57d66e9e99c7")
 
+    depends_on("c", type="build")  # generated
+
     patch("ctags-5.8-gcc-unused-attribute.patch", when="@5.8")

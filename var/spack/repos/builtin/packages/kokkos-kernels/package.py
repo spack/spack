@@ -46,6 +46,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
     version("3.1.00", sha256="27fea241ae92f41bd5b070b1a590ba3a56a06aca750207a98bea2f64a4a40c89")
     version("3.0.00", sha256="e4b832aed3f8e785de24298f312af71217a26067aea2de51531e8c1e597ef0e6")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("kokkos")
     depends_on("kokkos@master", when="@master")
     depends_on("kokkos@develop", when="@develop")

@@ -26,6 +26,9 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     version("1.10.0", tag="v1.10.0", commit="0d9030e79888d1d5828730b254fedc53c7b640c1")
     version("1.7.2", tag="v1.7.2", commit="5bc92dff16b0ddd5063b717fb8522ca2ad023cb0")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("cuda", default=False, description="Build with CUDA support")
 
     # cmake/CMakeLists.txt

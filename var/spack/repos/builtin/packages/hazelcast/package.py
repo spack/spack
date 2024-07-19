@@ -24,4 +24,6 @@ class Hazelcast(MavenPackage):
     version("3.12.7", sha256="0747de968082bc50202f825b4010be28a3885b3dbcee4b83cbe21b2f8b26a7e0")
     version("3.11.7", sha256="c9f636b8813027d4cc24459bd27740549f89b4f11f62a868079bcb5b41d9b2bb")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("java@8:", type=("build", "run"))

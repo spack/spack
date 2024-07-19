@@ -72,6 +72,9 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
         deprecated=True,
         sha256="117f5fdb16e53d0fa8a47a1e28cccab1d8020ed4f6e50163d985dc90226aaa2c",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     # Do NOT add older versions here.
     # GASNet-EX releases over 2 years old are not supported.
 

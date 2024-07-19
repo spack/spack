@@ -25,6 +25,9 @@ class Uftrace(AutotoolsPackage):
     version("master", branch="master", get_full_repo=True)
     version("0.11", sha256="101dbb13cb3320ee76525ec26426f2aa1de4e3ee5af74f79cb403ae4d2c6c871")
     version("0.10", sha256="b8b56d540ea95c3eafe56440d6a998e0a140d53ca2584916b6ca82702795bbd9")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     variant("doc", default=False, description="Build uftrace's documentation")
     variant("python2", default=False, description="Build uftrace with python2 support")
     variant("python3", default=True, description="Build uftrace with python3 support")

@@ -52,6 +52,8 @@ class Squashfs(MakefilePackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     variant("gzip", default=True, description="Enable gzip compression support")
     variant("lz4", default=False, description="Enable LZ4 compression support")
     variant("lzo", default=False, description="Enable LZO compression support")

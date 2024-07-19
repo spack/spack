@@ -35,7 +35,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     homepage = "https://chapel-lang.org/"
 
-    url = "https://github.com/chapel-lang/chapel/archive/refs/tags/2.0.0.tar.gz"
+    url = "https://github.com/chapel-lang/chapel/archive/refs/tags/2.1.0.tar.gz"
     git = "https://github.com/chapel-lang/chapel.git"
 
     test_requires_compiler = True
@@ -52,8 +52,13 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
 
+    version("2.1.0", sha256="8e164d9a9e705e6b816857e84833b0922ce0bde6a36a9f3a29734830aac168ef")
     version("2.0.1", sha256="47e1f3789478ea870bd4ecdf52acbe469d171b89b663309325431f3da7c75008")
     version("2.0.0", sha256="a8cab99fd034c7b7229be8d4626ec95cf02072646fb148c74b4f48c460c6059c")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     patch("fix_spack_cc_wrapper_in_cray_prgenv.patch", when="@2.0.0:")
 
@@ -652,7 +657,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     @llnl.util.lang.memoized
     def _output_version_long(self):
         if str(self.spec.version).lower() == "main":
-            return "2.1.0"
+            return "2.2.0"
         spec_vers_str = str(self.spec.version.up_to(3))
         return spec_vers_str
 
@@ -660,7 +665,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     @llnl.util.lang.memoized
     def _output_version_short(self):
         if str(self.spec.version).lower() == "main":
-            return "2.1"
+            return "2.2"
         spec_vers_str = str(self.spec.version.up_to(2))
         return spec_vers_str
 

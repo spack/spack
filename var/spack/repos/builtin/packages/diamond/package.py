@@ -16,6 +16,8 @@ class Diamond(CMakePackage):
 
     license("GPL-3.0-only")
 
+    version("2.1.9", sha256="4cde9df78c63e8aef9df1e3265cd06a93ce1b047d6dba513a1437719b70e9d88")
+    version("2.1.8", sha256="b6088259f2bc92d1f9dc4add44590cff68321bcbf91eefbc295a3525118b9415")
     version("2.1.7", sha256="2dcaba0e79ecb02c3d2a6816d317e714767118a9a056721643abff4c586ca95b")
     version("2.1.6", sha256="852d27c7535d53f1ce59db0625ff23ac3bf17e57f7a3b1c46c08718f77e19c54")
     version("2.0.15", sha256="cc8e1f3fd357d286cf6585b21321bd25af69aae16ae1a8f605ea603c1886ffa4")
@@ -33,6 +35,9 @@ class Diamond(CMakePackage):
     version("0.9.14", sha256="de870a7806ac0aa47b97c9b784dd7201e2c8e11a122003bde440d926211b911e")
     version("0.8.38", sha256="582a7932f3aa73b0eac2275dd773818665f0b067b32a79ff5a13b0e3ca375f60")
     version("0.8.26", sha256="00d2be32dad76511a767ab8e917962c0ecc572bc808080be60dec028df45439f")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("zlib-api")
 

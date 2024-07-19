@@ -5,8 +5,6 @@
 
 import os
 
-import llnl.util.tty as tty
-
 from spack.package import *
 
 
@@ -71,6 +69,10 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     # Development branches
     version("master", branch="master")
     version("develop", branch="develop")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("jsrun", default=False, description="Enable/Disable jsrun command for testing")
     variant("shared", default=False, description="Enable/Disable shared libraries")
@@ -274,37 +276,35 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     #
     # export SPACK_USER_CACHE_PATH=/tmp/spack
     # export SPACK_DISABLE_LOCAL_CONFIG=true
-    def test(self):
-        if not self.spec.satisfies("@develop") or not os.path.isdir(self.prefix.bin):
-            tty.info("Skipping: checks not installed in bin for v{0}".format(self.version))
-            return
 
-        tests = [
-            ["NlpMdsEx1.exe", "400", "100", "0", "-selfcheck"],
-            ["NlpMdsEx1.exe", "400", "100", "1", "-selfcheck"],
-            ["NlpMdsEx1.exe", "400", "100", "0", "-empty_sp_row", "-selfcheck"],
+    def run_hiop(self, raja):
+        if raja:
+            exName = "NlpMdsEx1Raja.exe"
+        else:
+            exName = "NlpMdsEx1.exe"
+
+        exe = os.path.join(self.prefix.bin, exName)
+        if not os.path.exists(exe):
+            raise SkipTest(f"{exName} does not exist in version {self.version}")
+
+        options = [
+            ["400", "100", "0", "-selfcheck"],
+            ["400", "100", "1", "-selfcheck"],
+            ["400", "100", "0", "-empty_sp_row", "-selfcheck"],
         ]
 
-        if "+raja" in self.spec:
-            tests.extend(
-                [
-                    ["NlpMdsEx1Raja.exe", "400", "100", "0", "-selfcheck"],
-                    ["NlpMdsEx1Raja.exe", "400", "100", "1", "-selfcheck"],
-                    ["NlpMdsEx1Raja.exe", "400", "100", "0", "-empty_sp_row", "-selfcheck"],
-                ]
-            )
+        exe = which(exe)
 
-        for i, test in enumerate(tests):
-            exe = os.path.join(self.prefix.bin, test[0])
-            args = test[1:]
-            reason = 'test {0}: "{1}"'.format(i, " ".join(test))
-            self.run_test(
-                exe,
-                args,
-                [],
-                0,
-                installed=False,
-                purpose=reason,
-                skip_missing=True,
-                work_dir=self.prefix.bin,
-            )
+        for i, args in enumerate(options):
+            with test_part(self, f"test_{exName}_{i+1}", purpose=" ".join(args)):
+                exe(*args)
+
+    def test_NlpMdsEx1(self):
+        """Test NlpMdsEx1"""
+        self.run_hiop(False)
+
+    def test_NlpMdsEx1Raja(self):
+        """Test NlpMdsEx1 with +raja"""
+        if "+raja" not in self.spec:
+            raise SkipTest("Package must be installed with +raja")
+        self.run_hiop(True)

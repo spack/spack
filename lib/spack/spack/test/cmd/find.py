@@ -337,7 +337,7 @@ def test_find_command_basic_usage(database):
 @pytest.mark.not_on_windows("envirnment is not yet supported on windows")
 @pytest.mark.regression("9875")
 def test_find_prefix_in_env(
-    mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive, config
+    mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive
 ):
     """Test `find` formats requiring concrete specs work in environments."""
     env("create", "test")
@@ -349,7 +349,7 @@ def test_find_prefix_in_env(
         # Would throw error on regression
 
 
-def test_find_specs_include_concrete_env(mutable_mock_env_path, config, mutable_mock_repo, tmpdir):
+def test_find_specs_include_concrete_env(mutable_mock_env_path, mutable_mock_repo, tmpdir):
     path = tmpdir.join("spack.yaml")
 
     with tmpdir.as_cwd():
@@ -393,9 +393,7 @@ spack:
     assert "libelf" in output
 
 
-def test_find_specs_nested_include_concrete_env(
-    mutable_mock_env_path, config, mutable_mock_repo, tmpdir
-):
+def test_find_specs_nested_include_concrete_env(mutable_mock_env_path, mutable_mock_repo, tmpdir):
     path = tmpdir.join("spack.yaml")
 
     with tmpdir.as_cwd():
@@ -434,7 +432,7 @@ def test_find_loaded(database, working_env):
     output = find("--loaded", "--group")
     assert output == ""
 
-    os.environ[uenv.spack_loaded_hashes_var] = ":".join(
+    os.environ[uenv.spack_loaded_hashes_var] = os.pathsep.join(
         [x.dag_hash() for x in spack.store.STORE.db.query()]
     )
     output = find("--loaded")

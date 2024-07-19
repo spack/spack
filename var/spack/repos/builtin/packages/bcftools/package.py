@@ -37,6 +37,9 @@ class Bcftools(AutotoolsPackage):
     version("1.3.1", sha256="12c37a4054cbf1980223e2b3a80a7fdb3fd850324a4ba6832e38fdba91f1b924")
     version("1.2", sha256="53c628339020dd45334a007c9cefdaf1cba3f1032492ec813b116379fa684fd6")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "libgsl",
         default=False,

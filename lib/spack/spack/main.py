@@ -444,8 +444,9 @@ def make_argument_parser(**kwargs):
         "--config-scope",
         dest="config_scopes",
         action="append",
-        metavar="DIR",
-        help="add a custom configuration scope",
+        metavar="DIR|ENV",
+        help="add directory or environment as read-only configuration scope, without activating "
+        "the environment.",
     )
     parser.add_argument(
         "-d",

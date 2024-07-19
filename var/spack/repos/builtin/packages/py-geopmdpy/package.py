@@ -21,6 +21,10 @@ class PyGeopmdpy(PythonPackage):
     version("develop", branch="dev")
     version("3.0.1", sha256="32ba1948de58815ee055470dcdea64593d1113a6cad70ce00ab0286c127f8234")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("py-dasbus@1.6.0:", type=("build", "run"))
     depends_on("py-cffi@1.14.5:", type="run")
     depends_on("py-psutil@5.8.0:", type="run")

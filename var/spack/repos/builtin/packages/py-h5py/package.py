@@ -40,6 +40,8 @@ class PyH5py(PythonPackage):
     version("2.5.0", sha256="9833df8a679e108b561670b245bcf9f3a827b10ccb3a5fa1341523852cfac2f6")
     version("2.4.0", sha256="faaeadf4b8ca14c054b7568842e0d12690de7d5d68af4ecce5d7b8fc104d8e60")
 
+    depends_on("c", type="build")  # generated
+
     variant("mpi", default=True, description="Build with MPI support")
 
     # Python versions
@@ -58,12 +60,13 @@ class PyH5py(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     # Build and runtime dependencies
-    depends_on("py-numpy@1.17.3:", type=("build", "run"), when="@3.11:")
-    depends_on("py-numpy@1.17.3:1", type=("build", "run"), when="@3.9:3.10")
-    depends_on("py-numpy@1.19.3:1", type=("build", "run"), when="@3:3.5 ^python@3.9.0:")
-    depends_on("py-numpy@1.17.5:1", type=("build", "run"), when="@3:3.5 ^python@3.8.0:3.8")
-    depends_on("py-numpy@1.14.5:1", type=("build", "run"), when="@3:")
-    depends_on("py-numpy@1.7:1", type=("build", "run"), when="@:2")
+    depends_on("py-numpy@1.17.3:", type=("build", "run"), when="@3.9:")
+    depends_on("py-numpy@1.19.3:", type=("build", "run"), when="@3:3.5 ^python@3.9.0:")
+    depends_on("py-numpy@1.17.5:", type=("build", "run"), when="@3:3.5 ^python@3.8.0:3.8")
+    depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@3:")
+    depends_on("py-numpy@1.7:", type=("build", "run"), when="@:2")
+    # https://github.com/h5py/h5py/issues/2353
+    depends_on("py-numpy@:1", when="@:3.10", type=("build", "run"))
 
     # Link dependencies (py-h5py v2 cannot build against HDF5 1.12 regardless
     # of API setting)
