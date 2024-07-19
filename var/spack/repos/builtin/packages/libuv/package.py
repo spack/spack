@@ -54,6 +54,9 @@ class Libuv(CMakePackage, AutotoolsPackage):
         depends_on("libtool", type="build", when="@:1.43.0")
         depends_on("m4", type="build", when="@:1.43.0")
 
+    with when("build_system=cmake"):
+        depends_on("cmake+ownlibs")
+
     # CMake is Windows only for now due to the constraints
     # placed by the libuv-dist source distribution.
     # The '-dist' source distribution does not have CMake files.
