@@ -710,13 +710,13 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     def post_configure_fixes(self):
         spec = self.spec
 
-        # disable the post-build remangling of rpaths using patchelf
-        filter_file(
-            "patch_so(srcs_dir)",
-            "pass",
-            "tensorflow/tools/pip_package/build_pip_package.py",
-            string=True,
-        )
+        if spec.satisfies("@2.17:"):
+            filter_file(
+                "patchelf",
+                spec['patchelf'].prefix.bin.patchelf,
+                "tensorflow/tools/pip_package/build_pip_package.py",
+                string=True,
+            )
 
         # make sure xla is actually turned off
         if spec.satisfies("~xla"):
