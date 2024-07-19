@@ -718,9 +718,9 @@ class EnvironmentModifications:
                 (default: ``&> /dev/null``)
             concatenate_on_success (str): operator used to execute a command
                 only when the previous command succeeds (default: ``&&``)
-            exclude ([str or re]): ignore any modifications of these
+            exclude ([str or re.Pattern[str]]): ignore any modifications of these
                 variables (default: [])
-            include ([str or re]): always respect modifications of these
+            include ([str or re.Pattern[str]]): always respect modifications of these
                 variables (default: []). Supersedes any excluded variables.
             clean (bool): in addition to removing empty entries,
                 also remove duplicate entries (default: False).
