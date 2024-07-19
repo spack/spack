@@ -53,7 +53,7 @@ class Rocfft(CMakePackage):
         values=auto_or_any_combination_of(*amdgpu_targets),
         sticky=True,
     )
-    variant("asan", default=False, description="Build with address-sanitizer en                                                                             abled or disabled")
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     depends_on("cmake@3.16:", type="build")
     depends_on("python@3.6:", type="build")
