@@ -360,6 +360,23 @@ def _unpack_script(script_section, op=_noop):
     return script
 
 
+def dedupe_needs(job_object):
+    """Removes duplicate entries in a job objects'
+    'needs' section - this is to limit redundant entries
+    in the needs section, which has a limit of 50
+    """
+    # Roundtrip the list of needs through a dict constructor to dedupe
+    # use ordered dict to preserve list ordering
+    deduped_needs = []
+    needed_jobs = set()
+    for need in job_object["needs"]:
+        job = need["job"]
+        if job not in needed_jobs:
+            needed_jobs.add(need["job"])
+            deduped_needs.append(need)
+    job_object["needs"] = deduped_needs
+
+
 class RebuildDecision:
     def __init__(self):
         self.rebuild = True
@@ -960,7 +977,10 @@ def generate_gitlab_ci_yaml(
             job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
             job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
 
-            job_object["needs"] = []
+            # don't clear user defined needs here
+            # TODO (johnwparent): ensure this doesn't unduly impact scheduling
+            job_object.setdefault("needs", [])
+
             if spec_label in dependencies:
                 if enable_artifacts_buildcache:
                     # Get dependencies transitively, so they're all
@@ -1034,6 +1054,8 @@ def generate_gitlab_ci_yaml(
                 job_object["needs"].append(
                     {"job": generate_job_name, "pipeline": f"{parent_pipeline_id}"}
                 )
+
+            dedupe_needs(job_object)
 
             # Let downstream jobs know whether the spec needed rebuilding, regardless
             # whether DAG pruning was enabled or not.

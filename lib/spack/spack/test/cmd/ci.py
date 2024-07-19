@@ -42,7 +42,7 @@ install_cmd = spack.main.SpackCommand("install")
 uninstall_cmd = spack.main.SpackCommand("uninstall")
 buildcache_cmd = spack.main.SpackCommand("buildcache")
 
-pytestmark = [pytest.mark.not_on_windows("does not run on windows"), pytest.mark.maybeslow]
+# pytestmark = [pytest.mark.not_on_windows("does not run on windows"), pytest.mark.maybeslow]
 
 
 @pytest.fixture()
@@ -597,6 +597,57 @@ spack:
 
         # Check that the "externaltool" package was not erroneously staged
         assert not any("externaltool" in key for key in yaml_contents)
+
+
+def test_ci_generate_with_job_needs(
+    tmpdir,
+    working_env,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_packages,
+    monkeypatch,
+    ci_base_environment,
+):
+    """Test pipeline generation for a ci config with 'needs'"""
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(
+            """\
+spack:
+  specs:
+    - flatten-deps
+  mirrors:
+    some-mirror: https://my.fake.mirror
+  ci:
+    enable-artifacts-buildcache: True
+    pipeline-gen:
+    - build-job:
+        tags: [test]
+        needs:
+          - pipeline: generate-pipelines
+            job: create-artifact
+"""
+        )
+
+    with tmpdir.as_cwd():
+        env_cmd("create", "test", "./spack.yaml")
+        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+
+        with ev.read("test"):
+            ci_cmd("generate", "--output-file", outputfile)
+
+        with open(outputfile) as f:
+            contents = f.read()
+            yaml_contents = syaml.load(contents)
+            found = []
+            for ci_key in yaml_contents.keys():
+                ci_obj = yaml_contents[ci_key]
+                if "dependency-install" in ci_key or "flatten-deps" in ci_key:
+                    assert "needs" in ci_obj
+                    needs = ci_obj["needs"]
+                    assert {"pipeline": "generate-pipelines", "job": "create-artifact"} in needs
+                    found.append(ci_key)
+            assert len(found) == 2
 
 
 def test_ci_rebuild_missing_config(tmpdir, working_env, mutable_mock_env_path):
