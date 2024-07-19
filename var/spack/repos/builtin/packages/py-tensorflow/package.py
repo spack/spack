@@ -713,7 +713,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         if spec.satisfies("@2.17:"):
             filter_file(
                 "patchelf",
-                spec['patchelf'].prefix.bin.patchelf,
+                spec["patchelf"].prefix.bin.patchelf,
                 "tensorflow/tools/pip_package/build_pip_package.py",
                 string=True,
             )
