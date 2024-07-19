@@ -1451,6 +1451,11 @@ imposed_constraint(Hash, "depends_on", PackageName, SpliceName, Type) :-
   hash_attr(Hash, "depends_on", PackageName, DepName, Type),
   hash_attr(Hash, "hash", DepName, DepHash),
   attr("splice_hash", node(SID, SpliceName), DepName, DepHash, _).
+
+imposed_constraint(Hash, "virtual_on_edge", PackageName, SpliceName, VirtName) :-
+  attr("hash", node(ID, PackageName), Hash),
+  hash_attr(Hash, "virtual_on_edge", PackageName, DepName, VirtName),
+  attr("splice_hash", node(SID, SpliceName), DepName, _, _).
   
 impose(Hash, PackageNode) :- attr("hash", PackageNode, Hash), attr("node", PackageNode).
 build(PackageNode) :- attr("node", PackageNode), not attr("hash", PackageNode, _).
