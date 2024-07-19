@@ -1388,7 +1388,13 @@ imposed_constraint(Hash, Attr, PackageName) :-
   attr("hash", node(ID, PackageName), Hash),
   hash_attr(Hash, Attr, PackageName).
 
-% Hash is a weird attribute, it's where splices can occur
+% "virtual_node" is a weird attribute, since it does not reference the name of
+% of the package its referring to, but the name of the virtual it provides
+imposed_constraint(Hash, "virtual_node", VirtName) :-
+  attr("hash", node(ID, PackageName), Hash),
+  hash_attr(Hash, "virtual_node", VirtName).
+
+% "hash" is a weird attribute, it's where splices can occur
 imposed_constraint(Hash, Attr, PackageName, Arg1) :- 
   attr("hash", node(ID, PackageName), Hash),
   hash_attr(Hash, Attr, PackageName, Arg1),
@@ -1446,7 +1452,7 @@ imposed_constraint(Hash, "depends_on", PackageName, SpliceName, Type) :-
   hash_attr(Hash, "hash", DepName, DepHash),
   attr("splice_hash", node(SID, SpliceName), DepName, DepHash, _).
   
-impose(Hash, PackageNode) :- attr("hash", PackageNode, Hash).
+impose(Hash, PackageNode) :- attr("hash", PackageNode, Hash), attr("node", PackageNode).
 build(PackageNode) :- attr("node", PackageNode), not attr("hash", PackageNode, _).
 
 
