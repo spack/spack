@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import tempfile
-
 from spack.package import *
 
 
@@ -55,5 +53,4 @@ class PyTensorflowMetadata(PythonPackage):
         )
 
     def setup_build_environment(self, env):
-        tmp_path = tempfile.mkdtemp(prefix="spack")
-        env.set("TEST_TMPDIR", tmp_path)
+        env.set("TEST_TMPDIR", self.stage.source_path)

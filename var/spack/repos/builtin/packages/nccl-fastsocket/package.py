@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import tempfile
-
 from spack.package import *
 
 
@@ -25,20 +23,17 @@ class NcclFastsocket(Package):
 
     def setup_build_environment(self, env):
         spec = self.spec
-        tmp_path = tempfile.mkdtemp(prefix="spack")
-        env.set("TEST_TMPDIR", tmp_path)
         env.set("NCCL_INSTALL_PATH", spec["nccl"].prefix)
         env.set("NCCL_HDR_PATH", spec["nccl"].prefix.include)
 
     def install(self, spec, prefix):
-        tmp_path = env["TEST_TMPDIR"]
         # Copied of py-tensorflow
         args = [
             # Don't allow user or system .bazelrc to override build settings
             "--nohome_rc",
             "--nosystem_rc",
-            # Bazel does not work properly on NFS, switch to /tmp
-            "--output_user_root=" + tmp_path,
+            # Bazel needs to be told to use the stage path
+            "--output_user_root=" + self.stage.source_path,
             "build",
             "libnccl-net.so",
             # Spack logs don't handle colored output well

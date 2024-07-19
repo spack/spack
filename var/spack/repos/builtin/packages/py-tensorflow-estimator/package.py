@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import tempfile
-
 from spack.package import *
 
 
@@ -66,16 +64,12 @@ class PyTensorflowEstimator(Package):
             depends_on(f"py-keras@{ver}", when=f"@{ver}")
 
     def install(self, spec, prefix):
-        self.tmp_path = tempfile.mkdtemp(prefix="spack")
-        env["TEST_TMPDIR"] = self.tmp_path
-        env["HOME"] = self.tmp_path
-
         args = [
             # Don't allow user or system .bazelrc to override build settings
             "--nohome_rc",
             "--nosystem_rc",
-            # Bazel does not work properly on NFS, switch to /tmp
-            "--output_user_root=" + self.tmp_path,
+            # Bazel needs to be told to use the stage path
+            "--output_user_root=" + self.stage.source_path,
             "build",
             # Spack logs don't handle colored output well
             "--color=no",
@@ -99,4 +93,3 @@ class PyTensorflowEstimator(Package):
         with working_dir(buildpath):
             args = std_pip_args + ["--prefix=" + prefix, "."]
             pip(*args)
-        remove_linked_tree(self.tmp_path)
