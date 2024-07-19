@@ -12,6 +12,7 @@ import sys
 import llnl.util.tty as tty
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Openmpi(AutotoolsPackage, CudaPackage):
@@ -911,7 +912,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     def with_or_without_psm2(self, activated):
         if not activated:
             return "--without-psm2"
-        return "--with-psm2={0}".format(self.spec["opa-psm2"].prefix)
+        return "--with-psm2={0}".format(self.yes_or_prefix("opa-psm2"))
 
     def with_or_without_verbs(self, activated):
         # Up through version 1.6, this option was named --with-openib.
@@ -919,17 +920,17 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         opt = "verbs" if self.spec.satisfies("@1.7:") else "openib"
         if not activated:
             return "--without-{0}".format(opt)
-        return "--with-{0}={1}".format(opt, self.spec["rdma-core"].prefix)
+        return "--with-{0}={1}".format(opt, self.yes_or_prefix("rdma-core"))
 
     def with_or_without_mxm(self, activated):
         if not activated:
             return "--without-mxm"
-        return "--with-mxm={0}".format(self.spec["mxm"].prefix)
+        return "--with-mxm={0}".format(self.yes_or_prefix("mxm"))
 
     def with_or_without_ucx(self, activated):
         if not activated:
             return "--without-ucx"
-        return "--with-ucx={0}".format(self.spec["ucx"].prefix)
+        return "--with-ucx={0}".format(self.yes_or_prefix("ucx"))
 
     def with_or_without_ofi(self, activated):
         # Up through version 3.0.3 this option was name --with-libfabric.
@@ -937,17 +938,17 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         opt = "ofi" if self.spec.satisfies("@3.0.4:") else "libfabric"
         if not activated:
             return "--without-{0}".format(opt)
-        return "--with-{0}={1}".format(opt, self.spec["libfabric"].prefix)
+        return "--with-{0}={1}".format(opt, self.yes_or_prefix("libfabric"))
 
     def with_or_without_fca(self, activated):
         if not activated:
             return "--without-fca"
-        return "--with-fca={0}".format(self.spec["fca"].prefix)
+        return "--with-fca={0}".format(self.yes_or_prefix("fca"))
 
     def with_or_without_hcoll(self, activated):
         if not activated:
             return "--without-hcoll"
-        return "--with-hcoll={0}".format(self.spec["hcoll"].prefix)
+        return "--with-hcoll={0}".format(self.yes_or_prefix("hcoll"))
 
     def with_or_without_ucc(self, activated):
         if not activated:
@@ -957,22 +958,22 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     def with_or_without_xpmem(self, activated):
         if not activated:
             return "--without-xpmem"
-        return "--with-xpmem={0}".format(self.spec["xpmem"].prefix)
+        return "--with-xpmem={0}".format(self.yes_or_prefix("xpmem"))
 
     def with_or_without_knem(self, activated):
         if not activated:
             return "--without-knem"
-        return "--with-knem={0}".format(self.spec["knem"].prefix)
+        return "--with-knem={0}".format(self.yes_or_prefix("knem"))
 
     def with_or_without_lsf(self, activated):
         if not activated:
             return "--without-lsf"
-        return "--with-lsf={0}".format(self.spec["lsf"].prefix)
+        return "--with-lsf={0}".format(self.yes_or_prefix("lsf"))
 
     def with_or_without_tm(self, activated):
         if not activated:
             return "--without-tm"
-        return "--with-tm={0}".format(self.spec["pbs"].prefix)
+        return "--with-tm={0}".format(self.yes_or_prefix("pbs"))
 
     @run_before("autoreconf")
     def die_without_fortran(self):
@@ -1008,10 +1009,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         config_args.extend(self.enable_or_disable("builtin-atomics", variant="atomics"))
 
-        if spec.satisfies("+pmi"):
-            config_args.append("--with-pmi={0}".format(spec["slurm"].prefix))
-        else:
-            config_args.extend(self.with_or_without("pmi"))
+        config_args.extend(
+            self.with_or_without("pmi", activation_value=lambda x: self.yes_or_prefix("slurm"))
+        )
 
         config_args.extend(self.enable_or_disable("static"))
 
@@ -1058,22 +1058,22 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         # Package dependencies
         for dep in ["libevent", "lustre", "singularity", "valgrind"]:
             if "^" + dep in spec:
-                config_args.append("--with-{0}={1}".format(dep, spec[dep].prefix))
+                config_args.append("--with-{0}={1}".format(dep, self.yes_or_prefix(dep)))
 
         # PMIx support
         if spec.satisfies("+internal-pmix"):
             config_args.append("--with-pmix=internal")
         elif "^pmix" in spec:
-            config_args.append("--with-pmix={0}".format(spec["pmix"].prefix))
+            config_args.append("--with-pmix={0}".format(self.yes_or_prefix("pmix")))
 
         if "^zlib-api" in spec:
-            config_args.append("--with-zlib={0}".format(spec["zlib-api"].prefix))
+            config_args.append("--with-zlib={0}".format(self.yes_or_prefix("zlib-api")))
 
         # Hwloc support
         if spec.satisfies("+internal-hwloc"):
             config_args.append("--with-hwloc=internal")
         elif "^hwloc" in spec:
-            config_args.append("--with-hwloc=" + spec["hwloc"].prefix)
+            config_args.append("--with-hwloc={0}".format(self.yes_or_prefix("hwloc")))
 
         # Java support
         if "+java" in spec:
@@ -1115,17 +1115,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             # OpenMPI dynamically loads libcuda.so, requires dlopen
             config_args.append("--enable-dlopen")
             # Searches for header files in DIR/include
-            config_args.append("--with-cuda={0}".format(spec["cuda"].prefix))
-            if spec.satisfies("@1.7:1.7.2"):
-                # This option was removed from later versions
-                config_args.append(
-                    "--with-cuda-libdir={0}".format(spec["cuda"].libs.directories[0])
-                )
-            if spec.satisfies("@5.0:"):
-                # And then it returned
-                config_args.append(
-                    "--with-cuda-libdir={0}".format(spec["cuda"].libs.directories[0] + "/stubs")
-                )
+            config_args.append("--with-cuda={0}".format(self.yes_or_prefix("cuda")))
+            if spec.satisfies("@1.7:1.7.2,5.0:"):
+                cuda_lib_dir = spec["cuda"].libs.directories[0]
+                if spec.satisfies("@5.0:"):
+                    cuda_lib_dir = join_path(cuda_lib_dir, "stubs")
+                if not is_system_path(cuda_lib_dir):
+                    config_args.append("--with-cuda-libdir={0}".format(cuda_lib_dir))
             if spec.satisfies("@1.7.2"):
                 # There was a bug in 1.7.2 when --enable-static is used
                 config_args.append("--enable-mca-no-build=pml-bfo")
@@ -1290,6 +1286,10 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         install test subdirectory for use during `spack test run`.
         """
         self.cache_extra_test_sources(self.extra_install_tests)
+
+    def yes_or_prefix(self, spec_name):
+        prefix = self.spec[spec_name].prefix
+        return "yes" if is_system_path(prefix) else prefix
 
     def run_installed_binary(self, bin, options, expected):
         """run and check outputs for the installed binary"""
