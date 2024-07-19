@@ -424,27 +424,27 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         out = example_exe([], output=str.split, error=str.split)
         check_outputs(expected, out)
 
-    def test_sequential(self):
-        """Test raja sequential"""
+    def test_line_of_sight(self):
+        """Test line of sight example"""
         self.run_raja(
-            "ex6_stencil-offset-layout_solution", [r"RAJA Views \(permuted\)", r"result -- PASS"]
+            "ex5_line-of-sight_solution", [r"RAJA sequential", r"RAJA OpenMP", r"result -- PASS"]
         )
 
     def test_views(self):
-        """Test raja views"""
+        """Test stencil offset layout"""
         self.run_raja(
             "ex6_stencil-offset-layout_solution", [r"RAJA Views \(permuted\)", r"result -- PASS"]
         )
 
-    def test_matrix(self):
-        """Test raja matrix"""
+    def test_tiled_matrix(self):
+        """Test tiled matrix transpose"""
         self.run_raja(
             "ex8_tiled-matrix-transpose_solution",
             [r"parallel top inner loop", r"collapsed inner loops", r"result -- PASS"],
         )
 
-    def test_dynamic(self):
-        """Test dynamic kernel"""
+    def test_dynamic_tile(self):
+        """Test dynamic tile"""
         self.run_raja("kernel-dynamic-tile", [r"Running index", r"(24,24)"])
 
     def test_plugin_example(self):
@@ -452,7 +452,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         self.run_raja("plugin-example", [r"Launching host kernel for the 10 time"])
 
     def test_tut_matrix(self):
-        """Test tut matrix"""
+        """Test batched matrix multiple"""
         self.run_raja("tut_batched-matrix-multiply", [r"result -- PASS"])
 
     def test_wave_equation(self):
