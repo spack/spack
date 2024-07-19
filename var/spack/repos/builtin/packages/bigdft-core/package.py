@@ -41,6 +41,7 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
     depends_on("lapack")
     depends_on("py-pyyaml")
     depends_on("libgain")
+    depends_on("libgain+shared", when="+shared")
     depends_on("mpi", when="+mpi")
     depends_on("scalapack", when="+scalapack")
     depends_on("openbabel", when="+openbabel")
@@ -63,9 +64,16 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
         python_version = spec["python"].version.up_to(2)
         pyyaml = join_path(spec["py-pyyaml"].prefix.lib, f"python{python_version}")
 
-        openmp_flag = []
+        fcflags = []
+        cflags = []
+        cxxflags = []
         if "+openmp" in spec:
-            openmp_flag.append(self.compiler.openmp_flag)
+            fcflags.append(self.compiler.openmp_flag)
+
+        if spec.satisfies("+shared"):
+            fcflags.append("-fPIC")
+            cflags.append("-fPIC")
+            cxxflags.append("-fPIC")
 
         linalg = []
         if "+scalapack" in spec:
@@ -74,7 +82,9 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
         linalg.append(spec["blas"].libs.ld_flags)
 
         args = [
-            f"FCFLAGS={' '.join(openmp_flag)}",
+            f"FCFLAGS={' '.join(fcflags)}",
+            f"CFLAGS={' '.join(cflags)}",
+            f"CXXFLAGS={' '.join(cxxflags)}",
             f"--with-ext-linalg={' '.join(linalg)}",
             f"--with-pyyaml-path={pyyaml}",
             f"--with-futile-libs={spec['bigdft-futile'].libs.ld_flags}",

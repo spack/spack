@@ -21,6 +21,26 @@ class Libgain(AutotoolsPackage):
         sha256="3e02637433272f5edfee74ea47abf93ab7e3f1ce717664d22329468a5bd45c3a",
         url="https://gitlab.com/l_sim/bigdft-suite/-/raw/1.9.1/GaIn-1.0.tar.gz",
     )
+    variant(
+        "shared", default=True, description="Build shared libraries"
+    )  # Not default in bigdft, but is typically the default expectation
+
+    def configure_args(self):
+        fcflags = []
+        cflags = []
+        cxxflags = []
+
+        if self.spec.satisfies("+shared"):
+            fcflags.append("-fPIC")
+            cflags.append("-fPIC")
+            cxxflags.append("-fPIC")
+
+        args = [
+            f"FCFLAGS={' '.join(fcflags)}",
+            f"CFLAGS={' '.join(cflags)}",
+            f"CXXFLAGS={' '.join(cxxflags)}",
+        ]
+        return args
 
     depends_on("fortran", type="build")  # generated
 
