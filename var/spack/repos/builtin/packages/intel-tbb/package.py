@@ -117,6 +117,9 @@ class IntelTbb(CMakePackage, MakefilePackage):
     )
 
     variant("tm", default=True, description="Enable use of transactional memory on x86")
+    variant(
+        "test", default=True, description="Enable building and running unit tests before install"
+    )
 
     # Testing version ranges inside when clauses was fixed in e9ee9eaf.
     # See: #8957 and #13989.
@@ -319,6 +322,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
             cmake_args = (
                 "-DTBB_ROOT={0}".format(prefix),
                 "-DTBB_OS={0}".format(platform.system()),
+                self.define_from_variant("TBB_TEST", "test"),
                 "-P",
                 "tbb_config_generator.cmake",
             )
