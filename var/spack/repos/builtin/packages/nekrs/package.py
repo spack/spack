@@ -34,6 +34,10 @@ class Nekrs(Package, CudaPackage, ROCmPackage):
 
     version("21.0", tag="v21.0", commit="bcd890bf3f9fb4d91224c83aeda75c33570f1eaa")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("opencl", default=False, description="Activates support for OpenCL")
 
     # Conflicts:
