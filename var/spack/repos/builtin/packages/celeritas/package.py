@@ -77,7 +77,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("cxx", type="build")
 
     _cxxstd_values = ("14", "17")
 
