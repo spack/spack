@@ -23,16 +23,15 @@ class Povray(AutotoolsPackage):
     realistic reflections, shading, perspective and other effects.
     """
 
-    # Add a proper url for your package's homepage here.
     homepage = "http://povray.org/download/"
     url = "https://github.com/POV-Ray/povray/archive/v3.7.0.8.tar.gz"
     git = "https://github.com/POV-Ray/povray.git"
 
-    # maintainers('payerle' )
-
     license("AGPL-3.0-or-later")
 
-    version("3.7.0.8", sha256="53d11ebd2972fc452af168a00eb83aefb61387662c10784e81b63e44aa575de4")
+    version("3.7.0.10", sha256="7bee83d9296b98b7956eb94210cf30aa5c1bbeada8ef6b93bb52228bbc83abff")
+    # The following version no longer builds
+    version("3.7.0.8", sha256="53d11ebd2972fc452af168a00eb83aefb61387662c10784e81b63e44aa575de4", deprecated=True)
 
     variant("boost", default=True, description="Build with boost support")
     variant("debug", default=False, description="Enable compiler debugging mode")
