@@ -24,6 +24,8 @@ class Highway(CMakePackage):
     version("1.0.1", sha256="7ca6af7dc2e3e054de9e17b9dfd88609a7fd202812b1c216f43cc41647c97311")
     version("1.0.0", sha256="ab4f5f864932268356f9f6aa86f612fa4430a7db3c8de0391076750197e876b8")
 
+    variant("examples", default=False, description="Build examples")
+
     depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.10:", type="build")
@@ -31,8 +33,10 @@ class Highway(CMakePackage):
 
     def cmake_args(self):
         define = self.define
+        from_variant = self.define_from_variant
 
         args = [
+            from_variant("HWY_ENABLE_EXAMPLES", "examples"),
             define("HWY_ENABLE_TESTS", self.run_tests),
             define("BUILD_TESTING", self.run_tests),
             define("HWY_SYSTEM_GTEST", self.run_tests),
