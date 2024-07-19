@@ -1,2 +1,2 @@
 repos:
-  - $spack/var/spack/repos/mpi_abi.test
+  - $spack/var/spack/repos/abi_splice.test
