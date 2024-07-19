@@ -9,6 +9,7 @@ import pathlib
 import platform
 import re
 import sys
+from shutil import copyfile
 from typing import List, Optional, Tuple
 
 import llnl.util.filesystem as fs
@@ -193,7 +194,7 @@ class CMakePackage(spack.package_base.PackageBase):
         if sys.platform == "win32":
             generator("ninja")
         else:
-            generator("ninja", "make", default="make")
+            generator("ninja", "make", default="ninja")
 
         depends_on("cmake", type="build")
         depends_on("gmake", type="build", when="generator=make")
@@ -557,6 +558,7 @@ class CMakeBuilder(BaseBuilder):
                 inspect.getmodule(self.pkg).make(*self.install_targets)
             elif self.generator == "Ninja":
                 inspect.getmodule(self.pkg).ninja(*self.install_targets)
+                copyfile(".ninja_log", os.path.join(self.metadata_dir, ".ninja_log"))
 
     spack.builder.run_after("build")(execute_build_time_tests)
 
