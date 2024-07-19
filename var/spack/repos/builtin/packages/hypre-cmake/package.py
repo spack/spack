@@ -52,11 +52,13 @@ class HypreCmake(CMakePackage, CudaPackage):
 
     def url_for_version(self, version):
         if version >= Version("2.12.0"):
-            url = "https://github.com/hypre-space/hypre/archive/v{0}.tar.gz"
+            url = f"https://github.com/hypre-space/hypre/archive/v{version}.tar.gz"
         else:
-            url = "http://computing.llnl.gov/project/linear_solvers/download/hypre-{0}.tar.gz"
+            url = (
+                f"http://computing.llnl.gov/project/linear_solvers/download/hypre-{version}.tar.gz"
+            )
 
-        return url.format(version)
+        return url
 
     root_cmakelists_dir = "src"
 
@@ -105,15 +107,15 @@ class HypreCmake(CMakePackage, CudaPackage):
             raise SkipTest("Package must be installed with +mpi to run tests")
 
         # Build copied and cached test examples
-        with test_part(self, "test_hypre_cmake_build", purpose="Building selected examples"):
-            with working_dir(self._cached_tests_work_dir):
-                make = which("make")
-                make("HYPRE_DIR={0}".format(self.prefix), "bigint")
-
         with working_dir(self._cached_tests_work_dir):
+            make = which("make")
+            make(f"HYPRE_DIR={self.prefix}", "bigint")
+
             # Run the examples built above
             for exe in ["./ex5big", "./ex15big"]:
                 with test_part(self, "test_hypre_cmake_build", purpose=f"Ensuring {exe} runs"):
+                    if not os.path.exists(exe):
+                        raise SkipTest(f"{exe} does not exist in version {self.version}")
                     program = which(exe)
                     program()
 
