@@ -1249,7 +1249,7 @@ spack:
             dl_dir = working_dir.join("download_dir")
             if not os.path.exists(dl_dir.strpath):
                 os.makedirs(dl_dir.strpath)
-            buildcache_cmd("download", "--spec-file", json_path, "--path", dl_dir.strpath)
+            buildcache_cmd("download", "--spec", json_path, "--path", dl_dir.strpath)
             dl_dir_list = os.listdir(dl_dir.strpath)
 
             assert len(dl_dir_list) == 2
