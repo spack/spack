@@ -1438,16 +1438,14 @@ class SpackSolverSetup:
             # caller, we won't emit partial facts.
 
             condition_id = next(self._id_counter)
-            self.gen.fact(fn.pkg_fact(required_spec.name, fn.condition(condition_id)))
-            self.gen.fact(fn.condition_reason(condition_id, msg))
-
             trigger_id = self._get_condition_id(
                 required_spec, cache=self._trigger_cache, body=True, transform=transform_required
             )
+            self.gen.fact(fn.pkg_fact(required_spec.name, fn.condition(condition_id)))
+            self.gen.fact(fn.condition_reason(condition_id, msg))
             self.gen.fact(
                 fn.pkg_fact(required_spec.name, fn.condition_trigger(condition_id, trigger_id))
             )
-
             if not imposed_spec:
                 return condition_id
 
@@ -1720,14 +1718,18 @@ class SpackSolverSetup:
 
             # Declare external conditions with a local index into packages.yaml
             for local_idx, spec in enumerate(external_specs):
-                msg = "%s available as external when satisfying %s" % (spec.name, spec)
+                msg = f"{spec.name} available as external when satisfying {spec}"
 
                 def external_imposition(input_spec, requirements):
                     return requirements + [
                         fn.attr("external_conditions_hold", input_spec.name, local_idx)
                     ]
 
-                self.condition(spec, spec, msg=msg, transform_imposed=external_imposition)
+                try:
+                    self.condition(spec, spec, msg=msg, transform_imposed=external_imposition)
+                except (spack.error.SpecError, RuntimeError) as e:
+                    warnings.warn(f"while setting up external spec {spec}: {e}")
+                    continue
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 

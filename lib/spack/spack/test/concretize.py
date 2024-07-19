@@ -2609,6 +2609,25 @@ class TestConcretize:
         assert len(result.specs) == 1
         assert result.specs[0] == snd
 
+    @pytest.mark.regression("45321")
+    @pytest.mark.parametrize(
+        "corrupted_str",
+        [
+            "cmake@3.4.3 foo=bar",  # cmake has no variant "foo"
+            "mvdefaults@1.0 foo=a,d",  # variant "foo" has no value "d"
+        ],
+    )
+    def test_corrupted_external_does_not_halt_concretization(self, corrupted_str, mutable_config):
+        """Tests that having a wrong variant in an external spec doesn't stop concretization"""
+        corrupted_spec = Spec(corrupted_str)
+        packages_yaml = {
+            f"{corrupted_spec.name}": {"externals": [{"spec": corrupted_str, "prefix": "/usr"}]}
+        }
+        mutable_config.set("packages", packages_yaml)
+        # Assert we don't raise due to the corrupted external entry above
+        s = Spec("pkg-a").concretized()
+        assert s.concrete
+
 
 @pytest.fixture()
 def duplicates_test_repository():
