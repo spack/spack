@@ -135,5 +135,7 @@ class Migraphx(CMakePackage):
         """Test drivers"""
         if self.spec.satisfies("@:5.5.0"):
             raise SkipTest("Package must be installed as version @5.5.1 or later")
-        exe = which("migraphx-driver", "migraphx-hiprtc-driver")
-        exe()
+        test_dir = join_path(self.spec["migraphx"].prefix, "bin")
+        with working_dir(test_dir, create=True):
+            exe = which("UnitTests")
+            exe()
