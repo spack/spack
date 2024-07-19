@@ -23,6 +23,7 @@ class MlcLlm(CMakePackage, CudaPackage):
 
     depends_on("cmake@3.24:", type="build")
     depends_on("rust", type="build")
+    depends_on("cxx", type="build")
     depends_on("python@3.11", type="build")
     depends_on("apache-tvm")
 
