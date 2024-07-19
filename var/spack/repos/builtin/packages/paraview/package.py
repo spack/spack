@@ -87,6 +87,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
     variant("visitbridge", default=False, description="Enable VisItBridge support")
     variant("raytracing", default=False, description="Enable Raytracing support")
+    variant("ffmpeg", default=False, description="Build with FFMPEG support")
     variant(
         "openpmd",
         default=False,
@@ -232,6 +233,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("ospray@2.1:2", when="+raytracing")
     depends_on("openimagedenoise", when="+raytracing")
     depends_on("ospray +mpi", when="+raytracing +mpi")
+
+    depends_on("ffmpeg", when="+ffmpeg")
 
     depends_on("bzip2")
     depends_on("double-conversion")
@@ -681,6 +684,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+advanced_debug" in spec:
             cmake_args.append("-DVTK_DEBUG_LEAKS:BOOL=ON")
+
+        if "+ffmpeg" in spec:
+            cmake_args.append("-DPARAVIEW_ENABLE_FFMPEG:BOOL=ON")
 
         if spec.satisfies("@5.11:"):
             cmake_args.append("-DPARAVIEW_USE_HIP:BOOL=%s" % variant_bool("+rocm"))
