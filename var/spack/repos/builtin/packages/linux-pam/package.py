@@ -61,6 +61,9 @@ class LinuxPam(AutotoolsPackage):
         args += self.enable_or_disable("lastlog")
         args += self.enable_or_disable("selinux")
         args += self.enable_or_disable("regenerate-docu")
-        args += self.with_or_without("xauth", activation_value=self.spec["xauth"].prefix.bin.xauth)
+
+        if self.spec.satisfies("+xauth"):
+            xauth = self.spec["xauth"]
+            args.append(f"--with-xauth={xauth.prefix.bin.xauth}")
 
         return args
