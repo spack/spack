@@ -23,16 +23,17 @@ class LinuxPam(AutotoolsPackage):
     version("1.4.0", sha256="cd6d928c51e64139be3bdb38692c68183a509b83d4f2c221024ccd4bcddfd034")
     version("1.3.1", sha256="eff47a4ecd833fbf18de9686632a70ee8d0794b79aecb217ebd0ce11db4cd0db")
 
+    variant("unix", default=True, description="Build pam_unix model")
+    variant("selinux", default=True, description="Build with selinux support")
     variant("nls", default=False, description="Build with natural language support")
     variant("xauth", default=False, description="Build with xauth support")
     variant("openssl", default=False, description="Build with openssl support")
-    variant("unix", default=True, description="Build pam_unix model")
-    variant("lastlog", default=True, description="Build pam_lastlog model")
-    variant("selinux", default=True, description="Build with selinux support")
+    variant("lastlog", default=False, description="Build pam_lastlog model")
     variant("regenerate-docu", default=False, description="Regenerate docs")
 
     depends_on("libtirpc")
     depends_on("libxcrypt")
+    depends_on("xauth", when="+xauth")
 
     with default_args(type="build"):
         depends_on("m4")
@@ -52,16 +53,14 @@ class LinuxPam(AutotoolsPackage):
         return super().flag_handler(name, flags)
 
     def configure_args(self):
-        args = [
-            f"--includedir={self.prefix.include.security}"
-        ]
+        args = [f"--includedir={self.prefix.include.security}"]
 
         args += self.enable_or_disable("nls")
-        args += self.with_or_without("xauth")
         args += self.enable_or_disable("openssl")
         args += self.enable_or_disable("unix")
         args += self.enable_or_disable("lastlog")
         args += self.enable_or_disable("selinux")
         args += self.enable_or_disable("regenerate-docu")
+        args += self.with_or_without("xauth", activation_value=self.spec["xauth"].prefix.bin.xauth)
 
         return args
