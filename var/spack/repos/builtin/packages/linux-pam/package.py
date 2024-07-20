@@ -34,9 +34,9 @@ class LinuxPam(AutotoolsPackage):
     depends_on("libtirpc")
     depends_on("libxcrypt")
     depends_on("xauth", when="+xauth")
+    depends_on("c", type="build")
 
     with default_args(type="build"):
-        depends_on("c")
         depends_on("m4")
         depends_on("autoconf")
         depends_on("automake")
