@@ -88,6 +88,12 @@ class NodeJs(Package):
         "%gcc@14:", when="@:19", msg="fails to build with gcc 14+ due to implicit conversions"
     )
 
+    conflicts(
+        "^glibc@:2.27",
+        when="@:19",
+        msg="NodeJS depends on glibc 2.28+. See: https://github.com/nodejs/node/issues/52223",
+    )
+
     # See https://github.com/nodejs/node/issues/52223
     patch("fix-old-glibc-random-headers.patch", when="^glibc@:2.24")
 
