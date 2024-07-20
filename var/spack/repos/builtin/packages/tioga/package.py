@@ -20,6 +20,7 @@ class Tioga(CMakePackage):
     # The original TIOGA repo has possibly been abandoned,
     # so work on TIOGA has continued in the Exawind project
     version("develop", git="https://github.com/Exawind/tioga.git", branch="exawind")
+    version("1.1.0", git="https://github.com/Exawind/tioga.git", tag="v1.1.0")
     version("1.0.0", git="https://github.com/Exawind/tioga.git", tag="v1.0.0")
     version("master", branch="master")
 

@@ -19,12 +19,13 @@ class Geos(CMakePackage):
     url = "https://download.osgeo.org/geos/geos-3.8.1.tar.bz2"
     git = "https://github.com/libgeos/geos.git"
 
+    license("LGPL-2.1-or-later")
     maintainers("adamjstewart")
 
-    license("LGPL-2.1-or-later")
-
+    version("3.12.2", sha256="34c7770bf0090ee88488af98767d08e779f124fa33437e0aabec8abd4609fec6")
     version("3.12.1", sha256="d6ea7e492224b51193e8244fe3ec17c4d44d0777f3c32ca4fb171140549a0d03")
     version("3.12.0", sha256="d96db96011259178a35555a0f6d6e75a739e52a495a6b2aa5efb3d75390fbc39")
+    version("3.11.4", sha256="364c88ccfc38aa50cf65c700e7b2ae4706ed103326128493dbf750c78d136d2c")
     version("3.11.3", sha256="80d60a2bbc0cde7745a3366b9eb8c0d65a142b03e063ea0a52c364758cd5ee89")
     version("3.11.2", sha256="b1f077669481c5a3e62affc49e96eb06f281987a5d36fdab225217e5b825e4cc")
     version("3.11.1", sha256="6d0eb3cfa9f92d947731cc75f1750356b3bdfc07ea020553daf6af1c768e0be2")

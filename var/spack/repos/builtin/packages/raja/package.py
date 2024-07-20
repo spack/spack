@@ -26,12 +26,24 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/RAJA.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers("davidbeckingsale")
+    maintainers("davidbeckingsale", "adrienbernede")
 
     license("BSD-3-Clause")
 
     version("develop", branch="develop", submodules=submodules)
     version("main", branch="main", submodules=submodules)
+    version(
+        "2024.02.2",
+        tag="v2024.02.2",
+        commit="593f756b14ac57ded33ee61d8d2292d4beb840e6",
+        submodules=submodules,
+    )
+    version(
+        "2024.02.1",
+        tag="v2024.02.1",
+        commit="3ada0950b0774ec907d30a9eceaf6af7478b833b",
+        submodules=submodules,
+    )
     version(
         "2024.02.0",
         tag="v2024.02.0",
@@ -181,6 +193,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
 
     depends_on("blt", type="build")
+    depends_on("blt@0.6.2:", type="build", when="@2024.02.1:")
     depends_on("blt@0.6.1:", type="build", when="@2024.02.0:")
     depends_on("blt@0.5.3", type="build", when="@2023.06.0:2023.06.1")
     depends_on("blt@0.5.2:0.5.3", type="build", when="@2022.10.5")
@@ -193,6 +206,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("camp+openmp", when="+openmp")
     depends_on("camp@main", when="@develop")
     depends_on("camp@main", when="@main")
+    depends_on("camp@2024.02.1:", type="build", when="@2024.02.1:")
     depends_on("camp@2024.02.0:", type="build", when="@2024.02.0:")
     depends_on("camp@2023.06.0", type="build", when="@2023.06.0:2023.06.1")
     depends_on("camp@2022.10.1:2023.06.0", type="build", when="@2022.10.3:2022.10.5")
