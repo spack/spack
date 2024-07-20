@@ -53,6 +53,9 @@ class PyMypy(PythonPackage):
     version("0.740", sha256="48c8bc99380575deb39f5d3400ebb6a8a1cb5cc669bbba4d3bb30f904e0a0e7d")
     version("0.670", sha256="e80fd6af34614a0e898a57f14296d0dacb584648f0339c2e000ddbf0f4cc2f8d")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # pyproject.toml
     depends_on("py-setuptools@40.6.2:", when="@0.790:", type="build")
     depends_on("py-setuptools", type="build")

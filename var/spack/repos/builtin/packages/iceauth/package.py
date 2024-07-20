@@ -20,6 +20,8 @@ class Iceauth(AutotoolsPackage, XorgPackage):
     version("1.0.9", sha256="5ca274cf210453e7d7cf5c827a2fbc92149df83824f99a27cde17e1f20324dc6")
     version("1.0.7", sha256="6c9706cce276609876e768759ed4ee3b447cd17af4a61f9b5a374c7dda9696d8")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libice")
 
     depends_on("xproto@7.0.22:")

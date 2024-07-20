@@ -16,6 +16,7 @@ class Rocksdb(MakefilePackage):
     license("Apache-2.0 OR GPL-2.0-only")
 
     version("master", git=git, branch="master", submodules=True)
+    version("9.4.0", sha256="1f829976aa24b8ba432e156f52c9e0f0bd89c46dc0cc5a9a628ea70571c1551c")
     version("9.2.1", sha256="bb20fd9a07624e0dc1849a8e65833e5421960184f9c469d508b58ed8f40a780f")
     version("8.6.7", sha256="cdb2fc3c6a556f20591f564cb8e023e56828469aa3f76e1d9535c443ba1f0c1a")
     version("8.1.1", sha256="9102704e169cfb53e7724a30750eeeb3e71307663852f01fa08d5a320e6155a8")
@@ -30,6 +31,9 @@ class Rocksdb(MakefilePackage):
     version("5.17.2", sha256="101f05858650a810c90e4872338222a1a3bf3b24de7b7d74466814e6a95c2d28")
     version("5.16.6", sha256="f0739edce1707568bdfb36a77638fd5bae287ca21763ce3e56cf0bfae8fff033")
     version("5.15.10", sha256="26d5d4259fa352ae1604b5b4d275f947cacc006f4f7d2ef0b815056601b807c0")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("bz2", default=False, description="Enable bz2 compression support")
     variant("lz4", default=True, description="Enable lz4 compression support")

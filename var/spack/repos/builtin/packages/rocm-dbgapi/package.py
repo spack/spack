@@ -16,7 +16,7 @@ class RocmDbgapi(CMakePackage):
 
     homepage = "https://github.com/ROCm/ROCdbgapi"
     git = "https://github.com/ROCm/ROCdbgapi.git"
-    url = "https://github.com/ROCm/ROCdbgapi/archive/rocm-6.1.1.tar.gz"
+    url = "https://github.com/ROCm/ROCdbgapi/archive/rocm-6.1.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
@@ -25,6 +25,7 @@ class RocmDbgapi(CMakePackage):
     license("MIT")
 
     version("master", branch="amd-master")
+    version("6.1.2", sha256="6e55839e3d95c2cfe3ff89e3e31da77aeecc74012a17f5308589e8808df78026")
     version("6.1.1", sha256="425a6cf6a3942c2854c1f5e7717bed906cf6c3753b46c44476f54bfef6188dac")
     version("6.1.0", sha256="0985405b6fd44667a7ce8914aa39a7e651613e037e649fbdbfa2adcf744a2d50")
     version("6.0.2", sha256="39036f083de421f46afd8d3a8799576242ef64002643d7185767ccbba41ae854")
@@ -40,6 +41,8 @@ class RocmDbgapi(CMakePackage):
         version("5.4.0", sha256="895eb7056864daada40c3f9cd37645b0bdf4b6dc408b5f8cc974fc4cd9ab7ccb")
         version("5.3.3", sha256="3c81cb23fe671d391557a63c13b6a13d4dc367db5cb5de55592a6758284d8a3f")
         version("5.3.0", sha256="afffec78e34fe70952cd41efc3d7ba8f64e43acb2ad20aa35c9b8b591bed48ca")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3:", type="build")
     depends_on("hwdata", when="@5.5.0:")
@@ -59,6 +62,7 @@ class RocmDbgapi(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
         "master",
     ]:
         depends_on(f"hsa-rocr-dev@{ver}", type="build", when=f"@{ver}")
@@ -75,6 +79,7 @@ class RocmDbgapi(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 

@@ -28,6 +28,8 @@ class Kakoune(MakefilePackage):
         "2021.11.08", sha256="aa30889d9da11331a243a8f40fe4f6a8619321b19217debac8f565e06eddb5f4"
     )
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("ncurses")
 
     conflicts("%gcc@:8", when="@2021.11.08", msg="GCC version must be at least 9.0!")

@@ -28,7 +28,9 @@ import spack.modules
 import spack.package_base
 import spack.paths
 import spack.repo
+import spack.store
 import spack.util.spack_json as sjson
+import spack.util.spack_yaml
 from spack.cmd.env import _env_create
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
@@ -40,7 +42,7 @@ from spack.version import Version
 # TODO-27021
 # everything here uses the mock_env_path
 pytestmark = [
-    pytest.mark.usefixtures("mutable_mock_env_path", "config", "mutable_mock_repo"),
+    pytest.mark.usefixtures("mutable_config", "mutable_mock_env_path", "mutable_mock_repo"),
     pytest.mark.maybeslow,
     pytest.mark.not_on_windows("Envs unsupported on Window"),
 ]
@@ -501,7 +503,7 @@ def test_env_install_two_specs_same_dep(install_mockery, mock_fetch, tmpdir, cap
                 """\
 spack:
   specs:
-  - a
+  - pkg-a
   - depb
 """
             )
@@ -520,8 +522,8 @@ spack:
     depb = spack.store.STORE.db.query_one("depb", installed=True)
     assert depb, "Expected depb to be installed"
 
-    a = spack.store.STORE.db.query_one("a", installed=True)
-    assert a, "Expected a to be installed"
+    a = spack.store.STORE.db.query_one("pkg-a", installed=True)
+    assert a, "Expected pkg-a to be installed"
 
 
 def test_remove_after_concretize():
@@ -812,7 +814,6 @@ spack:
     assert not e2.specs_by_hash
 
 
-@pytest.mark.usefixtures("config")
 def test_env_view_external_prefix(tmp_path, mutable_database, mock_packages):
     fake_prefix = tmp_path / "a-prefix"
     fake_bin = fake_prefix / "bin"
@@ -825,7 +826,7 @@ def test_env_view_external_prefix(tmp_path, mutable_database, mock_packages):
         """\
 spack:
   specs:
-  - a
+  - pkg-a
   view: true
 """
     )
@@ -833,9 +834,9 @@ spack:
     external_config = io.StringIO(
         """\
 packages:
-  a:
+  pkg-a:
     externals:
-    - spec: a@2.0
+    - spec: pkg-a@2.0
       prefix: {a_prefix}
     buildable: false
 """.format(
@@ -1559,7 +1560,6 @@ def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
     assert not test.user_specs
 
 
-@pytest.mark.usefixtures("config")
 def test_indirect_build_dep(tmp_path):
     """Simple case of X->Y->Z where Y is a build/link dep and Z is a
     build-only dep. Make sure this concrete DAG is preserved when writing the
@@ -1587,7 +1587,6 @@ def test_indirect_build_dep(tmp_path):
         assert x_env_spec == x_concretized
 
 
-@pytest.mark.usefixtures("config")
 def test_store_different_build_deps(tmp_path):
     r"""Ensure that an environment can store two instances of a build-only
     dependency::
@@ -2328,7 +2327,7 @@ spack:
             assert mpileaks_spec not in after_conc
 
 
-def test_stack_concretize_extraneous_deps(tmpdir, config, mock_packages):
+def test_stack_concretize_extraneous_deps(tmpdir, mock_packages):
     # FIXME: The new concretizer doesn't handle yet soft
     # FIXME: constraints for stacks
     # FIXME: This now works for statically-determinable invalid deps
@@ -2367,7 +2366,7 @@ spack:
                 assert concrete.satisfies("^mpi")
 
 
-def test_stack_concretize_extraneous_variants(tmpdir, config, mock_packages):
+def test_stack_concretize_extraneous_variants(tmpdir, mock_packages):
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
         f.write(
@@ -2399,7 +2398,7 @@ spack:
                 assert concrete.variants["shared"].value == user.variants["shared"].value
 
 
-def test_stack_concretize_extraneous_variants_with_dash(tmpdir, config, mock_packages):
+def test_stack_concretize_extraneous_variants_with_dash(tmpdir, mock_packages):
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
         f.write(
@@ -3750,7 +3749,7 @@ def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery)
 
 
 @pytest.mark.parametrize("lockfile", ["v1", "v2", "v3"])
-def test_read_old_lock_and_write_new(config, tmpdir, lockfile):
+def test_read_old_lock_and_write_new(tmpdir, lockfile):
     # v1 lockfiles stored by a coarse DAG hash that did not include build deps.
     # They could not represent multiple build deps with different build hashes.
     #
@@ -3816,7 +3815,7 @@ def test_read_old_lock_and_write_new(config, tmpdir, lockfile):
     assert old_hashes == hashes
 
 
-def test_read_v1_lock_creates_backup(config, tmp_path):
+def test_read_v1_lock_creates_backup(tmp_path):
     """When reading a version-1 lockfile, make sure that a backup of that file
     is created.
     """
@@ -4199,7 +4198,7 @@ def test_env_include_packages_url(
         assert "openmpi" in cfg["all"]["providers"]["mpi"]
 
 
-def test_relative_view_path_on_command_line_is_made_absolute(tmp_path, config):
+def test_relative_view_path_on_command_line_is_made_absolute(tmp_path):
     with fs.working_dir(str(tmp_path)):
         env("create", "--with-view", "view", "--dir", "env")
         environment = ev.Environment(os.path.join(".", "env"))

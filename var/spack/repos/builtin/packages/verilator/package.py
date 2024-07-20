@@ -33,7 +33,7 @@ class Verilator(AutotoolsPackage):
     designs with thousands of modules."""
 
     homepage = "https://www.veripool.org/projects/verilator"
-    url = "https://github.com/verilator/verilator/archive/refs/tags/v5.022.tar.gz"
+    url = "https://github.com/verilator/verilator/archive/refs/tags/v5.026.tar.gz"
     git = "https://github.com/verilator/verilator.git"
 
     maintainers("davekeeshan")
@@ -42,6 +42,7 @@ class Verilator(AutotoolsPackage):
 
     version("master", branch="master")
 
+    version("5.026", sha256="87fdecf3967007d9ee8c30191ff2476f2a33635d0e0c6e3dbf345cc2f0c50b78")
     version("5.024", sha256="88b04c953e7165c670d6a700f202cef99c746a0867b4e2efe1d7ea789dee35f3")
     version("5.022", sha256="3c2f5338f4b6ce7e2f47a142401acdd18cbf4c5da06092618d6d036c0afef12d")
     version("5.020", sha256="41ca9abfadf8d2413efbff7f8277379733d0095957fe7769dc38f8fd1bc899a6")
@@ -69,6 +70,10 @@ class Verilator(AutotoolsPackage):
     version("4.200", sha256="2cd0fd48152f152d0487eaac23803d35ff75e924734435b366a523deb1185407")
     version("4.110", sha256="603c23944577a5d53a2e09191d04d5c61740a77b58f3a590a70e56f4526a5a0b")
     version("4.108", sha256="ce521dc57754e5a325ff7000c434ce23674c8e1de30e1f2a6506dc3a33bd7c55")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

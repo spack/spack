@@ -408,6 +408,10 @@ class Nvhpc(Package, CompilerPackage):
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1])
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("blas", default=True, description="Enable BLAS")
     variant(
         "install_type",

@@ -10,7 +10,7 @@ class Sleef(CMakePackage):
     """SIMD Library for Evaluating Elementary Functions, vectorized libm and DFT."""
 
     homepage = "https://sleef.org"
-    url = "https://github.com/shibatch/sleef/archive/3.6.tar.gz"
+    url = "https://github.com/shibatch/sleef/archive/3.6.1.tar.gz"
     git = "https://github.com/shibatch/sleef.git"
 
     maintainers("blapie")
@@ -18,7 +18,8 @@ class Sleef(CMakePackage):
     license("BSL-1.0")
 
     version("master", branch="master")
-    version("3.6", commit="a99491afee2bae0b11e9ffbf3211349f43a5fd10", preferred=True)
+    version("3.6.1", commit="6ee14bcae5fe92c2ff8b000d5a01102dab08d774", preferred=True)
+    version("3.6", commit="a99491afee2bae0b11e9ffbf3211349f43a5fd10")
     version("3.5.1_2020-12-22", commit="e0a003ee838b75d11763aa9c3ef17bf71a725bff")  # py-torch@1.8:
     version("3.5.1", sha256="415ee9b1bcc5816989d3d4d92afd0cd3f9ee89cbd5a33eb008e69751e40438ab")
     version(
@@ -44,6 +45,8 @@ class Sleef(CMakePackage):
         sha256="3130c5966e204e6d6a3ace81e543d12b5b21f60897f1c185bfa587c1bd77bee2",
         deprecated=True,
     )
+
+    depends_on("c", type="build")  # generated
 
     generator("ninja")
     depends_on("cmake@3.18:", type="build")

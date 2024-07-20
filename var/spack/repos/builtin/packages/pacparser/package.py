@@ -24,6 +24,8 @@ class Pacparser(MakefilePackage):
         url="https://github.com/manugarg/pacparser/releases/download/1.3.7/pacparser-1.3.7.tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("python", when="+python")
     depends_on("py-setuptools", when="+python", type=("build", "run"))
 

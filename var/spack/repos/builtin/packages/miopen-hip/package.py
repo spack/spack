@@ -14,13 +14,14 @@ class MiopenHip(CMakePackage):
 
     homepage = "https://github.com/ROCm/MIOpen"
     git = "https://github.com/ROCm/MIOpen.git"
-    url = "https://github.com/ROCm/MIOpen/archive/rocm-6.1.1.tar.gz"
+    url = "https://github.com/ROCm/MIOpen/archive/rocm-6.1.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libMIOpen"]
 
     license("MIT")
+    version("6.1.2", sha256="c8ff4af72264b2049bfe2685d581ea0f3e43319db7bd00dc347159bcf2731614")
     version("6.1.1", sha256="cf568ea16dd23b32fe89e250bb33ed4722fea8aa7f407cc66ff37c37aab037ce")
     version("6.1.0", sha256="3b373117eaeaf618aab9b39bb22e9950fd49bd0e264c8587b0c51fa348afe0d1")
     version("6.0.2", sha256="e6f671bd6af59f7470f42cda2ff9e77441d8f6c2105772bbf855d31da1085ffa")
@@ -36,6 +37,8 @@ class MiopenHip(CMakePackage):
         version("5.4.0", sha256="b4153791f9eeee4cbc5534bc6ad8b32c0947bcd38e08b77ebe144065a4fa5456")
         version("5.3.3", sha256="7efc98215d23a2caaf212378c37e9a6484f54a4ed3e9660719286e4f287d3715")
         version("5.3.0", sha256="c5819f593d71beeda2eb24b89182912240cc40f83b2b8f9de695a8e230aa4ea6")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.5:", type="build")
     depends_on("pkgconfig", type="build")
@@ -74,6 +77,7 @@ class MiopenHip(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
@@ -83,15 +87,26 @@ class MiopenHip(CMakePackage):
     for ver in ["5.3.0", "5.3.3"]:
         depends_on(f"mlirmiopen@{ver}", when=f"@{ver}")
 
-    for ver in ["5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
+    for ver in [
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+    ]:
         depends_on("nlohmann-json", type="link")
         depends_on(f"composable-kernel@{ver}", when=f"@{ver}")
     for ver in ["5.4.0", "5.4.3", "5.5.0"]:
         depends_on("nlohmann-json", type="link")
         depends_on(f"rocmlir@{ver}", when=f"@{ver}")
-    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
+    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2"]:
         depends_on("roctracer-dev@" + ver, when="@" + ver)
-    for ver in ["6.1.0", "6.1.1"]:
+    for ver in ["6.1.0", "6.1.1", "6.1.2"]:
         depends_on("googletest")
 
     def setup_build_environment(self, env):

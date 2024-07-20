@@ -28,6 +28,8 @@ class Re2(CMakePackage):
         "2020-04-01", sha256="98794bc5416326817498384a9c43cbb5a406bab8da9f84f83c39ecad43ed5cea"
     )
 
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=False, description="Build shared instead of static libraries")
     variant("pic", default=True, description="Enable position independent code")
 

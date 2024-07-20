@@ -46,6 +46,8 @@ class Dd4hep(CMakePackage):
     version("1.17", sha256="036a9908aaf1e13eaf5f2f43b6f5f4a8bdda8183ddc5befa77a4448dbb485826")
     version("1.16.1", sha256="c8b1312aa88283986f89cc008d317b3476027fd146fdb586f9f1fbbb47763f1a")
 
+    depends_on("cxx", type="build")  # generated
+
     generator("ninja")
 
     # Workaround for failing build file generation in some cases
@@ -95,10 +97,13 @@ class Dd4hep(CMakePackage):
     depends_on("boost +iostreams", when="+ddg4")
     depends_on("boost +system +filesystem", when="%gcc@:7")
     depends_on("root @6.08: +gdml +math +python")
+    depends_on("root @6.12.2: +root7", when="@1.26:")  # DDCoreGraphics needs ROOT::ROOTHistDraw
     with when("+ddeve"):
         depends_on("root @6.08: +x +opengl")
         depends_on("root @:6.27", when="@:1.23")
         conflicts("^root ~webgui", when="^root@6.28:")
+        # For DD4hep >= 1.24, DDEve_Interface needs ROOT::ROOTGeomViewer only if ROOT >= 6.27
+        requires("^root +root7 +webgui", when="@1.24: ^root @6.27:")
     depends_on("root @6.08: +gdml +math +python +x +opengl", when="+utilityapps")
 
     extends("python")

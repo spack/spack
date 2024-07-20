@@ -79,6 +79,8 @@ class Neovim(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     variant(
         "no_luajit",
         default=False,
@@ -139,6 +141,7 @@ class Neovim(CMakePackage):
         depends_on("tree-sitter@0.20.8:")
     with when("@0.10:"):
         depends_on("cmake@3.13:", type="build")
+        depends_on("libvterm@0.3.3:")
         depends_on("tree-sitter@0.20.9:")
 
     # Support for `libvterm@0.2:` has been added in neovim@0.8.0

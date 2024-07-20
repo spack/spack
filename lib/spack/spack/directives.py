@@ -90,14 +90,14 @@ directive_names = ["build_system"]
 _patch_order_index = 0
 
 
-SpecType = Union["spack.spec.Spec", str]
+SpecType = str
 DepType = Union[Tuple[str, ...], str]
 WhenType = Optional[Union["spack.spec.Spec", str, bool]]
 Patcher = Callable[[Union["spack.package_base.PackageBase", Dependency]], None]
 PatchesType = Optional[Union[Patcher, str, List[Union[Patcher, str]]]]
 
 
-SUPPORTED_LANGUAGES = ("fortran", "cxx")
+SUPPORTED_LANGUAGES = ("fortran", "cxx", "c")
 
 
 def _make_when_spec(value: WhenType) -> Optional["spack.spec.Spec"]:
@@ -475,7 +475,7 @@ def _execute_version(pkg, ver, **kwargs):
 
 def _depends_on(
     pkg: "spack.package_base.PackageBase",
-    spec: SpecType,
+    spec: "spack.spec.Spec",
     *,
     when: WhenType = None,
     type: DepType = dt.DEFAULT_TYPES,
@@ -485,11 +485,10 @@ def _depends_on(
     if not when_spec:
         return
 
-    dep_spec = spack.spec.Spec(spec)
-    if not dep_spec.name:
-        raise DependencyError("Invalid dependency specification in package '%s':" % pkg.name, spec)
-    if pkg.name == dep_spec.name:
-        raise CircularReferenceError("Package '%s' cannot depend on itself." % pkg.name)
+    if not spec.name:
+        raise DependencyError(f"Invalid dependency specification in package '{pkg.name}':", spec)
+    if pkg.name == spec.name:
+        raise CircularReferenceError(f"Package '{pkg.name}' cannot depend on itself.")
 
     depflag = dt.canonicalize(type)
 
@@ -505,7 +504,7 @@ def _depends_on(
     # ensure `Spec.virtual` is a valid thing to call in a directive.
     # For now, we comment out the following check to allow for virtual packages
     # with package files.
-    # if patches and dep_spec.virtual:
+    # if patches and spec.virtual:
     #     raise DependencyPatchError("Cannot patch a virtual dependency.")
 
     # ensure patches is a list
@@ -520,13 +519,13 @@ def _depends_on(
 
     # this is where we actually add the dependency to this package
     deps_by_name = pkg.dependencies.setdefault(when_spec, {})
-    dependency = deps_by_name.get(dep_spec.name)
+    dependency = deps_by_name.get(spec.name)
 
     if not dependency:
-        dependency = Dependency(pkg, dep_spec, depflag=depflag)
-        deps_by_name[dep_spec.name] = dependency
+        dependency = Dependency(pkg, spec, depflag=depflag)
+        deps_by_name[spec.name] = dependency
     else:
-        dependency.spec.constrain(dep_spec, deps=False)
+        dependency.spec.constrain(spec, deps=False)
         dependency.depflag |= depflag
 
     # apply patches to the dependency
@@ -591,12 +590,13 @@ def depends_on(
     @see The section "Dependency specs" in the Spack Packaging Guide.
 
     """
-    if spack.spec.Spec(spec).name in SUPPORTED_LANGUAGES:
+    dep_spec = spack.spec.Spec(spec)
+    if dep_spec.name in SUPPORTED_LANGUAGES:
         assert type == "build", "languages must be of 'build' type"
         return _language(lang_spec_str=spec, when=when)
 
     def _execute_depends_on(pkg: "spack.package_base.PackageBase"):
-        _depends_on(pkg, spec, when=when, type=type, patches=patches)
+        _depends_on(pkg, dep_spec, when=when, type=type, patches=patches)
 
     return _execute_depends_on
 
@@ -666,25 +666,24 @@ def extends(spec, when=None, type=("build", "run"), patches=None):
 
     keyword arguments can be passed to extends() so that extension
     packages can pass parameters to the extendee's extension
-    mechanism.
-
-    """
+    mechanism."""
 
     def _execute_extends(pkg):
         when_spec = _make_when_spec(when)
         if not when_spec:
             return
 
-        _depends_on(pkg, spec, when=when, type=type, patches=patches)
-        spec_obj = spack.spec.Spec(spec)
+        dep_spec = spack.spec.Spec(spec)
+
+        _depends_on(pkg, dep_spec, when=when, type=type, patches=patches)
 
         # When extending python, also add a dependency on python-venv. This is done so that
         # Spack environment views are Python virtual environments.
-        if spec_obj.name == "python" and not pkg.name == "python-venv":
-            _depends_on(pkg, "python-venv", when=when, type=("build", "run"))
+        if dep_spec.name == "python" and not pkg.name == "python-venv":
+            _depends_on(pkg, spack.spec.Spec("python-venv"), when=when, type=("build", "run"))
 
         # TODO: the values of the extendees dictionary are not used. Remove in next refactor.
-        pkg.extendees[spec_obj.name] = (spec_obj, None)
+        pkg.extendees[dep_spec.name] = (dep_spec, None)
 
     return _execute_extends
 

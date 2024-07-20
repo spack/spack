@@ -16,6 +16,7 @@ class Mold(CMakePackage):
 
     license("MIT")
 
+    version("2.32.1", sha256="f3c9a527d884c635834fe7d79b3de959b00783bf9446280ea274d996f0335825")
     version("2.32.0", sha256="4b7e4146ea0f52be9adae8b417399f3676a041e65b55e3f25f088120d30a320b")
     version("2.31.0", sha256="3dc3af83a5d22a4b29971bfad17261851d426961c665480e2ca294e5c74aa1e5")
     version("2.30.0", sha256="6e5178ccafe828fdb4ba0dd841d083ff6004d3cb41e56485143eb64c716345fd")
@@ -27,6 +28,9 @@ class Mold(CMakePackage):
     version("2.0.0", sha256="2ae8a22db09cbff626df74c945079fa29c1e5f60bbe02502dcf69191cf43527b")
     version("1.11.0", sha256="99318eced81b09a77e4c657011076cc8ec3d4b6867bd324b8677974545bc4d6f")
     version("1.7.1", sha256="fa2558664db79a1e20f09162578632fa856b3cde966fbcb23084c352b827dfa9")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("blake3", when="@2.2:")
     depends_on("mimalloc")
