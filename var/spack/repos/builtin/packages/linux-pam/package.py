@@ -48,10 +48,9 @@ class LinuxPam(AutotoolsPackage):
             depends_on("yacc")
 
     def flag_handler(self, name, flags):
-        if self.spec.satisfies("+nls"):
-            if name == "ldflags":
-                flags += ["-lintl"]  # Addresses https://github.com/spack/spack/issues/44637
-        return super().flag_handler(name, flags)
+        if name == "ldflags" and self.spec.satisfies("+nls"):
+            flags += ["-lintl"]  # Addresses https://github.com/spack/spack/issues/44637
+        return (flags, None, None)
 
     def configure_args(self):
         args = [f"--includedir={self.prefix.include.security}"]
