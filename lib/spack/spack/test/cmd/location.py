@@ -123,6 +123,7 @@ def test_location_env_missing():
 
 
 @pytest.mark.db
+@pytest.mark.not_on_windows("Broken on Windows")
 def test_location_install_dir(mock_spec):
     """Tests spack location --install-dir."""
     spec, _ = mock_spec
