@@ -56,7 +56,7 @@ class PyGlobusSdk(PythonPackage):
     depends_on("py-importlib-resources@5.12.0:", when="@3.41: ^python@:3.8", type=("build", "run"))
 
     def url_for_version(self, version):
-        if version <= Version("3.39"): 
+        if version <= Version("3.39"):
             return super().url_for_version(version).replace("_", "-")
         else:
             return super().url_for_version(version)
