@@ -40,8 +40,13 @@ class PyHail(MakefilePackage):
         destination="hail/src/main/c",
     )
 
-    variant("native", default=True)
-    variant("query_backend", values=["undefined", "spark", "batch"], default="spark")
+    variant("native", default=True, description="Compile native HAIL backend")
+    variant(
+        "query_backend",
+        values=["undefined", "spark", "batch"],
+        default="spark",
+        description="Configure HAIL query backend at build",
+    )
 
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-pip", type="build")
@@ -49,8 +54,9 @@ class PyHail(MakefilePackage):
 
     # HAIL bundle is tied to specific runtime versions
     # HAIL spec, Java sec, Spark spec, Scala spec
+    # We're not accurately capturing previous versions
     bundle_versions = [
-        (":0.2.130", "8", "3.3", "2.12"),
+        ("0.2.0.129:0.2.130", "8", "3.3", "2.12"),
         ("0.2.131:", "11", "3.5", "2.12"),
     ]
     for hail, java, spark, scala in bundle_versions:
@@ -169,4 +175,3 @@ class PyHail(MakefilePackage):
             hailctl = which("hailctl")  # Should be installed from above
             if hailctl is not None:  # but it might not be
                 hailctl("config", "set", "query/backend", f"{backend}")
-
