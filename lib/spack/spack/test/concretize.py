@@ -2639,7 +2639,7 @@ class TestConcretize:
             "cmake": {
                 "externals": [
                     {"spec": "cmake@3.23.1 %gcc", "prefix": "/tmp/prefix1"},
-                    {"spec": "cmake@3.23.1 %clang", "prefix": "/tmp.prefix2"},
+                    {"spec": "cmake@3.23.1 %clang", "prefix": "/tmp/prefix2"},
                 ]
             }
         }

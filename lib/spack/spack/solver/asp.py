@@ -1694,18 +1694,16 @@ class SpackSolverSetup:
                 spack.spec.parse_with_version_concrete(x["spec"]) for x in externals
             ]
 
-            external_specs = []
+            selected_externals = set()
             if spec_filters:
                 for current_filter in spec_filters:
                     current_filter.factory = lambda: candidate_specs
-                    external_specs.extend(current_filter.selected_specs())
-            else:
-                external_specs.extend(candidate_specs)
+                    selected_externals.update(current_filter.selected_specs())
 
             # Order the external versions to prefer more recent versions
             # even if specs in packages.yaml are not ordered that way
             external_versions = [
-                (x.version, external_id) for external_id, x in enumerate(external_specs)
+                (x.version, external_id) for external_id, x in enumerate(candidate_specs)
             ]
             external_versions = [
                 (v, idx, external_id)
@@ -1716,9 +1714,15 @@ class SpackSolverSetup:
                     DeclaredVersion(version=version, idx=idx, origin=Provenance.EXTERNAL)
                 )
 
-            # Declare external conditions with a local index into packages.yaml
-            for local_idx, spec in enumerate(external_specs):
+            # Emit facts for externals specs. Note that "local_idx" is the index of the spec
+            # in packages:<pkg_name>:externals. This means:
+            #
+            # packages:<pkg_name>:externals[local_idx].spec == spec
+            for local_idx, spec in enumerate(candidate_specs):
                 msg = f"{spec.name} available as external when satisfying {spec}"
+
+                if spec_filters and spec not in selected_externals:
+                    continue
 
                 def external_imposition(input_spec, requirements):
                     return requirements + [
