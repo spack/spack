@@ -370,12 +370,14 @@ spt_contains " spack env list " spack env list -h
 spt_contains " spack env list " spack env list --help
 
 title 'Testing `spack env activate`'
-spt_contains "No such environment:" spack env activate no_such_environment
+# spt_contains "No such environment:" spack env activate no_such_environment  # See fish-shell/fish-shell #1035
+spt_fails spack env activate no_such_environment
 spt_contains "usage: spack env activate " spack env activate -h
 spt_contains "usage: spack env activate " spack env activate --help
 
 title 'Testing `spack env deactivate`'
-spt_contains "Error: No environment is currently active" spack env deactivate
+# spt_contains "Error: No environment is currently active" spack env deactivate  # See fish-shell/fish-shell #1035
+spt_fails spack env deactivate
 spt_contains "usage: spack env deactivate " spack env deactivate no_such_environment
 spt_contains "usage: spack env deactivate " spack env deactivate -h
 spt_contains "usage: spack env deactivate " spack env deactivate --help
