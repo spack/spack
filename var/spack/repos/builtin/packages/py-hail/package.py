@@ -55,13 +55,12 @@ class PyHail(MakefilePackage):
     # HAIL bundle is tied to specific runtime versions
     # HAIL spec, Java sec, Spark spec, Scala spec
     # We're not accurately capturing previous versions
-    bundle_versions = [
-        ("0.2.0.129:0.2.130", "8", "3.3", "2.12"),
+    for hail, java, spark, scala in [
+        (":0.2.130", "8", "3.3", "2.12"),
         ("0.2.131:", "11", "3.5", "2.12"),
-    ]
-    for hail, java, spark, scala in bundle_versions:
-        with default_args(type=("build", "run")), when(f"@{hail}"):
-            depends_on(f"java@{scala}")
+    ]:
+        with default_args(type=("build", "run"), when=f"@{hail}"):
+            depends_on(f"java@{java}")
             depends_on(f"scala@{scala}")
             depends_on(f"spark@{spark}")
             # This should match spark but isn't actually enforced
