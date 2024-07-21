@@ -2621,12 +2621,40 @@ class TestConcretize:
         """Tests that having a wrong variant in an external spec doesn't stop concretization"""
         corrupted_spec = Spec(corrupted_str)
         packages_yaml = {
-            f"{corrupted_spec.name}": {"externals": [{"spec": corrupted_str, "prefix": "/usr"}]}
+            f"{corrupted_spec.name}": {
+                "externals": [{"spec": corrupted_str, "prefix": "/dev/null"}]
+            }
         }
         mutable_config.set("packages", packages_yaml)
         # Assert we don't raise due to the corrupted external entry above
         s = Spec("pkg-a").concretized()
         assert s.concrete
+
+    @pytest.mark.regression("44828")
+    def test_correct_external_is_selected_from_packages_yaml(self, mutable_config):
+        """Tests that when filtering external specs, the correct external is selected to
+        reconstruct the prefix, and other external attributes.
+        """
+        packages_yaml = {
+            "cmake": {
+                "externals": [
+                    {"spec": "cmake@3.23.1 %gcc", "prefix": "/tmp/prefix1"},
+                    {"spec": "cmake@3.23.1 %clang", "prefix": "/tmp.prefix2"},
+                ]
+            }
+        }
+        concretizer_yaml = {
+            "reuse": {"roots": True, "from": [{"type": "external", "exclude": ["%gcc"]}]}
+        }
+        mutable_config.set("packages", packages_yaml)
+        mutable_config.set("concretizer", concretizer_yaml)
+
+        s = Spec("cmake").concretized()
+
+        # Check that we got the properties from the right external
+        assert s.external
+        assert s.satisfies("%clang")
+        assert s.prefix == "/tmp/prefix2"
 
 
 @pytest.fixture()
