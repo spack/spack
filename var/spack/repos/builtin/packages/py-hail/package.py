@@ -19,6 +19,8 @@ class PyHail(MakefilePackage):
     maintainers("teaguesterling")
     license("MIT", checked_by="teaguesterling")
 
+    version("0.2.132", commit="678e1f52b9999cb05ebf03fd360e5c4506bd6dad")
+    version("0.2.131", commit="11d9b2ff89da9ef6a4f576be89f1f06959580ea4")
     version("0.2.130", commit="bea04d9c79b5ca739364e8c121132845475f617a")
     version("0.2.129", commit="41126be2df04e4ef823cefea40fba4cadbe5db8a")
 
@@ -45,24 +47,29 @@ class PyHail(MakefilePackage):
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
 
-    # HAIL spec, SPARK spec, SCALA spec
-    bundle_versions = [("0.2", "3.3", "2.12")]
-    # Hail build requirements
+    # HAIL bundle is tied to specific runtime versions
+    # HAIL spec, Java sec, Spark spec, Scala spec
+    bundle_versions = [
+        (":0.2.130", "8", "3.3", "2.12"),
+        ("0.2.131:", "11", "3.5", "2.12"),
+    ]
+    for hail, java, spark, scala in bundle_versions:
+        with default_args(type=("build", "run")), when(f"@{hail}"):
+            depends_on(f"java@{scala}")
+            depends_on(f"scala@{scala}")
+            depends_on(f"spark@{spark}")
+            # This should match spark but isn't actually enforced
+            # by the PySpark package and they can conflit.
+            depends_on(f"py-pyspark@{spark}")
+
     with default_args(type=("build", "run")):
+        # Hail build requirements
         depends_on("gcc@5:")
         depends_on("blas")
         depends_on("lapack")
         depends_on("lz4")
-        depends_on("java@8,11")
-        for hail, spark, scala in bundle_versions:
-            depends_on(f"scala@{scala}", when=f"@{hail}")
-            depends_on(f"spark@{spark}", when=f"@{hail}")
-            # This should match spark but isn't actually enforced
-            # by the PySpark package and they can conflit.
-            depends_on(f"py-pyspark@{spark}", when=f"@{hail}")
 
-    # HAIL API requirements are very specific
-    with default_args(type=("build", "run")):
+        # HAIL Python API requirements are very specific
         depends_on("py-avro@1.10:1.11")
         depends_on("py-bokeh@:3.3")
         depends_on("py-decorator@:4.4.2")
@@ -75,15 +82,7 @@ class PyHail(MakefilePackage):
         depends_on("py-requests@2.31")
         depends_on("py-scipy@1.3:1.11")
 
-    # HAIL wheels are pinned to a specific version of
-    # Spark. If we implement building from source, this
-    # will likely not be as much of an issue, but that
-    # isn't working yet.
-    # with default_args(type=("build", "run")):
-    #    depends_on("py-pyspark@3.3", when="@0.2.130")
-
-    # hailtop requirements
-    with default_args(type=("build", "run")):
+        # hailtop requirements
         depends_on("py-aiodns@2")
         depends_on("py-aiohttp@3.9")
         depends_on("py-azure-identity@1.6:1")
