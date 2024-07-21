@@ -21,11 +21,17 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/Umpire.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers("davidbeckingsale")
+    maintainers("davidbeckingsale", "adrienbernede")
 
     license("MIT")
 
     version("develop", branch="develop", submodules=False)
+    version(
+        "2024.02.1",
+        tag="v2024.02.1",
+        commit="3058d562fc707650e904f9321b1ee9bcebad3ae2",
+        submodules=False,
+    )
     version(
         "2024.02.0",
         tag="v2024.02.0",
@@ -137,6 +143,10 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     version(
         "0.1.3", tag="v0.1.3", commit="cc347edeb17f5f30f694aa47f395d17369a2e449", submodules=True
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Some projects importing both camp and umpire targets end up with conflicts in BLT targets
     # import. This is not addressing the root cause, which will be addressed in BLT@5.4.0 and will

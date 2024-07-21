@@ -20,6 +20,7 @@ class RocmCore(CMakePackage):
     libraries = ["librocm-core"]
 
     license("MIT")
+    version("6.1.2", sha256="ce9cbe12977f2058564ecb4cdcef4fd0d7880f6eff8591630f542441092f4fa3")
     version("6.1.1", sha256="a27bebdd1ba9d387f33b82a67f64c55cb565b482fe5017d5b5726d68da1ab839")
     version("6.1.0", sha256="9dfe542d1647c42993b06f594c316dad63ba6d6fb2a7398bd72c5768fd1d7b5b")
     version("6.0.2", sha256="04f01dca2862f0bf781de8afb74aabefc3c9b1d9f01bc8cadb2eb3d7395119cc")
@@ -30,6 +31,8 @@ class RocmCore(CMakePackage):
     version("5.6.0", sha256="3c3d47c8b774968d768d42810a3fed42d058b7d6da248d5295df2a7ffb262568")
     version("5.5.1", sha256="bc73060432ffdc2e210394835d383890b9652476074ef4708d447473f273ce76")
     version("5.5.0", sha256="684d3312bb14f05dc280cf136f5eddff38ba340cd85c383d6a217d8e27d3d57d")
+
+    depends_on("cxx", type="build")  # generated
 
     def cmake_args(self):
         args = [self.define("ROCM_VERSION", self.spec.version)]

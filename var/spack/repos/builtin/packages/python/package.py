@@ -21,6 +21,25 @@ from spack.package import *
 from spack.util.prefix import Prefix
 
 
+def make_pyvenv_cfg(python_spec: "spack.spec.Spec", venv_prefix: str) -> str:
+    """Make a pyvenv_cfg file for a given (real) python command and venv prefix."""
+    python_cmd = python_spec.command.path
+    lines = [
+        # directory containing python command
+        f"home = {os.path.dirname(python_cmd)}",
+        # venv should not allow site packages from the real python to be loaded
+        "include-system-site-packages = false",
+        # version of the python command
+        f"version = {python_spec.version}",
+        # the path to the python command
+        f"executable = {python_cmd}",
+        # command "used" to create the pyvenv.cfg
+        f"command = {python_cmd} -m venv --without-pip {venv_prefix}",
+    ]
+
+    return "\n".join(lines) + "\n"
+
+
 class Python(Package):
     """The Python programming language."""
 
@@ -40,6 +59,7 @@ class Python(Package):
 
     license("0BSD")
 
+    version("3.12.4", sha256="01b3c1c082196f3b33168d344a9c85fb07bfe0e7ecfe77fee4443420d1ce2ad9")
     version("3.12.3", sha256="a6b9459f45a6ebbbc1af44f5762623fa355a0c87208ed417628b379d762dddb0")
     version("3.12.2", sha256="a7c4f6a9dc423d8c328003254ab0c9338b83037bd787d680826a5bf84308116e")
     version("3.12.1", sha256="d01ec6a33bc10009b09c17da95cc2759af5a580a7316b3a446eb4190e13f97b2")
@@ -203,6 +223,9 @@ class Python(Package):
         sha256="85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d",
         deprecated=True,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     extendable = True
 
@@ -1240,6 +1263,33 @@ print(json.dumps(config))
         module.python_include = join_path(dependent_spec.prefix, self.include)
         module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
         module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
+
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
+        """Make the view a virtual environment if it isn't one already.
+
+        If `python-venv` is linked into the view, it will already be a virtual
+        environment. If not, then this is an older python that doesn't use the
+        python-venv support, or we may be using python packages that
+        use ``depends_on("python")`` but not ``extends("python")``.
+
+        We used to copy the python interpreter in, but we can get the same effect in a
+        simpler way by adding a ``pyvenv.cfg`` to the environment.
+
+        """
+        super().add_files_to_view(view, merge_map, skip_if_exists=skip_if_exists)
+
+        # location of python inside the view, where we will put the venv config
+        projection = view.get_projection_for_spec(self.spec)
+        pyvenv_cfg = os.path.join(projection, "pyvenv.cfg")
+        if os.path.lexists(pyvenv_cfg):
+            return
+
+        # don't put a pyvenv.cfg in a copy view
+        if view.link_type == "copy":
+            return
+
+        with open(pyvenv_cfg, "w") as cfg_file:
+            cfg_file.write(make_pyvenv_cfg(self.spec["python"], projection))
 
     def test_hello_world(self):
         """run simple hello world program"""

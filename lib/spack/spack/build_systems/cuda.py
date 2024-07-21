@@ -124,6 +124,8 @@ class CudaPackage(PackageBase):
         # minimum supported versions
         conflicts("%gcc@:4", when="+cuda ^cuda@11.0:")
         conflicts("%gcc@:5", when="+cuda ^cuda@11.4:")
+        conflicts("%gcc@:7.2", when="+cuda ^cuda@12.4:")
+        conflicts("%clang@:6", when="+cuda ^cuda@12.2:")
 
         # maximum supported version
         # NOTE:
@@ -136,14 +138,14 @@ class CudaPackage(PackageBase):
         conflicts("%gcc@11.2:", when="+cuda ^cuda@:11.5")
         conflicts("%gcc@12:", when="+cuda ^cuda@:11.8")
         conflicts("%gcc@13:", when="+cuda ^cuda@:12.3")
-        conflicts("%gcc@14:", when="+cuda ^cuda@:12.4")
+        conflicts("%gcc@14:", when="+cuda ^cuda@:12.5")
         conflicts("%clang@12:", when="+cuda ^cuda@:11.4.0")
         conflicts("%clang@13:", when="+cuda ^cuda@:11.5")
         conflicts("%clang@14:", when="+cuda ^cuda@:11.7")
         conflicts("%clang@15:", when="+cuda ^cuda@:12.0")
         conflicts("%clang@16:", when="+cuda ^cuda@:12.1")
         conflicts("%clang@17:", when="+cuda ^cuda@:12.3")
-        conflicts("%clang@18:", when="+cuda ^cuda@:12.4")
+        conflicts("%clang@18:", when="+cuda ^cuda@:12.5")
 
         # https://gist.github.com/ax3l/9489132#gistcomment-3860114
         conflicts("%gcc@10", when="+cuda ^cuda@:11.4.0")
@@ -211,12 +213,16 @@ class CudaPackage(PackageBase):
         conflicts("%intel@19.0:", when="+cuda ^cuda@:10.0")
         conflicts("%intel@19.1:", when="+cuda ^cuda@:10.1")
         conflicts("%intel@19.2:", when="+cuda ^cuda@:11.1.0")
+        conflicts("%intel@2021:", when="+cuda ^cuda@:11.4.0")
 
         # XL is mostly relevant for ppc64le Linux
         conflicts("%xl@:12,14:", when="+cuda ^cuda@:9.1")
         conflicts("%xl@:12,14:15,17:", when="+cuda ^cuda@9.2")
         conflicts("%xl@:12,17:", when="+cuda ^cuda@:11.1.0")
 
+        # PowerPC.
+        conflicts("target=ppc64le", when="+cuda ^cuda@12.5:")
+
         # Darwin.
         # TODO: add missing conflicts for %apple-clang cuda@:10
-        conflicts("platform=darwin", when="+cuda ^cuda@11.0.2: ")
+        conflicts("platform=darwin", when="+cuda ^cuda@11.0.2:")

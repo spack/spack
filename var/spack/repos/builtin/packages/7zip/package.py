@@ -25,6 +25,9 @@ class _7zip(SourceforgePackage, Package):
 
     version("21.07", sha256="213d594407cb8efcba36610b152ca4921eda14163310b43903d13e68313e1e39")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "link_type",
         default="shared",

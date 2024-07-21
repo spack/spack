@@ -18,6 +18,7 @@ class PyScipy(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("1.14.0", sha256="b5923f48cb840380f9854339176ef21763118a7300a88203ccd0bdd26e58527b")
     version("1.13.1", sha256="095a87a0312b08dfd6a6155cbbd310a8c51800fc931b8c0b84003014b874ed3c")
     version("1.13.0", sha256="58569af537ea29d3f78e5abd18398459f195546bb3be23d16677fb26616cc11e")
     version("1.12.0", sha256="4bf5abab8a36d20193c698b0f1fc282c1d083c94723902c447e5d2f1780936a3")
@@ -52,9 +53,14 @@ class PyScipy(PythonPackage):
     version("1.3.3", sha256="64bf4e8ae0db2d42b58477817f648d81e77f0b381d0ea4427385bba3f959380a")
     version("1.3.2", sha256="a03939b431994289f39373c57bbe452974a7da724ae7f9620a1beee575434da4")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Based on wheel availability on PyPI
     with default_args(type=("build", "link", "run")):
-        depends_on("python@3.9:3.12", when="@1.11.2:")
+        depends_on("python@3.10:3.12", when="@1.14:")
+        depends_on("python@3.9:3.12", when="@1.11.2:1.13")
         depends_on("python@3.8:3.11", when="@1.9.2:1.11.1")
         depends_on("python@3.8:3.10", when="@1.8:1.9.1")
         depends_on("python@:3.10", when="@1.7.2:1.7")
@@ -92,7 +98,8 @@ class PyScipy(PythonPackage):
 
     # Run dependencies
     with default_args(type=("build", "link", "run")):
-        depends_on("py-numpy@1.22.4:2.2", when="@1.13:")
+        depends_on("py-numpy@1.23.5:2.2", when="@1.14:")
+        depends_on("py-numpy@1.22.4:2.2", when="@1.13")
         depends_on("py-numpy@1.22.4:1.28", when="@1.12")
         depends_on("py-numpy@1.21.6:1.27", when="@1.11")
         depends_on("py-numpy@1.19.5:1.26", when="@1.10")

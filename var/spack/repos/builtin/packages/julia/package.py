@@ -26,6 +26,8 @@ class Julia(MakefilePackage):
     maintainers("vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
+    version("1.10.4", sha256="c46ed8166fe860a7258d088a0add68dfdf11ad64cc4c0b1f113570862d3ef777")
+    version("1.10.3", sha256="b3cd34c839d25b98a162070b4e3abd5f34564ffdad13e07073be7885e5678a18")
     version("1.10.2", sha256="e3d20c02975da054aeb18d32ed84c5d760d54d2563e45e25017684a5a105d185")
     version("1.9.3", sha256="8d7dbd8c90e71179e53838cdbe24ff40779a90d7360e29766609ed90d982081d")
     version("1.9.2", sha256="015438875d591372b80b09d01ba899657a6517b7c72ed41222298fef9d4ad86b")
@@ -46,6 +48,9 @@ class Julia(MakefilePackage):
     version("1.6.6", sha256="a8023708cadb2649395769810e6cec8afc8e352aa6d407189b6c88b86d7f5090")
     version("1.6.5", sha256="b70ae299ff6b63a9e9cbf697147a48a31b4639476d1947cb52e4201e444f23cb")
     version("1.6.4", sha256="a4aa921030250f58015201e28204bff604a007defc5a379a608723e6bb1808d4")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("precompile", default=True, description="Improve julia startup time")
     variant("openlibm", default=True, description="Use openlibm instead of libm")

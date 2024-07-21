@@ -55,6 +55,10 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("2.10.1", sha256="a4a9df645ebdc11e86221b794b276d1e17974887ead161d5050aaf0b43bb183a")
     version("2.10.0b", sha256="b55dbdc692afe5a00490d1ea1c38dd908dae244f7bdd7faaf711680059824c11")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Versions 2.13.0 and later can be patched to build shared
     # libraries on Darwin; the patch for this capability does not
     # apply to version 2.12.1 and earlier due to changes in the build system
@@ -85,6 +89,14 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("caliper", default=False, description="Enable Caliper support")
     variant("rocblas", default=False, description="Enable rocBLAS")
     variant("cublas", default=False, description="Enable cuBLAS")
+    variant(
+        "precision",
+        default="double",
+        values=("single", "double", "longdouble"),
+        multi=False,
+        description="Floating point precision",
+        when="@2.12.1:",
+    )
 
     # Patch to add gptune hookup codes
     patch("ij_gptune.patch", when="+gptune@2.19.0")
@@ -100,6 +112,10 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     patch("hypre21800-compat.patch", when="@2.18.0")
     # Patch to get config flags right
     patch("detect-compiler.patch", when="@2.15.0:2.20.0")
+    # The following patch may not work for all versions, so apply it only when
+    # it is needed:
+    patch("hypre-precision-fix.patch", when="precision=single")
+    patch("hypre-precision-fix.patch", when="precision=longdouble")
 
     @when("@2.26.0")
     def patch(self):  # fix sequential compilation in 'src/seq_mv'
@@ -220,6 +236,11 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         configure_args.extend(self.enable_or_disable("complex"))
 
+        if spec.satisfies("precision=single"):
+            configure_args.append("--enable-single")
+        elif spec.satisfies("precision=longdouble"):
+            configure_args.append("--enable-longdouble")
+
         if spec.satisfies("+shared"):
             configure_args.append("--enable-shared")
 
@@ -265,7 +286,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             else:
                 configure_args.append("--enable-cub")
             if spec.satisfies("+cublas"):
-                conigure_args.append("--enable-cublas")
+                configure_args.append("--enable-cublas")
         else:
             configure_args.extend(["--without-cuda", "--disable-curand", "--disable-cusparse"])
             if spec.satisfies("@:2.20.99"):

@@ -38,11 +38,11 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     version("2023.03.stable", branch="release/2023.03")
     version("2023.03.01", commit="9e0daf2ad169f6c7f6c60408475b3c2f71baebbf")
     version("2022.10.01", commit="e8a5cc87e8f5ddfd14338459a4106f8e0d162c83")
-    version("2022.05.15", commit="8ac72d9963c4ed7b7f56acb65feb02fbce353479")
-    version("2022.04.15", commit="a92fdad29fc180cc522a9087bba9554a829ee002")
-    version("2022.01.15", commit="0238e9a052a696707e4e65b2269f342baad728ae")
-    version("2021.10.15", commit="a8f289e4dc87ff98e05cfc105978c09eb2f5ea16")
-    version("2021.05.15", commit="004ea0c2aea6a261e7d5d216c24f8a703fc6c408")
+    version("2022.05.15", commit="8ac72d9963c4ed7b7f56acb65feb02fbce353479", deprecated=True)
+    version("2022.04.15", commit="a92fdad29fc180cc522a9087bba9554a829ee002", deprecated=True)
+    version("2022.01.15", commit="0238e9a052a696707e4e65b2269f342baad728ae", deprecated=True)
+    version("2021.10.15", commit="a8f289e4dc87ff98e05cfc105978c09eb2f5ea16", deprecated=True)
+    version("2021.05.15", commit="004ea0c2aea6a261e7d5d216c24f8a703fc6c408", deprecated=True)
     version("2021.03.01", commit="68a051044c952f0f4dac459d9941875c700039e7", deprecated=True)
     version("2020.08.03", commit="d9d13c705d81e5de38e624254cf0875cce6add9a", deprecated=True)
     version("2020.07.21", commit="4e56c780cffc53875aca67d6472a2fb3678970eb", deprecated=True)
@@ -50,8 +50,9 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     version("2020.03.01", commit="94ede4e6fa1e05e6f080be8dc388240ea027f769", deprecated=True)
     version("2019.12.28", commit="b4e1877ff96069fd8ed0fdf0e36283a5b4b62240", deprecated=True)
     version("2019.08.14", commit="6ea44ed3f93ede2d0a48937f288a2d41188a277c", deprecated=True)
-    version("2018.12.28", commit="8dbf0d543171ffa9885344f32f23cc6f7f6e39bc", deprecated=True)
-    version("2018.11.05", commit="d0c43e39020e67095b1f1d8bb89b75f22b12aee9", deprecated=True)
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Options for MPI and hpcprof-mpi.  We always support profiling
     # MPI applications.  These options add hpcprof-mpi, the MPI
@@ -151,8 +152,8 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
         " +graph +regex +shared +multithreaded visibility=global"
     )
 
-    depends_on("binutils +libiberty", type="link", when="@2021:2022.06")
-    depends_on("binutils +libiberty~nls", type="link", when="@2020.04:2020")
+    depends_on("binutils@:2.39 +libiberty", type="link", when="@2021:2022.06")
+    depends_on("binutils@:2.39 +libiberty~nls", type="link", when="@2020.04:2020")
     depends_on("binutils@:2.33.1 +libiberty~nls", type="link", when="@:2020.03")
     depends_on("boost" + boost_libs)
     depends_on("bzip2+shared", type="link")
@@ -212,6 +213,12 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     conflicts("^binutils@2.35:2.35.1", msg="avoid binutils 2.35 and 2.35.1 (spews errors)")
     conflicts("^xz@5.2.7:5.2.8", msg="avoid xz 5.2.7:5.2.8 (broken symbol versions)")
     conflicts("^intel-xed@2023.08:", when="@:2023.09")
+
+    # https://gitlab.com/hpctoolkit/hpctoolkit/-/issues/831
+    conflicts(
+        "^elfutils@0.191:",
+        msg="avoid elfutils 0.191 (known critical errors in hpcstruct for CUDA binaries)",
+    )
 
     conflicts("+cray", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
     conflicts("+mpi", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")

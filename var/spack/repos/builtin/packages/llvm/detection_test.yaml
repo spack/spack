@@ -53,7 +53,6 @@ paths:
       compilers:
         c: ".*/bin/clang-8$"
         cxx: ".*/bin/clang[+][+]-8$"
-        ld: ".*/bin/ld.lld-8$"
 
   - spec: 'llvm@3.9.1+clang~lld~lldb'
     extra_attributes:

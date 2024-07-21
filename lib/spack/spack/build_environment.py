@@ -72,6 +72,7 @@ import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.user_environment
+import spack.util.executable
 import spack.util.path
 import spack.util.pattern
 from spack import traverse
@@ -458,10 +459,7 @@ def set_wrapper_variables(pkg, env):
 
     # Find ccache binary and hand it to build environment
     if spack.config.get("config:ccache"):
-        ccache = Executable("ccache")
-        if not ccache:
-            raise RuntimeError("No ccache binary found in PATH")
-        env.set(SPACK_CCACHE_BINARY, ccache)
+        env.set(SPACK_CCACHE_BINARY, spack.util.executable.which_string("ccache", required=True))
 
     # Gather information about various types of dependencies
     link_deps = set(pkg.spec.traverse(root=False, deptype=("link")))
@@ -740,7 +738,9 @@ def get_rpaths(pkg):
     # Second module is our compiler mod name. We use that to get rpaths from
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
-        rpaths.append(path_from_modules([pkg.compiler.modules[1]]))
+        mod_rpath = path_from_modules([pkg.compiler.modules[1]])
+        if mod_rpath:
+            rpaths.append(mod_rpath)
     return list(dedupe(filter_system_paths(rpaths)))
 
 
@@ -1473,7 +1473,7 @@ class ChildError(InstallError):
             out.write("  {0}\n".format(self.log_name))
 
         # Also output the test log path IF it exists
-        if self.context != "test":
+        if self.context != "test" and have_log:
             test_log = join_path(os.path.dirname(self.log_name), spack_install_test_log)
             if os.path.isfile(test_log):
                 out.write("\nSee test log for details:\n")

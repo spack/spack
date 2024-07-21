@@ -27,6 +27,8 @@ class Armadillo(CMakePackage):
     version("8.100.1", sha256="54773f7d828bd3885c598f90122b530ded65d9b195c9034e082baea737cd138d")
     version("7.950.1", sha256="a32da32a0ea420b8397a53e4b40ed279c1a5fc791dd492a2ced81ffb14ad0d1b")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("hdf5", default=False, description="Include HDF5 support")
 
     depends_on("cmake@2.8.12:", type="build")
@@ -41,6 +43,14 @@ class Armadillo(CMakePackage):
     # E.g. `/path/linux-x86_64/dir` -> `/path/1-x86_64/dir` if/when a linux
     # platform's compiler is adding `#define linux 1`.
     patch("undef_linux.patch", when="platform=linux")
+
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        if name == "ldflags":
+            if spec.satisfies("%apple-clang@15:"):
+                flags.append("-Wl,-ld_classic")
+
+        return (flags, None, None)
 
     def patch(self):
         # Do not include Find{BLAS_type} because we are specifying the

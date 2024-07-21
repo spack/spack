@@ -22,6 +22,9 @@ class Dcmtk(CMakePackage):
     version("3.6.3", sha256="57f4f71ee4af9114be6408ff6fcafc441c349e4c2954e17c9c22c8ce0fb065bf")
     version("3.6.2", sha256="e9bf6e8805bbcf8a25274566541798785fd4e73bd046045ef27a0109ab520924")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("ssl", default=True, description="Suuport DICOM Security Enhancements one")
     depends_on("openssl", type=("build", "link"), when="+ssl")
 
@@ -49,6 +52,8 @@ class Dcmtk(CMakePackage):
     variant("stl", default=True, description="Use native STL implementation")
 
     conflicts("platform=darwin target=aarch64:", when="@:3.6.6")
+
+    patch("tiff-3.6.7.patch", when="@3.6.7")
 
     def patch(self):
         # Backport 3.6.4

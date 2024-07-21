@@ -29,7 +29,6 @@
 :- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode).
 :- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode).
 :- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("no_flags", PackageNode, _), not attr("node", PackageNode).
 :- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode).
 :- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode).
 :- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode).
@@ -256,6 +255,7 @@ possible_version_weight(node(ID, Package), Weight)
 :- attr("version", node(ID, Package), Version),
    version_weight(node(ID, Package), Weight),
    not pkg_fact(Package, version_declared(Version, Weight, "installed")),
+   not pkg_fact(Package, version_declared(Version, Weight, "installed_git_version")),
    not build(node(ID, Package)),
    internal_error("Build version weight used for reused package").
 
@@ -611,25 +611,18 @@ do_not_impose(EffectID, node(X, Package))
 % Virtual dependency weights
 %-----------------------------------------------------------------------------
 
-% A provider may have different possible weights depending on whether it's an external
-% or not, or on preferences expressed in packages.yaml etc. This rule ensures that
+% A provider has different possible weights depending on its preference. This rule ensures that
 % we select the weight, among the possible ones, that minimizes the overall objective function.
 1 { provider_weight(DependencyNode, VirtualNode, Weight) :
     possible_provider_weight(DependencyNode, VirtualNode, Weight, _) } 1
  :- provider(DependencyNode, VirtualNode), internal_error("Package provider weights must be unique").
 
-% A provider that is an external can use a weight of 0
-possible_provider_weight(DependencyNode, VirtualNode, 0, "external")
-  :- provider(DependencyNode, VirtualNode),
-     external(DependencyNode).
-
-% A provider mentioned in the default configuration can use a weight
-% according to its priority in the list of providers
+% Any configured provider has a weight based on index in the preference list
 possible_provider_weight(node(ProviderID, Provider), node(VirtualID, Virtual), Weight, "default")
   :- provider(node(ProviderID, Provider), node(VirtualID, Virtual)),
      default_provider_preference(Virtual, Provider, Weight).
 
-% Any provider can use 100 as a weight, which is very high and discourage its use
+% Any non-configured provider has a default weight of 100
 possible_provider_weight(node(ProviderID, Provider), VirtualNode, 100, "fallback")
   :- provider(node(ProviderID, Provider), VirtualNode).
 
@@ -811,37 +804,6 @@ node_has_variant(node(ID, Package), Variant) :-
   pkg_fact(Package, variant(Variant)),
   attr("node", node(ID, Package)).
 
-% Variant propagation is forwarded to dependencies
-attr("variant_propagation_candidate", PackageNode, Variant, Value, Source) :-
-  attr("node", PackageNode),
-  depends_on(ParentNode, PackageNode),
-  attr("variant_value", node(_, Source), Variant, Value),
-  attr("variant_propagation_candidate", ParentNode, Variant, _, Source).
-
-% If the node is a candidate, and it has the variant and value,
-% then those variant and value should be propagated
-attr("variant_propagate", node(ID, Package), Variant, Value, Source) :-
-  attr("variant_propagation_candidate", node(ID, Package), Variant, Value, Source),
-  node_has_variant(node(ID, Package), Variant),
-  pkg_fact(Package, variant_possible_value(Variant, Value)),
-  not attr("variant_set", node(ID, Package), Variant).
-
-% Propagate the value, if there is the corresponding attribute
-attr("variant_value", PackageNode, Variant, Value) :- attr("variant_propagate", PackageNode, Variant, Value, _).
-
-% If a variant is propagated, we cannot have extraneous values (this is for multi valued variants)
-variant_is_propagated(PackageNode, Variant) :- attr("variant_propagate", PackageNode, Variant, _, _).
-:- variant_is_propagated(PackageNode, Variant),
-   attr("variant_value", PackageNode, Variant, Value),
-   not attr("variant_propagate", PackageNode, Variant, Value, _).
-
-% Cannot receive different values from different sources on the same variant
-error(100, "{0} and {1} cannot both propagate variant '{2}' to package {3} with values '{4}' and '{5}'", Source1, Source2, Variant, Package, Value1, Value2) :-
-  attr("variant_propagate", node(X, Package), Variant, Value1, Source1),
-  attr("variant_propagate", node(X, Package), Variant, Value2, Source2),
-  node_has_variant(node(X, Package), Variant),
-  Value1 < Value2, Source1 < Source2.
-
 % a variant cannot be set if it is not a variant on the package
 error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
   :- attr("variant_set", node(X, Package), Variant),
@@ -919,7 +881,7 @@ variant_not_default(node(ID, Package), Variant, Value)
     % variants set explicitly on the CLI don't count as non-default
     not attr("variant_set", node(ID, Package), Variant, Value),
     % variant values forced by propagation don't count as non-default
-    not attr("variant_propagate", node(ID, Package), Variant, Value, _),
+    not propagate(node(ID, Package), variant_value(Variant, Value)),
     % variants set on externals that we could use don't count as non-default
     % this makes spack prefer to use an external over rebuilding with the
     % default configuration
@@ -932,7 +894,7 @@ variant_default_not_used(node(ID, Package), Variant, Value)
   :- variant_default_value(Package, Variant, Value),
      node_has_variant(node(ID, Package), Variant),
      not attr("variant_value", node(ID, Package), Variant, Value),
-     not attr("variant_propagate", node(ID, Package), Variant, _, _),
+     not propagate(node(ID, Package), variant_value(Variant, _)),
      attr("node", node(ID, Package)).
 
 % The variant is set in an external spec
@@ -988,6 +950,101 @@ pkg_fact(Package, variant_single_value("dev_path"))
 % warnings like 'info: atom does not occur in any rule head'.
 #defined variant_default_value/3.
 #defined variant_default_value_from_packages_yaml/3.
+
+%-----------------------------------------------------------------------------
+% Propagation semantics
+%-----------------------------------------------------------------------------
+
+% Propagation roots have a corresponding attr("propagate", ...)
+propagate(RootNode, PropagatedAttribute) :- attr("propagate", RootNode, PropagatedAttribute).
+propagate(RootNode, PropagatedAttribute, EdgeTypes) :- attr("propagate", RootNode, PropagatedAttribute, EdgeTypes).
+
+
+% Propagate an attribute along edges to child nodes
+propagate(ChildNode, PropagatedAttribute) :-
+  propagate(ParentNode, PropagatedAttribute),
+  depends_on(ParentNode, ChildNode).
+
+propagate(ChildNode, PropagatedAttribute, edge_types(DepType1, DepType2)) :-
+  propagate(ParentNode, PropagatedAttribute, edge_types(DepType1, DepType2)),
+  depends_on(ParentNode, ChildNode),
+  1 { attr("depends_on", ParentNode, ChildNode, DepType1);  attr("depends_on", ParentNode, ChildNode, DepType2) }.
+
+%-----------------------------------------------------------------------------
+% Activation of propagated values
+%-----------------------------------------------------------------------------
+
+%----
+% Variants
+%----
+
+% If a variant is propagated, and can be accepted, set its value
+attr("variant_value", node(ID, Package), Variant, Value) :-
+  propagate(node(ID, Package), variant_value(Variant, Value)),
+  node_has_variant(node(ID, Package), Variant),
+  pkg_fact(Package, variant_possible_value(Variant, Value)),
+  not attr("variant_set", node(ID, Package), Variant).
+
+% If a variant is propagated, we cannot have extraneous values
+variant_is_propagated(PackageNode, Variant) :-
+  attr("variant_value", PackageNode, Variant, Value),
+  propagate(PackageNode, variant_value(Variant, Value)),
+  not attr("variant_set", PackageNode, Variant).
+
+:- variant_is_propagated(PackageNode, Variant),
+   attr("variant_value", PackageNode, Variant, Value),
+   not propagate(PackageNode, variant_value(Variant, Value)).
+
+%----
+% Flags
+%----
+
+% A propagated flag implies:
+% 1. The same flag type is not set on this node
+% 2. This node has the same compiler as the propagation source
+
+propagated_flag(node(PackageID, Package), node_flag(FlagType, Flag), SourceNode) :-
+  propagate(node(PackageID, Package), node_flag(FlagType, Flag), _),
+  not attr("node_flag_set", node(PackageID, Package), FlagType, _),
+  % Same compiler as propagation source
+  node_compiler(node(PackageID, Package), CompilerID),
+  node_compiler(SourceNode, CompilerID),
+  attr("propagate", SourceNode, node_flag(FlagType, Flag), _),
+  node(PackageID, Package) != SourceNode,
+  not runtime(Package).
+
+attr("node_flag", PackageNode, FlagType, Flag) :- propagated_flag(PackageNode, node_flag(FlagType, Flag), _).
+attr("node_flag_source", PackageNode, FlagType, SourceNode) :- propagated_flag(PackageNode, node_flag(FlagType, _), SourceNode).
+
+% Cannot propagate the same flag from two distinct sources
+error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
+  propagated_flag(node(ID, Package), node_flag(FlagType, _), node(_, Source1)),
+  propagated_flag(node(ID, Package), node_flag(FlagType, _), node(_, Source2)),
+  Source1 < Source2.
+
+%----
+% Compiler constraints
+%----
+
+attr("node_compiler_version_satisfies", node(ID, Package), Compiler, Version) :-
+  propagate(node(ID, Package), node_compiler_version_satisfies(Compiler, Version)),
+  node_compiler(node(ID, Package), CompilerID),
+  compiler_name(CompilerID, Compiler),
+  not runtime(Package),
+  not external(Package).
+
+%-----------------------------------------------------------------------------
+% Runtimes
+%-----------------------------------------------------------------------------
+
+% Check whether the DAG has any built package
+has_built_packages() :- build(X), not external(X).
+
+% If we build packages, the runtime nodes must use an available compiler
+1 { node_compiler(PackageNode, CompilerID) : build(PackageNode), not external(PackageNode) } :-
+  has_built_packages(),
+  runtime(RuntimePackage),
+  node_compiler(node(_, RuntimePackage), CompilerID).
 
 %-----------------------------------------------------------------------------
 % Platform semantics
@@ -1090,10 +1147,18 @@ attr("node_target", PackageNode, Target)
  :- attr("node", PackageNode), attr("node_target_set", PackageNode, Target).
 
 % each node has the weight of its assigned target
-node_target_weight(node(ID, Package), Weight)
- :- attr("node", node(ID, Package)),
-    attr("node_target", node(ID, Package), Target),
-    target_weight(Target, Weight).
+target_weight(Target, 0)
+ :- attr("node", PackageNode),
+    attr("node_target", PackageNode, Target),
+    attr("node_target_set", PackageNode, Target).
+
+node_target_weight(PackageNode, MinWeight)
+ :- attr("node", PackageNode),
+    attr("node_target", PackageNode, Target),
+    target(Target),
+    MinWeight = #min { Weight : target_weight(Target, Weight) }.
+
+:- attr("node_target", PackageNode, Target), not node_target_weight(PackageNode, _).
 
 % compatibility rules for targets among nodes
 node_target_match(ParentNode, DependencyNode)
@@ -1155,12 +1220,12 @@ error(10, "No valid compiler for {0} satisfies '%{1}'", Package, Compiler)
 
 % If the compiler of a node must satisfy a constraint, then its version
 % must be chosen among the ones that satisfy said constraint
-error(100, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, Compiler, Constraint)
+error(100, "Package {0} cannot satisfy '%{1}@{2}'", Package, Compiler, Constraint)
   :- attr("node", node(X, Package)),
      attr("node_compiler_version_satisfies", node(X, Package), Compiler, Constraint),
-		 not compiler_version_satisfies(Compiler, Constraint, _).
+	 not compiler_version_satisfies(Compiler, Constraint, _).
 
-error(100, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, Compiler, Constraint)
+error(100, "Package {0} cannot satisfy '%{1}@{2}'", Package, Compiler, Constraint)
   :- attr("node", node(X, Package)),
      attr("node_compiler_version_satisfies", node(X, Package), Compiler, Constraint),
      not compiler_version_satisfies(Compiler, Constraint, ID),
@@ -1241,45 +1306,9 @@ error(100, "Compiler {1}@{2} requested for {0} cannot be found. Set install_miss
 % Compiler flags
 %-----------------------------------------------------------------------------
 
-% propagate flags when compiler match
-can_inherit_flags(PackageNode, DependencyNode, FlagType)
-  :- same_compiler(PackageNode, DependencyNode),
-     not attr("node_flag_set", DependencyNode, FlagType, _),
-     flag_type(FlagType).
-
-same_compiler(PackageNode, DependencyNode)
-  :- depends_on(PackageNode, DependencyNode),
-     node_compiler(PackageNode, CompilerID),
-     node_compiler(DependencyNode, CompilerID),
-     compiler_id(CompilerID).
-
-node_flag_inherited(DependencyNode, FlagType, Flag)
-  :- attr("node_flag_set", PackageNode, FlagType, Flag),
-     can_inherit_flags(PackageNode, DependencyNode, FlagType),
-     attr("node_flag_propagate", PackageNode, FlagType).
-
-% Ensure propagation
-:- node_flag_inherited(PackageNode, FlagType, Flag),
-   can_inherit_flags(PackageNode, DependencyNode, FlagType),
-   attr("node_flag_propagate", PackageNode, FlagType).
-
-error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
-  depends_on(Source1, Package),
-  depends_on(Source2, Package),
-  attr("node_flag_propagate", Source1, FlagType),
-  attr("node_flag_propagate", Source2, FlagType),
-  can_inherit_flags(Source1, Package, FlagType),
-  can_inherit_flags(Source2, Package, FlagType),
-  Source1 < Source2.
-
 % remember where flags came from
-attr("node_flag_source", PackageNode, FlagType, PackageNode)
-  :- attr("node_flag_set", PackageNode, FlagType, _).
-
-attr("node_flag_source", DependencyNode, FlagType, Q)
-  :- attr("node_flag_source", PackageNode, FlagType, Q),
-     node_flag_inherited(DependencyNode, FlagType, _),
-     attr("node_flag_propagate", PackageNode, FlagType).
+attr("node_flag_source", PackageNode, FlagType, PackageNode) :- attr("node_flag_set", PackageNode, FlagType, _).
+attr("node_flag_source", PackageNode, FlagType, PackageNode) :- attr("node_flag", PackageNode, FlagType, _), attr("hash", PackageNode, _).
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
 attr("node_flag", PackageNode, FlagType, Flag)
@@ -1299,15 +1328,8 @@ attr("node_flag_compiler_default", PackageNode)
      compiler_name(CompilerID, CompilerName),
      compiler_version(CompilerID, Version).
 
-% if a flag is set to something or inherited, it's included
+% Flag set to something
 attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_set", PackageNode, FlagType, Flag).
-attr("node_flag", PackageNode, FlagType, Flag) :- node_flag_inherited(PackageNode, FlagType, Flag).
-
-% if no node flags are set for a type, there are no flags.
-attr("no_flags", PackageNode, FlagType)
-  :- not attr("node_flag", PackageNode, FlagType, _),
-     attr("node", PackageNode),
-     flag_type(FlagType).
 
 #defined compiler_flag/3.
 
@@ -1496,7 +1518,7 @@ opt_criterion(45, "preferred providers (non-roots)").
 }.
 
 % Try to minimize the number of compiler mismatches in the DAG.
-opt_criterion(40, "compiler mismatches that are not from CLI").
+opt_criterion(40, "compiler mismatches that are not required").
 #minimize{ 0@240: #true }.
 #minimize{ 0@40: #true }.
 #minimize{
@@ -1506,7 +1528,7 @@ opt_criterion(40, "compiler mismatches that are not from CLI").
       not runtime(Dependency)
 }.
 
-opt_criterion(39, "compiler mismatches that are not from CLI").
+opt_criterion(39, "compiler mismatches that are required").
 #minimize{ 0@239: #true }.
 #minimize{ 0@39: #true }.
 #minimize{
