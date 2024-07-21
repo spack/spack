@@ -2632,6 +2632,7 @@ class TestConcretize:
         assert s.concrete
 
     @pytest.mark.regression("44828")
+    @pytest.mark.not_on_windows("Tests use linux paths")
     def test_correct_external_is_selected_from_packages_yaml(self, mutable_config):
         """Tests that when filtering external specs, the correct external is selected to
         reconstruct the prefix, and other external attributes.
