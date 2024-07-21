@@ -53,7 +53,7 @@ class PyGlobusSdk(PythonPackage):
     depends_on("py-cryptography@3.3.1:3.3,3.4.1:", when="@3.7:", type=("build", "run"))
     depends_on("py-cryptography@2:3.3,3.4.1:3.6", when="@:3.0", type=("build", "run"))
     depends_on("py-typing-extensions@4:", when="@3.25: ^python@:3.9", type=("build", "run"))
-    dpeends_on("py-importlib-resources@5.12.0:", when="@3.41: ^python@:3.8", type=("build", "run"))
+    depends_on("py-importlib-resources@5.12.0:", when="@3.41: ^python@:3.8", type=("build", "run"))
 
     def url_for_version(self, version):
         if version <= Version("3.39"): 
