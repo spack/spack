@@ -1700,28 +1700,19 @@ class SpackSolverSetup:
                     current_filter.factory = lambda: candidate_specs
                     selected_externals.update(current_filter.selected_specs())
 
-            # Order the external versions to prefer more recent versions
-            # even if specs in packages.yaml are not ordered that way
-            external_versions = [
-                (x.version, external_id) for external_id, x in enumerate(candidate_specs)
-            ]
-            external_versions = [
-                (v, idx, external_id)
-                for idx, (v, external_id) in enumerate(sorted(external_versions, reverse=True))
-            ]
-            for version, idx, external_id in external_versions:
-                self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=version, idx=idx, origin=Provenance.EXTERNAL)
-                )
-
             # Emit facts for externals specs. Note that "local_idx" is the index of the spec
             # in packages:<pkg_name>:externals. This means:
             #
             # packages:<pkg_name>:externals[local_idx].spec == spec
+            external_versions = []
             for local_idx, spec in enumerate(candidate_specs):
                 msg = f"{spec.name} available as external when satisfying {spec}"
 
                 if spec_filters and spec not in selected_externals:
+                    continue
+
+                if not spec.versions.concrete:
+                    warnings.warn(f"cannot use the external spec {spec}: needs a concrete version")
                     continue
 
                 def external_imposition(input_spec, requirements):
@@ -1734,8 +1725,20 @@ class SpackSolverSetup:
                 except (spack.error.SpecError, RuntimeError) as e:
                     warnings.warn(f"while setting up external spec {spec}: {e}")
                     continue
+                external_versions.append((spec.version, local_idx))
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
+
+            # Order the external versions to prefer more recent versions
+            # even if specs in packages.yaml are not ordered that way
+            external_versions = [
+                (v, idx, external_id)
+                for idx, (v, external_id) in enumerate(sorted(external_versions, reverse=True))
+            ]
+            for version, idx, external_id in external_versions:
+                self.declared_versions[pkg_name].append(
+                    DeclaredVersion(version=version, idx=idx, origin=Provenance.EXTERNAL)
+                )
 
             self.trigger_rules()
             self.effect_rules()

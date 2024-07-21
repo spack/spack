@@ -2615,6 +2615,7 @@ class TestConcretize:
         [
             "cmake@3.4.3 foo=bar",  # cmake has no variant "foo"
             "mvdefaults@1.0 foo=a,d",  # variant "foo" has no value "d"
+            "cmake %gcc",  # spec has no version
         ],
     )
     def test_corrupted_external_does_not_halt_concretization(self, corrupted_str, mutable_config):
