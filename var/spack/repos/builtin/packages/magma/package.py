@@ -188,7 +188,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.test_src_dir])
 
-    def test_magma(self):
+    def test_all_c(self):
         """Run benchmark tests"""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=False):
