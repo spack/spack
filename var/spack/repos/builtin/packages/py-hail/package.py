@@ -74,17 +74,16 @@ class PyHail(MakefilePackage):
         depends_on("lapack")
         depends_on("lz4")
 
-        # HAIL Python API requirements are very specific
         depends_on("py-avro@1.10:1.11")
-        depends_on("py-bokeh@:3.3")
-        depends_on("py-decorator@:4.4.2")
+        depends_on("py-bokeh@3:3.3")
+        depends_on("py-decorator@:4")
         depends_on("py-deprecated@1.2.10:1.2")
-        depends_on("py-numpy@:2")
-        depends_on("py-pandas@2")
+        depends_on("py-numpy@:1")
+        depends_on("py-pandas@2:2")
         depends_on("py-parsimonious@:0")
-        depends_on("py-plotly@5.18:5.20")
+        depends_on("py-plotly@5.18:5")
         depends_on("py-protobuf@3.20.2")
-        depends_on("py-requests@2.31")
+        depends_on("py-requests@2.31:2")
         depends_on("py-scipy@1.3:1.11")
 
         # hailtop requirements
