@@ -59,26 +59,23 @@ class Uftrace(AutotoolsPackage):
     def installcheck(self):
         pass
 
-    def test(self):
+    def test_uftrace(self):
         """Perform stand-alone/smoke tests using the installed package."""
         uftrace = self.prefix.bin.uftrace
-        self.run_test(
-            uftrace,
-            ["-A", ".", "-R", ".", "-P", "main", uftrace, "-V"],
-            [
-                r"dwarf",
-                r"luajit",
-                r"tui",
-                r"sched",
-                r"dynamic",
-                r"main\(2, ",
-                r"  getopt_long\(2, ",
-                r"  .*printf.*\(",
-                r"} = 0; /\* main \*/",
-            ],
-            installed=True,
-            purpose="test: testing the installation",
-        )
+        options = (["-A", ".", "-R", ".", "-P", "main", uftrace, "-V"],)
+        expected = [
+            r"dwarf",
+            r"luajit",
+            r"tui",
+            r"sched",
+            r"dynamic",
+            r"main\(2, ",
+            r"  getopt_long\(2, ",
+            r"  .*printf.*\(",
+            r"} = 0; /\* main \*/",
+        ]
+        out = uftrace(*options, output=str.split, error=str.split)
+        check_outputs(expected, out)
 
     @classmethod
     def determine_version(cls, exe):
