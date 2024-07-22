@@ -832,31 +832,35 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                     self.run_test(exe=cmake_bin, options=["."])
                 self.run_test(exe="make")
 
-    def run_smoke_tests(self):
+    def test_smoke(self):
+        """Run sundials smoke tests"""
+
+        cmake_bin = self.cmake_bin(set=False)
+
+        if not cmake_bin:
+            raise SkipTest("cmake_bin_path.txt not found")
+
         if "~examples-install" in self.spec:
-            return
+            raise SkipTest("Package must be installed with +examples-install")
 
-        for smoke_test in self._smoke_tests:
-            self.run_test(
-                exe=join_path(self._smoke_tests_path, smoke_test[0]),
-                options=smoke_test[1],
-                status=[0],
-                installed=True,
-                skip_missing=True,
-                purpose=smoke_test[2],
-            )
-
-    def clean_smoke_tests(self):
-        if "~examples-install" in self.spec:
-            return
-
+        cmake = which(cmake_bin)
+        make = which("make")
         for smoke_test in self._smoke_tests:
             work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
             with working_dir(work_dir):
-                self.run_test(exe="make", options=["clean"])
+                if smoke_test[3]:  # use cmake
+                    cmake(".")
+                    make()
 
-    def test(self):
-        self.build_smoke_tests()
-        self.run_smoke_tests()
-        self.clean_smoke_tests()
-        return
+        for smoke_test in self._smoke_tests:
+            with test_part(self, f"test_part_{smoke_test}", purpose=smoke_test[2]):
+                exe = which(join_path(self._smoke_tests_path, smoke_test[0]))
+                if exe is None:
+                    raise SkipTest(f"{smoke_test[0]} not found in {self.version}")
+                exe(*smoke_test[1])
+
+        make = which("make")
+        work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
+        with working_dir(work_dir):
+            for smoke_test in self._smoke_tests:
+                make("clean")
