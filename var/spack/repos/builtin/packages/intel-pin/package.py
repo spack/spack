@@ -114,6 +114,9 @@ class IntelPin(Package):
         url="https://software.intel.com/sites/landingpage/pintool/downloads/pin-2.14-71313-gcc.4.4.7-linux.tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     def install(self, spec, prefix):
         install_tree(".", prefix)
         mkdir(prefix.bin)

@@ -30,6 +30,9 @@ class AdolC(AutotoolsPackage):
     version("2.5.1", sha256="dedb93c3bb291366d799014b04b6d1ec63ca4e7216edf16167776c07961e3b4a")
     version("2.5.0", sha256="9d51c426d831884aac8f418be410c001eb62f3a11cb8f30c66af0b842edffb96")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "advanced_branching",
         default=False,

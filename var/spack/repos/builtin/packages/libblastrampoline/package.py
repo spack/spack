@@ -41,6 +41,8 @@ class Libblastrampoline(MakefilePackage):
     version("3.0.0", sha256="4d0856d30e7ba0cb0de08b08b60fd34879ce98714341124acf87e587d1bbbcde")
     version("2.2.0", sha256="1fb8752891578b45e187019c67fccbaafb108756aadc69bdd876033846ad30d3")
 
+    depends_on("c", type="build")  # generated
+
     build_directory = "src"
 
     def install(self, spec, prefix):

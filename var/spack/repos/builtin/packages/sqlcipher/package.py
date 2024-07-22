@@ -27,6 +27,9 @@ class Sqlcipher(AutotoolsPackage):
     version("4.0.0", sha256="c8f5fc6d800aae6107bf23900144804db5510c2676c93fbb269e4a0700837d68")
     version("3.4.2", sha256="69897a5167f34e8a84c7069f1b283aba88cdfa8ec183165c4a5da2c816cfaadb")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("openssl")
     depends_on("tcl", type=["build"])
     depends_on("zlib-api")

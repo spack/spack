@@ -20,6 +20,8 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    depends_on("cxx", type="build")  # generated
+
     # Variants are primarily backends to build on GPU systems and pass the right
     # informtion to the packages we depend on
     variant("cuda", default=False, description="Use CUDA support from subpackages")

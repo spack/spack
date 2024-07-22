@@ -22,6 +22,9 @@ class Halide(CMakePackage, PythonExtension):
     version("16.0.0", sha256="a0cccee762681ea697124b8172dd65595856d0fa5bd4d1af7933046b4a085b04")
     version("17.0.0", sha256="7e5a526b4074887b528d25b0265ddfa92c0a6d8bfdfbbba536313ecddf352da3")
     version("17.0.1", sha256="beb18331d9e4b6f69943bcc75fb9d923a250ae689f09f6940a01636243289727")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     variant(
         "build_type",
         default="Release",

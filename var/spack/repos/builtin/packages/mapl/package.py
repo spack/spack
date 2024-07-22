@@ -38,6 +38,7 @@ class Mapl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("2.47.1", sha256="ca3e94c0caa78a91591fe63603d1836196f5294d4baad7cf1d83b229b3a85916")
     version("2.47.0", sha256="66c862d2ab8bcd6969e9728091dbca54f1f420e97e41424c4ba93ef606088459")
     version("2.46.2", sha256="6d397ad73042355967de8ef5b521d6135c004f96e93ae7b215f9ee325e75c6f0")
     version("2.46.1", sha256="f3090281de6293b484259d58f852c45b98759de8291d36a4950e6d348ece6573")
@@ -137,6 +138,9 @@ class Mapl(CMakePackage):
         sha256="8239fdbebd2caa47a232c24927f7a91196704e35c8b7909e1bbbefccf0647ea6",
         deprecated=True,
     )
+
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     # Versions later than 3.14 remove FindESMF.cmake
     # from ESMA_CMake.

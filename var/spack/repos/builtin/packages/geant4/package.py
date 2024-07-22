@@ -57,6 +57,8 @@ class Geant4(CMakePackage):
     version("10.3.3", sha256="bcd36a453da44de9368d1d61b0144031a58e4b43a6d2d875e19085f2700a89d8")
     version("10.0.4", sha256="97f3744366b00143d1eed52f8786823034bbe523f45998106f798af61d83f863")
 
+    depends_on("cxx", type="build")
+
     _cxxstd_values = (
         conditional("11", "14", when="@:10"),
         conditional("17", when="@10.4.1:"),
@@ -164,8 +166,13 @@ class Geant4(CMakePackage):
     depends_on("libxmu", when="+x11")
     depends_on("motif", when="+motif")
     with when("+qt"):
-        depends_on("qt@5: +opengl")
-        depends_on("qt@5.9:", when="@11.2:")
+        depends_on("qmake")
+        with when("^[virtuals=qmake] qt-base"):
+            depends_on("qt-base +accessibility +gui +opengl")
+        with when("^[virtuals=qmake] qt"):
+            depends_on("qt@5: +opengl")
+            depends_on("qt@5.9:", when="@11.2:")
+    conflicts("@:11.1 ^[virtuals=qmake] qt-base", msg="Qt6 not supported before 11.2")
 
     # As released, 10.0.4 has inconsistently capitalised filenames
     # in the cmake files; this patch also enables cxxstd 14
@@ -305,7 +312,9 @@ class Geant4(CMakePackage):
 
         if "+qt" in spec:
             options.append(self.define("GEANT4_USE_QT", True))
-            options.append(self.define("QT_QMAKE_EXECUTABLE", spec["qt"].prefix.bin.qmake))
+            if "^[virtuals=qmake] qt-base" in spec:
+                options.append(self.define("GEANT4_USE_QT_QT6", True))
+            options.append(self.define("QT_QMAKE_EXECUTABLE", spec["qmake"].prefix.bin.qmake))
 
         options.append(self.define_from_variant("GEANT4_USE_VTK", "vtk"))
 
