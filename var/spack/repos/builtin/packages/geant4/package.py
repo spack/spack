@@ -172,7 +172,7 @@ class Geant4(CMakePackage):
         with when("^[virtuals=qmake] qt"):
             depends_on("qt@5: +opengl")
             depends_on("qt@5.9:", when="@11.2:")
-    conflicts("@:11.1 ^[virtuals=qmake] qt-base", msg="Qt6 not supported before 11.1")
+    conflicts("@:11.1 ^[virtuals=qmake] qt-base", msg="Qt6 not supported before 11.2")
 
     # As released, 10.0.4 has inconsistently capitalised filenames
     # in the cmake files; this patch also enables cxxstd 14
