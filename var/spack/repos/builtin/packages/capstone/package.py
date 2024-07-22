@@ -21,5 +21,8 @@ class Capstone(CMakePackage):
     version("4.0.2", sha256="7c81d798022f81e7507f1a60d6817f63aa76e489aa4e7055255f21a22f5e526a")
     version("4.0.1", sha256="79bbea8dbe466bd7d051e037db5961fdb34f67c9fac5c3471dd105cfb1e05dc7")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
+    def cmake_args(self):
+        return ["-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=TRUE"]
