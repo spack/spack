@@ -227,34 +227,47 @@ class Libint(AutotoolsPackage):
         # now build the library
         with working_dir(os.path.join(self.build_directory, "generated")):
             if spec.satisfies("@2.6.0"):
-                # see https://github.com/evaleev/libint/issues/144
-                force_remove(
-                    join_path("include", "libint2", "basis.h"),
-                    join_path("include", "libint2", "config.h"),
-                )
-            cmake_args = [
-                "..",
-                f"-DCMAKE_INSTALL_PREFIX={prefix}",
-                "-DLIBINT2_BUILD_SHARED_AND_STATIC_LIBS=ON",
-            ]
-            if "+fortran" in spec:
-                cmake_args.append("-DENABLE_FORTRAN=ON")
-            if "+debug" in spec:
-                cmake_args.append("CMAKE_BUILD_TYPE=Debug")
-            cmake = Executable("cmake")
-            mkdirp("build")
-            with working_dir("build"):
-                cmake(*cmake_args)
+                config_args = [
+                    f"--prefix={prefix}",
+                    "--enable-shared",
+                    f"--with-boost={spec['boost'].prefix}",
+                    f"--with-cxx-optflags={self.optflags}",
+                ]
+                config_args += self.enable_or_disable("debug", activation_value=lambda x: "opt")
+                config_args += self.enable_or_disable("fortran")
+                configure = Executable("./configure")
+                configure(*config_args)
                 make()
+            else:
+                cmake_args = [
+                    "..",
+                    f"-DCMAKE_INSTALL_PREFIX={prefix}",
+                    "-DLIBINT2_BUILD_SHARED_AND_STATIC_LIBS=ON",
+                ]
+                if "+fortran" in spec:
+                    cmake_args.append("-DENABLE_FORTRAN=ON")
+                if "+debug" in spec:
+                    cmake_args.append("CMAKE_BUILD_TYPE=Debug")
+                cmake = Executable("cmake")
+                mkdirp("build")
+                with working_dir("build"):
+                    cmake(*cmake_args)
+                    make()
 
     @when("@2.6.0:")
     def check(self):
-        with working_dir(os.path.join(self.build_directory, "generated", "build")):
+        path = join_path(self.build_directory, "generated")
+        if self.spec.satisfies("@2.9.0:"):
+            path = join_path(path, "build")
+        with working_dir(path):
             make("check")
 
     @when("@2.6.0:")
     def install(self, spec, prefix):
-        with working_dir(os.path.join(self.build_directory, "generated", "build")):
+        path = join_path(self.build_directory, "generated")
+        if self.spec.satisfies("@2.9.0:"):
+            path = join_path(path, "build")
+        with working_dir(path):
             make("install")
 
     @when("@:2.6.0")
@@ -269,3 +282,7 @@ class Libint(AutotoolsPackage):
                     "export/fortran/Makefile",
                     string=True,
                 )
+
+    @property
+    def libs(self):
+        return find_libraries("libint2", self.spec.prefix, shared=True, recursive=True)
