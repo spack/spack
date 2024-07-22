@@ -63,6 +63,7 @@ def create_db_tarball(args):
 
     base = os.path.basename(str(spack.store.STORE.root))
     transform_args = []
+    # Currently --transform and -s are not supported by Windows native tar
     if "GNU" in tar("--version", output=str):
         transform_args = ["--transform", "s/^%s/%s/" % (base, tarball_name)]
     elif sys.platform != "win32":
