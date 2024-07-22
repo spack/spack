@@ -24,7 +24,7 @@ class LinuxPam(AutotoolsPackage):
     version("1.3.1", sha256="eff47a4ecd833fbf18de9686632a70ee8d0794b79aecb217ebd0ce11db4cd0db")
 
     variant("unix", default=True, description="Build pam_unix model")
-    variant("selinux", default=True, description="Build with selinux support")
+    variant("selinux", default=False, description="Build with selinux support")
     variant("nls", default=False, description="Build with natural language support")
     variant("xauth", default=False, description="Build with xauth support")
     variant("openssl", default=False, description="Build with openssl support")
