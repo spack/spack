@@ -742,7 +742,7 @@ def activate_rebuild_env(tmpdir, pkg_name, rebuild_env):
         }
     )
 
-
+@pytest.mark.not_on_windows("gpg not available on Windows")
 @pytest.mark.parametrize("broken_tests", [True, False])
 def test_ci_rebuild_mock_success(
     tmpdir,
@@ -778,6 +778,7 @@ def test_ci_rebuild_mock_success(
             assert "Cannot copy test logs" in out
 
 
+@pytest.mark.not_on_windows("gpg not available on Windows")
 def test_ci_rebuild_mock_failure_to_push(
     tmpdir,
     working_env,
@@ -895,6 +896,7 @@ def test_ci_rebuild(
         env_cmd("deactivate")
 
 
+@pytest.mark.not_on_windows("gpg not available on Windows")
 def test_ci_require_signing(
     tmpdir, working_env, mutable_mock_env_path, mock_gnupghome, ci_base_environment
 ):
@@ -932,6 +934,7 @@ spack:
         assert "spack must have exactly one signing key" in output
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 def test_ci_nothing_to_rebuild(
     tmpdir,
     working_env,
@@ -1100,6 +1103,7 @@ spack:
             assert "no-specs-to-rebuild" not in second_yaml
 
 
+@pytest.mark.not_on_windows("gpg not available on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_push_to_build_cache(
     tmpdir,
@@ -1432,6 +1436,7 @@ spack:
                     assert the_elt["after_script"][0] == "post step one"
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_ci_rebuild_index(
     tmpdir,
@@ -2048,6 +2053,7 @@ def test_reproduce_build_url_validation_fails():
         ci_cmd("reproduce-build", "https://example.com/spack/spack/-")
 
 
+@pytest.mark.not_on_windows("gpg not available on Windows")
 @pytest.mark.parametrize(
     "subcmd", [(""), ("generate"), ("rebuild-index"), ("rebuild"), ("reproduce-build")]
 )

@@ -337,6 +337,7 @@ def test_relative_rpaths_install_nondefault(mirror_dir):
     buildcache_cmd("install", "-uf", cspec.name)
 
 
+@pytest.mark.not_on_windows("gpg not available on Windows")
 def test_push_and_fetch_keys(mock_gnupghome):
     testpath = str(mock_gnupghome)
 
@@ -398,6 +399,7 @@ def fake_dag_hash(spec, length=None):
     return "tal4c7h4z0gqmixb1eqa92mjoybxn5l6"[:length]
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch", "test_mirror")
 def test_spec_needs_rebuild(monkeypatch, tmpdir):
     """Make sure needs_rebuild properly compares remote hash
@@ -427,6 +429,7 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     assert rebuild
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
 def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     """Ensure spack buildcache index only reports available packages"""
@@ -517,6 +520,7 @@ def test_generate_indices_exception(monkeypatch, capfd):
     assert f"Encountered problem listing packages at {url}" in capfd.readouterr().err
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 @pytest.mark.usefixtures("mock_fetch", "install_mockery")
 def test_update_sbang(tmpdir, test_mirror):
     """Test the creation and installation of buildcaches with default rpaths
@@ -676,6 +680,7 @@ def test_build_manifest_visitor(tmpdir):
         assert all(os.path.islink(f) for f in visitor.symlinks)
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 def test_text_relocate_if_needed(install_mockery, mock_fetch, monkeypatch, capfd):
     spec = Spec("needs-text-relocation").concretized()
     install_cmd(str(spec))

@@ -10,6 +10,9 @@ import hashlib
 import json
 import os
 import pathlib
+
+import pytest
+
 from contextlib import contextmanager
 
 import spack.environment as ev
@@ -25,6 +28,7 @@ mirror = SpackCommand("mirror")
 env = SpackCommand("env")
 install = SpackCommand("install")
 
+pytestmark = pytest.mark.not_on_windows("file not available on Windows")
 
 @contextmanager
 def oci_servers(*servers: DummyServer):
