@@ -18,8 +18,6 @@ import spack.store
 import spack.util.spack_json as sjson
 import spack.verify
 
-pytestmark = pytest.mark.not_on_windows("Tests fail on Win")
-
 
 def test_link_manifest_entry(tmpdir):
     # Test that symlinks are properly checked against the manifest.
@@ -110,6 +108,7 @@ def test_file_manifest_entry(tmpdir):
     assert sorted(results.errors[file]) == sorted(expected)
 
 
+@pytest.mark.not_on_windows("chmod unsupported on Windows")
 def test_check_chmod_manifest_entry(tmpdir):
     # Check that the verification properly identifies errors for files whose
     # permissions have been modified.

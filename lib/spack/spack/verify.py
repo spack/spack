@@ -110,6 +110,8 @@ def check_file_manifest(filename):
     dirname = os.path.dirname(filename)
 
     results = VerificationResults()
+    # What should be the correct exit condition as os.path.sep seems wrong to me?
+    # There is a failing assert in spack\spack\test\verification.py(line 230) due to this
     while spack.store.STORE.layout.metadata_dir not in os.listdir(dirname):
         if dirname == os.path.sep:
             results.add_error(filename, "not owned by any package")
