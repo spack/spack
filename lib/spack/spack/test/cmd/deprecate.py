@@ -14,8 +14,6 @@ uninstall = SpackCommand("uninstall")
 deprecate = SpackCommand("deprecate")
 find = SpackCommand("find")
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
-
 
 def test_deprecate(mock_packages, mock_archive, mock_fetch, install_mockery):
     install("libelf@0.8.13")
