@@ -106,7 +106,8 @@ class Gptune(CMakePackage):
     def setup_run_environment(self, env):
         env.set("GPTUNE_INSTALL_PATH", python_platlib)
 
-    def test(self):
+    def test_all(self):
+        """Run all gptune tests"""
         spec = self.spec
         comp_name = self.compiler.name
         comp_version = str(self.compiler.version).replace(".", ",")
@@ -117,26 +118,56 @@ class Gptune(CMakePackage):
             op = ["-r", superludriver, "."]
             # copy superlu-dist executables to the correct place
             wd = join_path(test_dir, "SuperLU_DIST")
-            self.run_test("rm", options=["-rf", "superlu_dist"], work_dir=wd)
-            self.run_test(
-                "git",
-                options=["clone", "https://github.com/xiaoyeli/superlu_dist.git"],
-                work_dir=wd,
-            )
-            self.run_test("mkdir", options=["-p", "build"], work_dir=wd + "/superlu_dist")
-            self.run_test("mkdir", options=["-p", "EXAMPLE"], work_dir=wd + "/superlu_dist/build")
-            self.run_test("cp", options=op, work_dir=wd + "/superlu_dist/build/EXAMPLE")
+            with working_dir(wd):
+
+                with test_part(self, "test_part_rm", purpose="gptune rm test"):
+                    exe = which("rm")
+                    exe("-rf", "superlu_dist")
+
+                with test_part(self, "test_part_git", purpose="gptune git test"):
+                    exe = which("git")
+                    exe("clone", "https://github.com/xiaoyeli/superlu_dist.git")
+
+            with working_dir(wd + "/superlu_dist"):
+
+                with test_part(self, "test_part_mkdir_build", purpose="gptune mkdir build test"):
+                    exe = which("mkdir")
+                    exe("-p", "build")
+
+            with working_dir(wd + "/superlu_dist/build"):
+
+                with test_part(
+                    self, "test_part_mkdir_example", purpose="gptune cp mkdir example test"
+                ):
+                    exe = which("mkdir")
+                    exe("-p", "EXAMPLE")
+
+            with working_dir(wd + "/superlu_dist/build/EXAMPLE"):
+
+                with test_part(self, f"test_part_cp_basic", purpose=f"gptune cp basic test"):
+                    exe = which("cp")
+                    exe(*op)
 
         if spec.satisfies("+hypre"):
             hypredriver = join_path(spec["hypre"].prefix.bin, "ij")
             op = ["-r", hypredriver, "."]
             # copy superlu-dist executables to the correct place
             wd = join_path(test_dir, "Hypre")
-            self.run_test("rm", options=["-rf", "hypre"], work_dir=wd)
-            self.run_test(
-                "git", options=["clone", "https://github.com/hypre-space/hypre.git"], work_dir=wd
-            )
-            self.run_test("cp", options=op, work_dir=wd + "/hypre/src/test/")
+            with working_dir(wd):
+
+                with test_part(self, "test_part_rm_hypre", purpose="gptune rm hypre test"):
+                    exe = which("rm")
+                    exe("-rf", "hypre")
+
+                with test_part(self, "test_part_git_hypre", purpose="gptune git hypre test"):
+                    exe = which("git")
+                    exe("clone", "https://github.com/hypre-space/hypre.git")
+
+            with working_dir(wd + "/hypre/src/test/"):
+
+                with test_part(self, "test_part_cp_hypre", purpose="gptune cp hypre test"):
+                    exe = which("cp")
+                    exe(*op)
 
         wd = self.test_suite.current_test_cache_dir
         with open("{0}/run_env.sh".format(wd), "w") as envfile:
@@ -215,10 +246,15 @@ class Gptune(CMakePackage):
             )
 
         # copy the environment configuration files to non-cache directories
-        op = ["run_env.sh", python_platlib + "/gptune/."]
-        self.run_test("cp", options=op, work_dir=wd)
-        op = ["run_env.sh", self.install_test_root + "/."]
-        self.run_test("cp", options=op, work_dir=wd)
+        ops = [
+            ["run_env.sh", python_platlib + "/gptune/."],
+            ["run_env.sh", self.install_test_root + "/."],
+        ]
+        for op in ops:
+            with test_part(self, f"test_part_cp_{op[1]}", purpose=f"gptune cp {op[1]} test"):
+                with working_dir(wd):
+                    exe = which("cp")
+                    exe(*op)
 
         apps = ["Scalapack-PDGEQRF_RCI"]
         if spec.satisfies("+mpispawn"):
@@ -232,10 +268,7 @@ class Gptune(CMakePackage):
                 apps = apps + ["Hypre"]
 
         for app in apps:
-            wd = join_path(test_dir, app)
-            self.run_test(
-                "bash",
-                options=["run_examples.sh"],
-                work_dir=wd,
-                purpose="gptune smoke test for {0}".format(app),
-            )
+            exe = which("bash")
+            with test_part(self, f"test_part_{app}", purpose=f"gptune smoke test for {app}"):
+                with working_dir(join_path(test_dir, app)):
+                    exe("run_examples.sh")
