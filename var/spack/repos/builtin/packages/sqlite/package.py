@@ -279,7 +279,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             libraryname = "libsqlitefunctions." + dso_suffix
             cc = Executable(spack_cc)
             cc(
-                self.compiler.cc_pic_flag,
+                self.pkg.compiler.cc_pic_flag,
                 "-lm",
                 "-shared",
                 "extension-functions.c",
