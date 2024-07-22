@@ -742,6 +742,7 @@ def activate_rebuild_env(tmpdir, pkg_name, rebuild_env):
         }
     )
 
+
 @pytest.mark.not_on_windows("gpg not available on Windows")
 @pytest.mark.parametrize("broken_tests", [True, False])
 def test_ci_rebuild_mock_success(
