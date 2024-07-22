@@ -7,7 +7,8 @@ from spack.package import *
 
 
 class PyEdflibPython(PythonPackage):
-    """Library to read/write EDF+/BDF+ files written in pure Python by the same author as the original EDFlib."""
+    """Library to read/write EDF+/BDF+ files written in pure Python by the same
+    author as the original EDFlib."""
 
     homepage = "https://www.teuniz.net/edflib_python/"
     pypi = "EDFlib-Python/EDFlib-Python-1.0.8.tar.gz"
