@@ -159,10 +159,16 @@ def abi_splice_database(
         store.db.last_seen_verifier = ""
 
 
+def _mock_has_runtime_dependencies(_x):
+    return True
+
+
 @pytest.mark.only_clingo("Synthesized splices are not supported by the old concretizer")
 def test_simple_reuse(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
-    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
+    monkeypatch.setattr(
+        spack.solver.asp, "_has_runtime_dependencies", _mock_has_runtime_dependencies
+    )
     foo = Spec("foo@1.0.0+compat").concretized()
     foo.package.do_install(fake=True, explicit=True)
     new_foo = Spec("foo").concretized()
@@ -173,7 +179,9 @@ def test_simple_reuse(abi_splice_database, abi_splice_mock_packages, monkeypatch
 @pytest.mark.only_clingo("Synthesized splices are not supported by the old concretizer")
 def test_simple_dep_reuse(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
-    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
+    monkeypatch.setattr(
+        spack.solver.asp, "_has_runtime_dependencies", _mock_has_runtime_dependencies
+    )
     foo = Spec("foo@1.0.0+compat").concretized()
     foo.package.do_install(fake=True, explicit=True)
     bar = Spec("bar@1").concretized()
@@ -184,7 +192,9 @@ def test_simple_dep_reuse(abi_splice_database, abi_splice_mock_packages, monkeyp
 @pytest.mark.only_clingo("Synthesized splices are not supported by the old concretizer")
 def test_splice_installed_hash(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
-    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
+    monkeypatch.setattr(
+        spack.solver.asp, "_has_runtime_dependencies", _mock_has_runtime_dependencies
+    )
     old_baz = Spec("baz@1 ^bar@1.0.0+compat ^foo@1.0.0+compat").concretized()
     new_bar = Spec("bar@1.0.2+compat").concretized()
     old_baz.package.do_install(fake=True, explicit=True)
@@ -200,7 +210,9 @@ def test_splice_installed_hash(abi_splice_database, abi_splice_mock_packages, mo
 @pytest.mark.only_clingo("Synthesized splices are not supported by the old concretizer")
 def test_splice_build_dep(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
-    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
+    monkeypatch.setattr(
+        spack.solver.asp, "_has_runtime_dependencies", _mock_has_runtime_dependencies
+    )
     old_baz = Spec("baz@1 ^bar@1.0.0+compat ^foo@1.0.0+compat").concretized()
     old_baz.package.do_install(fake=True, explicit=True)
     baz_config = {"baz": {"buildable": False}}
@@ -213,7 +225,9 @@ def test_splice_build_dep(abi_splice_database, abi_splice_mock_packages, monkeyp
 @pytest.mark.only_clingo("Synthesized splices are not supported by the old concretizer")
 def test_mpi_splices(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
-    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", lambda x: True)
+    monkeypatch.setattr(
+        spack.solver.asp, "_has_runtime_dependencies", _mock_has_runtime_dependencies
+    )
     mpileaks_openmpi = Spec("mpileaks ^openmpi").concretized()
     mpileaks_mpich = Spec("mpileaks ^mpich").concretized()
     mpileaks_openmpi.package.do_install(fake=True, explicit=True)
