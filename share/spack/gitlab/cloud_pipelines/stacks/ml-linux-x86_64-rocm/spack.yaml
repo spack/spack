@@ -9,9 +9,6 @@ spack:
       - amdgpu_target=gfx90a
     gl:
       require: "osmesa"
-    py-torch:
-      # Does not yet support Spack-installed ROCm
-      require: ~rocm
     mpi:
       require: openmpi
 
@@ -35,30 +32,31 @@ spack:
     - py-keras2onnx
 
     # PyTorch
-    - py-botorch
-    - py-efficientnet-pytorch
-    - py-gpytorch
-    - py-kornia
-    - py-lightning
-    - py-pytorch-gradual-warmup-lr
-    - py-pytorch-lightning
-    - py-segmentation-models-pytorch
-    - py-timm
-    - py-torch
-    - py-torch-cluster
-    - py-torch-geometric
-    - py-torch-nvidia-apex
-    - py-torch-scatter
-    - py-torch-sparse
-    - py-torch-spline-conv
-    - py-torchaudio
-    - py-torchdata
-    - py-torchfile
-    - py-torchgeo
-    - py-torchmetrics
-    - py-torchtext
-    - py-torchvision
-    - py-vector-quantize-pytorch
+    # Does not yet support Spack-installed ROCm
+    # - py-botorch
+    # - py-efficientnet-pytorch
+    # - py-gpytorch
+    # - py-kornia
+    # - py-lightning
+    # - py-pytorch-gradual-warmup-lr
+    # - py-pytorch-lightning
+    # - py-segmentation-models-pytorch
+    # - py-timm
+    # - py-torch
+    # - py-torch-cluster
+    # - py-torch-geometric
+    # - py-torch-nvidia-apex
+    # - py-torch-scatter
+    # - py-torch-sparse
+    # - py-torch-spline-conv
+    # - py-torchaudio
+    # - py-torchdata
+    # - py-torchfile
+    # - py-torchgeo
+    # - py-torchmetrics
+    # - py-torchtext
+    # - py-torchvision
+    # - py-vector-quantize-pytorch
 
     # scikit-learn
     - py-scikit-learn
@@ -73,7 +71,8 @@ spack:
     # TensorFlow
     - py-tensorflow
     - py-tensorflow-datasets
-    - py-tensorflow-estimator
+    # version 2.16 is not available
+    # - py-tensorflow-estimator
     - py-tensorflow-hub
     - py-tensorflow-metadata
     - py-tensorflow-probability
