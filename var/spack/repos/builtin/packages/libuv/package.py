@@ -20,7 +20,7 @@ class Libuv(CMakePackage, AutotoolsPackage):
     license("MIT")
 
     if sys.platform == "win32":
-        version("1.48.0", sha256="")
+        version("1.48.0", sha256="7f1db8ac368d89d1baf163bac1ea5fe5120697a73910c8ae6b2fffb3551d59fb")
     else:
         version("1.48.0", sha256="c593139feb9061699fdd2f7fde47bb6c1ca77761ae9ec04f052083f1ef46c13b")
         version("1.46.0", sha256="94f101111ef3209340d7f09c2aa150ddb4feabd2f9d87d47d9f5bded835b8094")
@@ -74,11 +74,8 @@ class Libuv(CMakePackage, AutotoolsPackage):
 
     build_system(
         conditional("cmake", when="@1.48: platform=windows"),
-        conditional("cmake", when="@1.49:"),
-        conditional("autotools", when="@:1.48"),
-        default="autotools"
+        "autotools"
     )
-
     conflicts(
         "%gcc@:4.8",
         when="@1.45:",
