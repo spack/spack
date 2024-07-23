@@ -22,6 +22,10 @@ class Fleur(Package):
     version("4.0", tag="MaX-R4", commit="ea0db7877451e6240124e960c5546318c9ab3953")
     version("3.1", tag="MaX-R3.1", commit="f6288a0699604ad9e11efbfcde824b96db429404")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=True, description="Enable MPI support")
     variant("hdf5", default=False, description="Enable HDF5 support")
     variant("scalapack", default=False, description="Enable SCALAPACK")

@@ -39,7 +39,6 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 from llnl.util import filesystem, lang, tty
 
-import spack.compilers
 import spack.paths
 import spack.platforms
 import spack.schema
@@ -174,9 +173,7 @@ class DirectoryConfigScope(ConfigScope):
         if data is None:
             return
 
-        # We copy data here to avoid adding defaults at write time
-        validate_data = copy.deepcopy(data)
-        validate(validate_data, SECTION_SCHEMAS[section])
+        validate(data, SECTION_SCHEMAS[section])
 
         try:
             filesystem.mkdirp(self.path)
@@ -796,22 +793,27 @@ def config_paths_from_entry_points() -> List[Tuple[str, str]]:
 def _add_command_line_scopes(
     cfg: Union[Configuration, lang.Singleton], command_line_scopes: List[str]
 ) -> None:
-    """Add additional scopes from the --config-scope argument.
+    """Add additional scopes from the --config-scope argument, either envs or dirs."""
+    import spack.environment.environment as env  # circular import
 
-    Command line scopes are named after their position in the arg list.
-    """
     for i, path in enumerate(command_line_scopes):
-        # We ensure that these scopes exist and are readable, as they are
-        # provided on the command line by the user.
-        if not os.path.isdir(path):
-            raise ConfigError(f"config scope is not a directory: '{path}'")
-        elif not os.access(path, os.R_OK):
-            raise ConfigError(f"config scope is not readable: '{path}'")
+        name = f"cmd_scope_{i}"
 
-        # name based on order on the command line
-        name = f"cmd_scope_{i:d}"
-        cfg.push_scope(DirectoryConfigScope(name, path, writable=False))
-        _add_platform_scope(cfg, name, path, writable=False)
+        if env.exists(path):  # managed environment
+            manifest = env.EnvironmentManifestFile(env.root(path))
+        elif env.is_env_dir(path):  # anonymous environment
+            manifest = env.EnvironmentManifestFile(path)
+        elif os.path.isdir(path):  # directory with config files
+            cfg.push_scope(DirectoryConfigScope(name, path, writable=False))
+            _add_platform_scope(cfg, name, path, writable=False)
+            continue
+        else:
+            raise ConfigError(f"Invalid configuration scope: {path}")
+
+        for scope in manifest.env_config_scopes:
+            scope.name = f"{name}:{scope.name}"
+            scope.writable = False
+            cfg.push_scope(scope)
 
 
 def create() -> Configuration:
@@ -1075,11 +1077,8 @@ def validate(
     """
     import jsonschema
 
-    # Validate a copy to avoid adding defaults
-    # This allows us to round-trip data without adding to it.
-    test_data = syaml.deepcopy(data)
     try:
-        spack.schema.Validator(schema).validate(test_data)
+        spack.schema.Validator(schema).validate(data)
     except jsonschema.ValidationError as e:
         if hasattr(e.instance, "lc"):
             line_number = e.instance.lc.line + 1
@@ -1088,7 +1087,7 @@ def validate(
         raise ConfigFormatError(e, data, filename, line_number) from e
     # return the validated data so that we can access the raw data
     # mostly relevant for environments
-    return test_data
+    return data
 
 
 def read_config_file(

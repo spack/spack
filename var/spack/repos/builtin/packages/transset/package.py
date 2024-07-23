@@ -18,6 +18,8 @@ class Transset(AutotoolsPackage, XorgPackage):
     version("1.0.2", sha256="5c7d7d1bac36137f41ac3db84d7ed9b9fdac868608572bcba0bc1de40510ca67")
     version("1.0.1", sha256="87c560e69e05ae8a5bad17ff62ac31cda43a5065508205b109c756c0ab857d55")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libx11")
 
     depends_on("xproto@7.0.17:")

@@ -16,6 +16,9 @@ class Unzip(MakefilePackage):
 
     version("6.0", sha256="036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # clang and oneapi need this patch, likely others
     # There is no problem with it on gcc, so make it a catch all
     patch("configure-cflags.patch")

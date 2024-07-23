@@ -17,4 +17,6 @@ class Freexl(AutotoolsPackage):
     version("1.0.6", sha256="3de8b57a3d130cb2881ea52d3aa9ce1feedb1b57b7daa4eb37f751404f90fc22")
     version("1.0.5", sha256="3dc9b150d218b0e280a3d6a41d93c1e45f4d7155829d75f1e5bf3e0b0de6750d")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("minizip", when="@2:")

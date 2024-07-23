@@ -18,6 +18,8 @@ class Xman(AutotoolsPackage, XorgPackage):
     version("1.1.5", sha256="ff0aeb164fcb736b381bd7722c27aa0284cafb9a5d1b3940c3c3ee0af642f204")
     version("1.1.4", sha256="72fd0d479624a31d9a7330e5fdd220b7aa144744781f8e78aa12deece86e05c7")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libxaw")
     depends_on("libxt")
 

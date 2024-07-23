@@ -51,7 +51,8 @@ class Go(Package):
     provides("golang")
 
     depends_on("bash", type="build")
-    depends_on("git", type="run")
+    depends_on("sed", type="build")
+    depends_on("grep", type="build")
     depends_on("go-or-gccgo-bootstrap", type="build")
     depends_on("go-or-gccgo-bootstrap@1.17.13:", type="build", when="@1.20:")
     depends_on("go-or-gccgo-bootstrap@1.20.6:", type="build", when="@1.22:")

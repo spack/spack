@@ -24,6 +24,8 @@ class Giflib(MakefilePackage, SourceforgePackage):
         extension="tar.bz2",
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("automake", type="build", when="@:5.2.0")
     depends_on("autoconf", type="build", when="@:5.2.0")
     depends_on("m4", type="build", when="@:5.2.0")
@@ -73,3 +75,6 @@ class Giflib(MakefilePackage, SourceforgePackage):
         if spec.satisfies("@:5.2.0"):
             configure = Executable("./configure")
             configure("--prefix={0}".format(prefix))
+        # remove call to convert in doc makefile
+        with working_dir("doc"):
+            filter_file("^.*convert.*-resize.*$", "", "Makefile")

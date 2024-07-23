@@ -20,6 +20,8 @@ class Libxpresent(AutotoolsPackage, XorgPackage):
     version("1.0.1", sha256="8ebf8567a8f6afe5a64275a2ecfd4c84e957970c27299d964350f60be9f3541d")
     version("1.0.0", sha256="92f1bdfb67ae2ffcdb25ad72c02cac5e4912dc9bc792858240df1d7f105946fa")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libx11", type="link")
     depends_on("libxext", type="link")
     depends_on("libxfixes", type="link")
