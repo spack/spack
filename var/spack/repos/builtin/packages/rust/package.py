@@ -45,6 +45,9 @@ class Rust(Package):
     version("1.65.0", sha256="5828bb67f677eabf8c384020582b0ce7af884e1c84389484f7f8d00dd82c0038")
     version("1.60.0", sha256="20ca826d1cf674daf8e22c4f8c4b9743af07973211c839b85839742314c838b7")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     variant(
         "dev",
         default=False,
@@ -100,10 +103,17 @@ class Rust(Package):
     phases = ["configure", "build", "install"]
 
     @classmethod
-    def determine_version(csl, exe):
-        output = Executable(exe)("--version", output=str, error=str)
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        rustc_candidates = [x for x in exes_in_prefix if os.path.basename(x) == "rustc"]
+        cargo_candidates = [x for x in exes_in_prefix if os.path.basename(x) == "cargo"]
+        # Both rustc and cargo must be present
+        if not (rustc_candidates and cargo_candidates):
+            return
+        output = Executable(rustc_candidates[0])("--version", output=str, error=str)
         match = re.match(r"rustc (\S+)", output)
-        return match.group(1) if match else None
+        if match:
+            version_str = match.group(1)
+            return Spec.from_detection(f"rust@{version_str}")
 
     def setup_dependent_package(self, module, dependent_spec):
         module.cargo = Executable(os.path.join(self.spec.prefix.bin, "cargo"))

@@ -45,6 +45,9 @@ class Amdscalapack(ScalapackBase):
     version("3.0", sha256="6e6f3578f44a8e64518d276e7580530599ecfa8729f568303ed2590688e7096f")
     version("2.2", sha256="2d64926864fc6d12157b86e3f88eb1a5205e7fc157bf67e7577d0f18b9a7484c")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("ilp64", default=False, description="Build with ILP64 support")
 
     conflicts("+ilp64", when="@:3.0", msg="ILP64 is supported from 3.1 onwards")

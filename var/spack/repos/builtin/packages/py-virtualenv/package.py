@@ -28,6 +28,8 @@ class PyVirtualenv(PythonPackage):
     version("13.0.1", sha256="36c2cfae0f9c6462264bb19c478fc6bab3478cf0575f1027452e975a1ed84dbd")
     version("1.11.6", sha256="3e7a4c151e2ee97f51db0215bfd2a073b04a91e9786df6cb67c916f16abe04f7")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("py-hatch-vcs@0.3:", when="@20.18:", type="build")
     depends_on("py-hatchling@1.17.1:", when="@20.23.1:", type="build")
     depends_on("py-hatchling@1.14:", when="@20.22:", type="build")

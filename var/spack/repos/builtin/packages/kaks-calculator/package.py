@@ -17,6 +17,8 @@ class KaksCalculator(MakefilePackage, SourceforgePackage):
 
     version("2.0", sha256="e2df719a2fecc549d8ddc4e6d8f5cfa4b248282dca319c1928eaf886d68ec3c5")
 
+    depends_on("cxx", type="build")  # generated
+
     build_directory = "src"
 
     def url_for_version(self, version):

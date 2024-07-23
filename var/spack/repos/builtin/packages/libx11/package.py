@@ -38,6 +38,8 @@ class Libx11(AutotoolsPackage, XorgPackage):
     version("1.6.5", sha256="3abce972ba62620611fab5b404dafb852da3da54e7c287831c30863011d28fb3")
     version("1.6.3", sha256="0b03b9d22f4c9e59b4ba498f294e297f013cae27050dfa0f3496640200db5376")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libxcb@1.11.1:", when="@1.6.4:")
     depends_on("libxcb@1.1.92:")
 

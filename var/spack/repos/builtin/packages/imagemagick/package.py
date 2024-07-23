@@ -27,6 +27,9 @@ class Imagemagick(AutotoolsPackage):
     version("7.0.2-7", sha256="f2f18a97f861c1668befdaff0cc3aaafb2111847aab028a88b4c2cb017acfbaa")
     version("7.0.2-6", sha256="7d49ca8030f895c683cae69c52d8edfc4876de651f5b8bfdbea907e222480bd3")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("ghostscript", default=False, description="Compile with Ghostscript support")
     variant("rsvg", default=False, description="Enable RSVG support")
 

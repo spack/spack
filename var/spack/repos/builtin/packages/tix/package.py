@@ -21,6 +21,8 @@ class Tix(AutotoolsPackage):
 
     version("8.4.3", sha256="562f040ff7657e10b5cffc2c41935f1a53c6402eb3d5f3189113d734fd6c03cb")
 
+    depends_on("c", type="build")  # generated
+
     extends("tcl", type=("build", "link", "run"))
     depends_on("tk", type=("build", "link", "run"))
 

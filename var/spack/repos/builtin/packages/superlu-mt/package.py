@@ -19,6 +19,9 @@ class SuperluMt(Package):
 
     version("3.1", sha256="407b544b9a92b2ed536b1e713e80f986824cf3016657a4bfc2f3e7d2a76ecab6")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("int64", default=False, description="Build with 64 bit integers")
     variant("pic", default=True, description="Build with position independent code")
     variant("blas", default=True, description="Build with external BLAS library")

@@ -25,6 +25,10 @@ class Cloverleaf3d(MakefilePackage):
 
     version("1.0", sha256="78d591728c61bdfd6175b3930df7652e09ed04fbcd01b3fc86fb2aa0f237a8ef")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("opencl", default=False, description="Enable OpenCL Support")
 
     variant("openacc", default=False, description="Enable OpenACC Support")
