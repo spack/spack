@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
-
-import pytest
-
 import llnl.util.filesystem as fs
 
 import spack.paths
@@ -59,8 +56,7 @@ def test_git_sha_output(tmpdir, working_env, monkeypatch):
             """{0}
 echo {1}
 """.format(
-                script_head,
-                sha
+                script_head, sha
             )
         )
     fs.set_executable(git)
