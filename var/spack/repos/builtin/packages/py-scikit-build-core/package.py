@@ -26,6 +26,10 @@ class PyScikitBuildCore(PythonPackage):
     version("0.6.0", sha256="1bea5ed83610b367f3446badd996f2356690548188d6d38e5b93152df311a7ae")
     version("0.2.0", sha256="d2a76d9447a412038dc5e25dd259b03c25278661a0c7c3da766bb971c1a9acd2")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("pyproject", default=False, description="Enable pyproject.toml support")
 
     depends_on("python@3.7:", type=("build", "run"))

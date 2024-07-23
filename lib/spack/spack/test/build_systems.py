@@ -97,7 +97,7 @@ class TestTargets:
 @pytest.mark.usefixtures("mock_packages")
 class TestAutotoolsPackage:
     def test_with_or_without(self, default_mock_concretization):
-        s = default_mock_concretization("a")
+        s = default_mock_concretization("pkg-a")
         options = s.package.with_or_without("foo")
 
         # Ensure that values that are not representing a feature
@@ -129,7 +129,7 @@ class TestAutotoolsPackage:
         assert "--without-lorem-ipsum" in options
 
     def test_none_is_allowed(self, default_mock_concretization):
-        s = default_mock_concretization("a foo=none")
+        s = default_mock_concretization("pkg-a foo=none")
         options = s.package.with_or_without("foo")
 
         # Ensure that values that are not representing a feature

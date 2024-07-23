@@ -23,6 +23,8 @@ class LibuvJulia(AutotoolsPackage):
     version("1.44.1", commit="1b2d16477fe1142adea952168d828a066e03ee4c")
     version("1.42.0", commit="3a63bf71de62c64097989254e4f03212e3bf5fc8")
 
+    depends_on("c", type="build")  # generated
+
     def autoreconf(self, spec, prefix):
         # @haampie: Configure files are checked in, but git does not restore
         # mtime by design. Therefore, touch files to avoid regenerating those.

@@ -17,6 +17,8 @@ class PyContourpy(PythonPackage):
     version("1.0.7", sha256="d8165a088d31798b59e91117d1f5fc3df8168d8b48c4acc10fc0df0d0bdbcc5e")
     version("1.0.5", sha256="896631cd40222aef3697e4e51177d14c3709fda49d30983269d584f034acc8a4")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("python@3.8:", when="@1.0.7:", type=("build", "link", "run"))
     depends_on("python@3.7:", type=("build", "link", "run"))
     depends_on("py-pybind11@2.6:", type=("build", "link"))

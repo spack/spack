@@ -40,6 +40,8 @@ class Httpd(AutotoolsPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("m4", type="build")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

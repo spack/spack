@@ -32,6 +32,9 @@ class Mimalloc(CMakePackage):
     version("1.7.7", sha256="0f6663be1e1764851bf9563fcf7a6b3330e23b933eb4737dd07e3289b87895fe")
     version("1.7.6", sha256="d74f86ada2329016068bc5a243268f1f555edd620b6a7d6ce89295e7d6cf18da")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("cmake@3.0:", type="build")
 
     libs_values = ("shared", "static", "object")

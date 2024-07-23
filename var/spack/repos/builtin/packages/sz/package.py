@@ -46,6 +46,9 @@ class Sz(CMakePackage, AutotoolsPackage):
     version("1.4.10.0", sha256="cf23cf1ffd7c69c3d3128ae9c356b6acdc03a38f92c02db5d9bfc04f3fabc506")
     version("1.4.9.2", sha256="9dc785274d068d04c2836955fc93518a9797bfd409b46fea5733294b7c7c18f8")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     build_system(
         conditional("autotools", when="@:2.1.8.0"),
         conditional("cmake", when="@2.1.8.1:"),

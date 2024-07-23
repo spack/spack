@@ -19,6 +19,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
 
     license("Apache-2.0")
 
+    version("0.4.4", sha256="8b5ae63aa2d50c2ecf48d752424e4a33c50c07d9f0f5ca5448246de3286fd836")
     version("0.4.3", sha256="b4f603dce1dc9c4894ea4c86f6574026ea8536714982e7dc6dff7472c925c892")
     version("0.4.2", sha256="eeca9705413f5e16e0fb81154e042600c8df125af7049912757feb01d43730e2")
     version("0.4.1", sha256="24e5c15eb9eec45f52d94a6719ae3505388b49d409cb7e26c875c70ac409bd2c")
@@ -75,6 +76,8 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
         sha256="46692977b9b31d73662252cc122d7f016f94139475788bca7fdcb97279b93af8",
         deprecated=True,
     )
+
+    depends_on("cxx", type="build")
 
     _cxxstd_values = ("14", "17")
 

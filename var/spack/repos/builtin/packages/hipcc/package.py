@@ -32,6 +32,10 @@ class Hipcc(CMakePackage):
     version("5.7.1", sha256="d47d27ef2b5de7f49cdfd8547832ac9b437a32e6fc6f0e9c1646f4b704c90aee")
     version("5.7.0", sha256="9f839bf7226e5e26f3150f8ba6eca507ab9a668e68b207736301b3bb9040c973")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("numactl")
 
     patch("0014-remove-compiler-rt-linkage-for-host.6.0.patch", when="@6.0")

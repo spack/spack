@@ -18,6 +18,9 @@ class Libsolv(CMakePackage):
 
     version("0.7.22", sha256="968aef452b5493751fa0168cd58745a77c755e202a43fe8d549d791eb16034d5")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Build shared libraries")
     variant("conda", default=False, description="Include solv/conda.h")
 

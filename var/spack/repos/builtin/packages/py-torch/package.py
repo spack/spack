@@ -56,6 +56,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     version("1.5.0", tag="v1.5.0", commit="4ff3872a2099993bf7e8c588f7182f3df777205b")
     version("1.4.1", tag="v1.4.1", commit="74044638f755cd8667bedc73da4dbda4aa64c948")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     is_darwin = sys.platform == "darwin"
 
     # All options are defined in CMakeLists.txt.
