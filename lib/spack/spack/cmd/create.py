@@ -712,7 +712,7 @@ FORTRAN_EXT = {
 
 
 class BuildSystemAndLanguageGuesser:
-    """An instance of BuildSystemGuesser provides a callable object to be used
+    """An instance of BuildSystemAndLanguageGuesser provides a callable object to be used
     during ``spack create``. By passing this object to ``spack checksum``, we
     can take a peek at the fetched tarball and discern the build system it uses
     """
@@ -902,7 +902,7 @@ def get_url(url):
 def get_versions(args, name):
     """Returns a list of versions and hashes for a package.
 
-    Also returns a BuildSystemGuesser object.
+    Also returns a BuildSystemAndLanguageGuesser object.
 
     Returns default values if no URL is provided.
 
@@ -911,7 +911,7 @@ def get_versions(args, name):
         name (str): The name of the package
 
     Returns:
-        tuple: versions and hashes, and a BuildSystemGuesser object
+        tuple: versions and hashes, and a BuildSystemAndLanguageGuesser object
     """
 
     # Default version with hash
@@ -965,7 +965,7 @@ def get_versions(args, name):
     return versions, guesser
 
 
-def get_build_system(template, url, guesser):
+def get_build_system(template: str, url: str, guesser: BuildSystemAndLanguageGuesser) -> str:
     """Determine the build system template.
 
     If a template is specified, always use that. Otherwise, if a URL
@@ -973,11 +973,10 @@ def get_build_system(template, url, guesser):
     build system it uses. Otherwise, use a generic template by default.
 
     Args:
-        template (str): ``--template`` argument given to ``spack create``
-        url (str): ``url`` argument given to ``spack create``
-        args (argparse.Namespace): The arguments given to ``spack create``
-        guesser (BuildSystemGuesser): The first_stage_function given to
-            ``spack checksum`` which records the build system it detects
+        template: ``--template`` argument given to ``spack create``
+        url: ``url`` argument given to ``spack create``
+        guesser: The first_stage_function given to ``spack checksum`` which records the build
+            system it detects
 
     Returns:
         str: The name of the build system template to use
