@@ -30,3 +30,9 @@ class AuditUserspace(AutotoolsPackage):
     depends_on("m4", type="build")
     depends_on("openldap")
     depends_on("swig")
+
+    patch(
+        "https://github.com/linux-audit/audit-userspace/commit/28a74a445d54932e1450b60d6148912344615b44.patch?full_index=1",
+        sha256="63d4644c7037be21bcafa913f4c96fbaa37f388c170cf0344869a0dc2449fd65",
+        when="@4.0.1",
+    )
