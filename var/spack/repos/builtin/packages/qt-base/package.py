@@ -117,8 +117,10 @@ class QtPackage(CMakePackage):
 
     def setup_run_environment(self, env):
         env.prepend_path("QMAKEPATH", self.prefix)
-        env.prepend_path("QMAKE_MODULE_PATH", self.prefix.mkspecs.modules)
-        env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
+        if os.path.exists(self.prefix.mkspecs.modules):
+            env.prepend_path("QMAKE_MODULE_PATH", self.prefix.mkspecs.modules)
+        if os.path.exists(self.prefix.plugins):
+            env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
 
 
 class QtBase(QtPackage):
