@@ -24,6 +24,7 @@ class Enzyme(CMakePackage):
     root_cmakelists_dir = "enzyme"
 
     version("main", branch="main")
+    version("0.0.135", sha256="49c798534faec7ba524a3ed053dd4352d690a44d3cad5a14915c9398dc9b175b")
     version("0.0.100", sha256="fbc53ec02adc0303ff200d7699afface2d9fbc7350664e6c6d4c527ef11c2e82")
     version("0.0.81", sha256="4c17d0c28f0572a3ab97a60f1e56bbc045ed5dd64c2daac53ae34371ca5e8b34")
     version("0.0.69", sha256="144d964187551700fdf0a4807961ceab1480d4e4cd0bb0fc7bbfab48fe053aa2")

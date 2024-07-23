@@ -52,6 +52,7 @@ class Librsvg(AutotoolsPackage):
 
     depends_on("libffi")
     depends_on("shared-mime-info")
+    depends_on("py-docutils", type="build")
 
     def url_for_version(self, version):
         url = "https://download.gnome.org/sources/librsvg/"
