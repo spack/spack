@@ -51,6 +51,8 @@ class PyHail(MakefilePackage):
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # HAIL bundle is tied to specific runtime versions
     # HAIL spec, Java sec, Spark spec, Scala spec
