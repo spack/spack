@@ -969,7 +969,7 @@ def test_compiler_environment(working_env):
 
 
 def test_compiler_environment_always_flags(working_env):
-    """Test whether flags that are labeled as "ALWAYS_*FLAGS" are set in the compiler environment"""
+    """Test whether flags labeled as "ALWAYS_*FLAGS" are set in the compiler environment"""
     compiler = Compiler(
         "oneapi@=2023.2.0",
         operating_system="ubuntu22.04",
