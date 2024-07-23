@@ -199,7 +199,7 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
     assert "Unable to merge {0}".format(c1) in err
 
 
-def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
+def test_get_spec_filter_list(mutable_mock_env_path, mutable_mock_repo):
     """Test that given an active environment and list of touched pkgs,
     we get the right list of possibly-changed env specs"""
     e1 = ev.create("test")
@@ -253,7 +253,7 @@ def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
 
 
 @pytest.mark.regression("29947")
-def test_affected_specs_on_first_concretization(mutable_mock_env_path, mock_packages, config):
+def test_affected_specs_on_first_concretization(mutable_mock_env_path, mock_packages):
     e = ev.create("first_concretization")
     e.add("mpileaks~shared")
     e.add("mpileaks+shared")
@@ -322,12 +322,12 @@ def test_ci_run_standalone_tests_missing_requirements(
 
 @pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_junit(
-    tmp_path, repro_dir, working_env, default_mock_concretization, mock_test_stage, capfd
+    tmp_path, repro_dir, working_env, mock_test_stage, capfd, mock_packages
 ):
     log_file = tmp_path / "junit.xml"
     args = {
         "log_file": str(log_file),
-        "job_spec": default_mock_concretization("printing-package"),
+        "job_spec": spack.spec.Spec("printing-package").concretized(),
         "repro_dir": str(repro_dir),
         "fail_fast": True,
     }
@@ -340,13 +340,13 @@ def test_ci_run_standalone_tests_not_installed_junit(
 
 @pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_cdash(
-    tmp_path, repro_dir, working_env, default_mock_concretization, mock_test_stage, capfd
+    tmp_path, repro_dir, working_env, mock_test_stage, capfd, mock_packages
 ):
     """Test run_standalone_tests with cdash and related options."""
     log_file = tmp_path / "junit.xml"
     args = {
         "log_file": str(log_file),
-        "job_spec": default_mock_concretization("printing-package"),
+        "job_spec": spack.spec.Spec("printing-package").concretized(),
         "repro_dir": str(repro_dir),
     }
 

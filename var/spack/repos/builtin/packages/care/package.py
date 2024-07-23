@@ -46,6 +46,10 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         "0.2.0", tag="v0.2.0", commit="30135e03b14b1dc753634e9147dafede0663906f", submodules="True"
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("openmp", default=False, description="Build Shared Libs")
     variant(
         "implicit_conversions",

@@ -48,6 +48,9 @@ class PyTorchaudio(PythonPackage):
     version("0.5.0", tag="v0.5.0", commit="09494ea545738538f9db2dceeffe10d421060ee5")
     version("0.4.0", tag="v0.4.0", commit="8afed303af3de41f3586007079c0534543c8f663")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     with default_args(type=("build", "link", "run")):
         # Based on PyPI wheel availability
         depends_on("python@3.8:3.12", when="@2.2:")

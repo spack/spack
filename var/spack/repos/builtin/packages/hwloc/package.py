@@ -75,6 +75,9 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("1.11.1", sha256="b41f877d79b6026640943d57ef25311299378450f2995d507a5e633da711be61")
     version("1.9", sha256="9fb572daef35a1c8608d1a6232a4a9f56846bab2854c50562dfb9a7be294f4e8")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("nvml", default=False, description="Support NVML device discovery")
     variant("gl", default=False, description="Support GL device discovery")
     variant("libxml2", default=True, description="Build with libxml2")

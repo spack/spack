@@ -153,6 +153,8 @@ class Vecgeom(CMakePackage, CudaPackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")
+
     _cxxstd_values = (conditional("11", "14", when="@:1.1"), "17", conditional("20", when="@1.2:"))
     variant(
         "cxxstd",

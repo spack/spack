@@ -77,6 +77,9 @@ class Protobuf(CMakePackage):
     version("3.1.0", sha256="fb2a314f4be897491bb2446697be693d489af645cb0e165a85e7e64e07eb134d")
     version("3.0.2", sha256="a0a265bcc9d4e98c87416e59c33afc37cede9fb277292523739417e449b18c1e")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant(
         "build_type",

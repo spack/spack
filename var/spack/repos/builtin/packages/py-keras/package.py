@@ -79,6 +79,8 @@ class PyKeras(PythonPackage):
         depends_on("python@3.8:", when="@2.12:")
         depends_on("py-absl-py", when="@2.6:")
         depends_on("py-numpy")
+        # https://github.com/keras-team/keras/issues/19691
+        depends_on("py-numpy@:1")
         depends_on("py-rich", when="@3:")
         depends_on("py-namex@0.0.8:", when="@3.3.3:")
         depends_on("py-namex", when="@3:")

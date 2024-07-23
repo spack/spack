@@ -104,6 +104,9 @@ class Qemu(AutotoolsPackage):
     version("0.10.0", sha256="cd554729fa9d0ec17164afbc1cea62d02bde3db8e16db3fd1b8e71d8e1b3dd41")
     version("0.9.1", sha256="a9655a471d0649f5540b890447b35849c162d9b986bf2bbddcb68461748e0f42")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("glib@2.40:")
     depends_on("pixman@0.21.8:")
     depends_on("pkgconfig", type="build")

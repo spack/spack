@@ -17,6 +17,8 @@ class Funhpc(CMakePackage):
     version("develop", branch="master")
     version("1.3.0", sha256="140e60f55a307f21117bd43fa16db35d60c0df5ef37e17a4da1cb3f5da5e29c1")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("pic", default=True, description="Produce position-independent code")
 
     depends_on("cereal")

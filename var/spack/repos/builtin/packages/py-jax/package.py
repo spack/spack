@@ -65,6 +65,8 @@ class PyJax(PythonPackage):
         depends_on("py-numpy@1.22:", when="@0.4.14:")
         depends_on("py-numpy@1.21:", when="@0.4.7:")
         depends_on("py-numpy@1.20:", when="@0.3:")
+        # https://github.com/google/jax/issues/19246
+        depends_on("py-numpy@:1", when="@:0.4.25")
         depends_on("py-opt-einsum")
         depends_on("py-scipy@1.9:", when="@0.4.19:")
         depends_on("py-scipy@1.7:", when="@0.4.7:")

@@ -23,6 +23,9 @@ class Salmon(CMakePackage):
     version("0.9.1", sha256="3a32c28d217f8f0af411c77c04144b1fa4e6fd3c2f676661cc875123e4f53520")
     version("0.8.2", sha256="299168e873e71e9b07d63a84ae0b0c41b0876d1ad1d434b326a5be2dce7c4b91")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "build_type",
         default="RELEASE",
