@@ -102,7 +102,7 @@ class QtPackage(CMakePackage):
                 prefix=os.path.basename(old_file), dir=self.prefix.mkspecs.modules
             )
             with os.fdopen(new_fd, "w") as new_fh:
-                new_fh.write(f"include(qt_module.pri)\n")
+                new_fh.write("include(qt_module.pri)\n")
                 with open(old_file, "r") as old_fh:
                     new_fh.write(old_fh.read())
             shutil.move(new_file, old_file)
