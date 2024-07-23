@@ -198,7 +198,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         variant(dev, default=dflt, description=desc)
     conflicts("+cuda", when="+rocm", msg="CUDA and ROCm are not compatible in Kokkos.")
     depends_on("intel-oneapi-dpl", when="+sycl")
-    depends_on("rocthrust", when="+rocm")
+    depends_on("rocthrust", when="@4.3: +rocm")
 
     for opt, (dflt, desc) in options_variants.items():
         variant(opt, default=dflt, description=desc, when=("+cuda" if "cuda" in opt else None))
