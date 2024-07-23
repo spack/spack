@@ -24,7 +24,6 @@ class Halide(CMakePackage, PythonExtension):
     version("17.0.1", sha256="beb18331d9e4b6f69943bcc75fb9d923a250ae689f09f6940a01636243289727")
     version("18.0.0", sha256="1176b42a3e2374ab38555d9316c78e39b157044b5a8e765c748bf3afd2edb351")
     
-
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     variant(
@@ -84,7 +83,7 @@ class Halide(CMakePackage, PythonExtension):
     depends_on("python@3.8:", type=("build", "link", "run"), when="+python")
     # See https://github.com/halide/Halide/blob/main/requirements.txt
     depends_on("py-pybind11@2.6.2", type="build", when="@14.0.0:17+python")
-    depends_on("py-pybind11@2.10.4", type="build", when="@17.0.0:+python")
+    depends_on("py-pybind11@2.10.4", type="build", when="@18.0.0:+python")
     depends_on("py-setuptools@43:", type="build", when="+python")
     depends_on("py-scikit-build", type="build", when="+python")
     depends_on("py-wheel", type="build", when="+python")
