@@ -148,7 +148,7 @@ def get_spack_commit():
     if git.returncode != 0:
         return None
 
-    match = re.match(r"[a-f\d]{7,}$", rev)
+    match = re.match(r"[a-f\d]{7,}$", rev.strip())
     return match.group(0) if match else None
 
 

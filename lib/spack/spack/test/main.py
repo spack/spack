@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
 
 import pytest
 
@@ -13,18 +14,19 @@ import spack.util.executable as exe
 import spack.util.git
 from spack.main import get_version, main
 
-pytestmark = pytest.mark.not_on_windows(
-    "Test functionality supported but tests are failing on Win"
-)
+shell_extension = "git.bat" if sys.platform == "win32" else "git"
+script_head = "@echo off" if sys.platform == "win32" else "#!/bin/sh"
 
 
 def test_version_git_nonsense_output(tmpdir, working_env, monkeypatch):
-    git = str(tmpdir.join("git"))
+    git = str(tmpdir.join(shell_extension))
     with open(git, "w") as f:
         f.write(
-            """#!/bin/sh
+            """{0}
 echo --|not a hash|----
-"""
+""".format(
+                script_head
+            )
         )
     fs.set_executable(git)
 
@@ -33,13 +35,15 @@ echo --|not a hash|----
 
 
 def test_version_git_fails(tmpdir, working_env, monkeypatch):
-    git = str(tmpdir.join("git"))
+    git = str(tmpdir.join(shell_extension))
     with open(git, "w") as f:
         f.write(
-            """#!/bin/sh
+            """{0}
 echo 26552533be04e83e66be2c28e0eb5011cb54e8fa
 exit 1
-"""
+""".format(
+                script_head
+            )
         )
     fs.set_executable(git)
 
@@ -48,13 +52,14 @@ exit 1
 
 
 def test_git_sha_output(tmpdir, working_env, monkeypatch):
-    git = str(tmpdir.join("git"))
+    git = str(tmpdir.join(shell_extension))
     sha = "26552533be04e83e66be2c28e0eb5011cb54e8fa"
     with open(git, "w") as f:
         f.write(
-            """#!/bin/sh
-echo {0}
+            """{0}
+echo {1}
 """.format(
+                script_head,
                 sha
             )
         )
@@ -86,12 +91,14 @@ def test_main_calls_get_version(tmpdir, capsys, working_env, monkeypatch):
 
 
 def test_get_version_bad_git(tmpdir, working_env, monkeypatch):
-    bad_git = str(tmpdir.join("git"))
+    bad_git = str(tmpdir.join(shell_extension))
     with open(bad_git, "w") as f:
         f.write(
-            """#!/bin/sh
+            """{0}
 exit 1
-"""
+""".format(
+                script_head
+            )
         )
     fs.set_executable(bad_git)
 
