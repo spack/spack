@@ -260,29 +260,16 @@ operating system-specific (e.g. `sonoma`, or `almalinux9`) and
 target-specific (e.g. `m1`, or `cascadelake`) scopes. The full scope
 hierarchy is therefore:
 
-#. ``defaults``
-#. ``defaults/<platform>``
-#. ``defaults/<platform>/<os>``
-#. ``defaults/<platform>/<os>/<target>``
-#. ``system``
-#. ``system/<platform>``
-#. ``system/<platform>/<os>``
-#. ``system/<platform>/<os>/<target>``
-#. ``site``
-#. ``site/<platform>``
-#. ``site/<platform>/<os>``
-#. ``site/<platform>/<os>/<target>``
-#. ``user``
-#. ``user/<platform>``
-#. ``user/<platform>/<os>``
-#. ``user/<platform>/<os>/<target>``
-#. ``custom``
-#. ``custom/<platform>``
-#. ``custom/<platform>/<os>``
-#. ``custom/<platform>/<os>/<target>``
+#. ``defaults[/<platform>[/<os>[/<target>]]]``
+#. ``system[/<platform>[/<os>[/<target>]]]``
+#. ``site[/<platform>[/<os>[/<target>]]]``
+#. ``user[/<platform>[/<os>[/<target>]]]``
+#. ``custom[/<platform>[/<os>[/<target>]]]``
 
-The system config scope has a ``<platform>`` section for sites at which
-``/etc`` is mounted on multiple heterogeneous machines.
+Any scope overrides the ones above it in the directory tree.
+
+The system config scope has a platform-based hierarchy for sites at
+which ``/etc`` is mounted on multiple heterogeneous machines.
 
 You can get the name to use for ``<platform>`` by running ``spack arch
 --platform``.  Similarly, the names for ``<os>`` and ``<target>`` can be
