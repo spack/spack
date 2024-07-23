@@ -67,9 +67,8 @@ class PyMne(PythonPackage):
     depends_on("py-setuptools", when="@:1.6", type="build")
     depends_on("py-setuptools-scm@6.2:", when="@1.4:1.6", type="build")
     depends_on(
-        "py-importlib-resources@5.10.2:", when="@1.6 ^python@:3.9", type=("build", "run")
+        "py-importlib-resources@5.10.2:", when="@1.4:1.6 ^python@:3.9", type=("build", "run")
     )
-    depends_on("py-importlib-resources@5.10.2:", when="@1.4:1.6 ^python@:3.8", type=("build", "run"))
 
     with when("+full"):
         # requirements.txt with versions specified in README.rst (marked with *)
