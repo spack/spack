@@ -23,6 +23,7 @@ class Ruby(AutotoolsPackage, NMakePackage):
     tags = ["windows"]
 
     license("Ruby AND BSD-2-Clause AND MIT", checked_by="tgamblin")
+
     version("3.3.4", sha256="fe6a30f97d54e029768f2ddf4923699c416cdbc3a6e96db3e2d5716c7db96a34")
     version("3.3.2", sha256="3be1d100ebf2a0ce60c2cd8d22cd9db4d64b3e04a1943be2c4ff7b520f2bcb5b")
     version("3.3.0", sha256="96518814d9832bece92a85415a819d4893b307db5921ae1f0f751a9a89a56b7d")
