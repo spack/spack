@@ -31,7 +31,11 @@ class Povray(AutotoolsPackage):
 
     version("3.7.0.10", sha256="7bee83d9296b98b7956eb94210cf30aa5c1bbeada8ef6b93bb52228bbc83abff")
     # The following version no longer builds
-    version("3.7.0.8", sha256="53d11ebd2972fc452af168a00eb83aefb61387662c10784e81b63e44aa575de4", deprecated=True)
+    version(
+        "3.7.0.8",
+        sha256="53d11ebd2972fc452af168a00eb83aefb61387662c10784e81b63e44aa575de4",
+        deprecated=True,
+    )
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
