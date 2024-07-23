@@ -20,6 +20,8 @@ class Amrvis(MakefilePackage):
 
     version("main", branch="main")
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "dims",
         default="3",

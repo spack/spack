@@ -159,6 +159,10 @@ class RocmOpenmpExtras(Package):
     version("5.3.3", sha256=versions_dict["5.3.3"]["aomp"], deprecated=True)
     version("5.3.0", sha256=versions_dict["5.3.0"]["aomp"], deprecated=True)
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     depends_on("cmake@3:", type="build")

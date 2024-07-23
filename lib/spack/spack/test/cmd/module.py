@@ -11,6 +11,7 @@ import pytest
 import spack.config
 import spack.main
 import spack.modules
+import spack.spec
 import spack.store
 
 module = spack.main.SpackCommand("module")
@@ -178,8 +179,8 @@ def test_setdefault_command(mutable_database, mutable_config):
         }
     }
     spack.config.set("modules", data)
-    # Install two different versions of a package
-    other_spec, preferred = "a@1.0", "a@2.0"
+    # Install two different versions of pkg-a
+    other_spec, preferred = "pkg-a@1.0", "pkg-a@2.0"
 
     spack.spec.Spec(other_spec).concretized().package.do_install(fake=True)
     spack.spec.Spec(preferred).concretized().package.do_install(fake=True)

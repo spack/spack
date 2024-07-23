@@ -19,6 +19,8 @@ class GsettingsDesktopSchemas(MesonPackage):
     version("3.37.92", sha256="5f5dd0421ed2f3746674b8bb6e0c652784915133c7f2d133339bf5e4140d8d1d")
     version("3.37.2", sha256="1dacdfeecfc57468da7c598a01b635f82ecd088e1d78d5aa840e47256026654d")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("glib")
     depends_on("gobject-introspection", type="build")
     depends_on("gettext", type="build")

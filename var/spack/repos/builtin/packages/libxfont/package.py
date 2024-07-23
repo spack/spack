@@ -22,6 +22,8 @@ class Libxfont(AutotoolsPackage, XorgPackage):
     version("1.5.4", sha256="59be6eab53f7b0feb6b7933c11d67d076ae2c0fd8921229c703fc7a4e9a80d6e")
     version("1.5.2", sha256="a7350c75171d03d06ae0d623e42240356d6d3e1ac7dfe606639bf20f0d653c93")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libfontenc")
     depends_on("freetype build_system=autotools")
 

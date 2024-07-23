@@ -27,6 +27,8 @@ class Libvterm(MakefilePackage):
         url="http://www.leonerd.org.uk/code/libvterm/libvterm-0+bzr726.tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libtool", type="build")
 
     def setup_build_environment(self, env):

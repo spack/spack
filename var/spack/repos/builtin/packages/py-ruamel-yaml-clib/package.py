@@ -19,6 +19,8 @@ class PyRuamelYamlClib(PythonPackage):
     version("0.2.7", sha256="1f08fd5a2bea9c4180db71678e850b995d2a5f4537be0e94557668cf0f5f9497")
     version("0.2.0", sha256="b66832ea8077d9b3f6e311c4a53d06273db5dc2db6e8a908550f3c14d67e718c")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("python", type=("build", "link", "run"))
     # to prevent legacy-install-failure
     depends_on("python@:3.9", when="@0.2.0", type=("build", "link", "run"))

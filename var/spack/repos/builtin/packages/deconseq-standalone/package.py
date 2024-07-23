@@ -17,6 +17,8 @@ class DeconseqStandalone(Package):
 
     version("0.4.3", sha256="fb4050418c26a5203220f6396263da554326657590cffd65053eb8adc465ac65")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("perl@5:")
 
     def install(self, spec, prefix):

@@ -18,6 +18,8 @@ class GuacamoleServer(AutotoolsPackage):
 
     version("1.1.0", sha256="d0f0c66ebfa7a4fd6689ae5240f21797b5177945a042388b691b15b8bd5c81a8")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")

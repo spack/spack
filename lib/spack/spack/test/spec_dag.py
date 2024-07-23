@@ -138,19 +138,19 @@ def test_specify_preinstalled_dep(tmpdir, monkeypatch):
     transitive dependency that is only supplied by the preinstalled package.
     """
     builder = spack.repo.MockRepositoryBuilder(tmpdir)
-    builder.add_package("c")
-    builder.add_package("b", dependencies=[("c", None, None)])
-    builder.add_package("a", dependencies=[("b", None, None)])
+    builder.add_package("pkg-c")
+    builder.add_package("pkg-b", dependencies=[("pkg-c", None, None)])
+    builder.add_package("pkg-a", dependencies=[("pkg-b", None, None)])
 
     with spack.repo.use_repositories(builder.root):
-        b_spec = Spec("b").concretized()
-        monkeypatch.setattr(Spec, "installed", property(lambda x: x.name != "a"))
+        b_spec = Spec("pkg-b").concretized()
+        monkeypatch.setattr(Spec, "installed", property(lambda x: x.name != "pkg-a"))
 
-        a_spec = Spec("a")
+        a_spec = Spec("pkg-a")
         a_spec._add_dependency(b_spec, depflag=dt.BUILD | dt.LINK, virtuals=())
         a_spec.concretize()
 
-        assert set(x.name for x in a_spec.traverse()) == set(["a", "b", "c"])
+        assert {x.name for x in a_spec.traverse()} == {"pkg-a", "pkg-b", "pkg-c"}
 
 
 @pytest.mark.usefixtures("config")
@@ -1007,15 +1007,15 @@ def test_synthetic_construction_of_split_dependencies_from_same_package(mock_pac
     # Construct in a synthetic way (i.e. without using the solver)
     # the following spec:
     #
-    #          b
+    #        pkg-b
     #  build /   \ link,run
-    #    c@2.0   c@1.0
+    #  pkg-c@2.0   pkg-c@1.0
     #
     # To demonstrate that a spec can now hold two direct
     # dependencies from the same package
-    root = Spec("b").concretized()
-    link_run_spec = Spec("c@=1.0").concretized()
-    build_spec = Spec("c@=2.0").concretized()
+    root = Spec("pkg-b").concretized()
+    link_run_spec = Spec("pkg-c@=1.0").concretized()
+    build_spec = Spec("pkg-c@=2.0").concretized()
 
     root.add_dependency_edge(link_run_spec, depflag=dt.LINK, virtuals=())
     root.add_dependency_edge(link_run_spec, depflag=dt.RUN, virtuals=())
@@ -1023,10 +1023,10 @@ def test_synthetic_construction_of_split_dependencies_from_same_package(mock_pac
 
     # Check dependencies from the perspective of root
     assert len(root.dependencies()) == 2
-    assert all(x.name == "c" for x in root.dependencies())
+    assert all(x.name == "pkg-c" for x in root.dependencies())
 
-    assert "@2.0" in root.dependencies(name="c", deptype=dt.BUILD)[0]
-    assert "@1.0" in root.dependencies(name="c", deptype=dt.LINK | dt.RUN)[0]
+    assert "@2.0" in root.dependencies(name="pkg-c", deptype=dt.BUILD)[0]
+    assert "@1.0" in root.dependencies(name="pkg-c", deptype=dt.LINK | dt.RUN)[0]
 
     # Check parent from the perspective of the dependencies
     assert len(build_spec.dependents()) == 1
@@ -1038,30 +1038,30 @@ def test_synthetic_construction_of_split_dependencies_from_same_package(mock_pac
 def test_synthetic_construction_bootstrapping(mock_packages, config):
     # Construct the following spec:
     #
-    #  b@2.0
+    #  pkg-b@2.0
     #    | build
-    #  b@1.0
+    #  pkg-b@1.0
     #
-    root = Spec("b@=2.0").concretized()
-    bootstrap = Spec("b@=1.0").concretized()
+    root = Spec("pkg-b@=2.0").concretized()
+    bootstrap = Spec("pkg-b@=1.0").concretized()
 
     root.add_dependency_edge(bootstrap, depflag=dt.BUILD, virtuals=())
 
     assert len(root.dependencies()) == 1
-    assert root.dependencies()[0].name == "b"
-    assert root.name == "b"
+    assert root.dependencies()[0].name == "pkg-b"
+    assert root.name == "pkg-b"
 
 
 def test_addition_of_different_deptypes_in_multiple_calls(mock_packages, config):
     # Construct the following spec:
     #
-    #  b@2.0
+    #  pkg-b@2.0
     #    | build,link,run
-    #  b@1.0
+    #  pkg-b@1.0
     #
     # with three calls and check we always have a single edge
-    root = Spec("b@=2.0").concretized()
-    bootstrap = Spec("b@=1.0").concretized()
+    root = Spec("pkg-b@=2.0").concretized()
+    bootstrap = Spec("pkg-b@=1.0").concretized()
 
     for current_depflag in (dt.BUILD, dt.LINK, dt.RUN):
         root.add_dependency_edge(bootstrap, depflag=current_depflag, virtuals=())
@@ -1088,9 +1088,9 @@ def test_addition_of_different_deptypes_in_multiple_calls(mock_packages, config)
 def test_adding_same_deptype_with_the_same_name_raises(
     mock_packages, config, c1_depflag, c2_depflag
 ):
-    p = Spec("b@=2.0").concretized()
-    c1 = Spec("b@=1.0").concretized()
-    c2 = Spec("b@=2.0").concretized()
+    p = Spec("pkg-b@=2.0").concretized()
+    c1 = Spec("pkg-b@=1.0").concretized()
+    c2 = Spec("pkg-b@=2.0").concretized()
 
     p.add_dependency_edge(c1, depflag=c1_depflag, virtuals=())
     with pytest.raises(spack.error.SpackError):

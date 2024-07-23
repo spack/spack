@@ -19,6 +19,8 @@ class Fastor(CMakePackage):
 
     version("0.6.4", sha256="c97a3b9dbb92413be90689af9d942cddee12a74733cf42f1a8014965553a11f8")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.20:", type="build")
 
     def cmake_args(self):

@@ -38,6 +38,8 @@ class RocmCmake(CMakePackage):
         version("5.3.3", sha256="3e527f99db52e301ab4f1b994029585951e2ae685f0cdfb7b8529c72f4b77af4")
         version("5.3.0", sha256="659a8327f13e6786103dd562d3632e89a51244548fca081f46c753857cf09d04")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.6:", type="build")
 
     for ver in [

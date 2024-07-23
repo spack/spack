@@ -21,6 +21,8 @@ class Albany(CMakePackage):
 
     version("develop", branch="master")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("lcm", default=True, description="Enable LCM")
     variant("aeras", default=False, description="Enable AERAS")
     variant("qcad", default=False, description="Enable QCAD")

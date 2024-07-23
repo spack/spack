@@ -89,6 +89,9 @@ class Opencascade(CMakePackage):
         sha256="655da7717dac3460a22a6a7ee68860c1da56da2fec9c380d8ac0ac0349d67676",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # fix for numeric_limits in gcc-12; applies cleanly to all older versions
     patch(
         "https://git.dev.opencascade.org/gitweb/?p=occt.git;a=patch;h=2a8c5ad46cfef8114b13c3a33dcd88a81e522c1e",

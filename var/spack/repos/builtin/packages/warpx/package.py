@@ -57,6 +57,8 @@ class Warpx(CMakePackage):
     version("21.06", sha256="a26039dc4061da45e779dd5002467c67a533fc08d30841e01e7abb3a890fbe30")
     version("21.05", sha256="f835f0ae6c5702550d23191aa0bb0722f981abb1460410e3d8952bc3d945a9fc")
     version("21.04", sha256="51d2d8b4542eada96216e8b128c0545c4b7527addc2038efebe586c32c4020a0")
+
+    depends_on("cxx", type="build")  # generated
     # 20.01+ requires C++14 or newer
 
     variant("app", default=True, description="Build the WarpX executable application")
@@ -144,6 +146,7 @@ class Warpx(CMakePackage):
     with when("+openpmd"):
         depends_on("openpmd-api@0.13.1:")
         depends_on("openpmd-api@0.14.2:", when="@21.09:")
+        depends_on("openpmd-api@0.15.1:", when="@23.05:")
         depends_on("openpmd-api ~mpi", when="~mpi")
         depends_on("openpmd-api +mpi", when="+mpi")
 

@@ -41,6 +41,10 @@ class SstElements(AutotoolsPackage):
     version("develop", branch="devel")
     version("master", branch="master")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Contact SST developers (https://github.com/sstsimulator)
     # if your use case requires support for:
     #   - balar
