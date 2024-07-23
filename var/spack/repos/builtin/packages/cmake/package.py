@@ -101,6 +101,9 @@ class Cmake(Package):
             "3.18.0", sha256="83b4ffcb9482a73961521d2bafe4a16df0168f03f56e6624c419c461e5317e29"
         )
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     variant(
         "build_type",
         default="Release",
@@ -123,6 +126,10 @@ class Cmake(Package):
         sha256="42d8b2163a2f37a745800ec13a96c08a3a20d5e67af51031e51f63313d0dedd1",
         when="@3.15.5",
     )
+
+    # Statically linked binaries error on install when CMAKE_INSTALL_RPATH is set
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/9623
+    patch("mr-9623.patch", when="@3.22.0:3.30")
 
     depends_on("ninja", when="platform=windows")
     depends_on("gmake", when="platform=linux")

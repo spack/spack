@@ -100,6 +100,9 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         version("2.0.1", sha256="2564c91ed8ed36274ee31002a25798f5babc4221e879cb5013867733d80f9920")
         version("2.0.0", sha256="91704fafeea2349c5e268dc1e2d03921b3aae64b05ee01d59fdfc1a6b0ffc061")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # Optional dependencies
     variant("archive", default=False, when="@3.7:", description="Optional for vsi7z VFS driver")
     variant(
@@ -409,6 +412,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("py-setuptools@:57", type="build", when="@:3.2+python")  # needs 2to3
     depends_on("py-setuptools", type="build", when="+python")
     depends_on("py-numpy@1.0.0:", type=("build", "run"), when="+python")
+    # https://github.com/OSGeo/gdal/issues/9751
+    depends_on("py-numpy@:1", when="@:3.8+python", type=("build", "run"))
     depends_on("swig", type="build", when="+python")
     depends_on("java@7:", type=("build", "link", "run"), when="@3.2:+java")
     depends_on("java@6:", type=("build", "link", "run"), when="@2.4:+java")

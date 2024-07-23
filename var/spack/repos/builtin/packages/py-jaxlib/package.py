@@ -39,6 +39,9 @@ class PyJaxlib(PythonPackage, CudaPackage):
     version("0.4.4", sha256="881f402c7983b56b185e182d5315dd64c9f5320be96213d0415996ece1826806")
     version("0.4.3", sha256="2104735dc22be2b105e5517bd5bc6ae97f40e8e9e54928cac1585c6112a3d910")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("cuda", default=True, description="Build with CUDA enabled")
     variant("nccl", default=True, description="Build with NCCL enabled", when="+cuda")
 
@@ -82,6 +85,8 @@ class PyJaxlib(PythonPackage, CudaPackage):
         depends_on("py-numpy@1.22:", when="@0.4.14:")
         depends_on("py-numpy@1.21:", when="@0.4.7:")
         depends_on("py-numpy@1.20:", when="@0.3:")
+        # https://github.com/google/jax/issues/19246
+        depends_on("py-numpy@:1", when="@:0.4.25")
         depends_on("py-ml-dtypes@0.4:", when="@0.4.29")
         depends_on("py-ml-dtypes@0.2:", when="@0.4.14:")
         depends_on("py-ml-dtypes@0.1:", when="@0.4.9:")

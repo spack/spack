@@ -388,6 +388,10 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         "1.0", sha256="cf75e56852caebe90231d295806ac3441f37dc6d9ad17b1381791ebb78e21564"
     )  # libmpi.so.0.0.0
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     patch("ad_lustre_rwcontig_open_source.patch", when="@1.6.5")
     patch("llnl-platforms.patch", when="@1.6.5")
     patch("configure.patch", when="@1.10.1")
@@ -432,6 +436,12 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     patch("accelerator-cuda-fix-bug-in-makefile.patch", when="@5.0.0")
     patch("btlsmcuda-fix-problem-with-makefile.patch", when="@5.0.0")
     patch("accelerator-build-components-as-dso-s-by-default.patch", when="@5.0.0:5.0.1")
+
+    # OpenMPI 5.0.0-5.0.3 needs to change PMIX version check to compile w/ PMIX > 4.2.5
+    # https://github.com/open-mpi/ompi/issues/12537#issuecomment-2103350910
+    # https://github.com/openpmix/prrte/pull/1957
+    patch("pmix_getline_pmix_version.patch", when="@5.0.0:5.0.3")
+    patch("pmix_getline_pmix_version-prte.patch", when="@5.0.3")
 
     variant(
         "fabrics",

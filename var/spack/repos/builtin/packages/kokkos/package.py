@@ -50,6 +50,10 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     version("3.1.00", sha256="b935c9b780e7330bcb80809992caa2b66fd387e3a1c261c955d622dae857d878")
     version("3.0.00", sha256="c00613d0194a4fbd0726719bbed8b0404ed06275f310189b3493f5739042a92b")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake@3.16:", type="build")
     conflicts("cmake@3.28", when="@:4.2.01 +cuda")
 

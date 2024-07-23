@@ -25,6 +25,7 @@ class Rocrand(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.1.2", sha256="ac3c858c0f76188ac50574591aa6b41b27bda2af5925314451a44242319f28c8")
     version("6.1.1", sha256="d6302d014045694be85385cdc683ea75476e23fd92ae170079c261c0b041764b")
     version("6.1.0", sha256="ea80c5d657fa48b1122a47986239a04118977195ee4826d2b14b8bfe0fabce6e")
     version("6.0.2", sha256="51d66c645987cbfb593aaa6be94109e87fe4cb7e9c70309eb3c159af0de292d7")
@@ -40,6 +41,9 @@ class Rocrand(CMakePackage):
         version("5.4.0", sha256="0f6a0279b8b5a6dfbe32b45e1598218fe804fee36170d5c1f7b161c600544ef2")
         version("5.3.3", sha256="b0aae79dce7f6f9ef76ad2594745fe1f589a7b675b22f35b4d2369e7d5e1985a")
         version("5.3.0", sha256="be4c9f9433415bdfea50d9f47b8afb43ac315f205ed39674f863955a6c256dca")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
@@ -110,6 +114,7 @@ class Rocrand(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")

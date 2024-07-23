@@ -9,7 +9,7 @@ class Libgudev(MesonPackage):
     """Provides GObject bindings for libudev."""
 
     homepage = "https://gitlab.gnome.org/GNOME/libgudev/"
-    url = "https://download.gnome.org/sources/libgudev/237/libgudev-237.tar.xz"
+    url = "https://download.gnome.org/sources/libgudev/238/libgudev-238.tar.xz"
 
     maintainers("teaguesterling")
 
@@ -17,6 +17,6 @@ class Libgudev(MesonPackage):
 
     version("238", sha256="61266ab1afc9d73dbc60a8b2af73e99d2fdff47d99544d085760e4fa667b5dd1")
 
-    with default_args(when="@238", type=("build", "link", "run")):
+    with default_args(type=("build", "link", "run")):
         depends_on("glib@2.38:")
         depends_on("systemd@251:")  # For libuvdev

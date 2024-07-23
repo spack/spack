@@ -23,6 +23,9 @@ class Ntpoly(CMakePackage):
     version("3.1.0", sha256="71cd6827f20c68e384555dbcfc85422d0690e21d21d7b5d4f7375544a2755271")
     version("2.3.1", sha256="af8c7690321607fbdee9671b9cb3acbed945148014e0541435858cf82bfd887e")
 
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("shared", default=True, description="Build shared libraries.")
 
     depends_on("cmake", type="build")

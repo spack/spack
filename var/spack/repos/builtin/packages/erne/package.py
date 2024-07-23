@@ -16,6 +16,9 @@ class Erne(AutotoolsPackage):
 
     version("2.1.1", sha256="f32ab48481fd6c129b0a0246ab02b6e3a2a9da84024e1349510a59c15425d983")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("mpi", default=False, description="Build with OpenMPI support")
 
     depends_on(

@@ -62,6 +62,10 @@ class Amdlibflame(CMakePackage, LibflameBase):
     version("3.0", sha256="d94e08b688539748571e6d4c1ec1ce42732eac18bd75de989234983c33f01ced")
     version("2.2", sha256="12b9c1f92d2c2fa637305aaa15cf706652406f210eaa5cbc17aaea9fcfa576dc")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("ilp64", default=False, when="@3.0.1: ", description="Build with ILP64 support")
     variant(
         "enable-aocl-blas",

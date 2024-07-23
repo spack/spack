@@ -161,21 +161,24 @@ class TestConcretizePreferences:
         spec = concretize("mpileaks")
         assert "zmpi" in spec
 
-    def test_config_set_pkg_property_url(self, mutable_mock_repo):
+    @pytest.mark.parametrize(
+        "update,expected",
+        [
+            (
+                {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
+                "http://www.somewhereelse.com/mpileaks-2.3.tar.gz",
+            ),
+            ({}, "http://www.llnl.gov/mpileaks-2.3.tar.gz"),
+        ],
+    )
+    def test_config_set_pkg_property_url(self, update, expected, mock_repo_path):
         """Test setting an existing attribute in the package class"""
-        update_packages(
-            "mpileaks",
-            "package_attributes",
-            {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
-        )
-        spec = concretize("mpileaks")
-        assert spec.package.fetcher.url == "http://www.somewhereelse.com/mpileaks-2.3.tar.gz"
+        update_packages("mpileaks", "package_attributes", update)
+        with spack.repo.use_repositories(mock_repo_path):
+            spec = concretize("mpileaks")
+            assert spec.package.fetcher.url == expected
 
-        update_packages("mpileaks", "package_attributes", {})
-        spec = concretize("mpileaks")
-        assert spec.package.fetcher.url == "http://www.llnl.gov/mpileaks-2.3.tar.gz"
-
-    def test_config_set_pkg_property_new(self, mutable_mock_repo):
+    def test_config_set_pkg_property_new(self, mock_repo_path):
         """Test that you can set arbitrary attributes on the Package class"""
         conf = syaml.load_config(
             """\
@@ -194,19 +197,20 @@ mpileaks:
 """
         )
         spack.config.set("packages", conf, scope="concretize")
-
-        spec = concretize("mpileaks")
-        assert spec.package.v1 == 1
-        assert spec.package.v2 is True
-        assert spec.package.v3 == "yesterday"
-        assert spec.package.v4 == "true"
-        assert dict(spec.package.v5) == {"x": 1, "y": 2}
-        assert list(spec.package.v6) == [1, 2]
+        with spack.repo.use_repositories(mock_repo_path):
+            spec = concretize("mpileaks")
+            assert spec.package.v1 == 1
+            assert spec.package.v2 is True
+            assert spec.package.v3 == "yesterday"
+            assert spec.package.v4 == "true"
+            assert dict(spec.package.v5) == {"x": 1, "y": 2}
+            assert list(spec.package.v6) == [1, 2]
 
         update_packages("mpileaks", "package_attributes", {})
-        spec = concretize("mpileaks")
-        with pytest.raises(AttributeError):
-            spec.package.v1
+        with spack.repo.use_repositories(mock_repo_path):
+            spec = concretize("mpileaks")
+            with pytest.raises(AttributeError):
+                spec.package.v1
 
     def test_preferred(self):
         """ "Test packages with some version marked as preferred=True"""
@@ -512,5 +516,5 @@ mpich:
         packages.yaml doesn't fail with an error.
         """
         with spack.config.override("packages:all", {"variants": "+foo"}):
-            s = Spec("a").concretized()
+            s = Spec("pkg-a").concretized()
             assert s.satisfies("foo=bar")

@@ -51,6 +51,8 @@ class PyTorchvision(PythonPackage):
     version("0.6.0", sha256="02de11b3abe6882de4032ce86dab9c7794cbc84369b44d04e667486580f0f1f7")
     version("0.5.0", sha256="eb9afc93df3d174d975ee0914057a9522f5272310b4d56c150b955c287a4d74d")
 
+    depends_on("cxx", type="build")  # generated
+
     desc = "Enable support for native encoding/decoding of {} formats in torchvision.io"
     variant("png", default=True, description=desc.format("PNG"))
     variant("jpeg", default=True, description=desc.format("JPEG"))
@@ -105,6 +107,8 @@ class PyTorchvision(PythonPackage):
     # setup.py
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
+    # https://github.com/pytorch/vision/issues/8460
+    depends_on("py-numpy@:1", when="@:0.18", type=("build", "run"))
     depends_on("pil@5.3:", when="@0.10:", type=("build", "run"))
     depends_on("pil@4.1.1:", type=("build", "run"))
 

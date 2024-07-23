@@ -1,4 +1,4 @@
-sphinx==7.2.6
+sphinx==7.4.6
 sphinxcontrib-programoutput==0.17
 sphinx_design==0.6.0
 sphinx-rtd-theme==2.0.0
@@ -10,4 +10,4 @@ pytest==8.2.2
 isort==5.13.2
 black==24.4.2
 flake8==7.1.0
-mypy==1.10.1
+mypy==1.11.0
