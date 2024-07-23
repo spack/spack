@@ -967,6 +967,7 @@ def test_compiler_environment(working_env):
     with compiler.compiler_environment():
         assert os.environ["TEST"] == "yes"
 
+
 def test_compiler_environment_always_flags(working_env):
     """Test whether flags that are labeled as "ALWAYS_*FLAGS" are set in the compiler environment"""
     compiler = Compiler(
