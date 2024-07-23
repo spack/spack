@@ -144,7 +144,7 @@ class Gptune(CMakePackage):
 
             with working_dir(wd + "/superlu_dist/build/EXAMPLE"):
 
-                with test_part(self, f"test_part_cp_basic", purpose=f"gptune cp basic test"):
+                with test_part(self, "test_part_cp_basic", purpose="gptune cp basic test"):
                     exe = which("cp")
                     exe(*op)
 
