@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Sherpa(AutotoolsPackage, CMakePackage):
+class Sherpa(CMakePackage, AutotoolsPackage):
     """Sherpa is a Monte Carlo event generator for the Simulation of
     High-Energy Reactions of PArticles in lepton-lepton, lepton-photon,
     photon-photon, lepton-hadron and hadron-hadron collisions."""
@@ -79,7 +79,6 @@ class Sherpa(AutotoolsPackage, CMakePackage):
     # Note that the delphes integration seems utterly broken: https://sherpa.hepforge.org/trac/ticket/305
 
     # autotools dependencies are needed at runtime to compile processes
-    # at least as long as sherpa is an autotools package
     depends_on("autoconf", when="@:2")
     depends_on("automake", when="@:2")
     depends_on("libtool", when="@:2")
@@ -130,6 +129,20 @@ class Sherpa(AutotoolsPackage, CMakePackage):
                 string=True,
             )
 
+    def flag_handler(self, name, flags):
+        flags = list(flags)
+        if name == "cxxflags":
+            flags.append("-std=c++" + self.spec.variants["cxxstd"].value)
+
+            if "+cms" in self.spec:
+                flags.extend(["-fuse-cxa-atexit", "-O2"])
+                if self.spec.target.family == "x86_64":
+                    flags.append("-m64")
+
+        return (None, None, flags)
+
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
             self.define_from_variant("SHERPA_ENABLE_ANALYSIS", "analysis"),
@@ -150,6 +163,8 @@ class Sherpa(AutotoolsPackage, CMakePackage):
         ]
         return args
 
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
         args.append("--enable-binreloc")
@@ -190,21 +205,6 @@ class Sherpa(AutotoolsPackage, CMakePackage):
 
         return args
 
-    def flag_handler(self, name, flags):
-        flags = list(flags)
-        if name == "cxxflags":
-            flags.append("-std=c++" + self.spec.variants["cxxstd"].value)
-
-            if "+cms" in self.spec:
-                flags.extend(["-fuse-cxa-atexit", "-O2"])
-                if self.spec.target.family == "x86_64":
-                    flags.append("-m64")
-
-        return (None, None, flags)
-
-    # This may not be needed when this package is changed to be a CMake package
-    # since it's specific to makelibs
-    @when("@:2")
     def install(self, spec, prefix):
         # Make sure the path to the provided libtool is used instead of the system one
         filter_file(
