@@ -1,6 +1,11 @@
-%-----------------------------------------------------------------------------
+% Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
+% Spack Project Developers. See the top-level COPYRIGHT file for details.
+%
+% SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+%=============================================================================
 % Splicing
-%-----------------------------------------------------------------------------
+%=============================================================================
 % Splicing alters the encoding of hashes, because splices are always introduced
 % in the dependency of hashes. Without splicing, hashes impose their constraints
 % directly; with splicing we introduce a layer of indirection using the atom
