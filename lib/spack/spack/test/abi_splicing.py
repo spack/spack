@@ -192,6 +192,7 @@ def test_simple_dep_reuse(abi_splice_database, abi_splice_mock_packages, monkeyp
 @pytest.mark.only_clingo("Synthesized splices are not supported by the old concretizer")
 def test_splice_installed_hash(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
+    spack.config.set("concretizer:splice", True)
     monkeypatch.setattr(
         spack.solver.asp, "_has_runtime_dependencies", _mock_has_runtime_dependencies
     )
@@ -210,6 +211,7 @@ def test_splice_installed_hash(abi_splice_database, abi_splice_mock_packages, mo
 @pytest.mark.only_clingo("Synthesized splices are not supported by the old concretizer")
 def test_splice_build_dep(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
+    spack.config.set("concretizer:splice", True)
     monkeypatch.setattr(
         spack.solver.asp, "_has_runtime_dependencies", _mock_has_runtime_dependencies
     )
@@ -225,6 +227,7 @@ def test_splice_build_dep(abi_splice_database, abi_splice_mock_packages, monkeyp
 @pytest.mark.only_clingo("Synthesized splices are not supported by the old concretizer")
 def test_mpi_splices(abi_splice_database, abi_splice_mock_packages, monkeypatch):
     spack.config.set("concretizer:reuse", True)
+    spack.config.set("concretizer:splice", True)
     monkeypatch.setattr(
         spack.solver.asp, "_has_runtime_dependencies", _mock_has_runtime_dependencies
     )
