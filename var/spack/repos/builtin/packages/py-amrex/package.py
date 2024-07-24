@@ -115,5 +115,9 @@ class PyAmrex(PythonPackage, CudaPackage, ROCmPackage):
 
     def test_pytest(self):
         """Perform smoke tests on the installed package."""
-        pytest = which("pytest")
-        pytest(join_path(install_test_root(self), self.tests_src_dir))
+        test_dir = join_path(self.test_suite.current_test_cache_dir,self.tests_src_dir)
+        with working_dir(test_dir):
+            #pytest = which(join_path(self.prefix.bin, "pytest"))
+            pytest = which("pytest")
+            assert pytest is not None, "Pytest is none"
+            pytest(join_path(install_test_root(self), self.tests_src_dir))
