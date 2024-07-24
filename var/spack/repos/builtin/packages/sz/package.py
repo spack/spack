@@ -118,7 +118,7 @@ class Sz(CMakePackage, AutotoolsPackage):
             decfile = test_data_dir.join(filename)
 
             with test_part(
-                self, "test_float_2d_decompression_sz", purpose="testing 2D decompression of sz"
+                self, "test_2d_float_decompression_sz", purpose="testing 2D decompression of sz"
             ):
                 options = ["-x", "-f", "-i", orifile, "-s", decfile, "-2", "8", "1024", "-a"]
                 exe(*options)
