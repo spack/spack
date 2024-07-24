@@ -95,7 +95,8 @@ class Pinentry(AutotoolsPackage):
     def check_version(self, gui):
         """Version check"""
         exe = which(self.prefix.bin.pinentry + "-" + gui)
-        exe("--version", output=str.split, error=str.split)
+        out = exe("--version", output=str.split, error=str.split)
+        assert str(self.version) in out
 
     def test_pinentry(self):
         """Confirm pinentry version"""
@@ -114,4 +115,4 @@ class Pinentry(AutotoolsPackage):
                     raise SkipTest(f"Package must be installed with {gui}")
                 self.check_version(gui)
                 out = exe("--version", output=str.split, error=str.split)
-                assert str(self.version) in out
+                assert str(self.version) in out, "Wrong version!"
