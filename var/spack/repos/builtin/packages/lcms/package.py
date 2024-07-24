@@ -50,7 +50,11 @@ class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
         return pathlib.Path(self.pkg.stage.source_path) / "Projects" / f"VC{self.pkg.compiler.visual_studio_version}"
 
     def msbuild_args(self):
+        jpeg_include = self.spec["jpeg"].prefix.include
+        tiff_include = self.spec["libtiff"].prefix.include
+        zlib_include = self.spec["zlib-api"].prefix.include
         return [
             "lcms2.sln",
-            self.define("OutputPath", self.spec.prefix)
+            self.define("OutputPath", self.spec.prefix),
+            self.define("IncludePath", '"{0}"'.format(";".join([jpeg_include, tiff_include, zlib_include, "$(IncludePath)"])) )
         ]
