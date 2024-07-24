@@ -13,12 +13,6 @@ class WasiSdkPrebuilt(Package):
     homepage = "https://wasi.dev/"
     url = "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz"
 
-    def url_for_version(self, version):
-        base = "https://github.com/WebAssembly/wasi-sdk/releases/download"
-        major = version.up_to(1)
-        full = version.up_to(2)
-        return f"{base}/wasi-sdk-{major}/wasi-sdk-{full}-linux.tar.gz"
-
     maintainers("teaguesterling")
 
     license("APACHE-2.0", checked_by="teaguesterling")
@@ -33,6 +27,12 @@ class WasiSdkPrebuilt(Package):
     version("14.0", sha256="8c8ebb7f71dcccbb8b1ab384499a53913b0b6d1b7b3281c3d70165e0f002e821")
 
     provides("wasi-sdk")
+
+    def url_for_version(self, version):
+        base = "https://github.com/WebAssembly/wasi-sdk/releases/download"
+        major = version.up_to(1)
+        full = version.up_to(2)
+        return f"{base}/wasi-sdk-{major}/wasi-sdk-{full}-linux.tar.gz"
 
     def install(self, spec, prefix):
         install_tree("share/wasi-sysroot", prefix)
