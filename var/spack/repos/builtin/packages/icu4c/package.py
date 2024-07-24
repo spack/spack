@@ -102,7 +102,8 @@ class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
         return [
             "allinone.sln",
             self.define("OutputPath", self.spec.prefix),
-            self.define("Configuration", "Release")
+            self.define("Configuration", "Release"),
+            self.define("SkipUWP", "true")
         ]
 
     @property
@@ -112,3 +113,16 @@ class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
             solution_path = solution_path / "icu"
         solution_path = solution_path / "source" / "allinone"
         return str(solution_path)
+
+    def install(self, pkg, spec, prefix):
+        mkdirp(prefix.lib)
+        mkdirp(prefix.bin)
+        mkdirp(prefix.include)
+        mkdirp(prefix.commondata)
+        with working_dir(self.pkg.stage.source_path):
+            # install bin
+            install_tree("bin64", prefix.bin)
+            # install lib
+            install_tree("lib64", prefix.lib)
+            # intstall headers
+            install_tree("include", prefix.include)
