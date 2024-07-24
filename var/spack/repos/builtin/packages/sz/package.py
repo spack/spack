@@ -98,17 +98,19 @@ class Sz(CMakePackage, AutotoolsPackage):
             env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib64)
 
     def test_2d_float(self):
-        """This test performs simple 2D compression/decompression (float)"""
+        """Run simple 2D compression/decompression"""
         test_data_dir = self.test_suite.current_test_data_dir
 
         with working_dir(test_data_dir):
             filename = "testfloat_8_8_128.dat"
             orifile = test_data_dir.join(filename)
-            exe = which("sz")
+            exe = which(join_path(self.prefix.bin, "sz"))
             if exe is None:
                 raise SkipTest(f"sz is not installed for version {self.version}")
 
-            with test_part(self, "test_2d_compression_sz", purpose="testing 2D compression of sz"):
+            with test_part(
+                self, "test_2d_float_compression_sz", purpose="testing 2D compression of sz"
+            ):
                 options = ["-z", "-f", "-i", orifile, "-M", "REL", "-R", "1E-3", "-2", "8", "1024"]
                 exe(*options)
 
@@ -116,24 +118,25 @@ class Sz(CMakePackage, AutotoolsPackage):
             decfile = test_data_dir.join(filename)
 
             with test_part(
-                self, "test_2d_decompression_sz", purpose="testing 2D decompression of sz"
+                self, "test_float_2d_decompression_sz", purpose="testing 2D decompression of sz"
             ):
                 options = ["-x", "-f", "-i", orifile, "-s", decfile, "-2", "8", "1024", "-a"]
                 exe(*options)
 
     def test_3d_float(self):
-        """This test performs simple 3D compression/decompression (float)"""
-
+        """Run simple 3D compression/decompression"""
         test_data_dir = self.test_suite.current_test_data_dir
-        with working_dir(test_dat_dir):
+        with working_dir(test_data_dir):
 
             filename = "testfloat_8_8_128.dat"
             orifile = test_data_dir.join(filename)
-            exe = which("sz")
+            exe = which(join_path(self.prefix.bin, "sz"))
             if exe is None:
                 raise SkipTest(f"sz is not installed for version {self.version}")
 
-            with test_part(self, "test_3d_compression_sz", purpose="testing 3D compression of sz"):
+            with test_part(
+                self, "test_3d_float_compression_sz", purpose="testing 3D compression of sz"
+            ):
                 options = [
                     "-z",
                     "-f",
@@ -153,7 +156,7 @@ class Sz(CMakePackage, AutotoolsPackage):
             filename = "testfloat_8_8_128.dat.sz"
             decfile = test_data_dir.join(filename)
             with test_part(
-                self, "test_3d_decompression_sz", purpose="testing 3D decompression of sz"
+                self, "test_3d_float_decompression_sz", purpose="testing 3D decompression of sz"
             ):
                 options = ["-x", "-f", "-i", orifile, "-s", decfile, "-3", "8", "8", "128", "-a"]
                 exe(*options)
