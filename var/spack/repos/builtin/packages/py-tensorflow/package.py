@@ -562,6 +562,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             for pkg_dep in rocm_dependencies:
                 pkg_dep_cap = pkg_dep.upper().replace("-", "_")
                 env.set(f"{pkg_dep_cap}_PATH", spec[pkg_dep].prefix)
+            env.set("TF_ROCM_AMDGPU_TARGETS", ",".join(self.spec.variants["amdgpu_target"].value))
         else:
             env.set("TF_NEED_ROCM", "0")
 
