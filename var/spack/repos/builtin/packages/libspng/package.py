@@ -25,7 +25,7 @@ class Libspng(CMakePackage):
 
     def cmake_args(self):
         target = self.spec.target
-        return [ 
-            self.define("BUILD_EXAMPLES", False)),
+        return [
+            self.define("BUILD_EXAMPLES", False),
             self.define("ENABLE_OPT", target.vendor != "generic"),
         ]
