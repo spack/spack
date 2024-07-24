@@ -40,6 +40,8 @@ class File(AutotoolsPackage):
     depends_on("zlib-api")
     depends_on("zstd", when="@5.44:")
 
+    provides("file")
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str, error=str)

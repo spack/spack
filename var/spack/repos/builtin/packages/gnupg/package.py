@@ -65,6 +65,8 @@ class Gnupg(AutotoolsPackage):
 
     executables = ["^gpg$", "^gpg-agent$"]
 
+    provides("gpg")
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str, error=str)
