@@ -852,6 +852,8 @@ class PyclingoDriver:
         self.control.load(os.path.join(parent_dir, "display.lp"))
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
+        if setup.enable_splicing:
+            self.control.load(os.path.join(parent_dir, "splicing.lp"))
 
         # Binary compatibility is based on libc on Linux, and on the os tag elsewhere
         if using_libc_compatibility():
@@ -1071,6 +1073,10 @@ class SpackSolverSetup:
         # list of unique libc specs targeted by compilers (or an educated guess if no compiler)
         self.libcs: List[spack.spec.Spec] = []
 
+        # If true, we have to load the code for synthesizing splices
+        self.enable_splicing : bool = spack.config.CONFIG.get("concretizer:splice")
+    
+
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
 
@@ -1239,7 +1245,8 @@ class SpackSolverSetup:
         self.package_dependencies_rules(pkg)
 
         # splices
-        self.package_splice_rules(pkg)
+        if self.enable_splicing:
+            self.package_splice_rules(pkg)
 
         # virtual preferences
         self.virtual_preferences(
@@ -2414,9 +2421,13 @@ class SpackSolverSetup:
         for h, spec in self.reusable_and_possible.explicit_items():
             # this indicates that there is a spec like this installed
             self.gen.fact(fn.installed_hash(spec.name, h))
-            # this describes what constraints it imposes on the solve
-            for pred in self.spec_clauses(spec, body=True, required_from=None):
-                self.gen.fact(fn.hash_attr(h, *pred.args))
+            # If we enable splicing, we use the hash_attr encoding
+            if self.enable_splicing:
+                for pred in self.spec_clauses(spec, body=True, required_from=None):
+                    self.gen.fact(fn.hash_attr(h, *pred.args))
+            # otherwise, hashes impose their constraints directly
+            else:
+                self.impose(h, spec, body=True)
             self.gen.newline()
             # Declare as possible parts of specs that are not in package.py
             # - Add versions to possible versions
