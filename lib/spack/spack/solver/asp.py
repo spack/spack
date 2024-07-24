@@ -1074,8 +1074,7 @@ class SpackSolverSetup:
         self.libcs: List[spack.spec.Spec] = []
 
         # If true, we have to load the code for synthesizing splices
-        self.enable_splicing : bool = spack.config.CONFIG.get("concretizer:splice")
-    
+        self.enable_splicing: bool = spack.config.CONFIG.get("concretizer:splice")
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
