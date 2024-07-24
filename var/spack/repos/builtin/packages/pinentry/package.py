@@ -95,7 +95,7 @@ class Pinentry(AutotoolsPackage):
     def check_version(self, gui):
         """Version check"""
         exe = which(self.prefix.bin.pinentry + "-" + gui)
-        out = exe("--version", output=str.split, error=str.split)
+        exe("--version", output=str.split, error=str.split)
 
     def test_pinentry(self):
         """Confirm pinentry version"""
