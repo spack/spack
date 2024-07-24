@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import socket
 
 from spack.package import *
@@ -454,6 +455,12 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         return []
+
+    def setup_run_environment(self, env):
+        for library in ["lib", "lib64"]:
+            lib_path = join_path(self.prefix, library)
+            if os.path.exists(lib_path):
+                env.append_path("LD_LIBRARY_PATH", lib_path)
 
     def run_example(self, exe, expected):
         """Perform stand-alone checks on the installed package."""
