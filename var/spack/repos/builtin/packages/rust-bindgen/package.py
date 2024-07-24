@@ -23,7 +23,7 @@ class RustBindgen(CargoPackage):
     version("0.66.0", sha256="d2c8e8c1c9fbabecaa1146a02cc3bbbf968931136e7dc94614af06880d291685")
     version("0.20.5", sha256="4f5236e7979d262c43267afba365612b1008b91b8f81d1efc6a8a2199d52bb37")
 
-    depends_on("cxx", type="build") # generated
+    depends_on("cxx", type="build")  # generated
 
     def build(self, spec, prefix):
         # The carogopackage installer doesn't allow for an option to install from a subdir
