@@ -225,8 +225,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("mpi", when="+mpi")
 
-    everywhere_but_windows(depends_on, "qt+opengl", when="@5.3.0:+qt+opengl2")
-    everywhere_but_windows(depends_on, "qt~opengl", when="@5.3.0:+qt~opengl2")
+    for plat in ["linux", "darwin", "cray"]:
+        with when(f"platform={plat}"):
+            depends_on("qt+opengl", when="@5.3.0:+qt+opengl2")
+            depends_on("qt~opengl", when="@5.3.0:+qt~opengl2")
     depends_on("qt@:4", when="@:5.2.0+qt")
 
     depends_on("gl@3.2:", when="+opengl2")

@@ -185,7 +185,7 @@ class Qt(Package):
         with when(f"platform={plat}"):
             depends_on("pkgconfig", type="build")
             depends_on("glib", when="@4:")
-    depends_on("libmng")
+            depends_on("libmng")
     depends_on("icu4c")
     depends_on("harfbuzz", when="@5:")
 
@@ -588,11 +588,10 @@ class Qt(Package):
             config_args.append("-no-gui")
 
         if "+ssl" in spec:
-            if not IS_WINDOWS:
-                config_args.append("-openssl-linked")
-                pkg = spec["openssl"]
-                config_args.extend(pkg.libs.search_flags.split())
-                config_args.extend(pkg.headers.include_flags.split())
+            config_args.append("-openssl-linked")
+            pkg = spec["openssl"]
+            config_args.extend(pkg.libs.search_flags.split())
+            config_args.extend(pkg.headers.include_flags.split())
         else:
             config_args.append("-no-openssl")
 
@@ -607,7 +606,7 @@ class Qt(Package):
         else:
             config_args.append("-static")
 
-        if not IS_WINDOWS and version >= Version("5"):
+        if version >= Version("5"):
             use_spack_dep("pcre" if spec.satisfies("@5.0:5.8") else "pcre2", "pcre")
             use_spack_dep("harfbuzz")
 

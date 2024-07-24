@@ -88,12 +88,15 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
         description="Enable CoreText shaper backend on macOS",
     )
 
-    everywhere_but_windows(depends_on, "pkgconfig", type="build")
-    everywhere_but_windows(depends_on, "glib")
-    everywhere_but_windows(depends_on, "gobject-introspection")
+    for plat in ["linux", "darwin", "freebsd"]:
+        with when(f"platform={plat}"):
+            depends_on("pkgconfig", type="build")
+            depends_on("glib")
+            depends_on("gobject-introspection")
+            depends_on("cairo+pdf+ft")
+
     depends_on("icu4c")
     depends_on("freetype")
-    everywhere_but_windows(depends_on, "cairo+pdf+ft")
     depends_on("zlib-api")
     depends_on("graphite2", when="+graphite2")
 
