@@ -149,9 +149,11 @@ class NetlibLapack(CMakePackage):
             force_remove("LAPACKE/include/lapacke_mangling.h")
 
     def xplatform_lib_name(self, lib):
-        return "lib" + lib if not lib.startswith("lib")\
-            and not self.spec.satisfies("platform=windows") else lib
-
+        return (
+            "lib" + lib
+            if not lib.startswith("lib") and not self.spec.satisfies("platform=windows")
+            else lib
+        )
 
     @property
     def blas_libs(self):
@@ -159,10 +161,7 @@ class NetlibLapack(CMakePackage):
         query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
             tuple(): [self.xplatform_lib_name("blas")],
-            ("c", "fortran"): [
-                self.xplatform_lib_name("cblas"),
-                self.xplatform_lib_name("blas")
-            ],
+            ("c", "fortran"): [self.xplatform_lib_name("cblas"), self.xplatform_lib_name("blas")],
             ("c",): [self.xplatform_lib_name("cblas")],
             ("fortran",): [self.xplatform_lib_name("blas")],
         }
@@ -178,7 +177,7 @@ class NetlibLapack(CMakePackage):
             tuple(): [self.xplatform_lib_name("lapack")],
             ("c", "fortran"): [
                 self.xplatform_lib_name("lapacke"),
-                self.xplatform_lib_name("lapack")
+                self.xplatform_lib_name("lapack"),
             ],
             ("c",): [self.xplatform_lib_name("lapacke")],
             ("fortran",): [self.xplatform_lib_name("lapack")],
