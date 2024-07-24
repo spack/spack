@@ -870,7 +870,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         if self.spec.satisfies("@2.17:"):
             buildpath = join_path(
                 self.stage.source_path,
-                "bazel-out/k8-opt/bin/tensorflow/tools/pip_package/wheel_house/",
+                "bazel-bin/tensorflow/tools/pip_package/wheel_house/",
             )
             with working_dir(buildpath):
                 wheel = glob.glob("*.whl")[0]
