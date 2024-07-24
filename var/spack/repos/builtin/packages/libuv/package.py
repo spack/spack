@@ -101,7 +101,7 @@ class Libuv(CMakePackage, AutotoolsPackage):
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     @when("@:1.43")
-    def autoreconf(self, spec, prefix):
+    def autoreconf(self, pkg, spec, prefix):
         # This is needed because autogen.sh generates on-the-fly
         # an m4 macro needed during configuration
         Executable("./autogen.sh")()
