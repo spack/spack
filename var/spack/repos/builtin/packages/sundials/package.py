@@ -819,8 +819,6 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "~examples-install" in self.spec:
             raise SkipTest("Package must be installed with +examples-install")
 
-        test = ("nvector/serial/test_nvector_serial", ["10", "0"], "Test serial N_Vector", False)
-
         work_dir = join_path(
             self._smoke_tests_path, os.path.dirname("nvector/serial/test_nvector_serial")
         )
@@ -843,8 +841,6 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+CVODE" not in self.spec:
             raise SkipTest("Package must be installed with +CVODE")
-
-        test = ("cvode/serial/cvAdvDiff_bnd", [], "Test CVODE", True)
 
         work_dir = join_path(self._smoke_tests_path, os.path.dirname("cvode/serial/cvAdvDiff_bnd"))
         with working_dir(work_dir):
