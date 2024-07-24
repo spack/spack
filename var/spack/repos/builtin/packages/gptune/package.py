@@ -120,33 +120,26 @@ class Gptune(CMakePackage):
             wd = join_path(test_dir, "SuperLU_DIST")
             with working_dir(wd):
 
-                with test_part(self, "test_part_rm", purpose="gptune rm test"):
-                    exe = which("rm")
-                    exe("-rf", "superlu_dist")
+                exe = which("rm")
+                exe("-rf", "superlu_dist")
 
-                with test_part(self, "test_part_git", purpose="gptune git test"):
-                    exe = which("git")
-                    exe("clone", "https://github.com/xiaoyeli/superlu_dist.git")
+                exe = which("git")
+                exe("clone", "https://github.com/xiaoyeli/superlu_dist.git")
 
             with working_dir(wd + "/superlu_dist"):
 
-                with test_part(self, "test_part_mkdir_build", purpose="gptune mkdir build test"):
-                    exe = which("mkdir")
-                    exe("-p", "build")
+                exe = which("mkdir")
+                exe("-p", "build")
 
             with working_dir(wd + "/superlu_dist/build"):
 
-                with test_part(
-                    self, "test_part_mkdir_example", purpose="gptune cp mkdir example test"
-                ):
-                    exe = which("mkdir")
-                    exe("-p", "EXAMPLE")
+                exe = which("mkdir")
+                exe("-p", "EXAMPLE")
 
             with working_dir(wd + "/superlu_dist/build/EXAMPLE"):
 
-                with test_part(self, "test_part_cp_basic", purpose="gptune cp basic test"):
-                    exe = which("cp")
-                    exe(*op)
+                exe = which("cp")
+                exe(*op)
 
         if spec.satisfies("+hypre"):
             hypredriver = join_path(spec["hypre"].prefix.bin, "ij")
@@ -155,22 +148,19 @@ class Gptune(CMakePackage):
             wd = join_path(test_dir, "Hypre")
             with working_dir(wd):
 
-                with test_part(self, "test_part_rm_hypre", purpose="gptune rm hypre test"):
-                    exe = which("rm")
-                    exe("-rf", "hypre")
+                exe = which("rm")
+                exe("-rf", "hypre")
 
-                with test_part(self, "test_part_git_hypre", purpose="gptune git hypre test"):
-                    exe = which("git")
-                    exe("clone", "https://github.com/hypre-space/hypre.git")
+                exe = which("git")
+                exe("clone", "https://github.com/hypre-space/hypre.git")
 
             with working_dir(wd + "/hypre/src/test/"):
 
-                with test_part(self, "test_part_cp_hypre", purpose="gptune cp hypre test"):
-                    exe = which("cp")
-                    exe(*op)
+                exe = which("cp")
+                exe(*op)
 
         wd = self.test_suite.current_test_cache_dir
-        with open("{0}/run_env.sh".format(wd), "w") as envfile:
+        with open(f"{wd}/run_env.sh", "w") as envfile:
             envfile.write('if [[ $NERSC_HOST = "cori" ]]; then\n')
             envfile.write("    export machine=cori\n")
             envfile.write('elif [[ $(uname -s) = "Darwin" ]]; then\n')
@@ -185,13 +175,13 @@ class Gptune(CMakePackage):
             envfile.write("    export machine=unknownlinux\n")
             envfile.write("fi\n")
             envfile.write("export GPTUNEROOT=$PWD\n")
-            envfile.write("export MPIRUN={0}\n".format(which(spec["mpi"].prefix.bin + "/mpirun")))
-            envfile.write("export PYTHONPATH={0}:$PYTHONPATH\n".format(python_platlib + "/gptune"))
+            envfile.write(f"export MPIRUN={which(spec['mpi'].prefix.bin + '/mpirun')}\n")
+            envfile.write(f"export PYTHONPATH={python_platlib + '/gptune'}:$PYTHONPATH\n")
             envfile.write("export proc=$(spack arch)\n")
-            envfile.write("export mpi={0}\n".format(spec["mpi"].name))
-            envfile.write("export compiler={0}\n".format(comp_name))
-            envfile.write("export nodes={0} \n".format(self.nodes))
-            envfile.write("export cores={0} \n".format(self.cores))
+            envfile.write(f"export mpi={spec['mpi'].name}\n")
+            envfile.write(f"export compiler={comp_name}\n")
+            envfile.write(f"export nodes={self.nodes} \n")
+            envfile.write(f"export cores={self.cores} \n")
             envfile.write("export ModuleEnv=$machine-$proc-$mpi-$compiler \n")
             envfile.write(
                 'software_json=$(echo ",\\"software_configuration\\":'
@@ -251,10 +241,9 @@ class Gptune(CMakePackage):
             ["run_env.sh", self.install_test_root + "/."],
         ]
         for op in ops:
-            with test_part(self, f"test_part_cp_{op[1]}", purpose=f"gptune cp {op[1]} test"):
-                with working_dir(wd):
-                    exe = which("cp")
-                    exe(*op)
+            with working_dir(wd):
+                exe = which("cp")
+                exe(*op)
 
         apps = ["Scalapack-PDGEQRF_RCI"]
         if spec.satisfies("+mpispawn"):
