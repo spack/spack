@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -385,8 +386,19 @@ class CompilerLang:
 
 
 class TryCompiler:
-    def __init__(self, compiler):
-        self._compiler = compiler
+    def __init__(self, spec):
+        self._spec = spec
+        self.default_compiler_args = []
+        self.default_env = spack.environment.EnvironmentModifications()
+        # This is naive and needs work
+        # basically the only shared surface between the compiler clases
+        # and packages is a Spec,
+        # so I need to workout how to get the class/package from a spec
+        # and what to do when we have a package already
+        # as taking the spec of a package only to get the package is ridiculous
+        # and for classes its not possible
+        # right now we spec->class and use the class
+        self.compiler = spack.compilers.compilers_for_spec(spec)[0]
 
     def add_compiler_arg(self, *args):
         """Add default compiler arguments to compiler invocation for all languages"""
@@ -394,12 +406,60 @@ class TryCompiler:
     def add_environment_default(self, *args):
         """Add default environment settings to compiler invocation"""
 
+    def default_try_file_for_lang(self, lang):
+        ext = CompilerLang.ext_for_lang[lang]
+        cmp_shr = pathlib.Path(spack.paths.share_path) / "compiler"
+        return cmp_shr / lang / f"hello.{ext}"
+
     def __call__(self, *args, lang=CompilerLang.CC, **kwargs):
         """Invoke compiler for given language with compilation only flag
 
         Args:
             *args:
         """
+        compiler_path = getattr(self.compiler, lang)
+        test_file = self.default_try_file_for_lang(lang)
+        if not compiler_path:
+            err = f"No compiler for language: {lang}"
+            raise TryCompilerError(type(self).__name__, test_file, lang, err)
+
+        compiler = spack.util.executable.Executable(compiler_path)
+        compiler_invocation_args = {
+            "output": str,
+            "error": str,
+            "timeout": 120,
+            "fail_on_error": True,
+        }
+        compiler_args = [self.compiler.compile_only_arg, ]
+        compiler_args = [*compiler_args, str(test_file)]
+        try:
+            with self.compiler.compiler_environment():
+                result = compiler(*compiler_args, **compiler_invocation_args)
+            return result
+        except spack.util.executable.ProcessTimeoutError as e:
+            error = "Compilation attempt exceeded timeout 120s"
+            err = e
+        except spack.util.executable.ProcessError as e:
+            error = f"Experienced error while compiling: {str(e)}"
+            err = e
+        except Exception as e:
+            error = f"Experienced error attempting to execute compiler: {str(e)}"
+            err = e
+        raise TryCompilerError(type(self).__name__, test_file, lang, error) from err
+
+
+class TryCompilerError(spack.error.SpackError):
+    def __init__(self, compiler_name, file=None, lang=None, err=None):
+        lang = lang if lang else "unknown"
+        file = file if file else "unknown"
+        error_stmt = f"Unable to compile even a simple test file ({file}) \
+with {compiler_name} for {lang} language"
+        file_content = ""
+        if file:
+            with open(file, "r") as f:
+                file_content = f.read()
+        long_error_stmt = "" if not err else "\n".join([error_stmt, err, file_content])
+        super().__init__(error_stmt, long_error_stmt)
 
 
 class ProcessError(spack.error.SpackError):
