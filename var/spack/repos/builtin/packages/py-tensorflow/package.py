@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
 import sys
 import tempfile
@@ -381,7 +382,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
     # https://www.tensorflow.org/install/source#tested_build_configurations
     # https://github.com/tensorflow/tensorflow/issues/70199
-    conflicts("%gcc", when="@2.17:")
+    # (-mavx512fp16 exists in gcc@12:)
+    conflicts("%gcc@:11", when="@2.17:")
     conflicts("%gcc@:9.3.0", when="@2.9:")
     conflicts("%gcc@:7.3.0")
 
@@ -709,6 +711,14 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     def post_configure_fixes(self):
         spec = self.spec
 
+        if spec.satisfies("@2.17:"):
+            filter_file(
+                "patchelf",
+                spec["patchelf"].prefix.bin.patchelf,
+                "tensorflow/tools/pip_package/build_pip_package.py",
+                string=True,
+            )
+
         # make sure xla is actually turned off
         if spec.satisfies("~xla"):
             filter_file(
@@ -849,14 +859,27 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
         bazel(*args)
 
-        build_pip_package = Executable("bazel-bin/tensorflow/tools/pip_package/build_pip_package")
-        buildpath = join_path(self.stage.source_path, "spack-build")
-        build_pip_package("--src", buildpath)
+        if self.spec.satisfies("@:2.16"):
+            build_pip_package = Executable(
+                "bazel-bin/tensorflow/tools/pip_package/build_pip_package"
+            )
+            buildpath = join_path(self.stage.source_path, "spack-build")
+            build_pip_package("--src", buildpath)
 
     def install(self, spec, prefix):
         tmp_path = env["TEST_TMPDIR"]
-        buildpath = join_path(self.stage.source_path, "spack-build")
-        with working_dir(buildpath):
-            args = std_pip_args + ["--prefix=" + prefix, "."]
-            pip(*args)
+        if self.spec.satisfies("@2.17:"):
+            buildpath = join_path(
+                self.stage.source_path, "bazel-bin/tensorflow/tools/pip_package/wheel_house/"
+            )
+            with working_dir(buildpath):
+                wheel = glob.glob("*.whl")[0]
+                args = std_pip_args + ["--prefix=" + prefix, wheel]
+                pip(*args)
+        else:
+            buildpath = join_path(self.stage.source_path, "spack-build")
+            with working_dir(buildpath):
+                args = std_pip_args + ["--prefix=" + prefix, "."]
+                pip(*args)
+
         remove_linked_tree(tmp_path)
