@@ -21,7 +21,9 @@ class Sleef(CMakePackage):
     version("3.6.1", commit="6ee14bcae5fe92c2ff8b000d5a01102dab08d774", preferred=True)
     version("3.6.0_2024-03-20", commit="60e76d2bce17d278b439d9da17177c8f957a9e9b")  # py-torch@2.4:
     version("3.6.0", commit="a99491afee2bae0b11e9ffbf3211349f43a5fd10")
-    version("3.5.1_2020-12-22", commit="e0a003ee838b75d11763aa9c3ef17bf71a725bff")  # py-torch@1.8:2.3
+    version(
+        "3.5.1_2020-12-22", commit="e0a003ee838b75d11763aa9c3ef17bf71a725bff"
+    )  # py-torch@1.8:2.3
     version("3.5.1", sha256="415ee9b1bcc5816989d3d4d92afd0cd3f9ee89cbd5a33eb008e69751e40438ab")
     version(
         "3.4.0_2019-07-30", commit="7f523de651585fe25cade462efccca647dcc8d02"
