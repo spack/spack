@@ -14,7 +14,8 @@ class Cxx(Package):
     homepage = "https://isocpp.org/std/the-standard"
     virtual = True
 
-    def test(self):
+    def test_hello_world(self):
+        """Compile and run 'Hello World'"""
         test_source = self.test_suite.current_test_data_dir
 
         for test in os.listdir(test_source):
@@ -34,8 +35,13 @@ class Cxx(Package):
             cxx_opts = [compiler.cxx11_flag] if "c++11" in test else []
 
             cxx_opts += ["-o", exe_name, filepath]
-            compiled = self.run_test(cxx_exe, options=cxx_opts, installed=True)
+            cxx_exe = which(join_path(self.prefix.bin, cxx_exe))
+            compiled = cxx_exe(*cxx_opts)
 
             if compiled:
                 expected = ["Hello world", "YES!"]
-                self.run_test(exe_name, expected=expected)
+                exe_run = which(join_path(self.prefix.bin, exe_name))
+                out = exe_run(output=str.split, error=str.split)
+                assert expected in out
+            else:
+                assert False, "Did not compile"
