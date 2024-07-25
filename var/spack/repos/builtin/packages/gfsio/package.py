@@ -26,9 +26,7 @@ class Gfsio(CMakePackage):
     depends_on("pfunit", type="test")
 
     def cmake_args(self):
-        args = [
-            self.define("ENABLE_TESTS", self.run_tests),
-        ]
+        args = [self.define("ENABLE_TESTS", self.run_tests)]
         return args
 
     def setup_run_environment(self, env):
