@@ -15,5 +15,3 @@ class RustIndexmap(CargoPackage):
     license("APACHE-2.0 OR MIT", checked_by="teaguesterling")
 
     version("2.2.6", sha256="11a8a9fa470e76b0f23f323511b31ffadb6813392993ca95003284829815d5e4")
-
-

@@ -23,5 +23,3 @@ class RustClap(CargoPackage):
     version("4.5.2", sha256="10962660f531b5a1bbd4c7c8e96fdf4aef0ecbc8ad64ca3d9995b6e59ced765f")
     version("4.5.1", sha256="f3cc654960dc16bf3212d7964e1033c1e4339acbd3ddb1b153ae731b7a9609e7")
     version("4.5.0", sha256="c501afbe05a20d86c62206a66cc3c5e0d39e11bc10b000436a2166fc99a56e65")
-
-

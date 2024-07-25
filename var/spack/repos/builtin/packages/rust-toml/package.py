@@ -14,4 +14,3 @@ class RustToml(CargoPackage):
     license("APACHE-2.0 OR MIT", checked_by="teaguesterling")
 
     version("0.22.16", sha256="8cdd73db2290c389f724605244f057c725e91bfd327521c1e566eaf11bd04a96")
-

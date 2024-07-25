@@ -25,5 +25,3 @@ class RustLog(CargoPackage):
     version("0.4.12", sha256="be36b344650940670caa413b63a61dd5436ace24306e91c0f43f954871b7837e")
 
     depends_on("rust@1.60:")
-
-

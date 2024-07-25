@@ -6,7 +6,7 @@ from spack.package import *
 
 
 class RustSerde(CargoPackage):
-    """ Serialization framework for Rust"""
+    """Serialization framework for Rust"""
 
     homepage = "https://serde.rs/"
     url = "https://github.com/serde-rs/serde/archive/refs/tags/v1.0.204.tar.gz"
@@ -24,5 +24,3 @@ class RustSerde(CargoPackage):
         if self.spec.satisfies("+derive"):
             args += ["--features", "derive"]
         return args
- 
-

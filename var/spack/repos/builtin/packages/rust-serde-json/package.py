@@ -19,4 +19,3 @@ class RustSerdeJson(CargoPackage):
     depends_on("rust@1.56:")
     depends_on("rust-serde@1.0.94:")
     depends_on("rust-indexmap@2.2.3:")
-
