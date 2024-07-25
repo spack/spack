@@ -43,7 +43,12 @@ class G2(CMakePackage):
     variant("shared", default="False", when="@3.4.7:")
     variant("openmp", default=False, description="Use OpenMP multithreading", when="@develop")
     variant("utils", default=False, description="Build grib utilities", when="@develop")
-    variant("g2c_compare", default=False, description="Enable copygb2 tests using g2c_compare", when="@develop")
+    variant(
+        "g2c_compare",
+        default=False,
+        description="Enable copygb2 tests using g2c_compare",
+        when="@develop",
+    )
 
     depends_on("jasper@:2.0.32", when="@:3.4.7")
     depends_on("jasper")
@@ -81,7 +86,12 @@ class G2(CMakePackage):
             self.spec.variants["precision"].value if self.spec.satisfies("@3.4.6:") else ("4", "d")
         )
         for suffix in precisions:
-            lib = find_libraries("libg2_" + suffix, root=self.prefix, shared=self.spec.satisfies("+shared"), recursive=True)
+            lib = find_libraries(
+                "libg2_" + suffix,
+                root=self.prefix,
+                shared=self.spec.satisfies("+shared"),
+                recursive=True,
+            )
             env.set("G2_LIB" + suffix, lib[0])
             env.set("G2_INC" + suffix, join_path(self.prefix, "include_" + suffix))
 
