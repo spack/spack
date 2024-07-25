@@ -17,7 +17,7 @@ class PyPybv(PythonPackage):
 
     version("0.7.5", sha256="57bb09305c1255b11dd5c6a75d0e6b3c81675cf0469d6a757b148ac332ac05d5")
 
-    depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    depends_on("python@3.7:3", type=("build", "run"))
+    depends_on("py-setuptools@46.4:", type="build")
 
     depends_on("py-numpy@1.18.1:", type=("build", "run"))
