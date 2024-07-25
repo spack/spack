@@ -23,6 +23,10 @@ class Sqlite(AutotoolsPackage, NMakePackage):
 
     license("blessing")
 
+    version("3.46.0", sha256="6f8e6a7b335273748816f9b3b62bbdc372a889de8782d7f048c653a447417a7d")
+    version("3.45.3", sha256="b2809ca53124c19c60f42bf627736eae011afdcc205bb48270a5ee9a38191531")
+    version("3.45.1", sha256="cd9c27841b7a5932c9897651e20b86c701dd740556989b01ca596fcfa3d49a0a")
+    version("3.44.2", sha256="1c6719a148bc41cf0f2bbbe3926d7ce3f5ca09d878f1246fcc20767b175bb407")
     version("3.43.2", sha256="6d422b6f62c4de2ca80d61860e3a3fb693554d2f75bb1aaca743ccc4d6f609f0")
     version("3.42.0", sha256="7abcfd161c6e2742ca5c6c0895d1f853c940f203304a0b49da4e1eca5d088ca6")
     version("3.40.1", sha256="2c5dea207fa508d765af1ef620b637dcb06572afa6f01f0815bd5bbf864b33d9")
@@ -275,7 +279,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             libraryname = "libsqlitefunctions." + dso_suffix
             cc = Executable(spack_cc)
             cc(
-                self.compiler.cc_pic_flag,
+                self.pkg.compiler.cc_pic_flag,
                 "-lm",
                 "-shared",
                 "extension-functions.c",
