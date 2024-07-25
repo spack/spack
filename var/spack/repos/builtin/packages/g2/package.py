@@ -56,9 +56,9 @@ class G2(CMakePackage):
     depends_on("zlib-api", when="@develop")
     depends_on("bacio", when="@3.4.6:")
     depends_on("ip", when="@develop")
-    depends_on("ip precision=d", when="^ip@4.1:")
+    requires("^ip precision=d", when="^ip@4.1:")
     depends_on("sp", when="^ip@:4")
-    depends_on("sp precision=d", when="^ip@:4 ^sp@2.4:")
+    requires("^sp precision=d", when="^ip@:4 ^sp@2.4:")
     depends_on("g2c@1.8: +utils", when="+g2c_compare")
     with when("+w3emc"):
         depends_on("w3emc")
