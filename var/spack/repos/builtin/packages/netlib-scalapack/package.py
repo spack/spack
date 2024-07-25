@@ -91,6 +91,7 @@ class ScalapackBase(CMakePackage):
             or spec.satisfies("%apple-clang")
             or spec.satisfies("%oneapi")
             or spec.satisfies("%arm")
+            or spec.satisfies("%cce")
         ):
             c_flags.append("-Wno-error=implicit-function-declaration")
 
