@@ -26,15 +26,12 @@ class Cbindgen(CargoPackage):
 
     depends_on("rust@1.70:")
 
+    depends_on("rust-indexmap@2.1.0:")
+    depends_on("rust-log@0.4:")
+    depends_on("rust-serde@1.0.103+derive")
+    depends_on("rust-serde-json@1.0:")
+    depends_on("rust-toml@0.8.8:")
+    depends_on("rust-proc-macro2@1.0.60")
+    depends_on("rust-heck@0.4:")
 
-#    depends_on("rust-indexmap@2.1.0:")
-#    depends_on("rust-log@0.4:")
-#    depends_on("rust-serde@1.0.103+derive")
-#    depends_on("rust-serde_json@1.0:")
-#    depends_on("rust-tempfile@3:")
-#    depends_on("rust-toml@0.8.8:")
-#    depends_on("rust-proc-macro2@1.0.60")
-#    depends_on("rust-quote@1:")
-#    depends_on("rust-heck@0.4:")
-#
-#    depends_on("rust-clap@4.3:")
+    depends_on("rust-clap@4.3:")
