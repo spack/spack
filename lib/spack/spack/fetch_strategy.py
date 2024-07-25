@@ -725,6 +725,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         "submodules",
         "get_full_repo",
         "submodules_delete",
+        "git_sparse_paths",
     ]
 
     git_version_re = r"git version (\S+)"
@@ -740,6 +741,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         self.submodules = kwargs.get("submodules", False)
         self.submodules_delete = kwargs.get("submodules_delete", False)
         self.get_full_repo = kwargs.get("get_full_repo", False)
+        self.git_sparse_paths = kwargs.get("git_sparse_paths", None)
 
     @property
     def git_version(self):
@@ -1532,8 +1534,11 @@ def _from_merged_attrs(fetcher, pkg, version):
     attrs["fetch_options"] = pkg.fetch_options
     attrs.update(pkg.versions[version])
 
-    if fetcher.url_attr == "git" and hasattr(pkg, "submodules"):
-        attrs.setdefault("submodules", pkg.submodules)
+    if fetcher.url_attr == "git":
+        pkg_attr_list = ["submodules", "git_sparse_paths"]
+        for pkg_attr in pkg_attr_list:
+            if hasattr(pkg, pkg_attr):
+                attrs.setdefault(pkg_attr, getattr(pkg, pkg_attr))
 
     return fetcher(**attrs)
 
