@@ -45,7 +45,7 @@ class PyGevent(PythonPackage):
     conflicts(
         "^py-cython@3.0.10",
         when="@:23.9.0",
-        msg="py-gevent fails to build when using cython@3.0.10"
+        msg="py-gevent fails to build when using cython@3.0.10",
     )
 
     # Deprecated compiler options. upstream PR: https://github.com/gevent/gevent/pull/1896
