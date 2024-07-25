@@ -91,14 +91,15 @@ class N2p2(MakefilePackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        cache_extra_test_sources(self)
+        cache_extra_test_sources(self, ["src"])
 
     def test_n2p2(self):
         """Run benchmark tests"""
-        with working_dir(join_path(self.install_test_root, "test"), create=False):
+        make = which("make")
+        with working_dir("test"):
             make("clean")
-
-        with working_dir(join_path(self.install_test_root, "src"), create=False):
+        print("Calling make inside src dir")
+        with working_dir("src"):
             make("clean")
             make(
                 "MODE=test",
@@ -112,8 +113,8 @@ class N2p2(MakefilePackage):
                 f"PROJECT_EIGEN={self.spec['eigen'].prefix.include.eigen3}",
             )
             make("pynnp", "MODE=test")
-
-        with working_dir(join_path(self.install_test_root, "test"), create=False):
+        print("Making and running the test")
+        with working_dir("test"):
             if self.spec.satisfies("%fj"):
                 f = FileFilter(join_path("cpp", "nnp_test.h"))
                 mpirun = self.spec["mpi"].prefix.bin.mpirun
