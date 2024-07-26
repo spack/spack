@@ -18,15 +18,16 @@ class Fortran(Package):
         """Compile and run 'Hello world'"""
         test_source = self.test_suite.current_test_data_dir
 
+        fc_exe = os.environ["FC"]
+        fc_exe = which(join_path(self.prefix.bin, fc_exe))
+        if fc_exe is None:
+            raise SkipTest(f"{os.environ['FC']} not found in {self.version}")
+
         for test in os.listdir(test_source):
             with test_part(self, f"test_fortran_{test}", f"Test {test}"):
                 filepath = os.path.join(test_source, test)
                 exe_name = "%s.exe" % test
-                fc_exe = os.environ["FC"]
                 fc_opts = ["-o", exe_name, filepath]
-                fc_exe = which(join_path(self.prefix.bin, fc_exe))
-                if fc_exe is None:
-                    raise SkipTest(f"{os.environ['FC']} not found in {self.version}")
                 fc_exe(*fc_opts)
 
                 if compiled:
