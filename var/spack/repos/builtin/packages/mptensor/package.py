@@ -68,7 +68,7 @@ class Mptensor(CMakePackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(".")
+        cache_extra_test_sources(self)
 
         with working_dir(join_path(install_test_root(self), "tests"), create=False):
             make("clean")
