@@ -58,31 +58,21 @@ abi_splice_conditions_hold(SID, node(NID, PackageName), BasePackageName, BaseHas
 
 % These rules just recover the precise hash semantics, namely that pure hashes 
 % impose their attributes
-imposed_constraint(Hash, Attr, PackageName) :- 
-  attr("hash", node(ID, PackageName), Hash),
-  hash_attr(Hash, Attr, PackageName).
-
-% "virtual_node" is a weird attribute, since it does not reference the name of
-% of the package its referring to, but the name of the virtual it provides
-imposed_constraint(Hash, "virtual_node", VirtName) :-
-  attr("hash", node(ID, PackageName), Hash),
-  hash_attr(Hash, "virtual_node", VirtName).
+imposed_constraint(Hash, Attr, PackageName) :- hash_attr(Hash, Attr, PackageName).
 
 % "hash" is a weird attribute, it's where splices can occur
-imposed_constraint(Hash, Attr, PackageName, Arg1) :- 
-  attr("hash", node(ID, PackageName), Hash),
+imposed_constraint(Hash, Attr, PackageName, Arg1) :-
   hash_attr(Hash, Attr, PackageName, Arg1),
   Attr != "hash".
 
 % Similarly, since splices can affect the names of dependent hashes, we need to 
 % treat is special as well
 imposed_constraint(Hash, Attr, PackageName, Arg1, Arg2) :- 
-  attr("hash", node(ID, PackageName), Hash),
   hash_attr(Hash, Attr, PackageName, Arg1, Arg2),
-  Attr != "depends_on".
+  Attr != "depends_on",
+  Attr != "virtual_on_edge".
 
 imposed_constraint(Hash, Attr, PackageName, Arg1, Arg2, Arg3) :- 
-  attr("hash", node(ID, PackageName), Hash),
   hash_attr(Hash, Attr, PackageName, Arg1, Arg2, Arg3).
   
 % The general idea is that splicing need only be introduced on hashes that are
@@ -99,23 +89,29 @@ imposed_constraint(Hash, "hash", HashName, ImpHash) :-
   
 % The choice case of whether to keep the hash pure, or introduce a splice into 
 % the dependencies 
-1 { 
-  imposed_constraint(ParentHash, "hash", ChildName, ChildHash); 
-  attr("splice_hash", node(SID, SpliceName), ChildName, ChildHash, node(ID, PackageName)) : attr("node", node(SID, SpliceName))
-} 1 :-
+{ imposed_constraint(ParentHash, "hash", ChildName, ChildHash) } :-
   attr("hash", node(ID, PackageName), ParentHash),
   hash_attr(ParentHash, "hash", ChildName, ChildHash),
   abi_splice_conditions_hold(_, node(SID, SpliceName), ChildName, ChildHash).
 
-:- attr("hash", _, ChildHash), attr("splice_hash", _, _, ChildHash, _), internal_error("Cannot splice into a hash in use").
+attr("splice_hash", node(SID, SpliceName), ChildName, ChildHash, node(ID, PackageName)) :- 
+  attr("hash", node(ID, PackageName), ParentHash),
+  hash_attr(ParentHash, "hash", ChildName, ChildHash),
+  abi_splice_conditions_hold(_, node(SID, SpliceName), ChildName, ChildHash),
+  not imposed_constraint(ParentHash, "hash", ChildName, ChildHash). 
 
-% depends_on works normally if the hash is not a splice, since the name will not 
-% have changed 
+:- attr("hash", _, ChildHash), attr("splice_hash", _, _, ChildHash, _).
+
+% depends_on and virtual_on_edge work normally if the hash is not a
+% splice, since the name will not have changed
 imposed_constraint(Hash, "depends_on", PackageName, DepName, Type) :-
-  attr("hash", node(ID, PackageName), Hash),
   hash_attr(Hash, "depends_on", PackageName, DepName, Type),
   hash_attr(Hash, "hash", DepName, DepHash),
   not attr("splice_hash", _, DepName, DepHash, _).
+
+imposed_constraint(Hash, "virtual_on_edge", PackageName, DepName, VirtName) :-
+  hash_attr(Hash, "virtual_on_edge", PackageName, DepName, VirtName),
+  not attr("splice_hash", _, DepName, _, _).
 
 % If there is a splice, the name of the dependency might change (e.g. splicing 
 % a different virtual provider), but the splice_hash attribute has enough info 
