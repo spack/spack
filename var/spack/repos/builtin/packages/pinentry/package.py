@@ -105,8 +105,9 @@ class Pinentry(AutotoolsPackage):
     def test_guis(self):
         """Check gui versions"""
         for gui in self.supported_guis:
+            if f"gui={gui}" not in self.spec:
+                continue
+
             exe_name = f"pinentry-{gui}"
             with test_part(self, f"test_guis_{gui}", purpose=f"Check {exe_name} version"):
-                if f"gui={gui}" not in self.spec:
-                    raise SkipTest(f"Package must be installed with {gui}")
                 self.check_version(exe_name)
