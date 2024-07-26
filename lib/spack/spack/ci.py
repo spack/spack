@@ -1472,7 +1472,7 @@ def win_quote(quote_str: str) -> str:
     return quote_str
 
 
-def download_and_extract_artifacts(url, work_dir):
+def download_and_extract_artifacts(url, work_dir) -> str:
     """Look for gitlab artifacts.zip at the given url, and attempt to download
         and extract the contents into the given work_dir
 
@@ -1480,6 +1480,10 @@ def download_and_extract_artifacts(url, work_dir):
 
         url (str): Complete url to artifacts.zip file
         work_dir (str): Path to destination where artifacts should be extracted
+
+    Output:
+
+        Artifacts root path relative to the archive root
     """
     tty.msg(f"Fetching artifacts from: {url}\n")
 
