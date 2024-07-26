@@ -1496,7 +1496,7 @@ def download_and_extract_artifacts(url, work_dir) -> str:
     opener = build_opener(HTTPHandler)
 
     request = Request(url, headers=headers)
-    request.get_method = lambda: "GET"
+    request.method = "GET"
 
     response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
     response_code = response.getcode()
@@ -2300,7 +2300,7 @@ hash={spec.dag_hash()} arch={spec.architecture} ({self.build_group})"
         enc_data = json.dumps(data).encode("utf-8")
 
         request = Request(url, data=enc_data, headers=headers)
-        request.get_method = lambda: "PUT"
+        request.method = "PUT"
 
         response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
         response_code = response.getcode()
