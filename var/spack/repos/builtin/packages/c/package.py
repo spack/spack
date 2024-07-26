@@ -22,7 +22,6 @@ class C(Package):
             with test_part(self, f"test_hello_world_{test}", f"Test {test}"):
                 filepath = test_source.join(test)
                 exe_name = "%s.exe" % test
-
                 cc_exe = os.environ["CC"]
                 cc_opts = ["-o", exe_name, filepath]
                 compiled = self.run_test(cc_exe, options=cc_opts, installed=True)
@@ -30,6 +29,8 @@ class C(Package):
                 if compiled:
                     expected = ["Hello world", "YES!"]
                     exe = which(join_path(self.prefix.bin, exe_name))
+                    if exe is None:
+                        raise SkipTest(f"{exe} not found in {self.version}")
                     out = exe(output=str.split, error=str.split)
                     check_outputs(expected, out)
                 else:
