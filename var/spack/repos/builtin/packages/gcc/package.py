@@ -18,6 +18,8 @@ import spack.util.libc
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 from spack.package import *
 
+provides("cxx")
+
 
 class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     """The GNU Compiler Collection includes front ends for C, C++, Objective-C,
