@@ -238,7 +238,7 @@ class Gptune(CMakePackage):
         # copy the environment configuration files to non-cache directories
         ops = [
             ["run_env.sh", python_platlib + "/gptune/."],
-            ["run_env.sh", self.install_test_root + "/."],
+            ["run_env.sh", install_test_root(self) + "/."],
         ]
         for op in ops:
             with working_dir(wd):
