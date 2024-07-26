@@ -20,7 +20,7 @@ class Libuuid(AutotoolsPackage, SourceforgePackage):
 
     depends_on("c", type="build")  # generated
 
-    if sys.platform not in ["darwin", "windows"]:
+    if sys.platform not in ["darwin", "windows"]: #only provide on *nix-like
         provides("uuid")
 
     conflicts("%gcc@14:")
