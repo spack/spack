@@ -750,44 +750,6 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             make("test_install")
 
     @property
-    def _smoke_tests(self):
-        # smoke_tests tuple: exe, args, purpose, use cmake (true/false)
-        smoke_tests = [
-            ("nvector/serial/test_nvector_serial", ["10", "0"], "Test serial N_Vector", False)
-        ]
-        if "+CVODE" in self.spec:
-            smoke_tests.append(("cvode/serial/cvAdvDiff_bnd", [], "Test CVODE", True))
-
-        if "+cuda" in self.spec:
-            smoke_tests.append(
-                ("nvector/cuda/test_nvector_cuda", ["10", "0", "0"], "Test CUDA N_Vector", True)
-            )
-            if "+CVODE" in self.spec:
-                smoke_tests.append(
-                    ("cvode/cuda/cvAdvDiff_kry_cuda", [], "Test CVODE with CUDA", True)
-                )
-
-        if "+rocm" in self.spec:
-            smoke_tests.append(
-                ("nvector/hip/test_nvector_hip", ["10", "0", "0"], "Test HIP N_Vector", True)
-            )
-            if "+CVODE" in self.spec:
-                smoke_tests.append(
-                    ("cvode/hip/cvAdvDiff_kry_hip", [], "Test CVODE with HIP", True)
-                )
-
-        if "+sycl" in self.spec:
-            smoke_tests.append(
-                ("nvector/sycl/test_nvector_sycl", ["10", "0", "0"], "Test SYCL N_Vector")
-            )
-            if "+CVODE" in self.spec:
-                smoke_tests.append(
-                    ("cvode/sycl/cvAdvDiff_kry_sycl", [], "Test CVODE with SYCL", True)
-                )
-
-        return smoke_tests
-
-    @property
     def _smoke_tests_path(self):
         # examples/smoke-tests are cached for testing
         return self.prefix.examples
@@ -811,152 +773,80 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     def test_serial_nvector(self):
         """Run serial N Vector test"""
 
-        cmake = self.spec["cmake"].command
-
-        if not cmake:
-            raise SkipTest("cmake not found")
-
-        if "~examples-install" in self.spec:
-            raise SkipTest("Package must be installed with +examples-install")
-
-        work_dir = join_path(
-            self._smoke_tests_path, os.path.dirname("nvector/serial/test_nvector_serial")
-        )
-        with working_dir(work_dir):
-            exe = which(join_path(self._smoke_tests_path, "nvector/serial/test_nvector_serial"))
-            if exe is None:
-                raise SkipTest(f"test_nvector_serial not found in {self.version}")
-            exe("10", "0")
+        self.run_sundials("nvector/serial/test_nvector_serial", ["10", "0"], False)
 
     def test_cvode(self):
         """Run CVODE test"""
 
-        cmake = self.spec["cmake"].command
-
-        if not cmake:
-            raise SkipTest("cmake not found")
-
-        if "~examples-install" in self.spec:
-            raise SkipTest("Package must be installed with +examples-install")
-
         if "+CVODE" not in self.spec:
             raise SkipTest("Package must be installed with +CVODE")
 
-        work_dir = join_path(self._smoke_tests_path, os.path.dirname("cvode/serial/cvAdvDiff_bnd"))
-        with working_dir(work_dir):
-            cmake(".")
-            make()
-            exe = which(join_path(self._smoke_tests_path, "cvode/serial/cvAdvDiff_bnd"))
-            if exe is None:
-                raise SkipTest(f"cvode/serial not found in {self.version}")
-            exe()
-            make("clean")
-
-        if "+cuda" in self.spec:
-            smoke_tests.append(
-                ("nvector/cuda/test_nvector_cuda", ["10", "0", "0"], "Test CUDA N_Vector", True)
-            )
-            if "+CVODE" in self.spec:
-                smoke_tests.append(
-                    ("cvode/cuda/cvAdvDiff_kry_cuda", [], "Test CVODE with CUDA", True)
-                )
+        self.run_sundials("cvode/serial/cvAdvDiff_bnd", [], True)
 
     def test_cuda(self):
-        """Run cuda test(s)"""
-
-        cmake = self.spec["cmake"].command
-
-        if not cmake:
-            raise SkipTest("cmake not found")
-
-        if "~examples-install" in self.spec:
-            raise SkipTest("Package must be installed with +examples-install")
+        """Run cuda test"""
 
         if "+cuda" not in self.spec:
             raise SkipTest("Package must be installed with +cuda")
 
-        tests = ("nvector/cuda/test_nvector_cuda", ["10", "0", "0"], "Test CUDA N_Vector", "basic")
+        self.run_sundials("nvector/cuda/test_nvector_cuda", ["10", "0", "0"], True)
 
-        if "+CVODE" in self.spec:
-            tests.append(("cvode/cuda/cvAdvDiff_kry_cuda", [], "Test CVODE with CUDA", "CVODE"))
+    def test_cuda_cvode(self):
+        """Run cuda CVODE test"""
 
-        for test in tests:
-            with test_part(self, f"test_cuda_{test[3]}", purpose=test[2]):
-                work_dir = join_path(self._smoke_tests_path, os.path.dirname(test[0]))
-                with working_dir(work_dir):
-                    cmake(".")
-                    make()
-                    exe = which(join_path(self._smoke_tests_path, test[0]))
-                    if exe is None:
-                        raise SkipTest(f"{test[0]} not found in {self.version}")
-                    exe(*test[1])
-                    make("clean")
+        if "+cuda" not in self.spec or "+CVODE" not in self.spec:
+            raise SkipTest("Package must be installed with +cuda and +CVODE")
+
+        self.run_sundials("cvode/cuda/cvAdvDiff_kry_cuda", [], True)
 
     def test_rocm(self):
-        """Run rocm test(s)"""
-
-        cmake = self.spec["cmake"].command
-
-        if not cmake:
-            raise SkipTest("cmake not found")
-
-        if "~examples-install" in self.spec:
-            raise SkipTest("Package must be installed with +examples-install")
+        """Run rocm test"""
 
         if "+rocm" not in self.spec:
-            raise SkipTest("Package must be installed with +cuda")
+            raise SkipTest("Package must be installed with +rocm")
 
-        tests = [("nvector/hip/test_nvector_hip", ["10", "0", "0"], "Test HIP N_Vector", "basic")]
+        self.run_sundials("nvector/hip/test_nvector_hip", ["10", "0", "0"], True)
 
-        if "+CVODE" in self.spec:
-            tests.append(("cvode/hip/cvAdvDiff_kry_hip", [], "Test CVODE with HIP", "CVODE_HIP"))
+    def test_rocm_cvode(self):
+        """Run rocm CVODE test"""
 
-        for test in tests:
-            with test_part(self, f"test_cuda_{test[3]}", purpose=test[2]):
-                work_dir = join_path(self._smoke_tests_path, os.path.dirname(test[0]))
-                with working_dir(work_dir):
-                    cmake(".")
-                    make()
-                    exe = which(join_path(self._smoke_tests_path, test[0]))
-                    if exe is None:
-                        raise SkipTest(f"{test[0]} not found in {self.version}")
-                    exe(*test[1])
-                    make("clean")
+        if "+rocm" not in self.spec or "+CVODE" not in self.spec:
+            raise SkipTest("Package must be installed with +rocm and +CVODE")
+
+        self.run_sundials("cvode/hip/cvAdvDiff_kry_hip", [], True)
 
     def test_sycl(self):
-        """Run sycl test(s)"""
-
-        cmake = self.spec["cmake"].command
-
-        if not cmake:
-            raise SkipTest("cmake not found")
-
-        if "~examples-install" in self.spec:
-            raise SkipTest("Package must be installed with +examples-install")
+        """Run sycl test"""
 
         if "+sycl" not in self.spec:
             raise SkipTest("Package must be installed with +sycl")
 
-            tests = (
-                "nvector/sycl/test_nvector_sycl",
-                ["10", "0", "0"],
-                "Test SYCL N_Vector",
-                "basic",
-            )
+        self.run_sundials("nvector/sycl/test_nvector_sycl", ["10", "0", "0"], True)
 
-            if "+CVODE" in self.spec:
-                tests.append(
-                    ("cvode/sycl/cvAdvDiff_kry_sycl", [], "Test CVODE with SYCL", "CVODE")
-                )
+    def test_sycl_cvode(self):
+        """Run sycl CVODE test"""
 
-        for test in tests:
-            with test_part(self, f"test_cuda_{test[3]}", purpose=test[2]):
-                work_dir = join_path(self._smoke_tests_path, os.path.dirname(test[0]))
-                with working_dir(work_dir):
-                    cmake(".")
-                    make()
-                    exe = which(join_path(self._smoke_tests_path, test[0]))
-                    if exe is None:
-                        raise SkipTest(f"{test[0]} not found in {self.version}")
-                    exe(*test[1])
-                    make("clean")
+        if "+sycl" not in self.spec or "+CVODE" not in self.spec:
+            raise SkipTest("Package must be installed with +sycl and +CVODE")
+
+        self.run_sundials("cvode/sycl/cvAdvDiff_kry_sycl", [], True)
+
+    def run_sundials(self, exe_path, opts, cmake_bool):
+        """Common sundials test method"""
+
+        if "~examples-install" in self.spec:
+            raise SkipTest("Package must be installed with +examples-install")
+
+        work_dir = join_path(self._smoke_tests_path, os.path.dirname(exe_path))
+        with working_dir(work_dir):
+            if cmake_bool:
+                cmake = self.spec["cmake"].command
+                if not cmake:
+                    raise SkipTest("cmake not found")
+                cmake(".")
+            make()
+            exe = which(join_path(self._smoke_tests_path, exe_path))
+            if exe is None:
+                raise SkipTest(f"{exe_path} not found in {self.version}")
+            exe(*opts)
+            make("clean")
