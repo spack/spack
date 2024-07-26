@@ -152,7 +152,7 @@ class ParallelNetcdf(AutotoolsPackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([self.examples_src_dir])
+        cache_extra_test_sources(self)
 
     def test_pnetcdf(self):
         """Test pnetcdf"""
