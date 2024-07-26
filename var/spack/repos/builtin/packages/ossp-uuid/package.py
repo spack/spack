@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 import sys
+from spack.package import *
+
 
 class OsspUuid(AutotoolsPackage):
     """OSSP uuid is a ISO-C:1999 application programming interface (API) and
