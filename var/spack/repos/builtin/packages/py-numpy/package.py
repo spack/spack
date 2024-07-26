@@ -161,6 +161,7 @@ class PyNumpy(PythonPackage):
     # meson.build
     # https://docs.scipy.org/doc/scipy/dev/toolchain.html#compilers
     conflicts("%gcc@:8.3", when="@1.26:", msg="NumPy requires GCC >= 8.4")
+    conflicts("%gcc@:5", when="@1.24:", msg="NumPy requires GCC >= 6")
     conflicts("%gcc@:4.7", msg="NumPy requires GCC >= 4.8")
     conflicts(
         "%msvc@:19.19",
