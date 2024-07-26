@@ -14,17 +14,20 @@ class Fortran(Package):
     homepage = "https://wg5-fortran.org/"
     virtual = True
 
-    def test_hello_world(self):
+    def test_fortran(self):
         """Compile and run 'Hello world'"""
         test_source = self.test_suite.current_test_data_dir
 
         for test in os.listdir(test_source):
-            with test_part(self, f"test_hello_world_{test}", f"Test {test}"):
+            with test_part(self, f"test_fortran_{test}", f"Test {test}"):
                 filepath = os.path.join(test_source, test)
                 exe_name = "%s.exe" % test
                 fc_exe = os.environ["FC"]
                 fc_opts = ["-o", exe_name, filepath]
-                compiled = self.run_test(fc_exe, options=fc_opts, installed=True)
+                fc_exe = which(join_path(self.prefix.bin, fc_exe))
+                if fc_exe is None:
+                    raise SkipTest(f"{os.environ['FC']} not found in {self.version}")
+                fc_exe(*fc_opts)
 
                 if compiled:
                     exe = which(join_path(self.prefix.bin, exe_name))
