@@ -611,3 +611,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             cmake_defs += [self.define("USE_OPENMP", "OFF"), self.define("USE_THREAD", "OFF")]
 
         return cmake_defs
+
+    @run_after("install")
+    @when("platform=darwin")
+    def darwin_install_name(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        fix_darwin_install_name(self.prefix.lib)
+
