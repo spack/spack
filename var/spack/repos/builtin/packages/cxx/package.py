@@ -24,7 +24,7 @@ class Cxx(Package):
             raise SkipTest(f"{os.environ['CXX']} not found in {self.version}")
 
         for test in os.listdir(test_source):
-            with test_part(self, f"test_hello_world_{test}", f"Test {test}"):
+            with test_part(self, f"test_cxx_{test}", f"Test {test}"):
                 filepath = os.path.join(test_source, test)
                 exe_name = "%s.exe" % test
                 # standard options
