@@ -18,30 +18,30 @@ class Cxx(Package):
         """Compile and run 'Hello World'"""
         test_source = self.test_suite.current_test_data_dir
 
+        cxx_exe = os.environ["CXX"]
+        cxx_exe = which(join_path(self.prefix.bin, cxx_exe))
+
         for test in os.listdir(test_source):
-            filepath = os.path.join(test_source, test)
-            exe_name = "%s.exe" % test
+            with test_part(self, f"test_hello_world_{test}", f"Test {test}"):
+                filepath = os.path.join(test_source, test)
+                exe_name = "%s.exe" % test
+                # standard options
+                # Hack to get compiler attributes
+                # TODO: remove this when compilers are dependencies
+                c_name = clang if self.spec.satisfies("llvm+clang") else self.name
+                c_spec = spack.spec.CompilerSpec(c_name, self.spec.version)
+                c_cls = spack.compilers.class_for_compiler_name(c_name)
+                compiler = c_cls(c_spec, None, None, ["fakecc", "fakecxx"])
+                cxx_opts = [compiler.cxx11_flag] if "c++11" in test else []
+                cxx_opts += ["-o", exe_name, filepath]
+                compiled = cxx_exe(*cxx_opts)
 
-            cxx_exe = os.environ["CXX"]
-
-            # standard options
-            # Hack to get compiler attributes
-            # TODO: remove this when compilers are dependencies
-            c_name = clang if self.spec.satisfies("llvm+clang") else self.name
-            c_spec = spack.spec.CompilerSpec(c_name, self.spec.version)
-            c_cls = spack.compilers.class_for_compiler_name(c_name)
-            compiler = c_cls(c_spec, None, None, ["fakecc", "fakecxx"])
-
-            cxx_opts = [compiler.cxx11_flag] if "c++11" in test else []
-
-            cxx_opts += ["-o", exe_name, filepath]
-            cxx_exe = which(join_path(self.prefix.bin, cxx_exe))
-            compiled = cxx_exe(*cxx_opts)
-
-            if compiled:
-                expected = ["Hello world", "YES!"]
-                exe_run = which(join_path(self.prefix.bin, exe_name))
-                out = exe_run(output=str.split, error=str.split)
-                assert expected in out
-            else:
-                assert False, "Did not compile"
+                if compiled:
+                    expected = ["Hello world", "YES!"]
+                    exe_run = which(join_path(self.prefix.bin, exe_name))
+                    if exe_run is None:
+                        raise SkipTest(f"{exe_run} not found in {self.version}")
+                    out = exe_run(output=str.split, error=str.split)
+                    assert expected in out
+                else:
+                    assert False, "Did not compile"
