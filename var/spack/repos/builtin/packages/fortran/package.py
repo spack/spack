@@ -14,18 +14,24 @@ class Fortran(Package):
     homepage = "https://wg5-fortran.org/"
     virtual = True
 
-    def test(self):
+    def test_hello_world(self):
+        """Compile and run 'Hello world'"""
         test_source = self.test_suite.current_test_data_dir
 
         for test in os.listdir(test_source):
-            filepath = os.path.join(test_source, test)
-            exe_name = "%s.exe" % test
+            with test_part(self, f"test_hello_world_{test}", f"Test {test}"):
+                filepath = os.path.join(test_source, test)
+                exe_name = "%s.exe" % test
+                fc_exe = os.environ["FC"]
+                fc_opts = ["-o", exe_name, filepath]
+                compiled = self.run_test(fc_exe, options=fc_opts, installed=True)
 
-            fc_exe = os.environ["FC"]
-            fc_opts = ["-o", exe_name, filepath]
-
-            compiled = self.run_test(fc_exe, options=fc_opts, installed=True)
-
-            if compiled:
-                expected = ["Hello world", "YES!"]
-                self.run_test(exe_name, expected=expected)
+                if compiled:
+                    exe = which(join_path(self.prefix.bin, exe_name))
+                    if exe is None:
+                        raise SkipTest(f"{exe} not found in {self.version}")
+                        expected = ["Hello world", "YES!"]
+                        out = exe(output=str.split, error=str.split)
+                        check_outputs(expected, out)
+                    else:
+                        assert False, "Did not compile"
