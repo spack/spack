@@ -413,7 +413,7 @@ class Libpressio(CMakePackage, CudaPackage):
             join_path("test", "smoke_test", "smoke_test.cc"),
             join_path("test", "smoke_test", "CMakeLists.txt"),
         ]
-        self.cache_extra_test_sources(srcs)
+        cache_extra_test_sources(self)
 
     def test_smoke(self):
         """Run smoke test"""
