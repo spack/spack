@@ -26,7 +26,7 @@ class Cxx(Package):
         for test in os.listdir(test_source):
             with test_part(self, f"test_cxx_{test}", f"Test {test}"):
                 filepath = os.path.join(test_source, test)
-                exe_name = "%s.exe" % test
+                exe_name = f"{test}.exe"
                 # standard options
                 # Hack to get compiler attributes
                 # TODO: remove this when compilers are dependencies
