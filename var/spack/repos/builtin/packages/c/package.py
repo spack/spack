@@ -26,7 +26,7 @@ class C(Package):
         for test in os.listdir(test_source):
             with test_part(self, f"test_c_{test}", f"Test {test}"):
                 filepath = test_source.join(test)
-                exe_name = "%s.exe" % test
+                exe_name = f"{test}.exe"
                 cc_opts = ["-o", exe_name, filepath]
                 comp_exe = which(join_path(self.prefix.bin, cc_exe))
                 if comp_exe is None:
