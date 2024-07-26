@@ -1345,6 +1345,56 @@ attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_set", PackageN
 % you can't choose an installed hash for a dev spec
 :- attr("hash", PackageNode, Hash), attr("variant_value", PackageNode, "dev_path", _).
 
+% hash_attrs are versions, but can_splice_attr are usually node_version_satisfies
+hash_attr(Hash, "node_version_satisfies", PackageName, Constraint) :-
+  hash_attr(Hash, "version", PackageName, Version),
+  pkg_fact(PackageName, version_satisfies(Constraint, Version)).
+
+imposed_constraint(Hash, Attr, PackageName) :-
+  hash_attr(Hash, Attr, PackageName).
+imposed_constraint(Hash, Attr, PackageName, A1) :-
+  hash_attr(Hash, Attr, PackageName, A1), Attr != "hash".
+imposed_constraint(Hash, Attr, PackageName, Arg1, Arg2) :- 
+  hash_attr(Hash, Attr, PackageName, Arg1, Arg2),
+  Attr != "depends_on",
+  Attr != "virtual_on_edge".
+
+imposed_constraint(Hash, Attr, PackageName, A1, A2, A3) :-
+  hash_attr(Hash, Attr, PackageName, A1, A2, A3).
+
+imposed_constraint(Hash, "hash", HashName, ImpHash) :- 
+  hash_attr(Hash, "hash", HashName, ImpHash),
+  not abi_splice_conditions_hold(_, _, HashName, ImpHash).
+
+{ imposed_constraint(ParentHash, "hash", ChildName, ChildHash) } :-
+  hash_attr(ParentHash, "hash", ChildName, ChildHash),
+  abi_splice_conditions_hold(_, node(SID, SpliceName), ChildName, ChildHash).
+
+attr("splice_hash", node(SID, SpliceName), ChildName, ChildHash, node(ID, PackageName)) :- 
+  attr("hash", node(ID, PackageName), ParentHash),
+  hash_attr(ParentHash, "hash", ChildName, ChildHash),
+  abi_splice_conditions_hold(_, node(SID, SpliceName), ChildName, ChildHash),
+  not imposed_constraint(ParentHash, "hash", ChildName, ChildHash). 
+
+imposed_constraint(Hash, "dependency_holds", PackageName, DepName, Type) :-
+  hash_attr(Hash, "depends_on", PackageName, DepName, Type),
+  hash_attr(Hash, "hash", DepName, DepHash),
+  not attr("splice_hash", _, DepName, DepHash, _).
+
+imposed_constraint(Hash, "dependency_holds", PackageName, SpliceName, Type) :-
+  hash_attr(Hash, "depends_on", PackageName, DepName, Type),
+  hash_attr(Hash, "hash", DepName, DepHash),
+  attr("splice_hash", node(SID, SpliceName), DepName, DepHash, node(ID, PackageName)).
+
+imposed_constraint(Hash, "virtual_on_edge", PackageName, DepName, VirtName) :-
+  hash_attr(Hash, "virtual_on_edge", PackageName, DepName, VirtName),
+  not attr("splice_hash", _, DepName, _, _).
+
+imposed_constraint(Hash, "virtual_on_edge", PackageName, SpliceName, VirtName) :-
+  hash_attr(Hash, "virtual_on_edge", PackageName, DepName, VirtName),
+  attr("splice_hash", node(SID, SpliceName), DepName, _, _).
+
+
 % You can't install a hash, if it is not installed
 :- attr("hash", node(ID, Package), Hash), not installed_hash(Package, Hash).
 
