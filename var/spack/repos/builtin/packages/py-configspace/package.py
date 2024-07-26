@@ -10,7 +10,7 @@ class PyConfigspace(PythonPackage):
     """Creation and manipulation of parameter configuration spaces for
     automated algorithm configuration and hyperparameter tuning."""
 
-    maintainers("Kerilk")
+    maintainers("Kerilk", "mdorier")
 
     homepage = "https://automl.github.io/ConfigSpace/master/"
     pypi = "configspace/configspace-1.0.0.tar.gz"
@@ -18,6 +18,8 @@ class PyConfigspace(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", git="https://github.com/automl/ConfigSpace.git", branch="main")
+    version("1.1.3", sha256="8b77e77bd1c286a57e35da87552e33052f67  93ddbcc696a9fc62425f60739ac2")
+    version("1.1.2", sha256="8cd77438f976ce65ce2d056fbd659d12ca14  25fe230b737942261879b7c542f0")
     version("1.1.1", sha256="450e5dccb52ffc56ec5ade131eaa95207412e1fa44883d611e024fc185a54bf0")
     version("1.1.0", sha256="84f20d2b78365a33820558749975667e9bb81d8fb283fcf2ef5bae6052745481")
     version("1.0.1", sha256="ffaf2c02db1df47589d5501178827e945d3f953f2812e7e44a9c3029ea13a543")
