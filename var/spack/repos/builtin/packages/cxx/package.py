@@ -14,12 +14,14 @@ class Cxx(Package):
     homepage = "https://isocpp.org/std/the-standard"
     virtual = True
 
-    def test_hello_world(self):
+    def test_c(self):
         """Compile and run 'Hello World'"""
         test_source = self.test_suite.current_test_data_dir
 
         cxx_exe = os.environ["CXX"]
         cxx_exe = which(join_path(self.prefix.bin, cxx_exe))
+        if cxx_exe is None:
+            raise SkipTest(f"{os.environ['CXX']} not found in {self.version}")
 
         for test in os.listdir(test_source):
             with test_part(self, f"test_hello_world_{test}", f"Test {test}"):
