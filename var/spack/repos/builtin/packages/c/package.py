@@ -14,17 +14,23 @@ class C(Package):
     homepage = "http://open-std.org/JTC1/SC22/WG14/www/standards"
     virtual = True
 
-    def test(self):
+    def test_hello_world(self):
+        """Compile and run 'Hello world'"""
         test_source = self.test_suite.current_test_data_dir
 
         for test in os.listdir(test_source):
-            filepath = test_source.join(test)
-            exe_name = "%s.exe" % test
+            with test_part(self, f"test_hello_world_{test}", f"Test {test}"):
+                filepath = test_source.join(test)
+                exe_name = "%s.exe" % test
 
-            cc_exe = os.environ["CC"]
-            cc_opts = ["-o", exe_name, filepath]
-            compiled = self.run_test(cc_exe, options=cc_opts, installed=True)
+                cc_exe = os.environ["CC"]
+                cc_opts = ["-o", exe_name, filepath]
+                compiled = self.run_test(cc_exe, options=cc_opts, installed=True)
 
-            if compiled:
-                expected = ["Hello world", "YES!"]
-                self.run_test(exe_name, expected=expected)
+                if compiled:
+                    expected = ["Hello world", "YES!"]
+                    exe = which(join_path(self.prefix.bin, exe_name))
+                    out = exe(output=str.split, error=str.split)
+                    check_outputs(expected, out)
+                else:
+                    assert False, "Did not compile"
