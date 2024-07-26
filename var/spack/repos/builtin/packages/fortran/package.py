@@ -26,7 +26,7 @@ class Fortran(Package):
         for test in os.listdir(test_source):
             with test_part(self, f"test_fortran_{test}", f"Test {test}"):
                 filepath = os.path.join(test_source, test)
-                exe_name = "%s.exe" % test
+                exe_name = f"{test}.exe"
                 fc_opts = ["-o", exe_name, filepath]
                 fc_exe(*fc_opts)
 
