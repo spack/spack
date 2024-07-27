@@ -25,6 +25,18 @@ class Vep(Package):
     version("111.0", sha256="9cb326a1fa0054ce1a417f8fd4f2325ba605c40ec10eefbf87f461c264a89407")
     version("110.0", sha256="391a1fe50139064c1044c09e013bb21437933d677537b5d3336807f3b131fb51")
 
+    variant("vep_installer", default=False, description="Install dependencies with VEP installer")
+    variant("utility_scripts", default=True, descprition="Install utility scripts")
+
+    # Optional dependencies
+    variant("json", default=True, description="Include requirements for JSON support")
+    variant("nearest", default=True, description="Include requirements for 'nearest'")
+    variant("gzip", default=True, description="Include requirements for gzip support")
+
+    # Bundled versions
+    variant("bundled_bioperl", default=False, description="Build with bundled BioPerl")
+    variant("bundled_htslib", default=False, description="Build with bundled HTSLib")
+
     extends("perl")
 
     with default_args(type="build"):
@@ -51,18 +63,6 @@ class Vep(Package):
             depends_on(f"perl-bio-ensembl-variation@{ver}", when=f"@{ver}")
             depends_on(f"perl-bio-ensembl-funcgen@{ver}", when=f"@{ver}")
             depends_on(f"perl-bio-ensembl-io@{ver}", when=f"@{ver}")
-
-    variant("vep_installer", default=False)
-    variant("utility_scripts", default=True)
-
-    # Optional dependencies
-    variant("json", default=True)
-    variant("nearest", default=True)
-    variant("gzip", default=True)
-
-    # Bundled versions
-    variant("bundled_bioperl", default=False)
-    variant("bundled_htslib", default=False)
 
     # These should probably move futher up the dependency stack
     conflicts("zlib-ng", when="+gzip")
