@@ -26,7 +26,7 @@ class Vep(Package):
     version("110.0", sha256="391a1fe50139064c1044c09e013bb21437933d677537b5d3336807f3b131fb51")
 
     variant("vep_installer", default=False, description="Install dependencies with VEP installer")
-    variant("utility_scripts", default=True, descprition="Install utility scripts")
+    variant("utility_scripts", default=True, description="Install utility scripts")
 
     # Optional dependencies
     variant("json", default=True, description="Include requirements for JSON support")
