@@ -24,12 +24,15 @@ import llnl.util.tty.color as clr
 from llnl.util.link_tree import ConflictingSpecsError
 from llnl.util.symlink import readlink, symlink
 
+import spack.caches
+import spack.cmd
 import spack.compilers
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.fetch_strategy
+import spack.filesystem_view as fsv
 import spack.hash_types as ht
 import spack.hooks
 import spack.main
@@ -52,7 +55,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.url
 import spack.version
 from spack import traverse
-from spack.filesystem_view import SimpleFilesystemView, inverse_view_func_parser, view_func_parser
 from spack.installer import PackageInstaller
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
@@ -606,7 +608,7 @@ class ViewDescriptor:
         self.projections = projections
         self.select = select
         self.exclude = exclude
-        self.link_type = view_func_parser(link_type)
+        self.link_type = fsv.canonicalize_link_type(link_type)
         self.link = link
 
     def select_fn(self, spec):
@@ -640,7 +642,7 @@ class ViewDescriptor:
         if self.exclude:
             ret["exclude"] = self.exclude
         if self.link_type:
-            ret["link_type"] = inverse_view_func_parser(self.link_type)
+            ret["link_type"] = self.link_type
         if self.link != default_view_link:
             ret["link"] = self.link
         return ret
@@ -690,7 +692,7 @@ class ViewDescriptor:
         to exist on the filesystem."""
         return self._view(self.root).get_projection_for_spec(spec)
 
-    def view(self, new: Optional[str] = None) -> SimpleFilesystemView:
+    def view(self, new: Optional[str] = None) -> fsv.SimpleFilesystemView:
         """
         Returns a view object for the *underlying* view directory. This means that the
         self.root symlink is followed, and that the view has to exist on the filesystem
@@ -710,14 +712,14 @@ class ViewDescriptor:
             )
         return self._view(path)
 
-    def _view(self, root: str) -> SimpleFilesystemView:
+    def _view(self, root: str) -> fsv.SimpleFilesystemView:
         """Returns a view object for a given root dir."""
-        return SimpleFilesystemView(
+        return fsv.SimpleFilesystemView(
             root,
             spack.store.STORE.layout,
             ignore_conflicts=True,
             projections=self.projections,
-            link=self.link_type,
+            link_type=self.link_type,
         )
 
     def __contains__(self, spec):
@@ -2473,27 +2475,21 @@ def _equiv_dict(first, second):
     return same_values and same_keys_with_same_overrides
 
 
-def display_specs(concretized_specs):
-    """Displays the list of specs returned by `Environment.concretize()`.
+def display_specs(specs):
+    """Displays a list of specs traversed breadth-first, covering nodes, with install status.
 
     Args:
-        concretized_specs (list): list of specs returned by
-            `Environment.concretize()`
+        specs (list): list of specs
     """
-
-    def _tree_to_display(spec):
-        return spec.tree(
-            recurse_dependencies=True,
-            format=spack.spec.DISPLAY_FORMAT,
-            status_fn=spack.spec.Spec.install_status,
-            hashlen=7,
-            hashes=True,
-        )
-
-    for user_spec, concrete_spec in concretized_specs:
-        tty.msg("Concretized {0}".format(user_spec))
-        sys.stdout.write(_tree_to_display(concrete_spec))
-        print("")
+    tree_string = spack.spec.tree(
+        specs,
+        format=spack.spec.DISPLAY_FORMAT,
+        hashes=True,
+        hashlen=7,
+        status_fn=spack.spec.Spec.install_status,
+        key=traverse.by_dag_hash,
+    )
+    print(tree_string)
 
 
 def _concretize_from_constraints(spec_constraints, tests=False):
@@ -2547,7 +2543,7 @@ def _concretize_task(packed_arguments) -> Tuple[int, Spec, float]:
 
 def make_repo_path(root):
     """Make a RepoPath from the repo subdirectories in an environment."""
-    path = spack.repo.RepoPath()
+    path = spack.repo.RepoPath(cache=spack.caches.MISC_CACHE)
 
     if os.path.isdir(root):
         for repo_root in os.listdir(root):
@@ -2556,7 +2552,7 @@ def make_repo_path(root):
             if not os.path.isdir(repo_root):
                 continue
 
-            repo = spack.repo.Repo(repo_root)
+            repo = spack.repo.from_path(repo_root)
             path.put_last(repo)
 
     return path
@@ -3032,7 +3028,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: if the manifest includes a remote file but
                 no configuration stage directory has been identified
         """
-        scopes = []
+        scopes: List[spack.config.ConfigScope] = []
 
         # load config scopes added via 'include:', in reverse so that
         # highest-precedence scopes are last.
@@ -3101,22 +3097,20 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             if os.path.isdir(config_path):
                 # directories are treated as regular ConfigScopes
                 config_name = "env:%s:%s" % (env_name, os.path.basename(config_path))
-                tty.debug("Creating ConfigScope {0} for '{1}'".format(config_name, config_path))
-                scope = spack.config.ConfigScope(config_name, config_path)
+                tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
+                scopes.append(spack.config.DirectoryConfigScope(config_name, config_path))
             elif os.path.exists(config_path):
                 # files are assumed to be SingleFileScopes
                 config_name = "env:%s:%s" % (env_name, config_path)
-                tty.debug(
-                    "Creating SingleFileScope {0} for '{1}'".format(config_name, config_path)
-                )
-                scope = spack.config.SingleFileScope(
-                    config_name, config_path, spack.schema.merged.schema
+                tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
+                scopes.append(
+                    spack.config.SingleFileScope(
+                        config_name, config_path, spack.schema.merged.schema
+                    )
                 )
             else:
                 missing.append(config_path)
                 continue
-
-            scopes.append(scope)
 
         if missing:
             msg = "Detected {0} missing include path(s):".format(len(missing))
@@ -3134,7 +3128,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         scopes: List[spack.config.ConfigScope] = [
             *self.included_config_scopes,
             spack.config.SingleFileScope(
-                self.scope_name, str(self.manifest_file), spack.schema.env.schema, [TOP_LEVEL_KEY]
+                self.scope_name,
+                str(self.manifest_file),
+                spack.schema.env.schema,
+                yaml_path=[TOP_LEVEL_KEY],
             ),
         ]
         ensure_no_disallowed_env_config_mods(scopes)

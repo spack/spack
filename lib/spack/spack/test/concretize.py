@@ -24,6 +24,7 @@ import spack.hash_types as ht
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.util.file_cache
 import spack.util.libc
 import spack.variant as vt
 from spack.concretize import find_spec
@@ -168,19 +169,18 @@ def fuzz_dep_order(request, monkeypatch):
 
 
 @pytest.fixture()
-def repo_with_changing_recipe(tmpdir_factory, mutable_mock_repo):
+def repo_with_changing_recipe(tmp_path_factory, mutable_mock_repo):
     repo_namespace = "changing"
-    repo_dir = tmpdir_factory.mktemp(repo_namespace)
+    repo_dir = tmp_path_factory.mktemp(repo_namespace)
 
-    repo_dir.join("repo.yaml").write(
+    (repo_dir / "repo.yaml").write_text(
         """
 repo:
   namespace: changing
-""",
-        ensure=True,
+"""
     )
 
-    packages_dir = repo_dir.ensure("packages", dir=True)
+    packages_dir = repo_dir / "packages"
     root_pkg_str = """
 class Root(Package):
     homepage = "http://www.example.com"
@@ -191,7 +191,9 @@ class Root(Package):
 
     conflicts("^changing~foo")
 """
-    packages_dir.join("root", "package.py").write(root_pkg_str, ensure=True)
+    package_py = packages_dir / "root" / "package.py"
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text(root_pkg_str)
 
     changing_template = """
 class Changing(Package):
@@ -225,7 +227,9 @@ class Changing(Package):
 
             def __init__(self, repo_directory):
                 self.repo_dir = repo_directory
-                self.repo = spack.repo.Repo(str(repo_directory))
+                cache_dir = tmp_path_factory.mktemp("cache")
+                self.repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
+                self.repo = spack.repo.Repo(str(repo_directory), cache=self.repo_cache)
 
             def change(self, changes=None):
                 changes = changes or {}
@@ -246,10 +250,12 @@ class Changing(Package):
                 # Change the recipe
                 t = jinja2.Template(changing_template)
                 changing_pkg_str = t.render(**context)
-                packages_dir.join("changing", "package.py").write(changing_pkg_str, ensure=True)
+                package_py = packages_dir / "changing" / "package.py"
+                package_py.parent.mkdir(parents=True, exist_ok=True)
+                package_py.write_text(changing_pkg_str)
 
                 # Re-add the repository
-                self.repo = spack.repo.Repo(str(self.repo_dir))
+                self.repo = spack.repo.Repo(str(self.repo_dir), cache=self.repo_cache)
                 repository.put_first(self.repo)
 
         _changing_pkg = _ChangingPackage(repo_dir)
@@ -421,30 +427,38 @@ class TestConcretize:
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
-    def test_concretize_compiler_flag_propagate(self):
-        spec = Spec("hypre cflags=='-g' ^openblas")
-        spec.concretize()
-
-        assert spec.satisfies("^openblas cflags='-g'")
-
-    @pytest.mark.only_clingo(
-        "Optional compiler propagation isn't deprecated for original concretizer"
+    @pytest.mark.parametrize(
+        "spec_str,expected,not_expected",
+        [
+            # Simple flag propagation from the root
+            ("hypre cflags=='-g' ^openblas", ["hypre cflags='-g'", "^openblas cflags='-g'"], []),
+            (
+                "hypre cflags='-g' ^openblas",
+                ["hypre cflags='-g'", "^openblas"],
+                ["^openblas cflags='-g'"],
+            ),
+            # Setting a flag overrides propagation
+            (
+                "hypre cflags=='-g' ^openblas cflags='-O3'",
+                ["hypre cflags='-g'", "^openblas cflags='-O3'"],
+                ["^openblas cflags='-g'"],
+            ),
+            # Propagation doesn't go across build dependencies
+            (
+                "cmake-client cflags=='-O2 -g'",
+                ["cmake-client cflags=='-O2 -g'", "^cmake"],
+                ["cmake cflags=='-O2 -g'"],
+            ),
+        ],
     )
-    def test_concretize_compiler_flag_does_not_propagate(self):
-        spec = Spec("hypre cflags='-g' ^openblas")
-        spec.concretize()
+    def test_compiler_flag_propagation(self, spec_str, expected, not_expected):
+        root = Spec(spec_str).concretized()
 
-        assert not spec.satisfies("^openblas cflags='-g'")
+        for constraint in expected:
+            assert root.satisfies(constraint)
 
-    @pytest.mark.only_clingo(
-        "Optional compiler propagation isn't deprecated for original concretizer"
-    )
-    def test_concretize_propagate_compiler_flag_not_passed_to_dependent(self):
-        spec = Spec("hypre cflags=='-g' ^openblas cflags='-O3'")
-        spec.concretize()
-
-        assert set(spec.compiler_flags["cflags"]) == set(["-g"])
-        assert spec.satisfies("^openblas cflags='-O3'")
+        for constraint in not_expected:
+            assert not root.satisfies(constraint)
 
     def test_mixing_compilers_only_affects_subdag(self):
         spack.config.set("packages:all:compiler", ["clang", "gcc"])
@@ -1767,21 +1781,21 @@ class TestConcretize:
             assert s.namespace == "builtin.mock"
 
     @pytest.mark.parametrize(
-        "specs,expected",
+        "specs,expected,libc_offset",
         [
-            (["libelf", "libelf@0.8.10"], 1),
-            (["libdwarf%gcc", "libelf%clang"], 2),
-            (["libdwarf%gcc", "libdwarf%clang"], 3),
-            (["libdwarf^libelf@0.8.12", "libdwarf^libelf@0.8.13"], 4),
-            (["hdf5", "zmpi"], 3),
-            (["hdf5", "mpich"], 2),
-            (["hdf5^zmpi", "mpich"], 4),
-            (["mpi", "zmpi"], 2),
-            (["mpi", "mpich"], 1),
+            (["libelf", "libelf@0.8.10"], 1, 1),
+            (["libdwarf%gcc", "libelf%clang"], 2, 1),
+            (["libdwarf%gcc", "libdwarf%clang"], 3, 2),
+            (["libdwarf^libelf@0.8.12", "libdwarf^libelf@0.8.13"], 4, 1),
+            (["hdf5", "zmpi"], 3, 1),
+            (["hdf5", "mpich"], 2, 1),
+            (["hdf5^zmpi", "mpich"], 4, 1),
+            (["mpi", "zmpi"], 2, 1),
+            (["mpi", "mpich"], 1, 1),
         ],
     )
     @pytest.mark.only_clingo("Original concretizer cannot concretize in rounds")
-    def test_best_effort_coconcretize(self, specs, expected):
+    def test_best_effort_coconcretize(self, specs, expected, libc_offset):
         specs = [Spec(s) for s in specs]
         solver = spack.solver.asp.Solver()
         solver.reuse = False
@@ -1790,7 +1804,9 @@ class TestConcretize:
             for s in result.specs:
                 concrete_specs.update(s.traverse())
 
-        libc_offset = 1 if spack.solver.asp.using_libc_compatibility() else 0
+        if not spack.solver.asp.using_libc_compatibility():
+            libc_offset = 0
+
         assert len(concrete_specs) == expected + libc_offset
 
     @pytest.mark.parametrize(
@@ -3043,3 +3059,45 @@ def test_spec_filters(specs, include, exclude, expected):
         factory=lambda: specs, is_usable=lambda x: True, include=include, exclude=exclude
     )
     assert f.selected_specs() == expected
+
+
+@pytest.mark.only_clingo("clingo only reuse feature being tested")
+@pytest.mark.regression("38484")
+def test_git_ref_version_can_be_reused(
+    install_mockery_mutable_config, do_not_check_runtimes_on_reuse
+):
+    first_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5~opt").concretized()
+    first_spec.package.do_install(fake=True, explicit=True)
+
+    with spack.config.override("concretizer:reuse", True):
+        # reproducer of the issue is that spack will solve when there is a change to the base spec
+        second_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5+opt").concretized()
+        assert second_spec.dag_hash() != first_spec.dag_hash()
+        # we also want to confirm that reuse actually works so leave variant off to
+        # let solver reuse
+        third_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5")
+        assert first_spec.satisfies(third_spec)
+        third_spec.concretize()
+        assert third_spec.dag_hash() == first_spec.dag_hash()
+
+
+@pytest.mark.only_clingo("clingo only reuse feature being tested")
+@pytest.mark.parametrize("standard_version", ["2.0.0", "2.1.5", "2.1.6"])
+def test_reuse_prefers_standard_over_git_versions(
+    standard_version, install_mockery_mutable_config, do_not_check_runtimes_on_reuse
+):
+    """
+    order matters in this test. typically reuse would pick the highest versioned installed match
+    but we want to prefer the standard version over git ref based versions
+    so install git ref last and ensure it is not picked up by reuse
+    """
+    standard_spec = spack.spec.Spec(f"git-ref-package@{standard_version}").concretized()
+    standard_spec.package.do_install(fake=True, explicit=True)
+
+    git_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5").concretized()
+    git_spec.package.do_install(fake=True, explicit=True)
+
+    with spack.config.override("concretizer:reuse", True):
+        test_spec = spack.spec.Spec("git-ref-package@2").concretized()
+        assert git_spec.dag_hash() != test_spec.dag_hash()
+        assert standard_spec.dag_hash() == test_spec.dag_hash()
