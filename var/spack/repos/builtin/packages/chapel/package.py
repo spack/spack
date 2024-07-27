@@ -59,7 +59,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     patch("fix_spack_cc_wrapper_in_cray_prgenv.patch", when="@2.0.0:")
 
