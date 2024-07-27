@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import re
+
 from spack.package import *
 
 
@@ -136,6 +138,15 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     provides("mpi@:3.1")
     conflicts("+generic-names +classic-names")
+
+    executables = [r"^mpiicpx$"]
+    version_regex = r"Intel\(R\) MPI Library (\S+)"
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("-v", output=str, error=str)
+        match = re.search(cls.version_regex, output)
+        return match.group(1) if match else None
 
     @property
     def mpiexec(self):
