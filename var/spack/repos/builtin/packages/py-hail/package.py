@@ -132,9 +132,35 @@ class PyHail(MakefilePackage):
         depends_on("py-typing-extensions")
 
     patch("fix-lz4-import-builtins.patch")
-    patch("fix-git-for-version.patch")
 
     build_directory = "hail"
+
+    def patch(self):
+        # Hail will fail to build if it cannot determine a commit hash from git
+        # which will not be available in a spack cache. Since we know it from
+        # the package, we can inject it in the failure and move forward.
+        version = self.version
+        version_info = self.versions[version]
+
+        # REVISION must look like a hash or Hail crashes at startup
+        # Technically, it needs to be at least 12 characters
+        revision = version_info.get("commit", version.joined.string.ljust(40, "0"))
+
+        filter_file(
+            r'\$\(error "git rev-parse HEAD" failed to produce output\)',
+            f"REVISION := {revision}",
+            "hail/version.mk",
+        )
+        filter_file(
+            r'\$\(error "git rev-parse --short=12 HEAD" failed to produce output\)',
+            f"SHORT_REVISION := {revision[:12]}",
+            "hail/version.mk",
+        )
+        filter_file(
+            r'\$\(error "git rev-parse --abbrev-ref HEAD" failed to produce output\)',
+            f"BRANCH := tags/{version}",
+            "hail/version.mk",
+        )
 
     @property
     def hail_pip_version(self):
