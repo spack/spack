@@ -61,6 +61,7 @@ packages:
       tbb: [intel-tbb]
       unwind: [libunwind]
       uuid: [util-linux-uuid, libuuid]
+      wasi-sdk: [wasi-sdk-prebuilt]
       xxd: [xxd-standalone, vim]
       yacc: [bison, byacc]
       ziglang: [zig]
