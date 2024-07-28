@@ -46,7 +46,7 @@ class PyHail(MakefilePackage):
         sha256="278b430150af899495d360d1f886e223e78bb4a20e67144a240bfb7e2d4f6085",
         destination="hail/mill",
         expand=False,
-    )    
+    )
 
     variant("native", default=True, description="Compile native HAIL backend")
     variant(
@@ -70,10 +70,9 @@ class PyHail(MakefilePackage):
         # 0.2.130 and before (to somwhere around 0.2.64) used Spark 3.3
         # And either Java 8 or Java 11
         (":0.2.130", "8,11", "3.3", "2.12"),
-
         # 0.2.131 updated to Java 11 and Spark 3.5
         # Undocumented bump was to scala 2.12.13 for scala.annotation.noerror
-        ("0.2.131:", "11", "3.5", "2.12.18:2.12"), 
+        ("0.2.131:", "11", "3.5", "2.12.18:2.12"),
     ]:
         with default_args(type=("build", "run"), when=f"@{hail}"):
             depends_on(f"java@{java}")
