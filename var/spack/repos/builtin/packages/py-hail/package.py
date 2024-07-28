@@ -40,6 +40,14 @@ class PyHail(MakefilePackage):
         destination="hail/src/main/c",
     )
 
+    resource(
+        name="mill-0.11.7",
+        url="https://repo1.maven.org/maven2/com/lihaoyi/mill-dist/0.11.7/mill-dist-0.11.7.jar",
+        sha256="278b430150af899495d360d1f886e223e78bb4a20e67144a240bfb7e2d4f6085",
+        destination="hail/mill",
+        expand=False,
+    )    
+
     variant("native", default=True, description="Compile native HAIL backend")
     variant(
         "query_backend",
@@ -51,6 +59,7 @@ class PyHail(MakefilePackage):
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
+    depends_on("py-build@1.1+virtualenv", type="build", when="@0.2.131:")
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
@@ -58,8 +67,13 @@ class PyHail(MakefilePackage):
     # HAIL spec, Java sec, Spark spec, Scala spec
     # We're not accurately capturing previous versions
     for hail, java, spark, scala in [
-        (":0.2.130", "8", "3.3", "2.12"),
-        ("0.2.131:", "11", "3.5", "2.12"),
+        # 0.2.130 and before (to somwhere around 0.2.64) used Spark 3.3
+        # And either Java 8 or Java 11
+        (":0.2.130", "8,11", "3.3", "2.12"),
+
+        # 0.2.131 updated to Java 11 and Spark 3.5
+        # Undocumented bump was to scala 2.12.13 for scala.annotation.noerror
+        ("0.2.131:", "11", "3.5", "2.12.18:2.12"), 
     ]:
         with default_args(type=("build", "run"), when=f"@{hail}"):
             depends_on(f"java@{java}")
@@ -119,6 +133,7 @@ class PyHail(MakefilePackage):
         depends_on("py-typing-extensions")
 
     patch("fix-lz4-import-builtins.patch")
+    patch("fix-git-for-version.patch")
 
     build_directory = "hail"
 
@@ -140,7 +155,11 @@ class PyHail(MakefilePackage):
     @property
     def build_targets(self):
         spec = self.spec
+
+        # Hail likes variables passed in to Make
         variables = [
+            f"HAIL_PYTHON3={spec['python'].home.bin.python3}",
+            f"PIP={spec['py-pip'].home.bin.pip}",
             f"SCALA_VERSION={spec['scala'].version}",
             f"SPARK_VERSION={spec['spark'].version}",
         ]
