@@ -148,15 +148,22 @@ class NetlibLapack(CMakePackage):
         if self.spec.satisfies("platform=windows @0:3.9.1"):
             force_remove("LAPACKE/include/lapacke_mangling.h")
 
+    def xplatform_lib_name(self, lib):
+        return (
+            "lib" + lib
+            if not lib.startswith("lib") and not self.spec.satisfies("platform=windows")
+            else lib
+        )
+
     @property
     def blas_libs(self):
-        shared = True if "+shared" in self.spec else False
+        shared = "+shared" in self.spec
         query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
-            tuple(): ["libblas"],
-            ("c", "fortran"): ["libcblas", "libblas"],
-            ("c",): ["libcblas"],
-            ("fortran",): ["libblas"],
+            tuple(): [self.xplatform_lib_name("blas")],
+            ("c", "fortran"): [self.xplatform_lib_name("cblas"), self.xplatform_lib_name("blas")],
+            ("c",): [self.xplatform_lib_name("cblas")],
+            ("fortran",): [self.xplatform_lib_name("blas")],
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]
@@ -167,10 +174,13 @@ class NetlibLapack(CMakePackage):
         shared = True if "+shared" in self.spec else False
         query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
-            tuple(): ["liblapack"],
-            ("c", "fortran"): ["liblapacke", "liblapack"],
-            ("c",): ["liblapacke"],
-            ("fortran",): ["liblapack"],
+            tuple(): [self.xplatform_lib_name("lapack")],
+            ("c", "fortran"): [
+                self.xplatform_lib_name("lapacke"),
+                self.xplatform_lib_name("lapack"),
+            ],
+            ("c",): [self.xplatform_lib_name("lapacke")],
+            ("fortran",): [self.xplatform_lib_name("lapack")],
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]
