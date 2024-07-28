@@ -1,0 +1,31 @@
+diff --git a/hail/version.mk b/hail/version.mk
+index cb888c774..b90924852 100644
+--- a/hail/version.mk
++++ b/hail/version.mk
+@@ -1,17 +1,4 @@
+-REVISION := $(shell git rev-parse HEAD)
+-ifndef REVISION
+-$(error "git rev-parse HEAD" failed to produce output)
+-endif
+-
+-SHORT_REVISION := $(shell git rev-parse --short=12 HEAD)
+-ifndef SHORT_REVISION
+-$(error "git rev-parse --short=12 HEAD" failed to produce output)
+-endif
+-
+-BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+-ifndef BRANCH
+-$(error "git rev-parse --abbrev-ref HEAD" failed to produce output)
+-endif
++SHORT_REVISION := spack
+ 
+ SCALA_VERSION ?= 2.12.18
+ SPARK_VERSION ?= 3.5.0
+@@ -20,3 +7,6 @@ HAIL_PATCH_VERSION := 132
+ HAIL_PIP_VERSION := $(HAIL_MAJOR_MINOR_VERSION).$(HAIL_PATCH_VERSION)
+ HAIL_VERSION := $(HAIL_PIP_VERSION)-$(SHORT_REVISION)
+ ELASTIC_MAJOR_VERSION ?= 7
++
++REVISION := tags/$(HAIL_PIP_VERSION)
++BRANCH := $(REVISION)
+
