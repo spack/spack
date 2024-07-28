@@ -28,8 +28,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
 
     generator("ninja")
 
-    family = "compiler"  # Used by lmod
-
     version("doe", branch="doe", preferred=True)
     version("upstream", branch="llvm.org/main")
     version("bolt", branch="bolt/main")
@@ -37,6 +35,10 @@ class LlvmDoe(CMakePackage, CudaPackage):
     version("pragma-clang-loop", branch="sollve/pragma-clang-loop")
     version("pragma-omp-tile", branch="sollve/pragma-omp-tile")
     version("13.0.0", branch="llvm.org/llvmorg-13.0.0")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # NOTE: The debug version of LLVM is an order of magnitude larger than
     # the release version, and may take up 20-30 GB of space. If you want
@@ -185,7 +187,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
 
     # code signing is only necessary on macOS",
     conflicts("+code_signing", when="platform=linux")
-    conflicts("+code_signing", when="platform=cray")
 
     conflicts(
         "+code_signing",
@@ -549,7 +550,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
         if self.compiler.name == "gcc":
             cmake_args.append(define("GCC_INSTALL_PREFIX", self.compiler.prefix))
 
-        # if spec.satisfies("platform=cray") or spec.satisfies("platform=linux"):
+        # if spec.satisfies("platform=linux"):
         #     cmake_args.append("-DCMAKE_BUILD_WITH_INSTALL_RPATH=1")
 
         if self.spec.satisfies("~code_signing platform=darwin"):

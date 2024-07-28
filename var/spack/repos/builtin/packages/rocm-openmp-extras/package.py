@@ -15,11 +15,6 @@ compute_url = "https://github.com/ROCm"
 # For example array[0] = 3.9.0, array[1] = 3.10.0, etc.
 
 aomp = [
-    "e69fe0c933cb30daafe49d9f1df71fe16f387e0287bba921995feeefdf9ac262",
-    "8bab3d621343f419b29043ac0cb56e062f114991dc3ec1e33e786f771deecc8f",
-    "20e21312816272222d1f427ea72a99a9a67077078552f5e2638a40860d161d25",
-    "c0aa6997e889d6ce0e37cfa6a2e91c5c0b54cda1673abdcabcf34da1ba78ba72",
-    "4ba1792095427588c484feed01f2f48e66aaad26bc000cbc74a15032551699e7",
     "371ed037b95b83fac64fb2ff2fc17313fe7d3befc8671f0a08f0e2072393fa5b",
     "c86141fcde879fc78d06a41ba6a26ff528da539c6a1be8b714f635182c66e3f4",
     "bbca540897848fa95fd0f14fc05ab6deda31299a061424972d5e2bc09c7543dc",
@@ -32,14 +27,12 @@ aomp = [
     "ed7bbf92230b6535a353ed032a39a9f16e9987397798100392fc25e40c8a1a4e",
     "1b2c0934ef16e17b2377944fae8c9b3db6dc64b7e43932ddfe2eeefdf6821410",
     "d6e13a15d5d25990d4bacbac8fabe2eb07973829f2e69abbc628e0736f95caf9",
+    "832b7c48149a730619b577a2863b8d1bf1b2551eda5b815e1865a044929ab9fa",
+    "62a5036a2299ed2e3053ee00b7ea1800469cd545fea486fa17266a8b3acfaf5d",
+    "3de1c7a31a88c3f05a6a66ba6854ac8fdad1ce44462e561cb1e6ad59629029ce",
 ]
 
 devlib = [
-    "47dbcb41fb4739219cadc9f2b5f21358ed2f9895ce786d2f7a1b2c4fd044d30f",
-    "c41958560ec29c8bf91332b9f668793463904a2081c330c0d828bf2f91d4f04e",
-    "901674bc941115c72f82c5def61d42f2bebee687aefd30a460905996f838e16c",
-    "e5855387ce73ed483ed0d03dbfef31f297c6ca66cf816f6816fd5ee373fc8225",
-    "16b7fc7db4759bd6fb54852e9855fa16ead76c97871d7e1e9392e846381d611a",
     "f7e1665a1650d3d0481bec68252e8a5e68adc2c867c63c570f6190a1d2fe735c",
     "963c9a0561111788b55a8c3b492e2a5737047914752376226c97a28122a4d768",
     "d68813ded47179c39914c8d1b76af3dad8c714b10229d1e2246af67609473951",
@@ -52,14 +45,12 @@ devlib = [
     "703de8403c0bd0d80f37c970a698f10f148daf144d34f982e4484d04f7c7bbef",
     "198df4550d4560537ba60ac7af9bde31d59779c8ec5d6309627f77a43ab6ef6f",
     "c6d88b9b46e39d5d21bd5a0c1eba887ec473a370b1ed0cebd1d2e910eedc5837",
+    "6bd9912441de6caf6b26d1323e1c899ecd14ff2431874a2f5883d3bc5212db34",
+    "f1a67efb49f76a9b262e9735d3f75ad21e3bd6a05338c9b15c01e6c625c4460d",
+    "300e9d6a137dcd91b18d5809a316fddb615e0e7f982dc7ef1bb56876dff6e097",
 ]
 
 llvm = [
-    "db5d45c4a7842a908527c1b7b8d4a40c688225a41d23cfa382eab23edfffdd10",
-    "d236a2064363c0278f7ba1bb2ff1545ee4c52278c50640e8bb2b9cfef8a2f128",
-    "0f892174111b78a02d1a00f8f46d9f80b9abb95513a7af38ecf2a5a0882fe87f",
-    "3644e927d943d61e22672422591c47a62ff83e3d87ced68439822156d8f79abf",
-    "1b852711aec3137b568fb65f93606d37fdcd62e06f5da3766f2ffcd4e0c646df",
     "4e3fcddb5b8ea8dcaa4417e0e31a9c2bbdc9e7d4ac3401635a636df32905c93e",
     "5296d5e474811c7d1e456cb6d5011db248b79b8d0512155e8a6c2aa5b5f12d38",
     "ff54f45a17723892cd775c1eaff9e5860527fcfd33d98759223c70e3362335bf",
@@ -72,14 +63,12 @@ llvm = [
     "6b54c422e45ad19c9bf5ab090ec21753e7f7d854ca78132c30eb146657b168eb",
     "c673708d413d60ca8606ee75c77e9871b6953c59029c987b92f2f6e85f683626",
     "7d35acc84de1adee65406f92a369a30364703f84279241c444cd93a48c7eeb76",
+    "6bd9912441de6caf6b26d1323e1c899ecd14ff2431874a2f5883d3bc5212db34",
+    "f1a67efb49f76a9b262e9735d3f75ad21e3bd6a05338c9b15c01e6c625c4460d",
+    "300e9d6a137dcd91b18d5809a316fddb615e0e7f982dc7ef1bb56876dff6e097",
 ]
 
 flang = [
-    "d95e36f3b93097ab6fb319c744ddc71cd94af0c358accc1e5224c2bbd431266d",
-    "d7847b5c6e1344dc0b4723dbe76a859257b4c242644dedb34e425f07738530d4",
-    "20f48cac9b58496230fa2428eba4e15ec0a6e92d429569b154a328b7a8c5da17",
-    "012a9c10a7d2a248dc40510e2f5c02a54b5f6bc39961500dc48b6780dac5ad67",
-    "496f00918721c72eae0bd926a5a8f1f35bd443f6b22bc08e2a42c67e44a4dbaf",
     "ef1256ddf6cd9de10a1b88df4736dce48295136983a7e31eadd942fb39b156f7",
     "ddccd866d0c01086087fe21b5711668f85bcf9cbd9f62853f8bda32eaedb5339",
     "fae8195a5e1b3778e31dbc6cbeedeae9998ea4b5a54215534af41e91fdcb8ba0",
@@ -92,14 +81,12 @@ flang = [
     "8fd618d81af092416b267c4d00c801731f7a00c0f8d4aedb795e52a4ec1bf183",
     "fcb319ddb2aa3004a6ae60370ab4425f529336b1cee50f29200e697e61b53586",
     "8e6469415880bb068d788596b3ed713a24495eb42788f98cca92e73a2998f703",
+    "51ecd2c154568c971f5b46ff0e1e1b57063afe28d128fc88c503de88f7240267",
+    "1bcaa73e73a688cb092f01987cf3ec9ace4aa1fcaab2b812888c610722c4501d",
+    "12418ea61cca58811b7e75fd9df48be568b406f84a489a41ba5a1fd70c47f7ba",
 ]
 
 extras = [
-    "c3a2a83d8f586ee765df96a692ebe010631446f700273fa31738ea260dfc35f7",
-    "2e3151a47d77166d071213af2a1691487691aae0abd5c1718d818a6d7d09cb2d",
-    "817c2e8975e56a8875ff56f9d1ea34d5e7e50f1b541b7f1236e3e5c8d9eee47f",
-    "8b738225f0be39f27bba64c014816cfa1b79f2c7cf2d0e31fbc0fffb6c26e429",
-    "f42ca7d85b0b64e6890502f1cf8309ef97f707829876742da2ea5c2cdf3ad8ac",
     "b3beee383d9c130666c230595c950bdc2ce4c7a99d728b9ddf1bca3963152223",
     "b26b9f4b11a9ccfab53d0dd55aada7e5b98f7ab51981cb033b376321dd44bf87",
     "2546becd4b182d1e366f47660c731c8ff7366b6306782f04706b6a7bf4e2094c",
@@ -112,14 +99,12 @@ extras = [
     "8060c6879708faf5f7d417b19a479dec9b7b9583a1b885f12d247faf831f7f0b",
     "f37e1107e4da5b083e794244f3d0c9fd073ccb6fd6015e635349d8f0d679c4b8",
     "b2e117d703cefdc2858adaeee5bad95e9b6dab6263a9c13891a79a7b1e2defb6",
+    "57d6d9d26c0cb6ea7f8373996c41165f463ae7936d32e5793822cfae03900f8f",
+    "3dc837fbfcac64e000e1b5518e4f8a6b260eaf1a3e74152d8b8c22f128f575b7",
+    "2b9351fdb1cba229669233919464ae906ca8f70910c6fa508a2812b7c3bed123",
 ]
 
 versions = [
-    "5.1.0",
-    "5.1.3",
-    "5.2.0",
-    "5.2.1",
-    "5.2.3",
     "5.3.0",
     "5.3.3",
     "5.4.0",
@@ -132,6 +117,9 @@ versions = [
     "5.7.1",
     "6.0.0",
     "6.0.2",
+    "6.1.0",
+    "6.1.1",
+    "6.1.2",
 ]
 versions_dict = dict()  # type: Dict[str,Dict[str,str]]
 components = ["aomp", "devlib", "llvm", "flang", "extras"]
@@ -149,12 +137,15 @@ class RocmOpenmpExtras(Package):
     """OpenMP support for ROCm LLVM."""
 
     homepage = tools_url + "/aomp"
-    url = tools_url + "/aomp/archive/rocm-6.0.2.tar.gz"
+    url = tools_url + "/aomp/archive/rocm-6.1.2.tar.gz"
     tags = ["rocm"]
 
     license("Apache-2.0")
 
     maintainers("srekolam", "renjithravindrankannath", "estewart08")
+    version("6.1.2", sha256=versions_dict["6.1.2"]["aomp"])
+    version("6.1.1", sha256=versions_dict["6.1.1"]["aomp"])
+    version("6.1.0", sha256=versions_dict["6.1.0"]["aomp"])
     version("6.0.2", sha256=versions_dict["6.0.2"]["aomp"])
     version("6.0.0", sha256=versions_dict["6.0.0"]["aomp"])
     version("5.7.1", sha256=versions_dict["5.7.1"]["aomp"])
@@ -163,15 +154,16 @@ class RocmOpenmpExtras(Package):
     version("5.6.0", sha256=versions_dict["5.6.0"]["aomp"])
     version("5.5.1", sha256=versions_dict["5.5.1"]["aomp"])
     version("5.5.0", sha256=versions_dict["5.5.0"]["aomp"])
-    version("5.4.3", sha256=versions_dict["5.4.3"]["aomp"])
-    version("5.4.0", sha256=versions_dict["5.4.0"]["aomp"])
-    version("5.3.3", sha256=versions_dict["5.3.3"]["aomp"])
-    version("5.3.0", sha256=versions_dict["5.3.0"]["aomp"])
-    version("5.2.3", sha256=versions_dict["5.2.3"]["aomp"], deprecated=True)
-    version("5.2.1", sha256=versions_dict["5.2.1"]["aomp"], deprecated=True)
-    version("5.2.0", sha256=versions_dict["5.2.0"]["aomp"], deprecated=True)
-    version("5.1.3", sha256=versions_dict["5.1.3"]["aomp"], deprecated=True)
-    version("5.1.0", sha256=versions_dict["5.1.0"]["aomp"], deprecated=True)
+    version("5.4.3", sha256=versions_dict["5.4.3"]["aomp"], deprecated=True)
+    version("5.4.0", sha256=versions_dict["5.4.0"]["aomp"], deprecated=True)
+    version("5.3.3", sha256=versions_dict["5.3.3"]["aomp"], deprecated=True)
+    version("5.3.0", sha256=versions_dict["5.3.0"]["aomp"], deprecated=True)
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     depends_on("cmake@3:", type="build")
     depends_on("py-setuptools", type="build")
@@ -183,15 +175,22 @@ class RocmOpenmpExtras(Package):
     depends_on("libdrm", when="@5.7:6.0")
     depends_on("numactl", when="@5.7:6.0")
 
-    for ver in ["5.5.0", "5.5.1", "5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2"]:
+    for ver in [
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+    ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     for ver in [
-        "5.1.0",
-        "5.1.3",
-        "5.2.0",
-        "5.2.1",
-        "5.2.3",
         "5.3.0",
         "5.3.3",
         "5.4.0",
@@ -219,6 +218,40 @@ class RocmOpenmpExtras(Package):
             placement="rocm-device-libs",
             when=f"@{ver}",
         )
+        resource(
+            name="flang",
+            url=f"{tools_url}/flang/archive/rocm-{ver}.tar.gz",
+            sha256=versions_dict[ver]["flang"],
+            expand=True,
+            destination="rocm-openmp-extras",
+            placement="flang",
+            when=f"@{ver}",
+        )
+
+        resource(
+            name="aomp-extras",
+            url=f"{tools_url}/aomp-extras/archive/rocm-{ver}.tar.gz",
+            sha256=versions_dict[ver]["extras"],
+            expand=True,
+            destination="rocm-openmp-extras",
+            placement="aomp-extras",
+            when=f"@{ver}",
+        )
+
+        resource(
+            name="llvm-project",
+            url=f"{compute_url}/llvm-project/archive/rocm-{ver}.tar.gz",
+            sha256=versions_dict[ver]["llvm"],
+            expand=True,
+            destination="rocm-openmp-extras",
+            placement="llvm-project",
+            when=f"@{ver}",
+        )
+    for ver in ["6.1.0", "6.1.1", "6.1.2"]:
+        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
+        depends_on(f"comgr@{ver}", when=f"@{ver}")
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
 
         resource(
             name="flang",
@@ -250,6 +283,11 @@ class RocmOpenmpExtras(Package):
             when=f"@{ver}",
         )
     patch("0001-Linking-hsakmt-libdrm-and-numactl-libraries.patch", when="@5.7:6.0")
+    patch(
+        "0001-Linking-hsakmt-libdrm-and-numactl-libraries-6.1.patch",
+        working_dir="rocm-openmp-extras/llvm-project/openmp/libomptarget",
+        when="@6.1",
+    )
 
     def setup_run_environment(self, env):
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
@@ -270,6 +308,14 @@ class RocmOpenmpExtras(Package):
         llvm_prefix = self.spec["llvm-amdgpu"].prefix
         env.set("AOMP", "{0}".format(llvm_prefix))
         env.set("FC", "{0}/bin/flang".format(openmp_extras_prefix))
+        if self.spec.satisfies("+asan"):
+            env.set("SANITIZER", 1)
+            env.set("VERBOSE", 1)
+            env.set(
+                "LDSHARED",
+                self.spec["llvm-amdgpu"].prefix.bin.clang
+                + " -shared -Wl,-O1 -Wl,-Bsymbolic-functions -Wl,-z,relro -g -fwrapv -O2",
+            )
         gfx_list = "gfx700 gfx701 gfx801 gfx803 gfx900 gfx902 gfx906 gfx908"
 
         if self.spec.version >= Version("4.3.1"):
@@ -278,7 +324,6 @@ class RocmOpenmpExtras(Package):
 
     def patch(self):
         src = self.stage.source_path
-        aomp_extras = "{0}/rocm-openmp-extras/aomp-extras/aomp-device-libs"
         libomptarget = "{0}/rocm-openmp-extras/llvm-project/openmp/libomptarget"
         flang = "{0}/rocm-openmp-extras/flang/"
 
@@ -290,6 +335,23 @@ class RocmOpenmpExtras(Package):
                 "{DEVICE_LIBS_DIR}",
                 aomp_extras.format(src) + "/aompextras/CMakeLists.txt",
                 libomptarget.format(src) + "/deviceRTLs/amdgcn/CMakeLists.txt",
+            )
+        if self.spec.satisfies("@6.1"):
+            filter_file(
+                r"${HSAKMT_LIB_PATH}",
+                "${HSAKMT_LIB_PATH} ${HSAKMT_LIB64}"
+                + "${HSAKMT_LIB} ${LIBDRM_LIB} ${NUMACTL_DIR}/lib",
+                libomptarget.format(src) + "/CMakeLists.txt",
+            )
+            filter_file(
+                r"${LIBOMPTARGET_LLVM_INCLUDE_DIRS}",
+                "${LIBOMPTARGET_LLVM_INCLUDE_DIRS} ${HSAKMT_INC_PATH}",
+                libomptarget.format(src) + "/../CMakeLists.txt",
+            )
+            filter_file(
+                r"${LIBOMPTARGET_LLVM_INCLUDE_DIRS}",
+                "${LIBOMPTARGET_LLVM_INCLUDE_DIRS} ${HSAKMT_INC_PATH}",
+                libomptarget.format(src) + "/CMakeLists.txt",
             )
 
         # Openmp adjustments
@@ -305,13 +367,6 @@ class RocmOpenmpExtras(Package):
             "{OPENMP_INSTALL_LIBDIR}/libdevice",
             libomptarget.format(src) + "/deviceRTLs/amdgcn/CMakeLists.txt",
         )
-
-        if self.spec.version <= Version("5.1.3"):
-            filter_file(
-                r"{ROCM_DIR}/amdgcn/bitcode",
-                "{DEVICE_LIBS_DIR}",
-                libomptarget.format(src) + "/deviceRTLs/libm/CMakeLists.txt",
-            )
 
         filter_file(
             "-nogpulib",
@@ -388,10 +443,13 @@ class RocmOpenmpExtras(Package):
         gfx_list = gfx_list.replace(" ", ";")
         openmp_extras_prefix = self.spec["rocm-openmp-extras"].prefix
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
-        devlibs_src = "{0}/rocm-openmp-extras/rocm-device-libs".format(src)
+        if self.spec.satisfies("@6.1:"):
+            devlibs_src = "{0}/rocm-openmp-extras/llvm-project/amd/device-libs".format(src)
+        else:
+            devlibs_src = "{0}/rocm-openmp-extras/rocm-device-libs".format(src)
         hsa_prefix = self.spec["hsa-rocr-dev"].prefix
         hsakmt_prefix = self.spec["hsakmt-roct"].prefix
-        if self.spec.satisfies("@5.7:6.0"):
+        if self.spec.satisfies("@5.7:6.1"):
             libdrm_prefix = self.spec["libdrm"].prefix
             numactl_prefix = self.spec["numactl"].prefix
         comgr_prefix = self.spec["comgr"].prefix
@@ -471,7 +529,7 @@ class RocmOpenmpExtras(Package):
             "-DNEW_BC_PATH=1",
             "-DHSA_INCLUDE={0}/include/hsa".format(hsa_prefix),
         ]
-        if self.spec.satisfies("@5.7:6.0"):
+        if self.spec.satisfies("@5.7:6.1"):
             openmp_common_args += [
                 "-DLIBDRM_LIB={0}/lib".format(libdrm_prefix),
                 "-DHSAKMT_INC_PATH={0}/include".format(hsakmt_prefix),

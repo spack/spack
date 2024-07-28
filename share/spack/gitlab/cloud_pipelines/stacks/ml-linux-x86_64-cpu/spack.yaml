@@ -28,9 +28,6 @@ spack:
     - py-keras-preprocessing
     - py-keras2onnx
 
-    # MXNet
-    - mxnet
-
     # PyTorch
     - py-botorch
     - py-efficientnet-pytorch
@@ -77,14 +74,12 @@ spack:
 
     # XGBoost
     - py-xgboost
-    # - r-xgboost
-    - xgboost
 
   ci:
     pipeline-gen:
     - build-job:
         image:
-          name: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:v2024-01-29
+          name: ghcr.io/spack/ubuntu-22.04:v2024-05-07
           entrypoint: ['']
 
   cdash:

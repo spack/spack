@@ -26,13 +26,12 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version(
-        "2.10.0-rc1", sha256="8b72142bd5aabfb80c7963f524df11b8721c09ef20caea6df5fb00c31a7747c0"
-    )
-    version(
-        "2.9.2",
-        sha256="78309297c82a95ee38ed3224c98b93d330128c753a43893f63bbe969320e4979",
+        "2.10.1",
+        sha256="ce776f3a451994f4979c6bd6d946917a749290a37b7433c0254759b02695ad85",
         preferred=True,
     )
+    version("2.10.0", sha256="e5984de488bda546553dd2f46f047e539333891e63b9fe73944782ba6c2d95e4")
+    version("2.9.2", sha256="78309297c82a95ee38ed3224c98b93d330128c753a43893f63bbe969320e4979")
     version("2.9.1", sha256="ddfa32c14494250ee8a48ef1c97a1bf6442c15484bbbd4669228a0f90242f4f9")
     version("2.9.0", sha256="69f98ef58c818bb5410133e1891ac192653b0ec96eb9468590140f2552b6e5d1")
     version("2.8.3", sha256="4906ab1899721c41dd918dddb039ba2848a1fb0cf84f3a563a1179b9d6ee0d9f")
@@ -45,6 +44,10 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     version("2.5.0", sha256="7c8ff3bf5441dd662806df9650c56a669359cb0185ea232ecb3578de7b065329")
     version("2.4.0", sha256="50ecea04b1e41c88835b4b3fd4e7bf0a0a2a3129855c9cc4ba6cf6a1575106e2")
     version("2.3.1", sha256="3bf81ccc20a7f2715935349336a76ba4c8402355e1dc3848fcd6f4c3c5931893")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # There's not really any consistency about how static and shared libs are
     # implemented across spack.  What we're trying to support is specifically three
@@ -84,6 +87,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
         when="+shared",
         description="Enable the DataMan engine for WAN transports",
     )
+    variant("campaign", default=False, when="@2.10:", description="Enable campaign management")
     variant("dataspaces", default=False, when="@2.5:", description="Enable support for DATASPACES")
     variant("ssc", default=True, when="@:2.7", description="Enable the SSC staging engine")
     variant("hdf5", default=False, description="Enable the HDF5 engine")
@@ -149,7 +153,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="~kokkos", msg="ADIOS2 does not support HIP without Kokkos")
     conflicts("+sycl", when="~kokkos", msg="ADIOS2 does not support SYCL without Kokkos")
 
-    for _platform in ["linux", "darwin", "cray"]:
+    for _platform in ["linux", "darwin"]:
         depends_on("pkgconfig", type="build", when=f"platform={_platform}")
         variant(
             "pic",
@@ -174,6 +178,8 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hdf5@:1.12", when="@:2.8 +hdf5")
     depends_on("hdf5~mpi", when="+hdf5~mpi")
     depends_on("hdf5+mpi", when="+hdf5+mpi")
+
+    depends_on("sqlite@3", when="+campaign")
 
     depends_on("libpressio", when="+libpressio")
     depends_on("c-blosc", when="+blosc")
@@ -211,6 +217,9 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     # See https://github.com/ornladios/ADIOS2/pull/2714
     patch("2.6-fix-gcc10-symbols.patch", when="@2.6.0")
 
+    # add missing include <cstdint>
+    patch("2.7-fix-missing-cstdint-include.patch", when="@2.7")
+
     # Add missing include <memory>
     # https://github.com/ornladios/adios2/pull/2710
     patch(
@@ -225,7 +234,11 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     # cmake: find threads package first
     # https://github.com/ornladios/ADIOS2/pull/3893
-    patch("2.9.2-cmake-find-threads-package-first.patch", when="@2.9.2:")
+    patch("2.9.2-cmake-find-threads-package-first.patch", when="@2.9")
+
+    # ROCM: enable support for rocm >= 6
+    # https://github.com/ornladios/ADIOS2/pull/4214
+    patch("2.10-enable-rocm6.patch", when="@2.9.1:")
 
     @when("%fj")
     def patch(self):
@@ -253,6 +266,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
             from_variant("ADIOS2_USE_Blosc", "blosc"),
             from_variant("ADIOS2_USE_Blosc2", "blosc2"),
             from_variant("ADIOS2_USE_BZip2", "bzip2"),
+            from_variant("ADIOS2_USE_Campaign", "campaign"),
             from_variant("ADIOS2_USE_DataMan", "dataman"),
             from_variant("ADIOS2_USE_DataSpaces", "dataspaces"),
             from_variant("ADIOS2_USE_Fortran", "fortran"),

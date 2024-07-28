@@ -36,11 +36,15 @@ class Apcomp(Package):
 
     maintainers("cyrush")
 
-    version("master", branch="master", submodules="True")
-    version("0.0.4", sha256="061876dd55e443de91a40d10662496f6bb58b0a3835aec78f5710f5a737d0494")
-    version("0.0.3", sha256="07e8c1d6a23205f4cc66d0a030e65a69e8344545f4d56213d968b67a410adc6e")
-    version("0.0.2", sha256="cb2e2c4524889408de2dd3d29665512c99763db13e6f5e35c3b55e52948c649c")
-    version("0.0.1", sha256="cbf85fe58d5d5bc2f468d081386cc8b79861046b3bb7e966edfa3f8e95b998b2")
+    with default_args(deprecated=True):  # part of ascent
+        version("master", branch="master", submodules="True")
+        version("0.0.4", sha256="061876dd55e443de91a40d10662496f6bb58b0a3835aec78f5710f5a737d0494")
+        version("0.0.3", sha256="07e8c1d6a23205f4cc66d0a030e65a69e8344545f4d56213d968b67a410adc6e")
+        version("0.0.2", sha256="cb2e2c4524889408de2dd3d29665512c99763db13e6f5e35c3b55e52948c649c")
+        version("0.0.1", sha256="cbf85fe58d5d5bc2f468d081386cc8b79861046b3bb7e966edfa3f8e95b998b2")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("openmp", default=True, description="Build with openmp support")
     variant("mpi", default=True, description="Build with MPI support")
@@ -60,19 +64,8 @@ class Apcomp(Package):
         """
         with working_dir("spack-build", create=True):
             host_cfg_fname = self.create_host_config(spec, prefix)
-            cmake_args = []
-            # if we have a static build, we need to avoid any of
-            # spack's default cmake settings related to rpaths
-            # (see: https://github.com/LLNL/spack/issues/2658)
-            if "+shared" in spec:
-                cmake_args.extend(std_cmake_args)
-            else:
-                for arg in std_cmake_args:
-                    if arg.count("RPATH") == 0:
-                        cmake_args.append(arg)
-            cmake_args.extend(["-C", host_cfg_fname, "../src"])
             print("Configuring APComp...")
-            cmake(*cmake_args)
+            cmake(*std_cmake_args, "-C", host_cfg_fname, "../src")
             print("Building APComp...")
             make()
             print("Installing APComp...")

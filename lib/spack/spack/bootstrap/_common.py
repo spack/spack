@@ -54,10 +54,14 @@ def _try_import_from_store(
     installed_specs = spack.store.STORE.db.query(query_spec, installed=True)
 
     for candidate_spec in installed_specs:
-        pkg = candidate_spec["python"].package
+        # previously bootstrapped specs may not have a python-venv dependency.
+        if candidate_spec.dependencies("python-venv"):
+            python, *_ = candidate_spec.dependencies("python-venv")
+        else:
+            python, *_ = candidate_spec.dependencies("python")
         module_paths = [
-            os.path.join(candidate_spec.prefix, pkg.purelib),
-            os.path.join(candidate_spec.prefix, pkg.platlib),
+            os.path.join(candidate_spec.prefix, python.package.purelib),
+            os.path.join(candidate_spec.prefix, python.package.platlib),
         ]
         path_before = list(sys.path)
 
@@ -209,15 +213,18 @@ def _root_spec(spec_str: str) -> str:
     Args:
         spec_str: spec to be bootstrapped. Must be without compiler and target.
     """
-    # Add a compiler requirement to the root spec.
+    # Add a compiler and platform requirement to the root spec.
     platform = str(spack.platforms.host())
+
     if platform == "darwin":
         spec_str += " %apple-clang"
+    elif platform == "windows":
+        spec_str += " %msvc"
     elif platform == "linux":
         spec_str += " %gcc"
     elif platform == "freebsd":
         spec_str += " %clang"
-
+    spec_str += f" platform={platform}"
     target = archspec.cpu.host().family
     spec_str += f" target={target}"
 

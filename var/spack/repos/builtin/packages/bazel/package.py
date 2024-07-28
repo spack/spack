@@ -131,6 +131,8 @@ class Bazel(Package):
     # Bazel-4.0.0 does not compile with gcc-11
     # Newer versions of grpc and abseil dependencies are needed but are not in bazel-4.0.0
     conflicts("@4.0.0", when="%gcc@11:")
+    # https://github.com/bazelbuild/bazel/issues/18642
+    conflicts("@:6", when="%gcc@13:")
 
     executables = ["^bazel$"]
 

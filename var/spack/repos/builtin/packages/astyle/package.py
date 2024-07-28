@@ -30,6 +30,8 @@ class Astyle(CMakePackage, MakefilePackage):
     version("2.05.1", sha256="fbdfc6f1966a972d19a215927266c76d4183eee235ed1e2bd7ec551c2a270eac")
     version("2.04", sha256="70b37f4853c418d1e2632612967eebf1bdb93dfbe558c51d7d013c9b4e116b60")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.8.0:", type="build", when="@3.2.0:")
 
     build_system(conditional("cmake", when="@3.2.0:"), "makefile", default="cmake")

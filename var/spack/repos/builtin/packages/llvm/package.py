@@ -8,13 +8,14 @@ import re
 import sys
 
 import llnl.util.tty as tty
+from llnl.util.lang import classproperty
 
 import spack.build_environment
 import spack.util.executable
 from spack.package import *
 
 
-class Llvm(CMakePackage, CudaPackage):
+class Llvm(CMakePackage, CudaPackage, CompilerPackage):
     """The LLVM Project is a collection of modular and reusable compiler and
     toolchain technologies. Despite its name, LLVM has little to do
     with traditional virtual machines, though it does provide helpful
@@ -28,15 +29,20 @@ class Llvm(CMakePackage, CudaPackage):
     git = "https://github.com/llvm/llvm-project"
     maintainers("trws", "haampie", "skosukhin")
 
-    tags = ["e4s"]
+    tags = ["e4s", "compiler"]
 
     generator("ninja")
-
-    family = "compiler"  # Used by lmod
 
     license("Apache-2.0")
 
     version("main", branch="main")
+    version("18.1.8", sha256="09c08693a9afd6236f27a2ebae62cda656eba19021ef3f94d59e931d662d4856")
+    version("18.1.7", sha256="b60df7cbe02cef2523f7357120fb0d46cbb443791cde3a5fb36b82c335c0afc9")
+    version("18.1.6", sha256="01390edfae5b809e982b530ff9088e674c62b13aa92cb9dc1e067fa2cf501083")
+    version("18.1.5", sha256="d543309f55ae3f9b422108302b45c40f5696c96862f4bda8f5526955daa54284")
+    version("18.1.4", sha256="deca5a29e8b1d103ecc4badb3c304aca50d5cac6453364d88ee415dc55699dfb")
+    version("18.1.3", sha256="fc5a2fd176d73ceb17f4e522f8fe96d8dde23300b8c233476d3609f55d995a7a")
+    version("18.1.2", sha256="8d686d5ece6f12b09985cb382a3a530dc06bb6e7eb907f57c7f8bf2d868ebb0b")
     version("18.1.1", sha256="62439f733311869dbbaf704ce2e02141d2a07092d952fc87ef52d1d636a9b1e4")
     version("18.1.0", sha256="eb18f65a68981e94ea1a5aae4f02321b17da9e99f76bfdb983b953f4ba2d3550")
     version("17.0.6", sha256="81494d32e6f12ea6f73d6d25424dbd2364646011bb8f7e345ca870750aa27de1")
@@ -87,6 +93,9 @@ class Llvm(CMakePackage, CudaPackage):
     version("5.0.2", sha256="fe87aa11558c08856739bfd9bd971263a28657663cb0c3a0af01b94f03b0b795")
     version("5.0.1", sha256="84ca454abf262579814a2a2b846569f6e0cb3e16dc33ca3642b4f1dff6fbafd3")
     version("5.0.0", sha256="1f1843315657a4371d8ca37f01265fa9aae17dbcf46d2d0a95c1fdb3c6a4bab6")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     variant(
         "clang", default=True, description="Build the LLVM C/C++/Objective-C compiler frontend"
@@ -538,6 +547,10 @@ class Llvm(CMakePackage, CudaPackage):
     # avoid build failed with Fujitsu compiler
     patch("llvm13-fujitsu.patch", when="@13 %fj")
 
+    # avoid build failed with Fujitsu compiler since llvm17
+    patch("llvm17-fujitsu.patch", when="@17: %fj")
+    patch("llvm17-18-thread.patch", when="@17:18 %fj")
+
     # patch for missing hwloc.h include for libompd
     # see https://reviews.llvm.org/D123888
     patch(
@@ -590,11 +603,36 @@ class Llvm(CMakePackage, CudaPackage):
             string=True,
         )
 
-    # The functions and attributes below implement external package
-    # detection for LLVM. See:
-    #
-    # https://spack.readthedocs.io/en/latest/packaging_guide.html#making-a-package-discoverable-with-spack-external-find
-    executables = ["clang", "flang", "ld.lld", "lldb"]
+    compiler_version_regex = (
+        # Normal clang compiler versions are left as-is
+        r"clang version ([^ )\n]+)-svn[~.\w\d-]*|"
+        # Don't include hyphenated patch numbers in the version
+        # (see https://github.com/spack/spack/pull/14365 for details)
+        r"clang version ([^ )\n]+?)-[~.\w\d-]*|"
+        r"clang version ([^ )\n]+)|"
+        # LLDB
+        r"lldb version ([^ )\n]+)|"
+        # LLD
+        r"LLD ([^ )\n]+) \(compatible with GNU linkers\)"
+    )
+    compiler_version_argument = "--version"
+    compiler_languages = ["c", "cxx", "fortran"]
+    c_names = ["clang"]
+    cxx_names = ["clang++"]
+    fortran_names = ["flang"]
+
+    @property
+    def supported_languages(self):
+        languages = []
+        if self.spec.satisfies("+clang"):
+            languages.extend(["c", "cxx"])
+        if self.spec.satisfies("+flang"):
+            languages.append("fortran")
+        return languages
+
+    @classproperty
+    def executables(cls):
+        return super().executables + ["ld.lld", "lldb"]
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
@@ -611,26 +649,14 @@ class Llvm(CMakePackage, CudaPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        version_regex = re.compile(
-            # Normal clang compiler versions are left as-is
-            r"clang version ([^ )\n]+)-svn[~.\w\d-]*|"
-            # Don't include hyphenated patch numbers in the version
-            # (see https://github.com/spack/spack/pull/14365 for details)
-            r"clang version ([^ )\n]+?)-[~.\w\d-]*|"
-            r"clang version ([^ )\n]+)|"
-            # LLDB
-            r"lldb version ([^ )\n]+)|"
-            # LLD
-            r"LLD ([^ )\n]+) \(compatible with GNU linkers\)"
-        )
         try:
             compiler = Executable(exe)
-            output = compiler("--version", output=str, error=str)
+            output = compiler(cls.compiler_version_argument, output=str, error=str)
             if "Apple" in output:
                 return None
             if "AMD" in output:
                 return None
-            match = version_regex.search(output)
+            match = re.search(cls.compiler_version_regex, output)
             if match:
                 return match.group(match.lastindex)
         except spack.util.executable.ProcessError:
@@ -642,23 +668,23 @@ class Llvm(CMakePackage, CudaPackage):
 
     @classmethod
     def determine_variants(cls, exes, version_str):
+        # Do not need to reuse more general logic from CompilerPackage
+        # because LLVM has kindly named compilers
         variants, compilers = ["+clang"], {}
         lld_found, lldb_found = False, False
-        for exe in exes:
-            if "clang++" in exe:
-                compilers["cxx"] = exe
-            elif "clang" in exe:
-                compilers["c"] = exe
-            elif "flang" in exe:
+        for exe in sorted(exes, key=len):
+            name = os.path.basename(exe)
+            if "clang++" in name:
+                compilers.setdefault("cxx", exe)
+            elif "clang" in name:
+                compilers.setdefault("c", exe)
+            elif "flang" in name:
                 variants.append("+flang")
-                compilers["fc"] = exe
-                compilers["f77"] = exe
-            elif "ld.lld" in exe:
+                compilers.setdefault("fortran", exe)
+            elif "ld.lld" in name:
                 lld_found = True
-                compilers["ld"] = exe
-            elif "lldb" in exe:
+            elif "lldb" in name:
                 lldb_found = True
-                compilers["lldb"] = exe
 
         variants.append("+lld" if lld_found else "~lld")
         variants.append("+lldb" if lldb_found else "~lldb")
@@ -751,10 +777,7 @@ class Llvm(CMakePackage, CudaPackage):
                     )
 
     def flag_handler(self, name, flags):
-        if name == "cxxflags":
-            flags.append(self.compiler.cxx11_flag)
-            return (None, flags, None)
-        elif name == "ldflags" and self.spec.satisfies("%intel"):
+        if name == "ldflags" and self.spec.satisfies("%intel"):
             flags.append("-shared-intel")
             return (None, flags, None)
         return (flags, None, None)
@@ -935,7 +958,9 @@ class Llvm(CMakePackage, CudaPackage):
 
         cmake_args.append(from_variant("LIBOMP_TSAN_SUPPORT", "libomp_tsan"))
 
-        if self.compiler.name == "gcc":
+        # From clang 16 onwards we use a more precise --gcc-install-dir flag in post-install
+        # generated config files.
+        if self.spec.satisfies("@:15 %gcc"):
             cmake_args.append(define("GCC_INSTALL_PREFIX", self.compiler.prefix))
 
         if self.spec.satisfies("~code_signing platform=darwin"):
@@ -975,12 +1000,24 @@ class Llvm(CMakePackage, CudaPackage):
                         runtimes_order.index(x) if x in runtimes_order else len(runtimes_order)
                     )
                 )
+
+            # CMake args passed just to runtimes
+            runtime_cmake_args = [define("CMAKE_INSTALL_RPATH_USE_LINK_PATH", True)]
+
+            # When building runtimes, just-built clang has to know where GCC is.
+            gcc_install_dir_flag = get_gcc_install_dir_flag(spec, self.compiler)
+            if gcc_install_dir_flag:
+                runtime_cmake_args.extend(
+                    [
+                        define("CMAKE_C_FLAGS", gcc_install_dir_flag),
+                        define("CMAKE_CXX_FLAGS", gcc_install_dir_flag),
+                    ]
+                )
+
             cmake_args.extend(
                 [
                     define("LLVM_ENABLE_RUNTIMES", runtimes),
-                    define(
-                        "RUNTIMES_CMAKE_ARGS", [define("CMAKE_INSTALL_RPATH_USE_LINK_PATH", True)]
-                    ),
+                    define("RUNTIMES_CMAKE_ARGS", runtime_cmake_args),
                 ]
             )
 
@@ -1030,6 +1067,19 @@ class Llvm(CMakePackage, CudaPackage):
         with working_dir(self.build_directory):
             install_tree("bin", join_path(self.prefix, "libexec", "llvm"))
 
+        cfg_files = []
+        if spec.satisfies("+clang"):
+            cfg_files.extend(("clang.cfg", "clang++.cfg"))
+        if spec.satisfies("@19: +flang"):
+            # The config file is `flang.cfg` even though the executable is `flang-new`.
+            # `--gcc-install-dir` / `--gcc-toolchain` support was only added in LLVM 19.
+            cfg_files.append("flang.cfg")
+        gcc_install_dir_flag = get_gcc_install_dir_flag(spec, self.compiler)
+        if gcc_install_dir_flag:
+            for cfg in cfg_files:
+                with open(os.path.join(self.prefix.bin, cfg), "w") as f:
+                    print(gcc_install_dir_flag, file=f)
+
     def llvm_config(self, *args, **kwargs):
         lc = Executable(self.prefix.bin.join("llvm-config"))
         if not kwargs.get("output"):
@@ -1039,6 +1089,18 @@ class Llvm(CMakePackage, CudaPackage):
             return ret.split()
         else:
             return ret
+
+
+def get_gcc_install_dir_flag(spec: Spec, compiler) -> Optional[str]:
+    """Get the --gcc-install-dir=... flag, so that clang does not do a system scan for GCC."""
+    if not spec.satisfies("@16: %gcc"):
+        return None
+    gcc = Executable(compiler.cc)
+    libgcc_path = gcc("-print-file-name=libgcc.a", output=str, fail_on_error=False).strip()
+    if not os.path.isabs(libgcc_path):
+        return None
+    libgcc_dir = os.path.dirname(libgcc_path)
+    return f"--gcc-install-dir={libgcc_dir}" if os.path.exists(libgcc_dir) else None
 
 
 def get_llvm_targets_to_build(spec):

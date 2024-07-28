@@ -24,6 +24,10 @@ class Librsb(AutotoolsPackage):
     version("1.2.0.9", sha256="f421f5d572461601120933e3c1cfee2ca69e6ecc92cbb11baa4e86bdedd3d9fa")
     version("1.2.0.8", sha256="8bebd19a1866d80ade13eabfdd0f07ae7e8a485c0b975b5d15f531ac204d80cb")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("zlib-api")
     depends_on("googletest", type="build", when="+googletest")
     conflicts("%apple-clang")

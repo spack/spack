@@ -13,8 +13,8 @@ class Arbor(CMakePackage, CudaPackage):
     homepage = "https://arbor-sim.org"
     git = "https://github.com/arbor-sim/arbor.git"
     url = "https://github.com/arbor-sim/arbor/releases/download/v0.8.1/arbor-v0.8.1-full.tar.gz"
-    maintainers = ["thorstenhater", "brenthuisman"]
 
+    maintainers("thorstenhater", "brenthuisman")
     license("BSD-3-Clause")
 
     version("master", branch="master")
@@ -49,6 +49,9 @@ class Arbor(CMakePackage, CudaPackage):
         sha256="290e2ad8ca8050db1791cabb6b431e7c0409c305af31b559e397e26b300a115d",
         url="https://github.com/arbor-sim/arbor/releases/download/v0.5.2/arbor-v0.5.2-full.tar.gz",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("assertions", default=False, description="Enable arb_assert() assertions in code.")
     variant("doc", default=False, description="Build documentation.")
@@ -120,9 +123,7 @@ class Arbor(CMakePackage, CudaPackage):
 
         # query spack for the architecture-specific compiler flags set by its wrapper
         args.append("-DARB_ARCH=none")
-        opt_flags = self.spec.target.optimization_flags(
-            self.spec.compiler.name, self.spec.compiler.version
-        )
+        opt_flags = self.spec.architecture.target.optimization_flags(self.spec.compiler)
         args.append("-DARB_CXX_FLAGS_TARGET=" + opt_flags)
 
         return args

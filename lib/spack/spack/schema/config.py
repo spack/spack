@@ -73,6 +73,7 @@ properties: Dict[str, Any] = {
             "environments_root": {"type": "string"},
             "connect_timeout": {"type": "integer", "minimum": 0},
             "verify_ssl": {"type": "boolean"},
+            "ssl_certs": {"type": "string"},
             "suppress_gpg_warnings": {"type": "boolean"},
             "install_missing_compilers": {"type": "boolean"},
             "debug": {"type": "boolean"},

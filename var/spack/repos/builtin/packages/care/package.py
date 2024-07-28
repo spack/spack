@@ -17,14 +17,38 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     license("GPL-2.0-or-later")
 
+    maintainers("adayton1")
+
     version("develop", branch="develop", submodules="True")
     version("master", branch="main", submodules="True")
+    version(
+        "0.13.1",
+        tag="v0.13.1",
+        commit="0fd0d47aaaa57076f26caad88e667fbc01ff7214",
+        submodules="True",
+    )
+    version(
+        "0.13.0",
+        tag="v0.13.0",
+        commit="2b288e2c557c3b14befeebc8e14a7d48348bd857",
+        submodules="True",
+    )
+    version(
+        "0.12.0",
+        tag="v0.12.0",
+        commit="a9978083035eb00a090451bd36d7987bc935204d",
+        submodules="True",
+    )
     version(
         "0.3.0", tag="v0.3.0", commit="5e2b69b2836c9f2215207ca9a36a690cb77eea33", submodules="True"
     )
     version(
         "0.2.0", tag="v0.2.0", commit="30135e03b14b1dc753634e9147dafede0663906f", submodules="True"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("openmp", default=False, description="Build Shared Libs")
     variant(
@@ -38,22 +62,42 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     variant("tests", default=False, description="Build tests")
     variant("loop_fuser", default=False, description="Enable loop fusion capability")
 
+    depends_on("cmake@3.8:", type="build")
+    depends_on("cmake@3.9:", type="build", when="+cuda")
+    depends_on("cmake@3.18:", type="build", when="@0.12.0:")
+    depends_on("cmake@3.21:", type="build", when="@0.12.0:+rocm")
+
+    depends_on("blt")
+    depends_on("blt@0.6.2:", type="build", when="@0.13.0:")
+    depends_on("blt@0.6.1:", type="build", when="@0.12.0:")
     depends_on("blt@0.4.0:", type="build", when="@0.3.1:")
     depends_on("blt@:0.3.6", type="build", when="@:0.3.0")
     conflicts("^blt@:0.3.6", when="+rocm")
 
-    depends_on("camp")
-    depends_on("umpire@develop")
-    depends_on("raja@develop")
-    depends_on("chai@develop+enable_pick~benchmarks")
+    depends_on("camp", when="@:0.11.1")
 
+    depends_on("umpire")
+    depends_on("umpire@2024.02.1:", when="@0.13.0:")
+    depends_on("umpire@2024.02.0:", when="@0.12.0:")
+
+    depends_on("raja")
+    depends_on("raja@2024.02.2:", when="@0.13.1:")
+    depends_on("raja@2024.02.1:", when="@0.13.0:")
+    depends_on("raja@2024.02.0:", when="@0.12.0:")
+
+    depends_on("chai+enable_pick+raja")
+    depends_on("chai@2024.02.2:", when="@0.13.1:")
+    depends_on("chai@2024.02.1:", when="@0.13.0:")
+    depends_on("chai@2024.02.0:", when="@0.12.0:")
+
+    # pass on +cuda variants
     # WARNING: this package currently only supports an internal cub
     # package. This will cause a race condition if compiled with another
     # package that uses cub. TODO: have all packages point to the same external
     # cub package.
+    depends_on("cub", when="+cuda")
     depends_on("camp+cuda", when="+cuda")
     depends_on("umpire+cuda~shared", when="+cuda")
-    depends_on("cub", when="+cuda")
     depends_on("raja+cuda~openmp", when="+cuda")
     depends_on("chai+cuda~shared", when="+cuda")
 

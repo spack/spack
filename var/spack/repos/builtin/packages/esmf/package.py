@@ -29,6 +29,7 @@ class Esmf(MakefilePackage):
     # Develop is a special name for spack and is always considered the newest version
     version("develop", branch="develop")
     # generate chksum with 'spack checksum esmf@x.y.z'
+    version("8.6.1", sha256="dc270dcba1c0b317f5c9c6a32ab334cb79468dda283d1e395d98ed2a22866364")
     version("8.6.0", sha256="ed057eaddb158a3cce2afc0712b49353b7038b45b29aee86180f381457c0ebe7")
     version("8.5.0", sha256="acd0b2641587007cc3ca318427f47b9cae5bfd2da8d2a16ea778f637107c29c4")
     version("8.4.2", sha256="969304efa518c7859567fa6e65efd960df2b4f6d72dbf2c3f29e39e4ab5ae594")
@@ -63,6 +64,10 @@ class Esmf(MakefilePackage):
         sha256="e08f21544083dcbe162b472852e321f8df14f4f711f35508403d32df438367a7",
         deprecated=True,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("mpi", default=True, description="Build with MPI support")
     variant("external-lapack", default=False, description="Build with external LAPACK library")
@@ -329,9 +334,8 @@ class Esmf(MakefilePackage):
             # ESMF code.
             env.set("ESMF_LAPACK", "system")
 
-            # FIXME: determine whether or not we need to set this
             # Specifies the path where the LAPACK library is located.
-            # env.set("ESMF_LAPACK_LIBPATH", spec["lapack"].prefix.lib)
+            env.set("ESMF_LAPACK_LIBPATH", spec["lapack"].prefix.lib)
 
             # Specifies the linker directive needed to link the LAPACK library
             # to the application.

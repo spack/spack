@@ -17,10 +17,10 @@ class PyPandas(PythonPackage):
 
     skip_modules = ["pandas.tests", "pandas.plotting._matplotlib", "pandas.core._numba.kernels"]
 
-    maintainers("adamjstewart")
-
     license("Apache-2.0")
+    maintainers("adamjstewart", "rgommers")
 
+    version("2.2.2", sha256="9e79019aba43cb4fda9e4d983f8e88ca0373adbb697ae9c6c43093218de28b54")
     version("2.2.1", sha256="0ab90f87093c13f3e8fa45b48ba9f39181046e8f3317d3aadb2fffbb1b978572")
     version("2.2.0", sha256="30b83f7c3eb217fb4d1b494a57a2fda5444f17834f5df2de6b2ffff68dc3c8e2")
     version("2.1.4", sha256="fcb68203c833cc735321512e13861358079a96c174a61f5116a1de89c58c0ef7")
@@ -68,6 +68,8 @@ class PyPandas(PythonPackage):
     version("0.25.3", sha256="52da74df8a9c9a103af0a72c9d5fdc8e0183a90884278db7f386b5692a2220a4")
     version("0.25.2", sha256="ca91a19d1f0a280874a24dca44aadce42da7f3a7edb7e9ab7c7baad8febee2be")
 
+    depends_on("c", type="build")  # generated
+
     variant("performance", default=True, description="Build recommended performance dependencies")
     variant("excel", when="@1.4:", default=False, description="Build with support for Excel")
 
@@ -93,16 +95,17 @@ class PyPandas(PythonPackage):
     depends_on("py-cython@0.29.13:2", when="@1.0", type="build")
     depends_on("py-versioneer+toml", when="@2:", type="build")
 
-    depends_on("py-numpy@1.22.4:2", when="@2.1.2:", type=("build", "run"))
     depends_on("py-numpy@1.22.4:", when="@2.1:", type=("build", "run"))
     depends_on("py-numpy@1.20.3:", when="@1.5:", type=("build", "run"))
-    depends_on("py-numpy@1.18.5:", when="@1.4:", type=("build", "run"))
-    depends_on("py-numpy@1.17.3:", when="@1.3:", type=("build", "run"))
-    depends_on("py-numpy@1.16.5:", when="@1.2:", type=("build", "run"))
-    depends_on("py-numpy@1.15.4:", when="@1.1:", type=("build", "run"))
-    depends_on("py-numpy@1.13.3:", when="@0.25:", type=("build", "run"))
+    depends_on("py-numpy@1.18.5:", when="@1.4", type=("build", "run"))
+    depends_on("py-numpy@1.17.3:", when="@1.3", type=("build", "run"))
+    depends_on("py-numpy@1.16.5:", when="@1.2", type=("build", "run"))
+    depends_on("py-numpy@1.15.4:", when="@1.1", type=("build", "run"))
+    depends_on("py-numpy@1.13.3:", when="@1.0", type=("build", "run"))
     # 'NUMPY_IMPORT_ARRAY_RETVAL' was removed in numpy@1.19
-    depends_on("py-numpy@:1.18", when="@:0.25", type=("build", "run"))
+    depends_on("py-numpy@1.13.3:1.18", when="@0.25", type=("build", "run"))
+    # https://github.com/pandas-dev/pandas/issues/55519
+    depends_on("py-numpy@:1", when="@:2.2.1", type=("build", "run"))
     depends_on("py-python-dateutil@2.8.2:", when="@2:", type=("build", "run"))
     depends_on("py-python-dateutil@2.8.1:", when="@1.4:", type=("build", "run"))
     depends_on("py-python-dateutil@2.7.3:", when="@1.1:", type=("build", "run"))

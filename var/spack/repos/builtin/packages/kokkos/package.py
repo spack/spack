@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
 
-from llnl.util import lang, tty
+import llnl.util.lang as lang
 
 from spack.package import *
 
@@ -27,6 +27,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("4.3.01", sha256="5998b7c732664d6b5e219ccc445cd3077f0e3968b4be480c29cd194b4f45ec70")
+    version("4.3.00", sha256="53cf30d3b44dade51d48efefdaee7a6cf109a091b702a443a2eda63992e5fe0d")
     version("4.2.01", sha256="cbabbabba021d00923fb357d2e1b905dda3838bd03c885a6752062fe03c67964")
     version("4.2.00", sha256="ac08765848a0a6ac584a0a46cd12803f66dd2a2c2db99bb17c06ffc589bf5be8")
     version("4.1.00", sha256="cf725ea34ba766fdaf29c884cfe2daacfdc6dc2d6af84042d1c78d0f16866275")
@@ -48,7 +50,12 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     version("3.1.00", sha256="b935c9b780e7330bcb80809992caa2b66fd387e3a1c261c955d622dae857d878")
     version("3.0.00", sha256="c00613d0194a4fbd0726719bbed8b0404ed06275f310189b3493f5739042a92b")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake@3.16:", type="build")
+    conflicts("cmake@3.28", when="@:4.2.01 +cuda")
 
     devices_variants = {
         "cuda": [False, "Whether to build CUDA backend"],
@@ -64,7 +71,6 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+openmptarget", when="@:3.5")
 
     # https://github.com/spack/spack/issues/29052
-    conflicts("@:3.5 +sycl", when="%dpcpp@2022:")
     conflicts("@:3.5 +sycl", when="%oneapi@2022:")
 
     tpls_variants = {
@@ -196,6 +202,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         variant(dev, default=dflt, description=desc)
     conflicts("+cuda", when="+rocm", msg="CUDA and ROCm are not compatible in Kokkos.")
     depends_on("intel-oneapi-dpl", when="+sycl")
+    depends_on("rocthrust", when="@4.3: +rocm")
 
     for opt, (dflt, desc) in options_variants.items():
         variant(opt, default=dflt, description=desc, when=("+cuda" if "cuda" in opt else None))
@@ -348,6 +355,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+rocm" in self.spec:
             options.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
+            options.append(self.define("Kokkos_ENABLE_ROCTHRUST", True))
         elif "+wrapper" in self.spec:
             options.append(
                 self.define("CMAKE_CXX_COMPILER", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
@@ -372,20 +380,6 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     test_script_relative_path = join_path("scripts", "spack_test")
 
-    # TODO: Replace this method and its 'get' use for cmake path with
-    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
-    #   tests can access build dependencies through self.spec['cmake'].
-    def cmake_bin(self, set=True):
-        """(Hack) Set/get cmake dependency path."""
-        filepath = join_path(self.install_test_root, "cmake_bin_path.txt")
-        if set:
-            with open(filepath, "w") as out_file:
-                cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
-                out_file.write("{0}\n".format(cmake_bin))
-        elif os.path.isfile(filepath):
-            with open(filepath, "r") as in_file:
-                return in_file.read().strip()
-
     @run_after("install")
     def setup_build_tests(self):
         # Skip if unsupported version
@@ -404,41 +398,19 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         ]
         cmake(*cmake_args)
         self.cache_extra_test_sources(cmake_out_path)
-        self.cmake_bin(set=True)
 
-    def build_tests(self, cmake_path):
-        """Build test."""
-        cmake_bin = self.cmake_bin(set=False)
-
-        if not cmake_bin:
-            tty.msg("Skipping kokkos test: cmake_bin_path.txt not found")
-            return
-
-        cmake_args = [cmake_path, "-DEXECUTABLE_OUTPUT_PATH=" + cmake_path]
-
-        if not self.run_test(cmake_bin, options=cmake_args, purpose="Generate the Makefile"):
-            tty.warn("Skipping kokkos test: failed to generate Makefile")
-            return
-
-        if not self.run_test("make", purpose="Build test software"):
-            tty.warn("Skipping kokkos test: failed to build test")
-
-    def run_tests(self, cmake_path):
-        """Run test."""
-        if not self.run_test(
-            "make", options=[cmake_path, "test"], purpose="Checking ability to execute."
-        ):
-            tty.warn("Failed to run kokkos test")
-
-    def test(self):
-        # Skip if unsupported version
+    def test_run(self):
+        """Test if kokkos builds and runs"""
         cmake_path = join_path(
             self.test_suite.current_test_cache_dir, self.test_script_relative_path, "out"
         )
 
         if not os.path.exists(cmake_path):
-            tty.warn("Skipping smoke tests: {0} is missing".format(cmake_path))
-            return
+            raise SkipTest(f"{cmake_path} is missing")
 
-        self.build_tests(cmake_path)
-        self.run_tests(cmake_path)
+        cmake = self.spec["cmake"].command
+        cmake(cmake_path, "-DEXECUTABLE_OUTPUT_PATH=" + cmake_path)
+
+        make = which("make")
+        make()
+        make(cmake_path, "test")

@@ -17,8 +17,11 @@ class Gnutls(AutotoolsPackage):
     homepage = "https://www.gnutls.org"
     url = "https://www.gnupg.org/ftp/gcrypt/gnutls/v3.5/gnutls-3.5.19.tar.xz"
 
+    maintainers("alecbcs")
+
     license("LGPL-2.1-or-later")
 
+    version("3.8.3", sha256="f74fc5954b27d4ec6dfbb11dea987888b5b124289a3703afcada0ee520f4173e")
     version("3.7.8", sha256="c58ad39af0670efe6a8aee5e3a8b2331a1200418b64b7c51977fb396d4617114")
     version("3.6.15", sha256="0ea8c3283de8d8335d7ae338ef27c53a916f15f382753b174c18b45ffd481558")
     version("3.6.14", sha256="5630751adec7025b8ef955af4d141d00d252a985769f51b4059e5affa3d39d63")
@@ -30,11 +33,18 @@ class Gnutls(AutotoolsPackage):
     version("3.5.9", sha256="82b10f0c4ef18f4e64ad8cef5dbaf14be732f5095a41cf366b4ecb4050382951")
     version("3.3.9", sha256="39166de5293a9d30ef1cd0a4d97f01fdeed7d7dbf8db95392e309256edcb13c1")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("zlib", default=True, description="Enable zlib compression support")
     variant("guile", default=False, description="Enable Guile bindings")
 
     # gnutls+guile is currently broken on MacOS.  See Issue #11668
     conflicts("+guile", when="platform=darwin")
+
+    # -Wimplicit-int is an error in newer clang
+    conflicts("%clang@16:", when="@:3.7")
+    conflicts("%apple-clang@15:", when="@:3.7")
 
     # Note that version 3.3.9 of gnutls doesn't support nettle 3.0.
     depends_on("nettle@3.4.1:", when="@3.6.7.1:")

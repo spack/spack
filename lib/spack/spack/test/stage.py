@@ -15,6 +15,7 @@ import sys
 import pytest
 
 from llnl.util.filesystem import getuid, mkdirp, partition_path, touch, working_dir
+from llnl.util.symlink import readlink
 
 import spack.error
 import spack.paths
@@ -22,7 +23,7 @@ import spack.stage
 import spack.util.executable
 import spack.util.url as url_util
 from spack.resource import Resource
-from spack.stage import DevelopStage, DIYStage, ResourceStage, Stage, StageComposite
+from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite
 from spack.util.path import canonicalize_path
 
 # The following values are used for common fetch and stage mocking fixtures:
@@ -145,9 +146,8 @@ def check_destroy(stage, stage_name):
     assert not os.path.exists(stage_path)
 
     # tmp stage needs to remove tmp dir too.
-    if not isinstance(stage, DIYStage):
-        target = os.path.realpath(stage_path)
-        assert not os.path.exists(target)
+    target = os.path.realpath(stage_path)
+    assert not os.path.exists(target)
 
 
 def check_setup(stage, stage_name, archive):
@@ -800,62 +800,6 @@ class TestStage:
         with Stage("file:///does-not-exist", path=testpath) as stage:
             assert stage.path == testpath
 
-    def test_diystage_path_none(self):
-        """Ensure DIYStage for path=None behaves as expected."""
-        with pytest.raises(ValueError):
-            DIYStage(None)
-
-    def test_diystage_path_invalid(self):
-        """Ensure DIYStage for an invalid path behaves as expected."""
-        with pytest.raises(spack.stage.StagePathError):
-            DIYStage("/path/does/not/exist")
-
-    def test_diystage_path_valid(self, tmpdir):
-        """Ensure DIYStage for a valid path behaves as expected."""
-        path = str(tmpdir)
-        stage = DIYStage(path)
-        assert stage.path == path
-        assert stage.source_path == path
-
-        # Order doesn't really matter for DIYStage since they are
-        # basically NOOPs; however, call each since they are part
-        # of the normal stage usage and to ensure full test coverage.
-        stage.create()  # Only sets the flag value
-        assert stage.created
-
-        stage.cache_local()  # Only outputs a message
-        stage.fetch()  # Only outputs a message
-        stage.check()  # Only outputs a message
-        stage.expand_archive()  # Only outputs a message
-
-        assert stage.expanded  # The path/source_path does exist
-
-        with pytest.raises(spack.stage.RestageError):
-            stage.restage()
-
-        stage.destroy()  # A no-op
-        assert stage.path == path  # Ensure can still access attributes
-        assert os.path.exists(stage.source_path)  # Ensure path still exists
-
-    def test_diystage_preserve_file(self, tmpdir):
-        """Ensure DIYStage preserves an existing file."""
-        # Write a file to the temporary directory
-        fn = tmpdir.join(_readme_fn)
-        fn.write(_readme_contents)
-
-        # Instantiate the DIYStage and ensure the above file is unchanged.
-        path = str(tmpdir)
-        stage = DIYStage(path)
-        assert os.path.isdir(path)
-        assert os.path.isfile(str(fn))
-
-        stage.create()  # Only sets the flag value
-
-        readmefn = str(fn)
-        assert os.path.isfile(readmefn)
-        with open(readmefn) as _file:
-            _file.read() == _readme_contents
-
 
 def _create_files_from_tree(base, tree):
     for name, content in tree.items():
@@ -872,7 +816,7 @@ def _create_files_from_tree(base, tree):
 
 def _create_tree_from_dir_recursive(path):
     if os.path.islink(path):
-        return os.readlink(path)
+        return readlink(path)
     elif os.path.isdir(path):
         tree = {}
         for name in os.listdir(path):
@@ -909,18 +853,20 @@ class TestDevelopStage:
         """
         devtree, srcdir = develop_path
         stage = DevelopStage("test-stage", srcdir, reference_link="link-to-stage")
+        assert not os.path.exists(stage.reference_link)
         stage.create()
+        assert os.path.exists(stage.reference_link)
         srctree1 = _create_tree_from_dir_recursive(stage.source_path)
         assert os.path.samefile(srctree1["link-to-stage"], stage.path)
         del srctree1["link-to-stage"]
         assert srctree1 == devtree
 
         stage.destroy()
+        assert not os.path.exists(stage.reference_link)
         # Make sure destroying the stage doesn't change anything
         # about the path
         assert not os.path.exists(stage.path)
         srctree2 = _create_tree_from_dir_recursive(srcdir)
-        del srctree2["link-to-stage"]  # Note the symlink persists but is broken
         assert srctree2 == devtree
 
 

@@ -31,6 +31,10 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
     version("0.2", tag="v0.2", commit="113004cb41757b819325a4b3a8a7dfcea5156531")
     version("0.1", tag="v0.1", commit="74e0540e2478136394f75869675056eb6aba67cc")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("occa", default=False, description="Enable OCCA backends")
     variant("debug", default=False, description="Enable debug build")
     variant("libxsmm", default=False, description="Enable LIBXSMM backend", when="@0.3:")

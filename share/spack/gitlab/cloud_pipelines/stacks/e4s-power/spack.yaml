@@ -35,19 +35,21 @@ spack:
     mpi:
       require: mpich
     mpich:
-      require: '~wrapperrpath ~hwloc'
+      require: '~wrapperrpath ~hwloc %gcc@9.4.0 target=ppc64le'
     ncurses:
-      require: '@6.3 +termlib'
+      require: '@6.3 +termlib %gcc@9.4.0 target=ppc64le'
     faodel:
-      require: "~tcmalloc"
+      require: "~tcmalloc %gcc@9.4.0 target=ppc64le"
     tbb:
       require: intel-tbb
     libffi:
-      require: "@3.4.4"
+      require: "@3.4.4 %gcc@9.4.0 target=ppc64le"
     vtk-m:
-      require: "+examples"
+      require: "+examples %gcc@9.4.0 target=ppc64le"
     cuda:
-      require: "@11.4.4"
+      require: "@11.4.4 %gcc@9.4.0 target=ppc64le"
+    paraview:
+      require: "+examples %gcc@9.4.0 target=ppc64le"
 
 
   specs:
@@ -65,7 +67,7 @@ spack:
   - butterflypack
   - cabana
   - caliper
-  - chai ~benchmarks ~tests
+  - chai
   - charliecloud
   - conduit
   - cp2k +mpi
@@ -129,6 +131,7 @@ spack:
   - precice
   - pruners-ninja
   - pumi
+  - py-amrex
   - py-h5py
   - py-jupyterhub
   - py-libensemble
@@ -157,7 +160,6 @@ spack:
   - upcxx
   - wannier90
   - xyce +mpi +shared +pymi +pymi_static_tpls
-  # - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 ~paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp # +visit: libext, libxkbfile, libxrender, libxt, silo (https://github.com/spack/spack/issues/39538), cairo
   # INCLUDED IN ECP DAV CPU
   - adios2
   - ascent
@@ -167,7 +169,6 @@ spack:
   - hdf5
   - libcatalyst
   - parallel-netcdf
-  - paraview
   - py-cinemasci
   - sz
   - unifyfs
@@ -175,6 +176,7 @@ spack:
   # - visit                                 # libext, libxkbfile, libxrender, libxt, silo (https://github.com/spack/spack/issues/39538), cairo
   - vtk-m
   - zfp
+  # - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 ~paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp # +visit: libext, libxkbfile, libxrender, libxt, silo (https://github.com/spack/spack/issues/39538), cairo
   # --
   # - dealii                                # fltk: https://github.com/spack/spack/issues/38791
   # - geopm                                 # geopm: https://github.com/spack/spack/issues/38798
@@ -210,7 +212,7 @@ spack:
   - flux-core +cuda
   - hpctoolkit +cuda
   - papi +cuda
-  - tau +mpi +cuda                          # tau: has issue with `spack env depfile` build
+  - tau +mpi +cuda
   # --
   # - legion +cuda                          # legion: needs NVIDIA driver
 
@@ -218,8 +220,7 @@ spack:
   - amrex +cuda cuda_arch=70
   - arborx +cuda cuda_arch=70 ^kokkos +wrapper
   - caliper +cuda cuda_arch=70
-  - chai ~benchmarks ~tests +cuda cuda_arch=70 ^umpire ~shared
-  # - cp2k +mpi +cuda cuda_arch=70 # dbcsr
+  - chai +cuda cuda_arch=70 ^umpire ~shared
   - ecp-data-vis-sdk ~rocm +adios2 ~ascent +hdf5 +vtkm +zfp ~paraview +cuda cuda_arch=70
   - exago +mpi +python +raja +hiop ~rocm +cuda cuda_arch=70 ~ipopt ^hiop@1.0.0 ~sparse +mpi +raja ~rocm +cuda cuda_arch=70 #^raja@0.14.0
   - flecsi +cuda cuda_arch=70
@@ -252,6 +253,7 @@ spack:
   - zfp +cuda cuda_arch=70
   # --
   # - axom +cuda cuda_arch=70               # axom: https://github.com/spack/spack/issues/29520
+  # - cp2k +mpi +cuda cuda_arch=70          # dbcsr
   # - cusz +cuda cuda_arch=70               # cusz: https://github.com/spack/spack/issues/38787
   # - dealii +cuda cuda_arch=70             # fltk: https://github.com/spack/spack/issues/38791
   # - lammps +cuda cuda_arch=70             # lammps: needs NVIDIA driver

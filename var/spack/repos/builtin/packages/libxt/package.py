@@ -9,7 +9,7 @@ from spack.package import *
 class Libxt(AutotoolsPackage, XorgPackage):
     """libXt - X Toolkit Intrinsics library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXt"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXt"
     xorg_mirror_path = "lib/libXt-1.1.5.tar.gz"
 
     license("MIT")
@@ -20,6 +20,8 @@ class Libxt(AutotoolsPackage, XorgPackage):
     version("1.2.1", sha256="6da1bfa9dd0ed87430a5ce95b129485086394df308998ebe34d98e378e3dfb33")
     version("1.2.0", sha256="d4bee88898fc5e1dc470e361430c72fbc529b9cdbbb6c0ed3affea3a39f97d8d")
     version("1.1.5", sha256="b59bee38a9935565fa49dc1bfe84cb30173e2e07e1dcdf801430d4b54eb0caa3")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("libsm")
     depends_on("libice")

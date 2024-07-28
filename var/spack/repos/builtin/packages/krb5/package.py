@@ -18,6 +18,7 @@ class Krb5(AutotoolsPackage):
 
     license("MIT")
 
+    version("1.21.2", sha256="9560941a9d843c0243a71b17a7ac6fe31c7cebb5bce3983db79e52ae7e850491")
     version("1.20.1", sha256="704aed49b19eb5a7178b34b2873620ec299db08752d6a8574f95d41879ab8851")
     version("1.19.4", sha256="41f5981c5a4de0a26b3937e679a116cd5b3739641fd253124aac91f7179b54eb")
     version("1.19.3", sha256="56d04863cfddc9d9eb7af17556e043e3537d41c6e545610778676cf551b9dcd0")
@@ -30,6 +31,9 @@ class Krb5(AutotoolsPackage):
     version("1.16.3", sha256="e40499df7c6dbef0cf9b11870a0e167cde827737d8b2c06a9436334f08ab9b0d")
     version("1.16.2", sha256="9f721e1fe593c219174740c71de514c7228a97d23eb7be7597b2ae14e487f027")
     version("1.16.1", sha256="214ffe394e3ad0c730564074ec44f1da119159d94281bbec541dc29168d21117")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("diffutils", type="build")
     depends_on("bison", type="build")
@@ -73,19 +77,20 @@ class Krb5(AutotoolsPackage):
         )
 
     def configure_args(self):
+        spec = self.spec
         args = ["--without-system-verto"]
 
-        if "~shared" in self.spec:
+        if spec.satisfies("~shared"):
             args.append("--enable-static")
             args.append("--disable-shared")
         else:
             args.append("--disable-static")
 
         # https://github.com/spack/spack/issues/34193
-        if "%gcc@10:" in self.spec:
+        if spec.satisfies("%gcc@10:"):
             args.append("CFLAGS=-fcommon")
 
-        if self.spec["openssl"].satisfies("~shared"):
+        if spec["openssl"].satisfies("~shared"):
             pkgconf = which("pkg-config")
             ssllibs = pkgconf("--static", "--libs", "openssl", output=str)
             args.append(f"LDFLAGS={ssllibs}")

@@ -19,6 +19,9 @@ class Freeglut(CMakePackage, SourceforgePackage):
     version("3.2.1", sha256="d4000e02102acaf259998c870e25214739d1f16f67f99cb35e4f46841399da68")
     version("3.0.0", sha256="2a43be8515b01ea82bcfa17d29ae0d40bd128342f0930cd1f375f1ff999f76a2")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Build shared libs instead of static")
 
     depends_on("gl")
@@ -27,16 +30,12 @@ class Freeglut(CMakePackage, SourceforgePackage):
     # FreeGLUT does not support OSMesa
     conflicts("^osmesa")
 
-    # FreeGLUT only works with GLX on linux (cray is also linux)
+    # FreeGLUT only works with GLX on linux
     with when("platform=linux"):
         depends_on("glx")
         depends_on("libx11")
         depends_on("libxi")
         depends_on("libxxf86vm")
-    with when("platform=cray"):
-        depends_on("glx")
-        depends_on("libx11")
-        depends_on("libxi")
 
     # freeglut 3.2.1 fails to build with -fno-common (default with newer compilers)
     # see https://bugs.gentoo.org/705840 and https://github.com/dcnieho/FreeGLUT/pull/76

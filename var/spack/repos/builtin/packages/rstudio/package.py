@@ -16,6 +16,9 @@ class Rstudio(CMakePackage):
 
     version("1.4.1717", sha256="3af234180fd7cef451aef40faac2c7b52860f14a322244c1c7aede029814d261")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("notebook", default=False, description="Enable notebook support.")
 
     depends_on("r@3.0.1:", type=("build", "run"))

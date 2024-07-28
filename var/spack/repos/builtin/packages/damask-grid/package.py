@@ -17,6 +17,10 @@ class DamaskGrid(CMakePackage):
 
     license("AGPL-3.0-or-later")
 
+    version("3.0.0", sha256="aaebc65b3b10e6c313132ee97cfed427c115079b7e438cc0727c5207e159019f")
+    version(
+        "3.0.0-beta2", sha256="513567b4643f39e27ae32b9f75463fc6f388c1548d42f0393cc87ba02d075f6a"
+    )
     version(
         "3.0.0-beta", sha256="1e25e409ac559fc437d1887c6ca930677a732db89a3a32499d545dd75e93925c"
     )
@@ -36,8 +40,12 @@ class DamaskGrid(CMakePackage):
         "3.0.0-alpha4", sha256="0bb8bde43b27d852b1fb6e359a7157354544557ad83d87987b03f5d629ce5493"
     )
 
-    depends_on("petsc@3.20.3:3.21", when="@3.0.0-beta")
-    depends_on("petsc@3.20.2:3.21", when="@3.0.0-alpha8")
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
+    depends_on("petsc@3.21", when="@3.0.0-beta2:")
+    depends_on("petsc@3.20.3:3.20", when="@3.0.0-beta")
+    depends_on("petsc@3.20.2:3.20", when="@3.0.0-alpha8")
     depends_on("petsc@3.17.1:3.18", when="@3.0.0-alpha7")
     depends_on("petsc@3.16.5:3.16", when="@3.0.0-alpha6")
     depends_on("petsc@3.14.0:3.14,3.15.1:3.16", when="@3.0.0-alpha5")

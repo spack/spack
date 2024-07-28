@@ -41,6 +41,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     version("1.1.0", commit="b9bec8225442b3eb2a85a870efa112ab767a17fb")  # v1.1.0
     version("1.0.0", commit="45244641e0c2b19ba33aecd25153c0bddbcbe1a0")  # v1.0.0
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Build shared libraries")
     variant("full_optimizations", default=False, description="Compile with all optimizations")
     variant("openmp", default=sys.platform != "darwin", description="Build with OpenMP")
@@ -100,8 +103,14 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
         "+sycl", when="@:1.4.0", msg="For SYCL support, please use Ginkgo version 1.4.0 and newer."
     )
 
+    # Probably fixed in NVIDIA/cccl#1528 which hopefully comes with the next CUDA release
+    conflicts("^cuda@12.4", when="+cuda", msg="CCCL 2.3 bug causes build failure.")
+
     # https://github.com/ginkgo-project/ginkgo/pull/1524
     patch("ginkgo-sycl-pr1524.patch", when="@1.7.0 +sycl %oneapi@2024:")
+
+    # https://github.com/ginkgo-project/ginkgo/pull/1585
+    patch("ginkgo-dpcpp-intrinsincs-oneapi-2024.1.patch", when="@1.7.0 +sycl %oneapi@2024.1:")
 
     # Skip smoke tests if compatible hardware isn't found
     patch("1.4.0_skip_invalid_smoke_tests.patch", when="@1.4.0")
@@ -115,7 +124,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             env.set("MKLROOT", join_path(spec["intel-oneapi-mkl"].prefix, "mkl", "latest"))
             env.set("DPL_ROOT", join_path(spec["intel-oneapi-dpl"].prefix, "dpl", "latest"))
             # The `IntelSYCLConfig.cmake` is broken with spack. By default, it
-            # relies on the CMAKE_CXX_COMPILER being the real ipcx/dpcpp
+            # relies on the CMAKE_CXX_COMPILER being the real ipcx
             # compiler. If not, the variable SYCL_COMPILER of that script is
             # broken, and all the SYCL detection mechanism is wrong. We fix it
             # by giving hint environment variables.
@@ -194,9 +203,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
                 )
 
         if "+sycl" in self.spec:
-            sycl_compatible_compilers = ["dpcpp", "icpx"]
+            sycl_compatible_compilers = ["icpx"]
             if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
-                raise InstallError("ginkgo +sycl requires DPC++ (dpcpp) or icpx compiler.")
+                raise InstallError("ginkgo +sycl requires icpx compiler.")
         return args
 
     @property
