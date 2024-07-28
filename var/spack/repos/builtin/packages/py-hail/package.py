@@ -139,12 +139,7 @@ class PyHail(MakefilePackage):
         # Hail will fail to build if it cannot determine a commit hash from git
         # which will not be available in a spack cache. Since we know it from
         # the package, we can inject it in the failure and move forward.
-        version = self.version
-        version_info = self.versions[version]
-
-        # REVISION must look like a hash or Hail crashes at startup
-        # Technically, it needs to be at least 12 characters
-        revision = version_info.get("commit", version.joined.string.ljust(40, "0"))
+        revision = self.hail_revision
 
         filter_file(
             r'\$\(error "git rev-parse HEAD" failed to produce output\)',
@@ -161,6 +156,24 @@ class PyHail(MakefilePackage):
             f"BRANCH := tags/{version}",
             "hail/version.mk",
         )
+
+        # Also need to make sure that build-info.properties gets the right revision
+        # which ends up improperly calculated in scala and will crash at runtime
+        filter_file(
+            r"val revision = VcsVersion\.vcsState\(\)\.currentRevision",
+            "val vcs_revision = VcsVersion.vcsState().currentRevision\n"
+            f'  val revision = if(vcs_revision ==  "no-vcs") "{revision}" else vcs_revision\n',
+            "hail/build.sc",
+        )
+
+    @property
+    def hail_revision(self):
+        version = self.version
+        version_info = self.versions[version]
+        # REVISION must look like a hash or Hail crashes at startup
+        # Technically, it needs to be at least 12 characters
+        revision = version_info.get("commit", version.joined.string.ljust(40, "0"))
+        return revision
 
     @property
     def hail_pip_version(self):
