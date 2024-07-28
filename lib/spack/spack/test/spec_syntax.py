@@ -1006,6 +1006,15 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("^[@foo] zlib", spack.parser.SpecParsingError),
         # TODO: Remove this as soon as use variants are added and we can parse custom attributes
         ("^[foo=bar] zlib", spack.parser.SpecParsingError),
+        # Propagating reserved names generates a parse error
+        ("x namespace==foo.bar.baz", spack.parser.SpecParsingError),
+        ("x arch==linux-rhel9-x86_64", spack.parser.SpecParsingError),
+        ("x architecture==linux-rhel9-x86_64", spack.parser.SpecParsingError),
+        ("x os==rhel9", spack.parser.SpecParsingError),
+        ("x operating_system==rhel9", spack.parser.SpecParsingError),
+        ("x target==x86_64", spack.parser.SpecParsingError),
+        ("x dev_path==/foo/bar/baz", spack.parser.SpecParsingError),
+        ("x patches==abcde12345,12345abcde", spack.parser.SpecParsingError),
     ],
 )
 def test_error_conditions(text, exc_cls):

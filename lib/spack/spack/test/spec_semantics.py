@@ -197,6 +197,9 @@ class TestSpecSemantics:
                 'multivalue-variant foo="baz"',
                 'multivalue-variant foo="bar,baz,barbaz"',
             ),
+            # Namespace (special case, but like variants
+            ("builtin.libelf", "namespace=builtin", "builtin.libelf"),
+            ("libelf", "namespace=builtin", "builtin.libelf"),
             # Flags
             ("mpich ", 'mpich cppflags="-O3"', 'mpich cppflags="-O3"'),
             (
@@ -317,6 +320,7 @@ class TestSpecSemantics:
             ("libelf debug=True", "libelf debug=False"),
             ('libelf cppflags="-O3"', 'libelf cppflags="-O2"'),
             ("libelf platform=test target=be os=be", "libelf target=fe os=fe"),
+            ("namespace=builtin.mock", "namespace=builtin"),
         ],
     )
     def test_constraining_abstract_specs_with_empty_intersection(self, lhs, rhs):
@@ -405,6 +409,11 @@ class TestSpecSemantics:
         spec = Spec("singlevalue-variant-dependent")
         spec.concretize()
         assert "pkg-a@1.0" not in spec
+
+    def test_satisfied_namespace(self):
+        spec = Spec("zlib").concretized()
+        assert spec.satisfies("namespace=builtin.mock")
+        assert not spec.satisfies("namespace=builtin")
 
     def test_unsatisfiable_multi_value_variant(self, default_mock_concretization):
         # Semantics for a multi-valued variant is different

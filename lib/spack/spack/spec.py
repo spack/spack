@@ -163,14 +163,14 @@ HASH_COLOR = "@K"  #: color for highlighting package hashes
 DEFAULT_FORMAT = (
     "{name}{@versions}"
     "{%compiler.name}{@compiler.versions}{compiler_flags}"
-    "{variants}{ arch=architecture}{/abstract_hash}"
+    "{variants}{ namespace=namespace_if_anonymous}{ arch=architecture}{/abstract_hash}"
 )
 
 #: Display format, which eliminates extra `@=` in the output, for readability.
 DISPLAY_FORMAT = (
     "{name}{@version}"
     "{%compiler.name}{@compiler.version}{compiler_flags}"
-    "{variants}{ arch=architecture}{/abstract_hash}"
+    "{variants}{ namespace=namespace_if_anonymous}{ arch=architecture}{/abstract_hash}"
 )
 
 #: Regular expression to pull spec contents out of clearsigned signature
@@ -1666,6 +1666,9 @@ class Spec:
             self._set_architecture(os=value)
         elif name == "target":
             self._set_architecture(target=value)
+        elif name == "namespace":
+            self.namespace = value
+            assert not propagate
         elif name in valid_flags:
             assert self.compiler_flags is not None
             flags_and_propagation = spack.compiler.tokenize_flags(value, propagate)
@@ -4385,6 +4388,10 @@ class Spec:
                 yield hash(dep.spec)
 
         yield deps
+
+    @property
+    def namespace_if_anonymous(self):
+        return self.namespace if not self.name else None
 
     def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
         r"""Prints out attributes of a spec according to a format string.

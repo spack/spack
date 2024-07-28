@@ -329,7 +329,7 @@ class SpecParser:
             return initial_spec
 
         initial_spec = initial_spec or spack.spec.Spec()
-        root_spec = SpecNodeParser(self.ctx).parse(initial_spec)
+        root_spec = SpecNodeParser(self.ctx, self.literal_str).parse(initial_spec)
         while True:
             if self.ctx.accept(TokenType.START_EDGE_PROPERTIES):
                 edge_properties = EdgeAttributeParser(self.ctx, self.literal_str).parse()
@@ -348,7 +348,7 @@ class SpecParser:
         return root_spec
 
     def _parse_node(self, root_spec):
-        dependency = SpecNodeParser(self.ctx).parse()
+        dependency = SpecNodeParser(self.ctx, self.literal_str).parse()
         if dependency is None:
             msg = (
                 "the dependency sigil and any optional edge attributes must be followed by a "
@@ -367,10 +367,11 @@ class SpecParser:
 class SpecNodeParser:
     """Parse a single spec node from a stream of tokens"""
 
-    __slots__ = "ctx", "has_compiler", "has_version"
+    __slots__ = "ctx", "has_compiler", "has_version", "literal_str"
 
-    def __init__(self, ctx):
+    def __init__(self, ctx, literal_str):
         self.ctx = ctx
+        self.literal_str = literal_str
         self.has_compiler = False
         self.has_version = False
 
@@ -467,6 +468,13 @@ class SpecNodeParser:
                 assert match, "SPLIT_KVP and PROPAGATED_KEY_VALUE_PAIR do not agree."
 
                 name, delim, value = match.groups()
+                if name in spack.directives.reserved_names:
+                    raise SpecParsingError(
+                        f"propagation is not supported for {name}",
+                        self.ctx.current_token,
+                        self.literal_str,
+                    )
+
                 initial_spec._add_flag(name, strip_quotes_and_unescape(value), propagate=True)
 
             elif self.ctx.expect(TokenType.DAG_HASH):
