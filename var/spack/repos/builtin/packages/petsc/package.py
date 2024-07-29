@@ -696,8 +696,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             tty.warn("Stand-alone tests only available for v3.13:")
             return
 
-        self.cache_extra_test_sources(
-            [join_path("src", "ksp", "ksp", "tutorials"), join_path("src", "snes", "tutorials")]
+        cache_extra_test_sources(
+            self,
+            [join_path("src", "ksp", "ksp", "tutorials"), join_path("src", "snes", "tutorials")],
         )
 
     def get_runner(self):
