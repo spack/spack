@@ -23,7 +23,8 @@ class PerlBioEnsemblIo(Package):
 
     variant("scripts", default=False, description="Install scripts")
 
-    depends_on("perl-bio-db-bigfile")
+    depends_on("perl-bio-bigfile")
+    depends_on("perl-bio-ensembl")
     depends_on("perl-try-tiny")
 
     def install(self, spec, prefix):
