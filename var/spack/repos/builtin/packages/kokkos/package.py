@@ -392,7 +392,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             cmake_source_path,
             "-DSPACK_PACKAGE_SOURCE_DIR:PATH={0}".format(self.stage.source_path),
             "-DSPACK_PACKAGE_TEST_ROOT_DIR:PATH={0}".format(
-                join_path(self.install_test_root, cmake_out_path)
+                join_path(install_test_root(self), cmake_out_path)
             ),
             "-DSPACK_PACKAGE_INSTALL_DIR:PATH={0}".format(self.prefix),
         ]
