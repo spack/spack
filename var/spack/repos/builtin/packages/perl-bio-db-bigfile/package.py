@@ -29,7 +29,7 @@ class PerlBioDbBigfile(PerlPackage):
 
     with default_args(type=("build", "link")):
         depends_on("kentutils")
-        depends_on("htslib+pic", when="^kentutils~htslib")
+        depends_on("htslib+pic", when="^kentutils~builtin_htslib")
         depends_on("freetype")
         depends_on("libpng+pic")
         depends_on("bzip2")
