@@ -104,27 +104,24 @@ class Parsec(CMakePackage, CudaPackage):
                 warn += "https://bitbucket.org/icldistcomp/parsec/issues"
                 tty.msg(warn)
 
-    def test_allreduce(self):
-        """Compile and run a user program with allreduce"""
+    def run_parsec(self, exe_name):
+        """Common parsec testing method"""
 
         cmake = self.spec["cmake"].command
         cmake(".")
         make = which("make")
         make()
 
-        exe = which("./dtd_test_allreduce")
+        exe = which("./" + exe_name)
         exe()
+
+    def test_allreduce(self):
+        """Compile and run a DTD user program"""
+        self.run_parsec("dtd_test_allreduce")
 
     def test_writecheck(self):
-        """Compile and run a user program with writecheck"""
-
-        cmake = self.spec["cmake"].command
-        cmake(".")
-        make = which("make")
-        make()
-
-        exe = which("./write_check")
-        exe()
+        """Compile and run a PTG user program"""
+        self.run_parsec("write_check")
 
     @run_after("install")
     def cache_test_sources(self):
