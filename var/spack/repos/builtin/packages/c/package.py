@@ -16,10 +16,11 @@ class C(Package):
 
     def test_c(self):
         """Compile and run 'Hello world'"""
+
         test_source = self.test_suite.current_test_data_dir
 
         cc_exe = os.environ["CC"]
-        cc_exe = which(join_path(self.prefix.bin, cxx_exe))
+        cc_exe = which(join_path(self.prefix.bin, cc_exe))
         if cc_exe is None:
             raise SkipTest(f"{os.environ['CC']} not found in {self.version}")
 
