@@ -397,7 +397,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             "-DSPACK_PACKAGE_INSTALL_DIR:PATH={0}".format(self.prefix),
         ]
         cmake(*cmake_args)
-        self.cache_extra_test_sources(cmake_out_path)
+        cache_extra_test_sources(self, cmake_out_path)
 
     def test_run(self):
         """Test if kokkos builds and runs"""
