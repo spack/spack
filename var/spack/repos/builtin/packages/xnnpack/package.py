@@ -16,19 +16,24 @@ class Xnnpack(CMakePackage):
     license("BSD-3-Clause")
 
     version("master", branch="master", deprecated=True)
-    version("2022-12-22", commit="51a987591a6fc9f0fc0707077f53d763ac132cbf")  # py-torch@2:
+    version("2024-02-29", commit="fcbf55af6cf28a4627bcd1f703ab7ad843f0f3a2")  # py-torch@2.3:
+    version("2022-12-22", commit="51a987591a6fc9f0fc0707077f53d763ac132cbf")  # py-torch@2.0:2.2
     version("2022-02-16", commit="ae108ef49aa5623b896fc93d4298c49d1750d9ba")  # py-torch@1.12:1.13
     version("2021-06-21", commit="79cd5f9e18ad0925ac9a050b00ea5a36230072db")  # py-torch@1.10:1.11
     version("2021-02-22", commit="55d53a4e7079d38e90acd75dd9e4f9e781d2da35")  # py-torch@1.8:1.9
     version("2020-03-23", commit="1b354636b5942826547055252f3b359b54acff95")  # py-torch@1.6:1.7
     version("2020-02-24", commit="7493bfb9d412e59529bcbced6a902d44cfa8ea1c")  # py-torch@1.5
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     generator("ninja")
-    depends_on("cmake@3.5:", type="build")
-    depends_on("python", type="build")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
+    with default_args(type="build"):
+        depends_on("cmake@3.15:", when="@2022-04-26:")
+        depends_on("cmake@3.12:", when="@2022-02-15:")
+        depends_on("cmake@3.5:")
+        depends_on("python")
 
     # Resources must be exact commit
     # https://github.com/google/XNNPACK/issues/4023
@@ -40,7 +45,7 @@ class Xnnpack(CMakePackage):
         sha256="6000cf2a0befe428d97ea921372397d049889cbd8a4cd5b93390c71415dd3b68",
         destination="deps",
         placement="clog",
-        when="@2022-12-22:",
+        when="@2022-12-22:2023-01-17",
     )
     resource(
         name="clog",
@@ -54,11 +59,19 @@ class Xnnpack(CMakePackage):
     # cmake/DownloadCpuinfo.cmake
     resource(
         name="cpuinfo",
+        url="https://github.com/pytorch/cpuinfo/archive/d6860c477c99f1fce9e28eb206891af3c0e1a1d7.zip",
+        sha256="a615cac78fad03952cc3e1fd231ce789a8df6e81a5957b64350cb8200364b385",
+        destination="deps",
+        placement="cpuinfo",
+        when="@2024-02-29:",
+    )
+    resource(
+        name="cpuinfo",
         url="https://github.com/Maratyszcza/cpuinfo/archive/0a38bc5cf17837bf3b536b57b9d35a259b6b2283.zip",
         sha256="fc79c33f10b7dcb710c5eb0fcd7fe4467bf98cdc6ff1925883b175fbb800c53e",
         destination="deps",
         placement="cpuinfo",
-        when="@2022-12-22:",
+        when="@2022-12-22",
     )
     resource(
         name="cpuinfo",
@@ -92,7 +105,15 @@ class Xnnpack(CMakePackage):
         sha256="e66e65515fa09927b348d3d584c68be4215cfe664100d01c9dbc7655a5716d70",
         destination="deps",
         placement="fp16",
-        when="@2021-06-21:",
+        when="@2024-02-29:",
+    )
+    resource(
+        name="fp16",
+        url="https://github.com/Maratyszcza/FP16/archive/0a92994d729ff76a58f692d3028ca1b64b145d91.zip",
+        sha256="e66e65515fa09927b348d3d584c68be4215cfe664100d01c9dbc7655a5716d70",
+        destination="deps",
+        placement="fp16",
+        when="@2021-06-21:2022-12-2",
     )
     resource(
         name="fp16",
@@ -142,11 +163,19 @@ class Xnnpack(CMakePackage):
     # cmake/DownloadPThreadPool.cmake
     resource(
         name="pthreadpool",
+        url="https://github.com/Maratyszcza/pthreadpool/archive/4fe0e1e183925bf8cfa6aae24237e724a96479b8.zip",
+        sha256="a4cf06de57bfdf8d7b537c61f1c3071bce74e57524fe053e0bbd2332feca7f95",
+        destination="deps",
+        placement="pthreadpool",
+        when="@2024-02-29:",
+    )
+    resource(
+        name="pthreadpool",
         url="https://github.com/Maratyszcza/pthreadpool/archive/43edadc654d6283b4b6e45ba09a853181ae8e850.zip",
         sha256="e6370550a1abf1503daf3c2c196e0a1c2b253440c39e1a57740ff49af2d8bedf",
         destination="deps",
         placement="pthreadpool",
-        when="@2022-12-22:",
+        when="@2022-12-22",
     )
     resource(
         name="pthreadpool",
@@ -183,8 +212,7 @@ class Xnnpack(CMakePackage):
     def cmake_args(self):
         # TODO: XNNPACK has a XNNPACK_USE_SYSTEM_LIBS option, but it seems to be broken
         # See https://github.com/google/XNNPACK/issues/1543
-        return [
-            self.define("CLOG_SOURCE_DIR", join_path(self.stage.source_path, "deps", "clog")),
+        args = [
             self.define(
                 "CPUINFO_SOURCE_DIR", join_path(self.stage.source_path, "deps", "cpuinfo")
             ),
@@ -199,6 +227,13 @@ class Xnnpack(CMakePackage):
             self.define("XNNPACK_BUILD_TESTS", False),
             self.define("XNNPACK_BUILD_BENCHMARKS", False),
         ]
+
+        if self.spec.satisfies("@:2023-01-17"):
+            args.append(
+                self.define("CLOG_SOURCE_DIR", join_path(self.stage.source_path, "deps", "clog"))
+            )
+
+        return args
 
     def setup_build_environment(self, env):
         env.append_flags("CFLAGS", self.compiler.cc_pic_flag)
