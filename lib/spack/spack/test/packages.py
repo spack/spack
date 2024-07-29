@@ -331,6 +331,3 @@ def test_package_can_have_sparse_checkout_properties(mock_packages, mock_fetch, 
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert hasattr(fetcher, "git_sparse_paths")
     assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
-
-
-

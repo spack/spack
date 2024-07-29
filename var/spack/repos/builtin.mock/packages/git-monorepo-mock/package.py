@@ -18,7 +18,7 @@ class GitMonorepoMock(Package):
     version("1.2", tag="1.2")  # not a typo
     version("2.0", tag="v2.0")
 
-    git_sparse_paths = [ "foo", "bar", "bing/bang"]
+    git_sparse_paths = ["foo", "bar", "bing/bang"]
 
     def install(self, spec, prefix):
         # It is assumed for the test which installs this package, that it will
@@ -28,4 +28,3 @@ class GitMonorepoMock(Package):
 
         # This will only exist for some second commit
         install("file.txt", prefix.bin)
-
