@@ -809,38 +809,49 @@ class GitFetchStrategy(VCSFetchStrategy):
             tty.debug("Already fetched {0}".format(self.stage.source_path))
             return
 
-        self.clone(commit=self.commit, branch=self.branch, tag=self.tag)
+        self.clone_src(commit=self.commit, branch=self.branch, tag=self.tag)
+        self.submodule_operations()
 
-    def clone(self, dest=None, commit=None, branch=None, tag=None, bare=False):
+    def bare_clone(self, dest):
+        """
+        Execute a bare clone for metadata only
+
+        Requires a destination since bare cloning does not provide source
+        and shouldn't be used for source path
+        """
+        # Default to spack source path
+        tty.debug("Cloning git repository: {0}".format(self._repo_info()))
+
+        git = self.git
+        debug = spack.config.get("config:debug")
+
+        # We don't need to worry about which commit/branch/tag is checked out
+        clone_args = ["clone", "--bare"]
+        if not debug:
+            clone_args.append("--quiet")
+        clone_args.extend([self.url, dest])
+        git(*clone_args)
+
+    def clone_src(self, commit=None, branch=None, tag=None):
         """
         Clone a repository to a path.
 
         This method handles cloning from git, but does not require a stage.
 
         Arguments:
-            dest (str or None): The path into which the code is cloned. If None,
-                requires a stage and uses the stage's source path.
             commit (str or None): A commit to fetch from the remote. Only one of
                 commit, branch, and tag may be non-None.
             branch (str or None): A branch to fetch from the remote.
             tag (str or None): A tag to fetch from the remote.
-            bare (bool): Execute a "bare" git clone (--bare option to git)
         """
         # Default to spack source path
-        dest = dest or self.stage.source_path
+        dest = self.stage.source_path
         tty.debug("Cloning git repository: {0}".format(self._repo_info()))
 
         git = self.git
         debug = spack.config.get("config:debug")
 
-        if bare:
-            # We don't need to worry about which commit/branch/tag is checked out
-            clone_args = ["clone", "--bare"]
-            if not debug:
-                clone_args.append("--quiet")
-            clone_args.extend([self.url, dest])
-            git(*clone_args)
-        elif commit:
+        if commit:
             # Need to do a regular clone and check out everything if
             # they asked for a particular commit.
             clone_args = ["clone", self.url]
@@ -918,6 +929,10 @@ class GitFetchStrategy(VCSFetchStrategy):
 
                     git(*pull_args, ignore_errors=1)
                     git(*co_args)
+
+    def submodule_operations(self):
+        dest = self.stage.source_path
+        git = self.git
 
         if self.submodules_delete:
             with working_dir(dest):
