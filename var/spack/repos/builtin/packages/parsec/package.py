@@ -106,7 +106,6 @@ class Parsec(CMakePackage, CudaPackage):
 
     def run_parsec(self, exe_name):
         """Common parsec testing method"""
-
         cmake = self.spec["cmake"].command
         cmake(".")
         make = which("make")
