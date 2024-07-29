@@ -405,7 +405,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         """Copy the build test files after the package is installed to a
         relative install test subdirectory for use during `spack test run`."""
         # Now copy the relative files
-        self.cache_extra_test_sources(self.build_relpath)
+        cache_extra_test_sources(self, self.build_relpath)
 
         # Ensure the path exists since relying on a relative path at the
         # same level as the normal stage source path.
