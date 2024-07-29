@@ -169,7 +169,9 @@ def pkg_hash(args):
 
 def get_grep(required=False):
     """Get a grep command to use with ``spack pkg grep``."""
-    return exe.which(os.environ.get("SPACK_GREP") or "grep", required=required)
+    grep = exe.which(os.environ.get("SPACK_GREP") or "grep", required=required)
+    grep.ignore_quotes = True  # allow `spack pkg grep '"quoted string"'` without warning
+    return grep
 
 
 def pkg_grep(args, unknown_args):

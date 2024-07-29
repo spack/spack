@@ -72,7 +72,7 @@ class GoBuilder(BaseBuilder):
     def build_args(self):
         """Arguments for ``go build``."""
         # Pass ldflags -s = --strip-all and -w = --no-warnings by default
-        return ["-ldflags", "-s -w", "-o", f"{self.pkg.name}"]
+        return ["-modcacherw", "-ldflags", "-s -w", "-o", f"{self.pkg.name}"]
 
     @property
     def check_args(self):
