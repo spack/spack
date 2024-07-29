@@ -31,7 +31,7 @@ class UtilLinuxUuid(AutotoolsPackage):
 
     depends_on("pkgconfig", type="build")
 
-    if sys.platform not in ["darwin", "windows"]:
+    if sys.platform not in ["darwin", "win32"]:
         provides("uuid")
 
     def url_for_version(self, version):

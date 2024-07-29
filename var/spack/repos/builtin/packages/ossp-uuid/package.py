@@ -24,7 +24,7 @@ class OsspUuid(AutotoolsPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    if sys.platform not in ["darwin", "windows"]:
+    if sys.platform not in ["darwin", "win32"]:
         provides("uuid")
 
     @property
