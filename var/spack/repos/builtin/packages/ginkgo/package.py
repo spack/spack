@@ -214,7 +214,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     @run_after("install")
     def cache_test_sources(self):
-        self.cache_extra_test_sources(self.extra_install_tests)
+        cache_extra_test_sources(self, self.extra_install_tests)
 
     def _cached_tests_src_dir(self, script):
         """The cached smoke test source directory for the script."""
