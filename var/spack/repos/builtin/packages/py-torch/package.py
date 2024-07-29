@@ -183,7 +183,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("fp16@2020-05-14", when="@1.6:")
     depends_on("fxdiv@2020-04-17", when="@1.6:")
     depends_on("xnnpack@2024-02-29", when="@2.3:+xnnpack")
-    depends_on("xnnpack@2022-12-21", when="@2.0:2.2+xnnpack")
+    depends_on("xnnpack@2022-12-22", when="@2.0:2.2+xnnpack")
     depends_on("xnnpack@2022-02-16", when="@1.12:1+xnnpack")
     depends_on("xnnpack@2021-06-21", when="@1.10:1.11+xnnpack")
     depends_on("xnnpack@2021-02-22", when="@1.8:1.9+xnnpack")
