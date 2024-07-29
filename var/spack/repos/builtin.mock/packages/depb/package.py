@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Depb(Package):
-    """Simple package with one dependency"""
+    """Simple package with one direct dependency"""
 
     homepage = "http://www.example.com"
     url = "http://www.example.com/a-1.0.tar.gz"
