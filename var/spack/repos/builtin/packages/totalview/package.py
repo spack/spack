@@ -33,26 +33,26 @@ class Totalview(Package):
 
     version(
        "2024.2-powerle",
-        md5="29d0cf1f764ae1fe85caae092e55eb70",
-        url="https://dslwuu69twiif.cloudfront.net/totalview/2024.2/totalview_2024.2.11_linux_powerle.tar",
+       md5="29d0cf1f764ae1fe85caae092e55eb70",
+       url="https://dslwuu69twiif.cloudfront.net/totalview/2024.2/totalview_2024.2.11_linux_powerle.tar",
     )
 
     version(
        "2024.2-linux-arm64",
-        md5="91d711f25e3605999fae7ca1290ac949",
-        url="https://dslwuu69twiif.cloudfront.net/totalview/2024.2/totalview_2024.2.11_linux_arm64.tar",
+       md5="91d711f25e3605999fae7ca1290ac949",
+       url="https://dslwuu69twiif.cloudfront.net/totalview/2024.2/totalview_2024.2.11_linux_arm64.tar",
     )
 
     version(
        "2024.1-x86-64",
-        md5="c406533efaf7decd23ce569a01bd0ee6",
-        url="https://dslwuu69twiif.cloudfront.net/totalview/2024.1/totalview_2024.1.21_linux_x86-64.tar",
+       md5="c406533efaf7decd23ce569a01bd0ee6",
+       url="https://dslwuu69twiif.cloudfront.net/totalview/2024.1/totalview_2024.1.21_linux_x86-64.tar",
     )
 
     version(
        "2024.1-powerle",
-        md5="443736bef3aa7b4ae83bc441ff6acaf6",
-        url="https://dslwuu69twiif.cloudfront.net/totalview/2024.1/totalview_2024.1.21_linux_powerle.tar",
+       md5="443736bef3aa7b4ae83bc441ff6acaf6",
+       url="https://dslwuu69twiif.cloudfront.net/totalview/2024.1/totalview_2024.1.21_linux_powerle.tar",
     )
 
     version(
@@ -60,7 +60,7 @@ class Totalview(Package):
         md5="58dff4cb2a74950d56502016b0676ef7",
         url="https://dslwuu69twiif.cloudfront.net/totalview/2024.1/totalview_2024.1.21_linux_arm64.tar",
     )
-    
+
     def setup_run_environment(self, env):
         env.prepend_path(
             "PATH",
