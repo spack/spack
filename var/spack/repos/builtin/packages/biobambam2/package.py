@@ -36,7 +36,7 @@ class Biobambam2(AutotoolsPackage):
     def cache_test_sources(self):
         """Copy the test source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(self.test_src_dir)
+        cache_extra_test_sources(self, self.test_src_dir)
 
     def test_short_sort(self):
         """run testshortsort.sh to check alignments sorted by coordinate"""
