@@ -126,4 +126,4 @@ class Parsec(CMakePackage, CudaPackage):
     @run_after("install")
     def cache_test_sources(self):
         srcs = ["contrib/build_with_parsec"]
-        self.cache_extra_test_sources(srcs)
+        cache_extra_test_sources(self, srcs)
