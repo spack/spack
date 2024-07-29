@@ -1223,7 +1223,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         # Clean the 'examples' directory -- at least one example is always built
         # and we do not want to cache executables.
         make("examples/clean", parallel=False)
-        self.cache_extra_test_sources([self.examples_src_dir, self.examples_data_dir])
+        cache_extra_test_sources(self, [self.examples_src_dir, self.examples_data_dir])
 
     def test_ex10(self):
         """build and run ex10(p)"""
