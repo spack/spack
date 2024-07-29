@@ -94,7 +94,7 @@ class HypreCmake(CMakePackage, CudaPackage):
 
     @run_after("install")
     def cache_test_sources(self):
-        self.cache_extra_test_sources(self.extra_install_tests)
+        cache_extra_test_sources(self, self.extra_install_tests)
 
     @property
     def _cached_tests_work_dir(self):
