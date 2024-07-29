@@ -809,7 +809,10 @@ class GitFetchStrategy(VCSFetchStrategy):
             tty.debug("Already fetched {0}".format(self.stage.source_path))
             return
 
-        self.clone_src(commit=self.commit, branch=self.branch, tag=self.tag)
+        if self.git_sparse_paths:
+            self.sparse_clone_src(commit=self.commit, branch=self.branch, tag=self.tag)
+        else:
+            self.clone_src(commit=self.commit, branch=self.branch, tag=self.tag)
         self.submodule_operations()
 
     def bare_clone(self, dest):
@@ -817,7 +820,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         Execute a bare clone for metadata only
 
         Requires a destination since bare cloning does not provide source
-        and shouldn't be used for source path
+        and shouldn't be used for staging.
         """
         # Default to spack source path
         tty.debug("Cloning git repository: {0}".format(self._repo_info()))
@@ -834,9 +837,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     def clone_src(self, commit=None, branch=None, tag=None):
         """
-        Clone a repository to a path.
-
-        This method handles cloning from git, but does not require a stage.
+        Clone a repository to a path using git.
 
         Arguments:
             commit (str or None): A commit to fetch from the remote. Only one of
@@ -929,6 +930,75 @@ class GitFetchStrategy(VCSFetchStrategy):
 
                     git(*pull_args, ignore_errors=1)
                     git(*co_args)
+
+    def sparse_clone_src(self, commit=None, branch=None, tag=None, **kwargs):
+        """
+        Use git's sparse checkout feature to clone portions of a git repository
+
+        Arguments:
+            commit (str or None): A commit to fetch from the remote. Only one of
+                commit, branch, and tag may be non-None.
+            branch (str or None): A branch to fetch from the remote.
+            tag (str or None): A tag to fetch from the remote.
+        """
+        dest = self.stage.source_path
+        git = self.git
+
+        if self.git_version < spack.version.Version("2.25.0.0"):
+            tty.warn(
+                (
+                    f"{self.package.name} is configured for git sparse-checkout "
+                    "but the git version is too old to support sparse cloning. "
+                    "Cloning the full repository instead."
+                )
+            )
+            self.clone_src(commit, branch, tag)
+        else:
+            # default to depth=2 to allow for retention of some git properties
+            depth = kwargs.get("depth", 2)
+            needs_fetch = branch or tag
+            git_ref = branch or tag
+
+            clone_args = ["clone"]
+
+            if needs_fetch:
+                clone_args.extend(["--branch", git_ref])
+
+            if self.get_full_repo:
+                clone_args.append("--no-single-branch")
+            else:
+                clone_args.append("--single-branch")
+
+            clone_args.extend(
+                [f"--depth={depth}", "--no-checkout", "--filter=blob:none", self.url]
+            )
+
+            sparse_args = ["sparse-checkout", "set"]
+
+            if callable(self.git_sparse_paths):
+                sparse_args.extend(self.git_sparse_paths())
+            else:
+                sparse_args.extend([p for p in self.git_sparse_paths])
+
+            sparse_args.append("--cone")
+
+            checkout_args = ["checkout", git_ref]
+
+            if not spack.config.get("config:debug"):
+                clone_args.insert(1, "--quiet")
+                sparse_args.insert(1, "--quiet")
+                checkout_args.insert(1, "--quiet")
+
+            with temp_cwd():
+                git(*clone_args)
+                repo_name = get_single_file(".")
+                if self.stage:
+                    self.stage.srcdir = repo_name
+                shutil.move(repo_name, dest)
+
+            with working_dir(dest):
+                git(*sparse_args)
+                git(*checkout_args)
 
     def submodule_operations(self):
         dest = self.stage.source_path
