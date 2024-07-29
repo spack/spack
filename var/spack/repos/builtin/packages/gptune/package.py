@@ -101,7 +101,7 @@ class Gptune(CMakePackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([self.examples_src_dir])
+        cache_extra_test_sources(self, [self.examples_src_dir])
 
     def setup_run_environment(self, env):
         env.set("GPTUNE_INSTALL_PATH", python_platlib)
