@@ -810,9 +810,9 @@ class GitFetchStrategy(VCSFetchStrategy):
             return
 
         if self.git_sparse_paths:
-            self.sparse_clone_src(commit=self.commit, branch=self.branch, tag=self.tag)
+            self._sparse_clone_src(commit=self.commit, branch=self.branch, tag=self.tag)
         else:
-            self.clone_src(commit=self.commit, branch=self.branch, tag=self.tag)
+            self._clone_src(commit=self.commit, branch=self.branch, tag=self.tag)
         self.submodule_operations()
 
     def bare_clone(self, dest):
@@ -835,7 +835,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         clone_args.extend([self.url, dest])
         git(*clone_args)
 
-    def clone_src(self, commit=None, branch=None, tag=None):
+    def _clone_src(self, commit=None, branch=None, tag=None):
         """
         Clone a repository to a path using git.
 
@@ -931,7 +931,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                     git(*pull_args, ignore_errors=1)
                     git(*co_args)
 
-    def sparse_clone_src(self, commit=None, branch=None, tag=None, **kwargs):
+    def _sparse_clone_src(self, commit=None, branch=None, tag=None, **kwargs):
         """
         Use git's sparse checkout feature to clone portions of a git repository
 
