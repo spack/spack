@@ -27,11 +27,11 @@ class ParallelNetcdf(AutotoolsPackage):
 
     def url_for_version(self, version):
         if version >= Version("1.11.0"):
-            url = "https://parallel-netcdf.github.io/Release/pnetcdf-{0}.tar.gz"
+            url = f"https://parallel-netcdf.github.io/Release/pnetcdf-{version.dotted}.tar.gz"
         else:
-            url = "https://parallel-netcdf.github.io/Release/parallel-netcdf-{0}.tar.gz"
+            url = f"https://parallel-netcdf.github.io/Release/parallel-netcdf-{version.dotted}.tar.gz"
 
-        return url.format(version.dotted)
+        return url
 
     version("master", branch="master")
     version("1.12.3", sha256="439e359d09bb93d0e58a6e3f928f39c2eae965b6c97f64e67cd42220d6034f77")
