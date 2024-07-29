@@ -28,7 +28,7 @@ class Fortran(Package):
                 filepath = os.path.join(test_source, test)
                 exe_name = f"{test}.exe"
                 fc_opts = ["-o", exe_name, filepath]
-                fc_exe(*fc_opts)
+                compiled = fc_exe(*fc_opts, output=str.split, error=str.split)
 
                 if compiled:
                     exe = which(join_path(self.prefix.bin, exe_name))
