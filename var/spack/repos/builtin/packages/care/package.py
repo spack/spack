@@ -7,9 +7,8 @@ import socket
 
 from spack.package import *
 
-from .camp import cuda_for_radiuss_projects
-from .camp import hip_for_radiuss_projects
 from .blt import llnl_link_helpers
+from .camp import cuda_for_radiuss_projects, hip_for_radiuss_projects
 
 
 class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -105,7 +104,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("chai@2024.02.0:", when="@0.12.0:")
     depends_on("chai@2022.10.0:", when="@0.10.0:")
 
-
     with when("+openmp"):
         depends_on("umpire+openmp")
         depends_on("raja+openmp")
@@ -133,10 +131,16 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("chai+rocm")
 
         for arch_ in ROCmPackage.amdgpu_targets:
-            depends_on('umpire+rocm amdgpu_target={0}'.format(arch_), when='amdgpu_target={0}'.format(arch_))
-            depends_on('raja+rocm amdgpu_target={0}'.format(arch_), when='amdgpu_target={0}'.format(arch_))
-            depends_on('chai+rocm amdgpu_target={0}'.format(arch_), when='amdgpu_target={0}'.format(arch_))
-
+            depends_on(
+                "umpire+rocm amdgpu_target={0}".format(arch_),
+                when="amdgpu_target={0}".format(arch_),
+            )
+            depends_on(
+                "raja+rocm amdgpu_target={0}".format(arch_), when="amdgpu_target={0}".format(arch_)
+            )
+            depends_on(
+                "chai+rocm amdgpu_target={0}".format(arch_), when="amdgpu_target={0}".format(arch_)
+            )
 
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
@@ -144,7 +148,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
         return sys_type
-
 
     @property
     def cache_name(self):
@@ -157,9 +160,8 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
             self._get_sys_type(self.spec),
             self.spec.compiler.name,
             self.spec.compiler.version,
-            self.spec.dag_hash(8)
+            self.spec.dag_hash(8),
         )
-
 
     def initconfig_compiler_entries(self):
         spec = self.spec
@@ -197,7 +199,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         return entries
 
-
     def initconfig_hardware_entries(self):
         spec = self.spec
         compiler = self.compiler
@@ -225,7 +226,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         return entries
 
-
     def initconfig_mpi_entries(self):
         spec = self.spec
 
@@ -233,7 +233,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option("ENABLE_MPI", "+mpi" in spec))
 
         return entries
-
 
     def initconfig_package_entries(self):
         spec = self.spec
@@ -255,31 +254,24 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("# Build Options")
         entries.append("#------------------{0}\n".format("-" * 60))
 
-        entries.append(cmake_cache_string(
-            "CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
+        entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
 
-        entries.append(cmake_cache_option(
-            "ENABLE_TESTS", "+tests" in spec))
+        entries.append(cmake_cache_option("ENABLE_TESTS", "+tests" in spec))
 
-        entries.append(cmake_cache_option(
-            "ENABLE_BENCHMARKS", "+benchmarks" in spec))
+        entries.append(cmake_cache_option("ENABLE_BENCHMARKS", "+benchmarks" in spec))
 
-        entries.append(cmake_cache_option(
-            "ENABLE_EXAMPLES", "+examples" in spec))
+        entries.append(cmake_cache_option("ENABLE_EXAMPLES", "+examples" in spec))
 
-        entries.append(cmake_cache_option(
-            "ENABLE_DOCS", "+docs" in spec))
+        entries.append(cmake_cache_option("ENABLE_DOCS", "+docs" in spec))
 
-        entries.append(cmake_cache_option(
-            "CARE_ENABLE_IMPLICIT_CONVERSIONS", "+implicit_conversions" in spec))
+        entries.append(
+            cmake_cache_option("CARE_ENABLE_IMPLICIT_CONVERSIONS", "+implicit_conversions" in spec)
+        )
 
-        entries.append(cmake_cache_option(
-            "CARE_ENABLE_LOOP_FUSER", "+loop_fuser" in spec))
+        entries.append(cmake_cache_option("CARE_ENABLE_LOOP_FUSER", "+loop_fuser" in spec))
 
         return entries
-    
 
     def cmake_args(self):
         options = []
         return options
-
