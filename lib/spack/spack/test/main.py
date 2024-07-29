@@ -20,7 +20,7 @@ def make_git_script(tmpdir, content, monkeypatch):
     git = str(tmpdir.join(git_exe_name))
     with open(git, "w") as f:
         f.write(
-            f"""{script_head} 
+            f"""{script_head}
 {content}
 """
         )
