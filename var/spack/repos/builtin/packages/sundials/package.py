@@ -757,7 +757,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     @run_after("install")
     def setup_smoke_tests(self):
         if "+examples-install" in self.spec:
-            install_tree(self._smoke_tests_path, join_path(self.install_test_root, "testing"))
+            install_tree(self._smoke_tests_path, join_path(install_test_root(self), "testing"))
 
     def build_smoke_tests(self):
 
