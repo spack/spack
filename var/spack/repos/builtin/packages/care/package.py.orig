@@ -1,4 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,8 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("adayton1")
 
+    maintainers("adayton1")
+
     version("develop", branch="develop", submodules="True")
     version("master", branch="master", submodules="True")
     version(
@@ -47,18 +49,40 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
     version("0.10.0", tag="v0.10.0", submodules="True")
     version(
+        "0.13.1",
+        tag="v0.13.1",
+        commit="0fd0d47aaaa57076f26caad88e667fbc01ff7214",
+        submodules="True",
+    )
+    version(
+        "0.13.0",
+        tag="v0.13.0",
+        commit="2b288e2c557c3b14befeebc8e14a7d48348bd857",
+        submodules="True",
+    )
+    version(
+        "0.12.0",
+        tag="v0.12.0",
+        commit="a9978083035eb00a090451bd36d7987bc935204d",
+        submodules="True",
+    )
+    version(
         "0.3.0", tag="v0.3.0", commit="5e2b69b2836c9f2215207ca9a36a690cb77eea33", submodules="True"
     )
     version(
         "0.2.0", tag="v0.2.0", commit="30135e03b14b1dc753634e9147dafede0663906f", submodules="True"
     )
 
+<<<<<<< HEAD
+    variant("openmp", default=False, description="Build with OpenMP support")
+    variant("mpi", default=False, description="Enable MPI support")
+=======
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
-    variant("openmp", default=False, description="Build with OpenMP support")
-    variant("mpi", default=False, description="Enable MPI support")
+    variant("openmp", default=False, description="Build Shared Libs")
+>>>>>>> develop
     variant(
         "implicit_conversions",
         default=False,
@@ -70,27 +94,64 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("docs", default=False, description="Build documentation")
     variant("loop_fuser", default=False, description="Enable loop fusion capability")
 
+<<<<<<< HEAD
     depends_on("cmake@3.21:", type="build", when="@0.12.0:+rocm")
     depends_on("cmake@3.18:", type="build", when="@0.12.0:")
     depends_on("cmake@3.14:", type="build", when="@0.10.0:")
     depends_on("cmake@3.9:", type="build", when="+cuda")
     depends_on("cmake@3.8:", type="build")
+=======
+    depends_on("cmake@3.8:", type="build")
+    depends_on("cmake@3.9:", type="build", when="+cuda")
+    depends_on("cmake@3.18:", type="build", when="@0.12.0:")
+    depends_on("cmake@3.21:", type="build", when="@0.12.0:+rocm")
+>>>>>>> develop
 
     depends_on("blt")
     depends_on("blt@0.6.2:", type="build", when="@0.13.0:")
     depends_on("blt@0.6.1:", type="build", when="@0.12.0:")
+<<<<<<< HEAD
     depends_on("blt@0.5.2:", type="build", when="@0.10.0:")
     depends_on("blt@0.4.1:", type="build", when="@0.3.1:")
+=======
+    depends_on("blt@0.4.0:", type="build", when="@0.3.1:")
+>>>>>>> develop
     depends_on("blt@:0.3.6", type="build", when="@:0.3.0")
     conflicts("^blt@:0.3.6", when="+rocm")
 
     depends_on("camp", when="@:0.11.1")
 
     depends_on("umpire")
+<<<<<<< HEAD
     depends_on("umpire+mpi", when="+mpi")
     depends_on("umpire@2024.02.1:", when="@0.13.0:")
     depends_on("umpire@2024.02.0:", when="@0.12.0:")
     depends_on("umpire@2022.10.0:", when="@0.10.0:")
+=======
+    depends_on("umpire@2024.02.1:", when="@0.13.0:")
+    depends_on("umpire@2024.02.0:", when="@0.12.0:")
+
+    depends_on("raja")
+    depends_on("raja@2024.02.2:", when="@0.13.1:")
+    depends_on("raja@2024.02.1:", when="@0.13.0:")
+    depends_on("raja@2024.02.0:", when="@0.12.0:")
+
+    depends_on("chai+enable_pick+raja")
+    depends_on("chai@2024.02.2:", when="@0.13.1:")
+    depends_on("chai@2024.02.1:", when="@0.13.0:")
+    depends_on("chai@2024.02.0:", when="@0.12.0:")
+
+    # pass on +cuda variants
+    # WARNING: this package currently only supports an internal cub
+    # package. This will cause a race condition if compiled with another
+    # package that uses cub. TODO: have all packages point to the same external
+    # cub package.
+    depends_on("cub", when="+cuda")
+    depends_on("camp+cuda", when="+cuda")
+    depends_on("umpire+cuda~shared", when="+cuda")
+    depends_on("raja+cuda~openmp", when="+cuda")
+    depends_on("chai+cuda~shared", when="+cuda")
+>>>>>>> develop
 
     depends_on("raja")
     depends_on("raja@2024.02.2:", when="@0.13.1:")
