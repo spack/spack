@@ -90,7 +90,9 @@ class PyLibensemble(PythonPackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(join_path("examples", "calling_scripts", "regression_tests"))
+        cache_extra_test_sources(
+            self, join_path("examples", "calling_scripts", "regression_tests")
+        )
 
     def run_tutorial_script(self, script):
         """run the tutorial example regression test"""
