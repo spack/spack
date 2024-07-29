@@ -168,7 +168,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         compiler = self.compiler
         entries = super().initconfig_compiler_entries()
 
-        #### BEGIN: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
+        # BEGIN: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
         flags = spec.compiler_flags
 
         # use global spack compiler flags
@@ -193,7 +193,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         if fflags:
             entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
 
-        #### END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
+        # END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
 
         llnl_link_helpers(entries, spec, compiler)
 
