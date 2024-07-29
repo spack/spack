@@ -39,6 +39,9 @@ class Clingo(CMakePackage):
     version("5.3.0", sha256="b0d406d2809352caef7fccf69e8864d55e81ee84f4888b0744894977f703f976")
     version("5.2.2", sha256="da1ef8142e75c5a6f23c9403b90d4f40b9f862969ba71e2aaee9a257d058bfcf")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("docs", default=False, description="build documentation with Doxygen")
     variant("python", default=True, description="build with python bindings")
 
@@ -53,7 +56,6 @@ class Clingo(CMakePackage):
         depends_on("bison@2.5:", type="build", when="platform=linux")
         depends_on("bison@2.5:", type="build", when="platform=darwin")
         depends_on("bison@2.5:", type="build", when="platform=freebsd")
-        depends_on("bison@2.5:", type="build", when="platform=cray")
 
     with when("platform=windows"):
         depends_on("re2c@0.13:", type="build")
@@ -67,7 +69,6 @@ class Clingo(CMakePackage):
         depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=linux")
         depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=darwin")
         depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=freebsd")
-        depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=cray")
 
     patch("python38.patch", when="@5.3:5.4.0")
     patch("size-t.patch", when="%msvc")

@@ -21,6 +21,7 @@ class PyOnnx(PythonPackage):
 
     license("Apache-2.0")
 
+    version("1.16.1", sha256="8299193f0f2a3849bfc069641aa8e4f93696602da8d165632af8ee48ec7556b6")
     version("1.16.0", sha256="237c6987c6c59d9f44b6136f5819af79574f8d96a760a1fa843bede11f3822f7")
     version("1.15.0", sha256="b18461a7d38f286618ca2a6e78062a2a9c634ce498e631e708a8041b00094825")
     version("1.14.1", sha256="70903afe163643bd71195c78cedcc3f4fa05a2af651fd950ef3acbb15175b2d1")
@@ -33,6 +34,8 @@ class PyOnnx(PythonPackage):
     version("1.8.1", sha256="9d65c52009a90499f8c25fdfe5acda3ac88efe0788eb1d5f2575a989277145fb")
     version("1.6.0", sha256="3b88c3fe521151651a0403c4d131cb2e0311bd28b753ef692020a432a81ce345")
     version("1.5.0", sha256="1a584a4ef62a6db178c257fffb06a9d8e61b41c0a80bfd8bcd8a253d72c4b0b4")
+
+    depends_on("cxx", type="build")  # generated
 
     # CMakeLists.txt
     depends_on("cmake@3.1:", type="build")

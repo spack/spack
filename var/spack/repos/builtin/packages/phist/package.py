@@ -71,6 +71,10 @@ class Phist(CMakePackage):
     version("1.6.0", sha256="667a967b37d248242c275226c96efc447ef73a2b15f241c6a588d570d7fac07b")
     version("1.4.3", sha256="9cc1c7ba7f7a04e94f4497da14199e4631a0d02d0e4187f3e16f4c242dc777c1")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         name="kernel_lib",
         default="builtin",

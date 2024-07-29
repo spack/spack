@@ -36,6 +36,8 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
     license("Apache-2.0")
 
     version("main", branch="main")
+    version("18.1.8", sha256="09c08693a9afd6236f27a2ebae62cda656eba19021ef3f94d59e931d662d4856")
+    version("18.1.7", sha256="b60df7cbe02cef2523f7357120fb0d46cbb443791cde3a5fb36b82c335c0afc9")
     version("18.1.6", sha256="01390edfae5b809e982b530ff9088e674c62b13aa92cb9dc1e067fa2cf501083")
     version("18.1.5", sha256="d543309f55ae3f9b422108302b45c40f5696c96862f4bda8f5526955daa54284")
     version("18.1.4", sha256="deca5a29e8b1d103ecc4badb3c304aca50d5cac6453364d88ee415dc55699dfb")
@@ -91,6 +93,9 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
     version("5.0.2", sha256="fe87aa11558c08856739bfd9bd971263a28657663cb0c3a0af01b94f03b0b795")
     version("5.0.1", sha256="84ca454abf262579814a2a2b846569f6e0cb3e16dc33ca3642b4f1dff6fbafd3")
     version("5.0.0", sha256="1f1843315657a4371d8ca37f01265fa9aae17dbcf46d2d0a95c1fdb3c6a4bab6")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     variant(
         "clang", default=True, description="Build the LLVM C/C++/Objective-C compiler frontend"
@@ -667,21 +672,19 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
         # because LLVM has kindly named compilers
         variants, compilers = ["+clang"], {}
         lld_found, lldb_found = False, False
-        for exe in exes:
+        for exe in sorted(exes, key=len):
             name = os.path.basename(exe)
             if "clang++" in name:
-                compilers["cxx"] = exe
+                compilers.setdefault("cxx", exe)
             elif "clang" in name:
-                compilers["c"] = exe
+                compilers.setdefault("c", exe)
             elif "flang" in name:
                 variants.append("+flang")
-                compilers["fortran"] = exe
+                compilers.setdefault("fortran", exe)
             elif "ld.lld" in name:
                 lld_found = True
-                compilers["ld"] = exe
             elif "lldb" in name:
                 lldb_found = True
-                compilers["lldb"] = exe
 
         variants.append("+lld" if lld_found else "~lld")
         variants.append("+lldb" if lldb_found else "~lldb")

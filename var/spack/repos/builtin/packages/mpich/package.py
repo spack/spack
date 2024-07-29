@@ -30,6 +30,7 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     license("mpich2")
 
     version("develop", submodules=True)
+    version("4.2.2", sha256="883f5bb3aeabf627cb8492ca02a03b191d09836bbe0f599d8508351179781d41")
     version("4.2.1", sha256="23331b2299f287c3419727edc2df8922d7e7abbb9fd0ac74e03b9966f9ad42d7")
     version("4.2.0", sha256="a64a66781b9e5312ad052d32689e23252f745b27ee8818ac2ac0c8209bc0b90e")
     version("4.1.2", sha256="3492e98adab62b597ef0d292fb2459b6123bc80070a8aa0a30be6962075a12f0")
@@ -54,6 +55,10 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("3.1.1", sha256="455ccfaf4ec724d2cf5d8bff1f3d26a958ad196121e7ea26504fd3018757652d")
     version("3.1", sha256="fcf96dbddb504a64d33833dc455be3dda1e71c7b3df411dfcf9df066d7c32c39")
     version("3.0.4", sha256="cf638c85660300af48b6f776e5ecd35b5378d5905ec5d34c3da7a27da0acf0b3")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("hwloc", default=True, description="Use external hwloc package")
     variant("hydra", default=True, description="Build the hydra process manager")
@@ -448,22 +453,10 @@ supported, and netmod is ignored if device is ch3:sock.""",
     def setup_run_environment(self, env):
         # Because MPI implementations provide compilers, they have to add to
         # their run environments the code to make the compilers available.
-        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
-        # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        if self.spec.satisfies("platform=cray") and spack_cc is not None:
-            # This is intended to support external MPICH instances registered
-            # by Spack on Cray machines prior to a879c87; users defining an
-            # external MPICH entry for Cray should generally refer to the
-            # "cray-mpich" package
-            env.set("MPICC", spack_cc)
-            env.set("MPICXX", spack_cxx)
-            env.set("MPIF77", spack_fc)
-            env.set("MPIF90", spack_fc)
-        else:
-            env.set("MPICC", join_path(self.prefix.bin, "mpicc"))
-            env.set("MPICXX", join_path(self.prefix.bin, "mpic++"))
-            env.set("MPIF77", join_path(self.prefix.bin, "mpif77"))
-            env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
+        env.set("MPICC", join_path(self.prefix.bin, "mpicc"))
+        env.set("MPICXX", join_path(self.prefix.bin, "mpic++"))
+        env.set("MPIF77", join_path(self.prefix.bin, "mpif77"))
+        env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         dependent_module = dependent_spec.package.module
@@ -476,20 +469,12 @@ supported, and netmod is ignored if device is ch3:sock.""",
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec
 
-        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
-        # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        if self.spec.satisfies("platform=cray") and spack_cc is not None:
-            spec.mpicc = spack_cc
-            spec.mpicxx = spack_cxx
-            spec.mpifc = spack_fc
-            spec.mpif77 = spack_f77
-        else:
-            spec.mpicc = join_path(self.prefix.bin, "mpicc")
-            spec.mpicxx = join_path(self.prefix.bin, "mpic++")
+        spec.mpicc = join_path(self.prefix.bin, "mpicc")
+        spec.mpicxx = join_path(self.prefix.bin, "mpic++")
 
-            if "+fortran" in spec:
-                spec.mpifc = join_path(self.prefix.bin, "mpif90")
-                spec.mpif77 = join_path(self.prefix.bin, "mpif77")
+        if "+fortran" in spec:
+            spec.mpifc = join_path(self.prefix.bin, "mpif90")
+            spec.mpif77 = join_path(self.prefix.bin, "mpif77")
 
         spec.mpicxx_shared_libs = [
             join_path(self.prefix.lib, "libmpicxx.{0}".format(dso_suffix)),

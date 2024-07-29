@@ -41,6 +41,8 @@ class Aml(AutotoolsPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     # Generate possible variants.
     #############################
 

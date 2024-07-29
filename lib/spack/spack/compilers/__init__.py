@@ -220,10 +220,10 @@ def _compiler_config_from_external(config):
         operating_system = host_platform.operating_system("default_os")
         target = host_platform.target("default_target").microarchitecture
     else:
-        target = spec.target
+        target = spec.architecture.target
         if not target:
-            host_platform = spack.platforms.host()
-            target = host_platform.target("default_target").microarchitecture
+            target = spack.platforms.host().target("default_target")
+        target = target.microarchitecture
 
         operating_system = spec.os
         if not operating_system:
@@ -260,7 +260,7 @@ def _init_compiler_config(
 def compiler_config_files():
     config_files = list()
     config = spack.config.CONFIG
-    for scope in config.file_scopes:
+    for scope in config.writable_scopes:
         name = scope.name
         compiler_config = config.get("compilers", scope=name)
         if compiler_config:
@@ -488,7 +488,7 @@ def supported_compilers_for_host_platform() -> List[str]:
     return supported_compilers_for_platform(host_plat)
 
 
-def supported_compilers_for_platform(platform: spack.platforms.Platform) -> List[str]:
+def supported_compilers_for_platform(platform: "spack.platforms.Platform") -> List[str]:
     """Return a set of compiler class objects supported by Spack
     that are also supported by the provided platform
 

@@ -55,11 +55,15 @@ class Ascent(CMakePackage, CudaPackage):
     version("develop", branch="develop", submodules=True)
 
     version(
-        "0.9.2",
-        tag="v0.9.2",
-        commit="b842516d12640e4a0d9433a18c7249440ef6fc3d",
+        "0.9.3",
+        tag="v0.9.3",
+        commit="e69d6ec77938846caae8fea7ed988b1151ac9b81",
         submodules=True,
         preferred=True,
+    )
+
+    version(
+        "0.9.2", tag="v0.9.2", commit="b842516d12640e4a0d9433a18c7249440ef6fc3d", submodules=True
     )
 
     version(
@@ -85,6 +89,10 @@ class Ascent(CMakePackage, CudaPackage):
     version(
         "0.6.0", tag="v0.6.0", commit="9ade37b0a9ea495e45adb25cda7498c0bf9465c5", submodules=True
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     ###########################################################################
     # package variants
@@ -155,6 +163,7 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("conduit@:0.7.2", when="@:0.7.1")
     depends_on("conduit@0.8.2:", when="@0.8:")
     depends_on("conduit@0.8.6:", when="@0.9:")
+    depends_on("conduit@0.9.1:", when="@0.9.3:")
     depends_on("conduit+python", when="+python")
     depends_on("conduit~python", when="~python")
     depends_on("conduit+mpi", when="+mpi")
@@ -183,12 +192,18 @@ class Ascent(CMakePackage, CudaPackage):
 
     #######################
     # RAJA and Umpire
+    # Note: Let RAJA/Umpire handle the Camp version constraints
     #######################
-    depends_on("raja", when="+raja")
-    depends_on("raja+openmp", when="+raja +openmp")
-    depends_on("raja~openmp", when="+raja ~openmp")
-    depends_on("umpire", when="+umpire")
-    depends_on("umpire@:2023.06.0", when="@:0.9.2 +umpire")
+    with when("+raja"):
+        depends_on("raja")
+        depends_on("raja@2024.02.1:", when="@0.9.3:")
+        depends_on("raja+openmp", when="+openmp")
+        depends_on("raja~openmp", when="~openmp")
+
+    with when("+umpire"):
+        depends_on("umpire")
+        depends_on("umpire@:2023.06.0", when="@:0.9.2")
+        depends_on("umpire@2024.02.1:", when="@0.9.3:")
 
     #######################
     # BabelFlow
@@ -215,6 +230,7 @@ class Ascent(CMakePackage, CudaPackage):
         depends_on("vtk-m~shared+fpic", when="@0.8.0: ~shared")
         # Ascent defaults to C++11
         depends_on("kokkos cxxstd=11", when="+vtkh ^vtk-m +kokkos")
+        depends_on("kokkos@3.7.02", when="@0.9.3: +vtkh ^vtk-m +kokkos")
 
         #######################
         # VTK-h

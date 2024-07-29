@@ -19,6 +19,8 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     version("master", branch="master")
     version("2020-10-19", commit="8a1ed9e8d35dfad26fb973996319965e4224dcdd")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("python@3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-packaging", type="build")

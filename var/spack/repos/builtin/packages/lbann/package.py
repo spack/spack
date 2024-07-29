@@ -35,6 +35,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "build_type",
         default="Release",
@@ -356,10 +358,6 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
                 entries.append(
                     cmake_cache_string("CMAKE_CUDA_FLAGS", "-allow-unsupported-compiler")
                 )
-
-        if "+rocm" in spec:
-            if "platform=cray" in spec:
-                entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
 
         return entries
 

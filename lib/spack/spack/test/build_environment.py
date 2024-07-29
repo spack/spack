@@ -177,7 +177,7 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
 
 
 def test_setup_dependent_package_inherited_modules(
-    config, working_env, mock_packages, install_mockery, mock_fetch
+    working_env, mock_packages, install_mockery, mock_fetch
 ):
     # This will raise on regression
     s = spack.spec.Spec("cmake-client-inheritor").concretized()
@@ -457,14 +457,14 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
     # a foobar=bar (parallel = False)
     # |
     # b (parallel =True)
-    s = default_mock_concretization("a foobar=bar")
+    s = default_mock_concretization("pkg-a foobar=bar")
 
     spack.build_environment.set_package_py_globals(s.package, context=Context.BUILD)
-    assert s["a"].package.module.make_jobs == 1
+    assert s["pkg-a"].package.module.make_jobs == 1
 
-    spack.build_environment.set_package_py_globals(s["b"].package, context=Context.BUILD)
-    assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
-        parallel=s["b"].package.parallel
+    spack.build_environment.set_package_py_globals(s["pkg-b"].package, context=Context.BUILD)
+    assert s["pkg-b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
+        parallel=s["pkg-b"].package.parallel
     )
 
 
@@ -554,24 +554,6 @@ def test_build_jobs_defaults():
         )
         == 10
     )
-
-
-def test_dirty_disable_module_unload(config, mock_packages, working_env, mock_module_cmd):
-    """Test that on CRAY platform 'module unload' is not called if the 'dirty'
-    option is on.
-    """
-    s = spack.spec.Spec("a").concretized()
-
-    # If called with "dirty" we don't unload modules, so no calls to the
-    # `module` function on Cray
-    spack.build_environment.setup_package(s.package, dirty=True)
-    assert not mock_module_cmd.calls
-
-    # If called without "dirty" we unload modules on Cray
-    spack.build_environment.setup_package(s.package, dirty=False)
-    assert mock_module_cmd.calls
-    assert any(("unload", "cray-libsci") == item[0] for item in mock_module_cmd.calls)
-    assert any(("unload", "cray-mpich") == item[0] for item in mock_module_cmd.calls)
 
 
 class TestModuleMonkeyPatcher:

@@ -26,6 +26,8 @@ class Er(CMakePackage):
     version("0.0.4", sha256="c456d34719bb57774adf6d7bc2fa9917ecb4a9de442091023c931a2cb83dfd37")
     version("0.0.3", sha256="243b2b46ea274e17417ef5873c3ed7ba16dacdfdaf7053d1de5434e300de796b")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("mpi")
     depends_on("kvtree+mpi")
     depends_on("rankstr", when="@0.0.4:")
@@ -65,8 +67,5 @@ class Er(CMakePackage):
 
         if spec.satisfies("@0.1.0:"):
             args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
-        else:
-            if spec.satisfies("platform=cray"):
-                args.append(self.define("ER_LINK_STATIC", True))
 
         return args

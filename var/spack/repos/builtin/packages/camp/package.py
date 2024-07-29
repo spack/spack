@@ -16,11 +16,17 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/camp.git"
     url = "https://github.com/LLNL/camp/archive/v0.1.0.tar.gz"
 
-    maintainers("trws")
+    maintainers("trws", "adrienbernede")
 
     license("BSD-3-Clause")
 
     version("main", branch="main", submodules=False)
+    version(
+        "2024.02.1",
+        tag="v2024.02.",
+        commit="79c320fa09db987923b56884afdc9f82f4b70fc4",
+        submodules=False,
+    )
     version(
         "2024.02.0",
         tag="v2024.02.0",
@@ -42,6 +48,8 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     version("0.2.2", sha256="194d38b57e50e3494482a7f94940b27f37a2bee8291f2574d64db342b981d819")
     version("0.1.0", sha256="fd4f0f2a60b82a12a1d9f943f8893dc6fe770db493f8fae5ef6f7d0c439bebcc")
 
+    depends_on("cxx", type="build")  # generated
+
     # TODO: figure out gtest dependency and then set this default True.
     variant("tests", default=False, description="Build tests")
     variant("openmp", default=False, description="Build with OpenMP support")
@@ -49,10 +57,13 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cub", when="+cuda")
 
     depends_on("blt", type="build")
+    depends_on("blt@0.6.2:", type="build", when="@2024.02.1:")
     depends_on("blt@0.6.1:", type="build", when="@2024.02.0:")
     depends_on("blt@0.5.0:0.5.3", type="build", when="@2022.03.0:2023.06.0")
 
     patch("libstdc++-13-missing-header.patch", when="@:2022.10")
+
+    patch("camp-rocm6.patch", when="@0.2.3 +rocm ^hip@6:")
 
     conflicts("^blt@:0.3.6", when="+rocm")
 

@@ -32,6 +32,12 @@ class Spectre(CMakePackage):
 
     version("develop", branch="develop")
     version(
+        "2024.06.18", sha256="75ca22f3f9d59887b4ae40397fffc0ada9f218cbb23013e86e14deabb30490f7"
+    )
+    version(
+        "2024.06.05", sha256="7f1dcb5dc067a3977d1720ab655507f52821d898ea1e2b2a82c52dd9e246804f"
+    )
+    version(
         "2024.05.11", sha256="be3a91011dd52adfe6f1263a1ee4bf8c51ac95c7d537ad934453997637e5d31a"
     )
     version(
@@ -121,6 +127,10 @@ class Spectre(CMakePackage):
     version(
         "2021.12.15", sha256="4bfe9e27412e263ffdc6fcfcb84011f16d34a9fdd633ad7fc84a34c898f67e5c"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Configuration variants
     variant(

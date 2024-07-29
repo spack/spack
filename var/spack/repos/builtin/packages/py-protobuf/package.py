@@ -17,6 +17,8 @@ class PyProtobuf(PythonPackage):
     homepage = "https://developers.google.com/protocol-buffers/"
     pypi = "protobuf/protobuf-3.11.0.tar.gz"
 
+    version("5.26.1", sha256="8ca2a1d97c290ec7b16e4e5dff2e5ae150cc1582f55b5ab300d45cb0dfa90e51")
+    version("4.25.3", sha256="25b5d0b42fd000320bd7830b349e3b696435f3b329810427a6bcce6a5492cc5c")
     version("4.24.3", sha256="12e9ad2ec079b833176d2921be2cb24281fa591f0b119b208b788adc48c2561d")
     version("4.23.3", sha256="7a92beb30600332a52cdadbedb40d33fd7c8a0d7f549c440347bc606fb3fe34b")
     version("4.21.9", sha256="61f21493d96d2a77f9ca84fefa105872550ab5ef71d21c458eb80edcf4885a99")
@@ -60,6 +62,8 @@ class PyProtobuf(PythonPackage):
     version("3.3.0", sha256="1cbcee2c45773f57cb6de7ee0eceb97f92b9b69c0178305509b162c0160c1f04")
     version("3.0.0", sha256="ecc40bc30f1183b418fe0ec0c90bc3b53fa1707c4205ee278c6b90479e5b6ff5")
 
+    depends_on("c", type="build")  # generated
+
     variant("cpp", default=False, when="@:4.21", description="Enable the cpp implementation")
 
     depends_on("python", type=("build", "link", "run"))
@@ -76,6 +80,7 @@ class PyProtobuf(PythonPackage):
         depends_on(f"protobuf@3.{ver}", when=f"@3.{ver}+cpp")
 
     conflicts("+cpp", when="^python@3.11:")
+    conflicts("%gcc@14", when="@:4.24.3")
 
     @property
     def build_directory(self):
