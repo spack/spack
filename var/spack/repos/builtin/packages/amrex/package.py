@@ -356,7 +356,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("@:21.11"):
             return
 
-        self.cache_extra_test_sources(["Tests"])
+        cache_extra_test_sources(self, ["Tests"])
 
     def test_run_install_test(self):
         """build and run AmrCore test"""
