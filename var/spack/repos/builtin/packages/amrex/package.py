@@ -26,6 +26,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("develop", branch="development")
+    version("24.07", sha256="6baf76c1377d765e94020a9bd89dd1bf1485d0440d41cce2ba35d4dfee562580")
+    version("24.06", sha256="103a97163d81716165fcff1af56df61741608b56f90730a725e9e4eb797bebf0")
     version("24.05", sha256="f3db5ea2b81973e3e244c5cf39d5a5383a98f297f56ed91c8dcdd2e24f7b750e")
     version("24.04", sha256="77a91e75ad0106324a44ca514e1e8abc54f2fc2d453406441c871075726a8167")
     version("24.03", sha256="024876fe65838d1021fcbf8530b992bff8d9be1d3f08a1723c4e2e5f7c28b427")
@@ -84,6 +86,10 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     version("18.10.1", sha256="e648465c9c3b7ff4c696dfa8b6d079b4f61c80d96c51e27af210951c9367c201")
     version("18.10", sha256="298eba03ef03d617c346079433af1089d38076d6fab2c34476c687740c1f4234")
     version("18.09.1", sha256="a065ee4d1d98324b6c492ae20ea63ba12a4a4e23432bf5b3fe9788d44aa4398e")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Config options
     variant(

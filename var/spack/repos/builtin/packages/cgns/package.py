@@ -38,6 +38,9 @@ class Cgns(CMakePackage):
     version("3.3.1", sha256="81093693b2e21a99c5640b82b267a495625b663d7b8125d5f1e9e7aaa1f8d469")
     version("3.3.0", sha256="8422c67994f8dc6a2f201523a14f6c7d7e16313bdd404c460c16079dbeafc662")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("hdf5", default=True, description="Enable HDF5 interface")
     variant("fortran", default=False, description="Enable Fortran interface")
     variant("base_scope", default=False, description="Enable base scope")
@@ -72,6 +75,11 @@ class Cgns(CMakePackage):
     # patch for error undefined reference to `matherr, see
     # https://bugs.gentoo.org/662210
     patch("no-matherr.patch", when="@:3.3.1 +tools")
+
+    # patch for gcc14 due to using internal tk type/function,
+    # copied from https://github.com/CGNS/CGNS/pull/757
+    # (adjusted an include from tk-private/generic/tkInt.h to tkInt.h)
+    patch("gcc14.patch", when="@:4.4.0 %gcc@14:")
 
     def cmake_args(self):
         spec = self.spec

@@ -28,6 +28,10 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     version("2.1.0", sha256="9e58fd998f224632f356e479d18b5032570d00d87b86736b6a6ac2d03f8d4b3c")
     version("2.0.1", sha256="61d5531b661e1dab043353a1d67939ddcde3893d3dc7b0ab3d05074d448b485c")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=True, description="Compile with MPI")
     variant("openmp", default=False, description="Build with OpenMP support")
     variant("shared", default=True, description="Build shared library")
@@ -54,7 +58,10 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("blas")
     depends_on("lapack")
     depends_on("mpi", when="+mpi")
-    depends_on("libxsmm@1.11:~header-only", when="smm=libxsmm")
+
+    with when("smm=libxsmm"):
+        depends_on("libxsmm~header-only")
+        depends_on("libxsmm@1.11:1")
 
     depends_on("cmake@3.10:", type="build")
     depends_on("cmake@3.12:", type="build", when="@2.1:")

@@ -53,6 +53,9 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     version("4.3.3.1", sha256="f2ee78eb310637c007f001e7c18e2d773d23f3455242bde89647137b7344c2e2")
     version("4.3.3", sha256="3f16e21bc3dfeb3973252b9addf5defb48994f84fc9c9356081f871526a680e7")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     with when("build_system=cmake"):
         # TODO: document why we need to revert https://github.com/Unidata/netcdf-c/pull/1731
         #  with the following patch:
@@ -134,6 +137,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("fsync", default=False, description="Enable fsync support")
     variant("nczarr_zip", default=False, description="Enable NCZarr zipfile format storage")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
+    variant("logging", default=False, description="Enable logging")
 
     variant("szip", default=True, description="Enable Szip compression plugin")
     variant("blosc", default=True, description="Enable Blosc compression plugin")
@@ -337,6 +341,7 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
             self.define("ENABLE_PARALLEL_TESTS", False),
             self.define_from_variant("ENABLE_FSYNC", "fsync"),
             self.define("ENABLE_LARGE_FILE_SUPPORT", True),
+            self.define_from_variant("NETCDF_ENABLE_LOGGING", "logging"),
         ]
         if "+parallel-netcdf" in self.pkg.spec:
             base_cmake_args.append(self.define("ENABLE_PNETCDF", True))
@@ -431,6 +436,8 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
             config_args += self.enable_or_disable("jna")
 
         config_args += self.enable_or_disable("fsync")
+
+        config_args += self.enable_or_disable("logging")
 
         if any(self.spec.satisfies(s) for s in ["+mpi", "+parallel-netcdf", "^hdf5+mpi~shared"]):
             config_args.append("CC={0}".format(self.spec["mpi"].mpicc))

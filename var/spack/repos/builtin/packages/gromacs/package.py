@@ -26,7 +26,7 @@ class Gromacs(CMakePackage, CudaPackage):
     url = "https://ftp.gromacs.org/gromacs/gromacs-2022.2.tar.gz"
     list_url = "https://ftp.gromacs.org/gromacs"
     git = "https://gitlab.com/gromacs/gromacs.git"
-    maintainers("danielahlin", "eirrgang", "junghans")
+    maintainers("mabraham", "eirrgang", "junghans")
 
     license("GPL-2.0-or-later", when="@:4.5")
     license("LGPL-2.1-or-later", when="@4.6:")
@@ -88,6 +88,10 @@ class Gromacs(CMakePackage, CudaPackage):
     version("5.1.2", sha256="39d6f1d7ae8ba38cea6089da40676bfa4049a49903d21551abc030992a58f304")
     version("4.6.7", sha256="6afb1837e363192043de34b188ca3cf83db6bd189601f2001a1fc5b0b2a214d9")
     version("4.5.5", sha256="e0605e4810b0d552a8761fef5540c545beeaf85893f4a6e21df9905a33f871ba")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant(
         "mpi", default=True, description="Activate MPI support (disable for Thread-MPI support)"

@@ -42,7 +42,8 @@ class PyPillowBase(PythonPackage):
     # Required dependencies
     # https://pillow.readthedocs.io/en/stable/installation/python-support.html
     with default_args(type=("build", "link", "run")):
-        depends_on("python@3.8:3.12", when="@10.1:")
+        depends_on("python@3.8:3.13", when="@10.4:")
+        depends_on("python@3.8:3.12", when="@10.1:10.3")
         depends_on("python@3.8:3.11", when="@10.0")
         depends_on("python@3.7:3.11", when="@9.3:9.5")
         depends_on("python@3.7:3.10", when="@9.0:9.2")
@@ -113,6 +114,7 @@ class PyPillow(PyPillowBase):
     homepage = "https://python-pillow.org/"
     pypi = "pillow/pillow-10.2.0.tar.gz"
 
+    version("10.4.0", sha256="166c1cd4d24309b30d61f79f4a9114b7b2313d7450912277855ff5dfd7cd4a06")
     version("10.3.0", sha256="9d2455fbf44c914840c793e89aa82d0e1763a14253a000743719ae5946814b2d")
     version("10.2.0", sha256="e87f0b2c78157e12d7686b27d63c070fd65d994e8ddae6f328e0dcf4a0cd007e")
     version("10.1.0", sha256="e6bf8de6c36ed96c86ea3b6e1d5273c53f46ef518a062464cd7ef5dd2cf92e38")
@@ -133,7 +135,10 @@ class PyPillow(PyPillowBase):
     version("6.2.2", sha256="db9ff0c251ed066d367f53b64827cc9e18ccea001b986d08c265e53625dab950")
     version("6.2.1", sha256="bf4e972a88f8841d8fdc6db1a75e0f8d763e66e3754b03006cbc3854d89f1cb1")
 
+    depends_on("c", type="build")  # generated
+
     for ver in [
+        "10.4.0",
         "10.3.0",
         "10.2.0",
         "10.1.0",

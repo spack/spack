@@ -18,3 +18,6 @@ class Libspng(CMakePackage):
 
     version("0.7.4", sha256="47ec02be6c0a6323044600a9221b049f63e1953faf816903e7383d4dc4234487")
     version("0.7.2", sha256="4acf25571d31f540d0b7ee004f5461d68158e0a13182505376805da99f4ccc4e")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated

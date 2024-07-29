@@ -19,6 +19,8 @@ class Nvtx(Package, PythonExtension):
     version("develop", branch="dev")
     version("3.1.0", sha256="dc4e4a227d04d3da46ad920dfee5f7599ac8d6b2ee1809c9067110fb1cc71ced")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("python", default=True, description="Install Python bindings.")
     extends("python", when="+python")
     depends_on("py-pip", type="build", when="+python")

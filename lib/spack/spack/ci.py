@@ -22,6 +22,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
 
+import ruamel.yaml
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
@@ -551,10 +553,9 @@ def generate_gitlab_ci_yaml(
     env,
     print_summary,
     output_file,
+    *,
     prune_dag=False,
     check_index_only=False,
-    run_optimizer=False,
-    use_dependencies=False,
     artifacts_root=None,
     remote_mirror_override=None,
 ):
@@ -575,12 +576,6 @@ def generate_gitlab_ci_yaml(
             this mode results in faster yaml generation time). Otherwise, also
             check each spec directly by url (useful if there is no index or it
             might be out of date).
-        run_optimizer (bool): If True, post-process the generated yaml to try
-            try to reduce the size (attempts to collect repeated configuration
-            and replace with definitions).)
-        use_dependencies (bool): If true, use "dependencies" rather than "needs"
-            ("needs" allows DAG scheduling).  Useful if gitlab instance cannot
-            be configured to handle more than a few "needs" per job.
         artifacts_root (str): Path where artifacts like logs, environment
             files (spack.yaml, spack.lock), etc should be written.  GitLab
             requires this to be within the project directory.
@@ -814,7 +809,8 @@ def generate_gitlab_ci_yaml(
         cli_scopes = [
             os.path.relpath(s.path, concrete_env_dir)
             for s in cfg.scopes().values()
-            if isinstance(s, cfg.ImmutableConfigScope)
+            if not s.writable
+            and isinstance(s, (cfg.DirectoryConfigScope))
             and s.path not in env_includes
             and os.path.exists(s.path)
         ]
@@ -1271,17 +1267,6 @@ def generate_gitlab_ci_yaml(
             with open(copy_specs_file, "w") as fd:
                 fd.write(json.dumps(buildcache_copies))
 
-        # TODO(opadron): remove this or refactor
-        if run_optimizer:
-            import spack.ci_optimization as ci_opt
-
-            output_object = ci_opt.optimizer(output_object)
-
-        # TODO(opadron): remove this or refactor
-        if use_dependencies:
-            import spack.ci_needs_workaround as cinw
-
-            output_object = cinw.needs_to_dependencies(output_object)
     else:
         # No jobs were generated
         noop_job = spack_ci_ir["jobs"]["noop"]["attributes"]
@@ -1310,8 +1295,11 @@ def generate_gitlab_ci_yaml(
         if not rebuild_everything:
             sys.exit(1)
 
-    with open(output_file, "w") as outf:
-        outf.write(syaml.dump(sorted_output, default_flow_style=True))
+    # Minimize yaml output size through use of anchors
+    syaml.anchorify(sorted_output)
+
+    with open(output_file, "w") as f:
+        ruamel.yaml.YAML().dump(sorted_output, f)
 
 
 def _url_encode_string(input_string):

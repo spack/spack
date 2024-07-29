@@ -87,6 +87,10 @@ class Hdf5(CMakePackage):
     version("1.8.12", sha256="b5cccea850096962b5fd9e96f22c4f47d2379224bb41130d9bc038bb6c37dfcb")
     version("1.8.10", sha256="4813b79c5fb8701a625b9924b8203bc7154a77f9b826ad4e034144b4056a160a")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("shared", default=True, description="Builds a shared version of the library")
 
     variant("hl", default=False, description="Enable the high-level library")
@@ -620,6 +624,18 @@ class Hdf5(CMakePackage):
                 for lib in libs:
                     libname = os.path.split(lib)[1]
                     os.symlink(libname, libname.replace("_debug", ""))
+
+    @run_after("install")
+    def symlink_to_h5hl_wrappers(self):
+        if self.spec.satisfies("+hl"):
+            with working_dir(self.prefix.bin):
+                # CMake's FindHDF5 relies only on h5cc so it doesn't find the HL
+                # component unless it uses h5hlcc so we symlink h5cc to h5hlcc etc
+                symlink_files = {"h5cc": "h5hlcc", "h5c++": "h5hlc++"}
+                for old, new in symlink_files.items():
+                    if os.path.isfile(old):
+                        os.remove(old)
+                        symlink(new, old)
 
     @property
     @llnl.util.lang.memoized

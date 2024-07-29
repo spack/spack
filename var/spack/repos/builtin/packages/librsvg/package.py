@@ -22,6 +22,8 @@ class Librsvg(AutotoolsPackage):
     version("2.44.14", sha256="6a85a7868639cdd4aa064245cc8e9d864dad8b8e9a4a8031bb09a4796bc4e303")
     version("2.40.21", sha256="f7628905f1cada84e87e2b14883ed57d8094dca3281d5bcb24ece4279e9a92ba")
 
+    depends_on("c", type="build")  # generated
+
     variant("doc", default=False, description="Build documentation with gtk-doc")
 
     depends_on("gobject-introspection", type="build")
@@ -50,6 +52,7 @@ class Librsvg(AutotoolsPackage):
 
     depends_on("libffi")
     depends_on("shared-mime-info")
+    depends_on("py-docutils", type="build")
 
     def url_for_version(self, version):
         url = "https://download.gnome.org/sources/librsvg/"

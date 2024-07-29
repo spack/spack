@@ -21,6 +21,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     tags = ["e4s"]
 
     version("main", branch="main")
+    version("3.21.3", sha256="6d9ceb99d84d275250c614192dad45955d4a7610e12d8292a07dc49403556d26")
     version("3.21.2", sha256="a1ac62b6204bdf2f7f9b637abf45e6cff24d372d4d3d3702c50e157bdb56eb21")
     version("3.21.1", sha256="7ff8b692bceb7d7a8f51e2f45ccb20af00ba9395d7e1eee8816d46eb1c4c4b27")
     version("3.21.0", sha256="1e0c2f92514c72f80d4a4d0e6439a3aba0ceda7a0bcbc7ad9c44ce4cd8b14c28")
@@ -89,6 +90,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     version("3.11.2", sha256="4d244dd7d1565d6534e776445fcf6977a6ee2a8bb2be4a36ac1e0fc1f9ad9cfa")
     version("3.11.1", sha256="cb627f99f7ce1540ebbbf338189f89a5f1ecf3ab3b5b0e357f9e46c209f1fb23")
     version("3.11.0", sha256="b3bed2a9263193c84138052a1b92d47299c3490dd24d1d0bf79fb884e71e678a")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Activates MPI support")
@@ -613,6 +618,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if "superlu-dist" in spec:
             if spec.satisfies("@3.10.3:3.15"):
                 options.append("--with-cxx-dialect=C++11")
+            if spec["superlu-dist"].satisfies("+rocm"):
+                # Suppress HIP header warning message, otherwise the PETSc
+                # configuration fails:
+                options.append("CXXPPFLAGS=-DROCM_NO_WRAPPER_HEADER_WARNING")
 
         if "+mkl-pardiso" in spec:
             options.append("--with-mkl_pardiso-dir=%s" % spec["mkl"].prefix)

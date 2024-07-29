@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 import re
 
 import spack.build_systems.autotools
@@ -86,6 +87,9 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         sha256="71d37c96451333c5c0b84b170169fdcb138bbb27397dc06281905d9717c8ed64",
         deprecated=True,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("plugins", default=True, description="enable plugins, needed for gold linker")
     # When you build ld.gold you automatically get ld, even when you add the
@@ -176,6 +180,20 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         output = Executable(exe)("--version", output=str, error=str)
         match = re.search(r"GNU (nm|readelf).* (\S+)", output)
         return Version(match.group(2)).dotted.up_to(3) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        bin_dir = pathlib.Path(exes[0]).parent
+        include_dir = bin_dir.parent / "include"
+        plugin_h = include_dir / "plugin-api.h"
+
+        variants = "+gold" if find(str(bin_dir), "gold", recursive=False) else "~gold"
+        if find(str(include_dir), str(plugin_h), recursive=False):
+            variants += "+headers"
+        else:
+            variants += "~headers"
+
+        return variants
 
     def flag_handler(self, name, flags):
         spec = self.spec

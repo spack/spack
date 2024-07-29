@@ -46,7 +46,9 @@ class GdkPixbuf(Package):
         deprecated=True,
     )
 
-    variant("x11", default=False, description="Enable X11 support")
+    depends_on("c", type="build")  # generated
+
+    variant("x11", default=False, description="Enable X11 support", when="@:2.41")
     variant("tiff", default=False, description="Enable TIFF support(partially broken)")
     # Man page creation was getting docbook errors, see issue #18853
     variant("man", default=False, description="Enable man page creation")

@@ -36,6 +36,12 @@ class Seacas(CMakePackage):
     # ###################### Versions ##########################
     version("master", branch="master")
     version(
+        "2024-07-10", sha256="b2ba6ca80359fed8ed2a8a210052582c7a3b7b837253bd1e9be941047dcab3ff"
+    )
+    version(
+        "2024-06-27", sha256="a28db6aa3d03ff0a54a091210cf867661427f0b22ac08f89a4cc3bd8e0c704b2"
+    )
+    version(
         "2024-04-03", sha256="edf1aacbde87212b10737d3037107dba5cf7e2cce167863e2ebb200dc1a3fbb5"
     )
     version(
@@ -138,6 +144,10 @@ class Seacas(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # ###################### Variants ##########################
     # Package options
     # The I/O libraries (exodus, IOSS) are always built
@@ -230,6 +240,17 @@ class Seacas(CMakePackage):
     depends_on("fmt@10.1.0:", when="@2023-10-24:2023-11-27")
     depends_on("fmt@9.1.0", when="@2022-10-14:2023-05-30")
     depends_on("fmt@8.1.0:9", when="@2022-03-04:2022-05-16")
+
+    # if fmt@9.1.0%gcc is mixed with an %apple-clang seacas build
+    # it triggers a bug in apple-clang w.r.t how symbols are mangled
+    # https://github.com/spack/spack/issues/44330
+    conflicts(
+        "^fmt@9%gcc",
+        msg="""Cannot mix gcc/apple-clang toolchains
+              for this library combination.
+              See https://github.com/spack/spack/issues/44330""",
+        when="%apple-clang",
+    )
 
     depends_on("catch2@3:", when="@2024-03-11:+tests")
 

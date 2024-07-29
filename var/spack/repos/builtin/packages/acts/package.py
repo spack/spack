@@ -33,7 +33,7 @@ class Acts(CMakePackage, CudaPackage):
     homepage = "https://acts.web.cern.ch/ACTS/"
     git = "https://github.com/acts-project/acts.git"
     list_url = "https://github.com/acts-project/acts/releases/"
-    maintainers("HadrienG2")
+    maintainers("wdconinc")
 
     tags = ["hep"]
 
@@ -42,6 +42,8 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("35.2.0", commit="b3b09f46d064c43050dd3d21cdf51d7a412134fc", submodules=True)
+    version("35.1.0", commit="9dfb47b8edeb8b9c75115462079bcb003dd3f031", submodules=True)
     version("35.0.0", commit="352b423ec31934f825deb9897780246d60ffc44e", submodules=True)
     version("34.1.0", commit="8e1b7a659d912cd98db9d700906ff59e708da574", submodules=True)
     version("34.0.0", commit="daafd83adf0ce50f9667f3c9d4791a459e39fd1b", submodules=True)
@@ -177,6 +179,8 @@ class Acts(CMakePackage, CudaPackage):
     version("0.08.2", commit="c5d7568714e69e7344582b93b8d24e45d6b81bf9")
     version("0.08.1", commit="289bdcc320f0b3ff1d792e29e462ec2d3ea15df6")
     version("0.08.0", commit="99eedb38f305e3a1cd99d9b4473241b7cd641fa9")
+
+    depends_on("cxx", type="build")  # generated
 
     # Variants that affect the core Acts library
     variant(
