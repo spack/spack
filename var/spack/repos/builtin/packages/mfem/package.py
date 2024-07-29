@@ -6,7 +6,6 @@
 import os
 import shutil
 import sys
-from platform import machine
 
 from spack.package import *
 
@@ -50,6 +49,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # 'develop' is a special version that is always larger (or newer) than any
     # other version.
     version("develop", branch="master")
+
+    version(
+        "4.7.0",
+        sha256="5e889493f5f79848f7b2d16afaae307c59880ac2a7ff2315551c60ca54717751",
+        url="https://bit.ly/mfem-4-7",
+        extension="tar.gz",
+    )
 
     version(
         "4.6.0",
@@ -212,6 +218,21 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     variant("examples", default=False, description="Build and install examples")
     variant("miniapps", default=False, description="Build and install miniapps")
     variant("exceptions", default=False, description="Enable the use of exceptions")
+    variant(
+        "precision",
+        default="double",
+        values=("single", "double"),
+        multi=False,
+        description="Floating point precision",
+        when="@4.7.0:",
+    )
+    variant(
+        "cxxstd",
+        default="auto",
+        values=("auto", conditional("98", when="@:3"), "11", "14", "17"),
+        multi=False,
+        description="C++ language standard",
+    )
 
     conflicts("+shared", when="@:3.3.2")
     conflicts("~static~shared")
@@ -290,6 +311,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("sundials@5.0.0:5+mpi+hypre", when="@4.0.1-xsdk:4.4+sundials+mpi")
     depends_on("sundials@5.0.0:6.7.0", when="@4.5.0:+sundials~mpi")
     depends_on("sundials@5.0.0:6.7.0+mpi+hypre", when="@4.5.0:+sundials+mpi")
+    conflicts("cxxstd=11", when="^sundials@6.4.0:")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "sundials@5.4.0:+cuda cuda_arch={0}".format(sm_),
@@ -337,7 +359,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # The PETSc tests in MFEM will fail if PETSc is not configured with
     # MUMPS (and SuiteSparse in older versions). On the other hand, PETSc built
     # with MUMPS is not strictly required, so we do not require it here.
-    depends_on("petsc@3.8:+mpi+double+hypre", when="+petsc")
+    depends_on("petsc@3.8:+mpi+hypre", when="+petsc")
     depends_on("slepc@3.8.0:", when="+slepc")
     # If petsc is built with +cuda, propagate cuda_arch to petsc and slepc
     for sm_ in CudaPackage.cuda_arch_values:
@@ -361,6 +383,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("conduit+mpi", when="+conduit+mpi")
     depends_on("libfms@0.2.0:", when="+fms")
     depends_on("ginkgo@1.4.0:", when="+ginkgo")
+    conflicts("cxxstd=11", when="^ginkgo")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "ginkgo+cuda cuda_arch={0}".format(sm_), when="+ginkgo+cuda cuda_arch={0}".format(sm_)
@@ -402,6 +425,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("raja@0.13.0", when="@4.3.0+raja")
     depends_on("raja@0.14.0:2022.03", when="@4.4.0:4.5.0+raja")
     depends_on("raja@2022.10.3:", when="@4.5.2:+raja")
+    conflicts("cxxstd=11", when="^raja@2022.03.0:")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "raja+cuda cuda_arch={0}".format(sm_), when="+raja+cuda cuda_arch={0}".format(sm_)
@@ -429,6 +453,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     depends_on("umpire@2.0.0:2.1.0", when="@:4.3.0+umpire")
     depends_on("umpire@3.0.0:", when="@4.4.0:+umpire")
+    conflicts("cxxstd=11", when="^umpire@2022.03.0:")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "umpire+cuda cuda_arch={0}".format(sm_), when="+umpire+cuda cuda_arch={0}".format(sm_)
@@ -447,6 +472,20 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         depends_on(
             "amgx~mpi cuda_arch={0}".format(sm_), when="+amgx~mpi cuda_arch={0}".format(sm_)
         )
+
+    for using_double_cond in ["@:4.6", "precision=double"]:
+        with when(using_double_cond):
+            # May need to enforce precision consistency on other packages in the
+            # future.
+            depends_on("hypre precision=double", when="+mpi")
+            depends_on("petsc+double", when="+petsc")
+            depends_on("mumps+double", when="+mumps")
+    with when("precision=single"):
+        # May need to enforce precision consistency on other packages in the
+        # future.
+        depends_on("hypre precision=single", when="+mpi")
+        depends_on("petsc~double", when="+petsc")
+        depends_on("mumps+float", when="+mumps")
 
     patch("mfem_ppc_build.patch", when="@3.2:3.3.0 arch=ppc64le")
     patch("mfem-3.4.patch", when="@3.4.0")
@@ -468,7 +507,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         when="@4.6.0 +gslib+shared+miniapps",
         sha256="2a31682d876626529e2778a216d403648b83b90997873659a505d982d0e65beb",
     )
-    patch("mfem-hip.patch", when="+rocm ^hip@6.0:")
+    patch("mfem-4.7.patch", when="@4.7.0")
 
     phases = ["configure", "build", "install"]
 
@@ -489,56 +528,16 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # likely to be up to date in supporting *all* of MFEM's
     # configuration options. So, don't use CMake
     #
-    def configure(self, spec, prefix):
+    def get_make_config_options(self, spec, prefix):
         def yes_no(varstr):
             return "YES" if varstr in self.spec else "NO"
 
-        # See also find_system_libraries in lib/spack/llnl/util/filesystem.py
-        # where the same list of paths is used.
-        sys_lib_paths = [
-            "/lib64",
-            "/lib",
-            "/usr/lib64",
-            "/usr/lib",
-            "/usr/local/lib64",
-            "/usr/local/lib",
-            "/usr/lib/x86_64-linux-gnu",
-        ]
-
-        def is_sys_lib_path(dir):
-            return dir in sys_lib_paths
-
-        xcompiler = ""
-        xlinker = "-Wl,"
-        if "+cuda" in spec:
-            xcompiler = "-Xcompiler="
-            xlinker = "-Xlinker="
-        cuda_arch = None if "~cuda" in spec else spec.variants["cuda_arch"].value
+        xcompiler = "" if "~cuda" in spec else "-Xcompiler="
 
         # We need to add rpaths explicitly to allow proper export of link flags
-        # from within MFEM.
-
-        # Similar to spec[pkg].libs.ld_flags but prepends rpath flags too.
-        # Also does not add system library paths as defined by 'sys_lib_paths'
-        # above -- this is done to avoid issues like this:
-        # https://github.com/mfem/mfem/issues/1088.
-        def ld_flags_from_library_list(libs_list):
-            flags = [
-                "%s-rpath,%s" % (xlinker, dir)
-                for dir in libs_list.directories
-                if not is_sys_lib_path(dir)
-            ]
-            flags += ["-L%s" % dir for dir in libs_list.directories if not is_sys_lib_path(dir)]
-            flags += [libs_list.link_flags]
-            return " ".join(flags)
-
-        def ld_flags_from_dirs(pkg_dirs_list, pkg_libs_list):
-            flags = [
-                "%s-rpath,%s" % (xlinker, dir) for dir in pkg_dirs_list if not is_sys_lib_path(dir)
-            ]
-            flags += ["-L%s" % dir for dir in pkg_dirs_list if not is_sys_lib_path(dir)]
-            flags += ["-l%s" % lib for lib in pkg_libs_list]
-            return " ".join(flags)
+        # from within MFEM. We use the following two functions to do that.
+        ld_flags_from_library_list = self.ld_flags_from_library_list
+        ld_flags_from_dirs = self.ld_flags_from_dirs
 
         def find_optional_library(name, prefix):
             for shared in [True, False]:
@@ -619,6 +618,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "MFEM_USE_EXCEPTIONS=%s" % yes_no("+exceptions"),
             "MFEM_USE_MUMPS=%s" % yes_no("+mumps"),
         ]
+        if spec.satisfies("@4.7.0:"):
+            options += ["MFEM_PRECISION=%s" % spec.variants["precision"].value]
 
         # Determine C++ standard to use:
         cxxstd = None
@@ -632,12 +633,19 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             cxxstd = "14"
         if self.spec.satisfies("^ginkgo"):
             cxxstd = "14"
+        cxxstd_req = spec.variants["cxxstd"].value
+        if cxxstd_req != "auto":
+            # Constraints for valid standard level should be imposed during
+            # concretization based on 'conflicts' or other directives.
+            cxxstd = cxxstd_req
         cxxstd_flag = None
         if cxxstd:
             if "+cuda" in spec:
                 cxxstd_flag = "-std=c++" + cxxstd
             else:
                 cxxstd_flag = getattr(self.compiler, "cxx" + cxxstd + "_flag")
+
+        cuda_arch = None if "~cuda" in spec else spec.variants["cuda_arch"].value
 
         cxxflags = spec.compiler_flags["cxxflags"].copy()
 
@@ -944,7 +952,6 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
             hip_headers = HeaderList([])
             hip_libs = LibraryList([])
-            hip_libs += find_libraries("libamdhip64", spec["hip"].prefix.lib)
             # To use a C++ compiler that supports -xhip flag one can use
             # something like this:
             #   options += [
@@ -972,9 +979,27 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 hip_headers += spec["hipblas"].headers
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
-                craylibs_path = env["CRAYLIBS_" + machine().upper()]
-                craylibs = ["libmodules", "libfi", "libcraymath", "libf", "libu", "libcsup"]
+                proc = str(spec.target.family)
+                craylibs_var = "CRAYLIBS_" + proc.upper()
+                craylibs_path = env.get(craylibs_var, None)
+                if not craylibs_path:
+                    raise InstallError(
+                        f"The environment variable {craylibs_var} is not defined.\n"
+                        "\tMake sure the 'cce' module is in the compiler spec."
+                    )
+                craylibs = [
+                    "libmodules",
+                    "libfi",
+                    "libcraymath",
+                    "libf",
+                    "libu",
+                    "libcsup",
+                    "libpgas-shmem",
+                ]
                 hip_libs += find_libraries(craylibs, craylibs_path)
+                craylibs_path2 = join_path(craylibs_path, "../../../cce-clang", proc, "lib")
+                hip_libs += find_libraries("libunwind", craylibs_path2)
+
             if hip_headers:
                 options += ["HIP_OPT=%s" % hip_headers.cpp_flags]
             if hip_libs:
@@ -1018,9 +1043,17 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             ]
 
         if "+umpire" in spec:
+            umpire = spec["umpire"]
+            umpire_opts = umpire.headers
+            umpire_libs = umpire.libs
+            if "^camp" in umpire:
+                umpire_opts += umpire["camp"].headers
+            if "^fmt" in umpire:
+                umpire_opts += umpire["fmt"].headers
+                umpire_libs += umpire["fmt"].libs
             options += [
-                "UMPIRE_OPT=-I%s" % spec["umpire"].prefix.include,
-                "UMPIRE_LIB=%s" % ld_flags_from_library_list(spec["umpire"].libs),
+                "UMPIRE_OPT=%s" % umpire_opts.cpp_flags,
+                "UMPIRE_LIB=%s" % ld_flags_from_library_list(umpire_libs),
             ]
 
         timer_ids = {"std": "0", "posix": "2", "mac": "4", "mpi": "6"}
@@ -1089,7 +1122,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             hiop_libs = hiop.libs
             hiop_hdrs += spec["lapack"].headers + spec["blas"].headers
             hiop_libs += spec["lapack"].libs + spec["blas"].libs
-            hiop_opt_libs = ["magma", "umpire"]
+            hiop_opt_libs = ["magma", "umpire", "hipblas", "hiprand"]
             for opt_lib in hiop_opt_libs:
                 if "^" + opt_lib in hiop:
                     hiop_hdrs += hiop[opt_lib].headers
@@ -1105,6 +1138,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     camp = raja["camp"]
                     hiop_hdrs += camp.headers
                     hiop_libs += find_optional_library("libcamp", camp.prefix)
+            if hiop.satisfies("@0.6:+cuda"):
+                hiop_libs += LibraryList(["cublas", "curand"])
             options += [
                 "HIOP_OPT=%s" % hiop_hdrs.cpp_flags,
                 "HIOP_LIB=%s" % ld_flags_from_library_list(hiop_libs),
@@ -1121,6 +1156,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 "MUMPS_LIB=%s" % ld_flags_from_library_list(mumps.libs),
             ]
 
+        return options
+
+    def configure(self, spec, prefix):
+        options = self.get_make_config_options(spec, prefix)
         make("config", *options, parallel=False)
         make("info", parallel=False)
 
@@ -1281,3 +1320,46 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if os.access(f, os.R_OK):
                 return FileList(f)
         return FileList(find(self.prefix, "test.mk", recursive=True))
+
+    # See also find_system_libraries in lib/spack/llnl/util/filesystem.py
+    # where the similar list of paths is used.
+    sys_lib_paths = [
+        "/lib64",
+        "/lib",
+        "/usr/lib64",
+        "/usr/lib",
+        "/usr/local/lib64",
+        "/usr/local/lib",
+        "/usr/lib/x86_64-linux-gnu",
+    ]
+
+    def is_sys_lib_path(self, dir):
+        return dir in self.sys_lib_paths
+
+    @property
+    def xlinker(self):
+        return "-Wl," if "~cuda" in self.spec else "-Xlinker="
+
+    # Similar to spec[pkg].libs.ld_flags but prepends rpath flags too.
+    # Also does not add system library paths as defined by 'sys_lib_paths'
+    # above -- this is done to avoid issues like this:
+    # https://github.com/mfem/mfem/issues/1088.
+    def ld_flags_from_library_list(self, libs_list):
+        flags = [
+            "%s-rpath,%s" % (self.xlinker, dir)
+            for dir in libs_list.directories
+            if not self.is_sys_lib_path(dir)
+        ]
+        flags += ["-L%s" % dir for dir in libs_list.directories if not self.is_sys_lib_path(dir)]
+        flags += [libs_list.link_flags]
+        return " ".join(flags)
+
+    def ld_flags_from_dirs(self, pkg_dirs_list, pkg_libs_list):
+        flags = [
+            "%s-rpath,%s" % (self.xlinker, dir)
+            for dir in pkg_dirs_list
+            if not self.is_sys_lib_path(dir)
+        ]
+        flags += ["-L%s" % dir for dir in pkg_dirs_list if not self.is_sys_lib_path(dir)]
+        flags += ["-l%s" % lib for lib in pkg_libs_list]
+        return " ".join(flags)

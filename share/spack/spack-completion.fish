@@ -962,9 +962,9 @@ complete -c spack -n '__fish_spack_using_command ci generate' -l output-file -r 
 complete -c spack -n '__fish_spack_using_command ci generate' -l copy-to -r -f -a copy_to
 complete -c spack -n '__fish_spack_using_command ci generate' -l copy-to -r -d 'path to additional directory for job files'
 complete -c spack -n '__fish_spack_using_command ci generate' -l optimize -f -a optimize
-complete -c spack -n '__fish_spack_using_command ci generate' -l optimize -d '(experimental) optimize the gitlab yaml file for size'
+complete -c spack -n '__fish_spack_using_command ci generate' -l optimize -d '(DEPRECATED) optimize the gitlab yaml file for size'
 complete -c spack -n '__fish_spack_using_command ci generate' -l dependencies -f -a dependencies
-complete -c spack -n '__fish_spack_using_command ci generate' -l dependencies -d '(experimental) disable DAG scheduling (use \'plain\' dependencies)'
+complete -c spack -n '__fish_spack_using_command ci generate' -l dependencies -d '(DEPRECATED) disable DAG scheduling (use \'plain\' dependencies)'
 complete -c spack -n '__fish_spack_using_command ci generate' -l buildcache-destination -r -f -a buildcache_destination
 complete -c spack -n '__fish_spack_using_command ci generate' -l buildcache-destination -r -d 'override the mirror configured in the environment'
 complete -c spack -n '__fish_spack_using_command ci generate' -l prune-dag -f -a prune_dag
@@ -1451,7 +1451,7 @@ complete -c spack -n '__fish_spack_using_command docs' -s h -l help -d 'show thi
 
 # spack edit
 set -g __fish_spack_optspecs_spack_edit h/help b/build-system c/command d/docs t/test m/module r/repo= N/namespace=
-complete -c spack -n '__fish_spack_using_command_pos 0 edit' -f -a '(__fish_spack_packages)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 edit' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command edit' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command edit' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command edit' -s b -l build-system -f -a path

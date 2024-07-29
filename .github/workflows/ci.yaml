@@ -53,6 +53,13 @@ jobs:
             - 'var/spack/repos/builtin/packages/clingo/**'
             - 'var/spack/repos/builtin/packages/python/**'
             - 'var/spack/repos/builtin/packages/re2c/**'
+            - 'var/spack/repos/builtin/packages/gnupg/**'
+            - 'var/spack/repos/builtin/packages/libassuan/**'
+            - 'var/spack/repos/builtin/packages/libgcrypt/**'
+            - 'var/spack/repos/builtin/packages/libgpg-error/**'
+            - 'var/spack/repos/builtin/packages/libksba/**'
+            - 'var/spack/repos/builtin/packages/npth/**'
+            - 'var/spack/repos/builtin/packages/pinentry/**'
             - 'lib/spack/**'
             - 'share/spack/**'
             - '.github/workflows/bootstrap.yml'
@@ -77,13 +84,8 @@ jobs:
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/unit_tests.yaml
     secrets: inherit
-  windows:
-    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
-    needs: [ prechecks ]
-    uses: ./.github/workflows/windows_python.yml
-    secrets: inherit
   all:
-    needs: [ windows, unit-tests, bootstrap ]
+    needs: [ unit-tests, bootstrap ]
     runs-on: ubuntu-latest
     steps:
     - name: Success
