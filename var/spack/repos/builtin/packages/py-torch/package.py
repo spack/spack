@@ -56,6 +56,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     version("1.5.0", tag="v1.5.0", commit="4ff3872a2099993bf7e8c588f7182f3df777205b")
     version("1.4.1", tag="v1.4.1", commit="74044638f755cd8667bedc73da4dbda4aa64c948")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     is_darwin = sys.platform == "darwin"
 
     # All options are defined in CMakeLists.txt.
@@ -165,6 +169,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("py-setuptools")
         depends_on("py-astunparse", when="@1.13:")
         depends_on("py-numpy@1.16.6:")
+        # https://github.com/pytorch/pytorch/issues/107302
+        depends_on("py-numpy@:1", when="@:2.2")
         depends_on("py-pyyaml")
         depends_on("py-requests", when="@1.13:")
 

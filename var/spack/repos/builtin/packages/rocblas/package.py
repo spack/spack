@@ -23,6 +23,7 @@ class Rocblas(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.1.2", sha256="1e83918bd7b28ec9ee292c6fb7eb0fc5f4db2d5d831a9a3db541f14a90c20a1a")
     version("6.1.1", sha256="c920742fb8f45512c360cdb40e37d0ac767f042e52f1981264853dab5ec2c876")
     version("6.1.0", sha256="af00357909da60d82618038aa9a3cc1f9d4ce1bdfb54db20ec746b592d478edf")
     version("6.0.2", sha256="d1bf31063a2d349797b88c994c91d05f94e681bafb5550ad9b53529703d89dbb")
@@ -38,6 +39,10 @@ class Rocblas(CMakePackage):
         version("5.4.0", sha256="261e05375024a01e68697c5d175210a07f0f5fc63a756234d996ddedffde78a2")
         version("5.3.3", sha256="62a3b5f415bd8e0dcd0d68233d379f1a928ec0349977c32b4eea72ae5004e805")
         version("5.3.0", sha256="8ea7269604cba949a6ea84b78dc92a44fa890427db88334da6358813f6512e34")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
@@ -59,11 +64,10 @@ class Rocblas(CMakePackage):
     depends_on("googletest@1.10.0:", type="test")
     depends_on("amdblis", type="test")
 
-    for ver in ["5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
+    for ver in ["5.6.0", "5.6.1", "5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2"]:
         depends_on(f"rocm-openmp-extras@{ver}", type="test", when=f"@{ver}")
 
     depends_on("rocm-cmake@master", type="build", when="@master:")
-    depends_on("rocm-cmake", type="build")
 
     for ver in [
         "5.3.0",
@@ -80,10 +84,12 @@ class Rocblas(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", type="build", when=f"@{ver}")
         depends_on(f"rocminfo@{ver}", type="build", when=f"@{ver}")
+        depends_on(f"rocm-cmake@{ver}", type="build", when=f"@{ver}")
 
     depends_on("python@3.6:", type="build")
 
@@ -114,6 +120,7 @@ class Rocblas(CMakePackage):
         ("@6.0.2", "17df881bde80fc20f997dfb290f4bb4b0e05a7e9"),
         ("@6.1.0", "2b55ccf58712f67b3df0ca53b0445f094fcb96b2"),
         ("@6.1.1", "2b55ccf58712f67b3df0ca53b0445f094fcb96b2"),
+        ("@6.1.2", "2b55ccf58712f67b3df0ca53b0445f094fcb96b2"),
     ]:
         resource(
             name="Tensile",

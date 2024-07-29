@@ -35,6 +35,8 @@ class PyNetcdf4(PythonPackage):
     depends_on("py-numpy", when="@1.6.5:", type=("build", "link", "run"))
     depends_on("py-numpy@1.9:", when="@1.5.4:1.6.2", type=("build", "link", "run"))
     depends_on("py-numpy@1.7:", type=("build", "link", "run"))
+    # https://github.com/Unidata/netcdf4-python/pull/1317
+    depends_on("py-numpy@:1", when="@:1.6", type=("build", "link", "run"))
     depends_on("py-mpi4py", when="+mpi", type=("build", "run"))
     depends_on("netcdf-c", when="-mpi")
     depends_on("netcdf-c+mpi", when="+mpi")

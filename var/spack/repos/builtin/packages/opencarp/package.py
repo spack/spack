@@ -51,6 +51,9 @@ class Opencarp(CMakePackage):
     )
     version("master", branch="master", submodules=False, no_cache=True)
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("carputils", default=False, description="Installs the carputils framework")
     variant("meshtool", default=False, description="Installs the meshtool software")
 

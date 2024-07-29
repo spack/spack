@@ -24,6 +24,8 @@ class Ebms(MakefilePackage):
 
     version("develop")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("mpi@2:")
 
     tags = ["proxy-app"]

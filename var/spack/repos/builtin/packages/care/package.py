@@ -53,6 +53,10 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         "0.2.0", tag="v0.2.0", commit="30135e03b14b1dc753634e9147dafede0663906f", submodules="True"
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("openmp", default=False, description="Build with OpenMP support")
     variant("mpi", default=False, description="Enable MPI support")
     variant(
@@ -66,6 +70,14 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("docs", default=False, description="Build documentation")
     variant("loop_fuser", default=False, description="Enable loop fusion capability")
 
+    depends_on("cmake@3.8:", type="build")
+    depends_on("cmake@3.9:", type="build", when="+cuda")
+    depends_on("cmake@3.18:", type="build", when="@0.12.0:")
+    depends_on("cmake@3.21:", type="build", when="@0.12.0:+rocm")
+
+    depends_on("blt")
+    depends_on("blt@0.6.2:", type="build", when="@0.13.0:")
+    depends_on("blt@0.6.1:", type="build", when="@0.12.0:")
     depends_on("cmake@3.21:", type="build", when="@0.12.0:+rocm")
     depends_on("cmake@3.18:", type="build", when="@0.12.0:")
     depends_on("cmake@3.14:", type="build", when="@0.10.0:")

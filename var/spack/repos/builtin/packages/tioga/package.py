@@ -24,6 +24,9 @@ class Tioga(CMakePackage):
     version("1.0.0", git="https://github.com/Exawind/tioga.git", tag="v1.0.0")
     version("master", branch="master")
 
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("shared", default=sys.platform != "darwin", description="Build shared libraries")
     variant("pic", default=True, description="Position independent code")
     variant("nodegid", default=True, description="Enable support for global Node IDs")

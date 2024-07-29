@@ -20,6 +20,8 @@ class Libfirefly(CMakePackage):
     version("master", branch="master")
     version("2.1.0", sha256="4de4b216c73199a1826de7a0d45205b401603315347d7947d8b5950d3e6b893d")
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "double-precision",
         description="Enables double type instead of float when enabled",

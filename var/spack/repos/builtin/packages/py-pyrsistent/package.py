@@ -22,6 +22,8 @@ class PyPyrsistent(PythonPackage):
     version("0.16.0", sha256="28669905fe725965daa16184933676547c5bb40a5153055a8dee2a4bd7933ad3")
     version("0.15.7", sha256="cdc7b5e3ed77bed61270a47d35434a30617b9becdf2478af76ad2c6ade307280")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("python", type=("build", "link", "run"))
     depends_on("py-setuptools@42:", when="@0.18.0:", type="build")
     depends_on("py-setuptools", type="build")

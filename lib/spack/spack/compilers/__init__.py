@@ -260,7 +260,7 @@ def _init_compiler_config(
 def compiler_config_files():
     config_files = list()
     config = spack.config.CONFIG
-    for scope in config.file_scopes:
+    for scope in config.writable_scopes:
         name = scope.name
         compiler_config = config.get("compilers", scope=name)
         if compiler_config:
@@ -488,7 +488,7 @@ def supported_compilers_for_host_platform() -> List[str]:
     return supported_compilers_for_platform(host_plat)
 
 
-def supported_compilers_for_platform(platform: spack.platforms.Platform) -> List[str]:
+def supported_compilers_for_platform(platform: "spack.platforms.Platform") -> List[str]:
     """Return a set of compiler class objects supported by Spack
     that are also supported by the provided platform
 
