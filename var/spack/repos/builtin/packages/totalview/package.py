@@ -97,4 +97,3 @@ class Totalview(Package):
             join_path(self.prefix, "tv_license", "license.lic"),
             join_path(self.prefix, "toolworks", "tv_license", "license.lic"),
         )
-    
