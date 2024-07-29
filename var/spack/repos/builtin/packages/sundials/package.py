@@ -768,7 +768,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         for smoke_test in self._smoke_tests:
             work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
             with working_dir(work_dir):
-                self.run_test(exe="make")
+                make = which("make")
+                make()
 
     def test_serial_nvector(self):
         """Run serial N Vector test"""
