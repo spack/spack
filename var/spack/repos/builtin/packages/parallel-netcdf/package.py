@@ -154,8 +154,8 @@ class ParallelNetcdf(AutotoolsPackage):
         install test subdirectory for use during `spack test run`."""
         cache_extra_test_sources(self)
 
-    def test_pnetcdf(self):
-        """Test pnetcdf"""
+    def test_column_wise(self):
+        """Test column_wise executable"""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
         # pnetcdf has many examples to serve as a suitable smoke check.
         # column_wise was chosen based on the E4S test suite. Other
