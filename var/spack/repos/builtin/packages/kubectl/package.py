@@ -21,6 +21,8 @@ class Kubectl(Package):
     version("1.27.1", sha256="3a3f7c6b8cf1d9f03aa67ba2f04669772b1205b89826859f1636062d5f8bec3f")
     version("1.27.0", sha256="536025dba2714ee5e940bb0a6b1df9ca97c244fa5b00236e012776a69121c323")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("bash", type="build")
     depends_on("go", type="build")
 

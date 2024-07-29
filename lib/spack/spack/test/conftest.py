@@ -603,7 +603,7 @@ def mutable_mock_repo(mock_repo_path, request):
 def mock_custom_repository(tmpdir, mutable_mock_repo):
     """Create a custom repository with a single package "c" and return its path."""
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("myrepo"))
-    builder.add_package("c")
+    builder.add_package("pkg-c")
     return builder.root
 
 

@@ -37,6 +37,8 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+
     # Allowed C++ standard
     variant(
         "cxxstd",

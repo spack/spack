@@ -25,6 +25,9 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
         "1.1.0", tag="v1.1.0", commit="17c42dc9ae0ec519dcc1b5732681b2e4054666f1", submodules=True
     )
     version("1.0", tag="v1.0", commit="eccab10cbdf5842ed9903fac7a023be5e2779f36", submodules=True)
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     patch("fix_v1.0_compilation.diff", when="@1.0")
 
     maintainers("dmay23", "Thomas-Ulrich")

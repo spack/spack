@@ -18,6 +18,8 @@ class LibnetfilterCttimeout(AutotoolsPackage):
         "1.2-2019Q4", sha256="71cebdf07a578901b160a54199062a4b4cd445e14742e2c7badc0900d8ae56b6"
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")

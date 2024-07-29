@@ -38,6 +38,10 @@ class OpenspeedshopUtils(CMakePackage):
     version("2.4.2", branch="2.4.2")
     version("2.4.1", branch="2.4.1")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "runtime", default=False, description="build only the runtime libraries and collectors."
     )

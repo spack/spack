@@ -44,6 +44,8 @@ class PyPyside2(PythonPackage):
         "5.12.5", tag="v5.12.5", commit="af0953e0d261ab9b1fc498d63e8d790a329dd285", submodules=True
     )
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "doc",
         default=False,

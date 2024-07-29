@@ -22,6 +22,7 @@ class PyNumpy(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.0.1", sha256="485b87235796410c3519a699cfe1faab097e509e90ebb05dcd098db2ae87e7b3")
     version("2.0.0", sha256="cf5d1c9e6837f8af9f92b6bd3e86d513cdc11f60fd62185cc49ec7d1aba34864")
     version("1.26.4", sha256="2a02aba9ed12e4ac4eb3ea9421c420301a0c6460d9830d74a9df87efa4912010")
     version("1.26.3", sha256="697df43e2b6310ecc9d95f05d5ef20eacc09c7c4ecc9da3f235d39e71b7da1e4")
@@ -73,6 +74,9 @@ class PyNumpy(PythonPackage):
     version("1.17.5", sha256="16507ba6617f62ae3c6ab1725ae6f550331025d4d9a369b83f6d5a470446c342")
     version("1.17.4", sha256="f58913e9227400f1395c7b800503ebfdb0772f1c33ff8cb4d6451c06cabdf316")
     version("1.17.3", sha256="a0678793096205a4d784bd99f32803ba8100f639cf3b932dc63b21621390ea7e")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # Based on PyPI wheel availability
     with default_args(type=("build", "link", "run")):

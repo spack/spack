@@ -18,6 +18,10 @@ class Cardioid(CMakePackage):
     version("develop", branch="master")
     version("elecfem", branch="elec-fem")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("cuda", default=False, description="Build with cuda support")
     variant("mfem", default=False, description="Build with mfem support")
 
