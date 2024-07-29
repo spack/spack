@@ -68,17 +68,26 @@ class Mptensor(CMakePackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        cache_extra_test_sources(self)
 
-        with working_dir(join_path(install_test_root(self), "tests"), create=False):
+        # Tests only supported when spec built with mpi
+        if "+mpi" not in self.spec:
+            print("Skipping copy of stand-alone test files: requires +mpi build")
+            return
+
+        self.cache_extra_test_sources(".")
+
+        # Clean cached makefiles now so only done once
+        print("Converting cached Makefile for stand-alone test use")
+        with working_dir(join_path(self.install_test_root, "tests"), create=False):
             make("clean")
             makefile = FileFilter("Makefile")
-            makefile.filter("g++", f"{spack_cxx}", string=True)
+            makefile.filter("g++", "{0}".format(spack_cxx), string=True)
 
-        with working_dir(join_path(install_test_root(self)), create=False):
+        print("Converting cached Makefile.option for stand-alone test use")
+        with working_dir(join_path(self.install_test_root), create=False):
             makefile = FileFilter("Makefile.option")
-            makefile.filter("CXX =.*", f"CXX ={self.spec['mpi'].mpicxx}")
-            makefile.filter("CXXFLAGS =.*", f"CXXFLAGS ={self.compiler.cxx11_flag}")
+            makefile.filter("CXX =.*", "CXX ={0}".format(self.spec["mpi"].mpicxx))
+            makefile.filter("CXXFLAGS =.*", "CXXFLAGS ={0}".format(self.compiler.cxx11_flag))
 
     def test_mpi(self):
         """test with +mpi"""
@@ -87,11 +96,13 @@ class Mptensor(CMakePackage):
 
         math_libs = self.spec["scalapack"].libs + self.spec["lapack"].libs + self.spec["blas"].libs
 
-        with working_dir(join_path(install_test_root(self), "tests"), create=False):
+        with working_dir(self.test_suite.current_test_cache_dir.tests):
+            make = which("make")
             make(f"LDFLAGS={math_libs.ld_flags}")
 
             mpirun = self.spec["mpi"].prefix.bin.mpirun
-            mpiexec = Executable(mpirun)
+            # mpiexec = Executable(mpirun)
+            mpiexec = which(mpirun)
             mpiexec("-n", "1", "tensor_test.out")
 
             # Test of mptensor has checker
