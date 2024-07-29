@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
 from spack.package import *
 
 
@@ -99,3 +97,4 @@ class Totalview(Package):
             join_path(self.prefix, "tv_license", "license.lic"),
             join_path(self.prefix, "toolworks", "tv_license", "license.lic"),
         )
+        
