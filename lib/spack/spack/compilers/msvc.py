@@ -229,26 +229,48 @@ class Msvc(Compiler):
         For CL version, query `Msvc.cl_version`"""
         return Version(re.search(Msvc.version_regex, self.cc).group(1))
 
+
     @property
     def short_msvc_version(self):
+        """This is the shorthand VCToolset version of form
+        MSVC<short-ver>
         """
-        This is the shorthand VCToolset version of form
-        MSVC<short-ver> *NOT* the full version, for that see
+        return "MSVC" + self.vc_toolset_ver
+
+    @property
+    def vc_toolset_ver(self):
+        """
+        The toolset version is the version of the combined set of cl and link
+        This typically relates directly to VS version i.e. VS 2022 is v143
+        VS 19 is v142, etc.
+
+        This is *NOT* the full version, for that see
         Msvc.msvc_version or MSVC.platform_toolset_ver for the
         raw platform toolset version
+
         """
-        ver = self.platform_toolset_ver
-        return "MSVC" + ver
+        ver = self.msvc_version[:2].joined.string[:3]
+        return ver
 
     @property
     def platform_toolset_ver(self):
         """
         This is the platform toolset version of current MSVC compiler
-        i.e. 142.
+        i.e. 142. The platform toolset is the targeted MSVC library/compiler
+        versions by compilation (this is different from the VC Toolset)
+
+
         This is different from the VC toolset version as established
-        by `short_msvc_version`
+        by `short_msvc_version`, but typically are represented by the same
+        three digit value
         """
-        return self.msvc_version[:2].joined.string[:3]
+        # VS22 introduces the first divergence of VS toolset version
+        # (144 for "recent" releases) and platform toolset version (143)
+        # so it needs additional handling until MS releases v144
+        # or adds better support for detection
+        toolset_ver = self.vc_toolset_ver
+        vs22_toolset = Version(toolset_ver) > Version("142")
+        return toolset_ver if not vs22_toolset else "143"
 
     def _compiler_version(self, compiler):
         """Returns version object for given compiler"""
