@@ -807,15 +807,20 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         if spec.satisfies("%aocc"):
             if spec.satisfies("+intel"):
                 cxx_flags = (
-                    "-Ofast -fno-math-errno -fno-unroll-loops "
+                    "-O3 -fno-math-errno -fno-unroll-loops "
                     "-fveclib=AMDLIBM -muse-unaligned-vector-move"
                 )
+                if spec.satisfies("%aocc@4.1:"):
+                    cxx_flags += (
+                        " -mllvm -force-gather-overhead-cost=50"
+                        " -mllvm -enable-masked-gather-sequence=false"
+                    )
                 # add -fopenmp-simd if OpenMP not already turned on
                 if spec.satisfies("~openmp"):
                     cxx_flags += " -fopenmp-simd"
                 cxx_flags += " -DLMP_SIMD_COMPILER -DUSE_OMP_SIMD -DLMP_INTEL_USELRT"
             else:
-                cxx_flags = "-Ofast -mfma -fvectorize -funroll-loops"
+                cxx_flags = "-O3 -mfma -fvectorize -funroll-loops"
             args.append(self.define("CMAKE_CXX_FLAGS_RELEASE", cxx_flags))
             args.append(self.define("CMAKE_CXX_FLAGS_RELWITHDEBINFO", cxx_flags))
 
