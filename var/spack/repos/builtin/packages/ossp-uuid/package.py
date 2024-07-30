@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack.package import *
 
 
@@ -22,7 +24,8 @@ class OsspUuid(AutotoolsPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    provides("uuid")
+    if sys.platform not in ["darwin", "win32"]:
+        provides("uuid")
 
     @property
     def libs(self):
