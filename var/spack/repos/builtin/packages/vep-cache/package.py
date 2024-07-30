@@ -47,6 +47,30 @@ class VepCache(Package):
         if species == "homo_sapiens"
     ]
 
+    variant("installer", default=True, description="Use built-in VEP installer to download")
+    variant("indexed", default=True, description="Use indexed cache")
+    variant("env", default=True, description="Setup VEP environment variables for this cache")
+    variant("fasta", default=True, description="Add FASTA files to the cache")
+    variant(
+        "type",
+        values=["ensembl", "refseq", "merged"],
+        default="ensembl",
+        description="What reference genome source to retrieve the cache for",
+    )
+    variant(
+        "species",
+        values=[species for species, _ in vep_species],
+        default="homo_sapiens",
+        description="Which species to download the cache for (only one at a time)",
+    )
+    variant(
+        "assembly",
+        values=[assembly.lower() for assembly in vep_assembly_choices],
+        default="grch38",
+        when="species=homo_sapiens",
+        description="Which assembly of genome to use (only needed for homo sapiens",
+    )
+
     @staticmethod
     def get_resource_filename(major_version, species, assembly):
         return f"{species}_vep_{major_version}_{assembly}.tar.gz"
@@ -91,30 +115,6 @@ class VepCache(Package):
                         version=major, species=species, assembly=assembly, indexed=False
                     )
                 )
-
-    variant("installer", default=True, description="Use built-in VEP installer to download")
-    variant("indexed", default=True, description="Use indexed cache")
-    variant("env", default=True, description="Setup VEP environment variables for this cache")
-    variant("fasta", default=True, description="Add FASTA files to the cache")
-    variant(
-        "type",
-        values=["ensembl", "refseq", "merged"],
-        default="ensembl",
-        description="What reference genome source to retrieve the cache for",
-    )
-    variant(
-        "species",
-        values=[species for species, _ in vep_species],
-        default="homo_sapiens",
-        description="Which species to download the cache for (only one at a time)",
-    )
-    variant(
-        "assembly",
-        values=[assembly.lower() for assembly in vep_assembly_choices],
-        default="grch38",
-        when="species=homo_sapiens",
-        description="Which assembly of genome to use (only needed for homo sapiens",
-    )
 
     @property
     def vep(self):
