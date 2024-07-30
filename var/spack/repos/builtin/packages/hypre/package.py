@@ -384,21 +384,27 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.extra_install_tests)
 
-    def test_hypre(self):
+    def run_hypre(self, exe_name):
         """Perform smoke test on installed HYPRE package."""
         if "+mpi" not in self.spec:
             raise SkipTest("Package must be installed with +mpi")
 
         with working_dir(self._cached_tests_work_dir):
-            exe = which("make")
-            exe(f"HYPRE_DIR={self.prefix}", "bigint")
+            make = which("make")
+            make(f"HYPRE_DIR={self.prefix}", "bigint")
 
-            for exeName in ["ex5big", "ex15big"]:
-                with test_part(self, f"test_hypre_{exeName}", purpose=f"Ensuring {exeName} runs"):
-                    if not os.path.exists("./" + exeName):
-                        raise SkipTest(f"{exeName} does not exist in version {self.version}")
-                    exe = which(exeName)
-                    exe()
+            exe = which("./" + exe_name)
+            if exe is None:
+                raise SkipTest(f"{exe_name} does not exist in version {self.version}")
+            exe()
+
+    def test_ex5big(self):
+        """Ensuring ex5big runs"""
+        self.run_hypre("ex5big")
+
+    def test_ex15big(self):
+        """Ensuring ex15big runs"""
+        self.run_hypre("ex15big")
 
     @property
     def headers(self):
