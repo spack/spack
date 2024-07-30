@@ -91,6 +91,7 @@ class ScalapackBase(CMakePackage):
             or spec.satisfies("%oneapi")
             or spec.satisfies("%arm")
             or spec.satisfies("%cce")
+            or spec.satisfies("%rocmcc")
         ):
             c_flags.append("-Wno-error=implicit-function-declaration")
 
