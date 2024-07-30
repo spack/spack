@@ -15,12 +15,6 @@ class VepCache(Package):
     url = "https://raw.githubusercontent.com/Ensembl/ensembl-vep/release/112/INSTALL.pl"
     list_url = "https://github.com/Ensembl/ensembl-vep/tags"
 
-    def url_for_version(self, version):
-        major = version.up_to(1)
-        url = f"https://raw.githubusercontent.com/Ensembl/ensembl-vep/release/{major}/INSTALL.pl"
-        vep = Spec(f"vep+installer@{major}")
-        return vep.package.vep_installer_path if vep.installed else url
-
     maintainers("teaguesterling")
 
     license("APACHE-2.0", checked_by="teaguesterling")
@@ -68,7 +62,7 @@ class VepCache(Package):
         values=[assembly.lower() for assembly in vep_assembly_choices],
         default="grch38",
         when="species=homo_sapiens",
-        description="Which assembly of genome to use (only needed for homo sapiens",
+        description="Which assembly of genome to use (only needed for homo sapiens)",
     )
 
     @staticmethod
@@ -77,7 +71,7 @@ class VepCache(Package):
 
     @staticmethod
     def vep_cache_resource_args(version, species, assembly, indexed, dest=""):
-        filename = "{species}_vep_{major_version}_{assembly}.tar.gz"
+        filename = f"{species}_vep_{major_version}_{assembly}.tar.gz"
         dir_name = "indexed_vep_cache" if indexed else "vep"
         root = f"https://ftp.ensembl.org/pub/release-{version}/variation/{dir_name}"
         url = f"{root}/{filename}"
@@ -88,7 +82,7 @@ class VepCache(Package):
             "+indexed" if indexed else "~indexed",  # Only need the appropriate indexed version
             f"species={species}",  # Only need the requested species
             # We only need to match the specified assembly for human assemblies
-            f"assemlby={assembly}" if species == "homo_sapiens" else "",
+            f"assembly={assembly}" if species == "homo_sapiens" else "",
         ]
 
         return {
@@ -170,6 +164,12 @@ class VepCache(Package):
             "dir": cache_dir,
             "full_path": join_path(root, cache_dir),
         }
+    
+    def url_for_version(self, version):
+        major = version.up_to(1)
+        url = f"https://raw.githubusercontent.com/Ensembl/ensembl-vep/release/{major}/INSTALL.pl"
+        vep = Spec(f"vep+installer@{major}")
+        return vep.package.vep_installer_path if vep.installed else url
 
     def setup_run_environment(self, env):
         if self.spec.satisfies("+env"):
