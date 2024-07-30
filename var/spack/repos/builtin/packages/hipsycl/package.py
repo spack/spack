@@ -122,7 +122,7 @@ class Hipsycl(CMakePackage, ROCmPackage):
             args.append("-DCUDA_TOOLKIT_ROOT_DIR:String={0}".format(spec["cuda"].prefix))
         if "+rocm" in spec:
             args.append("-DWITH_ACCELERATED_CPU:STRING=OFF")
-            args.append("-DROCM_PATH:STRING={0}".format(os.environ.get('ROCM_PATH')))
+            args.append("-DROCM_PATH:STRING={0}".format(os.environ.get("ROCM_PATH")))
             if self.spec.satisfies("@24.02.0:"):
                 args.append("-DWITH_SSCP_COMPILER=OFF")
         return args
