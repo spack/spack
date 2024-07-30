@@ -47,4 +47,4 @@ class PyMultiqc(PythonPackage):
     depends_on("py-spectra@0.0.10:", type=("build", "run"), when="@1.4:")
     depends_on("py-spectra", type=("build", "run"), when="@1.18:")
     depends_on("py-typeguard", type=("build", "run"), when="@1.23:")
-    depends_on("py-tqdm", type=("build", "run"), when="@1.23:")    
+    depends_on("py-tqdm", type=("build", "run"), when="@1.23:")
