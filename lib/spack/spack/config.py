@@ -39,7 +39,6 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 from llnl.util import filesystem, lang, tty
 
-import spack.compilers
 import spack.paths
 import spack.platforms
 import spack.schema
@@ -174,9 +173,7 @@ class DirectoryConfigScope(ConfigScope):
         if data is None:
             return
 
-        # We copy data here to avoid adding defaults at write time
-        validate_data = copy.deepcopy(data)
-        validate(validate_data, SECTION_SCHEMAS[section])
+        validate(data, SECTION_SCHEMAS[section])
 
         try:
             filesystem.mkdirp(self.path)
@@ -1080,11 +1077,8 @@ def validate(
     """
     import jsonschema
 
-    # Validate a copy to avoid adding defaults
-    # This allows us to round-trip data without adding to it.
-    test_data = syaml.deepcopy(data)
     try:
-        spack.schema.Validator(schema).validate(test_data)
+        spack.schema.Validator(schema).validate(data)
     except jsonschema.ValidationError as e:
         if hasattr(e.instance, "lc"):
             line_number = e.instance.lc.line + 1
@@ -1093,7 +1087,7 @@ def validate(
         raise ConfigFormatError(e, data, filename, line_number) from e
     # return the validated data so that we can access the raw data
     # mostly relevant for environments
-    return test_data
+    return data
 
 
 def read_config_file(

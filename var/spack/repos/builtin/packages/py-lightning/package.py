@@ -79,6 +79,9 @@ class PyLightning(PythonPackage):
         # depends_on("py-pytorch-lightning", when="@2:")
 
         # Historical requirements
+        # https://github.com/Lightning-AI/pytorch-lightning/pull/20081
+        depends_on("py-setuptools", when="@:2.3")
+
         with when("@:2.0"):
             depends_on("py-jinja2@:4")
             depends_on("py-arrow@1.2:2")

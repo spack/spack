@@ -1,4 +1,4 @@
-sphinx==7.2.6
+sphinx==7.4.7
 sphinxcontrib-programoutput==0.17
 sphinx_design==0.6.0
 sphinx-rtd-theme==2.0.0
@@ -6,8 +6,8 @@ python-levenshtein==0.25.1
 docutils==0.20.1
 pygments==2.18.0
 urllib3==2.2.2
-pytest==8.2.2
+pytest==8.3.1
 isort==5.13.2
 black==24.4.2
 flake8==7.1.0
-mypy==1.10.1
+mypy==1.11.0

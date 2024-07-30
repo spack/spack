@@ -23,6 +23,8 @@ class Libvterm(MakefilePackage):
     version("0.1.4", sha256="bc70349e95559c667672fc8c55b9527d9db9ada0fb80a3beda533418d782d3dd")
     version("0.1.3", sha256="e41724466a4658e0f095e8fc5aeae26026c0726dce98ee71d6920d06f7d78e2b")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libtool", type="build")
 
     def url_for_version(self, version):

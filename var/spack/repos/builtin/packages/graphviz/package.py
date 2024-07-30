@@ -36,6 +36,9 @@ class Graphviz(AutotoolsPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # Language bindings
     language_bindings = ["java"]
 

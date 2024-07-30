@@ -156,7 +156,7 @@ def print_flattened_configuration(*, blame: bool) -> None:
     """
     env = ev.active_environment()
     if env is not None:
-        pristine = env.manifest.pristine_yaml_content
+        pristine = env.manifest.yaml_content
         flattened = pristine.copy()
         flattened[spack.schema.env.TOP_LEVEL_KEY] = pristine[spack.schema.env.TOP_LEVEL_KEY].copy()
     else:

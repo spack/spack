@@ -688,7 +688,6 @@ complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a create 
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a install -d 'install from a binary package'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a list -d 'list binary packages available from mirrors'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a keys -d 'get public keys available on mirrors'
-complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a preview -d 'analyze an installed spec and reports whether executables and libraries are relocatable'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a check -d 'check specs against remote binary mirror(s) to see if any need to be rebuilt'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a download -d 'download buildcache entry from a remote mirror to local folder'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a get-buildcache-name -d 'get name (prefix) of buildcache entries for this spec'
@@ -700,14 +699,12 @@ complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache push
-set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned signed k/key= update-index spec-file= only= fail-fast base-image= t/tag= private j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force u/unsigned signed k/key= update-index spec-file= only= fail-fast base-image= t/tag= private j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache push' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s f -l force -f -a force
 complete -c spack -n '__fish_spack_using_command buildcache push' -s f -l force -d 'overwrite tarball if it exists'
-complete -c spack -n '__fish_spack_using_command buildcache push' -l allow-root -s a -f -a allow_root
-complete -c spack -n '__fish_spack_using_command buildcache push' -l allow-root -s a -d 'allow install root string in binary files after RPATH substitution'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l unsigned -s u -f -a signed
 complete -c spack -n '__fish_spack_using_command buildcache push' -l unsigned -s u -d 'push unsigned buildcache tarballs'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l signed -f -a signed
@@ -732,14 +729,12 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack buildcache create
-set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned signed k/key= update-index spec-file= only= fail-fast base-image= t/tag= private j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force u/unsigned signed k/key= update-index spec-file= only= fail-fast base-image= t/tag= private j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s f -l force -f -a force
 complete -c spack -n '__fish_spack_using_command buildcache create' -s f -l force -d 'overwrite tarball if it exists'
-complete -c spack -n '__fish_spack_using_command buildcache create' -l allow-root -s a -f -a allow_root
-complete -c spack -n '__fish_spack_using_command buildcache create' -l allow-root -s a -d 'allow install root string in binary files after RPATH substitution'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l unsigned -s u -f -a signed
 complete -c spack -n '__fish_spack_using_command buildcache create' -l unsigned -s u -d 'push unsigned buildcache tarballs'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l signed -f -a signed
@@ -803,12 +798,6 @@ complete -c spack -n '__fish_spack_using_command buildcache keys' -s t -l trust 
 complete -c spack -n '__fish_spack_using_command buildcache keys' -s t -l trust -d 'trust all downloaded keys'
 complete -c spack -n '__fish_spack_using_command buildcache keys' -s f -l force -f -a force
 complete -c spack -n '__fish_spack_using_command buildcache keys' -s f -l force -d 'force new download of keys'
-
-# spack buildcache preview
-set -g __fish_spack_optspecs_spack_buildcache_preview h/help
-complete -c spack -n '__fish_spack_using_command_pos_remainder 0 buildcache preview' -f -a '(__fish_spack_installed_specs)'
-complete -c spack -n '__fish_spack_using_command buildcache preview' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command buildcache preview' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache check
 set -g __fish_spack_optspecs_spack_buildcache_check h/help m/mirror-url= o/output-file= scope= s/spec= spec-file=
@@ -1753,7 +1742,7 @@ complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack find
-set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing deprecated only-deprecated install-tree= start-date= end-date=
+set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json I/install-status d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing deprecated only-deprecated install-tree= start-date= end-date=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 find' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -d 'show this help message and exit'
@@ -1763,6 +1752,8 @@ complete -c spack -n '__fish_spack_using_command find' -s H -l hashes -f -a form
 complete -c spack -n '__fish_spack_using_command find' -s H -l hashes -d 'same as \'--format {/hash}\'; use with xargs or $()'
 complete -c spack -n '__fish_spack_using_command find' -l json -f -a json
 complete -c spack -n '__fish_spack_using_command find' -l json -d 'output specs as machine-readable json records'
+complete -c spack -n '__fish_spack_using_command find' -s I -l install-status -f -a install_status
+complete -c spack -n '__fish_spack_using_command find' -s I -l install-status -d 'show install status of packages'
 complete -c spack -n '__fish_spack_using_command find' -s d -l deps -f -a deps
 complete -c spack -n '__fish_spack_using_command find' -s d -l deps -d 'output dependencies along with found specs'
 complete -c spack -n '__fish_spack_using_command find' -s p -l paths -f -a paths

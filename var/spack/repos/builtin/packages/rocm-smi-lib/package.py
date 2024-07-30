@@ -41,6 +41,9 @@ class RocmSmiLib(CMakePackage):
         version("5.3.3", sha256="c2c2a377c2e84f0c40297a97b6060dddc49183c2771b833ebe91ed98a98e4119")
         version("5.3.0", sha256="8f72ad825a021d5199fb73726b4975f20682beb966e0ec31b53132bcd56c5408")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Build shared or static library")
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
@@ -61,6 +64,12 @@ class RocmSmiLib(CMakePackage):
         "6.1.2",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
+
+    patch(
+        "https://github.com/ROCm/rocm_smi_lib/commit/11f12b86517d0e9868f4d16d74d4e8504c3ba7da.patch?full_index=1",
+        sha256="62be7262f6e1e71bf82a03f500a424a536638f04e913d0f4b477f60e8e1190fd",
+        when="@6.1.1:",
+    )
 
     patch("disable_pdf_generation_with_doxygen_and_latex.patch", when="@:5.6")
 

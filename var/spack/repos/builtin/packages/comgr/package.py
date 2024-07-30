@@ -47,6 +47,10 @@ class Comgr(CMakePackage):
         version("5.3.3", sha256="6a4ef69e672a077b5909977248445f0eedf5e124af9812993a4d444be030c78b")
         version("5.3.0", sha256="072f849d79476d87d31d62b962e368762368d540a9da02ee2675963dc4942b2c")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     # Disable the hip compile tests.  Spack should not be using

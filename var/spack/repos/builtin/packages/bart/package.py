@@ -18,6 +18,9 @@ class Bart(MakefilePackage, CudaPackage):
     version("0.6.00", sha256="dbbd33d1e3ed3324fe21f90a3b62cb51765fe369f21df100b46a32004928f18d")
     version("0.5.00", sha256="30eedcda0f0ef3808157542e0d67df5be49ee41e4f41487af5c850632788f643")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # patch to fix build with MKL
     patch(
         "https://github.com/mrirecon/bart/commit/b62ca4972d5ac41a44217a5c27123c15daae74db.patch?full_index=1",

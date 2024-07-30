@@ -135,6 +135,8 @@ class PyPillow(PyPillowBase):
     version("6.2.2", sha256="db9ff0c251ed066d367f53b64827cc9e18ccea001b986d08c265e53625dab950")
     version("6.2.1", sha256="bf4e972a88f8841d8fdc6db1a75e0f8d763e66e3754b03006cbc3854d89f1cb1")
 
+    depends_on("c", type="build")  # generated
+
     for ver in [
         "10.4.0",
         "10.3.0",
