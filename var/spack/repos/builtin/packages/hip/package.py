@@ -49,6 +49,7 @@ class Hip(CMakePackage):
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
+    conflicts("~rocm +asan", msg="ROCm must be enabled for asan")
 
     depends_on("cuda", when="+cuda")
 
@@ -61,6 +62,8 @@ class Hip(CMakePackage):
     with when("+rocm"):
         depends_on("gl@4.5:")
         depends_on("py-cppheaderparser", type="build", when="@5.3.3:")
+        depends_on("libx11", when="+asan")
+        depends_on("xproto", when="+asan")
         for ver in [
             "5.3.0",
             "5.3.3",
@@ -536,11 +539,11 @@ class Hip(CMakePackage):
             if self.spec.satisfies("@6.1.0:") and self.spec.satisfies("+asan"):
                 args.append(self.define("ADDRESS_SANITIZER", "ON"))
                 args.append(
-                    self.define("CMAKE_C_COMPILER", self.spec["llvm-amdgpu"].prefix.bin + "/clang")
+                    self.define("CMAKE_C_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
                 )
                 args.append(
                     self.define(
-                        "CMAKE_CXX_COMPILER", self.spec["llvm-amdgpu"].prefix.bin + "/clang++"
+                        "CMAKE_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++"
                     )
                 )
                 args.append(

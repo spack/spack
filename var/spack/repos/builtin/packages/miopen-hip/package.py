@@ -115,8 +115,8 @@ class MiopenHip(CMakePackage):
         lib_dir = self.spec["zlib-api"].libs.directories[0]
         env.prepend_path("LIBRARY_PATH", lib_dir)
         if self.spec.satisfies("+asan"):
-            env.set("CC", self.spec["llvm-amdgpu"].prefix + "/bin/clang")
-            env.set("CXX", self.spec["llvm-amdgpu"].prefix + "/bin/clang++")
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
             env.set("ASAN_OPTIONS", "detect_leaks=0")
             env.set("CFLAGS", "-fsanitize=address -shared-libasan")
             env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")

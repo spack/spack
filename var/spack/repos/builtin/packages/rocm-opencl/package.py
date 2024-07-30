@@ -60,6 +60,8 @@ class RocmOpencl(CMakePackage):
     depends_on("cmake@3:", type="build")
     depends_on("gl@4.5:", type="link")
     depends_on("numactl", type="link")
+    depends_on("libx11", when="+asan")
+    depends_on("xproto", when="+asan")
 
     for d_version, d_shasum in [
         ("5.6.1", "cc9a99c7e4de3d9360c0a471b27d626e84a39c9e60e0aff1e8e1500d82391819"),
@@ -154,21 +156,21 @@ class RocmOpencl(CMakePackage):
             args.append(self.define("CLR_BUILD_HIP", False))
             args.append(self.define("CLR_BUILD_OCL", True))
         if self.spec.satisfies("+asan"):
-            args.append(
-                self.define(
-                    "CMAKE_CXX_FLAGS",
-                    f"-I{self.spec['libx11'].prefix.include} "
-                    f"-I{self.spec['mesa'].prefix.include} "
-                    f"-I{self.spec['xproto'].prefix.include}",
-                )
-            )
+                args.append(
+                    self.define(
+                        "CMAKE_CXX_FLAGS",
+                        f"-I{self.spec['libx11'].prefix.include} "
+                        f"-I{self.spec['mesa'].prefix.include} "
+                        f"-I{self.spec['xproto'].prefix.include}",
+                    )
+               )
 
         return args
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("+asan"):
-            env.set("CC", self.spec["llvm-amdgpu"].prefix + "/bin/clang")
-            env.set("CXX", self.spec["llvm-amdgpu"].prefix + "/bin/clang++")
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
             env.set("ASAN_OPTIONS", "detect_leaks=0")
             env.set("CFLAGS", "-fsanitize=address -shared-libasan")
             env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")

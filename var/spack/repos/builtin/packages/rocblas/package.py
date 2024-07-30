@@ -146,8 +146,8 @@ class Rocblas(CMakePackage):
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("+asan"):
-            env.set("CC", self.spec["llvm-amdgpu"].prefix + "/bin/clang")
-            env.set("CXX", self.spec["llvm-amdgpu"].prefix + "/bin/clang++")
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
             env.set("ASAN_OPTIONS", "detect_leaks=0")
             env.set("CFLAGS", "-fsanitize=address -shared-libasan")
             env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
