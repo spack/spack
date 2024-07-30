@@ -71,13 +71,13 @@ class PerlBioEnsemblVariation(Package):
                 install_tree(extra, target)
 
         for requested, targets in {
-                "+ld": ["C_code/calc_genotypes", "C_code/ld_vcf"],
-                "+tools": [
-                    "tools/linkage_disequilibrium/ld_tool",
-                    "tools/variant_simulator/simulate_variation",
-                    "tools/phenotype_annotation/phenotype_annotation",
-                ],
-            }.items():
+            "+ld": ["C_code/calc_genotypes", "C_code/ld_vcf"],
+            "+tools": [
+                "tools/linkage_disequilibrium/ld_tool",
+                "tools/variant_simulator/simulate_variation",
+                "tools/phenotype_annotation/phenotype_annotation",
+            ],
+        }.items():
             if spec.satisfies(requested):
                 mkdirp(prefix.bin)
                 for target in targets:
