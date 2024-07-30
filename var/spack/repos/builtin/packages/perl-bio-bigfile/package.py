@@ -5,7 +5,7 @@
 from spack.package import *
 
 
-class PerlBioDbBigfile(PerlPackage):
+class PerlBioBigfile(PerlPackage):
     """Bio::DB::BigFile -- Low-level interface to BigWig & BigBed files for perl"""
 
     homepage = "https://metacpan.org/pod/Bio::DB::BigFile"
