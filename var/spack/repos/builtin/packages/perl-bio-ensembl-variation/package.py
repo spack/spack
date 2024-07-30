@@ -22,6 +22,8 @@ class PerlBioEnsemblVariation(Package):
     extends("perl")
 
     variant("sql", default=False, description="Install SQL files")
+    variant("schema", default=False, description="Install schema documentation")
+    variant("nextflow", default=False, description="Install nextflow workflows")
     variant("scripts", default=False, description="Install additional scripts")
     variant("tools", default=False, description="Install additional tools")
     variant("ld", default=False, description="Compile LD calculation tools")
@@ -38,27 +40,45 @@ class PerlBioEnsemblVariation(Package):
     depends_on("perl-xml-libxml")
     depends_on("perl-date-manip")
 
+    depends_on("perl-bio-ensembl-io", when="+tools", type="run")
     with when("+ld"):
-        depends_on("htslib", type=("build", "run"))
+        depends_on("htslib", type="build")
         depends_on("gmake", type="build")
 
-    def build(self, spec):
+    phases = ("build", "install")
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+ld"):
+            env.set("HTSLIB_DIR", self.spec["htslib"].prefix.include)
+
+    def build(self, spec, prefix):
         if spec.satisfies("+ld"):
             make = which("make")
             with working_dir("C_code"):
                 make()
+        if spec.satisfies("+tools"):
+            # Fix the fact that phenotype_annotation isn't executable
+            chmod = which("chmod")
+            chmod("+x", "tools/phenotype_annotation/phenotype_annotation")
 
     def install(self, spec, prefix):
         install_tree("modules", prefix.lib.perl5)
 
         mkdirp(prefix.share.ensembl.variation)
-        for extra in ["sql"]:
+        for extra in ["sql", "schema", "nextflow", "scripts"]:
             if spec.satisfies(f"+{extra}"):
                 target = join_path(prefix.share.ensembl, extra)
                 install_tree(extra, target)
 
-        if spec.satisfies("+ld"):
-            mkdirp(prefix.bin)
-            with working_dir("C_code"):
-                install("calc_genotypes", prefix.bin.calc_genotypes)
-                install("ld_vcf", prefix.bin.ld_vcf)
+        for requested, targets in {
+                "+ld": ["C_code/calc_genotypes", "C_code/ld_vcf"],
+                "+tools": [
+                    "tools/linkage_disequilibrium/ld_tool",
+                    "tools/variant_simulator/simulate_variation",
+                    "tools/phenotype_annotation/phenotype_annotation",
+                ],
+            }.items():
+            if spec.satisfies(requested):
+                mkdirp(prefix.bin)
+                for target in targets:
+                    install(target, prefix.bin)
