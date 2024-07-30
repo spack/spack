@@ -429,4 +429,4 @@ class Libpressio(CMakePackage, CudaPackage):
         out = exe(output=str.split, error=str.split)
 
         expected = "all passed"
-        assert out in expected
+        assert expected in out
