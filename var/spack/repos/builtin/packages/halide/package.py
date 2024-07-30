@@ -15,7 +15,7 @@ class Halide(CMakePackage, PythonExtension):
 
     license("MIT")
 
-    maintainers("wraith1995")
+    maintainers("wraith1995", "alexreinking")
     version("main", branch="main")
     version("18.0.0", sha256="1176b42a3e2374ab38555d9316c78e39b157044b5a8e765c748bf3afd2edb351")
     version("17.0.2", sha256="5f3a43ba27b47d3dcbcee963faabf1d633d4151031e60b6ff7cc62472e5677a0")
