@@ -8,7 +8,7 @@ from spack.package import *
 class PerlBioEnsemblFuncgen(Package):
     """Ensembl Funcgen Perl API and SQL schema."""
 
-    homepage = "http://useast.ensembl.org/info/docs/api/funcgen/index.html"
+    homepage = "http://ensembl.org/info/docs/api/funcgen/index.html"
     url = "https://github.com/Ensembl/ensembl-funcgen/archive/release/111.zip"
 
     maintainers("teaguesterling")
@@ -22,6 +22,7 @@ class PerlBioEnsemblFuncgen(Package):
     extends("perl")
 
     depends_on("perl-role-tiny", type=("build", "run"))
+    depends_on("perl-bio-ensembl")
 
     variant("sql", default=False, description="Install SQL files")
     variant("scripts", default=False, description="Install scripts")
