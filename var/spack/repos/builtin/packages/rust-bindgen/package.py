@@ -18,6 +18,8 @@ class RustBindgen(Package):
 
     version("0.20.5", sha256="4f5236e7979d262c43267afba365612b1008b91b8f81d1efc6a8a2199d52bb37")
 
+    depends_on("cxx", type="build")  # generated
+
     extends("rust")
     depends_on("llvm")
 

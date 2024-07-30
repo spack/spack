@@ -118,6 +118,10 @@ class Sherpa(AutotoolsPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     _cxxstd_values = ("11", "14", "17")
     variant(
         "cxxstd",

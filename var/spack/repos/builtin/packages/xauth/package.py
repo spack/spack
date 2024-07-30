@@ -10,7 +10,7 @@ class Xauth(AutotoolsPackage, XorgPackage):
     """The xauth program is used to edit and display the authorization
     information used in connecting to the X server."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/xauth"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/xauth"
     xorg_mirror_path = "app/xauth-1.0.9.tar.gz"
 
     license("custom")
@@ -20,6 +20,8 @@ class Xauth(AutotoolsPackage, XorgPackage):
     version("1.1", sha256="e9fce796c8c5c9368594b9e8bbba237fb54b6615f5fd60e8d0a5b3c52a92c5ef")
     version("1.0.10", sha256="5196821221d824b9bc278fa6505c595acee1d374518a52217d9b64d3c63dedd0")
     version("1.0.9", sha256="0709070caf23ba2fb99536907b75be1fe31853999c62d3e87a6a8d26ba8a8cdb")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("libx11")
     depends_on("libxau")

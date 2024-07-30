@@ -56,7 +56,6 @@ def roots_from_environments(args, active_env):
 
     # -e says "also preserve things needed by this particular env"
     for env_name_or_dir in args.except_environment:
-        print("HMM", env_name_or_dir)
         if ev.exists(env_name_or_dir):
             env = ev.read(env_name_or_dir)
         elif ev.is_env_dir(env_name_or_dir):

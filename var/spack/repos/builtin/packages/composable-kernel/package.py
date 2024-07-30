@@ -13,12 +13,13 @@ class ComposableKernel(CMakePackage):
 
     homepage = "https://github.com/ROCm/composable_kernel"
     git = "https://github.com/ROCm/composable_kernel.git"
-    url = "https://github.com/ROCm/composable_kernel/archive/refs/tags/rocm-6.1.1.tar.gz"
+    url = "https://github.com/ROCm/composable_kernel/archive/refs/tags/rocm-6.1.2.tar.gz"
     maintainers("srekolam", "afzpatel")
 
     license("MIT")
 
     version("master", branch="develop")
+    version("6.1.2", sha256="54db801e1c14239f574cf94dd764a2f986b4abcc223393d55c49e4b276e738c9")
     version("6.1.1", sha256="f55643c6eee0878e8f2d14a382c33c8b84af0bdf8f31b37b6092b377f7a9c6b5")
     version("6.1.0", sha256="355a4514b96b56aa9edf78198a3e22067e7397857cfe29d9a64d9c5557b9f83d")
     version("6.0.2", sha256="f648a99388045948b7d5fbf8eb8da6a1803c79008b54d406830b7f9119e1dcf6")
@@ -29,8 +30,11 @@ class ComposableKernel(CMakePackage):
     version("5.6.0", commit="f5ec04f091fa5c48c67d7bacec36a414d0be06a5")
     version("5.5.1", commit="ac9e01e2cc3721be24619807adc444e1f59a9d25")
     version("5.5.0", commit="8b76b832420a3d69708401de6607a033163edcce")
-    version("5.4.3", commit="bb3d9546f186e39cefedc3e7f01d88924ba20168")
-    version("5.4.0", commit="236bd148b98c7f1ec61ee850fcc0c5d433576305")
+    with default_args(deprecated=True):
+        version("5.4.3", commit="bb3d9546f186e39cefedc3e7f01d88924ba20168")
+        version("5.4.0", commit="236bd148b98c7f1ec61ee850fcc0c5d433576305")
+
+    depends_on("cxx", type="build")  # generated
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
@@ -52,6 +56,7 @@ class ComposableKernel(CMakePackage):
 
     for ver in [
         "master",
+        "6.1.2",
         "6.1.1",
         "6.1.0",
         "6.0.2",
@@ -84,7 +89,10 @@ class ComposableKernel(CMakePackage):
         if "auto" not in self.spec.variants["amdgpu_target"]:
             args.append(self.define_from_variant("GPU_TARGETS", "amdgpu_target"))
         if self.spec.satisfies("@5.6.0:"):
-            args.append(self.define("INSTANCES_ONLY", "ON"))
+            if self.run_tests:
+                args.append(self.define("BUILD_TESTING", "ON"))
+            else:
+                args.append(self.define("INSTANCES_ONLY", "ON"))
             args.append(self.define("CK_BUILD_JIT_LIB", "ON"))
             args.append(self.define("CMAKE_POSITION_INDEPENDENT_CODE", "ON"))
         if self.spec.satisfies("@:5.7"):

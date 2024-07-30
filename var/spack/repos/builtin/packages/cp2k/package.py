@@ -56,6 +56,10 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     version("7.1", sha256="ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb")
     version("master", branch="master", submodules="True")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=True, description="Enable OpenMP support")
     variant(
@@ -169,14 +173,14 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("cray-libsci+openmp", when="^[virtuals=blas] cray-libsci")
 
     with when("smm=libxsmm"):
-        depends_on("libxsmm@1.17:~header-only", when="@9.1:")
+        depends_on("libxsmm~header-only")
         # require libxsmm-1.11+ since 1.10 can leak file descriptors in Fortran
-        depends_on("libxsmm@1.11:~header-only", when="@:8.9")
+        depends_on("libxsmm@1.11:")
+        depends_on("libxsmm@1.17:", when="@9.1:")
+        # build needs to be fixed for libxsmm@2 once it is released
+        depends_on("libxsmm@:1")
         # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
         depends_on("pkgconfig", type="build")
-        # please set variants: smm=blas by configuring packages.yaml or install
-        # cp2k with option smm=blas on aarch64
-        conflicts("target=aarch64:", msg="libxsmm is not available on arm")
 
     with when("+libint"):
         depends_on("pkgconfig", type="build", when="@7.0:")
@@ -224,11 +228,23 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("elpa@2023.05.001:", when="@2023.2:")
 
     with when("+dlaf"):
-        depends_on("dla-future@0.2.1: +scalapack")
-        depends_on("dla-future ~cuda", when="~cuda")
-        depends_on("dla-future ~rocm", when="~rocm")
-        depends_on("dla-future +cuda", when="+cuda")
-        depends_on("dla-future +rocm", when="+rocm")
+        with when("@:2024.1"):
+            depends_on("dla-future@0.2.1: +scalapack")
+            depends_on("dla-future ~cuda", when="~cuda")
+            depends_on("dla-future ~rocm", when="~rocm")
+            depends_on("dla-future +cuda", when="+cuda")
+            depends_on("dla-future +rocm", when="+rocm")
+
+        with when("@master"):
+            depends_on("dla-future-fortran@0.1.0:")
+
+            # Use a direct dependency on dla-future so that constraints can be expressed
+            # WARN: In the concretizer output, dla-future will appear as dependency of CP2K
+            #       instead of dla-future-fortran
+            depends_on("dla-future ~cuda", when="~cuda")
+            depends_on("dla-future ~rocm", when="~rocm")
+            depends_on("dla-future +cuda", when="+cuda")
+            depends_on("dla-future +rocm", when="+rocm")
 
     with when("+plumed"):
         depends_on("plumed+shared")
@@ -276,6 +292,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("dbcsr+mpi", when="+mpi")
         depends_on("dbcsr+cuda", when="+cuda")
         depends_on("dbcsr+rocm", when="+rocm")
+        depends_on("dbcsr smm=libxsmm", when="smm=libxsmm")
+        depends_on("dbcsr smm=blas", when="smm=blas")
 
     with when("@2022: +rocm"):
         depends_on("hipblas")
@@ -460,78 +478,6 @@ class MakefileBuilder(makefile.MakefileBuilder):
         if "superlu-dist@4.3" in spec:
             ldflags.insert(0, "-Wl,--allow-multiple-definition")
 
-        if "+plumed" in spec:
-            dflags.extend(["-D__PLUMED2"])
-            cppflags.extend(["-D__PLUMED2"])
-            libs.extend([join_path(spec["plumed"].prefix.lib, "libplumed.{0}".format(dso_suffix))])
-
-        cc = spack_cc if "~mpi" in spec else spec["mpi"].mpicc
-        cxx = spack_cxx if "~mpi" in spec else spec["mpi"].mpicxx
-        fc = spack_fc if "~mpi" in spec else spec["mpi"].mpifc
-
-        # Intel
-        if "%intel" in spec:
-            cppflags.extend(["-D__INTEL", "-D__HAS_ISO_C_BINDING", "-D__USE_CP2K_TRACE"])
-            fcflags.extend(["-diag-disable 8290,8291,10010,10212,11060", "-free", "-fpp"])
-
-        # FFTW, LAPACK, BLAS
-        lapack = spec["lapack"].libs
-        blas = spec["blas"].libs
-        ldflags.append((lapack + blas).search_flags)
-        libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
-
-        if spec.satisfies("platform=darwin"):
-            cppflags.extend(["-D__NO_STATM_ACCESS"])
-
-        if spec["blas"].name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
-            cppflags += ["-D__MKL"]
-        elif spec["blas"].name == "accelerate":
-            cppflags += ["-D__ACCELERATE"]
-
-        if "+cosma" in spec:
-            # add before ScaLAPACK to override the p?gemm symbols
-            cosma = spec["cosma"].libs
-            ldflags.append(cosma.search_flags)
-            libs.extend(cosma)
-
-        # MPI
-        if "+mpi" in spec:
-            cppflags.extend(["-D__parallel", "-D__SCALAPACK"])
-
-            if spec["mpi"].name == "intel-oneapi-mpi":
-                mpi = [join_path(spec["intel-oneapi-mpi"].libs.directories[0], "libmpi.so")]
-            else:
-                mpi = spec["mpi:cxx"].libs
-
-            # while intel-mkl has a mpi variant and adds the scalapack
-            # libs to its libs, intel-oneapi-mkl does not.
-            if spec["scalapack"].name == "intel-oneapi-mkl":
-                mpi_impl = "openmpi" if spec["mpi"].name in ["openmpi", "hpcx-mpi"] else "intelmpi"
-                scalapack = [
-                    join_path(
-                        spec["intel-oneapi-mkl"].libs.directories[0], "libmkl_scalapack_lp64.so"
-                    ),
-                    join_path(
-                        spec["intel-oneapi-mkl"].libs.directories[0],
-                        "libmkl_blacs_{0}_lp64.so".format(mpi_impl),
-                    ),
-                ]
-            else:
-                scalapack = spec["scalapack"].libs
-                ldflags.append(scalapack.search_flags)
-
-            libs.extend(scalapack)
-            libs.extend(mpi)
-            libs.extend(pkg.compiler.stdcxx_libs)
-
-            if "+mpi_f08" in spec:
-                cppflags.append("-D__MPI_F08")
-
-            if "wannier90" in spec:
-                cppflags.append("-D__WANNIER90")
-                wannier = join_path(spec["wannier90"].libs.directories[0], "libwannier.a")
-                libs.append(wannier)
-
         if "+libint" in spec:
             cppflags += ["-D__LIBINT"]
 
@@ -632,6 +578,91 @@ class MakefileBuilder(makefile.MakefileBuilder):
             fcflags += ["-I{0}".format(sirius.prefix.include.sirius)]
             libs += list(sirius.libs)
 
+        if "+plumed" in spec:
+            dflags.extend(["-D__PLUMED2"])
+            cppflags.extend(["-D__PLUMED2"])
+            libs.extend([join_path(spec["plumed"].prefix.lib, "libplumed.{0}".format(dso_suffix))])
+
+        if "+libvori" in spec:
+            cppflags += ["-D__LIBVORI"]
+            libvori = spec["libvori"].libs
+            ldflags += [libvori.search_flags]
+            libs += libvori
+            libs += ["-lstdc++"]
+
+        if "+spglib" in spec:
+            cppflags += ["-D__SPGLIB"]
+            spglib = spec["spglib"].libs
+            ldflags += [spglib.search_flags]
+            libs += spglib
+
+        cc = spack_cc if "~mpi" in spec else spec["mpi"].mpicc
+        cxx = spack_cxx if "~mpi" in spec else spec["mpi"].mpicxx
+        fc = spack_fc if "~mpi" in spec else spec["mpi"].mpifc
+
+        # Intel
+        if "%intel" in spec:
+            cppflags.extend(["-D__INTEL", "-D__HAS_ISO_C_BINDING", "-D__USE_CP2K_TRACE"])
+            fcflags.extend(["-diag-disable 8290,8291,10010,10212,11060", "-free", "-fpp"])
+
+        # FFTW, LAPACK, BLAS
+        lapack = spec["lapack"].libs
+        blas = spec["blas"].libs
+        ldflags.append((lapack + blas).search_flags)
+        libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
+
+        if spec.satisfies("platform=darwin"):
+            cppflags.extend(["-D__NO_STATM_ACCESS"])
+
+        if spec["blas"].name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
+            cppflags += ["-D__MKL"]
+        elif spec["blas"].name == "accelerate":
+            cppflags += ["-D__ACCELERATE"]
+
+        if "+cosma" in spec:
+            # add before ScaLAPACK to override the p?gemm symbols
+            cosma = spec["cosma"].libs
+            ldflags.append(cosma.search_flags)
+            libs.extend(cosma)
+
+        # MPI
+        if "+mpi" in spec:
+            cppflags.extend(["-D__parallel", "-D__SCALAPACK"])
+
+            if spec["mpi"].name == "intel-oneapi-mpi":
+                mpi = [join_path(spec["intel-oneapi-mpi"].libs.directories[0], "libmpi.so")]
+            else:
+                mpi = spec["mpi:cxx"].libs
+
+            # while intel-mkl has a mpi variant and adds the scalapack
+            # libs to its libs, intel-oneapi-mkl does not.
+            if spec["scalapack"].name == "intel-oneapi-mkl":
+                mpi_impl = "openmpi" if spec["mpi"].name in ["openmpi", "hpcx-mpi"] else "intelmpi"
+                scalapack = [
+                    join_path(
+                        spec["intel-oneapi-mkl"].libs.directories[0], "libmkl_scalapack_lp64.so"
+                    ),
+                    join_path(
+                        spec["intel-oneapi-mkl"].libs.directories[0],
+                        "libmkl_blacs_{0}_lp64.so".format(mpi_impl),
+                    ),
+                ]
+            else:
+                scalapack = spec["scalapack"].libs
+                ldflags.append(scalapack.search_flags)
+
+            libs.extend(scalapack)
+            libs.extend(mpi)
+            libs.extend(pkg.compiler.stdcxx_libs)
+
+            if "+mpi_f08" in spec:
+                cppflags.append("-D__MPI_F08")
+
+            if "wannier90" in spec:
+                cppflags.append("-D__WANNIER90")
+                wannier = join_path(spec["wannier90"].libs.directories[0], "libwannier.a")
+                libs.append(wannier)
+
         gpuver = ""
         if spec.satisfies("+cuda"):
             libs += [
@@ -718,19 +749,6 @@ class MakefileBuilder(makefile.MakefileBuilder):
             cppflags += pkgconf("--cflags-only-other", "libxsmmf", output=str).split()
             fcflags += pkgconf("--cflags-only-I", "libxsmmf", output=str).split()
             libs += pkgconf("--libs", "libxsmmf", output=str).split()
-
-        if "+libvori" in spec:
-            cppflags += ["-D__LIBVORI"]
-            libvori = spec["libvori"].libs
-            ldflags += [libvori.search_flags]
-            libs += libvori
-            libs += ["-lstdc++"]
-
-        if "+spglib" in spec:
-            cppflags += ["-D__SPGLIB"]
-            spglib = spec["spglib"].libs
-            ldflags += [spglib.search_flags]
-            libs += spglib
 
         dflags.extend(cppflags)
         cflags.extend(cppflags)

@@ -32,6 +32,8 @@ class Libuv(AutotoolsPackage):
     version("1.10.0", sha256="0307a0eec6caddd476f9cad39e18fdd6f22a08aa58103c4b0aead96d638be15e")
     version("1.9.0", sha256="d595b2725abcce851c76239aab038adc126c58714cfb572b2ebb2d21b3593842")
 
+    depends_on("c", type="build")  # generated
+
     def url_for_version(self, version):
         if self.spec.satisfies("@:1.43"):
             url = "https://dist.libuv.org/dist/v{0}/libuv-v{0}.tar.gz"

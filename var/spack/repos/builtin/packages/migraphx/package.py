@@ -13,13 +13,14 @@ class Migraphx(CMakePackage):
 
     homepage = "https://github.com/ROCm/AMDMIGraphX"
     git = "https://github.com/ROCm/AMDMIGraphX.git"
-    url = "https://github.com/ROCm/AMDMIGraphX/archive/rocm-6.1.1.tar.gz"
+    url = "https://github.com/ROCm/AMDMIGraphX/archive/rocm-6.1.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libmigraphx"]
 
     license("MIT")
+    version("6.1.2", sha256="829f4a2bd9fe3dee130dfcca103ddc7691da18382f5b683aaca8f3ceceaef355")
     version("6.1.1", sha256="e14a62678e97356236b45921e24f28ff430d670fb70456c3e5ebfeeb22160811")
     version("6.1.0", sha256="2ba44146397624845c64f3898bb1b08837ad7a49f133329e58eb04c05d1f36ac")
     version("6.0.2", sha256="13f393f8fdf25275994dda07091a93eec867233cd2f99f9cb0df16fbabd53483")
@@ -30,21 +31,18 @@ class Migraphx(CMakePackage):
     version("5.6.0", sha256="eaec90535d62002fd5bb264677ad4a7e30c55f18d2a287680d0495c7e60432b2")
     version("5.5.1", sha256="e71c4744f8ef6a1a99c179bbad94b8fe9bd7686eaa9397f376b70988c3341f0c")
     version("5.5.0", sha256="6084eb596b170f5e38f22b5fa37e66aa43a8cbc626712c9f03cde48c8fecfc8f")
-    version("5.4.3", sha256="f83e7bbe5d6d0951fb2cf0abf7e8b3530e9a5e45f7cec6d760da055d6905d568")
-    version("5.4.0", sha256="b6e7f4a1bf445ea0dae644ed5722369cde66fbee82a5917722f5d3f8c48b0a8c")
-    version("5.3.3", sha256="91d91902bbedd5e1951a231e8e5c9a328360b128c731912ed17c8059df38e02a")
-    version("5.3.0", sha256="d0b7283f42e03fb38b612868b8c94f46f27a6e0b019ae95fde5b9086582a1c69")
     with default_args(deprecated=True):
-        version("5.2.3", sha256="03f7d49f2efdd2c7a6afcaa5a5db5103edc15047b0ff5e146a775cfb36b36af2")
-        version("5.2.1", sha256="300d990e1b92ad27c3eba3e94ef34538730ca9556398b8b9f7d61d28bf66c57d")
-        version("5.2.0", sha256="33afcdf52c6e0e3a2f939fcf30e87f712b8e8ef3633a3dc03a19fea359704925")
-        version("5.1.3", sha256="686e068774500a46b6e6488370bbf5bd0bba6d19ecdb00636f951704d19c9ef2")
-        version("5.1.0", sha256="6398efaef18a74f2a475aa21bd34bc7c077332a430ee3f6ba4fde6e6a6aa9f89")
+        version("5.4.3", sha256="f83e7bbe5d6d0951fb2cf0abf7e8b3530e9a5e45f7cec6d760da055d6905d568")
+        version("5.4.0", sha256="b6e7f4a1bf445ea0dae644ed5722369cde66fbee82a5917722f5d3f8c48b0a8c")
+        version("5.3.3", sha256="91d91902bbedd5e1951a231e8e5c9a328360b128c731912ed17c8059df38e02a")
+        version("5.3.0", sha256="d0b7283f42e03fb38b612868b8c94f46f27a6e0b019ae95fde5b9086582a1c69")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     patch("0001-Adding-nlohmann-json-include-directory.patch", when="@:5.5")
     # Restrict Python 2.7 usage to fix the issue below
     # https://github.com/spack/spack/issues/24429
-    patch("0002-restrict-python-2.7-usage.patch", when="@:5.1")
     patch("0003-restrict-python-2.7-usage.patch", when="@5.2.0:5.4")
     patch("0004-restrict-python2.7-usage-for-5.5.0.patch", when="@5.5.0")
     patch("0005-Adding-half-include-directory-path-migraphx.patch", when="@5.6.0:5.7")
@@ -75,11 +73,6 @@ class Migraphx(CMakePackage):
     depends_on("abseil-cpp")
 
     for ver in [
-        "5.1.0",
-        "5.1.3",
-        "5.2.0",
-        "5.2.1",
-        "5.2.3",
         "5.3.0",
         "5.3.3",
         "5.4.0",
@@ -94,6 +87,7 @@ class Migraphx(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
@@ -101,7 +95,7 @@ class Migraphx(CMakePackage):
         depends_on(f"rocblas@{ver}", when=f"@{ver}")
         depends_on(f"miopen-hip@{ver}", when=f"@{ver}")
 
-    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
+    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2"]:
         depends_on(f"rocmlir@{ver}", when=f"@{ver}")
 
     @property

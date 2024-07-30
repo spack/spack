@@ -26,6 +26,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.3.1", tag="v2.3.1", commit="63d5e9221bedd1546b7d364b5ce4171547db12a9")
     version("2.3.0", tag="v2.3.0", commit="97ff6cfd9c86c5c09d7ce775ab64ec5c99230f5d")
     version("2.2.2", tag="v2.2.2", commit="39901f229520a5256505ec24782f716ee7ddc843")
     version("2.2.1", tag="v2.2.1", commit="6c8c5ad5eaf47a62fafbb4a2747198cbffbf1ff0")
@@ -54,6 +55,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     version("1.5.1", tag="v1.5.1", commit="3c31d73c875d9a4a6ea8a843b9a0d1b19fbe36f3")
     version("1.5.0", tag="v1.5.0", commit="4ff3872a2099993bf7e8c588f7182f3df777205b")
     version("1.4.1", tag="v1.4.1", commit="74044638f755cd8667bedc73da4dbda4aa64c948")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     is_darwin = sys.platform == "darwin"
 
@@ -164,6 +169,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("py-setuptools")
         depends_on("py-astunparse", when="@1.13:")
         depends_on("py-numpy@1.16.6:")
+        # https://github.com/pytorch/pytorch/issues/107302
+        depends_on("py-numpy@:1", when="@:2.2")
         depends_on("py-pyyaml")
         depends_on("py-requests", when="@1.13:")
 
@@ -246,8 +253,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("cuda@9.2:11.4", when="@1.6:1.9+cuda")
         depends_on("cuda@9:11.4", when="@:1.5+cuda")
     # https://github.com/pytorch/pytorch#prerequisites
-    depends_on("cudnn@8.5:", when="@2.3:+cudnn")
-    depends_on("cudnn@7:", when="@1.6:+cudnn")
+    # https://github.com/pytorch/pytorch/issues/119400
+    depends_on("cudnn@8.5:9.0", when="@2.3:+cudnn")
+    depends_on("cudnn@7:8", when="@1.6:2.2+cudnn")
     depends_on("cudnn@7", when="@:1.5+cudnn")
     depends_on("magma+cuda", when="+magma+cuda")
     depends_on("magma+rocm", when="+magma+rocm")

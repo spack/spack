@@ -63,6 +63,12 @@ from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
 
 
+@pytest.fixture(autouse=True)
+def check_config_fixture(request):
+    if "config" in request.fixturenames and "mutable_config" in request.fixturenames:
+        raise RuntimeError("'config' and 'mutable_config' are both requested")
+
+
 def ensure_configuration_fixture_run_before(request):
     """Ensure that fixture mutating the configuration run before the one where
     the function is called.
@@ -561,7 +567,7 @@ def _use_test_platform(test_platform):
 #
 @pytest.fixture(scope="session")
 def mock_repo_path():
-    yield spack.repo.Repo(spack.paths.mock_packages_path)
+    yield spack.repo.from_path(spack.paths.mock_packages_path)
 
 
 def _pkg_install_fn(pkg, spec, prefix):
@@ -588,7 +594,7 @@ def mock_packages(mock_repo_path, mock_pkg_install, request):
 def mutable_mock_repo(mock_repo_path, request):
     """Function-scoped mock packages, for tests that need to modify them."""
     ensure_configuration_fixture_run_before(request)
-    mock_repo = spack.repo.Repo(spack.paths.mock_packages_path)
+    mock_repo = spack.repo.from_path(spack.paths.mock_packages_path)
     with spack.repo.use_repositories(mock_repo) as mock_repo_path:
         yield mock_repo_path
 
@@ -597,7 +603,7 @@ def mutable_mock_repo(mock_repo_path, request):
 def mock_custom_repository(tmpdir, mutable_mock_repo):
     """Create a custom repository with a single package "c" and return its path."""
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("myrepo"))
-    builder.add_package("c")
+    builder.add_package("pkg-c")
     return builder.root
 
 
@@ -719,9 +725,9 @@ def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
     return [
         spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
-        spack.config.ConfigScope("site", str(configuration_dir.join("site"))),
-        spack.config.ConfigScope("system", str(configuration_dir.join("system"))),
-        spack.config.ConfigScope("user", str(configuration_dir.join("user"))),
+        spack.config.DirectoryConfigScope("site", str(configuration_dir.join("site"))),
+        spack.config.DirectoryConfigScope("system", str(configuration_dir.join("system"))),
+        spack.config.DirectoryConfigScope("user", str(configuration_dir.join("user"))),
         spack.config.InternalConfigScope("command_line"),
     ]
 
@@ -755,7 +761,7 @@ def mutable_empty_config(tmpdir_factory, configuration_dir):
     """Empty configuration that can be modified by the tests."""
     mutable_dir = tmpdir_factory.mktemp("mutable_config").join("tmp")
     scopes = [
-        spack.config.ConfigScope(name, str(mutable_dir.join(name)))
+        spack.config.DirectoryConfigScope(name, str(mutable_dir.join(name)))
         for name in ["site", "system", "user"]
     ]
 
@@ -790,7 +796,7 @@ def concretize_scope(mutable_config, tmpdir):
     """Adds a scope for concretization preferences"""
     tmpdir.ensure_dir("concretize")
     mutable_config.push_scope(
-        spack.config.ConfigScope("concretize", str(tmpdir.join("concretize")))
+        spack.config.DirectoryConfigScope("concretize", str(tmpdir.join("concretize")))
     )
 
     yield str(tmpdir.join("concretize"))
@@ -802,10 +808,10 @@ def concretize_scope(mutable_config, tmpdir):
 @pytest.fixture
 def no_compilers_yaml(mutable_config):
     """Creates a temporary configuration without compilers.yaml"""
-    for scope, local_config in mutable_config.scopes.items():
-        if not local_config.path:  # skip internal scopes
+    for local_config in mutable_config.scopes.values():
+        if not isinstance(local_config, spack.config.DirectoryConfigScope):
             continue
-        compilers_yaml = os.path.join(local_config.path, "compilers.yaml")
+        compilers_yaml = local_config.get_section_filename("compilers")
         if os.path.exists(compilers_yaml):
             os.remove(compilers_yaml)
     return mutable_config
@@ -814,7 +820,9 @@ def no_compilers_yaml(mutable_config):
 @pytest.fixture()
 def mock_low_high_config(tmpdir):
     """Mocks two configuration scopes: 'low' and 'high'."""
-    scopes = [spack.config.ConfigScope(name, str(tmpdir.join(name))) for name in ["low", "high"]]
+    scopes = [
+        spack.config.DirectoryConfigScope(name, str(tmpdir.join(name))) for name in ["low", "high"]
+    ]
 
     with spack.config.use_configuration(*scopes) as config:
         yield config
@@ -849,7 +857,7 @@ def _populate(mock_db):
     _install("mpileaks ^mpich")
     _install("mpileaks ^mpich2")
     _install("mpileaks ^zmpi")
-    _install("externaltest")
+    _install("externaltest ^externalvirtual")
     _install("trivial-smoke-test")
 
 
@@ -988,19 +996,6 @@ def temporary_store(tmpdir, request):
     with spack.store.use_store(str(temporary_store_path)) as s:
         yield s
     temporary_store_path.remove()
-
-
-@pytest.fixture(scope="function")
-def install_mockery_mutable_config(temporary_store, mutable_config, mock_packages):
-    """Hooks a fake install directory, DB, and stage directory into Spack.
-
-    This is specifically for tests which want to use 'install_mockery' but
-    also need to modify configuration (and hence would want to use
-    'mutable config'): 'install_mockery' does not support this.
-    """
-    # We use a fake package, so temporarily disable checksumming
-    with spack.config.override("config:checksum", False):
-        yield
 
 
 @pytest.fixture()
@@ -2019,7 +2014,8 @@ repo:
         with open(str(pkg_file), "w") as f:
             f.write(pkg_str)
 
-    return spack.repo.Repo(repo_path)
+    repo_cache = spack.util.file_cache.FileCache(str(tmpdir.join("cache")))
+    return spack.repo.Repo(repo_path, cache=repo_cache)
 
 
 @pytest.fixture()
@@ -2061,3 +2057,10 @@ def _c_compiler_always_exists():
     spack.solver.asp.c_compiler_runs = _true
     yield
     spack.solver.asp.c_compiler_runs = fn
+
+
+@pytest.fixture(scope="session")
+def mock_test_cache(tmp_path_factory):
+    cache_dir = tmp_path_factory.mktemp("cache")
+    print(cache_dir)
+    return spack.util.file_cache.FileCache(str(cache_dir))

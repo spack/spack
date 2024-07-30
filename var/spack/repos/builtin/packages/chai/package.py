@@ -19,11 +19,23 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/CHAI.git"
     tags = ["ecp", "e4s", "radiuss"]
 
-    maintainers("davidbeckingsale")
+    maintainers("davidbeckingsale", "adayton1")
 
     license("BSD-3-Clause")
 
     version("develop", branch="develop", submodules=False)
+    version(
+        "2024.02.2",
+        tag="v2024.02.2",
+        commit="5ba0944d862513f600432c34b009824875df27e5",
+        submodules=False,
+    )
+    version(
+        "2024.02.1",
+        tag="v2024.02.1",
+        commit="7597134729bd3a38b45b67b4dfbf7f199d8106f3",
+        submodules=False,
+    )
     version(
         "2024.02.0",
         tag="v2024.02.0",
@@ -80,6 +92,8 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
     version("1.0", tag="v1.0", commit="501a098ad879dc8deb4a74fcfe8c08c283a10627", submodules=True)
 
+    depends_on("cxx", type="build")  # generated
+
     # Patching Umpire for dual BLT targets import changed MPI target name in Umpire link interface
     # We propagate the patch here.
     patch("change_mpi_target_name_umpire_patch.patch", when="@2022.10.0:2023.06.0")
@@ -110,6 +124,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.14:", type="build", when="@2022.03.0:")
 
     depends_on("blt")
+    depends_on("blt@0.6.2:", type="build", when="@2024.02.1:")
     depends_on("blt@0.6.1:", type="build", when="@2024.02.0:")
     depends_on("blt@0.5.3", type="build", when="@2023.06.0")
     depends_on("blt@0.5.2:0.5.3", type="build", when="@2022.10.0")
@@ -120,6 +135,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("^blt@:0.3.6", when="+rocm")
 
     depends_on("umpire")
+    depends_on("umpire@2024.02.1:", when="@2024.02.1:")
     depends_on("umpire@2024.02.0:", when="@2024.02.0:")
     depends_on("umpire@2023.06.0", when="@2023.06.0")
     depends_on("umpire@2022.10.0:2023.06.0", when="@2022.10.0")
@@ -144,6 +160,8 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     with when("+raja"):
         depends_on("raja~openmp", when="~openmp")
         depends_on("raja+openmp", when="+openmp")
+        depends_on("raja@2024.02.2:", when="@2024.02.2:")
+        depends_on("raja@2024.02.1:", when="@2024.02.1:")
         depends_on("raja@2024.02.0:", when="@2024.02.0:")
         depends_on("raja@2023.06.0", when="@2023.06.0")
         depends_on("raja@2022.10.0:2023.06.0", when="@2022.10.0")

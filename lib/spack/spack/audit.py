@@ -351,6 +351,22 @@ def _wrongly_named_spec(error_cls):
     return errors
 
 
+@config_packages
+def _ensure_all_virtual_packages_have_default_providers(error_cls):
+    """All virtual packages must have a default provider explicitly set."""
+    configuration = spack.config.create()
+    defaults = configuration.get("packages", scope="defaults")
+    default_providers = defaults["all"]["providers"]
+    virtuals = spack.repo.PATH.provider_index.providers
+    default_providers_filename = configuration.scopes["defaults"].get_section_filename("packages")
+
+    return [
+        error_cls(f"'{virtual}' must have a default provider in {default_providers_filename}", [])
+        for virtual in virtuals
+        if virtual not in default_providers
+    ]
+
+
 def _make_config_error(config_data, summary, error_cls):
     s = io.StringIO()
     s.write("Occurring in the following file:\n")
@@ -791,7 +807,7 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                         return
                     error = error_cls(
                         f"{pkg_name}: {msg}",
-                        f"remove variants from '{spec}' in depends_on directive in {filename}",
+                        [f"remove variants from '{spec}' in depends_on directive in {filename}"],
                     )
                     errors.append(error)
 
