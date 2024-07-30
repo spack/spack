@@ -113,7 +113,7 @@ class Xnnpack(CMakePackage):
         sha256="e66e65515fa09927b348d3d584c68be4215cfe664100d01c9dbc7655a5716d70",
         destination="deps",
         placement="fp16",
-        when="@2021-06-21:2022-12-2",
+        when="@2021-06-21:2022-12-22",
     )
     resource(
         name="fp16",
