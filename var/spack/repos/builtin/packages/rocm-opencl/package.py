@@ -157,12 +157,12 @@ class RocmOpencl(CMakePackage):
             args.append(self.define("CLR_BUILD_OCL", True))
         if self.spec.satisfies("+asan"):
             args.append(
-               self.define(
+                self.define(
                     "CMAKE_CXX_FLAGS",
                     f"-I{self.spec['libx11'].prefix.include} "
                     f"-I{self.spec['mesa'].prefix.include} "
                     f"-I{self.spec['xproto'].prefix.include}",
-               )
+                )
             )
 
         return args
