@@ -337,6 +337,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("dd4hep @1.11: +dddetectors +ddrec", when="+dd4hep")
     depends_on("dd4hep @1.21: +dddetectors +ddrec", when="@20: +dd4hep")
     depends_on("dd4hep +ddg4", when="+dd4hep +geant4 +examples")
+    depends_on("dfelibs", when="@35:")
     depends_on("edm4hep @0.4.1:", when="+edm4hep")
     depends_on("edm4hep @0.7:", when="@25: +edm4hep")
     depends_on("eigen @3.3.7:", when="@15.1:")
