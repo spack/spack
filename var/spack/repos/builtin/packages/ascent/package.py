@@ -396,7 +396,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         c_compiler = env["SPACK_CC"]
         cpp_compiler = env["SPACK_CXX"]
-        if "+fortran" in spec:
+        if spec.satisfies("+fortran"):
             f_compiler = env["SPACK_FC"]
         else:
             f_compiler = None
@@ -414,7 +414,7 @@ class Ascent(CMakePackage, CudaPackage):
         # Find and record what CMake is used
         ##############################################
 
-        if "+cmake" in spec:
+        if spec.satisfies("+cmake"):
             cmake_exe = spec["cmake"].command.path
         else:
             cmake_exe = which("cmake")
@@ -449,14 +449,14 @@ class Ascent(CMakePackage, CudaPackage):
         cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
         cfg.write("# fortran compiler used by spack\n")
-        if "+fortran" in spec:
+        if spec.satisfies("+fortran"):
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
             cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER", f_compiler))
         else:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
 
         # shared vs static libs
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "ON"))
         else:
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
@@ -481,7 +481,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         # Unit Tests
         #######################
-        if "+test" in spec:
+        if spec.satisfies("+test"):
             cfg.write(cmake_cache_entry("ENABLE_TESTS", "ON"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
@@ -534,7 +534,7 @@ class Ascent(CMakePackage, CudaPackage):
         # Serial
         #######################
 
-        if "+serial" in spec:
+        if spec.satisfies("+serial"):
             cfg.write(cmake_cache_entry("ENABLE_SERIAL", "ON"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_SERIAL", "OFF"))
@@ -545,7 +545,7 @@ class Ascent(CMakePackage, CudaPackage):
 
         cfg.write("# MPI Support\n")
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             mpicc_path = spec["mpi"].mpicc
             mpicxx_path = spec["mpi"].mpicxx
             mpifc_path = spec["mpi"].mpifc if "+fortran" in spec else None
@@ -560,7 +560,7 @@ class Ascent(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
-            if "+fortran" in spec:
+            if spec.satisfies("+fortran"):
                 cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
             mpiexe_bin = join_path(spec["mpi"].prefix.bin, "mpiexec")
             if os.path.isfile(mpiexe_bin):
@@ -571,14 +571,14 @@ class Ascent(CMakePackage, CudaPackage):
                 else:
                     cfg.write(cmake_cache_entry("MPIEXEC", mpiexe_bin))
 
-            if "+blt_find_mpi" in spec:
+            if spec.satisfies("+blt_find_mpi"):
                 cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "ON"))
             else:
                 cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "OFF"))
             ###################################
             # BABELFLOW (also depends on mpi)
             ###################################
-            if "+babelflow" in spec:
+            if spec.satisfies("+babelflow"):
                 cfg.write(cmake_cache_entry("ENABLE_BABELFLOW", "ON"))
                 cfg.write(cmake_cache_entry("BabelFlow_DIR", spec["babelflow"].prefix))
                 cfg.write(cmake_cache_entry("PMT_DIR", spec["parallelmergetree"].prefix))
@@ -591,12 +591,12 @@ class Ascent(CMakePackage, CudaPackage):
 
         cfg.write("# CUDA Support\n")
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "ON"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "OFF"))
 
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             cfg.write(cmake_cache_entry("ENABLE_OPENMP", "ON"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_OPENMP", "OFF"))
@@ -606,7 +606,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         cfg.write("# vtk-h support \n")
 
-        if "+vtkh" in spec:
+        if spec.satisfies("+vtkh"):
             cfg.write("# vtk-h\n")
             if self.spec.satisfies("@0.8.1:"):
                 cfg.write(cmake_cache_entry("ENABLE_VTKH", "ON"))
@@ -616,7 +616,7 @@ class Ascent(CMakePackage, CudaPackage):
             cfg.write("# vtk-m from spack\n")
             cfg.write(cmake_cache_entry("VTKM_DIR", spec["vtk-m"].prefix))
 
-            if "+cuda" in spec:
+            if spec.satisfies("+cuda"):
                 cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA", "ON"))
                 cfg.write(cmake_cache_entry("CMAKE_CUDA_HOST_COMPILER", env["SPACK_CXX"]))
             else:
@@ -632,7 +632,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         # RAJA
         #######################
-        if "+raja" in spec:
+        if spec.satisfies("+raja"):
             cfg.write("# RAJA from spack \n")
             cfg.write(cmake_cache_entry("RAJA_DIR", spec["raja"].prefix))
         else:
@@ -641,7 +641,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         # Umpire
         #######################
-        if "+umpire" in spec:
+        if spec.satisfies("+umpire"):
             cfg.write("# umpire from spack \n")
             cfg.write(cmake_cache_entry("UMPIRE_DIR", spec["umpire"].prefix))
         else:
@@ -659,7 +659,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         # MFEM
         #######################
-        if "+mfem" in spec:
+        if spec.satisfies("+mfem"):
             cfg.write("# mfem from spack \n")
             cfg.write(cmake_cache_entry("MFEM_DIR", spec["mfem"].prefix))
         else:
@@ -668,7 +668,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         # OCCA
         #######################
-        if "+occa" in spec:
+        if spec.satisfies("+occa"):
             cfg.write("# occa from spack \n")
             cfg.write(cmake_cache_entry("OCCA_DIR", spec["occa"].prefix))
         else:
@@ -677,7 +677,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         # Devil Ray
         #######################
-        if "+dray" in spec:
+        if spec.satisfies("+dray"):
             cfg.write("# devil ray\n")
             if self.spec.satisfies("@0.8.1:"):
                 cfg.write(cmake_cache_entry("ENABLE_DRAY", "ON"))
@@ -698,7 +698,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         cfg.write("# adios2 support\n")
 
-        if "+adios2" in spec:
+        if spec.satisfies("+adios2"):
             cfg.write(cmake_cache_entry("ADIOS2_DIR", spec["adios2"].prefix))
         else:
             cfg.write("# adios2 not built by spack \n")
@@ -708,7 +708,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         cfg.write("# Fides support\n")
 
-        if "+fides" in spec:
+        if spec.satisfies("+fides"):
             cfg.write(cmake_cache_entry("FIDES_DIR", spec["fides"].prefix))
         else:
             cfg.write("# fides not built by spack \n")
@@ -717,7 +717,7 @@ class Ascent(CMakePackage, CudaPackage):
         # Caliper
         #######################
         cfg.write("# caliper from spack \n")
-        if "+caliper" in spec:
+        if spec.satisfies("+caliper"):
             cfg.write(cmake_cache_entry("CALIPER_DIR", spec["caliper"].prefix))
             cfg.write(cmake_cache_entry("ADIAK_DIR", spec["adiak"].prefix))
         else:
