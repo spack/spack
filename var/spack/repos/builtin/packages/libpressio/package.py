@@ -300,7 +300,7 @@ class Libpressio(CMakePackage, CudaPackage):
     )
     for cuda_compressor in ["cusz", "mgard", "zfp", "ndzip"]:
         conflicts(
-            "~cuda+{pkg} ^ {pkg}+cuda".format(pkg=cuda_compressor),
+            f"~cuda+{cuda_compressor} ^ {cuda_compressor}+cuda",
             msg="compiling a CUDA compressor without a CUDA support makes no sense",
         )
     depends_on("sz3", when="+sz3")
