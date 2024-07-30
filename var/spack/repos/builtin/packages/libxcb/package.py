@@ -62,4 +62,6 @@ class Libxcb(AutotoolsPackage, XorgPackage):
         filter_file("typedef struct xcb_auth_info_t {", "typedef struct {", "src/xcb.h")
 
     def setup_build_environment(self, env):
-        env.set('LC_ALL', 'en_US.UTF-8')    # set well defined locale; see: https://www.linuxfromscratch.org/blfs/view/git/x/libxcb.html
+        env.set(
+            "LC_ALL", "en_US.UTF-8"
+        )    # set well defined locale; see: https://www.linuxfromscratch.org/blfs/view/git/x/libxcb.html
