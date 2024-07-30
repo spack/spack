@@ -86,3 +86,6 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
 
             for file in rdoff:
                 install(file, self.prefix.rdoff)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path("PATH", self.pkg.prefix)

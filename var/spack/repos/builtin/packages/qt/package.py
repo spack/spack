@@ -184,8 +184,9 @@ class Qt(Package):
     for plat in ["linux", "darwin", "freebsd"]:
         with when(f"platform={plat}"):
             depends_on("pkgconfig", type="build")
+            depends_on("libsm", when="@3")
             depends_on("glib", when="@4:")
-            depends_on("libmng")
+    depends_on("libmng")
     depends_on("icu4c")
     depends_on("harfbuzz", when="@5:")
 
@@ -201,7 +202,6 @@ class Qt(Package):
     depends_on("sqlite+column_metadata", when="+sql", type=("build", "run"))
 
     depends_on("libpng@1.2.57", when="@3")
-    depends_on("libsm", when="@3")
     depends_on("pcre+multibyte", when="@5.0:5.8")
     depends_on("inputproto", when="@:5.8")
 

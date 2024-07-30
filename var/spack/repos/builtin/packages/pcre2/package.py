@@ -33,6 +33,10 @@ class Pcre2(AutotoolsPackage, CMakePackage):
     variant("jit", default=False, description="enable Just-In-Time compiling support")
     build_system("autotools", "cmake", default="autotools")
 
+    with when("build_system=cmake"):
+        depends_on("zlib")
+        depends_on("bzip2")
+
     @property
     def libs(self):
         if "+multibyte" in self.spec:
