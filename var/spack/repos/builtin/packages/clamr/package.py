@@ -20,6 +20,10 @@ class Clamr(CMakePackage):
 
     version("master")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "graphics",
         default="opengl",

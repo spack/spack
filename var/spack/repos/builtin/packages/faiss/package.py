@@ -35,6 +35,9 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
     version("1.6.3", sha256="e1a41c159f0b896975fbb133e0240a233af5c9286c09a28fde6aefff5336e542")
     version("1.5.3", sha256="b24d347b0285d01c2ed663ccc7596cd0ea95071f3dd5ebb573ccfc28f15f043b")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("python", default=False, description="Build Python bindings")
     variant("shared", default=False, description="Build shared library")
     variant("tests", default=False, description="Build Tests")

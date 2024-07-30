@@ -27,6 +27,9 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     version("0.1.0", sha256="f7ffcde22edabb3dc24a624e2888f98829ee526da384cd752b2b271c731ca9b1")
     version("master", branch="master")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     variant("shared", default=True, description="Build shared libraries.")
 
     variant(

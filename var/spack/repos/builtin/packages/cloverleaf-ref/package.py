@@ -26,6 +26,9 @@ class CloverleafRef(MakefilePackage):
         "1.1", sha256="0ac87accf81d85b959e5da839e6b0659afb3a2840a13f5da113a1c34eeb87942"
     )  # commit "5667c3a"
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "ieee", default=False, description="Build with IEEE754 compliant floating point operations"
     )

@@ -41,6 +41,8 @@ class Highfive(CMakePackage):
     version("1.1", sha256="430fc312fc1961605ffadbfad82b9753a5e59482e9fbc64425fb2c184123d395")
     version("1.0", sha256="d867fe73d00817f686d286f3c69a23731c962c3e2496ca1657ea7302cd0bb944")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("boost", default=False, description="Support Boost")
     variant("mpi", default=True, description="Support MPI")
 

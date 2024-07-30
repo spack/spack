@@ -27,6 +27,7 @@ class PerlBioEnsemblVariation(Package):
     variant("ld", default=False, description="Compile LD calculation tools")
 
     depends_on("perl-bioperl")
+    depends_on("perl-bio-ensembl")
     depends_on("perl-json")
     depends_on("perl-set-intervaltree")
     depends_on("perl-string-approx")

@@ -27,6 +27,8 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     version("6.0.2", sha256="bdbceeae515f737131f0391ee3b7d2f7b655e3cf446e4303d93f083c59053587")
     version("6.0.0", sha256="cc4c7970601edbaa7f630b7ea24ae85beaeae466ef3e5ba63e11eab52465c157")
 
+    depends_on("cxx", type="build")  # generated
+
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
         "amdgpu_target",
@@ -55,6 +57,7 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     depends_on("py-pyyaml", type="test")
     depends_on("py-joblib")
     depends_on("googletest@1.10.0:", type="test")
+    depends_on("netlib-lapack@3.7.1:", type="test")
 
     patch("0001-update-llvm-path-add-hipsparse-include-dir-for-spack.patch", when="@6.0")
     # Below patch sets the proper path for clang++,lld and clang-offload-blunder inside the

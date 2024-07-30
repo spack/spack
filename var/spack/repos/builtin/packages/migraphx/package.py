@@ -37,6 +37,9 @@ class Migraphx(CMakePackage):
         version("5.3.3", sha256="91d91902bbedd5e1951a231e8e5c9a328360b128c731912ed17c8059df38e02a")
         version("5.3.0", sha256="d0b7283f42e03fb38b612868b8c94f46f27a6e0b019ae95fde5b9086582a1c69")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     patch("0001-Adding-nlohmann-json-include-directory.patch", when="@:5.5")
     # Restrict Python 2.7 usage to fix the issue below
     # https://github.com/spack/spack/issues/24429

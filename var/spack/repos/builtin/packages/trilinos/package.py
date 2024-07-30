@@ -35,7 +35,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-12-12-1.tar.gz"
     git = "https://github.com/trilinos/Trilinos.git"
 
-    maintainers("keitat", "sethrj", "kuberry", "jwillenbring", "psakievich")
+    maintainers("keitat", "kuberry", "jwillenbring", "psakievich")
 
     tags = ["e4s"]
 
@@ -70,6 +70,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     version("11.14.3", sha256="e37fa5f69103576c89300e14d43ba77ad75998a54731008b25890d39892e6e60")
     version("11.14.2", sha256="f22b2b0df7b88e28b992e19044ba72b845292b93cbbb3a948488199647381119")
     version("11.14.1", sha256="f10fc0a496bf49427eb6871c80816d6e26822a39177d850cc62cf1484e4eec07")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
 
     # ###################### Variants ##########################
 
