@@ -12,7 +12,7 @@ from llnl.util import filesystem
 from spack.package import *
 
 
-class Hipsycl(CMakePackage,ROCmPackage):
+class Hipsycl(CMakePackage, ROCmPackage):
     """hipSYCL is an implementation of the SYCL standard programming model
     over NVIDIA CUDA/AMD HIP"""
 
