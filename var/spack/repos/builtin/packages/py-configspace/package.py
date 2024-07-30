@@ -18,6 +18,7 @@ class PyConfigspace(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", git="https://github.com/automl/ConfigSpace.git", branch="main")
+    version("1.1.4", sha256="afd625a9bcf4c01efa06114ce9dcc718cf9cba68910b602849b1c59654415762")
     version("1.1.3", sha256="8b77e77bd1c286a57e35da87552e33052f6793ddbcc696a9fc62425f60739ac2")
     version("1.1.2", sha256="8cd77438f976ce65ce2d056fbd659d12ca1425fe230b737942261879b7c542f0")
     version("1.1.1", sha256="450e5dccb52ffc56ec5ade131eaa95207412e1fa44883d611e024fc185a54bf0")
