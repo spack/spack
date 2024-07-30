@@ -22,12 +22,15 @@ class PerlBioEnsemblVariation(Package):
     extends("perl")
 
     variant("sql", default=False, description="Install SQL files")
-    variant("scripts", default=False, description="Install addition scripts")
+    variant("scripts", default=False, description="Install additional scripts")
     variant("tools", default=False, description="Install additional tools")
     variant("ld", default=False, description="Compile LD calculation tools")
 
     depends_on("perl-bioperl")
     depends_on("perl-bio-ensembl")
+    depends_on("perl-bio-bigfile")
+    depends_on("perl-bio-db-hts")
+    depends_on("perl-sereal")
     depends_on("perl-json")
     depends_on("perl-set-intervaltree")
     depends_on("perl-string-approx")
