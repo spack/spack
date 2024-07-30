@@ -123,11 +123,11 @@ class HypreCmake(CMakePackage, CudaPackage):
 
     def test_ex5big(self):
         """Ensure ex5big runs"""
-        self.run_hypre_cmake(ex5big)
+        self.run_hypre_cmake("ex5big")
 
     def test_ex15big(self):
         """Ensure ex15big runs"""
-        self.run_hypre_cmake(ex15big)
+        self.run_hypre_cmake("ex15big")
 
     @property
     def headers(self):
