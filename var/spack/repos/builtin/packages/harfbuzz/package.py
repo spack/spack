@@ -20,6 +20,7 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
 
     license("MIT")
 
+    version("9.0.0", sha256="a41b272ceeb920c57263ec851604542d9ec85ee3030506d94662067c7b6ab89e")
     version("8.5.0", sha256="77e4f7f98f3d86bf8788b53e6832fb96279956e1c3961988ea3d4b7ca41ddc27")
     version("8.4.0", sha256="af4ea73e25ab748c8c063b78c2f88e48833db9b2ac369e29bd115702e789755e")
     version("8.3.0", sha256="109501eaeb8bde3eadb25fab4164e993fbace29c3d775bcaa1c1e58e2f15f847")
@@ -71,6 +72,9 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("graphite2", default=False, description="enable support for graphite2 font engine")
     variant(
         "coretext",
@@ -117,6 +121,7 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
+    @when("@:8")
     def patch(self):
         change_sed_delimiter("@", ";", "src/Makefile.in")
 

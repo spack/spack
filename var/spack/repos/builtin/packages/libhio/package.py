@@ -32,6 +32,8 @@ class Libhio(AutotoolsPackage):
     version("1.4.1.1", sha256="5c65d18bf74357f9d9960bf6b9ad2432f8fc5a2b653e72befe4d1caabb9a2f7a")
     version("1.4.1.0", sha256="963f4a8d365afd92a5593f80946e2c4c79f4185d897436a43fae61dae5567ac4")
 
+    depends_on("c", type="build")  # generated
+
     #
     # main users of libhio thru spack will want to use HFDF5 plugin,
     # so make hdf5 variant a default

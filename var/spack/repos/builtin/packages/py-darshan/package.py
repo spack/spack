@@ -21,6 +21,8 @@ class PyDarshan(PythonPackage):
     version("3.4.1.0", sha256="41a033ebac6fcd0ca05b8ccf07e11191286dee923ec334b876a7ec8e8a6add84")
     version("3.4.0.1", sha256="0142fc7c0b12a9e5c22358aa26cca7083d28af42aeea7dfcc5698c56b6aee6b7")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools@:63", when="@:3.4.4", type="build")
     depends_on("py-setuptools@64:", when="@3.4.5:", type="build")

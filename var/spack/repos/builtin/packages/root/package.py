@@ -87,6 +87,10 @@ class Root(CMakePackage):
     version("6.06.04", sha256="ab86dcc80cbd8e704099af0789e23f49469932ac4936d2291602301a7aa8795b")
     version("6.06.02", sha256="18a4ce42ee19e1a810d5351f74ec9550e6e422b13b5c58e0c3db740cdbc569d1")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # ###################### Patches ##########################
 
     # Widely used patch (CMS, FNAL) to increase the size of static
@@ -767,7 +771,7 @@ class Root(CMakePackage):
             add_include_path("xproto")
         if "+opengl" in spec and "platform=darwin" not in spec:
             add_include_path("glew")
-            add_include_path("mesa-glu")
+            add_include_path("glu")
         if "platform=darwin" in spec:
             # Newer deployment targets cause fatal errors in rootcling, so
             # override with an empty value even though it may lead to link

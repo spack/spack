@@ -36,6 +36,9 @@ class Diamond(CMakePackage):
     version("0.8.38", sha256="582a7932f3aa73b0eac2275dd773818665f0b067b32a79ff5a13b0e3ca375f60")
     version("0.8.26", sha256="00d2be32dad76511a767ab8e917962c0ecc572bc808080be60dec028df45439f")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("zlib-api")
 
     conflicts("target=aarch64:", when="@:0.9.25")

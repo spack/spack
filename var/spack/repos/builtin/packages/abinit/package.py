@@ -25,10 +25,11 @@ class Abinit(AutotoolsPackage):
     """
 
     homepage = "https://www.abinit.org/"
-    url = "https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz"
+    url = "https://www.abinit.org/sites/default/files/packages/abinit-10.0.7.tar.gz"
     license("Apache-2.0")
 
     maintainers("downloadico")
+    version("10.0.7", sha256="a9fc044b33861b7defd50fafd19a73eb6f225e18ae30b23bc731d9c8009c881c")
     version("9.10.5", sha256="a9e0f0e058baa6088ea93d26ada369ccf0fe52dc9d4a865b1c38c20620148cd5")
     version("9.10.3", sha256="3f2a9aebbf1fee9855a09dd687f88d2317b8b8e04f97b2628ab96fb898dce49b")
     version("9.8.4", sha256="a086d5045f0093b432e6a044d5f71f7edf5a41a62d67b3677cb0751d330c564a")
@@ -42,6 +43,10 @@ class Abinit(AutotoolsPackage):
     version("8.2.2", sha256="e43544a178d758b0deff3011c51ef7c957d7f2df2ce8543366d68016af9f3ea1")
     # Versions before 8.0.8b are not supported.
     version("8.0.8b", sha256="37ad5f0f215d2a36e596383cb6e54de3313842a0390ce8d6b48a423d3ee25af2")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("mpi", default=True, description="Builds with MPI support. Requires MPI2+")
     variant("openmp", default=False, description="Enables OpenMP threads. Use threaded FFTW3")
@@ -126,7 +131,7 @@ class Abinit(AutotoolsPackage):
     )
 
     patch("rm_march_settings.patch", when="@:8")
-    patch("rm_march_settings_v9.patch", when="@9:")
+    patch("rm_march_settings_v9.patch", when="@9")
 
     # Fix detection of Fujitsu compiler
     # Fix configure not to collect the option that causes an error

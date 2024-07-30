@@ -16,6 +16,8 @@ class Openslide(AutotoolsPackage):
 
     version("3.4.1", sha256="9938034dba7f48fadc90a2cdf8cfe94c5613b04098d1348a5ff19da95b990564")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("pkgconfig", type="build")
     depends_on("openjpeg")
     depends_on("jpeg")

@@ -36,6 +36,8 @@ class Justbuild(Package):
     version("1.1.2", tag="v1.1.2", commit="67b486e2ce6ab657a98b2212a9b6f68935d07a29")
     version("1.0.0", tag="v1.0.0", commit="c29b671f798e82ba26b5f54ebc9e24c7dcfb8166")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("python@3:", type=("build", "run"))
     depends_on("wget", type=("build", "run"))
 

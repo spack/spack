@@ -381,10 +381,10 @@ spack:
     """
     )
     env = ev.Environment(tmp_path)
-    env.add("a")
+    env.add("pkg-a")
 
     assert len(env.user_specs) == 1
-    assert env.manifest.yaml_content["spack"]["specs"] == ["a"]
+    assert env.manifest.yaml_content["spack"]["specs"] == ["pkg-a"]
 
 
 @pytest.mark.parametrize(
@@ -582,7 +582,7 @@ def test_conflicts_with_packages_that_are_not_dependencies(
 spack:
   specs:
   - {spec_str}
-  - b
+  - pkg-b
   concretizer:
     unify: true
 """
@@ -710,7 +710,7 @@ def test_variant_propagation_with_unify_false(tmp_path, mock_packages, config):
     spack:
       specs:
       - parent-foo ++foo
-      - c
+      - pkg-c
       concretizer:
         unify: false
     """
@@ -795,10 +795,10 @@ def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, mock
         """spack:
       specs:
       # These two specs concretize to the same hash
-      - c
-      - c@1.0
+      - pkg-c
+      - pkg-c@1.0
       # Spec used to trigger the bug
-      - a
+      - pkg-a
       concretizer:
         unify: true
     """
@@ -806,10 +806,10 @@ def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, mock
     e = ev.Environment(mutable_mock_env_path)
     with e:
         e.concretize()
-        e.deconcretize(spack.spec.Spec("a"), concrete=False)
+        e.deconcretize(spack.spec.Spec("pkg-a"), concrete=False)
         e.concretize()
     assert len(e.concrete_roots()) == 3
-    all_root_hashes = set(x.dag_hash() for x in e.concrete_roots())
+    all_root_hashes = {x.dag_hash() for x in e.concrete_roots()}
     assert len(all_root_hashes) == 2
 
 
@@ -841,3 +841,28 @@ def test_root_version_weights_for_old_versions(mutable_mock_env_path, mock_packa
 
     assert bowtie.satisfies("@=1.3.0")
     assert gcc.satisfies("@=1.0")
+
+
+def test_env_view_on_empty_dir_is_fine(tmp_path, config, mock_packages, temporary_store):
+    """Tests that creating a view pointing to an empty dir is not an error."""
+    view_dir = tmp_path / "view"
+    view_dir.mkdir()
+    env = ev.create_in_dir(tmp_path, with_view="view")
+    env.add("mpileaks")
+    env.concretize()
+    env.install_all(fake=True)
+    env.regenerate_views()
+    assert view_dir.is_symlink()
+
+
+def test_env_view_on_non_empty_dir_errors(tmp_path, config, mock_packages, temporary_store):
+    """Tests that creating a view pointing to a non-empty dir errors."""
+    view_dir = tmp_path / "view"
+    view_dir.mkdir()
+    (view_dir / "file").write_text("")
+    env = ev.create_in_dir(tmp_path, with_view="view")
+    env.add("mpileaks")
+    env.concretize()
+    env.install_all(fake=True)
+    with pytest.raises(ev.SpackEnvironmentError, match="because it is a non-empty dir"):
+        env.regenerate_views()

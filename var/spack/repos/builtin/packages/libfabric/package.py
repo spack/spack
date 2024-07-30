@@ -64,6 +64,8 @@ class Libfabric(AutotoolsPackage):
     version("1.5.0", sha256="88a8ad6772f11d83e5b6f7152a908ffcb237af273a74a1bd1cb4202f577f1f23")
     version("1.4.2", sha256="5d027d7e4e34cb62508803e51d6bd2f477932ad68948996429df2bfff37ca2a5")
 
+    depends_on("c", type="build")  # generated
+
     fabrics = (
         conditional("cxi", when=spack.platforms.cray.slingshot_network()),
         "efa",

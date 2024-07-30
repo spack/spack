@@ -6,8 +6,6 @@
 import os
 import socket
 
-import llnl.util.tty as tty
-
 from spack.package import *
 
 from .blt import llnl_link_helpers
@@ -143,6 +141,10 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     version(
         "0.1.3", tag="v0.1.3", commit="cc347edeb17f5f30f694aa47f395d17369a2e449", submodules=True
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Some projects importing both camp and umpire targets end up with conflicts in BLT targets
     # import. This is not addressing the root cause, which will be addressed in BLT@5.4.0 and will
@@ -458,37 +460,57 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         return []
 
-    def test(self):
+    def setup_run_environment(self, env):
+        for library in ["lib", "lib64"]:
+            lib_path = join_path(self.prefix, library)
+            if os.path.exists(lib_path):
+                env.append_path("LD_LIBRARY_PATH", lib_path)
+
+    def run_example(self, exe, expected):
         """Perform stand-alone checks on the installed package."""
-        if self.spec.satisfies("@:1") or not os.path.isdir(self.prefix.bin):
-            tty.info("Skipping: checks not installed in bin for v{0}".format(self.version))
-            return
 
-        # Run a subset of examples PROVIDED installed
-        # tutorials with readily checkable outputs.
-        checks = {
-            "malloc": ["99 should be 99"],
-            "recipe_dynamic_pool_heuristic": ["in the pool", "releas"],
-            "recipe_no_introspection": ["has allocated", "used"],
-            "strategy_example": ["Available allocators", "HOST"],
-            "tut_copy": ["Copied source data"],
-            "tut_introspection": ["Allocator used is HOST", "size of the allocation"],
-            "tut_memset": ["Set data from HOST"],
-            "tut_move": ["Moved source data", "HOST"],
-            "tut_reallocate": ["Reallocated data"],
-            "vector_allocator": [""],
-        }
+        exe_run = which(join_path(self.prefix.bin, exe))
+        if exe_run is None:
+            raise SkipTest(f"{exe} is not installed for version {self.version}")
+        out = exe_run(output=str.split, error=str.split)
+        check_outputs(expected, out)
 
-        for exe in checks:
-            expected = checks[exe]
-            reason = "test: checking output from {0}".format(exe)
-            self.run_test(
-                exe,
-                [],
-                expected,
-                0,
-                installed=False,
-                purpose=reason,
-                skip_missing=True,
-                work_dir=self.prefix.bin,
-            )
+    def test_malloc(self):
+        """Run Malloc"""
+        self.run_example("malloc", ["99 should be 99"])
+
+    def test_recipe_dynamic_pool_heuristic(self):
+        """Multiple use allocator test"""
+        self.run_example("recipe_dynamic_pool_heuristic", ["in the pool", "releas"])
+
+    def test_recipe_no_introspection(self):
+        """Test without introspection"""
+        self.run_example("recipe_no_introspection", ["has allocated", "used"])
+
+    def test_strategy_example(self):
+        """Memory allocation strategy test"""
+        self.run_example("strategy_example", ["Available allocators", "HOST"])
+
+    def test_tut_copy(self):
+        """Copy data test"""
+        self.run_example("tut_copy", ["Copied source data"])
+
+    def test_tut_introspection(self):
+        """Keep track of pointer allocation test"""
+        self.run_example("tut_introspection", ["Allocator used is HOST", "size of the allocation"])
+
+    def test_tut_memset(self):
+        """Set entire block of memory to one value test"""
+        self.run_example("tut_memset", ["Set data from HOST"])
+
+    def test_tut_move(self):
+        """Move memory test"""
+        self.run_example("tut_move", ["Moved source data", "HOST"])
+
+    def test_tut_reallocate(self):
+        """Reallocate memory test"""
+        self.run_example("tut_reallocate", ["Reallocated data"])
+
+    def test_vector_allocator(self):
+        """Allocate vector memory test"""
+        self.run_example("vector_allocator", [""])
