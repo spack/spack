@@ -146,7 +146,25 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         when="+cuda",
         description="Enable MEM Target for CUDA",
     )
-
+    # OMP offload
+    variant(
+        "omp_offload",
+        default=False,
+        when="+omp",
+        description="Enable OpenMP Target",
+    )
+    variant(
+        "omp_flags",
+        values=str,
+        default="none",
+        when="+omp",
+        description="If OFFLOAD is enabled, this *overrides* the default offload flags",
+    )
+    conflicts(
+        "omp_flags=none",
+        when="+omp_offload",
+        msg="OpenMP requires offload flags to be specfied by omp_flags=",
+    )
     # Raja offload
     variant(
         "raja_offload",
@@ -475,33 +493,29 @@ register_flag_optional(TARGET_PROCESSOR
         # Same applies for raja
         if self.spec.satisfies("+omp~kokkos~raja"):
             args.append("-DCMAKE_C_COMPILER=" + spack_cc)
-            if "cuda_arch" in self.spec.variants:
-                # the architecture value is only number so append cc_ to the name
-                cuda_arch = "cc" + self.spec.variants["cuda_arch"].value[0]
-                args.append("-DOFFLOAD=ON")
-                args.append("-DOFFLOAD_FLAGS=" + " -mp=gpu;" + "-gpu=" + cuda_arch)
-            elif ("amdgpu_target" in self.spec.variants) and (
-                self.spec.variants["amdgpu_target"].value != "none"
-            ):
-                args.append("-DOFFLOAD=ON")
-                args.append(
-                    "-DOFFLOAD_FLAGS="
-                    + self.pkg.compiler.openmp_flag
-                    + ";--offload-arch="
-                    + self.spec.variants["amdgpu_target"].value[0]
-                )
-            elif ("cpu_arch" in self.spec.variants) and (
-                self.spec.variants["cpu_arch"].value != "none"
-            ):
-                args.append("-DOFFLOAD=" + "INTEL")
-            elif "offload" in self.spec.variants and (
-                self.spec.variants["offload"].value != "none"
-            ):
-                args.append("-DOFFLOAD=" + "ON")
-                args.append("-DOFFLOAD_FLAGS=" + self.spec.variants["offload"].value)
-            else:
+            if self.spec.satisfies("~omp_offload"):
                 args.append("-DOFFLOAD=" + "OFF")
-                args.append("-DCMAKE_CXX_FLAGS=" + self.pkg.compiler.openmp_flag)
+                # Check if the omp_flags variant is not set to "none"
+                args.append("-DCMAKE_CXX_FLAGS=" 
+                + self.pkg.compiler.openmp_flag 
+                + " " + (self.spec.variants["omp_flags"].value if self.spec.variants["omp_flags"].value != "none" else ""))
+            else:
+                offload_args=""
+                args.append("-DOFFLOAD=ON")
+                if "cuda_arch" in self.spec.variants:
+                    if self.spec.satisfies("%nvhpc"):
+                        cuda_arch = "cc" + self.spec.variants["cuda_arch"].value[0]
+                        offload_args=" -mp=gpu;" + "-gpu=" + cuda_arch + " "
+                    if self.spec.satisfies("%clang"):
+                        cuda_arch = "sm_" + self.spec.variants["cuda_arch"].value[0]
+                        offload_args="-march=znver3;-fopenmp;--offload-arch="+cuda_arch
+                elif ("amdgpu_target" in self.spec.variants) and (
+                self.spec.variants["amdgpu_target"].value != "none"
+                ):
+                    offload_args = ";--offload-arch=" + self.spec.variants["amdgpu_target"].value[0]
+                
+                args.append("-DOFFLOAD_FLAGS=" + self.pkg.compiler.openmp_flag +";"+ offload_args +";"+self.spec.variants["omp_flags"].value)
+
 
         # ===================================
         #            SYCL
