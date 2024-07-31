@@ -106,13 +106,14 @@ class Parsec(CMakePackage, CudaPackage):
 
     def run_parsec(self, exe_name):
         """Common parsec testing method"""
-        cmake = self.spec["cmake"].command
-        cmake(".")
-        make = which("make")
-        make()
+        with working_dir(join_path(install_test_root(self), "contrib/build_with_parsec")):
+            cmake = self.spec["cmake"].command
+            cmake(".")
+            make = which("make")
+            make()
 
-        exe = which("./" + exe_name)
-        exe()
+            exe = which("./" + exe_name)
+            exe()
 
     def test_allreduce(self):
         """Compile and run a DTD user program"""
