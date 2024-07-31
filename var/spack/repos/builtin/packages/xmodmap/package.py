@@ -22,7 +22,7 @@ class Xmodmap(AutotoolsPackage, XorgPackage):
     version("1.0.10", sha256="d4e9dc4cb034d0d774d059498d05348869934c52b0f24b0f3913823090b88640")
     version("1.0.9", sha256="73427a996f0fcda2a2c7ac96cfc4edd5985aeb13b48053f55ae7f63a668fadef")
 
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")
 
     depends_on("libx11")
 

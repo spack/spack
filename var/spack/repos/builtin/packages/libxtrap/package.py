@@ -23,7 +23,7 @@ class Libxtrap(AutotoolsPackage, XorgPackage):
 
     version("1.0.1", sha256="db748e299dcc9af68428795b898a4a96cf806f79b75786781136503e4fce5e17")
 
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")
 
     depends_on("libx11")
     depends_on("libxt")

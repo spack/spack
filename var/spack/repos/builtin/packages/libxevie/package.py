@@ -16,7 +16,7 @@ class Libxevie(AutotoolsPackage, XorgPackage):
 
     version("1.0.3", sha256="3759bb1f7fdade13ed99bfc05c0717bc42ce3f187e7da4eef80beddf5e461258")
 
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")
 
     depends_on("libx11")
     depends_on("libxext")
