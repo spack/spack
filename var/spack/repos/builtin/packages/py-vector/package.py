@@ -12,6 +12,10 @@ class PyVector(PythonPackage):
     homepage = "https://github.com/scikit-hep/vector"
     pypi = "vector/vector-0.8.4.tar.gz"
 
+    maintainers("wdconinc")
+
+    tags = ["hep"]
+
     license("BSD-3-Clause")
 
     version("1.4.1", sha256="15aef8911560db1ea3ffa9dbd5414d0ec575a504a2c3f23ea45170a18994466e") 
