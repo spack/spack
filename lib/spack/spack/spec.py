@@ -4887,6 +4887,7 @@ def get_host_environment() -> Dict[str, Any]:
         "architecture": arch_spec,
         "arch_str": str(arch_spec),
         "hostname": socket.gethostname(),
+        "full_hostname": socket.getfqdn(),
     }
 
 
