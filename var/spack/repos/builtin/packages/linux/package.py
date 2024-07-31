@@ -3,27 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install linux
-#
-# You can edit this file again by typing:
-#
-#     spack edit linux
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack.package import *
-
+from shutil import copy2
 
 class Linux(MakefilePackage):
+# class Linux(Package):
     """Linux is a clone of the operating system Unix and aims towards POSIX and 
     Single UNIX Specification compliance. It has all the features you would expect 
     in a modern fully-fledged Unix, including true multitasking, virtual memory, 
@@ -39,12 +23,40 @@ class Linux(MakefilePackage):
 
     version("6.9.9", sha256="19e8dd54db1e338d59c17102d81edba7a988f9e1c7224c69165a9d442df8aac3")
 
-    patch ("configured-linux.patch", when="@6.9.9:")
-
     # FIXME: Add dependencies if required.
     # depends_on("foo")
 
-    def edit(self, spec, prefix):
-        # makefile = FileFilter("Makefile")
-        # makefile.filter("CC = .*", "CC = cc")
-        pass
+    def setup_build_environment(self, env):
+        env.set("KBUILD_OUTPUT", self.prefix)
+
+    @run_before("build")
+    def copy_kconfig(self):
+        name = "kconfig_allconfig"
+        try:
+            copy2(f"{self.package_dir}/{name}", f"{self.build_directory}/{name}")
+        except Exception as e:
+            print("exception occured: ", e)
+
+    def build(self, spec, prefix):
+        import llnl.util.filesystem as fs
+        import inspect
+        import sys
+        stage_dir = "~"
+        #print("word!", file=sys.stdout)
+#       self.stage.expand_archive
+        print("Staged DIR is:", self.stage.archive_file)
+        try:
+            import subprocess
+            print(f"Self.stage.path: {self.stage.path}")
+            subprocess.run(f"cp -rf {self.stage.path} {stage_dir}")
+            print("copied")
+        except Exception as e:
+            print(f"Exception: {e}")
+            
+        with fs.working_dir(self.build_directory):
+            make("KCONFIG_ALLCONFIG=kconfig_allconfig", "allnoconfig")
+            make("modules")
+
+    def install(self, spec, prefix):
+        install_tree(self.build_directory, self.prefix)
+        print("Got to install")

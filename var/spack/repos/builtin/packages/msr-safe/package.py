@@ -54,3 +54,13 @@ class MsrSafe(MakefilePackage):
         # makefile = FileFilter("Makefile")
         # makefile.filter("CC = .*", "CC = cc")
         pass
+
+    # Should be "make -C /full/path/to/depends/on/package/source M=/full/path/to/package/source modules"
+    @property
+    def build_targets(self):
+        return [
+            f"-C {self.spec['linux'].prefix}",
+            f"M={self.build_directory}",
+            "modules"
+        ]
+
