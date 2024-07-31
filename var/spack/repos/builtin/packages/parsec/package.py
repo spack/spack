@@ -108,7 +108,7 @@ class Parsec(CMakePackage, CudaPackage):
         """Common parsec testing method"""
         with working_dir(join_path(install_test_root(self), "contrib/build_with_parsec")):
             cmake = self.spec["cmake"].command
-            cmake(".")
+            cmake(".", f"-DCUDA_TOOLKIT_ROOT_DIR={self.spec['cuda'].prefix}")
             make = which("make")
             make()
 
