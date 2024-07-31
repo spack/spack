@@ -64,8 +64,8 @@ class Siesta(MakefilePackage, CMakePackage):
     variant(
         "cray",
         default=False,
-	description="Enable specific cray settings for using cray-hdf5"
-	" and cray-netcdf modulefiles",
+        description="Enable specific cray settings for using cray-hdf5"
+        " and cray-netcdf modulefiles",
     )
     variant("debug", default=False, description="Build in debug  mode")
     variant(
@@ -275,8 +275,8 @@ class CMakeBuilder(cmake.CMakeBuilder):
 
         if "build_type=Debug" in spec:
             args += [
-	    	"-DFortran_FLAGS=-Og -g -Wall -fcheck=all -fbacktrace"
-		" -Warray-bounds -Wunused -Wuninitialized"
+                "-DFortran_FLAGS=-Og -g -Wall -fcheck=all -fbacktrace"
+                " -Warray-bounds -Wunused -Wuninitialized"
             ]
         else:
             args += ["-DFortran_FLAGS=-O2 -fPIC -ftree-vectorize  -fallow-argument-mismatch"]
