@@ -64,7 +64,8 @@ class Siesta(MakefilePackage, CMakePackage):
     variant(
         "cray",
         default=False,
-        description="Enable specific cray settings for using cray-hdf5 and cray-netcdf modulefiles",
+	description="Enable specific cray settings for using cray-hdf5"
+	" and cray-netcdf modulefiles",
     )
     variant("debug", default=False, description="Build in debug  mode")
     variant(
@@ -120,7 +121,7 @@ class Siesta(MakefilePackage, CMakePackage):
                 configure_args += [
                     "--with-netcdf=%s" % (spec["netcdf-fortran"].libs + spec["netcdf-c"].libs)
                 ]
-            
+
             if self.spec.satisfies("%gcc"):
                 if "+cray" in spec:
                     configure_args.append(
@@ -224,7 +225,6 @@ class Siesta(MakefilePackage, CMakePackage):
                         arch_make.filter("^LIBS =.*", "LIBS = {0}".format(" ".join(libs_arg)))
                         f.write("FPPFLAGS = {0}".format(" ".join(fppflags_arg)))
 
-
     def build(self, spec, prefix):
         with working_dir("Obj"):
             make(parallel=False)
@@ -258,7 +258,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
 
         args += ["-DBLAS_LIBRARIES={0}".format(self.spec["blas"].libs.link_flags)]
         args += ["-DLAPACK_LIBRARIES={0}".format(self.spec["lapack"].libs.link_flags)]
-        
+
         if "+mpi" in spec:
             args += [
                 "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,
@@ -267,7 +267,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
             ]
             args += ["-DSIESTA_WITH_MPI=ON"]
             args += ["-DSCALAPACK_LIBRARY={0}".format(spec["scalapack"].libs.joined(";"))]
-       
+
         if "+openmp" in spec:
             args += ["-DSIESTA_WITH_OPENMP=ON"]
             if "+cray" in spec:
@@ -275,7 +275,8 @@ class CMakeBuilder(cmake.CMakeBuilder):
 
         if "build_type=Debug" in spec:
             args += [
-                "-DFortran_FLAGS=-Og -g -Wall -fcheck=all -fbacktrace -Warray-bounds -Wunused -Wuninitialized"
+	    	"-DFortran_FLAGS=-Og -g -Wall -fcheck=all -fbacktrace"
+		" -Warray-bounds -Wunused -Wuninitialized"
             ]
         else:
             args += ["-DFortran_FLAGS=-O2 -fPIC -ftree-vectorize  -fallow-argument-mismatch"]
