@@ -222,10 +222,11 @@ class Xnnpack(CMakePackage):
                 "PTHREADPOOL_SOURCE_DIR", join_path(self.stage.source_path, "deps", "pthreadpool")
             ),
             self.define("PSIMD_SOURCE_DIR", join_path(self.stage.source_path, "deps", "psimd")),
-            # https://salsa.debian.org/deeplearning-team/xnnpack/-/blob/master/debian/rules
-            self.define("XNNPACK_LIBRARY_TYPE", "shared"),
-            self.define("XNNPACK_BUILD_TESTS", False),
+            # https://github.com/pytorch/pytorch/blob/main/cmake/Dependencies.cmake
+            self.define("XNNPACK_LIBRARY_TYPE", "static"),
             self.define("XNNPACK_BUILD_BENCHMARKS", False),
+            self.define("XNNPACK_BUILD_TESTS", False),
+            self.define("CMAKE_POSITION_INDEPENDENT_CODE", True),
         ]
 
         if self.spec.satisfies("@:2023-01-17"):
@@ -234,7 +235,3 @@ class Xnnpack(CMakePackage):
             )
 
         return args
-
-    def setup_build_environment(self, env):
-        env.append_flags("CFLAGS", self.compiler.cc_pic_flag)
-        env.append_flags("CXXFLAGS", self.compiler.cxx_pic_flag)
