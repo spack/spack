@@ -4448,9 +4448,9 @@ class Spec:
         will be colorized along with the value.
 
         When formatting specs, key-value pairs are separated from preceding parts of the
-        spec by whitespace. However, we do not print extra whitespace if the formatted
-        attribute is not set. To allow this, you can add whitespace to the key *inside*
-        the braces of the format string, e.g.:
+        spec by whitespace. To avoid printing extra whitespace when the formatted
+        attribute is not set, you can add whitespace to the key *inside* the braces of
+        the format string, e.g.:
 
             { namespace=namespace}
 
