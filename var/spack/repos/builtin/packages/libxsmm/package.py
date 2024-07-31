@@ -26,7 +26,7 @@ class Libxsmm(MakefilePackage):
     # as a stable version that supports other targets than x86. Remove this
     # after 2.0 release.
     version("main-2023-11", commit="0d9be905527ba575c14ca5d3b4c9673916c868b2")
-    version("main-2024-07", commit="92b08d68724e9a2653056acb5a3c6667ecaeaea1") # CP2K
+    version("main-2024-07", commit="92b08d68724e9a2653056acb5a3c6667ecaeaea1")  # CP2K
     version("main", branch="main")
 
     version("1.17", sha256="8b642127880e92e8a75400125307724635ecdf4020ca4481e5efe7640451bb92")
