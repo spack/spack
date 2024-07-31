@@ -186,7 +186,7 @@ class Qt(Package):
             depends_on("pkgconfig", type="build")
             depends_on("libsm", when="@3")
             depends_on("glib", when="@4:")
-    depends_on("libmng")
+            depends_on("libmng")
     depends_on("icu4c")
     depends_on("harfbuzz", when="@5:")
 
