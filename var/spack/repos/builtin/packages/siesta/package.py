@@ -115,7 +115,7 @@ class Siesta(MakefilePackage, CMakePackage):
                 "MPIFC=%s" % spec["mpi"].mpifc,
             ]
             if "+cray" in spec:
-	    	configure_args += ["--with-netcdf={0}/lib/libnetcdff.so".format(netcdff_prefix)]
+                configure_args += ["--with-netcdf={0}/lib/libnetcdff.so".format(netcdff_prefix)]
             else:
                 configure_args += [
                     "--with-netcdf=%s" % (spec["netcdf-fortran"].libs + spec["netcdf-c"].libs)
@@ -267,8 +267,8 @@ class CMakeBuilder(cmake.CMakeBuilder):
             ]
             args += ["-DSIESTA_WITH_MPI=ON"]
             args += ["-DSCALAPACK_LIBRARY={0}".format(spec["scalapack"].libs.joined(";"))]
-        
-	if "+openmp" in spec:
+       
+        if "+openmp" in spec:
             args += ["-DSIESTA_WITH_OPENMP=ON"]
             if "+cray" in spec:
                 args += ["-DFortran_FLAGS=-fopenmp"]
