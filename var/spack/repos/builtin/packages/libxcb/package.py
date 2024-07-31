@@ -63,5 +63,5 @@ class Libxcb(AutotoolsPackage, XorgPackage):
 
     def setup_build_environment(self, env):
         env.set(
-            "LC_ALL", "en_US.UTF-8"
+            "LC_ALL", "C.UTF-8"
         )    # set well defined locale; see: https://www.linuxfromscratch.org/blfs/view/git/x/libxcb.html
