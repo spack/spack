@@ -100,7 +100,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         description="Use TensorPipe",
         when="@1.6: +distributed",
     )
-    variant("onnx_ml", default=True, description="Enable traditional ONNX ML API", when="@1.5:")
     variant(
         "breakpad",
         default=True,
@@ -206,16 +205,16 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("gloo@2020-03-17", when="@1.6+gloo")
     depends_on("gloo+cuda", when="@1.6:+gloo+cuda")
     depends_on("nccl", when="+nccl+cuda")
-    depends_on("onnx@1.16.0", when="@2.3:+onnx_ml")
-    depends_on("onnx@1.15.0", when="@2.2+onnx_ml")
-    depends_on("onnx@1.14.1", when="@2.1+onnx_ml")
-    depends_on("onnx@1.13.1", when="@2.0+onnx_ml")
-    depends_on("onnx@1.12.0", when="@1.13:1+onnx_ml")
-    depends_on("onnx@1.11.0", when="@1.12+onnx_ml")
-    depends_on("onnx@1.10.1_2021-10-08", when="@1.11+onnx_ml")
-    depends_on("onnx@1.10.1", when="@1.10+onnx_ml")
-    depends_on("onnx@1.8.0_2020-11-03", when="@1.8:1.9+onnx_ml")
-    depends_on("onnx@1.7.0_2020-05-31", when="@1.6:1.7+onnx_ml")
+    depends_on("onnx@1.16.0", when="@2.3:")
+    depends_on("onnx@1.15.0", when="@2.2")
+    depends_on("onnx@1.14.1", when="@2.1")
+    depends_on("onnx@1.13.1", when="@2.0")
+    depends_on("onnx@1.12.0", when="@1.13:1")
+    depends_on("onnx@1.11.0", when="@1.12")
+    depends_on("onnx@1.10.1_2021-10-08", when="@1.11")
+    depends_on("onnx@1.10.1", when="@1.10")
+    depends_on("onnx@1.8.0_2020-11-03", when="@1.8:1.9")
+    depends_on("onnx@1.7.0_2020-05-31", when="@1.6:1.7")
     with when("~custom-protobuf"):
         depends_on("protobuf@3.13.0", when="@1.10:")
         depends_on("protobuf@3.11.4", when="@1.6:1.9")
@@ -598,11 +597,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("DEBUG", "ON")
         else:
             env.set("DEBUG", "OFF")
-
-        if "+onnx_ml" in self.spec:
-            env.set("ONNX_ML", "ON")
-        elif "~onnx_ml" in self.spec:
-            env.set("ONNX_ML", "OFF")
 
         if not self.spec.satisfies("@main"):
             env.set("PYTORCH_BUILD_VERSION", self.version)
