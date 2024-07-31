@@ -243,6 +243,12 @@ class Msvc(Compiler):
         The toolset version is the version of the combined set of cl and link
         This typically relates directly to VS version i.e. VS 2022 is v143
         VS 19 is v142, etc.
+        This value is defined by the first three digits of the major + minor
+        version of the VS toolset (143 for 14.3x.bbbbb). Traditionally the
+        minor version has remained a static two digit number for a VS release
+        series, however, as of VS22, this is no longer true, both
+        14.4x.bbbbb and 14.3x.bbbbb are considered valid VS22 VC toolset
+        versions due to a change in toolset minor version sentiment.
 
         This is *NOT* the full version, for that see
         Msvc.msvc_version or MSVC.platform_toolset_ver for the
@@ -264,10 +270,14 @@ class Msvc(Compiler):
         by `short_msvc_version`, but typically are represented by the same
         three digit value
         """
+        # Typically VS toolset version and platform toolset versions match
         # VS22 introduces the first divergence of VS toolset version
         # (144 for "recent" releases) and platform toolset version (143)
         # so it needs additional handling until MS releases v144
+        # (assuming v144 is also for VS22)
         # or adds better support for detection
+        # TODO: (johnwparent) Update this logic for the next platform toolset
+        # or VC toolset version update
         toolset_ver = self.vc_toolset_ver
         vs22_toolset = Version(toolset_ver) > Version("142")
         return toolset_ver if not vs22_toolset else "143"
