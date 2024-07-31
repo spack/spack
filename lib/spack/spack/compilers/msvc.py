@@ -229,7 +229,6 @@ class Msvc(Compiler):
         For CL version, query `Msvc.cl_version`"""
         return Version(re.search(Msvc.version_regex, self.cc).group(1))
 
-
     @property
     def short_msvc_version(self):
         """This is the shorthand VCToolset version of form
