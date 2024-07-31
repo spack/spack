@@ -22,7 +22,9 @@ class PyRioxarray(PythonPackage):
     version("0.15.6", sha256="0c01f0531814fbaa36d2ab379183bdb27b5ec8ae1b5d9c1ee3b3eef11b76f003")
     version("0.15.5", sha256="433b169cd10346ed5fe0123e61fafca4dcaf5ce1b6e2f6cc1a9c0e0bf7d7c1d4")
     version("0.15.4", sha256="e5080f3c8a6e6542bfd05065b2a22134d28c727efa47b8ee356b430f99b1a1dd")
-    version("0.15.3.dev0", sha256="dbe760f43340bf7f6cd508a5aeb5032249cb5860630d4f73284138859a547208")
+    version(
+        "0.15.3.dev0", sha256="dbe760f43340bf7f6cd508a5aeb5032249cb5860630d4f73284138859a547208"
+        )
     version("0.15.3", sha256="d12441e696dbc8a6113658e75326009ef6fddd3f865f4bcdd659d7fcfe4d8c7f")
     version("0.15.2", sha256="019a3f6122c16faff1ace500c2753e949987e06862070150b7ea494d99baa910")
     version("0.15.1", sha256="c6d30d8b1b12924dffc45c4d55764840039fa0c8b551589d6cc1364e158e6055")
@@ -96,7 +98,6 @@ class PyRioxarray(PythonPackage):
     version("0.0.3", sha256="1a3aa667b680ce3cee8be61581740dbdb2d68a6a81b363a7377aa9c458fe2647")
     version("0.0.2", sha256="5ba89bc0c3bf57cd9ef8d12b3a7e610c5a5e75ff26448caca52def0cf5f09066")
     version("0.0.1", sha256="8306d9c4de219b6bf55ef0ee38bb0049ad53cb6cc1e3213aaead27ccdfef9ac7")
-
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
