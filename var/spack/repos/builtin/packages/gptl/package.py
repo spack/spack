@@ -22,6 +22,9 @@ class Gptl(AutotoolsPackage):
     version("8.0.3", sha256="334979c6fe78d4ed1b491ec57fb61df7a910c58fd39a3658d03ad89f077a4db6")
     version("8.0.2", sha256="011f153084ebfb52b6bf8f190835d4bae6f6b5c0ad320331356aa47a547bf2b4")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("pmpi", default=False, description="Build with PMPI support to auto-profile MPI calls")
     variant("papi", default=False, description="Enable built-in support for papi library")
     variant("nestedomp", default=False, description="Build with nested OMP capability")

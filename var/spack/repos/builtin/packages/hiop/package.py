@@ -5,8 +5,6 @@
 
 import os
 
-import llnl.util.tty as tty
-
 from spack.package import *
 
 
@@ -72,10 +70,14 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
     version("develop", branch="develop")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("jsrun", default=False, description="Enable/Disable jsrun command for testing")
     variant("shared", default=False, description="Enable/Disable shared libraries")
     variant("mpi", default=True, description="Enable/Disable MPI")
-    variant("raja", default=False, description="Enable/Disable RAJA")
+    variant("raja", default=False, when="@0.3.99:", description="Enable/Disable RAJA")
     variant("kron", default=False, description="Enable/Disable Kron reduction")
     variant("sparse", default=False, description="Enable/Disable Sparse linear algebra")
     variant(
@@ -124,7 +126,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     # 1.0.2 fixes bug with cuda 12 compatibility
     # hiop@0.6.0 requires cusolver API in cuda@11
     depends_on("cuda@11:11.9", when="@0.6.0:1.0.1+cuda")
-    depends_on("cuda@11:", when="@develop:+cuda")
+    # Version v0.7.0 of HiOp is the earliest version that uses
+    #    cusparseSpGEMMreuse_workEstimation
+    # which appears for the first time in the cuSPARSE version shipped with
+    # CUDA 11.3.1, at least according to the CUDA online documentation.
+    depends_on("cuda@11.3.1:", when="@0.7:+cuda")
     # Before hiop@0.6.0 only cuda requirement was magma
     depends_on("cuda", when="@:0.5.4+cuda")
 
@@ -134,9 +140,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     # RAJA > 0.14 and Umpire > 6.0 require c++ std 14
     # We are working on supporting newer Umpire/RAJA versions
-    depends_on("raja@0.14.0:0.14", when="@0.5.0:+raja")
-    depends_on("umpire@6.0.0:6", when="@0.5.0:+raja")
-    depends_on("camp@0.2.3:0.2", when="@0.5.0:+raja")
+    depends_on("raja@0.14", when="@0.5:+raja")
+    depends_on("raja@:0.13", when="@0.3.99:0.4+raja")
+    depends_on("umpire@6", when="@0.5:+raja")
+    depends_on("umpire@:5", when="@0.3.99:0.4+raja")
+    depends_on("camp@0.2.3:0.2", when="@0.3.99:+raja")
 
     # This is no longer a requirement in RAJA > 0.14
     depends_on("umpire+cuda~shared", when="+raja+cuda ^raja@:0.14")
@@ -149,8 +157,10 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     # We rely on RAJA / Umpire utilities when supporting CUDA backend
     conflicts("~raja", when="+cuda", msg="RAJA is required for CUDA support")
+    conflicts("~raja", when="+rocm", msg="RAJA is required for ROCm support")
 
     depends_on("hip", when="+rocm")
+    depends_on("hiprand", when="+rocm")
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", when="+rocm")
 
@@ -266,37 +276,35 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     #
     # export SPACK_USER_CACHE_PATH=/tmp/spack
     # export SPACK_DISABLE_LOCAL_CONFIG=true
-    def test(self):
-        if not self.spec.satisfies("@develop") or not os.path.isdir(self.prefix.bin):
-            tty.info("Skipping: checks not installed in bin for v{0}".format(self.version))
-            return
 
-        tests = [
-            ["NlpMdsEx1.exe", "400", "100", "0", "-selfcheck"],
-            ["NlpMdsEx1.exe", "400", "100", "1", "-selfcheck"],
-            ["NlpMdsEx1.exe", "400", "100", "0", "-empty_sp_row", "-selfcheck"],
+    def run_hiop(self, raja):
+        if raja:
+            exName = "NlpMdsEx1Raja.exe"
+        else:
+            exName = "NlpMdsEx1.exe"
+
+        exe = os.path.join(self.prefix.bin, exName)
+        if not os.path.exists(exe):
+            raise SkipTest(f"{exName} does not exist in version {self.version}")
+
+        options = [
+            ["400", "100", "0", "-selfcheck"],
+            ["400", "100", "1", "-selfcheck"],
+            ["400", "100", "0", "-empty_sp_row", "-selfcheck"],
         ]
 
-        if "+raja" in self.spec:
-            tests.extend(
-                [
-                    ["NlpMdsEx1Raja.exe", "400", "100", "0", "-selfcheck"],
-                    ["NlpMdsEx1Raja.exe", "400", "100", "1", "-selfcheck"],
-                    ["NlpMdsEx1Raja.exe", "400", "100", "0", "-empty_sp_row", "-selfcheck"],
-                ]
-            )
+        exe = which(exe)
 
-        for i, test in enumerate(tests):
-            exe = os.path.join(self.prefix.bin, test[0])
-            args = test[1:]
-            reason = 'test {0}: "{1}"'.format(i, " ".join(test))
-            self.run_test(
-                exe,
-                args,
-                [],
-                0,
-                installed=False,
-                purpose=reason,
-                skip_missing=True,
-                work_dir=self.prefix.bin,
-            )
+        for i, args in enumerate(options):
+            with test_part(self, f"test_{exName}_{i+1}", purpose=" ".join(args)):
+                exe(*args)
+
+    def test_NlpMdsEx1(self):
+        """Test NlpMdsEx1"""
+        self.run_hiop(False)
+
+    def test_NlpMdsEx1Raja(self):
+        """Test NlpMdsEx1 with +raja"""
+        if "+raja" not in self.spec:
+            raise SkipTest("Package must be installed with +raja")
+        self.run_hiop(True)

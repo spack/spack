@@ -22,7 +22,7 @@ def _libc_from_ldd(ldd: str) -> Optional["spack.spec.Spec"]:
     except Exception:
         return None
 
-    if not re.search("gnu|glibc", stdout, re.IGNORECASE):
+    if not re.search(r"\bFree Software Foundation\b", stdout):
         return None
 
     version_str = re.match(r".+\(.+\) (.+)", stdout)
@@ -75,8 +75,8 @@ def libc_from_dynamic_linker(dynamic_linker: str) -> Optional["spack.spec.Spec"]
             return spec
         except Exception:
             return None
-    elif re.search("gnu|glibc", stdout, re.IGNORECASE):
-        # output is like "ld.so (...) stable release version 2.33." write a regex for it
+    elif re.search(r"\bFree Software Foundation\b", stdout):
+        # output is like "ld.so (...) stable release version 2.33."
         match = re.search(r"version (\d+\.\d+(?:\.\d+)?)", stdout)
         if not match:
             return None
@@ -128,9 +128,9 @@ def startfile_prefix(prefix: str, compatible_with: str = sys.executable) -> Opti
     except Exception:
         accept = lambda path: True
 
-    queue = [(0, prefix)]
-    while queue:
-        depth, path = queue.pop()
+    stack = [(0, prefix)]
+    while stack:
+        depth, path = stack.pop()
         try:
             iterator = os.scandir(path)
         except OSError:
@@ -140,7 +140,7 @@ def startfile_prefix(prefix: str, compatible_with: str = sys.executable) -> Opti
                 try:
                     if entry.is_dir(follow_symlinks=True):
                         if depth < 2:
-                            queue.append((depth + 1, entry.path))
+                            stack.append((depth + 1, entry.path))
                     elif entry.name == "crt1.o" and accept(entry.path):
                         return path
                 except Exception:

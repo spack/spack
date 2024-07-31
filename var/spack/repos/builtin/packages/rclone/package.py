@@ -17,6 +17,7 @@ class Rclone(Package):
 
     license("MIT")
 
+    version("1.65.2", sha256="1305c913ac3684d02ce2bade0a23a2115c1ec03c9447d1562bb6cd9fa2573412")
     version("1.65.1", sha256="904b906cc465dd679a00487497e3891d33fca6b6e25c184400bccfb248344f39")
     version("1.65.0", sha256="45ec732d50b2517dc2c860317a3bf79867634a8143e4a441a3e399434ad6c141")
     version("1.64.2", sha256="0c74d8fb887691e04e865e3b6bc32e8af47c3e54a9922ffdbed38c8323e281c9")
@@ -37,6 +38,8 @@ class Rclone(Package):
     version("1.56.0", sha256="81d2eda23ebaad0a355aab6ff030712470a42505b94c01c9bb5a9ead9168cedb")
     version("1.55.1", sha256="25da7fc5c9269b3897f27b0d946919df595c6dda1b127085fda0fe32aa59d29d")
     version("1.55.0", sha256="75accdaedad3b82edc185dc8824a19a59c30dc6392de7074b6cd98d1dc2c9040")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("go@1.14:", type="build")
     depends_on("go@1.17:", type="build", when="@1.58.0:")

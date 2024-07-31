@@ -18,6 +18,8 @@ class Loki(MakefilePackage):
 
     version("0.1.7", sha256="07553754f6be2738559947db69b0718512665bf4a34015fa3a875b6eb1111198")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Build shared libraries")
 
     def flag_handler(self, name, flags):

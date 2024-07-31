@@ -14,8 +14,6 @@ class Rkcommon(CMakePackage):
     url = "https://github.com/ospray/rkcommon/archive/v1.4.1.tar.gz"
     git = "https://github.com/ospray/rkcommon.git"
 
-    # maintainers("github_user1",o"github_user2")
-
     license("Apache-2.0")
 
     version("1.13.0", sha256="8ae9f911420085ceeca36e1f16d1316a77befbf6bf6de2a186d65440ac66ff1f")
@@ -31,6 +29,8 @@ class Rkcommon(CMakePackage):
     version("1.5.0", sha256="3556e90301d4361f871b87ddf898b9d675deaa717cab541f99012e14557986bd")
     version("1.4.2", sha256="2d1c0046cf583d3040fc9bb3b8ddcb1a2262d3f48aebd0973e6bd6cabb487f9e")
     version("1.4.1", sha256="f5968f5865fa5fe938843e1db621795524e7d31b37ce6024ba2978bb293ddfcf")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("tbb")
 

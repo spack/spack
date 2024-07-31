@@ -58,6 +58,9 @@ class Fastjet(AutotoolsPackage):
     version("2.3.2", sha256="ba8b17fcc8edae16faa74608e8da53e87a8c574aa21a28c985ea0dfedcb95210")
     version("2.3.1", sha256="16c32b420e1aa7d0b6fecddd980ea0f2b7e3c2c66585e06f0eb3142677ab6ccf")
     version("2.3.0", sha256="e452fe4a9716627bcdb726cfb0917f46a7ac31f6006330a6ccc1abc43d9c2d53")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
     # older version use .tar instead of .tar.gz extension, to be added
 
     variant("shared", default=True, description="Builds a shared version of the library")
@@ -71,6 +74,14 @@ class Fastjet(AutotoolsPackage):
         description="Enables thread safety",
     )
     variant("atlas", default=False, description="Patch to make random generator thread_local")
+
+    variant(
+        "cxxstd",
+        default="11",
+        values=("11", "17", "20", "23"),
+        multi=False,
+        description="Use the specified C++ standard when building",
+    )
 
     available_plugins = (
         conditional("atlascone", when="@2.4.0:"),
@@ -126,3 +137,8 @@ class Fastjet(AutotoolsPackage):
             extra_args += ["--enable-thread-safety"]
 
         return extra_args
+
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            flags.append(f"-std=c++{self.spec.variants['cxxstd'].value}")
+        return (None, flags, None)

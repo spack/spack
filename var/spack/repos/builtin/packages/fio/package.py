@@ -21,6 +21,7 @@ class Fio(AutotoolsPackage):
 
     license("GPL-2.0-only")
 
+    version("3.37", sha256="b59099d42d5c62a8171974e54466a688c8da6720bf74a7f16bf24fb0e51ff92d")
     version("3.36", sha256="b34b8f3c5cd074c09ea487ffe3f444e95565c214b34a73042f35b00cbaab0e17")
     version("3.34", sha256="42ea28c78d269c4cc111b7516213f4d4b32986797a710b0ff364232cc7a3a0b7")
     version("3.33", sha256="f48b2547313ffd1799c58c6a170175176131bbd42bc847b5650784eaf6d914b3")
@@ -29,6 +30,8 @@ class Fio(AutotoolsPackage):
     version("3.19", sha256="809963b1d023dbc9ac7065557af8129aee17b6895e0e8c5ca671b0b14285f404")
     version("3.16", sha256="c7731a9e831581bab7104da9ea60c9f44e594438dbe95dff26726ca0285e7b93")
     version("2.19", sha256="61fb03a18703269b781aaf195cb0d7931493bbb5bfcc8eb746d5d66d04ed77f7")
+
+    depends_on("c", type="build")  # generated
 
     variant("gui", default=False, description="Enable building of gtk gfio")
     variant("doc", default=False, description="Generate documentation")
@@ -46,8 +49,9 @@ class Fio(AutotoolsPackage):
 
     def configure_args(self):
         config_args = []
+        spec = self.spec
 
-        if "+gui" in self.spec:
+        if spec.satisfies("+gui"):
             config_args.append("--enable-gfio")
 
         return config_args

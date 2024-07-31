@@ -17,6 +17,7 @@ class Gaudi(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("38.1", sha256="79d42833edcebc2099f91badb6f72708640c05f678cc4521a86e857f112486dc")
     version("38.0", sha256="52f2733fa0af760c079b3438bb9c7e36b28ea704f78b0085458e1918c11e1653")
     version("37.2", sha256="9b866caab46e182de98b59eddbde80d6fa0e670fe4a35906f1518b04bd99b2d2")
     version("37.1", sha256="1d7038fd5dfb5f2517ce57623cf8090549ffe2ea8f0171d534e5c1ca20bd009a")
@@ -37,6 +38,8 @@ class Gaudi(CMakePackage):
     version("36.1", sha256="9f718c832313676249e5c3ac76ba4346978ee2328f8cdcb29176498b080402e9")
     version("36.0", sha256="8a0458cef5b616532f9db7cca9fa0e892e602b64c9e93dc0cc6d972e03034830")
     version("35.0", sha256="c01b822f9592a7bf875b9997cbeb3c94dea97cb13d523c12649dbbf5d69b5fa6")
+
+    depends_on("cxx", type="build")  # generated
 
     maintainers("drbenmorgan", "vvolkl", "jmcarcell")
 
@@ -64,6 +67,12 @@ class Gaudi(CMakePackage):
         sha256="b05f6b7c1efb8c3af291c8d81fd1627e58af7c5f9a78a0098c6e3bfd7ec80c15",
         when="@37.1 ^catch2@3.1:",
     )
+    # add missing <list> include for newer compilers
+    patch(
+        "https://gitlab.cern.ch/gaudi/Gaudi/-/commit/54b727f08a685606420703098131b387d3026637.diff",
+        sha256="41aa1587a3e59d49e0fa9659577073c091871c2eca1b8b237c177ab98fbacf3f",
+        when="@:38.1",
+    )
 
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
@@ -82,7 +91,7 @@ class Gaudi(CMakePackage):
     depends_on("tbb", when="@37.1:")
     depends_on("uuid")
     depends_on("nlohmann-json")
-    depends_on("python", type=("build", "run"))
+    depends_on("python +dbm", type=("build", "run"))
     depends_on("py-networkx", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run", "test"))

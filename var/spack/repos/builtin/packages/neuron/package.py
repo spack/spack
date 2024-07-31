@@ -37,6 +37,10 @@ class Neuron(CMakePackage):
         "7.8.2", tag="7.8.2", commit="09b151ecb2b3984335c265932dc6ba3e4fcb318e", submodules="True"
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("backtrace", default=False, description="Enable printing backtraces on failure")
     variant("interviews", default=False, description="Enable GUI with INTERVIEWS")
     variant("legacy-unit", default=False, description="Enable legacy units")
@@ -157,10 +161,7 @@ class Neuron(CMakePackage):
 
         spec = self.spec
 
-        if "cray" in spec.architecture:
-            cc_compiler = "cc"
-            cxx_compiler = "CC"
-        elif spec.satisfies("+mpi"):
+        if spec.satisfies("+mpi"):
             cc_compiler = spec["mpi"].mpicc
             cxx_compiler = spec["mpi"].mpicxx
         else:

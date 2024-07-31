@@ -18,6 +18,9 @@ class AbseilCpp(CMakePackage):
     license("Apache-2.0")
 
     version(
+        "20240116.2", sha256="733726b8c3a6d39a4120d7e45ea8b41a434cdacde401cba500f14236c49b39dc"
+    )
+    version(
         "20240116.1", sha256="3c743204df78366ad2eaf236d6631d83f6bc928d1705dd0000b872e53b73dc6a"
     )
     version(
@@ -62,6 +65,15 @@ class AbseilCpp(CMakePackage):
     version("20190808", sha256="8100085dada279bf3ee00cd064d43b5f55e5d913be0dfe2906f06f8f28d5b37e")
     version("20181200", sha256="e2b53bfb685f5d4130b84c4f3050c81bf48c497614dc85d91dbd3ed9129bce6d")
     version("20180600", sha256="794d483dd9a19c43dc1fbbe284ce8956eb7f2600ef350dac4c602f9b4eb26e90")
+
+    depends_on("cxx", type="build")  # generated
+
+    # Avoid export of testonly target absl::test_allocator in CMake builds
+    patch(
+        "https://github.com/abseil/abseil-cpp/commit/779a3565ac6c5b69dd1ab9183e500a27633117d5.patch?full_index=1",
+        sha256="14ad7abbc20b10d57e00d0940e8338f69fd69f58d8285214848998e8687688cc",
+        when="@20240116",
+    )
 
     variant("shared", default=True, description="Build shared instead of static libraries")
 

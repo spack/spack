@@ -27,6 +27,8 @@ class PyNumcodecs(PythonPackage):
     version("0.7.3", sha256="022b12ad83eb623ec53f154859d49f6ec43b15c36052fa864eaf2d9ee786dd85")
     version("0.6.4", sha256="ef4843d5db4d074e607e9b85156835c10d006afc10e175bda62ff5412fca6e4d")
 
+    depends_on("c", type="build")  # generated
+
     variant("msgpack", default=False, description="Codec to encode data as msgpacked bytes.")
 
     depends_on("python@3.8:", when="@0.11:", type=("build", "link", "run"))
@@ -37,6 +39,8 @@ class PyNumcodecs(PythonPackage):
     depends_on("py-setuptools-scm@1.5.5: +toml", type="build")
     depends_on("py-cython", type="build")
     depends_on("py-numpy@1.7:", type=("build", "run"))
+    # https://github.com/zarr-developers/numcodecs/issues/521
+    depends_on("py-numpy@:1", when="@:0.12.0", type=("build", "run"))
     depends_on("py-py-cpuinfo", when="@0.11:", type="build")
     depends_on("py-entrypoints", when="@0.10.1:0.11", type=("build", "run"))
     depends_on("py-msgpack", type=("build", "run"), when="+msgpack")

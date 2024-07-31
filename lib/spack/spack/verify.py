@@ -9,6 +9,7 @@ import stat
 from typing import Any, Dict
 
 import llnl.util.tty as tty
+from llnl.util.symlink import readlink
 
 import spack.filesystem_view
 import spack.store
@@ -38,7 +39,7 @@ def create_manifest_entry(path: str) -> Dict[str, Any]:
     data: Dict[str, Any] = {"mode": s.st_mode, "owner": s.st_uid, "group": s.st_gid}
 
     if stat.S_ISLNK(s.st_mode):
-        data["dest"] = os.readlink(path)
+        data["dest"] = readlink(path)
 
     elif stat.S_ISREG(s.st_mode):
         data["hash"] = compute_hash(path)
@@ -90,7 +91,7 @@ def check_entry(path, data):
     # instead of `lstat(...).st_mode`. So, ignore mode errors for symlinks.
     if not stat.S_ISLNK(s.st_mode) and s.st_mode != data["mode"]:
         res.add_error(path, "mode")
-    elif stat.S_ISLNK(s.st_mode) and os.readlink(path) != data.get("dest"):
+    elif stat.S_ISLNK(s.st_mode) and readlink(path) != data.get("dest"):
         res.add_error(path, "link")
     elif stat.S_ISREG(s.st_mode):
         # Check file contents against hash and listed as file

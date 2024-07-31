@@ -8,13 +8,14 @@ import re
 import sys
 
 import llnl.util.tty as tty
+from llnl.util.lang import classproperty
 
 import spack.build_environment
 import spack.util.executable
 from spack.package import *
 
 
-class Llvm(CMakePackage, CudaPackage):
+class Llvm(CMakePackage, CudaPackage, CompilerPackage):
     """The LLVM Project is a collection of modular and reusable compiler and
     toolchain technologies. Despite its name, LLVM has little to do
     with traditional virtual machines, though it does provide helpful
@@ -28,13 +29,18 @@ class Llvm(CMakePackage, CudaPackage):
     git = "https://github.com/llvm/llvm-project"
     maintainers("trws", "haampie", "skosukhin")
 
-    tags = ["e4s"]
+    tags = ["e4s", "compiler"]
 
     generator("ninja")
 
     license("Apache-2.0")
 
     version("main", branch="main")
+    version("18.1.8", sha256="09c08693a9afd6236f27a2ebae62cda656eba19021ef3f94d59e931d662d4856")
+    version("18.1.7", sha256="b60df7cbe02cef2523f7357120fb0d46cbb443791cde3a5fb36b82c335c0afc9")
+    version("18.1.6", sha256="01390edfae5b809e982b530ff9088e674c62b13aa92cb9dc1e067fa2cf501083")
+    version("18.1.5", sha256="d543309f55ae3f9b422108302b45c40f5696c96862f4bda8f5526955daa54284")
+    version("18.1.4", sha256="deca5a29e8b1d103ecc4badb3c304aca50d5cac6453364d88ee415dc55699dfb")
     version("18.1.3", sha256="fc5a2fd176d73ceb17f4e522f8fe96d8dde23300b8c233476d3609f55d995a7a")
     version("18.1.2", sha256="8d686d5ece6f12b09985cb382a3a530dc06bb6e7eb907f57c7f8bf2d868ebb0b")
     version("18.1.1", sha256="62439f733311869dbbaf704ce2e02141d2a07092d952fc87ef52d1d636a9b1e4")
@@ -87,6 +93,9 @@ class Llvm(CMakePackage, CudaPackage):
     version("5.0.2", sha256="fe87aa11558c08856739bfd9bd971263a28657663cb0c3a0af01b94f03b0b795")
     version("5.0.1", sha256="84ca454abf262579814a2a2b846569f6e0cb3e16dc33ca3642b4f1dff6fbafd3")
     version("5.0.0", sha256="1f1843315657a4371d8ca37f01265fa9aae17dbcf46d2d0a95c1fdb3c6a4bab6")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     variant(
         "clang", default=True, description="Build the LLVM C/C++/Objective-C compiler frontend"
@@ -594,11 +603,36 @@ class Llvm(CMakePackage, CudaPackage):
             string=True,
         )
 
-    # The functions and attributes below implement external package
-    # detection for LLVM. See:
-    #
-    # https://spack.readthedocs.io/en/latest/packaging_guide.html#making-a-package-discoverable-with-spack-external-find
-    executables = ["clang", "flang", "ld.lld", "lldb"]
+    compiler_version_regex = (
+        # Normal clang compiler versions are left as-is
+        r"clang version ([^ )\n]+)-svn[~.\w\d-]*|"
+        # Don't include hyphenated patch numbers in the version
+        # (see https://github.com/spack/spack/pull/14365 for details)
+        r"clang version ([^ )\n]+?)-[~.\w\d-]*|"
+        r"clang version ([^ )\n]+)|"
+        # LLDB
+        r"lldb version ([^ )\n]+)|"
+        # LLD
+        r"LLD ([^ )\n]+) \(compatible with GNU linkers\)"
+    )
+    compiler_version_argument = "--version"
+    compiler_languages = ["c", "cxx", "fortran"]
+    c_names = ["clang"]
+    cxx_names = ["clang++"]
+    fortran_names = ["flang"]
+
+    @property
+    def supported_languages(self):
+        languages = []
+        if self.spec.satisfies("+clang"):
+            languages.extend(["c", "cxx"])
+        if self.spec.satisfies("+flang"):
+            languages.append("fortran")
+        return languages
+
+    @classproperty
+    def executables(cls):
+        return super().executables + ["ld.lld", "lldb"]
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
@@ -615,26 +649,14 @@ class Llvm(CMakePackage, CudaPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        version_regex = re.compile(
-            # Normal clang compiler versions are left as-is
-            r"clang version ([^ )\n]+)-svn[~.\w\d-]*|"
-            # Don't include hyphenated patch numbers in the version
-            # (see https://github.com/spack/spack/pull/14365 for details)
-            r"clang version ([^ )\n]+?)-[~.\w\d-]*|"
-            r"clang version ([^ )\n]+)|"
-            # LLDB
-            r"lldb version ([^ )\n]+)|"
-            # LLD
-            r"LLD ([^ )\n]+) \(compatible with GNU linkers\)"
-        )
         try:
             compiler = Executable(exe)
-            output = compiler("--version", output=str, error=str)
+            output = compiler(cls.compiler_version_argument, output=str, error=str)
             if "Apple" in output:
                 return None
             if "AMD" in output:
                 return None
-            match = version_regex.search(output)
+            match = re.search(cls.compiler_version_regex, output)
             if match:
                 return match.group(match.lastindex)
         except spack.util.executable.ProcessError:
@@ -646,23 +668,23 @@ class Llvm(CMakePackage, CudaPackage):
 
     @classmethod
     def determine_variants(cls, exes, version_str):
+        # Do not need to reuse more general logic from CompilerPackage
+        # because LLVM has kindly named compilers
         variants, compilers = ["+clang"], {}
         lld_found, lldb_found = False, False
-        for exe in exes:
-            if "clang++" in exe:
-                compilers["cxx"] = exe
-            elif "clang" in exe:
-                compilers["c"] = exe
-            elif "flang" in exe:
+        for exe in sorted(exes, key=len):
+            name = os.path.basename(exe)
+            if "clang++" in name:
+                compilers.setdefault("cxx", exe)
+            elif "clang" in name:
+                compilers.setdefault("c", exe)
+            elif "flang" in name:
                 variants.append("+flang")
-                compilers["fc"] = exe
-                compilers["f77"] = exe
-            elif "ld.lld" in exe:
+                compilers.setdefault("fortran", exe)
+            elif "ld.lld" in name:
                 lld_found = True
-                compilers["ld"] = exe
-            elif "lldb" in exe:
+            elif "lldb" in name:
                 lldb_found = True
-                compilers["lldb"] = exe
 
         variants.append("+lld" if lld_found else "~lld")
         variants.append("+lldb" if lldb_found else "~lldb")

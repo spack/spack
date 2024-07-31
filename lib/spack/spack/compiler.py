@@ -18,8 +18,8 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
 
-import spack.compilers
 import spack.error
+import spack.schema.environment
 import spack.spec
 import spack.util.executable
 import spack.util.libc
@@ -683,8 +683,8 @@ class Compiler:
 
     @contextlib.contextmanager
     def compiler_environment(self):
-        # yield immediately if no modules
-        if not self.modules:
+        # Avoid modifying os.environ if possible.
+        if not self.modules and not self.environment:
             yield
             return
 
@@ -694,20 +694,12 @@ class Compiler:
         try:
             # load modules and set env variables
             for module in self.modules:
-                # On cray, mic-knl module cannot be loaded without cce module
-                # See: https://github.com/spack/spack/issues/3153
-                if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-                    spack.util.module_cmd.load_module("cce")
                 spack.util.module_cmd.load_module(module)
 
             # apply other compiler environment changes
-            env = spack.util.environment.EnvironmentModifications()
-            env.extend(spack.schema.environment.parse(self.environment))
-            env.apply_modifications()
+            spack.schema.environment.parse(self.environment).apply_modifications()
 
             yield
-        except BaseException:
-            raise
         finally:
             # Restore environment regardless of whether inner code succeeded
             os.environ.clear()

@@ -9,7 +9,7 @@ from spack.package import *
 class Libxpm(AutotoolsPackage, XorgPackage):
     """libXpm - X Pixmap (XPM) image file format library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXpm"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXpm"
     xorg_mirror_path = "lib/libXpm-3.5.12.tar.gz"
 
     license("X11")
@@ -27,6 +27,8 @@ class Libxpm(AutotoolsPackage, XorgPackage):
     version("3.5.9", sha256="23beb930e27bc7df33cb0f6dbffc703852297c311b7e20146ff82e9a51f3e358")
     version("3.5.8", sha256="06472c7fdd175ea54c84162a428be19c154e7dda03d8bf91beee7f1d104669a6")
     version("3.5.7", sha256="422fbb311c4fe6ef337e937eb3adc8617a4320bd3e00fce06850d4360829b3ae")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("gettext")
     depends_on("libx11")

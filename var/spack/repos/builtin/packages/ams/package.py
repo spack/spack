@@ -10,7 +10,7 @@ class Ams(CMakePackage, CudaPackage):
     """AMS Autonomous Multiscale Framework."""
 
     homepage = "https://github.com/LLNL/AMS"
-    git = "git@github.com:LLNL/AMS.git"
+    git = "https://github.com/LLNL/AMS.git"
 
     maintainers("koparasy", "lpottier")
 
@@ -27,6 +27,9 @@ class Ams(CMakePackage, CudaPackage):
         commit="3aa8421f1f1ce1ae448d017214c602b9def19c90",
         submodules=False,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant(
         "faiss",

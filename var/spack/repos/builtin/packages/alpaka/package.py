@@ -25,6 +25,8 @@ class Alpaka(CMakePackage, CudaPackage):
     version("0.5.0", sha256="0ba08ea19961dd986160219ba00d6162fe7758980d88a606eff6494d7b3a6cd1")
     version("0.4.0", sha256="ad7905b13c22abcee4344ba225a65078e3f452ad45a9eda907e7d27c08315e46")
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "backend",
         multi=True,

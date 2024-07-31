@@ -254,8 +254,8 @@ def _search_duplicate_specs_in_externals(error_cls):
 
 @config_packages
 def _deprecated_preferences(error_cls):
-    """Search package preferences deprecated in v0.21 (and slated for removal in v0.22)"""
-    # TODO (v0.22): remove this audit as the attributes will not be allowed in config
+    """Search package preferences deprecated in v0.21 (and slated for removal in v0.23)"""
+    # TODO (v0.23): remove this audit as the attributes will not be allowed in config
     errors = []
     packages_yaml = spack.config.CONFIG.get_config("packages")
 
@@ -351,6 +351,22 @@ def _wrongly_named_spec(error_cls):
     return errors
 
 
+@config_packages
+def _ensure_all_virtual_packages_have_default_providers(error_cls):
+    """All virtual packages must have a default provider explicitly set."""
+    configuration = spack.config.create()
+    defaults = configuration.get("packages", scope="defaults")
+    default_providers = defaults["all"]["providers"]
+    virtuals = spack.repo.PATH.provider_index.providers
+    default_providers_filename = configuration.scopes["defaults"].get_section_filename("packages")
+
+    return [
+        error_cls(f"'{virtual}' must have a default provider in {default_providers_filename}", [])
+        for virtual in virtuals
+        if virtual not in default_providers
+    ]
+
+
 def _make_config_error(config_data, summary, error_cls):
     s = io.StringIO()
     s.write("Occurring in the following file:\n")
@@ -421,6 +437,10 @@ def _check_patch_urls(pkgs, error_cls):
         r"^https?://(?:patch-diff\.)?github(?:usercontent)?\.com/"
         r".+/.+/(?:commit|pull)/[a-fA-F0-9]+\.(?:patch|diff)"
     )
+    github_pull_commits_re = (
+        r"^https?://(?:patch-diff\.)?github(?:usercontent)?\.com/"
+        r".+/.+/pull/\d+/commits/[a-fA-F0-9]+\.(?:patch|diff)"
+    )
     # Only .diff URLs have stable/full hashes:
     # https://forum.gitlab.com/t/patches-with-full-index/29313
     gitlab_patch_url_re = (
@@ -436,14 +456,24 @@ def _check_patch_urls(pkgs, error_cls):
                 if not isinstance(patch, spack.patch.UrlPatch):
                     continue
 
-                if re.match(github_patch_url_re, patch.url):
+                if re.match(github_pull_commits_re, patch.url):
+                    url = re.sub(r"/pull/\d+/commits/", r"/commit/", patch.url)
+                    url = re.sub(r"^(.*)(?<!full_index=1)$", r"\1?full_index=1", url)
+                    errors.append(
+                        error_cls(
+                            f"patch URL in package {pkg_cls.name} "
+                            + "must not be a pull request commit; "
+                            + f"instead use {url}",
+                            [patch.url],
+                        )
+                    )
+                elif re.match(github_patch_url_re, patch.url):
                     full_index_arg = "?full_index=1"
                     if not patch.url.endswith(full_index_arg):
                         errors.append(
                             error_cls(
-                                "patch URL in package {0} must end with {1}".format(
-                                    pkg_cls.name, full_index_arg
-                                ),
+                                f"patch URL in package {pkg_cls.name} "
+                                + f"must end with {full_index_arg}",
                                 [patch.url],
                             )
                         )
@@ -451,9 +481,7 @@ def _check_patch_urls(pkgs, error_cls):
                     if not patch.url.endswith(".diff"):
                         errors.append(
                             error_cls(
-                                "patch URL in package {0} must end with .diff".format(
-                                    pkg_cls.name
-                                ),
+                                f"patch URL in package {pkg_cls.name} must end with .diff",
                                 [patch.url],
                             )
                         )
@@ -779,7 +807,7 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                         return
                     error = error_cls(
                         f"{pkg_name}: {msg}",
-                        f"remove variants from '{spec}' in depends_on directive in {filename}",
+                        [f"remove variants from '{spec}' in depends_on directive in {filename}"],
                     )
                     errors.append(error)
 

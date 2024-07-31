@@ -51,6 +51,9 @@ class Dyninst(CMakePackage):
         "8.2.1", tag="v8.2.1", commit="939afcbad1a8273636a3686a31b51dae4f1f0c11", deprecated=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "openmp",
         default=True,
@@ -108,7 +111,7 @@ class Dyninst(CMakePackage):
     patch("v9.3.2-auto.patch", when="@9.3.2 %gcc@:4.7")
     patch("tribool.patch", when="@9.3.0:10.0.0 ^boost@1.69:")
 
-    requires("%gcc", msg="dyninst builds only with GCC")
+    requires("%gcc", when="@:13.0.0", msg="dyninst builds only with GCC")
 
     # No Mac support (including apple-clang)
     conflicts("platform=darwin", msg="macOS is not supported")

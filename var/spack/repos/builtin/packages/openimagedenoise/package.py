@@ -15,8 +15,6 @@ class Openimagedenoise(CMakePackage):
     homepage = "https://www.openimagedenoise.org/"
     url = "https://github.com/OpenImageDenoise/oidn/releases/download/v1.4.3/oidn-1.4.3.src.tar.gz"
 
-    # maintainers("github_user1", "github_user2")
-
     license("Apache-2.0")
 
     version("2.2.2", sha256="d26b75fa216165086f65bf48c80648290f2cfed7d3c4bfc1e86c247b46c96b7e")
@@ -29,6 +27,9 @@ class Openimagedenoise(CMakePackage):
     version("1.3.0", sha256="88367b2bbea82d1df45d65141c36b6d86491bc6b397dc70beb3a05dda566f31c")
     version("1.2.4", sha256="948b070c780b5de0d983e7d5d37f6d9454932cc278913d9ee5b0bd047d23864a")
     version("1.2.3", sha256="469d20b093a73b18a54a2e559b0f18a6baac845ede864be62429737042ebe4f7")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("ispc", type=("build"))
     depends_on("python@3:", type=("build", "test"))

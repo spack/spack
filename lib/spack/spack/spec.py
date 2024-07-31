@@ -1030,16 +1030,13 @@ class _EdgeMap(collections.abc.Mapping):
         self.edges.clear()
 
 
-def _command_default_handler(descriptor, spec, cls):
+def _command_default_handler(spec: "Spec"):
     """Default handler when looking for the 'command' attribute.
 
     Tries to search for ``spec.name`` in the ``spec.home.bin`` directory.
 
     Parameters:
-        descriptor (ForwardQueryToPackage): descriptor that triggered the call
-        spec (Spec): spec that is being queried
-        cls (type(spec)): type of spec, to match the signature of the
-            descriptor ``__get__`` method
+        spec: spec that is being queried
 
     Returns:
         Executable: An executable of the command
@@ -1052,22 +1049,17 @@ def _command_default_handler(descriptor, spec, cls):
 
     if fs.is_exe(path):
         return spack.util.executable.Executable(path)
-    else:
-        msg = "Unable to locate {0} command in {1}"
-        raise RuntimeError(msg.format(spec.name, home.bin))
+    raise RuntimeError(f"Unable to locate {spec.name} command in {home.bin}")
 
 
-def _headers_default_handler(descriptor, spec, cls):
+def _headers_default_handler(spec: "Spec"):
     """Default handler when looking for the 'headers' attribute.
 
     Tries to search for ``*.h`` files recursively starting from
     ``spec.package.home.include``.
 
     Parameters:
-        descriptor (ForwardQueryToPackage): descriptor that triggered the call
-        spec (Spec): spec that is being queried
-        cls (type(spec)): type of spec, to match the signature of the
-            descriptor ``__get__`` method
+        spec: spec that is being queried
 
     Returns:
         HeaderList: The headers in ``prefix.include``
@@ -1080,12 +1072,10 @@ def _headers_default_handler(descriptor, spec, cls):
 
     if headers:
         return headers
-    else:
-        msg = "Unable to locate {0} headers in {1}"
-        raise spack.error.NoHeadersError(msg.format(spec.name, home))
+    raise spack.error.NoHeadersError(f"Unable to locate {spec.name} headers in {home}")
 
 
-def _libs_default_handler(descriptor, spec, cls):
+def _libs_default_handler(spec: "Spec"):
     """Default handler when looking for the 'libs' attribute.
 
     Tries to search for ``lib{spec.name}`` recursively starting from
@@ -1093,10 +1083,7 @@ def _libs_default_handler(descriptor, spec, cls):
     ``{spec.name}`` instead.
 
     Parameters:
-        descriptor (ForwardQueryToPackage): descriptor that triggered the call
-        spec (Spec): spec that is being queried
-        cls (type(spec)): type of spec, to match the signature of the
-            descriptor ``__get__`` method
+        spec: spec that is being queried
 
     Returns:
         LibraryList: The libraries found
@@ -1135,27 +1122,33 @@ def _libs_default_handler(descriptor, spec, cls):
         if libs:
             return libs
 
-    msg = "Unable to recursively locate {0} libraries in {1}"
-    raise spack.error.NoLibrariesError(msg.format(spec.name, home))
+    raise spack.error.NoLibrariesError(
+        f"Unable to recursively locate {spec.name} libraries in {home}"
+    )
 
 
 class ForwardQueryToPackage:
     """Descriptor used to forward queries from Spec to Package"""
 
-    def __init__(self, attribute_name, default_handler=None):
+    def __init__(
+        self,
+        attribute_name: str,
+        default_handler: Optional[Callable[["Spec"], Any]] = None,
+        _indirect: bool = False,
+    ) -> None:
         """Create a new descriptor.
 
         Parameters:
-            attribute_name (str): name of the attribute to be
-                searched for in the Package instance
-            default_handler (callable, optional): default function to be
-                called if the attribute was not found in the Package
-                instance
+            attribute_name: name of the attribute to be searched for in the Package instance
+            default_handler: default function to be called if the attribute was not found in the
+                Package instance
+            _indirect: temporarily added to redirect a query to another package.
         """
         self.attribute_name = attribute_name
         self.default = default_handler
+        self.indirect = _indirect
 
-    def __get__(self, instance, cls):
+    def __get__(self, instance: "SpecBuildInterface", cls):
         """Retrieves the property from Package using a well defined chain
         of responsibility.
 
@@ -1177,13 +1170,18 @@ class ForwardQueryToPackage:
         indicating a query failure, e.g. that library files were not found in a
         'libs' query.
         """
-        pkg = instance.package
+        # TODO: this indirection exist solely for `spec["python"].command` to actually return
+        # spec["python-venv"].command. It should be removed when `python` is a virtual.
+        if self.indirect and instance.indirect_spec:
+            pkg = instance.indirect_spec.package
+        else:
+            pkg = instance.wrapped_obj.package
         try:
             query = instance.last_query
         except AttributeError:
             # There has been no query yet: this means
             # a spec is trying to access its own attributes
-            _ = instance[instance.name]  # NOQA: ignore=F841
+            _ = instance.wrapped_obj[instance.wrapped_obj.name]  # NOQA: ignore=F841
             query = instance.last_query
 
         callbacks_chain = []
@@ -1195,7 +1193,8 @@ class ForwardQueryToPackage:
         callbacks_chain.append(lambda: getattr(pkg, self.attribute_name))
         # Final resort : default callback
         if self.default is not None:
-            callbacks_chain.append(lambda: self.default(self, instance, cls))
+            _default = self.default  # make mypy happy
+            callbacks_chain.append(lambda: _default(instance.wrapped_obj))
 
         # Trigger the callbacks in order, the first one producing a
         # value wins
@@ -1254,30 +1253,136 @@ QueryState = collections.namedtuple("QueryState", ["name", "extra_parameters", "
 class SpecBuildInterface(lang.ObjectWrapper):
     # home is available in the base Package so no default is needed
     home = ForwardQueryToPackage("home", default_handler=None)
-
-    command = ForwardQueryToPackage("command", default_handler=_command_default_handler)
-
     headers = ForwardQueryToPackage("headers", default_handler=_headers_default_handler)
-
     libs = ForwardQueryToPackage("libs", default_handler=_libs_default_handler)
+    command = ForwardQueryToPackage(
+        "command", default_handler=_command_default_handler, _indirect=True
+    )
 
-    def __init__(self, spec, name, query_parameters):
+    def __init__(self, spec: "Spec", name: str, query_parameters: List[str], _parent: "Spec"):
         super().__init__(spec)
         # Adding new attributes goes after super() call since the ObjectWrapper
         # resets __dict__ to behave like the passed object
         original_spec = getattr(spec, "wrapped_obj", spec)
         self.wrapped_obj = original_spec
-        self.token = original_spec, name, query_parameters
+        self.token = original_spec, name, query_parameters, _parent
         is_virtual = spack.repo.PATH.is_virtual(name)
         self.last_query = QueryState(
             name=name, extra_parameters=query_parameters, isvirtual=is_virtual
         )
+
+        # TODO: this ad-hoc logic makes `spec["python"].command` return
+        # `spec["python-venv"].command` and should be removed when `python` is a virtual.
+        self.indirect_spec = None
+        if spec.name == "python":
+            python_venvs = _parent.dependencies("python-venv")
+            if not python_venvs:
+                return
+            self.indirect_spec = python_venvs[0]
 
     def __reduce__(self):
         return SpecBuildInterface, self.token
 
     def copy(self, *args, **kwargs):
         return self.wrapped_obj.copy(*args, **kwargs)
+
+
+def tree(
+    specs: List["spack.spec.Spec"],
+    *,
+    color: Optional[bool] = None,
+    depth: bool = False,
+    hashes: bool = False,
+    hashlen: Optional[int] = None,
+    cover: str = "nodes",
+    indent: int = 0,
+    format: str = DEFAULT_FORMAT,
+    deptypes: Union[Tuple[str, ...], str] = "all",
+    show_types: bool = False,
+    depth_first: bool = False,
+    recurse_dependencies: bool = True,
+    status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
+    prefix: Optional[Callable[["Spec"], str]] = None,
+    key=id,
+) -> str:
+    """Prints out specs and their dependencies, tree-formatted with indentation.
+
+    Status function may either output a boolean or an InstallStatus
+
+    Args:
+        color: if True, always colorize the tree. If False, don't colorize the tree. If None,
+            use the default from llnl.tty.color
+        depth: print the depth from the root
+        hashes: if True, print the hash of each node
+        hashlen: length of the hash to be printed
+        cover: either "nodes" or "edges"
+        indent: extra indentation for the tree being printed
+        format: format to be used to print each node
+        deptypes: dependency types to be represented in the tree
+        show_types: if True, show the (merged) dependency type of a node
+        depth_first: if True, traverse the DAG depth first when representing it as a tree
+        recurse_dependencies: if True, recurse on dependencies
+        status_fn: optional callable that takes a node as an argument and return its
+            installation status
+        prefix: optional callable that takes a node as an argument and return its
+            installation prefix
+    """
+    out = ""
+
+    if color is None:
+        color = clr.get_color_when()
+
+    # reduce deptypes over all in-edges when covering nodes
+    if show_types and cover == "nodes":
+        deptype_lookup: Dict[str, dt.DepFlag] = collections.defaultdict(dt.DepFlag)
+        for edge in traverse.traverse_edges(specs, cover="edges", deptype=deptypes, root=False):
+            deptype_lookup[edge.spec.dag_hash()] |= edge.depflag
+
+    for d, dep_spec in traverse.traverse_tree(
+        sorted(specs), cover=cover, deptype=deptypes, depth_first=depth_first, key=key
+    ):
+        node = dep_spec.spec
+
+        if prefix is not None:
+            out += prefix(node)
+        out += " " * indent
+
+        if depth:
+            out += "%-4d" % d
+
+        if status_fn:
+            status = status_fn(node)
+            if status in list(InstallStatus):
+                out += clr.colorize(status.value, color=color)
+            elif status:
+                out += clr.colorize("@g{[+]}  ", color=color)
+            else:
+                out += clr.colorize("@r{[-]}  ", color=color)
+
+        if hashes:
+            out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hashlen)
+
+        if show_types:
+            if cover == "nodes":
+                depflag = deptype_lookup[dep_spec.spec.dag_hash()]
+            else:
+                # when covering edges or paths, we show dependency
+                # types only for the edge through which we visited
+                depflag = dep_spec.depflag
+
+            type_chars = dt.flag_to_chars(depflag)
+            out += "[%s]  " % type_chars
+
+        out += "    " * d
+        if d > 0:
+            out += "^"
+        out += node.format(format, color=color) + "\n"
+
+        # Check if we wanted just the first line
+        if not recurse_dependencies:
+            break
+
+    return out
 
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
@@ -2809,9 +2914,7 @@ class Spec:
 
         # Check if we can produce an optimized binary (will throw if
         # there are declared inconsistencies)
-        # No need on platform=cray because of the targeting modules
-        if not self.satisfies("platform=cray"):
-            self.architecture.target.optimization_flags(self.compiler)
+        self.architecture.target.optimization_flags(self.compiler)
 
     def _patches_assigned(self):
         """Whether patches have been assigned to this spec by the concretizer."""
@@ -3898,9 +4001,13 @@ class Spec:
         if not self._dependencies:
             return False
 
-        # If we arrived here, then rhs is abstract. At the moment we don't care about the edge
-        # structure of an abstract DAG, so we check if any edge could satisfy the properties
-        # we ask for.
+        # If we arrived here, the lhs root node satisfies the rhs root node. Now we need to check
+        # all the edges that have an abstract parent, and verify that they match some edge in the
+        # lhs.
+        #
+        # It might happen that the rhs brings in concrete sub-DAGs. For those we don't need to
+        # verify the edge properties, cause everything is encoded in the hash of the nodes that
+        # will be verified later.
         lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
             # If we are checking for ^mpi we need to verify if there is any edge
@@ -3908,6 +4015,10 @@ class Spec:
                 rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
 
             if not rhs_edge.virtuals:
+                continue
+
+            # Skip edges from a concrete sub-DAG
+            if rhs_edge.parent.concrete:
                 continue
 
             if not lhs_edges:
@@ -4129,7 +4240,7 @@ class Spec:
             raise spack.error.SpecError("Spec version is not concrete: " + str(self))
         return self.versions[0]
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str):
         """Get a dependency from the spec by its name. This call implicitly
         sets a query state in the package being retrieved. The behavior of
         packages may be influenced by additional query parameters that are
@@ -4138,7 +4249,7 @@ class Spec:
         Note that if a virtual package is queried a copy of the Spec is
         returned while for non-virtual a reference is returned.
         """
-        query_parameters = name.split(":")
+        query_parameters: List[str] = name.split(":")
         if len(query_parameters) > 2:
             raise KeyError("key has more than one ':' symbol. At most one is admitted.")
 
@@ -4149,38 +4260,30 @@ class Spec:
             csv = query_parameters.pop().strip()
             query_parameters = re.split(r"\s*,\s*", csv)
 
-        # In some cases a package appears multiple times in the same DAG for *distinct*
-        # specs. For example, a build-type dependency may itself depend on a package
-        # the current spec depends on, but their specs may differ. Therefore we iterate
-        # in an order here that prioritizes the build, test and runtime dependencies;
-        # only when we don't find the package do we consider the full DAG.
         order = lambda: itertools.chain(
-            self.traverse(deptype="link"),
-            self.dependencies(deptype=dt.BUILD | dt.RUN | dt.TEST),
-            self.traverse(),  # fall back to a full search
+            self.traverse_edges(deptype=dt.LINK, order="breadth", cover="edges"),
+            self.edges_to_dependencies(depflag=dt.BUILD | dt.RUN | dt.TEST),
+            self.traverse_edges(deptype=dt.ALL, order="breadth", cover="edges"),
         )
 
+        # Consider runtime dependencies and direct build/test deps before transitive dependencies,
+        # and prefer matches closest to the root.
         try:
-            value = next(
-                itertools.chain(
-                    # Regular specs
-                    (x for x in order() if x.name == name),
-                    (
-                        x
-                        for x in order()
-                        if (not x.virtual)
-                        and any(name in edge.virtuals for edge in x.edges_from_dependents())
-                    ),
-                    (x for x in order() if (not x.virtual) and x.package.provides(name)),
+            child: Spec = next(
+                e.spec
+                for e in itertools.chain(
+                    (e for e in order() if e.spec.name == name or name in e.virtuals),
+                    # for historical reasons
+                    (e for e in order() if e.spec.concrete and e.spec.package.provides(name)),
                 )
             )
         except StopIteration:
             raise KeyError(f"No spec with name {name} in {self}")
 
         if self._concrete:
-            return SpecBuildInterface(value, name, query_parameters)
+            return SpecBuildInterface(child, name, query_parameters, _parent=self)
 
-        return value
+        return child
 
     def __contains__(self, spec):
         """True if this spec or some dependency satisfies the spec.
@@ -4547,7 +4650,7 @@ class Spec:
         spec_str = " ^".join(root_str + sorted_dependencies)
         return spec_str.strip()
 
-    def install_status(self):
+    def install_status(self) -> InstallStatus:
         """Helper for tree to print DB install status."""
         if not self.concrete:
             return InstallStatus.absent
@@ -4591,13 +4694,14 @@ class Spec:
         recurse_dependencies: bool = True,
         status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
         prefix: Optional[Callable[["Spec"], str]] = None,
+        key=id,
     ) -> str:
-        """Prints out this spec and its dependencies, tree-formatted
-        with indentation.
+        """Prints out this spec and its dependencies, tree-formatted with indentation.
 
-        Status function may either output a boolean or an InstallStatus
+        See multi-spec ``spack.spec.tree()`` function for details.
 
         Args:
+            specs: List of specs to format.
             color: if True, always colorize the tree. If False, don't colorize the tree. If None,
                 use the default from llnl.tty.color
             depth: print the depth from the root
@@ -4615,60 +4719,23 @@ class Spec:
             prefix: optional callable that takes a node as an argument and return its
                 installation prefix
         """
-        out = ""
-
-        if color is None:
-            color = clr.get_color_when()
-
-        for d, dep_spec in traverse.traverse_tree(
-            [self], cover=cover, deptype=deptypes, depth_first=depth_first
-        ):
-            node = dep_spec.spec
-
-            if prefix is not None:
-                out += prefix(node)
-            out += " " * indent
-
-            if depth:
-                out += "%-4d" % d
-
-            if status_fn:
-                status = status_fn(node)
-                if status in list(InstallStatus):
-                    out += clr.colorize(status.value, color=color)
-                elif status:
-                    out += clr.colorize("@g{[+]}  ", color=color)
-                else:
-                    out += clr.colorize("@r{[-]}  ", color=color)
-
-            if hashes:
-                out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hashlen)
-
-            if show_types:
-                if cover == "nodes":
-                    # when only covering nodes, we merge dependency types
-                    # from all dependents before showing them.
-                    depflag = 0
-                    for ds in node.edges_from_dependents():
-                        depflag |= ds.depflag
-                else:
-                    # when covering edges or paths, we show dependency
-                    # types only for the edge through which we visited
-                    depflag = dep_spec.depflag
-
-                type_chars = dt.flag_to_chars(depflag)
-                out += "[%s]  " % type_chars
-
-            out += "    " * d
-            if d > 0:
-                out += "^"
-            out += node.format(format, color=color) + "\n"
-
-            # Check if we wanted just the first line
-            if not recurse_dependencies:
-                break
-
-        return out
+        return tree(
+            [self],
+            color=color,
+            depth=depth,
+            hashes=hashes,
+            hashlen=hashlen,
+            cover=cover,
+            indent=indent,
+            format=format,
+            deptypes=deptypes,
+            show_types=show_types,
+            depth_first=depth_first,
+            recurse_dependencies=recurse_dependencies,
+            status_fn=status_fn,
+            prefix=prefix,
+            key=key,
+        )
 
     def __repr__(self):
         return str(self)

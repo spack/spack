@@ -261,15 +261,14 @@ def test_compiler_list_empty(no_compilers_yaml, working_env, compilers_dir):
     [
         (
             {
-                "spec": "gcc@=7.7.7 os=foobar target=x86_64",
+                "spec": "gcc@=7.7.7 languages=c,cxx,fortran os=foobar target=x86_64",
                 "prefix": "/path/to/fake",
                 "modules": ["gcc/7.7.7", "foobar"],
                 "extra_attributes": {
-                    "paths": {
-                        "cc": "/path/to/fake/gcc",
+                    "compilers": {
+                        "c": "/path/to/fake/gcc",
                         "cxx": "/path/to/fake/g++",
-                        "fc": "/path/to/fake/gfortran",
-                        "f77": "/path/to/fake/gfortran",
+                        "fortran": "/path/to/fake/gfortran",
                     },
                     "flags": {"fflags": "-ffree-form"},
                 },
@@ -285,26 +284,7 @@ def test_compiler_list_empty(no_compilers_yaml, working_env, compilers_dir):
 \tmodules  = ['gcc/7.7.7', 'foobar']
 \toperating system  = foobar
 """,
-        ),
-        (
-            {
-                "spec": "gcc@7.7.7",
-                "prefix": "{prefix}",
-                "modules": ["gcc/7.7.7", "foobar"],
-                "extra_attributes": {"flags": {"fflags": "-ffree-form"}},
-            },
-            """gcc@7.7.7:
-\tpaths:
-\t\tcc = {compilers_dir}{sep}gcc-8{suffix}
-\t\tcxx = {compilers_dir}{sep}g++-8{suffix}
-\t\tf77 = {compilers_dir}{sep}gfortran-8{suffix}
-\t\tfc = {compilers_dir}{sep}gfortran-8{suffix}
-\tflags:
-\t\tfflags = ['-ffree-form']
-\tmodules  = ['gcc/7.7.7', 'foobar']
-\toperating system  = debian6
-""",
-        ),
+        )
     ],
 )
 def test_compilers_shows_packages_yaml(

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import os
 import sys
 
 from spack.operating_systems.mac_os import macos_version
@@ -22,9 +23,7 @@ class Root(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers(
-        "drbenmorgan", "gartung", "greenc-FNAL", "HadrienG2", "marcmengel", "vitodb", "vvolkl"
-    )
+    maintainers("drbenmorgan", "gartung", "greenc-FNAL", "marcmengel", "vitodb", "vvolkl")
 
     # ###################### Versions ##########################
 
@@ -35,10 +34,14 @@ class Root(CMakePackage):
     version("develop", branch="master")
 
     # Production version
+    version("6.32.02", sha256="3d0f76bf05857e1807ccfb2c9e014f525bcb625f94a2370b455f4b164961602d")
+    version("6.32.00", sha256="12f203681a59041c474ce9523761e6f0e8861b3bee78df5f799a8db55189e5d2")
+    version("6.30.08", sha256="8bb8594867b9ded20a65e59f2cb6da965aa30851b8960f8cbf76293aec046b69")
     version("6.30.06", sha256="300db7ed1b678ed2fb9635ca675921a1945c7c2103da840033b493091f55700c")
     version("6.30.04", sha256="2b4180b698f39cc65d91084d833a884515b325bc5f673c8e39abe818b025d8cc")
     version("6.30.02", sha256="7965a456d1ad1ee0d5fe4769bf5a8fec291af684ed93db0f3080a9c362435183")
     version("6.30.00", sha256="0592c066954cfed42312957c9cb251654456064fe2d8dabdcb8826f1c0099d71")
+    version("6.28.12", sha256="fcd325267d238e9c6008f56a3a7e7c87fd864b1e633b0ffcf1f82b7e7ad3d249")
     version("6.28.10", sha256="69d6fdeb607e6b20bd02c757fa6217024c0b6132c1e9b1dff4d85d9a2bb7e51e")
     version("6.28.06", sha256="af3b673b9aca393a5c9ae1bf86eab2672aaf1841b658c5c6e7a30ab93c586533")
     version("6.28.04", sha256="70f7f86a0cd5e3f2a0befdc59942dd50140d990ab264e8e56c7f17f6bfe9c965")
@@ -53,6 +56,7 @@ class Root(CMakePackage):
     version("6.26.00", sha256="5fb9be71fdf0c0b5e5951f89c2f03fcb5e74291d043f6240fb86f5ca977d4b31")
     version("6.24.08", sha256="882c41fe36e94456fb10443d08ef9152375a90d1f910a10add1793d6e838bc44")
     version("6.24.06", sha256="907f69f4baca1e4f30eeb4979598ca7599b6aa803ca046e80e25b6bbaa0ef522")
+    version("6.24.04", sha256="4a416f3d7aa25dba46d05b641505eb074c5f07b3ec1d21911451046adaea3ee7")
     version("6.24.02", sha256="0507e1095e279ccc7240f651d25966024325179fa85a1259b694b56723ad7c1c")
     version("6.24.00", sha256="9da30548a289211c3122d47dacb07e85d35e61067fac2be6c5a5ff7bda979989")
     version("6.22.08", sha256="6f061ff6ef8f5ec218a12c4c9ea92665eea116b16e1cd4df4f96f00c078a2f6f")
@@ -82,6 +86,10 @@ class Root(CMakePackage):
     version("6.06.06", sha256="0a7d702a130a260c72cb6ea754359eaee49a8c4531b31f23de0bfcafe3ce466b")
     version("6.06.04", sha256="ab86dcc80cbd8e704099af0789e23f49469932ac4936d2291602301a7aa8795b")
     version("6.06.02", sha256="18a4ce42ee19e1a810d5351f74ec9550e6e422b13b5c58e0c3db740cdbc569d1")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # ###################### Patches ##########################
 
@@ -118,6 +126,18 @@ class Root(CMakePackage):
     patch("protobuf-config.patch", level=0, when="@:6.30.02 ^protobuf ^cmake@3.9:")
 
     patch("webgui.patch", level=0, when="@6.26.00:6.26.10,6.28.00:6.28.08,6.30.00 +webgui")
+
+    # Back-ported patches fixing segfault in weighted likelihood fits
+    patch(
+        "https://github.com/root-project/root/commit/2f00d6df258906c1f6fe848135a88b836db3077f.patch?full_index=1",
+        sha256="8da36032082e65ae246c03558a4c3fd67b157d1d0c6d20adac9de263279d1db6",
+        when="@6.28:6.28.12",
+    )
+    patch(
+        "https://github.com/root-project/root/commit/14838b35600b08278e69bc3d8d8669773bc11399.patch?full_index=1",
+        sha256="4647898ef28cb1adbaacdeedb04b417d69ccbaf02fc2b3aab20e07c0b2a96a0f",
+        when="@6.30:6.30.04",
+    )
 
     if sys.platform == "darwin":
         # Resolve non-standard use of uint, _cf_
@@ -267,6 +287,11 @@ class Root(CMakePackage):
     depends_on("cmake@3.19:", type="build", when="@6.28.00: platform=darwin")
     depends_on("pkgconfig", type="build")
 
+    # 6.32.00 requires sys/random.h
+    with when("@6.32.00:"):
+        depends_on("glibc@2.25:", when="^[virtuals=libc] glibc")
+        depends_on("musl@1.1.20:", when="^[virtuals=libc] musl")
+
     depends_on("freetype")
     depends_on("jpeg")
     depends_on("libice")
@@ -355,7 +380,8 @@ class Root(CMakePackage):
     depends_on("vc@1.3.0:", when="@6.09.02: +vc")
     depends_on("vc@1.4.4:", when="@6.29.02: +vc")
     depends_on("vdt", when="+vdt")
-    depends_on("veccore", when="+veccore")
+    depends_on("veccore@0.4.0:", when="@6.09.04: +veccore")
+    depends_on("veccore@0.4.2:", when="@6.11.02: +veccore")
     depends_on("libxml2", when="+xml")
     depends_on("xrootd", when="+xrootd")
     depends_on("xrootd@:4", when="@:6.22.03 +xrootd")
@@ -530,7 +556,6 @@ class Root(CMakePackage):
 
         # Options controlling gross build / config behavior.
         options += [
-            define("exceptions", True),
             define("explicitlink", True),
             define("fail-on-missing", True),
             define_from_variant("fortran"),
@@ -550,8 +575,11 @@ class Root(CMakePackage):
             define("CLING_CXX_PATH", self.compiler.cxx),
         ]
 
-        if self.spec.satisfies("@:6.28.99"):
+        if self.spec.satisfies("@:6.28"):
             options.append(define("cxxmodules", False))
+
+        if self.spec.satisfies("@:6.30"):
+            options.append(define("exceptions", True))
 
         # Options related to ROOT's ability to download and build its own
         # dependencies. Per Spack convention, this should generally be avoided.
@@ -559,7 +587,6 @@ class Root(CMakePackage):
         afterimage_enabled = ("+x" in self.spec) if "platform=darwin" not in self.spec else True
 
         options += [
-            define("builtin_afterimage", afterimage_enabled),
             define("builtin_cfitsio", False),
             define("builtin_davix", False),
             define("builtin_fftw3", False),
@@ -583,6 +610,9 @@ class Root(CMakePackage):
             define("builtin_xxhash", self.spec.satisfies("@6.12.02:6.12")),
             define("builtin_zlib", False),
         ]
+
+        if self.spec.satisfies("@:6.32"):
+            options.append(define("builtin_afterimage", afterimage_enabled))
 
         # Features
         options += [
@@ -622,7 +652,6 @@ class Root(CMakePackage):
             define_from_variant("memstat"),  # See conflicts
             define("minimal", False),
             define_from_variant("minuit"),
-            define_from_variant("minuit2", "minuit"),
             define_from_variant("mlp"),
             define("monalisa", False),
             define_from_variant("mysql"),
@@ -687,6 +716,9 @@ class Root(CMakePackage):
         if self.spec.satisfies("@6.25.02:"):
             options.append(define_from_variant("tmva-sofie"))
 
+        if self.spec.satisfies("@:6.30"):
+            options.append(define_from_variant("minuit2", "minuit"))
+
         # #################### Compiler options ####################
 
         if sys.platform == "darwin" and self.compiler.cc == "gcc":
@@ -739,12 +771,21 @@ class Root(CMakePackage):
             add_include_path("xproto")
         if "+opengl" in spec and "platform=darwin" not in spec:
             add_include_path("glew")
-            add_include_path("mesa-glu")
+            add_include_path("glu")
         if "platform=darwin" in spec:
             # Newer deployment targets cause fatal errors in rootcling, so
             # override with an empty value even though it may lead to link
             # warnings when building against ROOT
             env.unset("MACOSX_DEPLOYMENT_TARGET")
+
+    @property
+    def root_library_path(self):
+        # Where possible, we do not use LD_LIBRARY_PATH as that is non-portable
+        # and pollutes the standard library-loading mechanisms on Linux systems.
+        # The ROOT_LIBRARY_PATH environment variable was added to ROOT 6.26.
+        if self.spec.satisfies("@:6.25"):
+            return "LD_LIBRARY_PATH"
+        return "ROOT_LIBRARY_PATH"
 
     def setup_run_environment(self, env):
         env.set("ROOTSYS", self.prefix)
@@ -753,8 +794,12 @@ class Root(CMakePackage):
         # the following vars are copied from thisroot.sh; silence a cppyy warning
         env.set("CLING_STANDARD_PCH", "none")
         env.set("CPPYY_API_PATH", "none")
+        if "+rpath" not in self.spec:
+            env.prepend_path(self.root_library_path, self.prefix.lib.root)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: spack.util.environment.EnvironmentModifications, dependent_spec
+    ):
         env.set("ROOTSYS", self.prefix)
         env.set("ROOT_VERSION", "v{0}".format(self.version.up_to(1)))
         env.prepend_path("PYTHONPATH", self.prefix.lib.root)
@@ -762,16 +807,20 @@ class Root(CMakePackage):
         env.append_path("CMAKE_MODULE_PATH", self.prefix.cmake)
         env.prepend_path("ROOT_INCLUDE_PATH", dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
-            env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib.root)
+            env.prepend_path(self.root_library_path, self.prefix.lib.root)
         if "platform=darwin" in self.spec:
             # Newer deployment targets cause fatal errors in rootcling
             env.unset("MACOSX_DEPLOYMENT_TARGET")
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        env.set("ROOTSYS", self.prefix)
-        env.set("ROOT_VERSION", "v{0}".format(self.version.up_to(1)))
-        env.prepend_path("PYTHONPATH", self.prefix.lib.root)
-        env.prepend_path("PATH", self.prefix.bin)
+    def setup_dependent_run_environment(
+        self, env: spack.util.environment.EnvironmentModifications, dependent_spec
+    ):
         env.prepend_path("ROOT_INCLUDE_PATH", dependent_spec.prefix.include)
-        if "+rpath" not in self.spec:
-            env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib.root)
+        # For dependents that build dictionaries, ROOT needs to know where the
+        # dictionaries have been installed.  This can be facilitated by
+        # automatically prepending dependent package library paths to
+        # ROOT_LIBRARY_PATH (for @6.26:) or LD_LIBRARY_PATH (for older
+        # versions).
+        for lib_path in (dependent_spec.prefix.lib, dependent_spec.prefix.lib64):
+            if os.path.exists(lib_path):
+                env.prepend_path(self.root_library_path, lib_path)
