@@ -30,9 +30,6 @@ class PerlBioBigfile(PerlPackage):
     with default_args(type=("build", "link")):
         depends_on("kentutils")
         depends_on("htslib+pic", when="^kentutils~builtin_htslib")
-        depends_on("freetype")
-        depends_on("libpng+pic")
-        depends_on("bzip2")
         depends_on("openssl")
 
     with default_args(type=("build", "run")):
@@ -59,11 +56,7 @@ class PerlBioBigfile(PerlPackage):
             # These are being set in Build.PL so we need to reset here
             "-lz",
             "-lssl",
-            # These are expected as dependencies from kentutils
-            "-lfreetype",
-            "-lpng",
-            "-lbz2",
-            # This is an undocumented dependency
+            # This is an undocumented dependency from kentutils
             "-lhts",
         ]
 
