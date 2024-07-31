@@ -10,8 +10,9 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
+import sys
 import warnings
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import archspec.cpu
 
@@ -29,6 +30,10 @@ import spack.spec
 import spack.version
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
+from spack.util.executable import which_string
+
+
+IS_WINDOWS = sys.platform == "win32"
 
 _path_instance_vars = ["cc", "cxx", "f77", "fc"]
 _flags_instance_vars = ["cflags", "cppflags", "cxxflags", "fflags"]
@@ -348,6 +353,27 @@ def _remove_compiler_from_scope(compiler_spec, scope):
     compiler_config[:] = filtered_compiler_config
     spack.config.CONFIG.set("compilers", compiler_config, scope=scope)
     return True
+
+
+def _is_active_vcvars_session(env=None) -> bool:
+    if not env:
+        env = os.environ
+    return bool(env.get("VisualStudioVersion", False))
+
+
+def compiler_from_vcenv() -> Union[spack.compiler.CompilerSpec, None]:
+    # not intended to function on non Windows platforms
+    # or if there's no active VCVars, not worth considering
+    if not IS_WINDOWS or not _is_active_vcvars_session():
+        return
+    # find compiler loaded by vcvars
+    active_compiler = which_string("cl")
+    if not active_compiler:
+        return
+    active_compiler_dir = os.path.dirname(active_compiler)
+    args = arguments_to_detect_version_fn(spack.operating_systems.WindowsOs(), [active_compiler_dir])
+    detected_compilers = detect_version(args)
+    return make_compiler_list(detected_compilers)[0]
 
 
 def all_compilers_config(
