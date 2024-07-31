@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack.package import *
 
 
@@ -20,6 +22,7 @@ class Libuuid(AutotoolsPackage, SourceforgePackage):
 
     depends_on("c", type="build")  # generated
 
-    provides("uuid")
+    if sys.platform not in ["darwin", "win32"]:
+        provides("uuid")
 
     conflicts("%gcc@14:")
