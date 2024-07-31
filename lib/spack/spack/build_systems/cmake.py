@@ -375,6 +375,18 @@ class CMakeBuilder(BaseBuilder):
             ]
         )
 
+        # Establish some CMake based sandboxing from the user env
+
+        args.extend(
+            [
+                define("CMAKE_FIND_PACKAGE_PREFER_CONFIG", True),
+                define("CMAKE_FIND_USE_PACKAGE_ROOT_PATH", False),
+                define("CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY", False),
+                define("CMAKE_FIND_USE_PACKAGE_REGISTRY", False),
+                define("CMAKE_FIND_USE_SYSTEM_PATH", False)
+            ]
+        )
+
         return args
 
     @staticmethod
