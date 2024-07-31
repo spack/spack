@@ -9,7 +9,7 @@ from spack.package import *
 class Makedepend(AutotoolsPackage, XorgPackage):
     """makedepend - create dependencies in makefiles."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/util/makedepend"
+    homepage = "https://gitlab.freedesktop.org/xorg/util/makedepend"
     xorg_mirror_path = "util/makedepend-1.0.5.tar.gz"
 
     license("MIT-open-group")

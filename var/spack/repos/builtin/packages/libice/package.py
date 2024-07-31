@@ -9,7 +9,7 @@ from spack.package import *
 class Libice(AutotoolsPackage, XorgPackage):
     """libICE - Inter-Client Exchange Library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libICE"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libICE"
     xorg_mirror_path = "lib/libICE-1.0.9.tar.gz"
 
     license("X11")

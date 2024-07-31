@@ -9,7 +9,7 @@ from spack.package import *
 class Libfontenc(AutotoolsPackage, XorgPackage):
     """libfontenc - font encoding library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libfontenc"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libfontenc"
     xorg_mirror_path = "lib/libfontenc-1.1.3.tar.gz"
 
     license("MIT")

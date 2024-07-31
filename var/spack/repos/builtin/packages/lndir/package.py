@@ -10,7 +10,7 @@ class Lndir(AutotoolsPackage, XorgPackage):
     """lndir - create a shadow directory of symbolic links to another
     directory tree."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/util/lndir"
+    homepage = "https://gitlab.freedesktop.org/xorg/util/lndir"
     xorg_mirror_path = "util/lndir-1.0.3.tar.gz"
 
     version("1.0.5", sha256="2be863f59e6833955b11295c43d79ab32464a8706d29072171cd8da95922a7a2")

@@ -9,7 +9,7 @@ from spack.package import *
 class Bitmap(AutotoolsPackage, XorgPackage):
     """bitmap, bmtoa, atobm - X bitmap (XBM) editor and converter utilities."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/bitmap"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/bitmap"
     xorg_mirror_path = "app/bitmap-1.0.8.tar.gz"
 
     version("1.1.1", sha256="86928020ece030435eb5ae795a5f22c5ca0886a6c589187886d1b6d14d9eec81")

@@ -9,7 +9,7 @@ from spack.package import *
 class Fonttosfnt(AutotoolsPackage, XorgPackage):
     """Wrap a bitmap font in a sfnt (TrueType) wrapper."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/fonttosfnt"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/fonttosfnt"
     xorg_mirror_path = "app/fonttosfnt-1.0.4.tar.gz"
 
     license("MIT")

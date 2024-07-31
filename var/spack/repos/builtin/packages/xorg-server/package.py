@@ -10,7 +10,7 @@ class XorgServer(AutotoolsPackage, XorgPackage):
     """X.Org Server is the free and open source implementation of the display
     server for the X Window System stewarded by the X.Org Foundation."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/xserver"
+    homepage = "https://gitlab.freedesktop.org/xorg/xserver"
     xorg_mirror_path = "xserver/xorg-server-1.18.99.901.tar.gz"
 
     license("MIT")

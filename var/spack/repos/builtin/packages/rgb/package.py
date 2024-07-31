@@ -15,7 +15,7 @@ class Rgb(AutotoolsPackage, XorgPackage):
 
     The "others" subdirectory contains some alternate color databases."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/rgb"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/rgb"
     xorg_mirror_path = "app/rgb-1.0.6.tar.gz"
 
     license("MIT")

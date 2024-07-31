@@ -12,7 +12,7 @@ class Appres(AutotoolsPackage, XorgPackage):
     names.  It can be used to determine which resources a particular
     program will load."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/appres"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/appres"
     xorg_mirror_path = "app/appres-1.0.4.tar.gz"
 
     version("1.0.6", sha256="848f383ff429612fb9df840d79e97dc193dc72dbbf53d3217a8d1e90a5aa1e26")

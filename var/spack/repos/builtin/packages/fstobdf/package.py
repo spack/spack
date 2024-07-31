@@ -12,7 +12,7 @@ class Fstobdf(AutotoolsPackage, XorgPackage):
     This is useful in testing servers, debugging font metrics, and
     reproducing lost BDF files."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/fstobdf"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/fstobdf"
     xorg_mirror_path = "app/fstobdf-1.0.6.tar.gz"
 
     version("1.0.7", sha256="5cf1f697415dc5f66df24d7495471dbd5bc3812580773e4c700ead5db27503cf")

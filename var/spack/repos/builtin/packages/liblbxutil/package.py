@@ -9,7 +9,7 @@ from spack.package import *
 class Liblbxutil(AutotoolsPackage, XorgPackage):
     """liblbxutil - Low Bandwith X extension (LBX) utility routines."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/liblbxutil"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/liblbxutil"
     xorg_mirror_path = "lib/liblbxutil-1.1.0.tar.gz"
 
     license("libtiff")

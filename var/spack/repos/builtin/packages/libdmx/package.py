@@ -10,7 +10,7 @@ class Libdmx(AutotoolsPackage, XorgPackage):
     """libdmx - X Window System DMX (Distributed Multihead X) extension
     library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libdmx"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libdmx"
     xorg_mirror_path = "lib/libdmx-1.1.3.tar.gz"
 
     version("1.1.5", sha256="070e82cc1daa1b21ee1339aef56a909eab04cbe7d430fabfbb01ecd21b2dd9f3")

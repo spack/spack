@@ -11,7 +11,7 @@ class Iceauth(AutotoolsPackage, XorgPackage):
     information used in connecting with ICE.   It operates very much
     like the xauth program for X11 connection authentication records."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/iceauth"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/iceauth"
     xorg_mirror_path = "app/iceauth-1.0.7.tar.gz"
 
     license("MIT")

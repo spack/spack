@@ -10,7 +10,7 @@ class Mkfontscale(AutotoolsPackage, XorgPackage):
     """mkfontscale creates the fonts.scale and fonts.dir index files used by the
     legacy X11 font system."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/mkfontscale"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/mkfontscale"
     xorg_mirror_path = "app/mkfontscale-1.1.2.tar.gz"
 
     license("MIT")

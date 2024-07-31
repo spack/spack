@@ -14,7 +14,7 @@ class Bdftopcf(AutotoolsPackage, XorgPackage):
     appropriate machine, but the files are still portable (but read more
     slowly) on other machines."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/bdftopcf"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/bdftopcf"
     xorg_mirror_path = "app/bdftopcf-1.0.5.tar.gz"
 
     license("MIT")

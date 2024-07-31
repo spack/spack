@@ -9,7 +9,7 @@ from spack.package import *
 class Libsm(AutotoolsPackage, XorgPackage):
     """libSM - X Session Management Library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libSM"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libSM"
     xorg_mirror_path = "lib/libSM-1.2.2.tar.gz"
 
     license("MIT")

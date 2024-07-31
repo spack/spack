@@ -12,7 +12,7 @@ class Libfs(AutotoolsPackage, XorgPackage):
     This library is used by clients of X Font Servers (xfs), such as
     xfsinfo, fslsfonts, and the X servers themselves."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libFS"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libFS"
     xorg_mirror_path = "lib/libFS-1.0.7.tar.gz"
 
     version("1.0.9", sha256="8bc2762f63178905228a28670539badcfa2c8793f7b6ce3f597b7741b932054a")

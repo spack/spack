@@ -14,7 +14,7 @@ class Libwindowswm(AutotoolsPackage, XorgPackage):
     better interact with the Cygwin XWin server when running X11 in a
     rootless mode."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libWindowsWM"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libWindowsWM"
     xorg_mirror_path = "lib/libWindowsWM-1.0.1.tar.gz"
 
     license("MIT")

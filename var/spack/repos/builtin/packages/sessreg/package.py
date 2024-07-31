@@ -11,7 +11,7 @@ class Sessreg(AutotoolsPackage, XorgPackage):
     sessions. It was originally written for use with xdm, but may also be
     used with other display managers such as gdm or kdm."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/sessreg"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/sessreg"
     xorg_mirror_path = "app/sessreg-1.1.0.tar.gz"
 
     license("ICU")

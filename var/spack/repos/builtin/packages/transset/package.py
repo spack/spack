@@ -9,7 +9,7 @@ from spack.package import *
 class Transset(AutotoolsPackage, XorgPackage):
     """transset is an utility for setting opacity property."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/app/transset"
+    homepage = "https://gitlab.freedesktop.org/xorg/app/transset"
     xorg_mirror_path = "app/transset-1.0.1.tar.gz"
 
     license("MIT")

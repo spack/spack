@@ -9,7 +9,7 @@ from spack.package import *
 class Imake(AutotoolsPackage, XorgPackage):
     """The imake build system."""
 
-    homepage = "http://www.snake.net/software/imake-stuff/"
+    homepage = "https://gitlab.freedesktop.org/xorg/util/imake"
     xorg_mirror_path = "util/imake-1.0.7.tar.gz"
 
     license("custom")
