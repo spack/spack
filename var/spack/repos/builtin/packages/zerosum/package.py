@@ -41,6 +41,8 @@ class Zerosum(CMakePackage):
     # for all attributes except for the when clauses."
     variant("ompt", default=True, description="Enable OpenMP Tools support")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on("cmake", type="build")
     depends_on("hwloc", when="+hwloc")
     depends_on("mpi", when="+mpi")
