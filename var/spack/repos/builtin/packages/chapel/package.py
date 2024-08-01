@@ -618,7 +618,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         if not is_system_path(prefix):
             env.prepend_path("CPATH", prefix.include)
 
-    def set_lib_path(self, env, prefix):
+    def update_lib_path(self, env, prefix):
         if not is_system_path(prefix):
             env.prepend_path("LD_LIBRARY_PATH", prefix.lib)
             env.prepend_path("LIBRARY_PATH", prefix.lib)
@@ -657,10 +657,10 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             # TODO: why must we add to CPATH to find gmp.h
             # TODO: why must we add to LIBRARY_PATH to find lgmp
             self.prepend_cpath_include(env, self.spec["gmp"].prefix)
-            self.set_lib_path(env, self.spec["gmp"].prefix)
+            self.update_lib_path(env, self.spec["gmp"].prefix)
 
         if self.spec.variants["hwloc"].value == "spack":
-            self.set_lib_path(env, self.spec["hwloc"].prefix)
+            self.update_lib_path(env, self.spec["hwloc"].prefix)
             # Need this for the test env, where it does not appear automatic:
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libpciaccess"].prefix.lib.pkgconfig)
 
@@ -673,18 +673,18 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("+yaml"):
             self.prepend_cpath_include(env, self.spec["libyaml"].prefix)
             # could not compile test/library/packages/Yaml/writeAndParse.chpl without this
-            self.set_lib_path(env, self.spec["libyaml"].prefix)
+            self.update_lib_path(env, self.spec["libyaml"].prefix)
 
         if self.spec.satisfies("+zmq"):
             self.prepend_cpath_include(env, self.spec["libzmq"].prefix)
             # could not compile test/library/packages/ZMQ/hello.chpl without this
-            self.set_lib_path(env, self.spec["libzmq"].prefix)
+            self.update_lib_path(env, self.spec["libzmq"].prefix)
             env.prepend_path("PKG_CONFIG_PATH", self.spec["libsodium"].prefix.lib.pkgconfig)
 
         if self.spec.satisfies("+curl"):
             self.prepend_cpath_include(env, self.spec["curl"].prefix)
             # could not compile test/library/packages/Curl/check-http.chpl without this
-            self.set_lib_path(env, self.spec["curl"].prefix)
+            self.update_lib_path(env, self.spec["curl"].prefix)
 
         if self.spec.satisfies("+cuda"):
             # TODO: why must we add to LD_LIBRARY_PATH to find libcudart?
@@ -698,8 +698,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.set("CHPL_GPU_ARCH", self.spec.variants["amdgpu_target"].value[0])
             self.prepend_cpath_include(env, self.spec["hip"].prefix)
             env.set("CHPL_ROCM_PATH", self.spec["llvm-amdgpu"].prefix)
-            self.set_lib_path(env, self.spec["hip"].prefix)
-            self.set_lib_path(env, self.spec["hsa-rocr-dev"].prefix)
+            self.update_lib_path(env, self.spec["hip"].prefix)
+            self.update_lib_path(env, self.spec["hsa-rocr-dev"].prefix)
         self.setup_chpl_comm(env, self.spec)
 
     def setup_build_environment(self, env):
