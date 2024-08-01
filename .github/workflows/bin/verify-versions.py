@@ -7,7 +7,8 @@ from llnl.util import tty
 
 import spack.paths
 import spack.repo
-from spack.util.git import get_added_versions, get_modified_files
+from spack.ci import get_added_versions
+from spack.util.git import get_modified_files
 from spack.version import GitVersion, StandardVersion
 
 BUILTIN = re.compile(r"var\/spack\/repos\/builtin\/packages\/([^\/]+)\/package\.py")
@@ -35,7 +36,9 @@ def get_standard_version_checksum(pkg, version: StandardVersion) -> str:
 
 def main():
     with fs.working_dir(spack.paths.prefix):
-        files = get_modified_files()
+        # We use HEAD^1 explicitly on the merge commit created by
+        # GitHub Actions. However HEAD~1 is a safer default for the helper function.
+        files = get_modified_files(from_ref="HEAD^1")
 
     pkgs = [(m.group(1), p) for p in files for m in [BUILTIN.search(p)] if m]
 
@@ -55,13 +58,16 @@ def main():
             if isinstance(version, StandardVersion):
                 if "sha256" in pkg.versions[version]:
                     checksums_version_dict[pkg.versions[version]["sha256"]] = version
-                else:
-                    tty.die(
-                        f"{pkg_name}@{version} does not define a sha256 and is not a git version."
-                    )
+                elif not pkg.versions[version].isdevelop():
+                    tty.die(f"{pkg_name}@{version} does not define a sha256.")
+            if isinstance(version, GitVersion):
+                if "commit" in pkg.versions[version]:
+                    checksums_version_dict[pkg.versions[version]["commit"]] = version
+                elif not pkg.versions[version].isdevelop():
+                    tty.die(f"{pkg_name}@{version} does not define a commit.")
 
         with fs.working_dir(spack.paths.prefix):
-            added_versions = get_added_versions(checksums_version_dict, path)
+            added_versions = get_added_versions(checksums_version_dict, path, from_ref="HEAD^1")
 
         for version in added_versions:
             # Verify package versions coming from tarballs
@@ -77,7 +83,6 @@ def main():
                         f"    [Downloaded] {sha}"
                     )
 
-            # TODO: Verify package versions coming from git
             elif isinstance(version, GitVersion):
                 pass
 
