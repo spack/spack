@@ -28,6 +28,5 @@ class Libapplewm(AutotoolsPackage, XorgPackage):
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
 
-    # Crashes with this error message on Linux:
-    # HIServices/Processes.h: No such file or directory
-    # May only build properly on macOS?
+    conflicts("platform=linux", msg="AppleWM is only available for macOS")
+    conflicts("platform=windows", msg="AppleWM is only available for macOS")
