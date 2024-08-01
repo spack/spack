@@ -4,10 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pathlib
-from spack.package import *
 import sys
 
+from spack.package import *
+
 IS_WINDOWS = sys.platform == "win32"
+
 
 class Icu4c(AutotoolsPackage, MSBuildPackage):
     """ICU is a mature, widely used set of C/C++ and Java libraries providing
@@ -19,7 +21,6 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
 
     license("Unicode-TOU")
 
-    build_system("autotools", "msbuild")
 
     version("74.2", sha256="68db082212a96d6f53e35d60f47d38b962e9f9d207a74cfac78029ae8ff5e08c")
     version("67.1", sha256="94a80cd6f251a53bd2a997f6f1b5ac6653fe791dfab66e1eb0227740fb86d5dc")
@@ -35,6 +36,9 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
+
+    build_system("autotools", "msbuild", default="autotools")
+
 
     variant(
         "cxxstd",
@@ -103,7 +107,7 @@ class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
             "allinone.sln",
             self.define("OutputPath", self.spec.prefix),
             self.define("Configuration", "Release"),
-            self.define("SkipUWP", "true")
+            self.define("SkipUWP", "true"),
         ]
 
     @property
