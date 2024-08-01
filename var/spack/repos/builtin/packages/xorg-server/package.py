@@ -19,6 +19,13 @@ class XorgServer(AutotoolsPackage, XorgPackage):
         "1.18.99.901", sha256="c8425163b588de2ee7e5c8e65b0749f2710f55a7e02a8d1dc83b3630868ceb21"
     )
 
+    def patch(self):
+        with when("@1"):
+            # Due to transition from mesa version numbers to libglvnd version numbers,
+            # subset of https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/292
+            filter_file('LIBGL="gl >= 7.1.0"', 'LIBGL="gl >= 1.2"', "configure")
+            filter_file('LIBGL="gl >= 9.2.0"', 'LIBGL="gl >= 1.2"', "configure")
+
     depends_on("c", type="build")
 
     depends_on("pixman@0.27.2:")
