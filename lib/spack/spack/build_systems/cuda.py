@@ -86,7 +86,7 @@ class CudaPackage(PackageBase):
         Returns:
             A list of float strings, optionally followed by a suffix
         """
-        pattern = re.compile(r'(\d+)')
+        pattern = re.compile(r"(\d+)")
         capabilities = []
         for arch in arch_list:
             _, number, letter = re.split(pattern, arch)
