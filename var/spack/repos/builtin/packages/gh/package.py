@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Gh(Package):
+class Gh(GoPackage):
     """GitHub's official command line tool."""
 
     homepage = "https://github.com/cli/cli"
@@ -43,14 +43,10 @@ class Gh(Package):
     depends_on("go@1.21:", type="build", when="@2.33.0:")
     depends_on("go@1.22:", type="build", when="@2.47.0:")
 
-    phases = ["build", "install"]
 
-    def setup_build_environment(self, env):
-        # Point GOPATH at the top of the staging dir for the build step.
-        env.prepend_path("GOPATH", self.stage.path)
-
-    def build(self, spec, prefix):
-        make()
-
-    def install(self, spec, prefix):
-        make("install", "prefix=" + prefix)
+class GoBuilder(spack.build_systems.go.GoBuilder):
+    @property
+    def build_args(self):
+        args = super().build_args
+        args.extend(["-trimpath", "./cmd/gh"])
+        return args
