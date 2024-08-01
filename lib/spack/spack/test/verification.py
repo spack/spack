@@ -224,7 +224,7 @@ def test_single_file_verification(tmpdir):
     assert sorted(results.errors[filepath]) == sorted(expected)
 
     shutil.rmtree(metadir)
-    
+
     filepath = "C:\\spack_test\\temp\\file" if sys.platform == "win32" else filepath
     results = spack.verify.check_file_manifest(filepath)
     assert results.has_errors()

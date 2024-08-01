@@ -118,7 +118,7 @@ def check_file_manifest(filename):
     if spack.store.STORE.layout.metadata_dir not in os.listdir(dir):
         results.add_error(filename, "not owned by any package")
         return results
-    
+
     manifest_file = os.path.join(
         dirname, spack.store.STORE.layout.metadata_dir, spack.store.STORE.layout.manifest_file_name
     )
