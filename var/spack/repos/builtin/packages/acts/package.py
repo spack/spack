@@ -493,7 +493,7 @@ class Acts(CMakePackage, CudaPackage):
             if spec.satisfies("@14: +vecmem"):
                 args.append("-DACTS_USE_SYSTEM_VECMEM=ON")
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             cuda_arch = spec.variants["cuda_arch"].value
             if cuda_arch != "none":
                 args.append(f"-DCUDA_FLAGS=-arch=sm_{cuda_arch[0]}")
