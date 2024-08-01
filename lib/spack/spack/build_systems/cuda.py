@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
-from typing import List, Iterable
+from typing import Iterable, List
 
 import spack.variant
 from spack.directives import conflicts, depends_on, variant
