@@ -22,11 +22,7 @@ class Edm4hep(CMakePackage):
 
     version("main", branch="main")
     version("0.99", sha256="3636e8c14474237029bf1a8be11c53b57ad3ed438fd70a7e9b87c5d08f1f2ea6")
-    version(
-        "0.10.5",
-        sha256="003c8e0c8e1d1844592d43d41384f4320586fbfa51d4d728ae0870b9c4f78d81",
-        deprecated=True,
-    )
+    version("0.10.5", sha256="003c8e0c8e1d1844592d43d41384f4320586fbfa51d4d728ae0870b9c4f78d81")
     version(
         "0.10.4",
         sha256="76d51947525bc8a27b62f567033255da2e632d42d07a32ff578887948d56bd6f",
