@@ -181,6 +181,12 @@ class FluxCore(AutotoolsPackage):
         env.append_path("LUA_PATH", "./?.lua", separator=";")
 
     def setup_run_environment(self, env):
+        # If this package is external, we expect the external provider to set things
+        # like LUA paths. So, we early return. If the package is not external,
+        # properly set these environment variables to make sure the user environment
+        # is configured correctly
+        if self.spec.external:
+            return
         env.prepend_path(
             "LUA_PATH", os.path.join(self.spec.prefix, self.lua_share_dir, "?.lua"), separator=";"
         )
