@@ -47,8 +47,6 @@ class OmegaH(CMakePackage, CudaPackage):
     version("9.13.14", sha256="f617dfd024c9cc323e56800ca23df3386bfa37e1b9bd378847d1f5d32d2b8e5d")
     version("9.13.13", sha256="753702edf4bda9ae57ea21f09ca071e341604a468d8c86468c9aebba049f581c")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Build shared libraries")
     variant("mpi", default=True, description="Activates MPI support")
     variant("zlib", default=True, description="Activates ZLib support")
@@ -60,6 +58,9 @@ class OmegaH(CMakePackage, CudaPackage):
     variant("warnings", default=False, description="Compile C++ with warnings")
     variant("gmsh", default=False, description="Use Gmsh C++ API")
     variant("kokkos", default=False, description="Use Kokkos")
+
+    depends_on("cxx", type="build")
+    depends_on("c", type="build", when="+mpi")
 
     depends_on("gmsh", when="+examples")
     depends_on("gmsh@4.4.1:", when="+gmsh")
