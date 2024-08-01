@@ -437,7 +437,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     conflicts("+rocm", when="+cuda", msg="Chapel must be built with either CUDA or ROCm, not both")
     conflicts(
-        "+rocm", when="@:1.99.99", msg="ROCm support in spack requires Chapel 2.0.0 or later"
+        "+rocm", when="@:1", msg="ROCm support in spack requires Chapel 2.0.0 or later"
     )
     # Chapel restricts the allowable ROCm versions
     with when("+rocm"):
@@ -463,7 +463,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     conflicts(
         "^python@3.12:",
-        when="@:2.0.99",
+        when="@:2.0",
         msg="Chapel versions prior to 2.1.0 may produce SyntaxWarnings with Python >= 3.12",
     )
 
