@@ -10,8 +10,6 @@ from spack.main import SpackCommand
 
 providers = SpackCommand("providers")
 
-pytestmark = pytest.mark.not_on_windows("Providers not currently supported on Windows")
-
 
 @pytest.mark.parametrize(
     "pkg",
