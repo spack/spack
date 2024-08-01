@@ -225,7 +225,17 @@ def test_single_file_verification(tmpdir):
 
     shutil.rmtree(metadir)
 
-    filepath = "C:\\spack_test\\temp\\file" if sys.platform == "win32" else filepath
+    if sys.platform == "win32":
+        filedir = "C:\\spack_test\\temp"
+        filepath = os.path.join(filedir, "file1")
+        fs.mkdirp(filedir)
+
+        with open(filepath, "w") as f:
+            f.write("I'm a file")
+
     results = spack.verify.check_file_manifest(filepath)
     assert results.has_errors()
     assert results.errors[filepath] == ["not owned by any package"]
+
+    if sys.platform == "win32":
+        shutil.rmtree(filedir)
