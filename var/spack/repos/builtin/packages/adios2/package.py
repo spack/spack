@@ -292,7 +292,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
             self.define("ADIOS2_USE_MGARD", False),
         ]
 
-        if "+sst" in spec:
+        if spec.satisfies("+sst"):
             args.extend(
                 [
                     # Broken dependency package
@@ -305,15 +305,15 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
                 ]
             )
 
-        if "%fj" in spec:
+        if spec.satisfies("%fj"):
             args.extend(["-DCMAKE_Fortran_SUBMODULE_EXT=.smod", "-DCMAKE_Fortran_SUBMODULE_SEP=."])
 
         # hip support
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             args.append(self.builder.define_cuda_architectures(self))
 
         # hip support
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             args.append(self.builder.define_hip_architectures(self))
 
         return args
@@ -323,18 +323,18 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         libs_to_seek = set()
 
-        if "@2.6:" in spec:
+        if spec.satisfies("@2.6:"):
             libs_to_seek.add("libadios2_core")
             libs_to_seek.add("libadios2_c")
             libs_to_seek.add("libadios2_cxx11")
-            if "+fortran" in spec:
+            if spec.satisfies("+fortran"):
                 libs_to_seek.add("libadios2_fortran")
 
-            if "+mpi" in spec:
+            if spec.satisfies("+mpi"):
                 libs_to_seek.add("libadios2_core_mpi")
                 libs_to_seek.add("libadios2_c_mpi")
                 libs_to_seek.add("libadios2_cxx11_mpi")
-                if "+fortran" in spec:
+                if spec.satisfies("+fortran"):
                     libs_to_seek.add("libadios2_fortran_mpi")
 
             if "@2.7: +shared+hdf5" in spec and "@1.12:" in spec["hdf5"]:
@@ -342,7 +342,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
         else:
             libs_to_seek.add("libadios2")
-            if "+fortran" in spec:
+            if spec.satisfies("+fortran"):
                 libs_to_seek.add("libadios2_fortran")
 
         return find_libraries(
@@ -391,7 +391,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
         std_cmake_args = []
 
-        if "+mpi" in self.spec:
+        if self.spec.satisfies("+mpi"):
             mpi_exec = join_path(self.spec["mpi"].prefix, "bin", "mpiexec")
             std_cmake_args.append(f"-DMPIEXEC_EXECUTABLE={mpi_exec}")
 

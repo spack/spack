@@ -292,20 +292,20 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("%fj"):
             args.append("-DCMAKE_Fortran_MODDIR_FLAG=-M")
 
-        if "+cuda" in self.spec:
+        if self.spec.satisfies("+cuda"):
             args.append("-DAMReX_GPU_BACKEND=CUDA")
             args.append("-DAMReX_CUDA_ERROR_CAPTURE_THIS=ON")
             args.append("-DAMReX_CUDA_ERROR_CROSS_EXECUTION_SPACE_CALL=ON")
             cuda_arch = self.spec.variants["cuda_arch"].value
             args.append("-DAMReX_CUDA_ARCH=" + self.get_cuda_arch_string(cuda_arch))
 
-        if "+rocm" in self.spec:
+        if self.spec.satisfies("+rocm"):
             args.append("-DCMAKE_CXX_COMPILER={0}".format(self.spec["hip"].hipcc))
             args.append("-DAMReX_GPU_BACKEND=HIP")
             targets = self.spec.variants["amdgpu_target"].value
             args.append("-DAMReX_AMD_ARCH=" + ";".join(str(x) for x in targets))
 
-        if "+sycl" in self.spec:
+        if self.spec.satisfies("+sycl"):
             args.append("-DAMReX_GPU_BACKEND=SYCL")
             # SYCL GPU backend only supported with Intel's oneAPI or DPC++ compilers
             sycl_compatible_compilers = ["icpx"]
@@ -344,7 +344,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("%fj"):
             args.append("-DCMAKE_Fortran_MODDIR_FLAG=-M")
 
-        if "+cuda" in self.spec:
+        if self.spec.satisfies("+cuda"):
             cuda_arch = self.spec.variants["cuda_arch"].value
             args.append("-DCUDA_ARCH=" + self.get_cuda_arch_string(cuda_arch))
 
@@ -365,11 +365,11 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
         args = ["-S{0}".format(join_path(".", "cache", "amrex", "Tests", "SpackSmokeTest"))]
         args.append("-DAMReX_ROOT=" + self.prefix)
-        if "+mpi" in self.spec:
+        if self.spec.satisfies("+mpi"):
             args.append("-DMPI_C_COMPILER=" + self.spec["mpi"].mpicc)
             args.append("-DMPI_CXX_COMPILER=" + self.spec["mpi"].mpicxx)
 
-        if "+cuda" in self.spec:
+        if self.spec.satisfies("+cuda"):
             args.append("-DCMAKE_CUDA_COMPILER=" + join_path(self.spec["cuda"].prefix.bin, "nvcc"))
 
         args.extend(self.cmake_args())

@@ -243,11 +243,11 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             # Are we on a LLNL system then strip node number
             hostname = hostname.rstrip("1234567890")
         special_case = ""
-        if "+cuda" in self.spec:
+        if self.spec.satisfies("+cuda"):
             special_case += "_cuda"
-        if "~fortran" in self.spec:
+        if self.spec.satisfies("~fortran"):
             special_case += "_nofortran"
-        if "+rocm" in self.spec:
+        if self.spec.satisfies("+rocm"):
             special_case += "_hip"
         return "{0}-{1}-{2}@{3}{4}.cmake".format(
             hostname,
@@ -261,7 +261,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = super().initconfig_compiler_entries()
 
-        if "+fortran" in spec:
+        if spec.satisfies("+fortran"):
             entries.append(cmake_cache_option("ENABLE_FORTRAN", True))
             if self.is_fortran_compiler("gfortran") and "clang" in self.compiler.cxx:
                 libdir = pjoin(os.path.dirname(os.path.dirname(self.compiler.cxx)), "lib")
@@ -282,7 +282,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_string("BLT_CXX_STD", "c++14", ""))
 
         # Add optimization flag workaround for Debug builds with cray compiler or newer HIP
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             entries.append(cmake_cache_string("CMAKE_CXX_FLAGS_DEBUG", "-O1 -g -DNDEBUG"))
 
         return entries
@@ -291,7 +291,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = super().initconfig_hardware_entries()
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
             entries.append(cmake_cache_option("CMAKE_CUDA_SEPARABLE_COMPILATION", True))
 
@@ -304,7 +304,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
             if spec.satisfies("^blt@:0.5.1"):
                 # This is handled internally by BLT now
-                if "+cpp14" in spec:
+                if spec.satisfies("+cpp14"):
                     cudaflags += " -std=c++14"
                 else:
                     cudaflags += " -std=c++11"
@@ -313,7 +313,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append("# nvcc does not like gtest's 'pthreads' flag\n")
             entries.append(cmake_cache_option("gtest_disable_pthreads", True))
 
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             entries.append("#------------------{0}\n".format("-" * 60))
             entries.append("# Axom ROCm specifics\n")
             entries.append("#------------------{0}\n\n".format("-" * 60))
@@ -385,7 +385,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
             entries.append(cmake_cache_string("BLT_EXE_LINKER_FLAGS", linker_flags, description))
 
-            if "+shared" in spec:
+            if spec.satisfies("+shared"):
                 linker_flags = "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-rpath," + libdir
                 entries.append(
                     cmake_cache_string("CMAKE_SHARED_LINKER_FLAGS", linker_flags, description)
@@ -440,7 +440,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = super().initconfig_mpi_entries()
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             entries.append(cmake_cache_option("ENABLE_MPI", True))
             if spec["mpi"].name == "spectrum-mpi":
                 entries.append(cmake_cache_string("BLT_MPI_COMMAND_APPEND", "mpibind"))
@@ -496,7 +496,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             else:
                 entries.append("# %s not built\n" % dep.upper())
 
-        if "+profiling" in spec:
+        if spec.satisfies("+profiling"):
             dep_dir = get_spec_path(spec, "adiak", path_replacements)
             entries.append(cmake_cache_path("ADIAK_DIR", dep_dir))
 
@@ -508,7 +508,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_path("CAMP_DIR", dep_dir))
 
         # SCR does not export it's targets so we need to pull in its dependencies
-        if "+scr" in spec:
+        if spec.satisfies("+scr"):
             dep_dir = get_spec_path(spec, "scr", path_replacements)
             entries.append(cmake_cache_path("SCR_DIR", dep_dir))
 
@@ -541,7 +541,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("#------------------{0}\n".format("-" * 60))
 
         # Add common prefix to path replacement list
-        if "+devtools" in spec:
+        if spec.satisfies("+devtools"):
             # Grab common devtools root and strip the trailing slash
             path1 = os.path.realpath(spec["cppcheck"].prefix)
             path2 = os.path.realpath(spec["doxygen"].prefix)

@@ -146,12 +146,12 @@ class Abinit(AutotoolsPackage):
         options += self.with_or_without("libxml2")
 
         oapp = options.append
-        if "@:8" in spec:
+        if spec.satisfies("@:8"):
             oapp(f"--enable-optim={self.spec.variants['optimization-flavor'].value}")
         else:
             oapp(f"--with-optim-flavor={self.spec.variants['optimization-flavor'].value}")
 
-        if "+wannier90" in spec:
+        if spec.satisfies("+wannier90"):
             if spec.satisfies("@:8"):
                 oapp(f"--with-wannier90-libs=-L{spec['wannier90'].prefix.lib} -lwannier -lm")
                 oapp(f"--with-wannier90-incs=-I{spec['wannier90'].prefix.modules}")
@@ -174,16 +174,16 @@ class Abinit(AutotoolsPackage):
                     ]
                 )
         else:
-            if "@:9.8" in spec:
+            if spec.satisfies("@:9.8"):
                 oapp(f"--with-fftw={spec['fftw-api'].prefix}")
                 oapp(f"--with-hdf5={spec['hdf5'].prefix}")
 
-            if "@:8" in spec:
+            if spec.satisfies("@:8"):
                 oapp("--with-dft-flavor=atompaw+libxc")
             else:
                 "--without-wannier90",
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             oapp(f"CC={spec['mpi'].mpicc}")
             oapp(f"CXX={spec['mpi'].mpicxx}")
             oapp(f"FC={spec['mpi'].mpifc}")
@@ -192,18 +192,18 @@ class Abinit(AutotoolsPackage):
 
             # MPI version:
             # let the configure script auto-detect MPI support from mpi_prefix
-            if "@:8" in spec:
+            if spec.satisfies("@:8"):
                 oapp("--enable-mpi=yes")
             else:
                 oapp("--with-mpi")
         else:
-            if "@:8" in spec:
+            if spec.satisfies("@:8"):
                 oapp("--enable-mpi=no")
             else:
                 oapp("--without-mpi")
 
         # Activate OpenMP in Abinit Fortran code.
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             oapp("--enable-openmp=yes")
         else:
             oapp("--enable-openmp=no")
@@ -213,19 +213,19 @@ class Abinit(AutotoolsPackage):
         is_using_intel_libraries = spec["lapack"].name in INTEL_MATH_LIBRARIES
         if is_using_intel_libraries:
             linalg_flavor = "mkl"
-        elif "@9:" in spec and "^openblas" in spec:
+        if spec.satisfies("@9:") and spec.satisfies("^openblas"):
             linalg_flavor = "openblas"
-        elif "@9:" in spec and "^fujitsu-ssl2" in spec:
+        if spec.satisfies("@9:") and spec.satisfies("^fujitsu-ssl2"):
             linalg_flavor = "openblas"
         else:
             linalg_flavor = "custom"
 
-        if "+scalapack" in spec:
+        if spec.satisfies("+scalapack"):
             linalg = spec["scalapack"].libs + linalg
-            if "@:8" in spec:
+            if spec.satisfies("@:8"):
                 linalg_flavor = f"scalapack+{linalg_flavor}"
 
-        if "@:8" in spec:
+        if spec.satisfies("@:8"):
             oapp(f"--with-linalg-libs={linalg.ld_flags}")
         else:
             oapp(f"LINALG_LIBS={linalg.ld_flags}")
@@ -235,14 +235,14 @@ class Abinit(AutotoolsPackage):
         if is_using_intel_libraries:
             fftflavor = "dfti"
         else:
-            if "+openmp" in spec:
+            if spec.satisfies("+openmp"):
                 fftflavor, fftlibs = "fftw3-threads", "-lfftw3_omp -lfftw3 -lfftw3f"
             else:
                 fftflavor, fftlibs = "fftw3", "-lfftw3 -lfftw3f"
 
         oapp(f"--with-fft-flavor={fftflavor}")
 
-        if "@:8" in spec:
+        if spec.satisfies("@:8"):
             if is_using_intel_libraries:
                 oapp(f"--with-fft-incs={spec['fftw-api'].headers.cpp_flags}")
                 oapp(f"--with-fft-libs={spec['fftw-api'].libs.ld_flags}")
@@ -271,7 +271,7 @@ class Abinit(AutotoolsPackage):
 
         # LibXC library
         libxc = spec["libxc:fortran"]
-        if "@:8" in spec:
+        if spec.satisfies("@:8"):
             options.extend(
                 [
                     f"--with-libxc-incs={libxc.headers.cpp_flags}",
@@ -285,7 +285,7 @@ class Abinit(AutotoolsPackage):
         hdf5 = spec["hdf5:hl"]
         netcdfc = spec["netcdf-c"]
         netcdff = spec["netcdf-fortran:shared"]
-        if "@:8" in spec:
+        if spec.satisfies("@:8"):
             oapp("--with-trio-flavor=netcdf")
             # Since version 8, Abinit started to use netcdf4 + hdf5 and we have
             # to link with the high level HDF5 library
@@ -318,7 +318,7 @@ class Abinit(AutotoolsPackage):
         # the tests directly execute abinit. thus failing with MPI
         # TODO: run tests in tests/ via the builtin runtests.py
         #       requires Python with numpy, pyyaml, pandas
-        if "~mpi" in self.spec:
+        if self.spec.satisfies("~mpi"):
             make("tests_in")
 
     # Abinit assumes the *old* behavior of HDF5 where the library flags to link
@@ -333,5 +333,5 @@ class Abinit(AutotoolsPackage):
 
     def install(self, spec, prefix):
         make("install")
-        if "+install-tests" in spec:
+        if spec.satisfies("+install-tests"):
             install_tree("tests", spec.prefix.tests)

@@ -110,7 +110,7 @@ class ArpackNg(CMakePackage, AutotoolsPackage):
         # query_parameters = self.spec.last_query.extra_parameters
         libraries = ["libarpack"]
 
-        if "+mpi" in self.spec:
+        if self.spec.satisfies("+mpi"):
             libraries = ["libparpack"] + libraries
 
         return find_libraries(libraries, root=self.prefix, shared=True, recursive=True)
@@ -160,7 +160,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             + self.enable_or_disable("shared")
         )
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             options.append(f"F77={spec['mpi'].mpif77}")
 
         return options
