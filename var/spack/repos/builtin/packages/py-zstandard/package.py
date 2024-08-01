@@ -17,6 +17,4 @@ class PyZstandard(PythonPackage):
 
     depends_on("py-cffi@1.16.0:")
     depends_on("py-setuptools@:68", type="build")
-    depends_on("py-maturin", type="build")
-
     depends_on("zstd")
