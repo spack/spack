@@ -1842,6 +1842,8 @@ class SpackSolverSetup:
 
         if spec.name:
             clauses.append(f.node(spec.name) if not spec.virtual else f.virtual_node(spec.name))
+        if spec.namespace:
+            clauses.append(f.namespace(spec.name, spec.namespace))
 
         clauses.extend(self.spec_versions(spec))
 
@@ -2739,6 +2741,7 @@ class _Head:
     """ASP functions used to express spec clauses in the HEAD of a rule"""
 
     node = fn.attr("node")
+    namespace = fn.attr("namespace_set")
     virtual_node = fn.attr("virtual_node")
     node_platform = fn.attr("node_platform_set")
     node_os = fn.attr("node_os_set")
@@ -2754,6 +2757,7 @@ class _Body:
     """ASP functions used to express spec clauses in the BODY of a rule"""
 
     node = fn.attr("node")
+    namespace = fn.attr("namespace")
     virtual_node = fn.attr("virtual_node")
     node_platform = fn.attr("node_platform")
     node_os = fn.attr("node_os")

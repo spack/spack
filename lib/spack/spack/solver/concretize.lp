@@ -71,8 +71,21 @@
 :- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "link"), ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)), internal_error("link dependency out of the root unification set").
 :- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "run"),  ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)), internal_error("run dependency out of the root unification set").
 
-% Namespaces are statically assigned by a package fact
-attr("namespace", node(ID, Package), Namespace) :- attr("node", node(ID, Package)), pkg_fact(Package, namespace(Namespace)).
+% Namespaces are statically assigned by a package fact if not otherwise set
+error(100, "{0} does not have a namespace", Package) :- attr("node", node(ID, Package)),
+   not attr("namespace", node(ID, Package), _),
+   internal_error("A node must have a namespace").
+error(100, "{0} cannot come from both {1} and {2} namespaces", Package, NS1, NS2) :- attr("node", node(ID, Package)),
+   attr("namespace", node(ID, Package), NS1),
+   attr("namespace", node(ID, Package), NS2),
+   NS1 != NS2,
+   internal_error("A node cannot have two namespaces").
+
+attr("namespace", node(ID, Package), Namespace) :- attr("namespace_set", node(ID, Package), Namespace).
+attr("namespace", node(ID, Package), Namespace)
+  :- attr("node", node(ID, Package)),
+     not attr("namespace_set", node(ID, Package), _),
+     pkg_fact(Package, namespace(Namespace)).
 
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
 unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
