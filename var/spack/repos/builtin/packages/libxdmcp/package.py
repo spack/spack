@@ -23,7 +23,7 @@ class Libxdmcp(AutotoolsPackage, XorgPackage):
 
     depends_on("c", type="build")
 
-    depends_on("xproto")
+    depends_on("xproto", type=("build", "link"))
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
     depends_on("libbsd", when="platform=linux")

@@ -29,7 +29,7 @@ class Lbxproxy(AutotoolsPackage, XorgPackage):
     depends_on("libice")
 
     depends_on("xtrans")
-    depends_on("xproxymanagementprotocol")
-    depends_on("bigreqsproto")
+    depends_on("xproxymanagementprotocol", type="build")
+    depends_on("bigreqsproto", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

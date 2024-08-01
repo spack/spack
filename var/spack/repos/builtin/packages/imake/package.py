@@ -20,7 +20,7 @@ class Imake(AutotoolsPackage, XorgPackage):
 
     depends_on("c", type="build")
 
-    depends_on("xproto")
+    depends_on("xproto", type="build")
     depends_on("xorg-cf-files", type="run")
     depends_on("pkgconfig", type="build")
 

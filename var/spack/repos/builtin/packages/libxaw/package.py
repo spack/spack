@@ -31,7 +31,7 @@ class Libxaw(AutotoolsPackage, XorgPackage):
     depends_on("libxmu")
     depends_on("libxpm")
 
-    depends_on("xproto")
-    depends_on("xextproto")
+    depends_on("xproto", type=("build", "link"))
+    depends_on("xextproto", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

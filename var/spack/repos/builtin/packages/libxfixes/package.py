@@ -27,9 +27,9 @@ class Libxfixes(AutotoolsPackage, XorgPackage):
 
     depends_on("libx11@1.6:")
 
-    depends_on("xproto")
-    depends_on("fixesproto@5.0:", when="@5")
-    # depends_on("fixesproto@6.0:", when="@6")
-    depends_on("xextproto")
+    depends_on("xproto", type=("build", "link"))
+    depends_on("fixesproto@5.0:", type=("build", "link"), when="@5")
+    # depends_on("fixesproto@6.0:", type=("build", "link"), when="@6")
+    depends_on("xextproto", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

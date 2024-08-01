@@ -25,9 +25,9 @@ class Xts(AutotoolsPackage, XorgPackage):
     depends_on("libxt", type="link")
     depends_on("libxmu", type="link")
     depends_on("libxaw", type="link")
-    depends_on("inputproto")
-    depends_on("recordproto")
-    depends_on("fixesproto")
+    depends_on("inputproto", type="build")
+    depends_on("recordproto", type="build")
+    depends_on("fixesproto", type="build")
 
     depends_on("xtrans")
     depends_on("bdftopcf", type="build")

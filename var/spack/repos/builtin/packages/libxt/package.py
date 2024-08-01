@@ -27,8 +27,8 @@ class Libxt(AutotoolsPackage, XorgPackage):
     depends_on("libice")
     depends_on("libx11")
 
-    depends_on("xproto")
-    depends_on("kbproto")
+    depends_on("xproto", type=("build", "link"))
+    depends_on("kbproto", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
 

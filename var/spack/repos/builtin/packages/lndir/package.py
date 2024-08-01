@@ -19,5 +19,5 @@ class Lndir(AutotoolsPackage, XorgPackage):
 
     depends_on("c", type="build")
 
-    depends_on("xproto@7.0.17:")
+    depends_on("xproto@7.0.17:", type="build")
     depends_on("pkgconfig", type="build")

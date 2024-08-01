@@ -23,6 +23,6 @@ class Xman(AutotoolsPackage, XorgPackage):
     depends_on("libxaw")
     depends_on("libxt")
 
-    depends_on("xproto@7.0.17:")
+    depends_on("xproto@7.0.17:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

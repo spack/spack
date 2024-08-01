@@ -20,8 +20,10 @@ class Libfs(AutotoolsPackage, XorgPackage):
 
     depends_on("c", type="build")
 
-    depends_on("xproto@7.0.17:")
-    depends_on("fontsproto")
+    # Note: `Requires: xproto fontsproto` in libfs.pc means this is type link
+    # https://gitlab.freedesktop.org/xorg/lib/libfs/-/blob/master/libfs.pc.in
+    depends_on("xproto@7.0.17:", type=("build", "link"))
+    depends_on("fontsproto", type=("build", "link"))
     depends_on("xtrans")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

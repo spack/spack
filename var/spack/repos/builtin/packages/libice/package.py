@@ -27,7 +27,7 @@ class Libice(AutotoolsPackage, XorgPackage):
     # but spack doesn't currently have a good way to model this so we depend on it unconditionally
     depends_on("libbsd", when="platform=linux")
 
-    depends_on("xproto")
+    depends_on("xproto", type=("build", "link"))
     depends_on("xtrans")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

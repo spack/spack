@@ -26,6 +26,6 @@ class Xmodmap(AutotoolsPackage, XorgPackage):
 
     depends_on("libx11")
 
-    depends_on("xproto@7.0.25:")
+    depends_on("xproto@7.0.25:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

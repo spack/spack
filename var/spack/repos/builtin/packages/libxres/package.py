@@ -26,9 +26,9 @@ class Libxres(AutotoolsPackage, XorgPackage):
     depends_on("libx11")
     depends_on("libxext")
 
-    depends_on("xextproto")
-    depends_on("resourceproto@1.0:", when="@1.0")
-    depends_on("resourceproto@1.2:", when="@1.2")
+    depends_on("xextproto", type="build")
+    depends_on("resourceproto@1.0:", type="build", when="@1.0")
+    depends_on("resourceproto@1.2:", type="build", when="@1.2")
 
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

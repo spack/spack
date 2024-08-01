@@ -26,6 +26,6 @@ class Libxkbfile(AutotoolsPackage, XorgPackage):
 
     depends_on("libx11")
 
-    depends_on("kbproto")
+    depends_on("kbproto", type=("build", "link"))
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

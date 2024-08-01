@@ -27,4 +27,4 @@ class Rgb(AutotoolsPackage, XorgPackage):
 
     depends_on("xorg-server")
 
-    depends_on("xproto")
+    depends_on("xproto", type="build")

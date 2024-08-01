@@ -29,6 +29,6 @@ class Xrx(AutotoolsPackage, XorgPackage):
     depends_on("libxaw")
 
     depends_on("xtrans")
-    depends_on("xproxymanagementprotocol")
+    depends_on("xproxymanagementprotocol", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

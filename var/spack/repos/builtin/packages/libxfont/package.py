@@ -28,7 +28,7 @@ class Libxfont(AutotoolsPackage, XorgPackage):
     depends_on("freetype build_system=autotools")
 
     depends_on("xtrans")
-    depends_on("xproto")
-    depends_on("fontsproto@2.1.3:")
+    depends_on("xproto", type=("build", "link"))
+    depends_on("fontsproto@2.1.3:", type=("build", "link"))
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

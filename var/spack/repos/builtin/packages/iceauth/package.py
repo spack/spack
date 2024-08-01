@@ -24,6 +24,6 @@ class Iceauth(AutotoolsPackage, XorgPackage):
 
     depends_on("libice")
 
-    depends_on("xproto@7.0.22:")
+    depends_on("xproto@7.0.22:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

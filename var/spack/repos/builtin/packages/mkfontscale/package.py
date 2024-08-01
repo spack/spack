@@ -24,6 +24,6 @@ class Mkfontscale(AutotoolsPackage, XorgPackage):
     depends_on("libfontenc")
     depends_on("freetype build_system=autotools")
 
-    depends_on("xproto@7.0.25:")
+    depends_on("xproto@7.0.25:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
