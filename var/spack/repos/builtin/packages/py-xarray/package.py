@@ -97,7 +97,7 @@ class PyXarray(PythonPackage):
         when="@:2022.05.0 +parallel",
         type=("build", "run"),
     )
-    
+
     # xarray uses inline_array starting in v2022.06.0 which only exists
     # since dask 2021.01.0
     depends_on(
