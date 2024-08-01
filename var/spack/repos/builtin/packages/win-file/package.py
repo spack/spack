@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 import shutil
+import sys
 
 from spack.package import *
 
@@ -13,7 +14,7 @@ class WinFile(Package):
     systems via the Mingw-w64 cross compiler and a custom Spack repository
     """
 
-    homepage = "https://www.darwinsys.com/file/"
+    homepage = "https://spack.github.io/windows-bootstrap-resources"
     url = (
         "https://spack.github.io/windows-bootstrap-resources/resources/file/5.45/file_5.45.tar.gz"
     )
@@ -22,7 +23,8 @@ class WinFile(Package):
 
     version("5.45", sha256="11b8f3abf647c711bc50ef8451c8d6e955f11c4afd8b0a98f2ac65e9b6e10d5e")
 
-    provides("file")
+    if sys.platform == "win32":
+        provides("file")
 
     @classmethod
     def determine_version(cls, exe):

@@ -4,11 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+import sys
 
 from spack.package import *
 
 
-class File(AutotoolsPackage):
+class NixFile(AutotoolsPackage):
     """The file command is "a file type guesser", that is, a command-line
     tool that tells you in words what kind of data a file contains"""
 
@@ -40,7 +41,8 @@ class File(AutotoolsPackage):
     depends_on("zlib-api")
     depends_on("zstd", when="@5.44:")
 
-    provides("file")
+    if sys.platform != "win32":
+        provides("file")
 
     @classmethod
     def determine_version(cls, exe):

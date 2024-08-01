@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 import shutil
+import sys
 
 from spack.package import *
 
@@ -16,14 +17,15 @@ class WinGpg(Package):
     systems via the Mingw-w64 cross compiler and a custom Spack repository
     """
 
-    homepage = "https://gnupg.org/"
+    homepage = "https://spack.github.io/windows-bootstrap-resources/"
     url = "https://spack.github.io/windows-bootstrap-resources/resources/gpg/2.4.5/ggp4win_2.4.5.tar.gz"
 
     executables = ["^gpg$"]
 
     version("2.4.5", sha256="249ab87bd06abea3140054089bad44d9a5d1531413590576da609142db2673ec")
 
-    provides("gpg")
+    if sys.platform == "win32":
+        provides("gpg")
 
     @classmethod
     def determine_version(cls, exe):
