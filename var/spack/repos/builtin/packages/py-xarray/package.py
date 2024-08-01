@@ -91,9 +91,18 @@ class PyXarray(PythonPackage):
     depends_on("py-rasterio", when="@:2022.3.0 +io", type=("build", "run"))
     depends_on("py-cfgrib", when="@:2022.3.0 +io", type=("build", "run"))
     depends_on("py-pooch", when="+io", type=("build", "run"))
+
     depends_on(
         "py-dask+array+dataframe+distributed+diagnostics+delayed",
         when="+parallel",
+        type=("build", "run"),
+    )
+    
+    # xarray uses inline_array starting in v2022.06.0 which only exists
+    # since dask 2021.01.0
+    depends_on(
+        "py-dask+array+dataframe+distributed+diagnostics+delayed@2021.01.0:",
+        when="@2022.06.0: +parallel",
         type=("build", "run"),
     )
 
