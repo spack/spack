@@ -14,7 +14,6 @@ import llnl.util.filesystem
 
 import spack.error
 import spack.paths
-import spack.util.binary_resource
 import spack.util.executable
 import spack.version
 

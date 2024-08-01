@@ -16,14 +16,13 @@ from llnl.util import tty
 from llnl.util.filesystem import join_path
 from llnl.util.lang import memoized
 
-import spack.bootstrap
 from spack.util.executable import Executable, which
 
 
 @memoized
 def file_command(*args):
     """Creates entry point to `file` system command with provided arguments"""
-
+    import spack.bootstrap
     with spack.bootstrap.ensure_bootstrap_configuration():
         spack.bootstrap.ensure_file_in_path_or_raise()
     file_cmd = which("file", required=True)
