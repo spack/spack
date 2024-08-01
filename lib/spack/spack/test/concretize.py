@@ -1761,6 +1761,20 @@ class TestConcretize:
             s = Spec("pkg-c").concretized()
         assert s.namespace == "builtin.mock"
 
+    @pytest.mark.regression("45538")
+    def test_reuse_from_other_namespace_no_raise(self, tmpdir, temporary_store, monkeypatch):
+        myrepo = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"), namespace="myrepo")
+        myrepo.add_package("zlib")
+
+        builtin = Spec("zlib").concretized()
+        builtin.package.do_install(fake=True, explicit=True)
+
+        with spack.repo.use_repositories(myrepo.root, override=False):
+            with spack.config.override("concretizer:reuse", True):
+                myrepo = Spec("myrepo.zlib").concretized()
+
+        assert myrepo.namespace == "myrepo"
+
     @pytest.mark.regression("28259")
     def test_reuse_with_unknown_package_dont_raise(self, tmpdir, temporary_store, monkeypatch):
         builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"), namespace="myrepo")
