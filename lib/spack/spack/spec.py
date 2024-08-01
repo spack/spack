@@ -1678,9 +1678,7 @@ class Spec:
         """Called by the parser to set the architecture."""
         arch_attrs = ["platform", "os", "target"]
         if self.architecture and self.architecture.concrete:
-            raise DuplicateArchitectureError(
-                "Spec for '%s' cannot have two architectures." % self.name
-            )
+            raise DuplicateArchitectureError("Spec cannot have two architectures.")
 
         if not self.architecture:
             new_vals = tuple(kwargs.get(arg, None) for arg in arch_attrs)
@@ -1689,10 +1687,7 @@ class Spec:
             new_attrvals = [(a, v) for a, v in kwargs.items() if a in arch_attrs]
             for new_attr, new_value in new_attrvals:
                 if getattr(self.architecture, new_attr):
-                    raise DuplicateArchitectureError(
-                        "Spec for '%s' cannot have two '%s' specified "
-                        "for its architecture" % (self.name, new_attr)
-                    )
+                    raise DuplicateArchitectureError(f"Cannot specify '{new_attr}' twice")
                 else:
                     setattr(self.architecture, new_attr, new_value)
 

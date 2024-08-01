@@ -328,6 +328,13 @@ class SpecParser:
         if not self.ctx.next_token:
             return initial_spec
 
+        def add_dependency(dep, **edge_properties):
+            """wrapper around root_spec._add_dependency"""
+            try:
+                root_spec._add_dependency(dep, **edge_properties)
+            except spack.error.SpecError as e:
+                raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str) from e
+
         initial_spec = initial_spec or spack.spec.Spec()
         root_spec = SpecNodeParser(self.ctx, self.literal_str).parse(initial_spec)
         while True:
@@ -336,11 +343,11 @@ class SpecParser:
                 edge_properties.setdefault("depflag", 0)
                 edge_properties.setdefault("virtuals", ())
                 dependency = self._parse_node(root_spec)
-                root_spec._add_dependency(dependency, **edge_properties)
+                add_dependency(dependency, **edge_properties)
 
             elif self.ctx.accept(TokenType.DEPENDENCY):
                 dependency = self._parse_node(root_spec)
-                root_spec._add_dependency(dependency, depflag=0, virtuals=())
+                add_dependency(dependency, depflag=0, virtuals=())
 
             else:
                 break
@@ -389,7 +396,8 @@ class SpecNodeParser:
         if not self.ctx.next_token or self.ctx.expect(TokenType.DEPENDENCY):
             return initial_spec
 
-        initial_spec = initial_spec or spack.spec.Spec()
+        if initial_spec is None:
+            initial_spec = spack.spec.Spec()
 
         # If we start with a package name we have a named spec, we cannot
         # accept another package name afterwards in a node
@@ -406,19 +414,21 @@ class SpecNodeParser:
         elif self.ctx.accept(TokenType.FILENAME):
             return FileParser(self.ctx).parse(initial_spec)
 
-        def add_flag(name, value, propagate):
+        def raise_parsing_error(string: str, cause: Optional[Exception] = None):
+            """Raise a spec parsing error with token context."""
+            raise SpecParsingError(string, self.ctx.current_token, self.literal_str) from cause
+
+        def add_flag(name: str, value: str, propagate: bool):
             """Wrapper around ``Spec._add_flag()`` that adds parser context to errors raised."""
             try:
                 initial_spec._add_flag(name, value, propagate)
             except Exception as e:
-                raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str) from e
+                raise_parsing_error(str(e), e)
 
         while True:
             if self.ctx.accept(TokenType.COMPILER):
                 if self.has_compiler:
-                    raise spack.spec.DuplicateCompilerSpecError(
-                        f"{initial_spec} cannot have multiple compilers"
-                    )
+                    raise_parsing_error("Spec cannot have multiple compilers")
 
                 compiler_name = self.ctx.current_token.value[1:]
                 initial_spec.compiler = spack.spec.CompilerSpec(compiler_name.strip(), ":")
@@ -426,9 +436,7 @@ class SpecNodeParser:
 
             elif self.ctx.accept(TokenType.COMPILER_AND_VERSION):
                 if self.has_compiler:
-                    raise spack.spec.DuplicateCompilerSpecError(
-                        f"{initial_spec} cannot have multiple compilers"
-                    )
+                    raise_parsing_error("Spec cannot have multiple compilers")
 
                 compiler_name, compiler_version = self.ctx.current_token.value[1:].split("@")
                 initial_spec.compiler = spack.spec.CompilerSpec(
@@ -442,9 +450,8 @@ class SpecNodeParser:
                 or self.ctx.accept(TokenType.VERSION)
             ):
                 if self.has_version:
-                    raise spack.spec.MultipleVersionError(
-                        f"{initial_spec} cannot have multiple versions"
-                    )
+                    raise_parsing_error("Spec cannot have multiple versions")
+
                 initial_spec.versions = spack.version.VersionList(
                     [spack.version.from_string(self.ctx.current_token.value[1:])]
                 )
