@@ -36,5 +36,8 @@ class Xts(AutotoolsPackage, XorgPackage):
     depends_on("xset", type="build")
     depends_on("xdpyinfo", type="build")
 
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")
+
     # FIXME: Crashes during compilation
     # error: redeclaration of enumerator 'XawChainTop'
