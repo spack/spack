@@ -265,6 +265,8 @@ class Mvapich(AutotoolsPackage):
 
         args.extend(self.enable_or_disable("alloca"))
         args.append("--with-pmi=" + spec.variants["pmi_version"].value)
+        if "pmi_version=pmix" in spec:
+            opts.append("--with-pmix={0}".format(spec["pmix"].prefix))
 
         if "+debug" in self.spec:
             args.extend(
