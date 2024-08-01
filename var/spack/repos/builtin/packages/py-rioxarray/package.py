@@ -16,7 +16,7 @@ class PyRioxarray(PythonPackage):
 
     license("Apache-2.0")
 
-    version("0.17.0", sha256="46c29938827fff268d497f7ae277077066fcfbac4e53132ed3d4e2b96455be62")  
+    version("0.17.0", sha256="46c29938827fff268d497f7ae277077066fcfbac4e53132ed3d4e2b96455be62")
     version(
         "0.4.1.post0", sha256="f043f846724a58518f87dd3fa84acbe39e15a1fac7e64244be3d5dacac7fe62b"
     )
