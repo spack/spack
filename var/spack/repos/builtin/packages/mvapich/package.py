@@ -113,6 +113,7 @@ class Mvapich(AutotoolsPackage):
     depends_on("libfabric", when="netmod=ofi")
     depends_on("slurm", when="process_managers=slurm")
     depends_on("ucx", when="netmod=ucx")
+    depends_on("pmix", when="pmi_version=pmix")
 
     with when("process_managers=slurm"):
         conflicts("pmi_version=pmi2")
@@ -266,7 +267,7 @@ class Mvapich(AutotoolsPackage):
         args.extend(self.enable_or_disable("alloca"))
         args.append("--with-pmi=" + spec.variants["pmi_version"].value)
         if "pmi_version=pmix" in spec:
-            opts.append("--with-pmix={0}".format(spec["pmix"].prefix))
+            args.append("--with-pmix={0}".format(spec["pmix"].prefix))
 
         if "+debug" in self.spec:
             args.extend(
