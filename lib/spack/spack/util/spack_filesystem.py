@@ -23,6 +23,7 @@ from spack.util.executable import Executable, which
 def file_command(*args):
     """Creates entry point to `file` system command with provided arguments"""
     import spack.bootstrap
+
     with spack.bootstrap.ensure_bootstrap_configuration():
         spack.bootstrap.ensure_file_in_path_or_raise()
     file_cmd = which("file", required=True)
