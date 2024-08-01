@@ -39,7 +39,7 @@ class PyXarray(PythonPackage):
 
     variant("io", default=False, description="Build io backends")
     variant("parallel", default=False, description="Build parallel backend")
-    variant("viz", default=False, description="Buid viz backends")
+    variant("viz", default=False, when="2024.7.0:", description="Buid viz backends")
 
     # pyproject.toml
     depends_on("py-setuptools", when="@:0.15", type="build")
