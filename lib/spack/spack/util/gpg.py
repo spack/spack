@@ -64,12 +64,9 @@ def init(gnupghome=None, force=False):
     GNUPGHOME = gnupghome or os.getenv("SPACK_GNUPGHOME") or spack.paths.gpg_path
 
     # Set the executable objects for "gpg" and "gpgconf"
-    if sys.platform == "win32":
-        spack.util.binary_resource.win_ensure_or_acquire_resource("gpg")
-    else:
-        with spack.bootstrap.ensure_bootstrap_configuration():
-            spack.bootstrap.ensure_gpg_in_path_or_raise()
-        GPG, GPGCONF = _gpg(), _gpgconf()
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        spack.bootstrap.ensure_gpg_in_path_or_raise()
+    GPG, GPGCONF = _gpg(), _gpgconf()
 
     GPG.add_default_env("GNUPGHOME", GNUPGHOME)
     if GPGCONF:

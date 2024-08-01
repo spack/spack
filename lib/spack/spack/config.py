@@ -43,7 +43,6 @@ import spack.paths
 import spack.platforms
 import spack.schema
 import spack.schema.bootstrap
-import spack.schema.bootstrap_resource
 import spack.schema.cdash
 import spack.schema.ci
 import spack.schema.compilers
@@ -78,7 +77,6 @@ SECTION_SCHEMAS: Dict[str, Any] = {
     "bootstrap": spack.schema.bootstrap.schema,
     "ci": spack.schema.ci.schema,
     "cdash": spack.schema.cdash.schema,
-    "bootstrap_resource": spack.schema.bootstrap_resource.schema,
 }
 
 # Same as above, but including keys for environments

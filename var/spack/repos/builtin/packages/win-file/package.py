@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import re
 import shutil
 import sys
@@ -33,4 +34,6 @@ class WinFile(Package):
         return match.group(1) if match else None
 
     def install(self, spec, prefix):
-        shutil.move(self.stage.source_path, prefix)
+        mkdirp(prefix)
+        for subdir in os.path.listdir(self.stage.source_path):
+            shutil.move(subdir, prefix)

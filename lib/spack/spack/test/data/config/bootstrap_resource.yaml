@@ -1,8 +1,0 @@
-bootstrap_resource:
-  enable: true
-  resources:
-    file:
-      providers:
-        - name: Spack Bootstrap Resource Repo
-          endpoint: file:///$spack/lib/spack/spack/test/data/binary_resource/file.tar.gz
-          sha256: 5481aa4601620a0c5b8d235710a1e87f3c511d4368d38a2697d45f118659ecf0
