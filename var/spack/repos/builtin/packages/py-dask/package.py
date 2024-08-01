@@ -30,7 +30,7 @@ class PyDask(PythonPackage):
     variant("dataframe", default=True, description="Install requirements for dask.dataframe")
     variant("distributed", default=True, description="Install requirements for dask.distributed")
     variant("diagnostics", default=False, description="Install requirements for dask.diagnostics")
-    
+
     variant(
         "delayed",
         default=True,
