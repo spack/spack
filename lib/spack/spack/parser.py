@@ -406,6 +406,13 @@ class SpecNodeParser:
         elif self.ctx.accept(TokenType.FILENAME):
             return FileParser(self.ctx).parse(initial_spec)
 
+        def add_flag(name, value, propagate):
+            """Wrapper around ``Spec._add_flag()`` that adds parser context to errors raised."""
+            try:
+                initial_spec._add_flag(name, value, propagate)
+            except Exception as e:
+                raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str) from e
+
         while True:
             if self.ctx.accept(TokenType.COMPILER):
                 if self.has_compiler:
@@ -446,36 +453,25 @@ class SpecNodeParser:
 
             elif self.ctx.accept(TokenType.BOOL_VARIANT):
                 variant_value = self.ctx.current_token.value[0] == "+"
-                initial_spec._add_flag(
-                    self.ctx.current_token.value[1:].strip(), variant_value, propagate=False
-                )
+                add_flag(self.ctx.current_token.value[1:].strip(), variant_value, propagate=False)
 
             elif self.ctx.accept(TokenType.PROPAGATED_BOOL_VARIANT):
                 variant_value = self.ctx.current_token.value[0:2] == "++"
-                initial_spec._add_flag(
-                    self.ctx.current_token.value[2:].strip(), variant_value, propagate=True
-                )
+                add_flag(self.ctx.current_token.value[2:].strip(), variant_value, propagate=True)
 
             elif self.ctx.accept(TokenType.KEY_VALUE_PAIR):
                 match = SPLIT_KVP.match(self.ctx.current_token.value)
                 assert match, "SPLIT_KVP and KEY_VALUE_PAIR do not agree."
 
-                name, delim, value = match.groups()
-                initial_spec._add_flag(name, strip_quotes_and_unescape(value), propagate=False)
+                name, _, value = match.groups()
+                add_flag(name, strip_quotes_and_unescape(value), propagate=False)
 
             elif self.ctx.accept(TokenType.PROPAGATED_KEY_VALUE_PAIR):
                 match = SPLIT_KVP.match(self.ctx.current_token.value)
                 assert match, "SPLIT_KVP and PROPAGATED_KEY_VALUE_PAIR do not agree."
 
-                name, delim, value = match.groups()
-                if name in spack.directives.reserved_names:
-                    raise SpecParsingError(
-                        f"propagation is not supported for {name}",
-                        self.ctx.current_token,
-                        self.literal_str,
-                    )
-
-                initial_spec._add_flag(name, strip_quotes_and_unescape(value), propagate=True)
+                name, _, value = match.groups()
+                add_flag(name, strip_quotes_and_unescape(value), propagate=True)
 
             elif self.ctx.expect(TokenType.DAG_HASH):
                 if initial_spec.abstract_hash:

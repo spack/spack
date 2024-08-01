@@ -99,7 +99,7 @@ __all__ = [
     "CompilerSpec",
     "Spec",
     "SpecParseError",
-    "ArchitecturePropagationError",
+    "UnsupportedPropagationError",
     "DuplicateDependencyError",
     "DuplicateCompilerSpecError",
     "UnsupportedCompilerError",
@@ -1640,19 +1640,9 @@ class Spec:
         Known flags currently include "arch"
         """
 
-        # If the == syntax is used to propagate the spec architecture
-        # This is an error
-        architecture_names = [
-            "arch",
-            "architecture",
-            "platform",
-            "os",
-            "operating_system",
-            "target",
-        ]
-        if propagate and name in architecture_names:
-            raise ArchitecturePropagationError(
-                "Unable to propagate the architecture failed." " Use a '=' instead."
+        if propagate and name in spack.directives.reserved_names:
+            raise UnsupportedPropagationError(
+                f"Propagation with '==' is not supported for '{name}'."
             )
 
         valid_flags = FlagMap.valid_compiler_flags()
@@ -5410,10 +5400,8 @@ class SpecParseError(spack.error.SpecError):
         )
 
 
-class ArchitecturePropagationError(spack.error.SpecError):
-    """Raised when the double equal symbols are used to assign
-    the spec's architecture.
-    """
+class UnsupportedPropagationError(spack.error.SpecError):
+    """Raised when propagation (==) is used with reserved variant names."""
 
 
 class DuplicateDependencyError(spack.error.SpecError):
