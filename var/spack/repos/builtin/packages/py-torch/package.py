@@ -479,10 +479,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     def torch_cuda_arch_list(self, env):
         if "+cuda" in self.spec:
-            torch_cuda_arch = ";".join(
-                "{0:.1f}".format(float(i) / 10.0) for i in self.spec.variants["cuda_arch"].value
-            )
-            env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch)
+            torch_cuda_arch = CudaPackage.compute_capabilities(spec.variants["cuda_arch"].value)
+            env.set("TORCH_CUDA_ARCH_LIST", ";".join(torch_cuda_arch))
 
     def setup_build_environment(self, env):
         """Set environment variables used to control the build.
