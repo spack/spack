@@ -74,7 +74,7 @@ class CudaPackage(PackageBase):
         ]
 
     @staticmethod
-    def compute_capabilities(arch_list):
+    def compute_capabilities(arch_list: list[str]) -> list[str]:
         """Adds a decimal place to each CUDA arch.
 
         >>> compute_capabilities(['90', '90a'])
