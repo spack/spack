@@ -21,7 +21,6 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
 
     license("Unicode-TOU")
 
-
     version("74.2", sha256="68db082212a96d6f53e35d60f47d38b962e9f9d207a74cfac78029ae8ff5e08c")
     version("67.1", sha256="94a80cd6f251a53bd2a997f6f1b5ac6653fe791dfab66e1eb0227740fb86d5dc")
     version("66.1", sha256="52a3f2209ab95559c1cf0a14f24338001f389615bf00e2585ef3dbc43ecf0a2e")
@@ -38,7 +37,6 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
     depends_on("cxx", type="build")  # generated
 
     build_system("autotools", "msbuild", default="autotools")
-
 
     variant(
         "cxxstd",
@@ -77,6 +75,8 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
             flags.append(getattr(self.compiler, f"cxx{self.spec.variants['cxxstd'].value}_flag"))
         return (None, flags, None)
 
+
+class BuildEnvironment:
     # Need to make sure that locale is UTF-8 in order to process source
     # files in UTF-8.
     @when("@59:")
@@ -84,7 +84,7 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
         env.set("LC_ALL", "en_US.UTF-8")
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder, BuildEnvironment):
     def configure_args(self):
         args = []
 
@@ -101,7 +101,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         return args
 
 
-class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
+class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder, BuildEnvironment):
     def msbuild_args(self):
         return [
             "allinone.sln",
