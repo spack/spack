@@ -69,7 +69,7 @@ class Mvapich(AutotoolsPackage):
         "pmi_version",
         description="Which pmi version to be used. If using pmi2 add it to your CFLAGS",
         default="simple",
-        values=("simple", "pmi2","pmix"),
+        values=("simple", "pmi2", "pmix"),
         multi=False,
     )
 
