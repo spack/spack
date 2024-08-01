@@ -16,6 +16,12 @@ class PySphinx(PythonPackage):
 
     license("BSD-2-Clause")
 
+    version("8.0.2", sha256="0cce1ddcc4fd3532cf1dd283bc7d886758362c5c1de6598696579ce96d8ffa5b")
+    version("8.0.1", sha256="7f762c18cfc1d4493e42f4a06a204c1ca55806c53f80a059e208e88d0668d661")
+    version("8.0.0", sha256="22551dc8fda6038a422bf1de59d91b31837b66afe45a3f30b2d8cc5aa9337343")
+
+    version("7.4.7", sha256="242f92a7ea7e6c5b406fdc2615413890ba9f699114a9c09192d7dfead2ee9cfe")
+    version("7.4.6", sha256="116918d455c493fff3178edea12b4fe1c1e4894680fd81e7b7431ea21d47ca52")
     version("7.4.5", sha256="a4abe5385bf856df094c1e6cadf24a2351b12057be3670b99a12c05a01d209f5")
     version("7.4.4", sha256="43c911f997a4530b6cffd4ff8d5516591f6c60d178591f4406f0dd02282e3f64")
     version("7.4.3", sha256="bd846bcb09fd2b6e94ce3e1ad50f4618bccf03cc7c17d0f3fa87393c0bd9178b")
@@ -98,6 +104,7 @@ class PySphinx(PythonPackage):
     depends_on("py-flit-core@3.7:", when="@5.2:", type="build")
 
     with default_args(type=("build", "run")):
+        depends_on("python@3.10:", when="@8:")
         depends_on("python@3.9:", when="@7.2:")
         depends_on("python@3.8:", when="@6:")
         depends_on("py-sphinxcontrib-applehelp", when="@2:")
@@ -144,9 +151,6 @@ class PySphinx(PythonPackage):
         depends_on("py-packaging@23:", when="@7.4:")
         depends_on("py-packaging@21:", when="@5.2:")
         depends_on("py-packaging", when="@1.7:")
-        depends_on("py-importlib-metadata@6:", when="@7.4: ^python@:3.9")
-        depends_on("py-importlib-metadata@4.8:", when="@5.2: ^python@:3.9")
-        depends_on("py-importlib-metadata@4.4:", when="@4.4: ^python@:3.9")
         depends_on("py-tomli@2:", when="@7.3.1: ^python@:3.10")
         depends_on("py-colorama@0.4.6:", when="@7.4: platform=windows")
         depends_on("py-colorama@0.4.5:", when="@5.2: platform=windows")
@@ -156,6 +160,9 @@ class PySphinx(PythonPackage):
     depends_on("py-setuptools", when="@4.4:5.1", type="build")
 
     with default_args(type=("build", "run")):
+        depends_on("py-importlib-metadata@6:", when="@7.4: ^python@:3.9")
+        depends_on("py-importlib-metadata@4.8:", when="@5.2: ^python@:3.9")
+        depends_on("py-importlib-metadata@4.4:", when="@4.4: ^python@:3.9")
         depends_on("py-setuptools", when="@:4.3")
         depends_on("py-sphinxcontrib-websupport", when="@1.6:1")
         depends_on("py-six@1.5:", when="@:1")
