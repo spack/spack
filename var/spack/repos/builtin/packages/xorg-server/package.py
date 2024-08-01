@@ -70,3 +70,6 @@ class XorgServer(AutotoolsPackage, XorgPackage):
     depends_on("libxdamage")
     depends_on("libxfixes")
     depends_on("libepoxy")
+
+    def configure_args(self):
+        return ["--disable-glx", "--disable-dri", "--disable-glamor"]
