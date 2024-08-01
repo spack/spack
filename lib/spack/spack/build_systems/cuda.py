@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+from typing import List, Iterable
 
 import spack.variant
 from spack.directives import conflicts, depends_on, variant
@@ -74,7 +75,7 @@ class CudaPackage(PackageBase):
         ]
 
     @staticmethod
-    def compute_capabilities(arch_list: list[str]) -> list[str]:
+    def compute_capabilities(arch_list: Iterable[str]) -> List[str]:
         """Adds a decimal place to each CUDA arch.
 
         >>> compute_capabilities(['90', '90a'])
