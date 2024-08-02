@@ -1043,8 +1043,6 @@ class SetupContext:
 
                 for root in self.specs:  # there is only one root in build context
                     spack.builder.create(pkg).setup_dependent_build_environment(env, root)
-                    if sys.platform == "win32" and isinstance(pkg, spack.build_systems.python.PythonPackage):
-                        env.prepend_path("PATH", pkg.spec.prefix.scripts)
 
             if self.should_setup_build_env & flag:
                 spack.builder.create(pkg).setup_build_environment(env)
