@@ -60,11 +60,11 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         pyyaml = join_path(spec["py-pyyaml"].prefix.lib, f"python{python_version}")
 
         openmp_flag = []
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             openmp_flag.append(self.compiler.openmp_flag)
 
         linalg = []
-        if "+scalapack" in spec:
+        if spec.satisfies("+scalapack"):
             linalg.append(spec["scalapack"].libs.ld_flags)
         linalg.append(spec["lapack"].libs.ld_flags)
         linalg.append(spec["blas"].libs.ld_flags)
@@ -83,7 +83,7 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         if spec.satisfies("+shared"):
             args.append("--enable-dynamic-libraries")
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             args.append(f"CC={spec['mpi'].mpicc}")
             args.append(f"CXX={spec['mpi'].mpicxx}")
             args.append(f"FC={spec['mpi'].mpifc}")
@@ -92,22 +92,22 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         else:
             args.append("--disable-mpi")
 
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             args.append("--with-openmp")
         else:
             args.append("--without-openmp")
 
         args.append(f"--with-atlab-libs={spec['bigdft-atlab'].prefix.lib}")
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             args.append("--enable-cuda-gpu")
             args.append(f"--with-cuda-path={spec['cuda'].prefix}")
             args.append(f"--with-cuda-libs={spec['cuda'].libs.link_flags}")
 
-        if "+minpack" in spec:
+        if spec.satisfies("+minpack"):
             args.append("--with-minpack")
 
-        if "+ntpoly" in spec:
+        if spec.satisfies("+ntpoly"):
             args.append("--enable-ntpoly")
 
         return args

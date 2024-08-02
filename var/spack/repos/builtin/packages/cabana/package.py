@@ -144,7 +144,7 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
                 options.append(self.define(cbn_disable, "ON"))
 
         # Use hipcc for HIP.
-        if "+rocm" in self.spec:
+        if self.spec.satisfies("+rocm"):
             options.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
 
         return options
