@@ -37,6 +37,9 @@ class MsrSafe(MakefilePackage):
 
     license("GPL-2.0-only", checked_by="fleshling")
 
+    version("diapason", md5="61184ea72d900474772ee3239c3118ea",
+        url="https://github.com/rountree/msr-safe/archive/refs/heads/diapason.zip")
+
     version("1.7.0", sha256="bdf4f96bde92a23dc3a98716611ebbe7d302005305adf6a368cb25da9c8a609a")
     version("1.6.0", sha256="defe9d12e2cdbcb1a9aa29bb09376d4156c3dbbeb7afc33315ca4b0b6859f5bb")
     version("1.5.0", sha256="e91bac281339bcb0d119a74d68a73eafb5944fd933a893e0e3209576b4c6f233")
@@ -59,8 +62,8 @@ class MsrSafe(MakefilePackage):
     @property
     def build_targets(self):
         return [
-            f"-C {self.spec['linux'].prefix}",
+            f"-C",
+            f"{self.spec['linux'].prefix}",
             f"M={self.build_directory}",
             "modules"
         ]
-
