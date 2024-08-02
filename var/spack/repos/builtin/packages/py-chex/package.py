@@ -21,22 +21,23 @@ class PyChex(PythonPackage):
     version("0.1.5", sha256="686858320f8f220c82a6c7eeb54dcdcaa4f3d7f66690dacd13a24baa1ee8299e")
     version("0.1.0", sha256="9e032058f5fed2fc1d5e9bf8e12ece5910cf6a478c12d402b6d30984695f2161")
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-absl-py@0.9.0:", type=("build", "run"))
-    depends_on("py-jax@0.1.55:", type=("build", "run"))
-    depends_on("py-jaxlib@0.1.37:", type=("build", "run"))
-    depends_on("py-numpy@1.18.0:", type=("build", "run"))
-    depends_on("py-toolz@0.9.0:", type=("build", "run"))
-
-    with when("@0.1.85:"):
-        depends_on("python@3.9:", type=("build", "run"))
-        depends_on("py-typing-extensions@4.2:", type=("build", "run"))
-        depends_on("py-jax@0.4.16:", type=("build", "run"))
-        depends_on("py-numpy@1.24.1:", type=("build", "run"))
-        depends_on("py-setuptools", type=("build", "run"), when="^python@3.12:")
-
-    # Historical dependencies
-    depends_on("py-dm-tree@0.1.5:", type=("build", "run"), when="@:0.1.5")
-
     # AttributeError: module 'jax.interpreters.pxla' has no attribute 'ShardedDeviceArray'
     conflicts("^py-jax@0.4.14:", when="@:0.1.5")
+
+    depends_on("py-setuptools", type="build")
+
+    with default_args(type=("build", "run")):
+        depends_on("python@3.9:", when="@0.1.85:")
+        depends_on("py-absl-py@0.9:")
+        depends_on("py-dataclasses@0.7:", when="@:0.1.5 ^python@3.6")
+        depends_on("py-jax@0.4.16:", when="@0.1.85:")
+        depends_on("py-jax@0.1.55:")
+        depends_on("py-jaxlib@0.1.37:")
+        depends_on("py-numpy@1.24.1:", when="@0.1.85:")
+        depends_on("py-numpy@1.18.0:")
+        depends_on("py-setuptools", when="@0.1.85: ^python@3.12:")
+        depends_on("py-toolz@0.9:")
+        depends_on("py-typing-extensions@4.2:", when="@0.1.85:")
+
+        # Historical dependencies
+        depends_on("py-dm-tree@0.1.5:", when="@:0.1.5")
