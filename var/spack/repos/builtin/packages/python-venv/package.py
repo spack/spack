@@ -89,10 +89,11 @@ class PythonVenv(Package):
         extension and any other python extensions it depends on."""
         # Packages may be installed in platform-specific or platform-independent site-packages
         # directories
-        for directory in {self.platlib, self.purelib, self.bindir}:
+        for directory in {self.platlib, self.purelib}:
             path = os.path.join(dependent_spec.prefix, directory)
             if os.path.isdir(path):
                 env.prepend_path("PYTHONPATH", path)
+        env.prepend_path("PATH", self.bindir)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_dependent_run_environment(env, dependent_spec)
