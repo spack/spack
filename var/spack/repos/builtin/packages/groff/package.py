@@ -44,6 +44,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
 
     conflicts("+uchardet", when="@:1.22.3")
 
+    depends_on("m4", type="build")
     depends_on("gawk", type="build")
     depends_on("gmake", type="build")
     depends_on("sed", type="build")

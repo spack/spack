@@ -12,7 +12,10 @@ class Xrootd(CMakePackage):
     tolerant access to data repositories of many kinds."""
 
     homepage = "https://xrootd.slac.stanford.edu"
-    url = "https://xrootd.slac.stanford.edu/download/v5.5.1/xrootd-5.5.1.tar.gz"
+    urls = [
+        "https://xrootd.slac.stanford.edu/download/v5.7.0/xrootd-5.7.0.tar.gz",
+        "https://github.com/xrootd/xrootd/releases/download/v5.7.0/xrootd-5.7.0.tar.gz",
+    ]
     list_url = "https://xrootd.slac.stanford.edu/dload.html"
     git = "https://github.com/xrootd/xrootd.git"
 

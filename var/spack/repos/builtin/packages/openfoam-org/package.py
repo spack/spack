@@ -106,6 +106,8 @@ class OpenfoamOrg(Package):
     depends_on("zlib-api")
     depends_on("flex")
     depends_on("cmake", type="build")
+    # The setSet tool (removed in version 10) depends on readline
+    depends_on("readline", when="@:9")
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
     depends_on("scotch~metis+mpi~int64", when="+scotch~int64")
