@@ -81,7 +81,17 @@ __all__ = [
 ]
 
 #: These are variant names used by Spack internally; packages can't use them
-reserved_names = ["patches", "dev_path"]
+reserved_names = [
+    "arch",
+    "architecture",
+    "dev_path",
+    "namespace",
+    "operating_system",
+    "os",
+    "patches",
+    "platform",
+    "target",
+]
 
 #: Names of possible directives. This list is mostly populated using the @directive decorator.
 #: Some directives leverage others and in that case are not automatically added.
