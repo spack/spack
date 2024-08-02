@@ -12,7 +12,7 @@ import llnl.util.tty as tty
 from spack.package import *
 
 
-class Namd(MakefilePackage, CudaPackage):
+class Namd(MakefilePackage, CudaPackage, ROCmPackage):
     """NAMD is a parallel molecular dynamics code designed for
     high-performance simulation of large biomolecular systems."""
 
@@ -293,6 +293,13 @@ class Namd(MakefilePackage, CudaPackage):
 
             if "+single_node_gpu" in spec:
                 opts.extend(["--with-single-node-cuda"])
+
+        if "+rocm" in spec:
+            self._copy_arch_file("hip")
+            opts.append("--with-hip")
+            opts.append("--with-single-node-hip")
+            opts.append("--rocm-prefix")
+            opts.append(os.environ["ROCM_PATH"])
 
         config = Executable("./config")
 
