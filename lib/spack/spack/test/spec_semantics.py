@@ -656,6 +656,7 @@ class TestSpecSemantics:
             ("{@VERSIONS}", "@", "versions", lambda spec: spec),
             ("{%compiler}", "%", "compiler", lambda spec: spec),
             ("{arch=architecture}", "arch=", "architecture", lambda spec: spec),
+            ("{namespace=namespace}", "namespace=", "namespace", lambda spec: spec),
             ("{compiler.name}", "", "name", lambda spec: spec.compiler),
             ("{compiler.version}", "", "version", lambda spec: spec.compiler),
             ("{%compiler.name}", "%", "name", lambda spec: spec.compiler),
@@ -706,12 +707,39 @@ class TestSpecSemantics:
     @pytest.mark.parametrize(
         "fmt_str",
         [
-            "{@name}",
-            "{@version.concrete}",
-            "{%compiler.version}",
-            "{/hashd}",
-            "{arch=architecture.os}",
+            "{name}",
+            "{version}",
+            "{@version}",
+            "{%compiler}",
+            "{namespace}",
+            "{ namespace=namespace}",
+            "{ namespace =namespace}",
+            "{ name space =namespace}",
+            "{arch}",
+            "{architecture}",
+            "{arch=architecture}",
+            "{  arch=architecture}",
+            "{  arch =architecture}",
         ],
+    )
+    def test_spec_format_null_attributes(self, fmt_str):
+        """Ensure that attributes format to empty strings when their values are null."""
+        spec = spack.spec.Spec()
+        assert spec.format(fmt_str) == ""
+
+    def test_spec_formatting_spaces_in_key(self, default_mock_concretization):
+        spec = default_mock_concretization("multivalue-variant cflags=-O2")
+
+        # test that spaces are preserved, if they come after some other text, otherwise
+        # they are trimmed.
+        # TODO: should we be trimming whitespace from formats? Probably not.
+        assert spec.format("x{ arch=architecture}") == f"x arch={spec.architecture}"
+        assert spec.format("x{ namespace=namespace}") == f"x namespace={spec.namespace}"
+        assert spec.format("x{ name space =namespace}") == f"x name space ={spec.namespace}"
+        assert spec.format("x{ os =os}") == f"x os ={spec.os}"
+
+    @pytest.mark.parametrize(
+        "fmt_str", ["{@name}", "{@version.concrete}", "{%compiler.version}", "{/hashd}"]
     )
     def test_spec_formatting_sigil_mismatches(self, default_mock_concretization, fmt_str):
         spec = default_mock_concretization("multivalue-variant cflags=-O2")
