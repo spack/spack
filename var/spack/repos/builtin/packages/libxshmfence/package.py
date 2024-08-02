@@ -14,12 +14,12 @@ class Libxshmfence(AutotoolsPackage, XorgPackage):
     using file descriptor passing."""
 
     homepage = "https://gitlab.freedesktop.org/xorg/lib/libxshmfence"
-    xorg_mirror_path = "lib/libxshmfence-1.3.tar.bz2"
+    xorg_mirror_path = "lib/libxshmfence-1.3.2.tar.xz"
 
     # note: url_for_version can only return a single url, no mirrors
     def url_for_version(self, version):
-        if version < Version("1.3.1"):
-            return self.urls[0].replace("xz", "bz2")
+        if self.spec.satisfies("@:1.3.0"):
+            return spack.url.substitute_version(self.urls[0].replace("xz", "bz2"), version)
 
     license("MIT")
 
