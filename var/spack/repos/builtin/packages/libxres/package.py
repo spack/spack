@@ -9,7 +9,7 @@ from spack.package import *
 class Libxres(AutotoolsPackage, XorgPackage):
     """libXRes - X-Resource extension client library."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXRes"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXRes"
     xorg_mirror_path = "lib/libXres-1.0.7.tar.gz"
 
     license("custom")
@@ -20,6 +20,8 @@ class Libxres(AutotoolsPackage, XorgPackage):
     version("1.2.1", sha256="918fb33c3897b389a1fbb51571c5c04c6b297058df286d8b48faa5af85e88bcc")
     version("1.2.0", sha256="5b62feee09f276d74054787df030fceb41034de84174abec6d81c591145e043a")
     version("1.0.7", sha256="488c9fa14b38f794d1f019fe62e6b06514a39f1a7538e55ece8faf22482fefcd")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("libx11")
     depends_on("libxext")

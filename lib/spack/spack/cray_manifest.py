@@ -227,7 +227,7 @@ def read(path, apply_updates):
     if apply_updates and compilers:
         for compiler in compilers:
             try:
-                spack.compilers.add_compilers_to_config([compiler], init_config=False)
+                spack.compilers.add_compilers_to_config([compiler])
             except Exception:
                 warnings.warn(
                     f"Could not add compiler {str(compiler.spec)}: "

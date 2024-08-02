@@ -14,7 +14,7 @@ import spack.spec
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
 
-pytestmark = pytest.mark.usefixtures("config", "mutable_mock_repo")
+pytestmark = pytest.mark.usefixtures("mutable_config", "mutable_mock_repo")
 
 spec = SpackCommand("spec")
 
@@ -31,7 +31,7 @@ def test_spec():
 
 
 @pytest.mark.only_clingo("Known failure of the original concretizer")
-def test_spec_concretizer_args(mutable_config, mutable_database):
+def test_spec_concretizer_args(mutable_database, do_not_check_runtimes_on_reuse):
     """End-to-end test of CLI concretizer prefs.
 
     It's here to make sure that everything works from CLI
@@ -58,7 +58,7 @@ def test_spec_concretizer_args(mutable_config, mutable_database):
 def test_spec_parse_dependency_variant_value():
     """Verify that we can provide multiple key=value variants to multiple separate
     packages within a spec string."""
-    output = spec("multivalue-variant fee=barbaz ^ a foobar=baz")
+    output = spec("multivalue-variant fee=barbaz ^ pkg-a foobar=baz")
 
     assert "fee=barbaz" in output
     assert "foobar=baz" in output
@@ -97,7 +97,7 @@ def test_spec_json():
     assert "mpich" in mpileaks
 
 
-def test_spec_format(database, config):
+def test_spec_format(mutable_database):
     output = spec("--format", "{name}-{^mpi.name}", "mpileaks^mpich")
     assert output.rstrip("\n") == "mpileaks-mpich"
 

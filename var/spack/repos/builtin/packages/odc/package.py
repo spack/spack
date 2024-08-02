@@ -16,8 +16,13 @@ class Odc(CMakePackage):
 
     license("Apache-2.0")
 
+    version("1.4.6", sha256="ff99d46175e6032ddd0bdaa3f6a5e2c4729d24b698ba0191a2a4aa418f48867c")
     version("1.4.5", sha256="8532d0453531d62e1f15791d1c5c96540b842913bd211a8ef090211eaf4cccae")
     version("1.3.0", sha256="97a4f10765b341cc8ccbbf203f5559cb1b838cbd945f48d4cecb1bc4305e6cd6")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("fortran", default=False, description="Enable the Fortran interface")
 

@@ -17,10 +17,19 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("24.04.01", tag="24.04.01")
+    version("23.08", tag="23.08")
+    version("23.07", tag="23.07")
+    version("23.06", tag="23.06")
+    version("23.05", tag="23.05")
+    version("22.03", tag="22.03")
     version("2020-10-19", commit="8a1ed9e8d35dfad26fb973996319965e4224dcdd")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("python@3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-packaging", type="build")
     depends_on("py-torch@0.4:", type=("build", "run"))
     depends_on("cuda@9:", when="+cuda")
     depends_on("py-pybind11", type=("build", "link", "run"))
@@ -34,15 +43,10 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     def setup_build_environment(self, env):
         if "+cuda" in self.spec:
             env.set("CUDA_HOME", self.spec["cuda"].prefix)
-            if self.spec.variants["cuda_arch"].value[0] != "none":
-                torch_cuda_arch = ";".join(
-                    "{0:.1f}".format(float(i) / 10.0)
-                    for i in self.spec.variants["cuda_arch"].value
-                )
-                env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch)
         else:
             env.unset("CUDA_HOME")
 
+    @when("^python@:3.10")
     def global_options(self, spec, prefix):
         args = []
         if spec.satisfies("^py-torch@1.0:"):
@@ -50,3 +54,11 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
             if "+cuda" in spec:
                 args.append("--cuda_ext")
         return args
+
+    @when("^python@3.11:")
+    def config_settings(self, spec, prefix):
+        return {
+            "builddir": "build",
+            "compile-args": f"-j{make_jobs}",
+            "--global-option": "--cpp_ext --cuda_ext",
+        }

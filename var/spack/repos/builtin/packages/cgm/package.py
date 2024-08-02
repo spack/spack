@@ -19,6 +19,8 @@ class Cgm(AutotoolsPackage):
     version("13.1.0", sha256="c81bead4b919bd0cea9dbc61b219e316718d940bd3dc70825c58efbf0a0acdc3")
     version("13.1", sha256="985aa6c5db4257999af6f2bdfcb24f2bce74191cdcd98e937700db7fd9f6b549")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("mpi", default=True, description="enable mpi support")
     variant("oce", default=False, description="enable oce geometry kernel")
     variant("debug", default=False, description="enable debug symbols")

@@ -24,6 +24,7 @@ class AmdAocl(BundlePackage):
 
     maintainers("amd-toolchain-support")
 
+    version("4.2", preferred=True)
     version("4.1")
     version("4.0")
     version("3.2")
@@ -43,11 +44,15 @@ class AmdAocl(BundlePackage):
         depends_on("amdfftw ~openmp")
         depends_on("amdlibflame threads=none")
 
-    for vers in ("2.2", "3.0", "3.1", "3.2", "4.0", "4.1"):
-        with when(f"@{vers}"):
-            depends_on(f"amdblis@{vers}")
-            depends_on(f"amdfftw@{vers}")
-            depends_on(f"amdlibflame@{vers}")
-            depends_on(f"amdlibm@{vers}")
-            depends_on(f"amdscalapack@{vers}")
-            depends_on(f"aocl-sparse@{vers}")
+    for vers in ["2.2", "3.0", "3.1", "3.2", "4.0", "4.1", "4.2"]:
+        with when(f"@={vers}"):
+            depends_on(f"amdblis@={vers}")
+            depends_on(f"amdfftw@={vers}")
+            depends_on(f"amdlibflame@={vers}")
+            depends_on(f"amdlibm@={vers}")
+            depends_on(f"amdscalapack@={vers}")
+            depends_on(f"aocl-sparse@={vers}")
+            if Version(vers) >= Version("4.2"):
+                depends_on(f"aocl-compression@={vers}")
+                depends_on(f"aocl-crypto@={vers}")
+                depends_on(f"aocl-libmem@={vers}")

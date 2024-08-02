@@ -19,6 +19,9 @@ class Fzf(MakefilePackage):
 
     license("MIT")
 
+    version("0.48.1", sha256="c8dbb545d651808ef4e1f51edba177fa918ea56ac53376c690dc6f2dd0156a71")
+    version("0.47.0", sha256="bc566cb4630418bc9981898d3350dbfddc114637a896acaa8d818a51945bdf30")
+    version("0.46.1", sha256="b0d640be3ae79980fdf461096f7d9d36d38ec752e25f8c4d2ca3ca6c041c2491")
     version("0.45.0", sha256="f0dd5548f80fe7f80d9277bb8fe252ac6e42a41e76fc85ce0f3af702cd987600")
     version("0.44.1", sha256="295f3aec9519f0cf2dce67a14e94d8a743d82c19520e5671f39c71c9ea04f90c")
     version("0.42.0", sha256="743c1bfc7851b0796ab73c6da7db09d915c2b54c0dd3e8611308985af8ed3df2")
@@ -53,8 +56,6 @@ class Fzf(MakefilePackage):
         mkdirp(prefix.share.fzf.shell)
         install_tree("shell", prefix.share.fzf.shell)
 
-    @run_after("install")
-    def post_install(self):
-        if "+vim" in self.spec:
-            mkdir(self.prefix.plugin)
-            install("plugin/fzf.vim", self.prefix.plugin)
+        if spec.satisfies("+vim"):
+            mkdirp(prefix.share.fzf.plugins)
+            install("plugin/fzf.vim", prefix.share.fzf.plugins)

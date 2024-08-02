@@ -50,6 +50,7 @@ class Eccodes(CMakePackage):
     license("Apache-2.0")
 
     version("develop", branch="develop")
+    version("2.34.0", sha256="3cd208c8ddad132789662cf8f67a9405514bfefcacac403c0d8c84507f303aba")
     version("2.33.0", sha256="bdcec8ce63654ec6803400c507f01220a9aa403a45fa6b5bdff7fdcc44fd7daf")
     version("2.32.1", sha256="ad2ac1bf36577b1d35c4a771b4d174a06f522a1e5ef6c1f5e53a795fb624863e")
     version("2.32.0", sha256="b57e8eeb0eba0c05d66fda5527c4ffa84b5ab35c46bcbc9a2227142973ccb8e6")
@@ -65,6 +66,10 @@ class Eccodes(CMakePackage):
     version("2.13.0", sha256="c5ce1183b5257929fc1f1c8496239e52650707cfab24f4e0e1f1a471135b8272")
     version("2.5.0", sha256="18ab44bc444168fd324d07f7dea94f89e056f5c5cd973e818c8783f952702e4e")
     version("2.2.0", sha256="1a4112196497b8421480e2a0a1164071221e467853486577c4f07627a702f4c3")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("tools", default=False, description="Build the command line tools")
     variant("netcdf", default=False, description="Enable GRIB to NetCDF conversion tool")
@@ -112,7 +117,6 @@ class Eccodes(CMakePackage):
     depends_on("cmake@3.12:", when="@2.19:", type="build")
 
     depends_on("ecbuild", type="build", when="@develop")
-    depends_on("ecbuild@3.7:", type="build", when="@2.25:")
 
     conflicts("+openmp", when="+pthreads", msg="Cannot enable both POSIX threads and OMP")
 

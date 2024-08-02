@@ -21,6 +21,11 @@ class Cdo(AutotoolsPackage):
     maintainers("skosukhin", "Try2Code")
 
     version(
+        "2.4.0",
+        sha256="a4790fb8cc07f353b11f9bbe49218b8e4be8e5ae56aade8420bad390510b4d2c",
+        url="https://code.mpimet.mpg.de/attachments/download/29313/cdo-2.4.0.tar.gz",
+    )
+    version(
         "2.3.0",
         sha256="10c878227baf718a6917837527d4426c2d0022cfac4457c65155b9c57f091f6b",
         url="https://code.mpimet.mpg.de/attachments/download/29019/cdo-2.3.0.tar.gz",
@@ -145,6 +150,10 @@ class Cdo(AutotoolsPackage):
         sha256="4c43eba7a95f77457bfe0d30fb82382b3b5f2b0cf90aca6f0f0a008f6cc7e697",
         url="https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("netcdf", default=True, description="Enable NetCDF support")
     variant(

@@ -9,6 +9,8 @@ import os
 import py.path
 import pytest
 
+import archspec.cpu
+
 import llnl.util.filesystem as fs
 
 import spack.build_systems.autotools
@@ -92,10 +94,10 @@ class TestTargets:
 
 
 @pytest.mark.not_on_windows("autotools not available on windows")
-@pytest.mark.usefixtures("config", "mock_packages")
+@pytest.mark.usefixtures("mock_packages")
 class TestAutotoolsPackage:
     def test_with_or_without(self, default_mock_concretization):
-        s = default_mock_concretization("a")
+        s = default_mock_concretization("pkg-a")
         options = s.package.with_or_without("foo")
 
         # Ensure that values that are not representing a feature
@@ -127,7 +129,7 @@ class TestAutotoolsPackage:
         assert "--without-lorem-ipsum" in options
 
     def test_none_is_allowed(self, default_mock_concretization):
-        s = default_mock_concretization("a foo=none")
+        s = default_mock_concretization("pkg-a foo=none")
         options = s.package.with_or_without("foo")
 
         # Ensure that values that are not representing a feature
@@ -137,11 +139,9 @@ class TestAutotoolsPackage:
         assert "--without-baz" in options
         assert "--no-fee" in options
 
-    def test_libtool_archive_files_are_deleted_by_default(
-        self, default_mock_concretization, mutable_database
-    ):
+    def test_libtool_archive_files_are_deleted_by_default(self, mutable_database):
         # Install a package that creates a mock libtool archive
-        s = default_mock_concretization("libtool-deletion")
+        s = Spec("libtool-deletion").concretized()
         s.package.do_install(explicit=True)
 
         # Assert the libtool archive is not there and we have
@@ -152,25 +152,23 @@ class TestAutotoolsPackage:
         assert libtool_deletion_log
 
     def test_libtool_archive_files_might_be_installed_on_demand(
-        self, mutable_database, monkeypatch, default_mock_concretization
+        self, mutable_database, monkeypatch
     ):
         # Install a package that creates a mock libtool archive,
         # patch its package to preserve the installation
-        s = default_mock_concretization("libtool-deletion")
+        s = Spec("libtool-deletion").concretized()
         monkeypatch.setattr(type(s.package.builder), "install_libtool_archives", True)
         s.package.do_install(explicit=True)
 
         # Assert libtool archives are installed
         assert os.path.exists(s.package.builder.libtool_archive_file)
 
-    def test_autotools_gnuconfig_replacement(self, default_mock_concretization, mutable_database):
+    def test_autotools_gnuconfig_replacement(self, mutable_database):
         """
         Tests whether only broken config.sub and config.guess are replaced with
         files from working alternatives from the gnuconfig package.
         """
-        s = default_mock_concretization(
-            "autotools-config-replacement +patch_config_files +gnuconfig"
-        )
+        s = Spec("autotools-config-replacement +patch_config_files +gnuconfig").concretized()
         s.package.do_install()
 
         with open(os.path.join(s.prefix.broken, "config.sub")) as f:
@@ -185,15 +183,11 @@ class TestAutotoolsPackage:
         with open(os.path.join(s.prefix.working, "config.guess")) as f:
             assert "gnuconfig version of config.guess" not in f.read()
 
-    def test_autotools_gnuconfig_replacement_disabled(
-        self, default_mock_concretization, mutable_database
-    ):
+    def test_autotools_gnuconfig_replacement_disabled(self, mutable_database):
         """
         Tests whether disabling patch_config_files
         """
-        s = default_mock_concretization(
-            "autotools-config-replacement ~patch_config_files +gnuconfig"
-        )
+        s = Spec("autotools-config-replacement ~patch_config_files +gnuconfig").concretized()
         s.package.do_install()
 
         with open(os.path.join(s.prefix.broken, "config.sub")) as f:
@@ -209,6 +203,9 @@ class TestAutotoolsPackage:
             assert "gnuconfig version of config.guess" not in f.read()
 
     @pytest.mark.disable_clean_stage_check
+    @pytest.mark.skipif(
+        str(archspec.cpu.host().family) != "x86_64", reason="test data is specific for x86_64"
+    )
     def test_autotools_gnuconfig_replacement_no_gnuconfig(self, mutable_database, monkeypatch):
         """
         Tests whether a useful error message is shown when patch_config_files is

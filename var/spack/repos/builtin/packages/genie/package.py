@@ -43,6 +43,8 @@ class Genie(Package):
     version("2.9.0", sha256="8229beb73f65f5af86a77bf141acfbe4a8b68cba9d797aae083a929906f6f2a2")
     version("2.8.6", sha256="310dc8e0d17a65e6b9773e398250703a3a6f94ceafe94f599ae0f7b3fecf7e6c")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("root+pythia6")
     depends_on("pythia6")
     depends_on("lhapdf", when="@3:")
@@ -88,11 +90,9 @@ class Genie(Package):
 
     def setup_build_environment(self, env):
         env.set("GENIE", self.stage.source_path)
-        return super().setup_build_environment(env)
 
     def setup_run_environment(self, env):
         env.set("GENIE", self.prefix)
-        return super().setup_run_environment(env)
 
     def install(self, spec, prefix):
         configure = Executable("./configure")

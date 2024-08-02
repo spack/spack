@@ -173,35 +173,14 @@ class BuildcacheBootstrapper(Bootstrapper):
         return data
 
     def _install_by_hash(
-        self,
-        pkg_hash: str,
-        pkg_sha256: str,
-        index: List[spack.spec.Spec],
-        bincache_platform: spack.platforms.Platform,
+        self, pkg_hash: str, pkg_sha256: str, bincache_platform: spack.platforms.Platform
     ) -> None:
-        index_spec = next(x for x in index if x.dag_hash() == pkg_hash)
-        # Reconstruct the compiler that we need to use for bootstrapping
-        compiler_entry = {
-            "modules": [],
-            "operating_system": str(index_spec.os),
-            "paths": {
-                "cc": "/dev/null",
-                "cxx": "/dev/null",
-                "f77": "/dev/null",
-                "fc": "/dev/null",
-            },
-            "spec": str(index_spec.compiler),
-            "target": str(index_spec.target.family),
-        }
         with spack.platforms.use_platform(bincache_platform):
-            with spack.config.override("compilers", [{"compiler": compiler_entry}]):
-                spec_str = "/" + pkg_hash
-                query = spack.binary_distribution.BinaryCacheQuery(all_architectures=True)
-                matches = spack.store.find([spec_str], multiple=False, query_fn=query)
-                for match in matches:
-                    spack.binary_distribution.install_root_node(
-                        match, unsigned=True, force=True, sha256=pkg_sha256
-                    )
+            query = spack.binary_distribution.BinaryCacheQuery(all_architectures=True)
+            for match in spack.store.find([f"/{pkg_hash}"], multiple=False, query_fn=query):
+                spack.binary_distribution.install_root_node(
+                    match, unsigned=True, force=True, sha256=pkg_sha256
+                )
 
     def _install_and_test(
         self,
@@ -232,7 +211,7 @@ class BuildcacheBootstrapper(Bootstrapper):
                     continue
 
                 for _, pkg_hash, pkg_sha256 in item["binaries"]:
-                    self._install_by_hash(pkg_hash, pkg_sha256, index, bincache_platform)
+                    self._install_by_hash(pkg_hash, pkg_sha256, bincache_platform)
 
                 info: ConfigDictionary = {}
                 if test_fn(query_spec=abstract_spec, query_info=info):
@@ -291,10 +270,6 @@ class SourceBootstrapper(Bootstrapper):
         with spack_python_interpreter():
             # Add hint to use frontend operating system on Cray
             concrete_spec = spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python())
-            # This is needed to help the old concretizer taking the `setuptools` dependency
-            # only when bootstrapping from sources on Python 3.12
-            if spec_for_current_python() == "python@3.12":
-                concrete_spec.constrain("+force_setuptools")
 
             if module == "clingo":
                 # TODO: remove when the old concretizer is deprecated  # pylint: disable=fixme
@@ -557,6 +532,41 @@ def ensure_patchelf_in_path_or_raise() -> spack.util.executable.Executable:
             abstract_spec=_root_spec("patchelf@0.13.1:0.13"),
             cmd_check=verify_patchelf,
         )
+
+
+def ensure_winsdk_external_or_raise() -> None:
+    """Ensure the Windows SDK + WGL are available on system
+    If both of these package are found, the Spack user or bootstrap
+    configuration (depending on where Spack is running)
+    will be updated to include all versions and variants detected.
+    If either the WDK or WSDK are not found, this method will raise
+    a RuntimeError.
+
+    **NOTE:** This modifies the Spack config in the current scope,
+    either user or environment depending on the calling context.
+    This is different from all other current bootstrap dependency
+    checks.
+    """
+    if set(["win-sdk", "wgl"]).issubset(spack.config.get("packages").keys()):
+        return
+    externals = spack.detection.by_path(["win-sdk", "wgl"])
+    if not set(["win-sdk", "wgl"]) == externals.keys():
+        missing_packages_lst = []
+        if "wgl" not in externals:
+            missing_packages_lst.append("wgl")
+        if "win-sdk" not in externals:
+            missing_packages_lst.append("win-sdk")
+        missing_packages = " & ".join(missing_packages_lst)
+        raise RuntimeError(
+            f"Unable to find the {missing_packages}, please install these packages \
+via the Visual Studio installer \
+before proceeding with Spack or provide the path to a non standard install with \
+'spack external find --path'"
+        )
+    # wgl/sdk are not required for bootstrapping Spack, but
+    # are required for building anything non trivial
+    # add to user config so they can be used by subsequent Spack ops
+    spack.detection.update_configuration(externals, buildable=False)
 
 
 def ensure_core_dependencies() -> None:

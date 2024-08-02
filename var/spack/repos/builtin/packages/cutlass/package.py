@@ -15,6 +15,8 @@ class Cutlass(CMakePackage, CudaPackage):
 
     version("main", branch="main")
     version("master", branch="master")
+    version("3.4.1", sha256="aebd4f9088bdf2fd640d65835de30788a6c7d3615532fcbdbc626ec3754becd4")
+    version("3.4.0", sha256="49f4b854acc2a520126ceefe4f701cfe8c2b039045873e311b1f10a8ca5d5de1")
     version("3.3.0", sha256="99876de94a04d0b9cdee81d4f29659bde1426b416926aef4d9a3a3a7869511a3")
     version("3.2.2", sha256="aaa9719eb806b168695b34893faf4854bb6bc9e09f63f2d36772aaf35a8516e5")
     version("3.2.1", sha256="da4081210d6699a547dbbe3d7cc18b4527df835518a3d0d3c85a373927c3a9b1")
@@ -42,6 +44,8 @@ class Cutlass(CMakePackage, CudaPackage):
     version("1.1.0", sha256="7ae0da2257efa7f4ad9c224bce0d10cb1a5580df6b7010d832cf0a11def4627d")
     version("1.0.1", sha256="2adec90497141893ca53ac945b88d5881610ed3347166b36be4f72449b5342a0")
     version("1.0.0", sha256="c7a16d349e11d85891cb91ece97d5bdbc4b140f614a0265732c2dc81a806bd98")
+
+    depends_on("cxx", type="build")  # generated
     variant("cuda", default=True, description="Build with CUDA")
     conflicts("~cuda", msg="Cutlass requires CUDA")
     conflicts(

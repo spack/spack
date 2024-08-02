@@ -8,7 +8,7 @@ from llnl.util import tty
 from spack.package import *
 
 
-class Aocc(Package):
+class Aocc(Package, CompilerPackage):
     """
     The AOCC compiler system is a high performance, production quality code
     generation tool.  The AOCC environment provides various options to developers
@@ -28,11 +28,15 @@ class Aocc(Package):
     """
 
     _name = "aocc"
-    family = "compiler"
     homepage = "https://www.amd.com/en/developer/aocc.html"
 
     maintainers("amd-toolchain-support")
 
+    version(
+        ver="4.2.0",
+        sha256="ed5a560ec745b24dc0685ccdcbde914843fb2f2dfbfce1ba592de4ffbce1ccab",
+        url="https://download.amd.com/developer/eula/aocc/aocc-4-2/aocc-compiler-4.2.0.tar",
+    )
     version(
         ver="4.1.0",
         sha256="5b04bfdb751c68dfb9470b34235d76efa80a6b662a123c3375b255982cb52acd",
@@ -49,6 +53,8 @@ class Aocc(Package):
         url="https://download.amd.com/developer/eula/aocc-compiler/aocc-compiler-3.2.0.tar",
     )
 
+    depends_on("c", type="build")  # generated
+
     # Licensing
     license_url = "https://www.amd.com/en/developer/aocc/aocc-compiler/eula.html"
 
@@ -56,7 +62,6 @@ class Aocc(Package):
     depends_on("zlib-api")
     depends_on("ncurses")
     depends_on("libtool")
-    depends_on("texinfo")
 
     variant(
         "license-agreed",
@@ -75,7 +80,7 @@ class Aocc(Package):
 
     @run_before("install")
     def license_reminder(self):
-        if "+license-agreed" in self.spec:
+        if self.spec.satisfies("+license-agreed"):
             tty.msg(
                 "Reminder: by setting +license-agreed you are confirming you agree to the terms "
                 "of the {0} EULA (found at {1})".format(self.spec.name, self.license_url)
@@ -101,3 +106,9 @@ class Aocc(Package):
             for compiler in ["clang", "clang++"]:
                 with open(join_path(self.prefix.bin, "{}.cfg".format(compiler)), "w") as f:
                     f.write(compiler_options)
+
+    compiler_version_argument = "--version"
+    compiler_version_regex = r"AOCC_(\d+[._]\d+[._]\d+)"
+    c_names = ["clang"]
+    cxx_names = ["clang++"]
+    fortran_names = ["flang"]

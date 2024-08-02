@@ -82,6 +82,10 @@ class Texlive(AutotoolsPackage):
             when="@{0}".format(release["version"]),
         )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # The following variant is only for the "live" binary installation.
     # There does not seem to be a complete list of schemes.
     # Examples include:
@@ -183,9 +187,6 @@ class Texlive(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", join_path(self.prefix.bin, self.tex_arch()))
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
 
     @when("@live")
     def autoreconf(self, spec, prefix):

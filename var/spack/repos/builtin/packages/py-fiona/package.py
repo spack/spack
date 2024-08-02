@@ -18,6 +18,7 @@ class PyFiona(PythonPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("1.9.6", sha256="791b3494f8b218c06ea56f892bd6ba893dfa23525347761d066fb7738acda3b1")
     version("1.9.5", sha256="99e2604332caa7692855c2ae6ed91e1fffdf9b59449aa8032dd18e070e59a2f7")
     version("1.9.4", sha256="49f18cbcd3b1f97128c1bb038c3451b2e1be25baa52f02ce906c25cf75af95b6")
     version("1.9.3", sha256="60f3789ad9633c3a26acf7cbe39e82e3c7a12562c59af1d599fc3e4e8f7f8f25")
@@ -48,7 +49,6 @@ class PyFiona(PythonPackage):
     depends_on("py-importlib-metadata", when="@1.9.2: ^python@:3.9", type=("build", "run"))
     depends_on("py-six", when="@1.9.4:", type=("build", "run"))
     depends_on("py-six@1.7:", when="@:1.8", type=("build", "run"))
-    depends_on("py-setuptools", when="@:1.9.1,1.9.5:", type="run")
 
     # setup.py or release notes
     depends_on("gdal@3.1:", when="@1.9:", type=("build", "link", "run"))
@@ -57,6 +57,7 @@ class PyFiona(PythonPackage):
     # Historical dependencies
     depends_on("py-munch@2.3.2:", when="@1.9.0:1.9.3", type=("build", "run"))
     depends_on("py-munch", when="@:1.8", type=("build", "run"))
+    depends_on("py-setuptools", when="@:1.9.1,1.9.5", type="run")
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/{0}/{0}iona/{0}iona-{1}.tar.gz"

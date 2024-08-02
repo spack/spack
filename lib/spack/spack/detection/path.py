@@ -12,7 +12,7 @@ import os.path
 import re
 import sys
 import warnings
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple, Type
 
 import llnl.util.filesystem
 import llnl.util.lang
@@ -83,26 +83,15 @@ def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
     return path_to_dict(search_paths)
 
 
-def get_elf_compat(path):
-    """For ELF files, get a triplet (EI_CLASS, EI_DATA, e_machine) and see if
-    it is host-compatible."""
-    # On ELF platforms supporting, we try to be a bit smarter when it comes to shared
-    # libraries, by dropping those that are not host compatible.
-    with open(path, "rb") as f:
-        elf = elf_utils.parse_elf(f, only_header=True)
-        return (elf.is_64_bit, elf.is_little_endian, elf.elf_hdr.e_machine)
-
-
 def accept_elf(path, host_compat):
-    """Accept an ELF file if the header matches the given compat triplet,
-    obtained with :py:func:`get_elf_compat`. In case it's not an ELF (e.g.
-    static library, or some arbitrary file, fall back to is_readable_file)."""
+    """Accept an ELF file if the header matches the given compat triplet. In case it's not an ELF
+    (e.g. static library, or some arbitrary file, fall back to is_readable_file)."""
     # Fast path: assume libraries at least have .so in their basename.
     # Note: don't replace with splitext, because of libsmth.so.1.2.3 file names.
     if ".so" not in os.path.basename(path):
         return llnl.util.filesystem.is_readable_file(path)
     try:
-        return host_compat == get_elf_compat(path)
+        return host_compat == elf_utils.get_elf_compat(path)
     except (OSError, elf_utils.ElfParsingError):
         return llnl.util.filesystem.is_readable_file(path)
 
@@ -155,7 +144,7 @@ def libraries_in_ld_and_system_library_path(
     search_paths = list(llnl.util.lang.dedupe(search_paths, key=file_identifier))
 
     try:
-        host_compat = get_elf_compat(sys.executable)
+        host_compat = elf_utils.get_elf_compat(sys.executable)
         accept = lambda path: accept_elf(path, host_compat)
     except (OSError, elf_utils.ElfParsingError):
         accept = llnl.util.filesystem.is_readable_file
@@ -211,7 +200,7 @@ class Finder:
     def default_path_hints(self) -> List[str]:
         return []
 
-    def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
+    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:
         """Returns the list of patterns used to match candidate files.
 
         Args:
@@ -237,7 +226,7 @@ class Finder:
         raise NotImplementedError("must be implemented by derived classes")
 
     def detect_specs(
-        self, *, pkg: "spack.package_base.PackageBase", paths: List[str]
+        self, *, pkg: Type["spack.package_base.PackageBase"], paths: List[str]
     ) -> List[DetectedPackage]:
         """Given a list of files matching the search patterns, returns a list of detected specs.
 
@@ -338,7 +327,7 @@ class ExecutablesFinder(Finder):
     def default_path_hints(self) -> List[str]:
         return spack.util.environment.get_path("PATH")
 
-    def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
+    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:
         result = []
         if hasattr(pkg, "executables") and hasattr(pkg, "platform_executables"):
             result = pkg.platform_executables()
@@ -367,7 +356,7 @@ class LibrariesFinder(Finder):
     DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH, and standard system library paths
     """
 
-    def search_patterns(self, *, pkg: "spack.package_base.PackageBase") -> List[str]:
+    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:
         result = []
         if hasattr(pkg, "libraries"):
             result = pkg.libraries

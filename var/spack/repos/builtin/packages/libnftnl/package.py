@@ -19,5 +19,7 @@ class Libnftnl(AutotoolsPackage):
     version("1.1.5", sha256="66de4d05227c0a1a731c369b193010d18a05b1185c2735211e0ecf658eeb14f3")
     version("1.1.4", sha256="c8c7988347adf261efac5bba59f8e5f995ffb65f247a88cc144e69620573ed20")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("pkgconfig", type="build")
     depends_on("libmnl@1.0.3:")

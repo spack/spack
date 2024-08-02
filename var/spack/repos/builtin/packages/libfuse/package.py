@@ -31,6 +31,9 @@ class Libfuse(MesonPackage):
     version("3.9.2", sha256="b4409255cbda6f6975ca330f5b04cb335b823a95ddd8c812c3d224ec53478fc0")
     version("2.9.9", sha256="d0e69d5d608cc22ff4843791ad097f554dd32540ddc9bed7638cc6fea7c1b4b5")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     def url_for_version(self, version):
         if version < Version("3.0.0"):
             return "https://github.com/libfuse/libfuse/releases/download/fuse-{0}/fuse-{1}.tar.gz".format(

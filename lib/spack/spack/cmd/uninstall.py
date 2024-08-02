@@ -151,7 +151,8 @@ def installed_dependents(specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
         key=lambda s: s.dag_hash(),
     )
 
-    return [spec for spec in specs if is_installed(spec)]
+    with spack.store.STORE.db.read_transaction():
+        return [spec for spec in specs if is_installed(spec)]
 
 
 def dependent_environments(
@@ -239,6 +240,8 @@ def get_uninstall_list(args, specs: List[spack.spec.Spec], env: Optional[ev.Envi
             print()
             tty.info("The following environments still reference these specs:")
             colify([e.name for e in other_dependent_envs.keys()], indent=4)
+            if env:
+                msgs.append("use `spack remove` to remove the spec from the current environment")
             msgs.append("use `spack env remove` to remove environments")
         msgs.append("use `spack uninstall --force` to override")
         print()

@@ -24,6 +24,9 @@ class Changa(AutotoolsPackage):
 
     version("master", branch="master")
     version("3.4", sha256="c2bceb6ac00025dfd704bb6960bc17c6df7c746872185845d1e75f47e6ce2a94")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     patch("fix_configure_path.patch")
 
     resource(

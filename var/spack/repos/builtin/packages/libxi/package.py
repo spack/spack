@@ -9,7 +9,7 @@ from spack.package import *
 class Libxi(AutotoolsPackage, XorgPackage):
     """libXi - library for the X Input Extension."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/lib/libXi"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libXi"
     xorg_mirror_path = "lib/libXi-1.7.6.tar.gz"
 
     license("MIT AND X11")
@@ -24,6 +24,8 @@ class Libxi(AutotoolsPackage, XorgPackage):
     version("1.7.8", sha256="7466d0c626a9cc2e53fd78c811815e82924cd7582236a82401df3d282a9c2889")
     version("1.7.7", sha256="501f49e9c85609da17614d711aa4931fd128011042ff1cae53a16ce03e51ff5e")
     version("1.7.6", sha256="4e88fa7decd287e58140ea72238f8d54e4791de302938c83695fc0c9ac102b7e")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
     depends_on("libx11@1.6:")

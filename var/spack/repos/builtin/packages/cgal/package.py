@@ -18,6 +18,7 @@ class Cgal(CMakePackage):
     url = "https://github.com/CGAL/cgal/releases/download/v5.4.1/CGAL-5.4.1.tar.xz"
 
     version("5.6", sha256="dcab9b08a50a06a7cc2cc69a8a12200f8d8f391b9b8013ae476965c10b45161f")
+    version("5.5.3", sha256="0a04f662693256328b05babfabb5e3a5b7db2f5a58d52e3c520df9d0828ddd73")
     version("5.5.2", sha256="b2b05d5616ecc69facdc24417cce0b04fb4321491d107db45103add520e3d8c3")
     version("5.4.1", sha256="4c3dd7ee4d36d237111a4d72b6e14170093271595d5b695148532daa95323d76")
     version("5.3.2", sha256="af917dbc550388ebcb206f774e610fbdb914d95a4b2932fa952279129103852b")
@@ -31,6 +32,8 @@ class Cgal(CMakePackage):
     version("4.9", sha256="63ac5df71f912f34f2f0f2e54a303578df51f4ec2627db593a65407d791f9039")
     version("4.7", sha256="50bd0a1cad7a8957b09012f831eebaf7d670e2a3467e8f365ec0c71fa5436369")
     version("4.6.3", sha256="e338027b8767c0a7a6e4fd8679182d1b83b5b1a0da0a1fe4546e7c0ca094fc21")
+
+    depends_on("cxx", type="build")  # generated
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant(

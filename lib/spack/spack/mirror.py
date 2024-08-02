@@ -138,6 +138,12 @@ class Mirror:
         return isinstance(self._data, str) or self._data.get("signed", True)
 
     @property
+    def autopush(self) -> bool:
+        if isinstance(self._data, str):
+            return False
+        return self._data.get("autopush", False)
+
+    @property
     def fetch_url(self):
         """Get the valid, canonicalized fetch URL"""
         return self.get_url("fetch")
@@ -150,7 +156,7 @@ class Mirror:
     def _update_connection_dict(self, current_data: dict, new_data: dict, top_level: bool):
         keys = ["url", "access_pair", "access_token", "profile", "endpoint_url"]
         if top_level:
-            keys += ["binary", "source", "signed"]
+            keys += ["binary", "source", "signed", "autopush"]
         changed = False
         for key in keys:
             if key in new_data and current_data.get(key) != new_data[key]:
@@ -286,6 +292,7 @@ class MirrorCollection(collections.abc.Mapping):
         scope=None,
         binary: Optional[bool] = None,
         source: Optional[bool] = None,
+        autopush: Optional[bool] = None,
     ):
         """Initialize a mirror collection.
 
@@ -297,21 +304,27 @@ class MirrorCollection(collections.abc.Mapping):
                     If None, do not filter on binary mirrors.
             source: If True, only include source mirrors.
                     If False, omit source mirrors.
-                    If None, do not filter on source mirrors."""
-        self._mirrors = {
-            name: Mirror(data=mirror, name=name)
-            for name, mirror in (
-                mirrors.items()
-                if mirrors is not None
-                else spack.config.get("mirrors", scope=scope).items()
-            )
-        }
+                    If None, do not filter on source mirrors.
+            autopush: If True, only include mirrors that have autopush enabled.
+                      If False, omit mirrors that have autopush enabled.
+                      If None, do not filter on autopush."""
+        mirrors_data = (
+            mirrors.items()
+            if mirrors is not None
+            else spack.config.get("mirrors", scope=scope).items()
+        )
+        mirrors = (Mirror(data=mirror, name=name) for name, mirror in mirrors_data)
 
-        if source is not None:
-            self._mirrors = {k: v for k, v in self._mirrors.items() if v.source == source}
+        def _filter(m: Mirror):
+            if source is not None and m.source != source:
+                return False
+            if binary is not None and m.binary != binary:
+                return False
+            if autopush is not None and m.autopush != autopush:
+                return False
+            return True
 
-        if binary is not None:
-            self._mirrors = {k: v for k, v in self._mirrors.items() if v.binary == binary}
+        self._mirrors = {m.name: m for m in mirrors if _filter(m)}
 
     def __eq__(self, other):
         return self._mirrors == other._mirrors

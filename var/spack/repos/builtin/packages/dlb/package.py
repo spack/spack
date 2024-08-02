@@ -22,6 +22,7 @@ class Dlb(AutotoolsPackage):
     license("LGPL-3.0-or-later")
 
     version("main", branch="main")
+    version("3.4", sha256="6091d032c11a094a3ce0bec11c0a164783fdff83cb4ec870c9d8e192410c353a")
     version("3.3.1", sha256="1b245acad80b03eb83e815fd59dcfc598cfddd899de4504cf6a9572fe5359f40")
     version("3.3", sha256="55b87aea14f3954d8878912f3134938db235e6984fae26fdf5134148007eb722")
     version("3.2", sha256="b1c65ce3179b5275cfdf0bf921c0565a4a3ebcfdab72d7cef014957c17136c7e")
@@ -29,6 +30,9 @@ class Dlb(AutotoolsPackage):
     version("3.0.2", sha256="75b6cf83ea24bb0862db4ed86d073f335200a0b54e8af8fee6dcf32da443b6b8")
     version("3.0.1", sha256="04f8a7aa269d02fc8561d0a61d64786aa18850367ce4f95d086ca12ab3eb7d24")
     version("3.0", sha256="e3fc1d51e9ded6d4d40d37f8568da4c4d72d1a8996bdeff2dfbbd86c9b96e36a")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("debug", default=False, description="Builds additional debug libraries")
     variant("mpi", default=False, description="Builds MPI libraries")

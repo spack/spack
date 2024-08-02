@@ -33,7 +33,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
-    version("7.1.0", sha256="950d0e997e9e908f58c103efd54983e905b6cffa75ef52ed8fdd1ab441977bb6")
+    version("7.1.0", sha256="5818afb6dba3ece57f51e65897db5062f8e3464e6ed294b654ebf34c3991bc4f")
     version("7.0.1", sha256="c105da5d8fea7b113b0741a943d467a06c98db959ce71bdd9a50b9f03eecc43e")
     # Note: version 7.0.0 is omitted due to build issues, see PR 33940 for more information
     version("6.0.0.1", sha256="3cd7ed50c65b0d21d66e46d0ba34cd171178af4bbf9d94e693915c1aca1e287f")
@@ -45,6 +45,10 @@ class Papi(AutotoolsPackage, ROCmPackage):
     version("5.4.3", sha256="3aefd581e274f0a103f001f1ffd1009019b297c637e97f4b8c5fc13fa5a1e675")
     version("5.4.1", sha256="e131c1449786fe870322a949e44f974a5963824f683232e653fb570cc65d4e87")
     version("5.3.0", sha256="99f2f36398b370e75d100b4a189d5bc0ac4f5dd66df44d441f88fd32e1421524")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("example", default=True, description="Install the example files")
     variant("infiniband", default=False, description="Enable Infiniband support")
@@ -68,7 +72,8 @@ class Papi(AutotoolsPackage, ROCmPackage):
     depends_on("cuda", when="+nvml")
     depends_on("hsa-rocr-dev", when="+rocm")
     depends_on("rocprofiler-dev", when="+rocm")
-    depends_on("llvm-amdgpu +openmp", when="+rocm")
+    depends_on("llvm-amdgpu", when="+rocm")
+    depends_on("rocm-openmp-extras", when="+rocm")
     depends_on("rocm-smi-lib", when="+rocm_smi")
 
     conflicts("%gcc@8:", when="@5.3.0", msg="Requires GCC version less than 8.0")
