@@ -20,6 +20,8 @@ class PyAnvio(PythonPackage):
     # Not available on pypi
     url = "https://github.com/merenlab/anvio/releases/download/v8/anvio-8.tar.gz"
 
+    maintainers("alex391", "meren")
+
     version("8", sha256="4ced91773648d9ca27a20b725ab64bc213d80b33726940f5f818240033912c04")
 
     depends_on("py-setuptools", type="build")
