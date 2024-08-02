@@ -1658,7 +1658,6 @@ class Spec:
             self._set_architecture(target=value)
         elif name == "namespace":
             self.namespace = value
-            assert not propagate
         elif name in valid_flags:
             assert self.compiler_flags is not None
             flags_and_propagation = spack.compiler.tokenize_flags(value, propagate)
