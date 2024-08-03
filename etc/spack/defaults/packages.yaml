@@ -81,6 +81,7 @@ packages:
       xcmiscproto: [xorgproto, xcmiscproto]
       xf86driproto: [xorgproto, xf86driproto]
       xineramaproto: [xorgproto, xineramaproto]
+      xkbdata: [xkeyboard-config, xkbdata]
       xxd: [xxd-standalone, vim]
       yacc: [bison, byacc]
       ziglang: [zig]
