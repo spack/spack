@@ -99,7 +99,7 @@ __all__ = [
     "CompilerSpec",
     "Spec",
     "SpecParseError",
-    "ArchitecturePropagationError",
+    "UnsupportedPropagationError",
     "DuplicateDependencyError",
     "DuplicateCompilerSpecError",
     "UnsupportedCompilerError",
@@ -129,7 +129,7 @@ SPEC_FORMAT_RE = re.compile(
     r"|"  # or
     # OPTION 2: an actual format string
     r"{"  # non-escaped open brace {
-    r"([%@/]|arch=)?"  # optional sigil (to print sigil in color)
+    r"([%@/]|[\w ][\w -]*=)?"  # optional sigil (or identifier or space) to print sigil in color
     r"(?:\^([^}\.]+)\.)?"  # optional ^depname. (to get attr from dependency)
     # after the sigil or depname, we can have a hash expression or another attribute
     r"(?:"  # one of
@@ -163,14 +163,14 @@ HASH_COLOR = "@K"  #: color for highlighting package hashes
 DEFAULT_FORMAT = (
     "{name}{@versions}"
     "{%compiler.name}{@compiler.versions}{compiler_flags}"
-    "{variants}{arch=architecture}{/abstract_hash}"
+    "{variants}{ namespace=namespace_if_anonymous}{ arch=architecture}{/abstract_hash}"
 )
 
 #: Display format, which eliminates extra `@=` in the output, for readability.
 DISPLAY_FORMAT = (
     "{name}{@version}"
     "{%compiler.name}{@compiler.version}{compiler_flags}"
-    "{variants}{arch=architecture}{/abstract_hash}"
+    "{variants}{ namespace=namespace_if_anonymous}{ arch=architecture}{/abstract_hash}"
 )
 
 #: Regular expression to pull spec contents out of clearsigned signature
@@ -1332,6 +1332,12 @@ def tree(
     if color is None:
         color = clr.get_color_when()
 
+    # reduce deptypes over all in-edges when covering nodes
+    if show_types and cover == "nodes":
+        deptype_lookup: Dict[str, dt.DepFlag] = collections.defaultdict(dt.DepFlag)
+        for edge in traverse.traverse_edges(specs, cover="edges", deptype=deptypes, root=False):
+            deptype_lookup[edge.spec.dag_hash()] |= edge.depflag
+
     for d, dep_spec in traverse.traverse_tree(
         sorted(specs), cover=cover, deptype=deptypes, depth_first=depth_first, key=key
     ):
@@ -1358,11 +1364,7 @@ def tree(
 
         if show_types:
             if cover == "nodes":
-                # when only covering nodes, we merge dependency types
-                # from all dependents before showing them.
-                depflag = 0
-                for ds in node.edges_from_dependents():
-                    depflag |= ds.depflag
+                depflag = deptype_lookup[dep_spec.spec.dag_hash()]
             else:
                 # when covering edges or paths, we show dependency
                 # types only for the edge through which we visited
@@ -1638,19 +1640,9 @@ class Spec:
         Known flags currently include "arch"
         """
 
-        # If the == syntax is used to propagate the spec architecture
-        # This is an error
-        architecture_names = [
-            "arch",
-            "architecture",
-            "platform",
-            "os",
-            "operating_system",
-            "target",
-        ]
-        if propagate and name in architecture_names:
-            raise ArchitecturePropagationError(
-                "Unable to propagate the architecture failed." " Use a '=' instead."
+        if propagate and name in spack.directives.reserved_names:
+            raise UnsupportedPropagationError(
+                f"Propagation with '==' is not supported for '{name}'."
             )
 
         valid_flags = FlagMap.valid_compiler_flags()
@@ -1664,6 +1656,8 @@ class Spec:
             self._set_architecture(os=value)
         elif name == "target":
             self._set_architecture(target=value)
+        elif name == "namespace":
+            self.namespace = value
         elif name in valid_flags:
             assert self.compiler_flags is not None
             flags_and_propagation = spack.compiler.tokenize_flags(value, propagate)
@@ -1683,9 +1677,7 @@ class Spec:
         """Called by the parser to set the architecture."""
         arch_attrs = ["platform", "os", "target"]
         if self.architecture and self.architecture.concrete:
-            raise DuplicateArchitectureError(
-                "Spec for '%s' cannot have two architectures." % self.name
-            )
+            raise DuplicateArchitectureError("Spec cannot have two architectures.")
 
         if not self.architecture:
             new_vals = tuple(kwargs.get(arg, None) for arg in arch_attrs)
@@ -1694,10 +1686,7 @@ class Spec:
             new_attrvals = [(a, v) for a, v in kwargs.items() if a in arch_attrs]
             for new_attr, new_value in new_attrvals:
                 if getattr(self.architecture, new_attr):
-                    raise DuplicateArchitectureError(
-                        "Spec for '%s' cannot have two '%s' specified "
-                        "for its architecture" % (self.name, new_attr)
-                    )
+                    raise DuplicateArchitectureError(f"Cannot specify '{new_attr}' twice")
                 else:
                     setattr(self.architecture, new_attr, new_value)
 
@@ -1892,14 +1881,14 @@ class Spec:
         """Returns a version of the spec with the dependencies hashed
         instead of completely enumerated."""
         spec_format = "{name}{@version}{%compiler.name}{@compiler.version}"
-        spec_format += "{variants}{arch=architecture}{/hash:7}"
+        spec_format += "{variants}{ arch=architecture}{/hash:7}"
         return self.format(spec_format)
 
     @property
     def cshort_spec(self):
         """Returns an auto-colorized version of ``self.short_spec``."""
         spec_format = "{name}{@version}{%compiler.name}{@compiler.version}"
-        spec_format += "{variants}{arch=architecture}{/hash:7}"
+        spec_format += "{variants}{ arch=architecture}{/hash:7}"
         return self.cformat(spec_format)
 
     @property
@@ -4258,29 +4247,21 @@ class Spec:
             csv = query_parameters.pop().strip()
             query_parameters = re.split(r"\s*,\s*", csv)
 
-        # In some cases a package appears multiple times in the same DAG for *distinct*
-        # specs. For example, a build-type dependency may itself depend on a package
-        # the current spec depends on, but their specs may differ. Therefore we iterate
-        # in an order here that prioritizes the build, test and runtime dependencies;
-        # only when we don't find the package do we consider the full DAG.
         order = lambda: itertools.chain(
-            self.traverse(deptype="link"),
-            self.dependencies(deptype=dt.BUILD | dt.RUN | dt.TEST),
-            self.traverse(),  # fall back to a full search
+            self.traverse_edges(deptype=dt.LINK, order="breadth", cover="edges"),
+            self.edges_to_dependencies(depflag=dt.BUILD | dt.RUN | dt.TEST),
+            self.traverse_edges(deptype=dt.ALL, order="breadth", cover="edges"),
         )
 
+        # Consider runtime dependencies and direct build/test deps before transitive dependencies,
+        # and prefer matches closest to the root.
         try:
             child: Spec = next(
-                itertools.chain(
-                    # Regular specs
-                    (x for x in order() if x.name == name),
-                    (
-                        x
-                        for x in order()
-                        if (not x.virtual)
-                        and any(name in edge.virtuals for edge in x.edges_from_dependents())
-                    ),
-                    (x for x in order() if (not x.virtual) and x.package.provides(name)),
+                e.spec
+                for e in itertools.chain(
+                    (e for e in order() if e.spec.name == name or name in e.virtuals),
+                    # for historical reasons
+                    (e for e in order() if e.spec.concrete and e.spec.package.provides(name)),
                 )
             )
         except StopIteration:
@@ -4392,14 +4373,19 @@ class Spec:
 
         yield deps
 
-    def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
-        r"""Prints out particular pieces of a spec, depending on what is
-        in the format string.
+    @property
+    def namespace_if_anonymous(self):
+        return self.namespace if not self.name else None
 
-        Using the ``{attribute}`` syntax, any field of the spec can be
-        selected.  Those attributes can be recursive. For example,
-        ``s.format({compiler.version})`` will print the version of the
-        compiler.
+    def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
+        r"""Prints out attributes of a spec according to a format string.
+
+        Using an ``{attribute}`` format specifier, any field of the spec can be
+        selected. Those attributes can be recursive. For example,
+        ``s.format({compiler.version})`` will print the version of the compiler.
+
+        If the attribute in a format specifier evaluates to ``None``, then the format
+        specifier will evaluate to the empty string, ``""``.
 
         Commonly used attributes of the Spec for format strings include::
 
@@ -4415,6 +4401,7 @@ class Spec:
             architecture.os
             architecture.target
             prefix
+            namespace
 
         Some additional special-case properties can be added::
 
@@ -4423,40 +4410,51 @@ class Spec:
             spack_install The spack install directory
 
         The ``^`` sigil can be used to access dependencies by name.
-        ``s.format({^mpi.name})`` will print the name of the MPI
-        implementation in the spec.
+        ``s.format({^mpi.name})`` will print the name of the MPI implementation in the
+        spec.
 
-        The ``@``, ``%``, ``arch=``, and ``/`` sigils
-        can be used to include the sigil with the printed
-        string. These sigils may only be used with the appropriate
-        attributes, listed below::
+        The ``@``, ``%``, and ``/`` sigils can be used to include the sigil with the
+        printed string. These sigils may only be used with the appropriate attributes,
+        listed below::
 
             @        ``{@version}``, ``{@compiler.version}``
             %        ``{%compiler}``, ``{%compiler.name}``
-            arch=    ``{arch=architecture}``
             /        ``{/hash}``, ``{/hash:7}``, etc
 
-        The ``@`` sigil may also be used for any other property named
-        ``version``. Sigils printed with the attribute string are only
-        printed if the attribute string is non-empty, and are colored
-        according to the color of the attribute.
+        The ``@`` sigil may also be used for any other property named ``version``.
+        Sigils printed with the attribute string are only printed if the attribute
+        string is non-empty, and are colored according to the color of the attribute.
 
-        Sigils are not used for printing variants. Variants listed by
-        name naturally print with their sigil. For example,
-        ``spec.format('{variants.debug}')`` would print either
-        ``+debug`` or ``~debug`` depending on the name of the
-        variant. Non-boolean variants print as ``name=value``. To
-        print variant names or values independently, use
+        Variants listed by name naturally print with their sigil. For example,
+        ``spec.format('{variants.debug}')`` prints either ``+debug`` or ``~debug``
+        depending on the name of the variant. Non-boolean variants print as
+        ``name=value``. To print variant names or values independently, use
         ``spec.format('{variants.<name>.name}')`` or
         ``spec.format('{variants.<name>.value}')``.
 
-        Spec format strings use ``\`` as the escape character. Use
-        ``\{`` and ``\}`` for literal braces, and ``\\`` for the
-        literal ``\`` character.
+        There are a few attributes on specs that can be specified as key-value pairs
+        that are *not* variants, e.g.: ``os``, ``arch``, ``architecture``, ``target``,
+        ``namespace``, etc. You can format these with an optional ``key=`` prefix, e.g.
+        ``{namespace=namespace}`` or ``{arch=architecture}``, etc. The ``key=`` prefix
+        will be colorized along with the value.
+
+        When formatting specs, key-value pairs are separated from preceding parts of the
+        spec by whitespace. To avoid printing extra whitespace when the formatted
+        attribute is not set, you can add whitespace to the key *inside* the braces of
+        the format string, e.g.:
+
+            { namespace=namespace}
+
+        This evaluates to `` namespace=builtin`` if ``namespace`` is set to ``builtin``,
+        and to ``""`` if ``namespace`` is ``None``.
+
+        Spec format strings use ``\`` as the escape character. Use ``\{`` and ``\}`` for
+        literal braces, and ``\\`` for the literal ``\`` character.
 
         Args:
             format_string: string containing the format to be expanded
             color: True for colorized result; False for no color; None for auto color.
+
         """
         ensure_modern_format_string(format_string)
 
@@ -4510,10 +4508,6 @@ class Spec:
                 raise SpecFormatSigilError(sig, "compilers", attribute)
             elif sig == "/" and attribute != "abstract_hash":
                 raise SpecFormatSigilError(sig, "DAG hashes", attribute)
-            elif sig == "arch=":
-                if attribute not in ("architecture", "arch"):
-                    raise SpecFormatSigilError(sig, "the architecture", attribute)
-                sig = " arch="  # include space as separator
 
             # Iterate over components using getattr to get next element
             for idx, part in enumerate(parts):
@@ -4558,14 +4552,18 @@ class Spec:
 
             # Set color codes for various attributes
             color = None
-            if "variants" in parts:
-                color = VARIANT_COLOR
-            elif "architecture" in parts:
+            if "architecture" in parts:
                 color = ARCHITECTURE_COLOR
+            elif "variants" in parts or sig.endswith("="):
+                color = VARIANT_COLOR
             elif "compiler" in parts or "compiler_flags" in parts:
                 color = COMPILER_COLOR
             elif "version" in parts or "versions" in parts:
                 color = VERSION_COLOR
+
+            # return empty string if the value of the attribute is None.
+            if current is None:
+                return ""
 
             # return colored output
             return safe_color(sig, str(current), color)
@@ -4656,7 +4654,7 @@ class Spec:
         spec_str = " ^".join(root_str + sorted_dependencies)
         return spec_str.strip()
 
-    def install_status(self):
+    def install_status(self) -> InstallStatus:
         """Helper for tree to print DB install status."""
         if not self.concrete:
             return InstallStatus.absent
@@ -5396,10 +5394,8 @@ class SpecParseError(spack.error.SpecError):
         )
 
 
-class ArchitecturePropagationError(spack.error.SpecError):
-    """Raised when the double equal symbols are used to assign
-    the spec's architecture.
-    """
+class UnsupportedPropagationError(spack.error.SpecError):
+    """Raised when propagation (==) is used with reserved variant names."""
 
 
 class DuplicateDependencyError(spack.error.SpecError):
@@ -5529,7 +5525,7 @@ class UnconstrainableDependencySpecError(spack.error.SpecError):
 class AmbiguousHashError(spack.error.SpecError):
     def __init__(self, msg, *specs):
         spec_fmt = "{namespace}.{name}{@version}{%compiler}{compiler_flags}"
-        spec_fmt += "{variants}{arch=architecture}{/hash:7}"
+        spec_fmt += "{variants}{ arch=architecture}{/hash:7}"
         specs_str = "\n  " + "\n  ".join(spec.format(spec_fmt) for spec in specs)
         super().__init__(msg + specs_str)
 

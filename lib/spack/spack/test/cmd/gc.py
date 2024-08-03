@@ -20,13 +20,13 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.mark.db
-def test_gc_without_build_dependency(config, mutable_database):
+def test_gc_without_build_dependency(mutable_database):
     assert "There are no unused specs." in gc("-yb")
     assert "There are no unused specs." in gc("-y")
 
 
 @pytest.mark.db
-def test_gc_with_build_dependency(config, mutable_database):
+def test_gc_with_build_dependency(mutable_database):
     s = spack.spec.Spec("simple-inheritance")
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
@@ -37,7 +37,7 @@ def test_gc_with_build_dependency(config, mutable_database):
 
 
 @pytest.mark.db
-def test_gc_with_environment(config, mutable_database, mutable_mock_env_path):
+def test_gc_with_environment(mutable_database, mutable_mock_env_path):
     s = spack.spec.Spec("simple-inheritance")
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
@@ -53,7 +53,7 @@ def test_gc_with_environment(config, mutable_database, mutable_mock_env_path):
 
 
 @pytest.mark.db
-def test_gc_with_build_dependency_in_environment(config, mutable_database, mutable_mock_env_path):
+def test_gc_with_build_dependency_in_environment(mutable_database, mutable_mock_env_path):
     s = spack.spec.Spec("simple-inheritance")
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
@@ -78,7 +78,7 @@ def test_gc_with_build_dependency_in_environment(config, mutable_database, mutab
 
 
 @pytest.mark.db
-def test_gc_except_any_environments(config, mutable_database, mutable_mock_env_path):
+def test_gc_except_any_environments(mutable_database, mutable_mock_env_path):
     """Tests whether the garbage collector can remove all specs except those still needed in some
     environment (needed in the sense of roots + link/run deps)."""
     assert mutable_database.query_local("zmpi")
@@ -105,7 +105,7 @@ def test_gc_except_any_environments(config, mutable_database, mutable_mock_env_p
 
 
 @pytest.mark.db
-def test_gc_except_specific_environments(config, mutable_database, mutable_mock_env_path):
+def test_gc_except_specific_environments(mutable_database, mutable_mock_env_path):
     s = spack.spec.Spec("simple-inheritance")
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
@@ -125,14 +125,14 @@ def test_gc_except_specific_environments(config, mutable_database, mutable_mock_
 
 
 @pytest.mark.db
-def test_gc_except_nonexisting_dir_env(config, mutable_database, mutable_mock_env_path, tmpdir):
+def test_gc_except_nonexisting_dir_env(mutable_database, mutable_mock_env_path, tmpdir):
     output = gc("-ye", tmpdir.strpath, fail_on_error=False)
     assert "No such environment" in output
     gc.returncode == 1
 
 
 @pytest.mark.db
-def test_gc_except_specific_dir_env(config, mutable_database, mutable_mock_env_path, tmpdir):
+def test_gc_except_specific_dir_env(mutable_database, mutable_mock_env_path, tmpdir):
     s = spack.spec.Spec("simple-inheritance")
     s.concretize()
     s.package.do_install(fake=True, explicit=True)

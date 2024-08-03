@@ -26,6 +26,8 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     version("main", branch="main")
     version("develop", branch="develop")
 
+    depends_on("cxx", type="build")  # generated
+
     maintainers("tomdeakin", "kaanolgu", "tom91136", "robj0nes")
 
     # Languages
@@ -54,7 +56,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
 
     # ACC conflict
     variant("cpu_arch", values=str, default="none", description="Enable CPU Target for ACC")
-    variant("target", values=str, default="none", description="Enable CPU Target for ACC")
+    variant("acc_target", values=str, default="none", description="Enable CPU Target for ACC")
 
     # STD conflicts
     conflicts("+stddata", when="%gcc@:10.1.0", msg="STD-data requires newer version of GCC")
@@ -75,7 +77,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     conflicts(
         "offload=none",
         when="+raja",
-        msg="RAJA requires architecture to be specfied by target=[CPU,NVIDIA]",
+        msg="RAJA requires architecture to be specfied by acc_target=[CPU,NVIDIA]",
     )
 
     # download raja from https://github.com/LLNL/RAJA

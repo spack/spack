@@ -20,6 +20,8 @@ class PyGevent(PythonPackage):
     version("21.8.0", sha256="43e93e1a4738c922a2416baf33f0afb0a20b22d3dba886720bc037cd02a98575")
     version("1.5.0", sha256="b2814258e3b3fb32786bb73af271ad31f51e1ac01f33b37426b66cb8491b4c29")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("python@3.8:", when="@23.7.0:", type=("build", "run"))
     depends_on("python@:3.10", when="@:21.12", type=("build", "run"))
 

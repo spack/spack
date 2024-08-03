@@ -17,6 +17,8 @@ class Libnova(AutotoolsPackage):
 
     version("0.15.0", sha256="7c5aa33e45a3e7118d77df05af7341e61784284f1e8d0d965307f1663f415bb1")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("m4")
     depends_on("autoconf")
     depends_on("automake")

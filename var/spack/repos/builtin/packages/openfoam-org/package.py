@@ -84,6 +84,9 @@ class OpenfoamOrg(Package):
         url="http://downloads.sourceforge.net/foam/OpenFOAM-2.3.1.tgz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("int64", default=False, description="Compile with 64-bit label")
     variant(
         "source", default=True, description="Install library/application sources and tutorials"
@@ -103,6 +106,8 @@ class OpenfoamOrg(Package):
     depends_on("zlib-api")
     depends_on("flex")
     depends_on("cmake", type="build")
+    # The setSet tool (removed in version 10) depends on readline
+    depends_on("readline", when="@:9")
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
     depends_on("scotch~metis+mpi~int64", when="+scotch~int64")

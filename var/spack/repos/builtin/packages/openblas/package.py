@@ -61,6 +61,10 @@ class Openblas(CMakePackage, MakefilePackage):
     version("0.2.16", sha256="766f350d0a4be614812d535cead8c816fc3ad3b9afcd93167ea5e4df9d61869b")
     version("0.2.15", sha256="73c40ace5978282224e5e122a41c8388c5a19e65a6f2329c2b7c0b61bacc9044")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "fortran",
         default=True,
@@ -566,17 +570,19 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         # Openblas may pass its own test but still fail to compile Lapack
         # symbols. To make sure we get working Blas and Lapack, do a small
         # test.
-        source_file = join_path(os.path.dirname(self.module.__file__), "test_cblas_dgemm.c")
-        blessed_file = join_path(os.path.dirname(self.module.__file__), "test_cblas_dgemm.output")
+        source_file = join_path(os.path.dirname(self.pkg.module.__file__), "test_cblas_dgemm.c")
+        blessed_file = join_path(
+            os.path.dirname(self.pkg.module.__file__), "test_cblas_dgemm.output"
+        )
 
         include_flags = spec["openblas"].headers.cpp_flags
         link_flags = spec["openblas"].libs.ld_flags
-        if self.compiler.name == "intel":
+        if self.pkg.compiler.name == "intel":
             link_flags += " -lifcore"
         if self.spec.satisfies("threads=pthreads"):
             link_flags += " -lpthread"
         if spec.satisfies("threads=openmp"):
-            link_flags += " -lpthread " + self.compiler.openmp_flag
+            link_flags += " -lpthread " + self.pkg.compiler.openmp_flag
 
         output = compile_c_and_execute(source_file, [include_flags], link_flags.split())
         compare_output_file(output, blessed_file)

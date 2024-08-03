@@ -33,6 +33,9 @@ class Random123(Package):
         url="https://www.deshawresearch.com/downloads/download_random123.cgi/Random123-1.09.tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     patch("ibmxl.patch", when="@1.09")
     patch("arm-gcc.patch", when="@1.09")
     patch("v1132-xl161.patch", when="@1.13.2")

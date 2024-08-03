@@ -19,6 +19,9 @@ class Freeglut(CMakePackage, SourceforgePackage):
     version("3.2.1", sha256="d4000e02102acaf259998c870e25214739d1f16f67f99cb35e4f46841399da68")
     version("3.0.0", sha256="2a43be8515b01ea82bcfa17d29ae0d40bd128342f0930cd1f375f1ff999f76a2")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Build shared libs instead of static")
 
     depends_on("gl")

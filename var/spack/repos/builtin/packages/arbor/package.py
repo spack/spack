@@ -50,6 +50,9 @@ class Arbor(CMakePackage, CudaPackage):
         url="https://github.com/arbor-sim/arbor/releases/download/v0.5.2/arbor-v0.5.2-full.tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("assertions", default=False, description="Enable arb_assert() assertions in code.")
     variant("doc", default=False, description="Build documentation.")
     variant("mpi", default=False, description="Enable MPI support")
@@ -114,7 +117,7 @@ class Arbor(CMakePackage, CudaPackage):
             self.define_from_variant("ARB_VECTORIZE", "vectorize"),
         ]
 
-        if "+cuda" in self.spec:
+        if self.spec.satisfies("+cuda"):
             args.append("-DARB_GPU=cuda")
             args.append(self.define_from_variant("ARB_USE_GPU_RNG", "gpu_rng"))
 

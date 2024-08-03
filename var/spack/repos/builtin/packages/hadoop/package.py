@@ -29,6 +29,8 @@ class Hadoop(Package):
     version("2.7.7", sha256="d129d08a2c9dafec32855a376cbd2ab90c6a42790898cabbac6be4d29f9c2026")
     version("2.7.5", sha256="0bfc4d9b04be919be2fdf36f67fa3b4526cdbd406c512a7a1f5f1b715661f831")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("java", type="run")
 
     def install(self, spec, prefix):

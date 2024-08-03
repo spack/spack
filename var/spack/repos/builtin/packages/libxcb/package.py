@@ -31,17 +31,19 @@ class Libxcb(AutotoolsPackage, XorgPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libpthread-stubs")
     depends_on("libxau@0.99.2:")
     depends_on("libxdmcp")
 
     # libxcb 1.X requires xcb-proto >= 1.X
-    depends_on("xcb-proto")
-    depends_on("xcb-proto@1.17:", when="@1.17")
-    depends_on("xcb-proto@1.16:", when="@1.16")
-    depends_on("xcb-proto@1.15:", when="@1.15")
-    depends_on("xcb-proto@1.14:", when="@1.14")
-    depends_on("xcb-proto@1.13:", when="@1.13")
+    depends_on("xcb-proto", type="build")
+    depends_on("xcb-proto@1.17:", when="@1.17", type="build")
+    depends_on("xcb-proto@1.16:", when="@1.16", type="build")
+    depends_on("xcb-proto@1.15:", when="@1.15", type="build")
+    depends_on("xcb-proto@1.14:", when="@1.14", type="build")
+    depends_on("xcb-proto@1.13:", when="@1.13", type="build")
 
     depends_on("python", type="build")
     depends_on("pkgconfig", type="build")

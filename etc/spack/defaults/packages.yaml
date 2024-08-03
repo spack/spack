@@ -76,6 +76,7 @@ packages:
       unwind: [libunwind]
       uuid: [util-linux-uuid, libuuid]
       videoproto: [xorgproto, videoproto]
+      wasi-sdk: [wasi-sdk-prebuilt]
       xcmiscproto: [xorgproto, xcmiscproto]
       xf86driproto: [xorgproto, xf86driproto]
       xineramaproto: [xorgproto, xineramaproto]

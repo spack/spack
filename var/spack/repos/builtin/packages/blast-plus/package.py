@@ -14,6 +14,8 @@ class BlastPlus(AutotoolsPackage):
 
     maintainers("weijianwen")
 
+    version("2.16.0", sha256="17c93cf009721023e5aecf5753f9c6a255d157561638b91b3ad7276fd6950c2b")
+    version("2.15.0", sha256="6918c370524c8d44e028bf491e8f245a895e07c66c77b261ce3b38d6058216e0")
     version("2.14.1", sha256="712c2dbdf0fb13cc1c2d4f4ef5dd1ce4b06c3b57e96dfea8f23e6e99f5b1650e")
     version("2.13.0", sha256="89553714d133daf28c477f83d333794b3c62e4148408c072a1b4620e5ec4feb2")
     version("2.12.0", sha256="fda3c9c9d488cad6c1880a98a236d842bcf3610e3e702af61f7a48cf0a714b88")
@@ -23,6 +25,9 @@ class BlastPlus(AutotoolsPackage):
     version("2.7.1", sha256="10a78d3007413a6d4c983d2acbf03ef84b622b82bd9a59c6bd9fbdde9d0298ca")
     version("2.6.0", sha256="0510e1d607d0fb4389eca50d434d5a0be787423b6850b3a4f315abc2ef19c996")
     version("2.2.30", sha256="26f72d51c81b9497f33b7274109565c36692572faef4d72377f79b7e59910e40")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # homebrew sez: Fixed upstream in future version > 2.6
     # But this bug sez that it will be fixed in 2.6
