@@ -84,7 +84,6 @@ class PyHail(MakefilePackage):
 
     with default_args(type=("build", "run")):
         # Hail build requirements
-        depends_on("gcc@5:")
         depends_on("blas")
         depends_on("lapack")
         depends_on("lz4")
