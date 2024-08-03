@@ -19,7 +19,7 @@ class Rocalution(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocALUTION"
     git = "https://github.com/ROCm/rocALUTION.git"
-    url = "https://github.com/ROCm/rocALUTION/archive/rocm-6.1.1.tar.gz"
+    url = "https://github.com/ROCm/rocALUTION/archive/rocm-6.1.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
@@ -27,6 +27,7 @@ class Rocalution(CMakePackage):
 
     license("MIT")
 
+    version("6.1.2", sha256="5f9fb302ab1951a1caf54ed31b41d6f41a353dd4b5ee32bc3de2e9f9244dd4ef")
     version("6.1.1", sha256="1f80b33813291c2e81e5b1efc325d3f5bb6592c8670c016930d01e73e74ab46b")
     version("6.1.0", sha256="699a9b73844fcd4e30d0607b4042dc779f9bcdc27ad732e7a038968ff555af2b")
     version("6.0.2", sha256="453f889677728b510286d4c72952b343cac63c45e2cb8b801d8388a2ec599d2a")
@@ -42,6 +43,8 @@ class Rocalution(CMakePackage):
         version("5.4.0", sha256="dccf004434e0fee6d0c7bedd46827f5a2af0392bc4807a08403b130e461f55eb")
         version("5.3.3", sha256="3af022250bc25bebdee12bfb8fdbab4b60513b537b9fe15dfa82ded8850c5066")
         version("5.3.0", sha256="f623449789a5c9c9137ae51d4dbbee5c6940d8813826629cb4b7e84f07fab494")
+
+    depends_on("cxx", type="build")  # generated
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
@@ -69,6 +72,7 @@ class Rocalution(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocprim@{ver}", when=f"@{ver}")

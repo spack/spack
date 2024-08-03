@@ -28,6 +28,9 @@ class Ams(CMakePackage, CudaPackage):
         submodules=False,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "faiss",
         default=False,

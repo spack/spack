@@ -21,6 +21,8 @@ class Xauth(AutotoolsPackage, XorgPackage):
     version("1.0.10", sha256="5196821221d824b9bc278fa6505c595acee1d374518a52217d9b64d3c63dedd0")
     version("1.0.9", sha256="0709070caf23ba2fb99536907b75be1fe31853999c62d3e87a6a8d26ba8a8cdb")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libx11")
     depends_on("libxau")
     depends_on("libxext")

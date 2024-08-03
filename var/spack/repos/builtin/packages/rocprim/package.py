@@ -17,6 +17,7 @@ class Rocprim(CMakePackage):
     license("MIT")
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
+    version("6.1.2", sha256="560b65fffb103c11bee710e4eb871fd47dd84dfe99f5762a19c5650e490fd85d")
     version("6.1.1", sha256="94b265b6b4ed366b0ba008ef77ab6623b7b880b45874f202c887f01b67905922")
     version("6.1.0", sha256="9f02e5f8be90baa679a28f83927495ddf0e17d684536e1f820021e8c3e8e6c84")
     version("6.0.2", sha256="d3998720d3206965335902f8f67ca497b320a33b810cd19b2a2264505cb38779")
@@ -32,6 +33,8 @@ class Rocprim(CMakePackage):
         version("5.4.0", sha256="1740dca11c70ed350995331c292f7e3cb86273614e4a5ce9f0ea64dea5364318")
         version("5.3.3", sha256="21a6b352ad3f5b2b7d05a5ed55e612feb3c5c19d34fdb8f80260b6d25af18b2d")
         version("5.3.0", sha256="4885bd662b038c6e9f058a756fd838203dbd00227bfef6adaf31496010b100e4")
+
+    depends_on("cxx", type="build")  # generated
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
@@ -61,6 +64,7 @@ class Rocprim(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"comgr@{ver}", when=f"@{ver}")

@@ -128,9 +128,9 @@ def startfile_prefix(prefix: str, compatible_with: str = sys.executable) -> Opti
     except Exception:
         accept = lambda path: True
 
-    queue = [(0, prefix)]
-    while queue:
-        depth, path = queue.pop()
+    stack = [(0, prefix)]
+    while stack:
+        depth, path = stack.pop()
         try:
             iterator = os.scandir(path)
         except OSError:
@@ -140,7 +140,7 @@ def startfile_prefix(prefix: str, compatible_with: str = sys.executable) -> Opti
                 try:
                     if entry.is_dir(follow_symlinks=True):
                         if depth < 2:
-                            queue.append((depth + 1, entry.path))
+                            stack.append((depth + 1, entry.path))
                     elif entry.name == "crt1.o" and accept(entry.path):
                         return path
                 except Exception:

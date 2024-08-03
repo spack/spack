@@ -25,6 +25,9 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     version("1.22.4", sha256="e78e7b4cb7dec310849004fa88847c44701e8d133b5d4c13057d876c1bad0293")
     version("1.22.3", sha256="3a48a9d6c97750bfbd535feeb5be0111db6406ddb7bb79fc680809cda6d828a5")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # TODO: add html variant, spack doesn't have netpbm and its too
     # complicated for me to find out at this point in time.
     # See brew scripts for groff for guidance:

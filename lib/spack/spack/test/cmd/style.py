@@ -38,7 +38,7 @@ def flake8_package(tmpdir):
     change to the ``flake8`` mock package, yields the filename, then undoes the
     change on cleanup.
     """
-    repo = spack.repo.Repo(spack.paths.mock_packages_path)
+    repo = spack.repo.from_path(spack.paths.mock_packages_path)
     filename = repo.filename_for_package_name("flake8")
     rel_path = os.path.dirname(os.path.relpath(filename, spack.paths.prefix))
     tmp = tmpdir / rel_path / "flake8-ci-package.py"
@@ -54,7 +54,7 @@ def flake8_package(tmpdir):
 @pytest.fixture
 def flake8_package_with_errors(scope="function"):
     """A flake8 package with errors."""
-    repo = spack.repo.Repo(spack.paths.mock_packages_path)
+    repo = spack.repo.from_path(spack.paths.mock_packages_path)
     filename = repo.filename_for_package_name("flake8")
     tmp = filename + ".tmp"
 
@@ -130,7 +130,7 @@ def test_changed_files_all_files():
     assert os.path.join(spack.paths.module_path, "spec.py") in files
 
     # a mock package
-    repo = spack.repo.Repo(spack.paths.mock_packages_path)
+    repo = spack.repo.from_path(spack.paths.mock_packages_path)
     filename = repo.filename_for_package_name("flake8")
     assert filename in files
 

@@ -154,6 +154,8 @@ class Pmix(AutotoolsPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     variant(
         "pmi_backwards_compatibility",
         default=True,

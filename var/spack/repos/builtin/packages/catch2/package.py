@@ -108,6 +108,8 @@ class Catch2(CMakePackage):
     version("1.3.5", sha256="f15730d81b4173fb860ce3561768de7d41bbefb67dc031d7d1f5ae2c07f0a472")
     version("1.3.0", sha256="245f6ee73e2fea66311afa1da59e5087ddab8b37ce64994ad88506e8af28c6ac")
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "cxxstd",
         when="@3:",

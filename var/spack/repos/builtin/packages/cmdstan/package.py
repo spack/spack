@@ -16,6 +16,10 @@ class Cmdstan(MakefilePackage):
 
     version("2.30.1", sha256="bab76dcefa7f4c955595c0bf0496770507fc6ab0df5896e8cf8c2db0a17eedb9")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("threads", default=True, description="enable thread support")
     variant("opencl", default=False, description="enable OpenCl support")
     variant("mpi", default=False, description="enable MPI support")

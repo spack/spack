@@ -15,7 +15,7 @@ class Rpp(CMakePackage):
 
     homepage = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp"
     git = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git"
-    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/archive/refs/tags/rocm-6.1.1.tar.gz"
+    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/archive/refs/tags/rocm-6.1.2.tar.gz"
 
     def url_for_version(self, version):
         if version >= Version("5.7.0"):
@@ -28,6 +28,7 @@ class Rpp(CMakePackage):
 
     maintainers("srekolam", "afzpatel")
     license("MIT")
+    version("6.1.2", sha256="3a529bdd17b448a9e05a6aac1b5e173a077f4a4a1fd2ed759bcea331acd2829f")
     version("6.1.1", sha256="9ca385c6f208a0bbf2be60ad15697d35371992d49ed30077b69e22090cef657c")
     version("6.1.0", sha256="026c5ac7a92e14e35b9e7630a2ebfff3f4b3544b988eb9aa8af9991d4beea242")
     version("6.0.2", sha256="2686eb4099233db4444fcd2f77af9b00d38d829f05de2403bed37b1b28f2653c")
@@ -41,6 +42,8 @@ class Rpp(CMakePackage):
         version("0.99", sha256="f1d7ec65d0148ddb7b3ce836a7e058727036df940d72d1683dee590a913fd44a")
         version("0.98", sha256="191b5d89bf990ae22b5ef73675b89ed4371c3ce342ab9cc65383fa12ef13086e")
         version("0.97", sha256="8ce1a869ff67a29579d87d399d8b0bd97bf12ae1b6b1ca1f161cb8a262fb9939")
+
+    depends_on("cxx", type="build")  # generated
     variant(
         "build_type",
         default="Release",
@@ -64,7 +67,8 @@ class Rpp(CMakePackage):
 
     # adds half.hpp include directory and modifies how the libjpegturbo
     # library is linked for the rpp unit test
-    patch("0003-changes-to-rpp-unit-tests.patch", when="+add_tests")
+    patch("0003-changes-to-rpp-unit-tests.patch", when="@5.7:6.0 +add_tests")
+    patch("0003-changes-to-rpp-unit-tests-6.1.patch", when="@6.1 +add_tests")
 
     def patch(self):
         if self.spec.satisfies("+hip"):
@@ -103,6 +107,18 @@ class Rpp(CMakePackage):
                 "utilities/test_suite/HIP/CMakeLists.txt",
                 string=True,
             )
+            filter_file(
+                "${ROCM_PATH}/share/rpp/test/cmake",
+                self.spec.prefix.share.rpp.test.cmake,
+                "utilities/test_suite/HOST/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/share/rpp/test/cmake",
+                self.spec.prefix.share.rpp.test.cmake,
+                "utilities/test_suite/HIP/CMakeLists.txt",
+                string=True,
+            )
 
     depends_on("cmake@3.5:", type="build")
     depends_on("pkgconfig", type="build")
@@ -124,7 +140,7 @@ class Rpp(CMakePackage):
 
     with when("+hip"):
         with when("@5.7:"):
-            for ver in ["5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
+            for ver in ["5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2"]:
                 depends_on("hip@" + ver, when="@" + ver)
         with when("@:1.2"):
             depends_on("hip@5:")
@@ -134,6 +150,8 @@ class Rpp(CMakePackage):
     def setup_run_environment(self, env):
         if self.spec.satisfies("+add_tests"):
             env.set("TURBO_JPEG_PATH", self.spec["libjpeg-turbo"].prefix)
+        if self.spec.satisfies("@6.1:"):
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
 
     def cmake_args(self):
         spec = self.spec
@@ -152,9 +170,3 @@ class Rpp(CMakePackage):
                 )
             )
         return args
-
-    @run_after("install")
-    def add_tests(self):
-        if self.spec.satisfies("+add_tests"):
-            install_tree("utilities", self.spec.prefix.utilities)
-            install_tree("cmake", self.spec.prefix.cmake)

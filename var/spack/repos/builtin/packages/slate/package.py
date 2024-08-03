@@ -54,6 +54,10 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         "2020.10.00", sha256="ff58840cdbae2991d100dfbaf3ef2f133fc2f43fc05f207dc5e38a41137882ab"
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     patch("omp.patch", when="@2023.11.05")
 
     variant(
@@ -165,25 +169,26 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         commands = ["srun", "mpirun", "mpiexec"]
         return which(*commands, path=searchpath) or which(*commands)
 
-    def test(self):
+    def test_example(self):
+        """build and run slate example"""
+
         if self.spec.satisfies("@2020.10.00") or "+mpi" not in self.spec:
-            print("Skipping: stand-alone tests")
-            return
+            raise SkipTest("Package must be installed with +mpi and version @2021.05.01 or later")
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, "examples", "build")
         with working_dir(test_dir, create=True):
-            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
+            cmake = self.spec["cmake"].command
+
             # This package must directly depend on all packages listed here.
             # Otherwise, it will not work when some packages are external to spack.
             deps = "slate blaspp lapackpp mpi"
             if self.spec.satisfies("+rocm"):
                 deps += " rocblas hip llvm-amdgpu comgr hsa-rocr-dev rocsolver "
             prefixes = ";".join([self.spec[x].prefix for x in deps.split()])
-            self.run_test(cmake_bin, ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."])
+
+            cmake("-DCMAKE_PREFIX_PATH=" + prefixes, "..")
+            make = which("make")
             make()
-            test_args = ["-n", "4", "./ex05_blas"]
             launcher = self.mpi_launcher()
-            if not launcher:
-                raise RuntimeError("Cannot run tests due to absence of MPI launcher")
-            self.run_test(launcher.command, test_args, purpose="SLATE smoke test")
-            make("clean")
+            assert launcher is not None, "Cannot run tests due to absence of MPI launcher"
+            launcher("-n", "4", "./ex05_blas")

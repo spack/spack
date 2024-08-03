@@ -679,8 +679,8 @@ class EnvironmentModifications:
             for modifier in actions:
                 modifier.execute(new_env)
 
-        if "MANPATH" in new_env and not new_env["MANPATH"].endswith(":"):
-            new_env["MANPATH"] += ":"
+        if "MANPATH" in new_env and not new_env["MANPATH"].endswith(os.pathsep):
+            new_env["MANPATH"] += os.pathsep
 
         cmds = ""
 
@@ -718,9 +718,9 @@ class EnvironmentModifications:
                 (default: ``&> /dev/null``)
             concatenate_on_success (str): operator used to execute a command
                 only when the previous command succeeds (default: ``&&``)
-            exclude ([str or re]): ignore any modifications of these
+            exclude ([str or re.Pattern[str]]): ignore any modifications of these
                 variables (default: [])
-            include ([str or re]): always respect modifications of these
+            include ([str or re.Pattern[str]]): always respect modifications of these
                 variables (default: []). Supersedes any excluded variables.
             clean (bool): in addition to removing empty entries,
                 also remove duplicate entries (default: False).

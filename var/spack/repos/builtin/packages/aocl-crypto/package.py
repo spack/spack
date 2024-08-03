@@ -44,6 +44,9 @@ class AoclCrypto(CMakePackage):
         sha256="2bdbedd8ab1b28632cadff237f4abd776e809940ad3633ad90fc52ce225911fe",
         preferred=True,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     variant("examples", default=False, description="Build examples")
 
     depends_on("cmake@3.15:", type="build")

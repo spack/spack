@@ -13,7 +13,7 @@ from datetime import date
 import pytest
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import getuid, join_path, mkdirp, touch, touchp
+from llnl.util.filesystem import join_path, touch, touchp
 
 import spack.config
 import spack.directory_layout
@@ -774,7 +774,7 @@ def test_keys_are_ordered(configuration_dir):
         "./",
     )
 
-    config_scope = spack.config.ConfigScope("modules", configuration_dir.join("site"))
+    config_scope = spack.config.DirectoryConfigScope("modules", configuration_dir.join("site"))
 
     data = config_scope.get_section("modules")
 
@@ -864,26 +864,18 @@ def test_bad_config_section(mock_low_high_config):
         spack.config.get("foobar")
 
 
-@pytest.mark.not_on_windows("chmod not supported on Windows")
-@pytest.mark.skipif(getuid() == 0, reason="user is root")
-def test_bad_command_line_scopes(tmpdir, config):
+def test_bad_command_line_scopes(tmp_path, config):
     cfg = spack.config.Configuration()
+    file_path = tmp_path / "file_instead_of_dir"
+    non_existing_path = tmp_path / "non_existing_dir"
 
-    with tmpdir.as_cwd():
-        with pytest.raises(spack.config.ConfigError):
-            spack.config._add_command_line_scopes(cfg, ["bad_path"])
+    file_path.write_text("")
 
-        touch("unreadable_file")
-        with pytest.raises(spack.config.ConfigError):
-            spack.config._add_command_line_scopes(cfg, ["unreadable_file"])
+    with pytest.raises(spack.config.ConfigError):
+        spack.config._add_command_line_scopes(cfg, [str(file_path)])
 
-        mkdirp("unreadable_dir")
-        with pytest.raises(spack.config.ConfigError):
-            try:
-                os.chmod("unreadable_dir", 0)
-                spack.config._add_command_line_scopes(cfg, ["unreadable_dir"])
-            finally:
-                os.chmod("unreadable_dir", 0o700)  # so tmpdir can be removed
+    with pytest.raises(spack.config.ConfigError):
+        spack.config._add_command_line_scopes(cfg, [str(non_existing_path)])
 
 
 def test_add_command_line_scopes(tmpdir, mutable_config):
@@ -898,6 +890,45 @@ config:
         )
 
     spack.config._add_command_line_scopes(mutable_config, [str(tmpdir)])
+    assert mutable_config.get("config:verify_ssl") is False
+    assert mutable_config.get("config:dirty") is False
+
+
+def test_add_command_line_scope_env(tmp_path, mutable_mock_env_path):
+    """Test whether --config-scope <env> works, either by name or path."""
+    managed_env = ev.create("example").manifest_path
+
+    with open(managed_env, "w") as f:
+        f.write(
+            """\
+spack:
+  config:
+    install_tree:
+      root: /tmp/first
+"""
+        )
+
+    with open(tmp_path / "spack.yaml", "w") as f:
+        f.write(
+            """\
+spack:
+  config:
+    install_tree:
+      root: /tmp/second
+"""
+        )
+
+    config = spack.config.Configuration()
+    spack.config._add_command_line_scopes(config, ["example", str(tmp_path)])
+    assert len(config.scopes) == 2
+    assert config.get("config:install_tree:root") == "/tmp/second"
+
+    config = spack.config.Configuration()
+    spack.config._add_command_line_scopes(config, [str(tmp_path), "example"])
+    assert len(config.scopes) == 2
+    assert config.get("config:install_tree:root") == "/tmp/first"
+
+    assert ev.active_environment() is None  # shouldn't cause an environment to be activated
 
 
 def test_nested_override():
@@ -956,7 +987,7 @@ config:
       root: dummy_tree_value
 """
         )
-    scope = spack.config.ImmutableConfigScope("test", str(tmpdir))
+    scope = spack.config.DirectoryConfigScope("test", str(tmpdir), writable=False)
 
     data = scope.get_section("config")
     assert data["config"]["install_tree"] == {"root": "dummy_tree_value"}
@@ -966,7 +997,9 @@ config:
 
 
 def test_single_file_scope(config, env_yaml):
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
+    scope = spack.config.SingleFileScope(
+        "env", env_yaml, spack.schema.env.schema, yaml_path=["spack"]
+    )
 
     with spack.config.override(scope):
         # from the single-file config
@@ -1002,7 +1035,9 @@ spack:
 """
         )
 
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
+    scope = spack.config.SingleFileScope(
+        "env", env_yaml, spack.schema.env.schema, yaml_path=["spack"]
+    )
 
     with spack.config.override(scope):
         # from the single-file config
@@ -1018,7 +1053,7 @@ spack:
 def test_write_empty_single_file_scope(tmpdir):
     env_schema = spack.schema.env.schema
     scope = spack.config.SingleFileScope(
-        "test", str(tmpdir.ensure("config.yaml")), env_schema, ["spack"]
+        "test", str(tmpdir.ensure("config.yaml")), env_schema, yaml_path=["spack"]
     )
     scope._write_section("config")
     # confirm we can write empty config
@@ -1206,18 +1241,20 @@ def test_license_dir_config(mutable_config, mock_packages):
     expected_dir = spack.paths.default_license_dir
     assert spack.config.get("config:license_dir") == expected_dir
     assert spack.package_base.PackageBase.global_license_dir == expected_dir
-    assert spack.repo.PATH.get_pkg_class("a").global_license_dir == expected_dir
+    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == expected_dir
 
     rel_path = os.path.join(os.path.sep, "foo", "bar", "baz")
     spack.config.set("config:license_dir", rel_path)
     assert spack.config.get("config:license_dir") == rel_path
     assert spack.package_base.PackageBase.global_license_dir == rel_path
-    assert spack.repo.PATH.get_pkg_class("a").global_license_dir == rel_path
+    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == rel_path
 
 
 @pytest.mark.regression("22547")
 def test_single_file_scope_cache_clearing(env_yaml):
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
+    scope = spack.config.SingleFileScope(
+        "env", env_yaml, spack.schema.env.schema, yaml_path=["spack"]
+    )
     # Check that we can retrieve data from the single file scope
     before = scope.get_section("config")
     assert before
