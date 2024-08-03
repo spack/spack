@@ -22,6 +22,7 @@ packages:
       blas: [openblas, amdblis]
       D: [ldc]
       daal: [intel-oneapi-daal]
+      egl: [mesa]
       elf: [elfutils]
       fftw-api: [fftw, amdfftw]
       flame: [libflame, amdlibflame]
