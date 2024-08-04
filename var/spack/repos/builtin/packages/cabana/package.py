@@ -33,7 +33,8 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
         variant(_backend.lower(), default=_deflt, description=_descr)
 
     variant("shared", default=True, description="Build shared libraries")
-    variant("mpi", default=True, description="Build with mpi support")
+    variant("mpi", default=True, description="Build with MPI support")
+    variant("mpistream", default=False, description="Build MPI stream communication support")
     variant("arborx", default=False, description="Build with ArborX support")
     variant("heffte", default=False, description="Build with heFFTe support")
     variant("hypre", default=False, description="Build with HYPRE support")
@@ -102,6 +103,9 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     # Cajita support requires MPI
     conflicts("+cajita ~mpi")
     conflicts("+grid ~mpi")
+    
+    # MPI Stream communication requires MPI
+    conflicts("+mpistream ~mpi")
 
     # Conflict variants only available in newer versions of cabana
     conflicts("+rocm", when="@:0.2.0")
@@ -112,7 +116,7 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         options = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
-        enable = ["CAJITA", "TESTING", "EXAMPLES", "PERFORMANCE_TESTING"]
+        enable = ["CAJITA", "TESTING", "EXAMPLES", "PERFORMANCE_TESTING", "MPISTREAM"]
         require = ["ARBORX", "HEFFTE", "HYPRE", "SILO", "HDF5"]
 
         # These variables were removed in 0.3.0 (where backends are
