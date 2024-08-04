@@ -1,4 +1,4 @@
-black==24.4.2
+black==24.8.0
 clingo==5.7.1
 flake8==7.1.0
 isort==5.13.2
