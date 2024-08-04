@@ -189,6 +189,9 @@ class PyHail(MakefilePackage):
         # HAIL build doesn't find lz4: https://discuss.hail.is/t/ld-pruning-repeated-errors/1838/14
         env.append_flags("CXXFLAGS", f"-I{self.spec['lz4'].prefix.include}")
 
+    def setup_run_environment(self, env):
+        pass
+
     @property
     def build_targets(self):
         spec = self.spec
