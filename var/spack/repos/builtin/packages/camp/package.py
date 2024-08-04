@@ -75,7 +75,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
         options.append("-DBLT_SOURCE_DIR={0}".format(spec["blt"].prefix))
 
         options.append(self.define_from_variant("ENABLE_CUDA", "cuda"))
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             options.append("-DCUDA_TOOLKIT_ROOT_DIR={0}".format(spec["cuda"].prefix))
 
             if not spec.satisfies("cuda_arch=none"):
@@ -86,7 +86,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
                 options.append("-DCMAKE_CUDA_FLAGS:STRING={0}".format(flag))
 
         options.append(self.define_from_variant("ENABLE_HIP", "rocm"))
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             options.append("-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix))
 
             archs = self.spec.variants["amdgpu_target"].value

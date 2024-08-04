@@ -39,13 +39,13 @@ class Chatterbug(MakefilePackage):
         return targets
 
     def build(self, spec, prefix):
-        if "+scorep" in spec:
+        if spec.satisfies("+scorep"):
             make("WITH_OTF2=YES")
         else:
             make()
 
     def install(self, spec, prefix):
-        if "+scorep" in spec:
+        if spec.satisfies("+scorep"):
             make("WITH_OTF2=YES", "PREFIX=" + spec.prefix, "install")
         else:
             make("PREFIX=" + spec.prefix, "install")

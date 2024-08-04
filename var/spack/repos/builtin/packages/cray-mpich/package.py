@@ -65,7 +65,7 @@ class CrayMpich(Package):
                 return os.path.dirname(os.path.normpath(libdir))
 
     def setup_run_environment(self, env):
-        if "+wrappers" in self.spec:
+        if self.spec.satisfies("+wrappers"):
             env.set("MPICC", join_path(self.prefix.bin, "mpicc"))
             env.set("MPICXX", join_path(self.prefix.bin, "mpicxx"))
             env.set("MPIF77", join_path(self.prefix.bin, "mpif77"))
@@ -86,7 +86,7 @@ class CrayMpich(Package):
 
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec
-        if "+wrappers" in spec:
+        if spec.satisfies("+wrappers"):
             spec.mpicc = join_path(self.prefix.bin, "mpicc")
             spec.mpicxx = join_path(self.prefix.bin, "mpicxx")
             spec.mpifc = join_path(self.prefix.bin, "mpif90")

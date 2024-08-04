@@ -136,7 +136,7 @@ class ClingoBootstrap(Clingo):
         cmake.add_default_envmod(use_mods)
 
     def setup_build_environment(self, env):
-        if "%apple-clang" in self.spec:
+        if self.spec.satisfies("%apple-clang"):
             env.append_flags("CFLAGS", "-mmacosx-version-min=10.13")
             env.append_flags("CXXFLAGS", "-mmacosx-version-min=10.13")
             env.append_flags("LDFLAGS", "-mmacosx-version-min=10.13")

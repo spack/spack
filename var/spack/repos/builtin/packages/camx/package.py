@@ -92,7 +92,7 @@ else ifneq (, $(findstring $(MPI),openmpi openMPI OPENMPI))""",
             )
             makefile.filter("OPENMPI MVAPICH", "OPENMPI MVAPICH IntelMPI", string=True)
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             # Substitute CC, FC.
             makefile.filter("CC = .*", "CC = " + spec["mpi"].mpicc)
             makefile.filter("FC = .*", "FC = " + spec["mpi"].mpifc)
@@ -122,7 +122,7 @@ parlib :
         compiler = os.path.basename(env["FC"]) + omp
         args = ["COMPILER={0}".format(compiler)]
         # Set MPI.
-        if "+mpi" in self.spec:
+        if self.spec.satisfies("+mpi"):
             mpi = self.spec["mpi"]
             args += ["MPI={0}".format(mpi.name), "MPI_INST={0}".format(mpi.prefix)]
         return args
