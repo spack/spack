@@ -3,29 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install avro
-#
-# You can edit this file again by typing:
-#
-#     spack edit avro
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 import inspect
 import os
-from spack.package import *
+
 from llnl.util import filesystem as fs
 
-
+from spack.package import *
 
 
 class Avro(CMakePackage):
@@ -41,6 +24,7 @@ class Avro(CMakePackage):
     version("1.11.3", sha256="6ea787a83260a11b5a899aadd22f701e24138477cd7bf789614051a449dcc034")
 
     variant("cxx", default=True, description="Built the C++ library")
+    # TODO: c, java, javascript, perl, python, ruby, rust?
 
     with when("+cxx"):
         depends_on("cxx", type="build")
@@ -51,24 +35,16 @@ class Avro(CMakePackage):
             depends_on("doxygen")
 
     def cmake_variant_subdirs(self):
-        return [
-            ("lang/c++/build", "..", "+cxx"),
-        ]
-
-    def cmake_args(self):
-        # FIXME: Add arguments other than
-        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-        # FIXME: If not needed delete this function
-        args = []
-        return args
+        return [("lang/c++/build", "..", [], "+cxx")]
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
-    def cmake_subdir(self, pkg, spec, prefix, builddir, listdir, variant):
+    def cmake_subdir(self, pkg, spec, prefix, builddir, listdir, cmake_args, variant):
         """Runs ``cmake`` in the build sub directory if variant is true"""
         if spec.satisfies(variant):
             options = self.std_cmake_args
             options += self.cmake_args()
+            options += cmake_args
             with fs.working_dir(builddir, create=True):
                 options.append(os.path.abspath(listdir))
                 inspect.getmodule(self.pkg).cmake(*options)
@@ -93,14 +69,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                     inspect.getmodule(self.pkg).ninja(*self.install_targets)
 
     def cmake(self, pkg, spec, prefix):
-        for builddir, listdir, variant in pkg.cmake_variant_subdirs():
-            self.cmake_subdir(pkg, spec, prefix, builddir, listdir, variant)
+        for builddir, listdir, cmake_args, variant in pkg.cmake_variant_subdirs():
+            self.cmake_subdir(pkg, spec, prefix, builddir, listdir, cmake_args, variant)
 
     def build(self, pkg, spec, prefix):
-        for builddir, listdir, variant in pkg.cmake_variant_subdirs():
+        for builddir, listdir, cmake_args, variant in pkg.cmake_variant_subdirs():
             self.build_subdir(pkg, spec, prefix, builddir, variant)
 
     def install(self, pkg, spec, prefix):
-        for builddir, listdir, variant in pkg.cmake_variant_subdirs():
+        for builddir, listdir, cmake_args, variant in pkg.cmake_variant_subdirs():
             self.install_subdir(pkg, spec, prefix, builddir, variant)
-
