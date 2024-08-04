@@ -69,6 +69,4 @@ class Libxcb(AutotoolsPackage, XorgPackage):
     # then we can limit the following function, e.g.
     # when("@:1.17")
     def setup_build_environment(self, env):
-        env.set(
-            "LC_ALL", "C.UTF-8"
-        )
+        env.set("LC_ALL", "C.UTF-8")
