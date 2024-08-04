@@ -51,7 +51,7 @@ class BigdftAtlab(AutotoolsPackage):
         cflags = []
         cxxflags = []
 
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             fcflags.append(self.compiler.openmp_flag)
 
         if spec.satisfies("+shared"):
@@ -74,7 +74,7 @@ class BigdftAtlab(AutotoolsPackage):
         if spec.satisfies("+shared"):
             args.append("--enable-dynamic-libraries")
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             args.append(f"CC={spec['mpi'].mpicc}")
             args.append(f"CXX={spec['mpi'].mpicxx}")
             args.append(f"FC={spec['mpi'].mpifc}")
@@ -83,12 +83,12 @@ class BigdftAtlab(AutotoolsPackage):
         else:
             args.append("--disable-mpi")
 
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             args.append("--with-openmp")
         else:
             args.append("--without-openmp")
 
-        if "+openbabel" in spec:
+        if spec.satisfies("+openbabel"):
             args.append("--enable-openbabel")
             args.append(f"--with-openbabel-libs={spec['openbabel'].prefix.lib}")
             args.append(f"--with-openbabel-incs={spec['openbabel'].prefix.include}")
