@@ -273,8 +273,12 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("rocrand")
         depends_on("hipsparse")
         depends_on("hipfft")
+        depends_on("hiprand")
+        depends_on("hipblas")
+        depends_on("hipsolver")
         depends_on("rocfft")
         depends_on("rocblas")
+        depends_on("rocm-core")
         depends_on("miopen-hip")
         depends_on("rocminfo")
     depends_on("mpi", when="+mpi")
@@ -331,6 +335,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # Fixes build error when ROCm is enabled for pytorch-1.5 release
     patch("rocm.patch", when="@1.5+rocm")
+
+    # Fixes for ROCm spack build
+    patch(
+        "https://github.com/ROCm/pytorch/commit/b4ade760246c824c9433255c82536cfbb3dedc75.patch?full_index=1",
+        sha256="f2f80683c2be1c82dfa505f32ac61805f120ec46ad93eaa695b7f1d439f6dd61",
+        when="@2.2 +rocm",
+    )
 
     # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3
     # https://github.com/pytorch/pytorch/pull/37086
@@ -476,6 +487,27 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             "torch_global_deps PROPERTIES LINKER_LANGUAGE CXX",
             "caffe2/CMakeLists.txt",
         )
+        if self.spec.satisfies("@2.1: + rocm"):
+            filter_file(
+                r"${ROCM_INCLUDE_DIRS}/rocm_version.h",
+                "{0}/include/rocm-core/rocm_version.h".format(self.spec["rocm-core"].prefix),
+                "cmake/public/LoadHIP.cmake",
+                string=True,
+            )
+            filter_file(
+                r"-DINCLUDE_DIRECTORIES=${ROCM_INCLUDE_DIRS}",
+                "-DINCLUDE_DIRECTORIES={0}/include/rocm-core".format(
+                    self.spec["rocm-core"].prefix
+                ),
+                "cmake/public/LoadHIP.cmake",
+                string=True,
+            )
+            filter_file(
+                r"__HIP_PLATFORM_HCC__",
+                "__HIP_PLATFORM_AMD__",
+                "caffe2/CMakeLists.txt",
+                string=True,
+            )
 
     def torch_cuda_arch_list(self, env):
         if "+cuda" in self.spec:
@@ -542,14 +574,14 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("HIPFFT_PATH", self.spec["hipfft"].prefix)
             env.set("HIPSPARSE_PATH", self.spec["hipsparse"].prefix)
             env.set("HIP_PATH", self.spec["hip"].prefix)
-            env.set("HIPRAND_PATH", self.spec["rocrand"].prefix)
+            env.set("HIPRAND_PATH", self.spec["hiprand"].prefix)
             env.set("ROCRAND_PATH", self.spec["rocrand"].prefix)
             env.set("MIOPEN_PATH", self.spec["miopen-hip"].prefix)
             if "+nccl" in self.spec:
                 env.set("RCCL_PATH", self.spec["rccl"].prefix)
             env.set("ROCPRIM_PATH", self.spec["rocprim"].prefix)
             env.set("HIPCUB_PATH", self.spec["hipcub"].prefix)
-            env.set("ROCTHRUST_PATH", self.spec["rocthrust"].prefix)
+            env.set("THRUST_PATH", self.spec["rocthrust"].prefix)
             env.set("ROCTRACER_PATH", self.spec["roctracer-dev"].prefix)
             if self.spec.satisfies("^hip@5.2.0:"):
                 env.set("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
