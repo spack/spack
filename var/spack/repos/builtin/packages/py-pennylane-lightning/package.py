@@ -119,7 +119,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
-    def test_lightning_build(self):
+    def run_lightning_tests(self):
         with working_dir(self.stage.source_path):
             pl_runner = Executable(self.prefix.bin.pennylane_lightning_test_runner)
             pl_runner()
