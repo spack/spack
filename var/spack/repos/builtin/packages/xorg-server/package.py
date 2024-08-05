@@ -19,6 +19,10 @@ class XorgServer(AutotoolsPackage, XorgPackage):
         "1.18.99.901", sha256="c8425163b588de2ee7e5c8e65b0749f2710f55a7e02a8d1dc83b3630868ceb21"
     )
 
+    # glibc stopped declaring major()/minor() macros in <sys/types.h>
+    # https://gitlab.freedesktop.org/xorg/xserver/-/commit/d732c36597fab2e9bc4f2aa72cf1110997697557
+    patch("sysmacros.patch", when="@:1.18 ^glibc@2.25:")
+
     def patch(self):
         with when("@1"):
             # Due to transition from mesa version numbers to libglvnd version numbers,
