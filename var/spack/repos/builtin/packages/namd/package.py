@@ -298,8 +298,7 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
             self._copy_arch_file("hip")
             opts.append("--with-hip")
             opts.append("--with-single-node-hip")
-            opts.append("--rocm-prefix")
-            opts.append(os.environ["ROCM_PATH"])
+            opts.extend(["--rocm-prefix", os.environ["ROCM_PATH"]])
 
         config = Executable("./config")
 
