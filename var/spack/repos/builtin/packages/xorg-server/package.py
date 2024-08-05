@@ -75,5 +75,10 @@ class XorgServer(AutotoolsPackage, XorgPackage):
     depends_on("libxfixes")
     depends_on("libepoxy")
 
+    @when("@:1.19")
+    def setup_build_environment(self, env):
+        # https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/406
+        env.set("CPPFLAGS", "-fcommon")
+
     def configure_args(self):
         return ["--disable-glx", "--disable-dri", "--disable-glamor"]
