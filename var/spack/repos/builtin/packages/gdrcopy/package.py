@@ -34,16 +34,21 @@ class Gdrcopy(MakefilePackage, CudaPackage):
     depends_on("check")
     requires("+cuda")
 
+    variant("exes", default=True, description="Build and install executables")
+
     def build(self, spec, prefix):
         make("lib")
-        make("exes")
+        if "+exes" in self.spec:
+            make("exes")
 
     def install(self, spec, prefix):
         mkdir(prefix.include)
         mkdir(prefix.lib64)
         if spec.satisfies("@2.2:"):
             make("lib_install", "prefix={0}".format(self.prefix))
-            make("exes_install", "prefix={0}".format(self.prefix))
+            if "+exes" in self.spec:
+                make("exes_install", "prefix={0}".format(self.prefix))
         else:
             make("lib_install", "PREFIX={0}".format(self.prefix))
-            make("exes_install", "PREFIX={0}".format(self.prefix))
+            if "+exes" in self.spec:
+                make("exes_install", "PREFIX={0}".format(self.prefix))
