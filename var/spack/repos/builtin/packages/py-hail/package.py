@@ -130,8 +130,6 @@ class PyHail(MakefilePackage):
         depends_on("py-azure-mgmt-core")
         depends_on("py-typing-extensions")
 
-    patch("fix-lz4-import-builtins.patch")
-
     build_directory = "hail"
 
     def patch(self):
@@ -188,9 +186,6 @@ class PyHail(MakefilePackage):
     def setup_build_environment(self, env):
         # HAIL build doesn't find lz4: https://discuss.hail.is/t/ld-pruning-repeated-errors/1838/14
         env.append_flags("CXXFLAGS", f"-I{self.spec['lz4'].prefix.include}")
-
-    def setup_run_environment(self, env):
-        pass
 
     @property
     def build_targets(self):
