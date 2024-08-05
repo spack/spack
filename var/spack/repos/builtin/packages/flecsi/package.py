@@ -28,8 +28,6 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     version("2.1.0", tag="v2.1.0", commit="533df139c267e2a93c268dfe68f9aec55de11cf0")
     version("2.0.0", tag="v2.0.0", commit="5ceebadf75d1c98999ea9e9446926722d061ec22")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "backend",
         default="mpi",
@@ -51,6 +49,9 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("kokkos", default=False, description="Enable Kokkos Support")
     variant("openmp", default=False, description="Enable OpenMP Support")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # All Current FleCSI Releases
     for level in ("low", "medium", "high"):
