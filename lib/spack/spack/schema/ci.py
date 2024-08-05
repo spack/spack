@@ -86,10 +86,12 @@ dynamic_mapping_schema = {
             "type": "object",
             "required": ["endpoint"],
             "properties": {
-                "endpoint": {"type": "string", "patternProperties": r"http(s)?://[\w\d\-_\.]+"},
+                # Cannot have patternProperties constaint on required field
+                # Constrain is applied in code
+                "endpoint": {"type": "string"},
                 "timeout": {"type": "integer", "minimum": 0},
                 "verify_ssl": {"type": "boolean", "default": False},
-                "header": {"type": "object"},
+                "header": {"type": "object", "additionalProperties": False},
                 "fields": {
                     "type": "object",
                     "properties": {
@@ -103,58 +105,30 @@ dynamic_mapping_schema = {
     },
 }
 
-named_attributes_schema = {
-    "oneOf": [
-        {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": {"noop-job": attributes_schema, "noop-job-remove": attributes_schema},
-        },
-        {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": {"build-job": attributes_schema, "build-job-remove": attributes_schema},
-        },
-        {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": {"copy-job": attributes_schema, "copy-job-remove": attributes_schema},
-        },
-        {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": {
-                "reindex-job": attributes_schema,
-                "reindex-job-remove": attributes_schema,
-            },
-        },
-        {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": {
-                "signing-job": attributes_schema,
-                "signing-job-remove": attributes_schema,
-            },
-        },
-        {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": {
-                "cleanup-job": attributes_schema,
-                "cleanup-job-remove": attributes_schema,
-            },
-        },
-        {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": {"any-job": attributes_schema, "any-job-remove": attributes_schema},
-        },
-    ]
-}
+
+def job_schema(name: str):
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {f"{name}-job": attributes_schema, f"{name}-job-remove": attributes_schema},
+    }
+
 
 pipeline_gen_schema = {
     "type": "array",
-    "items": {"oneOf": [submapping_schema, named_attributes_schema, dynamic_mapping_schema]},
+    "items": {
+        "oneOf": [
+            submapping_schema,
+            dynamic_mapping_schema,
+            job_schema("any"),
+            job_schema("build"),
+            job_schema("cleanup"),
+            job_schema("copy"),
+            job_schema("noop"),
+            job_schema("reindex"),
+            job_schema("signing"),
+        ]
+    },
 }
 
 core_shared_properties = union_dicts(

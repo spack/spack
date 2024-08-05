@@ -630,9 +630,7 @@ class SpackCI:
                     # Create request for this job
                     query = job_query(job)
                     request = Request(
-                        endpoint_url._replace(query=query).geturl(),
-                        headers=header,
-                        method="GET",
+                        endpoint_url._replace(query=query).geturl(), headers=header, method="GET"
                     )
                     try:
                         response = _dyn_mapping_urlopener(
