@@ -297,7 +297,7 @@ class Cmake(Package):
             if jobs is not None:
                 args.append("--parallel={0}".format(jobs))
 
-            if "+ownlibs" in spec:
+            if spec.satisfies("+ownlibs"):
                 # Build and link to the CMake-provided third-party libraries
                 args.append("--no-system-libs")
             else:
@@ -312,7 +312,7 @@ class Cmake(Package):
             args.append("--system-curl")
             args.append("--no-qt-gui")
 
-            if "+doc" in spec:
+            if spec.satisfies("+doc"):
                 args.append("--sphinx-html")
                 args.append("--sphinx-man")
 
