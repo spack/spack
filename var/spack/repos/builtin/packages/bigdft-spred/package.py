@@ -57,11 +57,11 @@ class BigdftSpred(AutotoolsPackage):
         pyyaml = join_path(spec["py-pyyaml"].prefix.lib, f"python{python_version}")
 
         openmp_flag = []
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             openmp_flag.append(self.compiler.openmp_flag)
 
         linalg = []
-        if "+scalapack" in spec:
+        if spec.satisfies("+scalapack"):
             linalg.append(spec["scalapack"].libs.ld_flags)
         linalg.append(spec["lapack"].libs.ld_flags)
         linalg.append(spec["blas"].libs.ld_flags)
@@ -82,7 +82,7 @@ class BigdftSpred(AutotoolsPackage):
         if spec.satisfies("+shared"):
             args.append("--enable-dynamic-libraries")
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             args.append(f"CC={spec['mpi'].mpicc}")
             args.append(f"CXX={spec['mpi'].mpicxx}")
             args.append(f"FC={spec['mpi'].mpifc}")
@@ -91,7 +91,7 @@ class BigdftSpred(AutotoolsPackage):
         else:
             args.append("--disable-mpi")
 
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             args.append("--with-openmp")
         else:
             args.append("--without-openmp")
