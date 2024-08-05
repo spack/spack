@@ -615,23 +615,22 @@ class SpackCI:
 
                 def job_query(job):
                     job_vars = job["attributes"]["variables"]
-                    query = {
-                        "spec": (
-                            "{SPACK_JOB_SPEC_PKG_NAME}@{SPACK_JOB_SPEC_PKG_VERSION}"
-                            # The preceding space is required (ref. https://github.com/spack/spack-gantry/blob/develop/docs/api.md#allocation)
-                            " {SPACK_JOB_SPEC_VARIANTS}"
-                            "%{SPACK_JOB_SPEC_COMPILER_NAME}@{SPACK_JOB_SPEC_COMPILER_VERSION}"
-                        ).format_map(job_vars)
-                    }
-                    return quote(query)
+                    query = (
+                        "{SPACK_JOB_SPEC_PKG_NAME}@{SPACK_JOB_SPEC_PKG_VERSION}"
+                        # The preceding space is required (ref. https://github.com/spack/spack-gantry/blob/develop/docs/api.md#allocation)
+                        " {SPACK_JOB_SPEC_VARIANTS}"
+                        "%{SPACK_JOB_SPEC_COMPILER_NAME}@{SPACK_JOB_SPEC_COMPILER_VERSION}"
+                    ).format_map(job_vars)
+                    return f"spec={quote(query)}"
 
                 for job in jobs.values():
                     if not job["spec"]:
                         continue
 
                     # Create request for this job
+                    query = job_query(job)
                     request = Request(
-                        endpoint_url._replace(query=job_query(job)).geturl(),
+                        endpoint_url._replace(query=query).geturl(),
                         headers=header,
                         method="GET",
                     )
@@ -639,10 +638,12 @@ class SpackCI:
                         response = _dyn_mapping_urlopener(
                             request, verify_ssl=verify_ssl, timeout=timeout
                         )
-                    except Exception:
+                    except Exception as e:
                         # For now just ignore any errors from dynamic mapping and continue
                         # This is still experimental, and failures should not stop CI
                         # from running normally
+                        tty.warn(f"Failed to fetch dynamic mapping for query:\n\t{query}")
+                        tty.warn(f"{e}")
                         continue
 
                     config = json.load(codecs.getreader("utf-8")(response))
