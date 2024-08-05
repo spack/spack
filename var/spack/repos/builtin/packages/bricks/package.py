@@ -47,7 +47,7 @@ class Bricks(CMakePackage):
     def cmake_args(self):
         """CMake arguments for configure stage"""
         args = [self.define_from_variant("BRICK_USE_OPENCL", "cuda")]
-        if "+cuda" in self.spec:
+        if self.spec.satisfies("+cuda"):
             args.append(f"-DOCL_ROOT:STRING={self.spec['opencl-clhpp'].prefix}")
         return args
 

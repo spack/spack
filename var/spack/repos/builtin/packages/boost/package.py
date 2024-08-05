@@ -507,10 +507,10 @@ class Boost(Package):
             options.append("--with-toolset=%s" % boost_toolset_id)
         options.append("--with-libraries=%s" % ",".join(with_libs))
 
-        if "+python" in spec:
+        if spec.satisfies("+python"):
             options.append("--with-python=%s" % spec["python"].command.path)
 
-        if "+icu" in spec:
+        if spec.satisfies("+icu"):
             options.append("--with-icu")
         else:
             options.append("--without-icu")
@@ -522,7 +522,7 @@ class Boost(Package):
                 # Skip this on Windows since we don't have a cl.exe wrapper in spack
                 f.write("using {0} : : {1} ;\n".format(boost_toolset_id, spack_cxx))
 
-            if "+mpi" in spec:
+            if spec.satisfies("+mpi"):
                 # Use the correct mpi compiler.  If the compiler options are
                 # empty or undefined, Boost will attempt to figure out the
                 # correct options by running "${mpicxx} -show" or something
@@ -532,21 +532,21 @@ class Boost(Package):
                 mpi_line = "using mpi : %s" % spec["mpi"].mpicxx
                 f.write(mpi_line + " ;\n")
 
-            if "+python" in spec:
+            if spec.satisfies("+python"):
                 f.write(self.bjam_python_line(spec))
 
     def determine_b2_options(self, spec, options):
-        if "+debug" in spec:
+        if spec.satisfies("+debug"):
             options.append("variant=debug")
         else:
             options.append("variant=release")
 
-        if "+icu" in spec:
+        if spec.satisfies("+icu"):
             options.extend(["-s", "ICU_PATH=%s" % spec["icu4c"].prefix])
         else:
             options.append("--disable-icu")
 
-        if "+iostreams" in spec:
+        if spec.satisfies("+iostreams"):
             options.extend(
                 [
                     "-s",
@@ -568,17 +568,17 @@ class Boost(Package):
                 ]
             )
             # At least with older Xcode, _lzma_cputhreads is missing (#33998)
-            if "platform=darwin" in self.spec:
+            if self.spec.satisfies("platform=darwin"):
                 options.extend(["-s", "NO_LZMA=1"])
 
         link_types = ["static"]
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             link_types.append("shared")
 
         threading_opts = []
-        if "+multithreaded" in spec:
+        if spec.satisfies("+multithreaded"):
             threading_opts.append("multi")
-        if "+singlethreaded" in spec:
+        if spec.satisfies("+singlethreaded"):
             threading_opts.append("single")
         if not threading_opts:
             raise RuntimeError(
@@ -589,9 +589,9 @@ class Boost(Package):
         if "+context" in spec and "context-impl" in spec.variants:
             options.extend(["context-impl=%s" % spec.variants["context-impl"].value])
 
-        if "+taggedlayout" in spec:
+        if spec.satisfies("+taggedlayout"):
             layout = "tagged"
-        elif "+versionedlayout" in spec:
+        elif spec.satisfies("+versionedlayout"):
             layout = "versioned"
         else:
             if len(threading_opts) > 1:
@@ -623,7 +623,7 @@ class Boost(Package):
             if flag:
                 cxxflags.append(flag)
 
-        if "+pic" in self.spec:
+        if self.spec.satisfies("+pic"):
             cxxflags.append(self.compiler.cxx_pic_flag)
 
         # clang is not officially supported for pre-compiled headers
@@ -632,7 +632,7 @@ class Boost(Package):
         #   https://svn.boost.org/trac/boost/ticket/12496
         if spec.satisfies("%apple-clang") or spec.satisfies("%clang") or spec.satisfies("%fj"):
             options.extend(["pch=off"])
-            if "+clanglibcpp" in spec:
+            if spec.satisfies("+clanglibcpp"):
                 cxxflags.append("-stdlib=libc++")
                 options.extend(["toolset=clang", 'linkflags="-stdlib=libc++"'])
         elif spec.satisfies("%xl") or spec.satisfies("%xl_r"):
@@ -696,7 +696,7 @@ class Boost(Package):
             with_libs.remove("random")
         if not spec.satisfies("@1.39.0:") and "exception" in with_libs:
             with_libs.remove("exception")
-        if "+graph" in spec and "+mpi" in spec:
+        if spec.satisfies("+graph") and spec.satisfies("+mpi"):
             with_libs.append("graph_parallel")
 
         if not with_libs:
@@ -753,7 +753,7 @@ class Boost(Package):
         threading_opts = self.determine_b2_options(spec, b2_options)
 
         # Create headers if building from a git checkout
-        if "@develop" in spec:
+        if spec.satisfies("@develop"):
             b2("headers", *b2_options)
 
         b2("--clean", *b2_options)
@@ -766,7 +766,7 @@ class Boost(Package):
         else:
             b2("install", *b2_options)
 
-        if "+multithreaded" in spec and "~taggedlayout" in spec:
+        if spec.satisfies("+multithreaded") and spec.satisfies("~taggedlayout"):
             self.add_buildopt_symlinks(prefix)
 
         # The shared libraries are not installed correctly
