@@ -183,6 +183,12 @@ class PyHail(MakefilePackage):
         wheel_dir = join_path("build", "deploy", "dist")
         return join_path(wheel_dir, wheel_file)
 
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            # HAIL build doesn't find lz4: https://discuss.hail.is/t/ld-pruning-repeated-errors/1838/14
+            flags.append(f"-I{self.spec['lz4'].prefix.include}")
+        return (flags, None, None)
+
     def setup_build_environment(self, env):
         # HAIL build doesn't find lz4: https://discuss.hail.is/t/ld-pruning-repeated-errors/1838/14
         env.append_flags("CXXFLAGS", f"-I{self.spec['lz4'].prefix.include}")
