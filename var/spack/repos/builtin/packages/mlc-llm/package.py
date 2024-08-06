@@ -33,8 +33,8 @@ class MlcLlm(CMakePackage, CudaPackage):
         "flash-infer",
         default=False,
         description="Use FlashInfer? (need CUDA w/ compute capability 80;86;89;90)",
+        when="+cuda"
     )
-    conflicts("~cuda", when="+flash-infer")
     conflicts("cuda_arch=none", when="+flash-infer")
 
     unsupported_flash_infer_cuda_archs = filter(
@@ -53,7 +53,7 @@ class MlcLlm(CMakePackage, CudaPackage):
 
     def _gen_cmake_config(self) -> str:
         """
-        Generate string for cmake/config.cmake (based on cmake/gen_cmake_config.py
+        Generate string for cmake/config.cmake (based on cmake/gen_cmake_config.py)
         """
 
         tvm_home = self.spec["apache-tvm"].prefix
