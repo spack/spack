@@ -21,6 +21,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     tags = ["e4s"]
 
     version("main", branch="main")
+    version("3.21.4", sha256="a9ae076d4617c7d84ce2bed37194022319c19f19b3930edf148b2bc8ecf2248d")
     version("3.21.3", sha256="6d9ceb99d84d275250c614192dad45955d4a7610e12d8292a07dc49403556d26")
     version("3.21.2", sha256="a1ac62b6204bdf2f7f9b637abf45e6cff24d372d4d3d3702c50e157bdb56eb21")
     version("3.21.1", sha256="7ff8b692bceb7d7a8f51e2f45ccb20af00ba9395d7e1eee8816d46eb1c4c4b27")
@@ -521,7 +522,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 True,
             ),
             ("hdf5" + hdf5libs, "hdf5", True, True),
-            "zlib",
+            ("zlib-api", "zlib", True, True),
             "mumps",
             ("trilinos", "trilinos", False, False),
             ("fftw:mpi", "fftw", True, True),

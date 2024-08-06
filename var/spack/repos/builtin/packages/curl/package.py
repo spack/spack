@@ -281,21 +281,21 @@ class NMakeBuilder(BuildEnvironment, NMakeBuilder):
         args.append("mode=%s" % mode)
         args.append("WITH_ZLIB=%s" % mode)
         args.append("ZLIB_PATH=%s" % self.spec["zlib-api"].prefix)
-        if "+libssh" in self.spec:
+        if self.spec.satisfies("+libssh"):
             args.append("WITH_SSH=%s" % mode)
-        if "+libssh2" in self.spec:
+        if self.spec.satisfies("+libssh2"):
             args.append("WITH_SSH2=%s" % mode)
             args.append("SSH2_PATH=%s" % self.spec["libssh2"].prefix)
-        if "+nghttp2" in self.spec:
+        if self.spec.satisfies("+nghttp2"):
             args.append("WITH_NGHTTP2=%s" % mode)
             args.append("NGHTTP2=%s" % self.spec["nghttp2"].prefix)
-        if "tls=openssl" in self.spec:
+        if self.spec.satisfies("tls=openssl"):
             args.append("WITH_SSL=%s" % mode)
             args.append("SSL_PATH=%s" % self.spec["openssl"].prefix)
-        elif "tls=mbedtls" in self.spec:
+        elif self.spec.satisfies("tls=mbedtls"):
             args.append("WITH_MBEDTLS=%s" % mode)
             args.append("MBEDTLS_PATH=%s" % self.spec["mbedtls"].prefix)
-        elif "tls=sspi" in self.spec:
+        elif self.spec.satisfies("tls=sspi"):
             args.append("ENABLE_SSPI=%s" % mode)
 
         # The trailing path seperator is REQUIRED for cURL to install
