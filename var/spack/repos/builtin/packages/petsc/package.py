@@ -521,7 +521,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 True,
             ),
             ("hdf5" + hdf5libs, "hdf5", True, True),
-            "zlib",
+            ("zlib-api", "zlib", True, True),
             "mumps",
             ("trilinos", "trilinos", False, False),
             ("fftw:mpi", "fftw", True, True),

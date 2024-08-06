@@ -66,7 +66,7 @@ class BigdftLibabinit(AutotoolsPackage):
         if spec.satisfies("+shared"):
             args.append("--enable-dynamic-libraries")
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             args.extend(
                 [
                     f"CC={spec['mpi'].mpicc}",

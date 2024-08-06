@@ -67,14 +67,16 @@ spack:
 
   specs:
   # CPU
-  - aml
   - adios
+  - alquimia
+  - aml
   - amrex
   - arborx
   - argobots
   - axom
   - bolt
   - boost
+  - bricks ~cuda
   - butterflypack
   - cabana
   - caliper
@@ -82,15 +84,20 @@ spack:
   - charliecloud
   - conduit
   - datatransferkit
+  - dealii
   - drishti
+  - dxt-explorer
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 ~ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp # +ascent: fides: fides/xgc/XGCCommon.cxx:233:10: error: no member named 'iota' in namespace 'std'; +visit: visit_vtk/lightweight/vtkSkewLookupTable.C:32:10: error: cannot initialize return object of type 'unsigned char *' with an rvalue of type 'const unsigned char *'
   - exaworks
   - flecsi
   - flit
   - flux-core
   - fortrilinos
   - gasnet
+  - geopm-service
   - ginkgo
   - globalarrays
+  - glvis ^llvm
   - gmp
   - gotcha
   - gptune ~mpispawn
@@ -106,7 +113,6 @@ spack:
   - kokkos-kernels +openmp
   - laghos
   - lammps
-  # - lbann               # 2024.2 internal compiler error
   - legion
   - libnrm
   - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp
@@ -116,6 +122,7 @@ spack:
   - mercury
   - metall
   - mfem
+  - mgard +serial +openmp +timing +unstructured ~cuda
   - mpark-variant
   - mpifileutils ~xattr
   - nccmp
@@ -125,12 +132,13 @@ spack:
   - omega-h
   - openfoam
   - openmpi
+  - openpmd-api
   - papi
   - papyrus
   - parsec ~cuda
+  - pdt
   - petsc
   - phist
-  # - plasma           # 2024.2 internal compiler error
   - plumed
   - precice
   - pruners-ninja
@@ -152,12 +160,15 @@ spack:
   - sundials
   - superlu
   - superlu-dist
+  - swig@4.0.2-fortran
   - sz3
   - tasmanian
+  - tau +mpi +python +syscall
   - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
   - turbine
   - umap
   - umpire
+  - upcxx
   - variorum
   - wannier90
   - xyce +mpi +shared +pymi +pymi_static_tpls
@@ -170,31 +181,21 @@ spack:
   - hdf5
   - libcatalyst
   - parallel-netcdf
-  # - paraview            # paraview: VTK/ThirdParty/cgns/vtkcgns/src/adfh/ADFH.c:2002:23: error: incompatible function pointer types passing 'herr_t (hid_t, const char *, const H5L_info1_t *, void *)' (aka 'int (long, const char *, const H5L_info1_t *, void *)') to parameter of type 'H5L_iterate2_t' (aka 'int (*)(long, const char *,const H5L_info2_t *, void *)') [-Wincompatible-function-pointer-types]
+  - paraview
   - py-cinemasci
   - sz
   - unifyfs
   - veloc
-  # - visit               # silo: https://github.com/spack/spack/issues/39538
-  - vtk-m ~openmp         # https://github.com/spack/spack/issues/31830
+  # - visit                                                 # visit: +visit: visit_vtk/lightweight/vtkSkewLookupTable.C:32:10: error: cannot initialize return object of type 'unsigned char *' with an rvalue of type 'const unsigned char *'
+  - vtk-m ~openmp
   - zfp
   # --
-  # - alquimia                                                # pflotran: https://github.com/spack/spack/issues/39474
-  # - bricks ~cuda                                            # bricks: /opt/intel/oneapi/compiler/2024.0/bin/sycl-post-link: error while loading shared libraries: libonnxruntime.1.12.22.721.so: cannot open shared object file: No such file or directory
-  # - cp2k +mpi                                               # dbcsr
-  # - dealii                                                  # dealii: https://github.com/spack/spack/issues/39482
-  # - dxt-explorer                                            # r: https://github.com/spack/spack/issues/40257
-  # - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp # embree: CMake Error at CMakeLists.txt:215 (MESSAGE): Unsupported compiler: IntelLLVM; qt: qtbase/src/corelib/global/qendian.h:333:54: error: incomplete type 'std::numeric_limits' used in nested name specifier
-  # - geopm                                                   # geopm issue: https://github.com/spack/spack/issues/38795
-  # - glvis ^llvm                                             # glvis: https://github.com/spack/spack/issues/42839
-  # - hpctoolkit                                              # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
-  # - mgard +serial +openmp +timing +unstructured ~cuda       # mgard: mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
-  # - openpmd-api                                             # mgard:  mgard.tpp:63:48: error: non-constant-expression cannot be narrowed from type 'int' to 'unsigned long' in initializer list [-Wc++11-narrowing]
-  # - pdt                                                     # pdt: pdbType.cc:193:21: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
-  # - quantum-espresso                                        # quantum-espresso@7.2 /i3fqdx5: warning: <unknown>:0:0: loop not unroll-and-jammed: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering
-  # - swig@4.0.2-fortran                                      # ?
-  # - tau +mpi +python +syscall                               # pdt: pdbType.cc:193:21: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
-  # - upcxx                                                   # upcxx: /opt/intel/oneapi/mpi/2021.10.0//libfabric/bin/fi_info: error while loading shared libraries: libfabric.so.1: cannot open shared object file: No such file or directory
+  # - cp2k +mpi                                             # dbcsr: dbcsr_api.F(973): #error: incomplete macro call DBCSR_ABORT.
+  # - geopm-runtime                                         # libelf: configure: error: installation or configuration problem: C compiler cannot create executables.
+  # - hpctoolkit                                            # dyninst@13.0.0%gcc: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'
+  # - lbann                                                 # 2024.2 internal compiler error
+  # - plasma                                                # 2024.2 internal compiler error
+  # - quantum-espresso                                      # quantum-espresso: external/mbd/src/mbd_c_api.F90(392): error #6645: The name of the module procedure conflicts with a name in the encompassing scoping unit.   [F_C_STRING]
 
   # PYTHON PACKAGES
   - opencv +python3
@@ -232,8 +233,8 @@ spack:
   - upcxx +level_zero
   # --
   # - hpctoolkit +level_zero                                  # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
-  # - slate +sycl                                             # blaspp: CMake Error at CMakeLists.txt:313 (find_package): ... set MKL_FOUND to FALSE so package "MKL" is considered to be NOT FOUND.
-  # - warpx compute=sycl                                      # warpx: spack-build-wzp6vvo/_deps/fetchedamrex-src/Src/Base/AMReX_RandomEngine.H:18:10: fatal error: 'oneapi/mkl/rng/device.hpp' file not found
+  # - slate +sycl                                             # slate: ifx: error #10426: option '-fopenmp-targets' requires '-fiopenmp'
+  # - warpx compute=sycl                                      # warpx: fetchedamrex-src/Src/Base/AMReX_RandomEngine.H:18:10: fatal error: 'oneapi/mkl/rng/device.hpp' file not found
 
 
   ci:

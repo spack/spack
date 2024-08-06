@@ -165,11 +165,11 @@ class Amdfftw(FftwBase):
         # Dynamic dispatcher builds a single portable optimized library
         # that can execute on different x86 CPU architectures.
         # It is supported for GCC compiler and Linux based systems only.
-        if "+amd-dynamic-dispatcher" in spec:
+        if spec.satisfies("+amd-dynamic-dispatcher"):
             options.append("--enable-dynamic-dispatcher")
 
         # Check if compiler is AOCC
-        if "%aocc" in spec:
+        if spec.satisfies("%aocc"):
             options.append("CC={0}".format(os.path.basename(spack_cc)))
             options.append("FC={0}".format(os.path.basename(spack_fc)))
             options.append("F77={0}".format(os.path.basename(spack_fc)))
@@ -186,10 +186,10 @@ class Amdfftw(FftwBase):
                 "https://www.amd.com/content/dam/amd/en/documents/developer/version-4-2-documents/aocl/aocl-4-2-user-guide.pdf"
             )
 
-        if "+debug" in spec:
+        if spec.satisfies("+debug"):
             options.append("--enable-debug")
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             options.append("--enable-mpi")
             options.append("--enable-amd-mpifft")
         else:
@@ -223,7 +223,7 @@ class Amdfftw(FftwBase):
         simd_features = ["sse2", "avx", "avx2", "avx512"]
 
         # "avx512" is supported from amdfftw 4.0 version onwards
-        if "@2.2:3.2" in self.spec:
+        if self.spec.satisfies("@2.2:3.2"):
             simd_features.remove("avx512")
 
         simd_options = []

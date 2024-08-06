@@ -31,7 +31,7 @@ class QtPackage(CMakePackage):
         _list_url = "https://github.com/qt/{}/tags"
         return _list_url.format(qualname.lower())
 
-    maintainers("wdconinc", "sethrj")
+    maintainers("wdconinc")
 
     # Default dependencies for all qt-* components
     generator("ninja")

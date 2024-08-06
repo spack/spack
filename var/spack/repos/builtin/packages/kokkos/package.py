@@ -202,6 +202,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         variant(dev, default=dflt, description=desc)
     conflicts("+cuda", when="+rocm", msg="CUDA and ROCm are not compatible in Kokkos.")
     depends_on("intel-oneapi-dpl", when="+sycl")
+    depends_on("rocthrust", when="@4.3: +rocm")
 
     for opt, (dflt, desc) in options_variants.items():
         variant(opt, default=dflt, description=desc, when=("+cuda" if "cuda" in opt else None))
@@ -354,6 +355,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+rocm" in self.spec:
             options.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
+            options.append(self.define("Kokkos_ENABLE_ROCTHRUST", True))
         elif "+wrapper" in self.spec:
             options.append(
                 self.define("CMAKE_CXX_COMPILER", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
