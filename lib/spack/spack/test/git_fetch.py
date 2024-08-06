@@ -398,12 +398,10 @@ def test_git_sparse_paths_partial_clone(
 ):
     """
     Test partial clone of repository when using git_sparse_paths property
-    TODO
-    sparse checkout includes the top level directories files so need to add
-    a directory tree to really test it
     """
-    type_of_test = "branch"
-    sparse_paths = ["branch_file"]
+    type_of_test = "many-directories"
+    sparse_paths = ["dir0"]
+    omitted_paths = ["dir1", "dir2"]
     t = mock_git_repository.checks[type_of_test]
     args = copy.copy(t.args)
     args["git_sparse_paths"] = sparse_paths
@@ -411,8 +409,14 @@ def test_git_sparse_paths_partial_clone(
     monkeypatch.setitem(s.package.versions, Version("git"), args)
     s.package.do_stage()
     with working_dir(s.package.stage.source_path):
+        # top level directory files are cloned via sparse-checkout
+        assert os.path.isfile("r0_file")
+
         for p in sparse_paths:
-            file_path = os.path.join(s.package.stage.source_path, p)
-            assert os.path.isfile(file_path)
-        file_path = os.path.join(s.package.stage.source_path, "r0_file")
-        # assert not os.path.isfile(file_path)
+            assert os.path.isdir(p)
+        for p in omitted_paths:
+            assert not os.path.isdir(p)
+
+        # fixture file is in the sparse-path expansion tree
+        assert os.path.isfile(t.file)
+
