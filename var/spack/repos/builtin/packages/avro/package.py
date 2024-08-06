@@ -23,19 +23,37 @@ class Avro(CMakePackage):
 
     version("1.11.3", sha256="6ea787a83260a11b5a899aadd22f701e24138477cd7bf789614051a449dcc034")
 
+    # Failing in examples for me
+    variant("c", default=False, description="Built the C library")
     variant("cxx", default=True, description="Built the C++ library")
-    # TODO: c, java, javascript, perl, python, ruby, rust?
+    # TODO: java, javascript, perl, python, ruby, rust?
+
+    # Had issues with linking in C lib on my build
+    variant("snappy", default=True, description="Build with snappy support")
+    variant("zlib", default=True, description="Build with zlib support")
+
+    with default_args(type=("build")):
+        depends_on("pkgconfig")
+        depends_on("cmake@2.6:")
+        depends_on("python@3")
+        depends_on("doxygen")
+
+    depends_on("snappy+shared", when="+snappy")
+    depends_on("zlib-api")
+
+    with when("+c"):
+        depends_on("c", type="build")
+        depends_on("asciidoc", type="build")
+        depends_on("jansson@2.3:", type=("build", "link"))
 
     with when("+cxx"):
         depends_on("cxx", type="build")
-        with default_args(type=("build", "link")):
-            depends_on("boost@1.38:+iostreams+filesystem+system+program_options")
-            depends_on("cmake@2.6:")
-            depends_on("python@3")
-            depends_on("doxygen")
+        depends_on(
+            "boost@1.38:+iostreams+filesystem+system+program_options visibility=global", type=("build", "link")
+        )
 
     def cmake_variant_subdirs(self):
-        return [("lang/c++/build", "..", [], "+cxx")]
+        return [("build/c", "lang/c", [], "+c"), ("build/c++", "lang/c++", [], "+cxx")]
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
@@ -45,8 +63,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             options = self.std_cmake_args
             options += self.cmake_args()
             options += cmake_args
+            options.append(os.path.abspath(listdir))
             with fs.working_dir(builddir, create=True):
-                options.append(os.path.abspath(listdir))
                 inspect.getmodule(self.pkg).cmake(*options)
 
     def build_subdir(self, pkg, spec, prefix, builddir, variant):
