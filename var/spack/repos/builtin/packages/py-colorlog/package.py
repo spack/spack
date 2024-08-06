@@ -17,3 +17,4 @@ class PyColorlog(PythonPackage):
     version("3.1.4", sha256="418db638c9577f37f0fae4914074f395847a728158a011be2a193ac491b9779d")
 
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@38.6.0:", when="@6.8.0:", type="build")
