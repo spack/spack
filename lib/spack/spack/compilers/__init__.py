@@ -29,9 +29,8 @@ import spack.platforms
 import spack.spec
 import spack.version
 from spack.util.environment import get_path
-from spack.util.naming import mod_to_class
 from spack.util.executable import which_string
-
+from spack.util.naming import mod_to_class
 
 IS_WINDOWS = sys.platform == "win32"
 
@@ -371,7 +370,9 @@ def compiler_from_vcenv() -> Union[spack.compiler.CompilerSpec, None]:
     if not active_compiler:
         return
     active_compiler_dir = os.path.dirname(active_compiler)
-    args = arguments_to_detect_version_fn(spack.operating_systems.WindowsOs(), [active_compiler_dir])
+    args = arguments_to_detect_version_fn(
+        spack.operating_systems.WindowsOs(), [active_compiler_dir]
+    )
     detected_compilers = detect_version(args)
     return make_compiler_list(detected_compilers)[0]
 
