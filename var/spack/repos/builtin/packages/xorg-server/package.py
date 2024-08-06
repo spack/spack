@@ -94,9 +94,11 @@ class XorgServer(AutotoolsPackage, XorgPackage):
         else:
             args.append("--disable-glx")
 
-        args.extend([
-            "--disable-dri",  # dri >= 7.8.0
-            "--disable-glamor"  # Glamor for Xorg requires gbm >= 10.2.0
-        ])
+        args.extend(
+            [
+                "--disable-dri",  # dri >= 7.8.0
+                "--disable-glamor",  # Glamor for Xorg requires gbm >= 10.2.0
+            ]
+        )
 
         return args
