@@ -38,6 +38,8 @@ class XorgServer(AutotoolsPackage, XorgPackage):
     depends_on("libdrm@2.3.0:")
     depends_on("libx11")
 
+    depends_on("gl")
+
     depends_on("dri2proto@2.8:", type="build")
     depends_on("dri3proto@1.0:", type="build")
     depends_on("glproto@1.4.17:", type="build")
@@ -80,5 +82,21 @@ class XorgServer(AutotoolsPackage, XorgPackage):
         # https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/406
         env.set("CPPFLAGS", "-fcommon")
 
+        gl_libs = self.spec["gl"].libs
+        env.set("GL_LIBS", gl_libs)
+        env.set("GL_CFLAGS", self.spec["gl"].headers.cpp_flags)
+
     def configure_args(self):
-        return ["--disable-glx", "--disable-dri", "--disable-glamor"]
+        args = []
+
+        if self.spec.satisfies("^[virtuals=gl] osmesa"):
+            args.append("--enable-glx")
+        else:
+            args.append("--disable-glx")
+
+        args.extend([
+            "--disable-dri",  # dri >= 7.8.0
+            "--disable-glamor"  # Glamor for Xorg requires gbm >= 10.2.0
+        ])
+
+        return args
