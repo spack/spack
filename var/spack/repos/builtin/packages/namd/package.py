@@ -104,6 +104,8 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
     depends_on("python", when="interface=python")
 
     conflicts("+avxtiles", when="@:2.14,3:", msg="AVXTiles algorithm requires NAMD 2.15")
+    conflicts("+rocm", when="~single_node_gpu")
+    conflicts("+rocm", when="+cuda", msg="NAMD supports only one GPU backend at a time")
 
     # https://www.ks.uiuc.edu/Research/namd/2.12/features.html
     # https://www.ks.uiuc.edu/Research/namd/2.13/features.html
@@ -297,8 +299,10 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             self._copy_arch_file("hip")
             opts.append("--with-hip")
-            opts.append("--with-single-node-hip")
             opts.extend(["--rocm-prefix", os.environ["ROCM_PATH"]])
+
+            if "+single_node_gpu" in spec:
+                opts.extend(["--with-single-node-hip"])
 
         config = Executable("./config")
 
