@@ -18,8 +18,11 @@ class Libxshmfence(AutotoolsPackage, XorgPackage):
 
     # note: url_for_version can only return a single url, no mirrors
     def url_for_version(self, version):
-        if self.spec.satisfies("@:1.3.0"):
-            return spack.url.substitute_version(self.urls[0].replace("xz", "bz2"), version)
+        url = super().url_for_version(version)
+        if version <= Version("1.3"):
+            return url.replace("xz", "bz2")
+
+        return url
 
     license("MIT")
 
