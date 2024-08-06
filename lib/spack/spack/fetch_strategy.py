@@ -988,7 +988,6 @@ class GitFetchStrategy(VCSFetchStrategy):
 
             if not spack.config.get("config:debug"):
                 clone_args.insert(1, "--quiet")
-                # sparse_args.insert(0, "--quiet")
                 checkout_args.insert(1, "--quiet")
 
             with temp_cwd():

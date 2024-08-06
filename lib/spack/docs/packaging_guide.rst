@@ -1267,7 +1267,7 @@ Git fetching supports the following parameters to ``version``:
   This feature requires ``git`` to be version ``2.25.0`` or later but is useful for
   large repositories that have separate portions that can be built independently.
   If paths provided are directories then all the subdirectories and associated files
-  will also be clones. 
+  will also be cloned. 
 
 Only one of ``tag``, ``branch``, or ``commit`` can be used at a time.
 
@@ -1369,9 +1369,10 @@ Submodules
 Sparse-Checkout
   You can supply ``git_sparse_paths`` at the package or version level to utilize git's 
   sparse-checkout feature. This will only clone the paths that are specified in the 
-  ``git_sparse_paths`` attribute for the package.  This feature allows you to only clone 
-  what you need from large repository.  Note that this is a newer feature in git and requries
-  git ``2.25.0`` or greater. If ``git_sparse_paths`` is supplied and the git version is too old
+  ``git_sparse_paths`` attribute for the package along with the files in the top level directory.
+  This feature allows you to only clone what you need from large repository.
+  Note that this is a newer feature in git and requries git ``2.25.0`` or greater.
+  If ``git_sparse_paths`` is supplied and the git version is too old
   then a warning will be issued and that package will use the standard cloning operations instead.
   ``git_sparse_paths`` should be supplied as a list of paths, a callable function for versions,
   or a more complex package attribute using the ``@property`` decorator. The return value should be
