@@ -70,8 +70,8 @@ class Parallelio(CMakePackage):
     # Allow argument mismatch in gfortran versions > 10 for mpi library compatibility
     patch("gfortran.patch", when="@:2.5.8 +fortran %gcc@10:")
 
-    @run_after("install")
     @when("platform=darwin")
+    @run_after("install")
     def darwin_install_name(self):
         # The shared library is not installed correctly on Darwin; fix this
         fix_darwin_install_name(self.prefix.lib)
