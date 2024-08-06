@@ -121,6 +121,29 @@ __all__ = [
     "SpecDeprecatedError",
 ]
 
+
+SPEC_FORMAT_RE = re.compile(
+    r"(?:"  # this is one big or, with matches ordered by priority
+    # OPTION 1: escaped character (needs to be first to catch opening \{)
+    # Note that an unterminated \ at the end of a string is left untouched
+    r"(?:\\(.))" r"|"  # or
+    # OPTION 2: an actual format string
+    r"{"  # non-escaped open brace {
+    r"([%@/]|[\w ][\w -]*=)?"  # optional sigil (or identifier or space) to print sigil in color
+    r"(?:\^([^}\.]+)\.)?"  # optional ^depname. (to get attr from dependency)
+    # after the sigil or depname, we can have a hash expression or another attribute
+    r"(?:"  # one of
+    r"(hash\b)(?:\:(\d+))?"  # hash followed by :<optional length>
+    r"|"  # or
+    r"([^}]*)"  # another attribute to format
+    r")"  # end one of
+    r"(})?"  # finish format string with non-escaped close brace }, or missing if not present
+    r"|"
+    # OPTION 3: mismatched close brace (option 2 would consume a matched open brace)
+    r"(})" r")",  # brace
+    re.IGNORECASE,
+)
+
 #: Valid pattern for an identifier in Spack
 
 IDENTIFIER_RE = r"\w[\w-]*"
@@ -4377,23 +4400,37 @@ class Spec:
                 f = COLOR_FORMATS[c] + f + "@."
             clr.cwrite(f, stream=out, color=color)
 
-        def write_attribute(spec, attribute, color):
-            attribute = attribute.lower()
+        def format_attribute(match_object: Match) -> str:
+            (
+                esc,
+                sig,
+                dep,
+                hash,
+                hash_len,
+                attribute,
+                close_brace,
+                unmatched_close_brace,
+            ) = match_object.groups()
+            if esc:
+                return esc
+            elif unmatched_close_brace:
+                raise SpecFormatStringError(f"Unmatched close brace: '{format_string}'")
+            elif not close_brace:
+                raise SpecFormatStringError(f"Missing close brace: '{format_string}'")
 
-            sig = ""
-            if attribute.startswith(("@", "%", "/")):
-                # color sigils that are inside braces
-                sig = attribute[0]
-                attribute = attribute[1:]
-            elif attribute.startswith("arch="):
-                sig = " arch="  # include space as separator
-                attribute = attribute[5:]
+            current = self if dep is None else self[dep]
 
-            current = spec
-            if attribute.startswith("^"):
-                attribute = attribute[1:]
-                dep, attribute = attribute.split(".", 1)
-                current = self[dep]
+            # Hash attributes can return early.
+            # NOTE: we currently treat abstract_hash like an attribute and ignore
+            # any length associated with it. We may want to change that.
+            if hash:
+                if sig and sig != "/":
+                    raise SpecFormatSigilError(sig, "DAG hashes", hash)
+                try:
+                    length = int(hash_len) if hash_len else None
+                except ValueError:
+                    raise SpecFormatStringError(f"Invalid hash length: '{hash_len}'")
+                return safe_color(sig or "", current.dag_hash(length), HASH_COLOR)
 
             if attribute == "":
                 raise SpecFormatStringError("Format string attributes must be non-empty")

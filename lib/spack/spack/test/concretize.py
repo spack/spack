@@ -523,7 +523,6 @@ class TestConcretize:
         assert spec.satisfies("~foo") and not spec.satisfies("^dependency-foo-bar~foo")
         assert spec.satisfies("+bar") and spec.satisfies("^dependency-foo-bar+bar")
 
-
     @pytest.mark.only_clingo("Original concretizer is allowed to forego variant propagation")
     def test_concretize_propagate_multivalue_variant(self):
         """Test that multivalue variants are propagating the specified value(s)
@@ -549,7 +548,6 @@ class TestConcretize:
         assert spec.satisfies("^mpich+debug")
         assert not spec.satisfies("callpath+debug")
         assert not spec.satisfies("^dyninst+debug")
-
 
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
