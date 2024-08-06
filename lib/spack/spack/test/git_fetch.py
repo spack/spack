@@ -419,4 +419,3 @@ def test_git_sparse_paths_partial_clone(
 
         # fixture file is in the sparse-path expansion tree
         assert os.path.isfile(t.file)
-

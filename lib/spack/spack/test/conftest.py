@@ -1429,7 +1429,7 @@ def mock_git_repository(git, tmpdir_factory):
         for f in dir_files:
             repodir.ensure(f, file=True)
             git("add", f)
-        
+
         git("-c", "commit.gpgsign=false", "commit", "-m", "many_dirs add files")
 
     # Map of version -> bunch. Each bunch includes; all the args
@@ -1451,7 +1451,11 @@ def mock_git_repository(git, tmpdir_factory):
         "default-no-per-version-git": Bunch(
             revision=default_branch, file=r0_file, args={"branch": default_branch}
         ),
-        "many-directories": Bunch(revision=multiple_directories_branch, file=dir_files[0], args={"git": url, "branch": multiple_directories_branch}),
+        "many-directories": Bunch(
+            revision=multiple_directories_branch,
+            file=dir_files[0],
+            args={"git": url, "branch": multiple_directories_branch},
+        ),
     }
 
     t = Bunch(
