@@ -17,6 +17,21 @@ class Jube(PythonPackage):
     license("GPL-3.0-or-later")
 
     version(
+        "2.7.1",
+        sha256="b55cb83f9690d363360cb45197d5741fcadbd6ec6ea3422abe2f4816c8f328c2",
+        extension="tar.gz",
+    )
+    version(
+        "2.7.0",
+        sha256="31bba50c40547db6dc777d9766babb4786bb8539e988fd5de962602593304d26",
+        extension="tar.gz",
+    )
+    version(
+        "2.6.2",
+        sha256="44fd0dd74500cb2537af52850d5742e5bc09f0379036bad83984a69bd7396151",
+        extension="tar.gz",
+    )
+    version(
         "2.6.1",
         sha256="348ebeb4db0ea56889a5d13bf49e394fccc0992f620e8c0c61c40185db13ad64",
         extension="tar.gz",
