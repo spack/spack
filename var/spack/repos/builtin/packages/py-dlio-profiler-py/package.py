@@ -15,13 +15,27 @@ class PyDlioProfilerPy(PythonPackage):
 
     license("MIT")
 
-    version("0.0.7", tag="v0.0.7", commit="e47ec476b58e14157b807cbadb4187bd4fe811d9")
-    version("0.0.6", tag="v0.0.6", commit="3be111c973883387418ad96f63a18de63555c540")
-    version("0.0.5", tag="v0.0.5", commit="08f1a43c67c8dbb458d547020674c86118c9742e")
-    version("0.0.4", tag="v0.0.4", commit="f9ba207f4c3e3789eb7759653a94013e6b76c91c")
-    version("0.0.3", tag="v0.0.3", commit="531f4475cf03312e121c78bf644445882b51ad57")
-    version("0.0.2", tag="v0.0.2", commit="b72144abf1499e03d1db87ef51e780633e9e9533")
-    version("0.0.1", tag="v0.0.1", commit="28affe716211315dd6936ddc8e25ce6c43cdf491")
+    version(
+        "0.0.7", tag="v0.0.7", commit="e47ec476b58e14157b807cbadb4187bd4fe811d9", deprecated=True
+    )
+    version(
+        "0.0.6", tag="v0.0.6", commit="3be111c973883387418ad96f63a18de63555c540", deprecated=True
+    )
+    version(
+        "0.0.5", tag="v0.0.5", commit="08f1a43c67c8dbb458d547020674c86118c9742e", deprecated=True
+    )
+    version(
+        "0.0.4", tag="v0.0.4", commit="f9ba207f4c3e3789eb7759653a94013e6b76c91c", deprecated=True
+    )
+    version(
+        "0.0.3", tag="v0.0.3", commit="531f4475cf03312e121c78bf644445882b51ad57", deprecated=True
+    )
+    version(
+        "0.0.2", tag="v0.0.2", commit="b72144abf1499e03d1db87ef51e780633e9e9533", deprecated=True
+    )
+    version(
+        "0.0.1", tag="v0.0.1", commit="28affe716211315dd6936ddc8e25ce6c43cdf491", deprecated=True
+    )
 
     depends_on("cpp-logger@0.0.1", when="@:0.0.1")
     depends_on("cpp-logger@0.0.2", when="@0.0.2")
