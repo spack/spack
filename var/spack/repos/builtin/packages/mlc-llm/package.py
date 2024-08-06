@@ -33,7 +33,7 @@ class MlcLlm(CMakePackage, CudaPackage):
         "flash-infer",
         default=False,
         description="Use FlashInfer? (need CUDA w/ compute capability 80;86;89;90)",
-        when="+cuda"
+        when="+cuda",
     )
     conflicts("cuda_arch=none", when="+flash-infer")
 
