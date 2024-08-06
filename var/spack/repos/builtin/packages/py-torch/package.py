@@ -338,8 +338,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # Fixes for ROCm spack build
     patch(
-        "https://github.com/ROCm/pytorch/commit/b4ade760246c824c9433255c82536cfbb3dedc75.patch?full_index=1",
-        sha256="f2f80683c2be1c82dfa505f32ac61805f120ec46ad93eaa695b7f1d439f6dd61",
+        "https://github.com/ROCm/pytorch/commit/bac5378c734e74b5d58b8e82f9dbaa1454cfa5bd.patch?full_index=1",
+        sha256="f0a64e6347e67ec84286994f1ac5e77dba7fa6992c5f083e70a4e2765a86c0c6",
         when="@2.2 +rocm",
     )
 
