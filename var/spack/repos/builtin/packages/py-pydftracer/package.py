@@ -17,6 +17,7 @@ class PyPydftracer(PythonPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("1.0.3", tag="v1.0.3", commit="856de0b958a22081d80a9a25bea3f74e2759d9ee")
     version("1.0.2", tag="v1.0.2", commit="8a15f09ff54a909605eda0070689c0b99401db20")
     version("1.0.1", tag="v1.0.1", commit="dc1ce44042e669e6da495f906ca5f8b155c9f155")
     version("1.0.0", tag="v1.0.0", commit="b6df57d81ffb043b468e2bd3e8df9959fdb4af53")
