@@ -372,8 +372,7 @@ class PackageTest:
             builder.pkg.test_suite.current_test_spec = builder.pkg.spec
             builder.pkg.test_suite.current_base_spec = builder.pkg.spec
 
-            # TODO (post-34236): "test"->"test_" once remove deprecated methods
-            have_tests = any(name.startswith("test") for name in method_names)
+            have_tests = any(name.startswith("test_") for name in method_names)
             if have_tests:
                 copy_test_files(builder.pkg, builder.pkg.spec)
 
@@ -477,16 +476,9 @@ class PackageTest:
 def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbose: bool = False):
     wdir = "." if work_dir is None else work_dir
     tester = pkg.tester
-    # TODO (post-34236): "test"->"test_" once remove deprecated methods
     assert test_name and test_name.startswith(
-        "test"
-    ), f"Test name must start with 'test' but {test_name} was provided"
-
-    if test_name == "test":
-        tty.warn(
-            "{}: the 'test' method is deprecated. Convert stand-alone "
-            "test(s) to methods with names starting 'test_'.".format(pkg.name)
-        )
+        "test_"
+    ), f"Test name must start with 'test_' but {test_name} was provided"
 
     title = "test: {}: {}".format(test_name, purpose or "unspecified purpose")
     with fs.working_dir(wdir, create=True):
@@ -657,8 +649,7 @@ def test_functions(
     for clss in classes:
         methods = inspect.getmembers(clss, predicate=lambda x: inspect.isfunction(x))
         for name, test_fn in methods:
-            # TODO (post-34236): "test"->"test_" once remove deprecated methods
-            if not name.startswith("test"):
+            if not name.startswith("test_"):
                 continue
 
             # TODO (post-34236): Could remove empty method check once remove

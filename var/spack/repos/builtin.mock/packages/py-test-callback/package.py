@@ -13,17 +13,10 @@ class PyTestCallback(mp.Python):
     homepage = "http://www.example.com"
     url = "http://www.example.com/test-callback-1.0.tar.gz"
 
-    # TODO (post-34236): "test" -> "test_callback" once remove "test" support
-    install_time_test_callbacks = ["test"]
+    install_time_test_callbacks = ["test_callback"]
 
     version("1.0", "00000000000000000000000000000110")
     version("2.0", "00000000000000000000000000000120")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-
-    # TODO (post-34236): "test" -> "test_callback" once remove "test" support
-    def test(self):
-        super().test()
-
-        print("PyTestCallback test")
