@@ -16,12 +16,6 @@ class PyDlioProfilerPy(PythonPackage):
     license("MIT")
 
     version(
-        "0.0.7", tag="v0.0.7", commit="e47ec476b58e14157b807cbadb4187bd4fe811d9", deprecated=True
-    )
-    version(
-        "0.0.6", tag="v0.0.6", commit="3be111c973883387418ad96f63a18de63555c540", deprecated=True
-    )
-    version(
         "0.0.5", tag="v0.0.5", commit="08f1a43c67c8dbb458d547020674c86118c9742e", deprecated=True
     )
     version(
