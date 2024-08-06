@@ -174,6 +174,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
 
         if self.spec.satisfies("@2020.10.00") or "+mpi" not in self.spec:
             raise SkipTest("Package must be installed with +mpi and version @2021.05.01 or later")
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir, "examples", "build")
         with working_dir(test_dir, create=True):
             cmake = self.spec["cmake"].command
 
