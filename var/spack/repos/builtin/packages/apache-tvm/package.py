@@ -29,10 +29,7 @@ class ApacheTvm(CMakePackage, CudaPackage):
     depends_on("llvm@4.0:", type="build", when="+llvm")
 
     def cmake_args(self):
-        args = []
-        define = self.define
-        if self.spec.satisfies("+cuda"):
-            args.append(define("USE_CUDA", True))
-        if self.spec.satisfies("+llvm"):
-            args.append(define("USE_LLVM", True))
-        return args
+        return [
+            self.define_from_variant("USE_CUDA", "cuda"),
+            self.define_from_variant("USE_LLVM", "llvm")
+        ]
