@@ -18,7 +18,7 @@ class Jube(PythonPackage):
 
     version(
         "2.7.1",
-        sha256="b55cb83f9690d363360cb45197d5741fcadbd6ec6ea3422abe2f4816c8f328c2",
+        sha256="fe8b505a8bf224d785df665af134a1e69063d34d1a7214700d8c7325fef9ecfc",
         extension="tar.gz",
     )
     version(
