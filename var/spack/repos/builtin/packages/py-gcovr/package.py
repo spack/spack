@@ -30,4 +30,4 @@ class PyGcovr(PythonPackage):
     depends_on("py-pygments", when="@5:", type=("build", "run"))
     depends_on("py-pygments@2.13.0:", when="@7.2:", type=("build", "run"))
     depends_on("py-colorlog", when="@7.2:", type=("build", "run"))
-    depends_on("py-tomli", when="@7.2:", type=("build", "run"))
+    depends_on("py-tomli@1.1:", when="@7.2: ^python@:3.10", type=("build", "run"))
