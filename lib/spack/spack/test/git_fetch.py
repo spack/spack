@@ -390,3 +390,29 @@ def test_gitsubmodules_falsey(
         assert not os.path.isfile(file_path)
         file_path = os.path.join(s.package.stage.source_path, "third_party/submodule1/r0_file_1")
         assert not os.path.isfile(file_path)
+
+
+@pytest.mark.disable_clean_stage_check
+def test_git_sparse_paths_partial_clone(
+    mock_git_repository, default_mock_concretization, mutable_mock_repo, monkeypatch
+):
+    """
+    Test partial clone of repository when using git_sparse_paths property
+    TODO
+    sparse checkout includes the top level directories files so need to add
+    a directory tree to really test it
+    """
+    type_of_test = "branch"
+    sparse_paths = ["branch_file"]
+    t = mock_git_repository.checks[type_of_test]
+    args = copy.copy(t.args)
+    args["git_sparse_paths"] = sparse_paths
+    s = default_mock_concretization("git-test")
+    monkeypatch.setitem(s.package.versions, Version("git"), args)
+    s.package.do_stage()
+    with working_dir(s.package.stage.source_path):
+        for p in sparse_paths:
+            file_path = os.path.join(s.package.stage.source_path, p)
+            assert os.path.isfile(file_path)
+        file_path = os.path.join(s.package.stage.source_path, "r0_file")
+        # assert not os.path.isfile(file_path)

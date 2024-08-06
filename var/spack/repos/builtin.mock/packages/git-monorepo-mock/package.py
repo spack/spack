@@ -11,20 +11,9 @@ class GitMonorepoMock(Package):
 
     homepage = "http://www.git-fetch-example.com"
     # git='to-be-filled-in-by-test'
-    git = "https://a.com/really/big/project.git"
+    git = None
 
     version("1.0", tag="v1.0")
-    version("1.1", tag="v1.1")
-    version("1.2", tag="1.2")  # not a typo
-    version("2.0", tag="v2.0")
+    version("git", git=None)
 
     git_sparse_paths = ["foo", "bar", "bing/bang"]
-
-    def install(self, spec, prefix):
-        # It is assumed for the test which installs this package, that it will
-        # be using the earliest commit, which is contained in the range @:0
-        assert spec.satisfies("@:0")
-        mkdir(prefix.bin)
-
-        # This will only exist for some second commit
-        install("file.txt", prefix.bin)

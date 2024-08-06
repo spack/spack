@@ -326,6 +326,7 @@ def test_package_can_have_sparse_checkout_properties(mock_packages, mock_fetch, 
     spec = Spec("git-monorepo-mock")
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     assert hasattr(pkg_cls, "git_sparse_paths")
+    setattr(pkg_cls, "git", "https://a/really.com/big/repo.git")
 
     fetcher = spack.fetch_strategy.for_package_version(pkg_cls(spec), "1.0")
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)

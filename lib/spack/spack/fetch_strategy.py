@@ -957,7 +957,9 @@ class GitFetchStrategy(VCSFetchStrategy):
             # default to depth=2 to allow for retention of some git properties
             depth = kwargs.get("depth", 2)
             needs_fetch = branch or tag
-            git_ref = branch or tag
+            git_ref = branch or tag or commit
+
+            assert git_ref
 
             clone_args = ["clone"]
 
@@ -986,7 +988,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
             if not spack.config.get("config:debug"):
                 clone_args.insert(1, "--quiet")
-                sparse_args.insert(1, "--quiet")
+                # sparse_args.insert(0, "--quiet")
                 checkout_args.insert(1, "--quiet")
 
             with temp_cwd():
