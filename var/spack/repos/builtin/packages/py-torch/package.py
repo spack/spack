@@ -201,6 +201,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("gloo@2020-09-18", when="@1.7:1.8+gloo")
     depends_on("gloo@2020-03-17", when="@1.6+gloo")
     depends_on("gloo+cuda", when="@1.6:+gloo+cuda")
+    depends_on("gloo+libuv", when="@1.6: platform=darwin")
     depends_on("nccl", when="+nccl+cuda")
     # https://github.com/pytorch/pytorch/issues/60331
     # depends_on("onnx@1.16.0", when="@2.3:+onnx_ml")
