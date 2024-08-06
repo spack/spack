@@ -612,6 +612,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
         return cmake_defs
 
+    # TODO: constrain this to @:0.3.27 once @0.3.28 is released released and confirmed fixed
+    # https://github.com/OpenMathLib/OpenBLAS/pull/4840
     @run_after("install", when="platform=darwin")
     def darwin_install_name(self):
         # The shared library is not installed correctly on Darwin; fix this
