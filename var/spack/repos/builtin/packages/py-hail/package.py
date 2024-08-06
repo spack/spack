@@ -137,6 +137,7 @@ class PyHail(MakefilePackage):
         # which will not be available in a spack cache. Since we know it from
         # the package, we can inject it in the failure and move forward.
         revision = self.hail_revision
+        version = self.hail_pip_version
 
         filter_file(
             r'\$\(error "git rev-parse HEAD" failed to produce output\)',
@@ -188,10 +189,6 @@ class PyHail(MakefilePackage):
             # HAIL build doesn't find lz4: https://discuss.hail.is/t/ld-pruning-repeated-errors/1838/14
             flags.append(f"-I{self.spec['lz4'].prefix.include}")
         return (flags, None, None)
-
-    def setup_build_environment(self, env):
-        # HAIL build doesn't find lz4: https://discuss.hail.is/t/ld-pruning-repeated-errors/1838/14
-        env.append_flags("CXXFLAGS", f"-I{self.spec['lz4'].prefix.include}")
 
     @property
     def build_targets(self):
