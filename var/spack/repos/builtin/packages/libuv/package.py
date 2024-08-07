@@ -72,12 +72,26 @@ class Libuv(CMakePackage, AutotoolsPackage):
 
     def url_for_version(self, version):
         if self.spec.satisfies("@:1.43") or self.spec.satisfies("build_system=cmake"):
-            # '-dist' does not include CMake files
+            # This version includes CMake files unlike the '-dist' source distribution below
             url = "https://dist.libuv.org/dist/v{0}/libuv-v{0}.tar.gz"
         else:
             # From 1.44 on, the `-dist` download includes a configure script
             url = "https://dist.libuv.org/dist/v{0}/libuv-v{0}-dist.tar.gz"
         return url.format(version, version)
+
+
+    #Windows needs a CMake build, but the cmake-enabled sources do not have a pre-generated configure
+    # script to enable the autotools build, so: (a) pull different sources if you are on Windows
+    # and (b) make sure cmake build is not chosen on Linux (because Linux does not
+    # download the cmake-enabled source).
+
+    # new libuv versions should only use CMake to prevent the scenario
+    # described above
+    build_system(
+        conditional("cmake", when="@1.48: platform=windows"),
+        "autotools",
+        default="autotools"
+    )
 
     with when("build_system=autotools"):
         depends_on("automake", type="build", when="@:1.43.0")
@@ -88,22 +102,6 @@ class Libuv(CMakePackage, AutotoolsPackage):
     with when("build_system=cmake"):
         depends_on("cmake+ownlibs")
 
-    # CMake is Windows only for now due to the constraints
-    # placed by the libuv-dist source distribution.
-    # The '-dist' source distribution does not have CMake files.
-    # To build with CMake we need to use the standard distribution,
-    # however this has a different hash per version and the version
-    # directive does not support spec conditions (when).
-    # This means we need a version directive for each build system but as
-    # conditions over specs are not an option, we are limited to python
-    # conditionals, so we vary over platform.
-    # Allowing multiple platforms to use CMake would result in either autotools
-    # being forced to use the non dist source distribution or in a hash conflict
-
-    # new libuv versions should only use CMake to prevent the scenario
-    # described above
-
-    build_system(conditional("cmake", when="@1.48: platform=windows"), "autotools")
     conflicts(
         "%gcc@:4.8",
         when="@1.45:",
