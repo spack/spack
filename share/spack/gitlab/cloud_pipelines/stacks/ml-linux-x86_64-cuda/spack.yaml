@@ -12,8 +12,6 @@ spack:
       require: ~cuda
     mpi:
       require: openmpi
-    py-torch:
-      require: ~flash_attention
 
   specs:
     # Horovod
