@@ -12,7 +12,7 @@ class Odc(CMakePackage):
     homepage = "https://github.com/ecmwf/odc"
     url = "https://github.com/ecmwf/odc/archive/refs/tags/1.3.0.tar.gz"
 
-    maintainers("skosukhin")
+    maintainers("skosukhin", "climbfuji")
 
     license("Apache-2.0")
 
