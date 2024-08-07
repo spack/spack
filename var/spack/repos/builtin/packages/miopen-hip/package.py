@@ -112,6 +112,8 @@ class MiopenHip(CMakePackage):
     def setup_build_environment(self, env):
         lib_dir = self.spec["zlib-api"].libs.directories[0]
         env.prepend_path("LIBRARY_PATH", lib_dir)
+        if self.spec.satisfies("%gcc@8.0:8.9") and self.spec.satisfies("@6.1:"):
+            env.append_flags("LDFLAGS", "-lstdc++fs")
 
     def get_bitcode_dir(self):
         return self.spec["llvm-amdgpu"].prefix.amdgcn.bitcode

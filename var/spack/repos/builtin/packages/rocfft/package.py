@@ -104,6 +104,8 @@ class Rocfft(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
+        if self.spec.satisfies("%gcc@8.0:8.9") and self.spec.satisfies("@6.1:"):
+            env.append_flags("LDFLAGS", "-lstdc++fs")
 
     @run_after("build")
     @on_package_attributes(run_tests=True)
