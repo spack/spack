@@ -37,8 +37,10 @@ class MsrSafe(MakefilePackage):
 
     license("GPL-2.0-only", checked_by="fleshling")
 
-    version("diapason", md5="61184ea72d900474772ee3239c3118ea",
-        url="https://github.com/rountree/msr-safe/archive/refs/heads/diapason.zip")
+    # version("diapason", md5="61184ea72d900474772ee3239c3118ea",
+        # url="https://github.com/rountree/msr-safe/archive/refs/heads/diapason.zip")
+    version("linux-6.9.9-cleanup", md5="1201214a0260a258f0906e9c166bc19d",
+        url="https://github.com/rountree/msr-safe/archive/refs/heads/linux-6.9.9-cleanup.zip")
 
     version("1.7.0", sha256="bdf4f96bde92a23dc3a98716611ebbe7d302005305adf6a368cb25da9c8a609a")
     version("1.6.0", sha256="defe9d12e2cdbcb1a9aa29bb09376d4156c3dbbeb7afc33315ca4b0b6859f5bb")
@@ -58,7 +60,7 @@ class MsrSafe(MakefilePackage):
         # makefile.filter("CC = .*", "CC = cc")
         pass
 
-    # Should be "make -C /full/path/to/depends/on/package/source M=/full/path/to/package/source modules"
+    # Should be "make -C /full/path/to/dependents/package/source M=/full/path/to/package/source modules"
     @property
     def build_targets(self):
         return [
@@ -67,3 +69,11 @@ class MsrSafe(MakefilePackage):
             f"M={self.build_directory}",
             "modules"
         ]
+
+    @property
+    def install_targets(self):
+        return [
+            f"DESTDIR={self.prefix}",
+            f"spack-install"
+        ]
+
