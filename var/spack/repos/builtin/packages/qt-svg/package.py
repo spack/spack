@@ -49,7 +49,3 @@ class QtSvg(QtPackage):
     def cmake_args(self):
         args = super().cmake_args() + []
         return args
-
-    def setup_run_environment(self, env):
-        # to make plugins from SVG module to base, for e.g. icon loading
-        env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
