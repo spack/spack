@@ -58,7 +58,7 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
         pyyaml = join_path(spec["py-pyyaml"].prefix.lib, f"python{python_version}")
 
         openmp_flag = []
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             openmp_flag.append(self.compiler.openmp_flag)
 
         args = [
@@ -71,12 +71,12 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
         if spec.satisfies("+shared"):
             args.append("--enable-dynamic-libraries")
 
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             args.append("--with-openmp")
         else:
             args.append("--without-openmp")
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             args.append(f"CC={spec['mpi'].mpicc}")
             args.append(f"CXX={spec['mpi'].mpicxx}")
             args.append(f"FC={spec['mpi'].mpifc}")
@@ -85,7 +85,7 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
         else:
             args.append("--disable-mpi")
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             args.append("--enable-opencl")
             args.append(f"--with-ocl-path={spec['cuda'].prefix}")
             args.append("--enable-cuda-gpu")

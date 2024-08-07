@@ -79,30 +79,30 @@ class Alpaka(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
         args = []
-        if "backend=serial" in spec:
+        if spec.satisfies("backend=serial"):
             args.append(self.define("ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE", True))
-        if "backend=threads" in self.spec:
+        if self.spec.satisfies("backend=threads"):
             args.append(self.define("ALPAKA_ACC_CPU_B_SEQ_T_THREADS_ENABLE", True))
-        if "backend=fiber" in spec:
+        if spec.satisfies("backend=fiber"):
             args.append(self.define("ALPAKA_ACC_CPU_B_SEQ_T_FIBERS_ENABLE", True))
-        if "backend=tbb" in spec:
+        if spec.satisfies("backend=tbb"):
             args.append(self.define("ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLE", True))
-        if "backend=omp2_gridblock" in spec:
+        if spec.satisfies("backend=omp2_gridblock"):
             args.append(self.define("ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE", True))
-        if "backend=omp2_blockthread" in spec:
+        if spec.satisfies("backend=omp2_blockthread"):
             args.append(self.define("ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE", True))
-        if "backend=omp5" in spec:
+        if spec.satisfies("backend=omp5"):
             args.append(self.define("ALPAKA_ACC_ANY_BT_OMP5_ENABLE", True))
-        if "backend=oacc" in spec:
+        if spec.satisfies("backend=oacc"):
             args.append(self.define("ALPAKA_ACC_ANY_BT_OACC_ENABLE", True))
-        if "backend=cuda" in spec:
+        if spec.satisfies("backend=cuda"):
             args.append(self.define("ALPAKA_ACC_GPU_CUDA_ENABLE", True))
-        if "backend=cuda_only" in spec:
+        if spec.satisfies("backend=cuda_only"):
             args.append(self.define("ALPAKA_ACC_GPU_CUDA_ENABLE", True))
             args.append(self.define("ALPAKA_ACC_GPU_CUDA_ONLY_MODE", True))
-        if "backend=hip" in spec:
+        if spec.satisfies("backend=hip"):
             args.append(self.define("ALPAKA_ACC_GPU_HIP_ENABLE", True))
-        if "backend=hip_only" in spec:
+        if spec.satisfies("backend=hip_only"):
             args.append(self.define("ALPAKA_ACC_GPU_HIP_ENABLE", True))
             args.append(self.define("ALPAKA_ACC_GPU_HIP_ONLY_MODE", True))
 
