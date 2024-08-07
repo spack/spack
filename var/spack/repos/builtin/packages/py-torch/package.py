@@ -107,6 +107,12 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # cause problems with other packages that require newer versions of protobuf
     # and py-protobuf --> provide an option to use the internal/vendored protobuf.
     variant("custom-protobuf", default=False, description="Use vendored protobuf")
+    # Flash attention has very high memory requirements that may cause the build to fail
+    # https://github.com/pytorch/pytorch/issues/111526
+    # https://github.com/pytorch/pytorch/issues/124018
+    desc = "Build the flash_attention kernel for scaled dot product attention"
+    variant("flash_attention", default=True, description=desc, when="@1.13: +cuda")
+    variant("flash_attention", default=True, description=desc, when="@1.13: +rocm")
 
     conflicts("+cuda+rocm")
     conflicts("+tensorpipe", when="+rocm ^hip@:5.1", msg="TensorPipe not supported until ROCm 5.2")
@@ -567,6 +573,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         enable_or_disable("metal")
         enable_or_disable("mps")
         enable_or_disable("breakpad")
+        enable_or_disable("flash_attention")
 
         enable_or_disable("nccl")
         if "+cuda+nccl" in self.spec:
