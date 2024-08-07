@@ -91,15 +91,11 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     variant("valgrind", default=True, description="Use Valgrind", when="@1.8: platform=linux")
     variant("xnnpack", default=True, description="Use XNNPACK", when="@1.5:")
     variant("mkldnn", default=True, description="Use MKLDNN")
-    variant("distributed", default=not is_darwin, description="Use distributed")
-    variant("mpi", default=not is_darwin, description="Use MPI for Caffe2", when="+distributed")
-    variant("gloo", default=not is_darwin, description="Use Gloo", when="+distributed")
-    variant(
-        "tensorpipe",
-        default=not is_darwin,
-        description="Use TensorPipe",
-        when="@1.6: +distributed",
-    )
+    variant("distributed", default=True, description="Use distributed")
+    variant("mpi", default=True, description="Use MPI for Caffe2", when="+distributed")
+    variant("ucc", default=False, description="Use UCC", when="@1.13: +distributed")
+    variant("gloo", default=True, description="Use Gloo", when="+distributed")
+    variant("tensorpipe", default=True, description="Use TensorPipe", when="@1.6: +distributed")
     variant("onnx_ml", default=True, description="Enable traditional ONNX ML API", when="@1.5:")
     variant(
         "breakpad",
@@ -205,6 +201,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("gloo@2020-09-18", when="@1.7:1.8+gloo")
     depends_on("gloo@2020-03-17", when="@1.6+gloo")
     depends_on("gloo+cuda", when="@1.6:+gloo+cuda")
+    depends_on("gloo+libuv", when="@1.6: platform=darwin")
     depends_on("nccl", when="+nccl+cuda")
     # https://github.com/pytorch/pytorch/issues/60331
     # depends_on("onnx@1.16.0", when="@2.3:+onnx_ml")
@@ -278,6 +275,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("miopen-hip")
         depends_on("rocminfo")
     depends_on("mpi", when="+mpi")
+    depends_on("ucc", when="+ucc")
+    depends_on("ucx", when="+ucc")
     depends_on("mkl", when="+mkldnn")
 
     # Test dependencies
@@ -591,6 +590,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         enable_or_disable("mkldnn")
         enable_or_disable("distributed")
         enable_or_disable("mpi")
+        enable_or_disable("ucc")
         # cmake/Modules/FindGloo.cmake
         enable_or_disable("gloo")
         enable_or_disable("tensorpipe")
@@ -661,11 +661,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         env.set("USE_SYSTEM_PTHREADPOOL", "ON")
         env.set("USE_SYSTEM_PYBIND11", "ON")
         env.set("USE_SYSTEM_SLEEF", "ON")
-        # env.set("USE_SYSTEM_TBB", "ON")
-        # env.set("USE_SYSTEM_UCC", "ON")
+        env.set("USE_SYSTEM_UCC", "ON")
         # https://github.com/pytorch/pytorch/issues/60332
         # env.set("USE_SYSTEM_XNNPACK", "ON")
-        # env.set("USE_SYSTEM_ZSTD", "ON")
 
         if self.spec.satisfies("+custom-protobuf"):
             env.set("BUILD_CUSTOM_PROTOBUF", "ON")
