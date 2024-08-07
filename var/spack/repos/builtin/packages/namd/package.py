@@ -106,6 +106,7 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
     conflicts("+avxtiles", when="@:2.14,3:", msg="AVXTiles algorithm requires NAMD 2.15")
     conflicts("+rocm", when="~single_node_gpu")
     conflicts("+rocm", when="+cuda", msg="NAMD supports only one GPU backend at a time")
+    conflicts("+single_node_gpu", when="~cuda~rocm")
 
     # https://www.ks.uiuc.edu/Research/namd/2.12/features.html
     # https://www.ks.uiuc.edu/Research/namd/2.13/features.html
