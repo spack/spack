@@ -51,6 +51,10 @@ class Hip(CMakePackage):
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
     conflicts("~rocm +asan", msg="ROCm must be enabled for asan")
 
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
+
     depends_on("cuda", when="+cuda")
 
     depends_on("cmake@3.16.8:", type="build")

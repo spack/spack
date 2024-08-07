@@ -62,6 +62,10 @@ class Rpp(CMakePackage):
     )
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
+
     patch("0001-include-half-openmp-through-spack-package.patch", when="@:5.7")
     patch("0002-declare-handle-in-header.patch")
     patch("0003-include-half-through-spack-package.patch", when="@6.0:")
@@ -163,8 +167,8 @@ class Rpp(CMakePackage):
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("+asan"):
-            env.set("CC", self.spec["llvm-amdgpu"].prefix + "/bin/clang")
-            env.set("CXX", self.spec["llvm-amdgpu"].prefix + "/bin/clang++")
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
             env.set("ASAN_OPTIONS", "detect_leaks=0")
             env.set("CFLAGS", "-fsanitize=address -shared-libasan")
             env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")

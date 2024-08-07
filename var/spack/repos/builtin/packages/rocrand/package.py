@@ -56,6 +56,10 @@ class Rocrand(CMakePackage):
     variant("hiprand", default=True, when="@5.1.0:", description="Build the hiprand library")
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
+
     depends_on("cmake@3.10.2:", type="build")
 
     depends_on("googletest@1.10.0:", type="test")

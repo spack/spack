@@ -34,6 +34,10 @@ class Rocsparse(CMakePackage):
     variant("test", default=False, description="Build rocsparse-test client")
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
+
     license("MIT")
     version("6.1.2", sha256="e8989c28085275e7c044b19fd2bc86d8493ce6a1b8545126f787722c535fe6eb")
     version("6.1.1", sha256="9ac2bf84962cfdf24e4fa68e6f1d91ffdad5d5a5287ecdaddf331e6073ba57b3")

@@ -34,6 +34,10 @@ class RocmCore(CMakePackage):
 
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
+
     depends_on("cxx", type="build")  # generated
 
     for ver in ["6.1.0", "6.1.1", "6.1.2"]:

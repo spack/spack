@@ -55,6 +55,10 @@ class Mivisionx(CMakePackage):
     variant("add_tests", default=False, description="add tests and samples folder")
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
+
     patch("0001-add-half-include-path.patch", when="@5.5")
     patch("0001-add-half-include-path-5.6.patch", when="@5.6:")
     patch("0002-add-half-include-path-for-tests.patch", when="@5.5:6.0 +add_tests")

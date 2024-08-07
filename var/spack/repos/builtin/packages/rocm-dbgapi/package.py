@@ -44,6 +44,10 @@ class RocmDbgapi(CMakePackage):
 
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
+
     depends_on("cxx", type="build")  # generated
     depends_on("cmake@3:", type="build")
     depends_on("hwdata", when="@5.5.0:")

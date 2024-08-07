@@ -55,6 +55,10 @@ class Rocblas(CMakePackage):
     variant("tensile", default=True, description="Use Tensile as a backend")
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
+
     # https://reviews.llvm.org/D124866
     # https://github.com/ROCm/HIP/issues/2678
     # https://github.com/ROCm/hipamd/blob/rocm-5.2.x/include/hip/amd_detail/host_defines.h#L50
