@@ -561,6 +561,11 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("CUDNN_INCLUDE_DIR", self.spec["cudnn"].prefix.include)
             env.set("CUDNN_LIBRARY", self.spec["cudnn"].libs[0])
 
+        # Flash attention has very high memory requirements that may cause the build to fail
+        # https://github.com/pytorch/pytorch/issues/111526
+        # https://github.com/pytorch/pytorch/issues/124018
+        env.set("USE_FLASH_ATTENTION", "OFF")
+
         enable_or_disable("fbgemm")
         enable_or_disable("kineto")
         enable_or_disable("magma")
