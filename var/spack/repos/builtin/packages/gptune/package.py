@@ -131,10 +131,8 @@ class Gptune(CMakePackage):
                 mkdir = which("mkdir")
                 mkdir("-p", join_path(wd, "superlu_dist", "build", "EXAMPLE"))
 
-            with working_dir(wd + "/superlu_dist/build/EXAMPLE"):
-
-                exe = which("cp")
-                exe(*op)
+                cp = which("cp")
+                cp("-r", superludriver, join_path(wd, "superlu_dist", "build", "EXAMPLE"))
 
         if spec.satisfies("+hypre"):
             hypredriver = join_path(spec["hypre"].prefix.bin, "ij")
