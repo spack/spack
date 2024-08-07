@@ -5,6 +5,7 @@
 
 import os.path
 import re
+import shutil
 from textwrap import dedent
 
 import llnl.util.tty as tty
@@ -56,6 +57,7 @@ class LinuxPerf(Package):
     )
     variant("jvmti", default=False, description="build jvmti agent")
 
+    depends_on("c", type="build")
     depends_on("gmake", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("flex", type="build")
@@ -121,6 +123,12 @@ class LinuxPerf(Package):
             "LIBUNWIND_DIR={}".format(spec["libunwind"].prefix),
             "NO_SHELLCHECK=1",
         ]
+
+        # Setup clang if found in the system's or env's PATH:
+        clang = shutil.which("clang")
+        if clang:
+            args.append("CLANG=" + clang)
+
         # Features to check post-install against `perf version --build-options`
         checks = {"dwarf", "libunwind", "libbfd", "zlib"}
 
