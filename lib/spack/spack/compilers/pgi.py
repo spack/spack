@@ -31,7 +31,6 @@ class Pgi(Compiler):
     }
 
     PrgEnv = "PrgEnv-pgi"
-    PrgEnv_compiler = "pgi"
 
     version_argument = "-V"
     ignore_version_errors = [2]  # `pgcc -V` on PowerPC annoyingly returns 2

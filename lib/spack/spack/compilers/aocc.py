@@ -26,7 +26,6 @@ class Aocc(Compiler):
     fc_names = ["flang"]
 
     PrgEnv = "PrgEnv-aocc"
-    PrgEnv_compiler = "aocc"
 
     version_argument = "--version"
 

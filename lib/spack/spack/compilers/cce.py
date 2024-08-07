@@ -35,7 +35,6 @@ class Cce(Compiler):
     suffixes = [r"-mp-\d\.\d"]
 
     PrgEnv = "PrgEnv-cray"
-    PrgEnv_compiler = "cce"
 
     @property
     def link_paths(self):

@@ -24,7 +24,6 @@ class Rocmcc(spack.compilers.clang.Clang):
     fc_names = ["amdflang"]
 
     PrgEnv = "PrgEnv-amd"
-    PrgEnv_compiler = "amd"
 
     @property
     def link_paths(self):

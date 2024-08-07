@@ -41,7 +41,6 @@ class Gcc(spack.compiler.Compiler):
     }
 
     PrgEnv = "PrgEnv-gnu"
-    PrgEnv_compiler = "gcc"
 
     @property
     def verbose_flag(self):

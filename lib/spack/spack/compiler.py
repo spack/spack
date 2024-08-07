@@ -280,8 +280,6 @@ class Compiler:
 
     # Cray PrgEnv name that can be used to load this compiler
     PrgEnv: Optional[str] = None
-    # Name of module used to switch versions of this compiler
-    PrgEnv_compiler: Optional[str] = None
 
     def __init__(
         self,

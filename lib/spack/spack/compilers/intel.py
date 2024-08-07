@@ -32,7 +32,6 @@ class Intel(Compiler):
     }
 
     PrgEnv = "PrgEnv-intel"
-    PrgEnv_compiler = "intel"
 
     if sys.platform == "win32":
         version_argument = "/QV"
