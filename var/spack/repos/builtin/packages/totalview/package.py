@@ -25,37 +25,37 @@ class Totalview(Package):
 
     version(
         "2024.2-x86-64",
-        md5="1740fe50dbe87e17b48752e27937838a",
+        sha256="b6d9cfd804ff1f6641fbd92f9730b34f62062ead9b1324eaf44f34ea78c69ef1",
         url="https://dslwuu69twiif.cloudfront.net/totalview/2024.2/totalview_2024.2.11_linux_x86-64.tar",
     )
 
     version(
         "2024.2-powerle",
-        md5="29d0cf1f764ae1fe85caae092e55eb70",
+        sha256="2bc1ef377e95f6f09d1f221a1dcc2f79415bad9e1e8403c647f38e2d383524d6",
         url="https://dslwuu69twiif.cloudfront.net/totalview/2024.2/totalview_2024.2.11_linux_powerle.tar",
     )
 
     version(
         "2024.2-linux-arm64",
-        md5="91d711f25e3605999fae7ca1290ac949",
+        sha256="63f737e61c2fb7f4816bcfc1d00e9e7c39817455531abdd09500f953be4ac75d",
         url="https://dslwuu69twiif.cloudfront.net/totalview/2024.2/totalview_2024.2.11_linux_arm64.tar",
     )
 
     version(
         "2024.1-x86-64",
-        md5="c406533efaf7decd23ce569a01bd0ee6",
+        sha256="964b73e70cb9046ce320bb0f95891b05c96a59117e5243fdc269855831c7059b",
         url="https://dslwuu69twiif.cloudfront.net/totalview/2024.1/totalview_2024.1.21_linux_x86-64.tar",
     )
 
     version(
         "2024.1-powerle",
-        md5="443736bef3aa7b4ae83bc441ff6acaf6",
+        sha256="c4dd8a3099d4f6ed23a6646b1d091129e0bf0b10c7a0d7ec73bd767818bab39b",
         url="https://dslwuu69twiif.cloudfront.net/totalview/2024.1/totalview_2024.1.21_linux_powerle.tar",
     )
 
     version(
         "2024.1-linux-arm64",
-        md5="58dff4cb2a74950d56502016b0676ef7",
+        sha256="769527478dceb30855413970621f09a9dc54ef863ddaf75bb5a40142a54af346",
         url="https://dslwuu69twiif.cloudfront.net/totalview/2024.1/totalview_2024.1.21_linux_arm64.tar",
     )
 
