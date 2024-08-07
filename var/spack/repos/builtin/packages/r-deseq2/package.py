@@ -16,7 +16,9 @@ class RDeseq2(RPackage):
 
     homepage = "https://bioconductor.org/packages/DESeq2"
     git = "https://git.bioconductor.org/packages/DESeq2.git"
+    url = "https://bioconductor.org/packages/release/bioc/src/contrib/DESeq2_1.44.0.tar.gz"
 
+    version("1.44.0", sha256="b6b1f0e1d1c626196220e8d8238a71bde6aa36e227b54461ffb01cb6fadcf1c8")
     version("1.40.0", commit="c4962c3b16546e552fbc1a712258e4e21ff44241")
     version("1.38.0", commit="0e059f425d4ce6a5203685a4ad434f15bbd6e211")
     version("1.36.0", commit="2800b78ae52c0600f7e603c54af59beed3a2ed17")
