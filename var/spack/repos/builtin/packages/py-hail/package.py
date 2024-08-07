@@ -48,7 +48,7 @@ class PyHail(MakefilePackage):
         expand=False,
     )
 
-    variant("native", default=True, description="Compile C & C++ HAIL routines")
+    variant("native", default=True, description="Compile C & C++ HAIL optimizations")
     variant(
         "query_backend",
         values=["undefined", "spark", "batch"],
@@ -206,8 +206,9 @@ class PyHail(MakefilePackage):
             variables += ["HAIL_COMPILE_NATIVES=1"]
 
         # We're not using the documented target to
-        # because it depends on pipto install and resolve
-        # dependencies directly and does everythin in one step.
+        # because it depends on pip to install and resolve
+        # dependencies directly. This does everything in one step.
+        # and ends up downloading all of the dependencies via pip.
         # The documented target is `install-on-cluster`
         targets = [
             # This may be too specific but it would detect failures
