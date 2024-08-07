@@ -220,6 +220,6 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=False):
             make("fortran")
-            exe_fortran = which("./example_f")
-            exe_fortran()
+            example_f = which("./example_f")
+            example_f()
             make("clean")
