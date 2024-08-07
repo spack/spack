@@ -148,16 +148,16 @@ class Gptune(CMakePackage):
             wd = join_path(test_dir, "Hypre")
             with working_dir(wd):
 
-                exe = which("rm")
-                exe("-rf", "hypre")
+                rm = which("rm")
+                rm("-rf", "hypre")
 
-                exe = which("git")
-                exe("clone", "https://github.com/hypre-space/hypre.git")
+                git = which("git")
+                git("clone", "https://github.com/hypre-space/hypre.git")
 
             with working_dir(wd + "/hypre/src/test/"):
 
-                exe = which("cp")
-                exe(*op)
+                cp = which("cp")
+                cp(*op)
 
         wd = self.test_suite.current_test_cache_dir
         with open(f"{wd}/run_env.sh", "w") as envfile:
