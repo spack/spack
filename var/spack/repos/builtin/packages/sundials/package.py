@@ -771,7 +771,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                 make = which("make")
                 make()
 
-    def test_serial_nvector(self):
+    def test_nvector_serial(self):
         """Run serial N Vector test"""
 
         self.run_sundials("nvector/serial/test_nvector_serial", ["10", "0"], False)
