@@ -21,10 +21,11 @@ class PyRioxarray(PythonPackage):
         "0.4.1.post0", sha256="f043f846724a58518f87dd3fa84acbe39e15a1fac7e64244be3d5dacac7fe62b"
     )
 
-    depends_on("py-setuptools", type="build")
+    # interpolation variant
+    # default True to match existing behaviour of this package
+    variant("interp", default=True, when="@0.17.0:")
 
-    # for optional interp, let numpy control scipy version
-    depends_on("py-scipy", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
 
     with when("@0.17.0"):
         depends_on("python@3.10:", type=("build", "run"))
@@ -32,9 +33,13 @@ class PyRioxarray(PythonPackage):
         depends_on("py-xarray@2022.3.0:", type=("build", "run"))
         depends_on("py-pyproj@3.3:", type=("build", "run"))
         depends_on("py-numpy@1.23:", type=("build", "run"))
+        depends_on("py-scipy", type=("build", "run"), when="+interp")
 
     with when("@0.4.1.post0"):
         depends_on("python@3.7:", type=("build", "run"))
         depends_on("py-rasterio", type=("build", "run"))
         depends_on("py-xarray@0.17:", type=("build", "run"))
         depends_on("py-pyproj@2.2:", type=("build", "run"))
+
+        # not an optional in this version
+        depends_on("py-scipy", type=("build", "run"))
