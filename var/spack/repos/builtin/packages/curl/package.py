@@ -113,9 +113,12 @@ class Curl(NMakePackage, AutotoolsPackage):
     depends_on("pkgconfig", type="build", when="platform=freebsd")
 
     depends_on("gnutls", when="tls=gnutls")
+
     with when("tls=mbedtls"):
-        depends_on("mbedtls +pic")
-        depends_on("mbedtls@3.6.0:", when="@8.8.0:")
+        depends_on("mbedtls@:2 +pic", when="@:7.78")
+        depends_on("medbtls@2: +pic", when="@7.79:")
+        depends_on("mbedtls@3.6.0: +pic", when="@8.8.0:")
+
     depends_on("nss", when="tls=nss")
 
     with when("tls=openssl"):
