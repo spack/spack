@@ -830,7 +830,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+sycl" not in self.spec or "+CVODE" not in self.spec:
             raise SkipTest("Package must be installed with +sycl and +CVODE")
 
-        self.run_sundials("cvode/sycl/cvAdvDiff_kry_sycl", [], True)
+        self.run_sundials(join_path("cvode", "sycl", "cvAdvDiff_kry_sycl"), [], True)
 
     def run_sundials(self, exe_path, opts, cmake_bool):
         """Common sundials test method"""
