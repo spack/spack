@@ -60,8 +60,8 @@ class PyHail(MakefilePackage):
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
     depends_on("py-build@1.1+virtualenv", type="build", when="@0.2.131:")
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
+    depends_on("c", type="build", when="+native")
+    depends_on("cxx", type="build", when="+native")
 
     # HAIL bundle is tied to specific runtime versions
     # HAIL spec, Java sec, Spark spec, Scala spec
@@ -82,12 +82,13 @@ class PyHail(MakefilePackage):
             # by the PySpark package and they can conflit.
             depends_on(f"py-pyspark@{spark}")
 
-    with default_args(type=("build", "run")):
+    with default_args(type=("build", "link"), when="+native"):
         # Hail build requirements
         depends_on("blas")
         depends_on("lapack")
         depends_on("lz4")
 
+    with default_args(type=("build", "run")):
         depends_on("py-avro@1.10:1.11")
         depends_on("py-bokeh@3:3.3")
         depends_on("py-decorator@:4")
@@ -185,7 +186,7 @@ class PyHail(MakefilePackage):
         return join_path(wheel_dir, wheel_file)
 
     def flag_handler(self, name, flags):
-        if name == "cxxflags":
+        if name == "cxxflags" and self.spec.satisfies("+native"):
             # HAIL build doesn't find lz4: https://discuss.hail.is/t/ld-pruning-repeated-errors/1838/14
             flags.append(f"-I{self.spec['lz4'].prefix.include}")
         return (flags, None, None)
