@@ -17,5 +17,6 @@ class Xorgproto(MesonPackage):
 
     version("2024.1", sha256="3959b2d17d86dd9d165dc24d26f372ca64f27127cd381739366ba8383a6cd51a")
 
+    depends_on("meson@0.56:")
     depends_on("util-macros", type="build")
 
