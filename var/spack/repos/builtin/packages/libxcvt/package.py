@@ -9,8 +9,8 @@ class Libxcvt(MesonPackage, XorgPackage):
     """Implementation of the VESA CVT standard timing modelines generator."""
 
     homepage = "https://gitlab.freedesktop.org/xorg/lib/libxcvt"
-    xorg_mirror_path = "libxcvt/libxcvt-libxcvt-0.1.2.tar.bz2"
+    xorg_mirror_path = "lib/libxcvt-0.1.2.tar.xz"
 
     license("MIT", checked_by="teaguesterling")
 
-    version("0.1.2", sha256="590e5a6da87ace7aa7857026b207a2c4d378620035441e20ea97efedd15d6d4a")
+    version("0.1.2", sha256="0561690544796e25cfbd71806ba1b0d797ffe464e9796411123e79450f71db38")
