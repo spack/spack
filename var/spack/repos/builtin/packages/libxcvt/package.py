@@ -5,11 +5,11 @@
 from spack.package import *
 
 
-class Libxcvt(MesonPackage):
+class Libxcvt(MesonPackage, XorgPackage):
     """Implementation of the VESA CVT standard timing modelines generator."""
 
     homepage = "https://gitlab.freedesktop.org/xorg/lib/libxcvt"
-    url = "https://gitlab.freedesktop.org/xorg/lib/libxcvt/-/archive/libxcvt-0.1.2/libxcvt-libxcvt-0.1.2.tar.bz2"
+    xorg_mirror_path = "libxcvt/libxcvt-libxcvt-0.1.2.tar.bz2"
 
     license("MIT", checked_by="teaguesterling")
 
