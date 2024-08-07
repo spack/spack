@@ -19,6 +19,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     license("GPL-2.0-or-later")
 
     version("develop", branch="develop")
+    version("2.7.0", sha256="25c367b49fb108c5230bcfb127f05fc16deff2bb467f437023dfa6045aff66f6")
     version("2.6.0", sha256="c67b02ff9abc7c1f529af446a9f01f3ef9e5b0574f220259128da8d5ca7e9dc6")
     version("2.5.0", sha256="91fda9b2502e5d0a2a6cdd5a73ef096253cc7e75bd01ba5189a4726ad86aef08")
     version("2.4.1", sha256="b3d5ae62ca582b72707a2c932e8074a4f2f61d61085d97bd374213c70b8dbdcf")
@@ -55,6 +56,9 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     variant("opencl", default=False, description="Enable OpenCL backend")
     variant("mpi_f08", default=False, when="@2.6:", description="Use mpi F08 module")
 
+    variant("g2g", default=False, description="GPU-aware MPI with CUDA/HIP")
+    conflicts("+g2g", when="~cuda ~rocm", msg="GPU-aware MPI requires +cuda or +rocm")
+
     depends_on("blas")
     depends_on("lapack")
     depends_on("mpi", when="+mpi")
@@ -84,7 +88,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     # for optimal kernels. Note that we don't override the parent class arch
     # properties, since the parent class defines constraints for different archs
     # Instead just mark all unsupported cuda archs as conflicting.
-    dbcsr_cuda_archs = ("35", "37", "60", "70", "80")
+    dbcsr_cuda_archs = ("35", "37", "60", "70", "80", "90")
     cuda_msg = "dbcsr only supports cuda_arch {0}".format(dbcsr_cuda_archs)
 
     for arch in CudaPackage.cuda_arch_values:
@@ -152,7 +156,14 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("+cuda"):
             cuda_arch = self.spec.variants["cuda_arch"].value[0]
 
-            gpu_map = {"35": "K40", "37": "K80", "60": "P100", "70": "V100", "80": "A100"}
+            gpu_map = {
+                "35": "K40",
+                "37": "K80",
+                "60": "P100",
+                "70": "V100",
+                "80": "A100",
+                "90": "H100",
+            }
 
             gpuver = gpu_map[cuda_arch]
             if cuda_arch == "35" and self.spec.satisfies("+cuda_arch_35_k20x"):

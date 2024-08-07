@@ -2609,6 +2609,55 @@ class TestConcretize:
         assert len(result.specs) == 1
         assert result.specs[0] == snd
 
+    @pytest.mark.regression("45321")
+    @pytest.mark.parametrize(
+        "corrupted_str",
+        [
+            "cmake@3.4.3 foo=bar",  # cmake has no variant "foo"
+            "mvdefaults@1.0 foo=a,d",  # variant "foo" has no value "d"
+            "cmake %gcc",  # spec has no version
+        ],
+    )
+    def test_corrupted_external_does_not_halt_concretization(self, corrupted_str, mutable_config):
+        """Tests that having a wrong variant in an external spec doesn't stop concretization"""
+        corrupted_spec = Spec(corrupted_str)
+        packages_yaml = {
+            f"{corrupted_spec.name}": {
+                "externals": [{"spec": corrupted_str, "prefix": "/dev/null"}]
+            }
+        }
+        mutable_config.set("packages", packages_yaml)
+        # Assert we don't raise due to the corrupted external entry above
+        s = Spec("pkg-a").concretized()
+        assert s.concrete
+
+    @pytest.mark.regression("44828")
+    @pytest.mark.not_on_windows("Tests use linux paths")
+    def test_correct_external_is_selected_from_packages_yaml(self, mutable_config):
+        """Tests that when filtering external specs, the correct external is selected to
+        reconstruct the prefix, and other external attributes.
+        """
+        packages_yaml = {
+            "cmake": {
+                "externals": [
+                    {"spec": "cmake@3.23.1 %gcc", "prefix": "/tmp/prefix1"},
+                    {"spec": "cmake@3.23.1 %clang", "prefix": "/tmp/prefix2"},
+                ]
+            }
+        }
+        concretizer_yaml = {
+            "reuse": {"roots": True, "from": [{"type": "external", "exclude": ["%gcc"]}]}
+        }
+        mutable_config.set("packages", packages_yaml)
+        mutable_config.set("concretizer", concretizer_yaml)
+
+        s = Spec("cmake").concretized()
+
+        # Check that we got the properties from the right external
+        assert s.external
+        assert s.satisfies("%clang")
+        assert s.prefix == "/tmp/prefix2"
+
 
 @pytest.fixture()
 def duplicates_test_repository():
