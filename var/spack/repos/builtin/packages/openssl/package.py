@@ -111,6 +111,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             root=self.prefix,
             recursive=True,
             shared=self.spec.variants["shared"].value,
+            runtime=False
         )
 
     def handle_fetch_error(self, error):
