@@ -189,7 +189,6 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     depends_on("intel-gtpin", when="+gtpin")
     depends_on("opencl-c-headers", when="+opencl")
 
-    depends_on("intel-xed+pic", when="target=x86_64:")
     depends_on("memkind", type=("build", "run"), when="@2021.05.01:2023.08")
     depends_on("papi", when="+papi")
     depends_on("libpfm4", when="~papi")
@@ -198,6 +197,10 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     depends_on("hpcviewer@2022.10:", type="run", when="@2022.10: +viewer")
     depends_on("hpcviewer", type="run", when="+viewer")
     depends_on("python@3.10:", type=("build", "run"), when="+python")
+
+    with when("target=x86_64:"):
+        depends_on("intel-xed+pic")
+        depends_on("intel-xed+deprecated-includes", when="@:2024.01.1")
 
     # Avoid 'link' dep, we don't actually link, and that adds rpath
     # that conflicts with app.

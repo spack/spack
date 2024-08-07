@@ -34,6 +34,9 @@ class Gdrcopy(MakefilePackage, CudaPackage):
     depends_on("check")
     requires("+cuda")
 
+    def setup_build_environment(self, env):
+        env.set("CUDA", self.spec["cuda"].prefix)
+
     def build(self, spec, prefix):
         make("lib")
         make("exes")

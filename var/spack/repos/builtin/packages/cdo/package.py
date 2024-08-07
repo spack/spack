@@ -218,7 +218,7 @@ class Cdo(AutotoolsPackage):
             prefix = self.spec[spec_name].prefix
             return "yes" if is_system_path(prefix) else prefix
 
-        if "+netcdf" in self.spec:
+        if self.spec.satisfies("+netcdf"):
             config_args.append("--with-netcdf=" + yes_or_prefix("netcdf-c"))
             # We need to make sure that the libtool script of libcdi - the
             # internal library of CDO - finds the correct version of hdf5.
@@ -251,12 +251,12 @@ class Cdo(AutotoolsPackage):
             if self.spec.satisfies("@1.9:"):
                 config_args.append("--without-eccodes")
 
-        if "+external-grib1" in self.spec:
+        if self.spec.satisfies("+external-grib1"):
             config_args.append("--disable-cgribex")
         else:
             config_args.append("--enable-cgribex")
 
-        if "+szip" in self.spec:
+        if self.spec.satisfies("+szip"):
             config_args.append("--with-szlib=" + yes_or_prefix("szip"))
         else:
             config_args.append("--without-szlib")
@@ -267,7 +267,7 @@ class Cdo(AutotoolsPackage):
             "udunits2", activation_value=lambda x: yes_or_prefix("udunits")
         )
 
-        if "+libxml2" in self.spec:
+        if self.spec.satisfies("+libxml2"):
             libxml2_spec = self.spec["libxml2"]
             if is_system_path(libxml2_spec.prefix):
                 config_args.append("--with-libxml2=yes")

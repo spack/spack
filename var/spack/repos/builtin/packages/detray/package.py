@@ -20,6 +20,9 @@ class Detray(CMakePackage):
 
     license("MPL-2.0", checked_by="stephenswat")
 
+    version("0.72.1", sha256="6cc8d34bc0d801338e9ab142c4a9884d19d9c02555dbb56972fab86b98d0f75b")
+    version("0.71.0", sha256="2be2b3dac6f77aa8cea033eba841378dc3703ff93c99e4d05ea03df685e6d508")
+    version("0.70.0", sha256="14fa1d478d44d5d987caea6f4b365bce870aa8e140c21b802c527afa3a5db869")
     version("0.69.1", sha256="7100ec86a47458a35f5943cd6c7da07c68b8c1c2f62d36d13b8bb50568d0abe5")
     version("0.68.0", sha256="6d57835f22ced9243fbcc29b84ea4c01878a46bfa5910e320c933e9bf8e96612")
     version("0.67.0", sha256="87b1b29f333c955ea6160f9dda89628490d85a9e5186c2f35f57b322bbe27e18")
