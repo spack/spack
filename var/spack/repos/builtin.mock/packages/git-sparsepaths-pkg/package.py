@@ -6,14 +6,12 @@
 from spack.package import *
 
 
-class GitMonorepoMock(Package):
-    """Mock package that tests installing specific commit"""
+class GitSparsepathsPkg(Package):
+    """Mock package with git_sparse_paths attribute"""
 
     homepage = "http://www.git-fetch-example.com"
-    # git='to-be-filled-in-by-test'
-    git = None
+    git = "https://a/really.com/big/repo.git"
 
     version("1.0", tag="v1.0")
-    version("git", git=None)
 
     git_sparse_paths = ["foo", "bar", "bing/bang"]
