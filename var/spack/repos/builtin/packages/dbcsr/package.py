@@ -147,6 +147,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             "-DLAPACK_LIBRARIES=%s" % (spec["lapack"].libs.joined(";")),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("WITH_EXAMPLES", "examples"),
+            self.define_from_variant("WITH_G2G", "g2g"),
         ]
 
         # Switch necessary as a result of a bug.
