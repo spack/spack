@@ -8,8 +8,8 @@ from spack.package import *
 class RustBindgen(CargoPackage):
     """The rust programming language toolchain"""
 
-    homepage = "https://www.rust-lang.org"
-    url = "https://github.com/servo/rust-bindgen/archive/v0.20.5.tar.gz"
+    homepage = "https://rust-lang.github.io/rust-bindgen/"
+    url = "https://github.com/rust-lang/rust-bindgen/archive/v0.20.5.tar.gz"
 
     license("BSD-3-Clause")
 
