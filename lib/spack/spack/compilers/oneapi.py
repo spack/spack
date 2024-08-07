@@ -32,8 +32,6 @@ class Oneapi(Compiler):
         "fc": os.path.join("oneapi", "ifx"),
     }
 
-    PrgEnv = "PrgEnv-oneapi"
-
     version_argument = "--version"
     version_regex = r"(?:(?:oneAPI DPC\+\+(?:\/C\+\+)? Compiler)|(?:\(IFORT\))|(?:\(IFX\))) (\S+)"
 

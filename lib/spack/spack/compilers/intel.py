@@ -31,8 +31,6 @@ class Intel(Compiler):
         "fc": os.path.join("intel", "ifort"),
     }
 
-    PrgEnv = "PrgEnv-intel"
-
     if sys.platform == "win32":
         version_argument = "/QV"
     else:

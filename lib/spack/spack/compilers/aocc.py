@@ -25,8 +25,6 @@ class Aocc(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ["flang"]
 
-    PrgEnv = "PrgEnv-aocc"
-
     version_argument = "--version"
 
     @property
