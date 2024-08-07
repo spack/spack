@@ -842,8 +842,6 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         with working_dir(work_dir):
             if cmake_bool:
                 cmake = self.spec["cmake"].command
-                if not cmake:
-                    raise SkipTest("cmake not found")
                 cmake(".")
             make = which("make")
             make()
