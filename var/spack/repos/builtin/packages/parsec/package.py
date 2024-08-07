@@ -104,26 +104,24 @@ class Parsec(CMakePackage, CudaPackage):
                 warn += "https://bitbucket.org/icldistcomp/parsec/issues"
                 tty.msg(warn)
 
-    def run_parsec(self, exe_name):
-        """Common parsec testing method"""
-        with working_dir(join_path(install_test_root(self), "contrib/build_with_parsec")):
-            cmake = self.spec["cmake"].command
-            cmake(".", f"-DCUDA_TOOLKIT_ROOT_DIR={self.spec['cuda'].prefix}")
-            make = which("make")
-            make()
-
-            exe = which("./" + exe_name)
-            exe()
-
     def test_allreduce(self):
         """Compile and run a DTD user program"""
-        self.run_parsec("dtd_test_allreduce")
+        with working_dir(join_path("contrib", "build_with_parsec")):
+            allreduce = which("dtd_test_allreduce")
+            allreduce()
 
     def test_writecheck(self):
         """Compile and run a PTG user program"""
-        self.run_parsec("write_check")
+        with working_dir(join_path("contrib", "build_with_parsec")):
+            writecheck = which("write_check")
+            writecheck()
 
     @run_after("install")
     def cache_test_sources(self):
         srcs = ["contrib/build_with_parsec"]
         cache_extra_test_sources(self, srcs)
+        with working_dir(join_path(install_test_root(self), "contrib", "build_with_parsec")):
+            cmake = self.spec["cmake"].command
+            cmake(".")
+            make = which("make")
+            make()
