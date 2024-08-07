@@ -1432,6 +1432,9 @@ def mock_git_repository(git, tmpdir_factory):
 
         git("-c", "commit.gpgsign=false", "commit", "-m", "many_dirs add files")
 
+        # restore default
+        git("checkout", default_branch)
+
     # Map of version -> bunch. Each bunch includes; all the args
     # that must be specified as part of a version() declaration (used to
     # manufacture a version for the 'git-test' package); the associated
