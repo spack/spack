@@ -93,7 +93,7 @@ class PythonVenv(Package):
             path = os.path.join(dependent_spec.prefix, directory)
             if os.path.isdir(path):
                 env.prepend_path("PYTHONPATH", path)
-        env.prepend_path("PATH", self.bindir)
+        env.prepend_path("PATH", dependent_spec.bindir)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_dependent_run_environment(env, dependent_spec)
