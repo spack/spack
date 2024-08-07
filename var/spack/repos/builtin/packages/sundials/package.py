@@ -845,6 +845,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                 if not cmake:
                     raise SkipTest("cmake not found")
                 cmake(".")
+            make = which("make")
             make()
             exe = which(join_path(self._smoke_tests_path, exe_path))
             if exe is None:
