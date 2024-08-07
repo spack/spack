@@ -38,4 +38,3 @@ class Cbindgen(CargoPackage):
     # depends_on("rust-serde-json@1.0:")
     # depends_on("rust-proc-macro2@1.0.60")
     # depends_on("rust-indexmap@2.1.0:")
-
