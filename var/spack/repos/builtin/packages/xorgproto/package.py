@@ -5,7 +5,7 @@
 from spack.package import *
 
 
-class Xorgproto(MesonPackage):
+class Xorgproto(MesonPackage, XorgPackage):
     """X Window System unified protocol definitions replacing standalone protos"""
 
     homepage = "https://gitlab.freedesktop.org/xorg/proto/xorgproto"
