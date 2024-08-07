@@ -14,8 +14,6 @@ undevelop = SpackCommand("undevelop")
 env = SpackCommand("env")
 concretize = SpackCommand("concretize")
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
-
 
 def test_undevelop(tmpdir, mutable_config, mock_packages, mutable_mock_env_path):
     # setup environment

@@ -286,6 +286,7 @@ def test_package_test_no_compilers(mock_packages, monkeypatch, capfd):
 
 
 # TODO (post-34236): Remove when remove deprecated run_test(), etc.
+@pytest.mark.not_on_windows("echo not available on Windows")
 @pytest.mark.parametrize(
     "msg,installed,purpose,expected",
     [

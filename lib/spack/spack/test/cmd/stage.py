@@ -50,7 +50,6 @@ def check_stage_path(monkeypatch, tmpdir):
     return expected_path
 
 
-@pytest.mark.not_on_windows("PermissionError")
 def test_stage_path(check_stage_path):
     """Verify that --path only works with single specs."""
     stage("--path={0}".format(check_stage_path), "trivial-install-test-package")
