@@ -132,6 +132,9 @@ class Qt(Package):
     patch("qt514-isystem.patch", when="@5.14.2")
     # https://bugreports.qt.io/browse/QTBUG-84037
     patch("qt515-quick3d-assimp.patch", when="@5.15:5+opengl")
+    # https://forum.qt.io/topic/130793/a-problem-with-python-path-when-i-try-to-build-qt-from-source-e-program-is-not-recognized-as-an-internal-or-external-command?_=1722965446110&lang=en-US
+    patch("qt515_masm_python.patch", when="platform=windows")
+
     # https://bugreports.qt.io/browse/QTBUG-90395
     patch(
         "https://src.fedoraproject.org/rpms/qt5-qtbase/raw/6ae41be8260f0f5403367eb01f7cd8319779674a/f/qt5-qtbase-gcc11.patch",
@@ -307,7 +310,10 @@ class Qt(Package):
         "fj": ("clang",),
         "gcc": ("g++",),
     }
-    platform_mapping = {"darwin": ("macx")}
+    platform_mapping = {
+        "darwin": ("macx"),
+        "windows": ("win32")
+        }
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
