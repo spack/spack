@@ -463,7 +463,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             """Return false if osmesa or egl are requested"""
             if (
                 spec.satisfies("^[virtuals=gl] osmesa")
-                or spec.satisfies("^[virtuals=gl] egl")
+                or spec.satisfies("^[virtuals=gl] libegl")
                 or spec.satisfies("platform=windows")
             ):
                 return "OFF"
@@ -482,7 +482,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("VISIT_BUILD_READER_Silo", "visitbridge"),
         ]
 
-        if spec.satisfies("^[virtuals=gl] egl"):
+        if spec.satisfies("^[virtuals=gl] libegl"):
             cmake_args.append("-DVTK_OPENGL_HAS_EGL:BOOL=ON")
 
         if spec.satisfies("@5.12:"):

@@ -35,7 +35,7 @@ class Glew(CMakePackage):
         args = [
             self.define("BUILD_UTILS", True),
             self.define("GLEW_REGAL", False),
-            self.define("GLEW_EGL", spec.satisfies("^[virtuals=gl] egl")),
+            self.define("GLEW_EGL", spec.satisfies("^[virtuals=gl] libegl")),
             self.define("OPENGL_INCLUDE_DIR", spec["gl"].headers.directories[0]),
             self.define("OPENGL_gl_LIBRARY", spec["gl"].libs[0]),
             self.define("OPENGL_opengl_LIBRARY", "IGNORE"),
@@ -43,9 +43,9 @@ class Glew(CMakePackage):
             self.define("OPENGL_glu_LIBRARY", "IGNORE"),
             self.define("GLEW_OSMESA", spec.satisfies("^[virtuals=gl] osmesa")),
         ]
-        if spec.satisfies("^[virtuals=gl] egl"):
+        if spec.satisfies("^[virtuals=gl] libegl"):
             args.append(
-                self.define("OPENGL_egl_LIBRARY", [spec["egl"].libs[0], spec["egl"].libs[1]])
+                self.define("OPENGL_egl_LIBRARY", [spec["libegl"].libs[0], spec["libegl"].libs[1]])
             )
         else:
             args.append(self.define("OPENGL_egl_LIBRARY", "IGNORE"))
