@@ -113,43 +113,31 @@ class Gptune(CMakePackage):
         comp_version = str(self.compiler.version).replace(".", ",")
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
+        rm = which("rm")
+        cp = which("cp")
+        git = which("git")
+
         if spec.satisfies("+superlu"):
             superludriver = join_path(spec["superlu-dist"].prefix.lib, "EXAMPLE/pddrive_spawn")
             # copy superlu-dist executables to the correct place
             wd = join_path(test_dir, "SuperLU_DIST")
             with working_dir(wd):
+                rm("-rf", "superlu_dist")
+                git("clone", "https://github.com/xiaoyeli/superlu_dist.git")
 
-                exe = which("rm")
-                exe("-rf", "superlu_dist")
-
-                exe = which("git")
-                exe("clone", "https://github.com/xiaoyeli/superlu_dist.git")
-
-            with working_dir(wd + "/superlu_dist"):
-
-                mkdir = which("mkdir")
-                mkdir("-p", join_path(wd, "superlu_dist", "build", "EXAMPLE"))
-
-                cp = which("cp")
-                cp("-r", superludriver, join_path(wd, "superlu_dist", "build", "EXAMPLE"))
+            mkdir = which("mkdir")
+            mkdir("-p", join_path(wd, "superlu_dist", "build", "EXAMPLE"))
+            cp("-r", superludriver, join_path(wd, "superlu_dist", "build", "EXAMPLE"))
 
         if spec.satisfies("+hypre"):
             hypredriver = join_path(spec["hypre"].prefix.bin, "ij")
-            op = ["-r", hypredriver, "."]
             # copy superlu-dist executables to the correct place
             wd = join_path(test_dir, "Hypre")
             with working_dir(wd):
-
-                rm = which("rm")
                 rm("-rf", "hypre")
-
-                git = which("git")
                 git("clone", "https://github.com/hypre-space/hypre.git")
 
-            with working_dir(wd + "/hypre/src/test/"):
-
-                cp = which("cp")
-                cp(*op)
+            cp("-r", hypredriver, join_path(wd, "hypre", "src", "test"))
 
         wd = self.test_suite.current_test_cache_dir
         with open(f"{wd}/run_env.sh", "w") as envfile:
@@ -227,15 +215,10 @@ class Gptune(CMakePackage):
                 + '{\\"nodes\\":$nodes,\\"cores\\":$cores}}}") \n'
             )
 
+        # TODO: Replace use of install prefix (python_platlib, install_test_root)
         # copy the environment configuration files to non-cache directories
-        ops = [
-            ["run_env.sh", python_platlib + "/gptune/."],
-            ["run_env.sh", install_test_root(self) + "/."],
-        ]
-        for op in ops:
-            with working_dir(wd):
-                exe = which("cp")
-                exe(*op)
+        cp(join_path(wd, "run_env.sh"), python_platlib + "/gptune/.")
+        cp(join_path(wd, "run_env.sh"), install_test_root(self) + "/.")
 
         apps = ["Scalapack-PDGEQRF_RCI"]
         if spec.satisfies("+mpispawn"):
