@@ -306,6 +306,7 @@ def test_test_part_fail(tmpdir, install_mockery, mock_fetch, mock_test_stage):
         assert part_name.endswith(name)
         assert status == TestStatus.FAILED
 
+
 @pytest.mark.not_on_windows("echo not available on Windows")
 def test_test_part_pass(install_mockery, mock_fetch, mock_test_stage):
     """Confirm test_part that succeeds results in PASSED status."""

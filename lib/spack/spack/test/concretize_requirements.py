@@ -19,7 +19,9 @@ from spack.spec import Spec
 from spack.test.conftest import create_test_repo
 from spack.util.url import path_to_file_url
 
-pytestmark = pytest.mark.only_clingo("Original concretizer does not support configuration requirements")
+pytestmark = pytest.mark.only_clingo(
+    "Original concretizer does not support configuration requirements"
+)
 
 
 def update_packages_config(conf_str):
