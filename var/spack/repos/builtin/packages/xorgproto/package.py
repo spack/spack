@@ -9,7 +9,7 @@ class Xorgproto(MesonPackage, XorgPackage):
     """X Window System unified protocol definitions replacing standalone protos"""
 
     homepage = "https://gitlab.freedesktop.org/xorg/proto/xorgproto"
-    url = "https://gitlab.freedesktop.org/xorg/proto/xorgproto/-/archive/xorgproto-2024.1/xorgproto-xorgproto-2024.1.tar.bz2"
+    xorg_mirror_path = "proto/xorgproto-2024.1.tar.gz"
 
     maintainers("teaguesterling")
 
