@@ -26,6 +26,7 @@ class PyRioxarray(PythonPackage):
     variant("interp", default=True, when="@0.17.0:")
 
     depends_on("py-setuptools", type="build")
+    depends_on("py-wheel", type="build")
 
     with when("@0.17.0"):
         depends_on("python@3.10:", type=("build", "run"))
