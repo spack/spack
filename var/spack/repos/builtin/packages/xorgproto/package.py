@@ -19,4 +19,3 @@ class Xorgproto(MesonPackage, XorgPackage):
 
     depends_on("meson@0.56:")
     depends_on("util-macros", type="build")
-
