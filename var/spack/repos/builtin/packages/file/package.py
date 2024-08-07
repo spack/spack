@@ -9,7 +9,7 @@ import sys
 from spack.package import *
 
 
-class NixFile(AutotoolsPackage):
+class File(AutotoolsPackage):
     """The file command is "a file type guesser", that is, a command-line
     tool that tells you in words what kind of data a file contains"""
 
@@ -42,7 +42,7 @@ class NixFile(AutotoolsPackage):
     depends_on("zstd", when="@5.44:")
 
     if sys.platform != "win32":
-        provides("file")
+        provides("file-util")
 
     @classmethod
     def determine_version(cls, exe):
