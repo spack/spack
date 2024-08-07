@@ -106,7 +106,7 @@ class Mesa(MesonPackage):
 
     # Provides
     provides("libglx", when="+glx")
-    provides("egl@1.5", when="+egl")
+    provides("libegl@1.5", when="+egl")
 
     with when("+egl"):
         depends_on("libdrm")
