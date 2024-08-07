@@ -588,7 +588,12 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
-        cmake_defs = [self.define("TARGET", "GENERIC")]
+        cmake_defs = [
+            self.define("TARGET", "GENERIC"),
+            # ensure MACOSX_RPATH is set
+            self.define("CMAKE_POLICY_DEFAULT_CMP0042", "NEW"),
+        ]
+
         if self.spec.satisfies("+dynamic_dispatch"):
             cmake_defs += [self.define("DYNAMIC_ARCH", "ON")]
         if self.spec.satisfies("platform=windows"):
@@ -611,11 +616,3 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             cmake_defs += [self.define("USE_OPENMP", "OFF"), self.define("USE_THREAD", "OFF")]
 
         return cmake_defs
-
-    # TODO: constrain this to @:0.3.27 once @0.3.28 is released released and confirmed fixed
-    # https://github.com/OpenMathLib/OpenBLAS/pull/4840
-    @run_after("install", when="platform=darwin")
-    def darwin_install_name(self):
-        # The shared library is not installed correctly on Darwin; fix this
-        fix_darwin_install_name(self.prefix.lib)
-
