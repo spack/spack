@@ -44,6 +44,7 @@ class LinuxPerf(Package):
         ),
     )
     variant("debuginfod", default=False, description="support debuginfod")
+    variant("capstone", default=True, description="capstone disassembler")
     variant(
         "zstd",
         default=True,
@@ -77,6 +78,7 @@ class LinuxPerf(Package):
     depends_on("py-setuptools", type="build", when="+python")
     depends_on("perl", when="+perl")
     depends_on("slang", when="+slang")
+    depends_on("capstone", when="+capstone")
     depends_on("libpfm4", when="+libpfm4")
     depends_on("babeltrace@1.5:", when="+babeltrace")
     depends_on("libcap", when="+libcap")
