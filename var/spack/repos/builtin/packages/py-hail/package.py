@@ -48,7 +48,7 @@ class PyHail(MakefilePackage):
         expand=False,
     )
 
-    variant("native", default=True, description="Compile native HAIL backend")
+    variant("native", default=True, description="Compile C & C++ HAIL routines")
     variant(
         "query_backend",
         values=["undefined", "spark", "batch"],
