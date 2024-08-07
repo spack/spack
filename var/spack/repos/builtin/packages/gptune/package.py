@@ -128,13 +128,8 @@ class Gptune(CMakePackage):
 
             with working_dir(wd + "/superlu_dist"):
 
-                exe = which("mkdir")
-                exe("-p", "build")
-
-            with working_dir(wd + "/superlu_dist/build"):
-
-                exe = which("mkdir")
-                exe("-p", "EXAMPLE")
+                mkdir = which("mkdir")
+                mkdir("-p", join_path(wd, "superlu_dist", "build", "EXAMPLE"))
 
             with working_dir(wd + "/superlu_dist/build/EXAMPLE"):
 
