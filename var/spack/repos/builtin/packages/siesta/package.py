@@ -35,7 +35,7 @@ class Siesta(MakefilePackage, CMakePackage):
     version(
         "4.1.5",
         url="https://gitlab.com/siesta-project/siesta/-/archive/v4.1.5/siesta-v4.1.5.tar.gz",
-        sha256="518df31aa6213af5e24cc73abb537b2c89a925b487171f5339d743d0c7140b3f",
+        sha256="adc88619bf7e17fca2c67ecdcdae1f07ec4b3caf3541c0edf12964c8c330edc9",
     )
 
     license("GPL-3.0-or-later")
