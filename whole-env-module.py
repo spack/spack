@@ -29,7 +29,7 @@ def generate_module(args):
         env=active_env, shell=args.shell, prompt=None, view=view
     )
     env_mods.extend(spack.environment.shell.activate(env=active_env, view=view))
-    cmds += env_mods.shell_modifications(args.shell)
+    cmds += env_mods.shell_modifications(args.shell, explicit=True)
 
     if os.path.exists(args.path):
         raise Exception(f"Already exists {args.path}")
