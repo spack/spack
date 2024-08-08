@@ -248,6 +248,11 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
             depends_on("dla-future +cuda", when="+cuda")
             depends_on("dla-future +rocm", when="+rocm")
 
+    conflicts(
+        "+plumed",
+        when="@:2024.1 build_system=cmake",
+        msg="PLUMED support is broken in cp2k@:2024.1 with CMake",
+    )
     with when("+plumed"):
         depends_on("plumed+shared")
         depends_on("plumed+mpi", when="+mpi")
