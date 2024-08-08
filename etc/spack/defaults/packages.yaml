@@ -20,6 +20,7 @@ packages:
       awk: [gawk]
       armci: [armcimpi]
       blas: [openblas, amdblis]
+      cxx: [gcc]
       D: [ldc]
       daal: [intel-oneapi-daal]
       elf: [elfutils]
