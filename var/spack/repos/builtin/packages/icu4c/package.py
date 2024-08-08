@@ -126,7 +126,6 @@ class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder, BuildEnvironmen
         mkdirp(prefix.lib)
         mkdirp(prefix.bin)
         mkdirp(prefix.include)
-        mkdirp(prefix.commondata)
         with working_dir(self.pkg.stage.source_path):
             # install bin
             install_tree("bin64", prefix.bin)
