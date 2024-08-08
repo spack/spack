@@ -413,7 +413,9 @@ class Root(CMakePackage):
     conflicts("target=ppc64le:", when="@:6.24")
 
     # Incompatible variants
-    if sys.platform != "darwin":
+    if sys.platform == "darwin":
+        conflicts("+opengl", when="~x ~aqua", msg="root+opengl requires X or Aqua")
+    else:
         conflicts("+opengl", when="~x", msg="root+opengl requires X")
     conflicts("+math", when="~gsl", msg="root+math requires GSL")
     conflicts("+tmva", when="~gsl", msg="root+tmva requires GSL")
