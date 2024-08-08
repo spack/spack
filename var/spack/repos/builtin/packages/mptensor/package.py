@@ -84,7 +84,7 @@ class Mptensor(CMakePackage):
             makefile.filter("g++", "{0}".format(spack_cxx), string=True)
 
         print("Converting cached Makefile.option for stand-alone test use")
-        with working_dir(join_path(self.install_test_root), create=False):
+        with working_dir(join_path(install_test_root(self)), create=False):
             makefile = FileFilter("Makefile.option")
             makefile.filter("CXX =.*", "CXX ={0}".format(self.spec["mpi"].mpicxx))
             makefile.filter("CXXFLAGS =.*", "CXXFLAGS ={0}".format(self.compiler.cxx11_flag))
