@@ -37,7 +37,7 @@ class Cmdstan(MakefilePackage):
         else:
             cxx_type = spec.compiler.name
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             cxx = spec["mpi"].mpicxx
         else:
             cxx = spack_cxx
@@ -53,13 +53,13 @@ class Cmdstan(MakefilePackage):
             "TBB_CXX_TYPE={0}\n".format(cxx_type),
         ]
 
-        if "+threads" in spec:
+        if spec.satisfies("+threads"):
             make_options.append("STAN_THREADS=true\n")
 
-        if "+opencl" in spec:
+        if spec.satisfies("+opencl"):
             make_options.append("STAN_OPENCL=true\n")
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             make_options.append("STAN_MPI=true\n")
 
         filepath = join_path(self.stage.source_path, "make", "local")

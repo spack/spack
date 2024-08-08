@@ -24,6 +24,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     license("LGPL-3.0-only")
 
     version("master", branch="master")
+    version("0.36.1", sha256="0ee37ed364912f3f5a48ed5b5f5f21cb86cda43ff357486695b9454c217ad8b8")
     version("0.36.0", sha256="c20814eae65b6eb9f2c919dbcc216dd4b87f038a341cf99510cca88d43631c41")
     version("0.35.0", sha256="38fde51464f4e34ecbd1e4fbbf00267f96b639db5987257a7ad07f811e2f09d2")
     version("0.34.0", sha256="10c03d78fa2302de7ddf9599ea59fb7a2dc7ccf6f526fd9fbfc9e3ff6ba39713")
@@ -166,6 +167,12 @@ class FluxSched(CMakePackage, AutotoolsPackage):
         return os.path.join("lib", "lua", str(self.lua_version))
 
     def setup_run_environment(self, env):
+        # If this package is external, we expect the external provider to set
+        # things like LUA paths. So, we early return. If the package is not
+        # external, properly set these environment variables to make sure the
+        # user environment is configured correctly
+        if self.spec.external:
+            return
         env.prepend_path(
             "LUA_PATH", os.path.join(self.spec.prefix, self.lua_share_dir, "?.lua"), separator=";"
         )

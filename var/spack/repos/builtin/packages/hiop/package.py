@@ -208,7 +208,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("HIOP_USE_COINHSL", "sparse"),
                 self.define_from_variant("HIOP_TEST_WITH_BSUB", "jsrun"),
                 self.define_from_variant("HIOP_USE_GINKGO", "ginkgo"),
-                self.define_from_variant("HIOP_USE_CUSOLVER_LU", "cusolver_lu"),
+                self.define_from_variant("HIOP_USE_RESOLVE", "cusolver_lu"),
             ]
         )
 

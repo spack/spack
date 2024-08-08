@@ -570,17 +570,19 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         # Openblas may pass its own test but still fail to compile Lapack
         # symbols. To make sure we get working Blas and Lapack, do a small
         # test.
-        source_file = join_path(os.path.dirname(self.module.__file__), "test_cblas_dgemm.c")
-        blessed_file = join_path(os.path.dirname(self.module.__file__), "test_cblas_dgemm.output")
+        source_file = join_path(os.path.dirname(self.pkg.module.__file__), "test_cblas_dgemm.c")
+        blessed_file = join_path(
+            os.path.dirname(self.pkg.module.__file__), "test_cblas_dgemm.output"
+        )
 
         include_flags = spec["openblas"].headers.cpp_flags
         link_flags = spec["openblas"].libs.ld_flags
-        if self.compiler.name == "intel":
+        if self.pkg.compiler.name == "intel":
             link_flags += " -lifcore"
         if self.spec.satisfies("threads=pthreads"):
             link_flags += " -lpthread"
         if spec.satisfies("threads=openmp"):
-            link_flags += " -lpthread " + self.compiler.openmp_flag
+            link_flags += " -lpthread " + self.pkg.compiler.openmp_flag
 
         output = compile_c_and_execute(source_file, [include_flags], link_flags.split())
         compare_output_file(output, blessed_file)
@@ -588,7 +590,12 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
-        cmake_defs = [self.define("TARGET", "GENERIC")]
+        cmake_defs = [
+            self.define("TARGET", "GENERIC"),
+            # ensure MACOSX_RPATH is set
+            self.define("CMAKE_POLICY_DEFAULT_CMP0042", "NEW"),
+        ]
+
         if self.spec.satisfies("+dynamic_dispatch"):
             cmake_defs += [self.define("DYNAMIC_ARCH", "ON")]
         if self.spec.satisfies("platform=windows"):

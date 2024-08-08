@@ -139,6 +139,13 @@ class Root(CMakePackage):
         when="@6.30:6.30.04",
     )
 
+    # Fix TUri to be PCRE2 compatible
+    patch(
+        "https://github.com/root-project/root/pull/15988.patch?full_index=1",
+        sha256="9de4aa66f791dc3a1b9521995552b2d28b57be88a96a2e9e369977e32da26eb0",
+        when="@6.32.0:6.32.02",
+    )
+
     if sys.platform == "darwin":
         # Resolve non-standard use of uint, _cf_
         # https://sft.its.cern.ch/jira/browse/ROOT-7886.

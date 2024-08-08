@@ -159,40 +159,40 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("WITH_KOKKOS", "kokkos"),
         ]
 
-        if "+papi" in spec:
+        if spec.satisfies("+papi"):
             args.append("-DPAPI_PREFIX=%s" % spec["papi"].prefix)
-        if "+libdw" in spec:
+        if spec.satisfies("+libdw"):
             args.append("-DLIBDW_PREFIX=%s" % spec["elfutils"].prefix)
-        if "+libpfm" in spec:
+        if spec.satisfies("+libpfm"):
             args.append("-DLIBPFM_INSTALL=%s" % spec["libpfm4"].prefix)
-        if "+sosflow" in spec:
+        if spec.satisfies("+sosflow"):
             args.append("-DSOS_PREFIX=%s" % spec["sosflow"].prefix)
-        if "+variorum" in spec:
+        if spec.satisfies("+variorum"):
             args.append("-DVARIORUM_PREFIX=%s" % spec["variorum"].prefix)
 
         # -DWITH_CALLPATH was renamed -DWITH_LIBUNWIND in 2.5
         callpath_flag = "LIBUNWIND" if spec.satisfies("@2.5:") else "CALLPATH"
-        if "+libunwind" in spec:
+        if spec.satisfies("+libunwind"):
             args.append("-DLIBUNWIND_PREFIX=%s" % spec["unwind"].prefix)
             args.append("-DWITH_%s=On" % callpath_flag)
         else:
             args.append("-DWITH_%s=Off" % callpath_flag)
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             args.append("-DMPI_C_COMPILER=%s" % spec["mpi"].mpicc)
             args.append("-DMPI_CXX_COMPILER=%s" % spec["mpi"].mpicxx)
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             args.append("-DCUDA_TOOLKIT_ROOT_DIR=%s" % spec["cuda"].prefix)
             # technically only works with cuda 10.2+, otherwise cupti is in
             # ${CUDA_TOOLKIT_ROOT_DIR}/extras/CUPTI
             args.append("-DCUPTI_PREFIX=%s" % spec["cuda"].prefix)
 
-        if "+vtune" in spec:
+        if spec.satisfies("+vtune"):
             itt_dir = join_path(spec["intel-oneapi-vtune"].prefix, "vtune", "latest")
             args.append("-DITT_PREFIX=%s" % itt_dir)
 
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             args.append("-DCMAKE_CXX_COMPILER={0}".format(spec["hip"].hipcc))
             args.append("-DROCM_PREFIX=%s" % spec["hsa-rocr-dev"].prefix)
 
