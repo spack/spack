@@ -86,9 +86,7 @@ class Libuv(CMakePackage, AutotoolsPackage):
     # (because Linux does not download the cmake-enabled source).
     # new libuv versions should only use CMake to prevent the scenario
     # described above
-    build_system(
-        conditional("cmake", when="platform=windows"), "autotools", default="autotools"
-    )
+    build_system(conditional("cmake", when="platform=windows"), "autotools", default="autotools")
 
     with when("build_system=autotools"):
         depends_on("automake", type="build", when="@:1.43.0")
