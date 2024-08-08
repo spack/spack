@@ -10,12 +10,19 @@ import hashlib
 import json
 import os
 import pathlib
+import re
 from contextlib import contextmanager
 
+import pytest
+
+import spack.cmd.buildcache
+import spack.database
 import spack.environment as ev
+import spack.error
 import spack.oci.opener
+import spack.spec
 from spack.main import SpackCommand
-from spack.oci.image import Digest, ImageReference, default_config, default_manifest
+from spack.oci.image import Digest, ImageReference, default_config, default_manifest, default_tag
 from spack.oci.oci import blob_exists, get_manifest_and_config, upload_blob, upload_manifest
 from spack.test.oci.mock_registry import DummyServer, InMemoryOCIRegistry, create_opener
 from spack.util.archive import gzip_compressed_tarfile
@@ -286,3 +293,59 @@ def test_uploading_with_base_image_in_docker_image_manifest_v2_format(
         for layer in m["layers"]:
             assert layer["mediaType"] == "application/vnd.docker.image.rootfs.diff.tar.gzip"
         assert "annotations" not in m
+
+
+def test_best_effort_upload(
+    mutable_database: spack.database.Database, disable_parallel_buildcache_push, monkeypatch
+):
+    """Failure to upload a blob or manifest should not prevent others from being uploaded"""
+
+    _push_blob = spack.cmd.buildcache._push_single_spack_binary_blob
+    _push_manifest = spack.cmd.buildcache._put_manifest
+
+    def push_blob(image_ref, spec, tmpdir):
+        # fail to upload the blob of mpich
+        if spec.name == "mpich":
+            raise Exception("Blob Server Error")
+        return _push_blob(image_ref, spec, tmpdir)
+
+    def put_manifest(base_images, checksums, image_ref, tmpdir, extra_config, annotations, *specs):
+        # fail to upload the manifest of libdwarf
+        if "libdwarf" in (s.name for s in specs):
+            raise Exception("Manifest Server Error")
+        return _push_manifest(
+            base_images, checksums, image_ref, tmpdir, extra_config, annotations, *specs
+        )
+
+    monkeypatch.setattr(spack.cmd.buildcache, "_push_single_spack_binary_blob", push_blob)
+    monkeypatch.setattr(spack.cmd.buildcache, "_put_manifest", put_manifest)
+
+    registry = InMemoryOCIRegistry("example.com")
+    with oci_servers(registry):
+        mirror("add", "oci-test", "oci://example.com/image")
+
+        with pytest.raises(spack.error.SpackError, match="The following 4 errors occurred") as e:
+            buildcache("push", "--update-index", "oci-test", "mpileaks^mpich")
+
+    error = str(e.value)
+
+    # mpich's blob failed to upload
+    assert re.search("mpich.+: Exception: Blob Server Error", error)
+
+    # libdwarf's manifest failed to upload
+    assert re.search("libdwarf.+: Exception: Manifest Server Error", error)
+
+    # since there is no blob for mpich, runtime dependents cannot refer to it in their
+    # manifests, which is a transitive error.
+    assert re.search("callpath.+: MissingLayerError: missing layer for mpich", error)
+    assert re.search("mpileaks.+: MissingLayerError: missing layer for mpich", error)
+
+    mpileaks: spack.spec.Spec = mutable_database.query_local("mpileaks^mpich")[0]
+
+    # ensure that packages not affected by errors were uploaded still.
+    uploaded_tags = {tag for _, tag in registry.manifests.keys()}
+    failures = {"mpich", "libdwarf", "callpath", "mpileaks"}
+    expected_tags = {default_tag(s) for s in mpileaks.traverse() if s.name not in failures}
+
+    assert expected_tags
+    assert uploaded_tags == expected_tags
