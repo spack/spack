@@ -31,7 +31,7 @@ class Pmix(AutotoolsPackage):
     while maintaining strict separation between it and the standard
     itself."""
 
-    homepage = "https://pmix.org"
+    homepage = "https://openpmix.github.io/"
     url = "https://github.com/openpmix/openpmix/releases/download/v5.0.3/pmix-5.0.3.tar.bz2"
     git = "https://github.com/openpmix/openpmix.git"
 
