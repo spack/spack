@@ -10,12 +10,8 @@ from spack.util.environment import EnvironmentModifications
 
 
 def main():
-    # parser.add_argument('name', type=str, help="Your name")
-    # parser.add_argument('--age', type=int, help="Your age", default=18)
-    # parser.add_argument('--greet', action='store_true', help="Greet the user")
     parser = argparse.ArgumentParser(description="Generate sourcing script")
     parser.add_argument('path', type=str, help="Where to generate the file")
-    parser.add_argument('--shell', type=str, help="Target shell", default=None)
     args = parser.parse_args()
     generate_module(args)
 
