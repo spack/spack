@@ -728,6 +728,41 @@ class Compiler:
         return result
 
 
+class ForwardToPackage:
+    """Converts a compiler class to one or more external packages, and allows
+    selecting them by language.
+    """
+
+    _CACHE = {}
+
+    def __init__(self, compiler: Compiler):
+        from spack.detection.path import ExecutablesFinder
+
+        if compiler not in self._CACHE:
+            result = []
+            candidate_paths = [x for x in compiler.to_dict()["paths"].values() if x is not None]
+            finder = ExecutablesFinder()
+            for pkg_name in spack.repo.PATH.packages_with_tags("compiler"):
+                pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+                detected = finder.detect_specs(pkg=pkg_cls, paths=candidate_paths)
+                if detected:
+                    for item in detected:
+                        spec, prefix = item.spec, item.prefix
+                        spec.external_path = prefix
+                        spec._finalize_concretization()
+                        result.append(spec.package)
+            self._CACHE[compiler] = result
+
+        self.packages = self._CACHE[compiler]
+
+    def select(self, language):
+        assert language in ("c", "cxx", "fortran"), "'language' can only be c, cxx, fortran"
+        for pkg in self.packages:
+            if language in pkg.spec.extra_attributes["compilers"]:
+                return pkg
+        raise RuntimeError(f"no {language} compiler found")
+
+
 class CompilerAccessError(spack.error.SpackError):
     def __init__(self, compiler, paths):
         msg = "Compiler '%s' has executables that are missing" % compiler.spec
