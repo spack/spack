@@ -22,6 +22,8 @@ def main():
 
 def generate_module(args):
     active_env = ev.active_environment()
+    if not active_env:
+        raise Exception("An active env is required")
 
     view = None
     if active_env.has_view(ev.default_view_name):
@@ -32,10 +34,7 @@ def generate_module(args):
     context = {"environment_modifications": [(type(x).__name__, x) for x in env_mods]}
 
     import jinja2
-    #env = tengine.make_environment()
-    #import pdb; pdb.set_trace()
     template = jinja2.Template(lmod_template())
-    import pdb; pdb.set_trace()
     text = template.render(context)
 
     if os.path.exists(args.path):
