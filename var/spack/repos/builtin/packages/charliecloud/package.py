@@ -161,14 +161,14 @@ class Charliecloud(AutotoolsPackage):
         py_path = self.spec["python"].command.path
         args.append("--with-python={0}".format(py_path))
 
-        if "+docs" in self.spec:
+        if self.spec.satisfies("+docs"):
             sphinx_bin = "{0}".format(self.spec["py-sphinx"].prefix.bin)
             args.append("--enable-html")
             args.append("--with-sphinx-build={0}".format(sphinx_bin.join("sphinx-build")))
         else:
             args.append("--disable-html")
 
-        if "+squashfuse" in self.spec:
+        if self.spec.satisfies("+squashfuse"):
             squashfuse_prefix = "{0}".format(self.spec["squashfuse"].prefix)
             args.append("--with-libsquashfuse={0}".format(squashfuse_prefix))
 

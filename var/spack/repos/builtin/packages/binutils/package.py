@@ -286,7 +286,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         args += self.enable_or_disable("lto")
         args += self.enable_or_disable("nls")
         args += self.enable_or_disable("plugins")
-        if "+pgo" in self.spec:
+        if self.spec.satisfies("+pgo"):
             args.append("--enable-pgo-build=lto")
         else:
             args.append("--disable-pgo-build")

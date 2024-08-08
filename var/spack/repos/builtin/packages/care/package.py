@@ -123,7 +123,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         options = []
         options.append("-DBLT_SOURCE_DIR={0}".format(spec["blt"].prefix))
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             options.extend(
                 [
                     "-DENABLE_CUDA=ON",
@@ -143,7 +143,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         else:
             options.append("-DENABLE_CUDA=OFF")
 
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             options.extend(["-DENABLE_HIP=ON", "-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix)])
 
             archs = self.spec.variants["amdgpu_target"].value
