@@ -30,7 +30,6 @@ import spack.version
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
-PATH_INSTANCE_VARS = ["cc", "cxx", "f77", "fc"]
 _other_instance_vars = [
     "modules",
     "operating_system",
@@ -578,13 +577,15 @@ def compiler_from_dict(items):
     os = items.get("operating_system", None)
     target = items.get("target", None)
 
-    if not ("paths" in items and all(n in items["paths"] for n in PATH_INSTANCE_VARS)):
+    if not (
+        "paths" in items and all(n in items["paths"] for n in spack.compiler.PATH_INSTANCE_VARS)
+    ):
         raise InvalidCompilerConfigurationError(cspec)
 
     cls = class_for_compiler_name(cspec.name)
 
     compiler_paths = []
-    for c in PATH_INSTANCE_VARS:
+    for c in spack.compiler.PATH_INSTANCE_VARS:
         compiler_path = items["paths"][c]
         if compiler_path != "None":
             compiler_paths.append(compiler_path)
@@ -1067,9 +1068,9 @@ def is_mixed_toolchain(compiler):
 class InvalidCompilerConfigurationError(spack.error.SpackError):
     def __init__(self, compiler_spec):
         super().__init__(
-            'Invalid configuration for [compiler "%s"]: ' % compiler_spec,
-            "Compiler configuration must contain entries for all compilers: %s"
-            % PATH_INSTANCE_VARS,
+            f'Invalid configuration for [compiler "{compiler_spec}"]: ',
+            f"Compiler configuration must contain entries for "
+            f"all compilers: {spack.compiler.PATH_INSTANCE_VARS}",
         )
 
 
