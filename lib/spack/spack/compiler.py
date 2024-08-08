@@ -704,29 +704,28 @@ class Compiler:
             os.environ.update(backup_env)
 
     def to_dict(self):
-        d = {}
-        d["spec"] = str(self.spec)
-        d["paths"] = dict((attr, getattr(self, attr, None)) for attr in PATH_INSTANCE_VARS)
-        d["flags"] = dict((fname, " ".join(fvals)) for fname, fvals in self.flags.items())
-        d["flags"].update(
-            dict(
-                (attr, getattr(self, attr, None))
-                for attr in FLAG_INSTANCE_VARS
-                if hasattr(self, attr)
-            )
+        flags_dict = {fname: " ".join(fvals) for fname, fvals in self.flags.items()}
+        flags_dict.update(
+            {attr: getattr(self, attr, None) for attr in FLAG_INSTANCE_VARS if hasattr(self, attr)}
         )
-        d["operating_system"] = str(self.operating_system)
-        d["target"] = str(self.target)
-        d["modules"] = self.modules or []
-        d["environment"] = self.environment or {}
-        d["extra_rpaths"] = self.extra_rpaths or []
+        result = {
+            "spec": str(self.spec),
+            "paths": {attr: getattr(self, attr, None) for attr in PATH_INSTANCE_VARS},
+            "flags": flags_dict,
+            "operating_system": str(self.operating_system),
+            "target": str(self.target),
+            "modules": self.modules or [],
+            "environment": self.environment or {},
+            "extra_rpaths": self.extra_rpaths or [],
+        }
+
         if self.enable_implicit_rpaths is not None:
-            d["implicit_rpaths"] = self.enable_implicit_rpaths
+            result["implicit_rpaths"] = self.enable_implicit_rpaths
 
         if self.alias:
-            d["alias"] = self.alias
+            result["alias"] = self.alias
 
-        return d
+        return result
 
 
 class CompilerAccessError(spack.error.SpackError):
