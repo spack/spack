@@ -5,7 +5,7 @@
 """Single util module where Spack should get a git executable."""
 
 import sys
-from typing import Dict, List, Optional, Union
+from typing import List, Optional
 
 import llnl.util.lang
 

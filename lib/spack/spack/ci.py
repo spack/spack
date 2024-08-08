@@ -17,7 +17,7 @@ import tempfile
 import time
 import zipfile
 from collections import defaultdict, namedtuple
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple, Union
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
@@ -111,7 +111,7 @@ def get_added_versions(
     Returns:
        versions_list (List): list of versions added between refs
     """
-    git_exe = git(required=True)
+    git_exe = spack.util.git.git(required=True)
 
     # Gather git diff
     diff_lines = git_exe("diff", from_ref, to_ref, "--", path, output=str).split("\n")
