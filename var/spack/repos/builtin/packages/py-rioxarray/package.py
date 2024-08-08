@@ -22,14 +22,13 @@ class PyRioxarray(PythonPackage):
     )
 
     # interpolation variant
-    # default True to match existing behaviour of this package
-    variant("interp", default=True, when="@0.17.0:", description="Enable interpolation routines")
+    variant("interp", default=False, when="@0.17.0:", description="Enable interpolation routines")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-wheel", type="build")
 
     with when("@0.17.0"):
         depends_on("python@3.10:", type=("build", "run"))
+        depends_on("py-packaging", type=("build", "run"))
         depends_on("py-rasterio@1.3:", type=("build", "run"))
         depends_on("py-xarray@2022.3.0:", type=("build", "run"))
         depends_on("py-pyproj@3.3:", type=("build", "run"))
