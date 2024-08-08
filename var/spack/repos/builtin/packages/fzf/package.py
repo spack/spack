@@ -43,9 +43,8 @@ class Fzf(MakefilePackage):
         return match.group(1) if match else None
 
     def url_for_version(self, version):
-        if self.spec.satisfies("@:0.53.0"):
-            return f"https://github.com/junegunn/fzf/archive/{version}.tar.gz"
-        return f"https://github.com/junegunn/fzf/archive/v{version}.tar.gz"
+        base = "refs/tags/v" if self.spec.satisfies("@:0.53.0") else ""
+        return f"https://github.com/junegunn/fzf/archive/{base}{version}.tar.gz"
 
     def setup_build_environment(self, env):
         # Point GOPATH at the top of the staging dir for the build step.
