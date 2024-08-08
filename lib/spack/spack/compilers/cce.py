@@ -34,12 +34,9 @@ class Cce(Compiler):
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
     suffixes = [r"-mp-\d\.\d"]
 
-    PrgEnv = "PrgEnv-cray"
-    PrgEnv_compiler = "cce"
-
     @property
     def link_paths(self):
-        if any(self.PrgEnv in m for m in self.modules):
+        if any("PrgEnv-cray" in m for m in self.modules):
             # Old module-based interface to cray compilers
             return {
                 "cc": os.path.join("cce", "cc"),
