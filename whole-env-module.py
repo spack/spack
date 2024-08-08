@@ -1,17 +1,15 @@
 import argparse
 import os
-import pathlib
 
 import spack.environment as ev
 import spack.environment.shell
 import spack.paths
-import spack.tengine as tengine
 from spack.util.environment import EnvironmentModifications
 
 
 def main():
     parser = argparse.ArgumentParser(description="Generate sourcing script")
-    parser.add_argument('path', type=str, help="Where to generate the file")
+    parser.add_argument("path", type=str, help="Where to generate the file")
     args = parser.parse_args()
     generate_module(args)
 
@@ -30,6 +28,7 @@ def generate_module(args):
     context = {"environment_modifications": [(type(x).__name__, x) for x in env_mods]}
 
     import jinja2
+
     template = jinja2.Template(lmod_template())
     text = template.render(context)
 
@@ -37,6 +36,7 @@ def generate_module(args):
         raise Exception(f"Already exists {args.path}")
     with open(args.path, "w") as f:
         f.write(text)
+
 
 def lmod_template():
     return """\
@@ -60,6 +60,7 @@ append_path("MANPATH", "", ":")
 {% endif %}
 {% endblock %}
 """
+
 
 if __name__ == "__main__":
     main()
