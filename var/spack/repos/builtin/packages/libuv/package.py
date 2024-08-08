@@ -87,7 +87,7 @@ class Libuv(CMakePackage, AutotoolsPackage):
     # new libuv versions should only use CMake to prevent the scenario
     # described above
     build_system(
-        conditional("cmake", when="@1.48: platform=windows"), "autotools", default="autotools"
+        conditional("cmake", when="platform=windows"), "autotools", default="autotools"
     )
 
     with when("build_system=autotools"):
