@@ -409,7 +409,7 @@ class Libpressio(CMakePackage, CudaPackage):
     def copy_test_sources(self):
         if self.spec.satisfies("@:0.88.2"):
             raise SkipTest("Package must be installed as version @0.88.3 or later")
-        cache_extra_test_sources(self)
+        cache_extra_test_sources(self, srcs)
 
     def test_smoke(self):
         """Run smoke test"""
