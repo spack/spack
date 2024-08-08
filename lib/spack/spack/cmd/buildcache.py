@@ -353,6 +353,7 @@ class SequentialExecutor(concurrent.futures.Executor):
     """Executor that runs tasks sequentially in the current thread."""
 
     def submit(self, fn, *args, **kwargs):
+        """Submit a function to be executed."""
         future = concurrent.futures.Future()
         try:
             future.set_result(fn(*args, **kwargs))
