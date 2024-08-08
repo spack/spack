@@ -23,7 +23,7 @@ class PyRioxarray(PythonPackage):
 
     # interpolation variant
     # default True to match existing behaviour of this package
-    variant("interp", default=True, when="@0.17.0:")
+    variant("interp", default=True, when="@0.17.0:", description="Enable interpolation routines")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-wheel", type="build")
