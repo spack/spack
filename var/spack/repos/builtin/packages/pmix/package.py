@@ -184,8 +184,7 @@ class Pmix(AutotoolsPackage):
     depends_on("py-sphinx-rtd-theme", type="build", when="+docs")
 
     depends_on("libevent@2.0.20:")
-    depends_on("hwloc@1.11:1,2:", when="@3:")
-    depends_on("hwloc@1.0:1", when="@:2")
+    depends_on("hwloc@1.11:")
     depends_on("curl", when="+restful")
     depends_on("jansson@2.11:", when="+restful")
     depends_on("python", when="+python")
