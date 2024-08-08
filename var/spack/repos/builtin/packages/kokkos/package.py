@@ -270,7 +270,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         join_path("include", "KokkosCore_config.h"),
         join_path("include", "Kokkos_Core.hpp"),
     ]
-    sanity_check_is_dir = ["bin", "include", "lib"]
+    sanity_check_is_dir = ["bin", "include"]
 
     @classmethod
     def get_microarch(cls, target):
