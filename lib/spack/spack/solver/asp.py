@@ -2835,6 +2835,8 @@ class RequirementParser:
         rules = []
         for when_spec, requirement_list in pkg.requirements.items():
             for requirements, policy, message in requirement_list:
+                if not message:
+                    message = f"Requirement from {pkg.name} package.py: {str(requirements)}"
                 rules.append(
                     RequirementRule(
                         pkg_name=pkg.name,
@@ -2862,6 +2864,10 @@ class RequirementParser:
         kind, preferences = self._raw_yaml_data(pkg, section="prefer")
         for item in preferences:
             spec, condition, message = self._parse_prefer_conflict_item(item)
+            if not message:
+                message = (
+                    f"Preference from config for {pkg.name} encoded as a requirement: {str(spec)}"
+                )
             result.append(
                 # A strong preference is defined as:
                 #
@@ -2883,6 +2889,8 @@ class RequirementParser:
         kind, conflicts = self._raw_yaml_data(pkg, section="conflict")
         for item in conflicts:
             spec, condition, message = self._parse_prefer_conflict_item(item)
+            if not message:
+                message = f"Conflict from {pkg.name} package.py: {str(spec)}"
             result.append(
                 # A conflict is defined as:
                 #
@@ -2960,13 +2968,20 @@ class RequirementParser:
                 if not constraints:
                     continue
 
+                message = requirement.get("message")
+                if not message:
+                    message = (
+                        "Requirement from config (packages.yaml) "
+                        f"for {pkg_name}: {str(constraints)}"
+                    )
+
                 rules.append(
                     RequirementRule(
                         pkg_name=pkg_name,
                         policy=policy,
                         requirements=constraints,
                         kind=kind,
-                        message=requirement.get("message"),
+                        message=message,
                         condition=when,
                     )
                 )
