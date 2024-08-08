@@ -100,7 +100,6 @@ class Libuv(CMakePackage, AutotoolsPackage):
     # pull different sources if you are on Windows and (b) make sure cmake
     # build is not chosen on Linux
     # (because Linux does not download the cmake-enabled source).
-
     # new libuv versions should only use CMake to prevent the scenario
     # described above
     build_system(
@@ -114,7 +113,8 @@ class Libuv(CMakePackage, AutotoolsPackage):
         depends_on("m4", type="build", when="@:1.43.0")
 
     with when("build_system=cmake"):
-        # explictly require ownlibs
+        # explicitly require ownlibs to indicate we're short
+        # circuiting the cmake<->libuv cyclic dependency here
         depends_on("cmake+ownlibs")
 
     conflicts(
