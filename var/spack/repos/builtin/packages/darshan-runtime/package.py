@@ -129,10 +129,7 @@ class DarshanRuntime(AutotoolsPackage):
         extra_args.append("--with-jobid-env=%s" % job_id)
         extra_args.append("--with-zlib=%s" % spec["zlib-api"].prefix)
 
-        if "+mpi" in spec:
-            extra_args.append("CC=%s" % self.spec["mpi"].mpicc)
-        else:
-            extra_args.append("CC=%s" % self.compiler.cc)
+        if "+mpi" not in spec:
             extra_args.append("--without-mpi")
 
         return extra_args
