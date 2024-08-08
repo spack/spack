@@ -78,16 +78,16 @@ class Mptensor(CMakePackage):
 
         # Clean cached makefiles now so only done once
         print("Converting cached Makefile for stand-alone test use")
-        with working_dir(join_path(self.install_test_root, "tests"), create=False):
+        with working_dir(join_path(install_test_root(self), "tests"), create=False):
             make("clean")
             makefile = FileFilter("Makefile")
-            makefile.filter("g++", "{0}".format(spack_cxx), string=True)
+            makefile.filter("g++", f"{spack_cxx}", string=True)
 
         print("Converting cached Makefile.option for stand-alone test use")
         with working_dir(join_path(install_test_root(self)), create=False):
             makefile = FileFilter("Makefile.option")
-            makefile.filter("CXX =.*", "CXX ={0}".format(self.spec["mpi"].mpicxx))
-            makefile.filter("CXXFLAGS =.*", "CXXFLAGS ={0}".format(self.compiler.cxx11_flag))
+            makefile.filter("CXX =.*", f"CXX ={self.spec['mpi'].mpicxx}")
+            makefile.filter("CXXFLAGS =.*", "CXXFLAGS ={self.compiler.cxx11_flag}")
 
     def test_mpi(self):
         """test with +mpi"""
