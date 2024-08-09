@@ -263,7 +263,8 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
 
     # See https://github.com/spack/spack/issues/39252
     depends_on("patchelf@:0.17", type="build", when="@:2024.1")
-
+    # Add the nvidia variant
+    variant("nvidia", default=False, description="Install NVIDIA plugin for OneAPI")
     # TODO: effectively gcc is a direct dependency of intel-oneapi-compilers, but we
     # cannot express that properly. For now, add conflicts for non-gcc compilers
     # instead.
@@ -370,6 +371,30 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
                 # Try to patch all files, patchelf will do nothing and fail if file
                 # should not be patched
                 patchelf(file, fail_on_error=False)
+        if "+nvidia" in spec:
+            nvidia_installer_url = "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia"
+            nvidia_installer_file = os.path.join(prefix, "oneapi-for-nvidia-gpus-2024.2.0-cuda-12.0-linux.sh")
+
+            # Download the NVIDIA plugin installer
+            wget = which("wget")
+
+            # Use wget with `--output-document` to specify the filename
+            wget("-O", nvidia_installer_file, nvidia_installer_url)
+
+
+            # Make the installer executable
+            chmod = which("chmod")
+            chmod("+x", nvidia_installer_file)
+
+
+            # Run the installer using bash
+            bash = which("bash")
+            bash(nvidia_installer_file, "--install-dir", prefix)
+
+
+            # Clean up the installer file after installation
+            os.remove(nvidia_installer_file)
+
 
     def write_config_file(self, flags, path, compilers):
         for compiler in compilers:
