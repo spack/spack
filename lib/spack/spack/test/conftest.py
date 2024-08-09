@@ -584,8 +584,30 @@ def mock_pkg_install(monkeypatch):
     monkeypatch.setattr(spack.package_base.PackageBase, "install", _pkg_install_fn, raising=False)
 
 
+def _mock_init(self, compiler):
+    prefix = pathlib.Path(compiler.cc).parent.parent
+    spec = spack.spec.Spec(str(compiler.spec))
+
+    if spec.name == "clang":
+        spec.name = "llvm"
+    elif spec.name == "oneapi":
+        spec.name = "intel-oneapi-compilers"
+
+    spec.external_path = prefix
+    spec.extra_attributes = {
+        "compilers": {"c": compiler.cc, "cxx": compiler.cxx, "fortran": compiler.fc}
+    }
+    spec._mark_concrete()
+    self.packages = [spec.package]
+
+
+@pytest.fixture()
+def mock_compiler_forwarder(monkeypatch):
+    monkeypatch.setattr(spack.compiler.ForwardToPackage, "__init__", _mock_init)
+
+
 @pytest.fixture(scope="function")
-def mock_packages(mock_repo_path, mock_pkg_install, request):
+def mock_packages(mock_repo_path, mock_pkg_install, mock_compiler_forwarder, request):
     """Use the 'builtin.mock' repository instead of 'builtin'"""
     ensure_configuration_fixture_run_before(request)
     with spack.repo.use_repositories(mock_repo_path) as mock_repo:

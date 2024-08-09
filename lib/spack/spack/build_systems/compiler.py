@@ -7,7 +7,7 @@ import os
 import pathlib
 import re
 import sys
-from typing import Dict, List, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import llnl.util.tty as tty
 from llnl.util.lang import classproperty
@@ -142,3 +142,6 @@ class CompilerPackage(spack.package_base.PackageBase):
     def determine_variants(cls, exes: Sequence[Path], version_str: str) -> Tuple:
         # path determination is separated so it can be reused in subclasses
         return "", {"compilers": cls.determine_compiler_paths(exes=exes)}
+
+    #: Returns the argument needed to set the RPATH, or None if it does not exist
+    rpath_arg: Optional[str] = "-Wl,-rpath,"

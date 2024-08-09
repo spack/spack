@@ -11,7 +11,8 @@ import re
 import shutil
 import sys
 import tempfile
-from typing import List, Optional, Sequence
+import typing
+from typing import Dict, List, Optional, Sequence
 
 import llnl.path
 import llnl.util.lang
@@ -26,6 +27,10 @@ import spack.util.libc
 import spack.util.module_cmd
 import spack.version
 from spack.util.environment import filter_system_paths
+
+if typing.TYPE_CHECKING:
+    import spack.package_base
+
 
 __all__ = ["Compiler"]
 
@@ -242,7 +247,7 @@ class Compiler:
     # Default flags used by a compiler to set an rpath
     @property
     def cc_rpath_arg(self):
-        return "-Wl,-rpath,"
+        return ForwardToPackage(self).select("c").rpath_arg
 
     @property
     def cxx_rpath_arg(self):
@@ -733,9 +738,9 @@ class ForwardToPackage:
     selecting them by language.
     """
 
-    _CACHE = {}
+    _CACHE: Dict[Compiler, List["spack.package_base.PackageBase"]] = {}
 
-    def __init__(self, compiler: Compiler):
+    def __init__(self, compiler: Compiler) -> None:
         from spack.detection.path import ExecutablesFinder
 
         if compiler not in self._CACHE:
@@ -755,7 +760,7 @@ class ForwardToPackage:
 
         self.packages = self._CACHE[compiler]
 
-    def select(self, language):
+    def select(self, language: str) -> "spack.package_base.PackageBase":
         assert language in ("c", "cxx", "fortran"), "'language' can only be c, cxx, fortran"
         for pkg in self.packages:
             if language in pkg.spec.extra_attributes["compilers"]:
