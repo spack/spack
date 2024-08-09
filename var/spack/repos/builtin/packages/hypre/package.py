@@ -379,32 +379,34 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     def cache_test_sources(self):
         cache_extra_test_sources(self, self.extra_install_tests)
 
+        # Customize the makefile to use the installed package
+        makefile = join_path(install_test_root(self), self.extra_install_tests, "Makefile")
+        filter_file(r"^HYPRE_DIR\s* =.*", f"HYPRE_DIR = {self.prefix}", makefile)
+        filter_file(r"^CC\s*=.*", f"CC = {os.environ['CC']}", makefile)
+        filter_file(r"^F77\s*=.*", f"F77 = {os.environ['F77']}", makefile)
+        filter_file(r"^CXX\s*=.*", f"CXX = {os.environ['CXX']}", makefile)
+
     @property
     def _cached_tests_work_dir(self):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.extra_install_tests)
 
-    def run_hypre(self, exe_name):
-        """Perform smoke test on installed HYPRE package."""
+    def test_bigint(self):
+        """build and run bigint tests"""
         if "+mpi" not in self.spec:
             raise SkipTest("Package must be installed with +mpi")
 
+        # build and run cached examples
         with working_dir(self._cached_tests_work_dir):
             make = which("make")
-            make(f"HYPRE_DIR={self.prefix}", "bigint")
+            make("bigint")
 
-            exe = which("./" + exe_name)
-            if exe is None:
-                raise SkipTest(f"{exe_name} does not exist in version {self.version}")
-            exe()
-
-    def test_ex5big(self):
-        """Ensuring ex5big runs"""
-        self.run_hypre("ex5big")
-
-    def test_ex15big(self):
-        """Ensuring ex15big runs"""
-        self.run_hypre("ex15big")
+            for name in ["ex5big", "ex15big"]:
+                with test_part(self, f"test_bigint_{name}", f"ensure {name} runs"):
+                    exe = which(name)
+                    if exe is None:
+                        raise SkipTest(f"{name} does not exist in version {self.version}")
+                    exe()
 
     @property
     def headers(self):
