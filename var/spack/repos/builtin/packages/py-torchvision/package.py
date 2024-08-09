@@ -60,7 +60,9 @@ class PyTorchvision(PythonPackage):
     variant("nvjpeg", default=False, description=desc.format("NVJPEG"))
     variant("ffmpeg", default=False, description=desc.format("FFMPEG"))
     variant("video_codec", default=False, description=desc.format("video_codec"))
-    variant("gif", default=False, description=desc.format("GIF"), when="@0.19:")
+    # torchvision does not yet support disabling giflib:
+    # https://github.com/pytorch/vision/pull/8406#discussion_r1590926939
+    # variant("gif", default=False, description=desc.format("GIF"), when="@0.19:")
 
     with default_args(type=("build", "link", "run")):
         # Based on PyPI wheel availability
