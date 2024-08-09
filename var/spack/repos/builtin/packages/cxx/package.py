@@ -14,19 +14,16 @@ class Cxx(Package):
     homepage = "https://isocpp.org/std/the-standard"
     virtual = True
 
-    def test_c(self):
+    def test_cxx(self):
         """Compile and run 'Hello World'"""
+        cxx = which(os.environ["CXX"])
+        expected = ["Hello world", "YES!"]
+
         test_source = self.test_suite.current_test_data_dir
-
-        cxx_exe = os.environ["CXX"]
-        cxx_exe = which(join_path(self.prefix.bin, cxx_exe))
-        if cxx_exe is None:
-            raise SkipTest(f"{os.environ['CXX']} not found in {self.version}")
-
         for test in os.listdir(test_source):
-            with test_part(self, f"test_cxx_{test}", f"Test {test}"):
-                filepath = os.path.join(test_source, test)
-                exe_name = f"{test}.exe"
+            exe_name = f"{test}.exe"
+            filepath = test_source.join(test)
+            with test_part(self, f"test_cxx_{test}", f"build and run {exe_name}"):
                 # standard options
                 # Hack to get compiler attributes
                 # TODO: remove this when compilers are dependencies
@@ -36,14 +33,8 @@ class Cxx(Package):
                 compiler = c_cls(c_spec, None, None, ["fakecc", "fakecxx"])
                 cxx_opts = [compiler.cxx11_flag] if "c++11" in test else []
                 cxx_opts += ["-o", exe_name, filepath]
-                compiled = cxx_exe(*cxx_opts)
 
-                if compiled:
-                    expected = ["Hello world", "YES!"]
-                    exe_run = which(join_path(self.prefix.bin, exe_name))
-                    if exe_run is None:
-                        raise SkipTest(f"{exe_run} not found in {self.version}")
-                    out = exe_run(output=str.split, error=str.split)
-                    assert expected in out
-                else:
-                    assert False, "Did not compile"
+                cxx(*cxx_opts)
+                exe = which(exe_name)
+                out = exe(output=str.split, error=str.split)
+                check_outputs(expected, out)
