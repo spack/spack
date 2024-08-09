@@ -94,7 +94,23 @@ class HypreCmake(CMakePackage, CudaPackage):
 
     @run_after("install")
     def cache_test_sources(self):
+        if "+mpi" not in self.spec:
+            print("Package must be installed with +mpi to cache test sources")
+            return
+
         cache_extra_test_sources(self, self.extra_install_tests)
+
+        # Customize the examples makefile before caching it
+        makefile = join_path(install_test_root(self), self.extra_install_tests, "Makefile")
+        filter_file(r"^HYPRE_DIR\s* =.*", f"HYPRE_DIR = {self.prefix}", makefile)
+        filter_file(r"^CC\s*=.*", "CC = " + self.spec["mpi"].mpicc, makefile)
+        filter_file(r"^F77\s*=.*", "F77 = " + self.spec["mpi"].mpif77, makefile)
+        filter_file(r"^CXX\s*=.*", "CXX = " + self.spec["mpi"].mpicxx, makefile)
+        filter_file(
+            r"^LIBS\s*=.*",
+            r"LIBS = -L$(HYPRE_DIR)/lib64 -lHYPRE -lm $(CUDA_LIBS) $(DOMP_LIBS)",
+            makefile,
+        )
 
     @property
     def _cached_tests_work_dir(self):
@@ -109,15 +125,12 @@ class HypreCmake(CMakePackage, CudaPackage):
         # Build copied and cached test examples
         with working_dir(self._cached_tests_work_dir):
             make = which("make")
-            make(f"HYPRE_DIR={self.prefix}", "bigint")
+            make("bigint")
 
             for exe_name in ["ex5big", "ex15big"]:
                 with test_part(
                     self, f"test_hypre_cmake_{exe_name}", purpose=f"Ensure {exe_name} runs"
                 ):
-                    # Run the examples built above
-                    if not os.path.exists("./" + exe_name):
-                        raise SkipTest(f"{exe_name} does not exist in version {self.version}")
 
                     program = which("./" + exe_name)
                     if program is None:
