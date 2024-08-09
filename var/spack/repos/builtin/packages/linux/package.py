@@ -303,6 +303,7 @@ class Linux(MakefilePackage):
 
     # depends_on("gcc@5.1:", when="@6.6:")
 
+    # Note: GNU make is not in Spack
     # depends_on("make@3.82:", when="@6.1:")
     # depends_on("make@3.81:", when="@6.0")
 
@@ -313,27 +314,63 @@ class Linux(MakefilePackage):
 
     # depends_on("flex@2.5.35:", when="@6.0:")
     # depends_on("bison@2.0:", when="@6.0:")
+
+    # Note: pahole (poke-a-hole) is not in Spack. Pahole
+    # helps developers understand memory layouts, alignment
+    # and padding of complex data structures or code. 
     # depends_on("pahole@1.16:", when="@6.0:")
+
     # depends_on("util-linux@2.10o:", when="@6.0:")
     # depends_on("kmod@13:", when="@6.0:")
     # depends_on("e2fsprogs@1.41.4:", when="@6.0:")
+    
+    # Note: jfsutils is not in Spack. Jfsutils package
+    # contains administration and debugging tools for the
+    # jfs file system.
     # depends_on("jfsutils@1.1.3:", when="@6.0:")
+    
+    # Note: reiserfsprogs is not in Spack. Reiserfsprogs 
+    # is used to maintain a ReiserFS (Reiser v3) file system. 
     # depends_on("reiserfsprogs@3.6.3:", when="@6.0:")
-    # depends_on("xfsprogs@2.6.0:", when="@6.0:")
-    # depends_on("squashfs-tools@4.0", when="@6.0:")
-    # depends_on("btfgs-progs@0.18:", when="@6.0:")
 
-    # only necessary if you have PC Card hardware
+    # depends_on("xfsprogs@2.6.0:", when="@6.0:")
+
+    # Note: squashfs-tools is not in Spack. Squashfs-tools is used to create
+    # and extract squashfs file systems.
+    # depends_on("squashfs-tools@4.0", when="@6.0:")
+
+    # Note: btrfs-progs is not in Spack. Btrfs-progs contains administration
+    # and debugging tools for the B-tree file system (btrfs). 
+    # depends_on("btrfs-progs@0.18:", when="@6.0:")
+
+    # Note: pcmciautils is not in Spack. Pcmciautils is only necessary if 
+    # user has PC Card hardware
     # depends_on("pcmciautils@004:", when="@6.0:")
 
     # depends_on("quota-tools@3.09:", when="@6.0:")
+    
+    # Note: ppp is not in Spack. PPP implements the Point-to-Points Protocol
+    # (PPP) to provide Internet connections over serial lines and other
+    # point-to-point links.
     # depends_on("PPP@2.4.0:", when="@6.0:")
+
     # depends_on("nfs-utils@1.0.5:", when="@6.0:")
     # depends_on("procps@3.2.0:", when="@6.0:")
     # depends_on("udev@081:", when="@6.0:")
+
+    # Note: grub is not in Spack. Grub, the GRand Unified
+    # Bootloader, is a multi-boot boot-loader. If the user is already
+    # functionally running a Linux kernel, they are assumed to have grub.
     # depends_on("grub@0.93:", when="@6.0:")
+
     # depends_on("mcelog@0.6:", when="@6.0:")
+
+    # Note: iptables is not in Spack. Iptables is the userspace command line
+    # program used to configure the Linux 2.4.x and later packet filtering 
+    # ruleset. If the user is already functionally running a Linux kernel,
+    # they are assumed to have iptables.
     # depends_on("iptables@1.4.2:", when="@6.0:")
+
     # depends_on("openssl@1.0.0:", when="@6.0:")
     # depends_on("bc@1.06.95:", when="@6.0:")
 
