@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,9 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     current "Multicore+GPU" systems.
     """
 
-    homepage = "https://icl.cs.utk.edu/magma/"
+    homepage = "https://icl.utk.edu/magma/"
     git = "https://bitbucket.org/icl/magma"
-    url = "https://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
+    url = "https://icl.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
     maintainers("stomov", "luszczek", "G-Ragghianti")
 
     tags = ["e4s"]
@@ -23,6 +23,9 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("master", branch="master")
+    version("2.8.0", sha256="f4e5e75350743fe57f49b615247da2cc875e5193cc90c11b43554a7c82cc4348")
+    version("2.7.2", sha256="729bc1a70e518a7422fe7a3a54537a4741035a77be3349f66eac5c362576d560")
+    version("2.7.1", sha256="d9c8711c047a38cae16efde74bee2eb3333217fd2711e1e9b8606cbbb4ae1a50")
     version("2.7.0", sha256="fda1cbc4607e77cacd8feb1c0f633c5826ba200a018f647f1c5436975b39fd18")
     version("2.6.2", sha256="75b554dab00903e2d10b972c913e50e7f88cbc62f3ae432b5a086c7e4eda0a71")
     version("2.6.1", sha256="6cd83808c6e8bc7a44028e05112b3ab4e579bcc73202ed14733f66661127e213")
@@ -36,6 +39,10 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     version("2.3.0", sha256="010a4a057d7aa1e57b9426bffc0958f3d06913c9151463737e289e67dd9ea608")
     version("2.2.0", sha256="df5d4ace417e5bf52694eae0d91490c6bde4cde1b0da98e8d400c5c3a70d83a2")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("fortran", default=True, description="Enable Fortran bindings support")
     variant("shared", default=True, description="Enable shared library")
     variant("cuda", default=True, description="Build with CUDA")
@@ -45,11 +52,30 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda@8:", when="@2.5.1: +cuda")  # See PR #14471
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", when="+rocm")
+    # This ensures that rocm-core matches the hip package version in the case that
+    # hip is an external package.
+    for ver in [
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+    ]:
+        depends_on(f"rocm-core@{ver}", when=f"@2.8.0: +rocm ^hip@{ver}")
+    depends_on("python", when="@master", type="build")
 
-    conflicts("~cuda", when="~rocm", msg="Either CUDA or HIP support must be enabled")
-    conflicts("+rocm", when="+cuda", msg="CUDA must be disabled to support HIP (ROCm)")
-    conflicts("+rocm", when="@:2.5.4", msg="HIP support starts in version 2.6.0")
-    conflicts("cuda_arch=none", when="+cuda", msg="Please indicate a CUDA arch value or values")
+    conflicts("~cuda", when="~rocm", msg="magma: Either CUDA or HIP support must be enabled")
+    conflicts("+rocm", when="+cuda", msg="magma: CUDA must be disabled to support HIP (ROCm)")
+    conflicts("+rocm", when="@:2.5.4", msg="magma: HIP support starts in version 2.6.0")
+    conflicts(
+        "cuda_arch=none", when="+cuda", msg="magma: Please indicate a CUDA arch value or values"
+    )
 
     # currently not compatible with CUDA-11
     # https://bitbucket.org/icl/magma/issues/22/cuda-11-changes-issue
@@ -61,11 +87,11 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("cuda_arch={}".format(target))
 
     # Some cuda_arch values had support added recently
-    conflicts("cuda_arch=37", when="@:2.5")
-    conflicts("cuda_arch=60", when="@:2.2")
-    conflicts("cuda_arch=70", when="@:2.2")
-    conflicts("cuda_arch=75", when="@:2.5.0")
-    conflicts("cuda_arch=80", when="@:2.5.3")
+    conflicts("cuda_arch=37", when="@:2.5", msg="magma: cuda_arch=37 needs a version > 2.5")
+    conflicts("cuda_arch=60", when="@:2.2", msg="magma: cuda_arch=60 needs a version > 2.2")
+    conflicts("cuda_arch=70", when="@:2.2", msg="magma: cuda_arch=70 needs a version > 2.2")
+    conflicts("cuda_arch=75", when="@:2.5.0", msg="magma: cuda_arch=75 needs a version > 2.5.0")
+    conflicts("cuda_arch=80", when="@:2.5.3", msg="magma: cuda_arch=80 needs a version > 2.5.3")
 
     patch("ibm-xl.patch", when="@2.2:2.5.0%xl")
     patch("ibm-xl.patch", when="@2.2:2.5.0%xl_r")
@@ -73,6 +99,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     patch("magma-2.5.0.patch", when="@2.5.0")
     patch("magma-2.5.0-cmake.patch", when="@2.5.0")
     patch("cmake-W.patch", when="@2.5.0:%nvhpc")
+    patch("0001-fix-magma-build-error-with-rocm-6.0.0.patch", when="@2.7.2 ^hip@6.0 + rocm")
 
     @run_before("cmake")
     def generate_gpu_config(self):
@@ -130,6 +157,8 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
             sep = "" if "@:2.2.0" in spec else "_"
             capabilities = " ".join("sm{0}{1}".format(sep, i) for i in cuda_arch)
             options.append(define("GPU_TARGET", capabilities))
+            archs = ";".join("%s" % i for i in cuda_arch)
+            options.append(define("CMAKE_CUDA_ARCHITECTURES", archs))
 
         if "@2.5.0" in spec:
             options.append(define("MAGMA_SPARSE", False))
@@ -139,9 +168,11 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             options.append(define("MAGMA_ENABLE_HIP", True))
             options.append(define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
-            # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+            # See https://github.com/ROCm/rocFFT/issues/322
             if spec.satisfies("^cmake@3.21.0:3.21.2"):
                 options.append(define("__skip_rocmclang", True))
+            if spec.satisfies("@2.8.0:"):
+                options.append(define("ROCM_CORE", spec["rocm-core"].prefix))
         else:
             options.append(define("MAGMA_ENABLE_CUDA", True))
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,9 @@ class GdkPixbuf(Package):
     list_url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/"
     list_depth = 1
 
+    license("LGPL-2.1-or-later")
+
+    version("2.42.10", sha256="ee9b6c75d13ba096907a2e3c6b27b61bcd17f5c7ebeab5a5b439d2f2e39fe44b")
     version("2.42.9", sha256="28f7958e7bf29a32d4e963556d241d0a41a6786582ff6a5ad11665e0347fc962")
     version("2.42.6", sha256="c4a6b75b7ed8f58ca48da830b9fa00ed96d668d3ab4b1f723dcf902f78bde77f")
     version("2.42.2", sha256="83c66a1cfd591d7680c144d2922c5955d38b4db336d7cd3ee109f7bcf9afef15")
@@ -43,7 +46,9 @@ class GdkPixbuf(Package):
         deprecated=True,
     )
 
-    variant("x11", default=False, description="Enable X11 support")
+    depends_on("c", type="build")  # generated
+
+    variant("x11", default=False, description="Enable X11 support", when="@:2.41")
     variant("tiff", default=False, description="Enable TIFF support(partially broken)")
     # Man page creation was getting docbook errors, see issue #18853
     variant("man", default=False, description="Enable man page creation")
@@ -53,7 +58,6 @@ class GdkPixbuf(Package):
     depends_on("meson@0.45.0:", type="build", when="@2.37.0:")
     depends_on("ninja", type="build", when="@2.37.0:")
     depends_on("shared-mime-info", when="@2.36.8: platform=linux")
-    depends_on("shared-mime-info", when="@2.36.8: platform=cray")
     depends_on("pkgconfig", type="build")
     # Building the man pages requires libxslt and the Docbook stylesheets
     depends_on("libxslt", type="build", when="+man")
@@ -62,7 +66,7 @@ class GdkPixbuf(Package):
     depends_on("glib@2.38.0:")
     depends_on("jpeg")
     depends_on("libpng")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libtiff", when="+tiff")
     depends_on("gobject-introspection")
     depends_on("libx11", when="+x11")

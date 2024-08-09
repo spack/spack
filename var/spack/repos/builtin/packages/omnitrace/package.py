@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Omnitrace(CMakePackage):
     git = "https://github.com/AMDResearch/omnitrace.git"
     maintainers("jrmadsen")
 
+    license("MIT")
+
     version("main", branch="main", submodules=True)
     version("1.7.4", commit="12001d9633328f9f56210c7ebffce065bff06310", submodules=True)
     version("1.7.3", commit="2ebfe3fc30f977559142509edc4ea190c975992a", submodules=True)
@@ -28,14 +30,10 @@ class Omnitrace(CMakePackage):
     version("1.3.0", commit="4dd144a32c8b83c44e132ef53f2b44fe4b4d5569", submodules=True)
     version("1.2.0", commit="f82845388aab108ed1d1fc404f433a0def391bb3", submodules=True)
 
-    # override build_type to default to Release because this has a significant
-    # impact on build-time and the size of the build
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "rocm",
         default=True,
@@ -132,11 +130,6 @@ class Omnitrace(CMakePackage):
             tau_root = spec["tau"].prefix
             args.append(self.define("TAU_ROOT_DIR", tau_root))
 
-        if "+python" in spec:
-            pyexe = spec["python"].command.path
-            args.append(self.define("PYTHON_EXECUTABLE", pyexe))
-            args.append(self.define("Python3_EXECUTABLE", pyexe))
-
         if "+mpi" in spec:
             args.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))
             args.append(self.define("MPI_CXX_COMPILER", spec["mpi"].mpicxx))
@@ -152,7 +145,3 @@ class Omnitrace(CMakePackage):
             files = glob.glob(pattern)
             if files:
                 env.set("TAU_MAKEFILE", files[0])
-
-    def setup_run_environment(self, env):
-        if "+python" in self.spec:
-            env.prepend_path("PYTHONPATH", join_path(self.prefix.lib, "python", "site-packages"))

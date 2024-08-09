@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,9 @@ class Amrvis(MakefilePackage):
 
     maintainers("etpalmer63")
 
-    version("main", tag="main")
+    version("main", branch="main")
+
+    depends_on("cxx", type="build")  # generated
 
     variant(
         "dims",
@@ -71,10 +73,7 @@ class Amrvis(MakefilePackage):
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85440
         if self.spec.target.family not in ["x86_64", "ppc64le"]:
             comps = join_path("amrex", "Tools", "GNUMake", "comps")
-            maks = [
-                join_path(comps, "gnu.mak"),
-                join_path(comps, "llvm.mak"),
-            ]
+            maks = [join_path(comps, "gnu.mak"), join_path(comps, "llvm.mak")]
             for mak in maks:
                 filter_file("-lquadmath", "", mak)
 
@@ -149,7 +148,7 @@ class Amrvis(MakefilePackage):
         # We don't want an AMREX_HOME the user may have set already
         env.unset("AMREX_HOME")
         # Help force Amrvis to not pick up random system compilers
-        if "+mpi" in self.spec:
+        if self.spec.satisfies("+mpi"):
             env.set("MPI_HOME", self.spec["mpi"].prefix)
             env.set("CC", self.spec["mpi"].mpicc)
             env.set("CXX", self.spec["mpi"].mpicxx)

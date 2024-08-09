@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ import spack.package_prefs
 import spack.repo
 import spack.util.spack_yaml as syaml
 from spack.config import ConfigError
-from spack.spec import Spec
+from spack.spec import CompilerSpec, Spec
 from spack.version import Version
 
 
@@ -61,7 +61,7 @@ def assert_variant_values(spec, **variants):
 
 
 @pytest.mark.usefixtures("concretize_scope", "mock_packages")
-class TestConcretizePreferences(object):
+class TestConcretizePreferences:
     @pytest.mark.parametrize(
         "package_name,variant_value,expected_results",
         [
@@ -105,27 +105,22 @@ class TestConcretizePreferences(object):
 
     @pytest.mark.parametrize(
         "compiler_str,spec_str",
-        [("gcc@4.5.0", "mpileaks"), ("clang@12.0.0", "mpileaks"), ("gcc@4.5.0", "openmpi")],
+        [("gcc@=9.4.0", "mpileaks"), ("clang@=15.0.0", "mpileaks"), ("gcc@=9.4.0", "openmpi")],
     )
     def test_preferred_compilers(self, compiler_str, spec_str):
         """Test preferred compilers are applied correctly"""
-        spec = spack.spec.Spec(spec_str)
-        update_packages(spec.name, "compiler", [compiler_str])
-        spec.concretize()
-        assert spec.compiler == spack.spec.CompilerSpec(compiler_str)
+        update_packages("all", "compiler", [compiler_str])
+        spec = spack.spec.Spec(spec_str).concretized()
+        assert spec.compiler == CompilerSpec(compiler_str)
 
+    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_preferred_target(self, mutable_mock_repo):
         """Test preferred targets are applied correctly"""
-        # FIXME: This test was a false negative, since the default and
-        # FIXME: the preferred target were the same
-        if spack.config.get("config:concretizer") == "original":
-            pytest.xfail("Known bug in the original concretizer")
-
         spec = concretize("mpich")
         default = str(spec.target)
         preferred = str(spec.target.family)
 
-        update_packages("mpich", "target", [preferred])
+        update_packages("all", "target", [preferred])
         spec = concretize("mpich")
         assert str(spec.target) == preferred
 
@@ -133,7 +128,7 @@ class TestConcretizePreferences(object):
         assert str(spec["mpileaks"].target) == preferred
         assert str(spec["mpich"].target) == preferred
 
-        update_packages("mpileaks", "target", [default])
+        update_packages("all", "target", [default])
         spec = concretize("mpileaks")
         assert str(spec["mpileaks"].target) == default
         assert str(spec["mpich"].target) == default
@@ -148,8 +143,9 @@ class TestConcretizePreferences(object):
         spec = concretize("mpileaks")
         assert spec.version == Version("2.2")
 
+    @pytest.mark.only_clingo("This behavior is not enforced for the old concretizer")
     def test_preferred_versions_mixed_version_types(self):
-        update_packages("mixedversions", "version", ["2.0"])
+        update_packages("mixedversions", "version", ["=2.0"])
         spec = concretize("mixedversions")
         assert spec.version == Version("2.0")
 
@@ -165,21 +161,24 @@ class TestConcretizePreferences(object):
         spec = concretize("mpileaks")
         assert "zmpi" in spec
 
-    def test_config_set_pkg_property_url(self, mutable_mock_repo):
+    @pytest.mark.parametrize(
+        "update,expected",
+        [
+            (
+                {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
+                "http://www.somewhereelse.com/mpileaks-2.3.tar.gz",
+            ),
+            ({}, "http://www.llnl.gov/mpileaks-2.3.tar.gz"),
+        ],
+    )
+    def test_config_set_pkg_property_url(self, update, expected, mock_repo_path):
         """Test setting an existing attribute in the package class"""
-        update_packages(
-            "mpileaks",
-            "package_attributes",
-            {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
-        )
-        spec = concretize("mpileaks")
-        assert spec.package.fetcher[0].url == "http://www.somewhereelse.com/mpileaks-2.3.tar.gz"
+        update_packages("mpileaks", "package_attributes", update)
+        with spack.repo.use_repositories(mock_repo_path):
+            spec = concretize("mpileaks")
+            assert spec.package.fetcher.url == expected
 
-        update_packages("mpileaks", "package_attributes", {})
-        spec = concretize("mpileaks")
-        assert spec.package.fetcher[0].url == "http://www.llnl.gov/mpileaks-2.3.tar.gz"
-
-    def test_config_set_pkg_property_new(self, mutable_mock_repo):
+    def test_config_set_pkg_property_new(self, mock_repo_path):
         """Test that you can set arbitrary attributes on the Package class"""
         conf = syaml.load_config(
             """\
@@ -198,19 +197,20 @@ mpileaks:
 """
         )
         spack.config.set("packages", conf, scope="concretize")
-
-        spec = concretize("mpileaks")
-        assert spec.package.v1 == 1
-        assert spec.package.v2 is True
-        assert spec.package.v3 == "yesterday"
-        assert spec.package.v4 == "true"
-        assert dict(spec.package.v5) == {"x": 1, "y": 2}
-        assert list(spec.package.v6) == [1, 2]
+        with spack.repo.use_repositories(mock_repo_path):
+            spec = concretize("mpileaks")
+            assert spec.package.v1 == 1
+            assert spec.package.v2 is True
+            assert spec.package.v3 == "yesterday"
+            assert spec.package.v4 == "true"
+            assert dict(spec.package.v5) == {"x": 1, "y": 2}
+            assert list(spec.package.v6) == [1, 2]
 
         update_packages("mpileaks", "package_attributes", {})
-        spec = concretize("mpileaks")
-        with pytest.raises(AttributeError):
-            spec.package.v1
+        with spack.repo.use_repositories(mock_repo_path):
+            spec = concretize("mpileaks")
+            with pytest.raises(AttributeError):
+                spec.package.v1
 
     def test_preferred(self):
         """ "Test packages with some version marked as preferred=True"""
@@ -224,6 +224,25 @@ mpileaks:
         spec = Spec("python")
         spec.concretize()
         assert spec.version == Version("3.5.0")
+
+    @pytest.mark.only_clingo("This behavior is not enforced for the old concretizer")
+    def test_preferred_undefined_raises(self):
+        """Preference should not specify an undefined version"""
+        update_packages("python", "version", ["3.5.0.1"])
+        spec = Spec("python")
+        with pytest.raises(spack.config.ConfigError):
+            spec.concretize()
+
+    @pytest.mark.only_clingo("This behavior is not enforced for the old concretizer")
+    def test_preferred_truncated(self):
+        """Versions without "=" are treated as version ranges: if there is
+        a satisfying version defined in the package.py, we should use that
+        (don't define a new version).
+        """
+        update_packages("python", "version", ["3.5"])
+        spec = Spec("python")
+        spec.concretize()
+        assert spec.satisfies("@3.5.1")
 
     def test_develop(self):
         """Test concretization with develop-like versions"""
@@ -277,6 +296,7 @@ mpich:
 
         The specific code for parsing the module is tested elsewhere.
         This just tests that the preference is accounted for"""
+
         # make sure this doesn't give us an external first.
         def mock_module(cmd, module):
             return "prepend-path PATH /dummy/path"
@@ -488,3 +508,13 @@ mpich:
         with spack.config.override("packages:sticky-variant", {"variants": "+allow-gcc"}):
             s = Spec("sticky-variant %gcc").concretized()
             assert s.satisfies("%gcc") and s.satisfies("+allow-gcc")
+
+    @pytest.mark.regression("41134")
+    @pytest.mark.only_clingo("Not backporting the fix to the old concretizer")
+    def test_default_preference_variant_different_type_does_not_error(self):
+        """Tests that a different type for an existing variant in the 'all:' section of
+        packages.yaml doesn't fail with an error.
+        """
+        with spack.config.override("packages:all", {"variants": "+foo"}):
+            s = Spec("pkg-a").concretized()
+            assert s.satisfies("foo=bar")

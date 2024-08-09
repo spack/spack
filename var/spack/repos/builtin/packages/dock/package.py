@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,12 +33,7 @@ class Dock(Package):
             env.set("MPICH_HOME", self.spec["mpi"].prefix)
 
     def install(self, spec, prefix):
-        compiler_targets = {
-            "gcc": "gnu",
-            "intel": "intel",
-            "pgi": "pgi",
-            "sgi": "sgi",
-        }
+        compiler_targets = {"gcc": "gnu", "intel": "intel", "pgi": "pgi", "sgi": "sgi"}
 
         if self.compiler.name not in compiler_targets:
             template = "Unsupported compiler {0}! Supported compilers: {1}"

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class RPhilentropy(RPackage):
     univariate or multivariate probability functions."""
 
     cran = "philentropy"
+
+    license("GPL-2.0-only")
 
     version("0.7.0", sha256="ce72e2327aee80aeeb630caa33be6a35e4f2b8a7491842d8c21099b9c43584b7")
     version("0.6.0", sha256="138acf2aedab17c9d367def378e35c8aba80d9e786284b2866955cea1c24eeb6")

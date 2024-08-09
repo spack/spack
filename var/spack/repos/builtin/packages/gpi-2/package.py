@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Gpi2(AutotoolsPackage):
 
     maintainers("robert-mijakovic", "acastanedam", "mzeyen1985")
 
+    license("GPL-3.0-only")
+
     version("develop", branch="next")
     version("master", branch="master")
 
@@ -35,15 +37,17 @@ class Gpi2(AutotoolsPackage):
     version("1.0.2", sha256="b03b4ac9f0715279b2a5e064fd85047cb640a85c2361d732930307f8bbf2aeb8")
     version("1.0.1", sha256="b1341bb39e7e70334d7acf831fe7f2061376e7516b44d18b31797748c2a169a3")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("fortran", default=False, description="Enable Fortran modules")
     variant("mpi", default=False, description="Enable MPI support")
     variant(
         "fabrics",
-        values=disjoint_sets(
-            ("auto",),
-            ("infiniband",),
-            ("ethernet",),
-        ).with_non_feature_values("auto", "none"),
+        values=disjoint_sets(("auto",), ("infiniband",), ("ethernet",)).with_non_feature_values(
+            "auto", "none"
+        ),
         description="List of fabrics that are enabled; "
         "'none' use GPI-2 default (infiniband), "
         "'infiniband' will use 'rdma-core' from Spack",

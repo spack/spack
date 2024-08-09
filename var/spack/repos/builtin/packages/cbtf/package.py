@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,12 +18,16 @@ class Cbtf(CMakePackage):
     homepage = "https://sourceforge.net/p/cbtf/wiki/Home"
     git = "https://github.com/OpenSpeedShop/cbtf.git"
 
-    maintainers = ["jgalarowicz"]
+    maintainers("jgalarowicz")
+
+    license("GPL-2.0-only")
 
     version("develop", branch="master")
     version("1.9.4.1", branch="1.9.4.1")
     version("1.9.4", branch="1.9.4")
     version("1.9.3", branch="1.9.3")
+
+    depends_on("cxx", type="build")  # generated
 
     variant(
         "runtime", default=False, description="build only the runtime libraries and collectors."
@@ -66,7 +70,6 @@ class Cbtf(CMakePackage):
     build_directory = "build_cbtf"
 
     def cmake_args(self):
-
         spec = self.spec
 
         # Boost_NO_SYSTEM_PATHS  Set to TRUE to suppress searching
@@ -77,7 +80,6 @@ class Cbtf(CMakePackage):
         compile_flags = "-O2 -g -Wall"
 
         if spec.satisfies("+runtime"):
-
             # Install message tag include file for use in Intel MIC
             # cbtf-krell build
             # FIXME

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,9 @@ class Ghostscript(AutotoolsPackage):
 
     executables = [r"^gs$"]
 
+    license("AGPL-3.0-or-later")
+
+    version("10.0.0", sha256="a57764d70caf85e2fc0b0f59b83b92e25775631714dcdb97cc6e0cea414bb5a3")
     version("9.56.1", sha256="1598b9a38659cce8448d42a73054b2f9cbfcc40a9b97eeec5f22d4d6cd1de8e6")
     version("9.54.0", sha256="0646bb97f6f4d10a763f4919c54fa28b4fbdd3dff8e7de3410431c81762cade0")
     version("9.53.3", sha256="6eaf422f26a81854a230b80fd18aaef7e8d94d661485bd2e97e695b9dce7bf7f")
@@ -25,6 +28,9 @@ class Ghostscript(AutotoolsPackage):
     version("9.26", sha256="831fc019bd477f7cc2d481dc5395ebfa4a593a95eb2fe1eb231a97e450d7540d")
     version("9.21", sha256="02bceadbc4dddeb6f2eec9c8b1623d945d355ca11b8b4df035332b217d58ce85")
     version("9.18", sha256="5fc93079749a250be5404c465943850e3ed5ffbc0d5c07e10c7c5ee8afbbdb1b")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # https://www.ghostscript.com/ocr.html
     variant("tesseract", default=False, description="Use the Tesseract library for OCR")
@@ -37,7 +43,7 @@ class Ghostscript(AutotoolsPackage):
     depends_on("lcms")
     depends_on("libpng")
     depends_on("libtiff")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libxext")
     depends_on("gtkplus")
 
@@ -80,18 +86,14 @@ class Ghostscript(AutotoolsPackage):
 
         filter_file(
             "ZLIBDIR=src",
-            "ZLIBDIR={0}".format(self.spec["zlib"].prefix.include),
+            "ZLIBDIR={0}".format(self.spec["zlib-api"].prefix.include),
             "configure.ac",
             "configure",
             string=True,
         )
 
     def configure_args(self):
-        args = [
-            "--disable-compile-inits",
-            "--enable-dynamic",
-            "--with-system-libtiff",
-        ]
+        args = ["--disable-compile-inits", "--enable-dynamic", "--with-system-libtiff"]
 
         if self.spec.satisfies("@9.53:"):
             args.extend(self.with_or_without("tesseract"))

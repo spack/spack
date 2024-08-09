@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Opam(AutotoolsPackage):
 
     maintainers("scemama")
 
+    version("2.1.3", sha256="cb2ab00661566178318939918085aa4b5c35c727df83751fd92d114fdd2fa001")
     version("2.0.6", sha256="7c4bff5e5f3628ad00c53ee1b044ced8128ffdcfbb7582f8773fb433e12e07f4")
     version("2.0.5", sha256="776c7e64d6e24c2ef1efd1e6a71d36e007645efae94eaf860c05c1929effc76f")
     version("2.0.4", sha256="debfb828b400fb511ca290f1bfc928db91cad74ec1ccbddcfdbfeff26f7099e5")
@@ -27,6 +28,8 @@ class Opam(AutotoolsPackage):
     version("2.0.0", sha256="9dad4fcb4f53878c9daa6285d8456ccc671e21bfa71544d1f926fb8a63bfed25")
     version("1.2.2", sha256="15e617179251041f4bf3910257bbb8398db987d863dd3cfc288bdd958de58f00")
     version("1.2.1", sha256="f210ece7a2def34b486c9ccfb75de8febd64487b2ea4a14a7fa0358f37eacc3b")
+
+    depends_on("c", type="build")  # generated
 
     # OCaml 4.10.0 has removed the -safe-string flag, which is necessary
     # for OPAM 1i (see docstring of setup_build_environment).

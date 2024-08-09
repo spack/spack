@@ -1,4 +1,4 @@
-.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ be present on the machine where Spack is run:
    :header-rows: 1
 
 These requirements can be easily installed on most modern Linux systems;
-on macOS, the Command Line Tools package is required, and a full XCode suite 
+on macOS, the Command Line Tools package is required, and a full XCode suite
 may be necessary for some packages such as Qt and apple-gl. Spack is designed
 to run on HPC platforms like Cray.  Not all packages should be expected
 to work on all platforms.
@@ -41,12 +41,9 @@ A build matrix showing which packages are working on which systems is shown belo
 
       .. code-block:: console
 
-         yum update -y
-         yum install -y epel-release
-         yum update -y
-         yum --enablerepo epel groupinstall -y "Development Tools"
-         yum --enablerepo epel install -y curl findutils gcc-c++ gcc gcc-gfortran git gnupg2 hostname iproute redhat-lsb-core make patch python3 python3-pip python3-setuptools unzip
-         python3 -m pip install boto3
+         dnf install epel-release
+         dnf group install "Development Tools"
+         dnf install curl findutils gcc-gfortran gnupg2 hostname iproute redhat-lsb-core python3 python3-pip python3-setuptools unzip python3-boto3
 
    .. tab-item:: macOS Brew
 
@@ -253,9 +250,10 @@ Compiler configuration
 
 Spack has the ability to build packages with multiple compilers and
 compiler versions. Compilers can be made available to Spack by
-specifying them manually in ``compilers.yaml``, or automatically by
-running ``spack compiler find``, but for convenience Spack will
-automatically detect compilers the first time it needs them.
+specifying them manually in ``compilers.yaml`` or ``packages.yaml``,
+or automatically by running ``spack compiler find``, but for
+convenience Spack will automatically detect compilers the first time
+it needs them.
 
 .. _cmd-spack-compilers:
 
@@ -320,7 +318,7 @@ installed, but you know that new compilers have been added to your
 
 .. code-block:: console
 
-   $ module load gcc-4.9.0
+   $ module load gcc/4.9.0
    $ spack compiler find
    ==> Added 1 new compiler to ~/.spack/linux/compilers.yaml
        gcc@4.9.0
@@ -368,7 +366,8 @@ Manual compiler configuration
 
 If auto-detection fails, you can manually configure a compiler by
 editing your ``~/.spack/<platform>/compilers.yaml`` file.  You can do this by running
-``spack config edit compilers``, which will open the file in your ``$EDITOR``.
+``spack config edit compilers``, which will open the file in
+:ref:`your favorite editor <controlling-the-editor>`.
 
 Each compiler configuration in the file looks like this:
 
@@ -459,6 +458,54 @@ specification. The operations available to modify the environment are ``set``, `
          prepend_path: # Similar for append|remove_path
            LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
 
+.. note::
+
+   Spack is in the process of moving compilers from a separate
+   attribute to be handled like all other packages. As part of this
+   process, the ``compilers.yaml`` section will eventually be replaced
+   by configuration in the ``packages.yaml`` section. This new
+   configuration is now available, although it is not yet the default
+   behavior.
+
+Compilers can also be configured as external packages in the
+``packages.yaml`` config file. Any external package for a compiler
+(e.g. ``gcc`` or ``llvm``) will be treated as a configured compiler
+assuming the paths to the compiler executables are determinable from
+the prefix.
+
+If the paths to the compiler executable are not determinable from the
+prefix, you can add them to the ``extra_attributes`` field. Similarly,
+all other fields from the compilers config can be added to the
+``extra_attributes`` field for an external representing a compiler.
+
+Note that the format for the ``paths`` field in the
+``extra_attributes`` section is different than in the ``compilers``
+config. For compilers configured as external packages, the section is
+named ``compilers`` and the dictionary maps language names (``c``,
+``cxx``, ``fortran``) to paths, rather than using the names ``cc``,
+``fc``, and ``f77``.
+
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       external:
+       - spec: gcc@12.2.0 arch=linux-rhel8-skylake
+         prefix: /usr
+         extra_attributes:
+           environment:
+             set:
+               GCC_ROOT: /usr
+       external:
+       - spec: llvm+clang@15.0.0 arch=linux-rhel8-skylake
+         prefix: /usr
+         extra_attributes:
+           compilers:
+             c: /usr/bin/clang-with-suffix
+             cxx: /usr/bin/clang++-with-extra-info
+             fortran: /usr/bin/gfortran
+           extra_rpaths:
+           - /usr/lib/llvm/
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Build Your Own Compiler
@@ -625,7 +672,7 @@ Fortran.
 
       compilers:
       - compiler:
-        ...
+        # ...
         paths:
           cc: /usr/bin/clang
           cxx: /usr/bin/clang++
@@ -1317,187 +1364,6 @@ This will write the private key to the file `dinosaur.priv`.
     or for help on an issue or the Spack slack.
 
 
-.. _cray-support:
-
--------------
-Spack on Cray
--------------
-
-Spack differs slightly when used on a Cray system. The architecture spec
-can differentiate between the front-end and back-end processor and operating system.
-For example, on Edison at NERSC, the back-end target processor
-is "Ivy Bridge", so you can specify to use the back-end this way:
-
-.. code-block:: console
-
-   $ spack install zlib target=ivybridge
-
-You can also use the operating system to build against the back-end:
-
-.. code-block:: console
-
-   $ spack install zlib os=CNL10
-
-Notice that the name includes both the operating system name and the major
-version number concatenated together.
-
-Alternatively, if you want to build something for the front-end,
-you can specify the front-end target processor. The processor for a login node
-on Edison is "Sandy bridge" so we specify on the command line like so:
-
-.. code-block:: console
-
-   $ spack install zlib target=sandybridge
-
-And the front-end operating system is:
-
-.. code-block:: console
-
-   $ spack install zlib os=SuSE11
-
-^^^^^^^^^^^^^^^^^^^^^^^
-Cray compiler detection
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack can detect compilers using two methods. For the front-end, we treat
-everything the same. The difference lies in back-end compiler detection.
-Back-end compiler detection is made via the Tcl module avail command.
-Once it detects the compiler it writes the appropriate PrgEnv and compiler
-module name to compilers.yaml and sets the paths to each compiler with Cray\'s
-compiler wrapper names (i.e. cc, CC, ftn). During build time, Spack will load
-the correct PrgEnv and compiler module and will call appropriate wrapper.
-
-The compilers.yaml config file will also differ. There is a
-modules section that is filled with the compiler's Programming Environment
-and module name. On other systems, this field is empty []:
-
-.. code-block:: yaml
-
-   - compiler:
-       modules:
-         - PrgEnv-intel
-         - intel/15.0.109
-
-As mentioned earlier, the compiler paths will look different on a Cray system.
-Since most compilers are invoked using cc, CC and ftn, the paths for each
-compiler are replaced with their respective Cray compiler wrapper names:
-
-.. code-block:: yaml
-
-     paths:
-       cc: cc
-       cxx: CC
-       f77: ftn
-       fc: ftn
-
-As opposed to an explicit path to the compiler executable. This allows Spack
-to call the Cray compiler wrappers during build time.
-
-For more on compiler configuration, check out :ref:`compiler-config`.
-
-Spack sets the default Cray link type to dynamic, to better match other
-other platforms. Individual packages can enable static linking (which is the
-default outside of Spack on cray systems) using the ``-static`` flag.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Setting defaults and using Cray modules
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you want to use default compilers for each PrgEnv and also be able
-to load cray external modules, you will need to set up a ``packages.yaml``.
-
-Here's an example of an external configuration for cray modules:
-
-.. code-block:: yaml
-
-   packages:
-     mpich:
-       externals:
-       - spec: "mpich@7.3.1%gcc@5.2.0 arch=cray_xc-haswell-CNL10"
-         modules:
-         - cray-mpich
-       - spec: "mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-haswell-CNL10"
-         modules:
-         - cray-mpich
-     all:
-       providers:
-         mpi: [mpich]
-
-This tells Spack that for whatever package that depends on mpi, load the
-cray-mpich module into the environment. You can then be able to use whatever
-environment variables, libraries, etc, that are brought into the environment
-via module load.
-
-.. note::
-
-    For Cray-provided packages, it is best to use ``modules:`` instead of ``prefix:``
-    in ``packages.yaml``, because the Cray Programming Environment heavily relies on
-    modules (e.g., loading the ``cray-mpich`` module adds MPI libraries to the
-    compiler wrapper link line).
-
-You can set the default compiler that Spack can use for each compiler type.
-If you want to use the Cray defaults, then set them under ``all:`` in packages.yaml.
-In the compiler field, set the compiler specs in your order of preference.
-Whenever you build with that compiler type, Spack will concretize to that version.
-
-Here is an example of a full packages.yaml used at NERSC
-
-.. code-block:: yaml
-
-   packages:
-     mpich:
-       externals:
-       - spec: "mpich@7.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
-         modules:
-         - cray-mpich
-       - spec: "mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-SuSE11-ivybridge"
-         modules:
-         - cray-mpich
-       buildable: False
-     netcdf:
-       externals:
-       - spec: "netcdf@4.3.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
-         modules:
-         - cray-netcdf
-       - spec: "netcdf@4.3.3.1%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge"
-         modules:
-         - cray-netcdf
-       buildable: False
-     hdf5:
-       externals:
-       - spec: "hdf5@1.8.14%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
-         modules:
-         - cray-hdf5
-       - spec: "hdf5@1.8.14%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge"
-         modules:
-         - cray-hdf5
-       buildable: False
-     all:
-       compiler: [gcc@5.2.0, intel@16.0.0.109]
-       providers:
-         mpi: [mpich]
-
-Here we tell spack that whenever we want to build with gcc use version 5.2.0 or
-if we want to build with intel compilers, use version 16.0.0.109. We add a spec
-for each compiler type for each cray modules. This ensures that for each
-compiler on our system we can use that external module.
-
-For more on external packages check out the section :ref:`sec-external-packages`.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Using Linux containers on Cray machines
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack uses environment variables particular to the Cray programming
-environment to determine which systems are Cray platforms. These
-environment variables may be propagated into containers that are not
-using the Cray programming environment.
-
-To ensure that Spack does not autodetect the Cray programming
-environment, unset the environment variable ``MODULEPATH``. This
-will cause Spack to treat a linux container on a Cray system as a base
-linux distro.
-
 .. _windows_support:
 
 ----------------
@@ -1506,7 +1372,7 @@ Spack On Windows
 
 Windows support for Spack is currently under development. While this work is still in an early stage,
 it is currently possible to set up Spack and perform a few operations on Windows.  This section will guide
-you through the steps needed to install Spack and start running it on a fresh Windows machine. 
+you through the steps needed to install Spack and start running it on a fresh Windows machine.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 1: Install prerequisites
@@ -1516,7 +1382,7 @@ To use Spack on Windows, you will need the following packages:
 
 Required:
 * Microsoft Visual Studio
-* Python 
+* Python
 * Git
 
 Optional:
@@ -1531,12 +1397,15 @@ Microsoft Visual Studio
 """""""""""""""""""""""
 
 Microsoft Visual Studio provides the only Windows C/C++ compiler that is currently supported by Spack.
+Spack additionally requires that the Windows SDK (including WGL) to be installed as part of your
+visual studio installation as it is required to build many packages from source.
 
 We require several specific components to be included in the Visual Studio installation.
 One is the C/C++ toolset, which can be selected as "Desktop development with C++" or "C++ build tools,"
 depending on installation type (Professional, Build Tools, etc.)  The other required component is
 "C++ CMake tools for Windows," which can be selected from among the optional packages.
 This provides CMake and Ninja for use during Spack configuration.
+
 
 If you already have Visual Studio installed, you can make sure these components are installed by
 rerunning the installer.  Next to your installation, select "Modify" and look at the
@@ -1547,8 +1416,8 @@ Intel Fortran
 """""""""""""
 
 For Fortran-based packages on Windows, we strongly recommend Intel's oneAPI Fortran compilers.
-The suite is free to download from Intel's website, located at 
-https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html#gs.70t5tw.
+The suite is free to download from Intel's website, located at
+https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html.
 The executable of choice for Spack will be Intel's Beta Compiler, ifx, which supports the classic
 compiler's (ifort's) frontend and runtime libraries by using LLVM.
 
@@ -1597,8 +1466,8 @@ in a Windows CMD prompt.
 
 .. note::
    If you chose to install Spack into a directory on Windows that is set up to require Administrative
-   Privleges, Spack will require elevated privleges to run.
-   Administrative Privleges can be denoted either by default such as
+   Privileges, Spack will require elevated privileges to run.
+   Administrative Privileges can be denoted either by default such as
    ``C:\Program Files``, or aministrator applied administrative restrictions
    on a directory that spack installs files to such as ``C:\Users``
 
@@ -1694,7 +1563,7 @@ Spack console via:
 
    spack install cpuinfo
 
-If in the previous step, you did not have CMake or Ninja installed, running the command above should boostrap both packages
+If in the previous step, you did not have CMake or Ninja installed, running the command above should bootstrap both packages
 
 """""""""""""""""""""""""""
 Windows Compatible Packages

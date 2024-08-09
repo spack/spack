@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,9 @@ class SuperluMt(Package):
     url = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_mt_3.1.tar.gz"
 
     version("3.1", sha256="407b544b9a92b2ed536b1e713e80f986824cf3016657a4bfc2f3e7d2a76ecab6")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("int64", default=False, description="Build with 64 bit integers")
     variant("pic", default=True, description="Build with position independent code")
@@ -104,11 +107,7 @@ class SuperluMt(Package):
         )
 
         if "+int64" in spec:
-            config.extend(
-                [
-                    "CFLAGS    += -D_LONGINT",
-                ]
-            )
+            config.extend(["CFLAGS    += -D_LONGINT"])
 
         if "+pic" in spec:
             config.extend(

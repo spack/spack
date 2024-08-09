@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class TclTclxml(AutotoolsPackage):
 
     version("3.2", sha256="f4116b6680b249ce74b856a121762361ca09e6256f0c8ad578d1c661b822cb39")
     version("3.1", sha256="9b017f29c7a06fa1a57d1658bd1d3867297c26013604bdcc4d7b0ca2333552c9")
+
+    depends_on("c", type="build")  # generated
 
     extends("tcl")
 

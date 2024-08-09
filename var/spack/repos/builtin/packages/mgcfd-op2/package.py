@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,9 @@ class MgcfdOp2(MakefilePackage):
 
     version("v1.0.0-rc1")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("mpi", default=False, description="Enable MPI support")
 
     depends_on("gmake@4.3:")
@@ -33,12 +36,7 @@ class MgcfdOp2(MakefilePackage):
     depends_on("op2-dsl~mpi", when="~mpi")
 
     def setup_build_environment(self, env):
-        compiler_map = {
-            "gcc": "gnu",
-            "arm": "clang",
-            "cce": "cray",
-            "nvhpc": "pgi",
-        }
+        compiler_map = {"gcc": "gnu", "arm": "clang", "cce": "cray", "nvhpc": "pgi"}
         if self.spec.compiler.name in compiler_map:
             env.set("COMPILER", compiler_map[self.spec.compiler.name])
         else:
@@ -58,11 +56,6 @@ class MgcfdOp2(MakefilePackage):
         if self.spec.compiler.name == "arm":
             makefile.filter(r"CPP := clang", r"CPP := armclang")
             makefile.filter(r"-cxx=clang.*", "")
-
-        # Cray systems require use of 'cc' and 'CC' to call correct mpi wrappers
-        if self.spec.platform == "cray":
-            makefile.filter("mpicc", "cc")
-            makefile.filter("mpicxx", "CC")
 
         if self.spec.compiler.name == "nvhpc":
             makefile.filter("pgc", "nvc")

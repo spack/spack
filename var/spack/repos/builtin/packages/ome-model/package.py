@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,12 @@ class OmeModel(CMakePackage):
 
     maintainers("omsai")
 
+    license("BSD-2-Clause")
+
     version("master", branch="master")
     version("6.0.0", sha256="d6644ff722411d3a8ac9f26a49c1afda30e4d4102e37b31593d2a9fdc8f96700")
+
+    depends_on("cxx", type="build")  # generated
 
     # Match version with ome-common-cpp.  It would be nice to match versions in a
     # more automated way.
@@ -35,7 +39,4 @@ class OmeModel(CMakePackage):
     depends_on("googletest", type="test")
 
     def cmake_args(self):
-        return [
-            "-DCMAKE_CXX_STANDARD=17",
-            "-DCMAKE_CXX_STANDARD_REQUIRED=ON",
-        ]
+        return ["-DCMAKE_CXX_STANDARD=17", "-DCMAKE_CXX_STANDARD_REQUIRED=ON"]

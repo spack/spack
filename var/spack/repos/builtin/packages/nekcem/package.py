@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,9 @@ class Nekcem(Package):
     version("0b8bedd", commit="0b8beddfdcca646bfcc866dfda1c5f893338399b")
     version("7332619", commit="7332619b73d03868a256614b61794dce2d95b360")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # dependencies
     depends_on("mpi", when="+mpi")
     depends_on("blas")
@@ -39,7 +42,7 @@ class Nekcem(Package):
             raise RuntimeError(msg)
 
     @run_after("install")
-    def test_install(self):
+    def check_install(self):
         nekcem_test = join_path(self.prefix.bin, "NekCEM", "tests", "2dboxpec")
         with working_dir(nekcem_test):
             makenek = Executable(join_path(self.prefix.bin, "makenek"))

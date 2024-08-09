@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,11 +35,7 @@ def module_suffixes_schema():
                         "properties": {
                             "suffixes": {
                                 "validate_spec": True,
-                                "patternProperties": {
-                                    r"\w[\w-]*": {
-                                        "type": "string",
-                                    }
-                                },
+                                "patternProperties": {r"\w[\w-]*": {"type": "string"}},
                             }
                         },
                     }
@@ -84,7 +80,17 @@ def test_module_suffixes(module_suffixes_schema):
 @pytest.mark.regression("10246")
 @pytest.mark.parametrize(
     "config_name",
-    ["compilers", "config", "env", "merged", "mirrors", "modules", "packages", "repos"],
+    [
+        "compilers",
+        "config",
+        "definitions",
+        "env",
+        "merged",
+        "mirrors",
+        "modules",
+        "packages",
+        "repos",
+    ],
 )
 def test_schema_validation(meta_schema, config_name):
     import importlib

@@ -1,9 +1,7 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import division
 
 import collections.abc
 import contextlib
@@ -100,36 +98,6 @@ def caller_locals():
         del stack
 
 
-def get_calling_module_name():
-    """Make sure that the caller is a class definition, and return the
-    enclosing module's name.
-    """
-    # Passing zero here skips line context for speed.
-    stack = inspect.stack(0)
-    try:
-        # Make sure locals contain __module__
-        caller_locals = stack[2][0].f_locals
-    finally:
-        del stack
-
-    if "__module__" not in caller_locals:
-        raise RuntimeError(
-            "Must invoke get_calling_module_name() " "from inside a class definition!"
-        )
-
-    module_name = caller_locals["__module__"]
-    base_name = module_name.split(".")[-1]
-    return base_name
-
-
-def attr_required(obj, attr_name):
-    """Ensure that a class has a required attribute."""
-    if not hasattr(obj, attr_name):
-        raise RequiredAttributeError(
-            "No required attribute '%s' in class '%s'" % (attr_name, obj.__class__.__name__)
-        )
-
-
 def attr_setdefault(obj, name, value):
     """Like dict.setdefault, but for objects."""
     if not hasattr(obj, name):
@@ -198,7 +166,7 @@ def memoized(func):
         except TypeError as e:
             # TypeError is raised when indexing into a dict if the key is unhashable.
             raise UnhashableArguments(
-                "args + kwargs '{}' was not hashable for function '{}'".format(key, func.__name__),
+                "args + kwargs '{}' was not hashable for function '{}'".format(key, func.__name__)
             ) from e
 
     return _memoized_function
@@ -237,6 +205,7 @@ def decorator_with_or_without_args(decorator):
         @decorator
 
     """
+
     # See https://stackoverflow.com/questions/653368 for more on this
     @functools.wraps(decorator)
     def new_dec(*args, **kwargs):
@@ -514,42 +483,6 @@ class HashableMap(collections.abc.MutableMapping):
         return clone
 
 
-def in_function(function_name):
-    """True if the caller was called from some function with
-    the supplied Name, False otherwise."""
-    stack = inspect.stack()
-    try:
-        for elt in stack[2:]:
-            if elt[3] == function_name:
-                return True
-        return False
-    finally:
-        del stack
-
-
-def check_kwargs(kwargs, fun):
-    """Helper for making functions with kwargs.  Checks whether the kwargs
-    are empty after all of them have been popped off.  If they're
-    not, raises an error describing which kwargs are invalid.
-
-    Example::
-
-       def foo(self, **kwargs):
-           x = kwargs.pop('x', None)
-           y = kwargs.pop('y', None)
-           z = kwargs.pop('z', None)
-           check_kwargs(kwargs, self.foo)
-
-       # This raises a TypeError:
-       foo(w='bad kwarg')
-    """
-    if kwargs:
-        raise TypeError(
-            "'%s' is an invalid keyword argument for function %s()."
-            % (next(iter(kwargs)), fun.__name__)
-        )
-
-
 def match_predicate(*args):
     """Utility function for making string matching predicates.
 
@@ -765,12 +698,7 @@ def pretty_seconds(seconds):
     return pretty_seconds_formatter(seconds)(seconds)
 
 
-class RequiredAttributeError(ValueError):
-    def __init__(self, message):
-        super(RequiredAttributeError, self).__init__(message)
-
-
-class ObjectWrapper(object):
+class ObjectWrapper:
     """Base class that wraps an object. Derived classes can add new behavior
     while staying undercover.
 
@@ -797,7 +725,7 @@ class ObjectWrapper(object):
         self.__dict__ = wrapped_object.__dict__
 
 
-class Singleton(object):
+class Singleton:
     """Simple wrapper for lazily initialized singleton objects."""
 
     def __init__(self, factory):
@@ -822,7 +750,7 @@ class Singleton(object):
         # 'instance'/'_instance' to be defined or it will enter an infinite
         # loop, so protect against that here.
         if name in ["_instance", "instance"]:
-            raise AttributeError()
+            raise AttributeError(f"cannot create {name}")
         return getattr(self.instance, name)
 
     def __getitem__(self, name):
@@ -844,25 +772,28 @@ class Singleton(object):
         return repr(self.instance)
 
 
-class LazyReference(object):
-    """Lazily evaluated reference to part of a singleton."""
+def get_entry_points(*, group: str):
+    """Wrapper for ``importlib.metadata.entry_points``
 
-    def __init__(self, ref_function):
-        self.ref_function = ref_function
+    Args:
+        group: entry points to select
 
-    def __getattr__(self, name):
-        if name == "ref_function":
-            raise AttributeError()
-        return getattr(self.ref_function(), name)
+    Returns:
+        EntryPoints for ``group`` or empty list if unsupported
+    """
 
-    def __getitem__(self, name):
-        return self.ref_function()[name]
+    try:
+        import importlib.metadata  # type: ignore  # novermin
+    except ImportError:
+        return []
 
-    def __str__(self):
-        return str(self.ref_function())
-
-    def __repr__(self):
-        return repr(self.ref_function())
+    try:
+        return importlib.metadata.entry_points(group=group)
+    except TypeError:
+        # Prior to Python 3.10, entry_points accepted no parameters and always
+        # returned a dictionary of entry points, keyed by group.  See
+        # https://docs.python.org/3/library/importlib.metadata.html#entry-points
+        return importlib.metadata.entry_points().get(group, [])
 
 
 def load_module_from_file(module_name, module_path):
@@ -933,25 +864,6 @@ def uniq(sequence):
     return uniq_list
 
 
-def star(func):
-    """Unpacks arguments for use with Multiprocessing mapping functions"""
-
-    def _wrapper(args):
-        return func(*args)
-
-    return _wrapper
-
-
-class Devnull(object):
-    """Null stream with less overhead than ``os.devnull``.
-
-    See https://stackoverflow.com/a/2929954.
-    """
-
-    def write(self, *_):
-        pass
-
-
 def elide_list(line_list, max_num=10):
     """Takes a long list and limits it to a smaller number of elements,
     replacing intervening elements with '...'.  For example::
@@ -990,8 +902,7 @@ def enum(**kwargs):
 
 
 def stable_partition(
-    input_iterable: Iterable,
-    predicate_fn: Callable[[Any], bool],
+    input_iterable: Iterable, predicate_fn: Callable[[Any], bool]
 ) -> Tuple[List[Any], List[Any]]:
     """Partition the input iterable according to a custom predicate.
 
@@ -1060,7 +971,7 @@ class TypedMutableSequence(collections.abc.MutableSequence):
         return str(self.data)
 
 
-class GroupedExceptionHandler(object):
+class GroupedExceptionHandler:
     """A generic mechanism to coalesce multiple exceptions and preserve tracebacks."""
 
     def __init__(self):
@@ -1070,9 +981,9 @@ class GroupedExceptionHandler(object):
         """Whether any exceptions were handled."""
         return bool(self.exceptions)
 
-    def forward(self, context: str) -> "GroupedExceptionForwarder":
+    def forward(self, context: str, base: type = BaseException) -> "GroupedExceptionForwarder":
         """Return a contextmanager which extracts tracebacks and prefixes a message."""
-        return GroupedExceptionForwarder(context, self)
+        return GroupedExceptionForwarder(context, self, base)
 
     def _receive_forwarded(self, context: str, exc: Exception, tb: List[str]):
         self.exceptions.append((context, exc, tb))
@@ -1091,31 +1002,30 @@ class GroupedExceptionHandler(object):
         return "due to the following failures:\n{0}".format("\n".join(each_exception_message))
 
 
-class GroupedExceptionForwarder(object):
+class GroupedExceptionForwarder:
     """A contextmanager to capture exceptions and forward them to a
     GroupedExceptionHandler."""
 
-    def __init__(self, context: str, handler: GroupedExceptionHandler):
+    def __init__(self, context: str, handler: GroupedExceptionHandler, base: type):
         self._context = context
         self._handler = handler
+        self._base = base
 
     def __enter__(self):
         return None
 
     def __exit__(self, exc_type, exc_value, tb):
         if exc_value is not None:
-            self._handler._receive_forwarded(
-                self._context,
-                exc_value,
-                traceback.format_tb(tb),
-            )
+            if not issubclass(exc_type, self._base):
+                return False
+            self._handler._receive_forwarded(self._context, exc_value, traceback.format_tb(tb))
 
         # Suppress any exception from being re-raised:
         # https://docs.python.org/3/reference/datamodel.html#object.__exit__.
         return True
 
 
-class classproperty(object):
+class classproperty:
     """Non-data descriptor to evaluate a class-level property. The function that performs
     the evaluation is injected at creation time and take an instance (could be None) and
     an owner (i.e. the class that originated the instance)

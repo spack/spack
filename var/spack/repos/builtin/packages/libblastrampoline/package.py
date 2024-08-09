@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,9 @@ class Libblastrampoline(MakefilePackage):
 
     maintainers("haampie", "giordano")
 
+    license("MIT")
+
+    version("5.8.0", sha256="aeceb01ebebdd1068a1147b636451c46c16d64f9e22694075abda4dddfffe13d")
     version("5.4.0", sha256="e1a2258b0ad31cc41e6e9b8ba36f5c239fd1a267f2657ef3d3f669cc5b811f6a")
     version("5.3.0", sha256="95bca73f1567e2acd1110d0dfe5bb58fc86718555cd6eab89f0a769534df3b62")
     version("5.2.0", sha256="5af9ff9cec16087f57109082a362419fc49152034fa90772ebcabd882007fd95")
@@ -37,6 +40,8 @@ class Libblastrampoline(MakefilePackage):
     version("3.0.1", sha256="b5b8ac0d3aba1bcb9dc26d7d6bb36b352d45e7d7e2594c6122e72b9e5d75a772")
     version("3.0.0", sha256="4d0856d30e7ba0cb0de08b08b60fd34879ce98714341124acf87e587d1bbbcde")
     version("2.2.0", sha256="1fb8752891578b45e187019c67fccbaafb108756aadc69bdd876033846ad30d3")
+
+    depends_on("c", type="build")  # generated
 
     build_directory = "src"
 

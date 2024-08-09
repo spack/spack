@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,13 @@ class IntelLlvm(CMakePackage):
     homepage = "https://github.com/intel/llvm"
     git = "https://github.com/intel/llvm.git"
 
-    family = "compiler"
+    license("Apache-2.0")
 
     version("sycl", branch="sycl")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.4.3:", type="build")
 
@@ -35,7 +39,6 @@ class IntelLlvm(CMakePackage):
     root_cmakelists_dir = "llvm"
 
     def cmake_args(self):
-
         cmake_args = []
 
         cmake_args.extend(

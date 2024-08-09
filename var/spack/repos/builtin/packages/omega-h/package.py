@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,11 @@ class OmegaH(CMakePackage, CudaPackage):
     maintainers("cwsmith")
     tags = ["e4s"]
     version("main", branch="main")
+    version(
+        "scorec.10.7.0",
+        commit="0e5de8618c3370f702e08c1b1af476dbbc118892",
+        git="https://github.com/SCOREC/omega_h.git",
+    )
     version(
         "scorec.10.6.0",
         commit="f376fad4741b55a4b2482218eb3437d719b7c72e",
@@ -51,28 +56,41 @@ class OmegaH(CMakePackage, CudaPackage):
     variant("optimize", default=True, description="Compile C++ with optimization")
     variant("symbols", default=True, description="Compile C++ with debug symbols")
     variant("warnings", default=False, description="Compile C++ with warnings")
+    variant("gmsh", default=False, description="Use Gmsh C++ API")
+    variant("kokkos", default=False, description="Use Kokkos")
 
-    depends_on("gmsh", when="+examples", type="build")
+    depends_on("cxx", type="build")
+    depends_on("c", type="build", when="+mpi")
+
+    depends_on("gmsh", when="+examples")
+    depends_on("gmsh@4.4.1:", when="+gmsh")
     depends_on("mpi", when="+mpi")
     depends_on("trilinos +kokkos", when="+trilinos")
-    depends_on("zlib", when="+zlib")
+    depends_on("kokkos", when="+kokkos")
+    depends_on("zlib-api", when="+zlib")
     # Note: '+cuda' and 'cuda_arch' variants are added by the CudaPackage
     depends_on("cuda", when="+cuda")
     conflicts(
-        "cuda@11.2",
+        "^cuda@11.2",
         when="@scorec.10.1.0:",
         msg="Thrust is broken in CUDA = 11.2.* see https://github.com/sandialabs/omega_h/issues/366",
     )
     # the sandia repo has a fix for cuda > 11.2 support
     #  see github.com/sandialabs/omega_h/pull/373
     conflicts(
-        "cuda@11.2",
+        "^cuda@11.2",
         when="@:9.34.4",
         msg="Thrust is broken in CUDA = 11.2.* see https://github.com/sandialabs/omega_h/issues/366",
     )
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86610
     conflicts("%gcc@8:8.2", when="@:9.22.1")
+
+    def patch(self):
+        if "@:9.34.8" in self.spec:
+            filter_file(
+                r"OUTPUT_QUIET", "OUTPUT_VARIABLE Gmsh_VERSION_STRING", "cmake/FindGmsh.cmake"
+            )
 
     def _bob_options(self):
         cmake_var_prefix = "Omega_h_CXX_"
@@ -110,9 +128,13 @@ class OmegaH(CMakePackage, CudaPackage):
             args.append("-DOmega_h_USE_CUDA:BOOL=OFF")
         if "+trilinos" in self.spec:
             args.append("-DOmega_h_USE_Trilinos:BOOL=ON")
+        if "+gmsh" in self.spec:
+            args.append("-DOmega_h_USE_Gmsh:BOOL=ON")
+        if "+kokkos" in self.spec:
+            args.append("-DOmega_h_USE_Kokkos:BOOL=ON")
         if "+zlib" in self.spec:
             args.append("-DOmega_h_USE_ZLIB:BOOL=ON")
-            args.append("-DZLIB_ROOT:PATH={0}".format(self.spec["zlib"].prefix))
+            args.append("-DZLIB_ROOT:PATH={0}".format(self.spec["zlib-api"].prefix))
         else:
             args.append("-DOmega_h_USE_ZLIB:BOOL=OFF")
         if "+examples" in self.spec:
@@ -123,9 +145,10 @@ class OmegaH(CMakePackage, CudaPackage):
             args.append("-DOmega_h_THROW:BOOL=ON")
         else:
             args.append("-DOmega_h_THROW:BOOL=OFF")
-        # omega-h requires empty CMAKE_BUILD_TYPE
-        args.append("-DCMAKE_BUILD_TYPE:STRING=")
-        args += list(self._bob_options())
+        if "@:9.29.99" in self.spec:
+            # omega-h requires empty CMAKE_BUILD_TYPE
+            args.append("-DCMAKE_BUILD_TYPE:STRING=")
+            args += list(self._bob_options())
         return args
 
     def flag_handler(self, name, flags):
@@ -138,23 +161,20 @@ class OmegaH(CMakePackage, CudaPackage):
 
         return (None, None, flags)
 
-    def test(self):
-        if self.spec.version < Version("9.34.1"):
-            print("Skipping tests since only relevant for versions > 9.34.1")
-            return
+    def test_mesh(self):
+        """test construction, adaptation, and conversion of a mesh"""
+        if self.spec.satisfies("@:9.34.0"):
+            raise SkipTest("Package must be installed as version 9.34.1 or later")
 
-        exe = join_path(self.prefix.bin, "osh_box")
-        options = ["1", "1", "1", "2", "2", "2", "box.osh"]
-        description = "testing mesh construction"
-        self.run_test(exe, options, purpose=description)
+        with test_part(self, "test_mesh_create", purpose="mesh construction"):
+            exe = which(self.prefix.bin.osh_box)
+            exe("1", "1", "1", "2", "2", "2", "box.osh")
 
-        exe = join_path(self.prefix.bin, "osh_scale")
-        options = ["box.osh", "100", "box_100.osh"]
-        expected = "adapting took"
-        description = "testing mesh adaptation"
-        self.run_test(exe, options, expected, purpose=description)
+        with test_part(self, "test_mesh_adapt", purpose="mesh adaptation"):
+            exe = which(self.prefix.bin.osh_scale)
+            actual = exe("box.osh", "100", "box_100.osh", output=str.split, error=str.split)
+            assert "adapting took" in actual
 
-        exe = join_path(self.prefix.bin, "osh2vtk")
-        options = ["box_100.osh", "box_100_vtk"]
-        description = "testing mesh to vtu conversion"
-        self.run_test(exe, options, purpose=description)
+        with test_part(self, "test_mesh_convert", purpose="mesh to vtu conversion"):
+            exe = which(self.prefix.bin.osh2vtk)
+            exe("box_100.osh", "box_100_vtk")

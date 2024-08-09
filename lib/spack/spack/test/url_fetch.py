@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import is_exe, working_dir
 
 import spack.config
+import spack.error
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.util.crypto as crypto
@@ -21,7 +22,6 @@ import spack.util.web as web_util
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
-from spack.version import ver
 
 
 @pytest.fixture(params=list(crypto.hashes.keys()))
@@ -153,7 +153,10 @@ def test_fetch(
     # Get a spec and tweak the test package with new checksum params
     s = default_mock_concretization("url-test")
     s.package.url = mock_archive.url
-    s.package.versions[ver("test")] = {checksum_type: checksum, "url": s.package.url}
+    s.package.versions[spack.version.Version("test")] = {
+        checksum_type: checksum,
+        "url": s.package.url,
+    }
 
     # Enter the stage directory and check some properties
     with s.package.stage:
@@ -170,18 +173,16 @@ def test_fetch(
             assert "echo Building..." in contents
 
 
-# TODO-27021
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "spec,url,digest",
     [
-        ("url-list-test @0.0.0", "foo-0.0.0.tar.gz", "00000000000000000000000000000000"),
-        ("url-list-test @1.0.0", "foo-1.0.0.tar.gz", "00000000000000000000000000000100"),
-        ("url-list-test @3.0", "foo-3.0.tar.gz", "00000000000000000000000000000030"),
-        ("url-list-test @4.5", "foo-4.5.tar.gz", "00000000000000000000000000000450"),
-        ("url-list-test @2.0.0b2", "foo-2.0.0b2.tar.gz", "000000000000000000000000000200b2"),
-        ("url-list-test @3.0a1", "foo-3.0a1.tar.gz", "000000000000000000000000000030a1"),
-        ("url-list-test @4.5-rc5", "foo-4.5-rc5.tar.gz", "000000000000000000000000000045c5"),
+        ("url-list-test @=0.0.0", "foo-0.0.0.tar.gz", "00000000000000000000000000000000"),
+        ("url-list-test @=1.0.0", "foo-1.0.0.tar.gz", "00000000000000000000000000000100"),
+        ("url-list-test @=3.0", "foo-3.0.tar.gz", "00000000000000000000000000000030"),
+        ("url-list-test @=4.5", "foo-4.5.tar.gz", "00000000000000000000000000000450"),
+        ("url-list-test @=2.0.0b2", "foo-2.0.0b2.tar.gz", "000000000000000000000000000200b2"),
+        ("url-list-test @=3.0a1", "foo-3.0a1.tar.gz", "000000000000000000000000000030a1"),
+        ("url-list-test @=4.5-rc5", "foo-4.5-rc5.tar.gz", "000000000000000000000000000045c5"),
     ],
 )
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
@@ -202,32 +203,23 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
         assert fetch_strategy.extra_options == {"timeout": 60}
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
 @pytest.mark.parametrize(
     "requested_version,tarball,digest",
     [
-        # This version is in the web data path (test/data/web/4.html), but not in the
+        # These versions are in the web data path (test/data/web/4.html), but not in the
         # url-list-test package. We expect Spack to generate a URL with the new version.
-        ("4.5.0", "foo-4.5.0.tar.gz", None),
-        # This version is in web data path and not in the package file, BUT the 2.0.0b2
-        # version in the package file satisfies 2.0.0, so Spack will use the known version.
-        # TODO: this is *probably* not what the user wants, but it's here as an example
-        # TODO: for that reason. We can't express "exactly 2.0.0" right now, and we don't
-        # TODO: have special cases that would make 2.0.0b2 less than 2.0.0. We should
-        # TODO: probably revisit this in our versioning scheme.
-        ("2.0.0", "foo-2.0.0b2.tar.gz", "000000000000000000000000000200b2"),
+        ("=4.5.0", "foo-4.5.0.tar.gz", None),
+        ("=2.0.0", "foo-2.0.0.tar.gz", None),
     ],
 )
+@pytest.mark.only_clingo("Original concretizer doesn't resolve concrete versions to known ones")
 def test_new_version_from_list_url(
     mock_packages, config, _fetch_method, requested_version, tarball, digest
 ):
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer doesn't resolve concrete versions to known ones")
-
     """Test non-specific URLs from the url-list-test package."""
     with spack.config.override("config:url_fetch_method", _fetch_method):
-        s = Spec("url-list-test @%s" % requested_version).concretized()
+        s = Spec(f"url-list-test @{requested_version}").concretized()
         fetch_strategy = fs.from_list_url(s.package)
 
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
@@ -349,7 +341,7 @@ def test_missing_curl(tmpdir, monkeypatch):
 
 
 def test_url_fetch_text_without_url(tmpdir):
-    with pytest.raises(web_util.FetchError, match="URL is required"):
+    with pytest.raises(spack.error.FetchError, match="URL is required"):
         web_util.fetch_url_text(None)
 
 
@@ -366,18 +358,18 @@ def test_url_fetch_text_curl_failures(tmpdir, monkeypatch):
     monkeypatch.setattr(spack.util.web, "which", _which)
 
     with spack.config.override("config:url_fetch_method", "curl"):
-        with pytest.raises(web_util.FetchError, match="Missing required curl"):
+        with pytest.raises(spack.error.FetchError, match="Missing required curl"):
             web_util.fetch_url_text("https://github.com/")
 
 
 def test_url_check_curl_errors():
     """Check that standard curl error returncodes raise expected errors."""
     # Check returncode 22 (i.e., 404)
-    with pytest.raises(web_util.FetchError, match="not found"):
+    with pytest.raises(spack.error.FetchError, match="not found"):
         web_util.check_curl_code(22)
 
     # Check returncode 60 (certificate error)
-    with pytest.raises(web_util.FetchError, match="invalid certificate"):
+    with pytest.raises(spack.error.FetchError, match="invalid certificate"):
         web_util.check_curl_code(60)
 
 
@@ -394,12 +386,12 @@ def test_url_missing_curl(tmpdir, monkeypatch):
     monkeypatch.setattr(spack.util.web, "which", _which)
 
     with spack.config.override("config:url_fetch_method", "curl"):
-        with pytest.raises(web_util.FetchError, match="Missing required curl"):
+        with pytest.raises(spack.error.FetchError, match="Missing required curl"):
             web_util.url_exists("https://github.com/")
 
 
 def test_url_fetch_text_urllib_bad_returncode(tmpdir, monkeypatch):
-    class response(object):
+    class response:
         def getcode(self):
             return 404
 
@@ -409,7 +401,7 @@ def test_url_fetch_text_urllib_bad_returncode(tmpdir, monkeypatch):
     monkeypatch.setattr(spack.util.web, "read_from_url", _read_from_url)
 
     with spack.config.override("config:url_fetch_method", "urllib"):
-        with pytest.raises(web_util.FetchError, match="failed with error code"):
+        with pytest.raises(spack.error.FetchError, match="failed with error code"):
             web_util.fetch_url_text("https://github.com/")
 
 
@@ -420,5 +412,5 @@ def test_url_fetch_text_urllib_web_error(tmpdir, monkeypatch):
     monkeypatch.setattr(spack.util.web, "read_from_url", _raise_web_error)
 
     with spack.config.override("config:url_fetch_method", "urllib"):
-        with pytest.raises(web_util.FetchError, match="fetch failed to verify"):
+        with pytest.raises(spack.error.FetchError, match="fetch failed to verify"):
             web_util.fetch_url_text("https://github.com/")

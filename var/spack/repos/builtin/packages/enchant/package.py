@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Enchant(AutotoolsPackage):
     homepage = "https://abiword.github.io/enchant/"
     url = "https://github.com/AbiWord/enchant/releases/download/v2.2.5/enchant-2.2.5.tar.gz"
 
+    license("LGPL-2.1-or-later")
+
     version("2.2.7", sha256="1b22976135812b35cb5b8d21a53ad11d5e7c1426c93f51e7a314a2a42cab3a09")
     version("2.2.6", sha256="8048c5bd26190b21279745cfecd05808c635bc14912e630340cd44a49b87d46d")
     version("2.2.5", sha256="ffce4ea00dbda1478d91c3e1538cadfe5761d9d6c0ceb27bc3dba51882fe1c47")
@@ -27,6 +29,9 @@ class Enchant(AutotoolsPackage):
     version("2.1.2", sha256="039563bbb7340f320bd9237dac92303b3e7768152b08fc0d554d6957ae7183d8")
     version("2.1.1", sha256="5fad0a1e82ddfed91647e93da5955fc76249760fd51865648a36074dc97d526c")
     version("2.1.0", sha256="2cdda2d9edb62ad895c34be35c598d56ac5b9b9298f3dfdaa2b40a1914d1db7e")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("hunspell", default=True, description="Enables hunspell backend")
 

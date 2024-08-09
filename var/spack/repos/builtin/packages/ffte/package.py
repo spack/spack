@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,18 +26,15 @@ class Ffte(Package):
     version("2.0", sha256="f5cf1d1f880288e359f4d517191980ffca4420f817ecaa2d754ca5c5421271e3")
     version("1.0", sha256="35171e3324019018c25575b2807a6513fa85badad040f30f238fff03d4b4d1ab")
 
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=False, description="Build MPI library")
     variant("cuda", default=False, description="Use CUDA Fortran")
     variant("vector", default=False, description="Use vectorized FFT")
 
     depends_on("mpi", when="+mpi")
 
-    conflicts("%cce", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%clang", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%gcc", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%llvm", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%nag", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%intel", when="+cuda", msg="Must use NVHPC compiler")
+    requires("%nvhpc", when="+cuda", msg="ffte+cuda must use NVHPC compiler")
 
     def edit(self, spec, prefix):
         "No make-file, must create one from scratch."
@@ -70,10 +67,7 @@ class Ffte(Package):
             else:
                 lbnm = "libfftempi.a"
 
-            for spc, vrf, rs, ip in (
-                ("+vector", vf, "v", 2),
-                ("+cuda", cuf, "cu", 3),
-            ):
+            for spc, vrf, rs, ip in (("+vector", vf, "v", 2), ("+cuda", cuf, "cu", 3)):
                 if spc in spec:
                     for f in vrf:  # replace with variant versions
                         orgf = f[:ip].replace(rs, "") + f[ip:]

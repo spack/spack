@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,11 +38,18 @@ class Conduit(CMakePackage):
     git = "https://github.com/LLNL/conduit.git"
     tags = ["radiuss", "e4s"]
 
+    license("Apache-2.0")
+
     version("develop", branch="develop", submodules=True)
     # note: the main branch in conduit was renamed to develop, this next entry
     # is to bridge any spack dependencies that are still using the name master
     version("master", branch="develop", submodules=True)
     # note: 2021-05-05 latest tagged release is now preferred instead of develop
+    version("0.9.2", sha256="45d5a4eccd0fc978d153d29c440c53c483b8f29dfcf78ddcc9aa15c59b257177")
+    version("0.9.1", sha256="a3f1168738dcf72f8ebf83299850301aaf56e803f40618fc1230a755d0d05363")
+    version("0.9.0", sha256="844e012400ab820967eef6cec15e1aa9a68cb05119d0c1f292d3c01630111a58")
+    version("0.8.8", sha256="99811e9c464b6f841f52fcd47e982ae47cbb01cba334cff43eabe13eea58c0df")
+    version("0.8.7", sha256="f3bf44d860783f4e0d61517c5e280c88144af37414569f4cf86e2d29b3ba5293")
     version("0.8.6", sha256="8ca5d37033143ed7181c7286dd25a3f6126ba0358889066f13a2b32f68fc647e")
     version("0.8.5", sha256="b4a6f269a81570a4597e2565927fd0ed2ac45da0a2500ce5a71c26f7c92c5483")
     version("0.8.4", sha256="55c37ddc668dbc45d43b60c440192f76e688a530d64f9fe1a9c7fdad8cd525fd")
@@ -62,6 +69,10 @@ class Conduit(CMakePackage):
     # note: checksums on github automatic release source tars changed ~9/17
     version("0.2.1", sha256="796576b9c69717c52f0035542c260eb7567aa351ee892d3fbe3521c38f1520c4")
     version("0.2.0", sha256="31eff8dbc654a4b235cfcbc326a319e1752728684296721535c7ca1c9b463061")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     maintainers("cyrush")
 
@@ -113,8 +124,10 @@ class Conduit(CMakePackage):
     #######################
     # CMake
     #######################
-    # cmake 3.14.1 or newer
+    # cmake 3.14.1 or newer basic requirement
     depends_on("cmake@3.14.1:", type="build")
+    # cmake 3.21.0 or newer for conduit 0.9.0
+    depends_on("cmake@3.21.0:", type="build", when="@0.9.0:")
 
     #######################
     # Python
@@ -123,6 +136,7 @@ class Conduit(CMakePackage):
     extends("python", when="+python")
     depends_on("py-numpy", when="+python", type=("build", "run"))
     depends_on("py-mpi4py", when="+python+mpi", type=("build", "run"))
+    depends_on("py-pip", when="+python", type="build")
 
     #######################
     # I/O Packages
@@ -181,6 +195,8 @@ class Conduit(CMakePackage):
     depends_on("py-sphinx", when="+python+doc", type="build")
     depends_on("py-sphinx-rtd-theme", when="+python+doc", type="build")
     depends_on("doxygen", when="+doc+doxygen")
+
+    conflicts("+parmetis", when="~mpi", msg="Parmetis support requires MPI")
 
     # Tentative patch for fj compiler
     # Cmake will support fj compiler and this patch will be removed
@@ -297,7 +313,7 @@ class Conduit(CMakePackage):
         #######################
         c_compiler = env["SPACK_CC"]
         cpp_compiler = env["SPACK_CXX"]
-        if "+fortran" in spec:
+        if spec.satisfies("+fortran"):
             f_compiler = env["SPACK_FC"]
         else:
             f_compiler = None
@@ -348,13 +364,13 @@ class Conduit(CMakePackage):
         cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
         cfg.write("# fortran compiler used by spack\n")
-        if "+fortran" in spec:
+        if spec.satisfies("+fortran"):
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
             cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER", f_compiler))
         else:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
 
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "ON"))
         else:
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
@@ -389,12 +405,12 @@ class Conduit(CMakePackage):
         #######################
         # Examples/Utilities
         #######################
-        if "+examples" in spec:
+        if spec.satisfies("+examples"):
             cfg.write(cmake_cache_entry("ENABLE_EXAMPLES", "ON"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_EXAMPLES", "OFF"))
 
-        if "+utilities" in spec:
+        if spec.satisfies("+utilities"):
             cfg.write(cmake_cache_entry("ENABLE_UTILS", "ON"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_UTILS", "OFF"))
@@ -402,37 +418,25 @@ class Conduit(CMakePackage):
         #######################
         # Unit Tests
         #######################
-        if "+test" in spec:
+        if spec.satisfies("+test"):
             cfg.write(cmake_cache_entry("ENABLE_TESTS", "ON"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
 
         # extra fun for blueos
-        if on_blueos:
-            # All of BlueOS compilers report clang due to nvcc,
-            # override to proper compiler family
-            if "xlc" in c_compiler:
-                cfg.write(cmake_cache_entry("CMAKE_C_COMPILER_ID", "XL"))
-            if "xlC" in cpp_compiler:
-                cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER_ID", "XL"))
+        if on_blueos and "+fortran" in spec and (f_compiler is not None) and ("xlf" in f_compiler):
+            # Fix missing std linker flag in xlc compiler
+            flags = "-WF,-C! -qxlf2003=polymorphic"
+            cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS", flags))
+            # Grab lib directory for the current fortran compiler
+            libdir = os.path.join(os.path.dirname(os.path.dirname(f_compiler)), "lib")
+            rpaths = "-Wl,-rpath,{0} -Wl,-rpath,{0}64".format(libdir)
 
-            if "+fortran" in spec:
-                if "xlf" in f_compiler:
-                    cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER_ID", "XL"))
-
-                if (f_compiler is not None) and ("xlf" in f_compiler):
-                    # Fix missing std linker flag in xlc compiler
-                    flags = "-WF,-C! -qxlf2003=polymorphic"
-                    cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS", flags))
-                    # Grab lib directory for the current fortran compiler
-                    libdir = os.path.join(os.path.dirname(os.path.dirname(f_compiler)), "lib")
-                    rpaths = "-Wl,-rpath,{0} -Wl,-rpath,{0}64".format(libdir)
-
-                    flags = "${BLT_EXE_LINKER_FLAGS} -lstdc++ " + rpaths
-                    cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags))
-                    if "+shared" in spec:
-                        flags = "${CMAKE_SHARED_LINKER_FLAGS} " + rpaths
-                        cfg.write(cmake_cache_entry("CMAKE_SHARED_LINKER_FLAGS", flags))
+            flags = "${BLT_EXE_LINKER_FLAGS} -lstdc++ " + rpaths
+            cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags))
+            if spec.satisfies("+shared"):
+                flags = "${CMAKE_SHARED_LINKER_FLAGS} " + rpaths
+                cfg.write(cmake_cache_entry("CMAKE_SHARED_LINKER_FLAGS", flags))
 
         #######################
         # Python
@@ -440,11 +444,11 @@ class Conduit(CMakePackage):
 
         cfg.write("# Python Support\n")
 
-        if "+python" in spec:
+        if spec.satisfies("+python"):
             cfg.write("# Enable python module builds\n")
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")
-            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE", spec["python"].command.path))
+            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE", python.path))
             try:
                 cfg.write("# python module install dir\n")
                 cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX", python_platlib))
@@ -454,14 +458,14 @@ class Conduit(CMakePackage):
         else:
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
 
-        if "+doc" in spec:
-            if "+python" in spec:
+        if spec.satisfies("+doc"):
+            if spec.satisfies("+python"):
                 cfg.write(cmake_cache_entry("ENABLE_DOCS", "ON"))
 
                 cfg.write("# sphinx from spack \n")
                 sphinx_build_exe = join_path(spec["py-sphinx"].prefix.bin, "sphinx-build")
                 cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE", sphinx_build_exe))
-            if "+doxygen" in spec:
+            if spec.satisfies("+doxygen"):
                 cfg.write("# doxygen from uberenv\n")
                 doxygen_exe = spec["doxygen"].command.path
                 cfg.write(cmake_cache_entry("DOXYGEN_EXECUTABLE", doxygen_exe))
@@ -474,7 +478,7 @@ class Conduit(CMakePackage):
 
         cfg.write("# MPI Support\n")
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             mpicc_path = spec["mpi"].mpicc
             mpicxx_path = spec["mpi"].mpicxx
             mpifc_path = spec["mpi"].mpifc if "+fortran" in spec else None
@@ -489,11 +493,11 @@ class Conduit(CMakePackage):
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
-            if "+blt_find_mpi" in spec:
+            if spec.satisfies("+blt_find_mpi"):
                 cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "ON"))
             else:
                 cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "OFF"))
-            if "+fortran" in spec:
+            if spec.satisfies("+fortran"):
                 cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
 
             mpiexe_bin = join_path(spec["mpi"].prefix.bin, "mpiexec")
@@ -511,7 +515,7 @@ class Conduit(CMakePackage):
         # ZFP
         #######################
         cfg.write("# zfp from spack \n")
-        if "+zfp" in spec:
+        if spec.satisfies("+zfp"):
             cfg.write(cmake_cache_entry("ZFP_DIR", spec["zfp"].prefix))
         else:
             cfg.write("# zfp not built by spack \n")
@@ -520,7 +524,7 @@ class Conduit(CMakePackage):
         # Caliper
         #######################
         cfg.write("# caliper from spack \n")
-        if "+caliper" in spec:
+        if spec.satisfies("+caliper"):
             cfg.write(cmake_cache_entry("CALIPER_DIR", spec["caliper"].prefix))
             cfg.write(cmake_cache_entry("ADIAK_DIR", spec["adiak"].prefix))
         else:
@@ -538,11 +542,11 @@ class Conduit(CMakePackage):
 
         cfg.write("# hdf5 from spack \n")
 
-        if "+hdf5" in spec:
+        if spec.satisfies("+hdf5"):
             cfg.write(cmake_cache_entry("HDF5_DIR", spec["hdf5"].prefix))
-            if "zlib" in spec:
+            if spec.satisfies("^zlib-api"):
                 # HDF5 depends on zlib
-                cfg.write(cmake_cache_entry("ZLIB_DIR", spec["zlib"].prefix))
+                cfg.write(cmake_cache_entry("ZLIB_DIR", spec["zlib-api"].prefix))
         else:
             cfg.write("# hdf5 not built by spack \n")
 
@@ -552,7 +556,7 @@ class Conduit(CMakePackage):
 
         cfg.write("# h5z-zfp from spack \n")
 
-        if "+hdf5+zfp" in spec:
+        if spec.satisfies("+hdf5+zfp"):
             cfg.write(cmake_cache_entry("H5ZZFP_DIR", spec["h5z-zfp"].prefix))
         else:
             cfg.write("# h5z-zfp not built by spack \n")
@@ -563,7 +567,7 @@ class Conduit(CMakePackage):
 
         cfg.write("# silo from spack \n")
 
-        if "+silo" in spec:
+        if spec.satisfies("+silo"):
             cfg.write(cmake_cache_entry("SILO_DIR", spec["silo"].prefix))
         else:
             cfg.write("# silo not built by spack \n")
@@ -574,7 +578,7 @@ class Conduit(CMakePackage):
 
         cfg.write("# ADIOS from spack \n")
 
-        if "+adios" in spec:
+        if spec.satisfies("+adios"):
             cfg.write(cmake_cache_entry("ADIOS_DIR", spec["adios"].prefix))
         else:
             cfg.write("# adios not built by spack \n")
@@ -585,7 +589,7 @@ class Conduit(CMakePackage):
 
         cfg.write("# parmetis from spack \n")
 
-        if "+parmetis" in spec:
+        if spec.satisfies("+parmetis"):
             cfg.write(cmake_cache_entry("METIS_DIR", spec["metis"].prefix))
             cfg.write(cmake_cache_entry("PARMETIS_DIR", spec["parmetis"].prefix))
         else:

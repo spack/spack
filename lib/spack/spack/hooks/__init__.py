@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,16 +12,9 @@ Hooks are not executed in any particular order.
 Currently the following hooks are supported:
 
     * pre_install(spec)
-    * post_install(spec)
+    * post_install(spec, explicit)
     * pre_uninstall(spec)
     * post_uninstall(spec)
-    * on_install_start(spec)
-    * on_install_success(spec)
-    * on_install_failure(spec)
-    * on_phase_success(pkg, phase_name, log_file)
-    * on_phase_error(pkg, phase_name, log_file)
-    * on_phase_error(pkg, phase_name, log_file)
-    * post_env_write(env)
 
 This can be used to implement support for things like module
 systems (e.g. modules, lmod, etc.) or to add other custom
@@ -33,7 +26,7 @@ from llnl.util.lang import ensure_last, list_modules
 import spack.paths
 
 
-class _HookRunner(object):
+class _HookRunner:
     #: Stores all hooks on first call, shared among
     #: all HookRunner objects
     _hooks = None
@@ -78,17 +71,5 @@ class _HookRunner(object):
 pre_install = _HookRunner("pre_install")
 post_install = _HookRunner("post_install")
 
-# These hooks are run within an install subprocess
 pre_uninstall = _HookRunner("pre_uninstall")
 post_uninstall = _HookRunner("post_uninstall")
-on_phase_success = _HookRunner("on_phase_success")
-on_phase_error = _HookRunner("on_phase_error")
-
-# These are hooks in installer.py, before starting install subprocess
-on_install_start = _HookRunner("on_install_start")
-on_install_success = _HookRunner("on_install_success")
-on_install_failure = _HookRunner("on_install_failure")
-on_install_cancel = _HookRunner("on_install_cancel")
-
-# Environment hooks
-post_env_write = _HookRunner("post_env_write")

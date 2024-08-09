@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,10 +38,7 @@ class GenericBuilder(BaseBuilder):
     legacy_methods: Tuple[str, ...] = ()
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes: Tuple[str, ...] = (
-        "archive_files",
-        "install_time_test_callbacks",
-    )
+    legacy_attributes: Tuple[str, ...] = ("archive_files", "install_time_test_callbacks")
 
     #: Callback names for post-install phase tests
     install_time_test_callbacks = []

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,16 +17,19 @@ class Ip2(CMakePackage):
     homepage = "https://github.com/NOAA-EMC/NCEPLIBS-ip2"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-ip2/archive/refs/tags/v1.1.2.tar.gz"
 
-    maintainers(
-        "t-brown",
-        "AlexanderRichert-NOAA",
-        "Hang-Lei-NOAA",
-        "edwardhartnett",
+    maintainers("t-brown", "AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
+
+    version(
+        "1.1.2",
+        sha256="73c6beec8fd463ec7ccba3633d8c5d53d385c43d507367efde918c2db0af42ab",
+        deprecated=True,
     )
 
-    version("1.1.2", sha256="73c6beec8fd463ec7ccba3633d8c5d53d385c43d507367efde918c2db0af42ab")
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("sp")
+    requires("^sp precision=4,8,d", when="^sp@2.4:")
 
     def setup_run_environment(self, env):
         for suffix in ("4", "8", "d"):

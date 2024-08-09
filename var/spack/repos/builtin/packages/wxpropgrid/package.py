@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Wxpropgrid(Package, SourceforgePackage):
     sourceforge_mirror_path = "wxpropgrid/wxpropgrid-1.4.15-src.tar.gz"
 
     version("1.4.15", sha256="f0c9a86656828f592c8e57d2c89401f07f0af6a45b17bbca3990e8d29121c2b8")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("wxwidgets")
 

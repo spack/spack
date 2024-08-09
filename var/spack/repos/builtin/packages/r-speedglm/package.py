@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RSpeedglm(RPackage):
     updating algorithms."""
 
     cran = "speedglm"
+
+    license("GPL-2.0-or-later")
 
     version("0.3-4", sha256="1a12db7dbceaaf5cf4f9a0c03e2a2b9f32e91b697daf2ccfe81bbae9ac3046ce")
     version("0.3-3", sha256="d065d0ee42fb772760fca8d97ad2aa56cd76b1d9ecb4e97478ec362429e16738")

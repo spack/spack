@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,11 +9,11 @@ from spack.package import *
 class Pacparser(MakefilePackage):
     """pacparser is a library to parse proxy auto-config (PAC) files."""
 
-    maintainers("iarspider")
-
     homepage = "https://pacparser.github.io/"
     url = "https://github.com/manugarg/pacparser/releases/download/v1.4.0/pacparser-v1.4.0.tar.gz"
     git = "https://github.com/manugarg/pacparser.git"
+
+    license("LGPL-3.0-or-later")
 
     version("1.4.0", sha256="2e66c5fe635cd5dcb9bccca4aced925eca712632b81bada3b63682159c0f910e")
     version("1.3.9", commit="4bbfb15c96ea0b2aede2f7371e59f66e15722d41")
@@ -23,6 +23,8 @@ class Pacparser(MakefilePackage):
         sha256="eb48ec2fc202d12a4b882133048c7590329849f32c2285bc4dbe418f29aad249",
         url="https://github.com/manugarg/pacparser/releases/download/1.3.7/pacparser-1.3.7.tar.gz",
     )
+
+    depends_on("c", type="build")  # generated
 
     depends_on("python", when="+python")
     depends_on("py-setuptools", when="+python", type=("build", "run"))

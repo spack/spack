@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class RMcmc(RPackage):
     ergodicity by change of variable."""
 
     cran = "mcmc"
+
+    license("MIT")
 
     version("0.9-7", sha256="b7c4d3d5f9364c67a4a3cd49296a61c315ad9bd49324a22deccbacb314aa8260")
 

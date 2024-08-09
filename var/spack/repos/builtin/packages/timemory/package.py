@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Timemory(CMakePackage, PythonExtension):
     git = "https://github.com/NERSC/timemory.git"
     maintainers("jrmadsen")
 
+    license("MIT")
+
     version("master", branch="master", submodules=True)
     version("develop", branch="develop", submodules=True)
     version("3.2.3", commit="d535e478646e331a4c65cfd8c8f759c9a363ccc9", submodules=True)
@@ -25,6 +27,10 @@ class Timemory(CMakePackage, PythonExtension):
     version("3.1.0", commit="b12de7eeed699d820693fecd6136daff744f21b6", submodules=True)
     version("3.0.1", commit="ef638e1cde90275ce7c0e12fc4902c27bcbdeefd", submodules=True)
     version("3.0.0", commit="b36b1673b2c6b7ff3126d8261bef0f8f176c7beb", submodules=True)
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("shared", default=True, description="Build shared libraries")
     variant("static", default=False, description="Build static libraries")
@@ -61,15 +67,9 @@ class Timemory(CMakePackage, PythonExtension):
     variant("vtune", default=False, description="Enable VTune support")
     variant("upcxx", default=False, description="Enable UPC++ support")
     variant("gotcha", default=False, description="Enable GOTCHA support")
+    variant("likwid", default=False, description="Enable LIKWID CPU marker API support (perfmon)")
     variant(
-        "likwid",
-        default=False,
-        description="Enable LIKWID CPU marker API support (perfmon)",
-    )
-    variant(
-        "likwid_nvmon",
-        default=False,
-        description="Enable LIKWID GPU marker API support (nvmon)",
+        "likwid_nvmon", default=False, description="Enable LIKWID GPU marker API support (nvmon)"
     )
     variant("caliper", default=False, description="Enable Caliper support")
     variant("dyninst", default=False, description="Build dynamic instrumentation tools")
@@ -172,16 +172,10 @@ class Timemory(CMakePackage, PythonExtension):
         "but larger memory consumption",
     )
     variant(
-        "mpip_library",
-        default=False,
-        description="Build stand-alone timemory-mpip GOTCHA library",
+        "mpip_library", default=False, description="Build stand-alone timemory-mpip GOTCHA library"
     )
     variant("ompt", default=False, description=("Enable OpenMP tools support"))
-    variant(
-        "ompt_library",
-        default=False,
-        description="Build stand-alone timemory-ompt library",
-    )
+    variant("ompt_library", default=False, description="Build stand-alone timemory-ompt library")
     variant("allinea_map", default=False, description="Enable Allinea ARM-MAP support")
     variant(
         "require_packages",
@@ -244,25 +238,17 @@ class Timemory(CMakePackage, PythonExtension):
         msg="+kokkos_build_config requires +tools+kokkos_tools",
     )
     conflicts(
-        "tls_model=local-dynamic",
-        when="+python",
-        msg="+python require tls_model=global-dynamic",
+        "tls_model=local-dynamic", when="+python", msg="+python require tls_model=global-dynamic"
     )
     conflicts(
-        "tls_model=initial-exec",
-        when="+python",
-        msg="+python require tls_model=global-dynamic",
+        "tls_model=initial-exec", when="+python", msg="+python require tls_model=global-dynamic"
     )
     conflicts(
-        "tls_model=local-exec",
-        when="+python",
-        msg="+python require tls_model=global-dynamic",
+        "tls_model=local-exec", when="+python", msg="+python require tls_model=global-dynamic"
     )
     conflicts("+nccl", when="~gotcha", msg="+nccl requires +gotcha")
     conflicts(
-        "+nccl",
-        when="~shared~static",
-        msg="+nccl requires building shared or static libraries",
+        "+nccl", when="~shared~static", msg="+nccl requires building shared or static libraries"
     )
     conflicts("+mpip_library", when="~mpi", msg="+mpip_library requires +mpi")
     conflicts("+mpip_library", when="~gotcha", msg="+mpip_library requires +gotcha")
@@ -339,11 +325,6 @@ class Timemory(CMakePackage, PythonExtension):
             self.define_from_variant("TIMEMORY_USE_STATISTICS", "statistics"),
             self.define_from_variant("TIMEMORY_USE_ALLINEA_MAP", "allinea_map"),
         ]
-
-        if "+python" in spec:
-            pyexe = spec["python"].command.path
-            args.append(self.define("PYTHON_EXECUTABLE=", pyexe))
-            args.append(self.define("Python3_EXECUTABLE", pyexe))
 
         if "+mpi" in spec:
             args.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,8 @@ class Glvis(MakefilePackage):
     #
     # glvis does not need mfem+mpi but will build that by default, to just build
     # a serial mfem: `spack install glvis ^mfem~mpi~metis'
+
+    license("BSD-3-Clause")
 
     version("develop", branch="master")
 
@@ -90,6 +92,9 @@ class Glvis(MakefilePackage):
         url="http://goo.gl/gQZuu9",
         extension="tar.gz",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant(
         "screenshots",
@@ -152,16 +157,13 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             "CONFIG_MK={0}".format(self.spec["mfem"].package.config_mk),
         ]
 
+        # https://github.com/spack/spack/issues/42839
+        result.append("CPPFLAGS=-DGLEW_NO_GLU")
+
         if self.spec.satisfies("@4.0:"):
             # Spack will inject the necessary include dirs and link paths via
             # its compiler wrapper, so we can skip them:
-            result += [
-                "GLM_DIR=",
-                "SDL_DIR=",
-                "GLEW_DIR=",
-                "FREETYPE_DIR=",
-                "OPENGL_DIR=",
-            ]
+            result += ["GLM_DIR=", "SDL_DIR=", "GLEW_DIR=", "FREETYPE_DIR=", "OPENGL_DIR="]
             # Spack will not inject include dirs like /usr/include/freetype2,
             # so we need to do it ourselves:
             if spec["freetype"].external:

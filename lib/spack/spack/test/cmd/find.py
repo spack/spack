@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -64,6 +64,7 @@ def test_query_arguments():
         implicit=False,
         start_date="2018-02-23",
         end_date=None,
+        install_tree="all",
     )
 
     q_args = query_arguments(args)
@@ -75,6 +76,7 @@ def test_query_arguments():
     assert q_args["explicit"] is any
     assert "start_date" in q_args
     assert "end_date" not in q_args
+    assert q_args["install_tree"] == "all"
 
     # Check that explicit works correctly
     args.explicit = True
@@ -90,7 +92,6 @@ def test_query_arguments():
 @pytest.mark.db
 @pytest.mark.usefixtures("database", "mock_display")
 def test_tag1(parser, specs):
-
     args = parser.parse_args(["--tag", "tag1"])
     spack.cmd.find.find(parser, args)
 
@@ -118,13 +119,13 @@ def test_tag2_tag3(parser, specs):
     assert len(specs) == 0
 
 
+@pytest.mark.parametrize(
+    "args,with_namespace", [([], False), (["--namespace"], True), (["--namespaces"], True)]
+)
 @pytest.mark.db
-def test_namespaces_shown_correctly(database):
-    out = find()
-    assert "builtin.mock.zmpi" not in out
-
-    out = find("--namespace")
-    assert "builtin.mock.zmpi" in out
+def test_namespaces_shown_correctly(args, with_namespace, database):
+    """Test that --namespace(s) works. Old syntax is --namespace"""
+    assert ("builtin.mock.zmpi" in find(*args)) == with_namespace
 
 
 @pytest.mark.db
@@ -196,12 +197,7 @@ def test_find_json_deps(database):
 @pytest.mark.db
 def test_display_json(database, capsys):
     specs = [
-        Spec(s).concretized()
-        for s in [
-            "mpileaks ^zmpi",
-            "mpileaks ^mpich",
-            "mpileaks ^mpich2",
-        ]
+        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     cmd.display_specs_as_json(specs)
@@ -216,12 +212,7 @@ def test_display_json(database, capsys):
 @pytest.mark.db
 def test_display_json_deps(database, capsys):
     specs = [
-        Spec(s).concretized()
-        for s in [
-            "mpileaks ^zmpi",
-            "mpileaks ^mpich",
-            "mpileaks ^mpich2",
-        ]
+        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     cmd.display_specs_as_json(specs, deps=True)
@@ -237,31 +228,19 @@ def test_display_json_deps(database, capsys):
 def test_find_format(database, config):
     output = find("--format", "{name}-{^mpi.name}", "mpileaks")
     assert set(output.strip().split("\n")) == set(
-        [
-            "mpileaks-zmpi",
-            "mpileaks-mpich",
-            "mpileaks-mpich2",
-        ]
+        ["mpileaks-zmpi", "mpileaks-mpich", "mpileaks-mpich2"]
     )
 
     output = find("--format", "{name}-{version}-{compiler.name}-{^mpi.name}", "mpileaks")
     assert "installed package" not in output
     assert set(output.strip().split("\n")) == set(
-        [
-            "mpileaks-2.3-gcc-zmpi",
-            "mpileaks-2.3-gcc-mpich",
-            "mpileaks-2.3-gcc-mpich2",
-        ]
+        ["mpileaks-2.3-gcc-zmpi", "mpileaks-2.3-gcc-mpich", "mpileaks-2.3-gcc-mpich2"]
     )
 
     output = find("--format", "{name}-{^mpi.name}-{hash:7}", "mpileaks")
     elements = output.strip().split("\n")
     assert set(e[:-7] for e in elements) == set(
-        [
-            "mpileaks-zmpi-",
-            "mpileaks-mpich-",
-            "mpileaks-mpich2-",
-        ]
+        ["mpileaks-zmpi-", "mpileaks-mpich-", "mpileaks-mpich2-"]
     )
 
     # hashes are in base32
@@ -317,12 +296,7 @@ def test_find_very_long(database, config):
     output = find("-L", "--no-groups", "mpileaks")
 
     specs = [
-        Spec(s).concretized()
-        for s in [
-            "mpileaks ^zmpi",
-            "mpileaks ^mpich",
-            "mpileaks ^mpich2",
-        ]
+        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     assert set(output.strip().split("\n")) == set(
@@ -360,10 +334,10 @@ def test_find_command_basic_usage(database):
     assert "mpileaks" in output
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="envirnment is not yet supported on windows")
+@pytest.mark.not_on_windows("envirnment is not yet supported on windows")
 @pytest.mark.regression("9875")
 def test_find_prefix_in_env(
-    mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive, config
+    mutable_mock_env_path, install_mockery, mock_fetch, mock_packages, mock_archive
 ):
     """Test `find` formats requiring concrete specs work in environments."""
     env("create", "test")
@@ -375,13 +349,107 @@ def test_find_prefix_in_env(
         # Would throw error on regression
 
 
+def test_find_specs_include_concrete_env(mutable_mock_env_path, mutable_mock_repo, tmpdir):
+    path = tmpdir.join("spack.yaml")
+
+    with tmpdir.as_cwd():
+        with open(str(path), "w") as f:
+            f.write(
+                """\
+spack:
+  specs:
+  - mpileaks
+"""
+            )
+        env("create", "test1", "spack.yaml")
+
+    test1 = ev.read("test1")
+    test1.concretize()
+    test1.write()
+
+    with tmpdir.as_cwd():
+        with open(str(path), "w") as f:
+            f.write(
+                """\
+spack:
+  specs:
+  - libelf
+"""
+            )
+        env("create", "test2", "spack.yaml")
+
+    test2 = ev.read("test2")
+    test2.concretize()
+    test2.write()
+
+    env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
+
+    with ev.read("combined_env"):
+        output = find()
+
+    assert "No root specs" in output
+    assert "Included specs" in output
+    assert "mpileaks" in output
+    assert "libelf" in output
+
+
+def test_find_specs_nested_include_concrete_env(mutable_mock_env_path, mutable_mock_repo, tmpdir):
+    path = tmpdir.join("spack.yaml")
+
+    with tmpdir.as_cwd():
+        with open(str(path), "w") as f:
+            f.write(
+                """\
+spack:
+  specs:
+  - mpileaks
+"""
+            )
+        env("create", "test1", "spack.yaml")
+
+    test1 = ev.read("test1")
+    test1.concretize()
+    test1.write()
+
+    env("create", "--include-concrete", "test1", "test2")
+    test2 = ev.read("test2")
+    test2.add("libelf")
+    test2.concretize()
+    test2.write()
+
+    env("create", "--include-concrete", "test2", "test3")
+
+    with ev.read("test3"):
+        output = find()
+
+    assert "No root specs" in output
+    assert "Included specs" in output
+    assert "mpileaks" in output
+    assert "libelf" in output
+
+
 def test_find_loaded(database, working_env):
     output = find("--loaded", "--group")
     assert output == ""
 
-    os.environ[uenv.spack_loaded_hashes_var] = ":".join(
-        [x.dag_hash() for x in spack.store.db.query()]
+    os.environ[uenv.spack_loaded_hashes_var] = os.pathsep.join(
+        [x.dag_hash() for x in spack.store.STORE.db.query()]
     )
     output = find("--loaded")
     expected = find()
     assert output == expected
+
+
+@pytest.mark.regression("37712")
+def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
+    """Tests that having an active environment with a root spec containing a compiler constrained
+    by a version range (i.e. @X.Y rather the single version than @=X.Y) doesn't result in an error
+    when invoking "spack find".
+    """
+    test_environment = ev.create_in_dir(tmp_path)
+    test_environment.add("zlib %gcc@12.1.0")
+    test_environment.write()
+
+    with test_environment:
+        output = find()
+    assert "zlib%gcc@12.1.0" in output

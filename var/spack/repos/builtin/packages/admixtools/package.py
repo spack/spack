@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Admixtools(MakefilePackage):
     version("1.0.1", sha256="ef3afff161e6a24c0857678373138edb1251c24d7b5308a07f10bdb0dedd44d0")
     version("1.0", sha256="cf0d6950285e801e8a99c2a0b3dbbbc941a78e867af1767b1d002ec3f5803c4b")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("lapack")
     depends_on("gsl")
 
@@ -42,7 +44,6 @@ class Admixtools(MakefilePackage):
 
     def install(self, spec, prefix):
         with working_dir("src"):
-
             make("install")
             install_tree("bin", prefix.bin)
             install("twtable", prefix.bin)

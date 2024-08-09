@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Cln(AutotoolsPackage):
     url = "https://www.ginac.de/CLN/cln-1.3.6.tar.bz2"
     git = "git://www.ginac.de/cln.git"
 
+    license("GPL-2.0-or-later")
+
     version("master", branch="master")
     version("1.3.6", commit="d4ba1cc869be2c647c4ab48ac571b1fc9c2021a9")
     version("1.3.5", commit="b221c033c082b462455502b7e63702a9c466aede")
@@ -30,6 +32,9 @@ class Cln(AutotoolsPackage):
     version("1.2.2", commit="cd3ea9b9889856c6b54266fdb13b54dd3c53931a")
     version("1.2.1", commit="567378ab4cbfd443c3d82d810599860c769251fe")
     version("1.2.0", commit="679a0a8927f011fb32411f8a31070c77a9901094")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("gmp", default=True, description="Enable GMP multiprecision library")
 
@@ -71,7 +76,7 @@ class Cln(AutotoolsPackage):
 
         configure_args = []
 
-        if "+gmp" in spec:
+        if spec.satisfies("+gmp"):
             configure_args.append("--with-gmp={0}".format(spec["gmp"].prefix))
         else:
             configure_args.append("--without-gmp")

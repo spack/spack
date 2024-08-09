@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,12 +13,18 @@ class Salmon(CMakePackage):
     url = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
     maintainers("snehring")
 
+    license("GPL-3.0-only")
+
+    version("1.10.2", sha256="976989182160fef3afb4429ee8b85d8dd39ed6ca212bb14d6a65cde0e985fb98")
     version("1.9.0", sha256="450d953a5c43fe63fd745733f478d3fbaf24d926cb52731fd38ee21c4990d613")
     version("1.4.0", sha256="6d3e25387450710f0aa779a1e9aaa9b4dec842324ff8551d66962d7c7606e71d")
     version("0.14.1", sha256="05289170e69b5f291a8403b40d6b9bff54cc38825e9f721c210192b51a19273e")
     version("0.12.0", sha256="91ebd1efc5b0b4c12ec6babecf3c0b79f7102e42b8895ca07c8c8fea869fefa3")
     version("0.9.1", sha256="3a32c28d217f8f0af411c77c04144b1fa4e6fd3c2f676661cc875123e4f53520")
     version("0.8.2", sha256="299168e873e71e9b07d63a84ae0b0c41b0876d1ad1d434b326a5be2dce7c4b91")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant(
         "build_type",
@@ -30,8 +36,8 @@ class Salmon(CMakePackage):
     # 1.8.0 relies on tbb provided config, earlier versions make
     # assumptions about the layout of tbb files that are not true in
     # 2021.1 and later
-    conflicts("intel-tbb@2021.1:", when="@:1.7.0")
-    conflicts("intel-oneapi-tbb@2021.1:", when="@:1.7.0")
+    conflicts("^intel-tbb@2021.1:", when="@:1.7.0")
+    conflicts("^intel-oneapi-tbb@2021.1:", when="@:1.7.0")
     depends_on("tbb")
     depends_on(
         "boost@1.66.0:"
@@ -48,17 +54,25 @@ class Salmon(CMakePackage):
     depends_on("cereal")
     depends_on("jemalloc")
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("bzip2")
     depends_on("libdivsufsort")
     depends_on("staden-io-lib~curl")
     depends_on("libgff")
     depends_on("pkgconfig")
     depends_on("curl", when="@0.14.1:")
+    depends_on("htslib", when="@1.10.2")
+
+    patch("fix_hts.patch", when="@1.10.2")
 
     conflicts("%gcc@:5.1", when="@0.14.1:")
 
     resources = [
+        (
+            "1.10.2",
+            "pufferfish",
+            "f225b74833f71dcf767a565345224357fb091f90ce79717abc836814d9ccd101",
+        ),
         (
             "1.9.0",
             "pufferfish",
@@ -84,6 +98,15 @@ class Salmon(CMakePackage):
             expand=False,
             when="@{0}".format(ver),
         )
+
+    # `%gcc13:` requires `<cstdint>` to be manually included. Fixed upstream,
+    # so we patch to allow building of previous salmon versions
+    patch(
+        "https://github.com/COMBINE-lab/salmon/commit/ffb2a11.patch?full_index=1",
+        sha256="5ed3512bae665c1d72002911ab9ee6d213f10df63019ebd9e8e0ecde03823a73",
+        when="@:1.10.1%gcc@13:",
+        level=1,
+    )
 
     def patch(self):
         # remove static linking to libstdc++
@@ -113,8 +136,6 @@ class Salmon(CMakePackage):
             filter_file("curl -k.*", "", "scripts/fetchPufferfish.sh")
 
     def cmake_args(self):
-        args = [
-            "-DBOOST_ROOT=%s" % self.spec["boost"].prefix,
-        ]
+        args = ["-DBOOST_ROOT=%s" % self.spec["boost"].prefix]
 
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,11 @@ class Grid(AutotoolsPackage):
 
     maintainers("giordano")
 
+    license("GPL-2.0-only")
+
     version("develop", branch="develop")
+
+    depends_on("cxx", type="build")  # generated
 
     variant(
         "comms",
@@ -89,12 +93,7 @@ class Grid(AutotoolsPackage):
             # and what linker to use.  In many case it'd end up building the
             # code with support for MPI but without using `mpicxx` or linking to
             # `-lmpi`, wreaking havoc.  Forcing `CXX` to be mpicxx should help.
-            args.extend(
-                [
-                    "CC={0}".format(spec["mpi"].mpicc),
-                    "CXX={0}".format(spec["mpi"].mpicxx),
-                ]
-            )
+            args.extend(["CC={0}".format(spec["mpi"].mpicc), "CXX={0}".format(spec["mpi"].mpicxx)])
 
         args += self.enable_or_disable("timers")
         args += self.enable_or_disable("chroma")

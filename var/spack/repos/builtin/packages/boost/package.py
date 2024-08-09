@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,14 @@ class Boost(Package):
     list_depth = 1
     maintainers("hainest")
 
+    license("BSL-1.0")
+
     version("develop", branch="develop", submodules=True)
+    version("1.85.0", sha256="7009fe1faa1697476bdc7027703a2badb84e849b7b0baad5086b087b971f8617")
+    version("1.84.0", sha256="cc4b893acf645c9d4b698e9a0f08ca8846aa5d6c68275c14c3e7949c24109454")
+    version("1.83.0", sha256="6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e")
+    version("1.82.0", sha256="a6e1ab9b0860e6a2881dd7b21fe9f737a095e5f33a3a874afc6a345228597ee6")
+    version("1.81.0", sha256="71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa")
     version("1.80.0", sha256="1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0")
     version("1.79.0", sha256="475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39")
     version("1.78.0", sha256="8681f175d4bdb26c52222665793eef08490d7758529330f98d3b29dd0735bccc")
@@ -71,6 +78,9 @@ class Boost(Package):
     version("1.41.0", sha256="1ef94e6749eaf13318284b4f629be063544c7015b45e38113b975ac1945cc726")
     version("1.40.0", sha256="36cf4a239b587067a4923fdf6e290525a14c3af29829524fa73f3dec6841530c")
     version("1.39.0", sha256="44785eae8c6cce61a29a8a51f9b737e57b34d66baa7c0bcd4af188832b8018fd")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     with_default_variants = "boost" + "".join(
         [
@@ -166,19 +176,26 @@ class Boost(Package):
 
     variant(
         "cxxstd",
-        default="98",
+        default="11",
         values=(
             "98",
             "11",
             "14",
             # C++17 is not supported by Boost < 1.63.0.
             conditional("17", when="@1.63.0:"),
-            # C++20/2a is not support by Boost < 1.73.0
+            # C++20/2a is not supported by Boost < 1.73.0
             conditional("2a", when="@1.73.0:"),
+            conditional("20", when="@1.77.0:"),
+            conditional("23", when="@1.79.0:"),
+            conditional("26", when="@1.79.0:"),
         ),
         multi=False,
         description="Use the specified C++ standard when building.",
     )
+
+    # 1.84.0 dropped support for 98/03
+    conflicts("cxxstd=98", when="@1.84.0:")
+
     variant("debug", default=False, description="Switch to the debug version of Boost")
     variant("shared", default=True, description="Additionally build shared libraries")
     variant(
@@ -227,10 +244,12 @@ class Boost(Package):
 
     depends_on("mpi", when="+mpi")
     depends_on("bzip2", when="+iostreams")
-    depends_on("zlib", when="+iostreams")
+    depends_on("zlib-api", when="+iostreams")
     depends_on("zstd", when="+iostreams")
     depends_on("xz", when="+iostreams")
     depends_on("py-numpy", when="+numpy", type=("build", "run"))
+    # https://github.com/boostorg/python/issues/431
+    depends_on("py-numpy@:1", when="@:1.85+numpy", type=("build", "run"))
 
     # Improve the error message when the context-impl variant is conflicting
     conflicts("context-impl=fcontext", when="@:1.65.0")
@@ -274,6 +293,13 @@ class Boost(Package):
     # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
     conflicts("%oneapi", when="@1.80")
 
+    # Boost 1.85.0 stacktrace added a hard compilation error that has to
+    # explicitly be suppressed on some platforms:
+    # https://github.com/boostorg/stacktrace/pull/150. This conflict could be
+    # turned into a variant that allows users to opt-in when they know it is
+    # safe to do so on affected platforms.
+    conflicts("+clanglibcpp", when="@1.85: +stacktrace")
+
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch("boost_11856.patch", when="@1.60.0%gcc@4.4.7")
 
@@ -301,6 +327,9 @@ class Boost(Package):
     # Patch to workaround compiler bug
     patch("nvhpc-find_address.patch", when="@1.75.0:1.76%nvhpc")
 
+    # Patch to workaround gcc-8.3 compiler issue https://github.com/boostorg/mpl/issues/44
+    patch("boost_gcc83_cpp17_fix.patch", when="@1.69:%gcc@8.3")
+
     # Fix for version comparison on newer Clang on darwin
     # See: https://github.com/boostorg/build/issues/440
     # See: https://github.com/macports/macports-ports/pull/6726
@@ -317,9 +346,6 @@ class Boost(Package):
     # See: https://github.com/boostorg/process/issues/116
     # Patch: https://github.com/boostorg/process/commit/6a4d2ff72114ef47c7afaf92e1042aca3dfa41b0.patch
     patch("1.72_boost_process.patch", level=2, when="@1.72.0")
-
-    # Fix the bootstrap/bjam build for Cray
-    patch("bootstrap-path.patch", when="@1.39.0: platform=cray")
 
     # Patch fix for warnings from commits 2d37749, af1dc84, c705bab, and
     # 0134441 on https://github.com/boostorg/system.
@@ -395,6 +421,16 @@ class Boost(Package):
     # https://www.intel.com/content/www/us/en/developer/articles/technical/building-boost-with-oneapi.html
     patch("intel-oneapi-linux-jam.patch", when="@1.76: %oneapi")
 
+    # https://github.com/boostorg/phoenix/issues/111
+    patch("boost_phoenix_1.81.0.patch", level=2, when="@1.81.0:1.82.0")
+
+    # https://github.com/boostorg/filesystem/issues/284
+    patch(
+        "https://www.boost.org/patches/1_82_0/0002-filesystem-fix-win-smbv1-dir-iterator.patch",
+        sha256="738ba8e0d7b5cdcf5fae4998f9450b51577bbde1bb0d220a0721551609714ca4",
+        when="@1.82.0 platform=windows",
+    )
+
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
         if self.spec.satisfies("%nvhpc"):
@@ -412,11 +448,17 @@ class Boost(Package):
 
     def url_for_version(self, version):
         if version >= Version("1.63.0"):
-            url = "https://boostorg.jfrog.io/artifactory/main/release/{0}/source/boost_{1}.tar.bz2"
+            url = "https://archives.boost.io/release/{0}/source/boost_{1}.tar.bz2"
         else:
             url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
 
         return url.format(version.dotted, version.underscored)
+
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("@1.79.0 %oneapi"):
+                flags.append("-Wno-error=enum-constexpr-conversion")
+        return (flags, None, None)
 
     def determine_toolset(self, spec):
         toolsets = {
@@ -465,10 +507,10 @@ class Boost(Package):
             options.append("--with-toolset=%s" % boost_toolset_id)
         options.append("--with-libraries=%s" % ",".join(with_libs))
 
-        if "+python" in spec:
+        if spec.satisfies("+python"):
             options.append("--with-python=%s" % spec["python"].command.path)
 
-        if "+icu" in spec:
+        if spec.satisfies("+icu"):
             options.append("--with-icu")
         else:
             options.append("--without-icu")
@@ -476,9 +518,11 @@ class Boost(Package):
         with open("user-config.jam", "w") as f:
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
-            f.write("using {0} : : {1} ;\n".format(boost_toolset_id, spack_cxx))
+            if not spec.satisfies("platform=windows"):
+                # Skip this on Windows since we don't have a cl.exe wrapper in spack
+                f.write("using {0} : : {1} ;\n".format(boost_toolset_id, spack_cxx))
 
-            if "+mpi" in spec:
+            if spec.satisfies("+mpi"):
                 # Use the correct mpi compiler.  If the compiler options are
                 # empty or undefined, Boost will attempt to figure out the
                 # correct options by running "${mpicxx} -show" or something
@@ -486,27 +530,23 @@ class Boost(Package):
                 # wrappers.  Since Boost doesn't use the MPI C++ bindings,
                 # that can be used as a compiler option instead.
                 mpi_line = "using mpi : %s" % spec["mpi"].mpicxx
-
-                if "platform=cray" in spec:
-                    mpi_line += " : <define>MPICH_SKIP_MPICXX"
-
                 f.write(mpi_line + " ;\n")
 
-            if "+python" in spec:
+            if spec.satisfies("+python"):
                 f.write(self.bjam_python_line(spec))
 
     def determine_b2_options(self, spec, options):
-        if "+debug" in spec:
+        if spec.satisfies("+debug"):
             options.append("variant=debug")
         else:
             options.append("variant=release")
 
-        if "+icu" in spec:
+        if spec.satisfies("+icu"):
             options.extend(["-s", "ICU_PATH=%s" % spec["icu4c"].prefix])
         else:
             options.append("--disable-icu")
 
-        if "+iostreams" in spec:
+        if spec.satisfies("+iostreams"):
             options.extend(
                 [
                     "-s",
@@ -514,9 +554,9 @@ class Boost(Package):
                     "-s",
                     "BZIP2_LIBPATH=%s" % spec["bzip2"].prefix.lib,
                     "-s",
-                    "ZLIB_INCLUDE=%s" % spec["zlib"].prefix.include,
+                    "ZLIB_INCLUDE=%s" % spec["zlib-api"].prefix.include,
                     "-s",
-                    "ZLIB_LIBPATH=%s" % spec["zlib"].prefix.lib,
+                    "ZLIB_LIBPATH=%s" % spec["zlib-api"].prefix.lib,
                     "-s",
                     "LZMA_INCLUDE=%s" % spec["xz"].prefix.include,
                     "-s",
@@ -528,17 +568,17 @@ class Boost(Package):
                 ]
             )
             # At least with older Xcode, _lzma_cputhreads is missing (#33998)
-            if "platform=darwin" in self.spec:
+            if self.spec.satisfies("platform=darwin"):
                 options.extend(["-s", "NO_LZMA=1"])
 
         link_types = ["static"]
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             link_types.append("shared")
 
         threading_opts = []
-        if "+multithreaded" in spec:
+        if spec.satisfies("+multithreaded"):
             threading_opts.append("multi")
-        if "+singlethreaded" in spec:
+        if spec.satisfies("+singlethreaded"):
             threading_opts.append("single")
         if not threading_opts:
             raise RuntimeError(
@@ -549,9 +589,9 @@ class Boost(Package):
         if "+context" in spec and "context-impl" in spec.variants:
             options.extend(["context-impl=%s" % spec.variants["context-impl"].value])
 
-        if "+taggedlayout" in spec:
+        if spec.satisfies("+taggedlayout"):
             layout = "tagged"
-        elif "+versionedlayout" in spec:
+        elif spec.satisfies("+versionedlayout"):
             layout = "versioned"
         else:
             if len(threading_opts) > 1:
@@ -562,7 +602,7 @@ class Boost(Package):
 
         options.extend(["link=%s" % ",".join(link_types), "--layout=%s" % layout])
 
-        if not spec.satisfies("@:1.75 %intel"):
+        if not spec.satisfies("@:1.75 %intel") and not spec.satisfies("platform=windows"):
             # When building any version >= 1.76, the toolset must be specified.
             # Earlier versions could not specify Intel as the toolset
             # as that was considered to be redundant/conflicting with
@@ -583,7 +623,7 @@ class Boost(Package):
             if flag:
                 cxxflags.append(flag)
 
-        if "+pic" in self.spec:
+        if self.spec.satisfies("+pic"):
             cxxflags.append(self.compiler.cxx_pic_flag)
 
         # clang is not officially supported for pre-compiled headers
@@ -592,7 +632,7 @@ class Boost(Package):
         #   https://svn.boost.org/trac/boost/ticket/12496
         if spec.satisfies("%apple-clang") or spec.satisfies("%clang") or spec.satisfies("%fj"):
             options.extend(["pch=off"])
-            if "+clanglibcpp" in spec:
+            if spec.satisfies("+clanglibcpp"):
                 cxxflags.append("-stdlib=libc++")
                 options.extend(["toolset=clang", 'linkflags="-stdlib=libc++"'])
         elif spec.satisfies("%xl") or spec.satisfies("%xl_r"):
@@ -601,6 +641,13 @@ class Boost(Package):
             # change into boost compilation
             if spec.variants["cxxstd"].value == "11":
                 cxxflags.append("-std=c++11")
+
+        # See conflict above and
+        # https://github.com/boostorg/stacktrace/pull/150. This suppresses a
+        # compilation error that must be explicitly suppressed. Because of the
+        # conflict we can suppress the error without input from a user.
+        if spec.satisfies("@1.85: +stacktrace"):
+            cxxflags.append("-DBOOST_STACKTRACE_LIBCXX_RUNTIME_MAY_CAUSE_MEMORY_LEAK")
 
         if cxxflags:
             options.append('cxxflags="{0}"'.format(" ".join(cxxflags)))
@@ -612,7 +659,7 @@ class Boost(Package):
         return threading_opts
 
     def add_buildopt_symlinks(self, prefix):
-        with working_dir(prefix.lib):
+        with working_dir(prefix.lib, create=True):
             for lib in os.listdir(os.curdir):
                 if os.path.isfile(lib):
                     prefix, remainder = lib.split(".", 1)
@@ -649,7 +696,7 @@ class Boost(Package):
             with_libs.remove("random")
         if not spec.satisfies("@1.39.0:") and "exception" in with_libs:
             with_libs.remove("exception")
-        if "+graph" in spec and "+mpi" in spec:
+        if spec.satisfies("+graph") and spec.satisfies("+mpi"):
             with_libs.append("graph_parallel")
 
         if not with_libs:
@@ -665,12 +712,15 @@ class Boost(Package):
         # to make Boost find the user-config.jam
         env["BOOST_BUILD_PATH"] = self.stage.source_path
 
-        bootstrap = Executable("./bootstrap.sh")
-
         bootstrap_options = ["--prefix=%s" % prefix]
         self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
 
-        bootstrap(*bootstrap_options)
+        if self.spec.satisfies("platform=windows"):
+            bootstrap = Executable("cmd.exe")
+            bootstrap("/c", ".\\bootstrap.bat", *bootstrap_options)
+        else:
+            bootstrap = Executable("./bootstrap.sh")
+            bootstrap(*bootstrap_options)
 
         # strip the toolchain to avoid double include errors (intel) or
         # user-config being overwritten (again intel, but different boost version)
@@ -682,6 +732,8 @@ class Boost(Package):
 
         # b2 used to be called bjam, before 1.47 (sigh)
         b2name = "./b2" if spec.satisfies("@1.47:") else "./bjam"
+        if self.spec.satisfies("platform=windows"):
+            b2name = "b2.exe" if spec.satisfies("@1.47:") else "bjam.exe"
 
         b2 = Executable(b2name)
         jobs = make_jobs
@@ -689,26 +741,32 @@ class Boost(Package):
         if jobs > 64 and spec.satisfies("@:1.58"):
             jobs = 64
 
-        b2_options = [
-            "-j",
-            "%s" % jobs,
-            "--user-config=%s" % os.path.join(self.stage.source_path, "user-config.jam"),
-        ]
+        # Windows just wants a b2 call with no args
+        b2_options = []
+        if not self.spec.satisfies("platform=windows"):
+            path_to_config = "--user-config=%s" % os.path.join(
+                self.stage.source_path, "user-config.jam"
+            )
+            b2_options = ["-j", "%s" % jobs]
+            b2_options.append(path_to_config)
 
         threading_opts = self.determine_b2_options(spec, b2_options)
 
         # Create headers if building from a git checkout
-        if "@develop" in spec:
+        if spec.satisfies("@develop"):
             b2("headers", *b2_options)
 
         b2("--clean", *b2_options)
 
         # In theory it could be done on one call but it fails on
         # Boost.MPI if the threading options are not separated.
-        for threading_opt in threading_opts:
-            b2("install", "threading=%s" % threading_opt, *b2_options)
+        if not self.spec.satisfies("platform=windows"):
+            for threading_opt in threading_opts:
+                b2("install", "threading=%s" % threading_opt, *b2_options)
+        else:
+            b2("install", *b2_options)
 
-        if "+multithreaded" in spec and "~taggedlayout" in spec:
+        if spec.satisfies("+multithreaded") and spec.satisfies("~taggedlayout"):
             self.add_buildopt_symlinks(prefix)
 
         # The shared libraries are not installed correctly
@@ -723,14 +781,13 @@ class Boost(Package):
         # Disable find package's config mode for versions of Boost that
         # didn't provide it. See https://github.com/spack/spack/issues/20169
         # and https://cmake.org/cmake/help/latest/module/FindBoost.html
-        is_cmake = isinstance(dependent_spec.package, CMakePackage)
-        if self.spec.satisfies("boost@:1.69.0") and is_cmake:
-            args_fn = type(dependent_spec.package).cmake_args
+        if self.spec.satisfies("boost@:1.69.0") and dependent_spec.satisfies("build_system=cmake"):
+            args_fn = type(dependent_spec.package.builder).cmake_args
 
             def _cmake_args(self):
                 return ["-DBoost_NO_BOOST_CMAKE=ON"] + args_fn(self)
 
-            type(dependent_spec.package).cmake_args = _cmake_args
+            type(dependent_spec.package.builder).cmake_args = _cmake_args
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         if "+context" in self.spec and "context-impl" in self.spec.variants:

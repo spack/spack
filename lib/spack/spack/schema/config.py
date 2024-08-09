@@ -1,19 +1,20 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for config.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
-   :lines: 13-
+   :lines: 17-
 """
+from typing import Any, Dict
 
 from llnl.util.lang import union_dicts
 
 import spack.schema.projections
 
 #: Properties for inclusion in other schemas
-properties = {
+properties: Dict[str, Any] = {
     "config": {
         "type": "object",
         "default": {},
@@ -21,7 +22,7 @@ properties = {
             "flags": {
                 "type": "object",
                 "properties": {
-                    "keep_werror": {"type": "string", "enum": ["all", "specific", "none"]},
+                    "keep_werror": {"type": "string", "enum": ["all", "specific", "none"]}
                 },
             },
             "shared_linking": {
@@ -54,21 +55,25 @@ properties = {
                         ),
                     },
                     {"type": "string"},  # deprecated
-                ],
+                ]
             },
             "install_hash_length": {"type": "integer", "minimum": 1},
             "install_path_scheme": {"type": "string"},  # deprecated
             "build_stage": {
-                "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}],
+                "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]
             },
+            "stage_name": {"type": "string"},
+            "develop_stage_link": {"type": "string"},
             "test_stage": {"type": "string"},
             "extensions": {"type": "array", "items": {"type": "string"}},
             "template_dirs": {"type": "array", "items": {"type": "string"}},
             "license_dir": {"type": "string"},
             "source_cache": {"type": "string"},
             "misc_cache": {"type": "string"},
+            "environments_root": {"type": "string"},
             "connect_timeout": {"type": "integer", "minimum": 0},
             "verify_ssl": {"type": "boolean"},
+            "ssl_certs": {"type": "string"},
             "suppress_gpg_warnings": {"type": "boolean"},
             "install_missing_compilers": {"type": "boolean"},
             "debug": {"type": "boolean"},
@@ -82,21 +87,23 @@ properties = {
             "concretizer": {"type": "string", "enum": ["original", "clingo"]},
             "db_lock_timeout": {"type": "integer", "minimum": 1},
             "package_lock_timeout": {
-                "anyOf": [{"type": "integer", "minimum": 1}, {"type": "null"}],
+                "anyOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]
             },
             "allow_sgid": {"type": "boolean"},
+            "install_status": {"type": "boolean"},
             "binary_index_root": {"type": "string"},
             "url_fetch_method": {"type": "string", "enum": ["urllib", "curl"]},
             "additional_external_search_paths": {"type": "array", "items": {"type": "string"}},
             "binary_index_ttl": {"type": "integer", "minimum": 0},
+            "aliases": {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}},
         },
         "deprecatedProperties": {
-            "properties": ["module_roots"],
-            "message": "config:module_roots has been replaced by "
-            "modules:[module set]:roots and is ignored",
+            "properties": ["terminal_title"],
+            "message": "config:terminal_title has been replaced by "
+            "install_status and is ignored",
             "error": False,
         },
-    },
+    }
 }
 
 

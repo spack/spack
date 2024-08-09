@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import collections
 import contextlib
 import functools
+import gzip
 import os
 import time
 import traceback
@@ -113,7 +114,6 @@ class InfoCollector:
 
                 start_time = time.time()
                 try:
-
                     value = wrapped_fn(instance, *args, **kwargs)
                     package["stdout"] = self.fetch_log(pkg)
                     package["installed_from_binary_cache"] = pkg.installed_from_binary_cache
@@ -134,8 +134,9 @@ class InfoCollector:
                     # Everything else is an error (the installation
                     # failed outside of the child process)
                     package["result"] = "error"
-                    package["stdout"] = self.fetch_log(pkg)
                     package["message"] = str(exc) or "Unknown error"
+                    package["stdout"] = self.fetch_log(pkg)
+                    package["stdout"] += package["message"]
                     package["exception"] = traceback.format_exc()
                     raise
 
@@ -190,9 +191,13 @@ class BuildInfoCollector(InfoCollector):
 
     def fetch_log(self, pkg):
         try:
-            with open(pkg.build_log_path, "r", encoding="utf-8") as stream:
-                return "".join(stream.readlines())
-        except Exception:
+            if os.path.exists(pkg.install_log_path):
+                stream = gzip.open(pkg.install_log_path, "rt")
+            else:
+                stream = open(pkg.log_path)
+            with stream as f:
+                return f.read()
+        except OSError:
             return f"Cannot open log for {pkg.spec.cshort_spec}"
 
     def extract_package_from_signature(self, instance, *args, **kwargs):
@@ -234,9 +239,7 @@ class TestInfoCollector(InfoCollector):
 
 @contextlib.contextmanager
 def build_context_manager(
-    reporter: spack.reporters.Reporter,
-    filename: str,
-    specs: List[spack.spec.Spec],
+    reporter: spack.reporters.Reporter, filename: str, specs: List[spack.spec.Spec]
 ):
     """Decorate a package to generate a report after the installation function is executed.
 

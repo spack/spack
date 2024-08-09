@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,8 +27,24 @@ class Freefem(AutotoolsPackage):
     version("4.6", sha256="6c09af8e189fc02214b0e664b679b49832c134e29cf1ede3cab29cf754f6078f")
     version("4.5", sha256="5b2d4125c312da8fbedd49a72e742f18f35e0ae100c82fb493067dfad5d51432")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=False, description="Activate MPI support")
     variant("petsc", default=False, description="Compile with PETSc/SLEPc")
+
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+
+    depends_on("bison", type="build")
+    depends_on("flex", type="build")
+    depends_on("m4", type="build")
+    # depends_on("patch", type="build")
+    # depends_on("unzip", type="build")
+
+    depends_on("netlib-lapack")
 
     depends_on("mpi", when="+mpi")
     depends_on("slepc", when="+petsc")
@@ -45,10 +61,6 @@ class Freefem(AutotoolsPackage):
         when="@:4.8",
         sha256="be84f7b1b8182ff0151c258056a09bda70d72a611b0a4da1fa1954df2e0fe84e",
     )
-
-    def autoreconf(self, spec, prefix):
-        autoreconf = which("autoreconf")
-        autoreconf("-i")
 
     def configure_args(self):
         spec = self.spec

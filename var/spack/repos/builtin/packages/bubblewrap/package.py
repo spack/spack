@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,9 @@ class Bubblewrap(AutotoolsPackage):
     )
     maintainers("haampie")
 
+    license("LGPL-2.0-or-later")
+
+    version("0.8.0", sha256="957ad1149db9033db88e988b12bcebe349a445e1efc8a9b59ad2939a113d333a")
     version("0.7.0", sha256="764ab7100bd037ea53d440d362e099d7a425966bc62d1f00ab26b8fbb882a9dc")
     version("0.6.2", sha256="8a0ec802d1b3e956c5bb0a40a81c9ce0b055a31bf30a8efa547433603b8af20b")
     version("0.6.1", sha256="9609c7dc162bc68abc29abfab566934fdca37520a15ed01b675adcf3a4303282")
@@ -25,12 +28,10 @@ class Bubblewrap(AutotoolsPackage):
     version("0.3.3", sha256="c6a45f51794a908b76833b132471397a7413f07620af08e76c273d9f7b364dff")
     version("0.3.1", sha256="deca6b608c54df4be0669b8bb6d254858924588e9f86e116eb04656a3b6d4bf8")
 
+    depends_on("c", type="build")  # generated
+
     def configure_args(self):
-        return [
-            "--disable-sudo",
-            "--disable-man",
-            "--without-bash-completion-dir",
-        ]
+        return ["--disable-sudo", "--disable-man", "--without-bash-completion-dir"]
 
     depends_on("pkgconfig", type="build")
     depends_on("libcap")

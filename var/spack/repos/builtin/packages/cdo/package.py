@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,26 @@ class Cdo(AutotoolsPackage):
 
     maintainers("skosukhin", "Try2Code")
 
+    version(
+        "2.4.0",
+        sha256="a4790fb8cc07f353b11f9bbe49218b8e4be8e5ae56aade8420bad390510b4d2c",
+        url="https://code.mpimet.mpg.de/attachments/download/29313/cdo-2.4.0.tar.gz",
+    )
+    version(
+        "2.3.0",
+        sha256="10c878227baf718a6917837527d4426c2d0022cfac4457c65155b9c57f091f6b",
+        url="https://code.mpimet.mpg.de/attachments/download/29019/cdo-2.3.0.tar.gz",
+    )
+    version(
+        "2.2.2",
+        sha256="419c77315244019af41a296c05066f474cccbf94debfaae9e2106da51bc7c937",
+        url="https://code.mpimet.mpg.de/attachments/download/28882/cdo-2.2.2.tar.gz",
+    )
+    version(
+        "2.2.0",
+        sha256="679c8d105706caffcba0960ec5ddc4a1332c1b40c52f82c3937356999d8fadf2",
+        url="https://code.mpimet.mpg.de/attachments/download/28013/cdo-2.2.0.tar.gz",
+    )
     version(
         "2.1.1",
         sha256="c29d084ccbda931d71198409fb2d14f99930db6e7a3654b3c0243ceb304755d9",
@@ -131,6 +151,10 @@ class Cdo(AutotoolsPackage):
         url="https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("netcdf", default=True, description="Enable NetCDF support")
     variant(
         "grib2",
@@ -162,12 +186,13 @@ class Cdo(AutotoolsPackage):
     # We also need the backend of netcdf to be thread safe.
     depends_on("hdf5+threadsafe", when="+netcdf")
 
+    # Same in case hdf5 is used in the frontend
+    depends_on("hdf5+threadsafe", when="+hdf5")
+
     depends_on("grib-api", when="grib2=grib-api")
     depends_on("eccodes", when="grib2=eccodes")
 
     depends_on("szip", when="+szip")
-
-    depends_on("hdf5+threadsafe", when="+hdf5")
 
     depends_on("udunits", when="+udunits2")
     depends_on("libxml2", when="+libxml2")
@@ -193,7 +218,7 @@ class Cdo(AutotoolsPackage):
             prefix = self.spec[spec_name].prefix
             return "yes" if is_system_path(prefix) else prefix
 
-        if "+netcdf" in self.spec:
+        if self.spec.satisfies("+netcdf"):
             config_args.append("--with-netcdf=" + yes_or_prefix("netcdf-c"))
             # We need to make sure that the libtool script of libcdi - the
             # internal library of CDO - finds the correct version of hdf5.
@@ -226,12 +251,12 @@ class Cdo(AutotoolsPackage):
             if self.spec.satisfies("@1.9:"):
                 config_args.append("--without-eccodes")
 
-        if "+external-grib1" in self.spec:
+        if self.spec.satisfies("+external-grib1"):
             config_args.append("--disable-cgribex")
         else:
             config_args.append("--enable-cgribex")
 
-        if "+szip" in self.spec:
+        if self.spec.satisfies("+szip"):
             config_args.append("--with-szlib=" + yes_or_prefix("szip"))
         else:
             config_args.append("--without-szlib")
@@ -242,7 +267,7 @@ class Cdo(AutotoolsPackage):
             "udunits2", activation_value=lambda x: yes_or_prefix("udunits")
         )
 
-        if "+libxml2" in self.spec:
+        if self.spec.satisfies("+libxml2"):
             libxml2_spec = self.spec["libxml2"]
             if is_system_path(libxml2_spec.prefix):
                 config_args.append("--with-libxml2=yes")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,8 +19,14 @@ class Exciting(MakefilePackage):
     url = "https://exciting.wdfiles.com/local--files/nitrogen-14/exciting.nitrogen-14.tar.gz"
     git = "https://github.com/exciting/exciting.git"
 
+    license("LGPL-2.1-or-later")
+
     version("oxygen", branch="oxygen_release", preferred=True)
     version("14", sha256="a7feaffdc23881d6c0737d2f79f94d9bf073e85ea358a57196d7f7618a0a3eff")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # as-of-yet unpublished fix to version 14
     patch("dfgather.patch", when="@14", working_dir="src/src_xs", level=0)
@@ -39,23 +45,9 @@ class Exciting(MakefilePackage):
     depends_on("scalapack", when="+scalapack")
     # conflicts('%gcc@10:', msg='exciting cannot be built with GCC 10')
 
-    for __compiler in spack.compilers.supported_compilers():
-        if __compiler != "intel":
-            conflicts(
-                "%{0}".format(__compiler),
-                when="^mkl",
-                msg="Intel MKL only works with the Intel compiler",
-            )
-            conflicts(
-                "%{0}".format(__compiler),
-                when="^intel-mkl",
-                msg="Intel MKL only works with the Intel compiler",
-            )
-            conflicts(
-                "%{0}".format(__compiler),
-                when="^intel-mpi",
-                msg="Intel MPI only works with the Intel compiler",
-            )
+    requires("%intel", when="^mkl", msg="Intel MKL only works with the Intel compiler")
+    requires("%intel", when="^intel-mkl", msg="Intel MKL only works with the Intel compiler")
+    requires("%intel", when="^intel-mpi", msg="Intel MPI only works with the Intel compiler")
 
     def patch(self):
         """Fix bad logic in m_makespectrum.f90 for the Oxygen release"""

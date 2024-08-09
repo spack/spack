@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class PyHtgettoken(PythonPackage):
 
     maintainers("wdconinc")
 
+    license("BSD-3-Clause")
+
     # The following versions refer to setuptools-buildable commits after 1.16;
     # they are special reproducible version numbers from `git describe`
     version("1.16-33-g3788bb4", commit="3788bb4733e5e8f856cee51566df9a36cbfe097d")
@@ -33,8 +35,8 @@ class PyHtgettoken(PythonPackage):
     depends_on("py-urllib3", type=("build", "run"))
 
     def setup_run_environment(self, env):
-        dir = env.get("XDG_RUNTIME_DIR") or "/tmp"
-        uid = env.get("UID") or os.geteuid()
+        dir = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+        uid = os.environ.get("UID", str(os.geteuid()))
         file = join_path(dir, "bt_u" + uid)
         env.set("BEARER_TOKEN", file)
         env.set("BEARER_TOKEN_FILE", file)

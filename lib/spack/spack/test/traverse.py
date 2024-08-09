@@ -1,10 +1,11 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
 
+import spack.deptypes as dt
 import spack.traverse as traverse
 from spack.spec import Spec
 
@@ -19,7 +20,9 @@ def create_dag(nodes, edges):
     """
     specs = {name: Spec(name) for name in nodes}
     for parent, child, deptypes in edges:
-        specs[parent].add_dependency_edge(specs[child], deptypes=deptypes)
+        specs[parent].add_dependency_edge(
+            specs[child], depflag=dt.canonicalize(deptypes), virtuals=()
+        )
     return specs
 
 
@@ -145,16 +148,7 @@ def test_breadth_first_traversal(abstract_specs_dtuse):
 def test_breadth_first_deptype_traversal(abstract_specs_dtuse):
     s = abstract_specs_dtuse["dtuse"]
 
-    names = [
-        "dtuse",
-        "dttop",
-        "dtbuild1",
-        "dtlink1",
-        "dtbuild2",
-        "dtlink2",
-        "dtlink3",
-        "dtlink4",
-    ]
+    names = ["dtuse", "dttop", "dtbuild1", "dtlink1", "dtbuild2", "dtlink2", "dtlink3", "dtlink4"]
 
     traversal = traverse.traverse_nodes([s], order="breadth", key=id, deptype=("build", "link"))
     assert [x.name for x in traversal] == names
@@ -243,23 +237,13 @@ def test_breadth_first_versus_depth_first_tree(abstract_specs_chain):
     assert [
         (depth, edge.spec.name)
         for (depth, edge) in traverse.traverse_tree([s], cover="nodes", depth_first=False)
-    ] == [
-        (0, "chain-a"),
-        (1, "chain-b"),
-        (1, "chain-c"),
-        (1, "chain-d"),
-    ]
+    ] == [(0, "chain-a"), (1, "chain-b"), (1, "chain-c"), (1, "chain-d")]
 
     # DFS will disover all nodes along the chain a -> b -> c -> d.
     assert [
         (depth, edge.spec.name)
         for (depth, edge) in traverse.traverse_tree([s], cover="nodes", depth_first=True)
-    ] == [
-        (0, "chain-a"),
-        (1, "chain-b"),
-        (2, "chain-c"),
-        (3, "chain-d"),
-    ]
+    ] == [(0, "chain-a"), (1, "chain-b"), (2, "chain-c"), (3, "chain-d")]
 
     # When covering all edges, we should never exceed depth 2 in BFS.
     assert [
@@ -286,6 +270,29 @@ def test_breadth_first_versus_depth_first_tree(abstract_specs_chain):
         (1, "chain-c"),
         (1, "chain-d"),
     ]
+
+
+@pytest.mark.parametrize("cover", ["nodes", "edges"])
+@pytest.mark.parametrize("depth_first", [True, False])
+def test_tree_traversal_with_key(cover, depth_first, abstract_specs_chain):
+    """Compare two multisource traversals of the same DAG. In one case the DAG consists of unique
+    Spec instances, in the second case there are identical copies of nodes and edges. Traversal
+    should be equivalent when nodes are identified by dag_hash."""
+    a = abstract_specs_chain["chain-a"]
+    c = abstract_specs_chain["chain-c"]
+    kwargs = {"cover": cover, "depth_first": depth_first}
+    dag_hash = lambda s: s.dag_hash()
+
+    # Traverse DAG spanned by a unique set of Spec instances
+    first = traverse.traverse_tree([a, c], key=id, **kwargs)
+
+    # Traverse equivalent DAG with copies of Spec instances included, keyed by dag hash.
+    second = traverse.traverse_tree([a, c.copy()], key=dag_hash, **kwargs)
+
+    # Check that the same nodes are discovered at the same depth
+    node_at_depth_first = [(depth, dag_hash(edge.spec)) for (depth, edge) in first]
+    node_at_depth_second = [(depth, dag_hash(edge.spec)) for (depth, edge) in second]
+    assert node_at_depth_first == node_at_depth_second
 
 
 def test_breadth_first_versus_depth_first_printing(abstract_specs_chain):
@@ -402,15 +409,7 @@ def test_traverse_edges_topo(abstract_specs_toposort):
 
     # See figure above, we have 7 edges (excluding artifical ones to the root)
     assert set(edges) == set(
-        [
-            ("A", "B"),
-            ("A", "C"),
-            ("B", "F"),
-            ("B", "G"),
-            ("C", "D"),
-            ("D", "B"),
-            ("E", "D"),
-        ]
+        [("A", "B"), ("A", "C"), ("B", "F"), ("B", "G"), ("C", "D"), ("D", "B"), ("E", "D")]
     )
 
     # Verify that all in-edges precede all out-edges
@@ -419,3 +418,16 @@ def test_traverse_edges_topo(abstract_specs_toposort):
         out_edge_indices = [i for (i, (parent, child)) in enumerate(edges) if node == parent]
         if in_edge_indices and out_edge_indices:
             assert max(in_edge_indices) < min(out_edge_indices)
+
+
+def test_traverse_nodes_no_deps(abstract_specs_dtuse):
+    """Traversing nodes without deps should be the same as deduplicating the input specs. This may
+    not look useful, but can be used to avoid a branch on the call site in which it's otherwise
+    easy to forget to deduplicate input specs."""
+    inputs = [
+        abstract_specs_dtuse["dtuse"],
+        abstract_specs_dtuse["dtlink5"],
+        abstract_specs_dtuse["dtuse"],  # <- duplicate
+    ]
+    outputs = [x for x in traverse.traverse_nodes(inputs, deptype=dt.NONE)]
+    assert outputs == [abstract_specs_dtuse["dtuse"], abstract_specs_dtuse["dtlink5"]]
