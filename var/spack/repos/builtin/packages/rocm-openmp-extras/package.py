@@ -288,6 +288,7 @@ class RocmOpenmpExtras(Package):
         working_dir="rocm-openmp-extras/llvm-project/openmp/libomptarget",
         when="@6.1",
     )
+    patch("0001-Avoid-duplicate-registration-on-cuda-env.patch", when="@6.1:")
 
     def setup_run_environment(self, env):
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
