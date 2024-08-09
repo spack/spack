@@ -437,6 +437,13 @@ class RocmOpenmpExtras(Package):
             flang.format(src) + "CMakeLists.txt",
         )
 
+        filter_file(
+            "if (LIBOMPTARGET_DEP_CUDA_FOUND)",
+            "if (LIBOMPTARGET_DEP_CUDA_FOUND AND NOT LIBOMPTARGET_AMDGPU_ARCH)",
+            libomptarget.format(src) + "/hostexec/CMakeLists.txt",
+            string=True,
+        )
+
     def install(self, spec, prefix):
         src = self.stage.source_path
         gfx_list = os.environ["GFXLIST"]
