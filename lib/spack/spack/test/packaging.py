@@ -12,6 +12,7 @@ import pathlib
 import platform
 import shutil
 from collections import OrderedDict
+import sys
 
 import pytest
 
@@ -39,9 +40,8 @@ from spack.relocate import (
 )
 from spack.spec import Spec
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
-
+@pytest.mark.not_on_windows("gpg not available on Windows")
 @pytest.mark.usefixtures("install_mockery", "mock_gnupghome")
 def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
     # Install a test package
@@ -150,7 +150,8 @@ def test_relocate_links(tmpdir):
     dep_prefix_path = str(tmpdir.join("prefix_b", "file"))
     new_own_prefix_path = str(tmpdir.join("new_prefix_a", "file"))
     new_dep_prefix_path = str(tmpdir.join("new_prefix_b", "file"))
-    system_path = os.path.join(os.path.sep, "system", "path")
+    sep = "" if sys.platform == "win32" else os.path.sep
+    system_path = os.path.join(sep, "system", "path")
 
     fs.touchp(own_prefix_path)
     fs.touchp(new_own_prefix_path)
@@ -199,6 +200,7 @@ def test_needs_relocation():
     assert needs_binary_relocation("application", "x-mach-binary")
 
 
+@pytest.mark.not_on_windows("macos use not intended for Windows")
 def test_replace_paths(tmpdir):
     with tmpdir.as_cwd():
         suffix = "dylib" if platform.system().lower() == "darwin" else "so"
@@ -392,6 +394,7 @@ def test_replace_paths(tmpdir):
         }
 
 
+@pytest.mark.not_on_windows("macos use not intended for Windows")
 def test_macho_make_paths():
     out = macho_make_paths_relative(
         "/Users/Shared/spack/pkgC/lib/libC.dylib",
