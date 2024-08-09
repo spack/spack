@@ -78,7 +78,7 @@ class Siesta(MakefilePackage, CMakePackage):
     depends_on("mpi", when="+mpi")
     depends_on("blas")
     depends_on("lapack")
-    depends_on("scalapack")
+    depends_on("scalapack", when="+mpi")
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
     depends_on("cray-libsci+openmp", when="^[virtuals=cray-libsci] cray-libsci")
@@ -89,7 +89,6 @@ class Siesta(MakefilePackage, CMakePackage):
 
     with when("build_system=cmake"):
         depends_on("cmake@3.20:", type="build")
-        depends_on("scalapack", when="+mpi")
 
     def flag_handler(self, name, flags):
         if "%gcc@10:" in self.spec and name == "fflags":
@@ -101,7 +100,7 @@ class Siesta(MakefilePackage, CMakePackage):
         if "+cray" in spec:
             netcdff_prefix = os.environ.get("NETCDF_DIR", "")
             hdf5_prefix = os.environ.get("HDF5_DIR", "")
-        if spec.satisfies("@:4.0.2"):
+        if spec.satisfies("@:4.0.2 +mpi"):
             configure_args = [
                 "--enable-mpi",
                 "--with-blas=%s" % spec["blas"].libs,
@@ -168,6 +167,7 @@ class Siesta(MakefilePackage, CMakePackage):
                                 libs_arg.append("-lsci_gnu_mpi")
                             f.write("MPI_INTERFACE = libmpi_f90.a\n")
                             f.write("MPI_INCLUDE = .\n")
+                            f.write("LIBS += " + spec["scalapack"].libs.ld_flags + "\n")
                             fppflags_arg.append("-DMPI ")
 
                         if "+openmp" in spec:
