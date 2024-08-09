@@ -120,11 +120,6 @@ class PythonExtension(spack.package_base.PackageBase):
         """
         return []
 
-    @property
-    def bindir(self):
-        windows = self.spec.satisfies("platform=windows")
-        return join_path(self.prefix, "Scripts" if windows else "bin")
-
     def view_file_conflicts(self, view, merge_map):
         """Report all file conflicts, excepting special cases for python.
         Specifically, this does not report errors for duplicate
