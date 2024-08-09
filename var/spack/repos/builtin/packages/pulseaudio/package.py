@@ -55,6 +55,7 @@ class Pulseaudio(AutotoolsPackage):
     depends_on("libxtst", when="+x11")
     depends_on("openssl", when="+openssl")
     depends_on("perl-xml-parser", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("speexdsp@1.2:")
     depends_on("m4", type="build")
 
