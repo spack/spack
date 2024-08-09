@@ -555,8 +555,16 @@ register_flag_optional(TARGET_PROCESSOR
             
                 args.append(
                     "-DSYCL_COMPILER="
-                    + self.spec.variants["sycl_compiler_implementation"].value
+                    + self.spec.variants["sycl_compiler_implementation"].value.upper()
                 )
+                #special case for clang 
+                if self.spec.satisfies("%clang"):
+                    args.append("-DSYCL_COMPILER=ONEAPI-Clang")
+                else:
+                    args.append(
+                    "-DSYCL_COMPILER="
+                    + self.spec.variants["sycl_compiler_implementation"].value.upper()
+                    )
                 # if self.spec.variants["flags"].value != "none":
                 #     args.append("-DCXX_EXTRA_FLAGS= -fsycl -O3" + self.spec.variants["flags"].value)
                 if self.spec.variants["sycl2020_offload"].value == "nvidia":
