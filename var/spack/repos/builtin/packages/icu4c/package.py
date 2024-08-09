@@ -66,8 +66,6 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
         when="@58.0:59",
     )
 
-    configure_directory = "source"
-
     def url_for_version(self, version):
         url = "https://github.com/unicode-org/icu/releases/download/release-{0}/icu4c-{1}-src.tgz"
         return url.format(version.dashed, version.underscored)
@@ -89,6 +87,9 @@ class BuildEnvironment:
 
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder, BuildEnvironment):
+
+    configure_directory = "source"
+
     def configure_args(self):
         args = []
 
