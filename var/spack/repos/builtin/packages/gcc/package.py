@@ -34,6 +34,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
+    provides("cxx")
+
     version("master", branch="master")
 
     version("14.2.0", sha256="a7b39bc69cbf9e25826c5a60ab26477001f7c08d85cec04bc0e29cabed6f3cc9")
