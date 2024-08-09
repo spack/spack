@@ -16,7 +16,7 @@ class Siesta(MakefilePackage, CMakePackage):
     dynamics simulations of molecules and solids.
     """
 
-    build_system(conditional("cmake", when="@5.0.0:"), "makefile", default="cmake")
+    build_system(conditional("cmake", when="@5:"), conditional("makefile", when="@:4"))
 
     homepage = "https://departments.icmab.es/leem/siesta/"
     git = "https://gitlab.com/siesta-project/siesta"
