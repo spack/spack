@@ -25,6 +25,12 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop", submodules=False)
     version(
+        "2024.07.0",
+        tag="v2024.07.0",
+        commit="df7741f1dbbdc5fff5f7d626151fdf1904e62b19",
+        submodules=False,
+    )
+    version(
         "2024.02.2",
         tag="v2024.02.2",
         commit="5ba0944d862513f600432c34b009824875df27e5",
@@ -119,11 +125,13 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         description="Tests to run",
     )
 
-    depends_on("cmake@3.8:", type="build")
-    depends_on("cmake@3.9:", type="build", when="+cuda")
+    depends_on("cmake", type="build")
+    depends_on("cmake@3.23:", type="build", when="@2024.07.0:")
     depends_on("cmake@3.14:", type="build", when="@2022.03.0:")
+    depends_on("cmake@3.9:", type="build", when="+cuda")
+    depends_on("cmake@3.8:", type="build")
 
-    depends_on("blt")
+    depends_on("blt", type="build")
     depends_on("blt@0.6.2:", type="build", when="@2024.02.1:")
     depends_on("blt@0.6.1:", type="build", when="@2024.02.0:")
     depends_on("blt@0.5.3", type="build", when="@2023.06.0")
@@ -135,6 +143,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("^blt@:0.3.6", when="+rocm")
 
     depends_on("umpire")
+    depends_on("umpire@2024.07.0:", when="@2024.07.0:")
     depends_on("umpire@2024.02.1:", when="@2024.02.1:")
     depends_on("umpire@2024.02.0:", when="@2024.02.0:")
     depends_on("umpire@2023.06.0", when="@2023.06.0")
@@ -160,15 +169,16 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     with when("+raja"):
         depends_on("raja~openmp", when="~openmp")
         depends_on("raja+openmp", when="+openmp")
+        depends_on("raja@2024.07.0:", when="@2024.07.0:")
         depends_on("raja@2024.02.2:", when="@2024.02.2:")
         depends_on("raja@2024.02.1:", when="@2024.02.1:")
         depends_on("raja@2024.02.0:", when="@2024.02.0:")
         depends_on("raja@2023.06.0", when="@2023.06.0")
         depends_on("raja@2022.10.0:2023.06.0", when="@2022.10.0")
         depends_on("raja@2022.03.0:2023.06.0", when="@2022.03.0")
-        depends_on("raja@0.12.0", when="@2.2.0:2.2.2")
-        depends_on("raja@0.13.0", when="@2.3.0")
         depends_on("raja@0.14.0", when="@2.4.0")
+        depends_on("raja@0.13.0", when="@2.3.0")
+        depends_on("raja@0.12.0", when="@2.2.0:2.2.2")
 
         with when("+cuda"):
             depends_on("raja+cuda")

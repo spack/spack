@@ -22,6 +22,18 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop", submodules="True")
     version("master", branch="main", submodules="True")
     version(
+        "0.13.3",
+        tag="v0.13.3",
+        commit="93853696b452647278eae9311b835ad206236522",
+        submodules="True",
+    )
+    version(
+        "0.13.2",
+        tag="v0.13.2",
+        commit="b25dcd2a35683a68db1c25173e849be69833ed4f",
+        submodules="True",
+    )
+    version(
         "0.13.1",
         tag="v0.13.1",
         commit="0fd0d47aaaa57076f26caad88e667fbc01ff7214",
@@ -62,12 +74,14 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     variant("tests", default=False, description="Build tests")
     variant("loop_fuser", default=False, description="Enable loop fusion capability")
 
-    depends_on("cmake@3.8:", type="build")
-    depends_on("cmake@3.9:", type="build", when="+cuda")
-    depends_on("cmake@3.18:", type="build", when="@0.12.0:")
+    depends_on("cmake", type="build")
+    depends_on("cmake@3.23:", type="build", when="@0.13.2:")
     depends_on("cmake@3.21:", type="build", when="@0.12.0:+rocm")
+    depends_on("cmake@3.18:", type="build", when="@0.12.0:")
+    depends_on("cmake@3.9:", type="build", when="+cuda")
+    depends_on("cmake@3.8:", type="build")
 
-    depends_on("blt")
+    depends_on("blt", type="build")
     depends_on("blt@0.6.2:", type="build", when="@0.13.0:")
     depends_on("blt@0.6.1:", type="build", when="@0.12.0:")
     depends_on("blt@0.4.0:", type="build", when="@0.3.1:")
@@ -77,15 +91,18 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("camp", when="@:0.11.1")
 
     depends_on("umpire")
+    depends_on("umpire@2024.07.0:", when="@0.13.2:")
     depends_on("umpire@2024.02.1:", when="@0.13.0:")
     depends_on("umpire@2024.02.0:", when="@0.12.0:")
 
     depends_on("raja")
+    depends_on("raja@2024.07.0:", when="@0.13.2:")
     depends_on("raja@2024.02.2:", when="@0.13.1:")
     depends_on("raja@2024.02.1:", when="@0.13.0:")
     depends_on("raja@2024.02.0:", when="@0.12.0:")
 
     depends_on("chai+enable_pick+raja")
+    depends_on("chai@2024.07.0:", when="@0.13.2:")
     depends_on("chai@2024.02.2:", when="@0.13.1:")
     depends_on("chai@2024.02.1:", when="@0.13.0:")
     depends_on("chai@2024.02.0:", when="@0.12.0:")
