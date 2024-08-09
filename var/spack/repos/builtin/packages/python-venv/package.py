@@ -96,7 +96,7 @@ class PythonVenv(Package):
         windows = self.spec.satisfies("platform=windows")
         dependent_bin_path = join_path(dependent_spec.prefix, "Scripts" if windows else "bin")
         if os.path.isdir(dependent_bin_path):
-            env.prepend_path("PATH", dependent_spec.package.bindir)
+            env.prepend_path("PATH", dependent_bin_path)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_dependent_run_environment(env, dependent_spec)
