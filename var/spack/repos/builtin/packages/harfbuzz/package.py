@@ -74,11 +74,7 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
     )
 
     variant("freetype", default=True, description="enable support for freetype font rendering")
-    variant(
-        "coretext",
-        default=True,
-        description="Enable FreeType font rendering",
-    )
+    variant("coretext", default=True, description="Enable FreeType font rendering")
 
     variant("graphite2", default=False, description="enable support for graphite2 font engine")
     variant(
