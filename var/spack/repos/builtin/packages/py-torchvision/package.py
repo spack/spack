@@ -121,7 +121,9 @@ class PyTorchvision(PythonPackage):
     depends_on("cuda", when="+nvjpeg")
     depends_on("ffmpeg@3.1:", when="+ffmpeg")
     depends_on("cuda", when="+video_codec")
-    depends_on("giflib", when="+gif")
+    # torchvision does not yet support externally-installed giflib:
+    # https://github.com/pytorch/vision/pull/8406#discussion_r1590926939
+    # depends_on("giflib", when="+gif")
 
     # Historical dependencies
     depends_on("py-requests", when="@0.12:0.17.0", type=("build", "run"))
