@@ -16,7 +16,7 @@ class Siesta(MakefilePackage, CMakePackage):
     dynamics simulations of molecules and solids.
     """
 
-    build_system(conditional("cmake", when="@5.0.0:"), "makefile", default="makefile")
+    build_system(conditional("cmake", when="@5.0.0:"), "makefile", default="cmake")
 
     homepage = "https://departments.icmab.es/leem/siesta/"
     git = "https://gitlab.com/siesta-project/siesta"
@@ -30,7 +30,7 @@ class Siesta(MakefilePackage, CMakePackage):
     version(
         "5.0.0",
         url="https://gitlab.com/siesta-project/siesta/-/archive/rel-5.0/siesta-rel-5.0.tar.gz",
-        sha256="a407c31e8fd101efe4bfc68831870c524a8c397a39de7271d31ce0e6a4df92bb",
+        sha256="0b40c341dfd47e99e7e191189600bbcaadb0f9af03977fefed6a69836bd523e4",
     )
     version(
         "4.1.5",
@@ -73,7 +73,6 @@ class Siesta(MakefilePackage, CMakePackage):
         default="Release",
         description="The build type to build",
         values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel", "check"),
-        when="@5.0.0: build_system=cmake",
     )
 
     depends_on("mpi", when="+mpi")
@@ -89,6 +88,7 @@ class Siesta(MakefilePackage, CMakePackage):
     depends_on("pexsi", when="+pexsi")
 
     with when("build_system=cmake"):
+        depends_on("cmake@3.20:", type="build")
         depends_on("scalapack", when="+mpi")
 
     def flag_handler(self, name, flags):
