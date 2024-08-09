@@ -70,6 +70,7 @@ spack:
   - cabana
   - caliper
   - chai
+  - chapel ~rocm ~cuda
   - charliecloud
   - conduit
   - cp2k +mpi
@@ -231,6 +232,7 @@ spack:
   - cabana +cuda cuda_arch=80 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=80
   - caliper +cuda cuda_arch=80
   - chai +cuda cuda_arch=80 ^umpire ~shared
+  - chapel +cuda cuda_arch=80
   - cusz +cuda cuda_arch=80
   - ecp-data-vis-sdk ~rocm +adios2 ~ascent +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=80 # +ascent fails because fides fetch error
   - exago +mpi +python +raja +hiop ~rocm +cuda cuda_arch=80 ~ipopt ^hiop@1.0.0 ~sparse +mpi +raja ~rocm +cuda cuda_arch=80 #^raja@0.14.0
@@ -278,6 +280,7 @@ spack:
   - cabana +cuda cuda_arch=90 ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=90
   - caliper +cuda cuda_arch=90
   - chai +cuda cuda_arch=90 ^umpire ~shared
+  - chapel +cuda cuda_arch=90
   - flecsi +cuda cuda_arch=90
   - ginkgo +cuda cuda_arch=90
   - gromacs +cuda cuda_arch=90
@@ -325,6 +328,7 @@ spack:
   - amrex +rocm amdgpu_target=gfx90a
   - caliper +rocm amdgpu_target=gfx90a
   - chai +rocm amdgpu_target=gfx90a
+  - chapel +rocm amdgpu_target=gfx90a
   - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx90a
   - gasnet +rocm amdgpu_target=gfx90a
   - ginkgo +rocm amdgpu_target=gfx90a

@@ -81,6 +81,7 @@ spack:
   - cabana
   - caliper
   - chai
+  - chapel ~cuda ~rocm
   - charliecloud
   - conduit
   - datatransferkit
