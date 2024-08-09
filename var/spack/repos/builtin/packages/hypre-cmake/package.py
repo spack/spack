@@ -117,22 +117,20 @@ class HypreCmake(CMakePackage, CudaPackage):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.extra_install_tests)
 
-    def test_hypre_cmake(self):
+    def test_bigint(self):
         """Perform smoke tests on installed HYPRE package."""
         if "+mpi" not in self.spec:
             raise SkipTest("Package must be installed with +mpi to run tests")
 
-        # Build copied and cached test examples
+        # Build and run cached examples
         with working_dir(self._cached_tests_work_dir):
             make = which("make")
             make("bigint")
 
             for exe_name in ["ex5big", "ex15big"]:
-                with test_part(
-                    self, f"test_hypre_cmake_{exe_name}", purpose=f"Ensure {exe_name} runs"
-                ):
+                with test_part(self, f"test_bigint_{exe_name}", purpose=f"Ensure {exe_name} runs"):
 
-                    program = which("./" + exe_name)
+                    program = which(exe_name)
                     if program is None:
                         raise SkipTest(f"{exe_name} does not exist in version {self.version}")
 
