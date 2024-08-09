@@ -11,8 +11,8 @@ import os
 import pathlib
 import platform
 import shutil
-from collections import OrderedDict
 import sys
+from collections import OrderedDict
 
 import pytest
 
