@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test basic behavior of compilers in Spack"""
 import os
-from copy import copy
 import sys
+from copy import copy
 
 import pytest
 
@@ -713,10 +713,14 @@ def test_compiler_get_real_version(working_env, monkeypatch, tmpdir):
     test_version = "2.2.2"
 
     # Create compiler
-    content = """if "%CMP_ON%"=="1" (echo %CMP_VER%)""" if sys.platform == "win32" else """if [ "$CMP_ON" = "1" ]; then
+    content = (
+        """if "%CMP_ON%"=="1" (echo %CMP_VER%)""" 
+        if sys.platform == "win32" 
+        else """if [ "$CMP_ON" = "1" ]; then
     echo "$CMP_VER"
 fi
 """
+    )
     gcc = make_gcc_script(tmpdir, content)
 
     # Add compiler to config
@@ -797,10 +801,14 @@ def test_compiler_get_real_version_fails(working_env, monkeypatch, tmpdir):
     test_version = "2.2.2"
 
     # Create compiler
-    content = """if %CMP_ON%=="1" (echo %CMP_VER%)""" if sys.platform == "win32" else """if [ "$CMP_ON" = "1" ]; then
+    content = (
+        """if %CMP_ON%=="1" (echo %CMP_VER%)""" 
+        if sys.platform == "win32" 
+        else """if [ "$CMP_ON" = "1" ]; then
     echo "$CMP_VER"
 fi
 """
+    )
     gcc = make_gcc_script(tmpdir, content)
 
     # Add compiler to config
