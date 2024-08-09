@@ -25,31 +25,31 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         "0.13.3",
         tag="v0.13.3",
         commit="93853696b452647278eae9311b835ad206236522",
-        submodules="True",
+        submodules=False,
     )
     version(
         "0.13.2",
         tag="v0.13.2",
         commit="b25dcd2a35683a68db1c25173e849be69833ed4f",
-        submodules="True",
+        submodules=False,
     )
     version(
         "0.13.1",
         tag="v0.13.1",
         commit="0fd0d47aaaa57076f26caad88e667fbc01ff7214",
-        submodules="True",
+        submodules=False,
     )
     version(
         "0.13.0",
         tag="v0.13.0",
         commit="2b288e2c557c3b14befeebc8e14a7d48348bd857",
-        submodules="True",
+        submodules=False,
     )
     version(
         "0.12.0",
         tag="v0.12.0",
         commit="a9978083035eb00a090451bd36d7987bc935204d",
-        submodules="True",
+        submodules=False,
     )
     version(
         "0.3.0", tag="v0.3.0", commit="5e2b69b2836c9f2215207ca9a36a690cb77eea33", submodules="True"
