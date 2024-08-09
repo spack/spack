@@ -17,7 +17,7 @@ class Siesta(MakefilePackage, CMakePackage):
     """
 
     build_system(
-        conditional("cmake", when="@5:"), conditional("makefile", when="@:4"), default=cmake
+        conditional("cmake", when="@5:"), conditional("makefile", when="@:4"), default="cmake"
     )
 
     homepage = "https://departments.icmab.es/leem/siesta/"
