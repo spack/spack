@@ -32,7 +32,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     version("3.1", sha256="be69e6085e8966e12aa2df897eea6254b172e5adfa03de0adbb89bc3065f4fbe")
     version("3.0", sha256="776219c72e0fdc36f134e6975b68c7ab25f38206f8f8af84a6f9630648c24800")
     version("1.0", sha256="3cfb9e45601f1f249878355c72baa6e6a61f6c811f8716d60b83c7fb544e1d5c")
-    # version("main", branch="main")
+    version("main", branch="main")
     maintainers("tomdeakin", "kaanolgu", "tom91136")
     # Previous maintainers: "robj0nes"
     depends_on("cxx", type="build")  # generated
@@ -74,7 +74,13 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         default="none",
         description="[ComputeCpp only] Path to OpenCL library, usually called libOpenCL.so",
     )
-
+    variant(
+        "sycl2020_offload",
+        values=("nvidia", "intel"),
+        default="intel",
+        when="+sycl2020",
+        description="Offloading to NVIDIA GPU or not",
+    )
     sycl_compiler_implementations = [
         "oneapi-icpx",
         "oneapi-clang",
@@ -286,6 +292,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     )
     # depends_on("rocm-opencl@6.0.2", when="+ocl ocl_backend=amd")
     depends_on("cuda", when="+ocl ocl_backend=cuda")
+    depends_on("cuda", when="+sycl2020 sycl2020_offload=nvidia")
     depends_on("intel-oneapi-compilers", when="+ocl ocl_backend=intel")
     depends_on("pocl@1.5", when="+ocl ocl_backend=pocl")
 
@@ -365,6 +372,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             ]
             if "std" in filtered_model_list[0]:
                 args = ["-DMODEL=" + "std-" + self.spec.variants["std_submodel"].value]
+            elif "sycl2020" in filtered_model_list[0]: # this is for nvidia offload
+                args = ["-DMODEL=" + "sycl2020-" + self.spec.variants["sycl2020_submodel"].value]
             else:
                 args = ["-DMODEL=" + filtered_model_list[0]]
         else:
@@ -538,30 +547,26 @@ register_flag_optional(TARGET_PROCESSOR
         #              SYCL 2020
         # ===================================
         if "+sycl2020" in self.spec:
-            if self.spec.satisfies("%oneapi"):
+            # if self.spec.satisfies("%oneapi") or self.spec.satisfies("%clang"):
                 # -fsycl flag is required for setting up sycl/sycl.hpp seems like
                 #  it doesn't get it from the CMake file
-                args.append("-DCXX_EXTRA_FLAGS= -fsycl -O3")
+                # args.append("-DCXX_EXTRA_FLAGS= -fsycl -O3")
                 # this is required to enable -DCMAKE_CXX_COMPILER=icpx flag from CMake
-                args.append("-DSYCL_COMPILER=ONEAPI-ICPX")
-            else:
+            
                 args.append(
                     "-DSYCL_COMPILER="
-                    + self.spec.variants["sycl_compiler_implementation"].value.upper()
+                    + self.spec.variants["sycl_compiler_implementation"].value
                 )
-                if (
-                    self.spec.variants["sycl_compiler_implementation"].value.upper()
-                    != "ONEAPI-DPCPP"
-                ):
-                    args.append(
-                        "-DSYCL_COMPILER_DIR="
-                        + self.spec.variants["sycl_compiler_implementation"].value.upper()
-                    )
-                    if (
-                        self.spec.variants["sycl_compiler_implementation"].value.upper()
-                        == "COMPUTE-CPP"
-                    ):
-                        args.append("-DOpenCL_LIBRARY=")
+                # if self.spec.variants["flags"].value != "none":
+                #     args.append("-DCXX_EXTRA_FLAGS= -fsycl -O3" + self.spec.variants["flags"].value)
+                if self.spec.variants["sycl2020_offload"].value == "nvidia":
+                    cuda_dir = self.spec["cuda"].prefix 
+                    cuda_arch = "sm_" + self.spec.variants["cuda_arch"].value[0]
+                    args.append("-DCXX_EXTRA_FLAGS=" +
+                    "-fsycl; -march=znver3;-fsycl-targets=nvptx64-nvidia-cuda;"+
+                    "--cuda-path=" + cuda_dir)
+                
+
 
         # ===================================
         #             HIP(ROCM)
