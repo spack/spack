@@ -17,7 +17,7 @@ import archspec
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import HeaderList, LibraryList, join_path
+from llnl.util.filesystem import HeaderList, LibraryList
 
 import spack.builder
 import spack.config
