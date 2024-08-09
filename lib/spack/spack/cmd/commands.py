@@ -11,7 +11,6 @@ import sys
 from argparse import ArgumentParser, Namespace
 from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
-import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
 from llnl.util.tty.colify import colify
@@ -866,9 +865,6 @@ def _commands(parser: ArgumentParser, args: Namespace) -> None:
         with open(args.update, "w") as f:
             prepend_header(args, f)
             formatter(args, f)
-
-        if args.update_completion:
-            fs.set_executable(args.update)
 
     else:
         prepend_header(args, sys.stdout)
