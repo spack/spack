@@ -714,8 +714,8 @@ def test_compiler_get_real_version(working_env, monkeypatch, tmpdir):
 
     # Create compiler
     content = (
-        """if "%CMP_ON%"=="1" (echo %CMP_VER%)""" 
-        if sys.platform == "win32" 
+        """if "%CMP_ON%"=="1" (echo %CMP_VER%)"""
+        if sys.platform == "win32"
         else """if [ "$CMP_ON" = "1" ]; then
     echo "$CMP_VER"
 fi
@@ -802,8 +802,8 @@ def test_compiler_get_real_version_fails(working_env, monkeypatch, tmpdir):
 
     # Create compiler
     content = (
-        """if %CMP_ON%=="1" (echo %CMP_VER%)""" 
-        if sys.platform == "win32" 
+        """if %CMP_ON%=="1" (echo %CMP_VER%)"""
+        if sys.platform == "win32"
         else """if [ "$CMP_ON" = "1" ]; then
     echo "$CMP_VER"
 fi
