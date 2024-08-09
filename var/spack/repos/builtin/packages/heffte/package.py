@@ -129,7 +129,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("@:2.2.0"):
             return
         install_tree(
-            self.prefix.share.heffte.testing, join_path(self.install_test_root, "testing")
+            self.prefix.share.heffte.testing, join_path(install_test_root(self), "testing")
         )
 
     def test_make_test(self):

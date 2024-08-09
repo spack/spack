@@ -98,7 +98,7 @@ class Clingo(CMakePackage):
 
         args = [self.define("CLINGO_BUILD_WITH_LUA", False)]
 
-        if "+python" in self.spec:
+        if self.spec.satisfies("+python"):
             suffix = python(
                 "-c", "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))", output=str
             ).strip()
@@ -116,7 +116,7 @@ class Clingo(CMakePackage):
 
         # Use LTO also for non-Intel compilers please. This can be removed when they
         # bump cmake_minimum_required to VERSION 3.9.
-        if "+ipo" in self.spec:
+        if self.spec.satisfies("+ipo"):
             args.append(self.define("CMAKE_POLICY_DEFAULT_CMP0069", "NEW"))
 
         return args

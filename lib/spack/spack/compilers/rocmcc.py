@@ -23,9 +23,6 @@ class Rocmcc(spack.compilers.clang.Clang):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ["amdflang"]
 
-    PrgEnv = "PrgEnv-amd"
-    PrgEnv_compiler = "amd"
-
     @property
     def link_paths(self):
         link_paths = {
