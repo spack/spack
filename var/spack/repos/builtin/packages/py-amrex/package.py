@@ -118,5 +118,6 @@ class PyAmrex(PythonPackage, CudaPackage, ROCmPackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.tests_src_dir)
         with working_dir(test_dir):
             pytest = which("pytest")
-            assert pytest is not None, "Cannot find pytest"
-            pytest(join_path(install_test_root(self), self.tests_src_dir))
+            # TODO: Remove once test dependencies made available
+            assert pytest is not None, "Make sure a suitable 'pytest' is in your path"
+            pytest()
