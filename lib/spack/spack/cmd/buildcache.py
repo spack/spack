@@ -3,16 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
-import concurrent.futures
-import copy
 import glob
-import hashlib
 import json
 import os
 import shutil
 import sys
 import tempfile
-from typing import Dict, List, Optional, Tuple
+from typing import List, Tuple
 
 import llnl.util.tty as tty
 from llnl.string import plural
@@ -24,7 +21,6 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
-import spack.hash_types as ht
 import spack.mirror
 import spack.oci.oci
 import spack.oci.opener
@@ -41,22 +37,7 @@ import spack.util.web as web_util
 from spack import traverse
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
-from spack.oci.image import (
-    Digest,
-    ImageReference,
-    default_config,
-    default_index_tag,
-    default_manifest,
-    default_tag,
-    tag_is_spec,
-)
-from spack.oci.oci import (
-    copy_missing_layers_with_retry,
-    get_manifest_and_config_with_retry,
-    list_tags,
-    upload_blob_with_retry,
-    upload_manifest_with_retry,
-)
+from spack.oci.image import ImageReference
 from spack.spec import Spec, save_dependency_specfiles
 
 description = "create, download and install binary packages"
@@ -340,13 +321,6 @@ def _format_spec(spec: Spec) -> str:
     return spec.cformat("{name}{@version}{/hash:7}")
 
 
-def _progress(i: int, total: int):
-    if total > 1:
-        digits = len(str(total))
-        return f"[{i+1:{digits}}/{total}] "
-    return ""
-
-
 def _skip_no_redistribute_for_public(specs):
     remaining_specs = list()
     removed_specs = list()
@@ -378,10 +352,6 @@ class PackagesAreNotInstalledError(spack.error.SpackError):
 
 class PackageNotInstalledError(spack.error.SpackError):
     """Raised when a spec is not installed but picked to be packaged."""
-
-
-class MissingLayerError(spack.error.SpackError):
-    """Raised when a required layer for a dependency is missing in an OCI registry."""
 
 
 def _specs_to_be_packaged(
@@ -445,6 +415,10 @@ def push_fn(args):
                 "Code signing is currently not supported for OCI images. "
                 "Use --unsigned to silence this warning."
             )
+        unsigned = True
+
+    # Select a signing key, or None if unsigned.
+    signing_key = None if unsigned else (args.key or bindist.select_signing_key())
 
     specs = _specs_to_be_packaged(
         roots,
@@ -471,13 +445,10 @@ def push_fn(args):
                     (s, PackageNotInstalledError("package not installed")) for s in not_installed
                 )
 
-    # TODO: move into bindist.push_or_raise
-    if target_image:
-        base_image = ImageReference.from_string(args.base_image) if args.base_image else None
-        with tempfile.TemporaryDirectory(
-            dir=spack.stage.get_stage_root()
-        ) as tmpdir, spack.util.parallel.make_concurrent_executor() as executor:
-            skipped, base_images, checksums, upload_errors = _push_oci(
+    with bindist.default_push_context() as (tmpdir, executor):
+        if target_image:
+            base_image = ImageReference.from_string(args.base_image) if args.base_image else None
+            skipped, base_images, checksums, upload_errors = bindist._push_oci(
                 target_image=target_image,
                 base_image=base_image,
                 installed_specs_with_deps=specs,
@@ -495,46 +466,28 @@ def push_fn(args):
                 tagged_image = target_image.with_tag(args.tag)
                 # _push_oci may not populate base_images if binaries were already in the registry
                 for spec in roots:
-                    _update_base_images(
+                    bindist._oci_update_base_images(
                         base_image=base_image,
                         target_image=target_image,
                         spec=spec,
                         base_image_cache=base_images,
                     )
-                _put_manifest(base_images, checksums, tagged_image, tmpdir, None, None, *roots)
+                bindist._oci_put_manifest(
+                    base_images, checksums, tagged_image, tmpdir, None, None, *roots
+                )
                 tty.info(f"Tagged {tagged_image}")
 
-    else:
-        skipped = []
-
-        for i, spec in enumerate(specs):
-            try:
-                bindist.push_or_raise(
-                    spec,
-                    push_url,
-                    bindist.PushOptions(
-                        force=args.force,
-                        unsigned=unsigned,
-                        key=args.key,
-                        regenerate_index=args.update_index,
-                    ),
-                )
-
-                msg = f"{_progress(i, len(specs))}Pushed {_format_spec(spec)}"
-                if len(specs) == 1:
-                    msg += f" to {push_url}"
-                tty.info(msg)
-
-            except bindist.NoOverwriteException:
-                skipped.append(_format_spec(spec))
-
-            # Catch any other exception unless the fail fast option is set
-            except Exception as e:
-                if args.fail_fast or isinstance(
-                    e, (bindist.PickKeyException, bindist.NoKeyException)
-                ):
-                    raise
-                failed.append((spec, e))
+        else:
+            skipped, upload_errors = bindist._push(
+                specs,
+                out_url=push_url,
+                force=args.force,
+                update_index=args.update_index,
+                signing_key=signing_key,
+                tmpdir=tmpdir,
+                executor=executor,
+            )
+            failed.extend(upload_errors)
 
     if skipped:
         if len(specs) == 1:
@@ -567,409 +520,12 @@ def push_fn(args):
             ),
         )
 
-    # Update the index if requested
-    # TODO: remove update index logic out of bindist; should be once after all specs are pushed
-    # not once per spec.
+    # Update the OCI index if requested
     if target_image and len(skipped) < len(specs) and args.update_index:
         with tempfile.TemporaryDirectory(
             dir=spack.stage.get_stage_root()
         ) as tmpdir, spack.util.parallel.make_concurrent_executor() as executor:
-            _update_index_oci(target_image, tmpdir, executor)
-
-
-def _get_spack_binary_blob(image_ref: ImageReference) -> Optional[spack.oci.oci.Blob]:
-    """Get the spack tarball layer digests and size if it exists"""
-    try:
-        manifest, config = get_manifest_and_config_with_retry(image_ref)
-
-        return spack.oci.oci.Blob(
-            compressed_digest=Digest.from_string(manifest["layers"][-1]["digest"]),
-            uncompressed_digest=Digest.from_string(config["rootfs"]["diff_ids"][-1]),
-            size=manifest["layers"][-1]["size"],
-        )
-    except Exception:
-        return None
-
-
-def _push_single_spack_binary_blob(image_ref: ImageReference, spec: spack.spec.Spec, tmpdir: str):
-    filename = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
-
-    # Create an oci.image.layer aka tarball of the package
-    compressed_tarfile_checksum, tarfile_checksum = spack.oci.oci.create_tarball(spec, filename)
-
-    blob = spack.oci.oci.Blob(
-        Digest.from_sha256(compressed_tarfile_checksum),
-        Digest.from_sha256(tarfile_checksum),
-        os.path.getsize(filename),
-    )
-
-    # Upload the blob
-    upload_blob_with_retry(image_ref, file=filename, digest=blob.compressed_digest)
-
-    # delete the file
-    os.unlink(filename)
-
-    return blob
-
-
-def _retrieve_env_dict_from_config(config: dict) -> dict:
-    """Retrieve the environment variables from the image config file.
-    Sets a default value for PATH if it is not present.
-
-    Args:
-        config (dict): The image config file.
-
-    Returns:
-        dict: The environment variables.
-    """
-    env = {"PATH": "/bin:/usr/bin"}
-
-    if "Env" in config.get("config", {}):
-        for entry in config["config"]["Env"]:
-            key, value = entry.split("=", 1)
-            env[key] = value
-    return env
-
-
-def _archspec_to_gooarch(spec: spack.spec.Spec) -> str:
-    name = spec.target.family.name
-    name_map = {"aarch64": "arm64", "x86_64": "amd64"}
-    return name_map.get(name, name)
-
-
-def _put_manifest(
-    base_images: Dict[str, Tuple[dict, dict]],
-    checksums: Dict[str, spack.oci.oci.Blob],
-    image_ref: ImageReference,
-    tmpdir: str,
-    extra_config: Optional[dict],
-    annotations: Optional[dict],
-    *specs: spack.spec.Spec,
-):
-    architecture = _archspec_to_gooarch(specs[0])
-
-    expected_blobs: List[Spec] = [
-        s
-        for s in traverse.traverse_nodes(specs, order="topo", deptype=("link", "run"), root=True)
-        if not s.external
-    ]
-    expected_blobs.reverse()
-
-    base_manifest, base_config = base_images[architecture]
-    env = _retrieve_env_dict_from_config(base_config)
-
-    # If the base image uses `vnd.docker.distribution.manifest.v2+json`, then we use that too.
-    # This is because Singularity / Apptainer is very strict about not mixing them.
-    base_manifest_mediaType = base_manifest.get(
-        "mediaType", "application/vnd.oci.image.manifest.v1+json"
-    )
-    use_docker_format = (
-        base_manifest_mediaType == "application/vnd.docker.distribution.manifest.v2+json"
-    )
-
-    spack.user_environment.environment_modifications_for_specs(*specs).apply_modifications(env)
-
-    # Create an oci.image.config file
-    config = copy.deepcopy(base_config)
-
-    # Add the diff ids of the blobs
-    for s in expected_blobs:
-        # If a layer for a dependency has gone missing (due to removed manifest in the registry, a
-        # failed push, or a local forced uninstall), we cannot create a runnable container image.
-        # If an OCI registry is only used for storage, this is not a hard error, but for now we
-        # raise an exception unconditionally, until someone requests a more lenient behavior.
-        checksum = checksums.get(s.dag_hash())
-        if not checksum:
-            raise MissingLayerError(f"missing layer for {_format_spec(s)}")
-        config["rootfs"]["diff_ids"].append(str(checksum.uncompressed_digest))
-
-    # Set the environment variables
-    config["config"]["Env"] = [f"{k}={v}" for k, v in env.items()]
-
-    if extra_config:
-        # From the OCI v1.0 spec:
-        # > Any extra fields in the Image JSON struct are considered implementation
-        # > specific and MUST be ignored by any implementations which are unable to
-        # > interpret them.
-        config.update(extra_config)
-
-    config_file = os.path.join(tmpdir, f"{specs[0].dag_hash()}.config.json")
-
-    with open(config_file, "w") as f:
-        json.dump(config, f, separators=(",", ":"))
-
-    config_file_checksum = Digest.from_sha256(
-        spack.util.crypto.checksum(hashlib.sha256, config_file)
-    )
-
-    # Upload the config file
-    upload_blob_with_retry(image_ref, file=config_file, digest=config_file_checksum)
-
-    manifest = {
-        "mediaType": base_manifest_mediaType,
-        "schemaVersion": 2,
-        "config": {
-            "mediaType": base_manifest["config"]["mediaType"],
-            "digest": str(config_file_checksum),
-            "size": os.path.getsize(config_file),
-        },
-        "layers": [
-            *(layer for layer in base_manifest["layers"]),
-            *(
-                {
-                    "mediaType": (
-                        "application/vnd.docker.image.rootfs.diff.tar.gzip"
-                        if use_docker_format
-                        else "application/vnd.oci.image.layer.v1.tar+gzip"
-                    ),
-                    "digest": str(checksums[s.dag_hash()].compressed_digest),
-                    "size": checksums[s.dag_hash()].size,
-                }
-                for s in expected_blobs
-            ),
-        ],
-    }
-
-    if not use_docker_format and annotations:
-        manifest["annotations"] = annotations
-
-    # Finally upload the manifest
-    upload_manifest_with_retry(image_ref, manifest=manifest)
-
-    # delete the config file
-    os.unlink(config_file)
-
-
-def _update_base_images(
-    *,
-    base_image: Optional[ImageReference],
-    target_image: ImageReference,
-    spec: spack.spec.Spec,
-    base_image_cache: Dict[str, Tuple[dict, dict]],
-):
-    """For a given spec and base image, copy the missing layers of the base image with matching
-    arch to the registry of the target image. If no base image is specified, create a dummy
-    manifest and config file."""
-    architecture = _archspec_to_gooarch(spec)
-    if architecture in base_image_cache:
-        return
-    if base_image is None:
-        base_image_cache[architecture] = (
-            default_manifest(),
-            default_config(architecture, "linux"),
-        )
-    else:
-        base_image_cache[architecture] = copy_missing_layers_with_retry(
-            base_image, target_image, architecture
-        )
-
-
-def _push_oci(
-    *,
-    target_image: ImageReference,
-    base_image: Optional[ImageReference],
-    installed_specs_with_deps: List[Spec],
-    tmpdir: str,
-    executor: concurrent.futures.Executor,
-    force: bool = False,
-) -> Tuple[
-    List[str],
-    Dict[str, Tuple[dict, dict]],
-    Dict[str, spack.oci.oci.Blob],
-    List[Tuple[Spec, BaseException]],
-]:
-    """Push specs to an OCI registry
-
-    Args:
-        image_ref: The target OCI image
-        base_image: Optional base image, which will be copied to the target registry.
-        installed_specs_with_deps: The installed specs to push, excluding externals,
-            including deps, ordered from roots to leaves.
-        force: Whether to overwrite existing layers and manifests in the buildcache.
-
-    Returns:
-        A tuple consisting of the list of skipped specs already in the build cache,
-        a dictionary mapping architectures to base image manifests and configs,
-        a dictionary mapping each spec's dag hash to a blob,
-        and a list of tuples of specs with errors of failed uploads.
-    """
-
-    # Reverse the order
-    installed_specs_with_deps = list(reversed(installed_specs_with_deps))
-
-    # Spec dag hash -> blob
-    checksums: Dict[str, spack.oci.oci.Blob] = {}
-
-    # arch -> (manifest, config)
-    base_images: Dict[str, Tuple[dict, dict]] = {}
-
-    # Specs not uploaded because they already exist
-    skipped = []
-
-    if not force:
-        tty.info("Checking for existing specs in the buildcache")
-        blobs_to_upload = []
-
-        tags_to_check = (target_image.with_tag(default_tag(s)) for s in installed_specs_with_deps)
-        available_blobs = executor.map(_get_spack_binary_blob, tags_to_check)
-
-        for spec, maybe_blob in zip(installed_specs_with_deps, available_blobs):
-            if maybe_blob is not None:
-                checksums[spec.dag_hash()] = maybe_blob
-                skipped.append(_format_spec(spec))
-            else:
-                blobs_to_upload.append(spec)
-    else:
-        blobs_to_upload = installed_specs_with_deps
-
-    if not blobs_to_upload:
-        return skipped, base_images, checksums, []
-
-    tty.info(
-        f"{len(blobs_to_upload)} specs need to be pushed to "
-        f"{target_image.domain}/{target_image.name}"
-    )
-
-    # Upload blobs
-    blob_futures = [
-        executor.submit(_push_single_spack_binary_blob, target_image, spec, tmpdir)
-        for spec in blobs_to_upload
-    ]
-
-    concurrent.futures.wait(blob_futures)
-
-    manifests_to_upload: List[Spec] = []
-    errors: List[Tuple[Spec, BaseException]] = []
-
-    # And update the spec to blob mapping for successful uploads
-    for spec, blob_future in zip(blobs_to_upload, blob_futures):
-        error = blob_future.exception()
-        if error is None:
-            manifests_to_upload.append(spec)
-            checksums[spec.dag_hash()] = blob_future.result()
-        else:
-            errors.append((spec, error))
-
-    # Copy base images if necessary
-    for spec in manifests_to_upload:
-        _update_base_images(
-            base_image=base_image,
-            target_image=target_image,
-            spec=spec,
-            base_image_cache=base_images,
-        )
-
-    def extra_config(spec: Spec):
-        spec_dict = spec.to_dict(hash=ht.dag_hash)
-        spec_dict["buildcache_layout_version"] = bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
-        spec_dict["binary_cache_checksum"] = {
-            "hash_algorithm": "sha256",
-            "hash": checksums[spec.dag_hash()].compressed_digest.digest,
-        }
-        return spec_dict
-
-    # Upload manifests
-    tty.info("Uploading manifests")
-    manifest_futures = [
-        executor.submit(
-            _put_manifest,
-            base_images,
-            checksums,
-            target_image.with_tag(default_tag(spec)),
-            tmpdir,
-            extra_config(spec),
-            {"org.opencontainers.image.description": spec.format()},
-            spec,
-        )
-        for spec in manifests_to_upload
-    ]
-
-    concurrent.futures.wait(manifest_futures)
-
-    # Print the image names of the top-level specs
-    for spec, manifest_future in zip(manifests_to_upload, manifest_futures):
-        error = manifest_future.exception()
-        if error is None:
-            tty.info(f"Pushed {_format_spec(spec)} to {target_image.with_tag(default_tag(spec))}")
-        else:
-            errors.append((spec, error))
-
-    return skipped, base_images, checksums, errors
-
-
-def _config_from_tag(image_ref_and_tag: Tuple[ImageReference, str]) -> Optional[dict]:
-    image_ref, tag = image_ref_and_tag
-    # Don't allow recursion here, since Spack itself always uploads
-    # vnd.oci.image.manifest.v1+json, not vnd.oci.image.index.v1+json
-    _, config = get_manifest_and_config_with_retry(image_ref.with_tag(tag), tag, recurse=0)
-
-    # Do very basic validation: if "spec" is a key in the config, it
-    # must be a Spec object too.
-    return config if "spec" in config else None
-
-
-def _update_index_oci(
-    image_ref: ImageReference, tmpdir: str, pool: concurrent.futures.Executor
-) -> None:
-    tags = list_tags(image_ref)
-
-    # Fetch all image config files in parallel
-    spec_dicts = pool.map(_config_from_tag, ((image_ref, tag) for tag in tags if tag_is_spec(tag)))
-
-    # Populate the database
-    db_root_dir = os.path.join(tmpdir, "db_root")
-    db = bindist.BuildCacheDatabase(db_root_dir)
-
-    for spec_dict in spec_dicts:
-        spec = Spec.from_dict(spec_dict)
-        db.add(spec, directory_layout=None)
-        db.mark(spec, "in_buildcache", True)
-
-    # Create the index.json file
-    index_json_path = os.path.join(tmpdir, "index.json")
-    with open(index_json_path, "w") as f:
-        db._write_to_file(f)
-
-    # Create an empty config.json file
-    empty_config_json_path = os.path.join(tmpdir, "config.json")
-    with open(empty_config_json_path, "wb") as f:
-        f.write(b"{}")
-
-    # Upload the index.json file
-    index_shasum = Digest.from_sha256(spack.util.crypto.checksum(hashlib.sha256, index_json_path))
-    upload_blob_with_retry(image_ref, file=index_json_path, digest=index_shasum)
-
-    # Upload the config.json file
-    empty_config_digest = Digest.from_sha256(
-        spack.util.crypto.checksum(hashlib.sha256, empty_config_json_path)
-    )
-    upload_blob_with_retry(image_ref, file=empty_config_json_path, digest=empty_config_digest)
-
-    # Push a manifest file that references the index.json file as a layer
-    # Notice that we push this as if it is an image, which it of course is not.
-    # When the ORAS spec becomes official, we can use that instead of a fake image.
-    # For now we just use the OCI image spec, so that we don't run into issues with
-    # automatic garbage collection of blobs that are not referenced by any image manifest.
-    oci_manifest = {
-        "mediaType": "application/vnd.oci.image.manifest.v1+json",
-        "schemaVersion": 2,
-        # Config is just an empty {} file for now, and irrelevant
-        "config": {
-            "mediaType": "application/vnd.oci.image.config.v1+json",
-            "digest": str(empty_config_digest),
-            "size": os.path.getsize(empty_config_json_path),
-        },
-        # The buildcache index is the only layer, and is not a tarball, we lie here.
-        "layers": [
-            {
-                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
-                "digest": str(index_shasum),
-                "size": os.path.getsize(index_json_path),
-            }
-        ],
-    }
-
-    upload_manifest_with_retry(image_ref.with_tag(default_index_tag), oci_manifest)
+            bindist._oci_update_index(target_image, tmpdir, executor)
 
 
 def install_fn(args):
@@ -1251,13 +807,14 @@ def update_index(mirror: spack.mirror.Mirror, update_keys=False):
         with tempfile.TemporaryDirectory(
             dir=spack.stage.get_stage_root()
         ) as tmpdir, spack.util.parallel.make_concurrent_executor() as executor:
-            _update_index_oci(image_ref, tmpdir, executor)
+            bindist._oci_update_index(image_ref, tmpdir, executor)
         return
 
     # Otherwise, assume a normal mirror.
     url = mirror.push_url
 
-    bindist.generate_package_index(url_util.join(url, bindist.build_cache_relative_path()))
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        bindist.generate_package_index(url, tmpdir)
 
     if update_keys:
         keys_url = url_util.join(
@@ -1265,7 +822,8 @@ def update_index(mirror: spack.mirror.Mirror, update_keys=False):
         )
 
         try:
-            bindist.generate_key_index(keys_url)
+            with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+                bindist.generate_key_index(keys_url, tmpdir)
         except bindist.CannotListKeys as e:
             # Do not error out if listing keys went wrong. This usually means that the _gpg path
             # does not exist. TODO: distinguish between this and other errors.
