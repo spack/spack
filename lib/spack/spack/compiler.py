@@ -12,7 +12,7 @@ import shutil
 import sys
 import tempfile
 import typing
-from typing import Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 import llnl.path
 import llnl.util.lang
@@ -733,6 +733,27 @@ class Compiler:
         return result
 
 
+def packages_from_compiler(
+    compiler_dict: Dict[str, Any]
+) -> List["spack.package_base.PackageBase"]:
+    """Returns a list of packages, corresponding to a compiler entry from compilers.yaml."""
+    from spack.detection.path import ExecutablesFinder
+
+    result = []
+    candidate_paths = [x for x in compiler_dict["paths"].values() if x is not None]
+    finder = ExecutablesFinder()
+    for pkg_name in spack.repo.PATH.packages_with_tags("compiler"):
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        detected = finder.detect_specs(pkg=pkg_cls, paths=candidate_paths)
+        if detected:
+            for item in detected:
+                spec, prefix = item.spec, item.prefix
+                spec.external_path = prefix
+                spec._finalize_concretization()
+                result.append(spec.package)
+    return result
+
+
 class ForwardToPackage:
     """Converts a compiler class to one or more external packages, and allows
     selecting them by language.
@@ -741,23 +762,8 @@ class ForwardToPackage:
     _CACHE: Dict[Compiler, List["spack.package_base.PackageBase"]] = {}
 
     def __init__(self, compiler: Compiler) -> None:
-        from spack.detection.path import ExecutablesFinder
-
         if compiler not in self._CACHE:
-            result = []
-            candidate_paths = [x for x in compiler.to_dict()["paths"].values() if x is not None]
-            finder = ExecutablesFinder()
-            for pkg_name in spack.repo.PATH.packages_with_tags("compiler"):
-                pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-                detected = finder.detect_specs(pkg=pkg_cls, paths=candidate_paths)
-                if detected:
-                    for item in detected:
-                        spec, prefix = item.spec, item.prefix
-                        spec.external_path = prefix
-                        spec._finalize_concretization()
-                        result.append(spec.package)
-            self._CACHE[compiler] = result
-
+            self._CACHE[compiler] = packages_from_compiler(compiler.to_dict())
         self.packages = self._CACHE[compiler]
 
     def select(self, language: str) -> "spack.package_base.PackageBase":
