@@ -19,6 +19,9 @@ versions = [
             "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/5e7b0f1c-6f25-4cc8-94d7-3a527e596739/l_fortran-compiler_p_2024.2.1.80_offline.sh",
             "sha256": "6f6dab82a88082a7a39f6feb699343c521f58c6481a1bb87edba7e2550995b6d",
         },
+        "nvidia-plugin": {
+            "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2024.2.1&filters[]=12.0&filters[]=linux"
+        },
     },
     {
         "version": "2024.2.0",
@@ -29,6 +32,10 @@ versions = [
         "ftn": {
             "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/801143de-6c01-4181-9911-57e00fe40181/l_fortran-compiler_p_2024.2.0.426_offline.sh",
             "sha256": "fd19a302662b2f86f76fc115ef53a69f16488080278dba4c573cc705f3a52ffa",
+        },
+        "nvidia-plugin": {
+            "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2024.2.0&filters[]=12.0&filters[]=linux",
+            "sha256": "0622df0054364b01e91e7ed72a33cb3281e281db5b0e86579f516b1cc5336b0f",
         },
     },
     {
@@ -280,6 +287,14 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
                 expand=False,
                 **v["ftn"],
             )
+        if "nvidia-plugin" in v:
+            resource(
+                name="nvidia-plugin-installer",
+                placement="nvidia-plugin-installer",
+                when="@{0}".format(v["version"]),
+                expand=False,
+                **v["nvidia-plugin"],
+            )
 
     @property
     def v2_layout_versions(self):
@@ -304,6 +319,50 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
     @property
     def compiler_search_prefix(self):
         return self._llvm_bin
+
+
+
+    def install_component_codeplay(self, installer_path):
+        """Shared install method for codeplay nvidia plugin since it doesn't have eula option."""
+
+        if platform.system() == "Linux":
+            # Intel installer assumes and enforces that all components
+            # are installed into a single prefix. Spack wants to
+            # install each component in a separate prefix. The
+            # installer mechanism is implemented by saving install
+            # information in a directory called installercache for
+            # future runs. The location of the installercache depends
+            # on the userid. For root it is always in /var/intel. For
+            # non-root it is in $HOME/intel.
+            #
+            # The method for preventing this install from interfering
+            # with other install depends on the userid. For root, we
+            # delete the installercache before and after install. For
+            # non root we redefine the HOME environment variable.
+            if getpass.getuser() == "root":
+                shutil.rmtree("/var/intel/installercache", ignore_errors=True)
+
+            bash = Executable("bash")
+
+            # Installer writes files in ~/intel set HOME so it goes to prefix
+            bash.add_default_env("HOME", self.prefix)
+            # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
+            bash.add_default_env("XDG_RUNTIME_DIR", join_path(self.stage.path, "runtime"))
+
+            bash(
+                installer_path,
+                "--install-dir",
+                self.prefix,
+            )
+
+            if getpass.getuser() == "root":
+                shutil.rmtree("/var/intel/installercache", ignore_errors=True)
+
+        # Some installers have a bug and do not return an error code when failing
+        install_dir = self.component_prefix
+        if not isdir(install_dir):
+            raise RuntimeError("install failed to directory: {0}".format(install_dir))
+
 
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
@@ -335,6 +394,12 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         ftn = find("fortran-installer", "*")
         if ftn:
             self.install_component(ftn[0])
+        # install nvidia-plugin
+        if self.spec.satisfies("+nvidia"):
+            nvidia_script = find("nvidia-plugin-installer", "*")
+            if nvidia_script:
+                self.install_component(nvidia_script[0],is_nvidia=True)
+        
 
             # Some installers have a bug and do not return an error code when failing
             if not is_exe(self._llvm_bin.ifx):
@@ -371,29 +436,6 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
                 # Try to patch all files, patchelf will do nothing and fail if file
                 # should not be patched
                 patchelf(file, fail_on_error=False)
-        if "+nvidia" in spec:
-            nvidia_installer_url = "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia"
-            nvidia_installer_file = os.path.join(prefix, "oneapi-for-nvidia-gpus-2024.2.0-cuda-12.0-linux.sh")
-
-            # Download the NVIDIA plugin installer
-            wget = which("wget")
-
-            # Use wget with `--output-document` to specify the filename
-            wget("-O", nvidia_installer_file, nvidia_installer_url)
-
-
-            # Make the installer executable
-            chmod = which("chmod")
-            chmod("+x", nvidia_installer_file)
-
-
-            # Run the installer using bash
-            bash = which("bash")
-            bash(nvidia_installer_file, "--install-dir", prefix)
-
-
-            # Clean up the installer file after installation
-            os.remove(nvidia_installer_file)
 
 
     def write_config_file(self, flags, path, compilers):
