@@ -148,7 +148,7 @@ class Glib(MesonPackage, AutotoolsPackage):
     depends_on("perl", type=("build", "run"))
     # Uses distutils (@:2.78) or packaging (@2.79:) in gio/gdbus-2.0/codegen/utils.py
     depends_on("python@:3.11", type=("build", "run"), when="@2.53.4:")
-    depends_on("py-packaging", type="build", when="@2.79.0:")
+    depends_on("py-packaging", type=("build", "run"), when="@2.79.0:")
     depends_on("pcre2", when="@2.73.2:")
     depends_on("pcre2@10.34:", when="@2.74:")
     depends_on("pcre+utf", when="@2.48:2.73.1")
