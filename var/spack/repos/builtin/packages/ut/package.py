@@ -22,7 +22,7 @@ class Ut(CMakePackage):
     version("2.0.0", sha256="8b5b11197d1308dfc1fe20efd6a656e0c833dbec2807e2292967f6e2f7c0420f")
     version("1.1.9", sha256="1a666513157905aa0e53a13fac602b5673dcafb04a869100a85cd3f000c2ed0d")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("cxx", type="build")
 
     generator("ninja")
 

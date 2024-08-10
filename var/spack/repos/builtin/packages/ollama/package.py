@@ -27,6 +27,9 @@ class Ollama(GoPackage):
         preferred=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     license("MIT", checked_by="teaguesterling")
 
     depends_on("cmake", type="build")

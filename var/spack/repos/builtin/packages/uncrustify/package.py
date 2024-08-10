@@ -33,6 +33,9 @@ class Uncrustify(CMakePackage, AutotoolsPackage):
     version("0.62", commit="5987f2223f16b993dbece1360363eef9515fe5e8")
     version("0.61", sha256="1df0e5a2716e256f0a4993db12f23d10195b3030326fdf2e07f8e6421e172df9")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     build_system(
         conditional("cmake", when="@0.64:"),
         conditional("autotools", when="@:0.63"),

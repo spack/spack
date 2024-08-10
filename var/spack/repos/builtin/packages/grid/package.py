@@ -19,6 +19,8 @@ class Grid(AutotoolsPackage):
 
     version("develop", branch="develop")
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "comms",
         default="mpi",

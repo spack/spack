@@ -91,11 +91,11 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
         backend_config = "-Duse_cuda=%s" % ("+cuda" in spec)
         if self.version >= Version("2021.04.01"):
             backend = "none"
-            if "+cuda" in spec:
+            if spec.satisfies("+cuda"):
                 backend = "cuda"
-            if "+rocm" in spec:
+            if spec.satisfies("+rocm"):
                 backend = "hip"
-            if "+sycl" in spec:
+            if spec.satisfies("+sycl"):
                 backend = "sycl"
             backend_config = "-Dgpu_backend=%s" % backend
 

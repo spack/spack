@@ -97,9 +97,11 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     variant("kokkos", default=False, description="Enable KOKKOS support")
 
     # ACC conflict
+
     variant(
         "cpu_arch", values=str, default="none", description="Enable CPU Target for ACC and OMP"
     )
+
 
     # STD conflicts
     conflicts("+std", when="%gcc@:10.1.0", msg="STD requires newer version of GCC")
@@ -117,6 +119,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         when="+cuda",
         description="Enable MEM Target for CUDA",
     )
+
     # OMP offload
     variant(
         "omp_offload",
@@ -130,6 +133,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         default="none",
         when="+omp",
         description="If OFFLOAD is enabled, this *overrides* the default offload flags",
+
     )
     conflicts(
         "omp_flags=none",
@@ -494,6 +498,7 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
         #            SYCL
         # ===================================
+
         if "+sycl" in self.spec:
             if self.spec.satisfies("%oneapi"):
                 # -fsycl flag is required for setting up sycl/sycl.hpp seems like
@@ -508,10 +513,13 @@ register_flag_optional(TARGET_PROCESSOR
                 args.append("-DSYCL_COMPILER=HIPSYCL")
                 args.append("-DSYCL_COMPILER_DIR=" + self.spec.variants["dir"].value)
                 args.append("-DCXX_EXTRA_FLAGS= -fsycl") 
+
         # ===================================
         #              SYCL 2020
         # ===================================
+
         if "+sycl2020" in self.spec:
+
             if self.spec.satisfies("%oneapi"):
                 # -fsycl flag is required for setting up sycl/sycl.hpp seems like
                 #  it doesn't get it from the CMake file
@@ -539,9 +547,11 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
         #             HIP(ROCM)
         # ===================================
+
         if "+hip" in self.spec:
             hip_comp = self.spec["hip"].prefix + "/bin/hipcc"
             offload_arch = str(self.spec.variants["amdgpu_target"].value[0])
+
             args.append("-DCMAKE_CXX_COMPILER=" + hip_comp)
             args.append(f"-DCXX_EXTRA_FLAGS=--offload-arch={offload_arch} -O3")
             if str(self.spec.variants["hip_mem_mode"].value) != "none":
@@ -550,6 +560,7 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
         #             TBB
         # ===================================
+
         if "+tbb" in self.spec:
             args.append("-DONE_TBB_DIR=" + self.spec["intel-tbb"].prefix + "/tbb/latest/")
             args.append("-DCXX_EXTRA_FLAGS=-ltbb")
@@ -557,9 +568,11 @@ register_flag_optional(TARGET_PROCESSOR
             if self.spec.satisfies("+tbb_use_vector"):
                 args.append("-DUSE_VECTOR=ON")
 
+
         # ===================================
         #             OpenCL (ocl)
         # ===================================
+
         if "+ocl" in self.spec:
             if "cuda" in self.spec.variants["ocl_backend"].value:
                 cuda_dir = self.spec["cuda"].prefix
@@ -579,9 +592,11 @@ register_flag_optional(TARGET_PROCESSOR
                 pocl_lib = self.spec["pocl"].prefix + "/lib64/libOpenCL.so"
                 args.append("-DOpenCL_LIBRARY=" + pocl_lib)
 
+
         # ===================================
         #             RAJA
         # ===================================
+
         if "+raja" in self.spec:
             args.append("-DCMAKE_C_COMPILER=" + spack_cc)
             args.append("-DRAJA_IN_PACKAGE=" + self.spec["raja"].prefix)
@@ -590,6 +605,7 @@ register_flag_optional(TARGET_PROCESSOR
                 args.append("-DTARGET=NVIDIA")
                 cuda_arch = "sm_" + self.spec.variants["cuda_arch"].value[0]
                 args.append("-DCUDA_ARCH=" + cuda_arch)
+
                 args.append("-DENABLE_CUDA=ON")
                 args.append("-DCUDA_TOOLKIT_ROOT_DIR=" + self.spec["cuda"].prefix)
                 if self.spec.variants["flags"].value != "none":
@@ -598,9 +614,11 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
         #             THRUST
         # ===================================
+
         if "+thrust" in self.spec:
             if "cuda" in self.spec.variants["thrust_submodel"].value:
                 args.append("-DTHRUST_IMPL=" + self.spec.variants["thrust_submodel"].value.upper())
+
                 args.append("-SDK_DIR=" + self.spec["thrust"].prefix + "/include")
                 # this model uses CMAKE_CUDA_ARCHITECTURES which only requires number of cuda_arch
                 # no need to append sm_ or cc_
@@ -622,6 +640,7 @@ register_flag_optional(TARGET_PROCESSOR
         #             kokkos
         # ===================================
         # kokkos implementation is versatile and it could use cuda or omp architectures as backend
+
         # The usage should be spack install babelstream +kokkos backend=[cuda or omp or none]
         if "+kokkos" in self.spec:
             args.append("-DCMAKE_C_COMPILER=" + spack_cc)
@@ -649,6 +668,7 @@ register_flag_optional(TARGET_PROCESSOR
                     args.append("-DKokkos_ARCH_AMPERE80=ON")
             if "omp" in self.spec.variants["kokkos_backend"].value:
                 args.append("-DKokkos_ENABLE_OPENMP=ON")
+
 
         # not in ["kokkos", "raja", "acc", "hip"] then compiler forced true
         if set(model_list).intersection(["kokkos", "raja", "acc", "hip"]) is True:

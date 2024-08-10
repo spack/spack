@@ -19,6 +19,8 @@ class Lmbench(MakefilePackage):
 
     version("master", branch="master")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("libtirpc")
 
     patch(
