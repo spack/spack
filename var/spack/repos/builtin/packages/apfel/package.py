@@ -20,9 +20,7 @@ class Apfel(AutotoolsPackage, CMakePackage):
     license("GPL-3.0-or-later")
 
     build_system(
-        conditional("autotools", when="@:3.0"),
-        conditional("cmake", when="@3.1:"),
-        default="cmake",
+        conditional("autotools", when="@:3.0"), conditional("cmake", when="@3.1:"), default="cmake"
     )
 
     version("3.1.1", sha256="9006b2a9544e504e8f6b5047f665054151870c3c3a4a05db3d4fb46f21908d4b")
@@ -43,6 +41,7 @@ class Apfel(AutotoolsPackage, CMakePackage):
     variant("python", description="Build python wrapper", default=False)
     variant("lhapdf", description="Link to LHAPDF", default=False)
 
+
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
@@ -53,6 +52,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if self.spec.satisfies("+python"):
             args.append(self.define("APFEL_Python_SITEARCH", "autoprefix"))
         return args
+
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
