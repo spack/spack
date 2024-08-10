@@ -255,11 +255,11 @@ class Compiler:
 
     @property
     def f77_rpath_arg(self):
-        return "-Wl,-rpath,"
+        return ForwardToPackage(self).select("fortran").rpath_arg
 
     @property
     def fc_rpath_arg(self):
-        return "-Wl,-rpath,"
+        return ForwardToPackage(self).select("fortran").rpath_arg
 
     @property
     def linker_arg(self):

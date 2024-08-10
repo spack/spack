@@ -18,6 +18,8 @@ import spack.util.module_cmd
 from spack.compiler import Compiler
 from spack.util.executable import Executable, ProcessError
 
+pytestmark = pytest.mark.usefixtures("mock_compiler_forwarder")
+
 
 @pytest.fixture()
 def make_args_for_version(monkeypatch):
@@ -292,8 +294,6 @@ def supported_flag_test(flag, flag_value_ref, spec=None):
 # Tests for UnsupportedCompilerFlag exceptions from default
 # implementations of flags.
 def test_default_flags():
-    supported_flag_test("f77_rpath_arg", "-Wl,-rpath,")
-    supported_flag_test("fc_rpath_arg", "-Wl,-rpath,")
     supported_flag_test("linker_arg", "-Wl,")
     unsupported_flag_test("openmp_flag")
     unsupported_flag_test("cxx11_flag")

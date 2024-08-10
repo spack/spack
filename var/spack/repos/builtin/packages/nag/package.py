@@ -73,6 +73,11 @@ class Nag(Package, CompilerPackage):
     compiler_version_regex = r"NAG Fortran Compiler Release (\d+).(\d+)\(.*\) Build (\d+)"
     compiler_version_argument = "-V"
 
+    # Unlike other compilers, the NAG compiler passes options to GCC, which
+    # then passes them to the linker. Therefore, we need to doubly wrap the
+    # options with '-Wl,-Wl,,'
+    rpath_arg = "-Wl,-Wl,,-rpath,,"
+
     @property
     def fortran(self):
         msg = "cannot retrieve Fortran compiler [spec is not concrete]"
