@@ -24,6 +24,11 @@ class Opencascade(CMakePackage):
     license("LGPL-2.1-only")
 
     version(
+        "7.8.1",
+        extension="tar.gz",
+        sha256="33f2bdb67e3f6ae469f3fa816cfba34529a23a9cb736bf98a32b203d8531c523",
+    )
+    version(
         "7.8.0",
         extension="tar.gz",
         sha256="b9c8f0a9d523ac1a606697f95fc39d8acf1140d3728561b8010a604431b4e9cf",
