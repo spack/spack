@@ -54,7 +54,7 @@ class Libdrm(AutotoolsPackage, MesonPackage):
     build_system(
         conditional("meson", when="@2.4.101:"),
         conditional("autotools", when="@:2.4.100"),
-        default="meson"
+        default="meson",
     )
 
     with when("build_system=meson"):
@@ -77,6 +77,7 @@ class Libdrm(AutotoolsPackage, MesonPackage):
         else:
             return self.list_url + "libdrm-%s.tar.xz" % version
 
+
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
@@ -92,6 +93,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         ):
             args.append("CFLAGS=-fcommon")
         return args
+
 
 class MesonBuilder(spack.build_systems.meson.MesonBuilder):
     def meson_args(self):
