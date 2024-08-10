@@ -35,6 +35,7 @@ class Apfel(AutotoolsPackage, CMakePackage):
     with when("build_system=cmake"):
         depends_on("cmake@03.15:")
 
+    extends("python", when="+python")
     depends_on("swig", when="+python")
     depends_on("python", when="+python", type=("build", "run"))
     depends_on("lhapdf", when="+lhapdf", type=("build", "run"))
@@ -48,6 +49,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("APFEL_ENABLE_PYTHON", "python"),
             self.define_from_variant("APFEL_ENABLE_LHAPDF", "lhapdf"),
         ]
+        # ensure installation of python module under CMAKE_INSTALL_PREFIX
+        if self.spec.satisfies("+python"):
+            args.append(self.define("APFEL_Python_SITEARCH", "autoprefix"))
         return args
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
