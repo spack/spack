@@ -67,48 +67,13 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         default="data",
         description="STD -> choose between data, indices and ranges models",
     )
-    variant(
-        "sycl_opencl_path",
-        values=str,
-        when="+sycl",
-        default="none",
-        description="[ComputeCpp only] Path to OpenCL library, usually called libOpenCL.so",
-    )
+
     variant(
         "sycl2020_offload",
         values=("nvidia", "intel"),
         default="intel",
         when="+sycl2020",
         description="Offloading to NVIDIA GPU or not",
-    )
-    sycl_compiler_implementations = [
-        "oneapi-icpx",
-        "oneapi-clang",
-        "dpcpp",
-        "hipsycl",
-        "computecpp",
-        "none",
-    ]  # list them here, with the default first
-    sycl_compiler_implementations_description = "Compile using the specified SYCL compiler implementation\
-           Supported values are \
-           ONEAPI-ICPX  - icpx as a standalone compiler \
-           ONEAPI-Clang - oneAPI's Clang driver (enabled via `source /opt/intel/oneapi/setvars.sh  --include-intel-llvm`)\
-           DPCPP        - dpc++ as a standalone compiler (https://github.com/intel/llvm)\
-           HIPSYCL      - hipSYCL compiler (https://github.com/illuhad/hipSYCL)s\
-           COMPUTECPP   - ComputeCpp compiler (https://developer.codeplay.com/products/computecpp/ce/home)"
-    variant(
-        "sycl_compiler_implementation",
-        values=sycl_compiler_implementations,
-        default=sycl_compiler_implementations[0],
-        when="+sycl",
-        description=sycl_compiler_implementations_description,
-    )
-    variant(
-        "sycl_compiler_implementation",
-        values=sycl_compiler_implementations,
-        default=sycl_compiler_implementations[0],
-        when="+sycl2020",
-        description=sycl_compiler_implementations_description,
     )
 
     variant(
@@ -530,49 +495,44 @@ register_flag_optional(TARGET_PROCESSOR
         #            SYCL
         # ===================================
         if "+sycl" in self.spec:
-            args.append("-DCXX_EXTRA_FLAGS=" + "-fsycl")
-            args.append(
-                "-DSYCL_COMPILER="
-                + self.spec.variants["sycl_compiler_implementation"].value.upper()
-            )
-            if self.spec.variants["sycl_compiler_implementation"].value.upper() == "none":
+            if self.spec.satisfies("%oneapi"):
+                # -fsycl flag is required for setting up sycl/sycl.hpp seems like
+                #  it doesn't get it from the CMake file
+                args.append("-DSYCL_COMPILER=ONEAPI-ICPX")
+                args.append("-DCXX_EXTRA_FLAGS= -fsycl") 
+            elif self.spec.satisfies("%clang"):
+                # this requires the clang inside oneapi installation
+                args.append("-DSYCL_COMPILER=ONEAPI-Clang")
+                args.append("-DCXX_EXTRA_FLAGS= -fsycl") 
+            else:
+                args.append("-DSYCL_COMPILER=HIPSYCL")
                 args.append("-DSYCL_COMPILER_DIR=" + self.spec.variants["dir"].value)
-            if (
-                self.spec.variants["sycl_compiler_implementation"].value.upper() == "COMPUTECPP"
-                and self.spec.variants["sycl_opencl_path"].value != "none"
-            ):
-                args.append("-DOpenCL_LIBRARY=" + self.spec.variants["sycl_opencl_path"].value)
-
+                args.append("-DCXX_EXTRA_FLAGS= -fsycl") 
         # ===================================
         #              SYCL 2020
         # ===================================
         if "+sycl2020" in self.spec:
-            # if self.spec.satisfies("%oneapi") or self.spec.satisfies("%clang"):
+            if self.spec.satisfies("%oneapi"):
                 # -fsycl flag is required for setting up sycl/sycl.hpp seems like
                 #  it doesn't get it from the CMake file
-                # args.append("-DCXX_EXTRA_FLAGS= -fsycl -O3")
-                # this is required to enable -DCMAKE_CXX_COMPILER=icpx flag from CMake
-            
-                args.append(
-                    "-DSYCL_COMPILER="
-                    + self.spec.variants["sycl_compiler_implementation"].value.upper()
-                )
-                #special case for clang 
-                if self.spec.satisfies("%clang"):
-                    args.append("-DSYCL_COMPILER=ONEAPI-Clang")
-                else:
-                    args.append(
-                    "-DSYCL_COMPILER="
-                    + self.spec.variants["sycl_compiler_implementation"].value.upper()
-                    )
+                args.append("-DSYCL_COMPILER=ONEAPI-ICPX")
+                args.append("-DCXX_EXTRA_FLAGS= -fsycl") 
+            elif self.spec.satisfies("%clang"):
+                # this requires the clang inside oneapi installation
+                args.append("-DSYCL_COMPILER=ONEAPI-Clang")
+                args.append("-DCXX_EXTRA_FLAGS= -fsycl") 
+            else:
+                args.append("-DSYCL_COMPILER=HIPSYCL")
+                args.append("-DSYCL_COMPILER_DIR=" + self.spec.variants["dir"].value)
+                args.append("-DCXX_EXTRA_FLAGS= -fsycl") 
                 # if self.spec.variants["flags"].value != "none":
                 #     args.append("-DCXX_EXTRA_FLAGS= -fsycl -O3" + self.spec.variants["flags"].value)
-                if self.spec.variants["sycl2020_offload"].value == "nvidia":
-                    cuda_dir = self.spec["cuda"].prefix 
-                    cuda_arch = "sm_" + self.spec.variants["cuda_arch"].value[0]
-                    args.append("-DCXX_EXTRA_FLAGS=" +
-                    "-fsycl; -march=znver3;-fsycl-targets=nvptx64-nvidia-cuda;"+
-                    "--cuda-path=" + cuda_dir)
+            if self.spec.variants["sycl2020_offload"].value == "nvidia":
+                cuda_dir = self.spec["cuda"].prefix 
+                cuda_arch = "sm_" + self.spec.variants["cuda_arch"].value[0]
+                args.append("-DCXX_EXTRA_FLAGS=" +
+                "-fsycl; -march=znver3;-fsycl-targets=nvptx64-nvidia-cuda;"+
+                "--cuda-path=" + cuda_dir)
                 
 
 
