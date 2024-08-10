@@ -356,18 +356,14 @@ class PythonPackage(PythonExtension):
     @lang.classproperty
     def urls(cls) -> Optional[List[str]]:
         if cls.pypi:
-            urls = [
-                f"https://files.pythonhosted.org/packages/source/{cls.pypi[0]}/{cls.pypi}"
-            ]
+            urls = [f"https://files.pythonhosted.org/packages/source/{cls.pypi[0]}/{cls.pypi}"]
             assert cls.pypi.count("/") == 1, "PyPI class attribute must include a single slash"
             name, file = cls.pypi.split("/")
             name_dash_count = name.count("-")
             if name_dash_count > 0:
                 # replace all but last dash with underscores for pypi.org listing changes
                 pypi = "/".join([name, file.replace("-", "_", name_dash_count)])
-                urls.append(
-                    f"https://files.pythonhosted.org/packages/source/{pypi[0]}/{pypi}"
-                )
+                urls.append(f"https://files.pythonhosted.org/packages/source/{pypi[0]}/{pypi}")
             return urls
         return None
 
