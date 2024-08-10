@@ -365,7 +365,7 @@ class PythonPackage(PythonExtension):
                 pypi = "/".join([name, file.replace("-", "_", name_dash_count)])
                 urls.append(f"https://files.pythonhosted.org/packages/source/{pypi[0]}/{pypi}")
             return urls
-        return None
+        return []
 
     @lang.classproperty
     def list_url(cls) -> Optional[str]:  # type: ignore[override]
