@@ -34,11 +34,13 @@ class Catch2(CMakePackage):
     version("3.1.0", sha256="c252b2d9537e18046d8b82535069d2567f77043f8e644acf9a9fffc22ea6e6f7")
     version("3.0.1", sha256="8c4173c68ae7da1b5b505194a0c2d6f1b2aef4ec1e3e7463bde451f26bbaf4e7")
     version(
-        "3.0.0-preview4", sha256="2458d47d923b65ab611656cb7669d1810bcc4faa62e4c054a7405b1914cd4aee",
+        "3.0.0-preview4",
+        sha256="2458d47d923b65ab611656cb7669d1810bcc4faa62e4c054a7405b1914cd4aee",
         deprecated=True,
     )
     version(
-        "3.0.0-preview3", sha256="06a4f903858f21c553e988f8b76c9c6915d1f95f95512d6a58c421e02a2c4975",
+        "3.0.0-preview3",
+        sha256="06a4f903858f21c553e988f8b76c9c6915d1f95f95512d6a58c421e02a2c4975",
         deprecated=True,
     )
     version("2.13.10", sha256="d54a712b7b1d7708bc7a819a8e6e47b2fde9536f487b89ccbca295072a7d9943")
