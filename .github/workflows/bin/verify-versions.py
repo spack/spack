@@ -88,7 +88,7 @@ def validate_git_version(pkg, version: StandardVersion) -> bool:
             try:
                 git("cat-file", "-t", known_commit, output=str, error=str)
 
-            except ProcessError as exp:
+            except ProcessError:
                 tty.error(
                     f"Invalid commit for {pkg.name}@{version}\n"
                     f"    {known_commit} could not be located in git repository."
