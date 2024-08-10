@@ -18,6 +18,7 @@ class Autodiff(CMakePackage, CudaPackage):
 
     license("MIT")
 
+    version("1.1.2", sha256="86f68aabdae1eed214bfbf0ddaa182c78ea1bb99e4df404efb7b94d30e06b744")
     version("1.1.1", sha256="05aa2a432c83db079efeca1c407166a3f3d190645bd3202da3b6357fb30fc9e1")
     version("1.1.0", sha256="a5489bb546c460af52de8ead447439b3c97429184df28b4d142ce7dcfd62b82c")
     version("1.0.3", sha256="21b57ce60864857913cacb856c3973ae10f7539b6bb00bcc04f85b2f00db0ce2")
