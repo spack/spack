@@ -320,50 +320,6 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
     def compiler_search_prefix(self):
         return self._llvm_bin
 
-
-
-    def install_component_codeplay(self, installer_path):
-        """Shared install method for codeplay nvidia plugin since it doesn't have eula option."""
-
-        if platform.system() == "Linux":
-            # Intel installer assumes and enforces that all components
-            # are installed into a single prefix. Spack wants to
-            # install each component in a separate prefix. The
-            # installer mechanism is implemented by saving install
-            # information in a directory called installercache for
-            # future runs. The location of the installercache depends
-            # on the userid. For root it is always in /var/intel. For
-            # non-root it is in $HOME/intel.
-            #
-            # The method for preventing this install from interfering
-            # with other install depends on the userid. For root, we
-            # delete the installercache before and after install. For
-            # non root we redefine the HOME environment variable.
-            if getpass.getuser() == "root":
-                shutil.rmtree("/var/intel/installercache", ignore_errors=True)
-
-            bash = Executable("bash")
-
-            # Installer writes files in ~/intel set HOME so it goes to prefix
-            bash.add_default_env("HOME", self.prefix)
-            # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
-            bash.add_default_env("XDG_RUNTIME_DIR", join_path(self.stage.path, "runtime"))
-
-            bash(
-                installer_path,
-                "--install-dir",
-                self.prefix,
-            )
-
-            if getpass.getuser() == "root":
-                shutil.rmtree("/var/intel/installercache", ignore_errors=True)
-
-        # Some installers have a bug and do not return an error code when failing
-        install_dir = self.component_prefix
-        if not isdir(install_dir):
-            raise RuntimeError("install failed to directory: {0}".format(install_dir))
-
-
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
 
