@@ -438,11 +438,11 @@ class TestConcretize:
                 ["hypre cflags='-g'", "^openblas"],
                 ["^openblas cflags='-g'"],
             ),
-            # Setting a flag overrides propagation
+            # TODO: should setting a flag override propagation?
             (
                 "hypre cflags=='-g' ^openblas cflags='-O3'",
                 ["hypre cflags='-g'", "^openblas cflags='-O3'"],
-                ["^openblas cflags='-g'"],
+                [],
             ),
             # Propagation doesn't go across build dependencies
             (

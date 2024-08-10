@@ -786,6 +786,8 @@ class CompilerFlag(str):
     def __new__(cls, value, **kwargs):
         obj = str.__new__(cls, value)
         obj.propagate = kwargs.pop("propagate", False)
+        obj.flag_group = kwargs.pop("flag_group", value)
+        obj.source = kwargs.pop("source", None)
         return obj
 
 
@@ -800,7 +802,7 @@ class FlagMap(lang.HashableMap):
         self.spec = spec
 
     def satisfies(self, other):
-        return all(f in self and self[f] == other[f] for f in other)
+        return all(f in self and set(self[f]) >= set(other[f]) for f in other)
 
     def intersects(self, other):
         common_types = set(self) & set(other)
@@ -858,7 +860,7 @@ class FlagMap(lang.HashableMap):
             clone[name] = compiler_flag
         return clone
 
-    def add_flag(self, flag_type, value, propagation):
+    def add_flag(self, flag_type, value, propagation, flag_group=None, source=None):
         """Stores the flag's value in CompilerFlag and adds it
         to the FlagMap
 
@@ -869,7 +871,8 @@ class FlagMap(lang.HashableMap):
             propagation (bool): if ``True`` the flag value will be passed to
                 the packages' dependencies. If``False`` it will not be passed
         """
-        flag = CompilerFlag(value, propagate=propagation)
+        flag_group = flag_group or value
+        flag = CompilerFlag(value, propagate=propagation, flag_group=flag_group, source=source)
 
         if flag_type not in self:
             self[flag_type] = [flag]
@@ -1661,8 +1664,9 @@ class Spec:
         elif name in valid_flags:
             assert self.compiler_flags is not None
             flags_and_propagation = spack.compiler.tokenize_flags(value, propagate)
+            flag_group = " ".join(x for (x, y) in flags_and_propagation)
             for flag, propagation in flags_and_propagation:
-                self.compiler_flags.add_flag(name, flag, propagation)
+                self.compiler_flags.add_flag(name, flag, propagation, flag_group)
         else:
             # FIXME:
             # All other flags represent variants. 'foo=true' and 'foo=false'
