@@ -292,7 +292,6 @@ def supported_flag_test(flag, flag_value_ref, spec=None):
 # Tests for UnsupportedCompilerFlag exceptions from default
 # implementations of flags.
 def test_default_flags():
-    supported_flag_test("cxx_rpath_arg", "-Wl,-rpath,")
     supported_flag_test("f77_rpath_arg", "-Wl,-rpath,")
     supported_flag_test("fc_rpath_arg", "-Wl,-rpath,")
     supported_flag_test("linker_arg", "-Wl,")
@@ -556,7 +555,6 @@ def test_nag_flags():
     supported_flag_test("cxx_pic_flag", "-fPIC", "nag@=1.0")
     supported_flag_test("f77_pic_flag", "-PIC", "nag@=1.0")
     supported_flag_test("fc_pic_flag", "-PIC", "nag@=1.0")
-    supported_flag_test("cxx_rpath_arg", "-Wl,-rpath,", "nag@=1.0")
     supported_flag_test("f77_rpath_arg", "-Wl,-Wl,,-rpath,,", "nag@=1.0")
     supported_flag_test("fc_rpath_arg", "-Wl,-Wl,,-rpath,,", "nag@=1.0")
     supported_flag_test("linker_arg", "-Wl,-Wl,,", "nag@=1.0")

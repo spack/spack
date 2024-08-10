@@ -321,30 +321,33 @@ def set_compiler_environment_variables(pkg, env):
     # wrapper which will emit an error if it is used.
     if compiler.cc:
         env.set("SPACK_CC", compiler.cc)
+        env.set("SPACK_CC_RPATH_ARG", compiler.cc_rpath_arg)
         env.set("CC", os.path.join(link_dir, compiler.link_paths["cc"]))
     else:
         env.set("CC", os.path.join(link_dir, "cc"))
+
     if compiler.cxx:
         env.set("SPACK_CXX", compiler.cxx)
+        env.set("SPACK_CXX_RPATH_ARG", compiler.cxx_rpath_arg)
         env.set("CXX", os.path.join(link_dir, compiler.link_paths["cxx"]))
     else:
-        env.set("CC", os.path.join(link_dir, "c++"))
+        env.set("CXX", os.path.join(link_dir, "c++"))
+
     if compiler.f77:
         env.set("SPACK_F77", compiler.f77)
+        env.set("SPACK_F77_RPATH_ARG", compiler.f77_rpath_arg)
         env.set("F77", os.path.join(link_dir, compiler.link_paths["f77"]))
     else:
         env.set("F77", os.path.join(link_dir, "f77"))
+
     if compiler.fc:
         env.set("SPACK_FC", compiler.fc)
+        env.set("SPACK_FC_RPATH_ARG", compiler.fc_rpath_arg)
         env.set("FC", os.path.join(link_dir, compiler.link_paths["fc"]))
     else:
         env.set("FC", os.path.join(link_dir, "fc"))
 
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
-    env.set("SPACK_CC_RPATH_ARG", compiler.cc_rpath_arg)
-    env.set("SPACK_CXX_RPATH_ARG", compiler.cxx_rpath_arg)
-    env.set("SPACK_F77_RPATH_ARG", compiler.f77_rpath_arg)
-    env.set("SPACK_FC_RPATH_ARG", compiler.fc_rpath_arg)
     env.set("SPACK_LINKER_ARG", compiler.linker_arg)
 
     # Check whether we want to force RPATH or RUNPATH

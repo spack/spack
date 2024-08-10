@@ -251,7 +251,7 @@ class Compiler:
 
     @property
     def cxx_rpath_arg(self):
-        return "-Wl,-rpath,"
+        return ForwardToPackage(self).select("cxx").rpath_arg
 
     @property
     def f77_rpath_arg(self):

@@ -41,10 +41,6 @@ SPACK_ENV_PATH
 SPACK_DEBUG_LOG_DIR
 SPACK_DEBUG_LOG_ID
 SPACK_COMPILER_SPEC
-SPACK_CC_RPATH_ARG
-SPACK_CXX_RPATH_ARG
-SPACK_F77_RPATH_ARG
-SPACK_FC_RPATH_ARG
 SPACK_LINKER_ARG
 SPACK_SHORT_SPEC
 SPACK_SYSTEM_DIRS
@@ -277,6 +273,7 @@ fi
 command="${0##*/}"
 comp="CC"
 vcheck_flags=""
+rpath_var_name="SPACK_CC_RPATH_ARG"
 case "$command" in
     cpp)
         mode=cpp
@@ -287,6 +284,7 @@ case "$command" in
         command="$SPACK_CC"
         language="C"
         comp="CC"
+	rpath_var_name="SPACK_CC_RPATH_ARG"
         lang_flags=C
         debug_flags="-g"
         vcheck_flags="${SPACK_ALWAYS_CFLAGS}"
@@ -295,6 +293,7 @@ case "$command" in
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
+	rpath_var_name="SPACK_CXX_RPATH_ARG"
         lang_flags=CXX
         debug_flags="-g"
         vcheck_flags="${SPACK_ALWAYS_CXXFLAGS}"
@@ -303,6 +302,7 @@ case "$command" in
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
+	rpath_var_name="SPACK_FC_RPATH_ARG"
         lang_flags=F
         debug_flags="-g"
         vcheck_flags="${SPACK_ALWAYS_FFLAGS}"
@@ -311,6 +311,7 @@ case "$command" in
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"
+	rpath_var_name="SPACK_F77_RPATH_ARG"
         lang_flags=F
         debug_flags="-g"
         vcheck_flags="${SPACK_ALWAYS_FFLAGS}"
@@ -322,6 +323,11 @@ case "$command" in
         die "Unknown compiler: $command"
         ;;
 esac
+
+if eval "test -z \"\${${rpath_var_name}:-}\""; then
+    die "Spack compiler must be run from Spack! Input '$rpath_var_name' is missing."
+fi
+
 
 # If any of the arguments below are present, then the mode is vcheck.
 # In vcheck mode, nothing is added in terms of extra search paths or
