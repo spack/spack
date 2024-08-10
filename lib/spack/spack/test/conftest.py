@@ -704,11 +704,10 @@ def configuration_dir(tmpdir_factory, linux_os):
     tmpdir.ensure("user", dir=True)
 
     # Fill out config.yaml, compilers.yaml and modules.yaml templates.
-    solver = os.environ.get("SPACK_TEST_SOLVER", "clingo")
     locks = sys.platform != "win32"
     config = tmpdir.join("site", "config.yaml")
     config_template = test_config / "config.yaml"
-    config.write(config_template.read_text().format(install_tree_root, solver, locks))
+    config.write(config_template.read_text().format(install_tree_root, locks))
 
     target = str(archspec.cpu.host().family)
     compilers = tmpdir.join("site", "compilers.yaml")
@@ -1956,16 +1955,6 @@ def nullify_globals(request, monkeypatch):
 
 
 def pytest_runtest_setup(item):
-    # Skip tests if they are marked only clingo and are run with the original concretizer
-    only_clingo_marker = item.get_closest_marker(name="only_clingo")
-    if only_clingo_marker and os.environ.get("SPACK_TEST_SOLVER") == "original":
-        pytest.skip(*only_clingo_marker.args)
-
-    # Skip tests if they are marked only original and are run with clingo
-    only_original_marker = item.get_closest_marker(name="only_original")
-    if only_original_marker and os.environ.get("SPACK_TEST_SOLVER", "clingo") == "clingo":
-        pytest.skip(*only_original_marker.args)
-
     # Skip test marked "not_on_windows" if they're run on Windows
     not_on_windows_marker = item.get_closest_marker(name="not_on_windows")
     if not_on_windows_marker and sys.platform == "win32":

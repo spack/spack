@@ -30,7 +30,6 @@ def test_spec():
     assert "mpich@3.0.4" in output
 
 
-@pytest.mark.only_clingo("Known failure of the original concretizer")
 def test_spec_concretizer_args(mutable_database, do_not_check_runtimes_on_reuse):
     """End-to-end test of CLI concretizer prefs.
 

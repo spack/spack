@@ -60,4 +60,3 @@ def test_report():
     assert get_version() in out
     assert platform.python_version() in out
     assert str(architecture) in out
-    assert spack.config.get("config:concretizer") in out
