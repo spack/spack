@@ -102,7 +102,6 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         "cpu_arch", values=str, default="none", description="Enable CPU Target for ACC and OMP"
     )
 
-
     # STD conflicts
     conflicts("+std", when="%gcc@:10.1.0", msg="STD requires newer version of GCC")
 
@@ -121,19 +120,13 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     )
 
     # OMP offload
-    variant(
-        "omp_offload",
-        default=False,
-        when="+omp",
-        description="Enable OpenMP Target",
-    )
+    variant("omp_offload", default=False, when="+omp", description="Enable OpenMP Target")
     variant(
         "omp_flags",
         values=str,
         default="none",
         when="+omp",
         description="If OFFLOAD is enabled, this *overrides* the default offload flags",
-
     )
     conflicts(
         "omp_flags=none",
@@ -341,7 +334,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             ]
             if "std" in filtered_model_list[0]:
                 args = ["-DMODEL=" + "std-" + self.spec.variants["std_submodel"].value]
-            elif "sycl2020" in filtered_model_list[0]: # this is for nvidia offload
+            elif "sycl2020" in filtered_model_list[0]:  # this is for nvidia offload
                 args = ["-DMODEL=" + "sycl2020-" + self.spec.variants["sycl2020_submodel"].value]
             else:
                 args = ["-DMODEL=" + filtered_model_list[0]]
@@ -407,7 +400,9 @@ register_flag_optional(TARGET_PROCESSOR
                 target_device = (
                     "multicore"
                     if self.spec.variants["cpu_arch"].value != "none"
-                    else "gpu" if "cuda_arch" in self.spec.variants else None
+                    else "gpu"
+                    if "cuda_arch" in self.spec.variants
+                    else None
                 )
                 if self.spec.variants["cpu_arch"].value != "none":
                     # get the cpu architecture value from user
@@ -474,26 +469,41 @@ register_flag_optional(TARGET_PROCESSOR
             if self.spec.satisfies("~omp_offload"):
                 args.append("-DOFFLOAD=" + "OFF")
                 # Check if the omp_flags variant is not set to "none"
-                args.append("-DCMAKE_CXX_FLAGS=" 
-                + self.pkg.compiler.openmp_flag 
-                + " " + (self.spec.variants["omp_flags"].value if self.spec.variants["omp_flags"].value != "none" else ""))
+                args.append(
+                    "-DCMAKE_CXX_FLAGS="
+                    + self.pkg.compiler.openmp_flag
+                    + " "
+                    + (
+                        self.spec.variants["omp_flags"].value
+                        if self.spec.variants["omp_flags"].value != "none"
+                        else ""
+                    )
+                )
             else:
-                offload_args=""
+                offload_args = ""
                 args.append("-DOFFLOAD=ON")
                 if "cuda_arch" in self.spec.variants:
                     if self.spec.satisfies("%nvhpc"):
                         cuda_arch = "cc" + self.spec.variants["cuda_arch"].value[0]
-                        offload_args=" -mp=gpu;" + "-gpu=" + cuda_arch + " "
+                        offload_args = " -mp=gpu;" + "-gpu=" + cuda_arch + " "
                     if self.spec.satisfies("%clang"):
                         cuda_arch = "sm_" + self.spec.variants["cuda_arch"].value[0]
-                        offload_args="-march=znver3;-fopenmp;--offload-arch="+cuda_arch
+                        offload_args = "-march=znver3;-fopenmp;--offload-arch=" + cuda_arch
                 elif ("amdgpu_target" in self.spec.variants) and (
-                self.spec.variants["amdgpu_target"].value != "none"
+                    self.spec.variants["amdgpu_target"].value != "none"
                 ):
-                    offload_args = ";--offload-arch=" + self.spec.variants["amdgpu_target"].value[0]
-                
-                args.append("-DOFFLOAD_FLAGS=" + self.pkg.compiler.openmp_flag +";"+ offload_args +";"+self.spec.variants["omp_flags"].value)
+                    offload_args = (
+                        ";--offload-arch=" + self.spec.variants["amdgpu_target"].value[0]
+                    )
 
+                args.append(
+                    "-DOFFLOAD_FLAGS="
+                    + self.pkg.compiler.openmp_flag
+                    + ";"
+                    + offload_args
+                    + ";"
+                    + self.spec.variants["omp_flags"].value
+                )
 
         # ===================================
         #            SYCL
@@ -504,45 +514,45 @@ register_flag_optional(TARGET_PROCESSOR
                 # -fsycl flag is required for setting up sycl/sycl.hpp seems like
                 #  it doesn't get it from the CMake file
                 args.append("-DSYCL_COMPILER=ONEAPI-ICPX")
-                args.append("-DCXX_EXTRA_FLAGS= -fsycl") 
+                args.append("-DCXX_EXTRA_FLAGS= -fsycl")
             elif self.spec.satisfies("%clang"):
                 # this requires the clang inside oneapi installation
                 args.append("-DSYCL_COMPILER=ONEAPI-Clang")
-                args.append("-DCXX_EXTRA_FLAGS= -fsycl") 
+                args.append("-DCXX_EXTRA_FLAGS= -fsycl")
             else:
                 args.append("-DSYCL_COMPILER=HIPSYCL")
                 args.append("-DSYCL_COMPILER_DIR=" + self.spec.variants["dir"].value)
-                args.append("-DCXX_EXTRA_FLAGS= -fsycl") 
+                args.append("-DCXX_EXTRA_FLAGS= -fsycl")
 
         # ===================================
         #              SYCL 2020
         # ===================================
 
         if "+sycl2020" in self.spec:
-
             if self.spec.satisfies("%oneapi"):
                 # -fsycl flag is required for setting up sycl/sycl.hpp seems like
                 #  it doesn't get it from the CMake file
                 args.append("-DSYCL_COMPILER=ONEAPI-ICPX")
-                args.append("-DCXX_EXTRA_FLAGS= -fsycl") 
+                args.append("-DCXX_EXTRA_FLAGS= -fsycl")
             elif self.spec.satisfies("%clang"):
                 # this requires the clang inside oneapi installation
                 args.append("-DSYCL_COMPILER=ONEAPI-Clang")
-                args.append("-DCXX_EXTRA_FLAGS= -fsycl") 
+                args.append("-DCXX_EXTRA_FLAGS= -fsycl")
             else:
                 args.append("-DSYCL_COMPILER=HIPSYCL")
                 args.append("-DSYCL_COMPILER_DIR=" + self.spec.variants["dir"].value)
-                args.append("-DCXX_EXTRA_FLAGS= -fsycl") 
+                args.append("-DCXX_EXTRA_FLAGS= -fsycl")
                 # if self.spec.variants["flags"].value != "none":
                 #     args.append("-DCXX_EXTRA_FLAGS= -fsycl -O3" + self.spec.variants["flags"].value)
             if self.spec.variants["sycl2020_offload"].value == "nvidia":
-                cuda_dir = self.spec["cuda"].prefix 
+                cuda_dir = self.spec["cuda"].prefix
                 cuda_arch = "sm_" + self.spec.variants["cuda_arch"].value[0]
-                args.append("-DCXX_EXTRA_FLAGS=" +
-                "-fsycl; -march=znver3;-fsycl-targets=nvptx64-nvidia-cuda;"+
-                "--cuda-path=" + cuda_dir)
-                
-
+                args.append(
+                    "-DCXX_EXTRA_FLAGS="
+                    + "-fsycl; -march=znver3;-fsycl-targets=nvptx64-nvidia-cuda;"
+                    + "--cuda-path="
+                    + cuda_dir
+                )
 
         # ===================================
         #             HIP(ROCM)
@@ -568,7 +578,6 @@ register_flag_optional(TARGET_PROCESSOR
             if self.spec.satisfies("+tbb_use_vector"):
                 args.append("-DUSE_VECTOR=ON")
 
-
         # ===================================
         #             OpenCL (ocl)
         # ===================================
@@ -591,7 +600,6 @@ register_flag_optional(TARGET_PROCESSOR
             elif "pocl" in self.spec.variants["ocl_backend"].value:
                 pocl_lib = self.spec["pocl"].prefix + "/lib64/libOpenCL.so"
                 args.append("-DOpenCL_LIBRARY=" + pocl_lib)
-
 
         # ===================================
         #             RAJA
@@ -668,7 +676,6 @@ register_flag_optional(TARGET_PROCESSOR
                     args.append("-DKokkos_ARCH_AMPERE80=ON")
             if "omp" in self.spec.variants["kokkos_backend"].value:
                 args.append("-DKokkos_ENABLE_OPENMP=ON")
-
 
         # not in ["kokkos", "raja", "acc", "hip"] then compiler forced true
         if set(model_list).intersection(["kokkos", "raja", "acc", "hip"]) is True:
@@ -747,9 +754,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
             config["DOCONCURRENT_FLAG"] = "-h thread_do_concurrent -DCRAY_THREAD_DOCONCURRENT"
             config["ARRAY_FLAG"] = "-h autothread"
-            config["OPENMP_FLAG"] = (
-                pkg.compiler.openmp_flag
-            )  # if clang based it will be -fopenmp else -h omp
+            config[
+                "OPENMP_FLAG"
+            ] = pkg.compiler.openmp_flag  # if clang based it will be -fopenmp else -h omp
             config["OPENACC_FLAG"] = "-h acc"  # for cpu only -h omp
 
         # ===================================
