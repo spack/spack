@@ -52,8 +52,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
-        args = [
-            self.enable_or_disable("pywrap", variant="python"),
-            self.enable_or_disable("lhapdf"),
-        ]
+        args = []
+        args += self.enable_or_disable("pywrap", variant="python")
+        args += self.enable_or_disable("lhapdf")
         return args
