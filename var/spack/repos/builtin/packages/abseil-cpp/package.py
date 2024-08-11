@@ -94,14 +94,15 @@ class AbseilCpp(CMakePackage):
     depends_on("cmake@3.5:", when="@20190312:", type="build")
     depends_on("cmake@3.1:", type="build")
 
-    depends_on("googletest", type="build")
+    depends_on("googletest", type="build", when="@20220623:")
 
     def cmake_args(self):
+        run_tests = self.run_tests and self.spec.satisfies("@20220623:")
         return [
-            self.define("BUILD_TESTING", self.run_tests),
-            self.define("ABSL_BUILD_TESTING", self.run_tests),
-            self.define("ABSL_USE_EXTERNAL_GOOGLETEST", self.run_tests),
-            self.define("ABSL_FIND_GOOGLETEST", self.run_tests),
+            self.define("BUILD_TESTING", run_tests),
+            self.define("ABSL_BUILD_TESTING", run_tests),
+            self.define("ABSL_USE_EXTERNAL_GOOGLETEST", run_tests),
+            self.define("ABSL_FIND_GOOGLETEST", run_tests),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
         ]
