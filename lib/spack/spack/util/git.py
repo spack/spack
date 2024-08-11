@@ -36,8 +36,7 @@ def get_modified_files(from_ref: str = "HEAD~1", to_ref: str = "HEAD") -> List[s
        from_ref (str): oldest git ref, defaults to `HEAD~1`
        to_ref (str): newer git ref, defaults to `HEAD`
 
-    Returns:
-      files (list): list of file paths
+    Returns: list of file paths
     """
     git_exe = git(required=True)
 

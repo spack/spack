@@ -108,8 +108,7 @@ def get_added_versions(
        from_ref (str): oldest git ref, defaults to `HEAD~1`
        to_ref (str): newer git ref, defaults to `HEAD`
 
-    Returns:
-       versions_list (List): list of versions added between refs
+    Returns: list of versions added between refs
     """
     git_exe = spack.util.git.git(required=True)
 
