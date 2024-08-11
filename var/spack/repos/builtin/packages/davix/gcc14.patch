@@ -1,0 +1,13 @@
+diff --git a/src/libs/rapidjson/document.h b/src/libs/rapidjson/document.h
+index e3e20df..b0f1f70 100644
+--- a/src/libs/rapidjson/document.h
++++ b/src/libs/rapidjson/document.h
+@@ -316,8 +316,6 @@ struct GenericStringRef {
+ 
+     GenericStringRef(const GenericStringRef& rhs) : s(rhs.s), length(rhs.length) {}
+ 
+-    GenericStringRef& operator=(const GenericStringRef& rhs) { s = rhs.s; length = rhs.length; }
+-
+     //! implicit conversion to plain CharType pointer
+     operator const Ch *() const { return s; }
+ 

@@ -11,7 +11,7 @@ class Davix(CMakePackage):
 
     homepage = "https://davix.web.cern.ch/davix/docs/devel/index.html"
     url = "https://github.com/cern-fts/davix/releases/download/R_0_8_7/davix-0.8.7.tar.gz"
-
+    git = "https://github.com/cern-fts/davix.git"
     maintainers("gartung", "greenc-FNAL", "marcmengel", "vitodb")
 
     license("LGPL-2.1-or-later")
@@ -58,6 +58,8 @@ class Davix(CMakePackage):
         description="Use the specified C++ standard when building.",
     )
 
+    conflicts("%gcc@14:", when="@:0.8.5", msg="GCC14 compatibility")
+
     depends_on("pkgconfig", type="build")
     depends_on("libxml2")
     depends_on("uuid")
@@ -67,6 +69,8 @@ class Davix(CMakePackage):
 
     variant("thirdparty", default=False, description="Build vendored libraries")
     depends_on("gsoap", when="+thirdparty")
+
+    patch("gcc14.patch", when="%gcc@14: @0.8.5:")
 
     def cmake_args(self):
         cmake_args = [
