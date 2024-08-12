@@ -40,6 +40,7 @@ _os_map_before_24 = {
 _os_pkg_map = {
     "ubuntu20.04": "deb",
     "ubuntu22.04": "deb",
+    "debian12": "deb",
     "sles15": "rpm",
     "centos7": "rpm",
     "centos8": "rpm",
