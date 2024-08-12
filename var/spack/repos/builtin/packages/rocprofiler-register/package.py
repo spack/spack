@@ -8,7 +8,8 @@ from spack.package import *
 
 class RocprofilerRegister(CMakePackage):
     """The rocprofiler-register library is a helper library that coordinates the modification of the
-    intercept API table(s) of the HSA/HIP/ROCTx runtime libraries by the ROCprofiler (v2) library"""
+    intercept API table(s) of the HSA/HIP/ROCTx runtime libraries by the ROCprofiler (v2) library
+    """
 
     homepage = "https://github.com/ROCm/rocprofiler-register"
     git = "https://github.com/ROCm/rocprofiler-register.git"
@@ -31,8 +32,5 @@ class RocprofilerRegister(CMakePackage):
     patch("001-add-cpack-fmt-glog.patch")
 
     def cmake_args(self):
-        args = [
-            "-DROCPROFILER_REGISTER_BUILD_FMT=OFF",
-            "-DROCPROFILER_REGISTER_BUILD_GLOG=OFF",
-        ]
+        args = ["-DROCPROFILER_REGISTER_BUILD_FMT=OFF", "-DROCPROFILER_REGISTER_BUILD_GLOG=OFF"]
         return args

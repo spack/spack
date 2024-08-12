@@ -286,8 +286,13 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         if self.spec.satisfies("@6.1: +rocm-device-libs"):
             exe = self.prefix.bin.join("llvm-config")
             output = Executable(exe)("--version", output=str, error=str)
-            version= re.split("[.]",output)[0]
-            mkdirp(join_path(self.prefix.lib.clang, version , "lib"), "amdgcn")
-            install_tree(self.prefix.amdgcn,join_path(self.prefix.lib.clang, version, "lib", "amdgcn"))
+            version = re.split("[.]", output)[0]
+            mkdirp(join_path(self.prefix.lib.clang, version, "lib"), "amdgcn")
+            install_tree(
+                self.prefix.amdgcn, join_path(self.prefix.lib.clang, version, "lib", "amdgcn")
+            )
             shutil.rmtree(self.prefix.amdgcn)
-            os.symlink(join_path(self.prefix.lib.clang, version,"lib","amdgcn"), os.path.join(self.prefix, "amdgcn"))
+            os.symlink(
+                join_path(self.prefix.lib.clang, version, "lib", "amdgcn"),
+                os.path.join(self.prefix, "amdgcn"),
+            )

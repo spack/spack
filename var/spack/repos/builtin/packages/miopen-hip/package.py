@@ -198,7 +198,7 @@ class MiopenHip(CMakePackage):
                     f"-I{self.spec['roctracer-dev'].prefix.include} "
                     f"-L{self.spec['roctracer-dev'].prefix.lib} "
                     f"-I{self.spec['nlohmann-json'].prefix.include} "
-                    f"-I{self.spec['sqlite'].prefix.include} "
+                    f"-I{self.spec['sqlite'].prefix.include} ",
                 )
             )
         return args
