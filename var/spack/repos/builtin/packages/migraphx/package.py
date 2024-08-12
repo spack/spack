@@ -135,6 +135,6 @@ class Migraphx(CMakePackage):
         """Test drivers"""
         if self.spec.satisfies("@:5.5.0"):
             raise SkipTest("Package must be installed as version @5.5.1 or later")
-        unit_tests = which("UnitTests")
+        unit_tests = which(self.prefix.bin.UnitTests)
         assert unit_tests is not None, "UnitTests is not installed!"
         unit_tests()
