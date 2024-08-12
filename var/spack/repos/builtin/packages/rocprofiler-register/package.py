@@ -1,4 +1,4 @@
-opyright 2013-2024 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ class RocprofilerRegister(CMakePackage):
     depends_on("fmt")
     depends_on("glog")
 
-    patch("001-add-cpack.patch")
+    patch("001-add-cpack-fmt-glog.patch")
 
     def cmake_args(self):
         args = [
