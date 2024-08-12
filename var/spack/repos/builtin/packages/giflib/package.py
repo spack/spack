@@ -10,7 +10,7 @@ class Giflib(MakefilePackage, SourceforgePackage):
     """The GIFLIB project maintains the giflib service library, which has
     been pulling images out of GIFs since 1989."""
 
-    homepage = "http://giflib.sourceforge.net/"
+    homepage = "https://giflib.sourceforge.net/"
     sourceforge_mirror_path = "giflib/giflib-5.1.4.tar.gz"
 
     license("MIT")

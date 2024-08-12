@@ -10,8 +10,8 @@ class Librsb(AutotoolsPackage):
     """librsb : A shared memory parallel sparse matrix computations
     library for the Recursive Sparse Blocks format"""
 
-    homepage = "http://librsb.sourceforge.net/"
-    url = "http://download.sourceforge.net/librsb/librsb-1.3.0.1.tar.gz"
+    homepage = "https://librsb.sourceforge.net/"
+    url = "https://download.sourceforge.net/librsb/librsb-1.3.0.1.tar.gz"
     list_url = "https://sourceforge.net/projects/librsb/files/"
 
     license("LGPL-3.0-only")

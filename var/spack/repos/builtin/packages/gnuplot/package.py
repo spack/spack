@@ -22,7 +22,7 @@ class Gnuplot(AutotoolsPackage):
     """
 
     homepage = "http://www.gnuplot.info"
-    url = "http://downloads.sourceforge.net/project/gnuplot/gnuplot/5.0.6/gnuplot-5.0.6.tar.gz"
+    url = "https://downloads.sourceforge.net/project/gnuplot/gnuplot/5.0.6/gnuplot-5.0.6.tar.gz"
 
     # There is a conflict in term.h between gnuplot and ncurses, which is a
     # dependency of readline. Fix it with a small patch
