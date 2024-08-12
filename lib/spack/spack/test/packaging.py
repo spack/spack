@@ -394,7 +394,7 @@ def test_replace_paths(tmpdir):
         }
 
 
-@pytest.mark.not_on_windows("dylib manipulation logic in macho_make_paths functions does not run on Windows")
+@pytest.mark.not_on_windows("dylib manipulation logic in macho_make_paths does not run on Windows")
 def test_macho_make_paths():
     out = macho_make_paths_relative(
         "/Users/Shared/spack/pkgC/lib/libC.dylib",
