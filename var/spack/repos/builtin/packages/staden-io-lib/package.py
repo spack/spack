@@ -14,6 +14,8 @@ class StadenIoLib(AutotoolsPackage):
 
     license("BSD-3-Clause")
 
+    maintainers("snehring")
+
     version("1.15.0", sha256="ad343dac7c77086db1b54585c5887b26eda6430d1639d111dd3304c3b749494f")
     version("1.14.9", sha256="8d0732f3d37abba1633731bfacac5fd7f8172eccb1cef224e8ced904d3b242f4")
     version(
