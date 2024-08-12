@@ -27,7 +27,7 @@ class PyHtgettoken(PythonPackage):
     version("2.0-2", commit="e777edb54eb28194351aee0a818aa70489017ab0")
     version("1.16-33-g3788bb4", commit="3788bb4733e5e8f856cee51566df9a36cbfe097d")
     version("1.16-20-g8b72f48", commit="8b72f4800ef99923dac99dbe0756a26266a27886")
-    
+
     # Older versions do not have a python build system
 
     depends_on("py-setuptools@30.3:", type="build")
