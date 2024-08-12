@@ -17,6 +17,7 @@ MACOS_VERSION = macos_version() if sys.platform == "darwin" else None
 LINUX_VERSION = kernel_version() if platform.system() == "Linux" else None
 IS_WINDOWS = sys.platform == "win32"
 
+
 class Qt(Package):
     """Qt is a comprehensive cross-platform C++ application framework."""
 
@@ -312,10 +313,7 @@ class Qt(Package):
         "fj": ("clang",),
         "gcc": ("g++",),
     }
-    platform_mapping = {
-        "darwin": ("macx"),
-        "windows": ("win32")
-        }
+    platform_mapping = {"darwin": ("macx"), "windows": ("win32")}
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release

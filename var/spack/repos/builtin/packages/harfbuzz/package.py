@@ -152,10 +152,7 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder, SetupEnvironment):
             f"-Dcoretext={coretext}",
         ]
         if IS_WINDOWS:
-            config_args.extend([
-                "-Dcairo=disabled",
-                "-Dglib=disabled"
-            ])
+            config_args.extend(["-Dcairo=disabled", "-Dglib=disabled"])
         return config_args
 
 

@@ -295,10 +295,7 @@ class Msvc(Compiler):
 
     @property
     def visual_studio_version(self):
-        return re.search(
-            r"[0-9]{4}",
-            self.cc
-        ).group(0)
+        return re.search(r"[0-9]{4}", self.cc).group(0)
 
     def _compiler_version(self, compiler):
         """Returns version object for given compiler"""
