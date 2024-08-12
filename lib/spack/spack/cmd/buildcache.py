@@ -372,7 +372,7 @@ class PackagesAreNotInstalledError(spack.error.SpackError):
     def __init__(self, specs: List[Spec]):
         super().__init__(
             "Cannot push non-installed packages",
-            ", ".join(_format_spec(s) for s in elide_list(specs, 5)),
+            ", ".join(elide_list(list(_format_spec(s) for s in specs), 5)),
         )
 
 
