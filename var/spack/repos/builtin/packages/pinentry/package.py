@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 from spack.package import *
 
 
@@ -95,17 +94,24 @@ class Pinentry(AutotoolsPackage):
                 args.append("--enable-pinentry-" + gui)
             else:
                 args.append("--disable-pinentry-" + gui)
-
         return args
 
-    def test(self):
-        kwargs = {
-            "exe": self.prefix.bin.pinentry,
-            "options": ["--version"],
-            "expected": [str(self.version)],
-        }
-        self.run_test(**kwargs)
+    def check_version(self, exe_name):
+        """Version check"""
+        exe = which(join_path(self.prefix.bin, exe_name))
+        out = exe("--version", output=str.split, error=str.split)
+        assert str(self.version) in out
+
+    def test_pinentry(self):
+        """Confirm pinentry version"""
+        self.check_version("pinentry")
+
+    def test_guis(self):
+        """Check gui versions"""
         for gui in self.supported_guis:
-            if "gui=" + gui in self.spec:
-                kwargs["exe"] = self.prefix.bin.pinentry + "-" + gui
-                self.run_test(**kwargs)
+            if f"gui={gui}" not in self.spec:
+                continue
+
+            exe_name = f"pinentry-{gui}"
+            with test_part(self, f"test_guis_{gui}", purpose=f"Check {exe_name} version"):
+                self.check_version(exe_name)

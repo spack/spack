@@ -197,6 +197,9 @@ class TestSpecSemantics:
                 'multivalue-variant foo="baz"',
                 'multivalue-variant foo="bar,baz,barbaz"',
             ),
+            # Namespace (special case, but like variants
+            ("builtin.libelf", "namespace=builtin", "builtin.libelf"),
+            ("libelf", "namespace=builtin", "builtin.libelf"),
             # Flags
             ("mpich ", 'mpich cppflags="-O3"', 'mpich cppflags="-O3"'),
             (
@@ -317,6 +320,7 @@ class TestSpecSemantics:
             ("libelf debug=True", "libelf debug=False"),
             ('libelf cppflags="-O3"', 'libelf cppflags="-O2"'),
             ("libelf platform=test target=be os=be", "libelf target=fe os=fe"),
+            ("namespace=builtin.mock", "namespace=builtin"),
         ],
     )
     def test_constraining_abstract_specs_with_empty_intersection(self, lhs, rhs):
@@ -405,6 +409,25 @@ class TestSpecSemantics:
         spec = Spec("singlevalue-variant-dependent")
         spec.concretize()
         assert "pkg-a@1.0" not in spec
+
+    def test_satisfied_namespace(self):
+        spec = Spec("zlib").concretized()
+        assert spec.satisfies("namespace=builtin.mock")
+        assert not spec.satisfies("namespace=builtin")
+
+    @pytest.mark.parametrize(
+        "spec_string",
+        [
+            "tcl namespace==foobar",
+            "tcl arch==foobar",
+            "tcl os==foobar",
+            "tcl patches==foobar",
+            "tcl dev_path==foobar",
+        ],
+    )
+    def test_propagate_reserved_variant_names(self, spec_string):
+        with pytest.raises(spack.parser.SpecParsingError, match="Propagation"):
+            Spec(spec_string)
 
     def test_unsatisfiable_multi_value_variant(self, default_mock_concretization):
         # Semantics for a multi-valued variant is different
@@ -514,27 +537,20 @@ class TestSpecSemantics:
         s = Spec("callpath")
         assert s["callpath"] == s
 
-    def test_dep_index(self):
-        s = Spec("callpath")
-        s.normalize()
+    def test_dep_index(self, default_mock_concretization):
+        """Tests __getitem__ and __contains__ for specs."""
+        s = default_mock_concretization("callpath")
 
         assert s["callpath"] == s
-        assert isinstance(s["dyninst"], Spec)
-        assert isinstance(s["libdwarf"], Spec)
-        assert isinstance(s["libelf"], Spec)
-        assert isinstance(s["mpi"], Spec)
 
-        assert s["dyninst"].name == "dyninst"
-        assert s["libdwarf"].name == "libdwarf"
-        assert s["libelf"].name == "libelf"
-        assert s["mpi"].name == "mpi"
+        # Real dependencies
+        for key in ("dyninst", "libdwarf", "libelf"):
+            assert isinstance(s[key], Spec)
+            assert s[key].name == key
+            assert key in s
 
-    def test_spec_contains_deps(self):
-        s = Spec("callpath")
-        s.normalize()
-        assert "dyninst" in s
-        assert "libdwarf" in s
-        assert "libelf" in s
+        # Virtual dependencies
+        assert s["mpi"].name == "mpich"
         assert "mpi" in s
 
     @pytest.mark.usefixtures("config")
@@ -656,6 +672,7 @@ class TestSpecSemantics:
             ("{@VERSIONS}", "@", "versions", lambda spec: spec),
             ("{%compiler}", "%", "compiler", lambda spec: spec),
             ("{arch=architecture}", "arch=", "architecture", lambda spec: spec),
+            ("{namespace=namespace}", "namespace=", "namespace", lambda spec: spec),
             ("{compiler.name}", "", "name", lambda spec: spec.compiler),
             ("{compiler.version}", "", "version", lambda spec: spec.compiler),
             ("{%compiler.name}", "%", "name", lambda spec: spec.compiler),
@@ -706,12 +723,39 @@ class TestSpecSemantics:
     @pytest.mark.parametrize(
         "fmt_str",
         [
-            "{@name}",
-            "{@version.concrete}",
-            "{%compiler.version}",
-            "{/hashd}",
-            "{arch=architecture.os}",
+            "{name}",
+            "{version}",
+            "{@version}",
+            "{%compiler}",
+            "{namespace}",
+            "{ namespace=namespace}",
+            "{ namespace =namespace}",
+            "{ name space =namespace}",
+            "{arch}",
+            "{architecture}",
+            "{arch=architecture}",
+            "{  arch=architecture}",
+            "{  arch =architecture}",
         ],
+    )
+    def test_spec_format_null_attributes(self, fmt_str):
+        """Ensure that attributes format to empty strings when their values are null."""
+        spec = spack.spec.Spec()
+        assert spec.format(fmt_str) == ""
+
+    def test_spec_formatting_spaces_in_key(self, default_mock_concretization):
+        spec = default_mock_concretization("multivalue-variant cflags=-O2")
+
+        # test that spaces are preserved, if they come after some other text, otherwise
+        # they are trimmed.
+        # TODO: should we be trimming whitespace from formats? Probably not.
+        assert spec.format("x{ arch=architecture}") == f"x arch={spec.architecture}"
+        assert spec.format("x{ namespace=namespace}") == f"x namespace={spec.namespace}"
+        assert spec.format("x{ name space =namespace}") == f"x name space ={spec.namespace}"
+        assert spec.format("x{ os =os}") == f"x os ={spec.os}"
+
+    @pytest.mark.parametrize(
+        "fmt_str", ["{@name}", "{@version.concrete}", "{%compiler.version}", "{/hashd}"]
     )
     def test_spec_formatting_sigil_mismatches(self, default_mock_concretization, fmt_str):
         spec = default_mock_concretization("multivalue-variant cflags=-O2")
@@ -740,11 +784,11 @@ class TestSpecSemantics:
 
     def test_combination_of_wildcard_or_none(self):
         # Test that using 'none' and another value raises
-        with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
+        with pytest.raises(spack.parser.SpecParsingError, match="cannot be combined"):
             Spec("multivalue-variant foo=none,bar")
 
         # Test that using wildcard and another value raises
-        with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
+        with pytest.raises(spack.parser.SpecParsingError, match="cannot be combined"):
             Spec("multivalue-variant foo=*,bar")
 
     def test_errors_in_variant_directive(self):
@@ -1072,9 +1116,6 @@ class TestSpecSemantics:
         ],
     )
     def test_virtual_deps_bindings(self, default_mock_concretization, spec_str, specs_in_dag):
-        if spack.config.get("config:concretizer") == "original":
-            pytest.skip("Use case not supported by the original concretizer")
-
         s = default_mock_concretization(spec_str)
         for label, expected in specs_in_dag:
             assert label in s
@@ -1090,9 +1131,6 @@ class TestSpecSemantics:
         ],
     )
     def test_unsatisfiable_virtual_deps_bindings(self, spec_str):
-        if spack.config.get("config:concretizer") == "original":
-            pytest.skip("Use case not supported by the original concretizer")
-
         with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
             Spec(spec_str).concretized()
 

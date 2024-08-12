@@ -16,38 +16,27 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
-        concretizer: ['clingo']
         on_develop:
         - ${{ github.ref == 'refs/heads/develop' }}
         include:
-        - python-version: '3.11'
-          os: ubuntu-latest
-          concretizer: original
-          on_develop: ${{ github.ref == 'refs/heads/develop' }}
         - python-version: '3.6'
           os: ubuntu-20.04
-          concretizer: clingo
           on_develop: ${{ github.ref == 'refs/heads/develop' }}
         exclude:
         - python-version: '3.7'
           os: ubuntu-latest
-          concretizer: 'clingo'
           on_develop: false
         - python-version: '3.8'
           os: ubuntu-latest
-          concretizer: 'clingo'
           on_develop: false
         - python-version: '3.9'
           os: ubuntu-latest
-          concretizer: 'clingo'
           on_develop: false
         - python-version: '3.10'
           os: ubuntu-latest
-          concretizer: 'clingo'
           on_develop: false
         - python-version: '3.11'
           os: ubuntu-latest
-          concretizer: 'clingo'
           on_develop: false
 
     steps:
@@ -85,7 +74,6 @@ jobs:
     - name: Run unit tests
       env:
           SPACK_PYTHON: python
-          SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
           SPACK_TEST_PARALLEL: 2
           COVERAGE: true
           UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11' }}
@@ -182,7 +170,6 @@ jobs:
     - name: Run unit tests (full suite with coverage)
       env:
           COVERAGE: true
-          SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
     - uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673
@@ -213,7 +200,6 @@ jobs:
         brew install dash fish gcc gnupg2 kcov
     - name: Run unit tests
       env:
-        SPACK_TEST_SOLVER: clingo
         SPACK_TEST_PARALLEL: 4
       run: |
         git --version

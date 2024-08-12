@@ -116,6 +116,8 @@ class Rocfft(CMakePackage):
             env.set("CFLAGS", "-fsanitize=address -shared-libasan")
             env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
             env.set("LDFLAGS", "-fuse-ld=lld")
+        if self.spec.satisfies("%gcc@8.0:8.9") and self.spec.satisfies("@6.1:"):
+            env.append_flags("LDFLAGS", "-lstdc++fs")
 
     @run_after("build")
     @on_package_attributes(run_tests=True)

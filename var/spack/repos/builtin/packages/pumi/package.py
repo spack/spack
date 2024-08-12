@@ -45,6 +45,10 @@ class Pumi(CMakePackage):
     version("2.2.0", commit="8c7e6f13943893b2bc1ece15003e4869a0e9634f")  # tag 2.2.0
     version("2.1.0", commit="840fbf6ec49a63aeaa3945f11ddb224f6055ac9f")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("int64", default=False, description="Enable 64bit mesh entity ids")
     variant("shared", default=False, description="Build shared libraries")
     variant("zoltan", default=False, description="Enable Zoltan Features")
@@ -64,6 +68,10 @@ class Pumi(CMakePackage):
         description="Enable check of Simmetrix SimModSuite version. "
         "Disable the check for testing new versions.",
     )
+
+    depends_on("cxx", type="build")
+    depends_on("c", type="build")
+    depends_on("fortran", type="build", when="+fortran")
 
     depends_on("mpi")
     depends_on("cmake@3:", type="build")

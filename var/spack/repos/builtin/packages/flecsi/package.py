@@ -50,6 +50,9 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     variant("kokkos", default=False, description="Enable Kokkos Support")
     variant("openmp", default=False, description="Enable OpenMP Support")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     # All Current FleCSI Releases
     for level in ("low", "medium", "high"):
         depends_on("caliper@:2.5,2.8:", when=f"caliper_detail={level}")

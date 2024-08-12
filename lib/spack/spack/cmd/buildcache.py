@@ -798,7 +798,7 @@ def _push_oci(
 
     def extra_config(spec: Spec):
         spec_dict = spec.to_dict(hash=ht.dag_hash)
-        spec_dict["buildcache_layout_version"] = 1
+        spec_dict["buildcache_layout_version"] = bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         spec_dict["binary_cache_checksum"] = {
             "hash_algorithm": "sha256",
             "hash": checksums[spec.dag_hash()].compressed_digest.digest,

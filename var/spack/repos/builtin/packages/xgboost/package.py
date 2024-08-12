@@ -37,6 +37,9 @@ class Xgboost(CMakePackage, CudaPackage):
         "1.3.3", tag="v1.3.3", commit="000292ce6d99ed658f6f9aebabc6e9b330696e7e", submodules=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("nccl", default=False, description="Build with NCCL to enable distributed GPU support")
     variant("openmp", default=True, description="Build with OpenMP support")
 

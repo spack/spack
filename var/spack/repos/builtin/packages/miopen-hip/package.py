@@ -125,6 +125,8 @@ class MiopenHip(CMakePackage):
             env.set("CFLAGS", "-fsanitize=address -shared-libasan")
             env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
             env.set("LDFLAGS", "-fuse-ld=lld")
+        if self.spec.satisfies("%gcc@8.0:8.9") and self.spec.satisfies("@6.1:"):
+            env.append_flags("LDFLAGS", "-lstdc++fs")
 
     def get_bitcode_dir(self):
         return self.spec["llvm-amdgpu"].prefix.amdgcn.bitcode

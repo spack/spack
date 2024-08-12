@@ -56,6 +56,9 @@ class Libgcrypt(AutotoolsPackage):
     # https://dev.gnupg.org/T6442
     patch("rndgetentropy_no_getrandom.patch", when="@=1.10.2 platform=darwin")
 
+    # https://git.gnupg.org/cgi-bin/gitweb.cgi?p=libgcrypt.git;a=commit;h=b42116d6067a5233f72e5598032d4b396bb8eaac
+    patch("conditional_avx512.patch", when="@1.11.0")
+
     def check(self):
         # Without this hack, `make check` fails on macOS when SIP is enabled
         # https://bugs.gnupg.org/gnupg/issue2056

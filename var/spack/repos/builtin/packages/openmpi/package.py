@@ -44,10 +44,16 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     # Current
     version(
-        "5.0.3", sha256="990582f206b3ab32e938aa31bbf07c639368e4405dca196fabe7f0f76eeda90b"
-    )  # libmpi.so.40.40.3
+        "5.0.5", sha256="6588d57c0a4bd299a24103f4e196051b29e8b55fbda49e11d5b3d32030a32776"
+    )  # libmpi.so.40.40.5
 
     # Still supported
+    version(
+        "5.0.4", sha256="64526852cdd88b2d30e022087c16ab3e03806c451b10cd691d5c1ac887d8ef9d"
+    )  # libmpi.so.40.40.4
+    version(
+        "5.0.3", sha256="990582f206b3ab32e938aa31bbf07c639368e4405dca196fabe7f0f76eeda90b"
+    )  # libmpi.so.40.40.3
     version(
         "5.0.2", sha256="ee46ad8eeee2c3ff70772160bff877cbf38c330a0bc3b3ddc811648b3396698f"
     )  # libmpi.so.40.40.2
@@ -536,6 +542,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant(
         "orterunprefix",
         default=False,
+        when="@1.3:4",
         description="Prefix Open MPI to PATH and LD_LIBRARY_PATH on local and remote hosts",
     )
     # Adding support to build a debug version of OpenMPI that activates
@@ -554,6 +561,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant(
         "legacylaunchers",
         default=False,
+        when="@1.6:4 schedulers=slurm",
         description="Do not remove mpirun/mpiexec when building with slurm",
     )
     # Variants to use internal packages
@@ -1024,9 +1032,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.append("--enable-mca-no-build=plm-rsh")
 
         # Useful for ssh-based environments
-        if spec.satisfies("@1.3:"):
-            if spec.satisfies("+orterunprefix"):
-                config_args.append("--enable-orterun-prefix-by-default")
+        # For v4 and lower
+        if spec.satisfies("+orterunprefix"):
+            config_args.append("--enable-orterun-prefix-by-default")
 
         # some scientific packages ignore deprecated/remove symbols. Re-enable
         # them for now, for discussion see
@@ -1258,6 +1266,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if self.compiler.name == "nag":
             x.filter("-Wl,--enable-new-dtags", "", string=True, backup=False)
 
+    # For v4 and lower
     @run_after("install")
     def delete_mpirun_mpiexec(self):
         # The preferred way to run an application when Slurm is the
@@ -1267,7 +1276,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         # applications via mpirun or mpiexec, and leaves srun as the
         # only sensible choice (orterun is still present, but normal
         # users don't know about that).
-        if "@1.6: ~legacylaunchers schedulers=slurm" in self.spec:
+        if self.spec.satisfies("~legacylaunchers schedulers=slurm"):
             exe_list = [
                 self.prefix.bin.mpirun,
                 self.prefix.bin.mpiexec,

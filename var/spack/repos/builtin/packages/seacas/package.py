@@ -35,6 +35,7 @@ class Seacas(CMakePackage):
 
     # ###################### Versions ##########################
     version("master", branch="master")
+    # note: if next release supports fmt@11, update dependencies below
     version(
         "2024-07-10", sha256="b2ba6ca80359fed8ed2a8a210052582c7a3b7b837253bd1e9be941047dcab3ff"
     )
@@ -236,8 +237,8 @@ class Seacas(CMakePackage):
     depends_on("hdf5+hl~mpi", when="~mpi")
     depends_on("hdf5+hl+mpi", when="+mpi")
 
-    depends_on("fmt@10.2.1:", when="@2024-03-11:")
-    depends_on("fmt@10.1.0:", when="@2023-10-24:2023-11-27")
+    depends_on("fmt@10.2.1:10", when="@2024-03-11:")
+    depends_on("fmt@10.1.0:10", when="@2023-10-24:2023-11-27")
     depends_on("fmt@9.1.0", when="@2022-10-14:2023-05-30")
     depends_on("fmt@8.1.0:9", when="@2022-03-04:2022-05-16")
 

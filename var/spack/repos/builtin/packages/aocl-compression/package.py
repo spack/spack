@@ -92,21 +92,21 @@ class AoclCompression(CMakePackage):
             "-DLZ4_FRAME_FORMAT_SUPPORT=ON",
             "-DAOCL_LZ4HC_DISABLE_PATTERN_ANALYSIS=ON",
         ]
-        if "~shared" in spec:
+        if spec.satisfies("~shared"):
             args.append("-DBUILD_STATIC_LIBS=ON")
-        if "~zlib" in spec:
+        if spec.satisfies("~zlib"):
             args.append("-DAOCL_EXCLUDE_ZLIB=ON")
-        if "~bzip2" in spec:
+        if spec.satisfies("~bzip2"):
             args.append("-DAOCL_EXCLUDE_BZIP2=ON")
-        if "~snappy" in spec:
+        if spec.satisfies("~snappy"):
             args.append("-DAOCL_EXCLUDE_SNAPPY=ON")
-        if "~zstd" in spec:
+        if spec.satisfies("~zstd"):
             args.append("-DAOCL_EXCLUDE_ZSTD=ON")
-        if "~lzma" in spec:
+        if spec.satisfies("~lzma"):
             args.append("-DAOCL_EXCLUDE_LZMA=ON")
-        if "~lz4" in spec:
+        if spec.satisfies("~lz4"):
             args.append("-DAOCL_EXCLUDE_LZ4=ON")
-        if "~lz4hc" in spec:
+        if spec.satisfies("~lz4hc"):
             args.append("-DAOCL_EXCLUDE_LZ4HC=ON")
 
         return args

@@ -44,6 +44,7 @@ jobs:
       run: |
           . share/spack/setup-env.sh
           coverage run $(which spack) audit packages
+          coverage run $(which spack) audit configs
           coverage run $(which spack) -d audit externals
           coverage combine
           coverage xml
@@ -52,12 +53,15 @@ jobs:
       run: |
           . share/spack/setup-env.sh          
           spack -d audit packages
+          spack -d audit configs
           spack -d audit externals
     - name: Package audits (without coverage)
       if: ${{ runner.os == 'Windows' }}
       run: |
           . share/spack/setup-env.sh          
           spack -d audit packages
+          ./share/spack/qa/validate_last_exit.ps1
+          spack -d audit configs
           ./share/spack/qa/validate_last_exit.ps1
           spack -d audit externals
           ./share/spack/qa/validate_last_exit.ps1
