@@ -155,6 +155,10 @@ class Cdo(AutotoolsPackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
+    # patches
+    # see https://code.mpimet.mpg.de/boards/1/topics/15594
+    patch("add_algorithm_header.patch", when="@2.4.0 %gcc@14")
+
     variant("netcdf", default=True, description="Enable NetCDF support")
     variant(
         "grib2",
