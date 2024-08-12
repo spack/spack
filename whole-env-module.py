@@ -22,6 +22,8 @@ def generate_module(args):
     view = None
     if active_env.has_view(ev.default_view_name):
         view = ev.default_view_name
+    else:
+        raise Exception(f"{active_env.name} does not have a default view")
 
     env_mods = EnvironmentModifications()
     env_mods.extend(spack.environment.shell.activate(env=active_env, view=view))
