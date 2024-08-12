@@ -20,7 +20,7 @@ class Boost(Package):
     """
 
     homepage = "https://www.boost.org"
-    url = "http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2"
+    url = "https://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2"
     git = "https://github.com/boostorg/boost.git"
     list_url = "https://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
@@ -450,7 +450,7 @@ class Boost(Package):
         if version >= Version("1.63.0"):
             url = "https://archives.boost.io/release/{0}/source/boost_{1}.tar.bz2"
         else:
-            url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
+            url = "https://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
 
         return url.format(version.dotted, version.underscored)
 
