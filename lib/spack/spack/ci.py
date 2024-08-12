@@ -1107,7 +1107,7 @@ def generate_gitlab_ci_yaml(
     if cdash_handler and cdash_handler.auth_token:
         try:
             cdash_handler.populate_buildgroup(all_job_names)
-        except (SpackError, HTTPError, URLError) as err:
+        except (SpackError, HTTPError, URLError, TimeoutError) as err:
             tty.warn(f"Problem populating buildgroup: {err}")
     else:
         tty.warn("Unable to populate buildgroup without CDash credentials")
@@ -2083,7 +2083,7 @@ def read_broken_spec(broken_spec_url):
     """
     try:
         _, _, fs = web_util.read_from_url(broken_spec_url)
-    except (URLError, web_util.SpackWebError, HTTPError):
+    except web_util.SpackWebError:
         tty.warn(f"Unable to read broken spec from {broken_spec_url}")
         return None
 
