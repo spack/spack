@@ -12,11 +12,10 @@ import spack.util.executable as exe
 import spack.util.git
 from spack.main import get_version, main
 
-git_exe_name = "git.bat" if sys.platform == "win32" else "git"
-script_head = "@echo off" if sys.platform == "win32" else "#!/bin/sh"
-
 
 def make_git_script(tmpdir, content, monkeypatch):
+    git_exe_name = "git.bat" if sys.platform == "win32" else "git"
+    script_head = "@echo off" if sys.platform == "win32" else "#!/bin/sh"
     git = str(tmpdir.join(git_exe_name))
     with open(git, "w") as f:
         f.write(
