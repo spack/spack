@@ -465,7 +465,7 @@ def test_best_effort_vs_fail_fast_when_dep_not_installed(tmp_path, mutable_datab
     assert not os.listdir(tmp_path)
     assert not spack.binary_distribution.update_cache_and_get_specs()
 
-    with pytest.raises(Exception):
+    with pytest.raises(spack.cmd.buildcache.PackageNotInstalledError):
         buildcache("push", "--update-index", "my-mirror", "mpileaks^mpich")
 
     specs = spack.binary_distribution.update_cache_and_get_specs()
