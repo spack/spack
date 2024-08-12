@@ -12,7 +12,7 @@ class Mrbayes(AutotoolsPackage):
     chain Monte Carlo (MCMC) methods to estimate the posterior distribution
     of model parameters."""
 
-    homepage = "http://mrbayes.sourceforge.net"
+    homepage = "https://mrbayes.sourceforge.net"
     url = "https://github.com/NBISweden/MrBayes/releases/download/v3.2.7a/mrbayes-3.2.7a.tar.gz"
 
     license("GPL-3.0-or-later")

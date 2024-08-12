@@ -21,7 +21,13 @@ class Landsfcutil(CMakePackage):
     version("develop", branch="develop")
     version("2.4.1", sha256="831c5005a480eabe9a8542b4deec838c2650f6966863ea2711cc0cc5db51ca14")
 
-    depends_on("fortran", type="build")  # generated
+    depends_on("fortran", type="build")
+
+    depends_on("pfunit", type="test")
+
+    def cmake_args(self):
+        args = [self.define("ENABLE_TESTS", self.run_tests)]
+        return args
 
     def setup_run_environment(self, env):
         for suffix in ("4", "d"):
@@ -37,3 +43,7 @@ class Landsfcutil(CMakePackage):
             if name == "fflags":
                 flags.append("-Free")
         return (None, None, flags)
+
+    def check(self):
+        with working_dir(self.builder.build_directory):
+            make("test")

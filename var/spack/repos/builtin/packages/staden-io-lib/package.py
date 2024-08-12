@@ -10,7 +10,7 @@ class StadenIoLib(AutotoolsPackage):
     """Io_lib is a library for reading/writing various bioinformatics
     file formats."""
 
-    homepage = "http://staden.sourceforge.net/"
+    homepage = "https://staden.sourceforge.net/"
     url = (
         "https://sourceforge.net/projects/staden/files/io_lib/1.14.8/io_lib-1.14.8.tar.gz/download"
     )

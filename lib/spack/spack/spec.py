@@ -70,7 +70,6 @@ import llnl.util.tty.color as clr
 import spack.compiler
 import spack.compilers
 import spack.config
-import spack.dependency as dp
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
@@ -99,7 +98,7 @@ __all__ = [
     "CompilerSpec",
     "Spec",
     "SpecParseError",
-    "ArchitecturePropagationError",
+    "UnsupportedPropagationError",
     "DuplicateDependencyError",
     "DuplicateCompilerSpecError",
     "UnsupportedCompilerError",
@@ -129,7 +128,7 @@ SPEC_FORMAT_RE = re.compile(
     r"|"  # or
     # OPTION 2: an actual format string
     r"{"  # non-escaped open brace {
-    r"([%@/]|arch=)?"  # optional sigil (to print sigil in color)
+    r"([%@/]|[\w ][\w -]*=)?"  # optional sigil (or identifier or space) to print sigil in color
     r"(?:\^([^}\.]+)\.)?"  # optional ^depname. (to get attr from dependency)
     # after the sigil or depname, we can have a hash expression or another attribute
     r"(?:"  # one of
@@ -163,14 +162,14 @@ HASH_COLOR = "@K"  #: color for highlighting package hashes
 DEFAULT_FORMAT = (
     "{name}{@versions}"
     "{%compiler.name}{@compiler.versions}{compiler_flags}"
-    "{variants}{arch=architecture}{/abstract_hash}"
+    "{variants}{ namespace=namespace_if_anonymous}{ arch=architecture}{/abstract_hash}"
 )
 
 #: Display format, which eliminates extra `@=` in the output, for readability.
 DISPLAY_FORMAT = (
     "{name}{@version}"
     "{%compiler.name}{@compiler.version}{compiler_flags}"
-    "{variants}{arch=architecture}{/abstract_hash}"
+    "{variants}{ namespace=namespace_if_anonymous}{ arch=architecture}{/abstract_hash}"
 )
 
 #: Regular expression to pull spec contents out of clearsigned signature
@@ -1640,19 +1639,9 @@ class Spec:
         Known flags currently include "arch"
         """
 
-        # If the == syntax is used to propagate the spec architecture
-        # This is an error
-        architecture_names = [
-            "arch",
-            "architecture",
-            "platform",
-            "os",
-            "operating_system",
-            "target",
-        ]
-        if propagate and name in architecture_names:
-            raise ArchitecturePropagationError(
-                "Unable to propagate the architecture failed." " Use a '=' instead."
+        if propagate and name in spack.directives.reserved_names:
+            raise UnsupportedPropagationError(
+                f"Propagation with '==' is not supported for '{name}'."
             )
 
         valid_flags = FlagMap.valid_compiler_flags()
@@ -1666,6 +1655,8 @@ class Spec:
             self._set_architecture(os=value)
         elif name == "target":
             self._set_architecture(target=value)
+        elif name == "namespace":
+            self.namespace = value
         elif name in valid_flags:
             assert self.compiler_flags is not None
             flags_and_propagation = spack.compiler.tokenize_flags(value, propagate)
@@ -1685,9 +1676,7 @@ class Spec:
         """Called by the parser to set the architecture."""
         arch_attrs = ["platform", "os", "target"]
         if self.architecture and self.architecture.concrete:
-            raise DuplicateArchitectureError(
-                "Spec for '%s' cannot have two architectures." % self.name
-            )
+            raise DuplicateArchitectureError("Spec cannot have two architectures.")
 
         if not self.architecture:
             new_vals = tuple(kwargs.get(arg, None) for arg in arch_attrs)
@@ -1696,10 +1685,7 @@ class Spec:
             new_attrvals = [(a, v) for a, v in kwargs.items() if a in arch_attrs]
             for new_attr, new_value in new_attrvals:
                 if getattr(self.architecture, new_attr):
-                    raise DuplicateArchitectureError(
-                        "Spec for '%s' cannot have two '%s' specified "
-                        "for its architecture" % (self.name, new_attr)
-                    )
+                    raise DuplicateArchitectureError(f"Cannot specify '{new_attr}' twice")
                 else:
                     setattr(self.architecture, new_attr, new_value)
 
@@ -1894,14 +1880,14 @@ class Spec:
         """Returns a version of the spec with the dependencies hashed
         instead of completely enumerated."""
         spec_format = "{name}{@version}{%compiler.name}{@compiler.version}"
-        spec_format += "{variants}{arch=architecture}{/hash:7}"
+        spec_format += "{variants}{ arch=architecture}{/hash:7}"
         return self.format(spec_format)
 
     @property
     def cshort_spec(self):
         """Returns an auto-colorized version of ``self.short_spec``."""
         spec_format = "{name}{@version}{%compiler.name}{@compiler.version}"
-        spec_format += "{variants}{arch=architecture}{/hash:7}"
+        spec_format += "{variants}{ arch=architecture}{/hash:7}"
         return self.cformat(spec_format)
 
     @property
@@ -2628,294 +2614,6 @@ class Spec:
         validate_fn = getattr(pkg_cls, "validate_detected_spec", lambda x, y: None)
         validate_fn(self, self.extra_attributes)
 
-    def _concretize_helper(self, concretizer, presets=None, visited=None):
-        """Recursive helper function for concretize().
-        This concretizes everything bottom-up.  As things are
-        concretized, they're added to the presets, and ancestors
-        will prefer the settings of their children.
-        """
-        if presets is None:
-            presets = {}
-        if visited is None:
-            visited = set()
-
-        if self.name in visited:
-            return False
-
-        if self.concrete:
-            visited.add(self.name)
-            return False
-
-        changed = False
-
-        # Concretize deps first -- this is a bottom-up process.
-        for name in sorted(self._dependencies):
-            # WARNING: This function is an implementation detail of the
-            # WARNING: original concretizer. Since with that greedy
-            # WARNING: algorithm we don't allow multiple nodes from
-            # WARNING: the same package in a DAG, here we hard-code
-            # WARNING: using index 0 i.e. we assume that we have only
-            # WARNING: one edge from package "name"
-            changed |= self._dependencies[name][0].spec._concretize_helper(
-                concretizer, presets, visited
-            )
-
-        if self.name in presets:
-            changed |= self.constrain(presets[self.name])
-        else:
-            # Concretize virtual dependencies last.  Because they're added
-            # to presets below, their constraints will all be merged, but we'll
-            # still need to select a concrete package later.
-            if not self.virtual:
-                changed |= any(
-                    (
-                        concretizer.concretize_develop(self),  # special variant
-                        concretizer.concretize_architecture(self),
-                        concretizer.concretize_compiler(self),
-                        concretizer.adjust_target(self),
-                        # flags must be concretized after compiler
-                        concretizer.concretize_compiler_flags(self),
-                        concretizer.concretize_version(self),
-                        concretizer.concretize_variants(self),
-                    )
-                )
-            presets[self.name] = self
-
-        visited.add(self.name)
-        return changed
-
-    def _replace_with(self, concrete):
-        """Replace this virtual spec with a concrete spec."""
-        assert self.virtual
-        virtuals = (self.name,)
-        for dep_spec in itertools.chain.from_iterable(self._dependents.values()):
-            dependent = dep_spec.parent
-            depflag = dep_spec.depflag
-
-            # remove self from all dependents, unless it is already removed
-            if self.name in dependent._dependencies:
-                del dependent._dependencies.edges[self.name]
-
-            # add the replacement, unless it is already a dep of dependent.
-            if concrete.name not in dependent._dependencies:
-                dependent._add_dependency(concrete, depflag=depflag, virtuals=virtuals)
-            else:
-                dependent.edges_to_dependencies(name=concrete.name)[0].update_virtuals(
-                    virtuals=virtuals
-                )
-
-    def _expand_virtual_packages(self, concretizer):
-        """Find virtual packages in this spec, replace them with providers,
-        and normalize again to include the provider's (potentially virtual)
-        dependencies.  Repeat until there are no virtual deps.
-
-        Precondition: spec is normalized.
-
-        .. todo::
-
-           If a provider depends on something that conflicts with
-           other dependencies in the spec being expanded, this can
-           produce a conflicting spec.  For example, if mpich depends
-           on hwloc@:1.3 but something in the spec needs hwloc1.4:,
-           then we should choose an MPI other than mpich.  Cases like
-           this are infrequent, but should implement this before it is
-           a problem.
-        """
-        # Make an index of stuff this spec already provides
-        self_index = spack.provider_index.ProviderIndex(
-            repository=spack.repo.PATH, specs=self.traverse(), restrict=True
-        )
-        changed = False
-        done = False
-
-        while not done:
-            done = True
-            for spec in list(self.traverse()):
-                replacement = None
-                if spec.external:
-                    continue
-                if spec.virtual:
-                    replacement = self._find_provider(spec, self_index)
-                    if replacement:
-                        # TODO: may break if in-place on self but
-                        # shouldn't happen if root is traversed first.
-                        spec._replace_with(replacement)
-                        done = False
-                        break
-
-                if not replacement:
-                    # Get a list of possible replacements in order of
-                    # preference.
-                    candidates = concretizer.choose_virtual_or_external(spec)
-
-                    # Try the replacements in order, skipping any that cause
-                    # satisfiability problems.
-                    for replacement in candidates:
-                        if replacement is spec:
-                            break
-
-                        # Replace spec with the candidate and normalize
-                        copy = self.copy()
-                        copy[spec.name]._dup(replacement, deps=False)
-
-                        try:
-                            # If there are duplicate providers or duplicate
-                            # provider deps, consolidate them and merge
-                            # constraints.
-                            copy.normalize(force=True)
-                            break
-                        except spack.error.SpecError:
-                            # On error, we'll try the next replacement.
-                            continue
-
-                # If replacement is external then trim the dependencies
-                if replacement.external:
-                    if spec._dependencies:
-                        for dep in spec.dependencies():
-                            del dep._dependents.edges[spec.name]
-                        changed = True
-                        spec.clear_dependencies()
-                    replacement.clear_dependencies()
-                    replacement.architecture = self.architecture
-
-                # TODO: could this and the stuff in _dup be cleaned up?
-                def feq(cfield, sfield):
-                    return (not cfield) or (cfield == sfield)
-
-                if replacement is spec or (
-                    feq(replacement.name, spec.name)
-                    and feq(replacement.versions, spec.versions)
-                    and feq(replacement.compiler, spec.compiler)
-                    and feq(replacement.architecture, spec.architecture)
-                    and feq(replacement._dependencies, spec._dependencies)
-                    and feq(replacement.variants, spec.variants)
-                    and feq(replacement.external_path, spec.external_path)
-                    and feq(replacement.external_modules, spec.external_modules)
-                ):
-                    continue
-                # Refine this spec to the candidate. This uses
-                # replace_with AND dup so that it can work in
-                # place. TODO: make this more efficient.
-                if spec.virtual:
-                    spec._replace_with(replacement)
-                    changed = True
-                if spec._dup(replacement, deps=False, cleardeps=False):
-                    changed = True
-
-                self_index.update(spec)
-                done = False
-                break
-
-        return changed
-
-    def _old_concretize(self, tests=False, deprecation_warning=True):
-        """A spec is concrete if it describes one build of a package uniquely.
-        This will ensure that this spec is concrete.
-
-        Args:
-            tests (list or bool): list of packages that will need test
-                dependencies, or True/False for test all/none
-            deprecation_warning (bool): enable or disable the deprecation
-                warning for the old concretizer
-
-        If this spec could describe more than one version, variant, or build
-        of a package, this will add constraints to make it concrete.
-
-        Some rigorous validation and checks are also performed on the spec.
-        Concretizing ensures that it is self-consistent and that it's
-        consistent with requirements of its packages. See flatten() and
-        normalize() for more details on this.
-        """
-        import spack.concretize
-
-        # Add a warning message to inform users that the original concretizer
-        # will be removed
-        if deprecation_warning:
-            msg = (
-                "the original concretizer is currently being used.\n\tUpgrade to "
-                '"clingo" at your earliest convenience. The original concretizer '
-                "will be removed from Spack in a future version."
-            )
-            warnings.warn(msg)
-
-        self.replace_hash()
-
-        if not self.name:
-            raise spack.error.SpecError("Attempting to concretize anonymous spec")
-
-        if self._concrete:
-            return
-
-        # take the spec apart once before starting the main concretization loop and resolving
-        # deps, but don't break dependencies during concretization as the spec is built.
-        user_spec_deps = self.flat_dependencies(disconnect=True)
-
-        changed = True
-        force = False
-        concretizer = spack.concretize.Concretizer(self.copy())
-        while changed:
-            changes = (
-                self.normalize(force, tests, user_spec_deps, disconnect=False),
-                self._expand_virtual_packages(concretizer),
-                self._concretize_helper(concretizer),
-            )
-            changed = any(changes)
-            force = True
-
-        visited_user_specs = set()
-        for dep in self.traverse():
-            visited_user_specs.add(dep.name)
-            pkg_cls = spack.repo.PATH.get_pkg_class(dep.name)
-            visited_user_specs.update(pkg_cls(dep).provided_virtual_names())
-
-        extra = set(user_spec_deps.keys()).difference(visited_user_specs)
-        if extra:
-            raise InvalidDependencyError(self.name, extra)
-
-        Spec.inject_patches_variant(self)
-
-        for s in self.traverse():
-            # TODO: Refactor this into a common method to build external specs
-            # TODO: or turn external_path into a lazy property
-            Spec.ensure_external_path_if_external(s)
-
-        # assign hashes and mark concrete
-        self._finalize_concretization()
-
-        # If any spec in the DAG is deprecated, throw an error
-        Spec.ensure_no_deprecated(self)
-
-        # Update externals as needed
-        for dep in self.traverse():
-            if dep.external:
-                dep.package.update_external_dependencies()
-
-        # Now that the spec is concrete we should check if
-        # there are declared conflicts
-        #
-        # TODO: this needs rethinking, as currently we can only express
-        # TODO: internal configuration conflicts within one package.
-        matches = []
-        for x in self.traverse():
-            if x.external:
-                # external specs are already built, don't worry about whether
-                # it's possible to build that configuration with Spack
-                continue
-
-            for when_spec, conflict_list in x.package_class.conflicts.items():
-                if x.satisfies(when_spec):
-                    for conflict_spec, msg in conflict_list:
-                        if x.satisfies(conflict_spec):
-                            when = when_spec.copy()
-                            when.name = x.name
-                            matches.append((x, conflict_spec, when, msg))
-        if matches:
-            raise ConflictsInSpecError(self, matches)
-
-        # Check if we can produce an optimized binary (will throw if
-        # there are declared inconsistencies)
-        self.architecture.target.optimization_flags(self.compiler)
-
     def _patches_assigned(self):
         """Whether patches have been assigned to this spec by the concretizer."""
         # FIXME: _patches_in_order_of_appearance is attached after concretization
@@ -3045,7 +2743,13 @@ class Spec:
             msg += "    For each package listed, choose another spec\n"
             raise SpecDeprecatedError(msg)
 
-    def _new_concretize(self, tests=False):
+    def concretize(self, tests: Union[bool, List[str]] = False) -> None:
+        """Concretize the current spec.
+
+        Args:
+            tests: if False disregard 'test' dependencies, if a list of names activate them for
+                the packages in the list, if True activate 'test' dependencies for all packages.
+        """
         import spack.solver.asp
 
         self.replace_hash()
@@ -3078,19 +2782,6 @@ class Spec:
 
         concretized = answer[node]
         self._dup(concretized)
-
-    def concretize(self, tests=False):
-        """Concretize the current spec.
-
-        Args:
-            tests (bool or list): if False disregard 'test' dependencies,
-                if a list of names activate them for the packages in the list,
-                if True activate 'test' dependencies for all packages.
-        """
-        if spack.config.get("config:concretizer", "clingo") == "clingo":
-            self._new_concretize(tests)
-        else:
-            self._old_concretize(tests)
 
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
@@ -3195,34 +2886,6 @@ class Spec:
         clone.concretize(tests=tests)
         return clone
 
-    def flat_dependencies(self, disconnect: bool = False):
-        """Build DependencyMap of all of this spec's dependencies with their constraints merged.
-
-        Arguments:
-            disconnect: if True, disconnect all dependents and dependencies among nodes in this
-                spec's DAG.
-        """
-        flat_deps = {}
-        deptree = self.traverse(root=False)
-
-        for spec in deptree:
-            if spec.name not in flat_deps:
-                flat_deps[spec.name] = spec
-            else:
-                try:
-                    flat_deps[spec.name].constrain(spec)
-                except spack.error.UnsatisfiableSpecError as e:
-                    # DAG contains two instances of the same package with inconsistent constraints.
-                    raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message) from e
-
-        if disconnect:
-            for spec in flat_deps.values():
-                if not spec.concrete:
-                    spec.clear_edges()
-            self.clear_dependencies()
-
-        return flat_deps
-
     def index(self, deptype="all"):
         """Return a dictionary that points to all the dependencies in this
         spec.
@@ -3231,312 +2894,6 @@ class Spec:
         for spec in self.traverse(deptype=deptype):
             dm[spec.name].append(spec)
         return dm
-
-    def _evaluate_dependency_conditions(self, name):
-        """Evaluate all the conditions on a dependency with this name.
-
-        Args:
-            name (str): name of dependency to evaluate conditions on.
-
-        Returns:
-            (Dependency): new Dependency object combining all constraints.
-
-        If the package depends on <name> in the current spec
-        configuration, return the constrained dependency and
-        corresponding dependency types.
-
-        If no conditions are True (and we don't depend on it), return
-        ``(None, None)``.
-        """
-        vt.substitute_abstract_variants(self)
-        # evaluate when specs to figure out constraints on the dependency.
-        dep = None
-        for when_spec, deps_by_name in self.package_class.dependencies.items():
-            if not self.satisfies(when_spec):
-                continue
-
-            for dep_name, dependency in deps_by_name.items():
-                if dep_name != name:
-                    continue
-
-                if dep is None:
-                    dep = dp.Dependency(Spec(self.name), Spec(name), depflag=0)
-                try:
-                    dep.merge(dependency)
-                except spack.error.UnsatisfiableSpecError as e:
-                    e.message = (
-                        "Conflicting conditional dependencies for spec"
-                        "\n\n\t{0}\n\n"
-                        "Cannot merge constraint"
-                        "\n\n\t{1}\n\n"
-                        "into"
-                        "\n\n\t{2}".format(self, dependency.spec, dep.spec)
-                    )
-                    raise e
-
-        return dep
-
-    def _find_provider(self, vdep, provider_index):
-        """Find provider for a virtual spec in the provider index.
-        Raise an exception if there is a conflicting virtual
-        dependency already in this spec.
-        """
-        assert spack.repo.PATH.is_virtual_safe(vdep.name), vdep
-
-        # note that this defensively copies.
-        providers = provider_index.providers_for(vdep)
-
-        # If there is a provider for the vpkg, then use that instead of
-        # the virtual package.
-        if providers:
-            # Remove duplicate providers that can concretize to the same
-            # result.
-            for provider in providers:
-                for spec in providers:
-                    if spec is not provider and provider.intersects(spec):
-                        providers.remove(spec)
-            # Can't have multiple providers for the same thing in one spec.
-            if len(providers) > 1:
-                raise MultipleProviderError(vdep, providers)
-            return providers[0]
-        else:
-            # The user might have required something insufficient for
-            # pkg_dep -- so we'll get a conflict.  e.g., user asked for
-            # mpi@:1.1 but some package required mpi@2.1:.
-            required = provider_index.providers_for(vdep.name)
-            if len(required) > 1:
-                raise MultipleProviderError(vdep, required)
-            elif required:
-                raise UnsatisfiableProviderSpecError(required[0], vdep)
-
-    def _merge_dependency(self, dependency, visited, spec_deps, provider_index, tests):
-        """Merge dependency information from a Package into this Spec.
-
-        Args:
-            dependency (Dependency): dependency metadata from a package;
-                this is typically the result of merging *all* matching
-                dependency constraints from the package.
-            visited (set): set of dependency nodes already visited by
-                ``normalize()``.
-            spec_deps (dict): ``dict`` of all dependencies from the spec
-                being normalized.
-            provider_index (dict): ``provider_index`` of virtual dep
-                providers in the ``Spec`` as normalized so far.
-
-        NOTE: Caller should assume that this routine owns the
-        ``dependency`` parameter, i.e., it needs to be a copy of any
-        internal structures.
-
-        This is the core of ``normalize()``.  There are some basic steps:
-
-          * If dep is virtual, evaluate whether it corresponds to an
-            existing concrete dependency, and merge if so.
-
-          * If it's real and it provides some virtual dep, see if it provides
-            what some virtual dependency wants and merge if so.
-
-          * Finally, if none of the above, merge dependency and its
-            constraints into this spec.
-
-        This method returns True if the spec was changed, False otherwise.
-
-        """
-        changed = False
-        dep = dependency.spec
-
-        # If it's a virtual dependency, try to find an existing
-        # provider in the spec, and merge that.
-        virtuals = ()
-        if spack.repo.PATH.is_virtual_safe(dep.name):
-            virtuals = (dep.name,)
-            visited.add(dep.name)
-            provider = self._find_provider(dep, provider_index)
-            if provider:
-                dep = provider
-        else:
-            index = spack.provider_index.ProviderIndex(
-                repository=spack.repo.PATH, specs=[dep], restrict=True
-            )
-            items = list(spec_deps.items())
-            for name, vspec in items:
-                if not spack.repo.PATH.is_virtual_safe(vspec.name):
-                    continue
-
-                if index.providers_for(vspec):
-                    vspec._replace_with(dep)
-                    del spec_deps[vspec.name]
-                    changed = True
-                else:
-                    required = index.providers_for(vspec.name)
-                    if required:
-                        raise UnsatisfiableProviderSpecError(required[0], dep)
-            provider_index.update(dep)
-
-        # If the spec isn't already in the set of dependencies, add it.
-        # Note: dep is always owned by this method. If it's from the
-        # caller, it's a copy from _evaluate_dependency_conditions. If it
-        # comes from a vdep, it's a defensive copy from _find_provider.
-        if dep.name not in spec_deps:
-            if self.concrete:
-                return False
-
-            spec_deps[dep.name] = dep
-            changed = True
-        else:
-            # merge package/vdep information into spec
-            try:
-                tty.debug("{0} applying constraint {1}".format(self.name, str(dep)))
-                changed |= spec_deps[dep.name].constrain(dep)
-            except spack.error.UnsatisfiableSpecError as e:
-                fmt = "An unsatisfiable {0}".format(e.constraint_type)
-                fmt += " constraint has been detected for spec:"
-                fmt += "\n\n{0}\n\n".format(spec_deps[dep.name].tree(indent=4))
-                fmt += "while trying to concretize the partial spec:"
-                fmt += "\n\n{0}\n\n".format(self.tree(indent=4))
-                fmt += "{0} requires {1} {2} {3}, but spec asked for {4}"
-
-                e.message = fmt.format(
-                    self.name, dep.name, e.constraint_type, e.required, e.provided
-                )
-
-                raise
-
-        # Add merged spec to my deps and recurse
-        spec_dependency = spec_deps[dep.name]
-        if dep.name not in self._dependencies:
-            self._add_dependency(spec_dependency, depflag=dependency.depflag, virtuals=virtuals)
-
-        changed |= spec_dependency._normalize_helper(visited, spec_deps, provider_index, tests)
-        return changed
-
-    def _normalize_helper(self, visited, spec_deps, provider_index, tests):
-        """Recursive helper function for _normalize."""
-        if self.name in visited:
-            return False
-        visited.add(self.name)
-
-        # If we descend into a virtual spec, there's nothing more
-        # to normalize.  Concretize will finish resolving it later.
-        if self.virtual or self.external:
-            return False
-
-        # Avoid recursively adding constraints for already-installed packages:
-        # these may include build dependencies which are not needed for this
-        # install (since this package is already installed).
-        if self.concrete and self.installed:
-            return False
-
-        # Combine constraints from package deps with constraints from
-        # the spec, until nothing changes.
-        any_change = False
-        changed = True
-
-        while changed:
-            changed = False
-            for dep_name in self.package_class.dependency_names():
-                # Do we depend on dep_name?  If so pkg_dep is not None.
-                dep = self._evaluate_dependency_conditions(dep_name)
-
-                # If dep is a needed dependency, merge it.
-                if dep:
-                    merge = (
-                        # caller requested test dependencies
-                        tests is True
-                        or (tests and self.name in tests)
-                        or
-                        # this is not a test-only dependency
-                        (dep.depflag & ~dt.TEST)
-                    )
-
-                    if merge:
-                        changed |= self._merge_dependency(
-                            dep, visited, spec_deps, provider_index, tests
-                        )
-            any_change |= changed
-
-        return any_change
-
-    def normalize(self, force=False, tests=False, user_spec_deps=None, disconnect=True):
-        """When specs are parsed, any dependencies specified are hanging off
-        the root, and ONLY the ones that were explicitly provided are there.
-        Normalization turns a partial flat spec into a DAG, where:
-
-        1. Known dependencies of the root package are in the DAG.
-        2. Each node's dependencies dict only contains its known direct
-           deps.
-        3. There is only ONE unique spec for each package in the DAG.
-
-           * This includes virtual packages.  If there a non-virtual
-             package that provides a virtual package that is in the spec,
-             then we replace the virtual package with the non-virtual one.
-
-        TODO: normalize should probably implement some form of cycle
-        detection, to ensure that the spec is actually a DAG.
-        """
-        if not self.name:
-            raise spack.error.SpecError("Attempting to normalize anonymous spec")
-
-        # Set _normal and _concrete to False when forced
-        if force and not self._concrete:
-            self._normal = False
-
-        if self._normal:
-            return False
-
-        # Ensure first that all packages & compilers in the DAG exist.
-        self.validate_or_raise()
-        # Clear the DAG and collect all dependencies in the DAG, which will be
-        # reapplied as constraints. All dependencies collected this way will
-        # have been created by a previous execution of 'normalize'.
-        # A dependency extracted here will only be reintegrated if it is
-        # discovered to apply according to _normalize_helper, so
-        # user-specified dependencies are recorded separately in case they
-        # refer to specs which take several normalization passes to
-        # materialize.
-        all_spec_deps = self.flat_dependencies(disconnect=disconnect)
-
-        if user_spec_deps:
-            for name, spec in user_spec_deps.items():
-                if not name:
-                    msg = "Attempted to normalize anonymous dependency spec"
-                    msg += " %s" % spec
-                    raise InvalidSpecDetected(msg)
-                if name not in all_spec_deps:
-                    all_spec_deps[name] = spec
-                else:
-                    all_spec_deps[name].constrain(spec)
-
-        # Initialize index of virtual dependency providers if
-        # concretize didn't pass us one already
-        provider_index = spack.provider_index.ProviderIndex(
-            repository=spack.repo.PATH, specs=[s for s in all_spec_deps.values()], restrict=True
-        )
-
-        # traverse the package DAG and fill out dependencies according
-        # to package files & their 'when' specs
-        visited = set()
-
-        any_change = self._normalize_helper(visited, all_spec_deps, provider_index, tests)
-
-        # remove any leftover dependents outside the spec from, e.g., pruning externals
-        valid = {id(spec) for spec in all_spec_deps.values()} | {id(self)}
-        for spec in all_spec_deps.values():
-            remove = [dep for dep in spec.dependents() if id(dep) not in valid]
-            for dep in remove:
-                del spec._dependents.edges[dep.name]
-                del dep._dependencies.edges[spec.name]
-
-        # Mark the spec as normal once done.
-        self._normal = True
-        return any_change
-
-    def normalized(self):
-        """
-        Return a normalized copy of this spec without modifying this spec.
-        """
-        clone = self.copy()
-        clone.normalize()
-        return clone
 
     def validate_or_raise(self):
         """Checks that names and values in this spec are real. If they're not,
@@ -4386,14 +3743,19 @@ class Spec:
 
         yield deps
 
-    def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
-        r"""Prints out particular pieces of a spec, depending on what is
-        in the format string.
+    @property
+    def namespace_if_anonymous(self):
+        return self.namespace if not self.name else None
 
-        Using the ``{attribute}`` syntax, any field of the spec can be
-        selected.  Those attributes can be recursive. For example,
-        ``s.format({compiler.version})`` will print the version of the
-        compiler.
+    def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
+        r"""Prints out attributes of a spec according to a format string.
+
+        Using an ``{attribute}`` format specifier, any field of the spec can be
+        selected. Those attributes can be recursive. For example,
+        ``s.format({compiler.version})`` will print the version of the compiler.
+
+        If the attribute in a format specifier evaluates to ``None``, then the format
+        specifier will evaluate to the empty string, ``""``.
 
         Commonly used attributes of the Spec for format strings include::
 
@@ -4409,6 +3771,7 @@ class Spec:
             architecture.os
             architecture.target
             prefix
+            namespace
 
         Some additional special-case properties can be added::
 
@@ -4417,40 +3780,51 @@ class Spec:
             spack_install The spack install directory
 
         The ``^`` sigil can be used to access dependencies by name.
-        ``s.format({^mpi.name})`` will print the name of the MPI
-        implementation in the spec.
+        ``s.format({^mpi.name})`` will print the name of the MPI implementation in the
+        spec.
 
-        The ``@``, ``%``, ``arch=``, and ``/`` sigils
-        can be used to include the sigil with the printed
-        string. These sigils may only be used with the appropriate
-        attributes, listed below::
+        The ``@``, ``%``, and ``/`` sigils can be used to include the sigil with the
+        printed string. These sigils may only be used with the appropriate attributes,
+        listed below::
 
             @        ``{@version}``, ``{@compiler.version}``
             %        ``{%compiler}``, ``{%compiler.name}``
-            arch=    ``{arch=architecture}``
             /        ``{/hash}``, ``{/hash:7}``, etc
 
-        The ``@`` sigil may also be used for any other property named
-        ``version``. Sigils printed with the attribute string are only
-        printed if the attribute string is non-empty, and are colored
-        according to the color of the attribute.
+        The ``@`` sigil may also be used for any other property named ``version``.
+        Sigils printed with the attribute string are only printed if the attribute
+        string is non-empty, and are colored according to the color of the attribute.
 
-        Sigils are not used for printing variants. Variants listed by
-        name naturally print with their sigil. For example,
-        ``spec.format('{variants.debug}')`` would print either
-        ``+debug`` or ``~debug`` depending on the name of the
-        variant. Non-boolean variants print as ``name=value``. To
-        print variant names or values independently, use
+        Variants listed by name naturally print with their sigil. For example,
+        ``spec.format('{variants.debug}')`` prints either ``+debug`` or ``~debug``
+        depending on the name of the variant. Non-boolean variants print as
+        ``name=value``. To print variant names or values independently, use
         ``spec.format('{variants.<name>.name}')`` or
         ``spec.format('{variants.<name>.value}')``.
 
-        Spec format strings use ``\`` as the escape character. Use
-        ``\{`` and ``\}`` for literal braces, and ``\\`` for the
-        literal ``\`` character.
+        There are a few attributes on specs that can be specified as key-value pairs
+        that are *not* variants, e.g.: ``os``, ``arch``, ``architecture``, ``target``,
+        ``namespace``, etc. You can format these with an optional ``key=`` prefix, e.g.
+        ``{namespace=namespace}`` or ``{arch=architecture}``, etc. The ``key=`` prefix
+        will be colorized along with the value.
+
+        When formatting specs, key-value pairs are separated from preceding parts of the
+        spec by whitespace. To avoid printing extra whitespace when the formatted
+        attribute is not set, you can add whitespace to the key *inside* the braces of
+        the format string, e.g.:
+
+            { namespace=namespace}
+
+        This evaluates to `` namespace=builtin`` if ``namespace`` is set to ``builtin``,
+        and to ``""`` if ``namespace`` is ``None``.
+
+        Spec format strings use ``\`` as the escape character. Use ``\{`` and ``\}`` for
+        literal braces, and ``\\`` for the literal ``\`` character.
 
         Args:
             format_string: string containing the format to be expanded
             color: True for colorized result; False for no color; None for auto color.
+
         """
         ensure_modern_format_string(format_string)
 
@@ -4504,10 +3878,6 @@ class Spec:
                 raise SpecFormatSigilError(sig, "compilers", attribute)
             elif sig == "/" and attribute != "abstract_hash":
                 raise SpecFormatSigilError(sig, "DAG hashes", attribute)
-            elif sig == "arch=":
-                if attribute not in ("architecture", "arch"):
-                    raise SpecFormatSigilError(sig, "the architecture", attribute)
-                sig = " arch="  # include space as separator
 
             # Iterate over components using getattr to get next element
             for idx, part in enumerate(parts):
@@ -4552,14 +3922,18 @@ class Spec:
 
             # Set color codes for various attributes
             color = None
-            if "variants" in parts:
-                color = VARIANT_COLOR
-            elif "architecture" in parts:
+            if "architecture" in parts:
                 color = ARCHITECTURE_COLOR
+            elif "variants" in parts or sig.endswith("="):
+                color = VARIANT_COLOR
             elif "compiler" in parts or "compiler_flags" in parts:
                 color = COMPILER_COLOR
             elif "version" in parts or "versions" in parts:
                 color = VERSION_COLOR
+
+            # return empty string if the value of the attribute is None.
+            if current is None:
+                return ""
 
             # return colored output
             return safe_color(sig, str(current), color)
@@ -5390,10 +4764,8 @@ class SpecParseError(spack.error.SpecError):
         )
 
 
-class ArchitecturePropagationError(spack.error.SpecError):
-    """Raised when the double equal symbols are used to assign
-    the spec's architecture.
-    """
+class UnsupportedPropagationError(spack.error.SpecError):
+    """Raised when propagation (==) is used with reserved variant names."""
 
 
 class DuplicateDependencyError(spack.error.SpecError):
@@ -5523,7 +4895,7 @@ class UnconstrainableDependencySpecError(spack.error.SpecError):
 class AmbiguousHashError(spack.error.SpecError):
     def __init__(self, msg, *specs):
         spec_fmt = "{namespace}.{name}{@version}{%compiler}{compiler_flags}"
-        spec_fmt += "{variants}{arch=architecture}{/hash:7}"
+        spec_fmt += "{variants}{ arch=architecture}{/hash:7}"
         specs_str = "\n  " + "\n  ".join(spec.format(spec_fmt) for spec in specs)
         super().__init__(msg + specs_str)
 

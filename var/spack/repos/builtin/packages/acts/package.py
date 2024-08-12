@@ -353,7 +353,9 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("nlohmann-json @3.9.1:", when="@0.14: +json")
     depends_on("podio @0.6:", when="@25: +edm4hep")
     depends_on("podio @0.16:", when="@30.3: +edm4hep")
+    depends_on("podio @:0", when="@:35 +edm4hep")
     depends_on("podio @0.16:", when="+podio")
+    depends_on("podio @:0", when="@:35 +podio")
     depends_on("pythia8", when="+pythia8")
     depends_on("python", when="+python")
     depends_on("python@3.8:", when="+python @19.11:19")
@@ -491,7 +493,7 @@ class Acts(CMakePackage, CudaPackage):
             if spec.satisfies("@14: +vecmem"):
                 args.append("-DACTS_USE_SYSTEM_VECMEM=ON")
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             cuda_arch = spec.variants["cuda_arch"].value
             if cuda_arch != "none":
                 args.append(f"-DCUDA_FLAGS=-arch=sm_{cuda_arch[0]}")

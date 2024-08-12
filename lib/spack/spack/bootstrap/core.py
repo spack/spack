@@ -54,6 +54,7 @@ import spack.util.url
 import spack.version
 
 from ._common import _executables_in_store, _python_import, _root_spec, _try_import_from_store
+from .clingo import ClingoBootstrapConcretizer
 from .config import spack_python_interpreter, spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
@@ -268,15 +269,13 @@ class SourceBootstrapper(Bootstrapper):
 
         # Try to build and install from sources
         with spack_python_interpreter():
-            # Add hint to use frontend operating system on Cray
-            concrete_spec = spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python())
-
             if module == "clingo":
-                # TODO: remove when the old concretizer is deprecated  # pylint: disable=fixme
-                concrete_spec._old_concretize(  # pylint: disable=protected-access
-                    deprecation_warning=False
-                )
+                bootstrapper = ClingoBootstrapConcretizer(configuration=spack.config.CONFIG)
+                concrete_spec = bootstrapper.concretize()
             else:
+                concrete_spec = spack.spec.Spec(
+                    abstract_spec_str + " ^" + spec_for_current_python()
+                )
                 concrete_spec.concretize()
 
         msg = "[BOOTSTRAP MODULE {0}] Try installing '{1}' from sources"
@@ -303,14 +302,7 @@ class SourceBootstrapper(Bootstrapper):
         # might reduce compilation time by a fair amount
         _add_externals_if_missing()
 
-        concrete_spec = spack.spec.Spec(abstract_spec_str)
-        if concrete_spec.name == "patchelf":
-            concrete_spec._old_concretize(  # pylint: disable=protected-access
-                deprecation_warning=False
-            )
-        else:
-            concrete_spec.concretize()
-
+        concrete_spec = spack.spec.Spec(abstract_spec_str).concretized()
         msg = "[BOOTSTRAP] Try installing '{0}' from sources"
         tty.debug(msg.format(abstract_spec_str))
         with spack.config.override(self.mirror_scope):

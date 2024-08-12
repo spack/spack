@@ -71,7 +71,7 @@ SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 # TODO: Remove this in Spack 0.23
 SHARED_PR_MIRROR_URL = "s3://spack-binaries-prs/shared_pr_mirror"
 JOB_NAME_FORMAT = (
-    "{name}{@version} {/hash:7} {%compiler.name}{@compiler.version}{arch=architecture}"
+    "{name}{@version} {/hash:7} {%compiler.name}{@compiler.version}{ arch=architecture}"
 )
 IS_WINDOWS = sys.platform == "win32"
 spack_gpg = spack.main.SpackCommand("gpg")
