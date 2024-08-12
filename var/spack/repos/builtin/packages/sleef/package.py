@@ -19,8 +19,11 @@ class Sleef(CMakePackage):
 
     version("master", branch="master")
     version("3.6.1", commit="6ee14bcae5fe92c2ff8b000d5a01102dab08d774", preferred=True)
-    version("3.6", commit="a99491afee2bae0b11e9ffbf3211349f43a5fd10")
-    version("3.5.1_2020-12-22", commit="e0a003ee838b75d11763aa9c3ef17bf71a725bff")  # py-torch@1.8:
+    version("3.6.0_2024-03-20", commit="60e76d2bce17d278b439d9da17177c8f957a9e9b")  # py-torch@2.4:
+    version("3.6.0", commit="a99491afee2bae0b11e9ffbf3211349f43a5fd10")
+    version(
+        "3.5.1_2020-12-22", commit="e0a003ee838b75d11763aa9c3ef17bf71a725bff"
+    )  # py-torch@1.8:2.3
     version("3.5.1", sha256="415ee9b1bcc5816989d3d4d92afd0cd3f9ee89cbd5a33eb008e69751e40438ab")
     version(
         "3.4.0_2019-07-30", commit="7f523de651585fe25cade462efccca647dcc8d02"
@@ -38,15 +41,15 @@ class Sleef(CMakePackage):
         deprecated=True,
     )
     version(
-        "3.2_2018-05-09", commit="6ff7a135a1e31979d1e1844a2e7171dfbd34f54f", deprecated=True
+        "3.2.0_2018-05-09", commit="6ff7a135a1e31979d1e1844a2e7171dfbd34f54f", deprecated=True
     )  # py-torch@0.4.1:1.0
     version(
-        "3.2",
+        "3.2.0",
         sha256="3130c5966e204e6d6a3ace81e543d12b5b21f60897f1c185bfa587c1bd77bee2",
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")
 
     generator("ninja")
     depends_on("cmake@3.18:", type="build")
