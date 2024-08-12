@@ -66,7 +66,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         # no upstream PR (or set of PRs) covering all changes in this path.
         # When #2595 lands, this patch should be updated to include only
         # the changes not incorporated into that PR
-        patch("netcdfc_correct_and_export_link_interface.patch", when="platform=windows")
+        patch("netcdfc_correct_and_export_link_interface.patch")
 
     # Some of the patches touch configure.ac and, therefore, require forcing the autoreconf stage:
     _force_autoreconf_when = []

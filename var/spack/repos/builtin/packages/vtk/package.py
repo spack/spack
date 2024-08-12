@@ -135,7 +135,7 @@ class Vtk(CMakePackage):
     # allow proj to be detected via a CMake produced export config file
     # failing that, falls back on standard library detection
     # required for VTK to build against modern proj/more robustly
-    patch("vtk_findproj_config.patch")
+    patch("vtk_findproj_config.patch", when="@9:")
     # adds a fake target alias'ing the hdf5 target to prevent
     # checks for that target from falling on VTK's empty stub target
     # Required to consume netcdf and hdf5 both built
