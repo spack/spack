@@ -56,6 +56,7 @@ import spack.test.cray_manifest
 import spack.util.executable
 import spack.util.git
 import spack.util.gpg
+import spack.util.parallel
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.version
@@ -1961,11 +1962,11 @@ def pytest_runtest_setup(item):
         pytest.skip(*not_on_windows_marker.args)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(autouse=True)
 def disable_parallel_buildcache_push(monkeypatch):
     """Disable process pools in tests."""
     monkeypatch.setattr(
-        spack.cmd.buildcache, "_make_concurrent_executor", spack.cmd.buildcache.SequentialExecutor
+        spack.util.parallel, "make_concurrent_executor", spack.util.parallel.SequentialExecutor
     )
 
 

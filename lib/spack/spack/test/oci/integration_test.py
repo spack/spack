@@ -41,7 +41,7 @@ def oci_servers(*servers: DummyServer):
     spack.oci.opener.urlopen = old_opener
 
 
-def test_buildcache_push_command(mutable_database, disable_parallel_buildcache_push):
+def test_buildcache_push_command(mutable_database):
     with oci_servers(InMemoryOCIRegistry("example.com")):
         mirror("add", "oci-test", "oci://example.com/image")
 
@@ -64,9 +64,7 @@ def test_buildcache_push_command(mutable_database, disable_parallel_buildcache_p
         assert os.path.exists(os.path.join(spec.prefix, "bin", "mpileaks"))
 
 
-def test_buildcache_tag(
-    install_mockery, mock_fetch, mutable_mock_env_path, disable_parallel_buildcache_push
-):
+def test_buildcache_tag(install_mockery, mock_fetch, mutable_mock_env_path):
     """Tests whether we can create an OCI image from a full environment with multiple roots."""
     env("create", "test")
     with ev.read("test"):
@@ -104,9 +102,7 @@ def test_buildcache_tag(
         assert len(manifest["layers"]) == 1
 
 
-def test_buildcache_push_with_base_image_command(
-    mutable_database, tmpdir, disable_parallel_buildcache_push
-):
+def test_buildcache_push_with_base_image_command(mutable_database, tmpdir):
     """Test that we can push a package with a base image to an OCI registry.
 
     This test is a bit involved, cause we have to create a small base image."""
@@ -207,7 +203,7 @@ def test_buildcache_push_with_base_image_command(
 
 
 def test_uploading_with_base_image_in_docker_image_manifest_v2_format(
-    tmp_path: pathlib.Path, mutable_database, disable_parallel_buildcache_push
+    tmp_path: pathlib.Path, mutable_database
 ):
     """If the base image uses an old manifest schema, Spack should also use that.
     That is necessary for container images to work with Apptainer, which is rather strict about
@@ -295,9 +291,7 @@ def test_uploading_with_base_image_in_docker_image_manifest_v2_format(
         assert "annotations" not in m
 
 
-def test_best_effort_upload(
-    mutable_database: spack.database.Database, disable_parallel_buildcache_push, monkeypatch
-):
+def test_best_effort_upload(mutable_database: spack.database.Database, monkeypatch):
     """Failure to upload a blob or manifest should not prevent others from being uploaded"""
 
     _push_blob = spack.cmd.buildcache._push_single_spack_binary_blob

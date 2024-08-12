@@ -8,8 +8,6 @@ import copy
 import glob
 import hashlib
 import json
-import multiprocessing
-import multiprocessing.pool
 import os
 import shutil
 import sys
@@ -37,10 +35,10 @@ import spack.stage
 import spack.store
 import spack.user_environment
 import spack.util.crypto
+import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
-from spack.build_environment import determine_number_of_jobs
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
 from spack.oci.image import (
@@ -349,28 +347,6 @@ def _progress(i: int, total: int):
     return ""
 
 
-class SequentialExecutor(concurrent.futures.Executor):
-    """Executor that runs tasks sequentially in the current thread."""
-
-    def submit(self, fn, *args, **kwargs):
-        """Submit a function to be executed."""
-        future = concurrent.futures.Future()
-        try:
-            future.set_result(fn(*args, **kwargs))
-        except Exception as e:
-            future.set_exception(e)
-        return future
-
-
-def _make_concurrent_executor() -> concurrent.futures.Executor:
-    """Can't use threading because it's unsafe, and can't use spawned processes because of globals.
-    That leaves only forking"""
-    if multiprocessing.get_start_method() == "fork":
-        return concurrent.futures.ProcessPoolExecutor(determine_number_of_jobs(parallel=True))
-    else:
-        return SequentialExecutor()
-
-
 def _skip_no_redistribute_for_public(specs):
     remaining_specs = list()
     removed_specs = list()
@@ -500,14 +476,14 @@ def push_fn(args):
         base_image = ImageReference.from_string(args.base_image) if args.base_image else None
         with tempfile.TemporaryDirectory(
             dir=spack.stage.get_stage_root()
-        ) as tmpdir, _make_concurrent_executor() as pool:
+        ) as tmpdir, spack.util.parallel.make_concurrent_executor() as executor:
             skipped, base_images, checksums, upload_errors = _push_oci(
                 target_image=target_image,
                 base_image=base_image,
                 installed_specs_with_deps=specs,
                 force=args.force,
                 tmpdir=tmpdir,
-                executor=pool,
+                executor=executor,
             )
 
             if upload_errors:
@@ -597,8 +573,8 @@ def push_fn(args):
     if target_image and len(skipped) < len(specs) and args.update_index:
         with tempfile.TemporaryDirectory(
             dir=spack.stage.get_stage_root()
-        ) as tmpdir, _make_concurrent_executor() as pool:
-            _update_index_oci(target_image, tmpdir, pool)
+        ) as tmpdir, spack.util.parallel.make_concurrent_executor() as executor:
+            _update_index_oci(target_image, tmpdir, executor)
 
 
 def _get_spack_binary_blob(image_ref: ImageReference) -> Optional[spack.oci.oci.Blob]:
@@ -1274,8 +1250,8 @@ def update_index(mirror: spack.mirror.Mirror, update_keys=False):
     if image_ref:
         with tempfile.TemporaryDirectory(
             dir=spack.stage.get_stage_root()
-        ) as tmpdir, _make_concurrent_executor() as pool:
-            _update_index_oci(image_ref, tmpdir, pool)
+        ) as tmpdir, spack.util.parallel.make_concurrent_executor() as executor:
+            _update_index_oci(image_ref, tmpdir, executor)
         return
 
     # Otherwise, assume a normal mirror.
