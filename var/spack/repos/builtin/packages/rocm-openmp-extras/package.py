@@ -547,9 +547,6 @@ class RocmOpenmpExtras(Package):
         if self.spec.satisfies("@5.3.0:"):
             openmp_common_args += ["-DLIBOMPTARGET_ENABLE_DEBUG=ON"]
 
-        if self.spec.satisfies("@6.1:"):
-            openmp_common_args += ["-DLIBOMPTARGET_BUILD_CUDA_PLUGIN=OFF"]
-
         components["openmp"] = ["../rocm-openmp-extras/llvm-project/openmp"]
         components["openmp"] += openmp_common_args
 
