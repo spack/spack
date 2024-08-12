@@ -206,7 +206,9 @@ class Qt(Package):
 
     depends_on("libpng@1.2.57", when="@3")
     depends_on("pcre+multibyte", when="@5.0:5.8")
-    depends_on("inputproto", when="@:5.8")
+    for plat in ["linux", "darwin", "freebsd"]:
+        with when(f"platform={plat}"):
+            depends_on("inputproto", when="@:5.8")
 
     with when("+ssl"):
         depends_on("openssl")
