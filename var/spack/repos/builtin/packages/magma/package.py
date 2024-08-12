@@ -218,7 +218,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
             raise SkipTest("Package must be installed with +fortran")
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
-        with working_dir(test_dir, create=False):
+        with working_dir(test_dir):
             make("fortran")
             example_f = which("example_f")
             example_f()
