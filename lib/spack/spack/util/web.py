@@ -197,8 +197,8 @@ def read_from_url(url, accept_content_type=None):
 
     try:
         response = urlopen(request)
-    except URLError as err:
-        raise SpackWebError("Download failed: {}".format(str(err)))
+    except (TimeoutError, URLError) as e:
+        raise SpackWebError(f"Download of {url.geturl()} failed: {e}")
 
     if accept_content_type:
         try:
@@ -458,8 +458,8 @@ def url_exists(url, curl=None):
             timeout=spack.config.get("config:connect_timeout", 10),
         )
         return True
-    except URLError as e:
-        tty.debug("Failure reading URL: " + str(e))
+    except (TimeoutError, URLError) as e:
+        tty.debug(f"Failure reading {url}: {e}")
         return False
 
 
@@ -740,10 +740,10 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
                 subcalls.append(abs_link)
                 _visited.add(abs_link)
 
-    except URLError as e:
+    except (TimeoutError, URLError) as e:
         tty.debug(f"[SPIDER] Unable to read: {url}")
         tty.debug(str(e), level=2)
-        if hasattr(e, "reason") and isinstance(e.reason, ssl.SSLError):
+        if isinstance(e, URLError) and isinstance(e.reason, ssl.SSLError):
             tty.warn(
                 "Spack was unable to fetch url list due to a "
                 "certificate verification problem. You can try "

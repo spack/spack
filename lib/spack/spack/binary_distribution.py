@@ -23,7 +23,6 @@ import urllib.request
 import warnings
 from contextlib import closing
 from typing import Dict, Iterable, List, NamedTuple, Optional, Set, Tuple
-from urllib.error import HTTPError, URLError
 
 import llnl.util.filesystem as fsys
 import llnl.util.lang
@@ -899,9 +898,8 @@ def _specs_from_cache_fallback(cache_prefix):
         try:
             _, _, spec_file = web_util.read_from_url(url)
             contents = codecs.getreader("utf-8")(spec_file).read()
-        except (URLError, web_util.SpackWebError) as url_err:
-            tty.error("Error reading specfile: {0}".format(url))
-            tty.error(url_err)
+        except web_util.SpackWebError as e:
+            tty.error(f"Error reading specfile: {url}: {e}")
         return contents
 
     try:
@@ -2041,21 +2039,17 @@ def try_direct_fetch(spec, mirrors=None):
         try:
             _, _, fs = web_util.read_from_url(buildcache_fetch_url_signed_json)
             specfile_is_signed = True
-        except (URLError, web_util.SpackWebError, HTTPError) as url_err:
+        except web_util.SpackWebError as e1:
             try:
                 _, _, fs = web_util.read_from_url(buildcache_fetch_url_json)
-            except (URLError, web_util.SpackWebError, HTTPError) as url_err_x:
+            except web_util.SpackWebError as e2:
                 tty.debug(
-                    "Did not find {0} on {1}".format(
-                        specfile_name, buildcache_fetch_url_signed_json
-                    ),
-                    url_err,
+                    f"Did not find {specfile_name} on {buildcache_fetch_url_signed_json}",
+                    e1,
                     level=2,
                 )
                 tty.debug(
-                    "Did not find {0} on {1}".format(specfile_name, buildcache_fetch_url_json),
-                    url_err_x,
-                    level=2,
+                    f"Did not find {specfile_name} on {buildcache_fetch_url_json}", e2, level=2
                 )
                 continue
         specfile_contents = codecs.getreader("utf-8")(fs).read()
@@ -2150,19 +2144,12 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
         try:
             _, _, json_file = web_util.read_from_url(keys_index)
             json_index = sjson.load(codecs.getreader("utf-8")(json_file))
-        except (URLError, web_util.SpackWebError) as url_err:
+        except web_util.SpackWebError as url_err:
             if web_util.url_exists(keys_index):
-                err_msg = [
-                    "Unable to find public keys in {0},",
-                    " caught exception attempting to read from {1}.",
-                ]
-
                 tty.error(
-                    "".join(err_msg).format(
-                        url_util.format(fetch_url), url_util.format(keys_index)
-                    )
+                    f"Unable to find public keys in {url_util.format(fetch_url)},"
+                    f" caught exception attempting to read from {url_util.format(keys_index)}."
                 )
-
                 tty.debug(url_err)
 
             continue
@@ -2442,7 +2429,7 @@ class DefaultIndexFetcher:
         url_index_hash = url_util.join(self.url, BUILD_CACHE_RELATIVE_PATH, "index.json.hash")
         try:
             response = self.urlopen(urllib.request.Request(url_index_hash, headers=self.headers))
-        except urllib.error.URLError:
+        except (TimeoutError, urllib.error.URLError):
             return None
 
         # Validate the hash
@@ -2464,7 +2451,7 @@ class DefaultIndexFetcher:
 
         try:
             response = self.urlopen(urllib.request.Request(url_index, headers=self.headers))
-        except urllib.error.URLError as e:
+        except (TimeoutError, urllib.error.URLError) as e:
             raise FetchIndexError("Could not fetch index from {}".format(url_index), e) from e
 
         try:
@@ -2505,10 +2492,7 @@ class EtagIndexFetcher:
     def conditional_fetch(self) -> FetchIndexResult:
         # Just do a conditional fetch immediately
         url = url_util.join(self.url, BUILD_CACHE_RELATIVE_PATH, "index.json")
-        headers = {
-            "User-Agent": web_util.SPACK_USER_AGENT,
-            "If-None-Match": '"{}"'.format(self.etag),
-        }
+        headers = {"User-Agent": web_util.SPACK_USER_AGENT, "If-None-Match": f'"{self.etag}"'}
 
         try:
             response = self.urlopen(urllib.request.Request(url, headers=headers))
@@ -2516,14 +2500,14 @@ class EtagIndexFetcher:
             if e.getcode() == 304:
                 # Not modified; that means fresh.
                 return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
-            raise FetchIndexError("Could not fetch index {}".format(url), e) from e
-        except urllib.error.URLError as e:
-            raise FetchIndexError("Could not fetch index {}".format(url), e) from e
+            raise FetchIndexError(f"Could not fetch index {url}", e) from e
+        except (TimeoutError, urllib.error.URLError) as e:
+            raise FetchIndexError(f"Could not fetch index {url}", e) from e
 
         try:
             result = codecs.getreader("utf-8")(response).read()
         except ValueError as e:
-            raise FetchIndexError("Remote index {} is invalid".format(url), e) from e
+            raise FetchIndexError(f"Remote index {url} is invalid", e) from e
 
         headers = response.headers
         etag_header_value = headers.get("Etag", None) or headers.get("etag", None)
@@ -2554,21 +2538,19 @@ class OCIIndexFetcher:
                     headers={"Accept": "application/vnd.oci.image.manifest.v1+json"},
                 )
             )
-        except urllib.error.URLError as e:
-            raise FetchIndexError(
-                "Could not fetch manifest from {}".format(url_manifest), e
-            ) from e
+        except (TimeoutError, urllib.error.URLError) as e:
+            raise FetchIndexError(f"Could not fetch manifest from {url_manifest}", e) from e
 
         try:
             manifest = json.loads(response.read())
         except Exception as e:
-            raise FetchIndexError("Remote index {} is invalid".format(url_manifest), e) from e
+            raise FetchIndexError(f"Remote index {url_manifest} is invalid", e) from e
 
         # Get first blob hash, which should be the index.json
         try:
             index_digest = spack.oci.image.Digest.from_string(manifest["layers"][0]["digest"])
         except Exception as e:
-            raise FetchIndexError("Remote index {} is invalid".format(url_manifest), e) from e
+            raise FetchIndexError(f"Remote index {url_manifest} is invalid", e) from e
 
         # Fresh?
         if index_digest.digest == self.local_hash:
