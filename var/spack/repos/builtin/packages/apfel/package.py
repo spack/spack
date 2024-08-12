@@ -43,7 +43,7 @@ class Apfel(AutotoolsPackage, CMakePackage):
     variant("lhapdf", description="Link to LHAPDF", default=False)
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
             self.define_from_variant("APFEL_ENABLE_PYTHON", "python"),
@@ -55,7 +55,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return args
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
         args += self.enable_or_disable("pywrap", variant="python")
