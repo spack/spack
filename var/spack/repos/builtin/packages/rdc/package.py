@@ -92,7 +92,7 @@ class Rdc(CMakePackage):
         "6.2.0",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
-    depends_on("amdsmi@6.2.0", when=f"@6.2.0")
+    depends_on("amdsmi@6.2.0", when="@6.2.0")
 
     def patch(self):
         filter_file(r"\${ROCM_DIR}/rocm_smi", "${ROCM_SMI_DIR}", "CMakeLists.txt")
