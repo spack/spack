@@ -191,7 +191,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     def test_c(self):
         """Run benchmark tests"""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
-        with working_dir(test_dir, create=False):
+        with working_dir(test_dir):
             pkg_config_path = self.prefix.lib.pkgconfig
             with spack.util.environment.set_env(PKG_CONFIG_PATH=pkg_config_path):
 
