@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pathlib
+
 from spack.package import *
 
 
@@ -38,7 +39,6 @@ class Lcms(AutotoolsPackage, MSBuildPackage):
 
     build_system("autotools", "msbuild")
 
-
     @property
     def libs(self):
         return find_libraries("liblcms2", root=self.prefix, recursive=True)
@@ -47,7 +47,11 @@ class Lcms(AutotoolsPackage, MSBuildPackage):
 class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
     @property
     def build_directory(self):
-        return pathlib.Path(self.pkg.stage.source_path) / "Projects" / f"VC{self.pkg.compiler.visual_studio_version}"
+        return (
+            pathlib.Path(self.pkg.stage.source_path)
+            / "Projects"
+            / f"VC{self.pkg.compiler.visual_studio_version}"
+        )
 
     def setup_build_environment(self, env):
         jpeg_include = self.spec["jpeg"].prefix.include
@@ -56,6 +60,4 @@ class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
         env.prepend_path("INCLUDE", ";".join([jpeg_include, tiff_include, zlib_include]))
 
     def msbuild_args(self):
-        return [
-            "lcms2.sln",
-        ]
+        return ["lcms2.sln"]

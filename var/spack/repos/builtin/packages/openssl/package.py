@@ -111,7 +111,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             root=self.prefix,
             recursive=True,
             shared=self.spec.variants["shared"].value,
-            runtime=False
+            runtime=False,
         )
 
     def handle_fetch_error(self, error):
@@ -163,9 +163,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             if spec.satisfies("@1"):
                 base_args.extend([f'CC="{self.compiler.cc}"', f'CXX="{self.compiler.cxx}"'])
             else:
-                base_args.extend(
-                    [f"CC={self.compiler.cc}", f"CXX={self.compiler.cxx}"]
-                )
+                base_args.extend([f"CC={self.compiler.cc}", f"CXX={self.compiler.cxx}"])
             base_args.append("VC-WIN64A")
         else:
             base_args.extend(

@@ -334,7 +334,7 @@ class Cmake(Package):
                 # inside a ctest environment
                 "-DCMake_TEST_INSTALL=OFF",
                 f"-DBUILD_CursesDialog={'ON' if '+ncurses' in spec else 'OFF'}",
-                f"-DBUILD_QtDialog={'ON' if spec.satisfies('+qtgui') else 'OFF'}"
+                f"-DBUILD_QtDialog={'ON' if spec.satisfies('+qtgui') else 'OFF'}",
             ]
         )
 

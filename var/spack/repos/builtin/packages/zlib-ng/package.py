@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack.build_systems import autotools, cmake
 from spack.package import *
-import sys
 
 
 class ZlibNg(AutotoolsPackage, CMakePackage):
@@ -59,7 +60,11 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
         compat_name = "zlib" if sys.platform == "win32" else "libz"
         name = compat_name if self.spec.satisfies("+compat") else "libz-ng"
         return find_libraries(
-            name, root=self.prefix, recursive=True, shared=self.spec.satisfies("+shared"), runtime=False
+            name,
+            root=self.prefix,
+            recursive=True,
+            shared=self.spec.satisfies("+shared"),
+            runtime=False,
         )
 
     def flag_handler(self, name, flags):
