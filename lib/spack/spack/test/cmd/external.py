@@ -114,11 +114,31 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
 @pytest.mark.parametrize(
     "names,tags,exclude,expected",
     [
-        # find --all
-        (None, ["detectable"], [], ["builtin.mock.find-externals1"]),
+        # find -all
+        (
+            None,
+            ["detectable"],
+            [],
+            [
+                "builtin.mock.find-externals1",
+                "builtin.mock.gcc",
+                "builtin.mock.llvm",
+                "builtin.mock.intel-oneapi-compilers",
+            ],
+        ),
         # find --all --exclude find-externals1
-        (None, ["detectable"], ["builtin.mock.find-externals1"], []),
-        (None, ["detectable"], ["find-externals1"], []),
+        (
+            None,
+            ["detectable"],
+            ["builtin.mock.find-externals1"],
+            ["builtin.mock.gcc", "builtin.mock.llvm", "builtin.mock.intel-oneapi-compilers"],
+        ),
+        (
+            None,
+            ["detectable"],
+            ["find-externals1"],
+            ["builtin.mock.gcc", "builtin.mock.llvm", "builtin.mock.intel-oneapi-compilers"],
+        ),
         # find cmake (and cmake is not detectable)
         (["cmake"], ["detectable"], [], []),
     ],
