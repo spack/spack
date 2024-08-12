@@ -82,7 +82,7 @@ class IntelOneApiPackage(Package):
     def install(self, spec, prefix):
         self.install_component(basename(self.url_for_version(spec.version)))
 
-    def install_component(self, installer_path,is_nvidia=False):
+    def install_component(self, installer_path):
         """Shared install method for all oneapi packages."""
 
         if platform.system() == "Linux":
@@ -109,28 +109,18 @@ class IntelOneApiPackage(Package):
             # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
             bash.add_default_env("XDG_RUNTIME_DIR", join_path(self.stage.path, "runtime"))
 
-            if is_nvidia:
-                # For NVIDIA plugin installer
-                bash(
-                    installer_path,
-                    "-y",
-                    "--install-dir",
-                    self.prefix,
-                )
-            else:
-                # Default Intel installer behavior
-                bash(
-                    installer_path,
-                    "-s",
-                    "-a",
-                    "-s",
-                    "--action",
-                    "install",
-                    "--eula",
-                    "accept",
-                    "--install-dir",
-                    self.prefix,
-                )
+            bash(
+                installer_path,
+                "-s",
+                "-a",
+                "-s",
+                "--action",
+                "install",
+                "--eula",
+                "accept",
+                "--install-dir",
+                self.prefix,
+            )
 
             if getpass.getuser() == "root":
                 shutil.rmtree("/var/intel/installercache", ignore_errors=True)

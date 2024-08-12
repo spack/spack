@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
 
 from spack.build_environment import dso_suffix
 from spack.package import *
@@ -20,7 +21,8 @@ versions = [
             "sha256": "6f6dab82a88082a7a39f6feb699343c521f58c6481a1bb87edba7e2550995b6d",
         },
         "nvidia-plugin": {
-            "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2024.2.1&filters[]=12.0&filters[]=linux"
+            "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2024.2.1&filters[]=12.0&filters[]=linux",
+            "sha256": "2c377027c650291ccd8267cbf75bd3d00c7b11998cc59d5668a02a0cbc2c015f",
         },
     },
     {
@@ -272,6 +274,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
     depends_on("patchelf@:0.17", type="build", when="@:2024.1")
     # Add the nvidia variant
     variant("nvidia", default=False, description="Install NVIDIA plugin for OneAPI")
+    conflicts("@:2022.2.1", when="+nvidia", msg="Codeplay NVIDIA plugin requires newer release")
     # TODO: effectively gcc is a direct dependency of intel-oneapi-compilers, but we
     # cannot express that properly. For now, add conflicts for non-gcc compilers
     # instead.
@@ -350,16 +353,22 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         ftn = find("fortran-installer", "*")
         if ftn:
             self.install_component(ftn[0])
-        # install nvidia-plugin
-        if self.spec.satisfies("+nvidia"):
-            nvidia_script = find("nvidia-plugin-installer", "*")
-            if nvidia_script:
-                self.install_component(nvidia_script[0],is_nvidia=True)
-        
 
             # Some installers have a bug and do not return an error code when failing
             if not is_exe(self._llvm_bin.ifx):
                 raise RuntimeError("Fortran install failed")
+        # install nvidia-plugin
+        if self.spec.satisfies("+nvidia"):
+            nvidia_script = find("nvidia-plugin-installer", "*")
+            if nvidia_script:
+                if platform.system() == "Linux":
+                    bash = Executable("bash")
+                    # Installer writes files in ~/intel set HOME so it goes to prefix
+                    bash.add_default_env("HOME", prefix)
+                    # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
+                    bash.add_default_env("XDG_RUNTIME_DIR", join_path(self.stage.path, "runtime"))
+                    # For NVIDIA plugin installer
+                    bash(nvidia_script[0], "-y", "--install-dir", self.prefix)
 
     @run_after("install")
     def inject_rpaths(self):
@@ -392,7 +401,6 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
                 # Try to patch all files, patchelf will do nothing and fail if file
                 # should not be patched
                 patchelf(file, fail_on_error=False)
-
 
     def write_config_file(self, flags, path, compilers):
         for compiler in compilers:
