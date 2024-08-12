@@ -468,7 +468,7 @@ def push_fn(args):
                 raise PackagesAreNotInstalledError(not_installed)
             else:
                 failed.extend(
-                    (s, spack.error.SpackError("package not installed")) for s in not_installed
+                    (s, PackageNotInstalledError("package not installed")) for s in not_installed
                 )
 
     # TODO: move into bindist.push_or_raise
