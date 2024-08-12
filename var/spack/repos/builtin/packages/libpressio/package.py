@@ -408,7 +408,7 @@ class Libpressio(CMakePackage, CudaPackage):
     @run_after("install")
     def copy_test_sources(self):
         if self.spec.satisfies("@:0.88.2"):
-            raise SkipTest("Package must be installed as version @0.88.3 or later")
+            return
         srcs = [
             join_path("test", "smoke_test", "smoke_test.cc"),
             join_path("test", "smoke_test", "CMakeLists.txt"),
