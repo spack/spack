@@ -21,7 +21,6 @@ class MagicEnum(CMakePackage):
     version("0.9.6", sha256="814791ff32218dc869845af7eb89f898ebbcfa18e8d81aa4d682d18961e13731")
 
     variant("examples", default=False, description="Enable examples")
-    variant("tests", default=True, description="Enable tests")
 
     # minimum supported versions
     conflicts("%clang@:4")
@@ -38,7 +37,7 @@ class MagicEnum(CMakePackage):
 
         args = [
             from_variant("MAGIC_ENUM_OPT_BUILD_EXAMPLES", "examples"),
-            from_variant("MAGIC_ENUM_OPT_BUILD_TESTS", "tests"),
+            from_variant("MAGIC_ENUM_OPT_BUILD_TESTS", self.run_tests),
         ]
 
         return args
