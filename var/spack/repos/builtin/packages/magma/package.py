@@ -203,11 +203,11 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
                     ("example_v2", "v2 interface"),
                 ]
 
-                for test in tests:
+                for test, desc in tests:
                     with test_part(
-                        self, f"test_all_c_{test[0]}", purpose=f"MAGMA smoke test - {test[1]}"
+                        self, f"test_c_{test}", purpose=f"MAGMA smoke test - {desc}"
                     ):
-                        exe = which("./" + test[0])
+                        exe = which(test)
                         exe()
 
                 make("clean")
