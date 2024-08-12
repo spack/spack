@@ -200,7 +200,7 @@ def test_needs_relocation():
     assert needs_binary_relocation("application", "x-mach-binary")
 
 
-@pytest.mark.not_on_windows("macos use not intended for Windows")
+@pytest.mark.not_on_windows("dylib manipulation logic in macho_find_paths does not run on Windows")
 def test_replace_paths(tmpdir):
     with tmpdir.as_cwd():
         suffix = "dylib" if platform.system().lower() == "darwin" else "so"
@@ -394,7 +394,7 @@ def test_replace_paths(tmpdir):
         }
 
 
-@pytest.mark.not_on_windows("macos use not intended for Windows")
+@pytest.mark.not_on_windows("dylib manipulation logic in macho_make_paths functions does not run on Windows")
 def test_macho_make_paths():
     out = macho_make_paths_relative(
         "/Users/Shared/spack/pkgC/lib/libC.dylib",
