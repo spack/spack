@@ -24,10 +24,10 @@ class MagicEnum(CMakePackage):
     variant("tests", default=True, description="Enable tests")
 
     # minimum supported versions
-    conflicts("%clang@:5")
-    conflicts("%gcc@:9")
-    conflicts("%msvc@:14.11")
-    conflicts("%apple-clang@:10")
+    conflicts("%clang@:4")
+    conflicts("%gcc@:8")
+    conflicts("%msvc@:14.10")
+    conflicts("%apple-clang@:9")
 
     depends_on("cxx", type="build")
 
