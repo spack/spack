@@ -348,7 +348,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             args.extend(
                 [
                     define("SUNDIALS_INDEX_SIZE", intsize),
-                    define("SUNDIALS_INDEX_TYPE", "int{}_t".format(intsize)),
+                    define("SUNDIALS_INDEX_TYPE", f"int{intsize}_t"),
                 ]
             )
 
