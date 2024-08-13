@@ -18,5 +18,5 @@ class Depb(Package):
 
     def install(self, spec, prefix):
         # sanity_check_prefix requires something in the install directory
-        # Test requires overriding the one provided by `Package`
+        # `Package` does not define an `install` method by default
         mkdirp(prefix.bin)
