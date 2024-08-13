@@ -22,11 +22,11 @@ class MagicEnum(CMakePackage):
 
     variant("examples", default=False, description="Enable examples")
 
-    # minimum supported versions
-    conflicts("%clang@:4")
-    conflicts("%gcc@:8")
-    conflicts("%msvc@:14.10")
-    conflicts("%apple-clang@:9")
+    with default_args(msg="Compiler version is too old"):
+        conflicts("%clang@:4")
+        conflicts("%gcc@:8")
+        conflicts("%msvc@:14.10")
+        conflicts("%apple-clang@:9")
 
     depends_on("cxx", type="build")
 
