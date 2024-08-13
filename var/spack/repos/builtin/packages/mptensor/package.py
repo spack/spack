@@ -100,10 +100,8 @@ class Mptensor(CMakePackage):
             make = which("make")
             make(f"LDFLAGS={math_libs.ld_flags}")
 
-            mpirun = self.spec["mpi"].prefix.bin.mpirun
-            # mpiexec = Executable(mpirun)
-            mpiexec = which(mpirun)
-            mpiexec("-n", "1", "tensor_test.out")
+            mpirun = which(self.spec["mpi"].prefix.bin.mpirun)
+            mpirun("-n", "1", "tensor_test.out")
 
             # Test of mptensor has checker
             # and checker is abort when check detect any errors.
