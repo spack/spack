@@ -136,10 +136,10 @@ class Migraphx(CMakePackage):
             )
         return args
 
-    def test(self):
+    def test_unit_tests(self):
+        """Run installed UnitTests"""
         if self.spec.satisfies("@:5.5.0"):
-            print("Skipping: stand-alone tests")
-            return
-        test_dir = join_path(self.spec["migraphx"].prefix, "bin")
-        with working_dir(test_dir, create=True):
-            self.run_test("UnitTests")
+            raise SkipTest("Package must be installed as version @5.5.1 or later")
+        unit_tests = which(self.prefix.bin.UnitTests)
+        assert unit_tests is not None, "UnitTests is not installed!"
+        unit_tests()

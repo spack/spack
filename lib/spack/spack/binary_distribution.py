@@ -22,7 +22,7 @@ import urllib.parse
 import urllib.request
 import warnings
 from contextlib import closing
-from typing import Dict, Iterable, List, NamedTuple, Optional, Set, Tuple
+from typing import Dict, Iterable, NamedTuple, Optional, Set, Tuple
 
 import llnl.util.filesystem as fsys
 import llnl.util.lang
@@ -46,7 +46,6 @@ import spack.relocate as relocate
 import spack.repo
 import spack.stage
 import spack.store
-import spack.traverse as traverse
 import spack.util.archive
 import spack.util.crypto
 import spack.util.file_cache as file_cache
@@ -1199,59 +1198,6 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     # found
     if options.regenerate_index:
         generate_package_index(url_util.join(out_url, os.path.relpath(cache_prefix, stage_dir)))
-
-
-class NotInstalledError(spack.error.SpackError):
-    """Raised when a spec is not installed but picked to be packaged."""
-
-    def __init__(self, specs: List[Spec]):
-        super().__init__(
-            "Cannot push non-installed packages",
-            ", ".join(s.cformat("{name}{@version}{/hash:7}") for s in specs),
-        )
-
-
-def specs_to_be_packaged(
-    specs: List[Spec], root: bool = True, dependencies: bool = True
-) -> List[Spec]:
-    """Return the list of nodes to be packaged, given a list of specs.
-    Raises NotInstalledError if a spec is not installed but picked to be packaged.
-
-    Args:
-        specs: list of root specs to be processed
-        root: include the root of each spec in the nodes
-        dependencies: include the dependencies of each
-            spec in the nodes
-    """
-
-    if not root and not dependencies:
-        return []
-
-    # Filter packageable roots
-    with spack.store.STORE.db.read_transaction():
-        if root:
-            # Error on uninstalled roots, when roots are requested
-            uninstalled_roots = list(s for s in specs if not s.installed)
-            if uninstalled_roots:
-                raise NotInstalledError(uninstalled_roots)
-            roots = specs
-        else:
-            roots = []
-
-        if dependencies:
-            # Error on uninstalled deps, when deps are requested
-            deps = list(
-                traverse.traverse_nodes(
-                    specs, deptype="all", order="breadth", root=False, key=traverse.by_dag_hash
-                )
-            )
-            uninstalled_deps = list(s for s in deps if not s.installed)
-            if uninstalled_deps:
-                raise NotInstalledError(uninstalled_deps)
-        else:
-            deps = []
-
-    return [s for s in itertools.chain(roots, deps) if not s.external]
 
 
 def try_verify(specfile_path):

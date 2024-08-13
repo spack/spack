@@ -6,21 +6,21 @@
 from spack.package import *
 
 
-class Gcc(CompilerPackage, Package):
+class Llvm(Package, CompilerPackage):
     """Simple compiler package."""
 
     homepage = "http://www.example.com"
     url = "http://www.example.com/gcc-1.0.tar.gz"
 
-    version("1.0", md5="0123456789abcdef0123456789abcdef")
-    version("2.0", md5="abcdef0123456789abcdef0123456789")
-    version("3.0", md5="def0123456789abcdef0123456789abc")
+    version("18.1.8", md5="0123456789abcdef0123456789abcdef")
 
-    depends_on("conflict", when="@3.0")
+    variant(
+        "clang", default=True, description="Build the LLVM C/C++/Objective-C compiler frontend"
+    )
 
-    c_names = ["gcc"]
-    cxx_names = ["g++"]
-    fortran_names = ["gfortran"]
+    c_names = ["clang"]
+    cxx_names = ["clang++"]
+    fortran_names = ["flang"]
 
     def install(self, spec, prefix):
         # Create the minimal compiler that will fool `spack compiler find`

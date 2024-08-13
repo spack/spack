@@ -23,6 +23,7 @@ _os_map_before_23 = {
 _os_map = {
     "ubuntu20.04": "Ubuntu-20.04",
     "ubuntu22.04": "Ubuntu-22.04",
+    "debian12": "Ubuntu-22.04",
     "sles15": "SLES-15",
     "centos7": "RHEL-7",
     "centos8": "RHEL-8",

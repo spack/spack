@@ -2,11 +2,14 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import concurrent.futures
 import multiprocessing
 import os
 import sys
 import traceback
 from typing import Optional
+
+from spack.util.cpus import determine_number_of_jobs
 
 
 class ErrorFromWorker:
@@ -80,3 +83,24 @@ def imap_unordered(
             if isinstance(result, ErrorFromWorker):
                 raise RuntimeError(result.stacktrace if debug else str(result))
             yield result
+
+
+class SequentialExecutor(concurrent.futures.Executor):
+    """Executor that runs tasks sequentially in the current thread."""
+
+    def submit(self, fn, *args, **kwargs):
+        """Submit a function to be executed."""
+        future = concurrent.futures.Future()
+        try:
+            future.set_result(fn(*args, **kwargs))
+        except Exception as e:
+            future.set_exception(e)
+        return future
+
+
+def make_concurrent_executor() -> concurrent.futures.Executor:
+    """Can't use threading because it's unsafe, and can't use spawned processes because of globals.
+    That leaves only forking."""
+    if multiprocessing.get_start_method() == "fork":
+        return concurrent.futures.ProcessPoolExecutor(determine_number_of_jobs(parallel=True))
+    return SequentialExecutor()
