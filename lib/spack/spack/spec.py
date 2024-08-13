@@ -126,7 +126,8 @@ SPEC_FORMAT_RE = re.compile(
     r"(?:"  # this is one big or, with matches ordered by priority
     # OPTION 1: escaped character (needs to be first to catch opening \{)
     # Note that an unterminated \ at the end of a string is left untouched
-    r"(?:\\(.))" r"|"  # or
+    r"(?:\\(.))"
+    r"|"  # or
     # OPTION 2: an actual format string
     r"{"  # non-escaped open brace {
     r"([%@/]|[\w ][\w -]*=)?"  # optional sigil (or identifier or space) to print sigil in color
@@ -140,7 +141,8 @@ SPEC_FORMAT_RE = re.compile(
     r"(})?"  # finish format string with non-escaped close brace }, or missing if not present
     r"|"
     # OPTION 3: mismatched close brace (option 2 would consume a matched open brace)
-    r"(})" r")",  # brace
+    r"(})"  # brace
+    r")",
     re.IGNORECASE,
 )
 
@@ -4401,16 +4403,9 @@ class Spec:
             clr.cwrite(f, stream=out, color=color)
 
         def format_attribute(match_object: Match) -> str:
-            (
-                esc,
-                sig,
-                dep,
-                hash,
-                hash_len,
-                attribute,
-                close_brace,
-                unmatched_close_brace,
-            ) = match_object.groups()
+            (esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
+                match_object.groups()
+            )
             if esc:
                 return esc
             elif unmatched_close_brace:

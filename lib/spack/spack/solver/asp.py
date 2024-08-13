@@ -1994,7 +1994,7 @@ class SpackSolverSetup:
                         pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
                         if variant.propagate and vname not in pkg_cls.variants:
                             clauses.append(
-                                f.variant_propagation_candidate(spec.name, vname, value, spec.name)
+                                f.propagate(spec.name, vname, value, spec.name)
                             )
                             continue
 
