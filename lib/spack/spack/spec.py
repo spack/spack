@@ -3811,6 +3811,7 @@ class Spec(object):
                         try:
                             current = getattr(current, part)
                         except AttributeError:
+                            return # Avoids error during verbose output
                             parent = '.'.join(parts[:idx])
                             m = 'Attempted to format attribute %s.' % attribute
                             m += 'Spec.%s has no attribute %s' % (parent, part)
