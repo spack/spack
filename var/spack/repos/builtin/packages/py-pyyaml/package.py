@@ -10,7 +10,7 @@ class PyPyyaml(PythonPackage):
     """PyYAML is a YAML parser and emitter for Python."""
 
     homepage = "https://pyyaml.org/wiki/PyYAML"
-    pypi = "PyYAML/PyYAML-5.3.1.tar.gz"
+    pypi = "pyyaml/pyyaml-6.0.2.tar.gz"
     git = "https://github.com/yaml/pyyaml.git"
 
     maintainers("mathomp4")
@@ -20,8 +20,8 @@ class PyPyyaml(PythonPackage):
     # Advice for Maintainers:
     # PyYAML went from a mixed case tarfile name to a lowercase one in 6.0.2
     # (see url_for_version below). Since "spack checksum" does not use url_for_version,
-    # from now on, you'll need to use "spack checksum py-pyyaml x.y.z" because
-    # the versioned call into "spack checksum" does use url_for_version.
+    # for versions older than 6.0.2, you'll need to use "spack checksum py-pyyaml x.y.z"
+    # as we changed the pypi url above to lowercase.
     version("6.0.2", sha256="d584d9ec91ad65861cc08d42e834324ef890a082e591037abe114850ff7bbc3e")
     version("6.0.1", sha256="bfdf460b1736c775f2ba9f6a92bca30bc2095067b8a9d77876d1fad6cc3b4a43")
     version("6.0", sha256="68fb519c14306fec9720a2a5b45bc9f0c8d1b9c72adf45c37baedfcd949c35a2")
