@@ -774,7 +774,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     def test_nvector_serial(self):
         """Run serial N Vector test"""
 
-        self.run_sundials("nvector/serial/test_nvector_serial", ["10", "0"], False)
+        self.run_sundials(
+            join_path("nvector", "serial", "test_nvector_serial"), ["10", "0"], False
+        )
 
     def test_cvode(self):
         """Run CVODE test"""
@@ -782,7 +784,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+CVODE" not in self.spec:
             raise SkipTest("Package must be installed with +CVODE")
 
-        self.run_sundials("cvode/serial/cvAdvDiff_bnd", [], True)
+        self.run_sundials(join_path("cvode", "serial", "cvAdvDiff_bnd"), [], True)
 
     def test_cuda(self):
         """Run cuda test"""
@@ -790,7 +792,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+cuda" not in self.spec:
             raise SkipTest("Package must be installed with +cuda")
 
-        self.run_sundials("nvector/cuda/test_nvector_cuda", ["10", "0", "0"], True)
+        self.run_sundials(
+            join_path("nvector", "cuda", "test_nvector_cuda"), ["10", "0", "0"], True
+        )
 
     def test_cuda_cvode(self):
         """Run cuda CVODE test"""
@@ -798,7 +802,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+cuda" not in self.spec or "+CVODE" not in self.spec:
             raise SkipTest("Package must be installed with +cuda and +CVODE")
 
-        self.run_sundials("cvode/cuda/cvAdvDiff_kry_cuda", [], True)
+        self.run_sundials(join_path("cvode", "cuda", "cvAdvDiff_kry_cuda"), [], True)
 
     def test_rocm(self):
         """Run rocm test"""
@@ -806,7 +810,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" not in self.spec:
             raise SkipTest("Package must be installed with +rocm")
 
-        self.run_sundials("nvector/hip/test_nvector_hip", ["10", "0", "0"], True)
+        self.run_sundials(join_path("nvector", "hip", "test_nvector_hip"), ["10", "0", "0"], True)
 
     def test_rocm_cvode(self):
         """Run rocm CVODE test"""
@@ -814,7 +818,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" not in self.spec or "+CVODE" not in self.spec:
             raise SkipTest("Package must be installed with +rocm and +CVODE")
 
-        self.run_sundials("cvode/hip/cvAdvDiff_kry_hip", [], True)
+        self.run_sundials(join_path("cvode", "hip", "cvAdvDiff_kry_hip"), [], True)
 
     def test_sycl(self):
         """Run sycl test"""
@@ -822,7 +826,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+sycl" not in self.spec:
             raise SkipTest("Package must be installed with +sycl")
 
-        self.run_sundials("nvector/sycl/test_nvector_sycl", ["10", "0", "0"], True)
+        self.run_sundials(
+            join_path("nvector", "sycl", "test_nvector_sycl"), ["10", "0", "0"], True
+        )
 
     def test_sycl_cvode(self):
         """Run sycl CVODE test"""
