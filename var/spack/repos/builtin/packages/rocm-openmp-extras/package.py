@@ -309,6 +309,8 @@ class RocmOpenmpExtras(Package):
         llvm_prefix = self.spec["llvm-amdgpu"].prefix
         env.set("AOMP", "{0}".format(llvm_prefix))
         env.set("FC", "{0}/bin/flang".format(openmp_extras_prefix))
+        if self.spec.satisfies("@5.3.0:"):
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["rocm-openmp-extras"].prefix.lib)
         if self.spec.satisfies("+asan"):
             env.set("SANITIZER", 1)
             env.set("VERBOSE", 1)
