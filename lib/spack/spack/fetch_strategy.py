@@ -554,7 +554,7 @@ class OCIRegistryFetchStrategy(URLFetchStrategy):
 
         try:
             response = self._urlopen(self.url)
-        except urllib.error.URLError as e:
+        except (TimeoutError, urllib.error.URLError) as e:
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)

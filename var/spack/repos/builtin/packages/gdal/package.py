@@ -100,8 +100,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         version("2.0.1", sha256="2564c91ed8ed36274ee31002a25798f5babc4221e879cb5013867733d80f9920")
         version("2.0.0", sha256="91704fafeea2349c5e268dc1e2d03921b3aae64b05ee01d59fdfc1a6b0ffc061")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # Optional dependencies
     variant("archive", default=False, when="@3.7:", description="Optional for vsi7z VFS driver")
@@ -430,16 +430,19 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("googletest@1.10:", type="test")
 
     # https://gdal.org/development/rfc/rfc98_build_requirements_gdal_3_9.html
-    msg = "GDAL requires C++17 support"
-    conflicts("%gcc@:7", msg=msg)
-    conflicts("%clang@:4", msg=msg)
-    conflicts("%msvc@:19.14", msg=msg)
+    with default_args(when="@3.9:", msg="GDAL requires C++17 support"):
+        conflicts("%gcc@:7")
+        conflicts("%clang@:4")
+        conflicts("%msvc@:19.14")
 
     # https://gdal.org/development/rfc/rfc68_cplusplus11.html
-    msg = "GDAL requires C++11 support"
-    conflicts("%gcc@:4.8.0", msg=msg)
-    conflicts("%clang@:3.2", msg=msg)
-    conflicts("%msvc@:13", msg=msg)
+    with default_args(when="@2.3:", msg="GDAL requires C++11 support"):
+        conflicts("%gcc@:4.8.0")
+        conflicts("%clang@:3.2")
+        conflicts("%msvc@:13")
+
+    # https://github.com/OSGeo/gdal/issues/8693
+    conflicts("%gcc@11:", when="@:3.6")
 
     # https://github.com/OSGeo/gdal/issues/5994
     conflicts("~png", when="@3:3.5.0")

@@ -84,7 +84,6 @@ properties: Dict[str, Any] = {
             "build_language": {"type": "string"},
             "build_jobs": {"type": "integer", "minimum": 1},
             "ccache": {"type": "boolean"},
-            "concretizer": {"type": "string", "enum": ["original", "clingo"]},
             "db_lock_timeout": {"type": "integer", "minimum": 1},
             "package_lock_timeout": {
                 "anyOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]
@@ -98,9 +97,9 @@ properties: Dict[str, Any] = {
             "aliases": {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}},
         },
         "deprecatedProperties": {
-            "properties": ["terminal_title"],
-            "message": "config:terminal_title has been replaced by "
-            "install_status and is ignored",
+            "properties": ["concretizer"],
+            "message": "Spack supports only clingo as a concretizer from v0.23. "
+            "The config:concretizer config option is ignored.",
             "error": False,
         },
     }

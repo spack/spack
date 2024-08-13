@@ -10,7 +10,7 @@ class Unzip(MakefilePackage):
     """Unzip is a compression and file packaging/archive utility."""
 
     homepage = "http://www.info-zip.org/Zip.html"
-    url = "http://downloads.sourceforge.net/infozip/unzip60.tar.gz"
+    url = "https://downloads.sourceforge.net/infozip/unzip60.tar.gz"
 
     license("custom")
 
