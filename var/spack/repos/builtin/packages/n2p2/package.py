@@ -91,15 +91,15 @@ class N2p2(MakefilePackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        cache_extra_test_sources(self, ["src"])
+        cache_extra_test_sources(self, ["src", "test"])
 
     def test_n2p2(self):
         """Run benchmark tests"""
         make = which("make")
-        with working_dir("test"):
+        with working_dir(self.test_suite.current_test_cache_dir.test):
             make("clean")
         print("Calling make inside src dir")
-        with working_dir("src"):
+        with working_dir(self.test_suite.current_test_cache_dir.src):
             make("clean")
             make(
                 "MODE=test",
