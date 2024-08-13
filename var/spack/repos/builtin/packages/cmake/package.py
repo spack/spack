@@ -396,8 +396,6 @@ class Cmake(Package):
         env.set(f"{dependent_spec.name.upper()}_DIR", dependent_spec.prefix)
         env.set(f"{dependent_spec.name.upper()}_ROOT", dependent_spec.prefix)
 
-
-
     @property
     def libs(self):
         """CMake has no libraries, so if you ask for `spec['cmake'].libs`
