@@ -14,7 +14,7 @@ class Fastjson(MavenPackage):
     homepage = "https://github.com/alibaba/fastjson/wiki"
     url = "https://github.com/alibaba/fastjson2/archive/2.0.52.tar.gz"
 
-    license("Apache-2.0")
+    license("Apache-2.0", checked_by="wdconinc")
 
     version("2.0.52", sha256="23c84854da465d8cff4e252bf20ef4b82cf2c7bc57944b9a316fd31a8977d2a1")
     version("1.2.83", sha256="82fffe7859b1b6630f9a5e9b11c3cc5d043ba91f578d30cd1a60afa369ad448b")
