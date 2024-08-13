@@ -15,7 +15,8 @@ class PyPyyaml(PythonPackage):
 
     license("MIT")
 
-    # NOTE: PyYAML went from a mixed case tarfile name to a lowercase one in 6.0.2
+    # Advice for Maintainers:
+    # PyYAML went from a mixed case tarfile name to a lowercase one in 6.0.2
     # (see url_for_version below). Since "spack checksum" does not use url_for_version,
     # from now on, you'll need to use "spack checksum py-pyyaml x.y.z" because
     # the versioned call into "spack checksum" does use url_for_version.
