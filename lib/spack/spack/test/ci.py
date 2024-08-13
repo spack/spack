@@ -15,7 +15,7 @@ import spack.error
 import spack.paths as spack_paths
 import spack.spec
 import spack.util.git
-
+import spack.util.gpg
 from spack.version import Version
 
 
