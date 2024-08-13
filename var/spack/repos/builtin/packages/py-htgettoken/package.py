@@ -22,7 +22,7 @@ class PyHtgettoken(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("2.0-2", commit="e777edb54eb28194351aee0a818aa70489017ab0")
+    version("2.0-2", sha256="80b1b15cc4957f9d1cb5e71a1fbdc5d0ac82de46a888aeb7fa503b1465978b13")
     # The following versions refer to setuptools-buildable commits after 1.16;
     # they are special reproducible version numbers from `git describe`
     version("1.16-33-g3788bb4", commit="3788bb4733e5e8f856cee51566df9a36cbfe097d")
