@@ -5,9 +5,7 @@
 
 
 import llnl.util.tty as tty
-
 import os
-
 from spack.package import *
 
 
