@@ -69,7 +69,7 @@ class N2p2(MakefilePackage):
         )
 
     def build(self, spec, prefix):
-        with working_dir(self.test_suite.current_test_cache_dir.src):
+        with working_dir("src"):
             # Add --no-print-directory flag to avoid issues when variables set
             # to value of shell function with cd cmd used as target (see #43192)
             make("--no-print-directory")
