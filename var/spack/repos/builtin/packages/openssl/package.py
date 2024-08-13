@@ -68,6 +68,8 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     # On Cray DVS mounts, we can't make symlinks to /etc/ssl/openssl.cnf,
     # either due to a bug or because DVS is not intended to be POSIX compliant.
     # Therefore, stick to system agnostic certs=mozilla.

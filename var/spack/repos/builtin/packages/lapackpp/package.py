@@ -68,6 +68,8 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
         "2020.10.00", sha256="5f6ab3bd3794711818a3a50198efd29571520bf455e13ffa8ba50fa8376d7d1a"
     )
 
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Build shared library")
     variant("sycl", default=False, description="Build support for the SYCL backend")
 

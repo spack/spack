@@ -21,13 +21,16 @@ class W3m(AutotoolsPackage):
     # Feel free to use Debian's branch as you need.
     # Currently, Arch and Ubuntu (and Debian derivatives) use Debian's branch.
     # Also, Gentoo, Fedora and openSUSE switched to Debian's branch.
-    homepage = "http://w3m.sourceforge.net/index.en.html"
+    homepage = "https://w3m.sourceforge.net/index.en.html"
     url = "https://downloads.sourceforge.net/project/w3m/w3m/w3m-0.5.3/w3m-0.5.3.tar.gz"
     maintainers("ronin_gw")
 
     license("MIT")
 
     version("0.5.3", sha256="e994d263f2fd2c22febfbe45103526e00145a7674a0fda79c822b97c2770a9e3")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # mandatory dependency
     depends_on("bdw-gc")

@@ -19,6 +19,8 @@ class ActsAlgebraPlugins(CMakePackage):
 
     version("0.24.0", sha256="f44753e62b1ba29c28ab86b282ab67ac6028a0f9fe41e599b7fc6fc50b586b62")
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "cxxstd",
         default="17",

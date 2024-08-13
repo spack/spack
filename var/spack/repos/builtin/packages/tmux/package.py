@@ -43,6 +43,8 @@ class Tmux(AutotoolsPackage):
     version("1.9a", sha256="c5e3b22b901cf109b20dab54a4a651f0471abd1f79f6039d79b250d21c2733f5")
     version("master", branch="master")
 
+    depends_on("c", type="build")  # generated
+
     variant(
         "utf8proc", default=False, description="Build with UTF-8 support from utf8proc library"
     )

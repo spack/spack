@@ -30,6 +30,9 @@ class Dbus(AutotoolsPackage):
     version("1.8.4", sha256="3ef63dc8d0111042071ee7f7bafa0650c6ce2d7be957ef0b7ec269495a651ff8")
     version("1.8.2", sha256="5689f7411165adc953f37974e276a3028db94447c76e8dd92efe910c6d3bae08")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("xml_docs", default=False, description="Build XML documentation")
     variant("system-socket", default="default", description="Location for the DBus system socket")
 

@@ -153,6 +153,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         "0.4.0", tag="v0.4.0", commit="31b2a48192542c2da426885baa5af0ed57606b78", submodules="True"
     )
 
+    depends_on("cxx", type="build")  # generated
+
     # export targets when building pre-2.4.0 release with BLT 0.4.0+
     patch(
         "https://github.com/LLNL/RAJA/commit/eca1124ee4af380d6613adc6012c307d1fd4176b.patch?full_index=1",

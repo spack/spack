@@ -5,6 +5,7 @@
 import collections
 import collections.abc
 import contextlib
+import errno
 import os
 import pathlib
 import re
@@ -787,6 +788,23 @@ class ViewDescriptor:
 
         root_dirname = os.path.dirname(self.root)
         tmp_symlink_name = os.path.join(root_dirname, "._view_link")
+
+        # Remove self.root if is it an empty dir, since we need a symlink there. Note that rmdir
+        # fails if self.root is a symlink.
+        try:
+            os.rmdir(self.root)
+        except (FileNotFoundError, NotADirectoryError):
+            pass
+        except OSError as e:
+            if e.errno == errno.ENOTEMPTY:
+                msg = "it is a non-empty directory"
+            elif e.errno == errno.EACCES:
+                msg = "of insufficient permissions"
+            else:
+                raise
+            raise SpackEnvironmentViewError(
+                f"The environment view in {self.root} cannot not be created because {msg}."
+            ) from e
 
         # Create a new view
         try:
@@ -1626,9 +1644,8 @@ class Environment:
                 i += 1
 
         # Ensure we don't try to bootstrap clingo in parallel
-        if spack.config.get("config:concretizer", "clingo") == "clingo":
-            with spack.bootstrap.ensure_bootstrap_configuration():
-                spack.bootstrap.ensure_clingo_importable_or_raise()
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            spack.bootstrap.ensure_clingo_importable_or_raise()
 
         # Ensure all the indexes have been built or updated, since
         # otherwise the processes in the pool may timeout on waiting

@@ -27,6 +27,8 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
     version("11.3.0", sha256="d057cc2f73ecca06fae8b9c270d9e14116203abfd211a704810cc50a453b4c9e")
     version("11.2.0", sha256="c33361f117a347a63f6996ea97446d17f1c038f1a1f533e502464235076923e2")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("all", default=False, description="Enable optional py-scipy, optuna, and cython")
 
     depends_on("python@3.7:", when="@:11", type=("build", "run"))

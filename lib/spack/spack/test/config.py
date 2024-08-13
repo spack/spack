@@ -306,14 +306,14 @@ def test_add_config_path(mutable_config):
 
 @pytest.mark.regression("17543,23259")
 def test_add_config_path_with_enumerated_type(mutable_config):
-    spack.config.add("config:concretizer:clingo")
-    assert spack.config.get("config")["concretizer"] == "clingo"
+    spack.config.add("config:flags:keep_werror:all")
+    assert spack.config.get("config")["flags"]["keep_werror"] == "all"
 
-    spack.config.add("config:concretizer:original")
-    assert spack.config.get("config")["concretizer"] == "original"
+    spack.config.add("config:flags:keep_werror:specific")
+    assert spack.config.get("config")["flags"]["keep_werror"] == "specific"
 
     with pytest.raises(spack.config.ConfigError):
-        spack.config.add("config:concretizer:foo")
+        spack.config.add("config:flags:keep_werror:foo")
 
 
 def test_add_config_filename(mock_low_high_config, tmpdir):
@@ -1241,13 +1241,13 @@ def test_license_dir_config(mutable_config, mock_packages):
     expected_dir = spack.paths.default_license_dir
     assert spack.config.get("config:license_dir") == expected_dir
     assert spack.package_base.PackageBase.global_license_dir == expected_dir
-    assert spack.repo.PATH.get_pkg_class("a").global_license_dir == expected_dir
+    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == expected_dir
 
     rel_path = os.path.join(os.path.sep, "foo", "bar", "baz")
     spack.config.set("config:license_dir", rel_path)
     assert spack.config.get("config:license_dir") == rel_path
     assert spack.package_base.PackageBase.global_license_dir == rel_path
-    assert spack.repo.PATH.get_pkg_class("a").global_license_dir == rel_path
+    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == rel_path
 
 
 @pytest.mark.regression("22547")

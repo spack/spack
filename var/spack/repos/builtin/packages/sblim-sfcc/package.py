@@ -18,6 +18,9 @@ class SblimSfcc(AutotoolsPackage):
     version("2_2_7", sha256="bb85bc75efd112411eb76e83a38413a33b3fb8b6b725c8d08fe326efcbea427f")
     version("2_2_6", sha256="65a8b70047c449f8b60e519ec1a47aa50b6476d3876a698e8484467650e9ee78")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")

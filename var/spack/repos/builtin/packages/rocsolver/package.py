@@ -58,6 +58,9 @@ class Rocsolver(CMakePackage):
         version("5.3.3", sha256="d2248b5e2e0b20e08dd1ee5408e38deb02ecd28096dc7c7f2539351df6cb6ad5")
         version("5.3.0", sha256="4569f860d240d50e94e77d498050f5cafe5ad11daddaead3e7e9eaa1957878a7")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.8:", type="build")
     depends_on("fmt@7:", type="build", when="@4.5.0:")
     depends_on("fmt@7:8.0.1", type="test", when="@5.6:")

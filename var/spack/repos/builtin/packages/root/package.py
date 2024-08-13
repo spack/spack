@@ -87,6 +87,10 @@ class Root(CMakePackage):
     version("6.06.04", sha256="ab86dcc80cbd8e704099af0789e23f49469932ac4936d2291602301a7aa8795b")
     version("6.06.02", sha256="18a4ce42ee19e1a810d5351f74ec9550e6e422b13b5c58e0c3db740cdbc569d1")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # ###################### Patches ##########################
 
     # Widely used patch (CMS, FNAL) to increase the size of static
@@ -133,6 +137,13 @@ class Root(CMakePackage):
         "https://github.com/root-project/root/commit/14838b35600b08278e69bc3d8d8669773bc11399.patch?full_index=1",
         sha256="4647898ef28cb1adbaacdeedb04b417d69ccbaf02fc2b3aab20e07c0b2a96a0f",
         when="@6.30:6.30.04",
+    )
+
+    # Fix TUri to be PCRE2 compatible
+    patch(
+        "https://github.com/root-project/root/pull/15988.patch?full_index=1",
+        sha256="9de4aa66f791dc3a1b9521995552b2d28b57be88a96a2e9e369977e32da26eb0",
+        when="@6.32.0:6.32.02",
     )
 
     if sys.platform == "darwin":
@@ -767,7 +778,7 @@ class Root(CMakePackage):
             add_include_path("xproto")
         if "+opengl" in spec and "platform=darwin" not in spec:
             add_include_path("glew")
-            add_include_path("mesa-glu")
+            add_include_path("glu")
         if "platform=darwin" in spec:
             # Newer deployment targets cause fatal errors in rootcling, so
             # override with an empty value even though it may lead to link

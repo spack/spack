@@ -19,6 +19,8 @@ class LibnetfilterConntrack(AutotoolsPackage):
     version("1.0.3", sha256="e2129d7c0346c7140355d643da8e3409cbd755689ea889bc0d6dbd557f1b5671")
     version("1.0.2", sha256="97f641a2e47053bd87bc817292519d6661e8f84a22d3314724b83b9f5eaddbff")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
