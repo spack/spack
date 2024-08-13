@@ -69,7 +69,7 @@ class N2p2(MakefilePackage):
         )
 
     def build(self, spec, prefix):
-        with working_dir("src"):
+        with working_dir(self.test_suite.current_test_cache_dir.src):
             # Add --no-print-directory flag to avoid issues when variables set
             # to value of shell function with cd cmd used as target (see #43192)
             make("--no-print-directory")
@@ -91,7 +91,8 @@ class N2p2(MakefilePackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        cache_extra_test_sources(self, ["src", "test"])
+        # cache_extra_test_sources(self, [".", "src", "test"])
+        cache_extra_test_sources(self, ["."])
 
     def test_n2p2(self):
         """Run benchmark tests"""
@@ -114,7 +115,7 @@ class N2p2(MakefilePackage):
             )
             make("pynnp", "MODE=test")
         print("Making and running the test")
-        with working_dir("test"):
+        with working_dir(self.test_suite.current_test_cache_dir.test):
             if self.spec.satisfies("%fj"):
                 f = FileFilter(join_path("cpp", "nnp_test.h"))
                 mpirun = self.spec["mpi"].prefix.bin.mpirun
