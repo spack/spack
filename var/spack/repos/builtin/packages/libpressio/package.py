@@ -429,7 +429,7 @@ class Libpressio(CMakePackage, CudaPackage):
         cmake(*args)
         cmake("--build", ".")
 
-        exe = which("./pressio_smoke_tests")
+        exe = which("pressio_smoke_tests")
         out = exe(output=str.split, error=str.split)
 
         expected = "all passed"
