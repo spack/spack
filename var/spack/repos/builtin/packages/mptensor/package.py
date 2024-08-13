@@ -89,8 +89,8 @@ class Mptensor(CMakePackage):
             makefile.filter("CXX =.*", f"CXX ={self.spec['mpi'].mpicxx}")
             makefile.filter("CXXFLAGS =.*", f"CXXFLAGS ={self.compiler.cxx11_flag}")
 
-    def test_mpi(self):
-        """test with +mpi"""
+    def test_mptensor(self):
+        """test if mptensor works"""
         if "+mpi" not in self.spec:
             raise SkipTest("Package must be installed with +mpi")
 
