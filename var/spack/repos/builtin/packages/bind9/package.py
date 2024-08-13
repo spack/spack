@@ -30,8 +30,5 @@ class Bind9(AutotoolsPackage):
     depends_on("liburcu@0.14:", type="link", when="@9.20:")
 
     def configure_args(self):
-        args = [
-            "--without-python",
-            "--disable-doh",
-        ]
+        args = ["--without-python", "--disable-doh"]
         return args
