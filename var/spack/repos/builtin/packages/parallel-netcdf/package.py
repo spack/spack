@@ -174,7 +174,7 @@ class ParallelNetcdf(AutotoolsPackage):
             exe(*options)
 
             mpiexe_list = [
-                self.spec["mpi"].prefix.bin.srun,
+                "srun",
                 self.spec["mpi"].prefix.bin.mpirun,
                 self.spec["mpi"].prefix.bin.mpiexec,
             ]
