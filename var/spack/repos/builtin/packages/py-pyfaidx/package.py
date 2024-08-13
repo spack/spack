@@ -25,6 +25,6 @@ class PyPyfaidx(PythonPackage):
     depends_on("py-setuptools@45:", type="build", when="@0.8.1.2:")
     depends_on("py-setuptools-scm", type="build", when="@0.8.1.2:")
     depends_on("py-importlib-metadata", type="build", when="@0.8.1.2:")
-    depends_on("py-packaging", type="build", when="@0.8.1.2:")
+    depends_on("py-packaging", type=("build", "run"), when="@0.8.1.2:")
 
     depends_on("py-six", type=("build", "run"), when="@:0.6.4")
