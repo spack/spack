@@ -87,7 +87,7 @@ class Mptensor(CMakePackage):
         with working_dir(join_path(install_test_root(self)), create=False):
             makefile = FileFilter("Makefile.option")
             makefile.filter("CXX =.*", f"CXX ={self.spec['mpi'].mpicxx}")
-            makefile.filter("CXXFLAGS =.*", "CXXFLAGS ={self.compiler.cxx11_flag}")
+            makefile.filter("CXXFLAGS =.*", f"CXXFLAGS ={self.compiler.cxx11_flag}")
 
     def test_mpi(self):
         """test with +mpi"""
