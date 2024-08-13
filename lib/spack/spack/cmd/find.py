@@ -374,13 +374,9 @@ def find(parser, args):
                     concretized_suffix += " (show with `spack find -c`)"
 
             pkg_type = "loaded" if args.loaded else "installed"
-            spack.cmd.print_how_many_pkgs(
-                already_installed, pkg_type, suffix=installed_suffix
-            )
+            spack.cmd.print_how_many_pkgs(already_installed, pkg_type, suffix=installed_suffix)
 
             if env:
                 spack.cmd.print_how_many_pkgs(
-                    to_be_installed,
-                    "concretized",
-                    suffix=concretized_suffix,
+                    to_be_installed, "concretized", suffix=concretized_suffix
                 )
