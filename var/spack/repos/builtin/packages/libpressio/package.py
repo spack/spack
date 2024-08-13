@@ -425,7 +425,7 @@ class Libpressio(CMakePackage, CudaPackage):
         args.append(f"-S{join_path(self.test_suite.current_test_cache_dir, 'test', 'smoke_test')}")
         args.append(f"-DCMAKE_PREFIX_PATH={self.spec['libstdcompat'].prefix};{self.prefix}")
 
-        cmake = which("cmake")
+        cmake = self.spec["cmake"].command
         cmake(*args)
         cmake("--build", ".")
 
