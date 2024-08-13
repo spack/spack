@@ -3,6 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
+import llnl.util.tty as tty
+
+import os
+
 from spack.package import *
 
 
@@ -180,6 +185,7 @@ class ParallelNetcdf(AutotoolsPackage):
             ]
 
             for mpiexe in mpiexe_list:
+                tty.info(f"Attempting to build and launch with {os.path.basename(mpiexe)}")
                 try:
                     exe = which(mpiexe)
                     exe("-n", "1", test_exe)
@@ -189,3 +195,5 @@ class ParallelNetcdf(AutotoolsPackage):
 
                 except (Exception, ProcessError) as err:
                     tty.info(f"Skipping {mpiexe}: {str(err)}")
+
+            assert False, "No MPI executable was found"
