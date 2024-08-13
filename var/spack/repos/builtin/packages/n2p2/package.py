@@ -91,14 +91,14 @@ class N2p2(MakefilePackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        # cache_extra_test_sources(self, [".", "src", "test"])
         cache_extra_test_sources(self, ["."])
 
-    def test_n2p2(self):
-        """Run benchmark tests"""
+    def test_result_check(self):
+        """Build and run result-check.sh"""
         make = which("make")
         with working_dir(self.test_suite.current_test_cache_dir.test):
             make("clean")
+
         print("Calling make inside src dir")
         with working_dir(self.test_suite.current_test_cache_dir.src):
             make("clean")
@@ -114,6 +114,7 @@ class N2p2(MakefilePackage):
                 f"PROJECT_EIGEN={self.spec['eigen'].prefix.include.eigen3}",
             )
             make("pynnp", "MODE=test")
+
         print("Making and running the test")
         with working_dir(self.test_suite.current_test_cache_dir.test):
             if self.spec.satisfies("%fj"):
@@ -132,5 +133,5 @@ class N2p2(MakefilePackage):
 
             test_dir = self.test_suite.current_test_data_dir
             expected_file = join_path(test_dir, f"expected-result-{self.version}.txt")
-            check_n2p2 = Executable(join_path(test_dir, "result-check.sh"))
-            check_n2p2("./output_cpp.txt", "./output_python.txt", expected_file)
+            result_check = which(join_path(test_dir, "result-check.sh"))
+            result_check("./output_cpp.txt", "./output_python.txt", expected_file)
