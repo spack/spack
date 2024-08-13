@@ -187,8 +187,9 @@ class ParallelNetcdf(AutotoolsPackage):
             for mpiexe in mpiexe_list:
                 tty.info(f"Attempting to build and launch with {os.path.basename(mpiexe)}")
                 try:
+                    args = ["--immediate=30"] if exe == "srun" else []
                     exe = which(mpiexe)
-                    exe("-n", "1", test_exe)
+                    exe("-n", "1", test_exe, args)
                     rm = which("rm")
                     rm("-f", "column_wise")
                     return
@@ -196,4 +197,4 @@ class ParallelNetcdf(AutotoolsPackage):
                 except (Exception, ProcessError) as err:
                     tty.info(f"Skipping {mpiexe}: {str(err)}")
 
-            assert False, "No MPI executable was found"
+        assert False, "No MPI executable was found"
