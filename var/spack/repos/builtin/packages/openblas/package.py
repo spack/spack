@@ -260,9 +260,7 @@ class Openblas(CMakePackage, MakefilePackage):
         msg="Visual Studio does not support OpenBLAS dynamic dispatch features",
     )
 
-    conflicts("target=x86_64_v4", when="%intel@2021")
-    conflicts("target=zen4", when="%intel@2021")
-    conflicts("target=skylake_avx512", when="%intel@2021")
+    conflicts("target=x86_64_v4:", when="%intel@2021")
 
     depends_on("perl", type="build")
 
