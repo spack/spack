@@ -204,9 +204,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
                 ]
 
                 for test, desc in tests:
-                    with test_part(
-                        self, f"test_c_{test}", purpose=f"MAGMA smoke test - {desc}"
-                    ):
+                    with test_part(self, f"test_c_{test}", purpose=f"MAGMA smoke test - {desc}"):
                         exe = which(test)
                         exe()
 
