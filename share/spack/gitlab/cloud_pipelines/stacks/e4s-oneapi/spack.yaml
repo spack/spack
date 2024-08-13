@@ -171,6 +171,7 @@ spack:
   - upcxx
   - variorum
   - wannier90
+  - wps
   - wrf
   - xyce +mpi +shared +pymi +pymi_static_tpls
   # INCLUDED IN ECP DAV CPU
