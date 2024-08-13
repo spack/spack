@@ -16,6 +16,8 @@ import spack.paths as spack_paths
 import spack.spec
 import spack.util.git
 
+from spack.version import Version
+
 
 @pytest.fixture
 def repro_dir(tmp_path):
@@ -68,6 +70,45 @@ class FakeWebResponder:
         self._read.pop()
         self._content.pop()
         return None
+
+
+def test_get_added_versions_new_checksum(monkeypatch):
+    def git(*args, **kwargs):
+        with open(f"{spack.paths.test_path}/data/ci/git/new-checksum.diff", "r") as test_file:
+            return test_file.read()
+
+    monkeypatch.setattr(spack.util.executable.Executable, "__call__", git)
+
+    checksum_versions = {
+        "eedac958431876cebe243925dc354b0c21915d1bc84c5678a8073f0ec91d6a4c": Version("2.54.0"),
+        "683d0dee90e1d24a6673d13680e0d41963ddc6dd88580ab5119acec790d1b4d7": Version("2.50.0"),
+        "e839ea302ad99b70ce3efcb903f938ecbbb919798e49bc2f2034ad506ae0b0f5": Version("2.49.2"),
+        "1ea3f451fb7002c1fb95a7fab21e9ab16591058492628fe264c5878e79ec7c90": Version("2.43.1"),
+    }
+
+    added_versions = ci.get_added_versions(checksum_versions, "/mock/path/placeholder")
+    assert len(added_versions) == 1
+    assert added_versions[0] == Version("2.54.0")
+
+
+def test_get_added_versions_new_commit(monkeypatch):
+    def git(*args, **kwargs):
+        with open(f"{spack.paths.test_path}/data/ci/git/new-commit.diff", "r") as test_file:
+            return test_file.read()
+
+    monkeypatch.setattr(spack.util.executable.Executable, "__call__", git)
+
+    checksum_versions = {
+        "cf90dfd3098bef5b3c22d5ab026173b3c357f2dd": Version("0.13.0"),
+        "b0ba8b728fb8a96a36bea085a2788b9023d16328": Version("0.12.1"),
+        "a685ab1499d6560c523f0dbce2890dc140671e43": Version("0.12.0"),
+        "67709b638224ac03820226c6744d8b6ead59184c": Version("0.11.0"),
+        "b57081f039bd3f8f82210e8896e336e3c3a6869b": Version("0.10.1"),
+    }
+
+    added_versions = ci.get_added_versions(checksum_versions, "/mock/path/placeholder")
+    assert len(added_versions) == 1
+    assert added_versions[0] == Version("0.12.1")
 
 
 def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
