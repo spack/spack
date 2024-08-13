@@ -11,6 +11,8 @@ class PyPyfaidx(PythonPackage):
 
     pypi = "pyfaidx/pyfaidx-0.5.5.2.tar.gz"
 
+    maintainers("snehring")
+
     license("BSD-3-Clause")
 
     version("0.8.1.2", sha256="d8452470455b1e778f93969447db8ea24deb4624c7c40769516459cb6f87bc33")
