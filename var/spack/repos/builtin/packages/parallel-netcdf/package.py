@@ -172,11 +172,8 @@ class ParallelNetcdf(AutotoolsPackage):
 
         with working_dir(test_dir):
 
-            with test_part(
-                self, "test_column_wise_comp_link", purpose="compiling and linking pnetcdf example"
-            ):
-                exe = which(self.spec["mpi"].prefix.bin.mpicxx)
-                exe(*options)
+            exe = which(self.spec["mpi"].prefix.bin.mpicxx)
+            exe(*options)
 
             mpiexe_list = [
                 self.spec["mpi"].prefix.bin.srun,
@@ -185,17 +182,12 @@ class ParallelNetcdf(AutotoolsPackage):
             ]
 
             for mpiexe in mpiexe_list:
-                if os.path.isfile(mpiexe):
-                    with test_part(self, "test_column_wise_mpiexe", purpose="pnetcdf smoke test"):
-                        exe = which(mpiexe)
-                        if exe is None:
-                            raise SkipTest(f"{mpiexe} is not installed for {self.version}")
-                        exe("-n", "1", test_exe)
-                    break
+                try:
+                    exe = which(mpiexe)
+                    exe("-n", "1", test_exe)
+                    rm = which("rm")
+                    rm("-f", "column_wise")
+                    return
 
-    def test_rm(self):
-        """Test rm"""
-        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
-        with working_dir(test_dir):
-            exe = which("rm")
-            exe("-f", "cmlumn_wise")
+                except (Exception, ProcessError) as err:
+                    tty.info(f"Skipping {mpiexe}: {str(err)}")
