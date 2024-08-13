@@ -348,6 +348,9 @@ class Python(Package):
     # datetime.now(timezone.utc) segfaults
     conflicts("@3.9:", when="%oneapi@2022.2.1:2023")
 
+    # Per discussion https://github.com/spack/spack/pull/44226
+    conflicts("~ctypes", when="@3.12:")
+
     # Used to cache various attributes that are expensive to compute
     _config_vars: Dict[str, Dict[str, str]] = {}
 
@@ -665,8 +668,9 @@ class Python(Package):
         if cflags:
             config_args.append("CFLAGS={0}".format(" ".join(cflags)))
 
-        if self.version >= Version("3.12.0") and sys.platform == "darwin":
-            config_args.append("CURSES_LIBS={0}".format(spec["ncurses"].libs.link_flags))
+        if sys.platform == "darwin":
+            if self.version >= Version("3.12.0") and self.version < Version("3.13.0"):
+                config_args.append("CURSES_LIBS={0}".format(spec["ncurses"].libs.link_flags))
 
         return config_args
 
