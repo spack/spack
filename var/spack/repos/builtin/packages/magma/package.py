@@ -217,7 +217,9 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir):
-            make("fortran")
-            example_f = which("example_f")
-            example_f()
-            make("clean")
+            pkg_config_path = self.prefix.lib.pkgconfig
+            with spack.util.environment.set_env(PKG_CONFIG_PATH=pkg_config_path):
+                make("fortran")
+                example_f = which("example_f")
+                example_f()
+                make("clean")
