@@ -131,8 +131,8 @@ class Migraphx(CMakePackage):
             )
         return args
 
-    def test_drivers(self):
-        """Test drivers"""
+    def test_unit_tests(self):
+        """Run installed UnitTests"""
         if self.spec.satisfies("@:5.5.0"):
             raise SkipTest("Package must be installed as version @5.5.1 or later")
         unit_tests = which(self.prefix.bin.UnitTests)
