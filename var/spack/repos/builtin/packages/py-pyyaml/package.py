@@ -13,6 +13,8 @@ class PyPyyaml(PythonPackage):
     pypi = "PyYAML/PyYAML-5.3.1.tar.gz"
     git = "https://github.com/yaml/pyyaml.git"
 
+    maintainers("mathomp4")
+
     license("MIT")
 
     # Advice for Maintainers:
