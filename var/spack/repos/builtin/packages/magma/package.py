@@ -211,7 +211,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
                 make("clean")
 
     def test_fortran(self):
-        """MAGMA smoke test - Fortran interface"""
+        """Run Fortran example"""
         if "+fortran" not in self.spec:
             raise SkipTest("Package must be installed with +fortran")
 
