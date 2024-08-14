@@ -22,6 +22,10 @@ class Cbflib(MakefilePackage):
 
     version("0.9.2", sha256="367e37e1908a65d5472e921150291332823a751206804866e752b793bca17afc")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("m4", type="build")
 
     patch("cbf_f16.patch")

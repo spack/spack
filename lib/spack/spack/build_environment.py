@@ -1473,7 +1473,7 @@ class ChildError(InstallError):
             out.write("  {0}\n".format(self.log_name))
 
         # Also output the test log path IF it exists
-        if self.context != "test":
+        if self.context != "test" and have_log:
             test_log = join_path(os.path.dirname(self.log_name), spack_install_test_log)
             if os.path.isfile(test_log):
                 out.write("\nSee test log for details:\n")

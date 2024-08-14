@@ -18,7 +18,6 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
 
-import spack.compilers
 import spack.error
 import spack.schema.environment
 import spack.spec
@@ -278,11 +277,6 @@ class Compiler:
     @property
     def opt_flags(self):
         return ["-O", "-O0", "-O1", "-O2", "-O3"]
-
-    # Cray PrgEnv name that can be used to load this compiler
-    PrgEnv: Optional[str] = None
-    # Name of module used to switch versions of this compiler
-    PrgEnv_compiler: Optional[str] = None
 
     def __init__(
         self,

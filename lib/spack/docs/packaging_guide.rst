@@ -2344,10 +2344,10 @@ you set ``parallel`` to ``False`` at the package level, then each call
 to ``make()`` will be sequential by default, but packagers can call
 ``make(parallel=True)`` to override it.
 
-Note that the `--jobs` option works out of the box for all standard
+Note that the ``--jobs`` option works out of the box for all standard
 build systems. If you are using a non-standard build system instead, you
-can use the variable `make_jobs` to extract the number of jobs specified
-by the `--jobs` option:
+can use the variable ``make_jobs`` to extract the number of jobs specified
+by the ``--jobs`` option:
 
 .. code-block:: python
    :emphasize-lines: 7, 11
@@ -5589,7 +5589,8 @@ compiler configuration. This is accomplished by setting the package's
    Setting the property to ``True`` ensures access to the compiler through
    canonical environment variables (e.g., ``CC``, ``CXX``, ``FC``, ``F77``).
    It also gives access to build dependencies like ``cmake`` through their
-   ``spec objects`` (e.g., ``self.spec["cmake"].prefix.bin.cmake``).
+   ``spec objects`` (e.g., ``self.spec["cmake"].prefix.bin.cmake`` for the
+   path or ``self.spec["cmake"].command`` for the ``Executable`` instance).
 
    Be sure to add the property at the top of the package class under other
    properties like the ``homepage``.

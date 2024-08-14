@@ -23,6 +23,7 @@ _os_map_before_23 = {
 _os_map = {
     "ubuntu20.04": "Ubuntu-20.04",
     "ubuntu22.04": "Ubuntu-22.04",
+    "debian12": "Ubuntu-22.04",
     "sles15": "SLES-15",
     "centos7": "RHEL-7",
     "centos8": "RHEL-8",
@@ -378,7 +379,10 @@ class Acfl(Package, CompilerPackage):
     def headers(self):
         armpl_dir = get_armpl_prefix(self.spec)
 
-        suffix = "include" + self.lib_suffix
+        if self.spec.satisfies("@24:"):
+            suffix = "include"
+        else:
+            suffix = "include" + self.lib_suffix
 
         incdir = join_path(armpl_dir, suffix)
 

@@ -18,6 +18,10 @@ class Composyx(CMakePackage):
     version("main", branch="main", submodules=True)
     version("1.0.1", sha256="d97936e3b297fde435c165cbe29cb39e5d88ae368be451b1c45b8ee51486782c")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # User options
     variant("armadillo", default=False, description="Enable Armadillo interface")
     variant("arpack-ng", default=True, description="Enable arpack eigen/singular value solvers")
@@ -47,20 +51,20 @@ class Composyx(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("BUILD_SHARED_LIBS", True),
-            self.define("MAPHYSPP_C_DRIVER", True),
-            self.define("MAPHYSPP_Fortran_DRIVER", True),
-            self.define("MAPHYSPP_COMPILE_BENCH", False),
-            self.define("MAPHYSPP_USE_MUMPS", False),
-            self.define("MAPHYSPP_USE_QRMUMPS", False),
-            self.define("MAPHYSPP_USE_SZ_COMPRESSOR", False),
-            self.define_from_variant("MAPHYSPP_COMPILE_EXAMPLES", "examples"),
-            self.define_from_variant("MAPHYSPP_COMPILE_TESTS", "tests"),
-            self.define_from_variant("MAPHYSPP_USE_ARMADILLO", "armadillo"),
-            self.define_from_variant("MAPHYSPP_USE_ARPACK", "arpack-ng"),
-            self.define_from_variant("MAPHYSPP_USE_EIGEN", "eigen"),
-            self.define_from_variant("MAPHYSPP_USE_FABULOUS", "fabulous"),
-            self.define_from_variant("MAPHYSPP_USE_PADDLE", "paddle"),
-            self.define_from_variant("MAPHYSPP_USE_PASTIX", "pastix"),
+            self.define("COMPOSYX_C_DRIVER", True),
+            self.define("COMPOSYX_Fortran_DRIVER", True),
+            self.define("COMPOSYX_COMPILE_BENCH", False),
+            self.define("COMPOSYX_USE_MUMPS", False),
+            self.define("COMPOSYX_USE_QRMUMPS", False),
+            self.define("COMPOSYX_USE_SZ_COMPRESSOR", False),
+            self.define_from_variant("COMPOSYX_COMPILE_EXAMPLES", "examples"),
+            self.define_from_variant("COMPOSYX_COMPILE_TESTS", "tests"),
+            self.define_from_variant("COMPOSYX_USE_ARMADILLO", "armadillo"),
+            self.define_from_variant("COMPOSYX_USE_ARPACK", "arpack-ng"),
+            self.define_from_variant("COMPOSYX_USE_EIGEN", "eigen"),
+            self.define_from_variant("COMPOSYX_USE_FABULOUS", "fabulous"),
+            self.define_from_variant("COMPOSYX_USE_PADDLE", "paddle"),
+            self.define_from_variant("COMPOSYX_USE_PASTIX", "pastix"),
         ]
 
         return args

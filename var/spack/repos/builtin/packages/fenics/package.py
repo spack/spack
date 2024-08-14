@@ -40,6 +40,8 @@ class Fenics(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+
     dolfin_versions = ["2019.1.0", "2018.1.0", "2017.2.0", "2016.2.0"]
 
     variant("python", default=True, description="Compile with Python interface")

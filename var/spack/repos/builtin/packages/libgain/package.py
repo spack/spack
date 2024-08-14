@@ -22,6 +22,12 @@ class Libgain(AutotoolsPackage):
         url="https://gitlab.com/l_sim/bigdft-suite/-/raw/1.9.1/GaIn-1.0.tar.gz",
     )
 
+    depends_on("fortran", type="build")  # generated
+
+    def flag_handler(self, name, flags):
+        flags.append(self.compiler.fc_pic_flag)
+        return (None, None, flags)
+
     @property
     def libs(self):
         shared = "+shared" in self.spec

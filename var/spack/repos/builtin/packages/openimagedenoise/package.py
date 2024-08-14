@@ -28,6 +28,9 @@ class Openimagedenoise(CMakePackage):
     version("1.2.4", sha256="948b070c780b5de0d983e7d5d37f6d9454932cc278913d9ee5b0bd047d23864a")
     version("1.2.3", sha256="469d20b093a73b18a54a2e559b0f18a6baac845ede864be62429737042ebe4f7")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("ispc", type=("build"))
     depends_on("python@3:", type=("build", "test"))
     depends_on("tbb")

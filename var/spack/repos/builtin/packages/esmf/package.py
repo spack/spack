@@ -65,6 +65,10 @@ class Esmf(MakefilePackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=True, description="Build with MPI support")
     variant("external-lapack", default=False, description="Build with external LAPACK library")
     variant("netcdf", default=True, description="Build with NetCDF support")

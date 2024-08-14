@@ -19,10 +19,7 @@ from spack.spec import Spec
 from spack.test.conftest import create_test_repo
 from spack.util.url import path_to_file_url
 
-pytestmark = [
-    pytest.mark.not_on_windows("Windows uses old concretizer"),
-    pytest.mark.only_clingo("Original concretizer does not support configuration requirements"),
-]
+pytestmark = [pytest.mark.not_on_windows("Windows uses old concretizer")]
 
 
 def update_packages_config(conf_str):
@@ -101,23 +98,6 @@ def _create_test_repo(tmpdir, mutable_config):
 def test_repo(_create_test_repo, monkeypatch, mock_stage):
     with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
         yield mock_repo_path
-
-
-class MakeStage:
-    def __init__(self, stage):
-        self.stage = stage
-
-    def __call__(self, *args, **kwargs):
-        return self.stage
-
-
-@pytest.fixture
-def fake_installs(monkeypatch, tmpdir):
-    stage_path = str(tmpdir.ensure("fake-stage", dir=True))
-    universal_unused_stage = spack.stage.DIYStage(stage_path)
-    monkeypatch.setattr(
-        spack.build_systems.generic.Package, "_make_stage", MakeStage(universal_unused_stage)
-    )
 
 
 def test_one_package_multiple_reqs(concretize_scope, test_repo):
@@ -514,7 +494,7 @@ packages:
     assert s2.satisfies("@2.5")
 
 
-def test_reuse_oneof(concretize_scope, _create_test_repo, mutable_database, fake_installs):
+def test_reuse_oneof(concretize_scope, _create_test_repo, mutable_database, mock_fetch):
     conf_str = """\
 packages:
   y:
@@ -944,9 +924,9 @@ def test_default_requirements_semantic(packages_yaml, concretize_scope, mock_pac
         Spec("zlib ~shared").concretized()
 
     # A spec without the shared variant still concretize
-    s = Spec("a").concretized()
-    assert not s.satisfies("a +shared")
-    assert not s.satisfies("a ~shared")
+    s = Spec("pkg-a").concretized()
+    assert not s.satisfies("pkg-a +shared")
+    assert not s.satisfies("pkg-a ~shared")
 
 
 @pytest.mark.parametrize(

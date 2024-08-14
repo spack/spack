@@ -182,27 +182,6 @@ spack:
   # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # py-numcodecs@0.7.3: gcc: error: unrecognized command-line option '-mno-sse2'
   # - variorum                      # variorum: https://github.com/spack/spack/issues/38786
 
-  # PYTHON PACKAGES
-  # - opencv +python3
-  # - py-horovod
-  # - py-jax
-  # - py-jupyterlab
-  # - py-matplotlib
-  # - py-mpi4py
-  # - py-notebook
-  # - py-numba
-  # - py-numpy
-  # - py-openai
-  # - py-pandas
-  # - py-plotly
-  # - py-pooch
-  # - py-pytest
-  # - py-scikit-learn
-  # - py-scipy
-  # - py-seaborn
-  # - py-tensorflow
-  # - py-torch
-
   # CUDA NOARCH
   - flux-core +cuda
   - hpctoolkit +cuda
@@ -218,7 +197,6 @@ spack:
   - cabana +cuda cuda_arch=90  ^kokkos +wrapper +cuda_lambda +cuda cuda_arch=90
   - caliper +cuda cuda_arch=90
   - chai +cuda cuda_arch=90 ^umpire ~shared
-  # - cp2k +mpi +cuda cuda_arch=90 # cp2k: cp2k only supports cuda_arch ('35', '37', '60', '70', '80')
   - flecsi +cuda cuda_arch=90
   - ginkgo +cuda cuda_arch=90
   - gromacs +cuda cuda_arch=90
@@ -240,12 +218,13 @@ spack:
   - umpire ~shared +cuda cuda_arch=90
   # INCLUDED IN ECP DAV CUDA
   - adios2 +cuda cuda_arch=90
+  # - ascent +cuda cuda_arch=90     # ascent: https://github.com/spack/spack/issues/38045
   # - paraview +cuda cuda_arch=90   # paraview: InstallError: Incompatible cuda_arch=90
   - vtk-m +cuda cuda_arch=90
   - zfp +cuda cuda_arch=90
   # --
-  # - ascent +cuda cuda_arch=90     # ascent: https://github.com/spack/spack/issues/38045
   # - axom +cuda cuda_arch=90       # axom: https://github.com/spack/spack/issues/29520
+  # - cp2k +mpi +cuda cuda_arch=90  # cp2k: cp2k only supports cuda_arch ('35', '37', '60', '70', '80')
   # - cusz +cuda cuda_arch=90       # cusz: https://github.com/spack/spack/issues/38787
   # - dealii +cuda cuda_arch=90     # dealii: https://github.com/spack/spack/issues/39532
   # - ecp-data-vis-sdk +adios2 +hdf5 +vtkm +zfp +paraview +cuda cuda_arch=90 # embree: https://github.com/spack/spack/issues/39534

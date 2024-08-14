@@ -51,6 +51,9 @@ class Dyninst(CMakePackage):
         "8.2.1", tag="v8.2.1", commit="939afcbad1a8273636a3686a31b51dae4f1f0c11", deprecated=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "openmp",
         default=True,

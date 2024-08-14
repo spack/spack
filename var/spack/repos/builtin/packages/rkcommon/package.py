@@ -30,6 +30,8 @@ class Rkcommon(CMakePackage):
     version("1.4.2", sha256="2d1c0046cf583d3040fc9bb3b8ddcb1a2262d3f48aebd0973e6bd6cabb487f9e")
     version("1.4.1", sha256="f5968f5865fa5fe938843e1db621795524e7d31b37ce6024ba2978bb293ddfcf")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("tbb")
 
     def cmake_args(self):

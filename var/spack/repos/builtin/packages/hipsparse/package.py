@@ -21,6 +21,7 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
     libraries = ["libhipsparse"]
 
     license("MIT")
+    version("6.1.2", sha256="dd44f9b6000b3b0ac0fa238037a80f79d6745a689d4a6755f2d595643be1ef6d")
     version("6.1.1", sha256="307cff012f0465942dd6666cb00ae60c35941699677c4b26b08e4832bc499059")
     version("6.1.0", sha256="1d9277a11f71474ea4a9f8419a7a2c37170a86969584e5724e385ec74241e565")
     version("6.0.2", sha256="40c1d2493f87c686d9afd84a00321ad10ca0d0d80d6dcfeee8e51858dd1bd8c1")
@@ -36,6 +37,9 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
         version("5.4.0", sha256="47420d38483c8124813b744971e428a0352c83d9b62a5a50f74ffa8f9b785b20")
         version("5.3.3", sha256="d96d0e47594ab12e8c380da2300704c105736a0771940d7d2fae666f2869e457")
         version("5.3.0", sha256="691b32b916952ed9af008aa29f60cc190322b73cfc098bb2eda3ff68c89c7b35")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
     amdgpu_targets = ROCmPackage.amdgpu_targets
@@ -75,6 +79,7 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"rocsparse@{ver}", when=f"+rocm @{ver}")

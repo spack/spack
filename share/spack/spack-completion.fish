@@ -438,7 +438,7 @@ complete -c spack -n '__fish_spack_using_command ' -l color -r -d 'when to color
 complete -c spack -n '__fish_spack_using_command ' -s c -l config -r -f -a config_vars
 complete -c spack -n '__fish_spack_using_command ' -s c -l config -r -d 'add one or more custom, one off config settings'
 complete -c spack -n '__fish_spack_using_command ' -s C -l config-scope -r -f -a config_scopes
-complete -c spack -n '__fish_spack_using_command ' -s C -l config-scope -r -d 'add a custom configuration scope'
+complete -c spack -n '__fish_spack_using_command ' -s C -l config-scope -r -d 'add directory or environment as read-only configuration scope, without activating the environment.'
 complete -c spack -n '__fish_spack_using_command ' -s d -l debug -f -a debug
 complete -c spack -n '__fish_spack_using_command ' -s d -l debug -d 'write out debug messages'
 complete -c spack -n '__fish_spack_using_command ' -l timestamp -f -a timestamp
@@ -688,7 +688,6 @@ complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a create 
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a install -d 'install from a binary package'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a list -d 'list binary packages available from mirrors'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a keys -d 'get public keys available on mirrors'
-complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a preview -d 'analyze an installed spec and reports whether executables and libraries are relocatable'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a check -d 'check specs against remote binary mirror(s) to see if any need to be rebuilt'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a download -d 'download buildcache entry from a remote mirror to local folder'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a get-buildcache-name -d 'get name (prefix) of buildcache entries for this spec'
@@ -700,14 +699,12 @@ complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache push
-set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force a/allow-root u/unsigned signed k/key= update-index spec-file= only= fail-fast base-image= t/tag= private j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force u/unsigned signed k/key= update-index spec-file= only= with-build-dependencies without-build-dependencies fail-fast base-image= t/tag= private j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache push' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s f -l force -f -a force
 complete -c spack -n '__fish_spack_using_command buildcache push' -s f -l force -d 'overwrite tarball if it exists'
-complete -c spack -n '__fish_spack_using_command buildcache push' -l allow-root -s a -f -a allow_root
-complete -c spack -n '__fish_spack_using_command buildcache push' -l allow-root -s a -d 'allow install root string in binary files after RPATH substitution'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l unsigned -s u -f -a signed
 complete -c spack -n '__fish_spack_using_command buildcache push' -l unsigned -s u -d 'push unsigned buildcache tarballs'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l signed -f -a signed
@@ -720,6 +717,10 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -l spec-file -
 complete -c spack -n '__fish_spack_using_command buildcache push' -l spec-file -r -d 'create buildcache entry for spec from json or yaml file'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -f -a 'package dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -d 'select the buildcache mode. The default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies'
+complete -c spack -n '__fish_spack_using_command buildcache push' -l with-build-dependencies -f -a with_build_dependencies
+complete -c spack -n '__fish_spack_using_command buildcache push' -l with-build-dependencies -d 'include build dependencies in the buildcache'
+complete -c spack -n '__fish_spack_using_command buildcache push' -l without-build-dependencies -f -a without_build_dependencies
+complete -c spack -n '__fish_spack_using_command buildcache push' -l without-build-dependencies -d 'exclude build dependencies from the buildcache'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l fail-fast -f -a fail_fast
 complete -c spack -n '__fish_spack_using_command buildcache push' -l fail-fast -d 'stop pushing on first failure (default is best effort)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l base-image -r -f -a base_image
@@ -732,14 +733,12 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack buildcache create
-set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force a/allow-root u/unsigned signed k/key= update-index spec-file= only= fail-fast base-image= t/tag= private j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force u/unsigned signed k/key= update-index spec-file= only= with-build-dependencies without-build-dependencies fail-fast base-image= t/tag= private j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s f -l force -f -a force
 complete -c spack -n '__fish_spack_using_command buildcache create' -s f -l force -d 'overwrite tarball if it exists'
-complete -c spack -n '__fish_spack_using_command buildcache create' -l allow-root -s a -f -a allow_root
-complete -c spack -n '__fish_spack_using_command buildcache create' -l allow-root -s a -d 'allow install root string in binary files after RPATH substitution'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l unsigned -s u -f -a signed
 complete -c spack -n '__fish_spack_using_command buildcache create' -l unsigned -s u -d 'push unsigned buildcache tarballs'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l signed -f -a signed
@@ -752,6 +751,10 @@ complete -c spack -n '__fish_spack_using_command buildcache create' -l spec-file
 complete -c spack -n '__fish_spack_using_command buildcache create' -l spec-file -r -d 'create buildcache entry for spec from json or yaml file'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -f -a 'package dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -d 'select the buildcache mode. The default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies'
+complete -c spack -n '__fish_spack_using_command buildcache create' -l with-build-dependencies -f -a with_build_dependencies
+complete -c spack -n '__fish_spack_using_command buildcache create' -l with-build-dependencies -d 'include build dependencies in the buildcache'
+complete -c spack -n '__fish_spack_using_command buildcache create' -l without-build-dependencies -f -a without_build_dependencies
+complete -c spack -n '__fish_spack_using_command buildcache create' -l without-build-dependencies -d 'exclude build dependencies from the buildcache'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l fail-fast -f -a fail_fast
 complete -c spack -n '__fish_spack_using_command buildcache create' -l fail-fast -d 'stop pushing on first failure (default is best effort)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l base-image -r -f -a base_image
@@ -803,12 +806,6 @@ complete -c spack -n '__fish_spack_using_command buildcache keys' -s t -l trust 
 complete -c spack -n '__fish_spack_using_command buildcache keys' -s t -l trust -d 'trust all downloaded keys'
 complete -c spack -n '__fish_spack_using_command buildcache keys' -s f -l force -f -a force
 complete -c spack -n '__fish_spack_using_command buildcache keys' -s f -l force -d 'force new download of keys'
-
-# spack buildcache preview
-set -g __fish_spack_optspecs_spack_buildcache_preview h/help
-complete -c spack -n '__fish_spack_using_command_pos_remainder 0 buildcache preview' -f -a '(__fish_spack_installed_specs)'
-complete -c spack -n '__fish_spack_using_command buildcache preview' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command buildcache preview' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache check
 set -g __fish_spack_optspecs_spack_buildcache_check h/help m/mirror-url= o/output-file= scope= s/spec= spec-file=
@@ -962,9 +959,9 @@ complete -c spack -n '__fish_spack_using_command ci generate' -l output-file -r 
 complete -c spack -n '__fish_spack_using_command ci generate' -l copy-to -r -f -a copy_to
 complete -c spack -n '__fish_spack_using_command ci generate' -l copy-to -r -d 'path to additional directory for job files'
 complete -c spack -n '__fish_spack_using_command ci generate' -l optimize -f -a optimize
-complete -c spack -n '__fish_spack_using_command ci generate' -l optimize -d '(experimental) optimize the gitlab yaml file for size'
+complete -c spack -n '__fish_spack_using_command ci generate' -l optimize -d '(DEPRECATED) optimize the gitlab yaml file for size'
 complete -c spack -n '__fish_spack_using_command ci generate' -l dependencies -f -a dependencies
-complete -c spack -n '__fish_spack_using_command ci generate' -l dependencies -d '(experimental) disable DAG scheduling (use \'plain\' dependencies)'
+complete -c spack -n '__fish_spack_using_command ci generate' -l dependencies -d '(DEPRECATED) disable DAG scheduling (use \'plain\' dependencies)'
 complete -c spack -n '__fish_spack_using_command ci generate' -l buildcache-destination -r -f -a buildcache_destination
 complete -c spack -n '__fish_spack_using_command ci generate' -l buildcache-destination -r -d 'override the mirror configured in the environment'
 complete -c spack -n '__fish_spack_using_command ci generate' -l prune-dag -f -a prune_dag
@@ -1753,7 +1750,7 @@ complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack find
-set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing deprecated only-deprecated install-tree= start-date= end-date=
+set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json I/install-status d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing deprecated only-deprecated install-tree= start-date= end-date=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 find' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -d 'show this help message and exit'
@@ -1763,6 +1760,8 @@ complete -c spack -n '__fish_spack_using_command find' -s H -l hashes -f -a form
 complete -c spack -n '__fish_spack_using_command find' -s H -l hashes -d 'same as \'--format {/hash}\'; use with xargs or $()'
 complete -c spack -n '__fish_spack_using_command find' -l json -f -a json
 complete -c spack -n '__fish_spack_using_command find' -l json -d 'output specs as machine-readable json records'
+complete -c spack -n '__fish_spack_using_command find' -s I -l install-status -f -a install_status
+complete -c spack -n '__fish_spack_using_command find' -s I -l install-status -d 'show install status of packages'
 complete -c spack -n '__fish_spack_using_command find' -s d -l deps -f -a deps
 complete -c spack -n '__fish_spack_using_command find' -s d -l deps -d 'output dependencies along with found specs'
 complete -c spack -n '__fish_spack_using_command find' -s p -l paths -f -a paths
@@ -1909,7 +1908,7 @@ complete -c spack -n '__fish_spack_using_command gpg export' -l secret -f -a sec
 complete -c spack -n '__fish_spack_using_command gpg export' -l secret -d 'export secret keys'
 
 # spack gpg publish
-set -g __fish_spack_optspecs_spack_gpg_publish h/help d/directory= m/mirror-name= mirror-url= rebuild-index
+set -g __fish_spack_optspecs_spack_gpg_publish h/help d/directory= m/mirror-name= mirror-url= update-index
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 gpg publish' -f -a '(__fish_spack_gpg_keys)'
 complete -c spack -n '__fish_spack_using_command gpg publish' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command gpg publish' -s h -l help -d 'show this help message and exit'
@@ -1919,8 +1918,8 @@ complete -c spack -n '__fish_spack_using_command gpg publish' -s m -l mirror-nam
 complete -c spack -n '__fish_spack_using_command gpg publish' -s m -l mirror-name -r -d 'name of the mirror where keys will be published'
 complete -c spack -n '__fish_spack_using_command gpg publish' -l mirror-url -r -f -a mirror_url
 complete -c spack -n '__fish_spack_using_command gpg publish' -l mirror-url -r -d 'URL of the mirror where keys will be published'
-complete -c spack -n '__fish_spack_using_command gpg publish' -l rebuild-index -f -a rebuild_index
-complete -c spack -n '__fish_spack_using_command gpg publish' -l rebuild-index -d 'regenerate buildcache key index after publishing key(s)'
+complete -c spack -n '__fish_spack_using_command gpg publish' -l update-index -l rebuild-index -f -a update_index
+complete -c spack -n '__fish_spack_using_command gpg publish' -l update-index -l rebuild-index -d 'regenerate buildcache key index after publishing key(s)'
 
 # spack graph
 set -g __fish_spack_optspecs_spack_graph h/help a/ascii d/dot s/static c/color i/installed deptype=
