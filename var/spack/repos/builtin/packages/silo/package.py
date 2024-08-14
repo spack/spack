@@ -54,6 +54,7 @@ class Silo(AutotoolsPackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
+    variant("python", default=True, description="Enable Python support")
     variant("fortran", default=True, description="Enable Fortran support")
     variant("shared", default=True, description="Build shared libraries")
     variant("silex", default=False, description="Builds Silex, a GUI for viewing Silo files")
@@ -200,6 +201,7 @@ class Silo(AutotoolsPackage):
         spec = self.spec
         config_args = [
             "--enable-install-lite-headers",
+            "--enable-pythonmodule" if "+python" in spec else "--disable-pythonmodule",
             "--enable-fortran" if "+fortran" in spec else "--disable-fortran",
             "--enable-silex" if "+silex" in spec else "--disable-silex",
             "--enable-shared" if "+shared" in spec else "--disable-shared",
