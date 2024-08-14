@@ -12,7 +12,9 @@ import pytest
 
 import spack.binary_distribution
 import spack.cmd.buildcache
+import spack.deptypes
 import spack.environment as ev
+import spack.error
 import spack.main
 import spack.spec
 import spack.util.url
@@ -382,11 +384,14 @@ def test_correct_specs_are_pushed(
 
     packages_to_push = []
 
-    def fake_push(node, push_url, options):
-        assert isinstance(node, Spec)
-        packages_to_push.append(node.name)
+    def fake_push(specs, *args, **kwargs):
+        assert all(isinstance(s, Spec) for s in specs)
+        packages_to_push.extend(s.name for s in specs)
+        skipped = []
+        errors = []
+        return skipped, errors
 
-    monkeypatch.setattr(spack.binary_distribution, "push_or_raise", fake_push)
+    monkeypatch.setattr(spack.binary_distribution, "_push", fake_push)
 
     buildcache_create_args = ["create", "--unsigned"]
 
@@ -443,3 +448,54 @@ def test_skip_no_redistribute(mock_packages, config):
     filtered = spack.cmd.buildcache._skip_no_redistribute_for_public(specs)
     assert not any(s.name == "no-redistribute" for s in filtered)
     assert any(s.name == "no-redistribute-dependent" for s in filtered)
+
+
+def test_best_effort_vs_fail_fast_when_dep_not_installed(tmp_path, mutable_database):
+    """When --fail-fast is passed, the push command should fail if it immediately finds an
+    uninstalled dependency. Otherwise, failure to push one dependency shouldn't prevent the
+    others from being pushed."""
+
+    mirror("add", "--unsigned", "my-mirror", str(tmp_path))
+
+    # Uninstall mpich so that its dependent mpileaks can't be pushed
+    for s in mutable_database.query_local("mpich"):
+        s.package.do_uninstall(force=True)
+
+    with pytest.raises(spack.cmd.buildcache.PackagesAreNotInstalledError, match="mpich"):
+        buildcache("push", "--update-index", "--fail-fast", "my-mirror", "mpileaks^mpich")
+
+    # nothing should be pushed due to --fail-fast.
+    assert not os.listdir(tmp_path)
+    assert not spack.binary_distribution.update_cache_and_get_specs()
+
+    with pytest.raises(spack.cmd.buildcache.PackageNotInstalledError):
+        buildcache("push", "--update-index", "my-mirror", "mpileaks^mpich")
+
+    specs = spack.binary_distribution.update_cache_and_get_specs()
+
+    # everything but mpich should be pushed
+    mpileaks = mutable_database.query_local("mpileaks^mpich")[0]
+    assert set(specs) == {s for s in mpileaks.traverse() if s.name != "mpich"}
+
+
+def test_push_without_build_deps(tmp_path, temporary_store, mock_packages, mutable_config):
+    """Spack should not error when build deps are uninstalled and --without-build-dependenies is
+    passed."""
+
+    mirror("add", "--unsigned", "my-mirror", str(tmp_path))
+
+    s = spack.spec.Spec("dtrun3").concretized()
+    s.package.do_install(fake=True)
+    s["dtbuild3"].package.do_uninstall()
+
+    # fails when build deps are required
+    with pytest.raises(spack.error.SpackError, match="package not installed"):
+        buildcache(
+            "push", "--update-index", "--with-build-dependencies", "my-mirror", f"/{s.dag_hash()}"
+        )
+
+    # succeeds when build deps are not required
+    buildcache(
+        "push", "--update-index", "--without-build-dependencies", "my-mirror", f"/{s.dag_hash()}"
+    )
+    assert spack.binary_distribution.update_cache_and_get_specs() == [s]

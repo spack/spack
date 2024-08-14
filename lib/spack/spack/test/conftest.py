@@ -56,8 +56,10 @@ import spack.test.cray_manifest
 import spack.util.executable
 import spack.util.git
 import spack.util.gpg
+import spack.util.parallel
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
+import spack.util.web
 import spack.version
 from spack.fetch_strategy import URLFetchStrategy
 from spack.util.pattern import Bunch
@@ -1811,12 +1813,7 @@ def mock_curl_configs(mock_config_data, monkeypatch):
                     tty.msg("curl: (22) The requested URL returned error: 404")
                     self.returncode = 22
 
-    def mock_curl(*args):
-        return MockCurl()
-
-    monkeypatch.setattr(spack.util.web, "_curl", mock_curl)
-
-    yield
+    monkeypatch.setattr(spack.util.web, "require_curl", MockCurl)
 
 
 @pytest.fixture(scope="function")
@@ -1961,10 +1958,12 @@ def pytest_runtest_setup(item):
         pytest.skip(*not_on_windows_marker.args)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(autouse=True)
 def disable_parallel_buildcache_push(monkeypatch):
     """Disable process pools in tests."""
-    monkeypatch.setattr(spack.cmd.buildcache, "_make_pool", spack.cmd.buildcache.NoPool)
+    monkeypatch.setattr(
+        spack.util.parallel, "make_concurrent_executor", spack.util.parallel.SequentialExecutor
+    )
 
 
 def _root_path(x, y, *, path):
