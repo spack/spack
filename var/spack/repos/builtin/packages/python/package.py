@@ -348,7 +348,7 @@ class Python(Package):
     # datetime.now(timezone.utc) segfaults
     conflicts("@3.9:", when="%oneapi@2022.2.1:2023")
 
-    # Per discussion https://github.com/spack/spack/pull/44226
+    # https://docs.python.org/3/whatsnew/changelog.html#id133
     conflicts("~ctypes", when="@3.12:")
 
     # Used to cache various attributes that are expensive to compute
