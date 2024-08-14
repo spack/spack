@@ -97,7 +97,13 @@ class Openssh(AutotoolsPackage):
     patch(
         "https://raw.githubusercontent.com/Homebrew/patches/d8b2d8c2612fd251ac6de17bf0cc5174c3aab94c/openssh/patch-sshd.c-apple-sandbox-named-external.diff",
         sha256="3505c58bf1e584c8af92d916fe5f3f1899a6b15cc64a00ddece1dc0874b2f78f",
-        when="platform=darwin",
+        when="@:9.7p1 platform=darwin",
+    )
+    # same as above, but against sshd-session.c instead of sshd.c
+    patch(
+        "https://raw.githubusercontent.com/Homebrew/patches/aa6c71920318f97370d74f2303d6aea387fb68e4/openssh/patch-sshd.c-apple-sandbox-named-external.diff",
+        sha256="3f06fc03bcbbf3e6ba6360ef93edd2301f73efcd8069e516245aea7c4fb21279",
+        when="@9.8p1: platform=darwin",
     )
 
     @classmethod
