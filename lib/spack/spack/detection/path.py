@@ -337,7 +337,8 @@ class ExecutablesFinder(Finder):
         executables_by_path = executables_in_path(path_hints=paths)
         joined_pattern = re.compile(r"|".join(patterns))
         result = [path for path, exe in executables_by_path.items() if joined_pattern.search(exe)]
-        return sorted(set(result))
+        result.sort()
+        return result
 
     def prefix_from_path(self, *, path: str) -> str:
         result = executable_prefix(path)
