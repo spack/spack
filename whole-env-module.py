@@ -13,7 +13,12 @@ from spack.util.environment import EnvironmentModifications
 def main():
     parser = argparse.ArgumentParser(description="Generate sourcing script")
     parser.add_argument("path", type=str, help="Where to generate the file")
-    parser.add_argument("--view-input", dest="view_input", type=str, help="If provided, designate a view to create the module for")
+    parser.add_argument(
+        "--view-input",
+        dest="view_input",
+        type=str,
+        help="If provided, designate a view to create the module for",
+    )
     args = parser.parse_args()
     generate_module(args)
 
@@ -23,13 +28,17 @@ def generate_module(args):
 
     if args.view_input:
         if not os.path.isdir(args.view_input):
-            raise Exception(f"Specified --view-input {args.view_input} does not exist as a directory")
+            raise Exception(
+                f"Specified --view-input {args.view_input} does not exist as a directory"
+            )
 
         descriptor = ev.environment.ViewDescriptor(base_path=args.view_input, root=args.view_input)
 
         env_mods.extend(uenv.unconditional_environment_modifications(descriptor))
         view = descriptor.view()
-        env_mods.extend(uenv.environment_modifications_for_specs(*list(view.get_all_specs()), view=view))
+        env_mods.extend(
+            uenv.environment_modifications_for_specs(*list(view.get_all_specs()), view=view)
+        )
 
         # Note: you cannot encode PruneDuplicatePaths into a direct lmod action
         # so instead, I run dedupe on the environment modifications.
