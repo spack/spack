@@ -53,6 +53,11 @@ class Mivisionx(CMakePackage):
     variant("opencl", default=False, description="Use OPENCL as the backend")
     variant("hip", default=True, description="Use HIP as backend")
     variant("add_tests", default=False, description="add tests and samples folder")
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
 
     patch("0001-add-half-include-path.patch", when="@5.5")
     patch("0001-add-half-include-path-5.6.patch", when="@5.6:")
@@ -287,6 +292,15 @@ class Mivisionx(CMakePackage):
         env.set("MIVISIONX_MODEL_COMPILER_PATH", self.spec.prefix.libexec.mivisionx.model_compiler)
         if self.spec.satisfies("@6.1:"):
             env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+asan"):
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     def flag_handler(self, name, flags):
         spec = self.spec
