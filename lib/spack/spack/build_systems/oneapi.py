@@ -12,12 +12,12 @@ from llnl.util import tty
 from llnl.util.filesystem import HeaderList, LibraryList, find_libraries, join_path, mkdirp
 from llnl.util.link_tree import LinkTree
 
+import spack.util.path
 from spack.build_environment import dso_suffix
 from spack.directives import conflicts, license, redistribute, variant
 from spack.package_base import InstallError
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
-import spack.util.path
 
 from .generic import Package
 
