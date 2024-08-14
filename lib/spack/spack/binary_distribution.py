@@ -1274,7 +1274,8 @@ def _push(
 
     total = len(specs_to_upload)
 
-    tty.info(f"{total} specs need to be pushed to {out_url}")
+    if total != len(specs):
+        tty.info(f"{total} specs need to be pushed to {out_url}")
 
     upload_futures = [
         executor.submit(
@@ -1561,10 +1562,11 @@ def _push_oci(
     if not blobs_to_upload:
         return skipped, base_images, checksums, []
 
-    tty.info(
-        f"{len(blobs_to_upload)} specs need to be pushed to "
-        f"{target_image.domain}/{target_image.name}"
-    )
+    if len(blobs_to_upload) != len(installed_specs_with_deps):
+        tty.info(
+            f"{len(blobs_to_upload)} specs need to be pushed to "
+            f"{target_image.domain}/{target_image.name}"
+        )
 
     blob_progress = FancyProgress(len(blobs_to_upload))
 
