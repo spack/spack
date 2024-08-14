@@ -4,29 +4,43 @@ import os
 import spack.environment as ev
 import spack.environment.shell
 import spack.paths
+import spack.user_environment as uenv
 from spack.util.environment import EnvironmentModifications
 
 
 def main():
     parser = argparse.ArgumentParser(description="Generate sourcing script")
     parser.add_argument("path", type=str, help="Where to generate the file")
+    parser.add_argument("--view-input", dest="view_input", type=str, help="If provided, designate a view to create the module for")
     args = parser.parse_args()
     generate_module(args)
 
 
 def generate_module(args):
-    active_env = ev.active_environment()
-    if not active_env:
-        raise Exception("An active env is required")
-
-    view = None
-    if active_env.has_view(ev.default_view_name):
-        view = ev.default_view_name
-    else:
-        raise Exception(f"{active_env.name} does not have a default view")
-
     env_mods = EnvironmentModifications()
-    env_mods.extend(spack.environment.shell.activate(env=active_env, view=view))
+
+    if args.view_input:
+        if not os.path.isdir(args.view_input):
+            raise Exception(f"Specified --view-input {args.view_input} does not exist as a directory")
+
+        descriptor = ev.environment.ViewDescriptor(base_path=args.view_input, root=args.view_input)
+
+        env_mods.extend(uenv.unconditional_environment_modifications(descriptor))
+        view = descriptor.view()
+        env_mods.extend(uenv.environment_modifications_for_specs(view.get_all_specs(), view=view))
+    else:
+        active_env = ev.active_environment()
+        if not active_env:
+            raise Exception("An active env is required unless --view-input is specified")
+
+        view_id = None
+        if active_env.has_view(ev.default_view_name):
+            view_id = ev.default_view_name
+        else:
+            raise Exception(f"{active_env.name} does not have a default view")
+
+        env_mods.extend(spack.environment.shell.activate(env=active_env, view=view_id))
+
     context = {"environment_modifications": [(type(x).__name__, x) for x in env_mods]}
 
     import jinja2
