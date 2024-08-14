@@ -78,9 +78,7 @@ class W3m(AutotoolsPackage):
     def url_for_version(self, version):
         if ".git" in version.string:
             v = version.string.replace(".git", "+git")
-            return (
-                f"https://salsa.debian.org/debian/w3m/-/archive/upstream/{v}/w3m-upstream-{v}.tar.gz"
-            )
+            return f"https://salsa.debian.org/debian/w3m/-/archive/upstream/{v}/w3m-upstream-{v}.tar.gz"
         else:
             return f"https://downloads.sourceforge.net/project/w3m/w3m/w3m-{version}/w3m-{version}.tar.gz"
 
