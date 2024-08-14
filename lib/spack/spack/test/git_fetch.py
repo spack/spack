@@ -394,7 +394,7 @@ def test_gitsubmodules_falsey(
 
 @pytest.mark.disable_clean_stage_check
 def test_git_sparse_paths_partial_clone(
-    mock_git_repository, default_mock_concretization, mutable_mock_repo, monkeypatch
+    mock_git_repository, git_version, default_mock_concretization, mutable_mock_repo, monkeypatch
 ):
     """
     Test partial clone of repository when using git_sparse_paths property
@@ -414,8 +414,14 @@ def test_git_sparse_paths_partial_clone(
 
         for p in sparse_paths:
             assert os.path.isdir(p)
-        for p in omitted_paths:
-            assert not os.path.isdir(p)
+
+        if git_version < Version("2.25.0.0"):
+            # older versions of git should fall back to a full clone
+            for p in omitted_paths:
+                assert os.path.isdir(p)
+        else:
+            for p in omitted_paths:
+                assert not os.path.isdir(p)
 
         # fixture file is in the sparse-path expansion tree
         assert os.path.isfile(t.file)

@@ -945,14 +945,19 @@ class GitFetchStrategy(VCSFetchStrategy):
         git = self.git
 
         if self.git_version < spack.version.Version("2.25.0.0"):
+            # code paths exist where the package is not set.  Assure some indentifier for the 
+            # package that was configured  for sparse checkout exists in the error message
+            identifier = str(self.url)
+            if self.package:
+                identifier += f" ({self.package.name})"
             tty.warn(
                 (
-                    f"{self.package.name} is configured for git sparse-checkout "
+                    f"{identifier} is configured for git sparse-checkout "
                     "but the git version is too old to support sparse cloning. "
                     "Cloning the full repository instead."
                 )
             )
-            self.clone_src(commit, branch, tag)
+            self._clone_src(commit, branch, tag)
         else:
             # default to depth=2 to allow for retention of some git properties
             depth = kwargs.get("depth", 2)
