@@ -40,7 +40,7 @@ class SpecHashDescriptor:
     def __repr__(self):
         return (
             f"SpecHashDescriptor(depflag={self.depflag}, "
-            f"package_hash={self.package_hash}, name={self.name})"
+            f"package_hash={self.package_hash}, name={self.name}, override={self.override})"
         )
 
 
