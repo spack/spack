@@ -432,8 +432,10 @@ class ArmplGcc(Package):
         with when("@23:"):
             armpl_version = spec.version.string.split("_")[0]
 
-        exe = Executable(f"./arm-performance-libraries_{armpl_version}_"
-                         + f"{get_os_or_pkg_manager(armpl_version)}.sh")
+        exe = Executable(
+            f"./arm-performance-libraries_{armpl_version}_"
+            + f"{get_os_or_pkg_manager(armpl_version)}.sh"
+        )
         exe("--accept", "--force", "--install-to", prefix)
 
     @property
