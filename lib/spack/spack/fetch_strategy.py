@@ -945,7 +945,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         git = self.git
 
         if self.git_version < spack.version.Version("2.25.0.0"):
-            # code paths exist where the package is not set.  Assure some indentifier for the 
+            # code paths exist where the package is not set.  Assure some indentifier for the
             # package that was configured  for sparse checkout exists in the error message
             identifier = str(self.url)
             if self.package:
