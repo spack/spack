@@ -5,13 +5,17 @@
 
 import json
 import os
+import re
 import shutil
+import sys
+import tempfile
 import warnings
+from typing import Dict
 from urllib.parse import urlparse, urlunparse
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 import llnl.util.tty.color as clr
+from llnl.util import tty
 
 import spack.binary_distribution as bindist
 import spack.ci as spack_ci
@@ -21,10 +25,15 @@ import spack.config as cfg
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
+import spack.paths
+import spack.repo
+import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack.util.executable import ProcessError
+from spack.version import StandardVersion
 
 description = "manage continuous integration pipelines"
 section = "build"
@@ -33,6 +42,7 @@ level = "long"
 SPACK_COMMAND = "spack"
 INSTALL_FAIL_CODE = 1
 FAILED_CREATE_BUILDCACHE_CODE = 100
+BUILTIN = re.compile(r"var\/spack\/repos\/builtin\/packages\/([^\/]+)\/package\.py")
 
 
 def deindent(desc):
@@ -182,6 +192,7 @@ def setup_parser(subparser):
     reproduce.add_argument(
         "-s", "--autostart", help="Run docker reproducer automatically", action="store_true"
     )
+
     gpg_group = reproduce.add_mutually_exclusive_group(required=False)
     gpg_group.add_argument(
         "--gpg-file", help="Path to public GPG key for validating binary cache installs"
@@ -189,8 +200,17 @@ def setup_parser(subparser):
     gpg_group.add_argument(
         "--gpg-url", help="URL to public GPG key for validating binary cache installs"
     )
-
     reproduce.set_defaults(func=ci_reproduce)
+
+    # Verify checksums inside of ci workflows
+    verify_versions = subparsers.add_parser(
+        "verify-versions",
+        description=deindent(ci_verify_versions.__doc__),
+        help=spack.cmd.first_line(ci_verify_versions.__doc__),
+    )
+    verify_versions.add_argument("from_ref", help="git ref from which start looking at changes")
+    verify_versions.add_argument("to_ref", help="git ref to end looking at changes")
+    verify_versions.set_defaults(func=ci_verify_versions)
 
 
 def ci_generate(args):
@@ -290,7 +310,6 @@ def ci_rebuild(args):
     ci_config = cfg.get("ci")
     if not ci_config:
         tty.die("spack ci rebuild requires an env containing ci cfg")
-
     # Grab the environment variables we need.  These either come from the
     # pipeline generation step ("spack ci generate"), where they were written
     # out as variables, or else provided by GitLab itself.
@@ -813,6 +832,153 @@ def _gitlab_artifacts_url(url: str) -> str:
 
     # Don't allow fragments / queries
     return urlunparse(parsed._replace(path="/".join(parts), fragment="", query=""))
+
+
+def get_standard_version_checksum(pkg, version: StandardVersion) -> str:
+    """Get a checksum for a Spack StandardVersion.
+
+    Args:
+       pkg (Package): Spack package for which to get a version checksum
+       version (StandardVersion): version in package to get checksum
+
+    Returns:
+      checksum (str): sha256 checksum of version tarball
+    """
+    url = pkg.find_valid_url_for_version(version)
+    url_dict: Dict[StandardVersion, str] = {version: url}
+
+    version_hashes = spack.stage.get_checksums_for_versions(
+        url_dict, pkg.name, fetch_options=pkg.fetch_options
+    )
+
+    return version_hashes[version]
+
+
+def validate_standard_version(pkg, version: StandardVersion) -> bool:
+    """Get and test the checksum of a package version based on a tarball.
+
+    Args:
+      pkg (Package): Spack package for which to validate a version checksum
+      version (StandardVersion): version of the package to validate
+
+    Returns:
+      bool: result of the validation. True is valid and false is failed.
+    """
+    sha = get_standard_version_checksum(pkg, version)
+    if sha != pkg.versions[version]["sha256"]:
+        tty.error(
+            f"Invalid checksum found {pkg.name}@{version}\n"
+            f"    [package.py] {pkg.versions[version]['sha256']}\n"
+            f"    [Downloaded] {sha}"
+        )
+        return False
+
+    tty.info(f"Validated {pkg.name}@{version} --> {sha}")
+    return True
+
+
+def validate_git_version(pkg, version: StandardVersion) -> bool:
+    """Get and test the commit and tag of a package version based on a git repository.
+
+    Args:
+      pkg (Package): Spack package for which to validate a version commit / tag
+      version (StandardVersion): version of the package to validate
+
+    Returns:
+      bool: result of the validation. True is valid and false is failed.
+    """
+    known_commit = pkg.versions[version]["commit"]
+    git = spack.util.git.git(required=True)
+
+    with tempfile.TemporaryDirectory() as tmpdirpath:
+        # Test if repository can be cloned.
+        try:
+            git("clone", pkg.git, tmpdirpath, output=str, error=str)
+        except ProcessError as exp:
+            tty.error(f"Unable to clone git repository for {pkg.name}@{version}", exp)
+
+        with fs.working_dir(tmpdirpath):
+            # Test if the specified commit is in the repository.
+            # If the commit is located in the repository the command will return 0 and
+            # print the word "commit" else it will fail with a lookup error
+            try:
+                git("cat-file", "-t", known_commit, output=str, error=str)
+
+            except ProcessError:
+                tty.error(
+                    f"Invalid commit for {pkg.name}@{version}\n"
+                    f"    {known_commit} could not be located in git repository."
+                )
+                return False
+
+            # Test if the specified tag matches the commit in the package.py
+            # We retrieve the commit associated with a tag and compare it to the
+            # commit that is located in the package.py file.
+            if "tag" in pkg.versions[version]:
+                tag = pkg.versions[version]["tag"]
+                found_commit = git("rev-list", "-n", "1", tag, output=str).strip()
+                if found_commit != known_commit:
+                    tty.error(
+                        f"Mismatched tag <--> commit found for {pkg.name}@{version}\n"
+                        f"    [package.py] {known_commit}\n"
+                        f"    [Downloaded] {found_commit}"
+                    )
+                    return False
+
+    # If we have downloaded the repository, found the commit, and compared
+    # the tag (if specified) we can conclude that the version is pointing
+    # at what we would expect.
+    tty.info(f"Validated {pkg.name}@{version} --> {known_commit}")
+    return True
+
+
+def ci_verify_versions(args):
+    """validate version checksum & commits between git refs"""
+    with fs.working_dir(spack.paths.prefix):
+        # We use HEAD^1 explicitly on the merge commit created by
+        # GitHub Actions. However HEAD~1 is a safer default for the helper function.
+        files = spack.util.git.get_modified_files(from_ref=args.from_ref, to_ref=args.to_ref)
+
+    pkgs = [(m.group(1), p) for p in files for m in [BUILTIN.search(p)] if m]
+
+    failed_checksum = False
+    for pkg_name, path in pkgs:
+        # Get the package we're going to generate checksums for
+        spec = spack.spec.Spec(pkg_name)
+        pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+
+        # Skip checking manual download packages and trust the maintainers
+        if pkg.manual_download:
+            continue
+
+        # Store versions checksums / commits for future loop
+        checksums_version_dict = {}
+        for version in pkg.versions:
+            if "sha256" in pkg.versions[version]:
+                checksums_version_dict[pkg.versions[version]["sha256"]] = version
+
+            elif "commit" in pkg.versions[version]:
+                checksums_version_dict[pkg.versions[version]["commit"]] = version
+
+            elif not version.isdevelop():
+                tty.error(f"{pkg_name}@{version} does not define a sha256 or commit.")
+                failed_checksum = True
+
+        with fs.working_dir(spack.paths.prefix):
+            added_versions = spack_ci.get_added_versions(
+                checksums_version_dict, path, from_ref="HEAD^1"
+            )
+
+        for version in added_versions:
+            # Verify package versions coming from tarballs
+            if "sha256" in pkg.versions[version] and not validate_standard_version(pkg, version):
+                failed_checksum = True
+
+            if "commit" in pkg.versions[version] and not validate_git_version(pkg, version):
+                failed_checksum = True
+
+    if failed_checksum:
+        sys.exit(1)
 
 
 def ci(parser, args):

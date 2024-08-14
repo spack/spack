@@ -72,7 +72,7 @@ class FakeWebResponder:
         return None
 
 
-def mock_git_diff(filename, monkeypatch):
+def mock_git_diff(monkeypatch, filename):
     def git(*args, **kwargs):
         with open(f"{spack.paths.test_path}/data/ci/git/{filename}", "r") as test_file:
             return test_file.read()
@@ -81,7 +81,7 @@ def mock_git_diff(filename, monkeypatch):
 
 
 def test_get_added_versions_new_checksum(monkeypatch):
-    mock_git_diff("new-checksum.diff", monkeypatch)
+    mock_git_diff(monkeypatch, "new-checksum.diff")
 
     checksum_versions = {
         "eedac958431876cebe243925dc354b0c21915d1bc84c5678a8073f0ec91d6a4c": Version("2.54.0"),
@@ -96,7 +96,7 @@ def test_get_added_versions_new_checksum(monkeypatch):
 
 
 def test_get_added_versions_new_commit(monkeypatch):
-    mock_git_diff("new-commit.diff", monkeypatch)
+    mock_git_diff(monkeypatch, "new-commit.diff")
 
     checksum_versions = {
         "cf90dfd3098bef5b3c22d5ab026173b3c357f2dd": Version("0.13.0"),

@@ -17,5 +17,4 @@ jobs:
         fetch-depth: 2
     - name: Verify Added Checksums
       run: |
-        source share/spack/setup-env.sh
-        spack-python .github/workflows/bin/verify-versions.py
+        bin/spack ci verify-versions HEAD^1 HEAD
