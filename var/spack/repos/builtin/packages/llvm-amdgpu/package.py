@@ -296,6 +296,7 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
                 join_path(self.prefix.lib.clang, version, "lib", "amdgcn"),
                 os.path.join(self.prefix, "amdgcn"),
             )
+
     # Required for enabling asan on dependent packages
     def setup_dependent_build_environment(self, env, dependent_spec):
         for root, _, files in os.walk(self.spec["llvm-amdgpu"].prefix):
