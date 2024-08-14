@@ -368,10 +368,10 @@ def find(parser, args):
             to_be_installed = list(x for x in results if not x.installed)
             if env and (to_be_installed or args.show_concretized):
                 concretized_suffix = " to be installed"
-                if args.only_roots and to_be_installed:
-                    concretized_suffix += " (not shown)"
-                else:
-                    if (not args.show_concretized) and to_be_installed:
+                if to_be_installed:
+                    if args.only_roots:
+                        concretized_suffix += " (not shown)"
+                    elif not args.show_concretized:
                         concretized_suffix += " (show with `spack find -c`)"
 
                 spack.cmd.print_how_many_pkgs(
