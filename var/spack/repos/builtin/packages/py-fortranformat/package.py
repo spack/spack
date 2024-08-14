@@ -9,7 +9,7 @@ from spack.package import *
 class PyFortranformat(PythonPackage):
     """Mimics Fortran textual IO in Python"""
 
-    homepage = "http://bitbucket.org/brendanarnold/py-fortranformat"
+    homepage = "https://github.com/brendanarnold/py-fortranformat"
     pypi = "fortranformat/fortranformat-2.0.0.tar.gz"
 
     license("MIT")
