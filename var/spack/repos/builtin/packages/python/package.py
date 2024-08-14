@@ -669,7 +669,7 @@ class Python(Package):
             config_args.append("CFLAGS={0}".format(" ".join(cflags)))
 
         if sys.platform == "darwin":
-            if self.version >= Version("3.12.0") and self.version < Version("3.13.0"):
+            if self.spec.satisfies("@3.12"):
                 config_args.append("CURSES_LIBS={0}".format(spec["ncurses"].libs.link_flags))
 
         return config_args
