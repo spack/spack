@@ -1,6 +1,8 @@
 import argparse
 import os
 
+from llnl.util.lang import dedupe
+
 import spack.environment as ev
 import spack.environment.shell
 import spack.paths
@@ -27,7 +29,15 @@ def generate_module(args):
 
         env_mods.extend(uenv.unconditional_environment_modifications(descriptor))
         view = descriptor.view()
-        env_mods.extend(uenv.environment_modifications_for_specs(view.get_all_specs(), view=view))
+        env_mods.extend(uenv.environment_modifications_for_specs(*list(view.get_all_specs()), view=view))
+
+        # Note: you cannot encode PruneDuplicatePaths into a direct lmod action
+        # so instead, I run dedupe on the environment modifications.
+        # This would be incorrect if for example you had an action sequence like
+        # [x, undo(x), x]; you could sidestep that particular issue by reversing
+        # de-duping, and then re-reversing. Not sure if other effects might be
+        # more subtle
+        env_mods.env_modifications = list(dedupe(env_mods.env_modifications))
     else:
         active_env = ev.active_environment()
         if not active_env:
