@@ -647,10 +647,11 @@ class Python(Package):
         else:
             config_args.append("--without-system-expat")
 
-        if "+external-libffi" in spec:
-            config_args.append("--with-system-ffi")
-        else:
-            config_args.append("--without-system-ffi")
+        if self.version < Version("3.12.0"):
+            if "+external-libffi" in spec:
+                config_args.append("--with-system-ffi")
+            else:
+                config_args.append("--without-system-ffi")
 
         if "+tkinter" in spec:
             config_args.extend(
