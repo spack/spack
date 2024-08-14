@@ -22,6 +22,9 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
         url="https://github.com/beagle-dev/beagle-lib/archive/beagle_release_2_1_2.tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")

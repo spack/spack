@@ -26,6 +26,8 @@ class Ffte(Package):
     version("2.0", sha256="f5cf1d1f880288e359f4d517191980ffca4420f817ecaa2d754ca5c5421271e3")
     version("1.0", sha256="35171e3324019018c25575b2807a6513fa85badad040f30f238fff03d4b4d1ab")
 
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=False, description="Build MPI library")
     variant("cuda", default=False, description="Use CUDA Fortran")
     variant("vector", default=False, description="Use vectorized FFT")

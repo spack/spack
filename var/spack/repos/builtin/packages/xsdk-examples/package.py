@@ -24,6 +24,9 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("xsdk+cuda", when="+cuda")
     depends_on("xsdk~cuda", when="~cuda")
     for sm_ in CudaPackage.cuda_arch_values:

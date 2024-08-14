@@ -33,6 +33,8 @@ class Libedit(AutotoolsPackage):
         "3.1-20150325", sha256="c88a5e4af83c5f40dda8455886ac98923a9c33125699742603a88a0253fcc8c5"
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("pkgconfig", type="build")
     depends_on("ncurses")
 

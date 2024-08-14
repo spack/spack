@@ -53,6 +53,10 @@ class Spglib(CMakePackage):
     version("1.10.1", sha256="8ed979cda82f6d440567197ec191bffcb82ee83c5bfe8a484c5a008dd00273f0")
     version("1.10.0", sha256="117fff308731784bea2ddaf3d076f0ecbf3981b31ea1c1bfd5ce4f057a5325b1")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("openmp", default=True, description="Build with OpenMP support", when="@1.16.2:")
     variant("fortran", default=True, description="Build Fortran interface", when="@1.16.4:")
     variant("tests", default=False, description="Build with tests", when="@2.1.0:")

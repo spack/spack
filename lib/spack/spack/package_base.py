@@ -35,6 +35,7 @@ from llnl.util.link_tree import LinkTree
 
 import spack.compilers
 import spack.config
+import spack.dependency
 import spack.deptypes as dt
 import spack.directives
 import spack.directory_layout
@@ -196,13 +197,12 @@ class DetectablePackageMeta(type):
         # that "foo" was a possible executable.
 
         # If a package has the executables or libraries  attribute then it's
-        # assumed to be detectable
+        # assumed to be detectable. Add a tag, so finding them is faster
         if hasattr(cls, "executables") or hasattr(cls, "libraries"):
-            # Append a tag to each detectable package, so that finding them is faster
-            if hasattr(cls, "tags"):
-                getattr(cls, "tags").append(DetectablePackageMeta.TAG)
-            else:
-                setattr(cls, "tags", [DetectablePackageMeta.TAG])
+            # To add the tag, we need to copy the tags attribute, and attach it to
+            # the current class. We don't use append, since it might modify base classes,
+            # if "tags" is retrieved following the MRO.
+            cls.tags = getattr(cls, "tags", []) + [DetectablePackageMeta.TAG]
 
             @classmethod
             def platform_executables(cls):

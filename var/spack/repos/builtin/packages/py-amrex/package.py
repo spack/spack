@@ -21,6 +21,8 @@ class PyAmrex(PythonPackage, CudaPackage, ROCmPackage):
     version("24.04", sha256="ab85695bb9644b702d0fc84e77205d264d27ba94999cab912c8a3212a7eb77fc")
     version("24.03", sha256="bf85b4ad35b623278cbaae2c07e22138545dec0732d15c4ab7c53be76a7f2315")
 
+    depends_on("cxx", type="build")  # generated
+
     for v in ["24.04", "24.03"]:
         depends_on("amrex@{0}".format(v), when="@{0}".format(v), type=("build", "link"))
 
@@ -113,7 +115,11 @@ class PyAmrex(PythonPackage, CudaPackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         cache_extra_test_sources(self, [self.tests_src_dir])
 
-    def test(self):
+    def test_pytest(self):
         """Perform smoke tests on the installed package."""
-        pytest = which("pytest")
-        pytest(join_path(install_test_root(self), self.tests_src_dir))
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.tests_src_dir)
+        with working_dir(test_dir):
+            pytest = which("pytest")
+            # TODO: Remove once test dependencies made available
+            assert pytest is not None, "Make sure a suitable 'pytest' is in your path"
+            pytest()

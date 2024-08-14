@@ -46,8 +46,14 @@ class Hip(CMakePackage):
 
     variant("rocm", default=True, description="Enable ROCm support")
     variant("cuda", default=False, description="Build with CUDA")
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
+    conflicts("~rocm +asan", msg="ROCm must be enabled for asan")
+
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
 
     depends_on("cuda", when="+cuda")
 
@@ -60,6 +66,8 @@ class Hip(CMakePackage):
     with when("+rocm"):
         depends_on("gl@4.5:")
         depends_on("py-cppheaderparser", type="build", when="@5.3.3:")
+        depends_on("libx11", when="+asan")
+        depends_on("xproto", when="+asan")
         for ver in [
             "5.3.0",
             "5.3.3",
@@ -234,7 +242,7 @@ class Hip(CMakePackage):
         )
     # Add hipother sources thru the below
     for d_version, d_shasum in [
-        ("6.1.2", "8b975623c8ed1db53feea2cfd5d29f2a615e890aee1157d0d17adeb97200643f"),
+        ("6.1.2", "2740d1e3dcf1f2d07d2a8db6acf4c972941ae392172b83fd8ddcfe8706a40d0b"),
         ("6.1.1", "8b975623c8ed1db53feea2cfd5d29f2a615e890aee1157d0d17adeb97200643f"),
         ("6.1.0", "43a48ccc82f705a15852392ee7419e648d913716bfc04063a53d2d17979b1b46"),
         ("6.0.2", "0bebb3774debcecc0b29a0cc5aa98e373a3ee7acf161503d0d9c9d0ecc8b8010"),
@@ -532,6 +540,24 @@ class Hip(CMakePackage):
             args.append(self.define("HIP_PLATFORM", "amd"))
             if self.spec.satisfies("@5.6.0:"):
                 args.append(self.define("HIP_LLVM_ROOT", self.spec["llvm-amdgpu"].prefix))
+            if self.spec.satisfies("@6.1.0:") and self.spec.satisfies("+asan"):
+                args.append(self.define("ADDRESS_SANITIZER", "ON"))
+                args.append(
+                    self.define("CMAKE_C_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+                )
+                args.append(
+                    self.define(
+                        "CMAKE_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++"
+                    )
+                )
+                args.append(
+                    self.define(
+                        "CMAKE_CXX_FLAGS",
+                        f"-I{self.spec['libx11'].prefix.include} "
+                        f"-I{self.spec['mesa'].prefix.include} "
+                        f"-I{self.spec['xproto'].prefix.include}",
+                    )
+                )
 
         if self.spec.satisfies("+cuda"):
             args.append(self.define("HIP_PLATFORM", "nvidia"))

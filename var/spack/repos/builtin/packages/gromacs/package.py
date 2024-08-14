@@ -89,6 +89,10 @@ class Gromacs(CMakePackage, CudaPackage):
     version("4.6.7", sha256="6afb1837e363192043de34b188ca3cf83db6bd189601f2001a1fc5b0b2a214d9")
     version("4.5.5", sha256="e0605e4810b0d552a8761fef5540c545beeaf85893f4a6e21df9905a33f871ba")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "mpi", default=True, description="Activate MPI support (disable for Thread-MPI support)"
     )

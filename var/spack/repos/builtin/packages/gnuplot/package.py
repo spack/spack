@@ -22,7 +22,7 @@ class Gnuplot(AutotoolsPackage):
     """
 
     homepage = "http://www.gnuplot.info"
-    url = "http://downloads.sourceforge.net/project/gnuplot/gnuplot/5.0.6/gnuplot-5.0.6.tar.gz"
+    url = "https://downloads.sourceforge.net/project/gnuplot/gnuplot/5.0.6/gnuplot-5.0.6.tar.gz"
 
     # There is a conflict in term.h between gnuplot and ncurses, which is a
     # dependency of readline. Fix it with a small patch
@@ -43,6 +43,9 @@ class Gnuplot(AutotoolsPackage):
     version("5.0.6", sha256="5bbe4713e555c2e103b7d4ffd45fca69551fff09cf5c3f9cb17428aaacc9b460")
     version("5.0.5", sha256="25f3e0bf192e01115c580f278c3725d7a569eb848786e12b455a3fda70312053")
     version("5.0.1", sha256="7cbc557e71df581ea520123fb439dea5f073adcc9010a2885dc80d4ed28b3c47")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("wx", default=False, description="Activates wxWidgets terminal")
     variant("gd", default=True, description="Activates gd based terminal")

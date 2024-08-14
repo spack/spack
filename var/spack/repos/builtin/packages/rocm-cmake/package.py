@@ -38,6 +38,8 @@ class RocmCmake(CMakePackage):
         version("5.3.3", sha256="3e527f99db52e301ab4f1b994029585951e2ae685f0cdfb7b8529c72f4b77af4")
         version("5.3.0", sha256="659a8327f13e6786103dd562d3632e89a51244548fca081f46c753857cf09d04")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.6:", type="build")
 
     for ver in [
@@ -63,12 +65,13 @@ class RocmCmake(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.test_src_dir])
 
-    def test(self):
+    def test_cmake(self):
+        """Test cmake"""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=True):
-            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
             prefixes = ";".join([self.spec["rocm-cmake"].prefix])
             cc_options = ["-DCMAKE_PREFIX_PATH=" + prefixes, "."]
-            self.run_test(cmake_bin, cc_options)
+            cmake = which(self.spec["cmake"].prefix.bin.cmake)
+            cmake(*cc_options)
             make()
             make("clean")

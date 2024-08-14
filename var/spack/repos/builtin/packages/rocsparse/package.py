@@ -32,6 +32,11 @@ class Rocsparse(CMakePackage):
         sticky=True,
     )
     variant("test", default=False, description="Build rocsparse-test client")
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
 
     license("MIT")
     version("6.1.2", sha256="e8989c28085275e7c044b19fd2bc86d8493ce6a1b8545126f787722c535fe6eb")
@@ -50,6 +55,10 @@ class Rocsparse(CMakePackage):
         version("5.4.0", sha256="c8f0e920a8ec15b9ae40564c68191363356cc4d793c16247bb6e11ef5293ed11")
         version("5.3.3", sha256="4204035e952e20ada4526a94989e8e5c76c04574176fe63a021522862461c800")
         version("5.3.0", sha256="521ca0e7b52f26edbff8507eb1479dc26019f456756d884d7b8b192c3ea518e8")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.5:", type="build")
 
@@ -240,6 +249,13 @@ class Rocsparse(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
+        if self.spec.satisfies("+asan"):
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     @classmethod
     def determine_version(cls, lib):

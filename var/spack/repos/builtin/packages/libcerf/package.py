@@ -19,6 +19,9 @@ class Libcerf(AutotoolsPackage, SourceforgePackage):
 
     version("1.3", sha256="d7059e923d3f370c89fb4d19ed4f827d381bc3f0e36da5595a04aeaaf3e6a859")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     def configure_args(self):
         spec = self.spec
         options = []

@@ -6,7 +6,6 @@
 import hashlib
 import json
 import os
-import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -41,11 +40,6 @@ class Blob(NamedTuple):
 def create_tarball(spec: spack.spec.Spec, tarfile_path):
     buildinfo = spack.binary_distribution.get_buildinfo_dict(spec)
     return spack.binary_distribution._do_create_tarball(tarfile_path, spec.prefix, buildinfo)
-
-
-def _log_upload_progress(digest: Digest, size: int, elapsed: float):
-    elapsed = max(elapsed, 0.001)  # guard against division by zero
-    tty.info(f"Uploaded {digest} ({elapsed:.2f}s, {size / elapsed / 1024 / 1024:.2f} MB/s)")
 
 
 def with_query_param(url: str, param: str, value: str) -> str:
@@ -141,8 +135,6 @@ def upload_blob(
     if not force and blob_exists(ref, digest, _urlopen):
         return False
 
-    start = time.time()
-
     with open(file, "rb") as f:
         file_size = os.fstat(f.fileno()).st_size
 
@@ -167,7 +159,6 @@ def upload_blob(
 
         # Created the blob in one go.
         if response.status == 201:
-            _log_upload_progress(digest, file_size, time.time() - start)
             return True
 
         # Otherwise, do another PUT request.
@@ -191,8 +182,6 @@ def upload_blob(
 
         spack.oci.opener.ensure_status(request, response, 201)
 
-    # print elapsed time and # MB/s
-    _log_upload_progress(digest, file_size, time.time() - start)
     return True
 
 

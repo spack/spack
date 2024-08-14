@@ -87,6 +87,9 @@ class KokkosLegacy(Package):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("debug", default=False, description="Build debug version of Kokkos")
 
     variant("serial", default=True, description="enable Serial backend (default)")
