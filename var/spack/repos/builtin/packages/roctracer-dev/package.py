@@ -90,6 +90,7 @@ class RoctracerDev(CMakePackage, ROCmPackage):
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     patch("0001-include-rocprofiler-dev-path.patch", when="@5.3:5.4")
+    patch("0002-use-clang-18.patch", when="@6.2")
 
     @classmethod
     def determine_version(cls, lib):
