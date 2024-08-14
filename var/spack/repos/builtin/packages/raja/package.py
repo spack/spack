@@ -400,57 +400,69 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     @property
     def build_relpath(self):
         """Relative path to the cmake build subdirectory."""
-        return join_path("..", self.build_dirname)
+        return join_path("..", self.builder.build_dirname)
 
     @run_after("install")
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to a
         relative install test subdirectory for use during `spack test run`."""
         # Now copy the relative files
-        self.cache_extra_test_sources(self.build_relpath)
+        cache_extra_test_sources(self, self.build_relpath)
 
         # Ensure the path exists since relying on a relative path at the
         # same level as the normal stage source path.
-        mkdirp(self.install_test_root)
+        mkdirp(install_test_root(self))
 
     @property
     def _extra_tests_path(self):
         # TODO: The tests should be converted to re-build and run examples
         # TODO: using the installed libraries.
-        return join_path(self.install_test_root, self.build_relpath, "bin")
+        return join_path(install_test_root(self), self.build_relpath, "bin")
 
-    def _test_examples(self):
-        """Perform very basic checks on a subset of copied examples."""
-        checks = [
-            (
-                "ex5_line-of-sight_solution",
-                [r"RAJA sequential", r"RAJA OpenMP", r"result -- PASS"],
-            ),
-            (
-                "ex6_stencil-offset-layout_solution",
-                [r"RAJA Views \(permuted\)", r"result -- PASS"],
-            ),
-            (
-                "ex8_tiled-matrix-transpose_solution",
-                [r"parallel top inner loop", r"collapsed inner loops", r"result -- PASS"],
-            ),
-            ("kernel-dynamic-tile", [r"Running index", r"(24,24)"]),
-            ("plugin-example", [r"Launching host kernel for the 10 time"]),
-            ("tut_batched-matrix-multiply", [r"result -- PASS"]),
-            ("wave-eqn", [r"Max Error = 2", r"Evolved solution to time"]),
-        ]
-        for exe, expected in checks:
-            reason = "test: checking output of {0} for {1}".format(exe, expected)
-            self.run_test(
-                exe,
-                [],
-                expected,
-                installed=False,
-                purpose=reason,
-                skip_missing=True,
-                work_dir=self._extra_tests_path,
-            )
+    def run_example(self, exe, expected):
+        """run and check outputs of the example"""
+        with working_dir(self._extra_tests_path):
+            example = which(exe)
+            if example is None:
+                raise SkipTest(f"{exe} was not built")
 
-    def test(self):
-        """Perform smoke tests."""
-        self._test_examples()
+            out = example(output=str.split, error=str.split)
+            check_outputs(expected, out)
+
+    def test_line_of_sight(self):
+        """check line of sight example"""
+        self.run_example(
+            "ex5_line-of-sight_solution",
+            [r"C-style sequential", r"RAJA sequential", r"result -- PASS"],
+        )
+
+    def test_stencil_offset_layout(self):
+        """check stencil offset layout"""
+        self.run_example(
+            "ex6_stencil-offset-layout_solution", [r"RAJA Views \(permuted\)", r"result -- PASS"]
+        )
+
+    def test_tiled_matrix(self):
+        """check tiled matrix transpose"""
+        self.run_example(
+            "ex8_tiled-matrix-transpose_solution",
+            [r"C-version", r"RAJA sequential", r"result -- PASS"],
+        )
+
+    def test_dynamic_tile(self):
+        """check kernel dynamic tile"""
+        self.run_example("kernel-dynamic-tile", [r"Running index", r"(24,24)"])
+
+    def test_plugin_example(self):
+        """check plugin example"""
+        self.run_example("plugin-example", [r"Launching host kernel for the 10 time"])
+
+    def test_matrix_multiply(self):
+        """check batched matrix multiple tutorial"""
+        self.run_example(
+            "tut_batched-matrix-multiply", [r"batched matrix multiplication", r"result -- PASS"]
+        )
+
+    def test_wave_equation(self):
+        """check wave equation"""
+        self.run_example("wave-eqn", [r"Max Error = 2", r"Evolved solution to time"])

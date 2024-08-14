@@ -14,6 +14,7 @@ import spack
 import spack.cmd.external
 import spack.detection
 import spack.detection.path
+import spack.repo
 from spack.main import SpackCommand
 from spack.spec import Spec
 
@@ -55,7 +56,9 @@ def test_find_external_two_instances_same_package(mock_executable):
     search_paths = [str(cmake1.parent.parent), str(cmake2.parent.parent)]
 
     finder = spack.detection.path.ExecutablesFinder()
-    detected_specs = finder.find(pkg_name="cmake", initial_guess=search_paths)
+    detected_specs = finder.find(
+        pkg_name="cmake", initial_guess=search_paths, repository=spack.repo.PATH
+    )
 
     assert len(detected_specs) == 2
     spec_to_path = {e.spec: e.prefix for e in detected_specs}
@@ -114,11 +117,31 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
 @pytest.mark.parametrize(
     "names,tags,exclude,expected",
     [
-        # find --all
-        (None, ["detectable"], [], ["builtin.mock.find-externals1"]),
+        # find -all
+        (
+            None,
+            ["detectable"],
+            [],
+            [
+                "builtin.mock.find-externals1",
+                "builtin.mock.gcc",
+                "builtin.mock.llvm",
+                "builtin.mock.intel-oneapi-compilers",
+            ],
+        ),
         # find --all --exclude find-externals1
-        (None, ["detectable"], ["builtin.mock.find-externals1"], []),
-        (None, ["detectable"], ["find-externals1"], []),
+        (
+            None,
+            ["detectable"],
+            ["builtin.mock.find-externals1"],
+            ["builtin.mock.gcc", "builtin.mock.llvm", "builtin.mock.intel-oneapi-compilers"],
+        ),
+        (
+            None,
+            ["detectable"],
+            ["find-externals1"],
+            ["builtin.mock.gcc", "builtin.mock.llvm", "builtin.mock.intel-oneapi-compilers"],
+        ),
         # find cmake (and cmake is not detectable)
         (["cmake"], ["detectable"], [], []),
     ],
@@ -243,7 +266,9 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
     monkeypatch.setattr(gcc_cls, "determine_variants", _determine_variants)
 
     finder = spack.detection.path.ExecutablesFinder()
-    detected_specs = finder.find(pkg_name="gcc", initial_guess=[str(search_dir)])
+    detected_specs = finder.find(
+        pkg_name="gcc", initial_guess=[str(search_dir)], repository=spack.repo.PATH
+    )
 
     assert len(detected_specs) == 1
 
