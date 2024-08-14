@@ -15,6 +15,7 @@ from contextlib import contextmanager
 
 import pytest
 
+import spack.binary_distribution
 import spack.cmd.buildcache
 import spack.database
 import spack.environment as ev
@@ -294,8 +295,8 @@ def test_uploading_with_base_image_in_docker_image_manifest_v2_format(
 def test_best_effort_upload(mutable_database: spack.database.Database, monkeypatch):
     """Failure to upload a blob or manifest should not prevent others from being uploaded"""
 
-    _push_blob = spack.cmd.buildcache._push_single_spack_binary_blob
-    _push_manifest = spack.cmd.buildcache._put_manifest
+    _push_blob = spack.binary_distribution._oci_push_pkg_blob
+    _push_manifest = spack.binary_distribution._oci_put_manifest
 
     def push_blob(image_ref, spec, tmpdir):
         # fail to upload the blob of mpich
@@ -311,8 +312,8 @@ def test_best_effort_upload(mutable_database: spack.database.Database, monkeypat
             base_images, checksums, image_ref, tmpdir, extra_config, annotations, *specs
         )
 
-    monkeypatch.setattr(spack.cmd.buildcache, "_push_single_spack_binary_blob", push_blob)
-    monkeypatch.setattr(spack.cmd.buildcache, "_put_manifest", put_manifest)
+    monkeypatch.setattr(spack.binary_distribution, "_oci_push_pkg_blob", push_blob)
+    monkeypatch.setattr(spack.binary_distribution, "_oci_put_manifest", put_manifest)
 
     registry = InMemoryOCIRegistry("example.com")
     with oci_servers(registry):

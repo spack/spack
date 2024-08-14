@@ -384,11 +384,14 @@ def test_correct_specs_are_pushed(
 
     packages_to_push = []
 
-    def fake_push(node, push_url, options):
-        assert isinstance(node, Spec)
-        packages_to_push.append(node.name)
+    def fake_push(specs, *args, **kwargs):
+        assert all(isinstance(s, Spec) for s in specs)
+        packages_to_push.extend(s.name for s in specs)
+        skipped = []
+        errors = []
+        return skipped, errors
 
-    monkeypatch.setattr(spack.binary_distribution, "push_or_raise", fake_push)
+    monkeypatch.setattr(spack.binary_distribution, "_push", fake_push)
 
     buildcache_create_args = ["create", "--unsigned"]
 
