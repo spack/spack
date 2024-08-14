@@ -407,9 +407,9 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         # Now copy the relative files
         cache_extra_test_sources(self, self.build_relpath)
 
-        # # Ensure the path exists since relying on a relative path at the
-        # # same level as the normal stage source path.
-        # mkdirp(install_test_root(self))
+        # Ensure the path exists since relying on a relative path at the
+        # same level as the normal stage source path.
+        mkdirp(install_test_root(self))
 
     @property
     def _extra_tests_path(self):
@@ -419,14 +419,16 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def run_example(self, exe, expected):
         """run and check outputs of the example"""
-        example_exe = which(exe)
-        if example_exe is None:
-            raise SkipTest(f"{exe} is not installed")
-        out = example_exe([], output=str.split, error=str.split)
-        check_outputs(expected, out)
+        with working_dir(self._extra_tests_path):
+            example = which(exe)
+            if example is None:
+                raise SkipTest(f"{exe} is not installed")
+
+            out = example([], output=str.split, error=str.split)
+            check_outputs(expected, out)
 
     def test_line_of_sight(self):
-        """Test line of sight example"""
+        """check line of sight example"""
         self.run_example(
             "ex5_line-of-sight_solution", [r"RAJA sequential", r"RAJA OpenMP", r"result -- PASS"]
         )
