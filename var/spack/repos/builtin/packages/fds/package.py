@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Fds(MakefilePackage):
     git = "https://github.com/firemodels/fds.git"
 
     version("6.8.0", commit="886e0096535519b7358a3c4393c91da3caee5072")
+
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi")
     depends_on("mkl")

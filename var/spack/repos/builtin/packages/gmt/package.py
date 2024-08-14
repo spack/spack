@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Gmt(CMakePackage, AutotoolsPackage):
 
     maintainers("adamjstewart")
 
+    license("LGPL-3.0-only")
+
     version("master", branch="master")
     version("6.4.0", sha256="c39d23dbc8a85416457946f6b93c2b9a5f039f092453e7f4b1aaf88d4a288300")
     version("6.3.0", sha256="48712279da8228a7960f36fd4b7b04cc1a66489c37b2a5c03f8336a631aa3b24")
@@ -35,6 +37,9 @@ class Gmt(CMakePackage, AutotoolsPackage):
         sha256="27c30b516c317fed8e44efa84a0262f866521d80cfe76a61bf12952efb522b63",
         url="ftp://ftp.soest.hawaii.edu/gmt/gmt-4.5.18-src.tar.bz2",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant(
         "ghostscript",

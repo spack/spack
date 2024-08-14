@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,12 +32,12 @@ class TestPackage:
         assert pkg_cls.name == "mpich"
 
     def test_package_filename(self):
-        repo = spack.repo.Repo(mock_packages_path)
+        repo = spack.repo.from_path(mock_packages_path)
         filename = repo.filename_for_package_name("mpich")
         assert filename == os.path.join(mock_packages_path, "packages", "mpich", "package.py")
 
     def test_nonexisting_package_filename(self):
-        repo = spack.repo.Repo(mock_packages_path)
+        repo = spack.repo.from_path(mock_packages_path)
         filename = repo.filename_for_package_name("some-nonexisting-package")
         assert filename == os.path.join(
             mock_packages_path, "packages", "some-nonexisting-package", "package.py"
@@ -61,14 +61,15 @@ class TestPackage:
         import spack.pkg.builtin.mock.mpich as mp  # noqa: F401
         from spack.pkg.builtin import mock  # noqa: F401
 
-    def test_inheritance_of_diretives(self):
+    def test_inheritance_of_directives(self):
         pkg_cls = spack.repo.PATH.get_pkg_class("simple-inheritance")
 
         # Check dictionaries that should have been filled by directives
-        assert len(pkg_cls.dependencies) == 3
-        assert "cmake" in pkg_cls.dependencies
-        assert "openblas" in pkg_cls.dependencies
-        assert "mpi" in pkg_cls.dependencies
+        dependencies = pkg_cls.dependencies_by_name()
+        assert len(dependencies) == 3
+        assert "cmake" in dependencies
+        assert "openblas" in dependencies
+        assert "mpi" in dependencies
         assert len(pkg_cls.provided) == 2
 
         # Check that Spec instantiation behaves as we expect

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Pflotran(AutotoolsPackage):
 
     maintainers("ghammond86", "balay")
 
+    license("LGPL-3.0-only")
+
     version("develop")
     version("5.0.0", commit="f0fe931c72c03580e489724afeb8c5451406b942")  # tag v5.0.0
     version("4.0.1", commit="fd351a49b687e27f46eae92e9259156eea74897d")  # tag v4.0.1
@@ -25,6 +27,10 @@ class Pflotran(AutotoolsPackage):
     version("xsdk-0.5.0", commit="98a959c591b72f73373febf5f9735d2c523b4c20")
     version("xsdk-0.4.0", commit="c851cbc94fc56a32cfdb0678f3c24b9936a5584e")
     version("xsdk-0.3.0", branch="release/xsdk-0.3.0")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("rxn", default=False, description="Use inbuilt reaction code, useful with cray ftn")
 

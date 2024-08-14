@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class Likwid(Package):
     git = "https://github.com/RRZE-HPC/likwid.git"
     maintainers("TomTheBear")
 
+    license("GPL-3.0-only")
+
     version("5.3.0", sha256="c290e554c4253124ac2ab8b056e14ee4d23966b8c9fbfa10ba81f75ae543ce4e")
     version("5.2.2", sha256="7dda6af722e04a6c40536fc9f89766ce10f595a8569b29e80563767a6a8f940e")
     version("5.2.1", sha256="1b8e668da117f24302a344596336eca2c69d2bc2f49fa228ca41ea0688f6cbc2")
@@ -38,6 +40,10 @@ class Likwid(Package):
     version("4.3.2", sha256="fd39529854b8952e7530da1684835aa43ac6ce2169f5ebd1fb2a481f6fb288ac")
     version("4.3.1", sha256="4b40a96717da54514274d166f9b71928545468091c939c1d74109733279eaeb1")
     version("4.3.0", sha256="86fc5f82c80fcff1a643394627839ec79f1ca2bcfad30000eb7018da592588b4")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     patch(
         "https://github.com/RRZE-HPC/likwid/commit/e0332ace8fe8ca7dcd4b4477a25e37944f173a5c.patch?full_index=1",
@@ -62,7 +68,7 @@ class Likwid(Package):
     patch(
         "https://github.com/RRZE-HPC/likwid/releases/download/v5.2.0/likwid-icx-mem-group-fix.patch",
         sha256="af4ce278ef20cd1df26d8749a6b0e2716e4286685dae5a5e1eb4af8c383f7d10",
-        when="@5.2.0:",
+        when="@5.2.0:5.2.2",
     )
     variant("fortran", default=True, description="with fortran interface")
     variant("cuda", default=False, description="with Nvidia GPU profiling support")
@@ -87,7 +93,6 @@ class Likwid(Package):
     depends_on("hwloc", when="@5.2.0:")
     depends_on("rocprofiler-dev", when="@5.3: +rocm")
     depends_on("rocm-core", when="@5.3: +rocm")
-    depends_on("rocm-smi", when="@5.3: +rocm")
     depends_on("rocm-smi-lib", when="@5.3: +rocm")
 
     # TODO: check

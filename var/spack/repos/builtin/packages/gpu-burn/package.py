@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class GpuBurn(MakefilePackage, CudaPackage):
     version("master", branch="master")
     version("1.1", sha256="9876dbf7ab17b3072e9bc657034ab39bdedb219478f57c4e93314c78ae2d6376")
     version("1.0", sha256="d55994f0bee8dabf021966dbe574ef52be1e43386faeee91318dd4ebb36aa74a")
+
+    depends_on("cxx", type="build")  # generated
 
     # This package uses CudaPackage to pick up the cuda_arch variant. A side
     # effect is that it also picks up the cuda variant, but cuda is required

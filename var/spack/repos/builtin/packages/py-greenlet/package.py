@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,11 @@ class PyGreenlet(PythonPackage):
     homepage = "https://github.com/python-greenlet/greenlet"
     pypi = "greenlet/greenlet-0.4.17.tar.gz"
 
+    # Requires objgraph
+    skip_modules = ["greenlet.tests"]
+
+    license("MIT AND PSF-2.0", checked_by="tgamblin")
+
     version("3.0.0a1", sha256="1bd4ea36f0aeb14ca335e0c9594a5aaefa1ac4e2db7d86ba38f0be96166b3102")
     version(
         "2.0.2",
@@ -23,6 +28,9 @@ class PyGreenlet(PythonPackage):
     version("1.1.0", sha256="c87df8ae3f01ffb4483c796fe1b15232ce2b219f0b18126948616224d3f658ee")
     version("0.4.17", sha256="41d8835c69a78de718e466dd0e6bfd4b46125f21a67c3ff6d76d8d8059868d6b")
     version("0.4.13", sha256="0fef83d43bf87a5196c91e73cb9772f945a4caaff91242766c5916d1dd1381e4")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("python", type=("build", "link", "run"))
     depends_on("py-setuptools", type="build")

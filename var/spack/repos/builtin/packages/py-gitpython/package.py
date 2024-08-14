@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class PyGitpython(PythonPackage):
 
     homepage = "https://gitpython.readthedocs.org"
     pypi = "GitPython/GitPython-3.1.12.tar.gz"
+
+    license("BSD-3-Clause")
 
     version("3.1.40", sha256="22b126e9ffb671fdd0c129796343a02bf67bf2994b35449ffc9321aa755e18a4")
     version("3.1.34", sha256="85f7d365d1f6bf677ae51039c1ef67ca59091c7ebd5a3509aa399d4eda02d6dd")

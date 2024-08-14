@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,9 @@ class Gcta(CMakePackage):
 
     version("1.94.0beta", commit="746e3975ddb463fc7bd15b03c6cc64b023eca497", submodules=True)
     version("1.91.2", sha256="0609d0fba856599a2acc66adefe87725304117acc226360ec2aabf8a0ac64e85")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     conflicts("target=aarch64:", when="@:1.91.2", msg="aarch64 support added in 1.94.0")
 

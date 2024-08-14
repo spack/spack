@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class Redis(MakefilePackage):
 
     maintainers("lpottier")
 
+    license("BSD-3-Clause")
+
     version("7.0.5", sha256="67054cc37b58c125df93bd78000261ec0ef4436a26b40f38262c780e56315cc3")
     version("7.0.4", sha256="f0e65fda74c44a3dd4fa9d512d4d4d833dd0939c934e946a5c622a630d057f2f")
     version("7.0.3", sha256="2cde7d17214ffe305953da9fff12333e8a72caa57fd4923e4872f6362a208e73")
@@ -49,6 +51,9 @@ class Redis(MakefilePackage):
     version("4.0.13", sha256="17d955227966dcd68590be6139e5fe7f2d19fc4fb7334248a904ea9cdd30c1d4")
     version("4.0.12", sha256="6447259d2eed426a949c9c13f8fdb2d91fb66d9dc915dd50db13b87f46d93162")
     version("4.0.11", sha256="fc53e73ae7586bcdacb4b63875d1ff04f68c5474c1ddeda78f00e5ae2eed1bbb")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("tls", default=False, when="@6:", description="Builds with TLS support")
     depends_on("openssl@1.1:", type=("build", "link"), when="+tls")

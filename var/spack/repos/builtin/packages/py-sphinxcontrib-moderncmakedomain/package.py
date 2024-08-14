@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PySphinxcontribModerncmakedomain(PythonPackage):
     pypi = "sphinxcontrib_moderncmakedomain/sphinxcontrib_moderncmakedomain-3.25.0.tar.gz"
 
     maintainers("LydDeb")
+
+    license("BSD-3-Clause")
 
     version("3.27.0", sha256="51e259e91f58d17cc0fac9307fd40106aa59d5acaa741887903fc3660361d1a1")
     version("3.26.4", sha256="c4a62d586ed1a9baf1790b816fcc04c249dd3ac239bc7c7b79663951a0a463b8")

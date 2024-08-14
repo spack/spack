@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyFlask(PythonPackage):
     homepage = "https://palletsprojects.com/p/flask/"
     pypi = "Flask/Flask-1.1.1.tar.gz"
     git = "https://github.com/pallets/flask.git"
+
+    license("BSD-3-Clause")
 
     version("2.3.2", sha256="8c2f9abd47a9e8df7f0c3f091ce9497d011dc3b31effcf4c85a6e2b50f4114ef")
     version("2.2.2", sha256="642c450d19c4ad482f96729bd2a8f6d32554aa1e231f4f6b4e7e5264b16cca2b")

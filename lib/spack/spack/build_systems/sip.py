@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -138,6 +138,10 @@ class SIPBuilder(BaseBuilder):
         # https://www.riverbankcomputing.com/static/Docs/sip/command_line_tools.html
         args = ["--verbose", "--target-dir", inspect.getmodule(self.pkg).python_platlib]
         args.extend(self.configure_args())
+
+        # https://github.com/Python-SIP/sip/commit/cb0be6cb6e9b756b8b0db3136efb014f6fb9b766
+        if spec["py-sip"].satisfies("@6.1.0:"):
+            args.extend(["--scripts-dir", pkg.prefix.bin])
 
         sip_build = Executable(spec["py-sip"].prefix.bin.join("sip-build"))
         sip_build(*args)

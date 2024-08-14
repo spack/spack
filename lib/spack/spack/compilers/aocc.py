@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,9 +24,6 @@ class Aocc(Compiler):
 
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ["flang"]
-
-    PrgEnv = "PrgEnv-aocc"
-    PrgEnv_compiler = "aocc"
 
     version_argument = "--version"
 

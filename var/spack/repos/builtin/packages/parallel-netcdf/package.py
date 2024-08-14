@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,6 +46,10 @@ class ParallelNetcdf(AutotoolsPackage):
     version("1.8.0", sha256="ac00bb2333bee96354de9d9c32d3dfdaa919d878098762f146996578b7f0ede9")
     version("1.7.0", sha256="52f0d106c470a843c6176318141f74a21e6ece3f70ee8fe261c6b93e35f70a94")
     version("1.6.1", sha256="8cf1af7b640475e3cc931e5fbcfe52484c5055f2fab526691933c02eda388aae")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("cxx", default=True, description="Build the C++ Interface")
     variant("fortran", default=True, description="Build the Fortran Interface")

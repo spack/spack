@@ -1,8 +1,7 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
 import re
 import sys
@@ -27,7 +26,7 @@ level = "short"
 
 
 package_template = '''\
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -64,8 +63,9 @@ class {class_name}({base_class_name}):
     # maintainers("github_user1", "github_user2")
 
     # FIXME: Add the SPDX identifier of the project's license below.
-    # See https://spdx.org/licenses/ for a list.
-    license("UNKNOWN")
+    # See https://spdx.org/licenses/ for a list. Upon manually verifying
+    # the license, set checked_by to your Github username.
+    license("UNKNOWN", checked_by="github_user1")
 
 {versions}
 
@@ -933,7 +933,7 @@ def get_repository(args, name):
     # Figure out where the new package should live
     repo_path = args.repo
     if repo_path is not None:
-        repo = spack.repo.Repo(repo_path)
+        repo = spack.repo.from_path(repo_path)
         if spec.namespace and spec.namespace != repo.namespace:
             tty.die(
                 "Can't create package with namespace {0} in repo with "
@@ -941,9 +941,7 @@ def get_repository(args, name):
             )
     else:
         if spec.namespace:
-            repo = spack.repo.PATH.get_repo(spec.namespace, None)
-            if not repo:
-                tty.die("Unknown namespace: '{0}'".format(spec.namespace))
+            repo = spack.repo.PATH.get_repo(spec.namespace)
         else:
             repo = spack.repo.PATH.first_repo()
 

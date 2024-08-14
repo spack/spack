@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RTensora(RPackage):
     contravariate indices, parallel computations on sequences of tensors."""
 
     cran = "tensorA"
+
+    license("GPL-2.0-or-later")
 
     version("0.36.2", sha256="8e8947566bd3b65a54de4269df1abaa3d49cf5bfd2a963c3274a524c8a819ca7")
     version("0.36.1", sha256="c7ffe12b99867675b5e9c9f31798f9521f14305c9d9f9485b171bcbd8697d09c")

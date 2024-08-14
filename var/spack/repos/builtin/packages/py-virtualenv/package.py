@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyVirtualenv(PythonPackage):
     pypi = "virtualenv/virtualenv-16.7.6.tar.gz"
     git = "https://github.com/pypa/virtualenv.git"
 
+    license("MIT")
+
     version("20.24.5", sha256="e8361967f6da6fbdf1426483bfe9fca8287c242ac0bc30429905721cefbff752")
     version("20.22.0", sha256="278753c47aaef1a0f14e6db8a4c5e1e040e90aea654d0fc1dc7e0d8a42616cc3")
     version("20.17.1", sha256="f8b927684efc6f1cc206c9db297a570ab9ad0e51c16fa9e45487d36d1905c058")
@@ -25,6 +27,8 @@ class PyVirtualenv(PythonPackage):
     version("15.0.1", sha256="1a74278b8adb383ce4c7619e33c753b1eb7b58dc1e449601c096ca4b76125f84")
     version("13.0.1", sha256="36c2cfae0f9c6462264bb19c478fc6bab3478cf0575f1027452e975a1ed84dbd")
     version("1.11.6", sha256="3e7a4c151e2ee97f51db0215bfd2a073b04a91e9786df6cb67c916f16abe04f7")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("py-hatch-vcs@0.3:", when="@20.18:", type="build")
     depends_on("py-hatchling@1.17.1:", when="@20.23.1:", type="build")

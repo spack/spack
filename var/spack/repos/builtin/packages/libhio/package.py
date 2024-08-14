@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,8 @@ class Libhio(AutotoolsPackage):
     version("1.4.1.2", sha256="87a0f9b72b7aa69485c40d9bd36f02af653b70e8eed3eb0b50eaeb02ff0a9049")
     version("1.4.1.1", sha256="5c65d18bf74357f9d9960bf6b9ad2432f8fc5a2b653e72befe4d1caabb9a2f7a")
     version("1.4.1.0", sha256="963f4a8d365afd92a5593f80946e2c4c79f4185d897436a43fae61dae5567ac4")
+
+    depends_on("c", type="build")  # generated
 
     #
     # main users of libhio thru spack will want to use HFDF5 plugin,

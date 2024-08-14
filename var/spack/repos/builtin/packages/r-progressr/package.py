@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,8 @@ class RProgressr(RPackage):
     'doFuture'. The package is compatible with Shiny applications."""
 
     cran = "progressr"
+
+    license("GPL-3.0-or-later")
 
     version("0.13.0", sha256="0ffb3dcadde0cc191bad0ff9e05d000aa65e2fc339cfc94ebbb263088df5a4e1")
     version("0.11.0", sha256="d8668c82348a20cca34bb18c0c94e6083dbb6dbea40615e07e4161aff7366cd9")

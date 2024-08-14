@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ import shutil
 import tempfile
 from collections import OrderedDict
 
-from llnl.util.symlink import symlink
+from llnl.util.symlink import readlink, symlink
 
 import spack.binary_distribution as bindist
 import spack.error
@@ -26,7 +26,7 @@ def _relocate_spliced_links(links, orig_prefix, new_prefix):
     in our case. This still needs to be called after the copy to destination
     because it expects the new directory structure to be in place."""
     for link in links:
-        link_target = os.readlink(os.path.join(orig_prefix, link))
+        link_target = readlink(os.path.join(orig_prefix, link))
         link_target = re.sub("^" + orig_prefix, new_prefix, link_target)
         new_link_path = os.path.join(new_prefix, link)
         os.unlink(new_link_path)

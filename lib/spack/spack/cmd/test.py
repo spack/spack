@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -228,7 +228,7 @@ def create_reporter(args, specs_to_test, test_suite):
 
 def test_list(args):
     """list installed packages with available tests"""
-    tagged = set(spack.repo.PATH.packages_with_tags(*args.tag)) if args.tag else set()
+    tagged = spack.repo.PATH.packages_with_tags(*args.tag) if args.tag else set()
 
     def has_test_and_tags(pkg_class):
         tests = spack.install_test.test_functions(pkg_class)

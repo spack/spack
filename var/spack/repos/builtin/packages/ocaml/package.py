@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,9 @@ class Ocaml(Package):
     version("4.06.1", sha256="0c38c6f531103e87fab1c218a7e76287d7cb4d7ee4dea64e7f85952af3b1b50e")
     version("4.06.0", sha256="c17578e243c4b889fe53a104d8927eb8749c7be2e6b622db8b3c7b386723bf50")
     version("4.03.0", sha256="7fdf280cc6c0a2de4fc9891d0bf4633ea417046ece619f011fd44540fcfc8da2")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     patch("fix-duplicate-defs.patch", when="@4.08.0:4.09.0 %gcc@10.0:")
     # #9969, #9981: Added mergeable flag to ELF sections containing mergeable

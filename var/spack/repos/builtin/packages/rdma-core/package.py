@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,12 @@ class RdmaCore(CMakePackage):
     libraries = ["librdmacm.so"]
     keep_werror = "all"
 
+    license("GPL-2.0-only OR BSD-2-Clause")
+
+    version("52.0", sha256="1f0ce5f2462c982b20d21156707076278807a7adf4d10e9142f3be4bec1b2b83")
+    version("51.0", sha256="0a4a55b1351356c2750f26ec9010e8c7370402a13c95799cb8b447cf0134dd61")
+    version("50.0", sha256="405b9dd551120da9d1b8944c5ad24ab1f478fb13caedf5bf0d47053a6d6e20cc")
+    version("49.1", sha256="2e531d398073dd7ed28d95c94fa698e1a831952b508e9af93e36644dcd399936")
     version("49.0", sha256="953546ad2b179f9ce68dc21eb1eb26003098ea1bf0f87a4baed45bcea134b2b4")
     version("47.1", sha256="5d92058473b90be231c17220ce456837cb6da9975de498bd63b9660baa25afd6")
     version("46.2", sha256="c59c3c79fbae6038d7c6d16b37132e433e19f4a86d41341c6b7974b830b0d4fa")
@@ -64,6 +70,10 @@ class RdmaCore(CMakePackage):
     version("17.1", sha256="b47444b7c05d3906deb8771eec3e634984dd83f5e620d5e37d3a83f74f0cc1ba")
     version("13", sha256="e5230fd7cda610753ad1252b40a28b1e9cf836423a10d8c2525b081527760d97")
 
+    depends_on("c", type="build")  # generated
+
+    patch("libdrm.patch", when="@34:")
+
     variant(
         "static",
         default=True,
@@ -105,11 +115,4 @@ class RdmaCore(CMakePackage):
         if self.spec.satisfies("~man_pages"):
             cmake_args.append("-DNO_MAN_PAGES=1")
 
-        if self.spec.satisfies("@:39.0"):
-            cmake_args.extend(
-                [
-                    self.define("PYTHON_LIBRARY", self.spec["python"].libs[0]),
-                    self.define("PYTHON_INCLUDE_DIR", self.spec["python"].headers.directories[0]),
-                ]
-            )
         return cmake_args

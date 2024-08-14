@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,10 @@ class Fpart(AutotoolsPackage):
     license("BSD-2-Clause")
 
     version("master", branch="master")
+    version("1.6.0", sha256="ed1fac2853fc421071b72e4c5d8455a231bc30e50034db14af8b0485ece6e097")
     version("1.5.1", sha256="c353a28f48e4c08f597304cb4ebb88b382f66b7fabfc8d0328ccbb0ceae9220c")
+
+    depends_on("c", type="build")  # generated
 
     variant("embfts", default=False, description="Build with embedded fts functions")
     variant("static", default=False, description="Build static binary")

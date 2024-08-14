@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ import re
 import shutil
 import urllib.error
 import urllib.parse
+import urllib.request
+from pathlib import PurePath
 from typing import List, Optional
 
 import llnl.url
@@ -37,13 +39,14 @@ import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.string import comma_and, quote
-from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, temp_rename, working_dir
+from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, working_dir
 from llnl.util.symlink import symlink
 
 import spack.config
 import spack.error
 import spack.oci.opener
 import spack.url
+import spack.util.archive
 import spack.util.crypto as crypto
 import spack.util.git
 import spack.util.url as url_util
@@ -271,10 +274,7 @@ class URLFetchStrategy(FetchStrategy):
     @property
     def curl(self):
         if not self._curl:
-            try:
-                self._curl = which("curl", required=True)
-            except CommandNotFoundError as exc:
-                tty.error(str(exc))
+            self._curl = web_util.require_curl()
         return self._curl
 
     def source_id(self):
@@ -295,27 +295,23 @@ class URLFetchStrategy(FetchStrategy):
     @_needs_stage
     def fetch(self):
         if self.archive_file:
-            tty.debug("Already downloaded {0}".format(self.archive_file))
+            tty.debug(f"Already downloaded {self.archive_file}")
             return
 
-        url = None
-        errors = []
+        errors: List[Exception] = []
         for url in self.candidate_urls:
-            if not web_util.url_exists(url):
-                tty.debug("URL does not exist: " + url)
-                continue
-
             try:
                 self._fetch_from_url(url)
                 break
             except FailedDownloadError as e:
-                errors.append(str(e))
-
-        for msg in errors:
-            tty.debug(msg)
+                errors.extend(e.exceptions)
+        else:
+            raise FailedDownloadError(*errors)
 
         if not self.archive_file:
-            raise FailedDownloadError(url)
+            raise FailedDownloadError(
+                RuntimeError(f"Missing archive {self.archive_file} after fetching")
+            )
 
     def _fetch_from_url(self, url):
         if spack.config.get("config:url_fetch_method") == "curl":
@@ -334,19 +330,20 @@ class URLFetchStrategy(FetchStrategy):
     @_needs_stage
     def _fetch_urllib(self, url):
         save_file = self.stage.save_filename
-        tty.msg("Fetching {0}".format(url))
 
-        # Run urllib but grab the mime type from the http headers
+        request = urllib.request.Request(url, headers={"User-Agent": web_util.SPACK_USER_AGENT})
+
         try:
-            url, headers, response = web_util.read_from_url(url)
-        except web_util.SpackWebError as e:
+            response = web_util.urlopen(request)
+        except (TimeoutError, urllib.error.URLError) as e:
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
             if os.path.lexists(save_file):
                 os.remove(save_file)
-            msg = "urllib failed to fetch with error {0}".format(e)
-            raise FailedDownloadError(url, msg)
+            raise FailedDownloadError(e) from e
+
+        tty.msg(f"Fetching {url}")
 
         if os.path.lexists(save_file):
             os.remove(save_file)
@@ -354,7 +351,7 @@ class URLFetchStrategy(FetchStrategy):
         with open(save_file, "wb") as _open_file:
             shutil.copyfileobj(response, _open_file)
 
-        self._check_headers(str(headers))
+        self._check_headers(str(response.headers))
 
     @_needs_stage
     def _fetch_curl(self, url):
@@ -363,7 +360,7 @@ class URLFetchStrategy(FetchStrategy):
         if self.stage.save_filename:
             save_file = self.stage.save_filename
             partial_file = self.stage.save_filename + ".part"
-        tty.msg("Fetching {0}".format(url))
+        tty.msg(f"Fetching {url}")
         if partial_file:
             save_args = [
                 "-C",
@@ -403,8 +400,8 @@ class URLFetchStrategy(FetchStrategy):
 
             try:
                 web_util.check_curl_code(curl.returncode)
-            except spack.error.FetchError as err:
-                raise spack.fetch_strategy.FailedDownloadError(url, str(err))
+            except spack.error.FetchError as e:
+                raise FailedDownloadError(e) from e
 
         self._check_headers(headers)
 
@@ -552,13 +549,13 @@ class OCIRegistryFetchStrategy(URLFetchStrategy):
 
         try:
             response = self._urlopen(self.url)
-        except urllib.error.URLError as e:
+        except (TimeoutError, urllib.error.URLError) as e:
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
             if os.path.lexists(file):
                 os.remove(file)
-            raise FailedDownloadError(self.url, f"Failed to fetch {self.url}: {e}") from e
+            raise FailedDownloadError(e) from e
 
         if os.path.lexists(file):
             os.remove(file)
@@ -600,29 +597,21 @@ class VCSFetchStrategy(FetchStrategy):
         tty.debug("Source fetched with %s is already expanded." % self.url_attr)
 
     @_needs_stage
-    def archive(self, destination, **kwargs):
+    def archive(self, destination, *, exclude: Optional[str] = None):
         assert llnl.url.extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
+        # We need to prepend this dir name to every entry of the tarfile
+        top_level_dir = PurePath(self.stage.srcdir or os.path.basename(self.stage.source_path))
 
-        tar = which("tar", required=True)
-
-        patterns = kwargs.get("exclude", None)
-        if patterns is not None:
-            if isinstance(patterns, str):
-                patterns = [patterns]
-            for p in patterns:
-                tar.add_default_arg("--exclude=%s" % p)
-
-        with working_dir(self.stage.path):
-            if self.stage.srcdir:
-                # Here we create an archive with the default repository name.
-                # The 'tar' command has options for changing the name of a
-                # directory that is included in the archive, but they differ
-                # based on OS, so we temporarily rename the repo
-                with temp_rename(self.stage.source_path, self.stage.srcdir):
-                    tar("-czf", destination, self.stage.srcdir)
-            else:
-                tar("-czf", destination, os.path.basename(self.stage.source_path))
+        with working_dir(self.stage.source_path), spack.util.archive.gzip_compressed_tarfile(
+            destination
+        ) as (tar, _, _):
+            spack.util.archive.reproducible_tarfile_from_prefix(
+                tar=tar,
+                prefix=".",
+                skip=lambda entry: entry.name == exclude,
+                path_to_name=lambda path: (top_level_dir / PurePath(path)).as_posix(),
+            )
 
     def __str__(self):
         return "VCS: %s" % self.url
@@ -703,7 +692,6 @@ class GoFetchStrategy(VCSFetchStrategy):
 
 @fetcher
 class GitFetchStrategy(VCSFetchStrategy):
-
     """
     Fetch strategy that gets source code from a git repository.
     Use like this in a package:
@@ -936,9 +924,12 @@ class GitFetchStrategy(VCSFetchStrategy):
         git_commands = []
         submodules = self.submodules
         if callable(submodules):
-            submodules = list(submodules(self.package))
-            git_commands.append(["submodule", "init", "--"] + submodules)
-            git_commands.append(["submodule", "update", "--recursive"])
+            submodules = submodules(self.package)
+            if submodules:
+                if isinstance(submodules, str):
+                    submodules = [submodules]
+                git_commands.append(["submodule", "init", "--"] + submodules)
+                git_commands.append(["submodule", "update", "--recursive"])
         elif submodules:
             git_commands.append(["submodule", "update", "--init", "--recursive"])
 
@@ -1095,7 +1086,6 @@ class CvsFetchStrategy(VCSFetchStrategy):
 
 @fetcher
 class SvnFetchStrategy(VCSFetchStrategy):
-
     """Fetch strategy that gets source code from a subversion repository.
        Use like this in a package:
 
@@ -1190,7 +1180,6 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
 @fetcher
 class HgFetchStrategy(VCSFetchStrategy):
-
     """
     Fetch strategy that gets source code from a Mercurial repository.
     Use like this in a package:
@@ -1318,35 +1307,41 @@ class S3FetchStrategy(URLFetchStrategy):
     @_needs_stage
     def fetch(self):
         if self.archive_file:
-            tty.debug("Already downloaded {0}".format(self.archive_file))
+            tty.debug(f"Already downloaded {self.archive_file}")
             return
 
         parsed_url = urllib.parse.urlparse(self.url)
         if parsed_url.scheme != "s3":
             raise spack.error.FetchError("S3FetchStrategy can only fetch from s3:// urls.")
 
-        tty.debug("Fetching {0}".format(self.url))
-
         basename = os.path.basename(parsed_url.path)
+        request = urllib.request.Request(
+            self.url, headers={"User-Agent": web_util.SPACK_USER_AGENT}
+        )
 
         with working_dir(self.stage.path):
-            _, headers, stream = web_util.read_from_url(self.url)
+            try:
+                response = web_util.urlopen(request)
+            except (TimeoutError, urllib.error.URLError) as e:
+                raise FailedDownloadError(e) from e
+
+            tty.debug(f"Fetching {self.url}")
 
             with open(basename, "wb") as f:
-                shutil.copyfileobj(stream, f)
+                shutil.copyfileobj(response, f)
 
-            content_type = web_util.get_header(headers, "Content-type")
+            content_type = web_util.get_header(response.headers, "Content-type")
 
         if content_type == "text/html":
             warn_content_type_mismatch(self.archive_file or "the archive")
 
         if self.stage.save_filename:
-            llnl.util.filesystem.rename(
-                os.path.join(self.stage.path, basename), self.stage.save_filename
-            )
+            fs.rename(os.path.join(self.stage.path, basename), self.stage.save_filename)
 
         if not self.archive_file:
-            raise FailedDownloadError(self.url)
+            raise FailedDownloadError(
+                RuntimeError(f"Missing archive {self.archive_file} after fetching")
+            )
 
 
 @fetcher
@@ -1372,17 +1367,23 @@ class GCSFetchStrategy(URLFetchStrategy):
         if parsed_url.scheme != "gs":
             raise spack.error.FetchError("GCSFetchStrategy can only fetch from gs:// urls.")
 
-        tty.debug("Fetching {0}".format(self.url))
-
         basename = os.path.basename(parsed_url.path)
+        request = urllib.request.Request(
+            self.url, headers={"User-Agent": web_util.SPACK_USER_AGENT}
+        )
 
         with working_dir(self.stage.path):
-            _, headers, stream = web_util.read_from_url(self.url)
+            try:
+                response = web_util.urlopen(request)
+            except (TimeoutError, urllib.error.URLError) as e:
+                raise FailedDownloadError(e) from e
+
+            tty.debug(f"Fetching {self.url}")
 
             with open(basename, "wb") as f:
-                shutil.copyfileobj(stream, f)
+                shutil.copyfileobj(response, f)
 
-            content_type = web_util.get_header(headers, "Content-type")
+            content_type = web_util.get_header(response.headers, "Content-type")
 
         if content_type == "text/html":
             warn_content_type_mismatch(self.archive_file or "the archive")
@@ -1391,7 +1392,9 @@ class GCSFetchStrategy(URLFetchStrategy):
             os.rename(os.path.join(self.stage.path, basename), self.stage.save_filename)
 
         if not self.archive_file:
-            raise FailedDownloadError(self.url)
+            raise FailedDownloadError(
+                RuntimeError(f"Missing archive {self.archive_file} after fetching")
+            )
 
 
 @fetcher
@@ -1728,9 +1731,9 @@ class NoCacheError(spack.error.FetchError):
 class FailedDownloadError(spack.error.FetchError):
     """Raised when a download fails."""
 
-    def __init__(self, url, msg=""):
-        super().__init__("Failed to fetch file from URL: %s" % url, msg)
-        self.url = url
+    def __init__(self, *exceptions: Exception):
+        super().__init__("Failed to download")
+        self.exceptions = exceptions
 
 
 class NoArchiveFileError(spack.error.FetchError):

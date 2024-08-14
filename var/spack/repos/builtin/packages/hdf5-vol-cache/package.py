@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,14 @@ class Hdf5VolCache(CMakePackage):
 
     maintainers("hyoklee", "lrknox")
 
+    license("BSD-3-Clause")
+
     version("default", branch="develop")
     version("v1.1", tag="v1.1", commit="d886a17a381990b5949d95f5299461c39d7ac2bc")
     version("v1.0", tag="v1.0", commit="a9b9704e74fa24af50b2a3bd0d63a40a69bde8fe")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("hdf5@1.14: +mpi +threadsafe")
     depends_on("hdf5-vol-async")

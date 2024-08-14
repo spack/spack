@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyFlaskSqlalchemy(PythonPackage):
     pypi = "flask-sqlalchemy/Flask-SQLAlchemy-3.0.2.tar.gz"
 
     maintainers("charmoniumq")
+
+    license("BSD-3-Clause")
 
     version("3.0.2", sha256="16199f5b3ddfb69e0df2f52ae4c76aedbfec823462349dabb21a1b2e0a2b65e9")
 

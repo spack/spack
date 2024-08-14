@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,9 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         sha256="5bd1dd89cc5c84506f6900b6569b17e50becd73eb31ec85cfa11d6f1f912c4fa",
         deprecated=True,
     )
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("xsdkflags", default=False, description="enable XSDK defaults for Tasmanian")
 
@@ -114,17 +117,12 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DBLAS_LIBRARIES={0}".format(spec["blas"].libs.joined(";")))
             args.append("-DLAPACK_LIBRARIES={0}".format(spec["lapack"].libs.joined(";")))
 
-        if spec.satisfies("+python"):
-            args.append(
-                "-DPYTHON_EXECUTABLE:FILEPATH={0}".format(self.spec["python"].command.path)
-            )
-
         return args
 
     @run_after("install")
     def setup_smoke_test(self):
         install_tree(
-            self.prefix.share.Tasmanian.testing, join_path(self.install_test_root, "testing")
+            self.prefix.share.Tasmanian.testing, join_path(install_test_root(self), "testing")
         )
 
     def test_make_test(self):

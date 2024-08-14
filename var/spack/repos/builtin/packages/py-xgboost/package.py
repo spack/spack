@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,10 +18,14 @@ class PyXgboost(PythonPackage):
     maintainers("adamjstewart")
     import_modules = ["xgboost"]
 
+    license("Apache-2.0")
+
     version("1.6.2", sha256="e1f5c91ba88cf8edb409d7fd2ca150dcd80b6f2115587d87365f0c10b2d4f009")
     version("1.6.1", sha256="24072028656f3428e7b8aabf77340ece057f273e41f7f85d67ccaefb7454bb18")
     version("1.5.2", sha256="404dc09dca887ef5a9bc0268f882c54b33bfc16ac365a859a11e7b24d49da387")
     version("1.3.3", sha256="397051647bb837915f3ff24afc7d49f7fca57630ffd00fb5ef66ae2a0881fb43")
+
+    depends_on("cxx", type="build")  # generated
 
     variant("pandas", default=False, description="Enable Pandas extensions for training.")
     variant(
@@ -40,6 +44,8 @@ class PyXgboost(PythonPackage):
     depends_on("py-pip@:23.0", type="build")
 
     depends_on("py-numpy", type=("build", "run"))
+    # https://github.com/dmlc/xgboost/issues/10221
+    depends_on("py-numpy@:1", when="@:2.0", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
 
     depends_on("py-pandas", when="+pandas", type=("build", "run"))

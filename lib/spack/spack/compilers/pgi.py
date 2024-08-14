@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,9 +29,6 @@ class Pgi(Compiler):
         "f77": os.path.join("pgi", "pgfortran"),
         "fc": os.path.join("pgi", "pgfortran"),
     }
-
-    PrgEnv = "PrgEnv-pgi"
-    PrgEnv_compiler = "pgi"
 
     version_argument = "-V"
     ignore_version_errors = [2]  # `pgcc -V` on PowerPC annoyingly returns 2

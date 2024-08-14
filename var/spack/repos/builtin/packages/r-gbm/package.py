@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class RGbm(RPackage):
     to Rank measures (LambdaMart). Originally developed by Greg Ridgeway."""
 
     cran = "gbm"
+
+    license("GPL-2.0-or-later OR custom")
 
     version("2.1.8.1", sha256="8d2456124552658ee9500707c4e9992cf42cb88705008c32ea258efb4f2be80b")
     version("2.1.8", sha256="7d5de3b980b8f23275e86ac9bed48a497c9aa53c58e407dfd676309f38272ec1")

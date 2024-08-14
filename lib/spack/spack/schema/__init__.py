@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,6 @@
 import warnings
 
 import llnl.util.lang
-import llnl.util.tty
 
 
 # jsonschema is imported lazily as it is heavy to import
@@ -62,25 +61,3 @@ def _make_validator():
 
 
 Validator = llnl.util.lang.Singleton(_make_validator)
-
-spec_list_schema = {
-    "type": "array",
-    "default": [],
-    "items": {
-        "anyOf": [
-            {
-                "type": "object",
-                "additionalProperties": False,
-                "properties": {
-                    "matrix": {
-                        "type": "array",
-                        "items": {"type": "array", "items": {"type": "string"}},
-                    },
-                    "exclude": {"type": "array", "items": {"type": "string"}},
-                },
-            },
-            {"type": "string"},
-            {"type": "null"},
-        ]
-    },
-}

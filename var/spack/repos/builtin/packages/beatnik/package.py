@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,13 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("patrickb314", "JStewart28")
 
+    license("BSD-3-Clause")
+
     version("1.0", commit="ae31ef9cb44678d5ace77994b45b0778defa3d2f")
     version("develop", branch="develop")
     version("main", branch="main")
+
+    depends_on("cxx", type="build")  # generated
 
     # Variants are primarily backends to build on GPU systems and pass the right
     # informtion to the packages we depend on
@@ -25,8 +29,16 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
 
     # Dependencies for all Beatnik versions
     depends_on("mpi")
-    depends_on("mpi +cuda", when="+cuda")
-    depends_on("mpi +rocm", when="+rocm")
+    with when("+cuda"):
+        depends_on("mpich +cuda", when="^[virtuals=mpi] mpich")
+        depends_on("mvapich +cuda", when="^[virtuals=mpi] mvapich")
+        depends_on("mvapich2 +cuda", when="^[virtuals=mpi] mvapich2")
+        depends_on("mvapich2-gdr +cuda", when="^[virtuals=mpi] mvapich2-gdr")
+        depends_on("openmpi +cuda", when="^[virtuals=mpi] openmpi")
+
+    with when("+rocm"):
+        depends_on("mpich +rocm", when="^[virtuals=mpi] mpich")
+        depends_on("mvapich2-gdr +rocm", when="^[virtuals=mpi] mvapich2-gdr")
 
     # Kokkos dependencies
     depends_on("kokkos @4:")
@@ -72,7 +84,7 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
         # Use hipcc as the c compiler if we are compiling for rocm. Doing it this way
         # keeps the wrapper insted of changeing CMAKE_CXX_COMPILER keeps the spack wrapper
         # and the rpaths it sets for us from the underlying spec.
-        if "+rocm" in self.spec:
+        if self.spec.satisfies("+rocm"):
             env["SPACK_CXX"] = self.spec["hip"].hipcc
 
         # If we're building with cray mpich, we need to make sure we get the GTL library for

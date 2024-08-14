@@ -1,10 +1,8 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-
-import pytest
 
 import spack.store
 from spack.main import SpackCommand
@@ -12,8 +10,6 @@ from spack.main import SpackCommand
 install = SpackCommand("install")
 deprecate = SpackCommand("deprecate")
 reindex = SpackCommand("reindex")
-
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_reindex_basic(mock_packages, mock_archive, mock_fetch, install_mockery):

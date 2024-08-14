@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RMinqa(RPackage):
     interface to Fortran implementations by M. J. D. Powell."""
 
     cran = "minqa"
+
+    license("GPL-2.0-only")
 
     version("1.2.5", sha256="9b83562390990d04b2c61b63ac9a7c9ecab0d35c460d232596e3c73bdc89f4be")
     version("1.2.4", sha256="cfa193a4a9c55cb08f3faf4ab09c11b70412523767f19894e4eafc6e94cccd0c")

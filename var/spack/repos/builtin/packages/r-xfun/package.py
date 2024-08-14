@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RXfun(RPackage):
     'Yihui Xie'."""
 
     cran = "xfun"
+
+    license("MIT")
 
     version("0.39", sha256="d0ecaabb243dd3496da6029932fcdd4772914843de7ffd0b78a172efde1356c9")
     version("0.34", sha256="50e76c1febb988c044e44fb78e1abc1ba681173c9ff3c336f4c0ad71e6a2853d")

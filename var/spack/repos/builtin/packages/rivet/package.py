@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Rivet(AutotoolsPackage):
 
     tags = ["hep"]
 
+    license("GPL-3.0-or-later")
+
     version("3.1.8", sha256="75b3f3d419ca6388d1fd2ec0eda7e1f90f324b996ccf0591f48a5d2e28dccc13")
     version("3.1.7", sha256="27c7dbbcb5fd7ee81caf136daf4e960bca0ec255d9fa1abe602f4d430861b27a")
     version("3.1.6", sha256="1cf6ebb6a79d181c441d1d0c7c6d623c423817c61093f36f21adaae23e679090")
@@ -28,6 +30,9 @@ class Rivet(AutotoolsPackage):
     version("3.0.2", sha256="9624d6cdcad77eafde40312cf6a1c97f4263f22faf9244b198c140b2c256d2f3")
     version("3.0.1", sha256="e7551168b86a05c9c029c319c313a0aa142a476195e7ff986c896c1b868f89dd")
     version("3.0.0", sha256="3944434d3791dccb54f7b2257589df6252cc7c065ce9deb57fbef466ff9e62b1")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("hepmc", default="2", values=("2", "3"), description="HepMC version to link against")
 
@@ -52,7 +57,7 @@ class Rivet(AutotoolsPackage):
 
     depends_on("hepmc", when="hepmc=2")
     depends_on("hepmc3", when="hepmc=3")
-    depends_on("fastjet")
+    depends_on("fastjet plugins=cxx")
     depends_on("fastjet@3.4.0:", when="@3.1.7:")
     depends_on("fjcontrib")
     depends_on("python", type=("build", "run"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ import sys
 from spack.package import *
 
 
-class IntelOneapiCompilers(Package):
+class IntelOneapiCompilers(Package, CompilerPackage):
     """Simple compiler package."""
 
     homepage = "http://www.example.com"
@@ -17,6 +17,10 @@ class IntelOneapiCompilers(Package):
     version("1.0", md5="0123456789abcdef0123456789abcdef")
     version("2.0", md5="abcdef0123456789abcdef0123456789")
     version("3.0", md5="def0123456789abcdef0123456789abc")
+
+    c_names = ["icx"]
+    cxx_names = ["icpx"]
+    fortran_names = ["ifx"]
 
     @property
     def compiler_search_prefix(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Itk(CMakePackage):
     homepage = "https://itk.org/"
     url = "https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.1.1/InsightToolkit-5.1.1.tar.gz"
 
+    license("Apache-2.0")
+
     version("5.3.0", sha256="57a4471133dc8f76bde3d6eb45285c440bd40d113428884a1487472b7b71e383")
     version("5.3rc02", sha256="163aaf4a6cecd5b70ff718c1a986c746581797212fd1b629fa81f12ae4756d14")
     version(
@@ -32,6 +34,10 @@ class Itk(CMakePackage):
     version("5.2.0", sha256="12c9cf543cbdd929330322f0a704ba6925a13d36d01fc721a74d131c0b82796e")
     version("5.1.2", sha256="f1e5a78e11125348f68f655c6b89b617c3a8b2c09f710081f621054811a70c98")
     version("5.1.1", sha256="39e2a63840054361b728878a35b21bbe38374682ffb4b5c4f8f8f7514dedb58e")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("review", default=False, description="enable modules under review")
     variant("rtk", default=False, description="build the RTK (Reconstruction Toolkit module")

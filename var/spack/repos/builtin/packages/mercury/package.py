@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Mercury(CMakePackage):
 
     tags = ["e4s"]
 
+    license("GPL-2.0-only")
+
     version("master", branch="master", submodules=True)
     version("2.3.1", sha256="36182d49f2db7e2b075240cab4aaa1d4ec87a7756450c87643ededd1e6f16104")
     version("2.3.0", sha256="e9e62ce1bb2fd482f0e85ad75fa255d9750c6fed50ba441a03de93b3b8eae742")
@@ -26,6 +28,9 @@ class Mercury(CMakePackage):
     version("1.0.1", sha256="02febd56c401ef7afa250caf28d012b37dee842bfde7ee16fcd2f741b9cf25b3")
     version("1.0.0", sha256="fb0e44d13f4652f53e21040435f91d452bc2b629b6e98dcf5292cd0bece899d4")
     version("0.9.0", sha256="40868e141cac035213fe79400f8926823fb1f5a0651fd7027cbe162b063843ef")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("bmi", default=False, description="Use BMI plugin")
     variant("mpi", default=False, description="Use MPI plugin")

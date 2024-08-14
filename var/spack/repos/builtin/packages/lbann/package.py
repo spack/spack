@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import os
 import socket
 
+import spack.platforms.cray
 from spack.package import *
 
 
@@ -22,6 +23,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("bvanessen")
 
+    license("Apache-2.0")
+
     version("develop", branch="develop")
     version("benchmarking", branch="benchmarking")
     version("0.104", sha256="a847c7789082ab623ed5922ab1248dd95f5f89d93eed44ac3d6a474703bbc0bf")
@@ -31,6 +34,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         sha256="3734a76794991207e2dd2221f05f0e63a86ddafa777515d93d99d48629140f1a",
         deprecated=True,
     )
+
+    depends_on("cxx", type="build")  # generated
 
     variant(
         "build_type",
@@ -223,7 +228,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("py-setuptools", type="build", when="+pfe")
     depends_on("py-protobuf+cpp@3.10.0:4.21.12", type=("build", "run"), when="+pfe")
 
-    depends_on("protobuf+shared@3.10.0:3.21.12")
+    depends_on("protobuf@3.10.0:3.21.12")
     depends_on("zlib-api", when="^protobuf@3.11.0:")
 
     # using cereal@1.3.1 and above requires changing the
@@ -354,10 +359,6 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
                     cmake_cache_string("CMAKE_CUDA_FLAGS", "-allow-unsupported-compiler")
                 )
 
-        if "+rocm" in spec:
-            if "platform=cray" in spec:
-                entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
-
         return entries
 
     def initconfig_package_entries(self):
@@ -399,12 +400,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         )
         entries.append(cmake_cache_option("protobuf_MODULE_COMPATIBLE", True))
 
-        if spec.satisfies("^python") and "+pfe" in spec:
-            entries.append(
-                cmake_cache_path(
-                    "LBANN_PFE_PYTHON_EXECUTABLE", "{0}/python3".format(spec["python"].prefix.bin)
-                )
-            )
+        if spec.satisfies("+pfe ^python"):
+            entries.append(cmake_cache_path("LBANN_PFE_PYTHON_EXECUTABLE", python.path))
             entries.append(
                 cmake_cache_string("LBANN_PFE_PYTHONPATH", env["PYTHONPATH"])
             )  # do NOT need to sub ; for : because

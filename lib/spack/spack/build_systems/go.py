@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -72,7 +72,7 @@ class GoBuilder(BaseBuilder):
     def build_args(self):
         """Arguments for ``go build``."""
         # Pass ldflags -s = --strip-all and -w = --no-warnings by default
-        return ["-ldflags", "-s -w", "-o", f"{self.pkg.name}"]
+        return ["-modcacherw", "-ldflags", "-s -w", "-o", f"{self.pkg.name}"]
 
     @property
     def check_args(self):

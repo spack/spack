@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class PyGrapheneTornado(PythonPackage):
     pypi = "graphene-tornado/graphene-tornado-2.6.1.tar.gz"
 
     maintainers("LydDeb")
+
+    license("MIT")
 
     version("2.6.1", sha256="953bf812267177224ce1ac2a93c669069d85a8fa187a9fac681b76b63dffebc2")
 

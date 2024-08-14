@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class RStyler(RPackage):
     Pretty-prints R code without changing the user's formatting intent."""
 
     cran = "styler"
+
+    license("MIT")
 
     version("1.9.1", sha256="c80fa3c062f007645ec820b5b087d4d5784e7797cc88d030ab59fb5823ded0bb")
     version("1.8.1", sha256="15505fa85f0aa2902bc8af3f00b2aeb205d41a92b77bffbd176d657753ee81e9")

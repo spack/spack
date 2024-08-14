@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,12 +16,16 @@ class Alpaka(CMakePackage, CudaPackage):
 
     maintainers("vvolkl")
 
+    license("MPL-2.0-no-copyleft-exception")
+
     version("develop", branch="develop")
     version("0.8.0", sha256="e01bc377a7657d9a3e0c5f8d3f83dffbd7d0b830283c59efcbc1fb98cf88de43")
     version("0.7.0", sha256="4b61119a7b3b073f281ba15b63430db98b77dbd9420bc290a114f80121fbdd97")
     version("0.6.0", sha256="7424ecaee3af15e587b327e983998410fa379c61d987bfe923c7e95d65db11a3")
     version("0.5.0", sha256="0ba08ea19961dd986160219ba00d6162fe7758980d88a606eff6494d7b3a6cd1")
     version("0.4.0", sha256="ad7905b13c22abcee4344ba225a65078e3f452ad45a9eda907e7d27c08315e46")
+
+    depends_on("cxx", type="build")  # generated
 
     variant(
         "backend",
@@ -75,30 +79,30 @@ class Alpaka(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
         args = []
-        if "backend=serial" in spec:
+        if spec.satisfies("backend=serial"):
             args.append(self.define("ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE", True))
-        if "backend=threads" in self.spec:
+        if self.spec.satisfies("backend=threads"):
             args.append(self.define("ALPAKA_ACC_CPU_B_SEQ_T_THREADS_ENABLE", True))
-        if "backend=fiber" in spec:
+        if spec.satisfies("backend=fiber"):
             args.append(self.define("ALPAKA_ACC_CPU_B_SEQ_T_FIBERS_ENABLE", True))
-        if "backend=tbb" in spec:
+        if spec.satisfies("backend=tbb"):
             args.append(self.define("ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLE", True))
-        if "backend=omp2_gridblock" in spec:
+        if spec.satisfies("backend=omp2_gridblock"):
             args.append(self.define("ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE", True))
-        if "backend=omp2_blockthread" in spec:
+        if spec.satisfies("backend=omp2_blockthread"):
             args.append(self.define("ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE", True))
-        if "backend=omp5" in spec:
+        if spec.satisfies("backend=omp5"):
             args.append(self.define("ALPAKA_ACC_ANY_BT_OMP5_ENABLE", True))
-        if "backend=oacc" in spec:
+        if spec.satisfies("backend=oacc"):
             args.append(self.define("ALPAKA_ACC_ANY_BT_OACC_ENABLE", True))
-        if "backend=cuda" in spec:
+        if spec.satisfies("backend=cuda"):
             args.append(self.define("ALPAKA_ACC_GPU_CUDA_ENABLE", True))
-        if "backend=cuda_only" in spec:
+        if spec.satisfies("backend=cuda_only"):
             args.append(self.define("ALPAKA_ACC_GPU_CUDA_ENABLE", True))
             args.append(self.define("ALPAKA_ACC_GPU_CUDA_ONLY_MODE", True))
-        if "backend=hip" in spec:
+        if spec.satisfies("backend=hip"):
             args.append(self.define("ALPAKA_ACC_GPU_HIP_ENABLE", True))
-        if "backend=hip_only" in spec:
+        if spec.satisfies("backend=hip_only"):
             args.append(self.define("ALPAKA_ACC_GPU_HIP_ENABLE", True))
             args.append(self.define("ALPAKA_ACC_GPU_HIP_ONLY_MODE", True))
 

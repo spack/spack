@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Repeatmasker(Package):
     repeats and low complexity DNA sequences."""
 
     homepage = "https://www.repeatmasker.org"
+
+    license("OSL-2.1")
 
     version("4.1.5", sha256="16e07f9efd99adf15f4492b0e334df5ad4ea6ca38ddf62bdd180d257f2f4753f")
     version("4.1.2-p1", sha256="4be54bf6c050422b211e24a797feb06fd7954c8b4ee6f3ece94cb6faaf6b0e96")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RFansi(RPackage):
     effects of ANSI text formatting control sequences."""
 
     cran = "fansi"
+
+    license("GPL-2.0-only OR GPL-3.0-only")
 
     version("1.0.4", sha256="3163214e6c40922bbb495229259ed8ce1bebd98b77098a6936d234e43da9c49f")
     version("1.0.3", sha256="86a7b83d8c9d28baebbde310cd0b459d0950a9c7ff1a6276ce5858f6a89bc06a")

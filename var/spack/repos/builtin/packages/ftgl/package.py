@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,14 @@ class Ftgl(CMakePackage):
     homepage = "https://github.com/frankheckenbach/ftgl"
     git = "https://github.com/frankheckenbach/ftgl.git"
 
+    license("MIT")
+
     version("master", branch="master")
     version("2.4.0", commit="483639219095ad080538e07ceb5996de901d4e74")
     version("2.3.1", commit="3c0fdf367824b6381f29df3d8b4590240db62ab7")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # FIXME: Doc generation is broken in upstream build system
     # variant('doc', default=False, description='Build the documentation')

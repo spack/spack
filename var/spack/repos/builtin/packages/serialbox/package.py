@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,10 +17,16 @@ class Serialbox(CMakePackage):
 
     maintainers("skosukhin")
 
+    license("BSD-2-Clause")
+
     version("2.6.1", sha256="b795ce576e8c4fd137e48e502b07b136079c595c82c660cfa2e284b0ef873342")
     version("2.6.0", sha256="9199f8637afbd7f2b3c5ba932d1c63e9e14d553a0cafe6c29107df0e04ee9fae")
     version("2.5.4", sha256="f4aee8ef284f58e6847968fe4620e222ac7019d805bbbb26c199e4b6a5094fee")
     version("2.5.3", sha256="696499b3f43978238c3bcc8f9de50bce2630c07971c47c9e03af0324652b2d5d")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("c", default=True, description="enable C interface")
     variant("python", default=False, description="enable Python interface")
@@ -154,10 +160,7 @@ class Serialbox(CMakePackage):
         env.prepend_path("PATH", self.prefix.python.pp_ser)
         # Allow for running the preprocessor as a Python module, as well as
         # enable the Python interface in a non-standard directory:
-        env.prepend_path("PYTHONPATH", self.prefix.python)
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
+        env.prepend_path("PYTHONPATH", self.prefix.python.pp_ser)
 
     def setup_dependent_package(self, module, dependent_spec):
         # Simplify the location of the preprocessor by dependent packages:

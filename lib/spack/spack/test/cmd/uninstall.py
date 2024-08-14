@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -222,7 +222,7 @@ class TestUninstallFromEnv:
 
     @pytest.fixture(scope="function")
     def environment_setup(
-        self, mutable_mock_env_path, config, mock_packages, mutable_database, install_mockery
+        self, mutable_mock_env_path, mock_packages, mutable_database, install_mockery
     ):
         TestUninstallFromEnv.env("create", "e1")
         e1 = spack.environment.read("e1")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyJupyterServer(PythonPackage):
     homepage = "https://github.com/jupyter-server/jupyter_server"
     pypi = "jupyter_server/jupyter_server-1.9.0.tar.gz"
 
+    license("BSD-3-Clause")
+
     version("2.6.0", sha256="ae4af349f030ed08dd78cb7ac1a03a92d886000380c9ea6283f3c542a81f4b06")
     version("1.21.0", sha256="d0adca19913a3763359be7f0b8c2ea8bfde356f4b8edd8e3149d7d0fbfaa248b")
     version("1.18.1", sha256="2b72fc595bccae292260aad8157a0ead8da2c703ec6ae1bb7b36dbad0e267ea7")
@@ -26,6 +28,11 @@ class PyJupyterServer(PythonPackage):
     version("1.9.0", sha256="7d19006380f6217458a9db309b54e3dab87ced6c06329c61823907bef2a6f51b")
     version("1.6.1", sha256="242ddd0b644f10e030f917019b47c381e0f2d2b950164af45cbd791d572198ac")
 
+    variant("typescript", default=False, description="Build the typescript code", when="@1.10.2:1")
+
+    # https://github.com/spack/spack/issues/41899
+    patch("no_npm_node.patch", when="@1.10.2:1 ~typescript")
+
     depends_on("python@3.8:", when="@2:", type=("build", "run"))
     depends_on("py-hatchling@1.11:", when="@2:", type="build")
     # under [tool.hatch.build.hooks.jupyter-builder] in pyproject.toml
@@ -36,6 +43,7 @@ class PyJupyterServer(PythonPackage):
         depends_on("py-pre-commit", when="@1.16:", type="build")
         depends_on("py-setuptools", type="build")
 
+    depends_on("npm", type="build", when="+typescript")
     depends_on("py-anyio@3.1.0:", when="@2.2.1:", type=("build", "run"))
     depends_on("py-anyio@3.1.0:3", when="@:2.2.0", type=("build", "run"))
     depends_on("py-argon2-cffi", type=("build", "run"))

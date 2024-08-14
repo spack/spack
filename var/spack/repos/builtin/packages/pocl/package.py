@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Pocl(CMakePackage):
     url = "https://github.com/pocl/pocl/archive/v1.1.tar.gz"
     git = "https://github.com/pocl/pocl.git"
 
+    license("MIT")
+
     version("master", branch="master")
     version("3.0", sha256="a3fd3889ef7854b90b8e4c7899c5de48b7494bf770e39fba5ad268a5cbcc719d")
     version("1.8", sha256="0f63377ae1826e16e90038fc8e7f65029be4ff6f9b059f6907174b5c0d1f8ab2")
@@ -30,6 +32,9 @@ class Pocl(CMakePackage):
     version("1.2", sha256="0c43e68f336892f3a64cba19beb99d9212f529bedb77f7879c0331450b982d46")
     version("1.1", sha256="1e8dd0693a88c84937754df947b202871a40545b1b0a97ebefa370b0281c3c53")
     version("1.0", sha256="94bd86a2f9847c03e6c3bf8dca12af3734f8b272ffeacbc3fa8fcca58844b1d4")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     conflicts("@:1.5", when="target=a64fx", msg="a64fx is supported by pocl v1.6 and above.")
 

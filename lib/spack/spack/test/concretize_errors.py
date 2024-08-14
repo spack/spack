@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,16 +8,13 @@ import pytest
 import spack.solver.asp
 import spack.spec
 
-pytestmark = [
-    pytest.mark.not_on_windows("Windows uses old concretizer"),
-    pytest.mark.only_clingo("Original concretizer does not support configuration requirements"),
-]
+pytestmark = [pytest.mark.not_on_windows("Windows uses old concretizer")]
 
 version_error_messages = [
     "Cannot satisfy 'fftw@:1.0' and 'fftw@1.1:",
     "        required because quantum-espresso depends on fftw@:1.0",
-    "          required because quantum-espresso ^fftw@1.1: requested from CLI",
-    "        required because quantum-espresso ^fftw@1.1: requested from CLI",
+    "          required because quantum-espresso ^fftw@1.1: requested explicitly",
+    "        required because quantum-espresso ^fftw@1.1: requested explicitly",
 ]
 
 external_error_messages = [
@@ -30,15 +27,15 @@ external_error_messages = [
         " which was not satisfied"
     ),
     "        'quantum-espresso+veritas' required",
-    "        required because quantum-espresso+veritas requested from CLI",
+    "        required because quantum-espresso+veritas requested explicitly",
 ]
 
 variant_error_messages = [
     "'fftw' required multiple values for single-valued variant 'mpi'",
     "    Requested '~mpi' and '+mpi'",
     "        required because quantum-espresso depends on fftw+mpi when +invino",
-    "          required because quantum-espresso+invino ^fftw~mpi requested from CLI",
-    "        required because quantum-espresso+invino ^fftw~mpi requested from CLI",
+    "          required because quantum-espresso+invino ^fftw~mpi requested explicitly",
+    "        required because quantum-espresso+invino ^fftw~mpi requested explicitly",
 ]
 
 external_config = {

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyTables(PythonPackage):
     pypi = "tables/tables-3.6.1.tar.gz"
     git = "https://github.com/PyTables/PyTables.git"
 
+    license("BSD-3-Clause")
+
     version("master", branch="master")
     version("3.9.0", sha256="27c9ca14c359d875caf945a6a527c12690e017650402dd17d8eb8b6caf6687d5")
     version("3.8.0", sha256="34f3fa2366ce20b18f1df573a77c1d27306ce1f2a41d9f9eff621b5192ea8788")
@@ -24,6 +26,9 @@ class PyTables(PythonPackage):
     version("3.4.4", sha256="bdc5c073712af2a43babd139c4855fc99496bb2c3f3f5d1b4770a985e6f9ce29")
     version("3.3.0", sha256="8383ccf02e041a5d55494a09fc5514140b4653055a2732c981b5fd0f7408822c")
     version("3.2.2", sha256="3564b351a71ec1737b503b001eb7ceae1f65d5d6e3ffe1ea75aafba10f37fa84")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("zlib", default=True, description="Support for zlib compression")
     variant("bzip2", default=False, description="Support for bzip2 compression")
@@ -43,6 +48,8 @@ class PyTables(PythonPackage):
     # requirements.txt
     depends_on("py-numpy@1.19:", when="@3.8:", type=("build", "run"))
     depends_on("py-numpy@1.9.3:", type=("build", "run"))
+    # https://github.com/PyTables/PyTables/issues/1083
+    depends_on("py-numpy@:1", type=("build", "run"))
     depends_on("py-numexpr@2.6.2:", type=("build", "run"))
     depends_on("py-packaging", when="@3.7:", type=("build", "run"))
     depends_on("py-py-cpuinfo", when="@3.8:", type=("build", "run"))

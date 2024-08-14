@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -756,6 +756,10 @@ def test_process(pkg: Pb, kwargs):
             print_message(logger, "Skipped not installed package", verbose)
             pkg.tester.status(pkg.spec.name, TestStatus.SKIPPED)
             return
+
+        # Make sure properly named build-time test methods actually run as
+        # stand-alone tests.
+        pkg.run_tests = True
 
         # run test methods from the package and all virtuals it provides
         v_names = virtuals(pkg)

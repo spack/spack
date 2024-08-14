@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Libxsmm(MakefilePackage):
     git = "https://github.com/hfp/libxsmm.git"
 
     maintainers("hfp")
+
+    license("BSD-3-Clause")
 
     # 2.0 release is planned for Jan / Feb 2024. This commit from main is added
     # as a stable version that supports other targets than x86. Remove this
@@ -60,6 +62,10 @@ class Libxsmm(MakefilePackage):
     version("1.4.2", sha256="9c89391635be96759486a245365793bc4593859e6d7957b37c39a29f9b4f95eb")
     version("1.4.1", sha256="c19be118694c9b4e9a61ef4205b1e1a7e0c400c07f9bce65ae430d2dc2be5fe1")
     version("1.4", sha256="cf483a370d802bd8800c06a12d14d2b4406a745c8a0b2c8722ccc992d0cd72dd")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("shared", default=False, description="With shared libraries (and static libraries).")
     variant("debug", default=False, description="With call-trace (LIBXSMM_TRACE); unoptimized.")

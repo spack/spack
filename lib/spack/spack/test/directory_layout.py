@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -146,7 +146,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
         assert not os.path.exists(install_dir)
 
 
-def test_handle_unknown_package(temporary_store, config, mock_packages):
+def test_handle_unknown_package(temporary_store, config, mock_packages, tmp_path):
     """This test ensures that spack can at least do *some*
     operations with packages that are installed but that it
     does not know about.  This is actually not such an uncommon
@@ -158,7 +158,9 @@ def test_handle_unknown_package(temporary_store, config, mock_packages):
     or query them again if the package goes away.
     """
     layout = temporary_store.layout
-    mock_db = spack.repo.RepoPath(spack.paths.mock_packages_path)
+
+    repo_cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+    mock_db = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=repo_cache)
 
     not_in_mock = set.difference(
         set(spack.repo.all_package_names()), set(mock_db.all_package_names())

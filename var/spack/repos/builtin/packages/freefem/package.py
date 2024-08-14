@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Freefem(AutotoolsPackage):
 
     maintainers("corentin-dev")
 
+    version("4.14", sha256="931cbfe9ef6f6530756c300c5ae47bfdaca21c560a5407cb33325a376a3b6af8")
     version("4.10", sha256="957994c8f24cc2a671b8c116ae530796c3a431d4157ee71a3d6aab7122e7570d")
     version("4.9", sha256="299ba2b73dfff578b7890f693c1e835680bf55eba87263cabd60d81909e1e0e4")
     version("4.8", sha256="499b1ca24d45088226a238412ea1492d9cc3eb6088866904145511469780180d")
@@ -26,6 +27,10 @@ class Freefem(AutotoolsPackage):
     version("4.7", sha256="c1797b642e9c3d543eaad4949d26ce1e986f531ee9be14fff606ea525ada9206")
     version("4.6", sha256="6c09af8e189fc02214b0e664b679b49832c134e29cf1ede3cab29cf754f6078f")
     version("4.5", sha256="5b2d4125c312da8fbedd49a72e742f18f35e0ae100c82fb493067dfad5d51432")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("mpi", default=False, description="Activate MPI support")
     variant("petsc", default=False, description="Compile with PETSc/SLEPc")

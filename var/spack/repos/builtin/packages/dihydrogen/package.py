@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,10 +54,14 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("benson31", "bvanessen")
 
+    license("Apache-2.0")
+
     version("develop", branch="develop")
     version("master", branch="master")
 
     version("0.3.0", sha256="8dd143441a28e0c7662cd92694e9a4894b61fd48508ac1d77435f342bc226dcf")
+
+    depends_on("cxx", type="build")  # generated
 
     # Primary features
 
@@ -255,13 +259,6 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_string("CMAKE_CXX_STANDARD", "17"))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
         entries.append(cmake_cache_option("CMAKE_EXPORT_COMPILE_COMMANDS", True))
-
-        # It's possible this should have a `if "platform=cray" in
-        # spec:` in front of it, but it's not clear to me when this is
-        # set. In particular, I don't actually see this blurb showing
-        # up on Tioga builds. Which is causing the obvious problem
-        # (namely, the one this was added to supposedly solve in the
-        # first place.
         entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
 
         if spec.satisfies("%clang +distconv platform=darwin"):

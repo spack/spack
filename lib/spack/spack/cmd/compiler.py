@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -64,20 +64,14 @@ def setup_parser(subparser):
     # List
     list_parser = sp.add_parser("list", help="list available compilers")
     list_parser.add_argument(
-        "--scope",
-        action=arguments.ConfigScope,
-        default=lambda: spack.config.default_list_scope(),
-        help="configuration scope to read from",
+        "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
 
     # Info
     info_parser = sp.add_parser("info", help="show compiler paths")
     info_parser.add_argument("compiler_spec")
     info_parser.add_argument(
-        "--scope",
-        action=arguments.ConfigScope,
-        default=lambda: spack.config.default_list_scope(),
-        help="configuration scope to read from",
+        "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
 
 
@@ -95,7 +89,7 @@ def compiler_find(args):
         paths, scope=None, mixed_toolchain=args.mixed_toolchain
     )
     if new_compilers:
-        spack.compilers.add_compilers_to_config(new_compilers, scope=args.scope, init_config=False)
+        spack.compilers.add_compilers_to_config(new_compilers, scope=args.scope)
         n = len(new_compilers)
         s = "s" if n > 1 else ""
 

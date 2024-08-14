@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,9 @@ class Mimalloc(CMakePackage):
     version("1.7.9", sha256="45e05be518363d32b2cdcce1a1fac3580895ea2e4524e1a3c7e71145cb58659f")
     version("1.7.7", sha256="0f6663be1e1764851bf9563fcf7a6b3330e23b933eb4737dd07e3289b87895fe")
     version("1.7.6", sha256="d74f86ada2329016068bc5a243268f1f555edd620b6a7d6ce89295e7d6cf18da")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.0:", type="build")
 

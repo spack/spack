@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,9 @@ class Glib(MesonPackage, AutotoolsPackage):
 
     maintainers("michaelkuhn")
 
+    license("LGPL-2.1-or-later")
+
+    version("2.78.3", sha256="609801dd373796e515972bf95fc0b2daa44545481ee2f465c4f204d224b2bc21")
     version("2.78.0", sha256="44eaab8b720877ce303c5540b657b126f12dc94972d9880b52959f43fb537b30")
     version("2.76.6", sha256="1136ae6987dcbb64e0be3197a80190520f7acab81e2bfb937dc85c11c8aa9f04")
     version("2.76.4", sha256="5a5a191c96836e166a7771f7ea6ca2b0069c603c7da3cba1cd38d1694a395dda")
@@ -116,6 +119,9 @@ class Glib(MesonPackage, AutotoolsPackage):
         sha256="8f3f0865280e45b8ce840e176ef83bcfd511148918cc8d39df2ee89b67dcf89a",
         deprecated=True,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("libmount", default=False, description="Build with libmount support")
     variant(
@@ -314,13 +320,13 @@ class MesonBuilder(BaseBuilder, spack.build_systems.meson.MesonBuilder):
         if self.spec.satisfies("@:2.72"):
             args.append("-Dgettext=external")
         if self.spec.satisfies("@:2.74"):
-            if self.spec["iconv"].name == "libc":
-                args.append("-Diconv=libc")
-            else:
+            if self.spec["iconv"].name == "libiconv":
                 if self.spec.satisfies("@2.61.0:"):
                     args.append("-Diconv=external")
                 else:
                     args.append("-Diconv=gnu")
+            else:
+                args.append("-Diconv=libc")
         return args
 
 
@@ -335,10 +341,10 @@ class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuild
             args.append(
                 "--with-python={0}".format(os.path.basename(self.spec["python"].command.path))
             )
-        if self.spec["iconv"].name == "libc":
-            args.append("--with-libiconv=maybe")
-        else:
+        if self.spec["iconv"].name == "libiconv":
             args.append("--with-libiconv=gnu")
+        else:
+            args.append("--with-libiconv=maybe")
         if self.spec.satisfies("@2.56:"):
             for value in ("dtrace", "systemtap"):
                 if ("tracing=" + value) in self.spec:

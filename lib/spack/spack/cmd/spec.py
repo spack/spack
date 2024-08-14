@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -105,11 +105,19 @@ def spec(parser, args):
         if env:
             env.concretize()
             specs = env.concretized_specs()
+
+            # environments are printed together in a combined tree() invocation,
+            # except when using --yaml or --json, which we print spec by spec below.
+            if not args.format:
+                tree_kwargs["key"] = spack.traverse.by_dag_hash
+                tree_kwargs["hashes"] = args.long or args.very_long
+                print(spack.spec.tree([concrete for _, concrete in specs], **tree_kwargs))
+                return
         else:
             tty.die("spack spec requires at least one spec or an active environment")
 
     for input, output in specs:
-        # With -y, just print YAML to output.
+        # With --yaml or --json, just print the raw specs to output
         if args.format:
             if args.format == "yaml":
                 # use write because to_yaml already has a newline.

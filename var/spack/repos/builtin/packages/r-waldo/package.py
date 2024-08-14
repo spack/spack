@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class RWaldo(RPackage):
     isolate key differences makes understanding test failures much easier."""
 
     cran = "waldo"
+
+    license("MIT")
 
     version("0.4.0", sha256="57ee89eec9bcbba58cf8fa29c8e097f038768c30833eaf812682826333127eaa")
     version("0.3.1", sha256="ec2c8c1afbc413f8db8b6b0c6970194a875f616ad18e1e72a004bc4497ec019b")

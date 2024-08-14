@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -79,9 +79,11 @@ class PackageInstallContext:
         self.test_state.restore()
         spack.main.spack_working_dir = self.spack_working_dir
         env = pickle.load(self.serialized_env) if _SERIALIZE else self.env
-        pkg = pickle.load(self.serialized_pkg) if _SERIALIZE else self.pkg
         if env:
             spack.environment.activate(env)
+        # Order of operation is important, since the package might be retrieved
+        # from a repo defined within the environment configuration
+        pkg = pickle.load(self.serialized_pkg) if _SERIALIZE else self.pkg
         return pkg
 
 

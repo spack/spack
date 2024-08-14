@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class IntelPin(Package):
 
     homepage = "http://www.pintool.org"
     maintainers("matthiasdiener")
+
+    license("MIT")
 
     version(
         "3.27",
@@ -111,6 +113,9 @@ class IntelPin(Package):
         sha256="1c29f589515772411a699a82fc4a3156cad95863a29741dfa6522865d4d281a1",
         url="https://software.intel.com/sites/landingpage/pintool/downloads/pin-2.14-71313-gcc.4.4.7-linux.tar.gz",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     def install(self, spec, prefix):
         install_tree(".", prefix)

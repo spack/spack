@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Php(AutotoolsPackage):
     homepage = "https://php.net/"
     url = "https://github.com/php/php-src/archive/php-7.3.13.tar.gz"
 
+    license("PHP-3.01")
+
     version("7.4.1", sha256="4d9d7c5681bec3af38a935d033657dce09a9913498f8022d7ca163a7f2f493a7")
     version("7.4.0", sha256="91d34b48025ab9789216df89e247b6904912eeeaeff38c300ef314bdda8920b0")
     version("7.3.13", sha256="e68b8d9e659f2993eee912f05860e546fdc18e459f31cd2771f404df21285f0b")
@@ -26,6 +28,9 @@ class Php(AutotoolsPackage):
     version("7.2.25", sha256="049b2d291c45cb889d15fcd2bac6da7d15ca5d535d272d2f8879fb834bbf276e")
     version("7.2.24", sha256="334c9915733f6a29e1462f64038b1b4b1b21cb18f4f5f980add86792b5550ab3")
     version("7.1.33", sha256="f80a795a09328a9441bae4a8a60fa0d6d43ec5adc98f5aa5f51d06f4522c07fe")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,9 @@ class PerlAlienSvn(PerlPackage):
     version("1.7.3.1", sha256="e85efca8f9519b2cef81f39e026d227c077c9531c41f44995b31550c3af02366")
     version("1.7.3.0", sha256="02abbe17ad7db912001e6f1c5018cec08c3840e0c32700363a79274e144e74e5")
     version("1.6.12.1", sha256="a89d8eeff61e34aa7b3d35dee3e6752b12dfa5f0f04bf69d796846cf0391f53d")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("perl-module-build", type="build")
     depends_on("apr@1.6.2", type="build")

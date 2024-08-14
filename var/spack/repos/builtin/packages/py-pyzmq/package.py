@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,25 +12,17 @@ class PyPyzmq(PythonPackage):
     homepage = "https://github.com/zeromq/pyzmq"
     pypi = "pyzmq/pyzmq-22.3.0.tar.gz"
 
-    import_modules = [
-        "zmq",
-        "zmq.green",
-        "zmq.green.eventloop",
-        "zmq.sugar",
-        "zmq.auth",
-        "zmq.auth.asyncio",
-        "zmq.utils",
-        "zmq.backend",
+    skip_modules = [
+        # Requires zmq.backend.cffi._cffi
         "zmq.backend.cffi",
-        "zmq.backend.cython",
-        "zmq.ssh",
+        # Requires tornado
         "zmq.eventloop",
-        "zmq.eventloop.minitornado",
-        "zmq.eventloop.minitornado.platform",
-        "zmq.log",
-        "zmq.asyncio",
-        "zmq.devices",
+        "zmq.green.eventloop",
+        # Requires pytest
+        "zmq.tests",
     ]
+
+    license("BSD-3-Clause")
 
     version("25.0.2", sha256="6b8c1bbb70e868dc88801aa532cae6bd4e3b5233784692b786f17ad2962e5149")
     version("24.0.1", sha256="216f5d7dbb67166759e59b0479bca82b8acf9bed6015b526b8eb10143fb08e77")
@@ -40,6 +32,9 @@ class PyPyzmq(PythonPackage):
     version("17.1.2", sha256="a72b82ac1910f2cf61a49139f4974f994984475f771b0faa730839607eeedddf")
     version("16.0.2", sha256="0322543fff5ab6f87d11a8a099c4c07dd8a1719040084b6ce9162bcdf5c45c9d")
     version("14.7.0", sha256="77994f80360488e7153e64e5959dc5471531d1648e3a4bff14a714d074a38cc2")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("python@2.6:2.7,3.2:3.8", type=("build", "run"), when="@:14")
 

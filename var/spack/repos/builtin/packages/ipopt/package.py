@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Ipopt(AutotoolsPackage):
     homepage = "https://github.com/coin-or/Ipopt"
     url = "https://github.com/coin-or/Ipopt/archive/refs/tags/releases/3.13.2.tar.gz"
     maintainers("goxberry")
+
+    license("EPL-2.0")
 
     version("3.14.9", sha256="e12eba451269ec30f4cf6e2acb8b35399f0d029c97dff10465416f5739c8cf7a")
     version("3.14.5", sha256="9ebbbbf14a64e998e3fba5d2662a8f9bd03f97b1406017e78ae54e5d105ae932")
@@ -40,6 +42,10 @@ class Ipopt(AutotoolsPackage):
     version("3.12.2", sha256="0fa4498e61b301a65ba395bcecb2c1c1df49e56d6c6d109f0f26a0f75e3f43ee")
     version("3.12.1", sha256="bde8c415136bb38d5a3c5935757399760c6cabf67e9362702e59ab6027f030ec")
     version("3.12.0", sha256="b42f44eb53540205ede4584cced5d88a7b3ec2f1fac6e173a105496307e273a0")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("coinhsl", default=False, description="Build with Coin Harwell Subroutine Libraries")
     variant("metis", default=False, description="Build with METIS partitioning support")

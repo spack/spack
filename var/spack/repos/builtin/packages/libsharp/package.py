@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,13 @@ class Libsharp(AutotoolsPackage):
     homepage = "https://github.com/Libsharp/libsharp"
     git = "https://github.com/Libsharp/libsharp.git"
 
+    license("GPL-2.0-or-later")
+
     version("1.0.0", commit="cc4753ff4b0ef393f0d4ada41a175c6d1dd85d71", preferred=True)
     version("2018-01-17", commit="593d4eba67d61827191c32fb94bf235cb31205e1")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("autoconf", type="build")
     depends_on("mpi", when="+mpi")

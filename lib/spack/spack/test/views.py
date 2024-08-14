@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,8 +33,8 @@ def test_view_with_spec_not_contributing_files(mock_packages, tmpdir):
     layout = DirectoryLayout(view_dir)
     view = SimpleFilesystemView(view_dir, layout)
 
-    a = Spec("a")
-    b = Spec("b")
+    a = Spec("pkg-a")
+    b = Spec("pkg-b")
     a.prefix = os.path.join(tmpdir, "a")
     b.prefix = os.path.join(tmpdir, "b")
     a._mark_concrete()
