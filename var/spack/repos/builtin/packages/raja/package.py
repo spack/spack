@@ -434,7 +434,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
             [r"C-style sequential", r"RAJA sequential", r"result -- PASS"],
         )
 
-    def test_views(self):
+    def test_stencil_offset_layout(self):
         """check stencil offset layout"""
         self.run_example(
             "ex6_stencil-offset-layout_solution", [r"RAJA Views \(permuted\)", r"result -- PASS"]
