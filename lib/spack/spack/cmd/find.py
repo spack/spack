@@ -366,12 +366,12 @@ def find(parser, args):
             spack.cmd.print_how_many_pkgs(already_installed, pkg_type, suffix=installed_suffix)
 
             to_be_installed = list(x for x in results if not x.installed)
-            if env and to_be_installed:
+            if env and (to_be_installed or args.show_concretized):
                 concretized_suffix = " to be installed"
-                if args.only_roots:
+                if args.only_roots and to_be_installed:
                     concretized_suffix += " (not shown)"
                 else:
-                    if not args.show_concretized:
+                    if (not args.show_concretized) and to_be_installed:
                         concretized_suffix += " (show with `spack find -c`)"
             
                 spack.cmd.print_how_many_pkgs(
