@@ -36,3 +36,7 @@ class OpenclClhpp(CMakePackage):
         if sys.platform == "darwin":
             ln = which("ln")
             ln("-s", prefix.include.CL, prefix.include.OpenCL)
+
+    def setup_run_environment(self, env):
+        if self.spec.satisfies("@2.0.11:"):
+            env.prepend_path("CPLUS_INCLUDE_PATH", self.spec.prefix.include)
