@@ -838,8 +838,8 @@ def get_standard_version_checksum(pkg, version: StandardVersion) -> str:
     """Get a checksum for a Spack StandardVersion.
 
     Args:
-       pkg (Package): Spack package for which to get a version checksum
-       version (StandardVersion): version in package to get checksum
+       pkg (spack.package.Package): Spack package for which to get a version checksum
+       version (spack.version.StandardVersion): version in package to get checksum
 
     Returns:
       checksum (str): sha256 checksum of version tarball
@@ -858,8 +858,8 @@ def validate_standard_version(pkg, version: StandardVersion) -> bool:
     """Get and test the checksum of a package version based on a tarball.
 
     Args:
-      pkg (Package): Spack package for which to validate a version checksum
-      version (StandardVersion): version of the package to validate
+      pkg (spack.package.Package): Spack package for which to validate a version checksum
+      version (spack.version.StandardVersion): version of the package to validate
 
     Returns:
       bool: result of the validation. True is valid and false is failed.
@@ -881,8 +881,8 @@ def validate_git_version(pkg, version: StandardVersion) -> bool:
     """Get and test the commit and tag of a package version based on a git repository.
 
     Args:
-      pkg (Package): Spack package for which to validate a version commit / tag
-      version (StandardVersion): version of the package to validate
+      pkg (spack.package.Package): Spack package for which to validate a version commit / tag
+      version (spack.version.StandardVersion): version of the package to validate
 
     Returns:
       bool: result of the validation. True is valid and false is failed.
@@ -933,7 +933,12 @@ def validate_git_version(pkg, version: StandardVersion) -> bool:
 
 
 def ci_verify_versions(args):
-    """validate version checksum & commits between git refs"""
+    """validate version checksum & commits between git refs
+
+      This command takes a from_ref and to_ref arguments and
+      then parses the git diff between the two to determine which packages
+      have been modified verifies the new checksums inside of them.
+    """
     with fs.working_dir(spack.paths.prefix):
         # We use HEAD^1 explicitly on the merge commit created by
         # GitHub Actions. However HEAD~1 is a safer default for the helper function.
