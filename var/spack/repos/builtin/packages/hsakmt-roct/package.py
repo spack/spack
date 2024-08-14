@@ -88,7 +88,7 @@ class HsakmtRoct(CMakePackage):
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
-    def test_check_install(self):
+    def check_install(self):
         """Check if package is installed correctly"""
         test_dir = join_path("tests", "kfdtest")
         with working_dir(test_dir, create=True):
