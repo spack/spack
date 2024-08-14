@@ -39,8 +39,8 @@ class SpecHashDescriptor:
 
     def __repr__(self):
         return (
-            f"SpecHashDescriptor(depflag={self.depflag}, "
-            f"package_hash={self.package_hash}, name={self.name}, override={self.override})"
+            f"SpecHashDescriptor(depflag={self.depflag!r}, "
+            f"package_hash={self.package_hash!r}, name={self.name!r}, override={self.override!r})"
         )
 
 
