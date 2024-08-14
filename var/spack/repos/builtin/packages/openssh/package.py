@@ -25,6 +25,7 @@ class Openssh(AutotoolsPackage):
 
     license("SSH-OpenSSH")
 
+    version("9.8p1", sha256="dd8bd002a379b5d499dfb050dd1fa9af8029e80461f4bb6c523c49973f5a39f3") 
     version("9.7p1", sha256="490426f766d82a2763fcacd8d83ea3d70798750c7bd2aff2e57dc5660f773ffd")
     version("9.6p1", sha256="910211c07255a8c5ad654391b40ee59800710dd8119dd5362de09385aa7a777c")
     version("9.5p1", sha256="f026e7b79ba7fb540f75182af96dc8a8f1db395f922bbc9f6ca603672686086b")
