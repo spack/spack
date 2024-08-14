@@ -201,12 +201,12 @@ class Silo(AutotoolsPackage):
         spec = self.spec
         config_args = [
             "--enable-install-lite-headers",
-            "--enable-pythonmodule" if "+python" in spec else "--disable-pythonmodule",
-            "--enable-fortran" if "+fortran" in spec else "--disable-fortran",
-            "--enable-silex" if "+silex" in spec else "--disable-silex",
-            "--enable-shared" if "+shared" in spec else "--disable-shared",
-            "--enable-hzip" if "+hzip" in spec else "--disable-hzip",
-            "--enable-fpzip" if "+fpzip" in spec else "--disable-fpzip",
+            self.enable_or_disable("pythonmodule", variant="python"),
+            self.enable_or_disable("fortran"),
+            self.enable_or_disable("silex"),
+            self.enable_or_disable("shared"),
+            self.enable_or_disable("hzip"),
+            self.enable_or_disable("fpzip"),
         ]
 
         # Do not specify the prefix of zlib if it is in a system directory
