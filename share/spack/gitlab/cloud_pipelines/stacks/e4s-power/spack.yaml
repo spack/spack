@@ -68,6 +68,7 @@ spack:
   - cabana
   - caliper
   - chai
+  - chapel ~rocm ~cuda
   - charliecloud
   - conduit
   - cp2k +mpi
