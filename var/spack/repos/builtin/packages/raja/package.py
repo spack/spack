@@ -430,7 +430,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     def test_line_of_sight(self):
         """check line of sight example"""
         self.run_example(
-            "ex5_line-of-sight_solution", [r"RAJA sequential", r"RAJA OpenMP", r"result -- PASS"]
+            "ex5_line-of-sight_solution",
+            [r"C-style sequential", r"RAJA sequential", r"result -- PASS"],
         )
 
     def test_views(self):
@@ -443,7 +444,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         """check tiled matrix transpose"""
         self.run_example(
             "ex8_tiled-matrix-transpose_solution",
-            [r"parallel top inner loop", r"collapsed inner loops", r"result -- PASS"],
+            [r"C-version", r"RAJA sequential", r"result -- PASS"],
         )
 
     def test_dynamic_tile(self):
@@ -456,7 +457,9 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def test_matrix_multiply(self):
         """check batched matrix multiple tutorial"""
-        self.run_example("tut_batched-matrix-multiply", [r"result -- PASS"])
+        self.run_example(
+            "tut_batched-matrix-multiply", [r"batched matrix multiplication", r"result -- PASS"]
+        )
 
     def test_wave_equation(self):
         """check wave equation"""
