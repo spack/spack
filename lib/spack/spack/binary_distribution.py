@@ -1533,9 +1533,6 @@ def _push_oci(
     List[Tuple[Spec, BaseException]],
 ]:
 
-    # Reverse the order
-    installed_specs_with_deps = list(reversed(installed_specs_with_deps))
-
     # Spec dag hash -> blob
     checksums: Dict[str, spack.oci.oci.Blob] = {}
 

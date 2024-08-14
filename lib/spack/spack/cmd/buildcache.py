@@ -364,7 +364,7 @@ def _specs_to_be_packaged(
         deptype = dt.ALL
     else:
         deptype = dt.RUN | dt.LINK | dt.TEST
-    return [
+    specs = [
         s
         for s in traverse.traverse_nodes(
             requested,
@@ -375,6 +375,8 @@ def _specs_to_be_packaged(
         )
         if not s.external
     ]
+    specs.reverse()
+    return specs
 
 
 def push_fn(args):
