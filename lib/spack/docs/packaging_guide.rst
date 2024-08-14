@@ -1370,7 +1370,7 @@ Sparse-Checkout
   You can supply ``git_sparse_paths`` at the package or version level to utilize git's 
   sparse-checkout feature. This will only clone the paths that are specified in the 
   ``git_sparse_paths`` attribute for the package along with the files in the top level directory.
-  This feature allows you to only clone what you need from large repository.
+  This feature allows you to only clone what you need from a large repository.
   Note that this is a newer feature in git and requries git ``2.25.0`` or greater.
   If ``git_sparse_paths`` is supplied and the git version is too old
   then a warning will be issued and that package will use the standard cloning operations instead.
