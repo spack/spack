@@ -422,9 +422,9 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         with working_dir(self._extra_tests_path):
             example = which(exe)
             if example is None:
-                raise SkipTest(f"{exe} is not installed")
+                raise SkipTest(f"{exe} was not built")
 
-            out = example([], output=str.split, error=str.split)
+            out = example(output=str.split, error=str.split)
             check_outputs(expected, out)
 
     def test_line_of_sight(self):
