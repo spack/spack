@@ -34,6 +34,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.util.executable import ProcessError
 from spack.version import StandardVersion
+from spack.package import Package
 
 description = "manage continuous integration pipelines"
 section = "build"
@@ -834,15 +835,14 @@ def _gitlab_artifacts_url(url: str) -> str:
     return urlunparse(parsed._replace(path="/".join(parts), fragment="", query=""))
 
 
-def get_standard_version_checksum(pkg, version: StandardVersion) -> str:
+def get_standard_version_checksum(pkg: Package, version: StandardVersion) -> str:
     """Get a checksum for a Spack StandardVersion.
 
     Args:
        pkg (spack.package.Package): Spack package for which to get a version checksum
        version (spack.version.StandardVersion): version in package to get checksum
 
-    Returns:
-      checksum (str): sha256 checksum of version tarball
+    Returns: (str): sha256 checksum of version tarball
     """
     url = pkg.find_valid_url_for_version(version)
     url_dict: Dict[StandardVersion, str] = {version: url}
@@ -854,15 +854,14 @@ def get_standard_version_checksum(pkg, version: StandardVersion) -> str:
     return version_hashes[version]
 
 
-def validate_standard_version(pkg, version: StandardVersion) -> bool:
+def validate_standard_version(pkg: Package, version: StandardVersion) -> bool:
     """Get and test the checksum of a package version based on a tarball.
 
     Args:
       pkg (spack.package.Package): Spack package for which to validate a version checksum
       version (spack.version.StandardVersion): version of the package to validate
 
-    Returns:
-      bool: result of the validation. True is valid and false is failed.
+    Returns: (bool): result of the validation. True is valid and false is failed.
     """
     sha = get_standard_version_checksum(pkg, version)
     if sha != pkg.versions[version]["sha256"]:
@@ -877,15 +876,14 @@ def validate_standard_version(pkg, version: StandardVersion) -> bool:
     return True
 
 
-def validate_git_version(pkg, version: StandardVersion) -> bool:
+def validate_git_version(pkg: Package, version: StandardVersion) -> bool:
     """Get and test the commit and tag of a package version based on a git repository.
 
     Args:
       pkg (spack.package.Package): Spack package for which to validate a version commit / tag
       version (spack.version.StandardVersion): version of the package to validate
 
-    Returns:
-      bool: result of the validation. True is valid and false is failed.
+    Returns: (bool): result of the validation. True is valid and false is failed.
     """
     known_commit = pkg.versions[version]["commit"]
     git = spack.util.git.git(required=True)
