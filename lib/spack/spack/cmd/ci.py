@@ -935,9 +935,9 @@ def validate_git_version(pkg, version: StandardVersion) -> bool:
 def ci_verify_versions(args):
     """validate version checksum & commits between git refs
 
-      This command takes a from_ref and to_ref arguments and
-      then parses the git diff between the two to determine which packages
-      have been modified verifies the new checksums inside of them.
+    This command takes a from_ref and to_ref arguments and
+    then parses the git diff between the two to determine which packages
+    have been modified verifies the new checksums inside of them.
     """
     with fs.working_dir(spack.paths.prefix):
         # We use HEAD^1 explicitly on the merge commit created by
