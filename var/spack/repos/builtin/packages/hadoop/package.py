@@ -17,7 +17,7 @@ class Hadoop(Package):
     list_url = "https://archive.apache.org/dist/hadoop/common"
     list_depth = 1
 
-    license("Apache-2.0", checked="wdconinc")
+    license("Apache-2.0", checked_by="wdconinc")
 
     version("3.4.0", sha256="e311a78480414030f9ec63549a5d685e69e26f207103d9abf21a48b9dd03c86c")
     version("3.3.6", sha256="f5195059c0d4102adaa7fff17f7b2a85df906bcb6e19948716319f9978641a04")
