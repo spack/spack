@@ -407,9 +407,9 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         # Now copy the relative files
         cache_extra_test_sources(self, self.build_relpath)
 
-        # Ensure the path exists since relying on a relative path at the
-        # same level as the normal stage source path.
-        mkdirp(install_test_root(self))
+        # # Ensure the path exists since relying on a relative path at the
+        # # same level as the normal stage source path.
+        # mkdirp(install_test_root(self))
 
     @property
     def _extra_tests_path(self):
@@ -417,44 +417,45 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         # TODO: using the installed libraries.
         return join_path(install_test_root(self), self.build_relpath, "bin")
 
-    def run_raja(self, exe, expected):
+    def run_example(self, exe, expected):
+        """run and check outputs of the example"""
         example_exe = which(exe)
         if example_exe is None:
-            raise SkipTest(f"{exe} is not installed for version {self.version}")
+            raise SkipTest(f"{exe} is not installed")
         out = example_exe([], output=str.split, error=str.split)
         check_outputs(expected, out)
 
     def test_line_of_sight(self):
         """Test line of sight example"""
-        self.run_raja(
+        self.run_example(
             "ex5_line-of-sight_solution", [r"RAJA sequential", r"RAJA OpenMP", r"result -- PASS"]
         )
 
     def test_views(self):
-        """Test stencil offset layout"""
-        self.run_raja(
+        """check stencil offset layout"""
+        self.run_example(
             "ex6_stencil-offset-layout_solution", [r"RAJA Views \(permuted\)", r"result -- PASS"]
         )
 
     def test_tiled_matrix(self):
-        """Test tiled matrix transpose"""
-        self.run_raja(
+        """check tiled matrix transpose"""
+        self.run_example(
             "ex8_tiled-matrix-transpose_solution",
             [r"parallel top inner loop", r"collapsed inner loops", r"result -- PASS"],
         )
 
     def test_dynamic_tile(self):
-        """Test dynamic tile"""
-        self.run_raja("kernel-dynamic-tile", [r"Running index", r"(24,24)"])
+        """check kernel dynamic tile"""
+        self.run_example("kernel-dynamic-tile", [r"Running index", r"(24,24)"])
 
     def test_plugin_example(self):
-        """Test plugin example"""
-        self.run_raja("plugin-example", [r"Launching host kernel for the 10 time"])
+        """check plugin example"""
+        self.run_example("plugin-example", [r"Launching host kernel for the 10 time"])
 
-    def test_tut_matrix(self):
-        """Test batched matrix multiple"""
-        self.run_raja("tut_batched-matrix-multiply", [r"result -- PASS"])
+    def test_matrix_multiply(self):
+        """check batched matrix multiple tutorial"""
+        self.run_example("tut_batched-matrix-multiply", [r"result -- PASS"])
 
     def test_wave_equation(self):
-        """Test wave equation"""
-        self.run_raja("wave-eqn", [r"Max Error = 2", r"Evolved solution to time"])
+        """check wave equation"""
+        self.run_example("wave-eqn", [r"Max Error = 2", r"Evolved solution to time"])
