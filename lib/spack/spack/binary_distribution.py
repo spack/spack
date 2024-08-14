@@ -1179,9 +1179,7 @@ def push_or_raise(
     if errors:
         raise PushToBuildCacheError(
             f"Failed to push {len(errors)} specs to {out_url}:\n"
-            + "\n".join(
-                f"Failed to push {_format_spec(spec)}: {error}" for spec, error in errors
-            )
+            + "\n".join(f"Failed to push {_format_spec(spec)}: {error}" for spec, error in errors)
         )
     return skipped
 
