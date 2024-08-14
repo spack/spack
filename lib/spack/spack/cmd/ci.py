@@ -34,7 +34,6 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.util.executable import ProcessError
 from spack.version import StandardVersion
-from spack.package_base import PackageBase
 
 description = "manage continuous integration pipelines"
 section = "build"
@@ -835,7 +834,7 @@ def _gitlab_artifacts_url(url: str) -> str:
     return urlunparse(parsed._replace(path="/".join(parts), fragment="", query=""))
 
 
-def get_standard_version_checksum(pkg: PackageBase, version: StandardVersion) -> str:
+def get_standard_version_checksum(pkg, version: StandardVersion) -> str:
     """Get a checksum for a Spack StandardVersion.
 
     Args:
@@ -854,7 +853,7 @@ def get_standard_version_checksum(pkg: PackageBase, version: StandardVersion) ->
     return version_hashes[version]
 
 
-def validate_standard_version(pkg: PackageBase, version: StandardVersion) -> bool:
+def validate_standard_version(pkg, version: StandardVersion) -> bool:
     """Get and test the checksum of a package version based on a tarball.
 
     Args:
@@ -876,11 +875,11 @@ def validate_standard_version(pkg: PackageBase, version: StandardVersion) -> boo
     return True
 
 
-def validate_git_version(pkg: PackageBase, version: StandardVersion) -> bool:
+def validate_git_version(pkg, version: StandardVersion) -> bool:
     """Get and test the commit and tag of a package version based on a git repository.
 
     Args:
-      pkg (spack.package_base.PackageBase): Spack package for which to validate a version commit / tag
+      pkg (spack.package_base.PackageBase): Spack package for which to validate a version
       version (spack.version.StandardVersion): version of the package to validate
 
     Returns: (bool): result of the validation. True is valid and false is failed.
