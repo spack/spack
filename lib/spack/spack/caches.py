@@ -34,6 +34,8 @@ def _misc_cache():
     return spack.util.file_cache.FileCache(path)
 
 
+FileCacheType = Union[spack.util.file_cache.FileCache, llnl.util.lang.Singleton]
+
 #: Spack's cache for small data
 MISC_CACHE: Union[spack.util.file_cache.FileCache, llnl.util.lang.Singleton] = (
     llnl.util.lang.Singleton(_misc_cache)

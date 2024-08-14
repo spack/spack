@@ -229,7 +229,7 @@ def test_nested_directives(mock_packages):
 
 
 @pytest.mark.not_on_windows("Test requires Autotools")
-def test_patched_dependency(mock_packages, config, install_mockery, mock_fetch):
+def test_patched_dependency(mock_packages, install_mockery, mock_fetch):
     """Test whether patched dependencies work."""
     spec = Spec("patch-a-dependency")
     spec.concretize()
@@ -268,14 +268,11 @@ def trigger_bad_patch(pkg):
 
 
 def test_patch_failure_develop_spec_exits_gracefully(
-    mock_packages, config, install_mockery, mock_fetch, tmpdir, mock_stage
+    mock_packages, install_mockery, mock_fetch, tmpdir, mock_stage
 ):
-    """
-    ensure that a failing patch does not trigger exceptions
-    for develop specs
-    """
+    """ensure that a failing patch does not trigger exceptions for develop specs"""
 
-    spec = Spec("patch-a-dependency " "^libelf dev_path=%s" % str(tmpdir))
+    spec = Spec(f"patch-a-dependency ^libelf dev_path={tmpdir}")
     spec.concretize()
     libelf = spec["libelf"]
     assert "patches" in list(libelf.variants.keys())
@@ -287,7 +284,7 @@ def test_patch_failure_develop_spec_exits_gracefully(
     # success if no exceptions raised
 
 
-def test_patch_failure_restages(mock_packages, config, install_mockery, mock_fetch):
+def test_patch_failure_restages(mock_packages, install_mockery, mock_fetch):
     """
     ensure that a failing patch does not trigger exceptions
     for non-develop specs and the source gets restaged

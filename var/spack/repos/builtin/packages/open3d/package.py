@@ -21,6 +21,10 @@ class Open3d(CMakePackage, CudaPackage):
         "0.13.0", tag="v0.13.0", commit="c3f9de224e13838a72da0e5565a7ba51038b0f11", submodules=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("python", default=False, description="Build the Python module")
 
     # http://www.open3d.org/docs/latest/compilation.html
@@ -116,7 +120,7 @@ class Open3d(CMakePackage, CudaPackage):
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def check_import(self):
         if "+python" in self.spec:
             self.run_test(
                 python.path,

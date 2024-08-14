@@ -13,7 +13,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Callable, Dict, Iterable, Optional, Set
+from typing import Callable, Dict, Iterable, List, Optional, Set
 
 import llnl.string
 import llnl.util.lang
@@ -40,6 +40,7 @@ import spack.paths
 import spack.resource
 import spack.spec
 import spack.stage
+import spack.util.crypto
 import spack.util.lock
 import spack.util.path as sup
 import spack.util.pattern as pattern
@@ -346,8 +347,6 @@ class Stage(LockableStagingDir):
     similar, and are intended to persist for only one run of spack.
     """
 
-    #: Most staging is managed by Spack. DIYStage is one exception.
-    needs_fetching = True
     requires_patch_success = True
 
     def __init__(
@@ -536,32 +535,29 @@ class Stage(LockableStagingDir):
                 for fetcher in dynamic_fetchers:
                     yield fetcher
 
-        def print_errors(errors):
-            for msg in errors:
-                tty.debug(msg)
-
-        errors = []
+        errors: List[str] = []
         for fetcher in generate_fetchers():
             try:
                 fetcher.stage = self
                 self.fetcher = fetcher
                 self.fetcher.fetch()
                 break
-            except spack.fetch_strategy.NoCacheError:
+            except fs.NoCacheError:
                 # Don't bother reporting when something is not cached.
                 continue
+            except fs.FailedDownloadError as f:
+                errors.extend(f"{fetcher}: {e.__class__.__name__}: {e}" for e in f.exceptions)
+                continue
             except spack.error.SpackError as e:
-                errors.append("Fetching from {0} failed.".format(fetcher))
-                tty.debug(e)
+                errors.append(f"{fetcher}: {e.__class__.__name__}: {e}")
                 continue
         else:
-            print_errors(errors)
-
             self.fetcher = self.default_fetcher
-            default_msg = "All fetchers failed for {0}".format(self.name)
-            raise spack.error.FetchError(err_msg or default_msg, None)
-
-        print_errors(errors)
+            if err_msg:
+                raise spack.error.FetchError(err_msg)
+            raise spack.error.FetchError(
+                f"All fetchers failed for {self.name}", "\n".join(f"    {e}" for e in errors)
+            )
 
     def steal_source(self, dest):
         """Copy the source_path directory in its entirety to directory dest
@@ -772,8 +768,6 @@ class StageComposite(pattern.Composite):
                 "cache_mirror",
                 "steal_source",
                 "disable_mirrors",
-                "needs_fetching",
-                "requires_patch_success",
             ]
         )
 
@@ -813,6 +807,10 @@ class StageComposite(pattern.Composite):
         return self[0].archive_file
 
     @property
+    def requires_patch_success(self):
+        return self[0].requires_patch_success
+
+    @property
     def keep(self):
         return self[0].keep
 
@@ -822,64 +820,7 @@ class StageComposite(pattern.Composite):
             item.keep = value
 
 
-class DIYStage:
-    """
-    Simple class that allows any directory to be a spack stage.  Consequently,
-    it does not expect or require that the source path adhere to the standard
-    directory naming convention.
-    """
-
-    needs_fetching = False
-    requires_patch_success = False
-
-    def __init__(self, path):
-        if path is None:
-            raise ValueError("Cannot construct DIYStage without a path.")
-        elif not os.path.isdir(path):
-            raise StagePathError("The stage path directory does not exist:", path)
-
-        self.archive_file = None
-        self.path = path
-        self.source_path = path
-        self.created = True
-
-    # DIY stages do nothing as context managers.
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-    def fetch(self, *args, **kwargs):
-        tty.debug("No need to fetch for DIY.")
-
-    def check(self):
-        tty.debug("No checksum needed for DIY.")
-
-    def expand_archive(self):
-        tty.debug("Using source directory: {0}".format(self.source_path))
-
-    @property
-    def expanded(self):
-        """Returns True since the source_path must exist."""
-        return True
-
-    def restage(self):
-        raise RestageError("Cannot restage a DIY stage.")
-
-    def create(self):
-        self.created = True
-
-    def destroy(self):
-        # No need to destroy DIY stage.
-        pass
-
-    def cache_local(self):
-        tty.debug("Sources for DIY stages are not cached")
-
-
 class DevelopStage(LockableStagingDir):
-    needs_fetching = False
     requires_patch_success = False
 
     def __init__(self, name, dev_path, reference_link):
@@ -1245,7 +1186,7 @@ def _fetch_and_checksum(url, options, keep_stage, action_fn=None):
             # Checksum the archive and add it to the list
             checksum = spack.util.crypto.checksum(hashlib.sha256, stage.archive_file)
         return checksum, None
-    except FailedDownloadError:
+    except fs.FailedDownloadError:
         return None, f"[WORKER] Failed to fetch {url}"
     except Exception as e:
         return None, f"[WORKER] Something failed on {url}, skipping.  ({e})"
@@ -1265,7 +1206,3 @@ class RestageError(StageError):
 
 class VersionFetchError(StageError):
     """Raised when we can't determine a URL to fetch a package."""
-
-
-# Keep this in namespace for convenience
-FailedDownloadError = fs.FailedDownloadError

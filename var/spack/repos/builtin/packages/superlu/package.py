@@ -42,6 +42,9 @@ class Superlu(CMakePackage, Package):
         url="https://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_4.2.tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     build_system(
         conditional("cmake", when="@5:"), conditional("generic", when="@:4"), default="cmake"
     )

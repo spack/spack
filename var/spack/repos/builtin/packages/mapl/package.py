@@ -38,6 +38,8 @@ class Mapl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("2.47.1", sha256="ca3e94c0caa78a91591fe63603d1836196f5294d4baad7cf1d83b229b3a85916")
+    version("2.47.0", sha256="66c862d2ab8bcd6969e9728091dbca54f1f420e97e41424c4ba93ef606088459")
     version("2.46.2", sha256="6d397ad73042355967de8ef5b521d6135c004f96e93ae7b215f9ee325e75c6f0")
     version("2.46.1", sha256="f3090281de6293b484259d58f852c45b98759de8291d36a4950e6d348ece6573")
     version("2.46.0", sha256="726d9588b724bd43e5085d1a2f8d806d548f185ed6b22a1b13c0ed06212d7be2")
@@ -137,13 +139,22 @@ class Mapl(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
+
     # Versions later than 3.14 remove FindESMF.cmake
     # from ESMA_CMake.
     resource(
         name="esma_cmake",
         git="https://github.com/GEOS-ESM/ESMA_cmake.git",
+        tag="v3.46.0",
+        when="@2.47:",
+    )
+    resource(
+        name="esma_cmake",
+        git="https://github.com/GEOS-ESM/ESMA_cmake.git",
         tag="v3.45.2",
-        when="@2.45:",
+        when="@2.45:2.46",
     )
     resource(
         name="esma_cmake",
@@ -338,9 +349,12 @@ class Mapl(CMakePackage):
         # - Intel MPI --> intelmpi
         # - MVAPICH --> mvapich
         # - HPE MPT --> mpt
+        # - Cray MPICH --> mpich
 
         if self.spec.satisfies("^mpich"):
             args.append(self.define("MPI_STACK", "mpich"))
+        elif self.spec.satisfies("^mvapich2"):
+            args.append(self.define("MPI_STACK", "mvapich"))
         elif self.spec.satisfies("^openmpi"):
             args.append(self.define("MPI_STACK", "openmpi"))
         elif self.spec.satisfies("^intel-oneapi-mpi"):
@@ -349,6 +363,8 @@ class Mapl(CMakePackage):
             args.append(self.define("MPI_STACK", "mvapich"))
         elif self.spec.satisfies("^mpt"):
             args.append(self.define("MPI_STACK", "mpt"))
+        elif self.spec.satisfies("^cray-mpich"):
+            args.append(self.define("MPI_STACK", "mpich"))
         else:
             raise InstallError("Unsupported MPI stack")
 

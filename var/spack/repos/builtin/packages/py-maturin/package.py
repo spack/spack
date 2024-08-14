@@ -18,6 +18,7 @@ class PyMaturin(PythonPackage):
 
     license("Apache-2.0")
 
+    version("1.6.0", sha256="b955025c24c8babc808db49e0ff90db8b4b1320dcc16b14eb26132841737230d")
     version("1.5.1", sha256="3dd834ece80edb866af18cbd4635e0ecac40139c726428d5f1849ae154b26dca")
     version("1.4.0", sha256="ed12e1768094a7adeafc3a74ebdb8dc2201fa64c4e7e31f14cfc70378bf93790")
     version("1.1.0", sha256="4650aeaa8debd004b55aae7afb75248cbd4d61cd7da2dcf4ead8b22b58cecae0")
@@ -39,4 +40,7 @@ class PyMaturin(PythonPackage):
         ]:
             depends_on(f"rust@{rust}:", when=f"@{maturin}:")
 
-    conflicts("python@3.11:")
+    # May be an accidental dependency, remove in the future
+    # https://git.alpinelinux.org/aports/commit/?id=7ad298b467403b96a6b97d050170e367f147a75f
+    # https://patchwork.yoctoproject.org/project/oe-core/patch/8803dc101b641c948805cab9e5784c38f43b0e51.1702791173.git.tim.orling@konsulko.com/
+    depends_on("bzip2", when="platform=darwin")

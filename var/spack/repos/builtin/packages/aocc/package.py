@@ -53,6 +53,8 @@ class Aocc(Package, CompilerPackage):
         url="https://download.amd.com/developer/eula/aocc-compiler/aocc-compiler-3.2.0.tar",
     )
 
+    depends_on("c", type="build")  # generated
+
     # Licensing
     license_url = "https://www.amd.com/en/developer/aocc/aocc-compiler/eula.html"
 
@@ -78,7 +80,7 @@ class Aocc(Package, CompilerPackage):
 
     @run_before("install")
     def license_reminder(self):
-        if "+license-agreed" in self.spec:
+        if self.spec.satisfies("+license-agreed"):
             tty.msg(
                 "Reminder: by setting +license-agreed you are confirming you agree to the terms "
                 "of the {0} EULA (found at {1})".format(self.spec.name, self.license_url)

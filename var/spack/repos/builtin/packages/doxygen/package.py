@@ -41,6 +41,10 @@ class Doxygen(CMakePackage):
     version("1.8.11", sha256="86263cb4ce1caa41937465f73f644651bd73128d685d35f18dea3046c7c42c12")
     version("1.8.10", sha256="0ac08900e5dc3ab5b65976991bf197623a7cc33ec3b32fe29360fb55d0c16b60")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # graphviz appears to be a run-time optional dependency
     variant("graphviz", default=False, description="Build with dot command support from Graphviz.")
 

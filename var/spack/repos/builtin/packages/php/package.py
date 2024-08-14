@@ -29,6 +29,9 @@ class Php(AutotoolsPackage):
     version("7.2.24", sha256="334c9915733f6a29e1462f64038b1b4b1b21cb18f4f5f980add86792b5550ab3")
     version("7.1.33", sha256="f80a795a09328a9441bae4a8a60fa0d6d43ec5adc98f5aa5f51d06f4522c07fe")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")

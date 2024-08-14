@@ -46,6 +46,9 @@ class Amdlibm(SConsPackage):
     version("3.0", sha256="eb26b5e174f43ce083928d0d8748a6d6d74853333bba37d50057aac2bef7c7aa")
     version("2.2", commit="4033e022da428125747e118ccd6fdd9cee21c470")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("verbose", default=False, description="Building with verbosity", when="@:4.1")
 
     # Mandatory dependencies
@@ -58,6 +61,10 @@ class Amdlibm(SConsPackage):
 
     patch("0001-libm-ose-Scripts-cleanup-pyc-files.patch", when="@2.2")
     patch("0002-libm-ose-prevent-log-v3.c-from-building.patch", when="@2.2")
+    # Patch to update the SCons environment with
+    # the newly introduced 'SPACK_MANAGED_DIRS'
+    # build environment variable.
+    patch("libm-ose-SconsSpack.patch", when="@3.1:4.2")
 
     conflicts("%gcc@:9.1.0", msg="Minimum supported GCC version is 9.2.0")
     conflicts("%gcc@13.2.0:", msg="Maximum supported GCC version is 13.1.0")

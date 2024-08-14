@@ -54,6 +54,9 @@ class Fms(CMakePackage):
         "2020.04.01", sha256="2c409242de7dea0cf29f8dbf7495698b6bcac1eeb5c4599a728bdea172ffe37c"
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "precision",
         values=("32", "64"),
@@ -104,6 +107,7 @@ class Fms(CMakePackage):
     depends_on("netcdf-fortran")
     depends_on("mpi")
     depends_on("libyaml", when="+yaml")
+    depends_on("llvm-openmp", when="+openmp %apple-clang", type=("build", "run"))
 
     def cmake_args(self):
         args = [

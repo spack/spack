@@ -56,6 +56,10 @@ class Tau(Package):
     version("2.24", sha256="5d28e8b26561c7cd7d0029b56ec0f95fc26803ac0b100c98e00af0b02e7f55e2")
     version("2.23.1", sha256="31a4d0019cec6ef57459a9cd18a220f0130838a5f1a0b5ea7879853f5a38cf88")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Disable some default dependencies on Darwin/OSX
     darwin_default = False
     if sys.platform != "darwin":
@@ -177,6 +181,9 @@ class Tau(Package):
         when="+rocm",
         msg="Using ROCm, select either +rocprofiler, +roctracer or +rocprofv2",
     )
+
+    # https://github.com/UO-OACISS/tau2/commit/1d2cb6b
+    patch("tau-rocm-disable-llvm-plugin.patch", when="@2.33.2 +rocm")
 
     filter_compiler_wrappers("Makefile", relative_root="include")
     filter_compiler_wrappers("Makefile.tau*", relative_root="lib")

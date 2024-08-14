@@ -9,6 +9,8 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.config
+import spack.fetch_strategy
+import spack.repo
 import spack.spec
 import spack.util.path
 import spack.version
@@ -69,13 +71,15 @@ def _retrieve_develop_source(spec, abspath):
     # We construct a package class ourselves, rather than asking for
     # Spec.package, since Spec only allows this when it is concrete
     package = pkg_cls(spec)
-    if isinstance(package.stage[0].fetcher, spack.fetch_strategy.GitFetchStrategy):
-        package.stage[0].fetcher.get_full_repo = True
+    source_stage = package.stage[0]
+    if isinstance(source_stage.fetcher, spack.fetch_strategy.GitFetchStrategy):
+        source_stage.fetcher.get_full_repo = True
         # If we retrieved this version before and cached it, we may have
         # done so without cloning the full git repo; likewise, any
         # mirror might store an instance with truncated history.
-        package.stage[0].disable_mirrors()
+        source_stage.disable_mirrors()
 
+    source_stage.fetcher.set_package(package)
     package.stage.steal_source(abspath)
 
 

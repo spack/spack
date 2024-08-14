@@ -17,6 +17,10 @@ class Re2c(Package):
 
     license("Public-Domain")
 
+    # Python 3.7 is required for re2c@3.1, but the clingo bootstrap on OpenSUSE Leap uses
+    # the system Python 3.6 such that the bootstrap fails with an UnsatisfiableVersionSpecError
+    # version("3.1", sha256="0ac299ad359e3f512b06a99397d025cfff81d3be34464ded0656f8a96676c029")
+    version("3.0", sha256="b3babbbb1461e13fe22c630a40c43885efcfbbbb585830c6f4c0d791cf82ba0b")
     version("2.2", sha256="0fc45e4130a8a555d68e230d1795de0216dfe99096b61b28e67c86dfd7d86bda")
     version("2.1.1", sha256="036ee264fafd5423141ebd628890775aa9447a4c4068a6307385d7366fe711f8")
     version("2.1", sha256="8cba0d95c246c670de8f97f57def83a9c0f2113eaa6f7e4867a941f48f633540")
@@ -27,12 +31,16 @@ class Re2c(Package):
     version("1.3", sha256="f37f25ff760e90088e7d03d1232002c2c2672646d5844fdf8e0d51a5cd75a503")
     version("1.2.1", sha256="1a4cd706b5b966aeffd78e3cf8b24239470ded30551e813610f9cd1a4e01b817")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     phases = ["configure", "build", "install"]
 
     depends_on("cmake", when="platform=windows")
     depends_on("gmake", when="platform=linux")
     depends_on("gmake", when="platform=darwin")
     depends_on("gmake", when="platform=freebsd")
+    # depends_on("python@3:", when="@3.1:", type="build")
 
     @property
     def make_tool(self):

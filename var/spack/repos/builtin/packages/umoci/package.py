@@ -22,6 +22,8 @@ class Umoci(MakefilePackage):
     version("0.4.1", sha256="0d83e01167383f529d726e9fd455660d4837371d5f0d82fad405f3ae6ae52486")
     version("0.4.0", sha256="66997e270dee8abc9796385b162a1e8e32dd2ee2359e5200af4e6671cc1e76a0")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("go")
     depends_on("go-md2man", type="build")
 

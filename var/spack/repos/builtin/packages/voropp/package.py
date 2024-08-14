@@ -20,6 +20,8 @@ class Voropp(MakefilePackage):
 
     version("0.4.6", sha256="ef7970071ee2ce3800daa8723649ca069dc4c71cc25f0f7d22552387f3ea437e")
 
+    depends_on("cxx", type="build")  # generated
+
     def edit(self, spec, prefix):
         filter_file(r"CC=g\+\+", "CC={0}".format(self.compiler.cxx), "config.mk")
         filter_file(r"PREFIX=/usr/local", "PREFIX={0}".format(self.prefix), "config.mk")

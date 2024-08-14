@@ -19,6 +19,8 @@ class Diy(CMakePackage):
     version("3.6.0", sha256="d12eb7dabe3a8a66cd406d34aabdb43c1ec178b7ed40cf1dff10016643bbf149")
     version("3.5.0", sha256="b3b5490441d521b6e9b33471c782948194bf95c7c3df3eb97bc5cf4530b91576")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("mpi")
 
     def cmake_args(self):

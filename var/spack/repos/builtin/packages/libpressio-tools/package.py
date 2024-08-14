@@ -41,6 +41,8 @@ class LibpressioTools(CMakePackage):
     version("0.0.16", sha256="1299e441fb15666d1c8abfd40f3f52b1bf55b6bfda4bfcc71177eec37160a95e")
     version("0.0.15", sha256="bcdf865d77969a34e2d747034ceeccf5cb766a4c11bcc856630d837f442ee33e")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("libpressio-adios1@0.0.2:", when="+adios1")
     depends_on("lc-framework@1.1.1:+libpressio", when="+lc")
 
@@ -114,5 +116,5 @@ class LibpressioTools(CMakePackage):
 
     @run_after("build")
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def check_test(self):
         make("test")

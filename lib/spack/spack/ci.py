@@ -22,6 +22,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
 
+import ruamel.yaml
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
@@ -36,6 +38,7 @@ import spack.mirror
 import spack.paths
 import spack.repo
 import spack.spec
+import spack.stage
 import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
@@ -69,7 +72,7 @@ SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 # TODO: Remove this in Spack 0.23
 SHARED_PR_MIRROR_URL = "s3://spack-binaries-prs/shared_pr_mirror"
 JOB_NAME_FORMAT = (
-    "{name}{@version} {/hash:7} {%compiler.name}{@compiler.version}{arch=architecture}"
+    "{name}{@version} {/hash:7} {%compiler.name}{@compiler.version}{ arch=architecture}"
 )
 IS_WINDOWS = sys.platform == "win32"
 spack_gpg = spack.main.SpackCommand("gpg")
@@ -551,10 +554,9 @@ def generate_gitlab_ci_yaml(
     env,
     print_summary,
     output_file,
+    *,
     prune_dag=False,
     check_index_only=False,
-    run_optimizer=False,
-    use_dependencies=False,
     artifacts_root=None,
     remote_mirror_override=None,
 ):
@@ -575,12 +577,6 @@ def generate_gitlab_ci_yaml(
             this mode results in faster yaml generation time). Otherwise, also
             check each spec directly by url (useful if there is no index or it
             might be out of date).
-        run_optimizer (bool): If True, post-process the generated yaml to try
-            try to reduce the size (attempts to collect repeated configuration
-            and replace with definitions).)
-        use_dependencies (bool): If true, use "dependencies" rather than "needs"
-            ("needs" allows DAG scheduling).  Useful if gitlab instance cannot
-            be configured to handle more than a few "needs" per job.
         artifacts_root (str): Path where artifacts like logs, environment
             files (spack.yaml, spack.lock), etc should be written.  GitLab
             requires this to be within the project directory.
@@ -814,7 +810,8 @@ def generate_gitlab_ci_yaml(
         cli_scopes = [
             os.path.relpath(s.path, concrete_env_dir)
             for s in cfg.scopes().values()
-            if isinstance(s, cfg.ImmutableConfigScope)
+            if not s.writable
+            and isinstance(s, (cfg.DirectoryConfigScope))
             and s.path not in env_includes
             and os.path.exists(s.path)
         ]
@@ -1111,7 +1108,7 @@ def generate_gitlab_ci_yaml(
     if cdash_handler and cdash_handler.auth_token:
         try:
             cdash_handler.populate_buildgroup(all_job_names)
-        except (SpackError, HTTPError, URLError) as err:
+        except (SpackError, HTTPError, URLError, TimeoutError) as err:
             tty.warn(f"Problem populating buildgroup: {err}")
     else:
         tty.warn("Unable to populate buildgroup without CDash credentials")
@@ -1271,17 +1268,6 @@ def generate_gitlab_ci_yaml(
             with open(copy_specs_file, "w") as fd:
                 fd.write(json.dumps(buildcache_copies))
 
-        # TODO(opadron): remove this or refactor
-        if run_optimizer:
-            import spack.ci_optimization as ci_opt
-
-            output_object = ci_opt.optimizer(output_object)
-
-        # TODO(opadron): remove this or refactor
-        if use_dependencies:
-            import spack.ci_needs_workaround as cinw
-
-            output_object = cinw.needs_to_dependencies(output_object)
     else:
         # No jobs were generated
         noop_job = spack_ci_ir["jobs"]["noop"]["attributes"]
@@ -1310,8 +1296,11 @@ def generate_gitlab_ci_yaml(
         if not rebuild_everything:
             sys.exit(1)
 
-    with open(output_file, "w") as outf:
-        outf.write(syaml.dump(sorted_output, default_flow_style=True))
+    # Minimize yaml output size through use of anchors
+    syaml.anchorify(sorted_output)
+
+    with open(output_file, "w") as f:
+        ruamel.yaml.YAML().dump(sorted_output, f)
 
 
 def _url_encode_string(input_string):
@@ -1382,15 +1371,6 @@ def can_verify_binaries():
     return len(gpg_util.public_keys()) >= 1
 
 
-def _push_to_build_cache(spec: spack.spec.Spec, sign_binaries: bool, mirror_url: str) -> None:
-    """Unchecked version of the public API, for easier mocking"""
-    bindist.push_or_raise(
-        spec,
-        spack.mirror.Mirror.from_url(mirror_url).push_url,
-        bindist.PushOptions(force=True, unsigned=not sign_binaries),
-    )
-
-
 def push_to_build_cache(spec: spack.spec.Spec, mirror_url: str, sign_binaries: bool) -> bool:
     """Push one or more binary packages to the mirror.
 
@@ -1401,20 +1381,13 @@ def push_to_build_cache(spec: spack.spec.Spec, mirror_url: str, sign_binaries: b
         sign_binaries: If True, spack will attempt to sign binary package before pushing.
     """
     tty.debug(f"Pushing to build cache ({'signed' if sign_binaries else 'unsigned'})")
+    signing_key = bindist.select_signing_key() if sign_binaries else None
     try:
-        _push_to_build_cache(spec, sign_binaries, mirror_url)
+        bindist.push_or_raise([spec], out_url=mirror_url, signing_key=signing_key)
         return True
     except bindist.PushToBuildCacheError as e:
-        tty.error(str(e))
+        tty.error(f"Problem writing to {mirror_url}: {e}")
         return False
-    except Exception as e:
-        # TODO (zackgalbreath): write an adapter for boto3 exceptions so we can catch a specific
-        # exception instead of parsing str(e)...
-        msg = str(e)
-        if any(x in msg for x in ["Access Denied", "InvalidAccessKeyId"]):
-            tty.error(f"Permission problem writing to {mirror_url}: {msg}")
-            return False
-        raise
 
 
 def remove_other_mirrors(mirrors_to_keep, scope=None):
@@ -2095,7 +2068,7 @@ def read_broken_spec(broken_spec_url):
     """
     try:
         _, _, fs = web_util.read_from_url(broken_spec_url)
-    except (URLError, web_util.SpackWebError, HTTPError):
+    except web_util.SpackWebError:
         tty.warn(f"Unable to read broken spec from {broken_spec_url}")
         return None
 
