@@ -641,7 +641,7 @@ class Python(Package):
         else:
             config_args.append("--without-system-expat")
 
-        if self.version <= Version("3.12.0"):
+        if self.version < Version("3.12.0"):
             if "+ctypes" in spec:
                 config_args.append("--with-system-ffi")
             else:
