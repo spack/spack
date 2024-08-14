@@ -61,3 +61,7 @@ class OpenclCHeaders(CMakePackage):
     def cmake_args(self):
         # Disable testing the headers. They definitely work.
         return ["-DBUILD_TESTING=OFF"]
+
+    def setup_run_environment(self, env):
+        if self.spec.satisfies("@2020.12.18:"):
+            env.prepend_path("C_INCLUDE_PATH", self.spec.prefix.include)
