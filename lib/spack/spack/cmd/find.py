@@ -373,7 +373,7 @@ def find(parser, args):
                 else:
                     if (not args.show_concretized) and to_be_installed:
                         concretized_suffix += " (show with `spack find -c`)"
-            
+
                 spack.cmd.print_how_many_pkgs(
                     to_be_installed, "concretized", suffix=concretized_suffix
                 )
