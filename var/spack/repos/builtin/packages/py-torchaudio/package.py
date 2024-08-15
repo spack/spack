@@ -110,7 +110,7 @@ class PyTorchaudio(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("sox")
 
     # https://github.com/pytorch/audio/pull/3811
-    depends_on("cuda@:12.5", when="+cuda")
+    depends_on("cuda@:12.4", when="+cuda")
 
     def setup_build_environment(self, env):
         # tools/setup_helpers/extension.py
