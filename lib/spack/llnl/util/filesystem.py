@@ -1624,6 +1624,10 @@ def remove_linked_tree(path):
             shutil.rmtree(os.path.realpath(path), **kwargs)
             os.unlink(path)
         else:
+            if sys.platform == "win32":
+                # Adds support for removing long paths on windows
+                # https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry
+                path = "\\\\?\\" + path
             shutil.rmtree(path, **kwargs)
 
 
