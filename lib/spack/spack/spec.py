@@ -781,6 +781,13 @@ class CompilerFlag(str):
         propagate (bool): if ``True`` the flag value will
             be passed to the package's dependencies. If
             ``False`` it will not
+        flag_group (str): if this flag was introduced along
+            with several flags via a single source, then
+            this will store all such flags
+        source (str): identifies the type of constraint that
+            introduced this flag (e.g. if a package has
+            ``depends_on(... cflags=-g)``, then the ``source``
+            for "-g" would indicate ``depends_on``.
     """
 
     def __new__(cls, value, **kwargs):
