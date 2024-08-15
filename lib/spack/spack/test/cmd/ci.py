@@ -254,30 +254,33 @@ spack:
     )
 
     env_cmd("create", "test", str(spack_yaml))
+    outputfile = tmp_path / ".gitlab-ci.yaml"
     with ev.read("test"):
-        output = ci_cmd("generate", fail_on_error=False, output=str)
+        output = ci_cmd(
+            "generate", "--output-file", str(outputfile), fail_on_error=False, output=str
+        )
     assert "Environment does not have `ci` a configuration" in output
 
 
 def test_ci_generate_with_cdash_token(
-    tmpdir,
+    tmp_path,
     mutable_mock_env_path,
     install_mockery,
     mock_packages,
     ci_base_environment,
     mock_binary_index,
+    monkeypatch,
 ):
     """Make sure we it doesn't break if we configure cdash"""
-    os.environ.update({"SPACK_CDASH_AUTH_TOKEN": "notreallyatokenbutshouldnotmatter"})
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
+    monkeypatch.setenv("SPACK_CDASH_AUTH_TOKEN", "notreallyatokenbutshouldnotmatter")
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        f"""\
 spack:
   specs:
     - archive-files
   mirrors:
-    some-mirror: file://my.fake.mirror
+    some-mirror: {tmp_path / 'ci-mirror'}
   ci:
     enable-artifacts-buildcache: True
     pipeline-gen:
@@ -294,27 +297,21 @@ spack:
     project: Not used
     site: Nothing
 """
-        )
+    )
 
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
+    backup_file = tmp_path / "backup-ci.yml"
+    original_file = tmp_path / ".gitlab-ci.yml"
+    env_cmd("create", "test", str(spack_yaml))
+    with ev.read("test"):
+        args = ["--output-file", str(original_file), "--copy-to", str(backup_file)]
+        output = ci_cmd("generate", *args, output=str)
 
-        with ev.read("test"):
-            copy_to_file = str(tmpdir.join("backup-ci.yml"))
-            output = ci_cmd("generate", "--copy-to", copy_to_file, output=str)
-            # That fake token should still have resulted in being unable to
-            # register build group with cdash, but the workload should
-            # still have been generated.
-            expect = "Problem populating buildgroup"
-            assert expect in output
-
-            dir_contents = os.listdir(tmpdir.strpath)
-
-            assert "backup-ci.yml" in dir_contents
-
-            orig_file = str(tmpdir.join(".gitlab-ci.yml"))
-
-            assert filecmp.cmp(orig_file, copy_to_file) is True
+    # That fake token should still have resulted in being unable to
+    # register build group with cdash, but the workload should
+    # still have been generated.
+    assert "Problem populating buildgroup" in output
+    assert backup_file.exists()
+    assert filecmp.cmp(str(original_file), str(backup_file))
 
 
 def test_ci_generate_with_custom_settings(
