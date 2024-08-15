@@ -73,6 +73,9 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("graphite2", default=False, description="enable support for graphite2 font engine")
     variant(
         "coretext",
@@ -80,9 +83,6 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
         when="platform=darwin",
         description="Enable CoreText shaper backend on macOS",
     )
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
     depends_on("glib")
