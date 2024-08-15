@@ -797,7 +797,7 @@ def test_ci_rebuild_mock_failure_to_push(
     def mock_success(*args, **kwargs):
         return 0
 
-    monkeypatch.setattr(spack.ci, "process_command", mock_success)
+    monkeypatch.setattr(ci, "process_command", mock_success)
 
     # Mock failure to push to the build cache
     def mock_push_or_raise(*args, **kwargs):
@@ -1256,15 +1256,15 @@ spack:
 
 
 def test_push_to_build_cache_exceptions(monkeypatch, tmp_path, capsys):
-    def _push_to_build_cache(spec, sign_binaries, mirror_url):
-        raise Exception("Error: Access Denied")
+    def push_or_raise(*args, **kwargs):
+        raise spack.binary_distribution.PushToBuildCacheError("Error: Access Denied")
 
-    monkeypatch.setattr(spack.ci, "_push_to_build_cache", _push_to_build_cache)
+    monkeypatch.setattr(spack.binary_distribution, "push_or_raise", push_or_raise)
 
     # Input doesn't matter, as we are faking exceptional output
     url = tmp_path.as_uri()
     ci.push_to_build_cache(None, url, None)
-    assert f"Permission problem writing to {url}" in capsys.readouterr().err
+    assert f"Problem writing to {url}: Error: Access Denied" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize("match_behavior", ["first", "merge"])

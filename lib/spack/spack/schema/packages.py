@@ -11,6 +11,8 @@ from typing import Any, Dict
 
 import spack.schema.environment
 
+from .compilers import extra_rpaths, flags, implicit_rpaths
+
 permissions = {
     "type": "object",
     "additionalProperties": False,
@@ -184,7 +186,16 @@ properties: Dict[str, Any] = {
                                     "type": "object",
                                     "additionalProperties": True,
                                     "properties": {
-                                        "environment": spack.schema.environment.definition
+                                        "compilers": {
+                                            "type": "object",
+                                            "patternProperties": {
+                                                r"(^\w[\w-]*)": {"type": "string"}
+                                            },
+                                        },
+                                        "environment": spack.schema.environment.definition,
+                                        "extra_rpaths": extra_rpaths,
+                                        "implicit_rpaths": implicit_rpaths,
+                                        "flags": flags,
                                     },
                                 },
                             },

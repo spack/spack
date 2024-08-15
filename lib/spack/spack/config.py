@@ -99,7 +99,6 @@ CONFIG_DEFAULTS = {
         "dirty": False,
         "build_jobs": min(16, cpus_available()),
         "build_stage": "$tempdir/spack-stage",
-        "concretizer": "clingo",
         "license_dir": spack.paths.default_license_dir,
     }
 }
