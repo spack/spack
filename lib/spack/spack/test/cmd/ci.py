@@ -411,18 +411,22 @@ spack:
 
 
 def test_ci_generate_pkg_with_deps(
-    tmpdir, working_env, mutable_mock_env_path, install_mockery, mock_packages, ci_base_environment
+    tmp_path,
+    working_env,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_packages,
+    ci_base_environment,
 ):
     """Test pipeline generation for a package w/ dependencies"""
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        f"""\
 spack:
   specs:
     - flatten-deps
   mirrors:
-    some-mirror: file://my.fake.mirror
+    some-mirror: {tmp_path / 'ci-mirror'}
   ci:
     enable-artifacts-buildcache: True
     pipeline-gen:
@@ -438,32 +442,28 @@ spack:
           tags:
             - donotcare
 """
-        )
+    )
 
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+    env_cmd("create", "test", str(spack_yaml))
+    outputfile = tmp_path / ".gitlab-ci.yml"
 
-        with ev.read("test"):
-            ci_cmd("generate", "--output-file", outputfile)
+    with ev.read("test"):
+        ci_cmd("generate", "--output-file", str(outputfile))
 
-        with open(outputfile) as f:
-            contents = f.read()
-            yaml_contents = syaml.load(contents)
-            found = []
-            for ci_key in yaml_contents.keys():
-                ci_obj = yaml_contents[ci_key]
-                if "dependency-install" in ci_key:
-                    assert "stage" in ci_obj
-                    assert ci_obj["stage"] == "stage-0"
-                    found.append("dependency-install")
-                if "flatten-deps" in ci_key:
-                    assert "stage" in ci_obj
-                    assert ci_obj["stage"] == "stage-1"
-                    found.append("flatten-deps")
+    yaml_contents = syaml.load(outputfile.read_text())
+    found = []
+    for ci_key, ci_obj in yaml_contents.items():
+        if "dependency-install" in ci_key:
+            assert "stage" in ci_obj
+            assert ci_obj["stage"] == "stage-0"
+            found.append("dependency-install")
+        if "flatten-deps" in ci_key:
+            assert "stage" in ci_obj
+            assert ci_obj["stage"] == "stage-1"
+            found.append("flatten-deps")
 
-            assert "flatten-deps" in found
-            assert "dependency-install" in found
+    assert "flatten-deps" in found
+    assert "dependency-install" in found
 
 
 def test_ci_generate_for_pr_pipeline(
