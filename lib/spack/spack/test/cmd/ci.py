@@ -146,7 +146,7 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
 
 
 def test_ci_generate_with_env(
-    tmpdir,
+    tmp_path,
     mutable_mock_env_path,
     install_mockery,
     mock_packages,
@@ -154,12 +154,12 @@ def test_ci_generate_with_env(
     mock_binary_index,
 ):
     """Make sure we can get a .gitlab-ci.yml from an environment file
-    which has the gitlab-ci, cdash, and mirrors sections."""
-    mirror_url = "file://my.fake.mirror"
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
+    which has the gitlab-ci, cdash, and mirrors sections.
+    """
+    mirror_url = tmp_path / "ci-mirror"
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        f"""\
 spack:
   definitions:
     - old-gcc-pkgs:
@@ -174,7 +174,7 @@ spack:
     - matrix:
       - [$old-gcc-pkgs]
   mirrors:
-    some-mirror: {0}
+    some-mirror: {mirror_url}
   ci:
     pipeline-gen:
     - submapping:
@@ -201,39 +201,35 @@ spack:
     url: https://my.fake.cdash
     project: Not used
     site: Nothing
-""".format(
-                mirror_url
-            )
-        )
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+"""
+    )
 
-        with ev.read("test"):
-            ci_cmd("generate", "--output-file", outputfile)
+    env_cmd("create", "test", str(spack_yaml))
+    outputfile = tmp_path / ".gitlab-ci.yml"
 
-        with open(outputfile) as f:
-            contents = f.read()
-            yaml_contents = syaml.load(contents)
-            assert "workflow" in yaml_contents
-            assert "rules" in yaml_contents["workflow"]
-            assert yaml_contents["workflow"]["rules"] == [{"when": "always"}]
+    with ev.read("test"):
+        ci_cmd("generate", "--output-file", str(outputfile))
 
-            assert "stages" in yaml_contents
-            assert len(yaml_contents["stages"]) == 5
-            assert yaml_contents["stages"][0] == "stage-0"
-            assert yaml_contents["stages"][4] == "stage-rebuild-index"
+    contents = outputfile.read_text()
+    yaml_contents = syaml.load(contents)
 
-            assert "rebuild-index" in yaml_contents
-            rebuild_job = yaml_contents["rebuild-index"]
-            expected = "spack buildcache update-index --keys {0}".format(mirror_url)
-            assert rebuild_job["script"][0] == expected
-            assert rebuild_job["custom_attribute"] == "custom!"
+    assert "workflow" in yaml_contents
+    assert "rules" in yaml_contents["workflow"]
+    assert yaml_contents["workflow"]["rules"] == [{"when": "always"}]
 
-            assert "variables" in yaml_contents
-            assert "SPACK_ARTIFACTS_ROOT" in yaml_contents["variables"]
-            artifacts_root = yaml_contents["variables"]["SPACK_ARTIFACTS_ROOT"]
-            assert artifacts_root == "jobs_scratch_dir"
+    assert "stages" in yaml_contents
+    assert len(yaml_contents["stages"]) == 5
+    assert yaml_contents["stages"][0] == "stage-0"
+    assert yaml_contents["stages"][4] == "stage-rebuild-index"
+
+    assert "rebuild-index" in yaml_contents
+    rebuild_job = yaml_contents["rebuild-index"]
+    assert rebuild_job["script"][0] == f"spack buildcache update-index --keys {mirror_url}"
+    assert rebuild_job["custom_attribute"] == "custom!"
+
+    assert "variables" in yaml_contents
+    assert "SPACK_ARTIFACTS_ROOT" in yaml_contents["variables"]
+    assert yaml_contents["variables"]["SPACK_ARTIFACTS_ROOT"] == "jobs_scratch_dir"
 
 
 def test_ci_generate_with_env_missing_section(
