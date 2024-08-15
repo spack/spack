@@ -315,7 +315,7 @@ spack:
 
 
 def test_ci_generate_with_custom_settings(
-    tmpdir,
+    tmp_path,
     working_env,
     mutable_mock_env_path,
     install_mockery,
@@ -325,15 +325,15 @@ def test_ci_generate_with_custom_settings(
     mock_binary_index,
 ):
     """Test use of user-provided scripts and attributes"""
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
+    spack_yaml = tmp_path / "spack.yaml"
+
+    spack_yaml.write_text(
+        f"""\
 spack:
   specs:
     - archive-files
   mirrors:
-    some-mirror: file://my.fake.mirror
+    some-mirror: {tmp_path / "ci-mirror"}
   ci:
     pipeline-gen:
     - submapping:
@@ -344,13 +344,13 @@ spack:
             - donotcare
           variables:
             ONE: plain-string-value
-            TWO: ${INTERP_ON_BUILD}
+            TWO: ${{INTERP_ON_BUILD}}
           before_script:
             - mkdir /some/path
             - pushd /some/path
-            - git clone ${SPACK_REPO}
+            - git clone ${{SPACK_REPO}}
             - cd spack
-            - git checkout ${SPACK_REF}
+            - git checkout ${{SPACK_REF}}
             - popd
           script:
             - spack -d ci rebuild
@@ -361,61 +361,53 @@ spack:
             paths:
             - some/custom/artifact
 """
-        )
+    )
 
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+    outputfile = tmp_path / ".gitlab-ci.yml"
 
-        with ev.read("test"):
-            monkeypatch.setattr(spack.main, "get_version", lambda: "0.15.3")
-            monkeypatch.setattr(spack.main, "get_spack_commit", lambda: "big ol commit sha")
-            ci_cmd("generate", "--output-file", outputfile)
+    env_cmd("create", "test", str(spack_yaml))
 
-            with open(outputfile) as f:
-                contents = f.read()
-                yaml_contents = syaml.load(contents)
+    monkeypatch.setattr(spack.main, "get_version", lambda: "0.15.3")
+    monkeypatch.setattr(spack.main, "get_spack_commit", lambda: "big ol commit sha")
+    with ev.read("test"):
+        ci_cmd("generate", "--output-file", str(outputfile))
 
-                found_it = False
+    yaml_contents = syaml.load(outputfile.read_text())
 
-                global_vars = yaml_contents["variables"]
-                assert global_vars["SPACK_VERSION"] == "0.15.3"
-                assert global_vars["SPACK_CHECKOUT_VERSION"] == "big ol commit sha"
+    assert yaml_contents["variables"]["SPACK_VERSION"] == "0.15.3"
+    assert yaml_contents["variables"]["SPACK_CHECKOUT_VERSION"] == "big ol commit sha"
 
-                for ci_key in yaml_contents.keys():
-                    ci_obj = yaml_contents[ci_key]
-                    if "archive-files" in ci_key:
-                        # Ensure we have variables, possibly interpolated
-                        var_d = ci_obj["variables"]
-                        assert var_d["ONE"] == "plain-string-value"
-                        assert var_d["TWO"] == "${INTERP_ON_BUILD}"
+    assert any("archive-files" in key for key in yaml_contents)
+    for ci_key, ci_obj in yaml_contents.items():
+        if "archive-files" not in ci_key:
+            continue
 
-                        # Ensure we have scripts verbatim
-                        assert ci_obj["before_script"] == [
-                            "mkdir /some/path",
-                            "pushd /some/path",
-                            "git clone ${SPACK_REPO}",
-                            "cd spack",
-                            "git checkout ${SPACK_REF}",
-                            "popd",
-                        ]
-                        assert ci_obj["script"][1].startswith("cd ")
-                        ci_obj["script"][1] = "cd ENV"
-                        assert ci_obj["script"] == [
-                            "spack -d ci rebuild",
-                            "cd ENV",
-                            "spack env activate --without-view .",
-                            "spack ci rebuild",
-                        ]
-                        assert ci_obj["after_script"] == ["rm -rf /some/path/spack"]
+        # Ensure we have variables, possibly interpolated
+        assert ci_obj["variables"]["ONE"] == "plain-string-value"
+        assert ci_obj["variables"]["TWO"] == "${INTERP_ON_BUILD}"
 
-                        # Ensure we have the custom attributes
-                        assert "some/custom/artifact" in ci_obj["artifacts"]["paths"]
-                        assert ci_obj["custom_attribute"] == "custom!"
+        # Ensure we have scripts verbatim
+        assert ci_obj["before_script"] == [
+            "mkdir /some/path",
+            "pushd /some/path",
+            "git clone ${SPACK_REPO}",
+            "cd spack",
+            "git checkout ${SPACK_REF}",
+            "popd",
+        ]
+        assert ci_obj["script"][1].startswith("cd ")
+        ci_obj["script"][1] = "cd ENV"
+        assert ci_obj["script"] == [
+            "spack -d ci rebuild",
+            "cd ENV",
+            "spack env activate --without-view .",
+            "spack ci rebuild",
+        ]
+        assert ci_obj["after_script"] == ["rm -rf /some/path/spack"]
 
-                        found_it = True
-
-            assert found_it
+        # Ensure we have the custom attributes
+        assert "some/custom/artifact" in ci_obj["artifacts"]["paths"]
+        assert ci_obj["custom_attribute"] == "custom!"
 
 
 def test_ci_generate_pkg_with_deps(
