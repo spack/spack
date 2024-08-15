@@ -1037,7 +1037,10 @@ class ConstraintOrigin:
     result.
     """
 
-    _src_id_suffix = [(ConstraintOriginType.DEPENDS_ON, "_dep"), (ConstraintOriginType.REQUIRE, "_req")]
+    _src_id_suffix = [
+        (ConstraintOriginType.DEPENDS_ON, "_dep"),
+        (ConstraintOriginType.REQUIRE, "_req"),
+    ]
 
     @staticmethod
     def append_type_suffix(pkg_id: str, type: ConstraintOriginType):
@@ -1587,7 +1590,9 @@ class SpackSolverSetup:
                     msg=msg,
                     transform_required=track_dependencies,
                     transform_imposed=dependency_holds,
-                    source=ConstraintOrigin.append_type_suffix(pkg.name, ConstraintOriginType.DEPENDS_ON),
+                    source=ConstraintOrigin.append_type_suffix(
+                        pkg.name, ConstraintOriginType.DEPENDS_ON
+                    ),
                 )
 
                 self.gen.newline()
@@ -1677,7 +1682,9 @@ class SpackSolverSetup:
                         name=pkg_name,
                         transform_imposed=transform,
                         msg=f"{input_spec} is a requirement for package {pkg_name}",
-                        source=ConstraintOrigin.append_type_suffix(pkg_name, ConstraintOriginType.REQUIRE),
+                        source=ConstraintOrigin.append_type_suffix(
+                            pkg_name, ConstraintOriginType.REQUIRE
+                        ),
                     )
                 except Exception as e:
                     # Do not raise if the rule comes from the 'all' subsection, since usability
