@@ -1025,6 +1025,11 @@ ConditionIdFunctionPair = Tuple[int, List[AspFunction]]
 ConditionSpecCache = Dict[str, Dict[ConditionSpecKey, ConditionIdFunctionPair]]
 
 
+class ConstraintOriginType(enum.Enum):
+    DEPENDS_ON = 1
+    REQUIRE = 2
+
+
 class ConstraintOrigin:
     """Generates identifiers that can be pased into the solver attached
     to constraints, and then later retrieved to determine the origin of
@@ -1032,10 +1037,10 @@ class ConstraintOrigin:
     result.
     """
 
-    _src_id_suffix = [("depends_on", "_dep"), ("require", "_req")]
+    _src_id_suffix = [(ConstraintOriginType.DEPENDS_ON, "_dep"), (ConstraintOriginType.REQUIRE, "_req")]
 
     @staticmethod
-    def append_type_suffix(pkg_id: str, type: str):
+    def append_type_suffix(pkg_id: str, type: ConstraintOriginType):
         """Given a package identifier and a constraint type, generate
         a string ID.
         """
@@ -1582,7 +1587,7 @@ class SpackSolverSetup:
                     msg=msg,
                     transform_required=track_dependencies,
                     transform_imposed=dependency_holds,
-                    source=ConstraintOrigin.append_type_suffix(pkg.name, "depends_on"),
+                    source=ConstraintOrigin.append_type_suffix(pkg.name, ConstraintOriginType.DEPENDS_ON),
                 )
 
                 self.gen.newline()
@@ -1672,7 +1677,7 @@ class SpackSolverSetup:
                         name=pkg_name,
                         transform_imposed=transform,
                         msg=f"{input_spec} is a requirement for package {pkg_name}",
-                        source=ConstraintOrigin.append_type_suffix(pkg_name, "require"),
+                        source=ConstraintOrigin.append_type_suffix(pkg_name, ConstraintOriginType.REQUIRE),
                     )
                 except Exception as e:
                     # Do not raise if the rule comes from the 'all' subsection, since usability
