@@ -526,7 +526,7 @@ spack:
 
 
 def test_ci_generate_with_external_pkg(
-    tmpdir,
+    tmp_path,
     working_env,
     mutable_mock_env_path,
     install_mockery,
@@ -535,16 +535,15 @@ def test_ci_generate_with_external_pkg(
     ci_base_environment,
 ):
     """Make sure we do not generate jobs for external pkgs"""
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        f"""\
 spack:
   specs:
     - archive-files
     - externaltest
   mirrors:
-    some-mirror: file://my.fake.mirror
+    some-mirror: {tmp_path / "ci-mirror"}
   ci:
     pipeline-gen:
     - submapping:
@@ -556,20 +555,17 @@ spack:
             - donotcare
           image: donotcare
 """
-        )
+    )
+    outputfile = tmp_path / ".gitlab-ci.yml"
+    env_cmd("create", "test", str(spack_yaml))
 
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+    with ev.read("test"):
+        ci_cmd("generate", "--output-file", str(outputfile))
 
-        with ev.read("test"):
-            ci_cmd("generate", "--output-file", outputfile)
+    yaml_contents = syaml.load(outputfile.read_text())
 
-        with open(outputfile) as f:
-            yaml_contents = syaml.load(f)
-
-        # Check that the "externaltool" package was not erroneously staged
-        assert not any("externaltool" in key for key in yaml_contents)
+    # Check that the "externaltool" package was not erroneously staged
+    assert all("externaltool" not in key for key in yaml_contents)
 
 
 def test_ci_rebuild_missing_config(tmpdir, working_env, mutable_mock_env_path):
