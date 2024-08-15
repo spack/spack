@@ -1157,21 +1157,16 @@ def test_push_to_build_cache_exceptions(monkeypatch, tmp_path, capsys):
 @pytest.mark.parametrize("match_behavior", ["first", "merge"])
 @pytest.mark.parametrize("git_version", ["big ol commit sha", None])
 def test_ci_generate_override_runner_attrs(
-    tmp_path,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    monkeypatch,
-    ci_base_environment,
-    match_behavior,
-    git_version,
+    ci_generate_test, tmp_path, monkeypatch, match_behavior, git_version
 ):
     """Test that we get the behavior we want with respect to the provision
     of runner attributes like tags, variables, and scripts, both when we
     inherit them from the top level, as well as when we override one or
     more at the runner level"""
-    spack_yaml = tmp_path / "spack.yaml"
-    spack_yaml.write_text(
+    monkeypatch.setattr(spack, "spack_version", "0.20.0.test0")
+    monkeypatch.setattr(spack.main, "get_version", lambda: "0.20.0.test0 (blah)")
+    monkeypatch.setattr(spack.main, "get_spack_commit", lambda: git_version)
+    spack_yaml, outputfile, _ = ci_generate_test(
         f"""\
 spack:
   specs:
@@ -1233,15 +1228,6 @@ spack:
         tags: [donotcare]
 """
     )
-
-    outputfile = tmp_path / ".gitlab-ci.yml"
-    env_cmd("create", "test", str(spack_yaml))
-
-    with ev.read("test"):
-        monkeypatch.setattr(spack, "spack_version", "0.20.0.test0")
-        monkeypatch.setattr(spack.main, "get_version", lambda: "0.20.0.test0 (blah)")
-        monkeypatch.setattr(spack.main, "get_spack_commit", lambda: git_version)
-        ci_cmd("generate", "--output-file", str(outputfile))
 
     yaml_contents = syaml.load(outputfile.read_text())
 
@@ -1376,19 +1362,21 @@ def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
     assert ci.get_stack_changed("/no/such/env/path") is True
 
 
-def test_ci_generate_prune_untouched(
-    tmp_path,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    ci_base_environment,
-    monkeypatch,
-):
+def test_ci_generate_prune_untouched(ci_generate_test, tmp_path, monkeypatch):
     """Test pipeline generation with pruning works to eliminate
     specs that were not affected by a change"""
     monkeypatch.setenv("SPACK_PRUNE_UNTOUCHED", "TRUE")  # enables pruning of untouched specs
-    spack_yaml = tmp_path / "spack.yaml"
-    spack_yaml.write_text(
+
+    def fake_compute_affected(r1=None, r2=None):
+        return ["libdwarf"]
+
+    def fake_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
+        return False
+
+    monkeypatch.setattr(ci, "compute_affected_packages", fake_compute_affected)
+    monkeypatch.setattr(ci, "get_stack_changed", fake_stack_changed)
+
+    spack_yaml, outputfile, _ = ci_generate_test(
         f"""\
 spack:
   specs:
@@ -1409,26 +1397,11 @@ spack:
     # callpath -> dyninst -> libelf
     #                     -> libdwarf -> libelf
     #          -> mpich
-    outputfile = tmp_path / ".gitlab-ci.yml"
-    env_cmd("create", "test", str(spack_yaml))
-
-    def fake_compute_affected(r1=None, r2=None):
-        return ["libdwarf"]
-
-    def fake_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
-        return False
-
     env_hashes = {}
     with ev.read("test") as active_env:
-        monkeypatch.setattr(ci, "compute_affected_packages", fake_compute_affected)
-        monkeypatch.setattr(ci, "get_stack_changed", fake_stack_changed)
-
         active_env.concretize()
-
         for s in active_env.all_specs():
             env_hashes[s.name] = s.dag_hash()
-
-        ci_cmd("generate", "--output-file", str(outputfile))
 
     yaml_contents = syaml.load(outputfile.read_text())
 
@@ -1588,25 +1561,15 @@ def test_ensure_only_one_temporary_storage():
     jsonschema.validate(yaml_obj, ci_schema)
 
 
-def test_ci_generate_temp_storage_url(
-    tmpdir,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    monkeypatch,
-    ci_base_environment,
-    mock_binary_index,
-):
+def test_ci_generate_temp_storage_url(ci_generate_test, tmp_path, mock_binary_index):
     """Verify correct behavior when using temporary-storage-url-prefix"""
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
+    _, outputfile, _ = ci_generate_test(
+        f"""\
 spack:
   specs:
     - archive-files
   mirrors:
-    some-mirror: file://my.fake.mirror
+    some-mirror: {tmp_path / "ci-mirror"}
   ci:
     temporary-storage-url-prefix: file:///work/temp/mirror
     pipeline-gen:
@@ -1620,34 +1583,23 @@ spack:
     - cleanup-job:
         custom_attribute: custom!
 """
-        )
+    )
+    yaml_contents = syaml.load(outputfile.read_text())
 
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+    assert "cleanup" in yaml_contents
 
-        with ev.read("test"):
-            ci_cmd("generate", "--output-file", outputfile)
+    cleanup_job = yaml_contents["cleanup"]
+    assert cleanup_job["custom_attribute"] == "custom!"
+    assert "script" in cleanup_job
 
-            with open(outputfile) as of:
-                pipeline_doc = syaml.load(of.read())
+    cleanup_task = cleanup_job["script"][0]
+    assert cleanup_task.startswith("spack -d mirror destroy")
 
-                assert "cleanup" in pipeline_doc
-                cleanup_job = pipeline_doc["cleanup"]
-
-                assert cleanup_job["custom_attribute"] == "custom!"
-
-                assert "script" in cleanup_job
-                cleanup_task = cleanup_job["script"][0]
-
-                assert cleanup_task.startswith("spack -d mirror destroy")
-
-                assert "stages" in pipeline_doc
-                stages = pipeline_doc["stages"]
-
-                # Cleanup job should be 2nd to last, just before rebuild-index
-                assert "stage" in cleanup_job
-                assert cleanup_job["stage"] == stages[-2]
+    assert "stages" in yaml_contents
+    stages = yaml_contents["stages"]
+    # Cleanup job should be 2nd to last, just before rebuild-index
+    assert "stage" in cleanup_job
+    assert cleanup_job["stage"] == stages[-2]
 
 
 def test_ci_generate_read_broken_specs_url(
