@@ -233,7 +233,7 @@ spack:
 
 
 def test_ci_generate_with_env_missing_section(
-    tmpdir,
+    tmp_path,
     working_env,
     mutable_mock_env_path,
     install_mockery,
@@ -242,26 +242,21 @@ def test_ci_generate_with_env_missing_section(
     mock_binary_index,
 ):
     """Make sure we get a reasonable message if we omit gitlab-ci section"""
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        f"""\
 spack:
   specs:
     - archive-files
   mirrors:
-    some-mirror: file://my.fake.mirror
+    some-mirror: {tmp_path / 'ci-mirror'}
 """
-        )
+    )
 
-    expect_out = "Environment does not have `ci` a configuration"
-
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-
-        with ev.read("test"):
-            output = ci_cmd("generate", fail_on_error=False, output=str)
-            assert expect_out in output
+    env_cmd("create", "test", str(spack_yaml))
+    with ev.read("test"):
+        output = ci_cmd("generate", fail_on_error=False, output=str)
+    assert "Environment does not have `ci` a configuration" in output
 
 
 def test_ci_generate_with_cdash_token(
