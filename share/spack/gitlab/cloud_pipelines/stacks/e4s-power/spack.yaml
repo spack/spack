@@ -137,7 +137,6 @@ spack:
   - py-jupyterhub
   - py-libensemble
   - py-petsc4py
-  - py-warpx
   - qthreads scheduler=distrib
   - quantum-espresso
   - raja
@@ -160,6 +159,7 @@ spack:
   - umpire
   - upcxx
   - wannier90
+  - warpx +python
   - wps
   - wrf
   - xyce +mpi +shared +pymi +pymi_static_tpls
