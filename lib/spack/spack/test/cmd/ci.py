@@ -1452,77 +1452,69 @@ def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
 
 
 def test_ci_generate_prune_untouched(
-    tmpdir, mutable_mock_env_path, install_mockery, mock_packages, ci_base_environment, monkeypatch
+    tmp_path,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_packages,
+    ci_base_environment,
+    monkeypatch,
 ):
     """Test pipeline generation with pruning works to eliminate
     specs that were not affected by a change"""
-    os.environ.update({"SPACK_PRUNE_UNTOUCHED": "TRUE"})  # enables pruning of untouched specs
-    mirror_url = "file://my.fake.mirror"
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
+    monkeypatch.setenv("SPACK_PRUNE_UNTOUCHED", "TRUE")  # enables pruning of untouched specs
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        f"""\
 spack:
   specs:
     - archive-files
     - callpath
   mirrors:
-    some-mirror: {0}
+    some-mirror: {tmp_path / 'ci-mirror'}
   ci:
     pipeline-gen:
     - build-job:
         tags:
           - donotcare
         image: donotcare
-""".format(
-                mirror_url
-            )
-        )
+"""
+    )
 
     # Dependency graph rooted at callpath
     # callpath -> dyninst -> libelf
     #                     -> libdwarf -> libelf
     #          -> mpich
+    outputfile = tmp_path / ".gitlab-ci.yml"
+    env_cmd("create", "test", str(spack_yaml))
 
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+    def fake_compute_affected(r1=None, r2=None):
+        return ["libdwarf"]
 
-        def fake_compute_affected(r1=None, r2=None):
-            return ["libdwarf"]
+    def fake_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
+        return False
 
-        def fake_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
-            return False
+    env_hashes = {}
+    with ev.read("test") as active_env:
+        monkeypatch.setattr(ci, "compute_affected_packages", fake_compute_affected)
+        monkeypatch.setattr(ci, "get_stack_changed", fake_stack_changed)
 
-        env_hashes = {}
+        active_env.concretize()
 
-        with ev.read("test") as active_env:
-            monkeypatch.setattr(ci, "compute_affected_packages", fake_compute_affected)
-            monkeypatch.setattr(ci, "get_stack_changed", fake_stack_changed)
+        for s in active_env.all_specs():
+            env_hashes[s.name] = s.dag_hash()
 
-            active_env.concretize()
+        ci_cmd("generate", "--output-file", str(outputfile))
 
-            for s in active_env.all_specs():
-                env_hashes[s.name] = s.dag_hash()
+    yaml_contents = syaml.load(outputfile.read_text())
 
-            ci_cmd("generate", "--output-file", outputfile)
+    generated_hashes = []
+    for ci_key in yaml_contents.keys():
+        if "variables" in yaml_contents[ci_key]:
+            generated_hashes.append(yaml_contents[ci_key]["variables"]["SPACK_JOB_SPEC_DAG_HASH"])
 
-        with open(outputfile) as f:
-            contents = f.read()
-            print(contents)
-            yaml_contents = syaml.load(contents)
-
-            generated_hashes = []
-
-            for ci_key in yaml_contents.keys():
-                if "variables" in yaml_contents[ci_key]:
-                    generated_hashes.append(
-                        yaml_contents[ci_key]["variables"]["SPACK_JOB_SPEC_DAG_HASH"]
-                    )
-
-            assert env_hashes["archive-files"] not in generated_hashes
-            for spec_name in ["callpath", "dyninst", "mpich", "libdwarf", "libelf"]:
-                assert env_hashes[spec_name] in generated_hashes
+    assert env_hashes["archive-files"] not in generated_hashes
+    for spec_name in ["callpath", "dyninst", "mpich", "libdwarf", "libelf"]:
+        assert env_hashes[spec_name] in generated_hashes
 
 
 def test_ci_generate_prune_env_vars(
