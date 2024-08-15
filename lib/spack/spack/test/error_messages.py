@@ -24,47 +24,47 @@ def update_packages_config(conf_str):
     spack.config.set("packages", conf["packages"], scope="concretize")
 
 
-_pkgw = (
-    "w",
+_pkgx1 = (
+    "x1",
     """\
-class W(Package):
+class X1(Package):
     version("1.2")
     version("1.1")
 
-    depends_on("x")
-    depends_on("y")
+    depends_on("x2")
+    depends_on("x3")
 """,
 )
 
 
-_pkgx = (
-    "x",
+_pkgx2 = (
+    "x2",
     """\
-class X(Package):
+class X2(Package):
     version("2.1")
     version("2.0")
 
-    depends_on("z@4.1")
+    depends_on("x4@4.1")
 """,
 )
 
 
-_pkgy = (
-    "y",
+_pkgx3 = (
+    "x3",
     """\
-class Y(Package):
+class X3(Package):
     version("3.5")
     version("3.4")
 
-    depends_on("z@4.0")
+    depends_on("x4@4.0")
 """,
 )
 
 
-_pkgz = (
-    "z",
+_pkgx4 = (
+    "x4",
     """\
-class Z(Package):
+class X4(Package):
     version("4.1")
     version("4.0")
 """,
@@ -73,7 +73,7 @@ class Z(Package):
 
 @pytest.fixture
 def _create_test_repo(tmpdir, mutable_config):
-    yield create_test_repo(tmpdir, [_pkgw, _pkgx, _pkgy, _pkgz])
+    yield create_test_repo(tmpdir, [_pkgx1, _pkgx2, _pkgx3, _pkgx4])
 
 
 @pytest.fixture
@@ -83,8 +83,8 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
 
 
 def test_diamond_with_pkg_conflict(concretize_scope, test_repo):
-    x = Spec("x").concretized()
-    y = Spec("y").concretized()
-    z = Spec("z").concretized()
+    x = Spec("x2").concretized()
+    y = Spec("x3").concretized()
+    z = Spec("x4").concretized()
 
-    w = Spec("w").concretized()
+    w = Spec("x1").concretized()
