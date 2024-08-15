@@ -37,7 +37,6 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("2.11.1", sha256="9f320925cfd0daeaf3a3d724c93e127ecac63750c623654dca0298504aac4c2c")
-    version("2.11.0", sha256="58703bd6b7aebda4cf59adbc870fce697547c194668d4931da9df2ba8029c56d")
     version("2.10.0", sha256="c7fd8a1404a9719c76aadc642864b9f77aed1dc1fc8882d6af861a9260ba240d")
     version("2.9.3", sha256="5985db3a30bbe51234c2cd26ebe4ae9b4c3352ab788b1a464c40c0483bf4de59")
     version("2.9.2", sha256="ffb554d5735e0e0a19d1fd4b2b86e771d3b58b2d97f257eedacae67ade5054b3")
