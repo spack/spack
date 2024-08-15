@@ -199,15 +199,14 @@ class Silo(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = [
-            "--enable-install-lite-headers",
-            self.enable_or_disable("pythonmodule", variant="python"),
-            self.enable_or_disable("fortran"),
-            self.enable_or_disable("silex"),
-            self.enable_or_disable("shared"),
-            self.enable_or_disable("hzip"),
-            self.enable_or_disable("fpzip"),
-        ]
+        config_args = ["--enable-install-lite-headers"]
+
+        config_args.extend(self.enable_or_disable("pythonmodule", variant="python"))
+        config_args.extend(self.enable_or_disable("fortran"))
+        config_args.extend(self.enable_or_disable("silex"))
+        config_args.extend(self.enable_or_disable("shared"))
+        config_args.extend(self.enable_or_disable("hzip"))
+        config_args.extend(self.enable_or_disable("fpzip"))
 
         # Do not specify the prefix of zlib if it is in a system directory
         # (see https://github.com/spack/spack/pull/21900).
