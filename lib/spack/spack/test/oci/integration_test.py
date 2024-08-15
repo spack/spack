@@ -335,14 +335,14 @@ def test_best_effort_upload(mutable_database: spack.database.Database, monkeypat
 
         without_manifest = ("mpich", "libdwarf")
 
-        # Verify that layers for mpich/libdwarf are missing due to upload failure.
+        # Verify that manifests of mpich/libdwarf are missing due to upload failure.
         for name in without_manifest:
             tagged_img = image.with_tag(default_tag(mpileaks[name]))
             with pytest.raises(urllib.error.HTTPError, match="404"):
                 get_manifest_and_config(tagged_img)
 
-        # Collect the layers for the other packages so we can verify that they reference deps of
-        # successfully uploaded runtime deps.
+        # Collect the layer digests of successfully uploaded packages. Every package should refer
+        # to its own tarballs and those of its runtime deps that were uploaded.
         pkg_to_all_digests = {}
         pkg_to_own_digest = {}
         for s in mpileaks.traverse():
@@ -355,8 +355,7 @@ def test_best_effort_upload(mutable_database: spack.database.Database, monkeypat
             pkg_to_all_digests[s.name] = {layer["digest"] for layer in manifest["layers"]}
             pkg_to_own_digest[s.name] = manifest["layers"][-1]["digest"]
 
-        # Verify that all packages reference layers of their runtime deps (excluding those runtime
-        # deps whose blobs failed to upload).
+        # Verify that all packages reference blobs of their runtime deps that uploaded fine.
         for s in mpileaks.traverse():
             if s.name in without_manifest:
                 continue
