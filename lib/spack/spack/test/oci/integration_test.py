@@ -11,6 +11,7 @@ import json
 import os
 import pathlib
 import re
+import urllib.error
 from contextlib import contextmanager
 
 import pytest
@@ -293,7 +294,10 @@ def test_uploading_with_base_image_in_docker_image_manifest_v2_format(
 
 
 def test_best_effort_upload(mutable_database: spack.database.Database, monkeypatch):
-    """Failure to upload a blob or manifest should not prevent others from being uploaded"""
+    """Failure to upload a blob or manifest should not prevent others from being uploaded -- it
+    should be a best-effort operation. If any runtime dep fails to upload, it results in a missing
+    layer for dependents. But we do still create manifests for dependents, so that the build cache
+    is maximally useful. (The downside is that container images are not runnable)."""
 
     _push_blob = spack.binary_distribution._oci_push_pkg_blob
     _push_manifest = spack.binary_distribution._oci_put_manifest
@@ -315,32 +319,52 @@ def test_best_effort_upload(mutable_database: spack.database.Database, monkeypat
     monkeypatch.setattr(spack.binary_distribution, "_oci_push_pkg_blob", push_blob)
     monkeypatch.setattr(spack.binary_distribution, "_oci_put_manifest", put_manifest)
 
+    mirror("add", "oci-test", "oci://example.com/image")
     registry = InMemoryOCIRegistry("example.com")
-    with oci_servers(registry):
-        mirror("add", "oci-test", "oci://example.com/image")
+    image = ImageReference.from_string("example.com/image")
 
-        with pytest.raises(spack.error.SpackError, match="The following 4 errors occurred") as e:
+    with oci_servers(registry):
+        with pytest.raises(spack.error.SpackError, match="The following 2 errors occurred") as e:
             buildcache("push", "--update-index", "oci-test", "mpileaks^mpich")
 
-    error = str(e.value)
+            # mpich's blob failed to upload and libdwarf's manifest failed to upload
+            assert re.search("mpich.+: Exception: Blob Server Error", e.value)
+            assert re.search("libdwarf.+: Exception: Manifest Server Error", e.value)
 
-    # mpich's blob failed to upload
-    assert re.search("mpich.+: Exception: Blob Server Error", error)
+        mpileaks: spack.spec.Spec = mutable_database.query_local("mpileaks^mpich")[0]
 
-    # libdwarf's manifest failed to upload
-    assert re.search("libdwarf.+: Exception: Manifest Server Error", error)
+        without_manifest = ("mpich", "libdwarf")
 
-    # since there is no blob for mpich, runtime dependents cannot refer to it in their
-    # manifests, which is a transitive error.
-    assert re.search("callpath.+: MissingLayerError: missing layer for mpich", error)
-    assert re.search("mpileaks.+: MissingLayerError: missing layer for mpich", error)
+        # Verify that layers for mpich/libdwarf are missing due to upload failure.
+        for name in without_manifest:
+            tagged_img = image.with_tag(default_tag(mpileaks[name]))
+            with pytest.raises(urllib.error.HTTPError, match="404"):
+                get_manifest_and_config(tagged_img)
 
-    mpileaks: spack.spec.Spec = mutable_database.query_local("mpileaks^mpich")[0]
+        # Collect the layers for the other packages so we can verify that they reference deps of
+        # successfully uploaded runtime deps.
+        pkg_to_all_digests = {}
+        pkg_to_own_digest = {}
+        for s in mpileaks.traverse():
+            if s.name in without_manifest:
+                continue
+            # This should not raise a 404.
+            manifest, _ = get_manifest_and_config(image.with_tag(default_tag(s)))
 
-    # ensure that packages not affected by errors were uploaded still.
-    uploaded_tags = {tag for _, tag in registry.manifests.keys()}
-    failures = {"mpich", "libdwarf", "callpath", "mpileaks"}
-    expected_tags = {default_tag(s) for s in mpileaks.traverse() if s.name not in failures}
+            # Collect layer digests
+            pkg_to_all_digests[s.name] = {layer["digest"] for layer in manifest["layers"]}
+            pkg_to_own_digest[s.name] = manifest["layers"][-1]["digest"]
 
-    assert expected_tags
-    assert uploaded_tags == expected_tags
+        # Verify that all packages reference layers of their runtime deps (excluding those runtime
+        # deps whose blobs failed to upload).
+        for s in mpileaks.traverse():
+            if s.name in without_manifest:
+                continue
+            expected_digests = {
+                pkg_to_own_digest[t.name]
+                for t in s.traverse(deptype=("link", "run"), root=True)
+                if t.name not in without_manifest
+            }
+
+            # Test with issubset, cause we don't have the blob of libdwarf as it has no manifest.
+            assert expected_digests and expected_digests.issubset(pkg_to_all_digests[s.name])
