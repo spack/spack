@@ -5,6 +5,7 @@
 import filecmp
 import json
 import os
+import pathlib
 import shutil
 
 import jsonschema
@@ -568,32 +569,26 @@ spack:
     assert all("externaltool" not in key for key in yaml_contents)
 
 
-def test_ci_rebuild_missing_config(tmpdir, working_env, mutable_mock_env_path):
-    spack_yaml_contents = """
-spack:
-  specs:
-    - archive-files
-"""
+def test_ci_rebuild_missing_config(tmp_path, working_env, mutable_mock_env_path):
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        """
+    spack:
+      specs:
+        - archive-files
+    """
+    )
 
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(spack_yaml_contents)
-
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        env_cmd("activate", "--without-view", "--sh", "test")
-        out = ci_cmd("rebuild", fail_on_error=False)
-        assert "env containing ci" in out
-
-        env_cmd("deactivate")
+    env_cmd("create", "test", str(spack_yaml))
+    env_cmd("activate", "--without-view", "--sh", "test")
+    out = ci_cmd("rebuild", fail_on_error=False)
+    assert "env containing ci" in out
+    env_cmd("deactivate")
 
 
 def _signing_key():
-    signing_key_dir = spack_paths.mock_gpg_keys_path
-    signing_key_path = os.path.join(signing_key_dir, "package-signing-key")
-    with open(signing_key_path) as fd:
-        key = fd.read()
-    return key
+    signing_key_path = pathlib.Path(spack_paths.mock_gpg_keys_path) / "package-signing-key"
+    return signing_key_path.read_text()
 
 
 def create_rebuild_env(tmpdir, pkg_name, broken_tests=False):
@@ -865,14 +860,16 @@ def test_ci_rebuild(
 
 
 def test_ci_require_signing(
-    tmpdir, working_env, mutable_mock_env_path, mock_gnupghome, ci_base_environment
+    tmp_path, working_env, mutable_mock_env_path, mock_gnupghome, ci_base_environment, monkeypatch
 ):
-    spack_yaml_contents = """
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        f"""
 spack:
  specs:
    - archive-files
  mirrors:
-   test-mirror: file:///no-such-mirror
+   test-mirror: {tmp_path / "ci-mirror"}
  ci:
    pipeline-gen:
    - submapping:
@@ -883,22 +880,18 @@ spack:
            - donotcare
          image: donotcare
 """
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(spack_yaml_contents)
+    )
+    env_cmd("activate", "--without-view", "--sh", "-d", str(spack_yaml.parent))
 
-    with tmpdir.as_cwd():
-        env_cmd("activate", "--without-view", "--sh", "-d", ".")
+    # Run without the variable to make sure we don't accidentally require signing
+    output = ci_cmd("rebuild", output=str, fail_on_error=False)
+    assert "spack must have exactly one signing key" not in output
 
-        # Run without the variable to make sure we don't accidentally require signing
-        output = ci_cmd("rebuild", output=str, fail_on_error=False)
-        assert "spack must have exactly one signing key" not in output
-
-        # Now run with the variable to make sure it works
-        os.environ.update({"SPACK_REQUIRE_SIGNING": "True"})
-        output = ci_cmd("rebuild", output=str, fail_on_error=False)
-
-        assert "spack must have exactly one signing key" in output
+    # Now run with the variable to make sure it works
+    monkeypatch.setenv("SPACK_REQUIRE_SIGNING", "True")
+    output = ci_cmd("rebuild", output=str, fail_on_error=False)
+    assert "spack must have exactly one signing key" in output
+    env_cmd("deactivate")
 
 
 def test_ci_nothing_to_rebuild(
@@ -1239,7 +1232,7 @@ def test_push_to_build_cache_exceptions(monkeypatch, tmp_path, capsys):
 @pytest.mark.parametrize("match_behavior", ["first", "merge"])
 @pytest.mark.parametrize("git_version", ["big ol commit sha", None])
 def test_ci_generate_override_runner_attrs(
-    tmpdir,
+    tmp_path,
     mutable_mock_env_path,
     install_mockery,
     mock_packages,
@@ -1252,19 +1245,18 @@ def test_ci_generate_override_runner_attrs(
     of runner attributes like tags, variables, and scripts, both when we
     inherit them from the top level, as well as when we override one or
     more at the runner level"""
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        f"""\
 spack:
   specs:
     - flatten-deps
     - pkg-a
   mirrors:
-    some-mirror: file://my.fake.mirror
+    some-mirror: {tmp_path / "ci-mirror"}
   ci:
     pipeline-gen:
-    - match_behavior: {0}
+    - match_behavior: {match_behavior}
       submapping:
         - match:
             - flatten-deps
@@ -1314,91 +1306,86 @@ spack:
     - cleanup-job:
         image: donotcare
         tags: [donotcare]
-""".format(
-                match_behavior
-            )
-        )
+"""
+    )
 
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+    outputfile = tmp_path / ".gitlab-ci.yml"
+    env_cmd("create", "test", str(spack_yaml))
 
-        with ev.read("test"):
-            monkeypatch.setattr(spack, "spack_version", "0.20.0.test0")
-            monkeypatch.setattr(spack.main, "get_version", lambda: "0.20.0.test0 (blah)")
-            monkeypatch.setattr(spack.main, "get_spack_commit", lambda: git_version)
-            ci_cmd("generate", "--output-file", outputfile)
+    with ev.read("test"):
+        monkeypatch.setattr(spack, "spack_version", "0.20.0.test0")
+        monkeypatch.setattr(spack.main, "get_version", lambda: "0.20.0.test0 (blah)")
+        monkeypatch.setattr(spack.main, "get_spack_commit", lambda: git_version)
+        ci_cmd("generate", "--output-file", str(outputfile))
 
-        with open(outputfile) as f:
-            contents = f.read()
-            yaml_contents = syaml.load(contents)
+    yaml_contents = syaml.load(outputfile.read_text())
 
-            assert "variables" in yaml_contents
-            global_vars = yaml_contents["variables"]
-            assert "SPACK_VERSION" in global_vars
-            assert global_vars["SPACK_VERSION"] == "0.20.0.test0 (blah)"
-            assert "SPACK_CHECKOUT_VERSION" in global_vars
-            assert global_vars["SPACK_CHECKOUT_VERSION"] == git_version or "v0.20.0.test0"
+    assert "variables" in yaml_contents
+    global_vars = yaml_contents["variables"]
+    assert "SPACK_VERSION" in global_vars
+    assert global_vars["SPACK_VERSION"] == "0.20.0.test0 (blah)"
+    assert "SPACK_CHECKOUT_VERSION" in global_vars
+    assert global_vars["SPACK_CHECKOUT_VERSION"] == git_version or "v0.20.0.test0"
 
-            for ci_key in yaml_contents.keys():
-                if ci_key.startswith("pkg-a"):
-                    # Make sure pkg-a's attributes override variables, and all the
-                    # scripts.  Also, make sure the 'toplevel' tag doesn't
-                    # appear twice, but that a's specific extra tag does appear
-                    the_elt = yaml_contents[ci_key]
-                    assert the_elt["variables"]["ONE"] == "specificvarone"
-                    assert the_elt["variables"]["TWO"] == "specificvartwo"
-                    assert "THREE" not in the_elt["variables"]
-                    assert len(the_elt["tags"]) == (2 if match_behavior == "first" else 3)
-                    assert "specific-a" in the_elt["tags"]
-                    if match_behavior == "merge":
-                        assert "specific-a-2" in the_elt["tags"]
-                    assert "toplevel" in the_elt["tags"]
-                    assert "toplevel2" not in the_elt["tags"]
-                    assert len(the_elt["before_script"]) == 1
-                    assert the_elt["before_script"][0] == "custom pre step one"
-                    assert len(the_elt["script"]) == 1
-                    assert the_elt["script"][0] == "custom main step"
-                    assert len(the_elt["after_script"]) == 1
-                    assert the_elt["after_script"][0] == "custom post step one"
-                if "dependency-install" in ci_key:
-                    # Since the dependency-install match omits any
-                    # runner-attributes, make sure it inherited all the
-                    # top-level attributes.
-                    the_elt = yaml_contents[ci_key]
-                    assert the_elt["variables"]["ONE"] == "toplevelvarone"
-                    assert the_elt["variables"]["TWO"] == "toplevelvartwo"
-                    assert "THREE" not in the_elt["variables"]
-                    assert len(the_elt["tags"]) == 2
-                    assert "toplevel" in the_elt["tags"]
-                    assert "toplevel2" in the_elt["tags"]
-                    assert len(the_elt["before_script"]) == 2
-                    assert the_elt["before_script"][0] == "pre step one"
-                    assert the_elt["before_script"][1] == "pre step two"
-                    assert len(the_elt["script"]) == 1
-                    assert the_elt["script"][0] == "main step"
-                    assert len(the_elt["after_script"]) == 1
-                    assert the_elt["after_script"][0] == "post step one"
-                if "flatten-deps" in ci_key:
-                    # The flatten-deps match specifies that we keep the two
-                    # top level variables, but add a third specifc one.  It
-                    # also adds a custom tag which should be combined with
-                    # the top-level tag.
-                    the_elt = yaml_contents[ci_key]
-                    assert the_elt["variables"]["ONE"] == "toplevelvarone"
-                    assert the_elt["variables"]["TWO"] == "toplevelvartwo"
-                    assert the_elt["variables"]["THREE"] == "specificvarthree"
-                    assert len(the_elt["tags"]) == 3
-                    assert "specific-one" in the_elt["tags"]
-                    assert "toplevel" in the_elt["tags"]
-                    assert "toplevel2" in the_elt["tags"]
-                    assert len(the_elt["before_script"]) == 2
-                    assert the_elt["before_script"][0] == "pre step one"
-                    assert the_elt["before_script"][1] == "pre step two"
-                    assert len(the_elt["script"]) == 1
-                    assert the_elt["script"][0] == "main step"
-                    assert len(the_elt["after_script"]) == 1
-                    assert the_elt["after_script"][0] == "post step one"
+    for ci_key in yaml_contents.keys():
+        if ci_key.startswith("pkg-a"):
+            # Make sure pkg-a's attributes override variables, and all the
+            # scripts.  Also, make sure the 'toplevel' tag doesn't
+            # appear twice, but that a's specific extra tag does appear
+            the_elt = yaml_contents[ci_key]
+            assert the_elt["variables"]["ONE"] == "specificvarone"
+            assert the_elt["variables"]["TWO"] == "specificvartwo"
+            assert "THREE" not in the_elt["variables"]
+            assert len(the_elt["tags"]) == (2 if match_behavior == "first" else 3)
+            assert "specific-a" in the_elt["tags"]
+            if match_behavior == "merge":
+                assert "specific-a-2" in the_elt["tags"]
+            assert "toplevel" in the_elt["tags"]
+            assert "toplevel2" not in the_elt["tags"]
+            assert len(the_elt["before_script"]) == 1
+            assert the_elt["before_script"][0] == "custom pre step one"
+            assert len(the_elt["script"]) == 1
+            assert the_elt["script"][0] == "custom main step"
+            assert len(the_elt["after_script"]) == 1
+            assert the_elt["after_script"][0] == "custom post step one"
+        if "dependency-install" in ci_key:
+            # Since the dependency-install match omits any
+            # runner-attributes, make sure it inherited all the
+            # top-level attributes.
+            the_elt = yaml_contents[ci_key]
+            assert the_elt["variables"]["ONE"] == "toplevelvarone"
+            assert the_elt["variables"]["TWO"] == "toplevelvartwo"
+            assert "THREE" not in the_elt["variables"]
+            assert len(the_elt["tags"]) == 2
+            assert "toplevel" in the_elt["tags"]
+            assert "toplevel2" in the_elt["tags"]
+            assert len(the_elt["before_script"]) == 2
+            assert the_elt["before_script"][0] == "pre step one"
+            assert the_elt["before_script"][1] == "pre step two"
+            assert len(the_elt["script"]) == 1
+            assert the_elt["script"][0] == "main step"
+            assert len(the_elt["after_script"]) == 1
+            assert the_elt["after_script"][0] == "post step one"
+        if "flatten-deps" in ci_key:
+            # The flatten-deps match specifies that we keep the two
+            # top level variables, but add a third specifc one.  It
+            # also adds a custom tag which should be combined with
+            # the top-level tag.
+            the_elt = yaml_contents[ci_key]
+            assert the_elt["variables"]["ONE"] == "toplevelvarone"
+            assert the_elt["variables"]["TWO"] == "toplevelvartwo"
+            assert the_elt["variables"]["THREE"] == "specificvarthree"
+            assert len(the_elt["tags"]) == 3
+            assert "specific-one" in the_elt["tags"]
+            assert "toplevel" in the_elt["tags"]
+            assert "toplevel2" in the_elt["tags"]
+            assert len(the_elt["before_script"]) == 2
+            assert the_elt["before_script"][0] == "pre step one"
+            assert the_elt["before_script"][1] == "pre step two"
+            assert len(the_elt["script"]) == 1
+            assert the_elt["script"][0] == "main step"
+            assert len(the_elt["after_script"]) == 1
+            assert the_elt["after_script"][0] == "post step one"
 
 
 @pytest.mark.disable_clean_stage_check
