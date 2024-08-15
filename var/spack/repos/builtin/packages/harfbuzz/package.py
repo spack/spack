@@ -73,9 +73,6 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
         deprecated=True,
     )
 
-    variant("freetype", default=True, description="enable support for freetype font rendering")
-    variant("coretext", default=True, description="Enable FreeType font rendering")
-
     variant("graphite2", default=False, description="enable support for graphite2 font engine")
     variant(
         "coretext",
@@ -135,13 +132,12 @@ class SetupEnvironment:
 
 class MesonBuilder(spack.build_systems.meson.MesonBuilder, SetupEnvironment):
     def meson_args(self):
-        freetype = "enabled" if self.pkg.spec.satisfies("+freetype") else "disabled"
         graphite2 = "enabled" if self.pkg.spec.satisfies("+graphite2") else "disabled"
         coretext = "enabled" if self.pkg.spec.satisfies("+coretext") else "disabled"
         return [
             # disable building of gtk-doc files following #9885 and #9771
             "-Ddocs=disabled",
-            f"-Dfreetype={freetype}",
+            "-Dfreetype=enabled",
             f"-Dgraphite2={graphite2}",
             f"-Dcoretext={coretext}",
         ]
