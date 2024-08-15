@@ -3094,7 +3094,3 @@ class CannotListKeys(GenerateIndexError):
 
 class PushToBuildCacheError(spack.error.SpackError):
     """Raised when unable to push objects to binary mirror"""
-
-
-class MissingLayerError(spack.error.SpackError):
-    """Raised when a required layer for a dependency is missing in an OCI registry."""
