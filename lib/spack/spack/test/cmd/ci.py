@@ -1628,15 +1628,15 @@ def test_ci_generate_read_broken_specs_url(
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
         f.write(
-            """\
+            f"""\
 spack:
   specs:
     - flatten-deps
     - pkg-a
   mirrors:
-    some-mirror: file://my.fake.mirror
+    some-mirror: file:///my.fake.mirror
   ci:
-    broken-specs-url: "{0}"
+    broken-specs-url: "{broken_specs_url}"
     pipeline-gen:
     - submapping:
       - match:
@@ -1648,9 +1648,7 @@ spack:
           tags:
             - donotcare
           image: donotcare
-""".format(
-                broken_specs_url
-            )
+"""
         )
 
     with tmpdir.as_cwd():
@@ -1669,22 +1667,18 @@ spack:
             assert not_expected not in output
 
 
-def test_ci_generate_external_signing_job(
-    tmpdir, mutable_mock_env_path, install_mockery, mock_packages, monkeypatch, ci_base_environment
-):
+def test_ci_generate_external_signing_job(ci_generate_test, tmp_path, monkeypatch):
     """Verify that in external signing mode: 1) each rebuild jobs includes
     the location where the binary hash information is written and 2) we
     properly generate a final signing job in the pipeline."""
-    os.environ.update({"SPACK_PIPELINE_TYPE": "spack_protected_branch"})
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
+    monkeypatch.setenv("SPACK_PIPELINE_TYPE", "spack_protected_branch")
+    _, outputfile, _ = ci_generate_test(
+        f"""\
 spack:
   specs:
     - archive-files
   mirrors:
-    some-mirror: file://my.fake.mirror
+    some-mirror: {tmp_path / "ci-mirror"}
   ci:
     temporary-storage-url-prefix: file:///work/temp/mirror
     pipeline-gen:
@@ -1708,25 +1702,16 @@ spack:
           - echo hello
         custom_attribute: custom!
 """
-        )
+    )
+    yaml_contents = syaml.load(outputfile.read_text())
 
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
-
-        with ev.read("test"):
-            ci_cmd("generate", "--output-file", outputfile)
-
-        with open(outputfile) as of:
-            pipeline_doc = syaml.load(of.read())
-
-            assert "sign-pkgs" in pipeline_doc
-            signing_job = pipeline_doc["sign-pkgs"]
-            assert "tags" in signing_job
-            signing_job_tags = signing_job["tags"]
-            for expected_tag in ["notary", "protected", "aws"]:
-                assert expected_tag in signing_job_tags
-            assert signing_job["custom_attribute"] == "custom!"
+    assert "sign-pkgs" in yaml_contents
+    signing_job = yaml_contents["sign-pkgs"]
+    assert "tags" in signing_job
+    signing_job_tags = signing_job["tags"]
+    for expected_tag in ["notary", "protected", "aws"]:
+        assert expected_tag in signing_job_tags
+    assert signing_job["custom_attribute"] == "custom!"
 
 
 def test_ci_reproduce(
@@ -2006,19 +1991,15 @@ def test_gitlab_ci_update(
             assert "pipeline-gen" in ci_root
 
 
-def test_gitlab_config_scopes(
-    tmpdir, working_env, mutable_mock_env_path, mock_packages, ci_base_environment
-):
+def test_gitlab_config_scopes(ci_generate_test, tmp_path):
     """Test pipeline generation with real configs included"""
     configs_path = os.path.join(spack_paths.share_path, "gitlab", "cloud_pipelines", "configs")
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
+    _, outputfile, _ = ci_generate_test(
+        f"""\
 spack:
   config:
-    install_tree: {0}
-  include: [{1}]
+    install_tree: {tmp_path}
+  include: [{configs_path}]
   view: false
   specs:
     - flatten-deps
@@ -2029,31 +2010,22 @@ spack:
     - build-job:
         image: "ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01"
         tags: ["some_tag"]
-""".format(
-                tmpdir.strpath, configs_path
-            )
-        )
+"""
+    )
 
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+    yaml_contents = syaml.load(outputfile.read_text())
 
-        with ev.read("test"):
-            ci_cmd("generate", "--output-file", outputfile)
+    assert "rebuild-index" in yaml_contents
 
-        with open(outputfile) as f:
-            contents = f.read()
-            yaml_contents = syaml.load(contents)
+    rebuild_job = yaml_contents["rebuild-index"]
+    assert "tags" in rebuild_job
+    assert "variables" in rebuild_job
 
-            assert "rebuild-index" in yaml_contents
-            rebuild_job = yaml_contents["rebuild-index"]
-            assert "tags" in rebuild_job
-            assert "variables" in rebuild_job
-            rebuild_tags = rebuild_job["tags"]
-            rebuild_vars = rebuild_job["variables"]
-            assert all([t in rebuild_tags for t in ["spack", "service"]])
-            expected_vars = ["CI_JOB_SIZE", "KUBERNETES_CPU_REQUEST", "KUBERNETES_MEMORY_REQUEST"]
-            assert all([v in rebuild_vars for v in expected_vars])
+    rebuild_tags = rebuild_job["tags"]
+    rebuild_vars = rebuild_job["variables"]
+    assert all([t in rebuild_tags for t in ["spack", "service"]])
+    expected_vars = ["CI_JOB_SIZE", "KUBERNETES_CPU_REQUEST", "KUBERNETES_MEMORY_REQUEST"]
+    assert all([v in rebuild_vars for v in expected_vars])
 
 
 def test_ci_generate_mirror_config(
