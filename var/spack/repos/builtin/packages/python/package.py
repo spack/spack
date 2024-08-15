@@ -261,9 +261,6 @@ class Python(Package):
     variant("lzma", default=True, description="Build lzma module")
     variant("pyexpat", default=True, description="Build pyexpat module")
     variant("ctypes", default=True, description="Build ctypes module", when="platform=win32")
-    variant(
-        "external-libffi", default=True, description="Use external libffi instead of vendored one"
-    )
     variant("tkinter", default=False, description="Build tkinter module")
     variant("uuid", default=True, description="Build uuid module")
     variant("tix", default=False, description="Build Tix module", when="+tkinter")
@@ -294,7 +291,7 @@ class Python(Package):
         depends_on("bzip2", when="+bz2")
         depends_on("xz libs=shared", when="+lzma")
         depends_on("expat", when="+pyexpat")
-        depends_on("libffi", when="+external-libffi")
+        depends_on("libffi")
         # https://docs.python.org/3/whatsnew/3.11.html#build-changes
         depends_on("tk@8.5.12:", when="@3.11: +tkinter")
         depends_on("tk", when="+tkinter")
@@ -354,9 +351,6 @@ class Python(Package):
     # See https://github.com/python/cpython/issues/106424
     # datetime.now(timezone.utc) segfaults
     conflicts("@3.9:", when="%oneapi@2022.2.1:2023")
-
-    # https://docs.python.org/3/whatsnew/changelog.html#id133
-    conflicts("~external-libffi", when="@3.12:")
 
     # Used to cache various attributes that are expensive to compute
     _config_vars: Dict[str, Dict[str, str]] = {}
@@ -647,11 +641,9 @@ class Python(Package):
         else:
             config_args.append("--without-system-expat")
 
+        # https://docs.python.org/3/whatsnew/changelog.html#id133
         if self.version < Version("3.12.0"):
-            if "+external-libffi" in spec:
-                config_args.append("--with-system-ffi")
-            else:
-                config_args.append("--without-system-ffi")
+            config_args.append("--with-system-ffi")
 
         if "+tkinter" in spec:
             config_args.extend(
