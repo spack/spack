@@ -155,7 +155,7 @@ def test_ci_generate_with_env(
 ):
     """Make sure we can get a .gitlab-ci.yml from an environment file
     which has the gitlab-ci, cdash, and mirrors sections."""
-    mirror_url = "https://my.fake.mirror"
+    mirror_url = "file://my.fake.mirror"
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
         f.write(
@@ -254,7 +254,7 @@ spack:
   specs:
     - archive-files
   mirrors:
-    some-mirror: https://my.fake.mirror
+    some-mirror: file://my.fake.mirror
 """
         )
 
@@ -286,7 +286,7 @@ spack:
   specs:
     - archive-files
   mirrors:
-    some-mirror: https://my.fake.mirror
+    some-mirror: file://my.fake.mirror
   ci:
     enable-artifacts-buildcache: True
     pipeline-gen:
@@ -345,7 +345,7 @@ spack:
   specs:
     - archive-files
   mirrors:
-    some-mirror: https://my.fake.mirror
+    some-mirror: file://my.fake.mirror
   ci:
     pipeline-gen:
     - submapping:
@@ -442,7 +442,7 @@ spack:
   specs:
     - flatten-deps
   mirrors:
-    some-mirror: https://my.fake.mirror
+    some-mirror: file://my.fake.mirror
   ci:
     enable-artifacts-buildcache: True
     pipeline-gen:
@@ -509,7 +509,7 @@ spack:
   specs:
     - flatten-deps
   mirrors:
-    some-mirror: https://my.fake.mirror
+    some-mirror: file://my.fake.mirror
   ci:
     enable-artifacts-buildcache: True
     pipeline-gen:
@@ -531,7 +531,7 @@ spack:
 """
         )
 
-    monkeypatch.setattr(spack.ci, "SHARED_PR_MIRROR_URL", "https://fake.shared.pr.mirror")
+    monkeypatch.setattr(spack.ci, "SHARED_PR_MIRROR_URL", "file://fake.shared.pr.mirror")
 
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
@@ -571,7 +571,7 @@ spack:
     - archive-files
     - externaltest
   mirrors:
-    some-mirror: https://my.fake.mirror
+    some-mirror: file://my.fake.mirror
   ci:
     pipeline-gen:
     - submapping:
@@ -1292,7 +1292,7 @@ spack:
     - flatten-deps
     - pkg-a
   mirrors:
-    some-mirror: https://my.fake.mirror
+    some-mirror: file://my.fake.mirror
   ci:
     pipeline-gen:
     - match_behavior: {0}
@@ -1501,7 +1501,7 @@ def test_ci_generate_prune_untouched(
     """Test pipeline generation with pruning works to eliminate
     specs that were not affected by a change"""
     os.environ.update({"SPACK_PRUNE_UNTOUCHED": "TRUE"})  # enables pruning of untouched specs
-    mirror_url = "https://my.fake.mirror"
+    mirror_url = "file://my.fake.mirror"
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
         f.write(
@@ -1733,7 +1733,7 @@ spack:
   specs:
     - archive-files
   mirrors:
-    some-mirror: https://my.fake.mirror
+    some-mirror: file://my.fake.mirror
   ci:
     temporary-storage-url-prefix: file:///work/temp/mirror
     pipeline-gen:
@@ -1809,7 +1809,7 @@ spack:
     - flatten-deps
     - pkg-a
   mirrors:
-    some-mirror: https://my.fake.mirror
+    some-mirror: file://my.fake.mirror
   ci:
     broken-specs-url: "{0}"
     pipeline-gen:
@@ -1859,7 +1859,7 @@ spack:
   specs:
     - archive-files
   mirrors:
-    some-mirror: https://my.fake.mirror
+    some-mirror: file://my.fake.mirror
   ci:
     temporary-storage-url-prefix: file:///work/temp/mirror
     pipeline-gen:
@@ -2198,7 +2198,7 @@ spack:
   specs:
     - flatten-deps
   mirrors:
-    some-mirror: https://my.fake.mirror
+    some-mirror: file://my.fake.mirror
   ci:
     pipeline-gen:
     - build-job:
