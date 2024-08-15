@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class PyTorchaudio(PythonPackage):
+class PyTorchaudio(PythonPackage, CudaPackage, ROCmPackage):
     """An audio package for PyTorch."""
 
     homepage = "https://github.com/pytorch/audio"
@@ -92,6 +92,12 @@ class PyTorchaudio(PythonPackage):
         depends_on("py-torch@1.5.0", when="@0.5.0")
         depends_on("py-torch@1.4.1", when="@0.4.0")
 
+    # Propagate cuda/rocm
+    conflicts("+cuda", "^py-torch~cuda")
+    conflicts("~cuda", when="^py-torch+cuda")
+    conflicts("+rocm", "^py-torch~rocm")
+    conflicts("~rocm", when="^py-torch+rocm")
+
     # CMakelists.txt
     depends_on("cmake@3.18:", when="@0.10:", type="build")
     depends_on("cmake@3.5:", when="@0.8:", type="build")
@@ -103,16 +109,19 @@ class PyTorchaudio(PythonPackage):
     depends_on("pkgconfig", type="build")
     depends_on("sox")
 
+    # https://github.com/pytorch/audio/pull/3811
+    depends_on("cuda@:12.5", when="+cuda")
+
     def setup_build_environment(self, env):
         # tools/setup_helpers/extension.py
         env.set("BUILD_SOX", 0)
 
-        if "+cuda" in self.spec["py-torch"]:
+        if self.spec.satisfies("+cuda"):
             env.set("USE_CUDA", 1)
         else:
             env.set("USE_CUDA", 0)
 
-        if "+rocm" in self.spec["py-torch"]:
+        if self.spec.satisfies("+rocm"):
             env.set("USE_ROCM", 1)
         else:
             env.set("USE_ROCM", 0)
