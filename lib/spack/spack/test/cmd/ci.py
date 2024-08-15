@@ -42,7 +42,11 @@ install_cmd = spack.main.SpackCommand("install")
 uninstall_cmd = spack.main.SpackCommand("uninstall")
 buildcache_cmd = spack.main.SpackCommand("buildcache")
 
-pytestmark = [pytest.mark.not_on_windows("does not run on windows"), pytest.mark.maybeslow]
+pytestmark = [
+    pytest.mark.usefixtures("mock_packages"),
+    pytest.mark.not_on_windows("does not run on windows"),
+    pytest.mark.maybeslow,
+]
 
 
 @pytest.fixture()
@@ -87,6 +91,35 @@ testjob:
         git("-c", "commit.gpgsign=false", "commit", "-m", "add a .gitlab-ci.yml")
 
         yield repo_path
+
+
+@pytest.fixture()
+def ci_generate_test(tmp_path, mutable_mock_env_path, install_mockery, ci_base_environment):
+    """Returns a function that creates a new test environment, and runs 'spack generate'
+    on it, given the content of the spack.yaml file.
+
+    Additional positional arguments will be added to the 'spack generate' call.
+    """
+
+    def _func(spack_yaml_content, *args, fail_on_error=True):
+        spack_yaml = tmp_path / "spack.yaml"
+        spack_yaml.write_text(spack_yaml_content)
+
+        env_cmd("create", "test", str(spack_yaml))
+        outputfile = tmp_path / ".gitlab-ci.yml"
+        with ev.read("test"):
+            output = ci_cmd(
+                "generate",
+                "--output-file",
+                str(outputfile),
+                *args,
+                output=str,
+                fail_on_error=fail_on_error,
+            )
+
+        return spack_yaml, outputfile, output
+
+    return _func
 
 
 def test_specs_staging(config, tmpdir):
@@ -145,20 +178,12 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
         assert spec_a_label in stages[3]
 
 
-def test_ci_generate_with_env(
-    tmp_path,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    ci_base_environment,
-    mock_binary_index,
-):
+def test_ci_generate_with_env(ci_generate_test, tmp_path, mock_binary_index):
     """Make sure we can get a .gitlab-ci.yml from an environment file
     which has the gitlab-ci, cdash, and mirrors sections.
     """
     mirror_url = tmp_path / "ci-mirror"
-    spack_yaml = tmp_path / "spack.yaml"
-    spack_yaml.write_text(
+    spack_yaml, outputfile, _ = ci_generate_test(
         f"""\
 spack:
   definitions:
@@ -203,15 +228,7 @@ spack:
     site: Nothing
 """
     )
-
-    env_cmd("create", "test", str(spack_yaml))
-    outputfile = tmp_path / ".gitlab-ci.yml"
-
-    with ev.read("test"):
-        ci_cmd("generate", "--output-file", str(outputfile))
-
-    contents = outputfile.read_text()
-    yaml_contents = syaml.load(contents)
+    yaml_contents = syaml.load(outputfile.read_text())
 
     assert "workflow" in yaml_contents
     assert "rules" in yaml_contents["workflow"]
@@ -232,50 +249,26 @@ spack:
     assert yaml_contents["variables"]["SPACK_ARTIFACTS_ROOT"] == "jobs_scratch_dir"
 
 
-def test_ci_generate_with_env_missing_section(
-    tmp_path,
-    working_env,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    ci_base_environment,
-    mock_binary_index,
-):
+def test_ci_generate_with_env_missing_section(ci_generate_test, tmp_path, mock_binary_index):
     """Make sure we get a reasonable message if we omit gitlab-ci section"""
-    spack_yaml = tmp_path / "spack.yaml"
-    spack_yaml.write_text(
+    _, _, output = ci_generate_test(
         f"""\
 spack:
   specs:
     - archive-files
   mirrors:
     some-mirror: {tmp_path / 'ci-mirror'}
-"""
+""",
+        fail_on_error=False,
     )
-
-    env_cmd("create", "test", str(spack_yaml))
-    outputfile = tmp_path / ".gitlab-ci.yaml"
-    with ev.read("test"):
-        output = ci_cmd(
-            "generate", "--output-file", str(outputfile), fail_on_error=False, output=str
-        )
     assert "Environment does not have `ci` a configuration" in output
 
 
-def test_ci_generate_with_cdash_token(
-    tmp_path,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    ci_base_environment,
-    mock_binary_index,
-    monkeypatch,
-):
+def test_ci_generate_with_cdash_token(ci_generate_test, tmp_path, mock_binary_index, monkeypatch):
     """Make sure we it doesn't break if we configure cdash"""
     monkeypatch.setenv("SPACK_CDASH_AUTH_TOKEN", "notreallyatokenbutshouldnotmatter")
-    spack_yaml = tmp_path / "spack.yaml"
-    spack_yaml.write_text(
-        f"""\
+    backup_file = tmp_path / "backup-ci.yml"
+    spack_yaml_content = f"""\
 spack:
   specs:
     - archive-files
@@ -297,14 +290,9 @@ spack:
     project: Not used
     site: Nothing
 """
+    spack_yaml, original_file, output = ci_generate_test(
+        spack_yaml_content, "--copy-to", str(backup_file)
     )
-
-    backup_file = tmp_path / "backup-ci.yml"
-    original_file = tmp_path / ".gitlab-ci.yml"
-    env_cmd("create", "test", str(spack_yaml))
-    with ev.read("test"):
-        args = ["--output-file", str(original_file), "--copy-to", str(backup_file)]
-        output = ci_cmd("generate", *args, output=str)
 
     # That fake token should still have resulted in being unable to
     # register build group with cdash, but the workload should
@@ -315,19 +303,12 @@ spack:
 
 
 def test_ci_generate_with_custom_settings(
-    tmp_path,
-    working_env,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    monkeypatch,
-    ci_base_environment,
-    mock_binary_index,
+    ci_generate_test, tmp_path, mock_binary_index, monkeypatch
 ):
     """Test use of user-provided scripts and attributes"""
-    spack_yaml = tmp_path / "spack.yaml"
-
-    spack_yaml.write_text(
+    monkeypatch.setattr(spack.main, "get_version", lambda: "0.15.3")
+    monkeypatch.setattr(spack.main, "get_spack_commit", lambda: "big ol commit sha")
+    spack_yaml, outputfile, _ = ci_generate_test(
         f"""\
 spack:
   specs:
@@ -362,16 +343,6 @@ spack:
             - some/custom/artifact
 """
     )
-
-    outputfile = tmp_path / ".gitlab-ci.yml"
-
-    env_cmd("create", "test", str(spack_yaml))
-
-    monkeypatch.setattr(spack.main, "get_version", lambda: "0.15.3")
-    monkeypatch.setattr(spack.main, "get_spack_commit", lambda: "big ol commit sha")
-    with ev.read("test"):
-        ci_cmd("generate", "--output-file", str(outputfile))
-
     yaml_contents = syaml.load(outputfile.read_text())
 
     assert yaml_contents["variables"]["SPACK_VERSION"] == "0.15.3"
@@ -410,17 +381,9 @@ spack:
         assert ci_obj["custom_attribute"] == "custom!"
 
 
-def test_ci_generate_pkg_with_deps(
-    tmp_path,
-    working_env,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    ci_base_environment,
-):
+def test_ci_generate_pkg_with_deps(ci_generate_test, tmp_path, ci_base_environment):
     """Test pipeline generation for a package w/ dependencies"""
-    spack_yaml = tmp_path / "spack.yaml"
-    spack_yaml.write_text(
+    spack_yaml, outputfile, _ = ci_generate_test(
         f"""\
 spack:
   specs:
@@ -443,14 +406,8 @@ spack:
             - donotcare
 """
     )
-
-    env_cmd("create", "test", str(spack_yaml))
-    outputfile = tmp_path / ".gitlab-ci.yml"
-
-    with ev.read("test"):
-        ci_cmd("generate", "--output-file", str(outputfile))
-
     yaml_contents = syaml.load(outputfile.read_text())
+
     found = []
     for ci_key, ci_obj in yaml_contents.items():
         if "dependency-install" in ci_key:
@@ -466,15 +423,7 @@ spack:
     assert "dependency-install" in found
 
 
-def test_ci_generate_for_pr_pipeline(
-    tmp_path,
-    working_env,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    monkeypatch,
-    ci_base_environment,
-):
+def test_ci_generate_for_pr_pipeline(ci_generate_test, tmp_path, monkeypatch):
     """Test that PR pipelines do not include a final stage job for
     rebuilding the mirror index, even if that job is specifically
     configured.
@@ -483,8 +432,7 @@ def test_ci_generate_for_pr_pipeline(
     monkeypatch.setenv("SPACK_PR_BRANCH", "fake-test-branch")
     monkeypatch.setattr(spack.ci, "SHARED_PR_MIRROR_URL", f"{tmp_path / 'shared-pr-mirror'}")
 
-    spack_yaml = tmp_path / "spack.yaml"
-    spack_yaml.write_text(
+    spack_yaml, outputfile, _ = ci_generate_test(
         f"""\
 spack:
   specs:
@@ -511,13 +459,6 @@ spack:
     rebuild-index: False
 """
     )
-
-    outputfile = tmp_path / ".gitlab-ci.yml"
-
-    env_cmd("create", "test", str(spack_yaml))
-    with ev.read("test"):
-        ci_cmd("generate", "--output-file", str(outputfile))
-
     yaml_contents = syaml.load(outputfile.read_text())
 
     assert "rebuild-index" not in yaml_contents
@@ -526,18 +467,9 @@ spack:
     assert yaml_contents["variables"]["SPACK_PIPELINE_TYPE"] == "spack_pull_request"
 
 
-def test_ci_generate_with_external_pkg(
-    tmp_path,
-    working_env,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    monkeypatch,
-    ci_base_environment,
-):
+def test_ci_generate_with_external_pkg(ci_generate_test, tmp_path, monkeypatch):
     """Make sure we do not generate jobs for external pkgs"""
-    spack_yaml = tmp_path / "spack.yaml"
-    spack_yaml.write_text(
+    spack_yaml, outputfile, _ = ci_generate_test(
         f"""\
 spack:
   specs:
@@ -557,14 +489,7 @@ spack:
           image: donotcare
 """
     )
-    outputfile = tmp_path / ".gitlab-ci.yml"
-    env_cmd("create", "test", str(spack_yaml))
-
-    with ev.read("test"):
-        ci_cmd("generate", "--output-file", str(outputfile))
-
     yaml_contents = syaml.load(outputfile.read_text())
-
     # Check that the "externaltool" package was not erroneously staged
     assert all("externaltool" not in key for key in yaml_contents)
 
