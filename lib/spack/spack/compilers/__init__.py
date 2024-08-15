@@ -114,35 +114,31 @@ def _to_dict(compiler):
 
 
 def get_compiler_config(
-    configuration: "spack.config.Configuration", *, scope: Optional[str] = None
-) -> List[Dict]:
-    """Return the compiler configuration for the specified architecture."""
-    compilers_yaml = configuration.get("compilers", scope=scope)
-    if not compilers_yaml:
-        return []
-    return compilers_yaml
-
-
-def get_compiler_config_from_packages(
     configuration: "spack.config.Configuration",
     *,
     scope: Optional[str] = None,
     init_config: bool = False,
 ) -> List[Dict]:
-    """Return the compiler configuration from packages.yaml"""
-    packages_yaml = configuration.get("packages", scope=scope)
-    configs = CompilerConfigFactory.from_packages_yaml(packages_yaml)
-    if configs or not init_config:
-        return configs
+    """Return the compiler configuration for the specified architecture."""
+    config = configuration.get("compilers", scope=scope) or []
+    if config or not init_config:
+        return config
 
-    merged_packages_yaml = configuration.get("packages")
-    configs = CompilerConfigFactory.from_packages_yaml(merged_packages_yaml)
-    if configs:
+    merged_config = configuration.get("compilers")
+    if merged_config:
         # Config is empty for this scope
         # Do not init config because there is a non-empty scope
-        return configs
+        return config
 
     find_compilers(scope=scope)
+    config = configuration.get("compilers", scope=scope)
+    return config
+
+
+def get_compiler_config_from_packages(
+    configuration: "spack.config.Configuration", *, scope: Optional[str] = None
+) -> List[Dict]:
+    """Return the compiler configuration from packages.yaml"""
     packages_yaml = configuration.get("packages", scope=scope)
     return CompilerConfigFactory.from_packages_yaml(packages_yaml)
 
@@ -161,19 +157,24 @@ def compiler_config_files():
     return config_files
 
 
-def add_compiler_to_config(compiler, scope=None):
-    """Add a Compiler object to the configuration, at the required scope."""
-    if not compiler.cc:
-        tty.debug(f"{compiler.spec} does not have a C compiler")
-    if not compiler.cxx:
-        tty.debug(f"{compiler.spec} does not have a C++ compiler")
-    if not compiler.f77:
-        tty.debug(f"{compiler.spec} does not have a Fortran77 compiler")
-    if not compiler.fc:
-        tty.debug(f"{compiler.spec} does not have a Fortran compiler")
+def add_compilers_to_config(compilers, scope=None):
+    """Add compilers to the config for the specified architecture.
 
+    Arguments:
+        compilers: a list of Compiler objects.
+        scope: configuration scope to modify.
+    """
     compiler_config = get_compiler_config(configuration=spack.config.CONFIG, scope=scope)
-    compiler_config.append(_to_dict(compiler))
+    for compiler in compilers:
+        if not compiler.cc:
+            tty.debug(f"{compiler.spec} does not have a C compiler")
+        if not compiler.cxx:
+            tty.debug(f"{compiler.spec} does not have a C++ compiler")
+        if not compiler.f77:
+            tty.debug(f"{compiler.spec} does not have a Fortran77 compiler")
+        if not compiler.fc:
+            tty.debug(f"{compiler.spec} does not have a Fortran compiler")
+        compiler_config.append(_to_dict(compiler))
     spack.config.set("compilers", compiler_config, scope=scope)
 
 
@@ -240,12 +241,10 @@ def all_compilers_config(
     """Return a set of specs for all the compiler versions currently
     available to build with.  These are instances of CompilerSpec.
     """
-    from_compilers_yaml = get_compiler_config(configuration, scope=scope)
-    if from_compilers_yaml:
+    from_packages_yaml = get_compiler_config_from_packages(configuration, scope=scope)
+    if from_packages_yaml:
         init_config = False
-    from_packages_yaml = get_compiler_config_from_packages(
-        configuration, scope=scope, init_config=init_config
-    )
+    from_compilers_yaml = get_compiler_config(configuration, scope=scope, init_config=init_config)
 
     result = from_compilers_yaml + from_packages_yaml
     # Dedupe entries by the compiler they represent
@@ -280,6 +279,8 @@ def find_compilers(
             a certain language
         max_workers: number of processes used to search for compilers
     """
+    known_compilers = set(all_compilers(init_config=False))
+
     if path_hints is None:
         path_hints = get_path("PATH")
     default_paths = fs.search_paths_for_executables(*path_hints)
@@ -320,13 +321,16 @@ def find_compilers(
                         continue
                     candidate.spec.extra_attributes["compilers"]["fortran"] = gfortran
 
-    new_compilers = spack.detection.update_configuration(
-        valid_compilers, buildable=True, scope=scope
-    )
-    return [
-        _compiler_from_config_entry(c["compiler"])
-        for c in CompilerConfigFactory.from_specs(new_compilers)
-    ]
+    new_compilers = []
+    for name, detected in valid_compilers.items():
+        for config in CompilerConfigFactory.from_specs([x.spec for x in detected]):
+            c = _compiler_from_config_entry(config["compiler"])
+            if c in known_compilers:
+                continue
+            new_compilers.append(c)
+
+    add_compilers_to_config(new_compilers, scope=scope)
+    return new_compilers
 
 
 def select_new_compilers(compilers, scope=None):
