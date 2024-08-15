@@ -104,24 +104,29 @@ class Parsec(CMakePackage, CudaPackage):
                 warn += "https://bitbucket.org/icldistcomp/parsec/issues"
                 tty.msg(warn)
 
-    def test_allreduce(self):
-        """Compile and run a DTD user program"""
-        with working_dir(join_path("contrib", "build_with_parsec")):
-            allreduce = which("dtd_test_allreduce")
-            allreduce()
+    contrib_dir = join_path("contrib", "build_with_parsec")
 
-    def test_writecheck(self):
-        """Compile and run a PTG user program"""
-        with working_dir(join_path("contrib", "build_with_parsec")):
-            writecheck = which("write_check")
-            writecheck()
+    def test_contrib(self):
+        """build and run contrib examples"""
+        with working_dir(join_path(self.test_suite.current_test_cache_dir, self.contrib_dir)):
+            cmake = self.spec["cmake"].command
+            args = [
+                "-Wno-dev",
+                f"-DCMAKE_C_COMPILER={self.spec['mpi'].mpicc}",
+                f"-DCMAKE_PREFIX_PATH={self.prefix}",
+                ".",
+            ]
+            if "+cuda" in self.spec:
+                args.append("-DCUDA_TOOLKIT_ROOT_DIR:STRING=" + self.spec["cuda"].prefix)
+
+            cmake(*args)
+            make()
+
+            for name in ["dtd_test_allreduce", "write_check"]:
+                with test_part(self, f"test_contrib_{name}", f"run {name}"):
+                    exe = which(name)
+                    exe()
 
     @run_after("install")
     def cache_test_sources(self):
-        srcs = ["contrib/build_with_parsec"]
-        cache_extra_test_sources(self, srcs)
-        with working_dir(join_path(install_test_root(self), "contrib", "build_with_parsec")):
-            cmake = self.spec["cmake"].command
-            cmake(".")
-            make = which("make")
-            make()
+        cache_extra_test_sources(self, self.contrib_dir)
