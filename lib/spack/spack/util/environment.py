@@ -80,7 +80,8 @@ def double_quote_escape(s):
 
     # use double quotes, and escape double quotes in the string
     # the string $"b is then quoted as "$\"b"
-    return '"' + s.replace('"', r"\"") + '"'
+    # also replace backticks ` with \` to avoid command substitution
+    return '"' + s.replace('"', r"\"").replace("`", r"\`") + '"'
 
 
 def system_env_normalize(func):
