@@ -467,7 +467,8 @@ def clingo_root_spec() -> str:
 
 def file_root_spec() -> str:
     """Return the root spec used to bootstrap file"""
-    return _root_spec("file")
+    root_spec_name = "win-file" if IS_WINDOWS else "file"
+    return _root_spec(root_spec_name)
 
 
 def ensure_clingo_importable_or_raise() -> None:
