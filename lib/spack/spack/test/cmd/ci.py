@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import filecmp
 import json
 import os
@@ -467,7 +466,7 @@ spack:
 
 
 def test_ci_generate_for_pr_pipeline(
-    tmpdir,
+    tmp_path,
     working_env,
     mutable_mock_env_path,
     install_mockery,
@@ -477,19 +476,20 @@ def test_ci_generate_for_pr_pipeline(
 ):
     """Test that PR pipelines do not include a final stage job for
     rebuilding the mirror index, even if that job is specifically
-    configured"""
-    os.environ.update(
-        {"SPACK_PIPELINE_TYPE": "spack_pull_request", "SPACK_PR_BRANCH": "fake-test-branch"}
-    )
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
+    configured.
+    """
+    monkeypatch.setenv("SPACK_PIPELINE_TYPE", "spack_pull_request")
+    monkeypatch.setenv("SPACK_PR_BRANCH", "fake-test-branch")
+    monkeypatch.setattr(spack.ci, "SHARED_PR_MIRROR_URL", f"{tmp_path / 'shared-pr-mirror'}")
+
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        f"""\
 spack:
   specs:
     - flatten-deps
   mirrors:
-    some-mirror: file://my.fake.mirror
+    some-mirror: {tmp_path / 'ci-mirror'}
   ci:
     enable-artifacts-buildcache: True
     pipeline-gen:
@@ -509,27 +509,20 @@ spack:
         tags: [donotcare]
     rebuild-index: False
 """
-        )
+    )
 
-    monkeypatch.setattr(spack.ci, "SHARED_PR_MIRROR_URL", "file://fake.shared.pr.mirror")
+    outputfile = tmp_path / ".gitlab-ci.yml"
 
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+    env_cmd("create", "test", str(spack_yaml))
+    with ev.read("test"):
+        ci_cmd("generate", "--output-file", str(outputfile))
 
-        with ev.read("test"):
-            ci_cmd("generate", "--output-file", outputfile)
+    yaml_contents = syaml.load(outputfile.read_text())
 
-        with open(outputfile) as f:
-            contents = f.read()
-            yaml_contents = syaml.load(contents)
-
-            assert "rebuild-index" not in yaml_contents
-
-            assert "variables" in yaml_contents
-            pipeline_vars = yaml_contents["variables"]
-            assert "SPACK_PIPELINE_TYPE" in pipeline_vars
-            assert pipeline_vars["SPACK_PIPELINE_TYPE"] == "spack_pull_request"
+    assert "rebuild-index" not in yaml_contents
+    assert "variables" in yaml_contents
+    assert "SPACK_PIPELINE_TYPE" in yaml_contents["variables"]
+    assert yaml_contents["variables"]["SPACK_PIPELINE_TYPE"] == "spack_pull_request"
 
 
 def test_ci_generate_with_external_pkg(
