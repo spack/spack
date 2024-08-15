@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 
 from spack.package import *
 from spack.pkg.builtin.boost import Boost
@@ -95,11 +96,24 @@ class N2p2(MakefilePackage):
 
     def test_result_check(self):
         """Build and run result-check.sh"""
+        # The results cannot be verified with the script without an expected
+        # results file added to the test subdirectory of the package repository.
+        expected_file = join_path(
+            self.test_suite.current_test_data_dir, f"expected-result-{self.version}.txt"
+        )
+        if not os.path.exists(expected_file):
+            raise SkipTest(
+                f"The expected results file is missing from the repository for {self.version}"
+            )
+
+        result_check_script = join_path(self.test_suite.current_test_data_dir, "result-check.sh")
+        if not os.path.exists(result_check_script):
+            raise SkipTest("Required result-check.sh is missing from the repository directory")
+
         make = which("make")
         with working_dir(self.test_suite.current_test_cache_dir.test):
             make("clean")
 
-        print("Calling make inside src dir")
         with working_dir(self.test_suite.current_test_cache_dir.src):
             make("clean")
             make(
@@ -115,23 +129,25 @@ class N2p2(MakefilePackage):
             )
             make("pynnp", "MODE=test")
 
-        print("Making and running the test")
         with working_dir(self.test_suite.current_test_cache_dir.test):
             if self.spec.satisfies("%fj"):
                 f = FileFilter(join_path("cpp", "nnp_test.h"))
                 mpirun = self.spec["mpi"].prefix.bin.mpirun
                 f.filter("(example.co", f'("{mpirun} -n 1 " + example.co', string=True)
 
+            cpp_output = "output_cpp.txt"
             f = FileFilter(join_path("cpp", "makefile"))
-            f.filter("log_level=.*", "log_level=$(LOG_LEVEL) 2>&1 | tee -a ../output_cpp.txt")
+            f.filter("log_level=.*", f"log_level=$(LOG_LEVEL) 2>&1 | tee -a ../{cpp_output}")
 
+            python_output = "output_python.txt"
             f = FileFilter(join_path("python", "makefile"))
-            f.filter("term\\s-v.*", "term -v | tee -a ../output_python.txt")
+            f.filter("term\\s-v.*", f"term -v | tee -a ../{python_output}")
 
             make("cpp", parallel=False)
-            make("python", parallel=False)
+            assert os.path.isfile(cpp_output), f"{cpp_output} was not produced"
 
-            test_dir = self.test_suite.current_test_data_dir
-            expected_file = join_path(test_dir, f"expected-result-{self.version}.txt")
-            result_check = which(join_path(test_dir, "result-check.sh"))
-            result_check("./output_cpp.txt", "./output_python.txt", expected_file)
+            make("python", parallel=False)
+            assert os.path.isfile(python_output), f"{python_output} was not produced"
+
+            result_check = which(result_check_script)
+            result_check(cpp_output, python_output, expected_file)
