@@ -720,6 +720,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         "submodules",
         "get_full_repo",
         "submodules_delete",
+        "git_sparse_paths",
     ]
 
     git_version_re = r"git version (\S+)"
@@ -735,6 +736,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         self.submodules = kwargs.get("submodules", False)
         self.submodules_delete = kwargs.get("submodules_delete", False)
         self.get_full_repo = kwargs.get("get_full_repo", False)
+        self.git_sparse_paths = kwargs.get("git_sparse_paths", None)
 
     @property
     def git_version(self):
@@ -802,38 +804,50 @@ class GitFetchStrategy(VCSFetchStrategy):
             tty.debug("Already fetched {0}".format(self.stage.source_path))
             return
 
-        self.clone(commit=self.commit, branch=self.branch, tag=self.tag)
+        if self.git_sparse_paths:
+            self._sparse_clone_src(commit=self.commit, branch=self.branch, tag=self.tag)
+        else:
+            self._clone_src(commit=self.commit, branch=self.branch, tag=self.tag)
+        self.submodule_operations()
 
-    def clone(self, dest=None, commit=None, branch=None, tag=None, bare=False):
+    def bare_clone(self, dest):
         """
-        Clone a repository to a path.
+        Execute a bare clone for metadata only
 
-        This method handles cloning from git, but does not require a stage.
-
-        Arguments:
-            dest (str or None): The path into which the code is cloned. If None,
-                requires a stage and uses the stage's source path.
-            commit (str or None): A commit to fetch from the remote. Only one of
-                commit, branch, and tag may be non-None.
-            branch (str or None): A branch to fetch from the remote.
-            tag (str or None): A tag to fetch from the remote.
-            bare (bool): Execute a "bare" git clone (--bare option to git)
+        Requires a destination since bare cloning does not provide source
+        and shouldn't be used for staging.
         """
         # Default to spack source path
-        dest = dest or self.stage.source_path
         tty.debug("Cloning git repository: {0}".format(self._repo_info()))
 
         git = self.git
         debug = spack.config.get("config:debug")
 
-        if bare:
-            # We don't need to worry about which commit/branch/tag is checked out
-            clone_args = ["clone", "--bare"]
-            if not debug:
-                clone_args.append("--quiet")
-            clone_args.extend([self.url, dest])
-            git(*clone_args)
-        elif commit:
+        # We don't need to worry about which commit/branch/tag is checked out
+        clone_args = ["clone", "--bare"]
+        if not debug:
+            clone_args.append("--quiet")
+        clone_args.extend([self.url, dest])
+        git(*clone_args)
+
+    def _clone_src(self, commit=None, branch=None, tag=None):
+        """
+        Clone a repository to a path using git.
+
+        Arguments:
+            commit (str or None): A commit to fetch from the remote. Only one of
+                commit, branch, and tag may be non-None.
+            branch (str or None): A branch to fetch from the remote.
+            tag (str or None): A tag to fetch from the remote.
+        """
+        # Default to spack source path
+        dest = self.stage.source_path
+        tty.debug("Cloning git repository: {0}".format(self._repo_info()))
+
+        git = self.git
+        debug = spack.config.get("config:debug")
+
+        if commit:
             # Need to do a regular clone and check out everything if
             # they asked for a particular commit.
             clone_args = ["clone", self.url]
@@ -911,6 +925,85 @@ class GitFetchStrategy(VCSFetchStrategy):
 
                     git(*pull_args, ignore_errors=1)
                     git(*co_args)
+
+    def _sparse_clone_src(self, commit=None, branch=None, tag=None, **kwargs):
+        """
+        Use git's sparse checkout feature to clone portions of a git repository
+
+        Arguments:
+            commit (str or None): A commit to fetch from the remote. Only one of
+                commit, branch, and tag may be non-None.
+            branch (str or None): A branch to fetch from the remote.
+            tag (str or None): A tag to fetch from the remote.
+        """
+        dest = self.stage.source_path
+        git = self.git
+
+        if self.git_version < spack.version.Version("2.25.0.0"):
+            # code paths exist where the package is not set.  Assure some indentifier for the
+            # package that was configured  for sparse checkout exists in the error message
+            identifier = str(self.url)
+            if self.package:
+                identifier += f" ({self.package.name})"
+            tty.warn(
+                (
+                    f"{identifier} is configured for git sparse-checkout "
+                    "but the git version is too old to support sparse cloning. "
+                    "Cloning the full repository instead."
+                )
+            )
+            self._clone_src(commit, branch, tag)
+        else:
+            # default to depth=2 to allow for retention of some git properties
+            depth = kwargs.get("depth", 2)
+            needs_fetch = branch or tag
+            git_ref = branch or tag or commit
+
+            assert git_ref
+
+            clone_args = ["clone"]
+
+            if needs_fetch:
+                clone_args.extend(["--branch", git_ref])
+
+            if self.get_full_repo:
+                clone_args.append("--no-single-branch")
+            else:
+                clone_args.append("--single-branch")
+
+            clone_args.extend(
+                [f"--depth={depth}", "--no-checkout", "--filter=blob:none", self.url]
+            )
+
+            sparse_args = ["sparse-checkout", "set"]
+
+            if callable(self.git_sparse_paths):
+                sparse_args.extend(self.git_sparse_paths())
+            else:
+                sparse_args.extend([p for p in self.git_sparse_paths])
+
+            sparse_args.append("--cone")
+
+            checkout_args = ["checkout", git_ref]
+
+            if not spack.config.get("config:debug"):
+                clone_args.insert(1, "--quiet")
+                checkout_args.insert(1, "--quiet")
+
+            with temp_cwd():
+                git(*clone_args)
+                repo_name = get_single_file(".")
+                if self.stage:
+                    self.stage.srcdir = repo_name
+                shutil.move(repo_name, dest)
+
+            with working_dir(dest):
+                git(*sparse_args)
+                git(*checkout_args)
+
+    def submodule_operations(self):
+        dest = self.stage.source_path
+        git = self.git
 
         if self.submodules_delete:
             with working_dir(dest):
@@ -1541,8 +1634,11 @@ def _from_merged_attrs(fetcher, pkg, version):
     attrs["fetch_options"] = pkg.fetch_options
     attrs.update(pkg.versions[version])
 
-    if fetcher.url_attr == "git" and hasattr(pkg, "submodules"):
-        attrs.setdefault("submodules", pkg.submodules)
+    if fetcher.url_attr == "git":
+        pkg_attr_list = ["submodules", "git_sparse_paths"]
+        for pkg_attr in pkg_attr_list:
+            if hasattr(pkg, pkg_attr):
+                attrs.setdefault(pkg_attr, getattr(pkg, pkg_attr))
 
     return fetcher(**attrs)
 
