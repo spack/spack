@@ -49,7 +49,7 @@ class Graphviz(AutotoolsPackage):
 
     # Additional language bindings are nominally supported by GraphViz via SWIG
     # but are untested and need the proper dependencies added:
-    # language_bindings += ['sharp', 'go', 'guile', 'io', 'lua', 'ocaml',
+    # language_bindings += ['sharp', 'go', 'guile', 'io', 'lua',
     #                       'perl', 'php', 'python', 'r', 'ruby', 'tcl']
 
     for lang in language_bindings:
@@ -203,8 +203,9 @@ class Graphviz(AutotoolsPackage):
             "x",
         ]:
             args += self.with_or_without(var)
-        for var in ("expat", "java"):
-            if "+" + var in spec:
+
+        for var, when in [("expat", "@:8.0"), ("java", "@:")]:
+            if spec.satisfies("+" + var + when):
                 args.append("--with-{0}includedir={1}".format(var, spec[var].prefix.include))
                 args.append("--with-{0}libdir={1}".format(var, spec[var].prefix.lib))
 
