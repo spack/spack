@@ -137,6 +137,7 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
         yield mock_repo_path
 
 
+# Error message is good
 def test_diamond_with_pkg_conflict1(concretize_scope, test_repo):
     x = Spec("x2").concretized()
     y = Spec("x3").concretized()
@@ -145,5 +146,6 @@ def test_diamond_with_pkg_conflict1(concretize_scope, test_repo):
     w = Spec("x1").concretized()
 
 
+# Error message is good (has some redundancy though)
 def test_diamond_with_pkg_conflict1(concretize_scope, test_repo):
     w = Spec("y1").concretized()
