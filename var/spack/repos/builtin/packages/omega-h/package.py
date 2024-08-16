@@ -59,6 +59,9 @@ class OmegaH(CMakePackage, CudaPackage):
     variant("gmsh", default=False, description="Use Gmsh C++ API")
     variant("kokkos", default=False, description="Use Kokkos")
 
+    depends_on("cxx", type="build")
+    depends_on("c", type="build", when="+mpi")
+
     depends_on("gmsh", when="+examples")
     depends_on("gmsh@4.4.1:", when="+gmsh")
     depends_on("mpi", when="+mpi")

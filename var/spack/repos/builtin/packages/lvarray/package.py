@@ -54,6 +54,9 @@ class Lvarray(CMakePackage, CudaPackage):
         "0.1.0", tag="v0.1.0", commit="0bf5f7d077de4a08f58db24baed207f9dba95f6e", submodules=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Build Shared Libs")
     variant("umpire", default=False, description="Build Umpire support")
     variant("chai", default=False, description="Build Chai support")

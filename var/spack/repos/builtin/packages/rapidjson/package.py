@@ -22,6 +22,8 @@ class Rapidjson(CMakePackage):
     version("1.0.1", sha256="a9003ad5c6384896ed4fd1f4a42af108e88e1b582261766df32d717ba744ee73")
     version("1.0.0", sha256="4189b32b9c285f34b37ffe4c0fd5627c1e59c2444daacffe5a96fdfbf08d139b")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("doc", default=False, description="Build and install documentation")
 
     depends_on("doxygen+graphviz", when="+doc")

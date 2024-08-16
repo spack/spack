@@ -28,6 +28,9 @@ class Yambo(AutotoolsPackage):
     version("4.2.1", sha256="8ccd0ca75cc32d9266d4a37edd2a7396cf5038f3a68be07c0f0f77d1afc72bdc")
     version("4.2.0", sha256="9f78c4237ff363ff4e9ea5eeea671b6fff783d9a6078cc31b0b1abeb1f040f4d")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("dp", default=False, description="Enable double precision")
     variant(
         "profile",

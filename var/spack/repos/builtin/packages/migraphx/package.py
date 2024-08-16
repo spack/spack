@@ -37,6 +37,9 @@ class Migraphx(CMakePackage):
         version("5.3.3", sha256="91d91902bbedd5e1951a231e8e5c9a328360b128c731912ed17c8059df38e02a")
         version("5.3.0", sha256="d0b7283f42e03fb38b612868b8c94f46f27a6e0b019ae95fde5b9086582a1c69")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     patch("0001-Adding-nlohmann-json-include-directory.patch", when="@:5.5")
     # Restrict Python 2.7 usage to fix the issue below
     # https://github.com/spack/spack/issues/24429
@@ -133,10 +136,10 @@ class Migraphx(CMakePackage):
             )
         return args
 
-    def test(self):
+    def test_unit_tests(self):
+        """Run installed UnitTests"""
         if self.spec.satisfies("@:5.5.0"):
-            print("Skipping: stand-alone tests")
-            return
-        test_dir = join_path(self.spec["migraphx"].prefix, "bin")
-        with working_dir(test_dir, create=True):
-            self.run_test("UnitTests")
+            raise SkipTest("Package must be installed as version @5.5.1 or later")
+        unit_tests = which(self.prefix.bin.UnitTests)
+        assert unit_tests is not None, "UnitTests is not installed!"
+        unit_tests()

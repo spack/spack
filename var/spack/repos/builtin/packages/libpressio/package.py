@@ -174,6 +174,9 @@ class Libpressio(CMakePackage, CudaPackage):
     version("0.27.0", sha256="387ee5958de2d986095cda2aaf39d0bf319d02eaeeea2a565aea97e6a6f31f36")
     version("0.26.0", sha256="c451591d106d1671c9ddbb5c304979dd2d083e0616b2aeede62e7a6b568f828c")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "pybind", default=False, description="build support for pybind metrics", when="@0.96.0:"
     )

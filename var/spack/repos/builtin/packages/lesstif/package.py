@@ -16,6 +16,8 @@ class Lesstif(AutotoolsPackage):
 
     version("0.95.2", sha256="eb4aa38858c29a4a3bcf605cfe7d91ca41f4522d78d770f69721e6e3a4ecf7e3")
 
+    depends_on("c", type="build")  # generated
+
     variant("shared", default=True, description="Build shared libraries")
     variant("static", default=False, description="Build static libraries")
 

@@ -161,6 +161,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         extension="tar.gz",
     )
 
+    depends_on("cxx", type="build")  # generated
+
     variant("static", default=True, description="Build static library")
     variant("shared", default=False, description="Build shared library")
     variant("mpi", default=True, sticky=True, description="Enable MPI parallelism")

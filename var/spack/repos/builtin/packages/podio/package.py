@@ -69,6 +69,8 @@ class Podio(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "cxxstd",
         default="17",

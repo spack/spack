@@ -68,6 +68,8 @@ class PyPandas(PythonPackage):
     version("0.25.3", sha256="52da74df8a9c9a103af0a72c9d5fdc8e0183a90884278db7f386b5692a2220a4")
     version("0.25.2", sha256="ca91a19d1f0a280874a24dca44aadce42da7f3a7edb7e9ab7c7baad8febee2be")
 
+    depends_on("c", type="build")  # generated
+
     variant("performance", default=True, description="Build recommended performance dependencies")
     variant("excel", when="@1.4:", default=False, description="Build with support for Excel")
 

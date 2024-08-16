@@ -16,5 +16,7 @@ class Quota(AutotoolsPackage):
 
     version("4.05", sha256="ef3b5b5d1014ed1344b46c1826145e20cbef8db967b522403c9a060761cf7ab9")
 
+    depends_on("c", type="build")  # generated
+
     def setup_run_environment(self, env):
         env.prepend_path("PATH", self.prefix.sbin)

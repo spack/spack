@@ -94,6 +94,9 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
     version("5.0.1", sha256="84ca454abf262579814a2a2b846569f6e0cb3e16dc33ca3642b4f1dff6fbafd3")
     version("5.0.0", sha256="1f1843315657a4371d8ca37f01265fa9aae17dbcf46d2d0a95c1fdb3c6a4bab6")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     variant(
         "clang", default=True, description="Build the LLVM C/C++/Objective-C compiler frontend"
     )
@@ -669,21 +672,19 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
         # because LLVM has kindly named compilers
         variants, compilers = ["+clang"], {}
         lld_found, lldb_found = False, False
-        for exe in exes:
+        for exe in sorted(exes, key=len):
             name = os.path.basename(exe)
             if "clang++" in name:
-                compilers["cxx"] = exe
+                compilers.setdefault("cxx", exe)
             elif "clang" in name:
-                compilers["c"] = exe
+                compilers.setdefault("c", exe)
             elif "flang" in name:
                 variants.append("+flang")
-                compilers["fortran"] = exe
+                compilers.setdefault("fortran", exe)
             elif "ld.lld" in name:
                 lld_found = True
-                compilers["ld"] = exe
             elif "lldb" in name:
                 lldb_found = True
-                compilers["lldb"] = exe
 
         variants.append("+lld" if lld_found else "~lld")
         variants.append("+lldb" if lldb_found else "~lldb")

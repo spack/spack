@@ -117,8 +117,9 @@ def test_yaml_subdag(config, mock_packages):
         assert spec[dep].eq_dag(json_spec[dep])
 
 
-def test_using_ordered_dict(mock_packages):
-    """Checks that dicts are ordered
+@pytest.mark.parametrize("spec_str", ["mpileaks ^zmpi", "dttop", "dtuse"])
+def test_using_ordered_dict(default_mock_concretization, spec_str):
+    """Checks that we use syaml_dicts for spec serialization.
 
     Necessary to make sure that dag_hash is stable across python
     versions and processes.
@@ -136,14 +137,10 @@ def test_using_ordered_dict(mock_packages):
                     max_level = nlevel
         return max_level
 
-    specs = ["mpileaks ^zmpi", "dttop", "dtuse"]
-    for spec in specs:
-        dag = Spec(spec)
-        dag.normalize()
-        level = descend_and_check(dag.to_node_dict())
-
-        # level just makes sure we are doing something here
-        assert level >= 5
+    s = default_mock_concretization(spec_str)
+    level = descend_and_check(s.to_node_dict())
+    # level just makes sure we are doing something here
+    assert level >= 5
 
 
 def test_ordered_read_not_required_for_consistent_dag_hash(config, mock_packages):
@@ -316,23 +313,23 @@ def test_save_dependency_spec_jsons_subset(tmpdir, config):
     output_path = str(tmpdir.mkdir("spec_jsons"))
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock-repo"))
-    builder.add_package("g")
-    builder.add_package("f")
-    builder.add_package("e")
-    builder.add_package("d", dependencies=[("f", None, None), ("g", None, None)])
-    builder.add_package("c")
-    builder.add_package("b", dependencies=[("d", None, None), ("e", None, None)])
-    builder.add_package("a", dependencies=[("b", None, None), ("c", None, None)])
+    builder.add_package("pkg-g")
+    builder.add_package("pkg-f")
+    builder.add_package("pkg-e")
+    builder.add_package("pkg-d", dependencies=[("pkg-f", None, None), ("pkg-g", None, None)])
+    builder.add_package("pkg-c")
+    builder.add_package("pkg-b", dependencies=[("pkg-d", None, None), ("pkg-e", None, None)])
+    builder.add_package("pkg-a", dependencies=[("pkg-b", None, None), ("pkg-c", None, None)])
 
     with spack.repo.use_repositories(builder.root):
-        spec_a = Spec("a").concretized()
-        b_spec = spec_a["b"]
-        c_spec = spec_a["c"]
+        spec_a = Spec("pkg-a").concretized()
+        b_spec = spec_a["pkg-b"]
+        c_spec = spec_a["pkg-c"]
 
-        save_dependency_specfiles(spec_a, output_path, [Spec("b"), Spec("c")])
+        save_dependency_specfiles(spec_a, output_path, [Spec("pkg-b"), Spec("pkg-c")])
 
-        assert check_specs_equal(b_spec, os.path.join(output_path, "b.json"))
-        assert check_specs_equal(c_spec, os.path.join(output_path, "c.json"))
+        assert check_specs_equal(b_spec, os.path.join(output_path, "pkg-b.json"))
+        assert check_specs_equal(c_spec, os.path.join(output_path, "pkg-c.json"))
 
 
 def test_legacy_yaml(tmpdir, install_mockery, mock_packages):

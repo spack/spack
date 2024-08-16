@@ -3,25 +3,25 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
+import concurrent.futures
 import copy
 import glob
 import hashlib
 import json
-import multiprocessing
-import multiprocessing.pool
 import os
 import shutil
 import sys
 import tempfile
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 import llnl.util.tty as tty
 from llnl.string import plural
-from llnl.util.lang import elide_list
+from llnl.util.lang import elide_list, stable_partition
 
 import spack.binary_distribution as bindist
 import spack.cmd
 import spack.config
+import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
 import spack.hash_types as ht
@@ -35,10 +35,10 @@ import spack.stage
 import spack.store
 import spack.user_environment
 import spack.util.crypto
+import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
-from spack.build_environment import determine_number_of_jobs
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
 from spack.oci.image import (
@@ -70,12 +70,6 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     push = subparsers.add_parser("push", aliases=["create"], help=push_fn.__doc__)
     push.add_argument("-f", "--force", action="store_true", help="overwrite tarball if it exists")
-    push.add_argument(
-        "--allow-root",
-        "-a",
-        action="store_true",
-        help="allow install root string in binary files after RPATH substitution",
-    )
     push_sign = push.add_mutually_exclusive_group(required=False)
     push_sign.add_argument(
         "--unsigned",
@@ -117,6 +111,17 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "The default is to build a cache for the package along with all its dependencies. "
         "Alternatively, one can decide to build a cache for only the package or only the "
         "dependencies",
+    )
+    with_or_without_build_deps = push.add_mutually_exclusive_group()
+    with_or_without_build_deps.add_argument(
+        "--with-build-dependencies",
+        action="store_true",
+        help="include build dependencies in the buildcache",
+    )
+    with_or_without_build_deps.add_argument(
+        "--without-build-dependencies",
+        action="store_true",
+        help="exclude build dependencies from the buildcache",
     )
     push.add_argument(
         "--fail-fast",
@@ -189,10 +194,6 @@ def setup_parser(subparser: argparse.ArgumentParser):
     keys.add_argument("-t", "--trust", action="store_true", help="trust all downloaded keys")
     keys.add_argument("-f", "--force", action="store_true", help="force new download of keys")
     keys.set_defaults(func=keys_fn)
-
-    preview = subparsers.add_parser("preview", help=preview_fn.__doc__)
-    arguments.add_common_arguments(preview, ["installed_specs"])
-    preview.set_defaults(func=preview_fn)
 
     # Check if binaries need to be rebuilt on remote mirror
     check = subparsers.add_parser("check", help=check_fn.__doc__)
@@ -346,32 +347,6 @@ def _progress(i: int, total: int):
     return ""
 
 
-class NoPool:
-    def map(self, func, args):
-        return [func(a) for a in args]
-
-    def starmap(self, func, args):
-        return [func(*a) for a in args]
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        pass
-
-
-MaybePool = Union[multiprocessing.pool.Pool, NoPool]
-
-
-def _make_pool() -> MaybePool:
-    """Can't use threading because it's unsafe, and can't use spawned processes because of globals.
-    That leaves only forking"""
-    if multiprocessing.get_start_method() == "fork":
-        return multiprocessing.pool.Pool(determine_number_of_jobs(parallel=True))
-    else:
-        return NoPool()
-
-
 def _skip_no_redistribute_for_public(specs):
     remaining_specs = list()
     removed_specs = list()
@@ -391,6 +366,47 @@ def _skip_no_redistribute_for_public(specs):
     return remaining_specs
 
 
+class PackagesAreNotInstalledError(spack.error.SpackError):
+    """Raised when a list of specs is not installed but picked to be packaged."""
+
+    def __init__(self, specs: List[Spec]):
+        super().__init__(
+            "Cannot push non-installed packages",
+            ", ".join(elide_list(list(_format_spec(s) for s in specs), 5)),
+        )
+
+
+class PackageNotInstalledError(spack.error.SpackError):
+    """Raised when a spec is not installed but picked to be packaged."""
+
+
+class MissingLayerError(spack.error.SpackError):
+    """Raised when a required layer for a dependency is missing in an OCI registry."""
+
+
+def _specs_to_be_packaged(
+    requested: List[Spec], things_to_install: str, build_deps: bool
+) -> List[Spec]:
+    """Collect all non-external with or without roots and dependencies"""
+    if "dependencies" not in things_to_install:
+        deptype = dt.NONE
+    elif build_deps:
+        deptype = dt.ALL
+    else:
+        deptype = dt.RUN | dt.LINK | dt.TEST
+    return [
+        s
+        for s in traverse.traverse_nodes(
+            requested,
+            root="package" in things_to_install,
+            deptype=deptype,
+            order="breadth",
+            key=traverse.by_dag_hash,
+        )
+        if not s.external
+    ]
+
+
 def push_fn(args):
     """create a binary package and push it to a mirror"""
     if args.spec_file:
@@ -403,11 +419,6 @@ def push_fn(args):
         roots = _matching_specs(spack.cmd.parse_specs(args.specs or args.spec_file))
     else:
         roots = spack.cmd.require_active_env(cmd_name="buildcache push").concrete_roots()
-
-    if args.allow_root:
-        tty.warn(
-            "The flag `--allow-root` is the default in Spack 0.21, will be removed in Spack 0.22"
-        )
 
     mirror: spack.mirror.Mirror = args.mirror
 
@@ -435,40 +446,52 @@ def push_fn(args):
                 "Use --unsigned to silence this warning."
             )
 
-    # This is a list of installed, non-external specs.
-    specs = bindist.specs_to_be_packaged(
+    specs = _specs_to_be_packaged(
         roots,
-        root="package" in args.things_to_install,
-        dependencies="dependencies" in args.things_to_install,
+        things_to_install=args.things_to_install,
+        build_deps=args.with_build_dependencies or not args.without_build_dependencies,
     )
+
     if not args.private:
         specs = _skip_no_redistribute_for_public(specs)
 
-    # When pushing multiple specs, print the url once ahead of time, as well as how
-    # many specs are being pushed.
     if len(specs) > 1:
         tty.info(f"Selected {len(specs)} specs to push to {push_url}")
 
-    failed = []
+    # Pushing not installed specs is an error. Either fail fast or populate the error list and
+    # push installed package in best effort mode.
+    failed: List[Tuple[Spec, BaseException]] = []
+    with spack.store.STORE.db.read_transaction():
+        if any(not s.installed for s in specs):
+            specs, not_installed = stable_partition(specs, lambda s: s.installed)
+            if args.fail_fast:
+                raise PackagesAreNotInstalledError(not_installed)
+            else:
+                failed.extend(
+                    (s, PackageNotInstalledError("package not installed")) for s in not_installed
+                )
 
-    # TODO: unify this logic in the future.
+    # TODO: move into bindist.push_or_raise
     if target_image:
         base_image = ImageReference.from_string(args.base_image) if args.base_image else None
         with tempfile.TemporaryDirectory(
             dir=spack.stage.get_stage_root()
-        ) as tmpdir, _make_pool() as pool:
-            skipped, base_images, checksums = _push_oci(
+        ) as tmpdir, spack.util.parallel.make_concurrent_executor() as executor:
+            skipped, base_images, checksums, upload_errors = _push_oci(
                 target_image=target_image,
                 base_image=base_image,
                 installed_specs_with_deps=specs,
                 force=args.force,
                 tmpdir=tmpdir,
-                pool=pool,
+                executor=executor,
             )
+
+            if upload_errors:
+                failed.extend(upload_errors)
 
             # Apart from creating manifests for each individual spec, we allow users to create a
             # separate image tag for all root specs and their runtime dependencies.
-            if args.tag:
+            elif args.tag:
                 tagged_image = target_image.with_tag(args.tag)
                 # _push_oci may not populate base_images if binaries were already in the registry
                 for spec in roots:
@@ -511,7 +534,7 @@ def push_fn(args):
                     e, (bindist.PickKeyException, bindist.NoKeyException)
                 ):
                     raise
-                failed.append((_format_spec(spec), e))
+                failed.append((spec, e))
 
     if skipped:
         if len(specs) == 1:
@@ -534,7 +557,13 @@ def push_fn(args):
         raise spack.error.SpackError(
             f"The following {len(failed)} errors occurred while pushing specs to the buildcache",
             "\n".join(
-                elide_list([f"    {spec}: {e.__class__.__name__}: {e}" for spec, e in failed], 5)
+                elide_list(
+                    [
+                        f"    {_format_spec(spec)}: {e.__class__.__name__}: {e}"
+                        for spec, e in failed
+                    ],
+                    5,
+                )
             ),
         )
 
@@ -544,8 +573,8 @@ def push_fn(args):
     if target_image and len(skipped) < len(specs) and args.update_index:
         with tempfile.TemporaryDirectory(
             dir=spack.stage.get_stage_root()
-        ) as tmpdir, _make_pool() as pool:
-            _update_index_oci(target_image, tmpdir, pool)
+        ) as tmpdir, spack.util.parallel.make_concurrent_executor() as executor:
+            _update_index_oci(target_image, tmpdir, executor)
 
 
 def _get_spack_binary_blob(image_ref: ImageReference) -> Optional[spack.oci.oci.Blob]:
@@ -619,17 +648,12 @@ def _put_manifest(
 ):
     architecture = _archspec_to_gooarch(specs[0])
 
-    dependencies = list(
-        reversed(
-            list(
-                s
-                for s in traverse.traverse_nodes(
-                    specs, order="topo", deptype=("link", "run"), root=True
-                )
-                if not s.external
-            )
-        )
-    )
+    expected_blobs: List[Spec] = [
+        s
+        for s in traverse.traverse_nodes(specs, order="topo", deptype=("link", "run"), root=True)
+        if not s.external
+    ]
+    expected_blobs.reverse()
 
     base_manifest, base_config = base_images[architecture]
     env = _retrieve_env_dict_from_config(base_config)
@@ -648,9 +672,16 @@ def _put_manifest(
     # Create an oci.image.config file
     config = copy.deepcopy(base_config)
 
-    # Add the diff ids of the dependencies
-    for s in dependencies:
-        config["rootfs"]["diff_ids"].append(str(checksums[s.dag_hash()].uncompressed_digest))
+    # Add the diff ids of the blobs
+    for s in expected_blobs:
+        # If a layer for a dependency has gone missing (due to removed manifest in the registry, a
+        # failed push, or a local forced uninstall), we cannot create a runnable container image.
+        # If an OCI registry is only used for storage, this is not a hard error, but for now we
+        # raise an exception unconditionally, until someone requests a more lenient behavior.
+        checksum = checksums.get(s.dag_hash())
+        if not checksum:
+            raise MissingLayerError(f"missing layer for {_format_spec(s)}")
+        config["rootfs"]["diff_ids"].append(str(checksum.uncompressed_digest))
 
     # Set the environment variables
     config["config"]["Env"] = [f"{k}={v}" for k, v in env.items()]
@@ -694,7 +725,7 @@ def _put_manifest(
                     "digest": str(checksums[s.dag_hash()].compressed_digest),
                     "size": checksums[s.dag_hash()].size,
                 }
-                for s in dependencies
+                for s in expected_blobs
             ),
         ],
     }
@@ -739,9 +770,14 @@ def _push_oci(
     base_image: Optional[ImageReference],
     installed_specs_with_deps: List[Spec],
     tmpdir: str,
-    pool: MaybePool,
+    executor: concurrent.futures.Executor,
     force: bool = False,
-) -> Tuple[List[str], Dict[str, Tuple[dict, dict]], Dict[str, spack.oci.oci.Blob]]:
+) -> Tuple[
+    List[str],
+    Dict[str, Tuple[dict, dict]],
+    Dict[str, spack.oci.oci.Blob],
+    List[Tuple[Spec, BaseException]],
+]:
     """Push specs to an OCI registry
 
     Args:
@@ -754,7 +790,8 @@ def _push_oci(
     Returns:
         A tuple consisting of the list of skipped specs already in the build cache,
         a dictionary mapping architectures to base image manifests and configs,
-        and a dictionary mapping each spec's dag hash to a blob.
+        a dictionary mapping each spec's dag hash to a blob,
+        and a list of tuples of specs with errors of failed uploads.
     """
 
     # Reverse the order
@@ -771,39 +808,50 @@ def _push_oci(
 
     if not force:
         tty.info("Checking for existing specs in the buildcache")
-        to_be_uploaded = []
+        blobs_to_upload = []
 
         tags_to_check = (target_image.with_tag(default_tag(s)) for s in installed_specs_with_deps)
-        available_blobs = pool.map(_get_spack_binary_blob, tags_to_check)
+        available_blobs = executor.map(_get_spack_binary_blob, tags_to_check)
 
         for spec, maybe_blob in zip(installed_specs_with_deps, available_blobs):
             if maybe_blob is not None:
                 checksums[spec.dag_hash()] = maybe_blob
                 skipped.append(_format_spec(spec))
             else:
-                to_be_uploaded.append(spec)
+                blobs_to_upload.append(spec)
     else:
-        to_be_uploaded = installed_specs_with_deps
+        blobs_to_upload = installed_specs_with_deps
 
-    if not to_be_uploaded:
-        return skipped, base_images, checksums
+    if not blobs_to_upload:
+        return skipped, base_images, checksums, []
 
     tty.info(
-        f"{len(to_be_uploaded)} specs need to be pushed to "
+        f"{len(blobs_to_upload)} specs need to be pushed to "
         f"{target_image.domain}/{target_image.name}"
     )
 
     # Upload blobs
-    new_blobs = pool.starmap(
-        _push_single_spack_binary_blob, ((target_image, spec, tmpdir) for spec in to_be_uploaded)
-    )
+    blob_futures = [
+        executor.submit(_push_single_spack_binary_blob, target_image, spec, tmpdir)
+        for spec in blobs_to_upload
+    ]
 
-    # And update the spec to blob mapping
-    for spec, blob in zip(to_be_uploaded, new_blobs):
-        checksums[spec.dag_hash()] = blob
+    concurrent.futures.wait(blob_futures)
+
+    manifests_to_upload: List[Spec] = []
+    errors: List[Tuple[Spec, BaseException]] = []
+
+    # And update the spec to blob mapping for successful uploads
+    for spec, blob_future in zip(blobs_to_upload, blob_futures):
+        error = blob_future.exception()
+        if error is None:
+            manifests_to_upload.append(spec)
+            checksums[spec.dag_hash()] = blob_future.result()
+        else:
+            errors.append((spec, error))
 
     # Copy base images if necessary
-    for spec in to_be_uploaded:
+    for spec in manifests_to_upload:
         _update_base_images(
             base_image=base_image,
             target_image=target_image,
@@ -813,7 +861,7 @@ def _push_oci(
 
     def extra_config(spec: Spec):
         spec_dict = spec.to_dict(hash=ht.dag_hash)
-        spec_dict["buildcache_layout_version"] = 1
+        spec_dict["buildcache_layout_version"] = bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         spec_dict["binary_cache_checksum"] = {
             "hash_algorithm": "sha256",
             "hash": checksums[spec.dag_hash()].compressed_digest.digest,
@@ -822,30 +870,35 @@ def _push_oci(
 
     # Upload manifests
     tty.info("Uploading manifests")
-    pool.starmap(
-        _put_manifest,
-        (
-            (
-                base_images,
-                checksums,
-                target_image.with_tag(default_tag(spec)),
-                tmpdir,
-                extra_config(spec),
-                {"org.opencontainers.image.description": spec.format()},
-                spec,
-            )
-            for spec in to_be_uploaded
-        ),
-    )
+    manifest_futures = [
+        executor.submit(
+            _put_manifest,
+            base_images,
+            checksums,
+            target_image.with_tag(default_tag(spec)),
+            tmpdir,
+            extra_config(spec),
+            {"org.opencontainers.image.description": spec.format()},
+            spec,
+        )
+        for spec in manifests_to_upload
+    ]
+
+    concurrent.futures.wait(manifest_futures)
 
     # Print the image names of the top-level specs
-    for spec in to_be_uploaded:
-        tty.info(f"Pushed {_format_spec(spec)} to {target_image.with_tag(default_tag(spec))}")
+    for spec, manifest_future in zip(manifests_to_upload, manifest_futures):
+        error = manifest_future.exception()
+        if error is None:
+            tty.info(f"Pushed {_format_spec(spec)} to {target_image.with_tag(default_tag(spec))}")
+        else:
+            errors.append((spec, error))
 
-    return skipped, base_images, checksums
+    return skipped, base_images, checksums, errors
 
 
-def _config_from_tag(image_ref: ImageReference, tag: str) -> Optional[dict]:
+def _config_from_tag(image_ref_and_tag: Tuple[ImageReference, str]) -> Optional[dict]:
+    image_ref, tag = image_ref_and_tag
     # Don't allow recursion here, since Spack itself always uploads
     # vnd.oci.image.manifest.v1+json, not vnd.oci.image.index.v1+json
     _, config = get_manifest_and_config_with_retry(image_ref.with_tag(tag), tag, recurse=0)
@@ -855,13 +908,13 @@ def _config_from_tag(image_ref: ImageReference, tag: str) -> Optional[dict]:
     return config if "spec" in config else None
 
 
-def _update_index_oci(image_ref: ImageReference, tmpdir: str, pool: MaybePool) -> None:
+def _update_index_oci(
+    image_ref: ImageReference, tmpdir: str, pool: concurrent.futures.Executor
+) -> None:
     tags = list_tags(image_ref)
 
     # Fetch all image config files in parallel
-    spec_dicts = pool.starmap(
-        _config_from_tag, ((image_ref, tag) for tag in tags if tag_is_spec(tag))
-    )
+    spec_dicts = pool.map(_config_from_tag, ((image_ref, tag) for tag in tags if tag_is_spec(tag)))
 
     # Populate the database
     db_root_dir = os.path.join(tmpdir, "db_root")
@@ -958,14 +1011,6 @@ def list_fn(args):
 def keys_fn(args):
     """get public keys available on mirrors"""
     bindist.get_keys(args.install, args.trust, args.force)
-
-
-def preview_fn(args):
-    """analyze an installed spec and reports whether executables and libraries are relocatable"""
-    tty.warn(
-        "`spack buildcache preview` is deprecated since `spack buildcache push --allow-root` is "
-        "now the default. This command will be removed in Spack 0.22"
-    )
 
 
 def check_fn(args: argparse.Namespace):
@@ -1205,8 +1250,8 @@ def update_index(mirror: spack.mirror.Mirror, update_keys=False):
     if image_ref:
         with tempfile.TemporaryDirectory(
             dir=spack.stage.get_stage_root()
-        ) as tmpdir, _make_pool() as pool:
-            _update_index_oci(image_ref, tmpdir, pool)
+        ) as tmpdir, spack.util.parallel.make_concurrent_executor() as executor:
+            _update_index_oci(image_ref, tmpdir, executor)
         return
 
     # Otherwise, assume a normal mirror.

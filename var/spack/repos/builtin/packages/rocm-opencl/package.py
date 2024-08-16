@@ -5,6 +5,7 @@
 
 import os
 import re
+import sys
 
 from spack.package import *
 
@@ -35,6 +36,7 @@ class RocmOpencl(CMakePackage):
     license("MIT")
 
     version("master", branch="main")
+    version("6.1.2", sha256="1a1e21640035d957991559723cd093f0c7e202874423667d2ba0c7662b01fea4")
     version("6.1.1", sha256="2db02f335c9d6fa69befcf7c56278e5cecfe3db0b457eaaa41206c2585ef8256")
     version("6.1.0", sha256="49b23eef621f4e8e528bb4de8478a17436f42053a2f7fde21ff221aa683205c7")
     version("6.0.2", sha256="cb8ac610c8d4041b74fb3129c084f1e7b817ce1a5a9943feca1fa7531dc7bdcc")
@@ -50,6 +52,9 @@ class RocmOpencl(CMakePackage):
         version("5.4.0", sha256="a294639478e76c75dac0e094b418f9bd309309b07faf6af126cdfad9aab3c5c7")
         version("5.3.3", sha256="cab394e6ef16c35bab8de29a66b96a7dc0e7d1297aaacba3718fa1d369233c9f")
         version("5.3.0", sha256="d251e2efe95dc12f536ce119b2587bed64bbda013969fa72be58062788044a9e")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3:", type="build")
     depends_on("gl@4.5:", type="link")
@@ -105,12 +110,13 @@ class RocmOpencl(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
         "master",
     ]:
         depends_on(f"comgr@{ver}", type="build", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", type="link", when=f"@{ver}")
 
-    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
+    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2"]:
         depends_on(f"aqlprofile@{ver}", type="link", when=f"@{ver}")
 
     for ver in [
@@ -124,6 +130,7 @@ class RocmOpencl(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
+        "6.1.2",
     ]:
 
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
@@ -161,13 +168,15 @@ class RocmOpencl(CMakePackage):
         with open(join_path(vendor_config_path, config_file_name), "w") as f:
             f.write("libamdocl64.so")
 
-    test_src_dir = "tests/ocltst"
+    def test_ocltst(self):
+        """Run ocltst checks"""
+        test_dir = "tests/ocltst" if sys.platform == "win32" else "share/opencl/ocltst"
 
-    def test(self):
-        test_dir = join_path(self.spec["rocm-opencl"].prefix, self.test_src_dir)
-        with working_dir(test_dir, create=True):
-            os.environ["LD_LIBRARY_PATH"] += os.pathsep + test_dir
-            args = ["-m", "liboclruntime.so", "-A", "oclruntime.exclude"]
-            self.run_test("ocltst", args)
-            args = ["-m", "liboclperf.so", "-A", "oclperf.exclude"]
-            self.run_test("ocltst", args)
+        os.environ["LD_LIBRARY_PATH"] += os.pathsep + join_path(self.prefix, test_dir)
+
+        ocltst = which(join_path(self.prefix, test_dir, "ocltst"))
+        with test_part(self, "test_ocltst_runtime", purpose="check runtime"):
+            ocltst("-m", "liboclruntime.so", "-A", "oclruntime.exclude")
+
+        with test_part(self, "test_ocltst_perf", purpose="check perf"):
+            ocltst("-m", "liboclperf.so", "-A", "oclperf.exclude")

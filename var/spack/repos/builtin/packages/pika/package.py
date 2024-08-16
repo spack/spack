@@ -19,6 +19,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSL-1.0")
 
+    version("0.26.1", sha256="d7cc842238754019abdb536e22325e9a57186cd2ac8cc9c7140a5385f9d730f6")
     version("0.26.0", sha256="bbec5472c71006c1f55e7946c8dc517dae76c41cacb36fa98195312c74a1bb9a")
     version("0.25.0", sha256="6646e12f88049116d84ce0caeedaa039a13caaa0431964caea4660b739767b2e")
     version("0.24.0", sha256="3b97c684107f892a633f598d94bcbd1e238d940e88e1c336f205e81b99326cc3")
@@ -50,6 +51,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     version("0.2.0", sha256="712bb519f22bdc9d5ee4ac374d251a54a0af4c9e4e7f62760b8ab9a177613d12")
     version("0.1.0", sha256="aa0ae2396cd264d821a73c4c7ecb118729bb3de042920c9248909d33755e7327")
     version("main", branch="main")
+
+    depends_on("cxx", type="build")
 
     generator("ninja")
 

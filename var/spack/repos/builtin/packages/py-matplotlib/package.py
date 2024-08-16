@@ -68,6 +68,9 @@ class PyMatplotlib(PythonPackage):
     version("3.0.1", sha256="70f8782c50ac2c7617aad0fa5ba59fc49f690a851d6afc0178813c49767644dd")
     version("3.0.0", sha256="b4e2333c98a7c2c1ff6eb930cd2b57d4b818de5437c5048802096b32f66e65f9")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # https://matplotlib.org/stable/users/explain/figure/backends.html
     # matplotlib 3.9+: lib/matplotlib/backends/registry.py
     # matplotlib 3.8-: lib/matplotlib/rcsetup.py

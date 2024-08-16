@@ -48,6 +48,10 @@ class QuantumEspresso(CMakePackage, Package):
     version("5.4", sha256="e3993fccae9cea04a5c6492e8b961a053a63727051cb5c4eb6008f62cda8f335")
     version("5.3", sha256="3b26038efb9e3f8ac7a2b950c31d8c29169a3556c0b68c299eb88a4be8dc9048")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     resource(
         name="environ",
         git="https://github.com/environ-developers/Environ.git",

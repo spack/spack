@@ -17,7 +17,15 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("24.04.01", tag="24.04.01")
+    version("23.08", tag="23.08")
+    version("23.07", tag="23.07")
+    version("23.06", tag="23.06")
+    version("23.05", tag="23.05")
+    version("22.03", tag="22.03")
     version("2020-10-19", commit="8a1ed9e8d35dfad26fb973996319965e4224dcdd")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("python@3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")

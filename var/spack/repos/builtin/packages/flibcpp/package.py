@@ -26,6 +26,9 @@ class Flibcpp(CMakePackage):
     version("0.4.0", sha256="ccb0acf58a4480977fdb3c62a0bd267297c1dfa687a142ea8822474c38aa322b")
     version("0.3.1", sha256="871570124122c18018478275d5040b4b787d1966e50ee95b634b0b5e0cd27e91")
 
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("doc", default=False, description="Build and install documentation")
     variant("shared", default=True, description="Build shared libraries")
     variant("swig", default=False, description="Regenerate source files using SWIG")

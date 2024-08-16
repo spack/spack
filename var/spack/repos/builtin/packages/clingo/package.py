@@ -39,6 +39,9 @@ class Clingo(CMakePackage):
     version("5.3.0", sha256="b0d406d2809352caef7fccf69e8864d55e81ee84f4888b0744894977f703f976")
     version("5.2.2", sha256="da1ef8142e75c5a6f23c9403b90d4f40b9f862969ba71e2aaee9a257d058bfcf")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("docs", default=False, description="build documentation with Doxygen")
     variant("python", default=True, description="build with python bindings")
 
@@ -95,7 +98,7 @@ class Clingo(CMakePackage):
 
         args = [self.define("CLINGO_BUILD_WITH_LUA", False)]
 
-        if "+python" in self.spec:
+        if self.spec.satisfies("+python"):
             suffix = python(
                 "-c", "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))", output=str
             ).strip()
@@ -113,7 +116,7 @@ class Clingo(CMakePackage):
 
         # Use LTO also for non-Intel compilers please. This can be removed when they
         # bump cmake_minimum_required to VERSION 3.9.
-        if "+ipo" in self.spec:
+        if self.spec.satisfies("+ipo"):
             args.append(self.define("CMAKE_POLICY_DEFAULT_CMP0069", "NEW"))
 
         return args
