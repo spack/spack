@@ -41,7 +41,7 @@ class XorgServer(AutotoolsPackage, XorgPackage):
     depends_on("pixman@0.27.2:")
     depends_on("font-util")
     depends_on("libxshmfence@1.1:")
-    depends_on("libdrm@2.3.0:")
+    depends_on("libdrm@2.3.0:", when="+dri")
     depends_on("libx11")
 
     depends_on("gl", when="+dri")
