@@ -229,6 +229,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         with when(f"platform={plat}"):
             depends_on("qt+opengl", when="@5.3.0:+qt+opengl2")
             depends_on("qt~opengl", when="@5.3.0:+qt~opengl2")
+    depends_on("qt", when="@5.3.0:+qt")
     depends_on("qt@:4", when="@:5.2.0+qt")
 
     depends_on("gl@3.2:", when="+opengl2")
@@ -236,7 +237,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("glew")
     depends_on("libxt", when="platform=linux ^[virtuals=gl] glx")
 
-    requires("^[virtuals=gl] glx", when="+qt", msg="Qt support requires GLX")
+    # requires("^[virtuals=gl] glx", when="+qt", msg="Qt support requires GLX")
 
     depends_on("ospray@2.1:2", when="+raytracing")
     depends_on("openimagedenoise", when="+raytracing")
