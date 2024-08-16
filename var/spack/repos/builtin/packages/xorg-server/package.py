@@ -101,7 +101,7 @@ class XorgServer(AutotoolsPackage, XorgPackage):
             args.append("--enable-glx")
         else:
             args.append("--disable-glx")
-            
+
         if self.spec.satisfies("+dri"):
             args.append("--enable-dri")
             args.append("--enable-dri2")
@@ -118,10 +118,6 @@ class XorgServer(AutotoolsPackage, XorgPackage):
         else:
             args.append("--disable-glx")
 
-        args.extend(
-            [
-                "--disable-glamor",  # Glamor for Xorg requires gbm >= 10.2.0
-            ]
-        )
+        args.extend(["--disable-glamor"])  # Glamor for Xorg requires gbm >= 10.2.0
 
         return args
