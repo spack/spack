@@ -1,0 +1,175 @@
+diff -Naur a/bin/hdfs b/bin/hdfs
+--- a/bin/hdfs	2018-11-13 16:15:16.000000000 +0100
++++ b/bin/hdfs	2021-04-27 09:54:58.803618078 +0200
+@@ -25,14 +25,14 @@
+ #
+ #   JSVC_ERRFILE  path to jsvc error file.  Defaults to $HADOOP_LOG_DIR/jsvc.err.
+ 
+-bin=`which $0`
+-bin=`dirname ${bin}`
++bin=`which "$0"`
++bin=`dirname "${bin}"`
+ bin=`cd "$bin" > /dev/null; pwd`
+ 
+ DEFAULT_LIBEXEC_DIR="$bin"/../libexec
+ 
+ HADOOP_LIBEXEC_DIR=${HADOOP_LIBEXEC_DIR:-$DEFAULT_LIBEXEC_DIR}
+-. $HADOOP_LIBEXEC_DIR/hdfs-config.sh
++. "$HADOOP_LIBEXEC_DIR/hdfs-config.sh"
+ 
+ function print_usage(){
+   echo "Usage: hdfs [--config confdir] [--loglevel loglevel] COMMAND"
+@@ -101,7 +101,7 @@
+   
+     if [ -n "$HADOOP_SECURE_DN_LOG_DIR" ]; then
+       HADOOP_LOG_DIR=$HADOOP_SECURE_DN_LOG_DIR
+-      HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.log.dir=$HADOOP_LOG_DIR"
++      HADOOP_OPTS="$HADOOP_OPTS '-Dhadoop.log.dir=$HADOOP_LOG_DIR'"
+     fi
+    
+     HADOOP_IDENT_STRING=$HADOOP_SECURE_DN_USER
+@@ -122,7 +122,7 @@
+ 
+     if [ -n "$HADOOP_PRIVILEGED_NFS_LOG_DIR" ]; then
+       HADOOP_LOG_DIR=$HADOOP_PRIVILEGED_NFS_LOG_DIR
+-      HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.log.dir=$HADOOP_LOG_DIR"
++      HADOOP_OPTS="$HADOOP_OPTS '-Dhadoop.log.dir=$HADOOP_LOG_DIR'"
+     fi
+    
+     HADOOP_IDENT_STRING=$HADOOP_PRIVILEGED_NFS_USER
+diff -Naur a/libexec/hadoop-config.sh b/libexec/hadoop-config.sh
+--- a/libexec/hadoop-config.sh	2018-11-13 16:15:09.000000000 +0100
++++ b/libexec/hadoop-config.sh	2021-04-27 12:15:03.869389894 +0200
+@@ -248,8 +248,8 @@
+ # setup a default TOOL_PATH
+ TOOL_PATH="${TOOL_PATH:-$HADOOP_PREFIX/share/hadoop/tools/lib/*}"
+ 
+-HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.log.dir=$HADOOP_LOG_DIR"
+-HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.log.file=$HADOOP_LOGFILE"
++HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.log.dir=$(printf '%q' $HADOOP_LOG_DIR)"
++HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.log.file=$(printf '%q' $HADOOP_LOGFILE)"
+ 
+ if [ "$cygwin" = true ]; then
+   HADOOP_HOME=$(cygpath -w "$HADOOP_PREFIX" 2>/dev/null)
+diff -Naur a/sbin/hadoop-daemon.sh b/sbin/hadoop-daemon.sh
+--- a/sbin/hadoop-daemon.sh	2018-11-13 16:15:09.000000000 +0100
++++ b/sbin/hadoop-daemon.sh	2021-04-26 18:06:52.653238000 +0200
+@@ -81,16 +81,16 @@
+ 
+ # Determine if we're starting a secure datanode, and if so, redefine appropriate variables
+ if [ "$command" == "datanode" ] && [ "$EUID" -eq 0 ] && [ -n "$HADOOP_SECURE_DN_USER" ]; then
+-  export HADOOP_PID_DIR=$HADOOP_SECURE_DN_PID_DIR
+-  export HADOOP_LOG_DIR=$HADOOP_SECURE_DN_LOG_DIR
++  export HADOOP_PID_DIR="$HADOOP_SECURE_DN_PID_DIR"
++  export HADOOP_LOG_DIR="$HADOOP_SECURE_DN_LOG_DIR"
+   export HADOOP_IDENT_STRING=$HADOOP_SECURE_DN_USER
+   starting_secure_dn="true"
+ fi
+ 
+ #Determine if we're starting a privileged NFS, if so, redefine the appropriate variables
+ if [ "$command" == "nfs3" ] && [ "$EUID" -eq 0 ] && [ -n "$HADOOP_PRIVILEGED_NFS_USER" ]; then
+-    export HADOOP_PID_DIR=$HADOOP_PRIVILEGED_NFS_PID_DIR
+-    export HADOOP_LOG_DIR=$HADOOP_PRIVILEGED_NFS_LOG_DIR
++    export HADOOP_PID_DIR="$HADOOP_PRIVILEGED_NFS_PID_DIR"
++    export HADOOP_LOG_DIR="$HADOOP_PRIVILEGED_NFS_LOG_DIR"
+     export HADOOP_IDENT_STRING=$HADOOP_PRIVILEGED_NFS_USER
+     starting_privileged_nfs="true"
+ fi
+@@ -107,7 +107,7 @@
+ 
+ if [ ! -w "$HADOOP_LOG_DIR" ] ; then
+   mkdir -p "$HADOOP_LOG_DIR"
+-  chown $HADOOP_IDENT_STRING $HADOOP_LOG_DIR
++  chown $HADOOP_IDENT_STRING "$HADOOP_LOG_DIR"
+ fi
+ 
+ if [ "$HADOOP_PID_DIR" = "" ]; then
+@@ -119,8 +119,8 @@
+ export HADOOP_ROOT_LOGGER=${HADOOP_ROOT_LOGGER:-"INFO,RFA"}
+ export HADOOP_SECURITY_LOGGER=${HADOOP_SECURITY_LOGGER:-"INFO,RFAS"}
+ export HDFS_AUDIT_LOGGER=${HDFS_AUDIT_LOGGER:-"INFO,NullAppender"}
+-log=$HADOOP_LOG_DIR/hadoop-$HADOOP_IDENT_STRING-$command-$HOSTNAME.out
+-pid=$HADOOP_PID_DIR/hadoop-$HADOOP_IDENT_STRING-$command.pid
++log="$HADOOP_LOG_DIR/hadoop-$HADOOP_IDENT_STRING-$command-$HOSTNAME.out"
++pid="$HADOOP_PID_DIR/hadoop-$HADOOP_IDENT_STRING-$command.pid"
+ HADOOP_STOP_TIMEOUT=${HADOOP_STOP_TIMEOUT:-5}
+ 
+ # Set default scheduling priority
+@@ -134,9 +134,9 @@
+ 
+     [ -w "$HADOOP_PID_DIR" ] ||  mkdir -p "$HADOOP_PID_DIR"
+ 
+-    if [ -f $pid ]; then
+-      if kill -0 `cat $pid` > /dev/null 2>&1; then
+-        echo $command running as process `cat $pid`.  Stop it first.
++    if [ -f "$pid" ]; then
++      if kill -0 `cat "$pid"` > /dev/null 2>&1; then
++        echo $command running as process `cat "$pid"`.  Stop it first.
+         exit 1
+       fi
+     fi
+@@ -146,7 +146,7 @@
+       rsync -a -e ssh --delete --exclude=.svn --exclude='logs/*' --exclude='contrib/hod/logs/*' $HADOOP_MASTER/ "$HADOOP_PREFIX"
+     fi
+ 
+-    hadoop_rotate_log $log
++    hadoop_rotate_log "$log"
+     echo starting $command, logging to $log
+     cd "$HADOOP_PREFIX"
+     case $command in
+@@ -156,26 +156,26 @@
+         else
+           hdfsScript="$HADOOP_HDFS_HOME"/bin/hdfs
+         fi
+-        nohup nice -n $HADOOP_NICENESS $hdfsScript --config $HADOOP_CONF_DIR $command "$@" >> "$log" 2>&1 < /dev/null &
++        nohup nice -n $HADOOP_NICENESS "$hdfsScript" --config "$HADOOP_CONF_DIR" $command "$@" >> "$log" 2>&1 < /dev/null &
+       ;;
+       (*)
+-        nohup nice -n $HADOOP_NICENESS $hadoopScript --config $HADOOP_CONF_DIR $command "$@" >> "$log" 2>&1 < /dev/null &
++        nohup nice -n $HADOOP_NICENESS "$hadoopScript" --config "$HADOOP_CONF_DIR" $command "$@" >> "$log" 2>&1 < /dev/null &
+       ;;
+     esac
+-    echo $! > $pid
++    echo $! > "$pid"
+     sleep 1
+     head "$log"
+     # capture the ulimit output
+     if [ "true" = "$starting_secure_dn" ]; then
+-      echo "ulimit -a for secure datanode user $HADOOP_SECURE_DN_USER" >> $log
++      echo "ulimit -a for secure datanode user $HADOOP_SECURE_DN_USER" >> "$log"
+       # capture the ulimit info for the appropriate user
+-      su --shell=/bin/bash $HADOOP_SECURE_DN_USER -c 'ulimit -a' >> $log 2>&1
++      su --shell=/bin/bash $HADOOP_SECURE_DN_USER -c 'ulimit -a' >> "$log" 2>&1
+     elif [ "true" = "$starting_privileged_nfs" ]; then
+-        echo "ulimit -a for privileged nfs user $HADOOP_PRIVILEGED_NFS_USER" >> $log
+-        su --shell=/bin/bash $HADOOP_PRIVILEGED_NFS_USER -c 'ulimit -a' >> $log 2>&1
++        echo "ulimit -a for privileged nfs user $HADOOP_PRIVILEGED_NFS_USER" >> "$log"
++        su --shell=/bin/bash $HADOOP_PRIVILEGED_NFS_USER -c 'ulimit -a' >> "$log" 2>&1
+     else
+-      echo "ulimit -a for user $USER" >> $log
+-      ulimit -a >> $log 2>&1
++      echo "ulimit -a for user $USER" >> "$log"
++      ulimit -a >> "$log" 2>&1
+     fi
+     sleep 3;
+     if ! ps -p $! > /dev/null ; then
+@@ -185,8 +185,8 @@
+           
+   (stop)
+ 
+-    if [ -f $pid ]; then
+-      TARGET_PID=`cat $pid`
++    if [ -f "$pid" ]; then
++      TARGET_PID=`cat "$pid"`
+       if kill -0 $TARGET_PID > /dev/null 2>&1; then
+         echo stopping $command
+         kill $TARGET_PID
+@@ -198,7 +198,7 @@
+       else
+         echo no $command to stop
+       fi
+-      rm -f $pid
++      rm -f "$pid"
+     else
+       echo no $command to stop
+     fi
