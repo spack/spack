@@ -10,7 +10,10 @@ import pytest
 
 from llnl.util.symlink import resolve_link_target_relative_to_the_link
 
+import spack.caches
+import spack.fetch_strategy
 import spack.mirror
+import spack.patch
 import spack.repo
 import spack.util.executable
 import spack.util.spack_json as sjson
@@ -273,7 +276,7 @@ def test_mirror_cache_symlinks(tmpdir):
     cosmetic_path = "zlib/zlib-1.2.11.tar.gz"
     global_path = "_source-cache/archive/c3/c3e5.tar.gz"
     cache = spack.caches.MirrorCache(str(tmpdir), False)
-    reference = spack.mirror.MirrorReference(cosmetic_path, global_path)
+    reference = spack.mirror.DefaultLayout(cosmetic_path, global_path)
 
     cache.store(MockFetcher(), reference.storage_path)
     cache.symlink(reference)
