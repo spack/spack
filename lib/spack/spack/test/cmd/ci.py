@@ -272,7 +272,7 @@ spack:
   specs:
     - archive-files
   mirrors:
-    some-mirror: {tmp_path / 'ci-mirror'}
+    some-mirror: {tmp_path / "ci-mirror"}
   ci:
     enable-artifacts-buildcache: True
     pipeline-gen:
@@ -285,7 +285,7 @@ spack:
           image: donotcare
   cdash:
     build-group: Not important
-    url: https://my.fake.cdash
+    url: {(tmp_path / "cdash").as_uri()}
     project: Not used
     site: Nothing
 """
