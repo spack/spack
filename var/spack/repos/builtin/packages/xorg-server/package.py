@@ -19,6 +19,9 @@ class XorgServer(AutotoolsPackage, XorgPackage):
         "1.18.99.901", sha256="c8425163b588de2ee7e5c8e65b0749f2710f55a7e02a8d1dc83b3630868ceb21"
     )
 
+    variant("glx", default=True, description="Build GLX extension")
+    variant("dri", default=True, description="Build DRI, DRI2, DRI3 extensions")
+
     # glibc stopped declaring major()/minor() macros in <sys/types.h>
     # https://gitlab.freedesktop.org/xorg/xserver/-/commit/d732c36597fab2e9bc4f2aa72cf1110997697557
     patch("sysmacros.patch", when="@:1.18 ^glibc@2.25:")
@@ -38,11 +41,14 @@ class XorgServer(AutotoolsPackage, XorgPackage):
     depends_on("libdrm@2.3.0:")
     depends_on("libx11")
 
-    depends_on("gl")
+    depends_on("gl", when="+dri")
+    depends_on("gl", when="+glx")
 
-    depends_on("dri2proto@2.8:", type="build")
-    depends_on("dri3proto@1.0:", type="build")
-    depends_on("glproto@1.4.17:", type="build")
+    depends_on("xf86driproto@2.1.0:", type="build", when="+dri")
+    depends_on("dri2proto@2.8:", type="build", when="+dri")
+    depends_on("dri3proto@1.0:", type="build", when="+dri")
+    depends_on("glproto@1.4.17:", type="build", when="+dri")
+    depends_on("glproto@1.4.17:", type="build", when="+glx")
 
     depends_on("flex", type="build")
     depends_on("bison", type="build")
@@ -66,7 +72,6 @@ class XorgServer(AutotoolsPackage, XorgPackage):
     depends_on("recordproto@1.13.99.1:", type="build")
     depends_on("scrnsaverproto@1.1:", type="build")
     depends_on("resourceproto@1.2.0:", type="build")
-    depends_on("xf86driproto@2.1.0:", type="build")
     depends_on("glproto@1.4.17:", type="build")
     depends_on("presentproto@1.0:", type="build")
     depends_on("xineramaproto", type="build")
@@ -88,6 +93,20 @@ class XorgServer(AutotoolsPackage, XorgPackage):
 
     def configure_args(self):
         args = []
+
+        if self.spec.satisfies("+glx ^[virtuals=gl] osmesa"):
+            args.append("--enable-glx")
+        else:
+            args.append("--disable-glx")
+            
+        if self.spec.satisfies("+dri"):
+            args.append("--enable-dri")
+            args.append("--enable-dri2")
+            args.append("--enable-dri3")
+        else:
+            args.append("--disable-dri")
+            args.append("--disable-dri2")
+            args.append("--disable-dri3")
 
         if self.spec.satisfies("^[virtuals=gl] osmesa"):
             args.append("--enable-glx")
