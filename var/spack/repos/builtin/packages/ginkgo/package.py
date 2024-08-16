@@ -120,6 +120,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     # Add missing include statement
     patch("thrust-count-header.patch", when="+rocm @1.5.0")
 
+    # Correctly find rocthrust through CMake
+    patch("find_rocthrust.patch", when="+rocm @1.8.0")
+
     def setup_build_environment(self, env):
         spec = self.spec
         if "+sycl" in spec:

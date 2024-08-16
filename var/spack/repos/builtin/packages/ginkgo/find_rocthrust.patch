@@ -1,0 +1,23 @@
+diff --git a/cmake/hip.cmake b/cmake/hip.cmake
+--- a/cmake/hip.cmake	(revision 586b1754058d7a32d4bd1b650f9603484c2a8927)
++++ b/cmake/hip.cmake	(date 1723623505588)
+@@ -123,6 +123,7 @@
+ find_package(hipsparse REQUIRED)
+ # At the moment, for hiprand to work also rocrand is required.
+ find_package(rocrand REQUIRED)
++find_package(rocthrust REQUIRED)
+ find_package(ROCTX)
+
+ if(GINKGO_HIP_AMD_UNSAFE_ATOMIC AND GINKGO_HIP_VERSION VERSION_GREATER_EQUAL 5)
+diff --git a/hip/CMakeLists.txt b/hip/CMakeLists.txt
+--- a/hip/CMakeLists.txt	(revision 586b1754058d7a32d4bd1b650f9603484c2a8927)
++++ b/hip/CMakeLists.txt	(date 1723623505675)
+@@ -122,7 +122,7 @@
+ target_compile_definitions(ginkgo_hip PRIVATE GKO_COMPILING_HIP)
+
+ target_link_libraries(ginkgo_hip PUBLIC ginkgo_device)
+-target_link_libraries(ginkgo_hip PRIVATE hip::host roc::hipblas roc::hipsparse hip::hiprand roc::rocrand)
++target_link_libraries(ginkgo_hip PRIVATE hip::host roc::hipblas roc::hipsparse hip::hiprand roc::rocrand roc::rocthrust)
+ if (hipfft_FOUND)
+     target_link_libraries(ginkgo_hip PRIVATE hip::hipfft)
+ endif()
