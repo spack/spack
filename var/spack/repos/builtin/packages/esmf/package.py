@@ -167,7 +167,7 @@ class Esmf(MakefilePackage, PythonExtension):
         # However, this results in a version of 0.0.0 and a mismatch with the loaded version
         # so this hardcodes it to match the library's version
         filter_file(
-            """dynamic = \\[ "version" \\]""",
+            """dynamic = \\[\\s+"version"\\s+\\]""",
             f"""version = "{self.version}" """,
             os.path.join("src/addon/esmpy/pyproject.toml"),
         )
