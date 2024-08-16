@@ -121,12 +121,40 @@ class Y4(Package):
 )
 
 
+_pkgz1 = (
+    "z1",
+    """\
+class Z1(Package):
+    version("1.2")
+    version("1.1")
+
+    variant("v1", default=True)
+
+    depends_on("z2")
+    depends_on("z2@:2.0+v2", when="~v1")
+""",
+)
+
+
+_pkgz2 = (
+    "z2",
+    """\
+class Z2(Package):
+    version("2.1")
+    version("2.0")
+
+    variant("v2", default=True, when="@2.1:")
+""",
+)
+
+
 @pytest.fixture
 def _create_test_repo(tmpdir, mutable_config):
     yield create_test_repo(
         tmpdir,
         [_pkgx1, _pkgx2, _pkgx3, _pkgx4,
          _pkgy1, _pkgy2, _pkgy3, _pkgy4,
+         _pkgz1, _pkgz2,
         ]
     )
 
@@ -154,3 +182,10 @@ def test_diamond_with_pkg_conflict2(concretize_scope, test_repo):
 # This error message is not so great
 def test_version_range_null(concretize_scope, test_repo):
     Spec("x2@3:4").concretized()
+
+
+# Pretty good error message (at the end)
+def test_null_variant_for_requested_version(concretize_scope, test_repo):
+    Spec("z1").concretized()
+    Spec("z1+v1").concretized()
+    Spec("z1~v1").concretized()
