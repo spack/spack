@@ -216,7 +216,7 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     xsdk_depends_on("dealii ~trilinos", when="~trilinos +dealii")
     xsdk_depends_on(
         "dealii@master~assimp~python~doc~gmsh+petsc+slepc+mpi~int64"
-        + "~netcdf+metis+sundials~ginkgo~symengine~nanoflann~simplex~arborx~cgal~oce",
+        + "~netcdf+metis+sundials~ginkgo~symengine~simplex~arborx~cgal~oce",
         when="@develop +dealii",
     )
     xsdk_depends_on(
@@ -232,6 +232,7 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     xsdk_depends_on(
         "dealii@9.3.2~assimp~python~doc~gmsh+petsc+slepc+mpi~int64+hdf5"
         + "~netcdf+metis~sundials~ginkgo~symengine~simplex~arborx",
+        + " cxxstd=14",
         when="@0.7.0 +dealii",
     )
 
