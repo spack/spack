@@ -171,7 +171,7 @@ class LinkParser(HTMLParser):
             try:
                 links_str = next(val for key, val in attrs if key == "data-download-links")
                 links = json.loads(links_str)
-                self.links.extend([x["path"] for x in links])
+                self.links.extend(x["path"] for x in links)
             except Exception:
                 pass
 
