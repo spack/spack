@@ -409,8 +409,9 @@ class Stage(LockableStagingDir):
         # self.fetcher can change with mirrors.
         self.default_fetcher = self.fetcher
         self.search_fn = search_fn
-        # If we fetch from a URL, but the original data is from git, we can currently not prove
-        # that they are equal. This bool is used to skip verification and instead warn the user.
+        # If we fetch from a mirror, but the original data is from say git, we can currently not
+        # prove that they are equal (we don't even have a tree hash in package.py). This bool is
+        # used to skip checksum verification and instead warn the user.
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
             self.skip_checksum_for_mirror = not bool(self.default_fetcher.digest)
         else:
