@@ -200,7 +200,10 @@ def test_version_range_null(concretize_scope, test_repo):
     Spec("x2@3:4").concretized()
 
 
-# This error message is hard to follow
+# This error message is hard to follow: neither z2 or z3
+# are mentioned, so if this hierarchy had 10 other "OK"
+# packages, a user would be conducting a tedious manual
+# search
 def test_null_variant_for_requested_version(concretize_scope, test_repo):
     Spec("z1").concretized()
     Spec("z1@1.1").concretized()
