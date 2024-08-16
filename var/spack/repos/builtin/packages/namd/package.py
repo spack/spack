@@ -78,6 +78,11 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
     variant("avxtiles", when="target=x86_64_v4:", default=False, description="Enable avxtiles")
     variant("single_node_gpu", default=False, description="Single node GPU")
 
+    # Adding memopt variant to build memory-optimized mode that utilizes a compressed
+    # version of the molecular structure and also supports parallel I/O.
+    # Refer: https://www.ks.uiuc.edu/Research/namd/wiki/index.cgi?NamdMemoryReduction
+    variant("memopt", default=False, description="Enable memory-optimized build")
+
     # init_tcl_pointers() declaration and implementation are inconsistent
     # "src/colvarproxy_namd.C", line 482: error: inherited member is not
     # allowed
@@ -106,7 +111,7 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+cuda", msg="NAMD supports only one GPU backend at a time")
     conflicts("+single_node_gpu", when="~cuda~rocm")
     conflicts("+avxtiles", when="@:2.14", msg="AVXTiles algorithm requires NAMD 2.15+")
-    conflicts("+memopt", when="@:2.8", msg="NAMD 2.8+ supports memopt mode")
+    conflicts("+memopt", when="@:2.8", msg="memopt mode requires NAMD 2.8+")
 
     # https://www.ks.uiuc.edu/Research/namd/2.12/features.html
     # https://www.ks.uiuc.edu/Research/namd/2.13/features.html
@@ -304,6 +309,9 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
 
             if "+single_node_gpu" in spec:
                 opts.extend(["--with-single-node-hip"])
+
+        if "+memopt" in spec:
+            opts.append("--with-memopt")
 
         config = Executable("./config")
 
