@@ -37,19 +37,6 @@ class Dealii(CMakePackage, CudaPackage):
     version("9.3.2", sha256="5341d76bfd75d3402fc6907a875513efb5fe8a8b99af688d94443c492d5713e8")
     version("9.3.1", sha256="a62f4676ab2dc029892251d141427fb75cbb83cddd606019f615d0dde9c61ab8")
     version("9.3.0", sha256="aef8c7a87510ce827dfae3bdd4ed7bff82004dc09f96fa7a65b2554f2839b931")
-    version("9.2.0", sha256="d05a82fb40f1f1e24407451814b5a6004e39366a44c81208b1ae9d65f3efa43a")
-    version("9.1.1", sha256="fc5b483f7fe58dfeb52d05054011280f115498e337af3e085bf272fd1fd81276")
-    version("9.1.0", sha256="5b070112403f8afbb72345c1bb24d2a38d11ce58891217e353aab97957a04600")
-    version("9.0.1", sha256="df2f0d666f2224be07e3741c0e8e02132fd67ea4579cd16a2429f7416146ee64")
-    version("9.0.0", sha256="c918dc5c1a31d62f6eea7b524dcc81c6d00b3c378d4ed6965a708ab548944f08")
-    version("8.5.1", sha256="d33e812c21a51f7e5e3d3e6af86aec343155650b611d61c1891fbc3cabce09ae")
-    version("8.5.0", sha256="e6913ff6f184d16bc2598c1ba31f879535b72b6dff043e15aef048043ff1d779")
-    version("8.4.2", sha256="ec7c00fadc9d298d1a0d16c08fb26818868410a9622c59ba624096872f3058e4")
-    version("8.4.1", sha256="00a0e92d069cdafd216816f1aff460f7dbd48744b0d9e0da193287ebf7d6b3ad")
-    version("8.4.0", sha256="36a20e097a03f17b557e11aad1400af8c6252d25f7feca40b611d5fc16d71990")
-    version("8.3.0", sha256="4ddf72632eb501e1c814e299f32fc04fd680d6fda9daff58be4209e400e41779")
-    version("8.2.1", sha256="d75674e45fe63cd9fa294460fe45228904d51a68f744dbb99cd7b60720f3b2a0")
-    version("8.1.0", sha256="d666bbda2a17b41b80221d7029468246f2658051b8c00d9c5907cd6434c4df99")
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -64,18 +51,19 @@ class Dealii(CMakePackage, CudaPackage):
     )
     variant(
         "cxxstd",
-        default="default",
+        default="14",
+        when="@9.3:9.5",
         multi=False,
         description="Compile using the specified C++ standard",
-        values=("default", "11", "14", "17"),
+        values=("default", "14", "17"),
     )
     variant(
         "cxxstd",
         default="17",
-        when="@9.4:",
+        when="@9.6:",
         multi=False,
         description="Compile using the specified C++ standard",
-        values=("default", "11", "14", "17"),
+        values=("default", "17"),
     )
     variant("doc", default=False, description="Compile with documentation")
     variant("examples", default=True, description="Compile and install tutorial programs")
@@ -98,7 +86,6 @@ class Dealii(CMakePackage, CudaPackage):
     variant("kokkos", default=True, when="@9.5:", description="Compile with Kokkos")
     variant("metis", default=True, description="Compile with Metis")
     variant("muparser", default=True, description="Compile with muParser")
-    variant("nanoflann", default=False, description="Compile with Nanoflann")
     variant("netcdf", default=False, description="Compile with Netcdf (only with MPI)")
     variant("oce", default=True, description="Compile with OCE")
     variant("p4est", default=True, description="Compile with P4est (only with MPI)")
@@ -110,7 +97,7 @@ class Dealii(CMakePackage, CudaPackage):
     variant("simplex", default=True, description="Compile with Simplex support")
     variant(
         "taskflow",
-        default=True,
+        default=False,
         when="@9.6:",
         description="Compile with multi-threading via Taskflow",
     )
@@ -147,15 +134,11 @@ class Dealii(CMakePackage, CudaPackage):
         ],
         when="+python",
     )
-    # boost@1.77.0 triggers build errors in dealii@9.3.1
-    depends_on("boost@:1.76", when="@:9.3")
     # The std::auto_ptr is removed in the C++ 17 standard.
     # See https://github.com/dealii/dealii/issues/4662
     # and related topics discussed for other software libraries.
-    depends_on("boost cxxstd=11", when="cxxstd=11")
     depends_on("boost cxxstd=14", when="cxxstd=14")
     depends_on("boost cxxstd=17", when="cxxstd=17")
-    depends_on("bzip2", when="@:8")
 
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')
@@ -168,9 +151,9 @@ class Dealii(CMakePackage, CudaPackage):
     # Optional dependencies: Configuration
     depends_on("cuda@8:", when="+cuda")
     depends_on("cmake@3.9:", when="+cuda", type="build")
-    # Older version of deal.II do not build with Cmake 3.10, see
-    # https://github.com/dealii/dealii/issues/5510
-    depends_on("cmake@:3.9", when="@:8", type="build")
+    depends_on("cmake@3.1.0:", when="@9.3:9.4", type="build")
+    depends_on("cmake@3.3.0:", when="@9.4:9.5", type="build")
+    depends_on("cmake@3.13.4:", when="@9.5:", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("python", when="@8.5.0:+python")
 
@@ -198,8 +181,6 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("metis@5:+int64", when="+metis+int64")
     depends_on("metis@5:~int64", when="+metis~int64")
     depends_on("muparser", when="+muparser")
-    # Nanoflann support has been removed after 9.2.0
-    depends_on("nanoflann", when="@9.0:9.2+nanoflann")
     depends_on("netcdf-c+mpi", when="+netcdf+mpi")
     depends_on("netcdf-cxx", when="+netcdf+mpi")
     depends_on("oce", when="+oce")
@@ -241,37 +222,6 @@ class Dealii(CMakePackage, CudaPackage):
         trilinos_spec = f"trilinos +wrapper {arch_str}"
         depends_on(trilinos_spec, when=f"@9.5:+trilinos {arch_str}")
     depends_on("vtk", when="@9.6:+vtk")
-
-    # Explicitly provide a destructor in BlockVector,
-    # otherwise deal.II may fail to build with Intel compilers.
-    patch(
-        "https://github.com/dealii/dealii/commit/a89d90f9993ee9ad39e492af466b3595c06c3e25.patch?full_index=1",
-        sha256="72304bc6c3fb4549cf53ed533a00311d12827d48817e2038efd3a8ef6c43d149",
-        when="@9.0.1",
-    )
-
-    # https://github.com/dealii/dealii/pull/7935
-    patch(
-        "https://github.com/dealii/dealii/commit/f8de8c5c28c715717bf8a086e94f071e0fe9deab.patch?full_index=1",
-        sha256="4aba56b01d816ca950b1625f436840df253f145650e3a3eba51e7f2696ec7dc0",
-        when="@9.0.1 ^boost@1.70.0:",
-    )
-
-    # Fix TBB version check
-    # https://github.com/dealii/dealii/pull/9208
-    patch(
-        "https://github.com/dealii/dealii/commit/80b13fe5a2eaefc77fa8c9266566fa8a2de91edf.patch?full_index=1",
-        sha256="3da530766050a0cea80106684347055bdb78528a1869ce99e8fbf8fc83074fd0",
-        when="@9.0.0:9.1.1",
-    )
-
-    # Explicitly include a boost header, otherwise deal.II fails to compile
-    # https://github.com/dealii/dealii/pull/11438
-    patch(
-        "https://github.com/dealii/dealii/commit/3b815e21c4bfd82c792ba80e4d90314c8bb9edc9.patch?full_index=1",
-        sha256="90ae9ddefe77fffd297bba6b070ab68d07306d4ef525ee994e8c49cef68f76f3",
-        when="@9.2.0 ^boost@1.72.0:",
-    )
 
     # Fix issues due to override of CMake FIND_PACKAGE macro
     # https://github.com/dealii/dealii/pull/14158/files
@@ -315,50 +265,10 @@ class Dealii(CMakePackage, CudaPackage):
     conflicts(
         "cxxstd=14",
         when="@9.6:",
-        msg="Deal.II 9.6 onwards requires the C++ standard to be set to 17 or later.",
+        msg="deal.II 9.6 onwards requires the C++ standard to be set to 17 or later.",
     )
 
-    # Interfaces added in 8.5.0:
-    for _package in ["gsl", "python"]:
-        conflicts(
-            "+{0}".format(_package),
-            when="@:8.4.2",
-            msg="The interface to {0} is supported from version 8.5.0 "
-            "onwards. Please explicitly disable this variant "
-            "via ~{0}".format(_package),
-        )
-
-    # Interfaces added in 9.0.0:
-    for _package in ["assimp", "gmsh", "nanoflann", "scalapack", "sundials", "adol-c"]:
-        conflicts(
-            "+{0}".format(_package),
-            when="@:8.5.1",
-            msg="The interface to {0} is supported from version 9.0.0 "
-            "onwards. Please explicitly disable this variant "
-            "via ~{0}".format(_package),
-        )
-
-    # interfaces added in 9.1.0:
-    for _package in ["ginkgo", "symengine"]:
-        conflicts(
-            "+{0}".format(_package),
-            when="@:9.0",
-            msg="The interface to {0} is supported from version 9.1.0 "
-            "onwards. Please explicitly disable this variant "
-            "via ~{0}".format(_package),
-        )
-
-    # interfaces added in 9.3.0:
-    for _package in ["simplex", "arborx"]:
-        conflicts(
-            "+{0}".format(_package),
-            when="@:9.2",
-            msg="The interface to {0} is supported from version 9.3.0 "
-            "onwards. Please explicitly disable this variant "
-            "via ~{0}".format(_package),
-        )
-
-    # interfaces added after 9.5.0:
+    # Interfaces added after 9.5.0:
     for _package in ["vtk", "taskflow"]:
         conflicts(
             "+{0}".format(_package),
@@ -366,23 +276,6 @@ class Dealii(CMakePackage, CudaPackage):
             msg="The interface to {0} is supported from version 9.6.0 "
             "onwards. Please explicitly disable this variant "
             "via ~{0}".format(_package),
-        )
-
-    # Interfaces removed in 9.3.0:
-    conflicts(
-        "+nanoflann",
-        when="@9.3.0:",
-        msg="The interface to Nanoflann was removed from version 9.3.0. "
-        "Please explicitly disable this variant via ~nanoflann",
-    )
-
-    # Check that the combination of variants makes sense
-    # 64-bit BLAS:
-    for _package in ["openblas", "intel-mkl", "intel-parallel-studio+mkl"]:
-        conflicts(
-            "^{0}+ilp64".format(_package),
-            when="@:8.5.1",
-            msg="64bit BLAS is only supported from 9.0.0",
         )
 
     # MPI requirements:
@@ -431,16 +324,13 @@ class Dealii(CMakePackage, CudaPackage):
         cxx_flags = []
 
         # Set directory structure:
-        if spec.satisfies("@:8.2.1"):
-            options.append(self.define("DEAL_II_COMPONENT_COMPAT_FILES", False))
-        else:
-            options.extend(
-                [
-                    self.define("DEAL_II_EXAMPLES_RELDIR", "share/deal.II/examples"),
-                    self.define("DEAL_II_DOCREADME_RELDIR", "share/deal.II/"),
-                    self.define("DEAL_II_DOCHTML_RELDIR", "share/deal.II/doc"),
-                ]
-            )
+        options.extend(
+            [
+                self.define("DEAL_II_EXAMPLES_RELDIR", "share/deal.II/examples"),
+                self.define("DEAL_II_DOCREADME_RELDIR", "share/deal.II/"),
+                self.define("DEAL_II_DOCHTML_RELDIR", "share/deal.II/doc"),
+            ]
+        )
 
         # Required dependencies
         lapack_blas_libs = spec["lapack"].libs + spec["blas"].libs
@@ -459,16 +349,6 @@ class Dealii(CMakePackage, CudaPackage):
                 self.define("DEAL_II_ALLOW_BUNDLED", False),
             ]
         )
-
-        if spec.satisfies("@:8"):
-            options.extend(
-                [
-                    # Cmake may still pick up system's bzip2, fix this:
-                    self.define("BZIP2_FOUND", True),
-                    self.define("BZIP2_INCLUDE_DIRS", spec["bzip2"].prefix.include),
-                    self.define("BZIP2_LIBRARIES", spec["bzip2"].libs.joined(";")),
-                ]
-            )
 
         # Doxygen documentation
         options.append(self.define_from_variant("DEAL_II_COMPONENT_DOCUMENTATION", "doc"))
@@ -545,18 +425,13 @@ class Dealii(CMakePackage, CudaPackage):
                 options.extend([self.define("CMAKE_CXX_COMPILER", spec["trilinos"].kokkos_cxx)])
 
         # Python bindings
-        if spec.satisfies("@8.5.0:"):
-            options.append(self.define_from_variant("DEAL_II_COMPONENT_PYTHON_BINDINGS", "python"))
+        options.append(self.define_from_variant("DEAL_II_COMPONENT_PYTHON_BINDINGS", "python"))
 
         # Simplex support (no longer experimental)
-        if spec.satisfies("@9.3.0:9.4.0"):
-            options.append(self.define_from_variant("DEAL_II_WITH_SIMPLEX_SUPPORT", "simplex"))
+        options.append(self.define_from_variant("DEAL_II_WITH_SIMPLEX_SUPPORT", "simplex"))
 
         # Threading
-        if spec.satisfies("@9.3.0:"):
-            options.append(self.define_from_variant("DEAL_II_WITH_TBB", "threads"))
-        else:
-            options.append(self.define_from_variant("DEAL_II_WITH_THREADS", "threads"))
+        options.append(self.define_from_variant("DEAL_II_WITH_TBB", "threads"))
         if "+threads" in spec:
             if spec.satisfies("^intel-parallel-studio+tbb"):
                 # deal.II/cmake will have hard time picking up TBB from Intel.
