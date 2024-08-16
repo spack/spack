@@ -76,6 +76,7 @@ __all__ = [
     "build_system",
     "requires",
     "redistribute",
+    "can_splice",
 ]
 
 _patch_order_index = 0
@@ -502,6 +503,17 @@ def provides(*specs: SpecType, when: WhenType = None):
             provided_set.add(provided_spec)
 
     return _execute_provides
+
+
+@directive("splice_specs")
+def can_splice(spec: SpecType, when: WhenType = None, match_variants: Union[None, str, List[str]] = None):
+    def _execute_can_splice(pkg: "spack.package_base.PackageBase"):
+        when_spec = _make_when_spec(when)
+        if not when_spec:
+            return
+        pkg.splice_specs[when_spec] = (spack.spec.Spec(spec), match_variants)
+
+    return _execute_can_splice
 
 
 @directive("patches")

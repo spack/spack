@@ -1,0 +1,7 @@
+concretizer:
+  reuse: True
+  targets:
+    granularity: microarchitectures
+    host_compatible: false
+  duplicates:
+    strategy: minimal
