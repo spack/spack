@@ -16,6 +16,9 @@ class XorgServer(AutotoolsPackage, XorgPackage):
     license("MIT")
 
     version(
+        "1.18.99.902", sha256="fe5a312f7bdc6762c97f01b7a1d3c7a8691997255be6fbf7598c180abf384ea3"
+    )
+    version(
         "1.18.99.901", sha256="c8425163b588de2ee7e5c8e65b0749f2710f55a7e02a8d1dc83b3630868ceb21"
     )
 
