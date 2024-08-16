@@ -125,6 +125,11 @@ class Esmf(MakefilePackage, PythonExtension):
         depends_on("py-mpi4py", when="+mpi")
         depends_on("py-numpy")
 
+    # In esmf@8.4.0, esmx was introduced which depends on py-pyyaml
+    with when("@8.4.0:"):
+        depends_on("python", type="run")
+        depends_on("py-pyyaml", type="run")
+
     # Testing dependencies
     depends_on("perl", type="test")
 
