@@ -810,7 +810,7 @@ class Python(Package):
 
             # Ensure that ctypes module works on
             # linux/darwin unconditionally and on windows conditionally
-            if sys.platform != win32 or (sys.platform == win32 and "+ctypes" in spec):
+            if sys.platform != win32 or spec.satisfies("+ctypes"):
                 self.command("-c", "import ctypes")
 
             # Ensure that tkinter module works
