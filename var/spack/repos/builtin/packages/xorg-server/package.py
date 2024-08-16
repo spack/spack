@@ -75,7 +75,6 @@ class XorgServer(AutotoolsPackage, XorgPackage):
     depends_on("recordproto@1.13.99.1:", type="build")
     depends_on("scrnsaverproto@1.1:", type="build")
     depends_on("resourceproto@1.2.0:", type="build")
-    depends_on("glproto@1.4.17:", type="build")
     depends_on("presentproto@1.0:", type="build")
     depends_on("xineramaproto", type="build")
     depends_on("libxkbfile")
@@ -84,6 +83,7 @@ class XorgServer(AutotoolsPackage, XorgPackage):
     depends_on("libxdamage")
     depends_on("libxfixes")
     depends_on("libepoxy")
+    depends_on("libpciaccess")
 
     @when("@:1.19")
     def setup_build_environment(self, env):
@@ -106,10 +106,12 @@ class XorgServer(AutotoolsPackage, XorgPackage):
             args.append("--enable-dri")
             args.append("--enable-dri2")
             args.append("--enable-dri3")
+            args.append("--enable-drm")
         else:
             args.append("--disable-dri")
             args.append("--disable-dri2")
             args.append("--disable-dri3")
+            args.append("--disable-drm")
 
         if self.spec.satisfies("^[virtuals=gl] osmesa"):
             args.append("--enable-glx")
@@ -118,7 +120,6 @@ class XorgServer(AutotoolsPackage, XorgPackage):
 
         args.extend(
             [
-                "--disable-dri",  # dri >= 7.8.0
                 "--disable-glamor",  # Glamor for Xorg requires gbm >= 10.2.0
             ]
         )
