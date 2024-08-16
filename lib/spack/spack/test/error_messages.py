@@ -131,7 +131,11 @@ class Z1(Package):
     variant("v1", default=True)
 
     depends_on("z2")
-    depends_on("z2@:2.0+v2", when="~v1")
+
+    depends_on("z3")
+    depends_on("z3+v2", when="~v1")
+
+    conflicts("+v1", when="@:1.1")
 """,
 )
 
@@ -140,6 +144,18 @@ _pkgz2 = (
     "z2",
     """\
 class Z2(Package):
+    version("3.1")
+    version("3.0")
+
+    depends_on("z3@:2.0")
+""",
+)
+
+
+_pkgz3 = (
+    "z3",
+    """\
+class Z3(Package):
     version("2.1")
     version("2.0")
 
@@ -154,7 +170,7 @@ def _create_test_repo(tmpdir, mutable_config):
         tmpdir,
         [_pkgx1, _pkgx2, _pkgx3, _pkgx4,
          _pkgy1, _pkgy2, _pkgy3, _pkgy4,
-         _pkgz1, _pkgz2,
+         _pkgz1, _pkgz2, _pkgz3,
         ]
     )
 
@@ -187,5 +203,4 @@ def test_version_range_null(concretize_scope, test_repo):
 # Pretty good error message (at the end)
 def test_null_variant_for_requested_version(concretize_scope, test_repo):
     Spec("z1").concretized()
-    Spec("z1+v1").concretized()
-    Spec("z1~v1").concretized()
+    Spec("z1@1.1").concretized()
