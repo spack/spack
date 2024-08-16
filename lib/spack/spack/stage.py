@@ -352,8 +352,10 @@ class Stage(LockableStagingDir):
     def __init__(
         self,
         url_or_fetch_strategy,
+        *,
         name=None,
-        mirror_paths=None,
+        mirror_paths: Optional[spack.mirror.MirrorLayout] = None,
+        mirrors: Optional[Iterable[spack.mirror.Mirror]] = None,
         keep=False,
         path=None,
         lock=True,
@@ -413,6 +415,7 @@ class Stage(LockableStagingDir):
         self.srcdir = None
 
         self.mirror_paths = mirror_paths
+        self.mirrors = list(mirrors) if mirrors else []
 
     @property
     def expected_archive_files(self):
@@ -467,7 +470,7 @@ class Stage(LockableStagingDir):
         """The Stage will not attempt to look for the associated fetcher
         target in any of Spack's mirrors (including the local download cache).
         """
-        self.mirror_paths = []
+        self.mirror_paths = None
 
     def fetch(self, mirror_only=False, err_msg=None):
         """Retrieves the code or archive
@@ -481,49 +484,47 @@ class Stage(LockableStagingDir):
         if not mirror_only:
             fetchers.append(self.default_fetcher)
 
+        # If this archive is normally fetched from a URL, then use the same digest. `spack mirror`
+        # ensures that the checksum will be the same.
+        if isinstance(self.default_fetcher, fs.URLFetchStrategy):
+            digest = self.default_fetcher.digest
+            expand = self.default_fetcher.expand_archive
+            extension = self.default_fetcher.extension
+        else:
+            digest = None
+            expand = True
+            extension = None
+
         # TODO: move mirror logic out of here and clean it up!
         # TODO: Or @alalazo may have some ideas about how to use a
         # TODO: CompositeFetchStrategy here.
         self.skip_checksum_for_mirror = True
-        if self.mirror_paths:
-            # Join URLs of mirror roots with mirror paths. Because
-            # urljoin() will strip everything past the final '/' in
-            # the root, so we add a '/' if it is not present.
-            mirror_urls = [
-                url_util.join(mirror.fetch_url, rel_path)
-                for mirror in spack.mirror.MirrorCollection(source=True).values()
-                if not mirror.fetch_url.startswith("oci://")
-                for rel_path in self.mirror_paths
-            ]
-
-            # If this archive is normally fetched from a tarball URL,
-            # then use the same digest.  `spack mirror` ensures that
-            # the checksum will be the same.
-            digest = None
-            expand = True
-            extension = None
-            if isinstance(self.default_fetcher, fs.URLFetchStrategy):
-                digest = self.default_fetcher.digest
-                expand = self.default_fetcher.expand_archive
-                extension = self.default_fetcher.extension
-
+        if self.mirror_paths and self.mirrors:
             # Have to skip the checksum for things archived from
             # repositories.  How can this be made safer?
             self.skip_checksum_for_mirror = not bool(digest)
 
             # Add URL strategies for all the mirrors with the digest
             # Insert fetchers in the order that the URLs are provided.
-            for url in reversed(mirror_urls):
-                fetchers.insert(
-                    0, fs.from_url_scheme(url, digest, expand=expand, extension=extension)
+            fetchers[:0] = (
+                fs.from_url_scheme(
+                    url_util.join(mirror.fetch_url, rel_path),
+                    digest,
+                    expand=expand,
+                    extension=extension,
                 )
+                for mirror in self.mirrors
+                if not mirror.fetch_url.startswith("oci://")
+                for rel_path in self.mirror_paths
+            )
 
-            if self.default_fetcher.cachable:
-                for rel_path in reversed(list(self.mirror_paths)):
-                    cache_fetcher = spack.caches.FETCH_CACHE.fetcher(
-                        rel_path, digest, expand=expand, extension=extension
-                    )
-                    fetchers.insert(0, cache_fetcher)
+        if self.mirror_paths and self.default_fetcher.cachable:
+            fetchers[:0] = (
+                spack.caches.FETCH_CACHE.fetcher(
+                    rel_path, digest, expand=expand, extension=extension
+                )
+                for rel_path in self.mirror_paths
+            )
 
         def generate_fetchers():
             for fetcher in fetchers:
