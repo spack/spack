@@ -157,7 +157,7 @@ class ParallelNetcdf(AutotoolsPackage):
         cache_extra_test_sources(self, [self.examples_src_dir])
 
     def test_column_wise(self):
-        """Test column_wise executable"""
+        """build and run column_wise"""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
         # pnetcdf has many examples to serve as a suitable smoke check.
         # column_wise was chosen based on the E4S test suite. Other
@@ -173,9 +173,8 @@ class ParallelNetcdf(AutotoolsPackage):
         ]
 
         with working_dir(test_dir):
-
-            exe = which(self.spec["mpi"].prefix.bin.mpicxx)
-            exe(*options)
+            mpicxx = which(self.spec["mpi"].prefix.bin.mpicxx)
+            mpicxx(*options)
 
             mpiexe_list = [
                 "srun",
@@ -186,9 +185,10 @@ class ParallelNetcdf(AutotoolsPackage):
             for mpiexe in mpiexe_list:
                 tty.info(f"Attempting to build and launch with {os.path.basename(mpiexe)}")
                 try:
-                    args = ["--immediate=30"] if exe == "srun" else []
+                    args = ["--immediate=30"] if mpiexe == "srun" else []
+                    args += ["-n", "1", test_exe]
                     exe = which(mpiexe)
-                    exe("-n", "1", test_exe, args)
+                    exe(*args)
                     rm = which("rm")
                     rm("-f", "column_wise")
                     return
