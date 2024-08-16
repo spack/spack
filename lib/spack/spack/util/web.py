@@ -169,14 +169,13 @@ class LinkParser(HTMLParser):
         # GitLab uses a javascript function to place dropdown links:
         #  <div class="js-source-code-dropdown" ...
         #   data-download-links="[{"path":"/graphviz/graphviz/-/archive/12.0.0/graphviz-12.0.0.zip",...},...]"/>
-        if tag == "div":
-            if ("class", "js-source-code-dropdown") in attrs:
-                vals = [x[1] for x in attrs if x[0] == "data-download-links"]
-                for val in vals:
-                    data_download_links = json.loads(val)
-                    links = [x["path"] for x in data_download_links]
-                    for link in links:
-                        self.links.append(link)
+        if tag == "div" and ("class", "js-source-code-dropdown") in attrs:
+            vals = [x[1] for x in attrs if x[0] == "data-download-links"]
+            for val in vals:
+                data_download_links = json.loads(val)
+                links = [x["path"] for x in data_download_links]
+                for link in links:
+                    self.links.append(link)
 
 
 class ExtractMetadataParser(HTMLParser):
