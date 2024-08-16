@@ -139,13 +139,18 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
 
 # Error message is good
 def test_diamond_with_pkg_conflict1(concretize_scope, test_repo):
-    x = Spec("x2").concretized()
-    y = Spec("x3").concretized()
-    z = Spec("x4").concretized()
+    x2 = Spec("x2").concretized()
+    x3 = Spec("x3").concretized()
+    x4 = Spec("x4").concretized()
 
-    w = Spec("x1").concretized()
+    Spec("x1").concretized()
 
 
 # Error message is good (has some redundancy though)
-def test_diamond_with_pkg_conflict1(concretize_scope, test_repo):
-    w = Spec("y1").concretized()
+def test_diamond_with_pkg_conflict2(concretize_scope, test_repo):
+    Spec("y1").concretized()
+
+
+# This error message is not so great
+def test_version_range_null(concretize_scope, test_repo):
+    Spec("x2@3:4").concretized()
