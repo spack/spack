@@ -1272,7 +1272,7 @@ _spack_gpg_export() {
 _spack_gpg_publish() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url --rebuild-index"
+        SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url --update-index --rebuild-index"
     else
         _keys
     fi

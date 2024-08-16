@@ -37,6 +37,12 @@ class Migraphx(CMakePackage):
         version("5.3.3", sha256="91d91902bbedd5e1951a231e8e5c9a328360b128c731912ed17c8059df38e02a")
         version("5.3.0", sha256="d0b7283f42e03fb38b612868b8c94f46f27a6e0b019ae95fde5b9086582a1c69")
 
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
@@ -117,6 +123,15 @@ class Migraphx(CMakePackage):
             ver = None
         return ver
 
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+asan"):
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
+
     def cmake_args(self):
         spec = self.spec
         abspath = spec["abseil-cpp"].prefix.include
@@ -133,6 +148,12 @@ class Migraphx(CMakePackage):
             args.append(self.define("MIGRAPHX_USE_COMPOSABLEKERNEL", "OFF"))
             args.append(
                 self.define("GPU_TARGETS", "gfx906;gfx908;gfx90a;gfx1030;gfx1100;gfx1101;gfx1102")
+            )
+        if self.spec.satisfies("@6.1:") and self.spec.satisfies("+asan"):
+            args.append(
+                self.define(
+                    "CMAKE_CXX_FLAGS", "-fsanitize=address -shared-libasan -I{0}".format(abspath)
+                )
             )
         return args
 

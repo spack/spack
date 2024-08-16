@@ -495,7 +495,7 @@ class Legion(CMakePackage, ROCmPackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([join_path("examples", "local_function_tasks")])
+        cache_extra_test_sources(self, [join_path("examples", "local_function_tasks")])
 
     def test_run_local_function_tasks(self):
         """Build and run external application example"""
