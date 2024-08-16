@@ -103,9 +103,10 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
     depends_on("tcl", when="interface=python")
     depends_on("python", when="interface=python")
 
-    conflicts("+avxtiles", when="@:2.14,3:", msg="AVXTiles algorithm requires NAMD 2.15")
     conflicts("+rocm", when="+cuda", msg="NAMD supports only one GPU backend at a time")
     conflicts("+single_node_gpu", when="~cuda~rocm")
+    conflicts("+avxtiles", when="@:2.14", msg="AVXTiles algorithm requires NAMD 2.15+")
+    conflicts("+memopt", when="@:2.8", msg="memopt mode requires NAMD 2.8+")
 
     # https://www.ks.uiuc.edu/Research/namd/2.12/features.html
     # https://www.ks.uiuc.edu/Research/namd/2.13/features.html
