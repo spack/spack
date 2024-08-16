@@ -18,7 +18,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
-    maintainers("tcojean", "hartwiganzt")
+    maintainers("MarcelKoch", "hartwiganzt")
 
     tags = ["e4s"]
 
