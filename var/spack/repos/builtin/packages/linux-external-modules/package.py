@@ -319,65 +319,6 @@ class LinuxExternalModules(MakefilePackage):
     depends_on("binutils@2.25:", when="@6.2:")
     depends_on("binutils@2.23:", when="@6.0:6.2")
     
-    # depends_on("quota-tools@3.09:", when="@6.0:")
-
-    # depends_on("sphinx@1.7:", when="@6.0:6.8")
-    # depends_on("sphinx@2.4.4:", when="@6.8:")
-
-    # depends_on("xfsprogs@2.6.0:", when="@6.0:")
-    # depends_on("nfs-utils@1.0.5:", when="@6.0:")
-
-    # Note: pahole (poke-a-hole) is not in Spack. Pahole
-    # helps developers understand memory layouts, alignment
-    # and padding of complex data structures or code.
-    # depends_on("pahole@1.16:", when="@6.0:")
-
-    # Note: jfsutils is not in Spack. Jfsutils package
-    # contains administration and debugging tools for the
-    # jfs file system.
-    # depends_on("jfsutils@1.1.3:", when="@6.0:")
-    
-    # Note: reiserfsprogs is not in Spack. Reiserfsprogs
-    # is used to maintain a ReiserFS (Reiser v3) file system.
-    # depends_on("reiserfsprogs@3.6.3:", when="@6.0:")
-
-    # make into variant (ones that are dependent on what user wants)
-    # Note: squashfs-tools is not in Spack. Squashfs-tools is used to create
-    # and extract squashfs file systems.
-    # depends_on("squashfs-tools@4.0", when="@6.0:+squashfs")
-
-    # Note: btrfs-progs is not in Spack. Btrfs-progs contains administration
-    # and debugging tools for the B-tree file system (btrfs).
-    # depends_on("btrfs-progs@0.18:", when="@6.0:")
-
-    # Note: pcmciautils is not in Spack. Pcmciautils is only necessary if
-    # user has PC Card hardware.
-    # depends_on("pcmciautils@004:", when="@6.0:")
-
-    # Note: ppp is not in Spack. PPP implements the Point-to-Points Protocol
-    # (PPP) to provide Internet connections over serial lines and other
-    # point-to-point links.
-    # depends_on("PPP@2.4.0:", when="@6.0:")
-
-    # Note: udev is not in Spack. Udev is a device manager for the Linux kernel
-    # and is now a part of systemd. Running the Linux kernel 6 series assumes the user
-    # is already functionally running a Linux kernel, which has udev.
-    # depends_on("udev@081:", when="@6.0:")
-
-    # Note: grub is not in Spack. Grub, the GRand Unified
-    # Bootloader, is a multi-boot boot-loader. If the user is already
-    # functionally running a Linux kernel, they are assumed to have grub.
-    # depends_on("grub@0.93:", when="@6.0:")
-
-    # Note: mcelog is not in Spack. Mcelog mcelog logs and accounts machine checks (in
-    # particular memory, IO, and CPU hardware errors) on modern x86 Linux systems. 
-    # depends_on("mcelog@0.6:", when="@6.0:")
-
-    # Note: iptables is not in Spack. Iptables is the userspace command line
-    # program used to configure the Linux 2.4.x and later packet filtering
-    # ruleset. If the user is already functionally running a Linux kernel,
-    # they are assumed to have iptables.
-    # depends_on("iptables@1.4.2:", when="@6.0:")
 
     def setup_build_environment(self, env):
         env.set("KBUILD_OUTPUT", self.prefix)
