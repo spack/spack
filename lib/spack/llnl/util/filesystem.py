@@ -1625,9 +1625,11 @@ def remove_linked_tree(path):
             os.unlink(path)
         else:
             if sys.platform == "win32":
-                # Adds support for removing long paths on windows
+                # Adding this prefix allows shutil to remove long paths on windows
                 # https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry
-                path = "\\\\?\\" + path
+                long_path_pfx = "\\\\?\\"
+                if not path.startswith(long_path_pfx):
+                    path = long_path_pfx + path
             shutil.rmtree(path, **kwargs)
 
 
