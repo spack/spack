@@ -1190,7 +1190,6 @@ class Environment:
     def include_concrete_envs(self):
         """Copy and save the included envs' specs internally"""
 
-        lockfile_meta = None
         root_hash_seen = set()
         concrete_hash_seen = set()
         self.included_concrete_spec_data = {}
@@ -1201,37 +1200,26 @@ class Environment:
                 raise SpackEnvironmentError(f"Unable to find env at {env_path}")
 
             env = Environment(env_path)
-
-            with open(env.lock_path) as f:
-                lockfile_as_dict = env._read_lockfile(f)
-
-            # Lockfile_meta must match each env and use at least format version 5
-            if lockfile_meta is None:
-                lockfile_meta = lockfile_as_dict["_meta"]
-            elif lockfile_meta != lockfile_as_dict["_meta"]:
-                raise SpackEnvironmentError("All lockfile _meta values must match")
-            elif lockfile_meta["lockfile-version"] < 5:
-                raise SpackEnvironmentError("The lockfile format must be at version 5 or higher")
+            self.included_concrete_spec_data[env_path] = {"roots": [], "concrete_specs": {}}
 
             # Copy unique root specs from env
-            self.included_concrete_spec_data[env_path] = {"roots": []}
-            for root_dict in lockfile_as_dict["roots"]:
+            for root_dict in env._concrete_roots_dict():
                 if root_dict["hash"] not in root_hash_seen:
                     self.included_concrete_spec_data[env_path]["roots"].append(root_dict)
                     root_hash_seen.add(root_dict["hash"])
 
             # Copy unique concrete specs from env
-            for concrete_spec in lockfile_as_dict["concrete_specs"]:
-                if concrete_spec not in concrete_hash_seen:
-                    self.included_concrete_spec_data[env_path].update(
-                        {"concrete_specs": lockfile_as_dict["concrete_specs"]}
+            for dag_hash, spec_details in env._concrete_specs_dict().items():
+                if dag_hash not in concrete_hash_seen:
+                    self.included_concrete_spec_data[env_path]["concrete_specs"].update(
+                        {dag_hash: spec_details}
                     )
-                    concrete_hash_seen.add(concrete_spec)
+                    concrete_hash_seen.add(dag_hash)
 
-            if "include_concrete" in lockfile_as_dict.keys():
-                self.included_concrete_spec_data[env_path]["include_concrete"] = lockfile_as_dict[
-                    "include_concrete"
-                ]
+            # Copy transitive include data
+            transitive = env.included_concrete_spec_data
+            if transitive:
+                self.included_concrete_spec_data[env_path]["include_concrete"] = transitive
 
         self._read_lockfile_dict(self._to_lockfile_dict())
         self.write()
@@ -2144,16 +2132,23 @@ class Environment:
 
         return specs
 
-    def _to_lockfile_dict(self):
-        """Create a dictionary to store a lockfile for this environment."""
+    def _concrete_specs_dict(self):
         concrete_specs = {}
         for s in traverse.traverse_nodes(self.specs_by_hash.values(), key=traverse.by_dag_hash):
             spec_dict = s.node_dict_with_hashes(hash=ht.dag_hash)
             # Assumes no legacy formats, since this was just created.
             spec_dict[ht.dag_hash.name] = s.dag_hash()
             concrete_specs[s.dag_hash()] = spec_dict
+        return concrete_specs
 
+    def _concrete_roots_dict(self):
         hash_spec_list = zip(self.concretized_order, self.concretized_user_specs)
+        return [{"hash": h, "spec": str(s)} for h, s in hash_spec_list]
+
+    def _to_lockfile_dict(self):
+        """Create a dictionary to store a lockfile for this environment."""
+        concrete_specs = self._concrete_specs_dict()
+        root_specs = self._concrete_roots_dict()
 
         spack_dict = {"version": spack.spack_version}
         spack_commit = spack.main.get_spack_commit()
@@ -2174,7 +2169,7 @@ class Environment:
             # spack version information
             "spack": spack_dict,
             # users specs + hashes are the 'roots' of the environment
-            "roots": [{"hash": h, "spec": str(s)} for h, s in hash_spec_list],
+            "roots": root_specs,
             # Concrete specs by hash, including dependencies
             "concrete_specs": concrete_specs,
         }
