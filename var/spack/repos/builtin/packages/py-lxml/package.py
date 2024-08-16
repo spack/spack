@@ -45,4 +45,7 @@ class PyLxml(PythonPackage):
     depends_on("py-html5lib", when="+html5", type=("build", "run"))
     depends_on("py-beautifulsoup4", when="+htmlsoup", type=("build", "run"))
     depends_on("py-cssselect@0.7:", when="+cssselect", type=("build", "run"))
-    depends_on("py-cython@3.0.10:", type="build", when="@5.2.2:")
+    depends_on("py-cython@3.0.10:", type="build", when="@5.2:")
+    depends_on("py-cython@3.0.9:", type="build", when="@5.1.1:")
+    depends_on("py-cython@3.0.8:", type="build", when="@5:")
+    depends_on("py-cython@0.29.7:", type="build")
