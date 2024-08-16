@@ -13,7 +13,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Callable, Dict, Iterable, List, Optional, Set
+from typing import Callable, Dict, Generator, Iterable, List, Optional, Set
 
 import llnl.string
 import llnl.util.lang
@@ -409,8 +409,12 @@ class Stage(LockableStagingDir):
         # self.fetcher can change with mirrors.
         self.default_fetcher = self.fetcher
         self.search_fn = search_fn
-        # used for mirrored archives of repositories.
-        self.skip_checksum_for_mirror = True
+        # If we fetch from a URL, but the original data is from git, we can currently not prove
+        # that they are equal. This bool is used to skip verification and instead warn the user.
+        if isinstance(self.default_fetcher, fs.URLFetchStrategy):
+            self.skip_checksum_for_mirror = not bool(self.default_fetcher.digest)
+        else:
+            self.skip_checksum_for_mirror = True
 
         self.srcdir = None
 
@@ -472,20 +476,12 @@ class Stage(LockableStagingDir):
         """
         self.mirror_paths = None
 
-    def fetch(self, mirror_only=False, err_msg=None):
-        """Retrieves the code or archive
-
-        Args:
-            mirror_only (bool): only fetch from a mirror
-            err_msg (str or None): the error message to display if all fetchers
-                fail or ``None`` for the default fetch failure message
-        """
+    def _generate_fetchers(self, mirror_only=False) -> Generator[fs.FetchStrategy, None, None]:
         fetchers = []
         if not mirror_only:
             fetchers.append(self.default_fetcher)
 
-        # If this archive is normally fetched from a URL, then use the same digest. `spack mirror`
-        # ensures that the checksum will be the same.
+        # If this archive is normally fetched from a URL, then use the same digest.
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
             digest = self.default_fetcher.digest
             expand = self.default_fetcher.expand_archive
@@ -498,12 +494,7 @@ class Stage(LockableStagingDir):
         # TODO: move mirror logic out of here and clean it up!
         # TODO: Or @alalazo may have some ideas about how to use a
         # TODO: CompositeFetchStrategy here.
-        self.skip_checksum_for_mirror = True
         if self.mirror_paths and self.mirrors:
-            # Have to skip the checksum for things archived from
-            # repositories.  How can this be made safer?
-            self.skip_checksum_for_mirror = not bool(digest)
-
             # Add URL strategies for all the mirrors with the digest
             # Insert fetchers in the order that the URLs are provided.
             fetchers[:0] = (
@@ -526,18 +517,23 @@ class Stage(LockableStagingDir):
                 for rel_path in self.mirror_paths
             )
 
-        def generate_fetchers():
-            for fetcher in fetchers:
-                yield fetcher
-            # The search function may be expensive, so wait until now to
-            # call it so the user can stop if a prior fetcher succeeded
-            if self.search_fn and not mirror_only:
-                dynamic_fetchers = self.search_fn()
-                for fetcher in dynamic_fetchers:
-                    yield fetcher
+        yield from fetchers
 
+        # The search function may be expensive, so wait until now to call it so the user can stop
+        # if a prior fetcher succeeded
+        if self.search_fn and not mirror_only:
+            yield from self.search_fn()
+
+    def fetch(self, mirror_only=False, err_msg=None):
+        """Retrieves the code or archive
+
+        Args:
+            mirror_only (bool): only fetch from a mirror
+            err_msg (str or None): the error message to display if all fetchers
+                fail or ``None`` for the default fetch failure message
+        """
         errors: List[str] = []
-        for fetcher in generate_fetchers():
+        for fetcher in self._generate_fetchers(mirror_only):
             try:
                 fetcher.stage = self
                 self.fetcher = fetcher
