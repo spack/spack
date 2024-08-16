@@ -200,7 +200,7 @@ def test_version_range_null(concretize_scope, test_repo):
     Spec("x2@3:4").concretized()
 
 
-# Pretty good error message (at the end)
+# This error message is hard to follow
 def test_null_variant_for_requested_version(concretize_scope, test_repo):
     Spec("z1").concretized()
     Spec("z1@1.1").concretized()
