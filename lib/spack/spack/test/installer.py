@@ -582,7 +582,7 @@ def test_clear_failures_success(tmpdir):
         assert os.path.isfile(failures.locker.lock_path)
 
 
-@pytest.mark.xfail(sys.platform == "win32", reason="chmod does not prevent removal on Win")
+@pytest.mark.not_on_windows("chmod does not prevent removal on Win")
 def test_clear_failures_errs(tmpdir, capsys):
     """Test the clear_failures exception paths."""
     failures = spack.database.FailureTracker(str(tmpdir), default_timeout=0.1)

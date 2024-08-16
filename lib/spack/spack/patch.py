@@ -331,6 +331,7 @@ class UrlPatch(Patch):
             fetcher,
             name=f"{spack.stage.stage_prefix}patch-{fetch_digest}",
             mirror_paths=mirror_ref,
+            mirrors=spack.mirror.MirrorCollection(source=True).values(),
         )
         return self._stage
 

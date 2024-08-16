@@ -169,3 +169,6 @@ class PyTorchgeo(PythonPackage):
     depends_on("py-pandas@0.19.1:2.0", when="@0.2+datasets", type="run")
     depends_on("py-omegaconf@2.1:", when="@0.4.1+tests", type="run")
     depends_on("py-tensorboard@2.9.1:", when="@0.4.1+tests", type="run")
+
+    # https://github.com/Lightning-AI/pytorch-lightning/issues/19977
+    conflicts("py-lightning@2.3")

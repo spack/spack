@@ -50,9 +50,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     version("3.1.00", sha256="b935c9b780e7330bcb80809992caa2b66fd387e3a1c261c955d622dae857d878")
     version("3.0.00", sha256="c00613d0194a4fbd0726719bbed8b0404ed06275f310189b3493f5739042a92b")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("cxx", type="build")  # Kokkos requires a C++ compiler
 
     depends_on("cmake@3.16:", type="build")
     conflicts("cmake@3.28", when="@:4.2.01 +cuda")
@@ -392,12 +390,12 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             cmake_source_path,
             "-DSPACK_PACKAGE_SOURCE_DIR:PATH={0}".format(self.stage.source_path),
             "-DSPACK_PACKAGE_TEST_ROOT_DIR:PATH={0}".format(
-                join_path(self.install_test_root, cmake_out_path)
+                join_path(install_test_root(self), cmake_out_path)
             ),
             "-DSPACK_PACKAGE_INSTALL_DIR:PATH={0}".format(self.prefix),
         ]
         cmake(*cmake_args)
-        self.cache_extra_test_sources(cmake_out_path)
+        cache_extra_test_sources(self, cmake_out_path)
 
     def test_run(self):
         """Test if kokkos builds and runs"""
