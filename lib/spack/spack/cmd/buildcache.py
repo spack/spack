@@ -410,8 +410,6 @@ def push_fn(args):
 
     # For OCI images, we require dependencies to be pushed for now.
     if target_image:
-        if "dependencies" not in args.things_to_install:
-            tty.die("Dependencies must be pushed for OCI images.")
         if not unsigned:
             tty.warn(
                 "Code signing is currently not supported for OCI images. "
