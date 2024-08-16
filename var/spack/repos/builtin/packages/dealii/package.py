@@ -27,6 +27,9 @@ class Dealii(CMakePackage, CudaPackage):
     # correctly when ninja is used. Those are used automatically if paths get too long.
     generator("make")
 
+
+    # === VARIANTS ===
+
     version("master", branch="master")
     version("9.5.1", sha256="a818b535e6488d3aef7853311657c7b4fadc29a9abe91b7b202b131aad630f5e")
     version("9.5.0", sha256="a81f41565f0d3a22d491ee687957dd48053225da72e8d6d628d210358f4a0464")
@@ -37,10 +40,6 @@ class Dealii(CMakePackage, CudaPackage):
     version("9.3.2", sha256="5341d76bfd75d3402fc6907a875513efb5fe8a8b99af688d94443c492d5713e8")
     version("9.3.1", sha256="a62f4676ab2dc029892251d141427fb75cbb83cddd606019f615d0dde9c61ab8")
     version("9.3.0", sha256="aef8c7a87510ce827dfae3bdd4ed7bff82004dc09f96fa7a65b2554f2839b931")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     # Configuration variants
     variant(
@@ -63,7 +62,7 @@ class Dealii(CMakePackage, CudaPackage):
         when="@9.6:",
         multi=False,
         description="Compile using the specified C++ standard",
-        values=("default", "17"),
+        values=("default", "17", "20", "23"),
     )
     variant("doc", default=False, description="Compile with documentation")
     variant("examples", default=True, description="Compile and install tutorial programs")
@@ -104,6 +103,13 @@ class Dealii(CMakePackage, CudaPackage):
     variant("threads", default=True, description="Compile with multi-threading via TBB")
     variant("trilinos", default=True, description="Compile with Trilinos (only with MPI)")
     variant("vtk", default=True, when="@9.6:", description="Compile with VTK")
+
+
+    # === DEPENDENCIES ===
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Required dependencies: Light version
     depends_on("blas")
@@ -155,22 +161,22 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("cmake@3.3.0:", when="@9.4:9.5", type="build")
     depends_on("cmake@3.13.4:", when="@9.5:", type="build")
     depends_on("mpi", when="+mpi")
-    depends_on("python", when="@8.5.0:+python")
+    depends_on("python", when="+python")
 
     # Optional dependencies: Packages
-    depends_on("adol-c@2.6.4:", when="@9.0:+adol-c")
-    depends_on("arborx", when="@9.3:+arborx")
-    depends_on("arborx+trilinos", when="@9.3:+arborx+trilinos")
+    depends_on("adol-c@2.6.4:", when="+adol-c")
+    depends_on("arborx", when="+arborx")
+    depends_on("arborx+trilinos", when="+arborx+trilinos")
     depends_on("arpack-ng+mpi", when="+arpack+mpi")
-    depends_on("assimp", when="@9.0:+assimp")
+    depends_on("assimp", when="+assimp")
     depends_on("cgal", when="@9.4:+cgal")
     depends_on("cgal@5:", when="@9.5:+cgal")
     depends_on("doxygen+graphviz", when="+doc")
     depends_on("graphviz", when="+doc")
-    depends_on("ginkgo", when="@9.1:+ginkgo")
+    depends_on("ginkgo", when="@9.3:+ginkgo")
     depends_on("ginkgo@1.4.0:", when="@9.4:+ginkgo")
-    depends_on("gmsh+tetgen+netgen+oce", when="@9.0:+gmsh", type=("build", "run"))
-    depends_on("gsl", when="@8.5.0:+gsl")
+    depends_on("gmsh+tetgen+netgen+oce", when="+gmsh", type=("build", "run"))
+    depends_on("gsl", when="+gsl")
     # TODO: next line fixes concretization with petsc
     depends_on("hdf5+mpi+hl+fortran", when="+hdf5+mpi+petsc")
     depends_on("hdf5+mpi+hl", when="+hdf5+mpi~petsc")
@@ -187,16 +193,15 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("p4est", when="+p4est+mpi")
     depends_on("petsc+mpi~int64", when="+petsc+mpi~int64")
     depends_on("petsc+mpi+int64", when="+petsc+mpi+int64")
-    depends_on("scalapack", when="@9.0:+scalapack")
+    depends_on("scalapack", when="+scalapack")
     depends_on("slepc", when="+slepc+petsc+mpi")
     depends_on("slepc~arpack", when="+slepc+petsc+mpi+int64")
-    depends_on("sundials@:3~pthread", when="@9.0:9.2+sundials")
     depends_on("sundials@5:5.8", when="@9.3:9.3.3+sundials")
     depends_on("sundials@5:6.7", when="@9.3.4:+sundials")
     depends_on("taskflow@3.4:", when="@9.6:+taskflow")
     depends_on("trilinos gotype=int", when="+trilinos@12.18.1:")
     # TODO: next line fixes concretization with trilinos and adol-c
-    depends_on("trilinos~exodus", when="@9.0:+adol-c+trilinos")
+    depends_on("trilinos~exodus", when="+adol-c+trilinos")
     # Both Trilinos and SymEngine bundle the Teuchos RCP library.
     # This leads to conflicts between macros defined in the included
     # headers when they are not compiled in the same mode.
@@ -211,8 +216,7 @@ class Dealii(CMakePackage, CudaPackage):
     #     "symengine@0.4: build_type=Debug",
     #     when="@9.1:+symengine+trilinos^trilinos+debug"
     # )
-    depends_on("symengine@0.4:", when="@9.1:+symengine")
-    depends_on("symengine@0.6:", when="@9.2:+symengine")
+    depends_on("symengine@0.6:", when="+symengine")
     depends_on("tbb", when="+threads")
     # do not require +rol to make concretization of xsdk possible
     depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado", when="+trilinos")
@@ -222,6 +226,9 @@ class Dealii(CMakePackage, CudaPackage):
         trilinos_spec = f"trilinos +wrapper {arch_str}"
         depends_on(trilinos_spec, when=f"@9.5:+trilinos {arch_str}")
     depends_on("vtk", when="@9.6:+vtk")
+
+
+    # === PATCHES ===
 
     # Fix issues due to override of CMake FIND_PACKAGE macro
     # https://github.com/dealii/dealii/pull/14158/files
@@ -243,6 +250,9 @@ class Dealii(CMakePackage, CudaPackage):
         sha256="c9884ebb0fe379c539012a225d8bcdcfe288edec8dc9d319fbfd64d8fbafba8e",
         when="@:9.4 +ginkgo ^ginkgo@1.5.0:",
     )
+
+
+    # === CONFLICTS ===
 
     # deal.II's own CUDA backend does not support CUDA version 12.0 or newer.
     conflicts("+cuda ^cuda@12:")
@@ -314,6 +324,9 @@ class Dealii(CMakePackage, CudaPackage):
         when="~petsc",
         msg="It is not possible to enable slepc interfaces " "without petsc.",
     )
+
+
+    # === BUILD CONFIGURATION ===
 
     def cmake_args(self):
         spec = self.spec
