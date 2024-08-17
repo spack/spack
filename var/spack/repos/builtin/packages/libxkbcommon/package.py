@@ -65,7 +65,7 @@ class Libxkbcommon(MesonPackage, AutotoolsPackage):
 class MesonBuilder(spack.build_systems.meson.MesonBuilder):
     def meson_args(self):
         args = [
-            "-Dxkb-config-root={0}".format(self.spec["xkbdata"].prefix),
+            "-Dxkb-config-root={0}".format(self.spec["xkbdata-api"].prefix),
             "-Denable-docs=false",
             "-Denable-wayland=" + str(self.spec.satisfies("+wayland")),
         ]
@@ -80,6 +80,6 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         """Configure arguments are passed using meson_args functions"""
         return [
-            "--with-xkb-config-root={0}".format(self.spec["xkbdata"].prefix),
+            "--with-xkb-config-root={0}".format(self.spec["xkbdata-api"].prefix),
             "--disable-docs",
         ] + self.enable_or_disable("wayland")
