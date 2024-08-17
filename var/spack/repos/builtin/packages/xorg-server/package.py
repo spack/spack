@@ -103,7 +103,7 @@ class XorgServer(AutotoolsPackage, XorgPackage):
             args.append("--disable-glx")
 
         if self.spec.satisfies("+dri"):
-            args.append("--enable-dri")
+            args.append("--disable-dri")  # dri requires libdri, not libdrm
             args.append("--enable-dri2")
             args.append("--enable-dri3")
             args.append("--enable-drm")
