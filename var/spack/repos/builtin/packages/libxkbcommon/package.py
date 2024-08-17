@@ -54,7 +54,7 @@ class Libxkbcommon(MesonPackage, AutotoolsPackage):
     depends_on("pkgconfig@0.9.0:", type="build")
     depends_on("bison", type="build")
     depends_on("util-macros")
-    depends_on("xkbdata")
+    depends_on("xkbdata-api")
     depends_on("libxcb@1.10:")
     depends_on("libxml2", when="@1:")
 
