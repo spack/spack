@@ -2,8 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
-import pathlib
 
 import pytest
 
@@ -14,10 +12,9 @@ import spack.package_base
 import spack.repo
 import spack.util.spack_yaml as syaml
 import spack.version
-from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
 from spack.spec import Spec
 from spack.test.conftest import create_test_repo
-from spack.util.url import path_to_file_url
+
 
 def update_packages_config(conf_str):
     conf = syaml.load_config(conf_str)
@@ -168,10 +165,7 @@ class Z3(Package):
 def _create_test_repo(tmpdir, mutable_config):
     yield create_test_repo(
         tmpdir,
-        [_pkgx1, _pkgx2, _pkgx3, _pkgx4,
-         _pkgy1, _pkgy2, _pkgy3, _pkgy4,
-         _pkgz1, _pkgz2, _pkgz3,
-        ]
+        [_pkgx1, _pkgx2, _pkgx3, _pkgx4, _pkgy1, _pkgy2, _pkgy3, _pkgy4, _pkgz1, _pkgz2, _pkgz3],
     )
 
 
@@ -183,9 +177,9 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
 
 # Error message is good
 def test_diamond_with_pkg_conflict1(concretize_scope, test_repo):
-    x2 = Spec("x2").concretized()
-    x3 = Spec("x3").concretized()
-    x4 = Spec("x4").concretized()
+    Spec("x2").concretized()
+    Spec("x3").concretized()
+    Spec("x4").concretized()
 
     Spec("x1").concretized()
 
