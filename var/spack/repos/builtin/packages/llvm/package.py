@@ -636,16 +636,14 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
-        result = []
-        for exe in exes_in_prefix:
-            # Executables like lldb-vscode-X are daemon listening
-            # on some port and would hang Spack during detection.
-            # clang-cl and clang-cpp are dev tools that we don't
-            # need to test
-            if any(x in exe for x in ("vscode", "cpp", "-cl", "-gpu")):
-                continue
-            result.append(exe)
-        return result
+        # Executables like lldb-vscode-X are daemon listening on some port and would hang Spack
+        # during detection. clang-cl, clang-cpp, etc. are dev tools that we don't need to test
+        reject = re.compile(
+            r"-(vscode|cpp|cl|gpu|tidy|rename|scan-deps|format|refactor|offload|"
+            r"check|query|doc|move|extdef|apply|reorder|change-namespace|"
+            r"include-fixer|import-test)"
+        )
+        return [x for x in exes_in_prefix if not reject.search(x)]
 
     @classmethod
     def determine_version(cls, exe):
