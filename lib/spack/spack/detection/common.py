@@ -136,10 +136,10 @@ def path_to_dict(search_paths: List[str]):
     # entry overrides later entries
     for search_path in reversed(search_paths):
         try:
-            for lib in os.listdir(search_path):
-                lib_path = os.path.join(search_path, lib)
-                if llnl.util.filesystem.is_readable_file(lib_path):
-                    path_to_lib[lib_path] = lib
+            with os.scandir(search_path) as entries:
+                path_to_lib.update(
+                    {entry.path: entry.name for entry in entries if entry.is_file()}
+                )
         except OSError as e:
             msg = f"cannot scan '{search_path}' for external software: {str(e)}"
             llnl.util.tty.debug(msg)

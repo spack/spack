@@ -10,7 +10,7 @@ class Ngspice(AutotoolsPackage):
     """ngspice is the open source spice simulator for electric and
     electronic circuits."""
 
-    homepage = "http://ngspice.sourceforge.net/"
+    homepage = "https://ngspice.sourceforge.net/"
     url = "https://sourceforge.net/projects/ngspice/files/ngspice-33.tar.gz"
     list_url = "https://sourceforge.net/projects/ngspice/files/ng-spice-rework"
     list_depth = 1

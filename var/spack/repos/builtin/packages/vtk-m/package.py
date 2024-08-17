@@ -29,12 +29,12 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("release", branch="release")
-    version("2.2.0-rc1", sha256="32643cf3564fa77f8e2a2a5456a574b6b2355bb68918eb62ccde493993ade1a3")
     version(
-        "2.1.0",
-        sha256="9cf3522b6dc0675281a1a16839464ebd1cc5f9c08c20eabee1719b3bcfdcf41f",
+        "2.2.0",
+        sha256="ee66b6bbd33f6ad6f2350e11a7c9328492e53935ba8f66b4b1d01f074eb96341",
         preferred=True,
     )
+    version("2.1.0", sha256="9cf3522b6dc0675281a1a16839464ebd1cc5f9c08c20eabee1719b3bcfdcf41f")
     version("2.0.0", sha256="32643cf3564fa77f8e2a2a5456a574b6b2355bb68918eb62ccde493993ade1a3")
     version("1.9.0", sha256="12355dea1a24ec32767260068037adeb71abb3df2f9f920c92ce483f35ff46e4")
     version("1.8.0", sha256="fcedee6e8f4ac50dde56e8c533d48604dbfb663cea1561542a837e8e80ba8768")
@@ -121,7 +121,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("hip@3.7:", when="+rocm")
     # CUDA thrust is already include in the CUDA pkg
-    depends_on("rocthrust", when="@2.1: +kokkos+rocm")
+    depends_on("rocthrust", when="@2.2: +kokkos+rocm ^cmake@3.24:")
 
     # The rocm variant is only valid options for >= 1.7. It would be better if
     # this could be expressed as a when clause to disable the rocm variant,
@@ -152,13 +152,17 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     # VTK-M PR#3160
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3160
-    patch("mr3160-rocthrust-fix.patch", when="@2.1:")
+    patch("mr3160-rocthrust-fix.patch", when="@2.1")
+
+    # VTK-M PR#3258
+    # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3258
+    patch("mr3258-fix-typo-thrust-dependency-with-rocm.patch", when="@2.2:")
 
     # Disable Thrust patch that is no longer needed in modern Thrust
     patch(
         "https://github.com/Kitware/VTK-m/commit/4a4466e7c8cd44d2be2bd3fe6f359faa8e9547aa.patch?full_index=1",
         sha256="58dc104ba05ec99c359eeec3ac094cdb071053a4250f4ad9d72ef6a356c4346e",
-        when="@1.6.0: +cuda ^cuda@12.5:",
+        when="@1.6.0:2.1 +cuda ^cuda@12.5:",
     )
 
     def cmake_args(self):
