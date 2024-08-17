@@ -52,6 +52,8 @@ class PyTorchaudio(PythonPackage):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
+    variant("noop", default=False, description="This variant is for triggering a rebuild")
+
     with default_args(type=("build", "link", "run")):
         # Based on PyPI wheel availability
         depends_on("python@3.8:3.12", when="@2.2:")
