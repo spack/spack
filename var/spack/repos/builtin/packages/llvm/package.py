@@ -15,7 +15,26 @@ import spack.util.executable
 from spack.package import *
 
 
-class Llvm(CMakePackage, CudaPackage, CompilerPackage):
+class LlvmBasedCompiler(CompilerPackage):
+    """Base class to detect LLVM based compilers"""
+
+    compiler_version_argument = "--version"
+    c_names = ["clang"]
+    cxx_names = ["clang++"]
+
+    @classmethod
+    def filter_detected_exes(cls, prefix, exes_in_prefix):
+        # Executables like lldb-vscode-X are daemon listening on some port and would hang Spack
+        # during detection. clang-cl, clang-cpp, etc. are dev tools that we don't need to test
+        reject = re.compile(
+            r"-(vscode|cpp|cl|gpu|tidy|rename|scan-deps|format|refactor|offload|"
+            r"check|query|doc|move|extdef|apply|reorder|change-namespace|"
+            r"include-fixer|import-test)"
+        )
+        return [x for x in exes_in_prefix if not reject.search(x)]
+
+
+class Llvm(CMakePackage, CudaPackage, LlvmBasedCompiler):
     """The LLVM Project is a collection of modular and reusable compiler and
     toolchain technologies. Despite its name, LLVM has little to do
     with traditional virtual machines, though it does provide helpful
@@ -615,10 +634,6 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
         # LLD
         r"LLD ([^ )\n]+) \(compatible with GNU linkers\)"
     )
-    compiler_version_argument = "--version"
-    compiler_languages = ["c", "cxx", "fortran"]
-    c_names = ["clang"]
-    cxx_names = ["clang++"]
     fortran_names = ["flang"]
 
     @property
@@ -633,17 +648,6 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
     @classproperty
     def executables(cls):
         return super().executables + ["ld.lld", "lldb"]
-
-    @classmethod
-    def filter_detected_exes(cls, prefix, exes_in_prefix):
-        # Executables like lldb-vscode-X are daemon listening on some port and would hang Spack
-        # during detection. clang-cl, clang-cpp, etc. are dev tools that we don't need to test
-        reject = re.compile(
-            r"-(vscode|cpp|cl|gpu|tidy|rename|scan-deps|format|refactor|offload|"
-            r"check|query|doc|move|extdef|apply|reorder|change-namespace|"
-            r"include-fixer|import-test)"
-        )
-        return [x for x in exes_in_prefix if not reject.search(x)]
 
     @classmethod
     def determine_version(cls, exe):

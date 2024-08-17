@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
+from spack.pkg.builtin.llvm import LlvmBasedCompiler
 
 
-class AppleClang(BundlePackage, CompilerPackage):
+class AppleClang(BundlePackage, LlvmBasedCompiler):
     """Apple's Clang compiler"""
 
     homepage = "https://developer.apple.com/videos/developer-tools/compiler-and-llvm"
