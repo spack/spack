@@ -30,6 +30,9 @@ class Genesis(AutotoolsPackage, CudaPackage):
         url="https://www.r-ccs.riken.jp/labs/cbrt/wp-content/uploads/2020/09/genesis-1.5.1.tar.bz2",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     resource(
         when="@1.6.0",
         name="user_guide",
@@ -114,4 +117,4 @@ class Genesis(AutotoolsPackage, CudaPackage):
     def cache_test_sources(self):
         """Copy test files after the package is installed for test()."""
         if self.spec.satisfies("@master"):
-            self.cache_extra_test_sources(["tests"])
+            cache_extra_test_sources(self, ["tests"])

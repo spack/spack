@@ -376,7 +376,7 @@ e4s-neoverse_v1-build:
 
 e4s-rocm-external-generate:
   extends: [ ".e4s-rocm-external", ".generate-x86_64"]
-  image: ecpe4s/ubuntu22.04-runner-amd64-gcc-11.4-rocm6.1.1:2024.06.23
+  image: ecpe4s/ubuntu22.04-runner-amd64-gcc-11.4-rocm6.1.2:2024.07.22
 
 e4s-rocm-external-build:
   extends: [ ".e4s-rocm-external", ".build" ]
@@ -725,6 +725,29 @@ ml-linux-x86_64-cuda-build:
   needs:
     - artifacts: True
       job: ml-linux-x86_64-cuda-generate
+
+########################################
+# Machine Learning - Linux x86_64 (ROCm)
+########################################
+.ml-linux-x86_64-rocm:
+  extends: [ ".linux_x86_64_v3" ]
+  variables:
+    SPACK_CI_STACK_NAME: ml-linux-x86_64-rocm
+
+ml-linux-x86_64-rocm-generate:
+  extends: [ ".generate-x86_64", .ml-linux-x86_64-rocm, ".tags-x86_64_v4" ]
+  image: ghcr.io/spack/ubuntu-22.04:v2024-05-07
+
+ml-linux-x86_64-rocm-build:
+  extends: [ ".build", ".ml-linux-x86_64-rocm" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-x86_64-rocm-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-x86_64-rocm-generate
 
 #########################################
 # Machine Learning - Darwin aarch64 (MPS)

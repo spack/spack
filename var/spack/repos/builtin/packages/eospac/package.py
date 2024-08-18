@@ -128,6 +128,10 @@ class Eospac(Package):
         url="http://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.3.1_r20161202150449.tgz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # This patch allows the use of spack's compile wrapper 'flang'
     patch("flang.patch", when="@:6.4.0beta.2%clang")
     patch("frt.patch", when="%fj")

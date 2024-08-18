@@ -38,6 +38,9 @@ class Rccl(CMakePackage):
         version("5.3.3", sha256="8995a2d010ad0748fc85ac06e8da7e8d110ba996db04d42b77526c9c059c05bb")
         version("5.3.0", sha256="51da5099fa58c2be882319cebe9ceabe2062feebcc0c5849e8c109030882c10a")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant(
@@ -123,7 +126,7 @@ class Rccl(CMakePackage):
             args.append(self.define("BUILD_TESTS", "ON"))
         return args
 
-    def test(self):
-        test_dir = join_path(self.spec["rccl"].prefix, "bin")
-        with working_dir(test_dir, create=True):
-            self.run_test("UnitTests")
+    def test_unit(self):
+        """Run unit tests"""
+        unit_tests = which(join_path(self.prefix.bin, "rccl-UnitTests"))
+        unit_tests()

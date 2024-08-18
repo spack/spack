@@ -23,6 +23,9 @@ class Elemental(CMakePackage):
     version("0.87.7", sha256="7becfdbc223e9c72e65ae876d842c48d2037d13f83e9f41cea285e21b840d7d9")
     version("0.87.6", sha256="b597987c99ddd3462e0619524c5b7f711177ae8ae541b1b961e11d96e15afc64")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("hybrid", default=True, description="Make use of OpenMP within MPI packing/unpacking")
     variant(

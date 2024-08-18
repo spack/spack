@@ -120,6 +120,9 @@ class Glib(MesonPackage, AutotoolsPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("libmount", default=False, description="Build with libmount support")
     variant(
         "tracing",

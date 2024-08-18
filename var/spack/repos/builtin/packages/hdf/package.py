@@ -25,6 +25,10 @@ class Hdf(AutotoolsPackage):
     version("4.2.12", sha256="dd419c55e85d1a0e13f3ea5ed35d00710033ccb16c85df088eb7925d486e040c")
     version("4.2.11", sha256="c3f7753b2fb9b27d09eced4d2164605f111f270c9a60b37a578f7de02de86d24")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("szip", default=False, description="Enable szip support")
     variant(
         "external-xdr", default=sys.platform != "darwin", description="Use an external XDR backend"
@@ -214,7 +218,7 @@ class Hdf(AutotoolsPackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(self.extra_install_tests)
+        cache_extra_test_sources(self, self.extra_install_tests)
 
     def _check_version_match(self, exe):
         """Ensure exe version check yields spec version."""

@@ -82,6 +82,9 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("shared", default=True, description="Build shared libraries")
     variant("openmp", default=True, description="Build with OpenMP support")
     variant("fortran", default=False, description="Build Fortran bindings")

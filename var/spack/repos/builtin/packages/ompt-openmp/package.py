@@ -21,6 +21,10 @@ class OmptOpenmp(CMakePackage):
 
     version("0.1", sha256="a35dd2a83777fce54386d54cea8d2df9b5f34309d66fbc1d1757d55f6048c7a7")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake@2.8:", type="build")
 
     conflicts("%gcc@:4.7")

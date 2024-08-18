@@ -37,6 +37,8 @@ class Rocfft(CMakePackage):
         version("5.3.3", sha256="678c18710578c1fb36a0009311bb79de7607c3468f9102cfba56a866ebb7ff78")
         version("5.3.0", sha256="d655c5541c4aff4267e80e36d002fc3a55c2f84a0ae8631197c12af3bf03fa7d")
 
+    depends_on("cxx", type="build")  # generated
+
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant(
@@ -51,6 +53,11 @@ class Rocfft(CMakePackage):
         values=auto_or_any_combination_of(*amdgpu_targets),
         sticky=True,
     )
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
 
     depends_on("cmake@3.16:", type="build")
     depends_on("python@3.6:", type="build")
@@ -102,6 +109,15 @@ class Rocfft(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
+        if self.spec.satisfies("+asan"):
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
+        if self.spec.satisfies("%gcc@8.0:8.9") and self.spec.satisfies("@6.1:"):
+            env.append_flags("LDFLAGS", "-lstdc++fs")
 
     @run_after("build")
     @on_package_attributes(run_tests=True)

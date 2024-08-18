@@ -48,6 +48,9 @@ class PyCython(PythonPackage):
     version("0.23.5", sha256="0ae5a5451a190e03ee36922c4189ca2c88d1df40a89b4f224bc842d388a0d1b6")
     version("0.23.4", sha256="fec42fecee35d6cc02887f1eef4e4952c97402ed2800bfe41bbd9ed1a0730d8e")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # https://github.com/cython/cython/issues/5751 (distutils not yet dropped)
     depends_on("python@:3.11", type=("build", "link", "run"))
 

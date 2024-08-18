@@ -56,6 +56,10 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("3.1", sha256="fcf96dbddb504a64d33833dc455be3dda1e71c7b3df411dfcf9df066d7c32c39")
     version("3.0.4", sha256="cf638c85660300af48b6f776e5ecd35b5378d5905ec5d34c3da7a27da0acf0b3")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("hwloc", default=True, description="Use external hwloc package")
     variant("hydra", default=True, description="Build the hydra process manager")
     variant("romio", default=True, description="Enable ROMIO MPI I/O implementation")
@@ -645,7 +649,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(["examples", join_path("test", "mpi")])
+        cache_extra_test_sources(self, ["examples", join_path("test", "mpi")])
 
     def mpi_launcher(self):
         """Determine the appropriate launcher."""

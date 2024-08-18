@@ -30,7 +30,6 @@ def test_spec():
     assert "mpich@3.0.4" in output
 
 
-@pytest.mark.only_clingo("Known failure of the original concretizer")
 def test_spec_concretizer_args(mutable_database, do_not_check_runtimes_on_reuse):
     """End-to-end test of CLI concretizer prefs.
 
@@ -58,7 +57,7 @@ def test_spec_concretizer_args(mutable_database, do_not_check_runtimes_on_reuse)
 def test_spec_parse_dependency_variant_value():
     """Verify that we can provide multiple key=value variants to multiple separate
     packages within a spec string."""
-    output = spec("multivalue-variant fee=barbaz ^ a foobar=baz")
+    output = spec("multivalue-variant fee=barbaz ^ pkg-a foobar=baz")
 
     assert "fee=barbaz" in output
     assert "foobar=baz" in output

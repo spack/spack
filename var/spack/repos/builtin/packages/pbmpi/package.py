@@ -21,6 +21,8 @@ class Pbmpi(MakefilePackage):
     version("1.8c", sha256="2a80ec4a98d92ace61c67ff9ba78249d45d03094b364959d490b1ad05797a279")
     version("partition", branch="partition")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("mpi")
     depends_on("libfabric")
 

@@ -27,6 +27,8 @@ class Evtgen(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+
     variant("pythia8", default=True, description="Build with pythia8")
     variant("tauola", default=False, description="Build with tauola")
     variant("photos", default=False, description="Build with photos")

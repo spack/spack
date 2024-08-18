@@ -564,14 +564,14 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="push create install list keys preview check download get-buildcache-name save-specfile sync update-index rebuild-index"
+        SPACK_COMPREPLY="push create install list keys check download get-buildcache-name save-specfile sync update-index rebuild-index"
     fi
 }
 
 _spack_buildcache_push() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force --allow-root -a --unsigned -u --signed --key -k --update-index --rebuild-index --spec-file --only --fail-fast --base-image --tag -t --private -j --jobs"
+        SPACK_COMPREPLY="-h --help -f --force --unsigned -u --signed --key -k --update-index --rebuild-index --spec-file --only --with-build-dependencies --without-build-dependencies --fail-fast --base-image --tag -t --private -j --jobs"
     else
         _mirrors
     fi
@@ -580,7 +580,7 @@ _spack_buildcache_push() {
 _spack_buildcache_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force --allow-root -a --unsigned -u --signed --key -k --update-index --rebuild-index --spec-file --only --fail-fast --base-image --tag -t --private -j --jobs"
+        SPACK_COMPREPLY="-h --help -f --force --unsigned -u --signed --key -k --update-index --rebuild-index --spec-file --only --with-build-dependencies --without-build-dependencies --fail-fast --base-image --tag -t --private -j --jobs"
     else
         _mirrors
     fi
@@ -606,15 +606,6 @@ _spack_buildcache_list() {
 
 _spack_buildcache_keys() {
     SPACK_COMPREPLY="-h --help -i --install -t --trust -f --force"
-}
-
-_spack_buildcache_preview() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help"
-    else
-        _installed_packages
-    fi
 }
 
 _spack_buildcache_check() {
@@ -1281,7 +1272,7 @@ _spack_gpg_export() {
 _spack_gpg_publish() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url --rebuild-index"
+        SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url --update-index --rebuild-index"
     else
         _keys
     fi

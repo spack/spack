@@ -28,7 +28,9 @@ import spack.modules
 import spack.package_base
 import spack.paths
 import spack.repo
+import spack.store
 import spack.util.spack_json as sjson
+import spack.util.spack_yaml
 from spack.cmd.env import _env_create
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
@@ -501,7 +503,7 @@ def test_env_install_two_specs_same_dep(install_mockery, mock_fetch, tmpdir, cap
                 """\
 spack:
   specs:
-  - a
+  - pkg-a
   - depb
 """
             )
@@ -520,8 +522,8 @@ spack:
     depb = spack.store.STORE.db.query_one("depb", installed=True)
     assert depb, "Expected depb to be installed"
 
-    a = spack.store.STORE.db.query_one("a", installed=True)
-    assert a, "Expected a to be installed"
+    a = spack.store.STORE.db.query_one("pkg-a", installed=True)
+    assert a, "Expected pkg-a to be installed"
 
 
 def test_remove_after_concretize():
@@ -824,7 +826,7 @@ def test_env_view_external_prefix(tmp_path, mutable_database, mock_packages):
         """\
 spack:
   specs:
-  - a
+  - pkg-a
   view: true
 """
     )
@@ -832,9 +834,9 @@ spack:
     external_config = io.StringIO(
         """\
 packages:
-  a:
+  pkg-a:
     externals:
-    - spec: a@2.0
+    - spec: pkg-a@2.0
       prefix: {a_prefix}
     buildable: false
 """.format(
@@ -1055,7 +1057,6 @@ spack:
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-@pytest.mark.only_clingo("original concretizer does not support requirements")
 def test_config_change_existing(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
     """Test ``config change`` with config in the ``spack.yaml`` as well as an
     included file scope.
@@ -1131,7 +1132,6 @@ spack:
         spack.spec.Spec("bowtie@1.2.2").concretized()
 
 
-@pytest.mark.only_clingo("original concretizer does not support requirements")
 def test_config_change_new(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
     spack_yaml = tmp_path / ev.manifest_name
     spack_yaml.write_text(
@@ -1734,6 +1734,17 @@ def test_env_include_concrete_env_yaml(env_name):
     assert test.path in combined_yaml["include_concrete"]
 
 
+@pytest.mark.regression("45766")
+@pytest.mark.parametrize("format", ["v1", "v2", "v3"])
+def test_env_include_concrete_old_env(format, tmpdir):
+    lockfile = os.path.join(spack.paths.test_path, "data", "legacy_env", f"{format}.lock")
+    # create an env from old .lock file -- this does not update the format
+    env("create", "old-env", lockfile)
+    env("create", "--include-concrete", "old-env", "test")
+
+    assert ev.read("old-env").all_specs() == ev.read("test").all_specs()
+
+
 def test_env_bad_include_concrete_env():
     with pytest.raises(ev.SpackEnvironmentError):
         env("create", "--include-concrete", "nonexistant_env", "combined_env")
@@ -2330,8 +2341,6 @@ def test_stack_concretize_extraneous_deps(tmpdir, mock_packages):
     # FIXME: constraints for stacks
     # FIXME: This now works for statically-determinable invalid deps
     # FIXME: But it still does not work for dynamically determined invalid deps
-    # if spack.config.get('config:concretizer') == 'clingo':
-    #    pytest.skip('Clingo concretizer does not support soft constraints')
 
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
@@ -3178,9 +3187,7 @@ def test_concretize_user_specs_together():
     e.remove("mpich")
     e.add("mpich2")
 
-    exc_cls = spack.error.SpackError
-    if spack.config.get("config:concretizer") == "clingo":
-        exc_cls = spack.error.UnsatisfiableSpecError
+    exc_cls = spack.error.UnsatisfiableSpecError
 
     # Concretizing without invalidating the concrete spec for mpileaks fails
     with pytest.raises(exc_cls):
@@ -3206,10 +3213,8 @@ def test_duplicate_packages_raise_when_concretizing_together():
     e.add("mpileaks~opt")
     e.add("mpich")
 
-    exc_cls, match = spack.error.SpackError, None
-    if spack.config.get("config:concretizer") == "clingo":
-        exc_cls = spack.error.UnsatisfiableSpecError
-        match = r"You could consider setting `concretizer:unify`"
+    exc_cls = spack.error.UnsatisfiableSpecError
+    match = r"You could consider setting `concretizer:unify`"
 
     with pytest.raises(exc_cls, match=match):
         e.concretize()

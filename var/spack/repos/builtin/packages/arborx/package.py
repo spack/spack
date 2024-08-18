@@ -37,6 +37,8 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+
     # Allowed C++ standard
     variant(
         "cxxstd",
@@ -113,10 +115,10 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("ARBORX_ENABLE_MPI", "mpi"),
         ]
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             # Only Kokkos allows '+cuda' for now
             options.append("-DCMAKE_CXX_COMPILER=%s" % spec["kokkos"].kokkos_cxx)
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             options.append("-DCMAKE_CXX_COMPILER=%s" % spec["hip"].hipcc)
 
         return options
@@ -127,7 +129,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     def setup_build_tests(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([self.examples_src_dir])
+        cache_extra_test_sources(self, [self.examples_src_dir])
 
     @property
     def cached_tests_work_dir(self):
@@ -150,7 +152,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
             ),
             self.define("ArborX_ROOT", self.spec["arborx".prefix]),
         ]
-        if "+mpi" in self.spec:
+        if self.spec.satisfies("+mpi"):
             cmake_args.append(self.define("MPI_HOME", self.spec["mpi"].prefix))
         cmake = which(self.spec["cmake"].prefix.bin.cmake)
         make = which("make")
