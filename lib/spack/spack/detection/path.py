@@ -20,11 +20,11 @@ import llnl.util.tty
 
 import spack.package_base
 import spack.repo
+import spack.spec
 import spack.util.elf as elf_utils
 import spack.util.environment
 import spack.util.environment as environment
 import spack.util.ld_so_conf
-import spack.spec
 import spack.util.parallel
 
 from .common import (
@@ -105,7 +105,7 @@ def is_readable_file(entry: os.DirEntry) -> bool:
     return entry.is_file() and os.access(entry.path, os.R_OK)
 
 
-def libraries_in_ld_and_system_library_path() -> List[str]:
+def system_library_paths() -> List[str]:
     """Get the paths of all libraries available from ``path_hints`` or the
     following defaults:
 
@@ -123,15 +123,24 @@ def libraries_in_ld_and_system_library_path() -> List[str]:
 
     search_paths: List[str] = []
 
-    # Environment variables
-    if sys.platform == "darwin":
+    if sys.platform == "win32":
+        search_hints = spack.util.environment.get_path("PATH")
+        search_paths.extend(llnl.util.filesystem.search_paths_for_libraries(*search_hints))
+        # on Windows, some libraries (.dlls) are found in the bin directory or sometimes
+        # at the search root. Add both of those options to the search scheme
+        search_paths.extend(llnl.util.filesystem.search_paths_for_executables(*search_hints))
+        # if no user provided path was given, add defaults to the search
+        search_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths())
+        # SDK and WGL should be handled by above, however on occasion the WDK is in an atypical
+        # location, so we handle that case specifically.
+        search_paths.extend(WindowsKitExternalPaths.find_windows_driver_development_kit_paths())
+    elif sys.platform == "darwin":
         search_paths.extend(environment.get_path("DYLD_LIBRARY_PATH"))
         search_paths.extend(environment.get_path("DYLD_FALLBACK_LIBRARY_PATH"))
+        search_paths.extend(spack.util.ld_so_conf.host_dynamic_linker_search_paths())
     elif sys.platform.startswith("linux"):
         search_paths.extend(environment.get_path("LD_LIBRARY_PATH"))
-
-    # Dynamic linker paths
-    search_paths.extend(spack.util.ld_so_conf.host_dynamic_linker_search_paths())
+        search_paths.extend(spack.util.ld_so_conf.host_dynamic_linker_search_paths())
 
     # Drop redundant paths
     search_paths = list(filter(os.path.isdir, search_paths))
@@ -158,24 +167,6 @@ def libraries_in_path(search_paths: List[str]) -> Dict[str, str]:
                 if accept(entry):
                     path_to_lib[entry.path] = entry.name
     return path_to_lib
-
-
-def libraries_in_windows_paths() -> List[str]:
-    """Get the paths of all libraries available from the system PATH paths.
-
-    For more details, see `libraries_in_ld_and_system_library_path` regarding
-    return type and contents."""
-    search_hints = spack.util.environment.get_path("PATH")
-    search_paths = llnl.util.filesystem.search_paths_for_libraries(*search_hints)
-    # on Windows, some libraries (.dlls) are found in the bin directory or sometimes
-    # at the search root. Add both of those options to the search scheme
-    search_paths.extend(llnl.util.filesystem.search_paths_for_executables(*search_hints))
-    # if no user provided path was given, add defaults to the search
-    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths())
-    # SDK and WGL should be handled by above, however on occasion the WDK is in an atypical
-    # location, so we handle that case specifically.
-    search_paths.extend(WindowsKitExternalPaths.find_windows_driver_development_kit_paths())
-    return search_paths
 
 
 def _group_by_prefix(paths: List[str]) -> Dict[str, Set[str]]:
@@ -333,11 +324,7 @@ class LibrariesFinder(Finder):
 
     @classmethod
     def in_default_paths(cls):
-        if sys.platform == "win32":
-            search_paths = libraries_in_windows_paths()
-        else:
-            search_paths = libraries_in_ld_and_system_library_path()
-        return cls.in_search_paths(search_paths)
+        return cls.in_search_paths(system_library_paths())
 
     def search_patterns(self, *, pkg: Type[spack.package_base.PackageBase]) -> Optional[List[str]]:
         return getattr(pkg, "libraries", None)
