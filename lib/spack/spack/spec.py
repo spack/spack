@@ -3846,16 +3846,9 @@ class Spec:
             return clr.colorize(f"{color_fmt}{sigil}{clr.cescape(string)}@.", color=color)
 
         def format_attribute(match_object: Match) -> str:
-            (
-                esc,
-                sig,
-                dep,
-                hash,
-                hash_len,
-                attribute,
-                close_brace,
-                unmatched_close_brace,
-            ) = match_object.groups()
+            (esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
+                match_object.groups()
+            )
             if esc:
                 return esc
             elif unmatched_close_brace:
