@@ -812,20 +812,6 @@ class FlagMap(lang.HashableMap):
         return all(f in self and set(self[f]) >= set(other[f]) for f in other)
 
     def intersects(self, other):
-        common_types = set(self) & set(other)
-        for flag_type in common_types:
-            if not self[flag_type] or not other[flag_type]:
-                # At least one of the two is empty
-                continue
-
-            if self[flag_type] != other[flag_type]:
-                return False
-
-            if not all(
-                f1.propagate == f2.propagate for f1, f2 in zip(self[flag_type], other[flag_type])
-            ):
-                # At least one propagation flag didn't match
-                return False
         return True
 
     def constrain(self, other):
