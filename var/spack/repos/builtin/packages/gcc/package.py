@@ -5,6 +5,7 @@
 import glob
 import itertools
 import os
+import re
 import sys
 
 from archspec.cpu import UnsupportedMicroarchitecture
@@ -541,37 +542,25 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     compiler_version_argument = ("-dumpfullversion", "-dumpversion")
 
     @classmethod
-    def determine_version(cls, exe):
-        try:
-            output = spack.compiler.get_compiler_version_output(exe, "--version")
-        except Exception:
-            output = ""
-        # Apple's gcc is actually apple clang, so skip it.
-        if "Apple" in output:
-            return None
-
-        return super().determine_version(exe)
-
-    @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
-        result = []
-        for exe in exes_in_prefix:
-            # On systems like Ubuntu we might get multiple executables
-            # with the string "gcc" in them. See:
-            # https://helpmanual.io/packages/apt/gcc/
-            basename = os.path.basename(exe)
-            substring_to_be_filtered = [
-                "c99-gcc",
-                "c89-gcc",
-                "-nm",
-                "-ar",
-                "ranlib",
-                "clang",  # clang++ matches g++ -> clan[g++]
-            ]
-            if any(x in basename for x in substring_to_be_filtered):
-                continue
+        # On systems like Ubuntu we might get multiple executables with the string "gcc" in them.
+        # See: https://helpmanual.io/packages/apt/gcc/
+        # Also, clang++ matches g++ -> clan[g++]
+        reject = re.compile(r"c99-gcc|c89-gcc|-nm|-ar|ranlib|clang|mingw")
+        result = [x for x in exes_in_prefix if not reject.search(x)]
 
-            result.append(exe)
+        # Apple's gcc is actually apple clang, so skip it.
+        if str(spack.platforms.host()) == "darwin":
+            not_apple_clang = []
+            for exe in result:
+                try:
+                    output = spack.compiler.get_compiler_version_output(exe, "--version")
+                except Exception:
+                    output = ""
+                if "Apple" in output:
+                    continue
+                not_apple_clang.append(exe)
+            result = not_apple_clang
 
         return result
 
