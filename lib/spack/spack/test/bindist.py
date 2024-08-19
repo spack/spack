@@ -377,9 +377,7 @@ def fake_dag_hash(spec, length=None):
     return "tal4c7h4z0gqmixb1eqa92mjoybxn5l6"[:length]
 
 
-@pytest.mark.usefixtures(
-    "install_mockery_mutable_config", "mock_packages", "mock_fetch", "temporary_mirror"
-)
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch", "temporary_mirror")
 def test_spec_needs_rebuild(monkeypatch, tmpdir):
     """Make sure needs_rebuild properly compares remote hash
     against locally computed one, avoiding unnecessary rebuilds"""

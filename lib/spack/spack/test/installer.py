@@ -743,12 +743,10 @@ def test_installer_init_requests(install_mockery):
 
 
 @pytest.mark.parametrize("transitive", [True, False])
-def test_install_spliced(
-    install_mockery, mock_fetch, default_mock_concretization, monkeypatch, capsys, transitive
-):
-    """TODO: description"""
-    spec = default_mock_concretization("splice-t")
-    dep = default_mock_concretization("splice-h+foo")
+def test_install_spliced(install_mockery, mock_fetch, monkeypatch, capsys, transitive):
+    """Test installing a spliced spec"""
+    spec = spack.spec.Spec("splice-t").concretized()
+    dep = spack.spec.Spec("splice-h+foo").concretized()
 
     # Do the splice.
     out = spec.splice(dep, transitive)
@@ -760,12 +758,10 @@ def test_install_spliced(
 
 
 @pytest.mark.parametrize("transitive", [True, False])
-def test_install_spliced_build_spec_installed(
-    install_mockery, default_mock_concretization, capfd, mock_fetch, transitive
-):
-    """TODO: description"""
-    spec = default_mock_concretization("splice-t")
-    dep = default_mock_concretization("splice-h+foo")
+def test_install_spliced_build_spec_installed(install_mockery, capfd, mock_fetch, transitive):
+    """Test installing a spliced spec with the build spec already installed"""
+    spec = spack.spec.Spec("splice-t").concretized()
+    dep = spack.spec.Spec("splice-h+foo").concretized()
 
     # Do the splice.
     out = spec.splice(dep, transitive)
@@ -785,14 +781,9 @@ def test_install_spliced_build_spec_installed(
 @pytest.mark.parametrize("transitive", [True, False])
 @pytest.mark.parametrize("root_str", ["splice-t^splice-h~foo", "splice-h~foo"])
 def test_install_splice_root_from_binary(
-    install_mockery,
-    default_mock_concretization,
-    mock_fetch,
-    mutable_temporary_mirror,
-    transitive,
-    root_str,
+    install_mockery, mock_fetch, mutable_temporary_mirror, transitive, root_str
 ):
-    """TODO: Docstring"""
+    """Test installing a spliced spec with the root available in binary cache"""
     # Test splicing and rewiring a spec with the same name, different hash.
     original_spec = spack.spec.Spec(root_str).concretized()
     spec_to_splice = spack.spec.Spec("splice-h+foo").concretized()
@@ -805,7 +796,6 @@ def test_install_splice_root_from_binary(
     buildcache = SpackCommand("buildcache")
     buildcache(
         "push",
-        "--allow-root",
         "--unsigned",
         "--update-index",
         mutable_temporary_mirror,
@@ -1050,8 +1040,8 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
 
 
 def _interrupt(installer, task, install_status, **kwargs):
-    if task.pkg.name == "a":
-        raise KeyboardInterrupt("mock keyboard interrupt for a")
+    if task.pkg.name == "pkg-a":
+        raise KeyboardInterrupt("mock keyboard interrupt for pkg-a")
     else:
         return installer._real_install_task(task, None)
         # installer.installed.add(task.pkg.name)
@@ -1098,7 +1088,7 @@ def test_install_fail_single(install_mockery, mock_fetch, monkeypatch):
     # Raise a KeyboardInterrupt error to trigger early termination
     monkeypatch.setattr(inst.PackageInstaller, "_install_task", _install_fail_my_build_exception)
 
-    with pytest.raises(MyBuildException, match="mock internal package build error for a"):
+    with pytest.raises(MyBuildException, match="mock internal package build error for pkg-a"):
         installer.install()
 
     # ensure dependency of a is 'installed' and a is not
