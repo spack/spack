@@ -121,7 +121,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     patch("thrust-count-header.patch", when="+rocm @1.5.0")
 
     # Correctly find rocthrust through CMake
-    patch("find_rocthrust.patch", when="+rocm @1.8.0")
+    patch("https://github.com/ginkgo-project/ginkgo/pull/1668.patch",
+          sha256="aa6ea8cd913c9875aec1bfe44405f53a9e8be7370c8601301f4d334111c873bd",
+          when="+rocm @1.8.0")
 
     def setup_build_environment(self, env):
         spec = self.spec
@@ -150,7 +152,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
                 raise InstallError("Ginkgo requires a C++14-compliant C++ compiler")
 
         if self.spec.satisfies("@1.4.0:1.6.0 +sycl") and not self.spec.satisfies(
-            "%oneapi@2021.3.0:"
+                "%oneapi@2021.3.0:"
         ):
             raise InstallError("ginkgo +sycl requires %oneapi@2021.3.0:")
         elif self.spec.satisfies("@1.7.0: +sycl") and not self.spec.satisfies("%oneapi@2022.1.0:"):
