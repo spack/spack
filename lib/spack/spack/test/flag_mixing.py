@@ -272,8 +272,24 @@ packages:
 """
     update_concretize_scope(conf_str, "packages")
 
-    root_spec = Spec("v cflags=='-f1'").concretized()
-    assert root_spec["y"].satisfies("cflags='-f1 -f2'")
+    root_spec1 = Spec("v cflags=='-f1'").concretized()
+    assert root_spec1["y"].satisfies("cflags='-f1 -f2'")
+
+    # Next, check that a requirement does not "undo" a request for
+    # propagation from the command-line spec
+    conf_str = """\
+packages:
+  v:
+    require: cflags="-f1"
+"""
+    update_concretize_scope(conf_str, "packages")
+
+    root_spec2 = Spec("v cflags=='-f1'").concretized()
+    assert root_spec2["y"].satisfies("cflags='-f1'")
+
+    # Note: requirements cannot enforce propagation: any attempt to do
+    # so will generate a concretization error; this likely relates to
+    # the note about #37180 in concretize.lp
 
 
 def test_dev_mix_flags(tmp_path, concretize_scope, mutable_mock_env_path, test_repo):

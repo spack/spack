@@ -228,6 +228,12 @@ class TestSpecSemantics:
                 'libelf cflags="-O3" cppflags="-Wall"',
                 'libelf cflags="-O3" cppflags="-Wall"',
             ),
+            # Note: these were moved from test_constraining_abstract_specs_with_empty_intersection;
+            # these all intersect now, so presumably would be allowed to constrain one another, but
+            # that is not yet supported.
+            # ('mpich cppflags="-O3"', 'mpich cppflags="-O2"'),
+            # ('mpich cppflags="-O3"', 'mpich cppflags=="-O3"'),
+            # ('libelf cppflags="-O3"', 'libelf cppflags="-O2"'),
         ],
     )
     def test_abstract_specs_can_constrain_each_other(self, lhs, rhs, expected):
@@ -311,14 +317,11 @@ class TestSpecSemantics:
             ("mpich~~foo", "mpich++foo"),
             ("mpich++foo", "mpich~~foo"),
             ("mpich foo==True", "mpich foo==False"),
-            #('mpich cppflags="-O3"', 'mpich cppflags="-O2"'),
-            #('mpich cppflags="-O3"', 'mpich cppflags=="-O3"'),
             ("libelf@0:2.0", "libelf@2.1:3"),
             ("libelf@0:2.5%gcc@4.8:4.9", "libelf@2.1:3%gcc@4.5:4.7"),
             ("libelf+debug", "libelf~debug"),
             ("libelf+debug~foo", "libelf+debug+foo"),
             ("libelf debug=True", "libelf debug=False"),
-            #('libelf cppflags="-O3"', 'libelf cppflags="-O2"'),
             ("libelf platform=test target=be os=be", "libelf target=fe os=fe"),
             ("namespace=builtin.mock", "namespace=builtin"),
         ],
