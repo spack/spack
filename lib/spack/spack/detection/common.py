@@ -24,6 +24,7 @@ from typing import Dict, List, NamedTuple, Optional, Set, Tuple, Union
 import llnl.util.tty
 
 import spack.config
+import spack.error
 import spack.operating_systems.windows_os as winOs
 import spack.spec
 import spack.util.spack_yaml
