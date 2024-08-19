@@ -830,7 +830,9 @@ class FlagMap(lang.HashableMap):
                 changed = True
             else:
                 extra_other = set(other[flag_type]) - set(self[flag_type])
-                self[flag_type] = list(self[flag_type]) + list(x for x in other[flag_type] if x in extra_other)
+                self[flag_type] = list(self[flag_type]) + list(
+                    x for x in other[flag_type] if x in extra_other
+                )
                 changed = True
 
         # TODO: if you "cflags=x".constrain("cflags==x"), self should
