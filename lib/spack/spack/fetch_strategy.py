@@ -54,7 +54,7 @@ import spack.util.web as web_util
 import spack.version
 import spack.version.git_ref_lookup
 from spack.util.compression import decompressor_for
-from spack.util.executable import CommandNotFoundError, which
+from spack.util.executable import CommandNotFoundError, Executable, which
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
@@ -246,33 +246,28 @@ class URLFetchStrategy(FetchStrategy):
 
     # these are checksum types. The generic 'checksum' is deprecated for
     # specific hash names, but we need it for backward compatibility
-    optional_attrs = list(crypto.hashes.keys()) + ["checksum"]
+    optional_attrs = [*crypto.hashes.keys(), "checksum"]
 
-    def __init__(self, url=None, checksum=None, **kwargs):
+    def __init__(self, *, url: str, checksum: Optional[str] = None, **kwargs) -> None:
         super().__init__(**kwargs)
 
-        # Prefer values in kwargs to the positionals.
-        self.url = kwargs.get("url", url)
+        self.url = url
         self.mirrors = kwargs.get("mirrors", [])
 
         # digest can be set as the first argument, or from an explicit
         # kwarg by the hash name.
-        self.digest = kwargs.get("checksum", checksum)
+        self.digest: Optional[str] = checksum
         for h in self.optional_attrs:
             if h in kwargs:
                 self.digest = kwargs[h]
 
-        self.expand_archive = kwargs.get("expand", True)
-        self.extra_options = kwargs.get("fetch_options", {})
-        self._curl = None
-
-        self.extension = kwargs.get("extension", None)
-
-        if not self.url:
-            raise ValueError("URLFetchStrategy requires a url for fetching.")
+        self.expand_archive: bool = kwargs.get("expand", True)
+        self.extra_options: dict = kwargs.get("fetch_options", {})
+        self._curl: Optional[Executable] = None
+        self.extension: Optional[str] = kwargs.get("extension", None)
 
     @property
-    def curl(self):
+    def curl(self) -> Executable:
         if not self._curl:
             self._curl = web_util.require_curl()
         return self._curl
@@ -348,8 +343,8 @@ class URLFetchStrategy(FetchStrategy):
         if os.path.lexists(save_file):
             os.remove(save_file)
 
-        with open(save_file, "wb") as _open_file:
-            shutil.copyfileobj(response, _open_file)
+        with open(save_file, "wb") as f:
+            shutil.copyfileobj(response, f)
 
         self._check_headers(str(response.headers))
 
@@ -468,7 +463,7 @@ class URLFetchStrategy(FetchStrategy):
         """Check the downloaded archive against a checksum digest.
         No-op if this stage checks code out of a repository."""
         if not self.digest:
-            raise NoDigestError("Attempt to check URLFetchStrategy with no digest.")
+            raise NoDigestError(f"Attempt to check {self.__class__.__name__} with no digest.")
 
         verify_checksum(self.archive_file, self.digest)
 
@@ -479,8 +474,8 @@ class URLFetchStrategy(FetchStrategy):
         """
         if not self.archive_file:
             raise NoArchiveFileError(
-                "Tried to reset URLFetchStrategy before fetching",
-                "Failed on reset() for URL %s" % self.url,
+                f"Tried to reset {self.__class__.__name__} before fetching",
+                f"Failed on reset() for URL{self.url}",
             )
 
         # Remove everything but the archive from the stage
@@ -493,14 +488,10 @@ class URLFetchStrategy(FetchStrategy):
         self.expand()
 
     def __repr__(self):
-        url = self.url if self.url else "no url"
-        return "%s<%s>" % (self.__class__.__name__, url)
+        return f"{self.__class__.__name__}<{self.url}>"
 
     def __str__(self):
-        if self.url:
-            return self.url
-        else:
-            return "[no url]"
+        return self.url
 
 
 @fetcher
@@ -513,7 +504,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
 
         # check whether the cache file exists.
         if not os.path.isfile(path):
-            raise NoCacheError("No cache of %s" % path)
+            raise NoCacheError(f"No cache of {path}")
 
         # remove old symlink if one is there.
         filename = self.stage.save_filename
@@ -523,8 +514,8 @@ class CacheURLFetchStrategy(URLFetchStrategy):
         # Symlink to local cached archive.
         symlink(path, filename)
 
-        # Remove link if checksum fails, or subsequent fetchers
-        # will assume they don't need to download.
+        # Remove link if checksum fails, or subsequent fetchers will assume they don't need to
+        # download.
         if self.digest:
             try:
                 self.check()
@@ -533,12 +524,12 @@ class CacheURLFetchStrategy(URLFetchStrategy):
                 raise
 
         # Notify the user how we fetched.
-        tty.msg("Using cached archive: {0}".format(path))
+        tty.msg(f"Using cached archive: {path}")
 
 
 class OCIRegistryFetchStrategy(URLFetchStrategy):
-    def __init__(self, url=None, checksum=None, **kwargs):
-        super().__init__(url, checksum, **kwargs)
+    def __init__(self, *, url: str, checksum: Optional[str] = None, **kwargs):
+        super().__init__(url=url, checksum=checksum, **kwargs)
 
         self._urlopen = kwargs.get("_urlopen", spack.oci.opener.urlopen)
 
@@ -1381,7 +1372,7 @@ class HgFetchStrategy(VCSFetchStrategy):
             shutil.move(scrubbed, source_path)
 
     def __str__(self):
-        return "[hg] %s" % self.url
+        return f"[hg] {self.url}"
 
 
 @fetcher
@@ -1390,47 +1381,16 @@ class S3FetchStrategy(URLFetchStrategy):
 
     url_attr = "s3"
 
-    def __init__(self, *args, **kwargs):
-        try:
-            super().__init__(*args, **kwargs)
-        except ValueError:
-            if not kwargs.get("url"):
-                raise ValueError("S3FetchStrategy requires a url for fetching.")
-
     @_needs_stage
     def fetch(self):
+        if not self.url.startswith("s3://"):
+            raise spack.error.FetchError(
+                f"{self.__class__.__name__} can only fetch from s3:// urls."
+            )
         if self.archive_file:
             tty.debug(f"Already downloaded {self.archive_file}")
             return
-
-        parsed_url = urllib.parse.urlparse(self.url)
-        if parsed_url.scheme != "s3":
-            raise spack.error.FetchError("S3FetchStrategy can only fetch from s3:// urls.")
-
-        basename = os.path.basename(parsed_url.path)
-        request = urllib.request.Request(
-            self.url, headers={"User-Agent": web_util.SPACK_USER_AGENT}
-        )
-
-        with working_dir(self.stage.path):
-            try:
-                response = web_util.urlopen(request)
-            except (TimeoutError, urllib.error.URLError) as e:
-                raise FailedDownloadError(e) from e
-
-            tty.debug(f"Fetching {self.url}")
-
-            with open(basename, "wb") as f:
-                shutil.copyfileobj(response, f)
-
-            content_type = web_util.get_header(response.headers, "Content-type")
-
-        if content_type == "text/html":
-            warn_content_type_mismatch(self.archive_file or "the archive")
-
-        if self.stage.save_filename:
-            fs.rename(os.path.join(self.stage.path, basename), self.stage.save_filename)
-
+        self._fetch_urllib(self.url)
         if not self.archive_file:
             raise FailedDownloadError(
                 RuntimeError(f"Missing archive {self.archive_file} after fetching")
@@ -1443,46 +1403,17 @@ class GCSFetchStrategy(URLFetchStrategy):
 
     url_attr = "gs"
 
-    def __init__(self, *args, **kwargs):
-        try:
-            super().__init__(*args, **kwargs)
-        except ValueError:
-            if not kwargs.get("url"):
-                raise ValueError("GCSFetchStrategy requires a url for fetching.")
-
     @_needs_stage
     def fetch(self):
+        if not self.url.startswith("gs"):
+            raise spack.error.FetchError(
+                f"{self.__class__.__name__} can only fetch from gs:// urls."
+            )
         if self.archive_file:
-            tty.debug("Already downloaded {0}".format(self.archive_file))
+            tty.debug(f"Already downloaded {self.archive_file}")
             return
 
-        parsed_url = urllib.parse.urlparse(self.url)
-        if parsed_url.scheme != "gs":
-            raise spack.error.FetchError("GCSFetchStrategy can only fetch from gs:// urls.")
-
-        basename = os.path.basename(parsed_url.path)
-        request = urllib.request.Request(
-            self.url, headers={"User-Agent": web_util.SPACK_USER_AGENT}
-        )
-
-        with working_dir(self.stage.path):
-            try:
-                response = web_util.urlopen(request)
-            except (TimeoutError, urllib.error.URLError) as e:
-                raise FailedDownloadError(e) from e
-
-            tty.debug(f"Fetching {self.url}")
-
-            with open(basename, "wb") as f:
-                shutil.copyfileobj(response, f)
-
-            content_type = web_util.get_header(response.headers, "Content-type")
-
-        if content_type == "text/html":
-            warn_content_type_mismatch(self.archive_file or "the archive")
-
-        if self.stage.save_filename:
-            os.rename(os.path.join(self.stage.path, basename), self.stage.save_filename)
+        self._fetch_urllib(self.url)
 
         if not self.archive_file:
             raise FailedDownloadError(
@@ -1496,7 +1427,7 @@ class FetchAndVerifyExpandedFile(URLFetchStrategy):
     as well as after expanding it."""
 
     def __init__(self, url, archive_sha256: str, expanded_sha256: str):
-        super().__init__(url, archive_sha256)
+        super().__init__(url=url, checksum=archive_sha256)
         self.expanded_sha256 = expanded_sha256
 
     def expand(self):
@@ -1538,14 +1469,14 @@ def stable_target(fetcher):
     return False
 
 
-def from_url(url):
+def from_url(url: str) -> URLFetchStrategy:
     """Given a URL, find an appropriate fetch strategy for it.
     Currently just gives you a URLFetchStrategy that uses curl.
 
     TODO: make this return appropriate fetch strategies for other
           types of URLs.
     """
-    return URLFetchStrategy(url)
+    return URLFetchStrategy(url=url)
 
 
 def from_kwargs(**kwargs):
@@ -1614,10 +1545,12 @@ def _check_version_attributes(fetcher, pkg, version):
 def _extrapolate(pkg, version):
     """Create a fetcher from an extrapolated URL for this version."""
     try:
-        return URLFetchStrategy(pkg.url_for_version(version), fetch_options=pkg.fetch_options)
+        return URLFetchStrategy(url=pkg.url_for_version(version), fetch_options=pkg.fetch_options)
     except spack.package_base.NoURLError:
-        msg = "Can't extrapolate a URL for version %s " "because package %s defines no URLs"
-        raise ExtrapolationError(msg % (version, pkg.name))
+        raise ExtrapolationError(
+            f"Can't extrapolate a URL for version {version} because "
+            f"package {pkg.name} defines no URLs"
+        )
 
 
 def _from_merged_attrs(fetcher, pkg, version):
@@ -1733,11 +1666,9 @@ def for_package_version(pkg, version=None):
     raise InvalidArgsError(pkg, version, **args)
 
 
-def from_url_scheme(url, *args, **kwargs):
+def from_url_scheme(url: str, **kwargs):
     """Finds a suitable FetchStrategy by matching its url_attr with the scheme
     in the given url."""
-
-    url = kwargs.get("url", url)
     parsed_url = urllib.parse.urlparse(url, scheme="file")
 
     scheme_mapping = kwargs.get("scheme_mapping") or {
@@ -1754,11 +1685,9 @@ def from_url_scheme(url, *args, **kwargs):
     for fetcher in all_strategies:
         url_attr = getattr(fetcher, "url_attr", None)
         if url_attr and url_attr == scheme:
-            return fetcher(url, *args, **kwargs)
+            return fetcher(url=url, **kwargs)
 
-    raise ValueError(
-        'No FetchStrategy found for url with scheme: "{SCHEME}"'.format(SCHEME=parsed_url.scheme)
-    )
+    raise ValueError(f'No FetchStrategy found for url with scheme: "{parsed_url.scheme}"')
 
 
 def from_list_url(pkg):
@@ -1783,7 +1712,9 @@ def from_list_url(pkg):
                     )
 
                 # construct a fetcher
-                return URLFetchStrategy(url_from_list, checksum, fetch_options=pkg.fetch_options)
+                return URLFetchStrategy(
+                    url=url_from_list, checksum=checksum, fetch_options=pkg.fetch_options
+                )
             except KeyError as e:
                 tty.debug(e)
                 tty.msg("Cannot find version %s in url_list" % pkg.version)
@@ -1811,10 +1742,10 @@ class FsCache:
         mkdirp(os.path.dirname(dst))
         fetcher.archive(dst)
 
-    def fetcher(self, target_path, digest, **kwargs):
+    def fetcher(self, target_path: str, digest: Optional[str], **kwargs) -> CacheURLFetchStrategy:
         path = os.path.join(self.root, target_path)
         url = url_util.path_to_file_url(path)
-        return CacheURLFetchStrategy(url, digest, **kwargs)
+        return CacheURLFetchStrategy(url=url, checksum=digest, **kwargs)
 
     def destroy(self):
         shutil.rmtree(self.root, ignore_errors=True)

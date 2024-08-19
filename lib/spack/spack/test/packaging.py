@@ -48,7 +48,7 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
     # Install a test package
     spec = Spec("trivial-install-test-package").concretized()
-    monkeypatch.setattr(spec.package, "fetcher", URLFetchStrategy(mock_archive.url))
+    monkeypatch.setattr(spec.package, "fetcher", URLFetchStrategy(url=mock_archive.url))
     spec.package.do_install()
     pkghash = "/" + str(spec.dag_hash(7))
 

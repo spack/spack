@@ -501,7 +501,7 @@ class Stage(LockableStagingDir):
             fetchers[:0] = (
                 fs.from_url_scheme(
                     url_util.join(mirror.fetch_url, rel_path),
-                    digest,
+                    checksum=digest,
                     expand=expand,
                     extension=extension,
                 )
@@ -525,13 +525,13 @@ class Stage(LockableStagingDir):
         if self.search_fn and not mirror_only:
             yield from self.search_fn()
 
-    def fetch(self, mirror_only=False, err_msg=None):
+    def fetch(self, mirror_only: bool = False, err_msg: Optional[str] = None) -> None:
         """Retrieves the code or archive
 
         Args:
-            mirror_only (bool): only fetch from a mirror
-            err_msg (str or None): the error message to display if all fetchers
-                fail or ``None`` for the default fetch failure message
+            mirror_only: only fetch from a mirror
+            err_msg: the error message to display if all fetchers fail or ``None`` for the default
+                fetch failure message
         """
         errors: List[str] = []
         for fetcher in self._generate_fetchers(mirror_only):
@@ -593,16 +593,19 @@ class Stage(LockableStagingDir):
         self.destroy()
 
     def check(self):
-        """Check the downloaded archive against a checksum digest.
-        No-op if this stage checks code out of a repository."""
+        """Check the downloaded archive against a checksum digest."""
         if self.fetcher is not self.default_fetcher and self.skip_checksum_for_mirror:
+            cache = isinstance(self.fetcher, fs.CacheURLFetchStrategy)
+            if cache:
+                secure_msg = "your download cache is in a secure location"
+            else:
+                secure_msg = "you trust this mirror and have a secure connection"
             tty.warn(
-                "Fetching from mirror without a checksum!",
-                "This package is normally checked out from a version "
-                "control system, but it has been archived on a spack "
-                "mirror.  This means we cannot know a checksum for the "
-                "tarball in advance. Be sure that your connection to "
-                "this mirror is secure!",
+                f"Using {'download cache' if cache else 'a mirror'} instead of version control",
+                "The required sources are normally checked out from a version control system, "
+                f"but have been archived {'in download cache' if cache else 'on a mirror'}: "
+                f"{self.fetcher}. Spack lacks a tree hash to verify the integrity of this "
+                f"archive. Make sure {secure_msg}.",
             )
         elif spack.config.get("config:checksum"):
             self.fetcher.check()
@@ -1171,7 +1174,7 @@ def _fetch_and_checksum(url, options, keep_stage, action_fn=None):
     try:
         url_or_fs = url
         if options:
-            url_or_fs = fs.URLFetchStrategy(url, fetch_options=options)
+            url_or_fs = fs.URLFetchStrategy(url=url, fetch_options=options)
 
         with Stage(url_or_fs, keep=keep_stage) as stage:
             # Fetch the archive

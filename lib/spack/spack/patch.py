@@ -319,7 +319,7 @@ class UrlPatch(Patch):
                 self.url, archive_sha256=self.archive_sha256, expanded_sha256=self.sha256
             )
         else:
-            fetcher = fs.URLFetchStrategy(self.url, sha256=self.sha256, expand=False)
+            fetcher = fs.URLFetchStrategy(url=self.url, sha256=self.sha256, expand=False)
 
         # The same package can have multiple patches with the same name but
         # with different contents, therefore apply a subset of the hash.
