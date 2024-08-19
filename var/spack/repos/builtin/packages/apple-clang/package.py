@@ -15,11 +15,7 @@ class AppleClang(BundlePackage, LlvmDetection, CompilerPackage):
     maintainers("alalazo")
 
     compiler_languages = ["c", "cxx"]
-    c_names = ["clang"]
-    cxx_names = ["clang++"]
-
     compiler_version_regex = r"^Apple (?:LLVM|clang) version ([^ )]+)"
-    compiler_version_argument = "--version"
 
     @classmethod
     def validate_detected_spec(cls, spec, extra_attributes):
