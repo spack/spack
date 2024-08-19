@@ -926,7 +926,7 @@ class Task:
             pkg: the package to be built and installed
             request: the associated install request where ``None`` can be
                 used to indicate the package was explicitly requested by the user
-            compiler (bool): whether task is for a bootstrap compiler
+            compiler: whether task is for a bootstrap compiler
             start: the initial start time for the package, in seconds
             attempts: the number of attempts to install the package
             status: the installation status
@@ -2618,7 +2618,7 @@ class OverwriteInstall:
         """
         try:
             with fs.replace_directory_transaction(self.task.pkg.prefix):
-                return self.installer._install_task(self.task, self.install_status)
+                self.installer._install_task(self.task, self.install_status)
         except fs.CouldNotRestoreDirectoryBackup as e:
             self.database.remove(self.task.pkg.spec)
             tty.error(
