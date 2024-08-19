@@ -499,21 +499,14 @@ class Boost(Package):
         if spec.satisfies("@:1.58"):
             return ""
 
-        bjam_line_args = [
-            spec["python"].version.up_to(2),
-            spec["python"].command.path.as_posix()
-        ]
+        bjam_line_args = [spec["python"].version.up_to(2), spec["python"].command.path.as_posix()]
 
         if spec.satisfies("platform=windows"):
-            bjam_line_args.extend([
-                spec["python"].prefix.include.as_posix(),
-                spec["python"].prefix.libs.as_posix()
-            ])
+            bjam_line_args.extend(
+                [spec["python"].prefix.include.as_posix(), spec["python"].prefix.libs.as_posix()]
+            )
         else:
-            bjam_line_args.extend([
-                spec["python"].headers.directories[0],
-                spec["python"].libs[0],
-            ])
+            bjam_line_args.extend([spec["python"].headers.directories[0], spec["python"].libs[0]])
 
         return "using python : {0} : {1} : {2} : {3} ;\n".format(*bjam_line_args)
 
