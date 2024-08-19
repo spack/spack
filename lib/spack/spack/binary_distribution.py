@@ -714,7 +714,6 @@ def get_buildfile_manifest(spec):
 
 def hashes_to_prefixes(spec):
     """Return a dictionary of hashes to prefixes for a spec and its deps, excluding externals"""
-    # TODO: Get this to return a tuple value (name, prefix) and modify all callers.
     return {
         s.dag_hash(): (s.name, str(s.prefix))
         for s in itertools.chain(
@@ -1630,7 +1629,6 @@ def _oci_push(
     Dict[str, spack.oci.oci.Blob],
     List[Tuple[Spec, BaseException]],
 ]:
-
     # Spec dag hash -> blob
     checksums: Dict[str, spack.oci.oci.Blob] = {}
 
@@ -2216,7 +2214,6 @@ def relocate_package(spec):
                 except KeyError:
                     # This is a new dependency
                     tty.debug(f"{spec} does not have relocation for {name}")
-
 
         if lookup_dag_hash in hash_to_old_prefix:
             old_dep_prefix = hash_to_old_prefix[lookup_dag_hash]
