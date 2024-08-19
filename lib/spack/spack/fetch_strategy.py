@@ -930,7 +930,9 @@ class GitFetchStrategy(VCSFetchStrategy):
         dest = self.stage.source_path
         git = self.git
 
-        if self.git_version < spack.version.Version("2.25.0.0"):
+        if self.git_version < spack.version.Version("2.26.0"):
+            # technically this should be supported for 2.25, but bumping for OS issues 
+            # see https://github.com/spack/spack/issues/45771
             # code paths exist where the package is not set.  Assure some indentifier for the
             # package that was configured  for sparse checkout exists in the error message
             identifier = str(self.url)
