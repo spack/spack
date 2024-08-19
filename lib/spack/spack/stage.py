@@ -364,36 +364,30 @@ class Stage(LockableStagingDir):
         """Create a stage object.
         Parameters:
           url_or_fetch_strategy
-              URL of the archive to be downloaded into this stage, OR
-              a valid FetchStrategy.
+              URL of the archive to be downloaded into this stage, OR a valid FetchStrategy.
 
           name
-              If a name is provided, then this stage is a named stage
-              and will persist between runs (or if you construct another
-              stage object later).  If name is not provided, then this
+              If a name is provided, then this stage is a named stage and will persist between runs
+              (or if you construct another stage object later).  If name is not provided, then this
               stage will be given a unique name automatically.
 
           mirror_paths
-              If provided, Stage will search Spack's mirrors for
-              this archive at each of the provided relative mirror paths
-              before using the default fetch strategy.
+              If provided, Stage will search Spack's mirrors for this archive at each of the
+              provided relative mirror paths before using the default fetch strategy.
 
           keep
-              By default, when used as a context manager, the Stage
-              is deleted on exit when no exceptions are raised.
-              Pass True to keep the stage intact even if no
-              exceptions are raised.
+              By default, when used as a context manager, the Stage is deleted on exit when no
+              exceptions are raised. Pass True to keep the stage intact even if no exceptions are
+              raised.
 
          path
               If provided, the stage path to use for associated builds.
 
          lock
-              True if the stage directory file lock is to be used, False
-              otherwise.
+              True if the stage directory file lock is to be used, False otherwise.
 
          search_fn
-              The search function that provides the fetch strategy
-              instance.
+              The search function that provides the fetch strategy instance.
         """
         super().__init__(name, path, keep, lock)
 
