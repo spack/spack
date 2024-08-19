@@ -18,10 +18,12 @@ import llnl.util.filesystem
 import llnl.util.lang
 import llnl.util.tty
 
+import spack.package_base
 import spack.util.elf as elf_utils
 import spack.util.environment
 import spack.util.environment as environment
 import spack.util.ld_so_conf
+import spack.spec
 
 from .common import (
     WindowsCompilerExternalPaths,
@@ -201,7 +203,7 @@ class Finder:
     def default_path_hints(self) -> List[str]:
         return []
 
-    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:
+    def search_patterns(self, *, pkg: Type[spack.package_base.PackageBase]) -> List[str]:
         """Returns the list of patterns used to match candidate files.
 
         Args:
@@ -227,7 +229,7 @@ class Finder:
         raise NotImplementedError("must be implemented by derived classes")
 
     def detect_specs(
-        self, *, pkg: Type["spack.package_base.PackageBase"], paths: List[str]
+        self, *, pkg: Type[spack.package_base.PackageBase], paths: List[str]
     ) -> List["spack.spec.Spec"]:
         """Given a list of files matching the search patterns, returns a list of detected specs.
 
@@ -303,7 +305,7 @@ class Finder:
 
     def find(
         self, *, pkg_name: str, repository, initial_guess: Optional[List[str]] = None
-    ) -> List["spack.spec.Spec"]:
+    ) -> List[spack.spec.Spec]:
         """For a given package, returns a list of detected specs.
 
         Args:
@@ -328,7 +330,7 @@ class ExecutablesFinder(Finder):
     def default_path_hints(self) -> List[str]:
         return spack.util.environment.get_path("PATH")
 
-    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:
+    def search_patterns(self, *, pkg: Type[spack.package_base.PackageBase]) -> List[str]:
         result = []
         if hasattr(pkg, "executables") and hasattr(pkg, "platform_executables"):
             result = pkg.platform_executables()
@@ -354,7 +356,7 @@ class LibrariesFinder(Finder):
     DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH, and standard system library paths
     """
 
-    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:
+    def search_patterns(self, *, pkg: Type[spack.package_base.PackageBase]) -> List[str]:
         result = []
         if hasattr(pkg, "libraries"):
             result = pkg.libraries
