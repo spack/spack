@@ -429,7 +429,7 @@ Spack not to expand it with the following syntax:
 
 
 class MirrorLayout:
-    """A ``MirrorLayout`` object describes where a mirror entry is stored."""
+    """A ``MirrorLayout`` object describes the relative path of a mirror entry."""
 
     def __init__(self, path: str) -> None:
         self.path = path
@@ -438,37 +438,44 @@ class MirrorLayout:
         """Yield all paths including aliases where the resource can be found."""
         yield self.path
 
-    def make_alias(self) -> None:
-        """Make the entry ``self.path`` available under its human readable alias"""
+    def make_alias(self, root: str) -> None:
+        """Make the entry ``root / self.path`` available under a human readable alias"""
         pass
 
 
 class DefaultLayout(MirrorLayout):
     def __init__(self, alias_path: str, digest_path: Optional[str] = None) -> None:
         # When we have a digest, it is used as the primary storage location. If not, then we use
-        # the human-readable alias.
+        # the human-readable alias. In case of mirrors of a VCS checkout, we currently do not have
+        # a digest, that's why an alias is required and a digest optional.
         super().__init__(path=digest_path or alias_path)
         self.alias = alias_path
         self.digest_path = digest_path
 
-    def make_alias(self):
+    def make_alias(self, root: str) -> None:
         """Symlink a human readible path in our mirror to the actual storage location."""
         # We already use the human-readable path as the main storage location.
         if not self.digest_path:
             return
 
-        relative_dst = os.path.relpath(self.path, start=os.path.dirname(self.alias))
+        alias, digest = os.path.join(root, self.alias), os.path.join(root, self.digest_path)
 
-        mkdirp(os.path.dirname(self.alias))
+        alias_dir = os.path.dirname(alias)
+        relative_dst = os.path.relpath(digest, start=alias_dir)
+
+        mkdirp(alias_dir)
+        tmp = f"{alias}.tmp"
+        llnl.util.symlink.symlink(relative_dst, tmp)
+
         try:
-            tmp = f"{self.alias}.tmp"
-            llnl.util.symlink.symlink(relative_dst, tmp)
-            os.rename(tmp, self.alias)
-        finally:
+            os.rename(tmp, alias)
+        except OSError:
+            # Clean up the temporary if possible
             try:
                 os.unlink(tmp)
             except OSError:
                 pass
+            raise
 
     def __iter__(self):
         if self.digest_path:
@@ -484,7 +491,7 @@ class OCILayout(MirrorLayout):
         super().__init__(os.path.join("blobs", digest.algorithm, digest.digest))
 
 
-def mirror_archive_paths(
+def default_mirror_layout(
     fetcher: "spack.fetch_strategy.FetchStrategy",
     per_package_ref: str,
     spec: Optional["spack.spec.Spec"] = None,

@@ -419,7 +419,7 @@ class Stage(LockableStagingDir):
 
         self.srcdir = None
 
-        self.mirror_paths = mirror_paths
+        self.mirror_layout = mirror_paths
         self.mirrors = list(mirrors) if mirrors else []
 
     @property
@@ -431,8 +431,8 @@ class Stage(LockableStagingDir):
             expanded = self.default_fetcher.expand_archive
             fnames.append(url_util.default_download_filename(self.default_fetcher.url))
 
-        if self.mirror_paths:
-            fnames.append(os.path.basename(x) for x in self.mirror_paths.path)
+        if self.mirror_layout:
+            fnames.append(os.path.basename(self.mirror_layout.path))
 
         paths = [os.path.join(self.path, f) for f in fnames]
         if not expanded:
@@ -471,10 +471,9 @@ class Stage(LockableStagingDir):
         return os.path.join(self.path, _source_path_subdir)
 
     def disable_mirrors(self):
-        """The Stage will not attempt to look for the associated fetcher
-        target in any of Spack's mirrors (including the local download cache).
-        """
-        self.mirror_paths = None
+        """The Stage will not attempt to look for the associated fetcher target in any of Spack's
+        mirrors."""
+        self.mirror_layout = None
 
     def _generate_fetchers(self, mirror_only=False) -> Generator[fs.FetchStrategy, None, None]:
         fetchers: List[fs.FetchStrategy] = []
@@ -494,12 +493,12 @@ class Stage(LockableStagingDir):
         # TODO: move mirror logic out of here and clean it up!
         # TODO: Or @alalazo may have some ideas about how to use a
         # TODO: CompositeFetchStrategy here.
-        if self.mirror_paths and self.mirrors:
+        if self.mirror_layout and self.mirrors:
             # Add URL strategies for all the mirrors with the digest
             # Insert fetchers in the order that the URLs are provided.
             fetchers[:0] = (
                 fs.from_url_scheme(
-                    url_util.join(mirror.fetch_url, self.mirror_paths.path),
+                    url_util.join(mirror.fetch_url, self.mirror_layout.path),
                     checksum=digest,
                     expand=expand,
                     extension=extension,
@@ -508,11 +507,11 @@ class Stage(LockableStagingDir):
                 if not mirror.fetch_url.startswith("oci://")  # no support for mirrors yet
             )
 
-        if self.mirror_paths and self.default_fetcher.cachable:
+        if self.mirror_layout and self.default_fetcher.cachable:
             fetchers.insert(
                 0,
                 spack.caches.FETCH_CACHE.fetcher(
-                    self.mirror_paths.path, digest, expand=expand, extension=extension
+                    self.mirror_layout.path, digest, expand=expand, extension=extension
                 ),
             )
 
@@ -609,7 +608,7 @@ class Stage(LockableStagingDir):
             self.fetcher.check()
 
     def cache_local(self):
-        spack.caches.FETCH_CACHE.store(self.fetcher, self.mirror_paths.path)
+        spack.caches.FETCH_CACHE.store(self.fetcher, self.mirror_layout.path)
 
     def cache_mirror(
         self, mirror: spack.caches.MirrorCache, stats: spack.mirror.MirrorStats
@@ -617,35 +616,34 @@ class Stage(LockableStagingDir):
         """Perform a fetch if the resource is not already cached
 
         Arguments:
-            mirror (spack.caches.MirrorCache): the mirror to cache this Stage's
-                resource in
-            stats (spack.mirror.MirrorStats): this is updated depending on whether the
-                caching operation succeeded or failed
+            mirror: the mirror to cache this Stage's resource in
+            stats: this is updated depending on whether the caching operation succeeded or failed
         """
         if isinstance(self.default_fetcher, fs.BundleFetchStrategy):
-            # BundleFetchStrategy has no source to fetch. The associated
-            # fetcher does nothing but the associated stage may still exist.
-            # There is currently no method available on the fetcher to
-            # distinguish this ('cachable' refers to whether the fetcher
-            # refers to a resource with a fixed ID, which is not the same
-            # concept as whether there is anything to fetch at all) so we
-            # must examine the type of the fetcher.
+            # BundleFetchStrategy has no source to fetch. The associated fetcher does nothing but
+            # the associated stage may still exist. There is currently no method available on the
+            # fetcher to distinguish this ('cachable' refers to whether the fetcher refers to a
+            # resource with a fixed ID, which is not the same concept as whether there is anything
+            # to fetch at all) so we must examine the type of the fetcher.
             return
 
-        if mirror.skip_unstable_versions and not fs.stable_target(self.default_fetcher):
+        elif mirror.skip_unstable_versions and not fs.stable_target(self.default_fetcher):
             return
 
-        absolute_storage_path = os.path.join(mirror.root, self.mirror_paths.path)
+        elif not self.mirror_layout:
+            return
+
+        absolute_storage_path = os.path.join(mirror.root, self.mirror_layout.path)
 
         if os.path.exists(absolute_storage_path):
             stats.already_existed(absolute_storage_path)
         else:
             self.fetch()
             self.check()
-            mirror.store(self.fetcher, self.mirror_paths.path)
+            mirror.store(self.fetcher, self.mirror_layout.path)
             stats.added(absolute_storage_path)
 
-        self.mirror_paths.make_alias()
+        self.mirror_layout.make_alias(mirror.root)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
