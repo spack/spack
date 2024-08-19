@@ -1656,7 +1656,7 @@ def for_package_version(pkg, version=None):
     raise InvalidArgsError(pkg, version, **args)
 
 
-def from_url_scheme(url: str, **kwargs):
+def from_url_scheme(url: str, **kwargs) -> FetchStrategy:
     """Finds a suitable FetchStrategy by matching its url_attr with the scheme
     in the given url."""
     parsed_url = urllib.parse.urlparse(url, scheme="file")

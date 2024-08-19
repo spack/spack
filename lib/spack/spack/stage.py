@@ -425,7 +425,6 @@ class Stage(LockableStagingDir):
     @property
     def expected_archive_files(self):
         """Possible archive file paths."""
-        paths = []
         fnames = []
         expanded = True
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
@@ -433,12 +432,12 @@ class Stage(LockableStagingDir):
             fnames.append(url_util.default_download_filename(self.default_fetcher.url))
 
         if self.mirror_paths:
-            fnames.extend(os.path.basename(x) for x in self.mirror_paths)
+            fnames.append(os.path.basename(x) for x in self.mirror_paths.path)
 
-        paths.extend(os.path.join(self.path, f) for f in fnames)
+        paths = [os.path.join(self.path, f) for f in fnames]
         if not expanded:
-            # If the download file is not compressed, the "archive" is a
-            # single file placed in Stage.source_path
+            # If the download file is not compressed, the "archive" is a single file placed in
+            # Stage.source_path
             paths.extend(os.path.join(self.source_path, f) for f in fnames)
 
         return paths
@@ -478,7 +477,7 @@ class Stage(LockableStagingDir):
         self.mirror_paths = None
 
     def _generate_fetchers(self, mirror_only=False) -> Generator[fs.FetchStrategy, None, None]:
-        fetchers = []
+        fetchers: List[fs.FetchStrategy] = []
         if not mirror_only:
             fetchers.append(self.default_fetcher)
 
@@ -500,22 +499,21 @@ class Stage(LockableStagingDir):
             # Insert fetchers in the order that the URLs are provided.
             fetchers[:0] = (
                 fs.from_url_scheme(
-                    url_util.join(mirror.fetch_url, rel_path),
+                    url_util.join(mirror.fetch_url, self.mirror_paths.path),
                     checksum=digest,
                     expand=expand,
                     extension=extension,
                 )
                 for mirror in self.mirrors
-                if not mirror.fetch_url.startswith("oci://")
-                for rel_path in self.mirror_paths
+                if not mirror.fetch_url.startswith("oci://")  # no support for mirrors yet
             )
 
         if self.mirror_paths and self.default_fetcher.cachable:
-            fetchers[:0] = (
+            fetchers.insert(
+                0,
                 spack.caches.FETCH_CACHE.fetcher(
-                    rel_path, digest, expand=expand, extension=extension
-                )
-                for rel_path in self.mirror_paths
+                    self.mirror_paths.path, digest, expand=expand, extension=extension
+                ),
             )
 
         yield from fetchers
@@ -611,9 +609,11 @@ class Stage(LockableStagingDir):
             self.fetcher.check()
 
     def cache_local(self):
-        spack.caches.FETCH_CACHE.store(self.fetcher, self.mirror_paths.storage_path)
+        spack.caches.FETCH_CACHE.store(self.fetcher, self.mirror_paths.path)
 
-    def cache_mirror(self, mirror, stats):
+    def cache_mirror(
+        self, mirror: spack.caches.MirrorCache, stats: spack.mirror.MirrorStats
+    ) -> None:
         """Perform a fetch if the resource is not already cached
 
         Arguments:
@@ -635,17 +635,17 @@ class Stage(LockableStagingDir):
         if mirror.skip_unstable_versions and not fs.stable_target(self.default_fetcher):
             return
 
-        absolute_storage_path = os.path.join(mirror.root, self.mirror_paths.storage_path)
+        absolute_storage_path = os.path.join(mirror.root, self.mirror_paths.path)
 
         if os.path.exists(absolute_storage_path):
             stats.already_existed(absolute_storage_path)
         else:
             self.fetch()
             self.check()
-            mirror.store(self.fetcher, self.mirror_paths.storage_path)
+            mirror.store(self.fetcher, self.mirror_paths.path)
             stats.added(absolute_storage_path)
 
-        mirror.symlink(self.mirror_paths)
+        self.mirror_paths.make_alias()
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
@@ -653,9 +653,9 @@ class Stage(LockableStagingDir):
         downloaded."""
         if not self.expanded:
             self.fetcher.expand()
-            tty.debug("Created stage in {0}".format(self.path))
+            tty.debug(f"Created stage in {self.path}")
         else:
-            tty.debug("Already staged {0} in {1}".format(self.name, self.path))
+            tty.debug(f"Already staged {self.name} in {self.path}")
 
     def restage(self):
         """Removes the expanded archive path if it exists, then re-expands
