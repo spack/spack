@@ -814,33 +814,28 @@ class FlagMap(lang.HashableMap):
     def intersects(self, other):
         return True
 
+    # TODO: this is a partial demonstration of an update to `constrain`
+    # for purposes of discussion. This change is not required for any
+    # (currently enabled) test to pass. IMO we shouldn't worry about it
+    # in this PR.
     def constrain(self, other):
         """Add all flags in other that aren't in self to self.
 
         Return whether the spec changed.
         """
-        if other.spec and other.spec._concrete:
-            for k in self:
-                if k not in other:
-                    raise UnsatisfiableCompilerFlagSpecError(self[k], "<absent>")
-
         changed = False
-        for k in other:
-            if k in self and not set(self[k]) <= set(other[k]):
-                raise UnsatisfiableCompilerFlagSpecError(
-                    " ".join(f for f in self[k]), " ".join(f for f in other[k])
-                )
-            elif k not in self:
-                self[k] = other[k]
+        for flag_type in other:
+            if flag_type not in self:
+                self[flag_type] = other[flag_type]
+                changed = True
+            else:
+                extra_other = set(other[flag_type]) - set(self[flag_type])
+                self[flag_type] = list(self[flag_type]) + list(x for x in other[flag_type] if x in extra_other)
                 changed = True
 
-            # Check that the propagation values match
-            if self[k] == other[k]:
-                for i in range(len(other[k])):
-                    if self[k][i].propagate != other[k][i].propagate:
-                        raise UnsatisfiableCompilerFlagSpecError(
-                            self[k][i].propagate, other[k][i].propagate
-                        )
+        # TODO: if you "cflags=x".constrain("cflags==x"), self should
+        # propagate x
+
         return changed
 
     @staticmethod
