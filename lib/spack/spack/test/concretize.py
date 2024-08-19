@@ -2300,7 +2300,6 @@ class TestConcretize:
         assert not spec.build_spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
         assert not spec.satisfies("^zmpi")
 
-    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     @pytest.mark.db
     @pytest.mark.parametrize(
         "spec_str,mpi_name",
