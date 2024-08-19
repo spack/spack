@@ -34,7 +34,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
+    provides("c")
     provides("cxx")
+    provides("fortran")
 
     version("master", branch="master")
 

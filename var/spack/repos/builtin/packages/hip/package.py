@@ -46,8 +46,14 @@ class Hip(CMakePackage):
 
     variant("rocm", default=True, description="Enable ROCm support")
     variant("cuda", default=False, description="Build with CUDA")
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
+    conflicts("~rocm +asan", msg="ROCm must be enabled for asan")
+
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
 
     depends_on("cuda", when="+cuda")
 
@@ -60,6 +66,8 @@ class Hip(CMakePackage):
     with when("+rocm"):
         depends_on("gl@4.5:")
         depends_on("py-cppheaderparser", type="build", when="@5.3.3:")
+        depends_on("libx11", when="+asan")
+        depends_on("xproto", when="+asan")
         for ver in [
             "5.3.0",
             "5.3.3",
@@ -532,6 +540,24 @@ class Hip(CMakePackage):
             args.append(self.define("HIP_PLATFORM", "amd"))
             if self.spec.satisfies("@5.6.0:"):
                 args.append(self.define("HIP_LLVM_ROOT", self.spec["llvm-amdgpu"].prefix))
+            if self.spec.satisfies("@6.1.0:") and self.spec.satisfies("+asan"):
+                args.append(self.define("ADDRESS_SANITIZER", "ON"))
+                args.append(
+                    self.define("CMAKE_C_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+                )
+                args.append(
+                    self.define(
+                        "CMAKE_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++"
+                    )
+                )
+                args.append(
+                    self.define(
+                        "CMAKE_CXX_FLAGS",
+                        f"-I{self.spec['libx11'].prefix.include} "
+                        f"-I{self.spec['mesa'].prefix.include} "
+                        f"-I{self.spec['xproto'].prefix.include}",
+                    )
+                )
 
         if self.spec.satisfies("+cuda"):
             args.append(self.define("HIP_PLATFORM", "nvidia"))
@@ -568,9 +594,9 @@ class Hip(CMakePackage):
         """Copy the tests source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         if self.spec.satisfies("@5.1:5.5"):
-            self.cache_extra_test_sources([self.test_src_dir_old])
+            cache_extra_test_sources(self, [self.test_src_dir_old])
         elif self.spec.satisfies("@5.6:"):
-            self.cache_extra_test_sources([self.test_src_dir])
+            cache_extra_test_sources(self, [self.test_src_dir])
 
     def test_samples(self):
         # configure, build and run all hip samples

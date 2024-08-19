@@ -13,7 +13,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Callable, Dict, Iterable, Optional, Set
+from typing import Callable, Dict, Generator, Iterable, List, Optional, Set
 
 import llnl.string
 import llnl.util.lang
@@ -40,6 +40,7 @@ import spack.paths
 import spack.resource
 import spack.spec
 import spack.stage
+import spack.util.crypto
 import spack.util.lock
 import spack.util.path as sup
 import spack.util.pattern as pattern
@@ -351,8 +352,10 @@ class Stage(LockableStagingDir):
     def __init__(
         self,
         url_or_fetch_strategy,
+        *,
         name=None,
-        mirror_paths=None,
+        mirror_paths: Optional[spack.mirror.MirrorLayout] = None,
+        mirrors: Optional[Iterable[spack.mirror.Mirror]] = None,
         keep=False,
         path=None,
         lock=True,
@@ -406,12 +409,18 @@ class Stage(LockableStagingDir):
         # self.fetcher can change with mirrors.
         self.default_fetcher = self.fetcher
         self.search_fn = search_fn
-        # used for mirrored archives of repositories.
-        self.skip_checksum_for_mirror = True
+        # If we fetch from a mirror, but the original data is from say git, we can currently not
+        # prove that they are equal (we don't even have a tree hash in package.py). This bool is
+        # used to skip checksum verification and instead warn the user.
+        if isinstance(self.default_fetcher, fs.URLFetchStrategy):
+            self.skip_checksum_for_mirror = not bool(self.default_fetcher.digest)
+        else:
+            self.skip_checksum_for_mirror = True
 
         self.srcdir = None
 
         self.mirror_paths = mirror_paths
+        self.mirrors = list(mirrors) if mirrors else []
 
     @property
     def expected_archive_files(self):
@@ -466,100 +475,87 @@ class Stage(LockableStagingDir):
         """The Stage will not attempt to look for the associated fetcher
         target in any of Spack's mirrors (including the local download cache).
         """
-        self.mirror_paths = []
+        self.mirror_paths = None
 
-    def fetch(self, mirror_only=False, err_msg=None):
-        """Retrieves the code or archive
-
-        Args:
-            mirror_only (bool): only fetch from a mirror
-            err_msg (str or None): the error message to display if all fetchers
-                fail or ``None`` for the default fetch failure message
-        """
+    def _generate_fetchers(self, mirror_only=False) -> Generator[fs.FetchStrategy, None, None]:
         fetchers = []
         if not mirror_only:
             fetchers.append(self.default_fetcher)
 
-        # TODO: move mirror logic out of here and clean it up!
-        # TODO: Or @alalazo may have some ideas about how to use a
-        # TODO: CompositeFetchStrategy here.
-        self.skip_checksum_for_mirror = True
-        if self.mirror_paths:
-            # Join URLs of mirror roots with mirror paths. Because
-            # urljoin() will strip everything past the final '/' in
-            # the root, so we add a '/' if it is not present.
-            mirror_urls = [
-                url_util.join(mirror.fetch_url, rel_path)
-                for mirror in spack.mirror.MirrorCollection(source=True).values()
-                if not mirror.fetch_url.startswith("oci://")
-                for rel_path in self.mirror_paths
-            ]
-
-            # If this archive is normally fetched from a tarball URL,
-            # then use the same digest.  `spack mirror` ensures that
-            # the checksum will be the same.
+        # If this archive is normally fetched from a URL, then use the same digest.
+        if isinstance(self.default_fetcher, fs.URLFetchStrategy):
+            digest = self.default_fetcher.digest
+            expand = self.default_fetcher.expand_archive
+            extension = self.default_fetcher.extension
+        else:
             digest = None
             expand = True
             extension = None
-            if isinstance(self.default_fetcher, fs.URLFetchStrategy):
-                digest = self.default_fetcher.digest
-                expand = self.default_fetcher.expand_archive
-                extension = self.default_fetcher.extension
 
-            # Have to skip the checksum for things archived from
-            # repositories.  How can this be made safer?
-            self.skip_checksum_for_mirror = not bool(digest)
-
+        # TODO: move mirror logic out of here and clean it up!
+        # TODO: Or @alalazo may have some ideas about how to use a
+        # TODO: CompositeFetchStrategy here.
+        if self.mirror_paths and self.mirrors:
             # Add URL strategies for all the mirrors with the digest
             # Insert fetchers in the order that the URLs are provided.
-            for url in reversed(mirror_urls):
-                fetchers.insert(
-                    0, fs.from_url_scheme(url, digest, expand=expand, extension=extension)
+            fetchers[:0] = (
+                fs.from_url_scheme(
+                    url_util.join(mirror.fetch_url, rel_path),
+                    checksum=digest,
+                    expand=expand,
+                    extension=extension,
                 )
+                for mirror in self.mirrors
+                if not mirror.fetch_url.startswith("oci://")
+                for rel_path in self.mirror_paths
+            )
 
-            if self.default_fetcher.cachable:
-                for rel_path in reversed(list(self.mirror_paths)):
-                    cache_fetcher = spack.caches.FETCH_CACHE.fetcher(
-                        rel_path, digest, expand=expand, extension=extension
-                    )
-                    fetchers.insert(0, cache_fetcher)
+        if self.mirror_paths and self.default_fetcher.cachable:
+            fetchers[:0] = (
+                spack.caches.FETCH_CACHE.fetcher(
+                    rel_path, digest, expand=expand, extension=extension
+                )
+                for rel_path in self.mirror_paths
+            )
 
-        def generate_fetchers():
-            for fetcher in fetchers:
-                yield fetcher
-            # The search function may be expensive, so wait until now to
-            # call it so the user can stop if a prior fetcher succeeded
-            if self.search_fn and not mirror_only:
-                dynamic_fetchers = self.search_fn()
-                for fetcher in dynamic_fetchers:
-                    yield fetcher
+        yield from fetchers
 
-        def print_errors(errors):
-            for msg in errors:
-                tty.debug(msg)
+        # The search function may be expensive, so wait until now to call it so the user can stop
+        # if a prior fetcher succeeded
+        if self.search_fn and not mirror_only:
+            yield from self.search_fn()
 
-        errors = []
-        for fetcher in generate_fetchers():
+    def fetch(self, mirror_only: bool = False, err_msg: Optional[str] = None) -> None:
+        """Retrieves the code or archive
+
+        Args:
+            mirror_only: only fetch from a mirror
+            err_msg: the error message to display if all fetchers fail or ``None`` for the default
+                fetch failure message
+        """
+        errors: List[str] = []
+        for fetcher in self._generate_fetchers(mirror_only):
             try:
                 fetcher.stage = self
                 self.fetcher = fetcher
                 self.fetcher.fetch()
                 break
-            except spack.fetch_strategy.NoCacheError:
+            except fs.NoCacheError:
                 # Don't bother reporting when something is not cached.
                 continue
+            except fs.FailedDownloadError as f:
+                errors.extend(f"{fetcher}: {e.__class__.__name__}: {e}" for e in f.exceptions)
+                continue
             except spack.error.SpackError as e:
-                errors.append("Fetching from {0} failed.".format(fetcher))
-                tty.debug(e)
+                errors.append(f"{fetcher}: {e.__class__.__name__}: {e}")
                 continue
         else:
-            print_errors(errors)
-
             self.fetcher = self.default_fetcher
-            default_msg = "All fetchers failed for {0}".format(self.name)
-            raise spack.error.FetchError(err_msg or default_msg, None)
-
-        print_errors(errors)
+            if err_msg:
+                raise spack.error.FetchError(err_msg)
+            raise spack.error.FetchError(
+                f"All fetchers failed for {self.name}", "\n".join(f"    {e}" for e in errors)
+            )
 
     def steal_source(self, dest):
         """Copy the source_path directory in its entirety to directory dest
@@ -597,16 +593,19 @@ class Stage(LockableStagingDir):
         self.destroy()
 
     def check(self):
-        """Check the downloaded archive against a checksum digest.
-        No-op if this stage checks code out of a repository."""
+        """Check the downloaded archive against a checksum digest."""
         if self.fetcher is not self.default_fetcher and self.skip_checksum_for_mirror:
+            cache = isinstance(self.fetcher, fs.CacheURLFetchStrategy)
+            if cache:
+                secure_msg = "your download cache is in a secure location"
+            else:
+                secure_msg = "you trust this mirror and have a secure connection"
             tty.warn(
-                "Fetching from mirror without a checksum!",
-                "This package is normally checked out from a version "
-                "control system, but it has been archived on a spack "
-                "mirror.  This means we cannot know a checksum for the "
-                "tarball in advance. Be sure that your connection to "
-                "this mirror is secure!",
+                f"Using {'download cache' if cache else 'a mirror'} instead of version control",
+                "The required sources are normally checked out from a version control system, "
+                f"but have been archived {'in download cache' if cache else 'on a mirror'}: "
+                f"{self.fetcher}. Spack lacks a tree hash to verify the integrity of this "
+                f"archive. Make sure {secure_msg}.",
             )
         elif spack.config.get("config:checksum"):
             self.fetcher.check()
@@ -1175,7 +1174,7 @@ def _fetch_and_checksum(url, options, keep_stage, action_fn=None):
     try:
         url_or_fs = url
         if options:
-            url_or_fs = fs.URLFetchStrategy(url, fetch_options=options)
+            url_or_fs = fs.URLFetchStrategy(url=url, fetch_options=options)
 
         with Stage(url_or_fs, keep=keep_stage) as stage:
             # Fetch the archive
@@ -1188,7 +1187,7 @@ def _fetch_and_checksum(url, options, keep_stage, action_fn=None):
             # Checksum the archive and add it to the list
             checksum = spack.util.crypto.checksum(hashlib.sha256, stage.archive_file)
         return checksum, None
-    except FailedDownloadError:
+    except fs.FailedDownloadError:
         return None, f"[WORKER] Failed to fetch {url}"
     except Exception as e:
         return None, f"[WORKER] Something failed on {url}, skipping.  ({e})"
@@ -1208,7 +1207,3 @@ class RestageError(StageError):
 
 class VersionFetchError(StageError):
     """Raised when we can't determine a URL to fetch a package."""
-
-
-# Keep this in namespace for convenience
-FailedDownloadError = fs.FailedDownloadError

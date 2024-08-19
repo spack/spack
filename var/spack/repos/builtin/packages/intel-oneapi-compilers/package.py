@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
 
 from spack.build_environment import dso_suffix
 from spack.package import *
@@ -19,6 +20,10 @@ versions = [
             "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/5e7b0f1c-6f25-4cc8-94d7-3a527e596739/l_fortran-compiler_p_2024.2.1.80_offline.sh",
             "sha256": "6f6dab82a88082a7a39f6feb699343c521f58c6481a1bb87edba7e2550995b6d",
         },
+        "nvidia-plugin": {
+            "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2024.2.1&filters[]=12.0&filters[]=linux",
+            "sha256": "2c377027c650291ccd8267cbf75bd3d00c7b11998cc59d5668a02a0cbc2c015f",
+        },
     },
     {
         "version": "2024.2.0",
@@ -29,6 +34,10 @@ versions = [
         "ftn": {
             "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/801143de-6c01-4181-9911-57e00fe40181/l_fortran-compiler_p_2024.2.0.426_offline.sh",
             "sha256": "fd19a302662b2f86f76fc115ef53a69f16488080278dba4c573cc705f3a52ffa",
+        },
+        "nvidia-plugin": {
+            "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2024.2.0&filters[]=12.0&filters[]=linux",
+            "sha256": "0622df0054364b01e91e7ed72a33cb3281e281db5b0e86579f516b1cc5336b0f",
         },
     },
     {
@@ -263,7 +272,9 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
 
     # See https://github.com/spack/spack/issues/39252
     depends_on("patchelf@:0.17", type="build", when="@:2024.1")
-
+    # Add the nvidia variant
+    variant("nvidia", default=False, description="Install NVIDIA plugin for OneAPI")
+    conflicts("@:2022.2.1", when="+nvidia", msg="Codeplay NVIDIA plugin requires newer release")
     # TODO: effectively gcc is a direct dependency of intel-oneapi-compilers, but we
     # cannot express that properly. For now, add conflicts for non-gcc compilers
     # instead.
@@ -278,6 +289,14 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
                 when="@{0}".format(v["version"]),
                 expand=False,
                 **v["ftn"],
+            )
+        if "nvidia-plugin" in v:
+            resource(
+                name="nvidia-plugin-installer",
+                placement="nvidia-plugin-installer",
+                when="@{0}".format(v["version"]),
+                expand=False,
+                **v["nvidia-plugin"],
             )
 
     @property
@@ -338,6 +357,18 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
             # Some installers have a bug and do not return an error code when failing
             if not is_exe(self._llvm_bin.ifx):
                 raise RuntimeError("Fortran install failed")
+        # install nvidia-plugin
+        if self.spec.satisfies("+nvidia"):
+            nvidia_script = find("nvidia-plugin-installer", "*")
+            if nvidia_script:
+                if platform.system() == "Linux":
+                    bash = Executable("bash")
+                    # Installer writes files in ~/intel set HOME so it goes to prefix
+                    bash.add_default_env("HOME", prefix)
+                    # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
+                    bash.add_default_env("XDG_RUNTIME_DIR", join_path(self.stage.path, "runtime"))
+                    # For NVIDIA plugin installer
+                    bash(nvidia_script[0], "-y", "--install-dir", self.prefix)
 
     @run_after("install")
     def inject_rpaths(self):

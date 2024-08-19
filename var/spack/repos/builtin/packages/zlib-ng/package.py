@@ -45,7 +45,7 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     build_system("autotools", "cmake", default="autotools")
 
     # fix building with NVHPC, see https://github.com/zlib-ng/zlib-ng/pull/1698
-    patch("pr-1698.patch", when="@2.1.4:%nvhpc+opt")
+    patch("pr-1698.patch", when="@2.1.4:2.1.6%nvhpc+opt")
 
     with when("build_system=cmake"):
         depends_on("cmake@3.5.1:", type="build")

@@ -202,7 +202,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([join_path("examples", "apps")])
+        cache_extra_test_sources(self, [join_path("examples", "apps")])
 
     def test_cxx_example(self):
         """build and run cxx-example"""
