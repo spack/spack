@@ -740,7 +740,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             raise ValueError(msg.format(self))
 
         # init internal variables
-        self._stage = None
+        self._stage: Optional[StageComposite] = None
         self._fetcher = None
         self._tester: Optional["PackageTest"] = None
 
@@ -1179,7 +1179,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         return self._stage
 
     @stage.setter
-    def stage(self, stage):
+    def stage(self, stage: StageComposite):
         """Allow a stage object to be set to override the default."""
         self._stage = stage
 

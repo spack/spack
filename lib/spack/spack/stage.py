@@ -421,6 +421,8 @@ class Stage(LockableStagingDir):
 
         self.mirror_layout = mirror_paths
         self.mirrors = list(mirrors) if mirrors else []
+        # Allow users the disable both mirrors and download cache
+        self.default_fetcher_only = False
 
     @property
     def expected_archive_files(self):
@@ -470,11 +472,6 @@ class Stage(LockableStagingDir):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
 
-    def disable_mirrors(self):
-        """The Stage will not attempt to look for the associated fetcher target in any of Spack's
-        mirrors."""
-        self.mirror_layout = None
-
     def _generate_fetchers(self, mirror_only=False) -> Generator[fs.FetchStrategy, None, None]:
         fetchers: List[fs.FetchStrategy] = []
         if not mirror_only:
@@ -493,7 +490,7 @@ class Stage(LockableStagingDir):
         # TODO: move mirror logic out of here and clean it up!
         # TODO: Or @alalazo may have some ideas about how to use a
         # TODO: CompositeFetchStrategy here.
-        if self.mirror_layout and self.mirrors:
+        if not self.default_fetcher_only and self.mirror_layout and self.mirrors:
             # Add URL strategies for all the mirrors with the digest
             # Insert fetchers in the order that the URLs are provided.
             fetchers[:0] = (
@@ -507,7 +504,7 @@ class Stage(LockableStagingDir):
                 if not mirror.fetch_url.startswith("oci://")  # no support for mirrors yet
             )
 
-        if self.mirror_layout and self.default_fetcher.cachable:
+        if not self.default_fetcher_only and self.mirror_layout and self.default_fetcher.cachable:
             fetchers.insert(
                 0,
                 spack.caches.FETCH_CACHE.fetcher(
