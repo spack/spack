@@ -70,11 +70,15 @@ class Qt(Package):
     )
     variant("gtk", default=False, description="Build with gtkplus.")
     variant("gui", default=True, description="Build the Qt GUI module and dependencies")
-    # Windows does not have support for opengl support at the moment
-    # TODO (johnwparent): port angle and llvmmesapipe so we can enable opengl
+    # Desktop only on Windows
+    variant("opengl", default=False, description="Build with OpenGL support")
     for plat in ["linux", "darwin", "freebsd"]:
         with when(f"platform={plat}"):
-            variant("opengl", default=False, description="Build with OpenGL support")
+            # webkit support requires qtquick2 which requires a GL implementation beyond what
+            # windows system gl provides.
+            # This is unavailable until we get a hardware accelerated option for EGL 2 on Windows
+            # We can use llvm or angle for this, but those are not hardware accelerated, so are not
+            # as useful for things like paraview
             variant("webkit", default=False, description="Build the Webkit extension")
     variant("location", default=False, description="Build the Qt Location module.")
     variant("phonon", default=False, description="Build with phonon support.")
@@ -386,6 +390,10 @@ class Qt(Package):
         env.set("QTINC", self.prefix.inc)
         env.set("QTLIB", self.prefix.lib)
         env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
+        if IS_WINDOWS:
+            # Force Qt to use the desktop provided GL
+            # on Windows when dependencies are building against Qt
+            env.set("QT_OPENGL", "desktop")
 
     def setup_dependent_package(self, module, dependent_spec):
         module.qmake = Executable(self.spec.prefix.bin.qmake)
@@ -576,12 +584,19 @@ class Qt(Package):
             self.prefix,
             "-v",
             "-opensource",
-            "-{0}opengl".format("" if "+opengl" in spec else "no-"),
             "-{0}".format("debug" if "+debug" in spec else "release"),
             "-confirm-license",
             "-optimized-qmake",
             "-no-pch",
         ]
+
+        # Windows currently only supports the desktop provider for opengl
+        if "+opengl" in spec:
+            config_args.append("-opengl")
+            if IS_WINDOWS:
+                config_args.append("desktop")
+        else:
+            config_args.append("-noopengl")
 
         use_spack_dep = self._dep_appender_factory(config_args)
 
