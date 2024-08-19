@@ -135,9 +135,7 @@ def external_find(args):
     candidate_packages = packages_to_search_for(
         names=args.packages, tags=args.tags, exclude=args.exclude
     )
-    detected_packages = spack.detection.by_path(
-        candidate_packages, path_hints=args.path, max_workers=args.jobs
-    )
+    detected_packages = spack.detection.by_path(candidate_packages, path_hints=args.path)
 
     new_specs = spack.detection.update_configuration(
         detected_packages, scope=args.scope, buildable=not args.not_buildable
