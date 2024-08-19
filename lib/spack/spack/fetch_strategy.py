@@ -770,16 +770,16 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def cachable(self):
-        return self.cache_enabled and bool(self.commit or self.tag)
+        return self.cache_enabled and bool(self.commit)
 
     def source_id(self):
-        return self.commit or self.tag
+        # TODO: tree-hash would secure download cache and mirrors, commit only secures checkouts.
+        return self.commit
 
     def mirror_id(self):
-        repo_ref = self.commit or self.tag or self.branch
-        if repo_ref:
+        if self.commit:
             repo_path = urllib.parse.urlparse(self.url).path
-            result = os.path.sep.join(["git", repo_path, repo_ref])
+            result = os.path.sep.join(["git", repo_path, self.commit])
             return result
 
     def _repo_info(self):
