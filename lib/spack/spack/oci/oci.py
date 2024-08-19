@@ -390,15 +390,12 @@ def make_stage(
 ) -> spack.stage.Stage:
     _urlopen = _urlopen or spack.oci.opener.urlopen
     fetch_strategy = spack.fetch_strategy.OCIRegistryFetchStrategy(
-        url, checksum=digest.digest, _urlopen=_urlopen
+        url=url, checksum=digest.digest, _urlopen=_urlopen
     )
     # Use blobs/<alg>/<encoded> as the cache path, which follows
     # the OCI Image Layout Specification. What's missing though,
     # is the `oci-layout` and `index.json` files, which are
     # required by the spec.
     return spack.stage.Stage(
-        fetch_strategy,
-        mirror_paths=spack.mirror.OCIImageLayout(digest),
-        name=digest.digest,
-        keep=keep,
+        fetch_strategy, mirror_paths=spack.mirror.OCILayout(digest), name=digest.digest, keep=keep
     )

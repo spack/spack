@@ -61,6 +61,10 @@ class PyPybind11(CMakePackage, PythonExtension):
     depends_on("py-wheel", type="build")
     extends("python")
 
+    # Spack defaults to False but pybind11 defaults to True (and IPO is highly
+    # encouraged to be used)
+    variant("ipo", default=True, description="CMake interprocedural optimization")
+
     with when("build_system=cmake"):
         generator("ninja")
         depends_on("cmake@3.13:", type="build")

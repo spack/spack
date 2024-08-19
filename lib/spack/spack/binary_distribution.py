@@ -1431,12 +1431,9 @@ def _oci_put_manifest(
     for s in expected_blobs:
         # If a layer for a dependency has gone missing (due to removed manifest in the registry, a
         # failed push, or a local forced uninstall), we cannot create a runnable container image.
-        # If an OCI registry is only used for storage, this is not a hard error, but for now we
-        # raise an exception unconditionally, until someone requests a more lenient behavior.
         checksum = checksums.get(s.dag_hash())
-        if not checksum:
-            raise MissingLayerError(f"missing layer for {_format_spec(s)}")
-        config["rootfs"]["diff_ids"].append(str(checksum.uncompressed_digest))
+        if checksum:
+            config["rootfs"]["diff_ids"].append(str(checksum.uncompressed_digest))
 
     # Set the environment variables
     config["config"]["Env"] = [f"{k}={v}" for k, v in env.items()]
@@ -1481,6 +1478,7 @@ def _oci_put_manifest(
                     "size": checksums[s.dag_hash()].size,
                 }
                 for s in expected_blobs
+                if s.dag_hash() in checksums
             ),
         ],
     }
@@ -3096,7 +3094,3 @@ class CannotListKeys(GenerateIndexError):
 
 class PushToBuildCacheError(spack.error.SpackError):
     """Raised when unable to push objects to binary mirror"""
-
-
-class MissingLayerError(spack.error.SpackError):
-    """Raised when a required layer for a dependency is missing in an OCI registry."""

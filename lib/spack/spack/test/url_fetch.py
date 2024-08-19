@@ -76,12 +76,6 @@ def pkg_factory():
     return factory
 
 
-def test_urlfetchstrategy_sans_url():
-    """Ensure constructor with no URL fails."""
-    with pytest.raises(ValueError):
-        fs.URLFetchStrategy(None)
-
-
 @pytest.mark.parametrize("method", ["curl", "urllib"])
 def test_urlfetchstrategy_bad_url(tmp_path, mutable_config, method):
     """Ensure fetch with bad URL fails as expected."""
@@ -267,7 +261,7 @@ def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
     monkeypatch.setattr(sys.stdout, "isatty", is_true)
     monkeypatch.setattr(tty, "msg_enabled", is_true)
     with spack.config.override("config:url_fetch_method", "curl"):
-        fetcher = fs.URLFetchStrategy(mock_archive.url)
+        fetcher = fs.URLFetchStrategy(url=mock_archive.url)
         with Stage(fetcher, path=testpath) as stage:
             assert fetcher.archive_file is None
             stage.fetch()
@@ -280,7 +274,7 @@ def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
 def test_url_extra_fetch(tmp_path, mutable_config, mock_archive, _fetch_method):
     """Ensure a fetch after downloading is effectively a no-op."""
     mutable_config.set("config:url_fetch_method", _fetch_method)
-    fetcher = fs.URLFetchStrategy(mock_archive.url)
+    fetcher = fs.URLFetchStrategy(url=mock_archive.url)
     with Stage(fetcher, path=str(tmp_path)) as stage:
         assert fetcher.archive_file is None
         stage.fetch()

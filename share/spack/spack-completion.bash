@@ -2022,7 +2022,7 @@ _spack_verify() {
 _spack_versions() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --safe --safe-only -r --remote -n --new -j --jobs"
+        SPACK_COMPREPLY="-h --help -s --safe -r --remote -n --new -j --jobs"
     else
         _all_packages
     fi

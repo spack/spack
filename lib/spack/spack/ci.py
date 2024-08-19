@@ -1433,10 +1433,6 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
         job_log_dir: path into which build log should be copied
     """
     tty.debug(f"job spec: {job_spec}")
-    if not job_spec:
-        msg = f"Cannot copy stage logs: job spec ({job_spec}) is required"
-        tty.error(msg)
-        return
 
     try:
         pkg_cls = spack.repo.PATH.get_pkg_class(job_spec.name)

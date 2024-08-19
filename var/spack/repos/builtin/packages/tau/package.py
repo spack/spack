@@ -462,23 +462,23 @@ class Tau(Package):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(self.matmult_test)
-        self.cache_extra_test_sources(self.makefile_test)
-        self.cache_extra_test_sources(self.makefile_inc_test)
+        cache_extra_test_sources(self, self.matmult_test)
+        cache_extra_test_sources(self, self.makefile_test)
+        cache_extra_test_sources(self, self.makefile_inc_test)
         if "+dyninst" in self.spec:
-            self.cache_extra_test_sources(self.dyninst_test)
+            cache_extra_test_sources(self, self.dyninst_test)
         if "+cuda" in self.spec:
-            self.cache_extra_test_sources(self.cuda_test)
+            cache_extra_test_sources(self, self.cuda_test)
         if "+level_zero" in self.spec:
-            self.cache_extra_test_sources(self.level_zero_test)
+            cache_extra_test_sources(self, self.level_zero_test)
         if "+rocm" in self.spec:
-            self.cache_extra_test_sources(self.rocm_test)
+            cache_extra_test_sources(self, self.rocm_test)
         if "+syscall" in self.spec:
-            self.cache_extra_test_sources(self.syscall_test)
+            cache_extra_test_sources(self, self.syscall_test)
         if "+ompt" in self.spec:
-            self.cache_extra_test_sources(self.ompt_test)
+            cache_extra_test_sources(self, self.ompt_test)
         if "+python" in self.spec:
-            self.cache_extra_test_sources(self.python_test)
+            cache_extra_test_sources(self, self.python_test)
 
     def _run_python_test(self, test_name, purpose, work_dir):
         tau_python = which(self.prefix.bin.tau_python)
