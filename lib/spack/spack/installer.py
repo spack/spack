@@ -2605,7 +2605,7 @@ class OverwriteInstall:
         """
         try:
             with fs.replace_directory_transaction(self.task.pkg.prefix):
-                return self.installer._install_task(self.task, self.install_status)
+                self.installer._install_task(self.task, self.install_status)
         except fs.CouldNotRestoreDirectoryBackup as e:
             self.database.remove(self.task.pkg.spec)
             tty.error(
