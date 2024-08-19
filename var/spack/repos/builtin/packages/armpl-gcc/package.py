@@ -432,16 +432,10 @@ class ArmplGcc(Package):
         with when("@23:"):
             armpl_version = spec.version.string.split("_")[0]
 
-        if spec.satisfies("@:23"):
-            exe = Executable(
-                f"./arm-performance-libraries_{armpl_version}_"
-                + f"{get_os_or_pkg_manager(armpl_version)}.sh"
-            )
-        else:
-            package_type = (
-                "deb" if spack.platforms.host().default_os.startswith("ubuntu") else "rpm"
-            )
-            exe = Executable(f"./arm-performance-libraries_{armpl_version}_{package_type}.sh")
+        exe = Executable(
+            f"./arm-performance-libraries_{armpl_version}_"
+            + f"{get_os_or_pkg_manager(armpl_version)}.sh"
+        )
         exe("--accept", "--force", "--install-to", prefix)
 
     @property
