@@ -13,9 +13,10 @@ from llnl.util.lang import classproperty
 import spack.build_environment
 import spack.util.executable
 from spack.package import *
+from spack.package_base import PackageBase
 
 
-class LlvmBasedCompiler(CompilerPackage):
+class LlvmDetection(PackageBase):
     """Base class to detect LLVM based compilers"""
 
     compiler_version_argument = "--version"
@@ -34,7 +35,7 @@ class LlvmBasedCompiler(CompilerPackage):
         return [x for x in exes_in_prefix if not reject.search(x)]
 
 
-class Llvm(CMakePackage, CudaPackage, LlvmBasedCompiler):
+class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     """The LLVM Project is a collection of modular and reusable compiler and
     toolchain technologies. Despite its name, LLVM has little to do
     with traditional virtual machines, though it does provide helpful

@@ -6,10 +6,10 @@
 from llnl.util import tty
 
 from spack.package import *
-from spack.pkg.builtin.llvm import LlvmBasedCompiler
+from spack.pkg.builtin.llvm import LlvmDetection
 
 
-class Aocc(Package, LlvmBasedCompiler):
+class Aocc(Package, LlvmDetection, CompilerPackage):
     """
     The AOCC compiler system is a high performance, production quality code
     generation tool.  The AOCC environment provides various options to developers
