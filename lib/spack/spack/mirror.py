@@ -458,7 +458,7 @@ class OCILayout(MirrorLayout):
         super().__init__(os.path.join("blobs", digest.algorithm, digest.digest))
 
 
-def mirror_archive_paths(fetcher, per_package_ref, spec=None):
+def mirror_archive_paths(fetcher: spack.fetch_strategy.FetchStrategy, per_package_ref, spec: Optional[spack.spec.Spec]=None):
     """Returns a ``MirrorReference`` object which keeps track of the relative
     storage path of the resource associated with the specified ``fetcher``."""
     ext = None
