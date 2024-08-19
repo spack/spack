@@ -141,8 +141,8 @@ class RocmValidationSuite(CMakePackage):
                     f"-L{self.spec['hsakmt-roct'].prefix.lib} "
                     f"-L{self.spec['rocm-smi-lib'].prefix.lib} "
                     f"-L{self.spec['rocblas'].prefix.lib} "
-                    f"{self.spec['yaml-cpp'].prefix.lib}/libyaml-cpp.a "
+                    f"{self.spec['yaml-cpp'].prefix.lib}/libyaml-cpp.a ",
                 )
             )
-            args.append(self.define("CPACK_PACKAGING_INSTALL_PREFIX",  self.spec.prefix))
+            args.append(self.define("CPACK_PACKAGING_INSTALL_PREFIX", self.spec.prefix))
         return args
