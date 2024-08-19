@@ -24,6 +24,6 @@ class Fastjson(MavenPackage):
 
     def url_for_version(self, version):
         if version < Version("2"):
-            return f"https://github.com/alibaba/fastjson/releases/{version}.tar.gz"
+            return f"https://github.com/alibaba/fastjson/archive/{version}.tar.gz"
         else:
-            return f"https://github.com/alibaba/fastjson2/releases/{version}.tar.gz"
+            return f"https://github.com/alibaba/fastjson2/archive/{version}.tar.gz"
