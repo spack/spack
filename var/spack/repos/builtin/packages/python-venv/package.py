@@ -93,17 +93,10 @@ class PythonVenv(Package):
             path = os.path.join(dependent_spec.prefix, directory)
             if os.path.isdir(path):
                 env.prepend_path("PYTHONPATH", path)
-        try:
-            dep_bin_dir = dependent_spec.package.bindir
-            if os.path.isdir(dep_bin_dir):
-                env.prepend_path("PATH", dep_bin_dir)
-        except AttributeError:
-            # not all dependents will be python packages
-            # so will not have a bindir defined.
-            pass
+        dep_bin_dir = getattr(dependent_spec.package, "bindir", None)
+        if dep_bin_dir and os.path.isdir(dep_bin_dir):
+            env.prepend_path("PATH", dep_bin_dir)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_dependent_run_environment(env, dependent_spec)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods."""
