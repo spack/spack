@@ -668,6 +668,10 @@ class RepoIndex:
 
         return indexer.index
 
+    def all_package_names(self) -> List[str]:
+        """Returns the list of all package names in the repository"""
+        return sorted(self.checker.keys())
+
 
 class RepoPath:
     """A RepoPath is a list of repos that function as one.
@@ -1204,7 +1208,7 @@ class Repo:
 
     def all_package_names(self, include_virtuals: bool = False) -> List[str]:
         """Returns a sorted list of all package names in the Repo."""
-        names = sorted(self._pkg_checker.keys())
+        names = self.index.all_package_names()
         if include_virtuals:
             return names
         return [x for x in names if not self.is_virtual(x)]
