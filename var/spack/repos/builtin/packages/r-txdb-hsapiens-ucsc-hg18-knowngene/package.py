@@ -14,7 +14,6 @@ class RTxdbHsapiensUcscHg18Knowngene(RPackage):
 
     # This is a bioconductor package but ther is no available git repo
     bioc = "TxDb.Hsapiens.UCSC.hg18.knownGene"
-    url = "https://bioconductor.org/packages/release/data/annotation/src/contrib/TxDb.Hsapiens.UCSC.hg18.knownGene_3.2.2.tar.gz"
 
     version("3.2.2", sha256="bc9ca40b4eab87f5ca64a4b876d42502b9b8e9f5983d745bfe0ee349d97b69fa")
 

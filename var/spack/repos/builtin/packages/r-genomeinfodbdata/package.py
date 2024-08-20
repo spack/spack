@@ -11,7 +11,6 @@ class RGenomeinfodbdata(RPackage):
     in the GenomeInfoDb package."""
 
     bioc = "GenomeInfoDbData"
-    url = "https://bioconductor.org/packages/release/data/annotation/src/contrib/GenomeInfoDbData_0.99.0.tar.gz"
 
     version(
         "1.2.10",

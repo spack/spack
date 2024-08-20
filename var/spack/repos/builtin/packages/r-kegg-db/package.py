@@ -14,7 +14,6 @@ class RKeggDb(RPackage):
     # NOTE: The KEGG.db package was removed in Bioconductor-3.13
 
     bioc = "KEGG.db"
-    url = "https://www.bioconductor.org/packages/release/data/annotation/src/contrib/KEGG.db_3.2.3.tar.gz"
 
     version(
         "3.2.4",

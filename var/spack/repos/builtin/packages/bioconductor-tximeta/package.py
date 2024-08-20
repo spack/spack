@@ -14,9 +14,6 @@ class BioconductorTximeta(RPackage):
     metadata. De novo transcriptomes can be linked to the appropriate sources with
     linkedTxomes and shared for computational reproducibility."""
 
-    homepage = "https://bioconductor.org/packages/release/bioc/html/tximeta.html"
-    url = "https://bioconductor.org/packages/release/bioc/src/contrib/tximeta_1.18.1.tar.gz"
-
     bioc = "tximeta"
 
     version(

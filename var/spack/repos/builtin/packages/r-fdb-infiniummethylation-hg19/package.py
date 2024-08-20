@@ -13,7 +13,6 @@ class RFdbInfiniummethylationHg19(RPackage):
 
     # No available git repository
     bioc = "FDb.InfiniumMethylation.hg19"
-    url = "https://bioconductor.org/packages/release/data/annotation/src/contrib/FDb.InfiniumMethylation.hg19_2.2.0.tar.gz"
 
     version("2.2.0", sha256="605aa3643588a2f40a942fa760b92662060a0dfedb26b4e4cd6f1a78b703093f")
 
