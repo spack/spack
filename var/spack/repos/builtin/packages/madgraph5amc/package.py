@@ -137,7 +137,7 @@ class Madgraph5amc(MakefilePackage):
             join_path(prefix, "Template", "LO", "Source", "make_opts"),
         )
 
-        if "pythia8" in spec:
+        if "+pythia8" in spec:
             with open("install-pythia8-interface", "w") as f:
                 f.write(
                     f"""set pythia8_path {spec['pythia8'].prefix}
