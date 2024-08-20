@@ -262,8 +262,15 @@ class TestSpecSemantics:
             ),
         ],
     )
-    def test_abstract_specs_can_constrain_each_other_asymmetric(self, lhs, rhs, expected_lhs, expected_rhs):
-        lhs, rhs, expected_lhs, expected_rhs = Spec(lhs), Spec(rhs), Spec(expected_lhs), Spec(expected_rhs)
+    def test_abstract_specs_can_constrain_each_other_asymmetric(
+        self, lhs, rhs, expected_lhs, expected_rhs
+    ):
+        lhs, rhs, expected_lhs, expected_rhs = (
+            Spec(lhs),
+            Spec(rhs),
+            Spec(expected_lhs),
+            Spec(expected_rhs),
+        )
 
         assert lhs.intersects(rhs)
         assert rhs.intersects(lhs)
