@@ -27,7 +27,7 @@ class Madgraph5amc(MakefilePackage):
     )
     version(
         "2.9.20",
-        sha256="",
+        sha256="09a70e2e8b52e504bcaaa6527d3cec9641b043f5f853f2d11fa3c9970b7efae9",
     )
     version(
         "2.9.19",
