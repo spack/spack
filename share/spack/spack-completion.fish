@@ -3103,14 +3103,12 @@ complete -c spack -n '__fish_spack_using_command verify' -s f -l files -f -a typ
 complete -c spack -n '__fish_spack_using_command verify' -s f -l files -d 'treat entries as absolute filenames'
 
 # spack versions
-set -g __fish_spack_optspecs_spack_versions h/help s/safe safe-only r/remote n/new j/jobs=
+set -g __fish_spack_optspecs_spack_versions h/help s/safe r/remote n/new j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos 0 versions' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command versions' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command versions' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command versions' -s s -l safe -f -a safe
 complete -c spack -n '__fish_spack_using_command versions' -s s -l safe -d 'only list safe versions of the package'
-complete -c spack -n '__fish_spack_using_command versions' -l safe-only -f -a safe_only
-complete -c spack -n '__fish_spack_using_command versions' -l safe-only -d '[deprecated] only list safe versions of the package'
 complete -c spack -n '__fish_spack_using_command versions' -s r -l remote -f -a remote
 complete -c spack -n '__fish_spack_using_command versions' -s r -l remote -d 'only list remote versions of the package'
 complete -c spack -n '__fish_spack_using_command versions' -s n -l new -f -a new

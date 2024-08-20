@@ -357,7 +357,7 @@ def test_push_and_fetch_keys(mock_gnupghome, tmp_path):
         assert len(keys) == 1
         fpr = keys[0]
 
-        bindist.push_keys(mirror, keys=[fpr], tmpdir=str(tmp_path), update_index=True)
+        bindist._url_push_keys(mirror, keys=[fpr], tmpdir=str(tmp_path), update_index=True)
 
     # dir 2: import the key from the mirror, and confirm that its fingerprint
     #        matches the one created above
@@ -492,7 +492,7 @@ def test_generate_package_index_failure(monkeypatch, tmp_path, capfd):
     test_url = "file:///fake/keys/dir"
 
     with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
-        bindist.generate_package_index(test_url, str(tmp_path))
+        bindist._url_generate_package_index(test_url, str(tmp_path))
 
     assert (
         "Warning: Encountered problem listing packages at "
@@ -513,7 +513,7 @@ def test_generate_indices_exception(monkeypatch, tmp_path, capfd):
         bindist.generate_key_index(url, str(tmp_path))
 
     with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
-        bindist.generate_package_index(url, str(tmp_path))
+        bindist._url_generate_package_index(url, str(tmp_path))
 
     assert f"Encountered problem listing packages at {url}" in capfd.readouterr().err
 

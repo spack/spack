@@ -11,6 +11,7 @@ import os
 import os.path
 import pickle
 import re
+import shlex
 import sys
 from functools import wraps
 from typing import Any, Callable, Dict, List, MutableMapping, Optional, Tuple, Union
@@ -61,26 +62,6 @@ TRACING_ENABLED = False
 
 Path = str
 ModificationList = List[Union["NameModifier", "NameValueModifier"]]
-
-
-_find_unsafe = re.compile(r"[^\w@%+=:,./-]", re.ASCII).search
-
-
-def double_quote_escape(s):
-    """Return a shell-escaped version of the string *s*.
-
-    This is similar to how shlex.quote works, but it escapes with double quotes
-    instead of single quotes, to allow environment variable expansion within
-    quoted strings.
-    """
-    if not s:
-        return '""'
-    if _find_unsafe(s) is None:
-        return s
-
-    # use double quotes, and escape double quotes in the string
-    # the string $"b is then quoted as "$\"b"
-    return '"' + s.replace('"', r"\"") + '"'
 
 
 def system_env_normalize(func):
@@ -182,7 +163,7 @@ def _nix_env_var_to_source_line(var: str, val: str) -> str:
             fname=BASH_FUNCTION_FINDER.sub(r"\1", var), decl=val
         )
     else:
-        source_line = f"{var}={double_quote_escape(val)}; export {var}"
+        source_line = f"{var}={shlex.quote(val)}; export {var}"
     return source_line
 
 
@@ -691,11 +672,10 @@ class EnvironmentModifications:
                 if new is None:
                     cmds += _SHELL_UNSET_STRINGS[shell].format(name)
                 else:
-                    if sys.platform != "win32":
-                        new_env_name = double_quote_escape(new_env[name])
-                    else:
-                        new_env_name = new_env[name]
-                    cmd = _SHELL_SET_STRINGS[shell].format(name, new_env_name)
+                    value = new_env[name]
+                    if shell not in ("bat", "pwsh"):
+                        value = shlex.quote(value)
+                    cmd = _SHELL_SET_STRINGS[shell].format(name, value)
                     cmds += cmd
         return cmds
 

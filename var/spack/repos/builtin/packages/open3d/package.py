@@ -120,11 +120,11 @@ class Open3d(CMakePackage, CudaPackage):
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
-    def check_import(self):
-        if "+python" in self.spec:
-            self.run_test(
-                python.path,
-                ["-c", "import open3d"],
-                purpose="checking import of open3d",
-                work_dir="spack-test",
-            )
+    def test_open3d_import(self):
+        """Checking import of open3d"""
+        if "+python" not in self.spec:
+            return
+
+        with working_dir("spack-test"):
+            python = which(python.path)
+            python("-c", "import open3d")
