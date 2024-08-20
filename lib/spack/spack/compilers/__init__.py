@@ -360,7 +360,7 @@ def _is_active_vcvars_session(env=None) -> bool:
     return bool(env.get("VisualStudioVersion", False))
 
 
-def compiler_from_vcenv() -> Union[spack.compiler.CompilerSpec, None]:
+def compiler_from_vcenv():
     # not intended to function on non Windows platforms
     # or if there's no active VCVars, not worth considering
     if not IS_WINDOWS or not _is_active_vcvars_session():
