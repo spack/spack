@@ -269,7 +269,10 @@ class TestSpecSemantics:
     def test_constrain_compiler_flags(
         self, lhs, rhs, expected_lhs, expected_rhs, propagated_lhs, propagated_rhs
     ):
-        """Constraining is asymmetric for compiler flags."""
+        """Constraining is asymmetric for compiler flags. Also note that
+        Spec equality does not account for flag propagation, so the checks
+        here are manual.
+        """
         lhs, rhs, expected_lhs, expected_rhs = (
             Spec(lhs),
             Spec(rhs),
