@@ -81,7 +81,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # Build options
     variant("complex", default=False, description="Enable complex numbers in Trilinos")
     variant(
-        "cuda_constexpr", default=False, description="Enable relaxed constexpr functions for CUDA build")
+        "cuda_constexpr",
+        default=False,
+        description="Enable relaxed constexpr functions for CUDA build",
+    )
     variant("cuda_rdc", default=False, description="Turn on RDC for CUDA build")
     variant("rocm_rdc", default=False, description="Turn on RDC for ROCm build")
     variant(
