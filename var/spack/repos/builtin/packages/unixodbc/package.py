@@ -11,8 +11,8 @@ class Unixodbc(AutotoolsPackage):
     a predictable API with which to access Data Sources. Data Sources include
     SQL Servers and any Data Source with an ODBC Driver."""
 
-    homepage = "http://www.unixodbc.org/"
-    url = "http://www.unixodbc.org/unixODBC-2.3.4.tar.gz"
+    homepage = "https://www.unixodbc.org/"
+    url = "https://www.unixodbc.org/unixODBC-2.3.4.tar.gz"
 
     license("LGPL-2.0-or-later")
 

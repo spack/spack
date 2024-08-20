@@ -13,7 +13,7 @@ class HypreCmake(CMakePackage, CudaPackage):
     features parallel multigrid methods for both structured and
     unstructured grid problems."""
 
-    homepage = "http://computing.llnl.gov/project/linear_solvers/software.php"
+    homepage = "https://computing.llnl.gov/project/linear_solvers/software.php"
     url = "https://github.com/hypre-space/hypre/archive/v2.14.0.tar.gz"
     git = "https://github.com/hypre-space/hypre.git"
 
@@ -59,7 +59,7 @@ class HypreCmake(CMakePackage, CudaPackage):
             url = f"https://github.com/hypre-space/hypre/archive/v{version}.tar.gz"
         else:
             url = (
-                f"http://computing.llnl.gov/project/linear_solvers/download/hypre-{version}.tar.gz"
+                f"https://computing.llnl.gov/project/linear_solvers/download/hypre-{version}.tar.gz"
             )
 
         return url
