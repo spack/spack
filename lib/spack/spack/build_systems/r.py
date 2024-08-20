@@ -93,6 +93,13 @@ class RPackage(Package):
                 "https://cloud.r-project.org/src/contrib/Archive/{cls.cran}/"
                 + f"{cls.cran}_{str(list(cls.versions)[0])}.tar.gz",
             ]
+        elif cls.bioc:
+            return [
+                "https://bioconductor.org/packages/release/bioc/src/contrib/"
+                + f"{cls.bioc}_{str(list(cls.versions)[0])}.tar.gz",
+                "https://bioconductor.org/packages/release/data/annotation/src/contrib/"
+                + f"{cls.bioc}_{str(list(cls.versions)[0])}.tar.gz",
+            ]
         else:
             return [cls.url]
 
