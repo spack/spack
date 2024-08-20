@@ -295,9 +295,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
                 "-DCXX_EXTRA_FLAGS= --offload-arch="
                 + ",".join(self.spec.variants["amdgpu_target"].value)
                 + " "
-                # This evaluate to "none" which is at least very weird, at 
-                # worst, a bug.
-                + self.spec.variants["flags"].value
+                + self.spec.variants["flags"].value if self.spec.variants["flags"].value != "none" else ""
                 + " -O3"
             )
 
