@@ -76,6 +76,7 @@ class Madgraph5amc(MakefilePackage):
     patch(
         "https://patch-diff.githubusercontent.com/raw/mg5amcnlo/mg5amcnlo/pull/96.diff?full_index=1",
         sha256="ac6644f1d0ef51d9bdb27a1519261f1cf27d075d39faa278fbc2849acbc5575d",
+        when="@3:3.5",
     )
 
     def edit(self, spec, prefix):
