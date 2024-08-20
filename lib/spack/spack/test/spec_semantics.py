@@ -228,12 +228,6 @@ class TestSpecSemantics:
                 'libelf cflags="-O3" cppflags="-Wall"',
                 'libelf cflags="-O3" cppflags="-Wall"',
             ),
-            # Note: these were moved from test_constraining_abstract_specs_with_empty_intersection;
-            # these all intersect now, so presumably would be allowed to constrain one another, but
-            # that is not yet supported.
-            # ('mpich cppflags="-O3"', 'mpich cppflags="-O2"'),
-            # ('mpich cppflags="-O3"', 'mpich cppflags=="-O3"'),
-            # ('libelf cppflags="-O3"', 'libelf cppflags="-O2"'),
         ],
     )
     def test_abstract_specs_can_constrain_each_other(self, lhs, rhs, expected):
@@ -250,6 +244,40 @@ class TestSpecSemantics:
         c2.constrain(lhs)
         assert c1 == c2
         assert c1 == expected
+
+    @pytest.mark.parametrize(
+        "lhs,rhs,expected_lhs,expected_rhs",
+        [
+            (
+                'mpich cppflags="-O3"',
+                'mpich cppflags="-O2"',
+                'mpich cppflags="-O3 -O2"',
+                'mpich cppflags="-O2 -O3"',
+            ),
+            (
+                'mpich cppflags="-O3"',
+                'mpich cppflags=="-O3"',
+                'mpich cppflags="-O3"',
+                'mpich cppflags=="-O3"',
+            ),
+        ],
+    )
+    def test_abstract_specs_can_constrain_each_other_asymmetric(self, lhs, rhs, expected_lhs, expected_rhs):
+        lhs, rhs, expected_lhs, expected_rhs = Spec(lhs), Spec(rhs), Spec(expected_lhs), Spec(expected_rhs)
+
+        assert lhs.intersects(rhs)
+        assert rhs.intersects(lhs)
+
+        c1, c2 = lhs.copy(), rhs.copy()
+        c1.constrain(rhs)
+        assert c1 == expected_lhs
+        assert c1.satisfies(lhs)
+        assert c1.satisfies(rhs)
+
+        c2.constrain(lhs)
+        assert c2 == expected_rhs
+        assert c2.satisfies(lhs)
+        assert c2.satisfies(rhs)
 
     def test_constrain_specs_by_hash(self, default_mock_concretization, database):
         """Test that Specs specified only by their hashes can constrain eachother."""

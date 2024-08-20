@@ -814,10 +814,6 @@ class FlagMap(lang.HashableMap):
     def intersects(self, other):
         return True
 
-    # TODO: this is a partial demonstration of an update to `constrain`
-    # for purposes of discussion. This change is not required for any
-    # (currently enabled) test to pass. IMO we shouldn't worry about it
-    # in this PR.
     def constrain(self, other):
         """Add all flags in other that aren't in self to self.
 
@@ -836,8 +832,8 @@ class FlagMap(lang.HashableMap):
                     )
                     changed = True
 
-        # TODO: if you "cflags=x".constrain("cflags==x"), self should
-        # propagate x
+        # Note: if you "cflags=x".constrain("cflags==x"), the result right
+        # now is "cflags=x"
 
         return changed
 
