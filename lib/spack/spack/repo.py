@@ -14,6 +14,7 @@ import importlib.machinery
 import importlib.util
 import inspect
 import itertools
+import math
 import os
 import os.path
 import random
@@ -437,7 +438,7 @@ class FastPackageChecker(collections.abc.Mapping):
                     # No package.py file here.
                     continue
                 elif e.errno == errno.EACCES:
-                    tty.warn("Can't read package file %s." % pkg_file)
+                    tty.warn(f"Can't read package file {pkg_file}.")
                     continue
                 raise e
 
@@ -589,20 +590,8 @@ class Index:
         raise NotImplementedError("must be implemented by derived classes")
 
 
-class RepoIndex(Index):
-    """Container class that manages a set of Indexers for a Repo.
-
-    This class is responsible for checking packages in a repository for
-    updates (using ``FastPackageChecker``) and for regenerating indexes
-    when they're needed.
-
-    ``Indexers`` should be added to the ``RepoIndex`` using
-    ``add_indexer(name, indexer)``, and they should support the interface
-    defined by ``Indexer``, so that the ``RepoIndex`` can read, generate,
-    and update stored indices.
-
-    Generated indexes are accessed by name via ``__getitem__()``.
-    """
+class CacheBasedIndex(Index):
+    """Base class for indexes based on a file cache"""
 
     def __init__(self, packages_path: str, namespace: str, cache: "spack.caches.FileCacheType"):
         self.packages_path = packages_path
@@ -612,21 +601,21 @@ class RepoIndex(Index):
         self.indexers: Dict[str, Indexer] = {}
         self.indexes: Dict[str, Any] = {}
         self.cache = cache
-        self.checker = FastPackageChecker(self.packages_path)
 
     def add_indexer(self, name: str, indexer: Indexer):
         """Add an indexer to the repo index.
 
         Arguments:
-            name: name of this indexer
-            indexer: object implementing the ``Indexer`` interface"""
+            name: name for the index being generated
+            indexer: object implementing the ``Indexer`` interface
+        """
         self.indexers[name] = indexer
 
     def __getitem__(self, name):
         """Get the index with the specified name, reindexing if needed."""
         indexer = self.indexers.get(name)
         if not indexer:
-            raise KeyError("no such index: %s" % name)
+            raise KeyError(f"no such index: {name}")
 
         if name not in self.indexes:
             self._build_all_indexes()
@@ -642,33 +631,62 @@ class RepoIndex(Index):
         rather only pay that cost once rather than on several
         invocations.
         """
-        for name, indexer in self.indexers.items():
-            self.indexes[name] = self._build_index(name, indexer)
+        for name in self.indexers:
+            self.indexes[name] = self._build_index(name)
 
-    def _build_index(self, name: str, indexer: Indexer):
+    def cache_key(self, name: str) -> str:
+        """Relative path in the cache for the given index"""
+        return f"{name}/{self.namespace}-index.json"
+
+    def _build_index(self, name: str):
+        """Determine which packages need an update, and update indexes."""
+        raise NotImplementedError("must be implemented by derived classes")
+
+
+class RepoIndex(CacheBasedIndex):
+    """Container class that manages a set of Indexers for a Repo.
+
+    This class is responsible for checking packages in a repository for
+    updates (using ``FastPackageChecker``) and for regenerating indexes
+    when they're needed.
+
+    ``Indexers`` should be added to the ``RepoIndex`` using
+    ``add_indexer(name, indexer)``, and they should support the interface
+    defined by ``Indexer``, so that the ``RepoIndex`` can read, generate,
+    and update stored indices.
+
+    Generated indexes are accessed by name via ``__getitem__()``.
+    """
+
+    def __init__(self, packages_path: str, namespace: str, cache: "spack.caches.FileCacheType"):
+        super().__init__(packages_path, namespace, cache)
+        self.checker = FastPackageChecker(self.packages_path)
+
+    def _build_index(self, name: str):
         """Determine which packages need an update, and update indexes."""
 
         # Filename of the provider index cache (we assume they're all json)
-        cache_filename = f"{name}/{self.namespace}-index.json"
+        filename = self.cache_key(name)
+        indexer = self.indexers[name]
 
         # Compute which packages needs to be updated in the cache
-        index_mtime = self.cache.mtime(cache_filename)
+        index_mtime = self.cache.mtime(filename)
         needs_update = self.checker.modified_since(index_mtime)
 
-        index_existed = self.cache.init_entry(cache_filename)
+        index_existed = self.cache.init_entry(filename)
         if index_existed and not needs_update:
             # If the index exists and doesn't need an update, read it
-            with self.cache.read_transaction(cache_filename) as f:
+            with self.cache.read_transaction(filename) as f:
                 indexer.read(f)
 
         else:
             # Otherwise update it and rewrite the cache file
-            with self.cache.write_transaction(cache_filename) as (old, new):
+            with self.cache.write_transaction(filename) as (old, new):
                 indexer.read(old) if old else indexer.create()
 
                 # Compute which packages needs to be updated **again** in case someone updated them
                 # while we waited for the lock
-                new_index_mtime = self.cache.mtime(cache_filename)
+                new_index_mtime = self.cache.mtime(filename)
                 if new_index_mtime != index_mtime:
                     needs_update = self.checker.modified_since(new_index_mtime)
 
@@ -690,6 +708,52 @@ class RepoIndex(Index):
         return self.checker.last_mtime()
 
 
+class FrozenCacheIndex(CacheBasedIndex):
+    """This index assumes the cache files for a repository are available, and up to date.
+
+    By doing so it avoids a lot of stat calls, and is faster than RepoIndex, but can produce
+    wrong results if caches are not in sync with the repositories.
+    """
+
+    def __init__(self, packages_path: str, namespace: str, cache: "spack.caches.FileCacheType"):
+        super().__init__(packages_path, namespace, cache)
+        self._package_names = None
+
+    @property
+    def package_names(self):
+        if self._package_names is None:
+            result = set()
+            for entry in os.scandir(self.packages_path):
+                pkg_name = entry.name
+                if not nm.valid_module_name(pkg_name):
+                    continue
+
+                result.add(pkg_name)
+            self._package_names = result
+        return self._package_names
+
+    def _build_index(self, name: str):
+        key = self.cache_key(name)
+        filename = self.cache.cache_path(key)
+        if not os.path.exists(filename):
+            raise RepoError(f"repository cache {filename} does not exist")
+
+        indexer = self.indexers[name]
+        with self.cache.read_transaction(filename) as f:
+            indexer.read(f)
+        return indexer.index
+
+    def all_package_names(self) -> List[str]:
+        """Returns the list of all package names in the repository"""
+        return sorted(self.package_names)
+
+    def exists(self, pkg_name: str) -> bool:
+        return pkg_name in self.package_names
+
+    def last_repo_mtime(self) -> float:
+        return -math.inf
+
+
 class IndexFactory:
     """Creates an index for faster lookup of repos."""
 
@@ -697,7 +761,13 @@ class IndexFactory:
         self.cache = cache
 
     def get(self, *, repository: "Repo") -> "Index":
-        result = RepoIndex(repository.packages_path, repository.namespace, cache=self.cache)
+        result: CacheBasedIndex
+        if os.environ.get("SPACK_UPDATE_CACHE", "1") == "0":
+            result = FrozenCacheIndex(
+                repository.packages_path, repository.namespace, cache=self.cache
+            )
+        else:
+            result = RepoIndex(repository.packages_path, repository.namespace, cache=self.cache)
         result.add_indexer("providers", ProviderIndexer(repository))
         result.add_indexer("tags", TagIndexer(repository))
         result.add_indexer("patches", PatchIndexer(repository))
