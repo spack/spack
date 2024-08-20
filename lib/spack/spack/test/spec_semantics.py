@@ -257,12 +257,12 @@ class TestSpecSemantics:
                 [],
             ),
             (
-                'mpich cppflags="-O3"',
-                'mpich cppflags=="-O3"',
-                'mpich cppflags="-O3"',
-                'mpich cppflags=="-O3"',
-                [("cppflags", "-O3")],
-                [("cppflags", "-O3")],
+                'mpich cflags="-O3 -g"',
+                'mpich cflags=="-O3"',
+                'mpich cflags="-O3 -g"',
+                'mpich cflags=="-O3 -g"',
+                [("cflags", "-O3")],
+                [("cflags", "-O3")],
             ),
         ],
     )
@@ -301,7 +301,7 @@ class TestSpecSemantics:
                         result.add((flagtype, flag))
             return result
 
-        assert set(propagated_lhs) <= _propagated_flags(c1) 
+        assert set(propagated_lhs) <= _propagated_flags(c1)
         assert set(propagated_rhs) <= _propagated_flags(c2)
 
     def test_constrain_specs_by_hash(self, default_mock_concretization, database):

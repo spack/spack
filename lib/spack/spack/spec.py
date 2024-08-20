@@ -857,7 +857,7 @@ class FlagMap(lang.HashableMap):
 
                 # Next, if any flags in other propagate, we force them to propagate in our case
                 shared = list(sorted(set(other[flag_type]) - extra_other))
-                for (x, y) in _shared_subset_pair_iterate(shared, sorted(self[flag_type])):
+                for x, y in _shared_subset_pair_iterate(shared, sorted(self[flag_type])):
                     if x.propagate:
                         y.propagate = True
 
