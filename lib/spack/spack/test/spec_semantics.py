@@ -246,23 +246,27 @@ class TestSpecSemantics:
         assert c1 == expected
 
     @pytest.mark.parametrize(
-        "lhs,rhs,expected_lhs,expected_rhs",
+        "lhs,rhs,expected_lhs,expected_rhs,propagated_lhs,propagated_rhs",
         [
             (
                 'mpich cppflags="-O3"',
                 'mpich cppflags="-O2"',
                 'mpich cppflags="-O3 -O2"',
                 'mpich cppflags="-O2 -O3"',
+                [],
+                [],
             ),
             (
                 'mpich cppflags="-O3"',
                 'mpich cppflags=="-O3"',
                 'mpich cppflags="-O3"',
                 'mpich cppflags=="-O3"',
+                [],
+                [("cppflags", "-O3")]
             ),
         ],
     )
-    def test_constrain_compiler_flags(self, lhs, rhs, expected_lhs, expected_rhs):
+    def test_constrain_compiler_flags(self, lhs, rhs, expected_lhs, expected_rhs, propagated_lhs, propagated_rhs):
         """Constraining is asymmetric for compiler flags."""
         lhs, rhs, expected_lhs, expected_rhs = (
             Spec(lhs),
@@ -276,10 +280,13 @@ class TestSpecSemantics:
 
         c1, c2 = lhs.copy(), rhs.copy()
         c1.constrain(rhs)
-        assert c1 == expected_lhs
-
         c2.constrain(lhs)
+
+        assert c1 == expected_lhs
         assert c2 == expected_rhs
+        for x in [c1, c2]:
+            assert x.satisfies(lhs)
+            assert x.satisfies(rhs)
 
         def _propagated_flags(_spec):
             result = set()
@@ -289,10 +296,8 @@ class TestSpecSemantics:
                         result.add((flagtype, flag))
             return result
 
-        for x, y in [(c1, lhs), (c2, rhs)]:
-            assert x.satisfies(lhs)
-            assert x.satisfies(rhs)
-            assert _propagated_flags(y) <= _propagated_flags(x)
+        assert _propagated_flags(c1) <= set(propagated_lhs)
+        assert _propagated_flags(c2) <= set(propagated_rhs)
 
     def test_constrain_specs_by_hash(self, default_mock_concretization, database):
         """Test that Specs specified only by their hashes can constrain eachother."""
