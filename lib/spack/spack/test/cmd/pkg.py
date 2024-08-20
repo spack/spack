@@ -42,7 +42,9 @@ def mock_pkg_git_repo(git, tmp_path_factory):
     shutil.copytree(spack.paths.mock_packages_path, str(repo_dir))
 
     repo_cache = spack.util.file_cache.FileCache(str(root_dir / "cache"))
-    mock_repo = spack.repo.RepoPath(str(repo_dir), cache=repo_cache)
+    mock_repo = spack.repo.RepoPath(
+        str(repo_dir), index_factory=spack.repo.IndexFactory(cache=repo_cache)
+    )
     mock_repo_packages = mock_repo.repos[0].packages_path
 
     with working_dir(mock_repo_packages):

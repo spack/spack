@@ -679,25 +679,53 @@ class RepoIndex:
         return self.checker.last_mtime()
 
 
+class IndexFactory:
+    """Creates an index for faster lookup of repos."""
+
+    def __init__(self, cache: "spack.caches.FileCacheType") -> None:
+        self.cache = cache
+
+    def get(self, *, repository: "Repo") -> RepoIndex:
+        result = RepoIndex(
+            FastPackageChecker(repository.packages_path), repository.namespace, cache=self.cache
+        )
+        result.add_indexer("providers", ProviderIndexer(repository))
+        result.add_indexer("tags", TagIndexer(repository))
+        result.add_indexer("patches", PatchIndexer(repository))
+        return result
+
+    @staticmethod
+    def unmarshal(cache: "spack.caches.FileCacheType") -> "IndexFactory":
+        return IndexFactory(cache)
+
+    def __reduce__(self):
+        cache = self.cache
+        if isinstance(cache, llnl.util.lang.Singleton):
+            cache = cache.instance
+        return IndexFactory.unmarshal, (cache,)
+
+
 class RepoPath:
     """A RepoPath is a list of repos that function as one.
 
     It functions exactly like a Repo, but it operates on the combined
     results of the Repos in its list instead of on a single package
     repository.
-
-    Args:
-        repos: list Repo objects or paths to put in this RepoPath
-        cache: file cache associated with this repository
-        overrides: dict mapping package name to class attribute overrides for that package
     """
 
     def __init__(
         self,
         *repos: Union[str, "Repo"],
-        cache: Optional["spack.caches.FileCacheType"],
+        index_factory: Optional[IndexFactory],
         overrides: Optional[Dict[str, Any]] = None,
     ) -> None:
+        """Instantiates a RepoPath from a list of repos, or a list of paths and an index_factory.
+
+        Args:
+            repos: list Repo objects or paths to put in this RepoPath
+            index_factory: a factory to create a repository index
+            overrides: dict mapping package name to class attribute overrides for that package
+        """
         self.repos: List[Repo] = []
         self.by_namespace = nm.NamespaceTrie()
         self._provider_index: Optional[spack.provider_index.ProviderIndex] = None
@@ -708,8 +736,10 @@ class RepoPath:
         for repo in repos:
             try:
                 if isinstance(repo, str):
-                    assert cache is not None, "cache must hold a value, when repo is a string"
-                    repo = Repo(repo, cache=cache, overrides=overrides)
+                    assert (
+                        index_factory is not None
+                    ), "cache must hold a value, when repo is a string"
+                    repo = Repo(repo, index_factory=index_factory, overrides=overrides)
                 repo.finder(self)
                 self.put_last(repo)
             except RepoError as e:
@@ -961,7 +991,7 @@ class RepoPath:
 
     @staticmethod
     def unmarshal(repos):
-        return RepoPath(*repos, cache=None)
+        return RepoPath(*repos, index_factory=None)
 
     def __reduce__(self):
         return RepoPath.unmarshal, self.marshal()
@@ -970,8 +1000,7 @@ class RepoPath:
 class Repo:
     """Class representing a package repository in the filesystem.
 
-    Each package repository must have a top-level configuration file
-    called `repo.yaml`.
+    Each package repository must have a top-level configuration file called `repo.yaml`.
 
     Currently, `repo.yaml` must define:
 
@@ -983,17 +1012,13 @@ class Repo:
     """
 
     def __init__(
-        self,
-        root: str,
-        *,
-        cache: "spack.caches.FileCacheType",
-        overrides: Optional[Dict[str, Any]] = None,
+        self, root: str, *, index_factory: IndexFactory, overrides: Optional[Dict[str, Any]] = None
     ) -> None:
         """Instantiate a package repository from a filesystem path.
 
         Args:
             root: the root directory of the repository
-            cache: file cache associated with this repository
+            index_factory: a factory to create a repository index
             overrides: dict mapping package name to class attribute overrides for that package
         """
         # Root directory, containing _repo.yaml and package dirs
@@ -1037,13 +1062,13 @@ class Repo:
 
         # Class attribute overrides by package name
         self.overrides = overrides or {}
+        self.index_factory = index_factory
 
         # Optional reference to a RepoPath to influence module import from spack.pkg
         self._finder: Optional[RepoPath] = None
 
         # Indexes for this repository, computed lazily
         self._repo_index: Optional[RepoIndex] = None
-        self._cache = cache
 
     def finder(self, value: RepoPath) -> None:
         self._finder = value
@@ -1160,12 +1185,7 @@ class Repo:
     def index(self) -> RepoIndex:
         """Construct the index for this repo lazily."""
         if self._repo_index is None:
-            self._repo_index = RepoIndex(
-                FastPackageChecker(self.packages_path), self.namespace, cache=self._cache
-            )
-            self._repo_index.add_indexer("providers", ProviderIndexer(self))
-            self._repo_index.add_indexer("tags", TagIndexer(self))
-            self._repo_index.add_indexer("patches", PatchIndexer(self))
+            self._repo_index = self.index_factory.get(repository=self)
         return self._repo_index
 
     @property
@@ -1348,15 +1368,12 @@ class Repo:
         return self.exists(pkg_name)
 
     @staticmethod
-    def unmarshal(root, cache, overrides):
+    def unmarshal(root, factory, overrides):
         """Helper method to unmarshal keyword arguments"""
-        return Repo(root, cache=cache, overrides=overrides)
+        return Repo(root, index_factory=factory, overrides=overrides)
 
     def marshal(self):
-        cache = self._cache
-        if isinstance(cache, llnl.util.lang.Singleton):
-            cache = cache.instance
-        return self.root, cache, self.overrides
+        return self.root, self.index_factory, self.overrides
 
     def __reduce__(self):
         return Repo.unmarshal, self.marshal()
@@ -1436,7 +1453,7 @@ def create_repo(root, namespace=None, subdir=packages_dir_name):
 
 def from_path(path: str) -> "Repo":
     """Returns a repository from the path passed as input. Injects the global misc cache."""
-    return Repo(path, cache=spack.caches.MISC_CACHE)
+    return Repo(path, index_factory=IndexFactory(cache=spack.caches.MISC_CACHE))
 
 
 def create_or_construct(path, namespace=None):
@@ -1474,7 +1491,8 @@ def create(
             continue
         overrides[pkg_name] = value
 
-    return RepoPath(*repo_dirs, cache=spack.caches.MISC_CACHE, overrides=overrides)
+    factory = IndexFactory(cache=spack.caches.MISC_CACHE)
+    return RepoPath(*repo_dirs, index_factory=factory, overrides=overrides)
 
 
 #: Singleton repo path instance
