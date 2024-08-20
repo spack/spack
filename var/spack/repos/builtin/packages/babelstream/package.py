@@ -291,11 +291,12 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("+rocm"):
             hip_comp = self.spec["hip"].hipcc
             args.append("-DCMAKE_CXX_COMPILER=" + hip_comp)
+            extra_flags = self.spec.variants["flags"].value
             args.append(
                 "-DCXX_EXTRA_FLAGS= --offload-arch="
                 + ",".join(self.spec.variants["amdgpu_target"].value)
                 + " "
-                + self.spec.variants["flags"].value if self.spec.variants["flags"].value != "none" else ""
+                + extra_flags if extra_flags != "none" else ""
                 + " -O3"
             )
 
