@@ -5,12 +5,12 @@
 import glob
 import itertools
 import os
-import re
 import sys
 
-from archspec.cpu import UnsupportedMicroarchitecture
+import archspec.cpu
 
 import llnl.util.tty as tty
+from llnl.util.lang import classproperty
 from llnl.util.symlink import readlink
 
 import spack.platforms
@@ -536,23 +536,24 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     fortran_names = ["gfortran"]
     d_names = ["gdc"]
     go_names = ["gccgo"]
-    compiler_prefixes = [r"\w+-\w+-\w+-"]
     compiler_suffixes = [r"-mp-\d+(?:\.\d+)?", r"-\d+(?:\.\d+)?", r"\d\d"]
     compiler_version_regex = r"(?<!clang version)\s?([0-9.]+)"
     compiler_version_argument = ("-dumpfullversion", "-dumpversion")
 
+    @classproperty
+    def compiler_prefixes(cls):
+        host = spack.platforms.host()
+        if str(host) == "linux":
+            target = archspec.cpu.host().family
+            return [rf"{target}-{host}-\w+-"]
+        return []
+
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
-        # On systems like Ubuntu we might get multiple executables with the string "gcc" in them.
-        # See: https://helpmanual.io/packages/apt/gcc/
-        # Also, clang++ matches g++ -> clan[g++]
-        reject = re.compile(r"c99-gcc|c89-gcc|-nm|-ar|ranlib|clang|mingw")
-        result = [x for x in exes_in_prefix if not reject.search(x)]
-
         # Apple's gcc is actually apple clang, so skip it.
         if str(spack.platforms.host()) == "darwin":
             not_apple_clang = []
-            for exe in result:
+            for exe in exes_in_prefix:
                 try:
                     output = spack.compiler.get_compiler_version_output(exe, "--version")
                 except Exception:
@@ -560,9 +561,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
                 if "Apple" in output:
                     continue
                 not_apple_clang.append(exe)
-            result = not_apple_clang
+            return not_apple_clang
 
-        return result
+        return exes_in_prefix
 
     @classmethod
     def determine_variants(cls, exes, version_str):
@@ -691,7 +692,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         for uarch in microarchitectures:
             try:
                 return uarch.optimization_flags("gcc", str(spec.version))
-            except UnsupportedMicroarchitecture:
+            except archspec.cpu.UnsupportedMicroarchitecture:
                 pass
         # no arch specific flags in common, unlikely to happen.
         return ""
