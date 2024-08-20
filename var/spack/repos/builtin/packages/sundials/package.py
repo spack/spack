@@ -6,8 +6,6 @@
 import os
 import sys
 
-from llnl.util import tty
-
 from spack.package import *
 
 
