@@ -85,20 +85,21 @@ class RPackage(Package):
             return "https://bioconductor.org/packages/" + cls.bioc
 
     @lang.classproperty
-    def url(cls):
+    def urls(cls):
         if cls.cran:
-            return (
+            return [
                 "https://cloud.r-project.org/src/contrib/"
-                + cls.cran
-                + "_"
-                + str(list(cls.versions)[0])
-                + ".tar.gz"
-            )
+                + f"{cls.cran}_{str(list(cls.versions)[0])}.tar.gz",
+                "https://cloud.r-project.org/src/contrib/Archive/{cls.cran}/"
+                + f"{cls.cran}_{str(list(cls.versions)[0])}.tar.gz",
+            ]
+        else:
+            return [cls.url]
 
     @lang.classproperty
     def list_url(cls):
         if cls.cran:
-            return "https://cloud.r-project.org/src/contrib/Archive/" + cls.cran + "/"
+            return "https://cloud.r-project.org/src/contrib/"
 
     @property
     def git(self):
