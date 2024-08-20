@@ -262,9 +262,11 @@ class TestSpecSemantics:
             ),
         ],
     )
-    def test_abstract_specs_can_constrain_each_other_asymmetric(
+    def test_constrain_compiler_flags(
         self, lhs, rhs, expected_lhs, expected_rhs
     ):
+        """Constraining is asymmetric for compiler flags.
+        """
         lhs, rhs, expected_lhs, expected_rhs = (
             Spec(lhs),
             Spec(rhs),
@@ -278,13 +280,23 @@ class TestSpecSemantics:
         c1, c2 = lhs.copy(), rhs.copy()
         c1.constrain(rhs)
         assert c1 == expected_lhs
-        assert c1.satisfies(lhs)
-        assert c1.satisfies(rhs)
 
         c2.constrain(lhs)
         assert c2 == expected_rhs
-        assert c2.satisfies(lhs)
-        assert c2.satisfies(rhs)
+
+        def _propagated_flags(_spec):
+            result = set()
+            for flagtype in _spec.compiler_flags:
+                for flag in _spec.compiler_flags[flagtype]:
+                    if flag.propagate:
+                        result.add((flagtype, flag))
+            return result
+
+        for (x, y) in [(c1, lhs), (c2, rhs)]:
+            assert x.satisfies(lhs)
+            assert x.satisfies(rhs)
+            assert _propagated_flags(y) <= _propagated_flags(x)
+
 
     def test_constrain_specs_by_hash(self, default_mock_concretization, database):
         """Test that Specs specified only by their hashes can constrain eachother."""
