@@ -48,6 +48,7 @@ class HipifyClang(CMakePackage):
     patch("0001-install-hipify-clang-in-bin-dir-and-llvm-clangs-head.patch", when="@5.1.0:5.5")
     patch("0002-install-hipify-clang-in-bin-dir-and-llvm-clangs-head.patch", when="@5.6:6.0")
     patch("0003-install-hipify-clang-in-bin-dir-and-llvm-clangs-head.patch", when="@6.1")
+    patch("0001-use-source-permission-for-hipify-perl.patch", when="@6.2")
 
     depends_on("cmake@3.5:", type="build")
     for ver in [
