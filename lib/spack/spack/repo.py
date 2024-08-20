@@ -604,21 +604,15 @@ class RepoIndex(Index):
     Generated indexes are accessed by name via ``__getitem__()``.
     """
 
-    def __init__(
-        self,
-        package_checker: FastPackageChecker,
-        namespace: str,
-        cache: "spack.caches.FileCacheType",
-    ):
-        self.checker = package_checker
-        self.packages_path = self.checker.packages_path
+    def __init__(self, packages_path: str, namespace: str, cache: "spack.caches.FileCacheType"):
+        self.packages_path = packages_path
         if sys.platform == "win32":
             self.packages_path = llnl.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
-
         self.indexers: Dict[str, Indexer] = {}
         self.indexes: Dict[str, Any] = {}
         self.cache = cache
+        self.checker = FastPackageChecker(self.packages_path)
 
     def add_indexer(self, name: str, indexer: Indexer):
         """Add an indexer to the repo index.
@@ -703,9 +697,7 @@ class IndexFactory:
         self.cache = cache
 
     def get(self, *, repository: "Repo") -> "Index":
-        result = RepoIndex(
-            FastPackageChecker(repository.packages_path), repository.namespace, cache=self.cache
-        )
+        result = RepoIndex(repository.packages_path, repository.namespace, cache=self.cache)
         result.add_indexer("providers", ProviderIndexer(repository))
         result.add_indexer("tags", TagIndexer(repository))
         result.add_indexer("patches", PatchIndexer(repository))
