@@ -1023,7 +1023,7 @@ print(json.dumps(config))
         ]
 
         # The Python shipped with Xcode command line tools isn't in any of these locations
-        for subdir in ["lib", "lib64"]:
+        for subdir in ["lib", "lib64", "libs"]:
             directories.append(os.path.join(self.config_vars["base"], subdir))
 
         directories = dedupe(directories)
@@ -1066,10 +1066,14 @@ print(json.dumps(config))
         # The +shared variant isn't reliable, as `spack external find` currently can't
         # detect it. If +shared, prefer the shared libraries, but check for static if
         # those aren't found. Vice versa for ~shared.
-        if "+shared" in self.spec:
-            candidates = shared_libs + static_libs
-        else:
+        #
+        # On Windows, we need to find the libs directory regardless of whether or
+        # not its a shared build, and .DLLs are next to the executable, so search
+        # for static first.
+        if not self.spec.satisfies("+shared") or self.spec.satisfies("platform=windows"):
             candidates = static_libs + shared_libs
+        else:
+            candidates = shared_libs + static_libs
 
         candidates = dedupe(candidates)
 

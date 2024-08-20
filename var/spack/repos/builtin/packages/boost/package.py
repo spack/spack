@@ -499,16 +499,12 @@ class Boost(Package):
         if spec.satisfies("@:1.58"):
             return ""
 
-        bjam_line_args = [spec["python"].version.up_to(2), spec["python"].command.path.as_posix()]
-
-        if spec.satisfies("platform=windows"):
-            bjam_line_args.extend(
-                [spec["python"].prefix.include.as_posix(), spec["python"].prefix.libs.as_posix()]
-            )
-        else:
-            bjam_line_args.extend([spec["python"].headers.directories[0], spec["python"].libs[0]])
-
-        return "using python : {0} : {1} : {2} : {3} ;\n".format(*bjam_line_args)
+        return "using python : {0} : {1} : {2} : {3} ;\n".format(
+            spec["python"].version.up_to(2),
+            Path(spec["python"].command.path).as_posix(),
+            Path(spec["python"].headers.directories[0]).as_posix(),
+            Path(spec["python"].libs[0]).parent.as_posix(),
+        )
 
     def determine_bootstrap_options(self, spec, with_libs, options):
         boost_toolset_id = self.determine_toolset(spec)
