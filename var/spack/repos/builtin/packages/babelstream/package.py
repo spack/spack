@@ -293,8 +293,10 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DCMAKE_CXX_COMPILER=" + hip_comp)
             args.append(
                 "-DCXX_EXTRA_FLAGS= --offload-arch="
-                + self.spec.variants["amdgpu_target"].value
+                + ",".join(self.spec.variants["amdgpu_target"].value)
                 + " "
+                # This evaluate to "none" which is at least very weird, at 
+                # worst, a bug.
                 + self.spec.variants["flags"].value
                 + " -O3"
             )
