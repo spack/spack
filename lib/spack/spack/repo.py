@@ -915,6 +915,13 @@ class RepoPath:
         """
         return any(repo.exists(pkg_name) for repo in self.repos)
 
+    def exists_safe(self, pkg_name: str) -> bool:
+        """Whether package with the give name exists in the path's repos.
+
+        Note that virtual packages do not "exist".
+        """
+        return any(repo.exists_safe(pkg_name) for repo in self.repos)
+
     def _have_name(self, pkg_name: str) -> bool:
         have_name = pkg_name is not None
         if have_name and not isinstance(pkg_name, str):
@@ -942,7 +949,9 @@ class RepoPath:
             pkg_name (str): name of the package we want to check
         """
         have_name = self._have_name(pkg_name)
-        return have_name and (not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual)
+        return have_name and (
+            not self.exists_safe(pkg_name) or self.get_pkg_class(pkg_name).virtual
+        )
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
@@ -1234,10 +1243,14 @@ class Repo:
             yield self.get_pkg_class(name)
 
     def exists(self, pkg_name: str) -> bool:
-        """Whether a package with the supplied name exists."""
-        # If the index is already constructed, use it. Otherwise, check for the package.py
+        """Check if the package passed as argument exists."""
+        # If the index is already constructed, use it.
         if self._repo_index:
             return self.index.exists(pkg_name)
+        return self.exists_safe(pkg_name)
+
+    def exists_safe(self, pkg_name: str) -> bool:
+        """Same as 'exists', but ensure to never use the index."""
         path = self.filename_for_package_name(pkg_name)
         return os.path.exists(path)
 
@@ -1258,7 +1271,7 @@ class Repo:
 
         This function doesn't use the provider index.
         """
-        return not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual
+        return not self.exists_safe(pkg_name) or self.get_pkg_class(pkg_name).virtual
 
     def get_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
         """Get the class for the package out of its module.
