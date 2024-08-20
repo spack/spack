@@ -260,7 +260,7 @@ class Python(Package):
     variant("bz2", default=True, description="Build bz2 module")
     variant("lzma", default=True, description="Build lzma module")
     variant("pyexpat", default=True, description="Build pyexpat module")
-    variant("ctypes", default=True, description="Build ctypes module")
+    variant("ctypes", default=True, description="Build ctypes module", when="platform=win32")
     variant("tkinter", default=False, description="Build tkinter module")
     variant("uuid", default=True, description="Build uuid module")
     variant("tix", default=False, description="Build Tix module", when="+tkinter")
@@ -291,7 +291,7 @@ class Python(Package):
         depends_on("bzip2", when="+bz2")
         depends_on("xz libs=shared", when="+lzma")
         depends_on("expat", when="+pyexpat")
-        depends_on("libffi", when="+ctypes")
+        depends_on("libffi")
         # https://docs.python.org/3/whatsnew/3.11.html#build-changes
         depends_on("tk@8.5.12:", when="@3.11: +tkinter")
         depends_on("tk", when="+tkinter")
@@ -641,10 +641,9 @@ class Python(Package):
         else:
             config_args.append("--without-system-expat")
 
-        if "+ctypes" in spec:
+        # https://docs.python.org/3/whatsnew/changelog.html#id133
+        if self.version < Version("3.12.0"):
             config_args.append("--with-system-ffi")
-        else:
-            config_args.append("--without-system-ffi")
 
         if "+tkinter" in spec:
             config_args.extend(
@@ -667,6 +666,10 @@ class Python(Package):
 
         if cflags:
             config_args.append("CFLAGS={0}".format(" ".join(cflags)))
+
+        if sys.platform == "darwin":
+            if self.spec.satisfies("@3.12"):
+                config_args.append("CURSES_LIBS={0}".format(spec["ncurses"].libs.link_flags))
 
         return config_args
 
@@ -805,8 +808,9 @@ class Python(Package):
                 self.command("-c", "import xml.parsers.expat")
                 self.command("-c", "import xml.etree.ElementTree")
 
-            # Ensure that ctypes module works
-            if "+ctypes" in spec:
+            # Ensure that ctypes module works on
+            # linux/darwin unconditionally and on windows conditionally
+            if sys.platform != win32 or spec.satisfies("+ctypes"):
                 self.command("-c", "import ctypes")
 
             # Ensure that tkinter module works
