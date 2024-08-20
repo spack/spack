@@ -1908,7 +1908,7 @@ complete -c spack -n '__fish_spack_using_command gpg export' -l secret -f -a sec
 complete -c spack -n '__fish_spack_using_command gpg export' -l secret -d 'export secret keys'
 
 # spack gpg publish
-set -g __fish_spack_optspecs_spack_gpg_publish h/help d/directory= m/mirror-name= mirror-url= rebuild-index
+set -g __fish_spack_optspecs_spack_gpg_publish h/help d/directory= m/mirror-name= mirror-url= update-index
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 gpg publish' -f -a '(__fish_spack_gpg_keys)'
 complete -c spack -n '__fish_spack_using_command gpg publish' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command gpg publish' -s h -l help -d 'show this help message and exit'
@@ -1918,8 +1918,8 @@ complete -c spack -n '__fish_spack_using_command gpg publish' -s m -l mirror-nam
 complete -c spack -n '__fish_spack_using_command gpg publish' -s m -l mirror-name -r -d 'name of the mirror where keys will be published'
 complete -c spack -n '__fish_spack_using_command gpg publish' -l mirror-url -r -f -a mirror_url
 complete -c spack -n '__fish_spack_using_command gpg publish' -l mirror-url -r -d 'URL of the mirror where keys will be published'
-complete -c spack -n '__fish_spack_using_command gpg publish' -l rebuild-index -f -a rebuild_index
-complete -c spack -n '__fish_spack_using_command gpg publish' -l rebuild-index -d 'regenerate buildcache key index after publishing key(s)'
+complete -c spack -n '__fish_spack_using_command gpg publish' -l update-index -l rebuild-index -f -a update_index
+complete -c spack -n '__fish_spack_using_command gpg publish' -l update-index -l rebuild-index -d 'regenerate buildcache key index after publishing key(s)'
 
 # spack graph
 set -g __fish_spack_optspecs_spack_graph h/help a/ascii d/dot s/static c/color i/installed deptype=
@@ -3103,14 +3103,12 @@ complete -c spack -n '__fish_spack_using_command verify' -s f -l files -f -a typ
 complete -c spack -n '__fish_spack_using_command verify' -s f -l files -d 'treat entries as absolute filenames'
 
 # spack versions
-set -g __fish_spack_optspecs_spack_versions h/help s/safe safe-only r/remote n/new j/jobs=
+set -g __fish_spack_optspecs_spack_versions h/help s/safe r/remote n/new j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos 0 versions' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command versions' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command versions' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command versions' -s s -l safe -f -a safe
 complete -c spack -n '__fish_spack_using_command versions' -s s -l safe -d 'only list safe versions of the package'
-complete -c spack -n '__fish_spack_using_command versions' -l safe-only -f -a safe_only
-complete -c spack -n '__fish_spack_using_command versions' -l safe-only -d '[deprecated] only list safe versions of the package'
 complete -c spack -n '__fish_spack_using_command versions' -s r -l remote -f -a remote
 complete -c spack -n '__fish_spack_using_command versions' -s r -l remote -d 'only list remote versions of the package'
 complete -c spack -n '__fish_spack_using_command versions' -s n -l new -f -a new

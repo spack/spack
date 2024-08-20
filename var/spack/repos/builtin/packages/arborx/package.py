@@ -129,7 +129,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     def setup_build_tests(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([self.examples_src_dir])
+        cache_extra_test_sources(self, [self.examples_src_dir])
 
     @property
     def cached_tests_work_dir(self):

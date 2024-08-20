@@ -60,6 +60,11 @@ class Rpp(CMakePackage):
         default=False,
         description="add utilities folder which contains rpp unit tests",
     )
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
 
     patch("0001-include-half-openmp-through-spack-package.patch", when="@:5.7")
     patch("0002-declare-handle-in-header.patch")
@@ -75,6 +80,13 @@ class Rpp(CMakePackage):
             filter_file(
                 "${ROCM_PATH}/llvm", self.spec["llvm-amdgpu"].prefix, "CMakeLists.txt", string=True
             )
+            if self.spec.satisfies("+asan"):
+                filter_file(
+                    "CMAKE_CXX_COMPILER clang++",
+                    "CMAKE_CXX_COMPILER {0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
+                    "CMakeLists.txt",
+                    string=True,
+                )
         if self.spec.satisfies("+opencl"):
             filter_file(
                 "${ROCM_PATH}",
@@ -152,6 +164,15 @@ class Rpp(CMakePackage):
             env.set("TURBO_JPEG_PATH", self.spec["libjpeg-turbo"].prefix)
         if self.spec.satisfies("@6.1:"):
             env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+asan"):
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     def cmake_args(self):
         spec = self.spec

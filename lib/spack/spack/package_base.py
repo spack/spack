@@ -1101,6 +1101,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             mirror_paths=spack.mirror.mirror_archive_paths(
                 resource.fetcher, os.path.join(self.name, pretty_resource_name)
             ),
+            mirrors=spack.mirror.MirrorCollection(source=True).values(),
             path=self.path,
         )
 
@@ -1121,6 +1122,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         stage = Stage(
             fetcher,
             mirror_paths=mirror_paths,
+            mirrors=spack.mirror.MirrorCollection(source=True).values(),
             name=stage_name,
             path=self.path,
             search_fn=self._download_search,

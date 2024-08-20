@@ -7,6 +7,7 @@ import codecs
 import concurrent.futures
 import email.message
 import errno
+import json
 import os
 import os.path
 import re
@@ -152,7 +153,8 @@ class HTMLParseError(Exception):
 
 class LinkParser(HTMLParser):
     """This parser just takes an HTML page and strips out the hrefs on the
-    links.  Good enough for a really simple spider."""
+    links, as well as some javascript tags used on GitLab servers.
+    Good enough for a really simple spider."""
 
     def __init__(self):
         super().__init__()
@@ -160,9 +162,18 @@ class LinkParser(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         if tag == "a":
-            for attr, val in attrs:
-                if attr == "href":
-                    self.links.append(val)
+            self.links.extend(val for key, val in attrs if key == "href")
+
+        # GitLab uses a javascript function to place dropdown links:
+        #  <div class="js-source-code-dropdown" ...
+        #   data-download-links="[{"path":"/graphviz/graphviz/-/archive/12.0.0/graphviz-12.0.0.zip",...},...]"/>
+        if tag == "div" and ("class", "js-source-code-dropdown") in attrs:
+            try:
+                links_str = next(val for key, val in attrs if key == "data-download-links")
+                links = json.loads(links_str)
+                self.links.extend(x["path"] for x in links)
+            except Exception:
+                pass
 
 
 class ExtractMetadataParser(HTMLParser):
