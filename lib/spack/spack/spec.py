@@ -832,8 +832,10 @@ class FlagMap(lang.HashableMap):
                     )
                     changed = True
 
-        # Note: if you "cflags=x".constrain("cflags==x"), the result right
-        # now is "cflags=x"
+        # TODO: if you "cflags=x".constrain("cflags==x"), the result right
+        # now is "cflags=x", this is potentially inconsistent with the
+        # behavior of the concretizer (in that context, if any constraint
+        # demands propagation of a flag, then it will propagate).
 
         return changed
 
