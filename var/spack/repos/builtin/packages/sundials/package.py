@@ -674,7 +674,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         f2003_files = [
             "arkode/F2003_serial/Makefile",
             "cvode/F2003_serial/Makefile",
-            "cvodes/F2003_serial/Makefike",
+            "cvodes/F2003_serial/Makefile",
             "ida/F2003_serial/Makefile",
             "idas/F2003_serial/Makefile",
             "kinsol/F2003_serial/Makefile",
@@ -744,9 +744,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
-    def test_install(self):
-        """Perform make test_install."""
-        with working_dir(self.build_directory):
+    def check_test_install(self):
+        """Perform test_install on the build."""
+        with working_dir(self.builder.build_directory):
             make("test_install")
 
     @property
@@ -754,105 +754,85 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         # examples/smoke-tests are cached for testing
         return self.prefix.examples
 
-    @run_after("install")
-    def setup_smoke_tests(self):
-        if "+examples-install" in self.spec:
-            install_tree(self._smoke_tests_path, join_path(install_test_root(self), "testing"))
-
-    def build_smoke_tests(self):
-
-        if "~examples-install" in self.spec:
-            tty.msg("Skipping sundials test: examples were not installed")
-            return
-
-        for smoke_test in self._smoke_tests:
-            work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
-            with working_dir(work_dir):
-                make = which("make")
-                make()
-
-    def test_nvector_serial(self):
-        """Run serial N Vector test"""
-
-        self.run_sundials(
-            join_path("nvector", "serial", "test_nvector_serial"), ["10", "0"], False
-        )
-
-    def test_cvode(self):
-        """Run CVODE test"""
-
-        if "+CVODE" not in self.spec:
-            raise SkipTest("Package must be installed with +CVODE")
-
-        self.run_sundials(join_path("cvode", "serial", "cvAdvDiff_bnd"), [], True)
-
-    def test_cuda(self):
-        """Run cuda test"""
-
-        if "+cuda" not in self.spec:
-            raise SkipTest("Package must be installed with +cuda")
-
-        self.run_sundials(
-            join_path("nvector", "cuda", "test_nvector_cuda"), ["10", "0", "0"], True
-        )
-
-    def test_cuda_cvode(self):
-        """Run cuda CVODE test"""
-
-        if "+cuda" not in self.spec or "+CVODE" not in self.spec:
-            raise SkipTest("Package must be installed with +cuda and +CVODE")
-
-        self.run_sundials(join_path("cvode", "cuda", "cvAdvDiff_kry_cuda"), [], True)
-
-    def test_rocm(self):
-        """Run rocm test"""
-
-        if "+rocm" not in self.spec:
-            raise SkipTest("Package must be installed with +rocm")
-
-        self.run_sundials(join_path("nvector", "hip", "test_nvector_hip"), ["10", "0", "0"], True)
-
-    def test_rocm_cvode(self):
-        """Run rocm CVODE test"""
-
-        if "+rocm" not in self.spec or "+CVODE" not in self.spec:
-            raise SkipTest("Package must be installed with +rocm and +CVODE")
-
-        self.run_sundials(join_path("cvode", "hip", "cvAdvDiff_kry_hip"), [], True)
-
-    def test_sycl(self):
-        """Run sycl test"""
-
-        if "+sycl" not in self.spec:
-            raise SkipTest("Package must be installed with +sycl")
-
-        self.run_sundials(
-            join_path("nvector", "sycl", "test_nvector_sycl"), ["10", "0", "0"], True
-        )
-
-    def test_sycl_cvode(self):
-        """Run sycl CVODE test"""
-
-        if "+sycl" not in self.spec or "+CVODE" not in self.spec:
-            raise SkipTest("Package must be installed with +sycl and +CVODE")
-
-        self.run_sundials(join_path("cvode", "sycl", "cvAdvDiff_kry_sycl"), [], True)
-
-    def run_sundials(self, exe_path, opts, cmake_bool):
+    def run_example(self, exe_path, opts, cmake_bool):
         """Common sundials test method"""
-
         if "~examples-install" in self.spec:
             raise SkipTest("Package must be installed with +examples-install")
 
-        work_dir = join_path(self._smoke_tests_path, os.path.dirname(exe_path))
-        with working_dir(work_dir):
+        (dirname, basename) = os.path.split(exe_path)
+        srcpath = join_path(self._smoke_tests_path, dirname)
+        if not os.path.exists(srcpath):
+            raise SkipTest(f"Example '{dirname}' not found in {self.version}")
+
+        # copy the example's directory to the test stage
+        mkdirp(dirname)
+        install_tree(srcpath, dirname)
+
+        # build and run the example
+        with working_dir(dirname):
             if cmake_bool:
+                deps = "sundials mpi"
+                prefixes = ";".join([self.spec[x].prefix for x in deps.split()])
                 cmake = self.spec["cmake"].command
-                cmake(".")
+                cmake("-DCMAKE_PREFIX_PATH=" + prefixes, ".")
+
             make = which("make")
             make()
-            exe = which(join_path(self._smoke_tests_path, exe_path))
-            if exe is None:
-                raise SkipTest(f"{exe_path} not found in {self.version}")
+            exe = which(basename)
             exe(*opts)
             make("clean")
+
+    def test_nvector_serial(self):
+        """build and run serial N_Vector"""
+        self.run_example(join_path("nvector", "serial", "test_nvector_serial"), ["10", "0"], False)
+
+    def test_cvadvdiff_serial(self):
+        """build and run serial cvAdvDiff_bnd"""
+        if "+CVODE" not in self.spec:
+            raise SkipTest("Package must be installed with +CVODE")
+
+        self.run_example(join_path("cvode", "serial", "cvAdvDiff_bnd"), [], True)
+
+    def test_nvector_cuda(self):
+        """build and run CUDA N_Vector"""
+        if "+cuda" not in self.spec:
+            raise SkipTest("Package must be installed with +cuda")
+
+        self.run_example(join_path("nvector", "cuda", "test_nvector_cuda"), ["10", "0", "0"], True)
+
+    def test_cvadvdiff_cuda(self):
+        """build and run CUDA cvAdvDiff_kry"""
+        if "+cuda" not in self.spec or "+CVODE" not in self.spec:
+            raise SkipTest("Package must be installed with +cuda+CVODE")
+
+        self.run_example(join_path("cvode", "cuda", "cvAdvDiff_kry_cuda"), [], True)
+
+    def test_nvector_hip(self):
+        """build and run ROCM N_Vector"""
+        if "+rocm" not in self.spec:
+            raise SkipTest("Package must be installed with +rocm")
+
+        self.run_example(join_path("nvector", "hip", "test_nvector_hip"), ["10", "0", "0"], True)
+
+    def test_cvadvdiff_hip(self):
+        """build and run ROCM cvAdvDiff_kry"""
+        if "+rocm" not in self.spec or "+CVODE" not in self.spec:
+            raise SkipTest("Package must be installed with +rocm+CVODE")
+
+        self.run_example(join_path("cvode", "hip", "cvAdvDiff_kry_hip"), [], True)
+
+    def test_nvector_sycl(self):
+        """build and run SYCL N_Vector"""
+        if "+sycl" not in self.spec:
+            raise SkipTest("Package must be installed with +sycl")
+
+        self.run_example(
+            join_path("nvector", "sycl", "test_nvector_sycl"), ["10", "0", "0"], False
+        )
+
+    def test_sycl_cvode(self):
+        """build and run SYCL cvAdvDiff_kry"""
+        if "+sycl" not in self.spec or "+CVODE" not in self.spec:
+            raise SkipTest("Package must be installed with +sycl and +CVODE")
+
+        self.run_example(join_path("cvode", "sycl", "cvAdvDiff_kry_sycl"), [], True)
