@@ -14,7 +14,7 @@ class RIeugwasr(RPackage):
     specific queries."""
 
     homepage = "https://github.com/MRCIEU/ieugwasr"
-    url = "https://github.com/MRCIEU/ieugwasr/archive/refs/tags/0.1.5.tar.gz"
+    urls = ["https://github.com/MRCIEU/ieugwasr/archive/refs/tags/0.1.5.tar.gz"]
 
     license("MIT")
 

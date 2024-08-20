@@ -13,7 +13,7 @@ class RBfastspatial(RPackage):
     post-process the results."""
 
     homepage = "https://github.com/loicdtx/bfastSpatial"
-    url = "https://github.com/loicdtx/bfastSpatial/archive/0.6.2.tar.gz"
+    urls = ["https://github.com/loicdtx/bfastSpatial/archive/0.6.2.tar.gz"]
 
     version("0.6.2", sha256="2c6220a5d04d6e4531b0b022a015651e630433f8d6864fa8b820aed5af5c1897")
 

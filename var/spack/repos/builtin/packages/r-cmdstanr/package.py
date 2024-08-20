@@ -17,7 +17,7 @@ class RCmdstanr(RPackage):
     fewer unexpected crashes in RStudio, and a more permissive license."""
 
     homepage = "https://mc-stan.org/cmdstanr/"
-    url = "https://github.com/stan-dev/cmdstanr/archive/refs/tags/v0.5.3.tar.gz"
+    urls = ["https://github.com/stan-dev/cmdstanr/archive/refs/tags/v0.5.3.tar.gz"]
 
     license("BSD-3-Clause")
 

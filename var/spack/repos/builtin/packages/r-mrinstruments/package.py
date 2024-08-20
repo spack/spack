@@ -12,7 +12,7 @@ class RMrinstruments(RPackage):
     Datasets of eQTLs, GWAS catalogs, etc."""
 
     homepage = "https://github.com/MRCIEU/MRInstruments"
-    url = "https://github.com/MRCIEU/MRInstruments/archive/refs/tags/0.3.3.tar.gz"
+    urls = ["https://github.com/MRCIEU/MRInstruments/archive/refs/tags/0.3.3.tar.gz"]
 
     version("0.3.3", sha256="4ddbaf6335133e8f7baef469d6bc1f89212462b9f4062c9e4ddda37b12eb3486")
 

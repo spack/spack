@@ -11,7 +11,7 @@ class Phantompeakqualtools(RPackage):
     ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data."""
 
     homepage = "https://github.com/kundajelab/phantompeakqualtools"
-    url = "https://github.com/kundajelab/phantompeakqualtools/archive/1.2.tar.gz"
+    urls = ["https://github.com/kundajelab/phantompeakqualtools/archive/1.2.tar.gz"]
 
     version("1.2", sha256="86cbcca80b65f150b1cdbea673d8a47caba88c2db6b3b567a80f2c797c9a1668")
 
