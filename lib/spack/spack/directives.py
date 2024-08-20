@@ -463,6 +463,8 @@ def _depends_on(pkg, spec, when=None, type=dt.DEFAULT_TYPES, patches=None):
     dep_spec = spack.spec.Spec(spec)
     if not dep_spec.name:
         raise DependencyError("Invalid dependency specification in package '%s':" % pkg.name, spec)
+    elif dep_spec.name in ("c", "cxx", "fortran"):  # forward compat for language deps
+        return
     if pkg.name == dep_spec.name:
         raise CircularReferenceError("Package '%s' cannot depend on itself." % pkg.name)
 
