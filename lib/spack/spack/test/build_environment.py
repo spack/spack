@@ -523,17 +523,12 @@ def test_module_globals_available_at_setup(monkeypatch):
         assert dependent_module.ninja is not None
         dependent_spec.package.test_attr = True
 
-    ext_config = {
-        "externals": [
-            {
-                "spec": "externaltool@1.0",
-                "prefix": "/fake/path",
-            }
-        ]
-    }
+    ext_config = {"externals": [{"spec": "externaltool@1.0", "prefix": "/fake/path"}]}
     spack.config.set("packages:externaltool", ext_config)
     externaltool = spack.spec.Spec("externaltool").concretized()
-    monkeypatch.setattr(externaltool["externalprereq"].package, "setup_dependent_package", setup_dependent_package)
+    monkeypatch.setattr(
+        externaltool["externalprereq"].package, "setup_dependent_package", setup_dependent_package
+    )
     spack.build_environment.setup_package(externaltool.package, False)
     assert externaltool.package.test_attr
 
