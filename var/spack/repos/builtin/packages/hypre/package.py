@@ -374,8 +374,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             make("install")
             if spec.satisfies("+gptune"):
                 make("test")
-                self.run_test("mkdir", options=["-p", self.prefix.bin])
-                self.run_test("cp", options=["test/ij", self.prefix.bin + "/."])
+                mkdirp(self.prefix.bin)
+                install(join_path("test", "ij"), self.prefix.bin)
 
     extra_install_tests = join_path("src", "examples")
 

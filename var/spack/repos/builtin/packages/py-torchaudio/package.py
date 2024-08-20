@@ -103,6 +103,9 @@ class PyTorchaudio(PythonPackage):
     depends_on("pkgconfig", type="build")
     depends_on("sox")
 
+    # https://github.com/pytorch/audio/pull/3811
+    depends_on("cuda@:12.4", when="^py-torch+cuda")
+
     def setup_build_environment(self, env):
         # tools/setup_helpers/extension.py
         env.set("BUILD_SOX", 0)

@@ -149,7 +149,7 @@ class DarshanRuntime(AutotoolsPackage):
     @run_after("install")
     def _copy_test_inputs(self):
         test_inputs = [join_path(self.basepath, "mpi-io-test.c")]
-        self.cache_extra_test_sources(test_inputs)
+        cache_extra_test_sources(self, test_inputs)
 
     def test_mpi_io_test(self):
         """build, run, and check outputs"""
