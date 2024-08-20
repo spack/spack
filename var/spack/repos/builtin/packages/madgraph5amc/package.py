@@ -21,16 +21,18 @@ class Madgraph5amc(MakefilePackage):
 
     tags = ["hep"]
 
-    # Versions from github are not recommended by the authors, see https://github.com/spack/spack/pull/41128#issuecomment-2077343326
     version(
-        "3.5.4",
-        sha256="19121a4b8b4ccaddd86b5b87188e91da25b755e789663c790481bf387154c950",
-        url="https://github.com/mg5amcnlo/mg5amcnlo/archive/refs/tags/v3.5.4.tar.gz",
+        "3.5.5",
+        sha256="3b4262024cefb8a06082faa9a7ba43484b27a3f2b940a06fbe49c640c5b7ebd7",
+    )
+    version(
+        "2.9.20",
+        sha256="",
     )
     version(
         "2.9.19",
         sha256="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        preferred=True,
+        deprecated=True,
     )
     version("2.9.17", sha256="24026a534344c77a05b23a681437f825c41dc70c5bae5b7f79bb99e149d966b8")
     version(
