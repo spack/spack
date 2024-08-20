@@ -149,7 +149,12 @@ done
 
     compilers_before_find = set(spack.compilers.all_compiler_specs())
     args = spack.util.pattern.Bunch(
-        all=None, compiler_spec=None, add_paths=[str(root_dir)], scope=None, mixed_toolchain=False
+        all=None,
+        compiler_spec=None,
+        add_paths=[str(root_dir)],
+        scope=None,
+        mixed_toolchain=False,
+        jobs=1,
     )
     spack.cmd.compiler.compiler_find(args)
     compilers_after_find = set(spack.compilers.all_compiler_specs())
