@@ -584,7 +584,8 @@ class RepoIndex:
     defined by ``Indexer``, so that the ``RepoIndex`` can read, generate,
     and update stored indices.
 
-    Generated indexes are accessed by name via ``__getitem__()``."""
+    Generated indexes are accessed by name via ``__getitem__()``.
+    """
 
     def __init__(
         self,
@@ -628,7 +629,8 @@ class RepoIndex:
         because the main bottleneck here is loading all the packages.  It
         can take tens of seconds to regenerate sequentially, and we'd
         rather only pay that cost once rather than on several
-        invocations."""
+        invocations.
+        """
         for name, indexer in self.indexers.items():
             self.indexes[name] = self._build_index(name, indexer)
 
@@ -1230,9 +1232,6 @@ class Repo:
 
     def exists(self, pkg_name: str) -> bool:
         """Whether a package with the supplied name exists."""
-        if pkg_name is None:
-            return False
-
         # if the FastPackageChecker is already constructed, use it
         if self._fast_package_checker:
             return pkg_name in self._pkg_checker
