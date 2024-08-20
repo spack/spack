@@ -289,7 +289,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         # ===================================
 
         if self.spec.satisfies("+rocm"):
-            hip_comp = self.spec["rocm"].prefix + "/bin/hipcc"
+            hip_comp = self.spec["hip"].hipcc
             args.append("-DCMAKE_CXX_COMPILER=" + hip_comp)
             args.append(
                 "-DCXX_EXTRA_FLAGS= --offload-arch="
