@@ -33,7 +33,7 @@ class Gpgme(AutotoolsPackage):
 
     depends_on("gnupg", type="build")
     depends_on("libgpg-error", type="build")
-    depends_on("libassuan@:2.5.7", type="build")
+    depends_on("libassuan@2.4.2:2", type="build")
 
     @classmethod
     def determine_version(cls, exe):
