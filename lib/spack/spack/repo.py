@@ -672,6 +672,12 @@ class RepoIndex:
         """Returns the list of all package names in the repository"""
         return sorted(self.checker.keys())
 
+    def exists(self, pkg_name: str) -> bool:
+        return pkg_name in self.checker
+
+    def last_repo_mtime(self) -> float:
+        return self.checker.last_mtime()
+
 
 class RepoPath:
     """A RepoPath is a list of repos that function as one.
@@ -1026,9 +1032,6 @@ class Repo:
         # Optional reference to a RepoPath to influence module import from spack.pkg
         self._finder: Optional[RepoPath] = None
 
-        # Maps that goes from package name to corresponding file stat
-        self._fast_package_checker: Optional[FastPackageChecker] = None
-
         # Indexes for this repository, computed lazily
         self._repo_index: Optional[RepoIndex] = None
         self._cache = cache
@@ -1148,7 +1151,9 @@ class Repo:
     def index(self) -> RepoIndex:
         """Construct the index for this repo lazily."""
         if self._repo_index is None:
-            self._repo_index = RepoIndex(self._pkg_checker, self.namespace, cache=self._cache)
+            self._repo_index = RepoIndex(
+                FastPackageChecker(self.packages_path), self.namespace, cache=self._cache
+            )
             self._repo_index.add_indexer("providers", ProviderIndexer(self))
             self._repo_index.add_indexer("tags", TagIndexer(self))
             self._repo_index.add_indexer("patches", PatchIndexer(self))
@@ -1200,12 +1205,6 @@ class Repo:
         pkg_dir = self.dirname_for_package_name(pkg_name)
         return os.path.join(pkg_dir, package_file_name)
 
-    @property
-    def _pkg_checker(self) -> FastPackageChecker:
-        if self._fast_package_checker is None:
-            self._fast_package_checker = FastPackageChecker(self.packages_path)
-        return self._fast_package_checker
-
     def all_package_names(self, include_virtuals: bool = False) -> List[str]:
         """Returns a sorted list of all package names in the Repo."""
         names = self.index.all_package_names()
@@ -1236,17 +1235,15 @@ class Repo:
 
     def exists(self, pkg_name: str) -> bool:
         """Whether a package with the supplied name exists."""
-        # if the FastPackageChecker is already constructed, use it
-        if self._fast_package_checker:
-            return pkg_name in self._pkg_checker
-
-        # if not, check for the package.py file
+        # If the index is already constructed, use it. Otherwise, check for the package.py
+        if self._repo_index:
+            return self.index.exists(pkg_name)
         path = self.filename_for_package_name(pkg_name)
         return os.path.exists(path)
 
-    def last_mtime(self):
+    def last_mtime(self) -> float:
         """Time a package file in this repo was last updated."""
-        return self._pkg_checker.last_mtime()
+        return self.index.last_repo_mtime()
 
     def is_virtual(self, pkg_name: str) -> bool:
         """Return True if the package with this name is virtual, False otherwise.

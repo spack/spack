@@ -1734,7 +1734,7 @@ class TestConcretize:
         builder.remove("pkg-c")
         with spack.repo.use_repositories(builder.root, override=False) as repos:
             # TODO (INJECT CONFIGURATION): unclear why the cache needs to be invalidated explicitly
-            repos.repos[0]._pkg_checker.invalidate()
+            repos.repos[0].index.checker.invalidate()
             with spack.config.override("concretizer:reuse", True):
                 s = Spec("pkg-c").concretized()
             assert s.namespace == "builtin.mock"
