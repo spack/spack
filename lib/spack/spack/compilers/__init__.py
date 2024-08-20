@@ -12,7 +12,7 @@ import multiprocessing.pool
 import os
 import sys
 import warnings
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 import archspec.cpu
 
