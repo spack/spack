@@ -195,6 +195,8 @@ class Qt(Package):
             depends_on("libsm", when="@3")
             depends_on("glib", when="@4:")
             depends_on("libmng")
+            depends_on("assimp@5.0.0:5", when="@5.5:+opengl")
+
     depends_on("icu4c")
     depends_on("harfbuzz", when="@5:")
 
@@ -223,7 +225,6 @@ class Qt(Package):
     depends_on("libpng", when="@4:")
     depends_on("dbus", when="@4:+dbus")
     depends_on("gl", when="@4:+opengl")
-    depends_on("assimp@5.0.0:5", when="@5.5:+opengl")
 
     depends_on("double-conversion", when="@5.7:")
     depends_on("pcre2+multibyte", when="@5.9:")
