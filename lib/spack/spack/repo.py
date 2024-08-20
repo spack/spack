@@ -572,7 +572,24 @@ class PatchIndexer(Indexer):
         self.index.update_package(pkg_fullname)
 
 
-class RepoIndex:
+class Index:
+    """Base class for repository indexes."""
+
+    def all_package_names(self) -> List[str]:
+        """Returns the list of all package names in the repository"""
+        raise NotImplementedError("must be implemented by derived classes")
+
+    def exists(self, pkg_name: str) -> bool:
+        raise NotImplementedError("must be implemented by derived classes")
+
+    def last_repo_mtime(self) -> float:
+        raise NotImplementedError("must be implemented by derived classes")
+
+    def __getitem__(self, name):
+        raise NotImplementedError("must be implemented by derived classes")
+
+
+class RepoIndex(Index):
     """Container class that manages a set of Indexers for a Repo.
 
     This class is responsible for checking packages in a repository for
@@ -685,7 +702,7 @@ class IndexFactory:
     def __init__(self, cache: "spack.caches.FileCacheType") -> None:
         self.cache = cache
 
-    def get(self, *, repository: "Repo") -> RepoIndex:
+    def get(self, *, repository: "Repo") -> "Index":
         result = RepoIndex(
             FastPackageChecker(repository.packages_path), repository.namespace, cache=self.cache
         )
@@ -1068,7 +1085,7 @@ class Repo:
         self._finder: Optional[RepoPath] = None
 
         # Indexes for this repository, computed lazily
-        self._repo_index: Optional[RepoIndex] = None
+        self._repo_index: Optional[Index] = None
 
     def finder(self, value: RepoPath) -> None:
         self._finder = value
@@ -1182,7 +1199,7 @@ class Repo:
         fs.install(self.filename_for_package_name(spec.name), path)
 
     @property
-    def index(self) -> RepoIndex:
+    def index(self) -> Index:
         """Construct the index for this repo lazily."""
         if self._repo_index is None:
             self._repo_index = self.index_factory.get(repository=self)
