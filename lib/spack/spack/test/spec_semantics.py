@@ -350,10 +350,6 @@ class TestSpecSemantics:
             ("mpich", "mpich++foo"),
             ("mpich", "mpich~~foo"),
             ("mpich", "mpich foo==1"),
-            # Flags semantics is currently different from other variant
-            ("mpich", 'mpich cflags="-O3"'),
-            ("mpich cflags=-O3", 'mpich cflags="-O3 -Ofast"'),
-            ("mpich cflags=-O2", 'mpich cflags="-O3"'),
             ("multivalue-variant foo=bar", "multivalue-variant +foo"),
             ("multivalue-variant foo=bar", "multivalue-variant ~foo"),
             ("multivalue-variant fee=bar", "multivalue-variant fee=baz"),
