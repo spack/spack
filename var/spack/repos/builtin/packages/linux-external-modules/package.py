@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 from shutil import copy2
+
+from spack.package import *
 
 
 class LinuxExternalModules(MakefilePackage):
@@ -18,8 +19,10 @@ class LinuxExternalModules(MakefilePackage):
 
     homepage = "https://github.com/torvalds/linux"
     url = "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.10.2.tar.xz"
+    # url on how to build out-of-tree kernel modules
+    how_to = "https://docs.kernel.org/kbuild/modules.html"
 
-    maintainers("fleshling", "rountree", "rountree-alt")
+    maintainers("fleshling", "rountree")
 
     license("GPL-2.0-only", checked_by="fleshling")
 
@@ -312,13 +315,12 @@ class LinuxExternalModules(MakefilePackage):
     depends_on("bc@1.06.95:", when="@6.0:")
     depends_on("cpio")
     depends_on("tar@1.28:", when="@6.5:")
-    
+
     depends_on("gmake@3.82:", when="@6.1:")
     depends_on("gmake@3.81:", when="@6.0")
 
     depends_on("binutils@2.25:", when="@6.2:")
     depends_on("binutils@2.23:", when="@6.0:6.2")
-    
 
     def setup_build_environment(self, env):
         env.set("KBUILD_OUTPUT", self.prefix)
@@ -335,4 +337,3 @@ class LinuxExternalModules(MakefilePackage):
 
     def install(self, spec, prefix):
         install_tree(self.build_directory, self.prefix)
-
