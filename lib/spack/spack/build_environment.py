@@ -1010,6 +1010,10 @@ class SetupContext:
                     # This includes runtime dependencies, also runtime deps of direct build deps.
                     set_package_py_globals(pkg, context=Context.RUN)
 
+        # Looping over the set of packages a second time
+        # ensures all globals are loaded into the module space prior to
+        # any package setup. This guarantees package setup methods have
+        # access to expected module level definitions such as "spack_cc"
         for dspec, flag in chain(self.external, self.nonexternal):
             for spec in dspec.dependents():
                 pkg = dspec.package
