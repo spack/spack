@@ -262,11 +262,13 @@ class TestSpecSemantics:
                 'mpich cppflags="-O3"',
                 'mpich cppflags=="-O3"',
                 [],
-                [("cppflags", "-O3")]
+                [("cppflags", "-O3")],
             ),
         ],
     )
-    def test_constrain_compiler_flags(self, lhs, rhs, expected_lhs, expected_rhs, propagated_lhs, propagated_rhs):
+    def test_constrain_compiler_flags(
+        self, lhs, rhs, expected_lhs, expected_rhs, propagated_lhs, propagated_rhs
+    ):
         """Constraining is asymmetric for compiler flags."""
         lhs, rhs, expected_lhs, expected_rhs = (
             Spec(lhs),
