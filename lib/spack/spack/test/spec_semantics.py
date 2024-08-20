@@ -261,7 +261,7 @@ class TestSpecSemantics:
                 'mpich cppflags=="-O3"',
                 'mpich cppflags="-O3"',
                 'mpich cppflags=="-O3"',
-                [],
+                [("cppflags", "-O3")],
                 [("cppflags", "-O3")],
             ),
         ],
@@ -301,8 +301,8 @@ class TestSpecSemantics:
                         result.add((flagtype, flag))
             return result
 
-        assert _propagated_flags(c1) <= set(propagated_lhs)
-        assert _propagated_flags(c2) <= set(propagated_rhs)
+        assert set(propagated_lhs) <= _propagated_flags(c1) 
+        assert set(propagated_rhs) <= _propagated_flags(c2)
 
     def test_constrain_specs_by_hash(self, default_mock_concretization, database):
         """Test that Specs specified only by their hashes can constrain eachother."""
