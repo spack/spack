@@ -37,7 +37,9 @@ class Ddt(Package):
         if version < Version("22.1.3"):
             return f"https://downloads.linaroforge.com/{version}/arm-forge-{version}-linux-x86_64.tar"
         else:
-            return f"https://downloads.linaroforge.com/{version}/linaro-forge-{version}-linux-x86_64.tar"
+            return (
+                f"https://downloads.linaroforge.com/{version}/linaro-forge-{version}-linux-x86_64.tar"
+            )
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", join_path(self.prefix, "bin"))
