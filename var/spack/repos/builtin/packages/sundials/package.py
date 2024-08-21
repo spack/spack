@@ -760,7 +760,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         (dirname, basename) = os.path.split(exe_path)
         srcpath = join_path(self._smoke_tests_path, dirname)
         if not os.path.exists(srcpath):
-            raise SkipTest(f"Example '{dirname}' not found in {self.version}")
+            raise SkipTest(f"Example '{basename}' source directory not found in {self.version}")
 
         # copy the example's directory to the test stage
         mkdirp(dirname)
