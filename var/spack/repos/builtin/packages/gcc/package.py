@@ -540,14 +540,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     compiler_version_regex = r"(?<!clang version)\s?([0-9.]+)"
     compiler_version_argument = ("-dumpfullversion", "-dumpversion")
 
-    @classproperty
-    def compiler_prefixes(cls):
-        host = spack.platforms.host()
-        if str(host) == "linux":
-            target = archspec.cpu.host().family
-            return [rf"{target}-{host}-\w+-"]
-        return []
-
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
         # Apple's gcc is actually apple clang, so skip it.
