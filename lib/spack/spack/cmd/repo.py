@@ -172,12 +172,15 @@ def repo_zip(args):
         return entry.name == "__pycache__"
 
     def _zip_repo_path_to_name(path: str) -> str:
-        # strip `repo.packages_path`
-        return str(pathlib.Path(path).relative_to(repo.packages_path))
+        # use spack/pkg/<repo>/* prefix and rename `package.py` as `__init__.py`
+        rel_path = pathlib.PurePath(path).relative_to(repo.packages_path)
+        if rel_path.name == "package.py":
+            rel_path = rel_path.with_name("__init__.py")
+        return str(rel_path)
 
     # Create a zipfile in a temporary file
     with tempfile.NamedTemporaryFile(delete=False, mode="wb", dir=repo.root) as f, zipfile.ZipFile(
-        f, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
+        f, "w", compression=zipfile.ZIP_DEFLATED
     ) as zip:
         reproducible_zipfile_from_prefix(
             zip, repo.packages_path, skip=_zip_repo_skip, path_to_name=_zip_repo_path_to_name
@@ -185,8 +188,8 @@ def repo_zip(args):
 
     packages_zip = os.path.join(repo.root, "packages.zip")
     try:
-        # Inform the user whether or not the repo was modified
-        if filecmp.cmp(f.name, packages_zip):
+        # Inform the user whether or not the repo was modified since it was last zipped
+        if os.path.exists(packages_zip) and filecmp.cmp(f.name, packages_zip):
             tty.msg(f"{repo.namespace}: {packages_zip} is up to date")
             return
         else:

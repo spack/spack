@@ -9,6 +9,7 @@ import os
 import os.path
 import pathlib
 import sys
+import zipfile
 from typing import Any, Dict, Optional, Tuple, Type, Union
 
 import llnl.util.filesystem
@@ -21,7 +22,7 @@ import spack.mirror
 import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
-from spack.util.crypto import Checker, checksum
+from spack.util.crypto import Checker, checksum_stream
 from spack.util.executable import which, which_string
 
 
@@ -155,6 +156,9 @@ class Patch:
         return hash(self.sha256)
 
 
+zipfilecache = {}
+
+
 class FilePatch(Patch):
     """Describes a patch that is retrieved from a file in the repository."""
 
@@ -194,9 +198,27 @@ class FilePatch(Patch):
             # Cannot use pkg.package_dir because it's a property and we have
             # classes, not instances.
             pkg_dir = os.path.abspath(os.path.dirname(cls.module.__file__))
-            path = os.path.join(pkg_dir, self.relative_path)
-            if os.path.exists(path):
-                abs_path = path
+            path = pathlib.Path(os.path.join(pkg_dir, self.relative_path))
+
+            if "packages.zip" in path.parts:
+                # check if it exists in the zip file.
+                idx = path.parts.index("packages.zip")
+                zip_path, entry_path = pathlib.PurePath(*path.parts[: idx + 1]), pathlib.PurePath(
+                    *path.parts[idx + 1 :]
+                )
+
+                lookup = zipfilecache.get(zip_path)
+                if lookup is None:
+                    zip = zipfile.ZipFile(zip_path, "r")
+                    namelist = set(zip.namelist())
+                    zipfilecache[zip_path] = (zip, namelist)
+                else:
+                    zip, namelist = lookup
+                if str(entry_path) in namelist:
+                    abs_path = str(path)
+                    break
+            elif path.exists():
+                abs_path = str(path)
                 break
 
         if abs_path is None:
@@ -216,7 +238,24 @@ class FilePatch(Patch):
             The sha256 of the patch file.
         """
         if self._sha256 is None and self.path is not None:
-            self._sha256 = checksum(hashlib.sha256, self.path)
+            path = pathlib.PurePath(self.path)
+            if "packages.zip" in path.parts:
+                print("yes")
+                # split in path to packages.zip and the path within the zip
+                idx = path.parts.index("packages.zip")
+                path_to_zip, path_in_zip = pathlib.PurePath(
+                    *path.parts[: idx + 1]
+                ), pathlib.PurePath(*path.parts[idx + 1 :])
+                zip = zipfilecache.get(path_to_zip)
+                if not zip:
+                    zip = zipfile.ZipFile(path_to_zip, "r")
+                    zipfilecache[path_to_zip] = zip
+                f = zip.open(str(path_in_zip), "r")
+            else:
+                f = open(self.path, "rb")
+            self._sha256 = checksum_stream(hashlib.sha256, f)
+            f.close()
+
         assert isinstance(self._sha256, str)
         return self._sha256
 

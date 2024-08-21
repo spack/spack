@@ -6,8 +6,7 @@
 import socket
 
 from spack.package import *
-
-from .blt import llnl_link_helpers
+from spack.pkg.builtin.blt import llnl_link_helpers
 
 
 # Starting with 2022.03.0, the only submodule we want to fetch is tpl/desul

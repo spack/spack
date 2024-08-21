@@ -246,6 +246,8 @@ def reproducible_zipfile_from_prefix(
 
         # Add the dir before its contents. zip.mkdir is Python 3.11.
         dir_info = zipfile.ZipInfo(path_to_name(dir))
+        if not dir_info.filename.endswith("/"):
+            dir_info.filename += "/"
         dir_info.external_attr = (0o40755 << 16) | 0x10
         dir_info.file_size = 0
         with zip.open(dir_info, "w") as dest:
