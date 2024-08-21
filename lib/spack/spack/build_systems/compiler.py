@@ -145,3 +145,5 @@ class CompilerPackage(spack.package_base.PackageBase):
 
     #: Returns the argument needed to set the RPATH, or None if it does not exist
     rpath_arg: Optional[str] = "-Wl,-rpath,"
+    #: Flag that needs to be used to pass an argument to the linker
+    linker_arg: str = "-Wl,"

@@ -263,8 +263,7 @@ class Compiler:
 
     @property
     def linker_arg(self):
-        """Flag that need to be used to pass an argument to the linker."""
-        return "-Wl,"
+        return ForwardToPackage(self).select("c").linker_arg
 
     @property
     def disable_new_dtags(self):

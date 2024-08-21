@@ -77,6 +77,7 @@ class Nag(Package, CompilerPackage):
     # then passes them to the linker. Therefore, we need to doubly wrap the
     # options with '-Wl,-Wl,,'
     rpath_arg = "-Wl,-Wl,,-rpath,,"
+    linker_arg = "-Wl,-Wl,,"
 
     @property
     def fortran(self):

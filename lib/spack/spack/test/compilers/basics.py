@@ -294,7 +294,6 @@ def supported_flag_test(flag, flag_value_ref, spec=None):
 # Tests for UnsupportedCompilerFlag exceptions from default
 # implementations of flags.
 def test_default_flags():
-    supported_flag_test("linker_arg", "-Wl,")
     unsupported_flag_test("openmp_flag")
     unsupported_flag_test("cxx11_flag")
     unsupported_flag_test("cxx14_flag")
