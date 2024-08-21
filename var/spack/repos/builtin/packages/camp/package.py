@@ -48,6 +48,8 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     version("0.2.2", sha256="194d38b57e50e3494482a7f94940b27f37a2bee8291f2574d64db342b981d819")
     version("0.1.0", sha256="fd4f0f2a60b82a12a1d9f943f8893dc6fe770db493f8fae5ef6f7d0c439bebcc")
 
+    depends_on("cxx", type="build")  # generated
+
     # TODO: figure out gtest dependency and then set this default True.
     variant("tests", default=False, description="Build tests")
     variant("openmp", default=False, description="Build with OpenMP support")
@@ -73,7 +75,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
         options.append("-DBLT_SOURCE_DIR={0}".format(spec["blt"].prefix))
 
         options.append(self.define_from_variant("ENABLE_CUDA", "cuda"))
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             options.append("-DCUDA_TOOLKIT_ROOT_DIR={0}".format(spec["cuda"].prefix))
 
             if not spec.satisfies("cuda_arch=none"):
@@ -84,7 +86,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
                 options.append("-DCMAKE_CUDA_FLAGS:STRING={0}".format(flag))
 
         options.append(self.define_from_variant("ENABLE_HIP", "rocm"))
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             options.append("-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix))
 
             archs = self.spec.variants["amdgpu_target"].value

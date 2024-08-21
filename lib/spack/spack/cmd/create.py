@@ -941,9 +941,7 @@ def get_repository(args, name):
             )
     else:
         if spec.namespace:
-            repo = spack.repo.PATH.get_repo(spec.namespace, None)
-            if not repo:
-                tty.die("Unknown namespace: '{0}'".format(spec.namespace))
+            repo = spack.repo.PATH.get_repo(spec.namespace)
         else:
             repo = spack.repo.PATH.first_repo()
 

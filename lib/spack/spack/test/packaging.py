@@ -11,6 +11,7 @@ import os
 import pathlib
 import platform
 import shutil
+import urllib.error
 from collections import OrderedDict
 
 import pytest
@@ -21,6 +22,7 @@ from llnl.util.symlink import readlink, symlink
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
 import spack.error
+import spack.fetch_strategy
 import spack.package_base
 import spack.repo
 import spack.store
@@ -46,7 +48,7 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
     # Install a test package
     spec = Spec("trivial-install-test-package").concretized()
-    monkeypatch.setattr(spec.package, "fetcher", URLFetchStrategy(mock_archive.url))
+    monkeypatch.setattr(spec.package, "fetcher", URLFetchStrategy(url=mock_archive.url))
     spec.package.do_install()
     pkghash = "/" + str(spec.dag_hash(7))
 
@@ -478,7 +480,7 @@ def test_macho_make_paths():
 
 
 @pytest.fixture()
-def mock_download():
+def mock_download(monkeypatch):
     """Mock a failing download strategy."""
 
     class FailedDownloadStrategy(spack.fetch_strategy.FetchStrategy):
@@ -487,28 +489,21 @@ def mock_download():
 
         def fetch(self):
             raise spack.fetch_strategy.FailedDownloadError(
-                "<non-existent URL>", "This FetchStrategy always fails"
+                urllib.error.URLError("This FetchStrategy always fails")
             )
-
-    fetcher = FailedDownloadStrategy()
 
     @property
     def fake_fn(self):
-        return fetcher
+        return FailedDownloadStrategy()
 
-    orig_fn = spack.package_base.PackageBase.fetcher
-    spack.package_base.PackageBase.fetcher = fake_fn
-    yield
-    spack.package_base.PackageBase.fetcher = orig_fn
+    monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", fake_fn)
 
 
 @pytest.mark.parametrize(
     "manual,instr", [(False, False), (False, True), (True, False), (True, True)]
 )
 @pytest.mark.disable_clean_stage_check
-def test_manual_download(
-    install_mockery, mock_download, default_mock_concretization, monkeypatch, manual, instr
-):
+def test_manual_download(mock_download, default_mock_concretization, monkeypatch, manual, instr):
     """
     Ensure expected fetcher fail message based on manual download and instr.
     """
@@ -517,7 +512,7 @@ def test_manual_download(
     def _instr(pkg):
         return f"Download instructions for {pkg.spec.name}"
 
-    spec = default_mock_concretization("a")
+    spec = default_mock_concretization("pkg-a")
     spec.package.manual_download = manual
     if instr:
         monkeypatch.setattr(spack.package_base.PackageBase, "download_instr", _instr)
@@ -539,20 +534,16 @@ def fetching_not_allowed(monkeypatch):
     monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", FetchingNotAllowed())
 
 
-def test_fetch_without_code_is_noop(
-    default_mock_concretization, install_mockery, fetching_not_allowed
-):
+def test_fetch_without_code_is_noop(default_mock_concretization, fetching_not_allowed):
     """do_fetch for packages without code should be a no-op"""
-    pkg = default_mock_concretization("a").package
+    pkg = default_mock_concretization("pkg-a").package
     pkg.has_code = False
     pkg.do_fetch()
 
 
-def test_fetch_external_package_is_noop(
-    default_mock_concretization, install_mockery, fetching_not_allowed
-):
+def test_fetch_external_package_is_noop(default_mock_concretization, fetching_not_allowed):
     """do_fetch for packages without code should be a no-op"""
-    spec = default_mock_concretization("a")
+    spec = default_mock_concretization("pkg-a")
     spec.external_path = "/some/where"
     assert spec.external
     spec.package.do_fetch()

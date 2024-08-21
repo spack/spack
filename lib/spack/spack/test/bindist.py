@@ -105,11 +105,11 @@ def config_directory(tmpdir_factory):
 
 
 @pytest.fixture(scope="function")
-def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutable_config):
-    # This fixture depends on install_mockery_mutable_config to ensure
+def default_config(tmpdir, config_directory, monkeypatch, install_mockery):
+    # This fixture depends on install_mockery to ensure
     # there is a clear order of initialization. The substitution of the
     # config scopes here is done on top of the substitution that comes with
-    # install_mockery_mutable_config
+    # install_mockery
     mutable_dir = tmpdir.mkdir("mutable_config").join("tmp")
     config_directory.copy(mutable_dir)
 
@@ -337,7 +337,7 @@ def test_relative_rpaths_install_nondefault(mirror_dir):
     buildcache_cmd("install", "-uf", cspec.name)
 
 
-def test_push_and_fetch_keys(mock_gnupghome):
+def test_push_and_fetch_keys(mock_gnupghome, tmp_path):
     testpath = str(mock_gnupghome)
 
     mirror = os.path.join(testpath, "mirror")
@@ -357,7 +357,7 @@ def test_push_and_fetch_keys(mock_gnupghome):
         assert len(keys) == 1
         fpr = keys[0]
 
-        bindist.push_keys(mirror, keys=[fpr], regenerate_index=True)
+        bindist._url_push_keys(mirror, keys=[fpr], tmpdir=str(tmp_path), update_index=True)
 
     # dir 2: import the key from the mirror, and confirm that its fingerprint
     #        matches the one created above
@@ -398,9 +398,7 @@ def fake_dag_hash(spec, length=None):
     return "tal4c7h4z0gqmixb1eqa92mjoybxn5l6"[:length]
 
 
-@pytest.mark.usefixtures(
-    "install_mockery_mutable_config", "mock_packages", "mock_fetch", "test_mirror"
-)
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch", "test_mirror")
 def test_spec_needs_rebuild(monkeypatch, tmpdir):
     """Make sure needs_rebuild properly compares remote hash
     against locally computed one, avoiding unnecessary rebuilds"""
@@ -429,7 +427,7 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     assert rebuild
 
 
-@pytest.mark.usefixtures("install_mockery_mutable_config", "mock_packages", "mock_fetch")
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
 def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     """Ensure spack buildcache index only reports available packages"""
 
@@ -466,7 +464,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
         assert "libelf" not in cache_list
 
 
-def test_generate_key_index_failure(monkeypatch):
+def test_generate_key_index_failure(monkeypatch, tmp_path):
     def list_url(url, recursive=False):
         if "fails-listing" in url:
             raise Exception("Couldn't list the directory")
@@ -479,13 +477,13 @@ def test_generate_key_index_failure(monkeypatch):
     monkeypatch.setattr(web_util, "push_to_url", push_to_url)
 
     with pytest.raises(CannotListKeys, match="Encountered problem listing keys"):
-        bindist.generate_key_index("s3://non-existent/fails-listing")
+        bindist.generate_key_index("s3://non-existent/fails-listing", str(tmp_path))
 
     with pytest.raises(GenerateIndexError, match="problem pushing .* Couldn't upload"):
-        bindist.generate_key_index("s3://non-existent/fails-uploading")
+        bindist.generate_key_index("s3://non-existent/fails-uploading", str(tmp_path))
 
 
-def test_generate_package_index_failure(monkeypatch, capfd):
+def test_generate_package_index_failure(monkeypatch, tmp_path, capfd):
     def mock_list_url(url, recursive=False):
         raise Exception("Some HTTP error")
 
@@ -494,15 +492,16 @@ def test_generate_package_index_failure(monkeypatch, capfd):
     test_url = "file:///fake/keys/dir"
 
     with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
-        bindist.generate_package_index(test_url)
+        bindist._url_generate_package_index(test_url, str(tmp_path))
 
     assert (
-        f"Warning: Encountered problem listing packages at {test_url}: Some HTTP error"
+        "Warning: Encountered problem listing packages at "
+        f"{test_url}/{bindist.BUILD_CACHE_RELATIVE_PATH}: Some HTTP error"
         in capfd.readouterr().err
     )
 
 
-def test_generate_indices_exception(monkeypatch, capfd):
+def test_generate_indices_exception(monkeypatch, tmp_path, capfd):
     def mock_list_url(url, recursive=False):
         raise Exception("Test Exception handling")
 
@@ -511,10 +510,10 @@ def test_generate_indices_exception(monkeypatch, capfd):
     url = "file:///fake/keys/dir"
 
     with pytest.raises(GenerateIndexError, match=f"Encountered problem listing keys at {url}"):
-        bindist.generate_key_index(url)
+        bindist.generate_key_index(url, str(tmp_path))
 
     with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
-        bindist.generate_package_index(url)
+        bindist._url_generate_package_index(url, str(tmp_path))
 
     assert f"Encountered problem listing packages at {url}" in capfd.readouterr().err
 
@@ -587,9 +586,7 @@ def test_update_sbang(tmpdir, test_mirror):
     str(archspec.cpu.host().family) != "x86_64",
     reason="test data uses gcc 4.5.0 which does not support aarch64",
 )
-def test_install_legacy_buildcache_layout(
-    mutable_config, compiler_factory, install_mockery_mutable_config
-):
+def test_install_legacy_buildcache_layout(mutable_config, compiler_factory, install_mockery):
     """Legacy buildcache layout involved a nested archive structure
     where the .spack file contained a repeated spec.json and another
     compressed archive file containing the install tree.  This test

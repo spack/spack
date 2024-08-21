@@ -38,6 +38,7 @@ import spack.mirror
 import spack.paths
 import spack.repo
 import spack.spec
+import spack.stage
 import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
@@ -71,7 +72,7 @@ SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 # TODO: Remove this in Spack 0.23
 SHARED_PR_MIRROR_URL = "s3://spack-binaries-prs/shared_pr_mirror"
 JOB_NAME_FORMAT = (
-    "{name}{@version} {/hash:7} {%compiler.name}{@compiler.version}{arch=architecture}"
+    "{name}{@version} {/hash:7} {%compiler.name}{@compiler.version}{ arch=architecture}"
 )
 IS_WINDOWS = sys.platform == "win32"
 spack_gpg = spack.main.SpackCommand("gpg")
@@ -1107,7 +1108,7 @@ def generate_gitlab_ci_yaml(
     if cdash_handler and cdash_handler.auth_token:
         try:
             cdash_handler.populate_buildgroup(all_job_names)
-        except (SpackError, HTTPError, URLError) as err:
+        except (SpackError, HTTPError, URLError, TimeoutError) as err:
             tty.warn(f"Problem populating buildgroup: {err}")
     else:
         tty.warn("Unable to populate buildgroup without CDash credentials")
@@ -1370,15 +1371,6 @@ def can_verify_binaries():
     return len(gpg_util.public_keys()) >= 1
 
 
-def _push_to_build_cache(spec: spack.spec.Spec, sign_binaries: bool, mirror_url: str) -> None:
-    """Unchecked version of the public API, for easier mocking"""
-    bindist.push_or_raise(
-        spec,
-        spack.mirror.Mirror.from_url(mirror_url).push_url,
-        bindist.PushOptions(force=True, unsigned=not sign_binaries),
-    )
-
-
 def push_to_build_cache(spec: spack.spec.Spec, mirror_url: str, sign_binaries: bool) -> bool:
     """Push one or more binary packages to the mirror.
 
@@ -1389,20 +1381,15 @@ def push_to_build_cache(spec: spack.spec.Spec, mirror_url: str, sign_binaries: b
         sign_binaries: If True, spack will attempt to sign binary package before pushing.
     """
     tty.debug(f"Pushing to build cache ({'signed' if sign_binaries else 'unsigned'})")
+    signing_key = bindist.select_signing_key() if sign_binaries else None
+    mirror = spack.mirror.Mirror.from_url(mirror_url)
     try:
-        _push_to_build_cache(spec, sign_binaries, mirror_url)
+        with bindist.make_uploader(mirror, signing_key=signing_key) as uploader:
+            uploader.push_or_raise([spec])
         return True
     except bindist.PushToBuildCacheError as e:
-        tty.error(str(e))
+        tty.error(f"Problem writing to {mirror_url}: {e}")
         return False
-    except Exception as e:
-        # TODO (zackgalbreath): write an adapter for boto3 exceptions so we can catch a specific
-        # exception instead of parsing str(e)...
-        msg = str(e)
-        if any(x in msg for x in ["Access Denied", "InvalidAccessKeyId"]):
-            tty.error(f"Permission problem writing to {mirror_url}: {msg}")
-            return False
-        raise
 
 
 def remove_other_mirrors(mirrors_to_keep, scope=None):
@@ -1448,10 +1435,6 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
         job_log_dir: path into which build log should be copied
     """
     tty.debug(f"job spec: {job_spec}")
-    if not job_spec:
-        msg = f"Cannot copy stage logs: job spec ({job_spec}) is required"
-        tty.error(msg)
-        return
 
     try:
         pkg_cls = spack.repo.PATH.get_pkg_class(job_spec.name)
@@ -2083,7 +2066,7 @@ def read_broken_spec(broken_spec_url):
     """
     try:
         _, _, fs = web_util.read_from_url(broken_spec_url)
-    except (URLError, web_util.SpackWebError, HTTPError):
+    except web_util.SpackWebError:
         tty.warn(f"Unable to read broken spec from {broken_spec_url}")
         return None
 

@@ -42,6 +42,8 @@ class Rpp(CMakePackage):
         version("0.99", sha256="f1d7ec65d0148ddb7b3ce836a7e058727036df940d72d1683dee590a913fd44a")
         version("0.98", sha256="191b5d89bf990ae22b5ef73675b89ed4371c3ce342ab9cc65383fa12ef13086e")
         version("0.97", sha256="8ce1a869ff67a29579d87d399d8b0bd97bf12ae1b6b1ca1f161cb8a262fb9939")
+
+    depends_on("cxx", type="build")  # generated
     variant(
         "build_type",
         default="Release",
@@ -58,6 +60,11 @@ class Rpp(CMakePackage):
         default=False,
         description="add utilities folder which contains rpp unit tests",
     )
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
 
     patch("0001-include-half-openmp-through-spack-package.patch", when="@:5.7")
     patch("0002-declare-handle-in-header.patch")
@@ -65,13 +72,21 @@ class Rpp(CMakePackage):
 
     # adds half.hpp include directory and modifies how the libjpegturbo
     # library is linked for the rpp unit test
-    patch("0003-changes-to-rpp-unit-tests.patch", when="+add_tests")
+    patch("0003-changes-to-rpp-unit-tests.patch", when="@5.7:6.0 +add_tests")
+    patch("0003-changes-to-rpp-unit-tests-6.1.patch", when="@6.1 +add_tests")
 
     def patch(self):
         if self.spec.satisfies("+hip"):
             filter_file(
                 "${ROCM_PATH}/llvm", self.spec["llvm-amdgpu"].prefix, "CMakeLists.txt", string=True
             )
+            if self.spec.satisfies("+asan"):
+                filter_file(
+                    "CMAKE_CXX_COMPILER clang++",
+                    "CMAKE_CXX_COMPILER {0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
+                    "CMakeLists.txt",
+                    string=True,
+                )
         if self.spec.satisfies("+opencl"):
             filter_file(
                 "${ROCM_PATH}",
@@ -101,6 +116,18 @@ class Rpp(CMakePackage):
             filter_file(
                 "${ROCM_PATH}/lib",
                 self.spec.prefix.lib,
+                "utilities/test_suite/HIP/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/share/rpp/test/cmake",
+                self.spec.prefix.share.rpp.test.cmake,
+                "utilities/test_suite/HOST/CMakeLists.txt",
+                string=True,
+            )
+            filter_file(
+                "${ROCM_PATH}/share/rpp/test/cmake",
+                self.spec.prefix.share.rpp.test.cmake,
                 "utilities/test_suite/HIP/CMakeLists.txt",
                 string=True,
             )
@@ -135,6 +162,17 @@ class Rpp(CMakePackage):
     def setup_run_environment(self, env):
         if self.spec.satisfies("+add_tests"):
             env.set("TURBO_JPEG_PATH", self.spec["libjpeg-turbo"].prefix)
+        if self.spec.satisfies("@6.1:"):
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+asan"):
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     def cmake_args(self):
         spec = self.spec
@@ -153,9 +191,3 @@ class Rpp(CMakePackage):
                 )
             )
         return args
-
-    @run_after("install")
-    def add_tests(self):
-        if self.spec.satisfies("+add_tests"):
-            install_tree("utilities", self.spec.prefix.utilities)
-            install_tree("cmake", self.spec.prefix.cmake)

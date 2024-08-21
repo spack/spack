@@ -224,6 +224,9 @@ class Python(Package):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     extendable = True
 
     # Variants to avoid cyclical dependencies for concretizer
@@ -638,10 +641,11 @@ class Python(Package):
         else:
             config_args.append("--without-system-expat")
 
-        if "+ctypes" in spec:
-            config_args.append("--with-system-ffi")
-        else:
-            config_args.append("--without-system-ffi")
+        if self.version < Version("3.12.0"):
+            if "+ctypes" in spec:
+                config_args.append("--with-system-ffi")
+            else:
+                config_args.append("--without-system-ffi")
 
         if "+tkinter" in spec:
             config_args.extend(
@@ -664,6 +668,9 @@ class Python(Package):
 
         if cflags:
             config_args.append("CFLAGS={0}".format(" ".join(cflags)))
+
+        if self.version >= Version("3.12.0") and sys.platform == "darwin":
+            config_args.append("CURSES_LIBS={0}".format(spec["ncurses"].libs.link_flags))
 
         return config_args
 

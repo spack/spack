@@ -3,12 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 
 import pytest
 
 import spack.package_base
 import spack.paths
 import spack.repo
+import spack.spec
+import spack.util.file_cache
 
 
 @pytest.fixture(params=["packages", "", "foo"])
@@ -37,25 +40,25 @@ repo:
 
 
 def test_repo_getpkg(mutable_mock_repo):
-    mutable_mock_repo.get_pkg_class("a")
-    mutable_mock_repo.get_pkg_class("builtin.mock.a")
+    mutable_mock_repo.get_pkg_class("pkg-a")
+    mutable_mock_repo.get_pkg_class("builtin.mock.pkg-a")
 
 
 def test_repo_multi_getpkg(mutable_mock_repo, extra_repo):
     mutable_mock_repo.put_first(extra_repo[0])
-    mutable_mock_repo.get_pkg_class("a")
-    mutable_mock_repo.get_pkg_class("builtin.mock.a")
+    mutable_mock_repo.get_pkg_class("pkg-a")
+    mutable_mock_repo.get_pkg_class("builtin.mock.pkg-a")
 
 
 def test_repo_multi_getpkgclass(mutable_mock_repo, extra_repo):
     mutable_mock_repo.put_first(extra_repo[0])
-    mutable_mock_repo.get_pkg_class("a")
-    mutable_mock_repo.get_pkg_class("builtin.mock.a")
+    mutable_mock_repo.get_pkg_class("pkg-a")
+    mutable_mock_repo.get_pkg_class("builtin.mock.pkg-a")
 
 
 def test_repo_pkg_with_unknown_namespace(mutable_mock_repo):
     with pytest.raises(spack.repo.UnknownNamespaceError):
-        mutable_mock_repo.get_pkg_class("unknown.a")
+        mutable_mock_repo.get_pkg_class("unknown.pkg-a")
 
 
 def test_repo_unknown_pkg(mutable_mock_repo):
@@ -128,19 +131,6 @@ def test_relative_import_spack_packages_as_python_modules(mock_packages):
     assert issubclass(Mpileaks, spack.package_base.PackageBase)
 
 
-def test_all_virtual_packages_have_default_providers():
-    """All virtual packages must have a default provider explicitly set."""
-    configuration = spack.config.create()
-    defaults = configuration.get("packages", scope="defaults")
-    default_providers = defaults["all"]["providers"]
-    providers = spack.repo.PATH.provider_index.providers
-    default_providers_filename = configuration.scopes["defaults"].get_section_filename("packages")
-    for provider in providers:
-        assert provider in default_providers, (
-            "all providers must have a default in %s" % default_providers_filename
-        )
-
-
 def test_get_all_mock_packages(mock_packages):
     """Get the mock packages once each too."""
     for name in mock_packages.all_package_names():
@@ -149,14 +139,14 @@ def test_get_all_mock_packages(mock_packages):
 
 def test_repo_path_handles_package_removal(tmpdir, mock_packages):
     builder = spack.repo.MockRepositoryBuilder(tmpdir, namespace="removal")
-    builder.add_package("c")
+    builder.add_package("pkg-c")
     with spack.repo.use_repositories(builder.root, override=False) as repos:
-        r = repos.repo_for_pkg("c")
+        r = repos.repo_for_pkg("pkg-c")
         assert r.namespace == "removal"
 
-    builder.remove("c")
+    builder.remove("pkg-c")
     with spack.repo.use_repositories(builder.root, override=False) as repos:
-        r = repos.repo_for_pkg("c")
+        r = repos.repo_for_pkg("pkg-c")
         assert r.namespace == "builtin.mock"
 
 
@@ -205,6 +195,18 @@ def test_path_computation_with_names(method_name, mock_repo_path):
     assert qualified == unqualified
 
 
+def test_use_repositories_and_import():
+    """Tests that use_repositories changes the import search too"""
+    import spack.paths
+
+    repo_dir = pathlib.Path(spack.paths.repos_path)
+    with spack.repo.use_repositories(str(repo_dir / "compiler_runtime.test")):
+        import spack.pkg.compiler_runtime.test.gcc_runtime
+
+    with spack.repo.use_repositories(str(repo_dir / "builtin.mock")):
+        import spack.pkg.builtin.mock.cmake
+
+
 @pytest.mark.usefixtures("nullify_globals")
 class TestRepo:
     """Test that the Repo class work correctly, and does not depend on globals,
@@ -219,8 +221,9 @@ class TestRepo:
     @pytest.mark.parametrize(
         "name,expected", [("mpi", True), ("mpich", False), ("mpileaks", False)]
     )
-    def test_is_virtual(self, name, expected, mock_test_cache):
-        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+    @pytest.mark.parametrize("repo_cls", [spack.repo.Repo, spack.repo.RepoPath])
+    def test_is_virtual(self, repo_cls, name, expected, mock_test_cache):
+        repo = repo_cls(spack.paths.mock_packages_path, cache=mock_test_cache)
         assert repo.is_virtual(name) is expected
         assert repo.is_virtual_safe(name) is expected
 
@@ -258,13 +261,15 @@ class TestRepo:
         "extended,expected",
         [("python", ["py-extension1", "python-venv"]), ("perl", ["perl-extension"])],
     )
-    def test_extensions(self, extended, expected, mock_test_cache):
-        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+    @pytest.mark.parametrize("repo_cls", [spack.repo.Repo, spack.repo.RepoPath])
+    def test_extensions(self, repo_cls, extended, expected, mock_test_cache):
+        repo = repo_cls(spack.paths.mock_packages_path, cache=mock_test_cache)
         provider_names = {x.name for x in repo.extensions_for(extended)}
         assert provider_names.issuperset(expected)
 
-    def test_all_package_names(self, mock_test_cache):
-        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+    @pytest.mark.parametrize("repo_cls", [spack.repo.Repo, spack.repo.RepoPath])
+    def test_all_package_names(self, repo_cls, mock_test_cache):
+        repo = repo_cls(spack.paths.mock_packages_path, cache=mock_test_cache)
         all_names = repo.all_package_names(include_virtuals=True)
         real_names = repo.all_package_names(include_virtuals=False)
         assert set(all_names).issuperset(real_names)
@@ -272,10 +277,28 @@ class TestRepo:
             assert repo.is_virtual(name)
             assert repo.is_virtual_safe(name)
 
-    def test_packages_with_tags(self, mock_test_cache):
-        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+    @pytest.mark.parametrize("repo_cls", [spack.repo.Repo, spack.repo.RepoPath])
+    def test_packages_with_tags(self, repo_cls, mock_test_cache):
+        repo = repo_cls(spack.paths.mock_packages_path, cache=mock_test_cache)
         r1 = repo.packages_with_tags("tag1")
         r2 = repo.packages_with_tags("tag1", "tag2")
         assert "mpich" in r1 and "mpich" in r2
         assert "mpich2" in r1 and "mpich2" not in r2
         assert set(r2).issubset(r1)
+
+
+@pytest.mark.usefixtures("nullify_globals")
+class TestRepoPath:
+    def test_creation_from_string(self, mock_test_cache):
+        repo = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=mock_test_cache)
+        assert len(repo.repos) == 1
+        assert repo.repos[0]._finder is repo
+        assert repo.by_namespace["spack.pkg.builtin.mock"] is repo.repos[0]
+
+    def test_get_repo(self, mock_test_cache):
+        repo = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=mock_test_cache)
+        # builtin.mock is there
+        assert repo.get_repo("builtin.mock") is repo.repos[0]
+        # foo is not there, raise
+        with pytest.raises(spack.repo.UnknownNamespaceError):
+            repo.get_repo("foo")
