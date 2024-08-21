@@ -536,7 +536,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     d_names = ["gdc"]
     go_names = ["gccgo"]
     compiler_suffixes = [r"-mp-\d+(?:\.\d+)?", r"-\d+(?:\.\d+)?", r"\d\d"]
-    compiler_version_regex = r"(?<!clang version)\s?([0-9.]+)"
+    compiler_version_regex = r"([0-9.]+)"
     compiler_version_argument = ("-dumpfullversion", "-dumpversion")
 
     @classmethod
@@ -549,7 +549,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
                     output = spack.compiler.get_compiler_version_output(exe, "--version")
                 except Exception:
                     output = ""
-                if "Apple" in output:
+                if "clang version" in output:
                     continue
                 not_apple_clang.append(exe)
             return not_apple_clang
