@@ -10,7 +10,6 @@ import sys
 import archspec.cpu
 
 import llnl.util.tty as tty
-from llnl.util.lang import classproperty
 from llnl.util.symlink import readlink
 
 import spack.platforms
