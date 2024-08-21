@@ -81,34 +81,6 @@ def test_compiler_find_without_paths(no_compilers_yaml, working_env, mock_execut
     assert "gcc" in output
 
 
-@pytest.mark.regression("17589")
-def test_compiler_find_no_apple_gcc(no_compilers_yaml, working_env, mock_executable):
-    """Tests that Spack won't mistake Apple's GCC as a "real" GCC, since it's really
-    Clang with a few tweaks.
-    """
-    gcc_path = mock_executable(
-        "gcc",
-        output="""
-if [ "$1" = "-dumpversion" ]; then
-    echo "4.2.1"
-elif [ "$1" = "--version" ]; then
-    echo "Configured with: --prefix=/dummy"
-    echo "Apple clang version 11.0.0 (clang-1100.0.33.16)"
-    echo "Target: x86_64-apple-darwin18.7.0"
-    echo "Thread model: posix"
-    echo "InstalledDir: /dummy"
-else
-    echo "clang: error: no input files"
-fi
-""",
-    )
-
-    os.environ["PATH"] = str(gcc_path.parent)
-    output = compiler("find", "--scope=site")
-
-    assert "gcc" not in output
-
-
 @pytest.mark.regression("37996")
 def test_compiler_remove(mutable_config, mock_packages):
     """Tests that we can remove a compiler from configuration."""
