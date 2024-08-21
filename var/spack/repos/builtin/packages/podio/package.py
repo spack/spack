@@ -103,6 +103,7 @@ class Podio(CMakePackage):
     patch(
         "https://github.com/AIDASoft/podio/commit/0222a077aaff817b21a46a590af0f8329dd27d67.patch?full_index=1",
         when="@0.17:0.99",
+        sha256="9e42e0995634f2afdd358cd19383e882dc9143cce1b6afb0d2c4a1ec9add6e15",
     )
 
     # See https://github.com/AIDASoft/podio/pull/599 that landed after 0.99
