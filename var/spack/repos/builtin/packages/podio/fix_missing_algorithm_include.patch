@@ -1,0 +1,18 @@
+From 0222a077aaff817b21a46a590af0f8329dd27d67 Mon Sep 17 00:00:00 2001
+From: Juan Miguel Carceller <22276694+jmcarcell@users.noreply.github.com>
+Date: Mon, 13 May 2024 14:04:08 +0200
+Subject: [PATCH] Add include to fix building with GCC 14 (#600)
+
+Co-authored-by: jmcarcell <jmcarcell@users.noreply.github.com>
+---
+ src/DatamodelRegistryIOHelpers.cc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/DatamodelRegistryIOHelpers.cc b/src/DatamodelRegistryIOHelpers.cc
+index 901dbb113..1e7573a1f 100644
+--- a/src/DatamodelRegistryIOHelpers.cc
++++ b/src/DatamodelRegistryIOHelpers.cc
+@@ -1,4 +1,5 @@
+ #include "podio/utilities/DatamodelRegistryIOHelpers.h"
++#include <algorithm>
+ #include <iterator>
