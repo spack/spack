@@ -4,11 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pathlib
-import sys
 
 from spack.package import *
-
-IS_WINDOWS = sys.platform == "win32"
 
 
 class Icu4c(AutotoolsPackage, MSBuildPackage):
