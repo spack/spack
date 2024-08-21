@@ -152,7 +152,7 @@ def test_change_multiple_matches():
 
 
 def test_env_add_nonexistant_path_fails():
-    with pytest.raises(ev.SpackEnvironmentError, match=r"does not exist"):
+    with pytest.raises(ev.SpackEnvironmentError, match=r"doesn't contain an environment"):
         env("add", "path/does/not/exist")
 
 
