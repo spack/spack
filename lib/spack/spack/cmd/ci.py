@@ -964,16 +964,18 @@ def ci_verify_versions(args):
             elif "commit" in pkg.versions[version]:
                 commits_version_dict[pkg.versions[version]["commit"]] = version
 
-            # If a package version isn't an infinite / develop version and it doesn't
-            # define a commit nor a sha256 we should print an error to the user.
-            elif not version.isdevelop():
-                tty.error(
-                    f"{pkg_name}@{version} does not define a sha256 or commit. Generate one with,",
-                    "\n",
-                    f"        spack checksum {pkg_name}@{version}",
-                    "\n",
-                )
-                failed_version = True
+            # It'd be great to turn this on one day and enforce every package
+            # version have a commit or a sha256 defined if not an infinite version
+            # however there are a lot of package's where this doesn't work yet.
+            # elif not version.isdevelop():
+            #     tty.error(
+            #         f"{pkg_name}@{version} does not define a sha256 or commit.\n",
+            #         "You may generate one by running the following command,\n"
+            #         "\n",
+            #         f"        spack checksum {pkg_name} {version}\n",
+            #         "\n",
+            #     )
+            #     failed_version = True
 
         with fs.working_dir(spack.paths.prefix):
             added_checksums = spack_ci.get_added_versions(
@@ -984,14 +986,10 @@ def ci_verify_versions(args):
             )
 
         if added_checksums:
-            failed_version = not validate_standard_versions(
-                pkg, added_checksums,
-            ) or failed_version
+            failed_version = not validate_standard_versions(pkg, added_checksums) or failed_version
 
         if added_commits:
-            failed_version = not validate_git_versions(
-                pkg, added_commits
-            ) or failed_version
+            failed_version = not validate_git_versions(pkg, added_commits) or failed_version
 
     if failed_version:
         sys.exit(1)
