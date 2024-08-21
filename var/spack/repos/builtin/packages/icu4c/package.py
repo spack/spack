@@ -37,14 +37,15 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
     depends_on("cxx", type="build")  # generated
 
     build_system("autotools", "msbuild", default="autotools")
-
-    variant(
-        "cxxstd",
-        default="11",
-        values=("11", "14", "17"),
-        multi=False,
-        description="Use the specified C++ standard when building",
-    )
+    for plat in ["linux", "darwin", "freebsd"]:
+        with when(f"platform={plat}"):
+            variant(
+                "cxxstd",
+                default="11",
+                values=("11", "14", "17"),
+                multi=False,
+                description="Use the specified C++ standard when building",
+            )
 
     depends_on("python", type="build", when="@64.1:")
     with when("build_system=autotools"):
