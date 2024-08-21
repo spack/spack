@@ -3,8 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import filecmp
 import os
+import pathlib
 import sys
+import tempfile
+import zipfile
+from typing import List, Optional, Tuple
 
 import llnl.util.tty as tty
 
@@ -12,6 +17,7 @@ import spack.config
 import spack.repo
 import spack.util.path
 from spack.cmd.common import arguments
+from spack.util.archive import reproducible_zipfile_from_prefix
 
 description = "manage package source repositories"
 section = "config"
@@ -67,6 +73,12 @@ def setup_parser(subparser):
         help="configuration scope to modify",
     )
 
+    # Zip
+    zip_parser = sp.add_parser("zip", help=repo_zip.__doc__)
+    zip_parser.add_argument(
+        "namespace_or_path", help="namespace or path of a Spack package repository"
+    )
+
 
 def repo_create(args):
     """create a new package repository"""
@@ -109,31 +121,18 @@ def repo_add(args):
 def repo_remove(args):
     """remove a repository from Spack's configuration"""
     repos = spack.config.get("repos", scope=args.scope)
-    namespace_or_path = args.namespace_or_path
 
-    # If the argument is a path, remove that repository from config.
-    canon_path = spack.util.path.canonicalize_path(namespace_or_path)
-    for repo_path in repos:
-        repo_canon_path = spack.util.path.canonicalize_path(repo_path)
-        if canon_path == repo_canon_path:
-            repos.remove(repo_path)
-            spack.config.set("repos", repos, args.scope)
-            tty.msg("Removed repository %s" % repo_path)
-            return
+    key, repo = _get_repo(repos, args.namespace_or_path)
 
-    # If it is a namespace, remove corresponding repo
-    for path in repos:
-        try:
-            repo = spack.repo.from_path(path)
-            if repo.namespace == namespace_or_path:
-                repos.remove(path)
-                spack.config.set("repos", repos, args.scope)
-                tty.msg("Removed repository %s with namespace '%s'." % (repo.root, repo.namespace))
-                return
-        except spack.repo.RepoError:
-            continue
+    if not key:
+        tty.die(f"No repository with path or namespace: {args.namespace_or_path}")
 
-    tty.die("No repository with path or namespace: %s" % namespace_or_path)
+    repos.remove(key)
+    spack.config.set("repos", repos, args.scope)
+    if repo:
+        tty.msg(f"Removed repository {repo.root} with namespace '{repo.namespace}'")
+    else:
+        tty.msg(f"Removed repository {key}")
 
 
 def repo_list(args):
@@ -147,17 +146,74 @@ def repo_list(args):
             continue
 
     if sys.stdout.isatty():
-        msg = "%d package repositor" % len(repos)
-        msg += "y." if len(repos) == 1 else "ies."
-        tty.msg(msg)
+        tty.msg(f"{len(repos)} package repositor{'y.' if len(repos) == 1 else 'ies.'}")
 
     if not repos:
         return
 
     max_ns_len = max(len(r.namespace) for r in repos)
     for repo in repos:
-        fmt = "%%-%ds%%s" % (max_ns_len + 4)
-        print(fmt % (repo.namespace, repo.root))
+        print(f"{repo.namespace:<{max_ns_len}} {repo.root}")
+
+
+def repo_zip(args):
+    """zip a package repository to make it immutable and faster to load"""
+    key, _ = _get_repo(spack.config.get("repos"), args.namespace_or_path)
+
+    if not key:
+        tty.die(f"No repository with path or namespace: {args.namespace_or_path}")
+
+    try:
+        repo = spack.repo.from_path(key)
+    except spack.repo.RepoError:
+        tty.die(f"No repository at path: {key}")
+
+    def _zip_repo_skip(entry: os.DirEntry):
+        return entry.name == "__pycache__"
+
+    def _zip_repo_path_to_name(path: str) -> str:
+        # strip `repo.packages_path`
+        return str(pathlib.Path(path).relative_to(repo.packages_path))
+
+    # Create a zipfile in a temporary file
+    with tempfile.NamedTemporaryFile(delete=False, mode="wb", dir=repo.root) as f, zipfile.ZipFile(
+        f, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
+    ) as zip:
+        reproducible_zipfile_from_prefix(
+            zip, repo.packages_path, skip=_zip_repo_skip, path_to_name=_zip_repo_path_to_name
+        )
+
+    packages_zip = os.path.join(repo.root, "packages.zip")
+    try:
+        # Inform the user whether or not the repo was modified
+        if filecmp.cmp(f.name, packages_zip):
+            tty.msg(f"{repo.namespace}: {packages_zip} is up to date")
+            return
+        else:
+            os.rename(f.name, packages_zip)
+            tty.msg(f"{repo.namespace} was zipped: {packages_zip}")
+    finally:
+        try:
+            os.unlink(f.name)
+        except OSError:
+            pass
+
+
+def _get_repo(repos: List[str], path_or_name) -> Tuple[Optional[str], Optional[spack.repo.Repo]]:
+    """Find repo by path or namespace"""
+    canon_path = spack.util.path.canonicalize_path(path_or_name)
+    for path in repos:
+        if canon_path == spack.util.path.canonicalize_path(path):
+            return path, None
+
+    for path in repos:
+        try:
+            repo = spack.repo.from_path(path)
+        except spack.repo.RepoError:
+            continue
+        if repo.namespace == path_or_name:
+            return path, repo
+    return None, None
 
 
 def repo(parser, args):
@@ -167,5 +223,6 @@ def repo(parser, args):
         "add": repo_add,
         "remove": repo_remove,
         "rm": repo_remove,
+        "zip": repo_zip,
     }
     action[args.repo_command](args)

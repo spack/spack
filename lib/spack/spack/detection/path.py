@@ -165,6 +165,7 @@ def libraries_in_path(search_paths: List[str]) -> Dict[str, str]:
                     path_to_lib[entry.path] = entry.name
     return path_to_lib
 
+
 def _group_by_prefix(paths: List[str]) -> Dict[str, Set[str]]:
     groups = collections.defaultdict(set)
     for p in paths:
