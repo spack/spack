@@ -97,7 +97,6 @@ class PythonVenv(Package):
         if dep_bin_dir and os.path.isdir(dep_bin_dir):
             env.prepend_path("PATH", dep_bin_dir)
 
-
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods."""
         module.python = self.command
