@@ -29,6 +29,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     #   marked deprecated=True
     # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
+    version("20240627", sha256="2174a99d266279823a8c57629ee1c21ec357816aefd85f964d9f859fe9222aa5")
+    version("20240417", sha256="158b288725c251fd8b30dbcf61749e0d6a042807da92af865a7d3c413efdd8ea")
     version(
         "20240207.1", sha256="3ba62c2a1ed463fceedf313a1c3ea2997994aa102379a8d35b525ea424f56776"
     )
@@ -367,6 +369,16 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")
+
+    # mdi, scafacos, ml-quip, qmmm require C, but not available in Spack
+    for c_pkg in ("adios", "atc", "awpmd", "ml-pod", "electrode", "kim", "h5md", "tools"):
+        depends_on("c", type="build", when=f"+{c_pkg}")
+
+    # scafacos, ml-quip require Fortran, but not available in Spack
+    for fc_pkg in ("kim",):
+        depends_on("fortran", type="build", when=f"+{fc_pkg}")
+
     stable_versions = {
         "20230802.3",
         "20230802.2",
@@ -461,6 +473,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         "ml-pod": {"when": "@20221222:"},
         "ml-rann": {"when": "@20210702:"},
         "ml-snap": {"when": "@20210702:"},
+        "ml-uf3": {"when": "@20240627:"},
         "mliap": {"when": "@20200630:20210527"},
         "mofff": {"when": "@20210702:"},
         "molecule": {"default": True},
@@ -595,6 +608,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         values=("double", "mixed", "single"),
         multi=False,
     )
+    variant("tools", default=False, description="Build LAMMPS tools (msi2lmp, binary2txt, chain)")
 
     depends_on("cmake@3.16:", when="@20231121:")
     depends_on("mpi", when="+mpi")
@@ -630,6 +644,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("kokkos+deprecated_code+shared@3.0.00", when="@20200303+kokkos")
     depends_on("kokkos+shared@3.1:", when="@20200505:+kokkos")
     depends_on("kokkos@3.7.01:", when="@20230208: +kokkos")
+    depends_on("kokkos@4.3.00:", when="@20240417: +kokkos")
+    depends_on("kokkos@4.3.01:", when="@20240627: +kokkos")
     depends_on("adios2", when="+user-adios")
     depends_on("adios2", when="+adios")
     depends_on("plumed", when="+user-plumed")
@@ -771,6 +787,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             self.define_from_variant("LAMMPS_EXCEPTIONS", "exceptions"),
             self.define_from_variant("{}_MPI".format(mpi_prefix), "mpi"),
             self.define_from_variant("BUILD_OMP", "openmp"),
+            self.define_from_variant("BUILD_TOOLS", "tools"),
             self.define("ENABLE_TESTING", self.run_tests),
             self.define("DOWNLOAD_POTENTIALS", False),
         ]
@@ -892,6 +909,14 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             else:
                 env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
                 env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
+        if "+plugin" in self.spec:
+            env.prepend_path("LAMMPS_PLUGIN_PATH", self.prefix.lib.lammps.plugins)
+            env.prepend_path("LAMMPS_PLUGIN_PATH", self.prefix.lib64.lammps.plugins)
+
+    @run_after("install")
+    def make_plugins_directories(self):
+        os.makedirs(self.prefix.lib.lammps.plugins, exist_ok=True)
+        os.makedirs(self.prefix.lib64.lammps.plugins, exist_ok=True)
 
     @run_after("install")
     def install_python(self):

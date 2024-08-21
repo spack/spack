@@ -15,4 +15,6 @@ class PyPycryptodome(PythonPackage):
 
     version("3.16.0", sha256="0e45d2d852a66ecfb904f090c3f87dc0dfb89a499570abad8590f10d9cffb350")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("py-setuptools", type="build")

@@ -16,6 +16,8 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSD-3-Clause")
 
+    version("0.6.0", sha256="85dfcee36ff28fa44da3134408c40ebd611bccff8a295982a7c78eaf982524d9")
+    version("0.5.0", sha256="f964ee2a96bb58b3f0ee4563ae65fcd136e409a7c0e66beda33f926fc9515a8e")
     version("0.4.1", sha256="ba95f26475ad68da1f3a24d091dc1b925525e269e4c83c1eaf1d37d29b526666")
     version("0.4.0", sha256="34fd0da0d1a72b6981bed0bba029ba0947e0d0d99beb3e0aad0a478095c9527d")
     version("0.3.1", sha256="350a7fd216790182aa52639a3d574990a9d57843e02b92d87b854912f4812bfe")
@@ -24,6 +26,9 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     version("0.2.0", sha256="da73cbd1b88287c86d84b1045a05406b742be924e65c52588bbff200abd81a10")
     version("0.1.0", sha256="f7ffcde22edabb3dc24a624e2888f98829ee526da384cd752b2b271c731ca9b1")
     version("master", branch="master")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     variant("shared", default=True, description="Build shared libraries.")
 
@@ -43,6 +48,16 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         default=False,
         when="@0.2.0:",
         description="Build C API compatible with ScaLAPACK",
+    )
+
+    variant("mpi_gpu_aware", default=False, when="@0.5.0:", description="Use GPU-aware MPI.")
+    conflicts("+mpi_gpu_aware", when="~cuda ~rocm", msg="GPU-aware MPI requires +cuda or +rocm")
+
+    variant(
+        "mpi_gpu_force_contiguous",
+        default=True,
+        when="@0.5.0: +mpi_gpu_aware",
+        description="Force GPU communication buffers to be contiguous before communicating.",
     )
 
     generator("ninja")
@@ -142,7 +157,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
         # BLAS/LAPACK
-        if spec["lapack"].name in INTEL_MATH_LIBRARIES:
+        if spec.version <= Version("0.4") and spec["lapack"].name in INTEL_MATH_LIBRARIES:
             mkl_provider = spec["lapack"].name
 
             vmap = {
@@ -206,7 +221,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
                         )
                     )
         else:
-            args.append(self.define("DLAF_WITH_MKL", False))
+            args.append(self.define("DLAF_WITH_MKL", spec["lapack"].name in INTEL_MATH_LIBRARIES))
             args.append(
                 self.define(
                     "LAPACK_LIBRARY",
@@ -217,6 +232,13 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
                 args.append(self.define("SCALAPACK_LIBRARY", spec["scalapack"].libs.ld_flags))
 
         args.append(self.define_from_variant("DLAF_WITH_SCALAPACK", "scalapack"))
+
+        args.append(self.define_from_variant("DLAF_WITH_MPI_GPU_AWARE", "mpi_gpu_aware"))
+        args.append(
+            self.define_from_variant(
+                "DLAF_WITH_MPI_GPU_FORCE_CONTIGUOUS", "mpi_gpu_force_contiguous"
+            )
+        )
 
         # CUDA/HIP
         args.append(self.define_from_variant("DLAF_WITH_CUDA", "cuda"))

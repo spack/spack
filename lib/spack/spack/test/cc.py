@@ -355,6 +355,15 @@ def test_fc_flags(wrapper_environment, wrapper_flags):
     )
 
 
+def test_always_cflags(wrapper_environment, wrapper_flags):
+    with set_env(SPACK_ALWAYS_CFLAGS="-always1 -always2"):
+        check_args(
+            cc,
+            ["-v", "--cmd-line-v-opt"],
+            [real_cc] + ["-always1", "-always2"] + ["-v", "--cmd-line-v-opt"],
+        )
+
+
 def test_Wl_parsing(wrapper_environment):
     check_args(
         cc,
@@ -828,14 +837,14 @@ def test_keep_and_replace(wrapper_environment):
         ),
         (
             "config:flags:keep_werror:specific",
-            ["-Werror", "-Werror=specific", "-bah"],
-            ["-Werror=specific", "-bah"],
+            ["-Werror", "-Werror=specific", "-Werror-specific2", "-bah"],
+            ["-Wno-error", "-Werror=specific", "-Werror-specific2", "-bah"],
             ["-Werror"],
         ),
         (
             "config:flags:keep_werror:none",
             ["-Werror", "-Werror=specific", "-bah"],
-            ["-bah", "-Wno-error", "-Wno-error=specific"],
+            ["-Wno-error", "-Wno-error=specific", "-bah"],
             ["-Werror", "-Werror=specific"],
         ),
         # check non-standard -Werror opts like -Werror-implicit-function-declaration
@@ -848,13 +857,13 @@ def test_keep_and_replace(wrapper_environment):
         (
             "config:flags:keep_werror:specific",
             ["-Werror", "-Werror-implicit-function-declaration", "-bah"],
-            ["-Werror-implicit-function-declaration", "-bah", "-Wno-error"],
+            ["-Wno-error", "-Werror-implicit-function-declaration", "-bah"],
             ["-Werror"],
         ),
         (
             "config:flags:keep_werror:none",
             ["-Werror", "-Werror-implicit-function-declaration", "-bah"],
-            ["-bah", "-Wno-error=implicit-function-declaration"],
+            ["-Wno-error", "-bah", "-Wno-error=implicit-function-declaration"],
             ["-Werror", "-Werror-implicit-function-declaration"],
         ),
     ],

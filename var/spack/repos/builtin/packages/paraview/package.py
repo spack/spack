@@ -6,6 +6,7 @@
 import itertools
 import os
 import sys
+from subprocess import Popen
 
 from spack.package import *
 
@@ -30,6 +31,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     license("Apache-2.0")
 
     version("master", branch="master", submodules=True)
+    version(
+        "5.13.0-RC2", sha256="d10d0cec48c662d8c78470726af1b28cd39cbe434aef7fd0f75eec0112fa3f89"
+    )
     version(
         "5.12.1",
         sha256="927f880c13deb6dde4172f4727d2b66f5576e15237b35778344f5dd1ddec863e",
@@ -58,6 +62,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     version("5.1.2", sha256="ff02b7307a256b7c6e8ad900dee5796297494df7f9a0804fe801eb2f66e6a187")
     version("5.0.1", sha256="caddec83ec284162a2cbc46877b0e5a9d2cca59fb4ab0ea35b0948d2492950bb")
     version("4.4.0", sha256="c2dc334a89df24ce5233b81b74740fc9f10bc181cd604109fd13f6ad2381fc73")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant(
         "development_files",
@@ -144,6 +152,40 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         msg="Use paraview@5.9.0 with %xl_r. Earlier versions are not able to build with xl.",
     )
 
+    # CUDA ARCH
+
+    # This is (more or less) the mapping hard-coded in VTK-m logic
+    # see https://gitlab.kitware.com/vtk/vtk-m/-/blob/v2.1.0/CMake/VTKmDeviceAdapters.cmake?ref_type=tags#L221-247
+    supported_cuda_archs = {
+        "20": "fermi",
+        "21": "fermi",
+        "30": "kepler",
+        "32": "kepler",
+        "35": "kepler",
+        "37": "kepler",
+        "50": "maxwel",
+        "52": "maxwel",
+        "53": "maxwel",
+        "60": "pascal",
+        "61": "pascal",
+        "62": "pascal",
+        "70": "volta",
+        "72": "volta",
+        "75": "turing",
+        "80": "ampere",
+        "86": "ampere",
+    }
+
+    # VTK-m and transitively ParaView does not support Tesla Arch
+    for _arch in range(10, 14):
+        conflicts(f"cuda_arch={_arch}", when="+cuda", msg="ParaView requires cuda_arch >= 20")
+
+    # Starting from cmake@3.18, CUDA architecture managament can be delegated to CMake.
+    # Hence, it is possible to rely on it instead of relying on custom logic updates from VTK-m for
+    # newer architectures (wrt mapping).
+    for _arch in [arch for arch in CudaPackage.cuda_arch_values if int(arch) > 86]:
+        conflicts("cmake@:3.17", when=f"cuda_arch={_arch}")
+
     # We only support one single Architecture
     for _arch, _other_arch in itertools.permutations(CudaPackage.cuda_arch_values, 2):
         conflicts(
@@ -151,9 +193,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             when="cuda_arch={0}".format(_other_arch),
             msg="Paraview only accepts one architecture value",
         )
-
-    for _arch in range(10, 14):
-        conflicts("cuda_arch=%d" % _arch, when="+cuda", msg="ParaView requires cuda_arch >= 20")
 
     depends_on("cmake@3.3:", type="build")
     depends_on("cmake@3.21:", type="build", when="+rocm")
@@ -187,9 +226,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("gl@3.2:", when="+opengl2")
     depends_on("gl@1.2:", when="~opengl2")
     depends_on("glew")
-
-    for p in ["linux", "cray"]:
-        depends_on("libxt", when=f"platform={p} ^[virtuals=gl] glx")
+    depends_on("libxt", when="platform=linux ^[virtuals=gl] glx")
 
     requires("^[virtuals=gl] glx", when="+qt", msg="Qt support requires GLX")
 
@@ -579,38 +616,25 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         # VTK-m expects cuda_arch to be the arch name vs. the arch version.
         if spec.satisfies("+cuda"):
-            supported_cuda_archs = {
-                # VTK-m and transitively ParaView does not support Tesla Arch
-                "20": "fermi",
-                "21": "fermi",
-                "30": "kepler",
-                "32": "kepler",
-                "35": "kepler",
-                "37": "kepler",
-                "50": "maxwel",
-                "52": "maxwel",
-                "53": "maxwel",
-                "60": "pascal",
-                "61": "pascal",
-                "62": "pascal",
-                "70": "volta",
-                "72": "volta",
-                "75": "turing",
-                "80": "ampere",
-                "86": "ampere",
-            }
+            if spec["cmake"].satisfies("@3.18:"):
+                cmake_args.append(
+                    self.define(
+                        "CMAKE_CUDA_ARCHITECTURES", ";".join(spec.variants["cuda_arch"].value)
+                    )
+                )
+            else:
+                # ParaView/VTK-m only accepts one arch, default to first element
+                requested_arch = spec.variants["cuda_arch"].value[0]
 
-            cuda_arch_value = "native"
-            requested_arch = spec.variants["cuda_arch"].value
+                if requested_arch == "none":
+                    cuda_arch_value = "native"
+                else:
+                    try:
+                        cuda_arch_value = supported_cuda_archs[requested_arch]
+                    except KeyError:
+                        raise InstallError("Incompatible cuda_arch=" + requested_arch)
 
-            # ParaView/VTK-m only accepts one arch, default to first element
-            if requested_arch[0] != "none":
-                try:
-                    cuda_arch_value = supported_cuda_archs[requested_arch[0]]
-                except KeyError:
-                    raise InstallError("Incompatible cuda_arch=" + requested_arch[0])
-
-            cmake_args.append(self.define("VTKm_CUDA_Architecture", cuda_arch_value))
+                cmake_args.append(self.define("VTKm_CUDA_Architecture", cuda_arch_value))
 
         if "darwin" in spec.architecture:
             cmake_args.extend(
@@ -683,3 +707,54 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         cmake_args.append(self.define_from_variant("VTKOSPRAY_ENABLE_DENOISER", "raytracing"))
 
         return cmake_args
+
+    def test_smoke_test(self):
+        """Simple smoke test for ParaView"""
+        spec = self.spec
+
+        pvserver = Executable(spec["paraview"].prefix.bin.pvserver)
+        pvserver("--help")
+
+    def test_pvpython(self):
+        """Test pvpython"""
+        spec = self.spec
+
+        if "~python" in spec:
+            raise SkipTest("Package must be installed with +python")
+
+        pvpython = Executable(spec["paraview"].prefix.bin.pvpython)
+        pvpython("-c", "import paraview")
+
+    def test_mpi_ensemble(self):
+        """Test MPI ParaView Client/Server ensemble"""
+        spec = self.spec
+
+        if "~mpi" in spec or "~python" in spec:
+            raise SkipTest("Package must be installed with +mpi and +python")
+
+        mpirun = spec["mpi"].prefix.bin.mpirun
+        pvserver = spec["paraview"].prefix.bin.pvserver
+        pvpython = Executable(spec["paraview"].prefix.bin.pvpython)
+
+        with working_dir("smoke_test_build", create=True):
+            with Popen(
+                [mpirun, "-np", "3", pvserver, "--mpi", "--force-offscreen-rendering"]
+            ) as servers:
+                pvpython(
+                    "--force-offscreen-rendering",
+                    "-c",
+                    "from paraview.simple import *;"
+                    "Connect('127.0.0.1');"
+                    "sphere = Sphere(ThetaResolution=16, PhiResolution=32);"
+                    "sphere_remote = servermanager.Fetch(sphere);"
+                    "Show(sphere);"
+                    "Render()",
+                )
+                servers.terminate()
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
+        self.test_smoke_test()
+        self.test_pvpython()
+        self.test_mpi_ensemble()

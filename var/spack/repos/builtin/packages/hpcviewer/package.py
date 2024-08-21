@@ -188,11 +188,6 @@ class Hpcviewer(Package):
             file.write("open " + app_dir + "\n")
         os.chmod(viewer_file, 0o755)
 
-    # Install for Cray front-end is the same as Linux.
-    @when("platform=cray")
-    def install(self, spec, prefix):
-        self.linux_install(spec, prefix)
-
     @when("platform=linux")
     def install(self, spec, prefix):
         self.linux_install(spec, prefix)

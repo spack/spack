@@ -82,6 +82,9 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("shared", default=True, description="Build shared libraries")
     variant("openmp", default=True, description="Build with OpenMP support")
     variant("fortran", default=False, description="Build Fortran bindings")
@@ -155,7 +158,8 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("spla@1.1.0:")
         depends_on("spla+cuda", when="+cuda")
         depends_on("spla+rocm", when="+rocm")
-        depends_on("spla+openmp", when="+openmp")
+        # spla removed the openmp option in 1.6.0
+        conflicts("^spla@:1.5~openmp", when="+openmp")
 
     depends_on("nlcglib", when="+nlcglib")
     depends_on("nlcglib+rocm", when="+nlcglib+rocm")

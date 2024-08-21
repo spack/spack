@@ -29,6 +29,8 @@ class Mgard(CMakePackage, CudaPackage):
     version("2021-11-12", commit="3c05c80a45a51bb6cc5fb5fffe7b1b16787d3366")
     version("2020-10-01", commit="b67a0ac963587f190e106cc3c0b30773a9455f7a")
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "serial",
         when="@2022-11-18:",
@@ -47,6 +49,7 @@ class Mgard(CMakePackage, CudaPackage):
     depends_on("python", type=("build",), when="@2022-11-18:")
     depends_on("sed", type=("build",), when="@2022-11-18:")
     depends_on("zlib-api")
+    depends_on("zlib@1.2.9:", when="^[virtuals=zlib-api] zlib")  # crc32_z
     depends_on("pkgconfig", type=("build",), when="@2022-11-18:")
     depends_on("zstd")
     depends_on("protobuf@3.4:", when="@2022-11-18:")

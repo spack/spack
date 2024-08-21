@@ -55,6 +55,10 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
         "0.9.0", tag="v0.9.0", commit="cf66ebe31fd5f27b76a83451cd22f346e7a67160", submodules=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("hypre", default=False, description="Enable Hypre integration")
     variant("ascent", default=False, description="Enable Ascent integration")
     variant("masa", default=False, description="Enable MASA integration")

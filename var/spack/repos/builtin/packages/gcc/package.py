@@ -7,7 +7,7 @@ import itertools
 import os
 import sys
 
-from archspec.cpu import UnsupportedMicroarchitecture
+import archspec.cpu
 
 import llnl.util.tty as tty
 from llnl.util.symlink import readlink
@@ -34,14 +34,20 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
+    provides("c")
+    provides("cxx")
+    provides("fortran")
+
     version("master", branch="master")
 
+    version("14.2.0", sha256="a7b39bc69cbf9e25826c5a60ab26477001f7c08d85cec04bc0e29cabed6f3cc9")
     version("14.1.0", sha256="e283c654987afe3de9d8080bc0bd79534b5ca0d681a73a11ff2b5d3767426840")
 
     version("13.3.0", sha256="0845e9621c9543a13f484e94584a49ffc0129970e9914624235fc1d061a0c083")
     version("13.2.0", sha256="e275e76442a6067341a27f04c5c6b83d8613144004c0413528863dc6b5c743da")
     version("13.1.0", sha256="61d684f0aa5e76ac6585ad8898a2427aade8979ed5e7f85492286c4dfc13ee86")
 
+    version("12.4.0", sha256="704f652604ccbccb14bdabf3478c9511c89788b12cb3bbffded37341916a9175")
     version("12.3.0", sha256="949a5d4f99e786421a93b532b22ffab5578de7321369975b91aec97adfda8c3b")
     version("12.2.0", sha256="e549cf9cf3594a00e27b6589d4322d70e0720cdd213f39beb4181e06926230ff")
     version("12.1.0", sha256="62fd634889f31c02b64af2c468f064b47ad1ca78411c45abe6ac4b5f8dd19c7b")
@@ -97,6 +103,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     version("4.6.4", sha256="35af16afa0b67af9b8eb15cafb76d2bc5f568540552522f5dc2c88dd45d977e8")
     version("4.5.4", sha256="eef3f0456db8c3d992cbb51d5d32558190bc14f3bc19383dd93acc27acc6befc")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # We specifically do not add 'all' variant here because:
     # (i) Ada, D, Go, Jit, and Objective-C++ are not default languages.
     # In that respect, the name 'all' is rather misleading.
@@ -130,6 +140,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         description="Compilers and runtime libraries to build",
     )
     variant("binutils", default=False, description="Build via binutils")
+    variant("mold", default=False, description="Use mold as the linker by default", when="@12:")
     variant(
         "piclibs", default=False, description="Build PIC versions of libgfortran.a and libstdc++.a"
     )
@@ -194,6 +205,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     depends_on(
         "binutils+gas+ld+plugins~libiberty", when="+binutils", type=("build", "link", "run")
     )
+    depends_on("mold", when="+mold")
     depends_on("zip", type="build", when="languages=java")
 
     # The server is sometimes a bit slow to respond
@@ -523,50 +535,26 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     fortran_names = ["gfortran"]
     d_names = ["gdc"]
     go_names = ["gccgo"]
-    compiler_prefixes = [r"\w+-\w+-\w+-"]
     compiler_suffixes = [r"-mp-\d+(?:\.\d+)?", r"-\d+(?:\.\d+)?", r"\d\d"]
-    compiler_version_regex = r"(?<!clang version)\s?([0-9.]+)"
+    compiler_version_regex = r"([0-9.]+)"
     compiler_version_argument = ("-dumpfullversion", "-dumpversion")
 
     @classmethod
-    def determine_version(cls, exe):
-        try:
-            output = spack.compiler.get_compiler_version_output(exe, "--version")
-        except Exception:
-            output = ""
-        # Apple's gcc is actually apple clang, so skip it.
-        if "Apple" in output:
-            return None
-
-        return super().determine_version(exe)
-
-    @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
-        result = []
-        for exe in exes_in_prefix:
-            # On systems like Ubuntu we might get multiple executables
-            # with the string "gcc" in them. See:
-            # https://helpmanual.io/packages/apt/gcc/
-            basename = os.path.basename(exe)
-            substring_to_be_filtered = [
-                "c99-gcc",
-                "c89-gcc",
-                "-nm",
-                "-ar",
-                "ranlib",
-                "clang",  # clang++ matches g++ -> clan[g++]
-            ]
-            if any(x in basename for x in substring_to_be_filtered):
-                continue
-            # Filter out links in favor of real executables on
-            # all systems but Cray
-            host_platform = str(spack.platforms.host())
-            if os.path.islink(exe) and host_platform != "cray":
-                continue
+        # Apple's gcc is actually apple clang, so skip it.
+        if str(spack.platforms.host()) == "darwin":
+            not_apple_clang = []
+            for exe in exes_in_prefix:
+                try:
+                    output = spack.compiler.get_compiler_version_output(exe, "--version")
+                except Exception:
+                    output = ""
+                if "clang version" in output:
+                    continue
+                not_apple_clang.append(exe)
+            return not_apple_clang
 
-            result.append(exe)
-
-        return result
+        return exes_in_prefix
 
     @classmethod
     def determine_variants(cls, exes, version_str):
@@ -695,7 +683,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         for uarch in microarchitectures:
             try:
                 return uarch.optimization_flags("gcc", str(spec.version))
-            except UnsupportedMicroarchitecture:
+            except archspec.cpu.UnsupportedMicroarchitecture:
                 pass
         # no arch specific flags in common, unlikely to happen.
         return ""
@@ -979,6 +967,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             # programs search path
             if self.spec.satisfies("+binutils"):
                 f.write(f"*self_spec:\n+ -B{self.spec['binutils'].prefix.bin}\n\n")
+
+            # set -fuse-ld=mold as the default linker when +mold
+            if self.spec.satisfies("+mold"):
+                f.write(
+                    f"*self_spec:\n+ -B{self.spec['mold'].prefix.bin} "
+                    "%{!fuse-ld*:-fuse-ld=mold}\n\n"
+                )
+
         set_install_permissions(specs_file)
         tty.info(f"Wrote new spec file to {specs_file}")
 
@@ -1141,6 +1137,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             )
         # The version of gcc-runtime is the same as the %gcc used to "compile" it
         pkg("gcc-runtime").requires(f"@={str(spec.version)}", when=f"%{str(spec)}")
+
+        # If a node used %gcc@X.Y its dependencies must use gcc-runtime@:X.Y
+        # (technically @:X is broader than ... <= @=X but this should work in practice)
+        pkg("*").propagate(f"%gcc@:{str(spec.version)}", when=f"%{str(spec)}")
 
     def _post_buildcache_install_hook(self):
         if not self.spec.satisfies("platform=linux"):

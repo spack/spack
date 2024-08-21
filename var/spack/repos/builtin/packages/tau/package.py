@@ -56,6 +56,10 @@ class Tau(Package):
     version("2.24", sha256="5d28e8b26561c7cd7d0029b56ec0f95fc26803ac0b100c98e00af0b02e7f55e2")
     version("2.23.1", sha256="31a4d0019cec6ef57459a9cd18a220f0130838a5f1a0b5ea7879853f5a38cf88")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Disable some default dependencies on Darwin/OSX
     darwin_default = False
     if sys.platform != "darwin":
@@ -178,6 +182,9 @@ class Tau(Package):
         msg="Using ROCm, select either +rocprofiler, +roctracer or +rocprofv2",
     )
 
+    # https://github.com/UO-OACISS/tau2/commit/1d2cb6b
+    patch("tau-rocm-disable-llvm-plugin.patch", when="@2.33.2 +rocm")
+
     filter_compiler_wrappers("Makefile", relative_root="include")
     filter_compiler_wrappers("Makefile.tau*", relative_root="lib")
     filter_compiler_wrappers("Makefile.tau*", relative_root="lib64")
@@ -249,9 +256,6 @@ class Tau(Package):
 
         if "+x86_64" in spec:
             options.append("-arch=x86_64")
-
-        if ("platform=cray" in self.spec) and ("+x86_64" not in spec):
-            options.append("-arch=craycnl")
 
         if "+pdt" in spec:
             options.append("-pdt=%s" % spec["pdt"].prefix)
@@ -458,23 +462,23 @@ class Tau(Package):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(self.matmult_test)
-        self.cache_extra_test_sources(self.makefile_test)
-        self.cache_extra_test_sources(self.makefile_inc_test)
+        cache_extra_test_sources(self, self.matmult_test)
+        cache_extra_test_sources(self, self.makefile_test)
+        cache_extra_test_sources(self, self.makefile_inc_test)
         if "+dyninst" in self.spec:
-            self.cache_extra_test_sources(self.dyninst_test)
+            cache_extra_test_sources(self, self.dyninst_test)
         if "+cuda" in self.spec:
-            self.cache_extra_test_sources(self.cuda_test)
+            cache_extra_test_sources(self, self.cuda_test)
         if "+level_zero" in self.spec:
-            self.cache_extra_test_sources(self.level_zero_test)
+            cache_extra_test_sources(self, self.level_zero_test)
         if "+rocm" in self.spec:
-            self.cache_extra_test_sources(self.rocm_test)
+            cache_extra_test_sources(self, self.rocm_test)
         if "+syscall" in self.spec:
-            self.cache_extra_test_sources(self.syscall_test)
+            cache_extra_test_sources(self, self.syscall_test)
         if "+ompt" in self.spec:
-            self.cache_extra_test_sources(self.ompt_test)
+            cache_extra_test_sources(self, self.ompt_test)
         if "+python" in self.spec:
-            self.cache_extra_test_sources(self.python_test)
+            cache_extra_test_sources(self, self.python_test)
 
     def _run_python_test(self, test_name, purpose, work_dir):
         tau_python = which(self.prefix.bin.tau_python)

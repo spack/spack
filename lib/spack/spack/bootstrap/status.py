@@ -124,7 +124,7 @@ def _development_requirements() -> List[RequiredResponseType]:
     # Ensure we trigger environment modifications if we have an environment
     if BootstrapEnvironment.spack_yaml().exists():
         with BootstrapEnvironment() as env:
-            env.update_syspath_and_environ()
+            env.load()
 
     return [
         _required_executable(
