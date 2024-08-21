@@ -27,3 +27,5 @@ class Fj(Package, CompilerPackage):
     fortran_names = ["frt"]
     compiler_version_regex = r"\((?:FCC|FRT)\) ([a-z\d.]+)"
     compiler_version_argument = "--version"
+
+    debug_flags = ["-g"]

@@ -28,19 +28,6 @@ class Aocc(Compiler):
     version_argument = "--version"
 
     @property
-    def debug_flags(self):
-        return [
-            "-gcodeview",
-            "-gdwarf-2",
-            "-gdwarf-3",
-            "-gdwarf-4",
-            "-gdwarf-5",
-            "-gline-tables-only",
-            "-gmodules",
-            "-g",
-        ]
-
-    @property
     def opt_flags(self):
         return ["-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz", "-Og", "-O", "-O4"]
 

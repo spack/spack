@@ -21,8 +21,9 @@ class Cce(Package, CompilerPackage):
         r"[Cc]ray (?:clang|C :|C\+\+ :|Fortran :) [Vv]ersion.*?(\d+(?:\.\d+)+)"
     )
 
-    # notify when the package is updated.
     maintainers("becker33")
+
+    debug_flags = ["-g", "-G0", "-G1", "-G2", "-Gfast"]
 
     version("16.0.0")
 

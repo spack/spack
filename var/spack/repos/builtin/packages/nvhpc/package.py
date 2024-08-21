@@ -452,6 +452,8 @@ class Nvhpc(Package, CompilerPackage):
     compiler_version_argument = "--version"
     compiler_version_regex = r"nv[^ ]* (?:[^ ]+ Dev-r)?([0-9.]+)(?:-[0-9]+)?"
 
+    debug_flags = ["-g", "-gopt"]
+
     @classmethod
     def determine_variants(cls, exes, version_str):
         # TODO: use other exes to determine default_cuda/install_type/blas/lapack/mpi variants

@@ -305,7 +305,6 @@ def test_default_flags():
     supported_flag_test("cxx_pic_flag", "-fPIC")
     supported_flag_test("f77_pic_flag", "-fPIC")
     supported_flag_test("fc_pic_flag", "-fPIC")
-    supported_flag_test("debug_flags", ["-g"])
     supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3"])
 
 
@@ -470,7 +469,7 @@ def test_fj_flags():
     supported_flag_test("f77_pic_flag", "-KPIC", "fj@4.0.0")
     supported_flag_test("fc_pic_flag", "-KPIC", "fj@4.0.0")
     supported_flag_test("opt_flags", ["-O0", "-O1", "-O2", "-O3", "-Ofast"], "fj@4.0.0")
-    supported_flag_test("debug_flags", "-g", "fj@4.0.0")
+    supported_flag_test("debug_flags", ["-g"], "fj@4.0.0")
 
 
 def test_gcc_flags():

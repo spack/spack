@@ -65,10 +65,6 @@ class Cce(Compiler):
         return "-v"
 
     @property
-    def debug_flags(self):
-        return ["-g", "-G0", "-G1", "-G2", "-Gfast"]
-
-    @property
     def openmp_flag(self):
         if self.is_clang_based:
             return "-fopenmp"

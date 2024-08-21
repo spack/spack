@@ -274,7 +274,10 @@ class Compiler:
 
     @property
     def debug_flags(self):
-        return ["-g"]
+        try:
+            return ForwardToPackage(self).select("c").debug_flags
+        except AttributeError:
+            return []
 
     @property
     def opt_flags(self):
@@ -757,7 +760,10 @@ class ForwardToPackage:
 
     def __init__(self, compiler: Compiler) -> None:
         if compiler not in self._CACHE:
-            self._CACHE[compiler] = packages_from_compiler(compiler.to_dict())
+            try:
+                self._CACHE[compiler] = packages_from_compiler(compiler.to_dict())
+            except Exception as e:
+                raise RuntimeError(f"no compiler package matches {compiler}") from e
         self.packages = self._CACHE[compiler]
 
     def select(self, language: str) -> "spack.package_base.PackageBase":

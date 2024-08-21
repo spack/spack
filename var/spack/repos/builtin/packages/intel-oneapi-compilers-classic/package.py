@@ -41,6 +41,8 @@ class IntelOneapiCompilersClassic(Package, CompilerPackage):
             return r"([1-9][0-9]*\.[0-9]*\.[0-9]*)"
         return r"\((?:IFORT|ICC)\) ([^ ]+)"
 
+    debug_flags = ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"]
+
     # Versions before 2021 are in the `intel` package
     # intel-oneapi versions before 2022 use intel@19.0.4
     for ver, oneapi_ver in {

@@ -750,6 +750,17 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
             result = os.path.join(self.spec.prefix.bin, "flang")
         return result
 
+    debug_flags = [
+        "-gcodeview",
+        "-gdwarf-2",
+        "-gdwarf-3",
+        "-gdwarf-4",
+        "-gdwarf-5",
+        "-gline-tables-only",
+        "-gmodules",
+        "-g",
+    ]
+
     @property
     def libs(self):
         return LibraryList(self.llvm_config("--libfiles", "all", result="list"))

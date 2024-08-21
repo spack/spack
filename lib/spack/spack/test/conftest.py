@@ -592,6 +592,8 @@ def _mock_init(self, compiler):
         spec.name = "llvm"
     elif spec.name == "oneapi":
         spec.name = "intel-oneapi-compilers"
+    elif spec.name == "intel":
+        spec.name = "intel-oneapi-compilers-classic"
 
     spec.external_path = prefix
     spec.extra_attributes = {

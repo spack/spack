@@ -270,6 +270,8 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         r"(?:(?:oneAPI DPC\+\+(?:\/C\+\+)? Compiler)|(?:\(IFORT\))|(?:\(IFX\))) (\S+)"
     )
 
+    debug_flags = ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"]
+
     # See https://github.com/spack/spack/issues/39252
     depends_on("patchelf@:0.17", type="build", when="@:2024.1")
     # Add the nvidia variant

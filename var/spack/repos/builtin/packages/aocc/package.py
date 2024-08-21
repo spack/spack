@@ -110,3 +110,14 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
 
     compiler_version_regex = r"AOCC_(\d+[._]\d+[._]\d+)"
     fortran_names = ["flang"]
+
+    debug_flags = [
+        "-gcodeview",
+        "-gdwarf-2",
+        "-gdwarf-3",
+        "-gdwarf-4",
+        "-gdwarf-5",
+        "-gline-tables-only",
+        "-gmodules",
+        "-g",
+    ]

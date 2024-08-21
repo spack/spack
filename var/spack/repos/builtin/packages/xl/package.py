@@ -28,6 +28,8 @@ class Xl(Package, CompilerPackage):
     compiler_version_argument = "-qversion"
     compiler_version_regex = r"([0-9]?[0-9]\.[0-9])"
 
+    debug_flags = ["-g", "-g0", "-g1", "-g2", "-g8", "-g9"]
+
     @classmethod
     def determine_variants(cls, exes, version_str):
         _r_exes = [e for e in exes if e.endswith("_r")]

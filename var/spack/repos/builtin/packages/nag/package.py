@@ -80,6 +80,7 @@ class Nag(Package, CompilerPackage):
     linker_arg = "-Wl,-Wl,,"
     disable_new_dtags = ""
     enable_new_dtags = ""
+    debug_flags = ["-g", "-gline", "-g90"]
 
     @property
     def fortran(self):
