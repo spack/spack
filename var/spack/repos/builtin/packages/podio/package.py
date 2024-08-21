@@ -99,7 +99,10 @@ class Podio(CMakePackage):
 
     conflicts("+rntuple", when="@:0.16", msg="rntuple support requires at least podio@0.17")
 
-    patch("fix_missing_algorithm_include.patch", when="@0.17:0.100")
+    patch(
+        "https://github.com/AIDASoft/podio/commit/0222a077aaff817b21a46a590af0f8329dd27d67.patch?full_index=1",
+        when="@0.17:0.99",
+    )
 
     # See https://github.com/AIDASoft/podio/pull/599 that landed after 0.99
     extends("python", when="@1.0:")
