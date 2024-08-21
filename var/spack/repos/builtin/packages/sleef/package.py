@@ -49,6 +49,7 @@ class Sleef(CMakePackage):
         deprecated=True,
     )
 
+
     depends_on("c", type="build")
 
     generator("ninja")
@@ -68,6 +69,10 @@ class Sleef(CMakePackage):
             cmake_var = "SLEEF_" + cmake_var
 
         return self.define(cmake_var, value)
+
+    def setup_build_environment(self, env):
+        cflags = [self.compiler.cc_pic_flag]
+        env.set("CFLAGS", " ".join(cflags))
 
     def cmake_args(self):
         args = [self.sleef_define("BUILD_TESTS", self.run_tests)]
