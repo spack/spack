@@ -26,6 +26,7 @@ import traceback
 import types
 import uuid
 import warnings
+import zipimport
 from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
 
 import llnl.path
@@ -100,32 +101,6 @@ class _PrependFileLoader(importlib.machinery.SourceFileLoader):
             return self.prepend.encode() + b"\n" + data
 
 
-class RepoLoader(_PrependFileLoader):
-    """Loads a Python module associated with a package in specific repository"""
-
-    #: Code in ``_package_prepend`` is prepended to imported packages.
-    #:
-    #: Spack packages are expected to call `from spack.package import *`
-    #: themselves, but we are allowing a deprecation period before breaking
-    #: external repos that don't do this yet.
-    _package_prepend = "from spack.package import *"
-
-    def __init__(self, fullname, repo, package_name):
-        self.repo = repo
-        self.package_name = package_name
-        self.package_py = repo.filename_for_package_name(package_name)
-        self.fullname = fullname
-        super().__init__(self.fullname, self.package_py, prepend=self._package_prepend)
-
-
-class SpackNamespaceLoader:
-    def create_module(self, spec):
-        return SpackNamespace(spec.name)
-
-    def exec_module(self, module):
-        module.__loader__ = self
-
-
 class ReposFinder:
     """MetaPathFinder class that loads a Python module corresponding to a Spack package.
 
@@ -165,10 +140,11 @@ class ReposFinder:
         if not fullname.startswith(ROOT_PYTHON_NAMESPACE):
             return None
 
-        loader = self.compute_loader(fullname)
-        if loader is None:
+        result = self.compute_loader(fullname)
+        if result is None:
             return None
-        return importlib.util.spec_from_loader(fullname, loader)
+        loader, actual_fullname = result
+        return importlib.util.spec_from_loader(actual_fullname, loader)
 
     def compute_loader(self, fullname):
         # namespaces are added to repo, and package modules are leaves.
@@ -187,16 +163,29 @@ class ReposFinder:
                 # With 2 nested conditionals we can call "repo.real_name" only once
                 package_name = repo.real_name(module_name)
                 if package_name:
-                    return RepoLoader(fullname, repo, package_name)
+                    # annoyingly there is a many to one mapping for pkg module to file, have to
+                    # figure out how to deal with this properly.
+                    return (
+                        (repo.zipimporter, f"{namespace}.{package_name}")
+                        if repo.zipimporter
+                        else (
+                            _PrependFileLoader(
+                                fullname=fullname,
+                                path=repo.filename_for_package_name(package_name),
+                                prepend="from spack.package import *",
+                            ),
+                            fullname,
+                        )
+                    )
 
             # We are importing a full namespace like 'spack.pkg.builtin'
             if fullname == repo.full_namespace:
-                return SpackNamespaceLoader()
+                return SpackNamespaceLoader(), fullname
 
         # No repo provides the namespace, but it is a valid prefix of
         # something in the RepoPath.
         if is_repo_path and self.current_repository.by_namespace.is_prefix(fullname):
-            return SpackNamespaceLoader()
+            return SpackNamespaceLoader(), fullname
 
         return None
 
@@ -207,6 +196,7 @@ class ReposFinder:
 repo_config_name = "repo.yaml"  # Top-level filename for repo config.
 repo_index_name = "index.yaml"  # Top-level filename for repository index.
 packages_dir_name = "packages"  # Top-level repo directory containing pkgs.
+packages_zip_name = "packages.zip"  # Top-level filename for zipped packages.
 package_file_name = "package.py"  # Filename for packages in a repository.
 
 #: Guaranteed unused default value for some functions.
@@ -216,9 +206,9 @@ NOT_PROVIDED = object()
 def packages_path():
     """Get the test repo if it is active, otherwise the builtin repo."""
     try:
-        return spack.repo.PATH.get_repo("builtin.mock").packages_path
-    except spack.repo.UnknownNamespaceError:
-        return spack.repo.PATH.get_repo("builtin").packages_path
+        return PATH.get_repo("builtin.mock").packages_path
+    except UnknownNamespaceError:
+        return PATH.get_repo("builtin").packages_path
 
 
 class GitExe:
@@ -1009,9 +999,14 @@ class Repo:
         self._names = self.full_namespace.split(".")
 
         packages_dir = config.get("subdirectory", packages_dir_name)
+        packages_zip = os.path.join(self.root, "packages.zip")
+        self.zipimporter = (
+            zipimport.zipimporter(packages_zip) if os.path.exists(packages_zip) else None
+        )
         self.packages_path = os.path.join(self.root, packages_dir)
         check(
-            os.path.isdir(self.packages_path), f"No directory '{packages_dir}' found in '{root}'"
+            self.zipimporter or os.path.isdir(self.packages_path),
+            f"No '{self.packages_path}' or '{packages_zip} found in '{root}'",
         )
 
         # Class attribute overrides by package name
@@ -1505,6 +1500,14 @@ def use_repositories(
     finally:
         spack.config.CONFIG.remove_scope(scope_name=scope_name)
         PATH = saved
+
+
+class SpackNamespaceLoader:
+    def create_module(self, spec):
+        return SpackNamespace(spec.name)
+
+    def exec_module(self, module):
+        module.__loader__ = self
 
 
 class MockRepositoryBuilder:

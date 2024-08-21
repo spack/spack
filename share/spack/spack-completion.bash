@@ -1748,7 +1748,7 @@ _spack_repo() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create list add remove rm"
+        SPACK_COMPREPLY="create list add remove rm zip"
     fi
 }
 
@@ -1787,6 +1787,15 @@ _spack_repo_rm() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help --scope"
+    else
+        _repos
+    fi
+}
+
+_spack_repo_zip() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
     else
         _repos
     fi

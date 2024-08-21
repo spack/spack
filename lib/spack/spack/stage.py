@@ -916,7 +916,7 @@ def interactive_version_filter(
     orig_url_dict = url_dict  # only copy when using editor to modify
     print_header = True
     VERSION_COLOR = spack.spec.VERSION_COLOR
-    while True:
+    while sys.stdin.isatty():
         if print_header:
             has_filter = version_filter != VersionList([":"])
             header = []
@@ -933,7 +933,9 @@ def interactive_version_filter(
                 num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
                 header.append(f"{llnl.string.plural(num_new, 'new version')}")
             if has_filter:
-                header.append(colorize(f"Filtered by {VERSION_COLOR}@@{version_filter}@."))
+                header.append(
+                    colorize(f"Filtered by {VERSION_COLOR}@@{version_filter}@. (clear with c)")
+                )
 
             version_with_url = [
                 colorize(

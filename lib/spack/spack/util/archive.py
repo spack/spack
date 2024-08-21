@@ -7,7 +7,9 @@ import hashlib
 import io
 import os
 import pathlib
+import shutil
 import tarfile
+import zipfile
 from contextlib import closing, contextmanager
 from gzip import GzipFile
 from typing import Callable, Dict, Tuple
@@ -226,5 +228,55 @@ def reproducible_tarfile_from_prefix(
 
                 with open(entry.path, "rb") as f:
                     tar.addfile(file_info, f)
+
+        dir_stack.extend(reversed(new_dirs))  # we pop, so reverse to stay alphabetical
+
+
+def reproducible_zipfile_from_prefix(
+    zip: zipfile.ZipFile,
+    prefix: str,
+    *,
+    skip: Callable[[os.DirEntry], bool] = lambda entry: False,
+    path_to_name: Callable[[str], str] = default_path_to_name,
+) -> None:
+    """Similar to ``reproducible_tarfile_from_prefix`` but for zipfiles."""
+    dir_stack = [prefix]
+    while dir_stack:
+        dir = dir_stack.pop()
+
+        # Add the dir before its contents. zip.mkdir is Python 3.11.
+        dir_info = zipfile.ZipInfo(path_to_name(dir))
+        if not dir_info.filename.endswith("/"):
+            dir_info.filename += "/"
+        dir_info.external_attr = (0o40755 << 16) | 0x10
+        dir_info.file_size = 0
+        with zip.open(dir_info, "w") as dest:
+            dest.write(b"")
+
+        # Sort by name for reproducibility
+        with os.scandir(dir) as it:
+            entries = sorted(it, key=lambda entry: entry.name)
+
+        new_dirs = []
+        for entry in entries:
+            if skip(entry):
+                continue
+
+            if entry.is_dir(follow_symlinks=False):
+                new_dirs.append(entry.path)
+                continue
+
+            # symlink / hardlink support in ZIP is poor or non-existent: make copies.
+            elif entry.is_file(follow_symlinks=True):
+                file_info = zipfile.ZipInfo(path_to_name(entry.path))
+
+                # Normalize permissions like git
+                s = entry.stat(follow_symlinks=True)
+                file_info.external_attr = (0o755 if s.st_mode & 0o100 else 0o644) << 16
+                file_info.file_size = s.st_size
+                file_info.compress_type = zip.compression
+
+                with open(entry.path, "rb") as src, zip.open(file_info, "w") as dest:
+                    shutil.copyfileobj(src, dest)  # type: ignore[misc]
 
         dir_stack.extend(reversed(new_dirs))  # we pop, so reverse to stay alphabetical
