@@ -540,6 +540,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     compiler_version_argument = ("-dumpfullversion", "-dumpversion")
 
     debug_flags = ["-g", "-gstabs+", "-gstabs", "-gxcoff+", "-gxcoff", "-gvms"]
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-Os", "-Ofast", "-Og"]
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):

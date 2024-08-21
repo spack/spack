@@ -38,10 +38,6 @@ class Xl(Compiler):
         return "-V"
 
     @property
-    def opt_flags(self):
-        return ["-O", "-O0", "-O1", "-O2", "-O3", "-O4", "-O5", "-Ofast"]
-
-    @property
     def openmp_flag(self):
         return "-qsmp=omp"
 

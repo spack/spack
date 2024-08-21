@@ -121,3 +121,5 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
         "-gmodules",
         "-g",
     ]
+
+    opt_flags = ["-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz", "-Og", "-O", "-O4"]

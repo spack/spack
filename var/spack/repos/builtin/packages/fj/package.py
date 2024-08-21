@@ -29,3 +29,4 @@ class Fj(Package, CompilerPackage):
     compiler_version_argument = "--version"
 
     debug_flags = ["-g"]
+    opt_flags = ["-O0", "-O1", "-O2", "-O3", "-Ofast"]

@@ -453,6 +453,7 @@ class Nvhpc(Package, CompilerPackage):
     compiler_version_regex = r"nv[^ ]* (?:[^ ]+ Dev-r)?([0-9.]+)(?:-[0-9]+)?"
 
     debug_flags = ["-g", "-gopt"]
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"]
 
     @classmethod
     def determine_variants(cls, exes, version_str):

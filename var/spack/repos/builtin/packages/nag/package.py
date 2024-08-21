@@ -81,6 +81,7 @@ class Nag(Package, CompilerPackage):
     disable_new_dtags = ""
     enable_new_dtags = ""
     debug_flags = ["-g", "-gline", "-g90"]
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"]
 
     @property
     def fortran(self):

@@ -37,10 +37,6 @@ class Nvhpc(Compiler):
         return "-v"
 
     @property
-    def opt_flags(self):
-        return ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"]
-
-    @property
     def openmp_flag(self):
         return "-mp"
 

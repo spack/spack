@@ -271,6 +271,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
     )
 
     debug_flags = ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"]
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"]
 
     # See https://github.com/spack/spack/issues/39252
     depends_on("patchelf@:0.17", type="build", when="@:2024.1")

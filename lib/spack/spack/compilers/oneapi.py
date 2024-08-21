@@ -53,10 +53,6 @@ class Oneapi(Compiler):
     ]
 
     @property
-    def opt_flags(self):
-        return ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"]
-
-    @property
     def openmp_flag(self):
         return "-fiopenmp"
 

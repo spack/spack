@@ -42,6 +42,7 @@ class IntelOneapiCompilersClassic(Package, CompilerPackage):
         return r"\((?:IFORT|ICC)\) ([^ ]+)"
 
     debug_flags = ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"]
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"]
 
     # Versions before 2021 are in the `intel` package
     # intel-oneapi versions before 2022 use intel@19.0.4

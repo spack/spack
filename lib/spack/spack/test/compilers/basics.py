@@ -305,7 +305,6 @@ def test_default_flags():
     supported_flag_test("cxx_pic_flag", "-fPIC")
     supported_flag_test("f77_pic_flag", "-fPIC")
     supported_flag_test("fc_pic_flag", "-fPIC")
-    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3"])
 
 
 # Verify behavior of particular compiler definitions.

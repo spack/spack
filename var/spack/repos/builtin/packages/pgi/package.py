@@ -66,6 +66,7 @@ class Pgi(Package, CompilerPackage):
     compiler_version_regex = r"pg[^ ]* ([0-9.]+)-[0-9]+ (?:LLVM )?[^ ]+ target on "
 
     debug_flags = ["-g", "-gopt"]
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"]
 
     def install(self, spec, prefix):
         # Enable the silent installation feature

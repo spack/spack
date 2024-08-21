@@ -317,6 +317,8 @@ class Acfl(Package, CompilerPackage):
         r"Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) \(build number \d+\) "
     )
 
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast"]
+
     @property
     def cc(self):
         msg = "cannot retrieve C compiler [spec is not concrete]"

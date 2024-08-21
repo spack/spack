@@ -39,10 +39,6 @@ class Fj(spack.compiler.Compiler):
         return "-v"
 
     @property
-    def opt_flags(self):
-        return ["-O0", "-O1", "-O2", "-O3", "-Ofast"]
-
-    @property
     def openmp_flag(self):
         return "-Kopenmp"
 

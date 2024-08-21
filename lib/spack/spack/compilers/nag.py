@@ -78,10 +78,6 @@ class Nag(spack.compiler.Compiler):
         return "-openmp"
 
     @property
-    def opt_flags(self):
-        return ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"]
-
-    @property
     def cxx11_flag(self):
         # NAG does not have a C++ compiler
         # However, it can be mixed with a compiler that does support it

@@ -594,6 +594,8 @@ def _mock_init(self, compiler):
         spec.name = "intel-oneapi-compilers"
     elif spec.name == "intel":
         spec.name = "intel-oneapi-compilers-classic"
+    elif spec.name == "arm":
+        spec.name = "acfl"
 
     spec.external_path = prefix
     spec.extra_attributes = {

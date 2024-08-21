@@ -28,10 +28,6 @@ class Aocc(Compiler):
     version_argument = "--version"
 
     @property
-    def opt_flags(self):
-        return ["-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz", "-Og", "-O", "-O4"]
-
-    @property
     def link_paths(self):
         link_paths = {
             "cc": os.path.join("aocc", "clang"),

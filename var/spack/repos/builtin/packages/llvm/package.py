@@ -761,6 +761,8 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
         "-g",
     ]
 
+    opt_flags = ["-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz", "-Og", "-O", "-O4"]
+
     @property
     def libs(self):
         return LibraryList(self.llvm_config("--libfiles", "all", result="list"))

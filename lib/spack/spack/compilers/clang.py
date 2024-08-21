@@ -45,10 +45,6 @@ class Clang(Compiler):
 
     version_argument = "--version"
 
-    @property
-    def opt_flags(self):
-        return ["-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz", "-Og", "-O", "-O4"]
-
     # Clang has support for using different fortran compilers with the
     # clang executable.
     @property

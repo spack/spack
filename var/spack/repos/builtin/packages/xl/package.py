@@ -29,6 +29,7 @@ class Xl(Package, CompilerPackage):
     compiler_version_regex = r"([0-9]?[0-9]\.[0-9])"
 
     debug_flags = ["-g", "-g0", "-g1", "-g2", "-g8", "-g9"]
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-O4", "-O5", "-Ofast"]
 
     @classmethod
     def determine_variants(cls, exes, version_str):

@@ -281,7 +281,10 @@ class Compiler:
 
     @property
     def opt_flags(self):
-        return ["-O", "-O0", "-O1", "-O2", "-O3"]
+        try:
+            return ForwardToPackage(self).select("c").opt_flags
+        except AttributeError:
+            return []
 
     def __init__(
         self,
