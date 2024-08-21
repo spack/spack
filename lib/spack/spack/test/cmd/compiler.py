@@ -177,8 +177,8 @@ def test_compiler_find_mixed_suffixes(
         "find", "--scope=site", "--mixed-toolchain" if mixed_toolchain else "--no-mixed-toolchain"
     )
 
-    assert "clang@=11.0.0" in output
-    assert "gcc@=8.4.0" in output
+    assert "clang@11.0.0" in output
+    assert "gcc@8.4.0" in output
 
     config = spack.compilers.get_compiler_config(
         no_compilers_yaml, scope="site", init_config=False
@@ -214,8 +214,8 @@ def test_compiler_find_prefer_no_suffix(no_compilers_yaml, working_env, compiler
     os.environ["PATH"] = str(compilers_dir)
     output = compiler("find", "--scope=site")
 
-    assert "clang@=11.0.0" in output
-    assert "gcc@=8.4.0" in output
+    assert "clang@11.0.0" in output
+    assert "gcc@8.4.0" in output
 
     config = spack.compilers.get_compiler_config(
         no_compilers_yaml, scope="site", init_config=False

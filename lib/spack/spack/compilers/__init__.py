@@ -23,6 +23,7 @@ import spack.config
 import spack.error
 import spack.paths
 import spack.platforms
+import spack.repo
 import spack.spec
 import spack.version
 from spack.operating_systems import windows_os
@@ -279,6 +280,8 @@ def find_compilers(
             a certain language
         max_workers: number of processes used to search for compilers
     """
+    import spack.detection
+
     known_compilers = set(all_compilers(init_config=False))
 
     if path_hints is None:
