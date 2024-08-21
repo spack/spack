@@ -5,6 +5,7 @@
 import itertools
 import os
 import pathlib
+import platform
 import re
 import sys
 from typing import Dict, List, Optional, Sequence, Tuple, Union
@@ -147,3 +148,15 @@ class CompilerPackage(spack.package_base.PackageBase):
     rpath_arg: Optional[str] = "-Wl,-rpath,"
     #: Flag that needs to be used to pass an argument to the linker
     linker_arg: str = "-Wl,"
+
+    @property
+    def disable_new_dtags(self) -> str:
+        if platform.system() == "Darwin":
+            return ""
+        return "--disable-new-dtags"
+
+    @property
+    def enable_new_dtags(self) -> str:
+        if platform.system() == "Darwin":
+            return ""
+        return "--enable-new-dtags"

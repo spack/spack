@@ -78,6 +78,8 @@ class Nag(Package, CompilerPackage):
     # options with '-Wl,-Wl,,'
     rpath_arg = "-Wl,-Wl,,-rpath,,"
     linker_arg = "-Wl,-Wl,,"
+    disable_new_dtags = ""
+    enable_new_dtags = ""
 
     @property
     def fortran(self):

@@ -6,7 +6,6 @@
 import contextlib
 import itertools
 import os
-import platform
 import re
 import shutil
 import sys
@@ -267,15 +266,11 @@ class Compiler:
 
     @property
     def disable_new_dtags(self):
-        if platform.system() == "Darwin":
-            return ""
-        return "--disable-new-dtags"
+        return ForwardToPackage(self).select("c").disable_new_dtags
 
     @property
     def enable_new_dtags(self):
-        if platform.system() == "Darwin":
-            return ""
-        return "--enable-new-dtags"
+        return ForwardToPackage(self).select("c").enable_new_dtags
 
     @property
     def debug_flags(self):
