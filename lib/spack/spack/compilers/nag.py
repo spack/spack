@@ -64,7 +64,7 @@ class Nag(spack.compiler.Compiler):
         #
         # This way, we at least enable the implicit rpath detection, which is
         # based on compilation of a C file (see method
-        # spack.compiler._get_compiler_link_paths): in the case of a mixed
+        # spack.compiler._compile_dummy_c_source): in the case of a mixed
         # NAG/GCC toolchain, the flag will be passed to g++ (e.g.
         # 'g++ -Wl,-v ./main.c'), otherwise, the flag will be passed to nagfor
         # (e.g. 'nagfor -Wl,-v ./main.c' - note that nagfor recognizes '.c'

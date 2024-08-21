@@ -7,8 +7,7 @@ from spack.package import *
 
 
 class Orc(CMakePackage):
-    """the smallest, fastest columnar storage for Hadoop
-    workloads."""
+    """The smallest, fastest columnar storage for Hadoop workloads."""
 
     homepage = "https://orc.apache.org/"
     url = "https://github.com/apache/orc/archive/rel/release-1.6.5.tar.gz"
@@ -17,10 +16,12 @@ class Orc(CMakePackage):
 
     version("1.6.5", sha256="df5885db8fa2e4435db8d486c6c7fc4e2c565d6197eee27729cf9cbdf36353c0")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("maven")
     depends_on("openssl")
     depends_on("zlib-api")
-    depends_on("zlib@1.2.11:", when="^zlib")
+    depends_on("zlib@1.2.11:", when="^[virtuals=zlib-api] zlib")
     depends_on("pcre")
     depends_on("protobuf@3.5.1:")
     depends_on("zstd@1.4.5:")

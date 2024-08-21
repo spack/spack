@@ -31,6 +31,10 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     patch("cmake-magma-v230.patch", when="@2.3.0")
     patch("fortran200.patch", when="@2.0.0")
 
@@ -64,7 +68,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", type=("build", "run"))
 
     depends_on("fftw@3.3.8:", when="+fftw", type=("build", "run"))
-    depends_on("intel-mkl@2018.0.128:", when="+mkl", type=("build", "run"))
+    depends_on("intel-oneapi-mkl", when="+mkl", type=("build", "run"))
     depends_on("cuda@8.0:", when="+cuda", type=("build", "run"))
     depends_on("hip@3.8.0:", when="+rocm", type=("build", "run"))
     depends_on("rocfft@3.8.0:", when="+rocm", type=("build", "run"))
@@ -114,7 +118,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
             if "none" not in rocm_arch:
                 args.append("-DCMAKE_CXX_FLAGS={0}".format(self.hip_flags(rocm_arch)))
 
-            # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+            # See https://github.com/ROCm/rocFFT/issues/322
             if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
                 args.append(self.define("__skip_rocmclang", "ON"))
 
@@ -125,7 +129,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("@:2.2.0"):
             return
         install_tree(
-            self.prefix.share.heffte.testing, join_path(self.install_test_root, "testing")
+            self.prefix.share.heffte.testing, join_path(install_test_root(self), "testing")
         )
 
     def test_make_test(self):

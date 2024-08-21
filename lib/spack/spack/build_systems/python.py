@@ -2,11 +2,15 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import functools
 import inspect
+import operator
 import os
 import re
 import shutil
-from typing import Iterable, List, Mapping, Optional
+import stat
+from typing import Dict, Iterable, List, Mapping, Optional, Tuple
 
 import archspec
 
@@ -23,7 +27,7 @@ import spack.multimethod
 import spack.package_base
 import spack.spec
 import spack.store
-from spack.directives import build_system, depends_on, extends, maintainers
+from spack.directives import build_system, depends_on, extends
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import test_part
 from spack.spec import Spec
@@ -52,8 +56,6 @@ def _flatten_dict(dictionary: Mapping[str, object]) -> Iterable[str]:
 
 
 class PythonExtension(spack.package_base.PackageBase):
-    maintainers("adamjstewart")
-
     @property
     def import_modules(self) -> Iterable[str]:
         """Names of modules that the Python package provides.
@@ -136,31 +138,57 @@ class PythonExtension(spack.package_base.PackageBase):
         return conflicts
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
+        # Patch up shebangs if the package extends Python and we put a Python interpreter in the
+        # view.
         if not self.extendee_spec:
             return super().add_files_to_view(view, merge_map, skip_if_exists)
 
+        python, *_ = self.spec.dependencies("python-venv") or self.spec.dependencies("python")
+
+        if python.external:
+            return super().add_files_to_view(view, merge_map, skip_if_exists)
+
+        # We only patch shebangs in the bin directory.
+        copied_files: Dict[Tuple[int, int], str] = {}  # File identifier -> source
+        delayed_links: List[Tuple[str, str]] = []  # List of symlinks from merge map
         bin_dir = self.spec.prefix.bin
-        python_prefix = self.extendee_spec.prefix
-        python_is_external = self.extendee_spec.external
-        global_view = fs.same_path(python_prefix, view.get_projection_for_spec(self.spec))
+
         for src, dst in merge_map.items():
-            if os.path.exists(dst):
+            if skip_if_exists and os.path.lexists(dst):
                 continue
-            elif global_view or not fs.path_contains_subdirectory(src, bin_dir):
+
+            if not fs.path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst)
-            elif not os.path.islink(src):
+                continue
+
+            s = os.lstat(src)
+
+            # Symlink is delayed because we may need to re-target if its target is copied in view
+            if stat.S_ISLNK(s.st_mode):
+                delayed_links.append((src, dst))
+                continue
+
+            # If it's executable and has a shebang, copy and patch it.
+            if (s.st_mode & 0b111) and fs.has_shebang(src):
+                copied_files[(s.st_dev, s.st_ino)] = dst
                 shutil.copy2(src, dst)
-                is_script = fs.is_nonsymlink_exe_with_shebang(src)
-                if is_script and not python_is_external:
-                    fs.filter_file(
-                        python_prefix,
-                        os.path.abspath(view.get_projection_for_spec(self.spec)),
-                        dst,
-                    )
+                fs.filter_file(
+                    python.prefix, os.path.abspath(view.get_projection_for_spec(self.spec)), dst
+                )
             else:
-                orig_link_target = os.path.realpath(src)
-                new_link_target = os.path.abspath(merge_map[orig_link_target])
-                view.link(new_link_target, dst)
+                view.link(src, dst)
+
+        # Finally re-target the symlinks that point to copied files.
+        for src, dst in delayed_links:
+            try:
+                s = os.stat(src)
+                target = copied_files[(s.st_dev, s.st_ino)]
+            except (OSError, KeyError):
+                target = None
+            if target:
+                os.symlink(os.path.relpath(target, os.path.dirname(dst)), dst)
+            else:
+                view.link(src, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
         ignore_namespace = False
@@ -176,14 +204,13 @@ class PythonExtension(spack.package_base.PackageBase):
                 ignore_namespace = True
 
         bin_dir = self.spec.prefix.bin
-        global_view = self.extendee_spec.prefix == view.get_projection_for_spec(self.spec)
 
         to_remove = []
         for src, dst in merge_map.items():
             if ignore_namespace and namespace_init(dst):
                 continue
 
-            if global_view or not fs.path_contains_subdirectory(src, bin_dir):
+            if not fs.path_contains_subdirectory(src, bin_dir):
                 to_remove.append(dst)
             else:
                 os.remove(dst)
@@ -340,22 +367,32 @@ class PythonPackage(PythonExtension):
         return None
 
     @property
+    def python_spec(self):
+        """Get python-venv if it exists or python otherwise."""
+        python, *_ = self.spec.dependencies("python-venv") or self.spec.dependencies("python")
+        return python
+
+    @property
     def headers(self) -> HeaderList:
         """Discover header files in platlib."""
 
         # Remove py- prefix in package name
         name = self.spec.name[3:]
 
-        # Headers may be in either location
+        # Headers should only be in include or platlib, but no harm in checking purelib too
         include = self.prefix.join(self.spec["python"].package.include).join(name)
-        platlib = self.prefix.join(self.spec["python"].package.platlib).join(name)
-        headers = fs.find_all_headers(include) + fs.find_all_headers(platlib)
+        python = self.python_spec
+        platlib = self.prefix.join(python.package.platlib).join(name)
+        purelib = self.prefix.join(python.package.purelib).join(name)
+
+        headers_list = map(fs.find_all_headers, [include, platlib, purelib])
+        headers = functools.reduce(operator.add, headers_list)
 
         if headers:
             return headers
 
-        msg = "Unable to locate {} headers in {} or {}"
-        raise NoHeadersError(msg.format(self.spec.name, include, platlib))
+        msg = "Unable to locate {} headers in {}, {}, or {}"
+        raise NoHeadersError(msg.format(self.spec.name, include, platlib, purelib))
 
     @property
     def libs(self) -> LibraryList:
@@ -364,15 +401,20 @@ class PythonPackage(PythonExtension):
         # Remove py- prefix in package name
         name = self.spec.name[3:]
 
-        root = self.prefix.join(self.spec["python"].package.platlib).join(name)
+        # Libraries should only be in platlib, but no harm in checking purelib too
+        python = self.python_spec
+        platlib = self.prefix.join(python.package.platlib).join(name)
+        purelib = self.prefix.join(python.package.purelib).join(name)
 
-        libs = fs.find_all_libraries(root, recursive=True)
+        find_all_libraries = functools.partial(fs.find_all_libraries, recursive=True)
+        libs_list = map(find_all_libraries, [platlib, purelib])
+        libs = functools.reduce(operator.add, libs_list)
 
         if libs:
             return libs
 
-        msg = "Unable to recursively locate {} libraries in {}"
-        raise NoLibrariesError(msg.format(self.spec.name, root))
+        msg = "Unable to recursively locate {} libraries in {} or {}"
+        raise NoLibrariesError(msg.format(self.spec.name, platlib, purelib))
 
 
 @spack.builder.builder("python_pip")
@@ -474,6 +516,8 @@ class PythonPipBuilder(BaseBuilder):
 
     def install(self, pkg: PythonPackage, spec: Spec, prefix: Prefix) -> None:
         """Install everything from build directory."""
+        pip = spec["python"].command
+        pip.add_default_arg("-m", "pip")
 
         args = PythonPipBuilder.std_args(pkg) + [f"--prefix={prefix}"]
 
@@ -489,14 +533,6 @@ class PythonPipBuilder(BaseBuilder):
         else:
             args.append(".")
 
-        pip = spec["python"].command
-        # Hide user packages, since we don't have build isolation. This is
-        # necessary because pip / setuptools may run hooks from arbitrary
-        # packages during the build. There is no equivalent variable to hide
-        # system packages, so this is not reliable for external Python.
-        pip.add_default_env("PYTHONNOUSERSITE", "1")
-        pip.add_default_arg("-m")
-        pip.add_default_arg("pip")
         with fs.working_dir(self.build_directory):
             pip(*args)
 

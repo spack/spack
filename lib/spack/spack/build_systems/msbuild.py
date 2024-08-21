@@ -24,7 +24,6 @@ class MSBuildPackage(spack.package_base.PackageBase):
     build_system("msbuild")
     conflicts("platform=linux", when="build_system=msbuild")
     conflicts("platform=darwin", when="build_system=msbuild")
-    conflicts("platform=cray", when="build_system=msbuild")
 
 
 @spack.builder.builder("msbuild")
@@ -69,7 +68,7 @@ class MSBuildBuilder(BaseBuilder):
     @property
     def build_directory(self):
         """Return the directory containing the MSBuild solution or vcxproj."""
-        return self.pkg.stage.source_path
+        return fs.windows_sfn(self.pkg.stage.source_path)
 
     @property
     def toolchain_version(self):

@@ -20,6 +20,8 @@ class ScineSerenity(CMakePackage):
     version("master", branch="master")
     version("1.0.1", sha256="e2e5cc265a68ccab05f1bc934b957ca07c4f1c6004e662684023da451da69299")
 
+    depends_on("cxx", type="build")  # generated
+
     resource(
         name="dev",
         url="https://github.com/qcscine/development-utils/archive/refs/tags/5.0.1.tar.gz",
@@ -57,7 +59,7 @@ class ScineSerenity(CMakePackage):
         )
 
     def cmake_args(self):
-        args = [
+        return [
             self.define("SCINE_BUILD_TESTS", self.run_tests),
             self.define_from_variant("SCINE_BUILD_PYTHON_BINDINGS", "python"),
             self.define("SCINE_MARCH", ""),
@@ -69,6 +71,3 @@ class ScineSerenity(CMakePackage):
             self.define("BOOST_NO_SYSTEM_PATHS", True),
             self.define("Boost_NO_BOOST_CMAKE", True),
         ]
-        if "+python" in self.spec:
-            args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
-        return args

@@ -32,7 +32,15 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("m4@1.4.6:", type="build")
+
+    # the following are places in which libtool depends on findutils
+    # https://github.com/autotools-mirror/libtool/blob/v2.4.7/build-aux/ltmain.in#L3296
+    # https://github.com/autotools-mirror/libtool/blob/v2.4.6/build-aux/ltmain.in#L3278
+    # https://github.com/autotools-mirror/libtool/blob/v2.4.2/libltdl/config/ltmain.m4sh#L3028
+    depends_on("findutils", type="run")
 
     with when("@2.4.2"):
         depends_on("autoconf", type="build")

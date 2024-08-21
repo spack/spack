@@ -25,6 +25,8 @@ class Lazyten(CMakePackage):
     version("develop", branch="master")
     version("0.4.1", sha256="696d151382993c13d04516c77db3ea712a70e3cb449539b9e79abc78cf245ae4")
 
+    depends_on("cxx", type="build")  # generated
+
     #
     # Variants
     #

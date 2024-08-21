@@ -49,6 +49,8 @@ class PerlBioperl(PerlPackage):
         url="https://cpan.metacpan.org/authors/id/C/CJ/CJFIELDS/BioPerl-1.007002.tar.gz",
     )
 
+    depends_on("fortran", type="build")  # generated
+
     # According to cpandeps.grinnz.com Module-Build is both a build and run
     # time dependency for BioPerl
     depends_on("perl-module-build", type=("build", "run"))

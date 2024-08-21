@@ -16,8 +16,6 @@ class Sollve(CMakePackage):
     homepage = "https://www.bnl.gov/compsci/projects/SOLLVE/"
     git = "https://github.com/SOLLVE/llvm.git"
 
-    family = "compiler"  # Used by lmod
-
     # NOTE: The debug version of LLVM is an order of magnitude larger than
     # the release version, and may take up 20-30 GB of space. If you want
     # to save space, build with `build_type=Release`.
@@ -259,7 +257,6 @@ class Sollve(CMakePackage):
             "-DLLVM_ENABLE_RTTI:BOOL=ON",
             "-DLLVM_ENABLE_EH:BOOL=ON",
             "-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp",
-            "-DPYTHON_EXECUTABLE:PATH={0}".format(spec["python"].command.path),
         ]
 
         # TODO: Instead of unconditionally disabling CUDA, add a "cuda" variant

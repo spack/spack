@@ -6,6 +6,7 @@
 schemas.
 """
 import collections.abc
+from typing import Any, Dict
 
 array_of_strings_or_num = {
     "type": "array",
@@ -18,7 +19,7 @@ dictionary_of_strings_or_num = {
     "patternProperties": {r"\w[\w-]*": {"anyOf": [{"type": "string"}, {"type": "number"}]}},
 }
 
-definition = {
+definition: Dict[str, Any] = {
     "type": "object",
     "default": {},
     "additionalProperties": False,

@@ -25,6 +25,8 @@ class Hmmer(Package):
     version("2.3.2", sha256="d20e1779fcdff34ab4e986ea74a6c4ac5c5f01da2993b14e92c94d2f076828b4")
     version("2.3.1", sha256="3956d53af8de5bb99eec18cba0628e86924c6543639d290293b6677a9224ea3f")
 
+    depends_on("c", type="build")  # generated
+
     variant("mpi", default=True, description="Compile with MPI")
     variant("gsl", default=False, description="Compile with GSL")
 

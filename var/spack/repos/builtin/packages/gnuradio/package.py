@@ -26,6 +26,10 @@ class Gnuradio(CMakePackage):
 
     version("3.8.2.0", sha256="ddda12b55e3e1d925eefb24afb9d604bca7c9bbe0a431707aa48a2eed53eec2f")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("gui", default=False, description="Build with gui support")
 
     depends_on("cmake@3.5.1:", type="build")
@@ -42,6 +46,8 @@ class Gnuradio(CMakePackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
     depends_on("py-numpy", type=("build", "run"))
+    # https://github.com/gnuradio/gnuradio/issues/7378
+    depends_on("py-numpy@:1", when="@:3.10.10.0", type=("build", "run"))
     depends_on("py-click", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-click-plugins", type=("build", "run"))
@@ -61,10 +67,7 @@ class Gnuradio(CMakePackage):
     extends("python")
 
     def cmake_args(self):
-        args = []
-        args.append("-DPYTHON_EXECUTABLE={0}".format(self.spec["python"].command.path))
-        args.append("-DENABLE_INTERNAL_VOLK=OFF")
-        return args
+        return ["-DENABLE_INTERNAL_VOLK=OFF"]
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)

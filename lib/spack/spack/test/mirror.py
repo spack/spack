@@ -10,7 +10,10 @@ import pytest
 
 from llnl.util.symlink import resolve_link_target_relative_to_the_link
 
+import spack.caches
+import spack.fetch_strategy
 import spack.mirror
+import spack.patch
 import spack.repo
 import spack.util.executable
 import spack.util.spack_json as sjson
@@ -200,13 +203,13 @@ def test_invalid_json_mirror_collection(invalid_json, error_message):
     assert error_message in exc_msg
 
 
-def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):
+def test_mirror_archive_paths_no_version(mock_packages, mock_archive):
     spec = Spec("trivial-install-test-package@=nonexistingversion").concretized()
-    fetcher = spack.fetch_strategy.URLFetchStrategy(mock_archive.url)
+    fetcher = spack.fetch_strategy.URLFetchStrategy(url=mock_archive.url)
     spack.mirror.mirror_archive_paths(fetcher, "per-package-ref", spec)
 
 
-def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
+def test_mirror_with_url_patches(mock_packages, monkeypatch):
     spec = Spec("patch-several-dependencies")
     spec.concretize()
 
@@ -273,7 +276,7 @@ def test_mirror_cache_symlinks(tmpdir):
     cosmetic_path = "zlib/zlib-1.2.11.tar.gz"
     global_path = "_source-cache/archive/c3/c3e5.tar.gz"
     cache = spack.caches.MirrorCache(str(tmpdir), False)
-    reference = spack.mirror.MirrorReference(cosmetic_path, global_path)
+    reference = spack.mirror.DefaultLayout(cosmetic_path, global_path)
 
     cache.store(MockFetcher(), reference.storage_path)
     cache.symlink(reference)
@@ -289,8 +292,8 @@ def test_mirror_cache_symlinks(tmpdir):
 @pytest.mark.parametrize(
     "specs,expected_specs",
     [
-        (["a"], ["a@=1.0", "a@=2.0"]),
-        (["a", "brillig"], ["a@=1.0", "a@=2.0", "brillig@=1.0.0", "brillig@=2.0.0"]),
+        (["pkg-a"], ["pkg-a@=1.0", "pkg-a@=2.0"]),
+        (["pkg-a", "brillig"], ["pkg-a@=1.0", "pkg-a@=2.0", "brillig@=1.0.0", "brillig@=2.0.0"]),
     ],
 )
 def test_get_all_versions(specs, expected_specs):

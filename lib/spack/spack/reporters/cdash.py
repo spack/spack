@@ -14,7 +14,7 @@ import time
 import xml.sax.saxutils
 from typing import Dict, Optional
 from urllib.parse import urlencode
-from urllib.request import HTTPHandler, Request, build_opener
+from urllib.request import HTTPSHandler, Request, build_opener
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
@@ -27,6 +27,7 @@ import spack.util.git
 from spack.error import SpackError
 from spack.util.crypto import checksum
 from spack.util.log_parse import parse_log_events
+from spack.util.web import ssl_create_default_context
 
 from .base import Reporter
 from .extract import extract_test_parts
@@ -57,7 +58,8 @@ MAP_PHASES_TO_CDASH = {
 # Initialize data structures common to each phase's report.
 CDASH_PHASES = set(MAP_PHASES_TO_CDASH.values())
 CDASH_PHASES.add("update")
-
+# CDash request timeout in seconds
+SPACK_CDASH_TIMEOUT = 45
 
 CDashConfiguration = collections.namedtuple(
     "CDashConfiguration", ["upload_url", "packages", "build", "site", "buildstamp", "track"]
@@ -427,7 +429,7 @@ class CDash(Reporter):
         # Compute md5 checksum for the contents of this file.
         md5sum = checksum(hashlib.md5, filename, block_size=8192)
 
-        opener = build_opener(HTTPHandler)
+        opener = build_opener(HTTPSHandler(context=ssl_create_default_context()))
         with open(filename, "rb") as f:
             params_dict = {
                 "build": self.buildname,
@@ -446,7 +448,7 @@ class CDash(Reporter):
                 # By default, urllib2 only support GET and POST.
                 # CDash expects this file to be uploaded via PUT.
                 request.get_method = lambda: "PUT"
-                response = opener.open(request)
+                response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
                 if self.current_package_name not in self.buildIds:
                     resp_value = response.read()
                     if isinstance(resp_value, bytes):

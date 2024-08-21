@@ -199,12 +199,14 @@ nitpick_ignore = [
     ("py:class", "contextlib.contextmanager"),
     ("py:class", "module"),
     ("py:class", "_io.BufferedReader"),
+    ("py:class", "_io.BytesIO"),
     ("py:class", "unittest.case.TestCase"),
     ("py:class", "_frozen_importlib_external.SourceFileLoader"),
     ("py:class", "clingo.Control"),
     ("py:class", "six.moves.urllib.parse.ParseResult"),
     ("py:class", "TextIO"),
     ("py:class", "hashlib._Hash"),
+    ("py:class", "concurrent.futures._base.Executor"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),
@@ -215,6 +217,7 @@ nitpick_ignore = [
     ("py:class", "spack.spec.InstallStatus"),
     ("py:class", "spack.spec.SpecfileReaderBase"),
     ("py:class", "spack.install_test.Pb"),
+    ("py:class", "spack.filesystem_view.SimpleFilesystemView"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.

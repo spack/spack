@@ -120,6 +120,9 @@ class Glib(MesonPackage, AutotoolsPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("libmount", default=False, description="Build with libmount support")
     variant(
         "tracing",
@@ -317,13 +320,13 @@ class MesonBuilder(BaseBuilder, spack.build_systems.meson.MesonBuilder):
         if self.spec.satisfies("@:2.72"):
             args.append("-Dgettext=external")
         if self.spec.satisfies("@:2.74"):
-            if self.spec["iconv"].name == "libc":
-                args.append("-Diconv=libc")
-            else:
+            if self.spec["iconv"].name == "libiconv":
                 if self.spec.satisfies("@2.61.0:"):
                     args.append("-Diconv=external")
                 else:
                     args.append("-Diconv=gnu")
+            else:
+                args.append("-Diconv=libc")
         return args
 
 
@@ -338,10 +341,10 @@ class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuild
             args.append(
                 "--with-python={0}".format(os.path.basename(self.spec["python"].command.path))
             )
-        if self.spec["iconv"].name == "libc":
-            args.append("--with-libiconv=maybe")
-        else:
+        if self.spec["iconv"].name == "libiconv":
             args.append("--with-libiconv=gnu")
+        else:
+            args.append("--with-libiconv=maybe")
         if self.spec.satisfies("@2.56:"):
             for value in ("dtrace", "systemtap"):
                 if ("tracing=" + value) in self.spec:

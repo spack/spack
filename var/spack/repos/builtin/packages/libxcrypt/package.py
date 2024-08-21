@@ -11,6 +11,7 @@ class Libxcrypt(AutotoolsPackage):
 
     homepage = "https://github.com/besser82/libxcrypt"
     url = "https://github.com/besser82/libxcrypt/releases/download/v4.4.30/libxcrypt-4.4.30.tar.xz"
+    tags = ["build-tools"]
     maintainers("haampie")
 
     def url_for_version(self, version):
@@ -31,6 +32,8 @@ class Libxcrypt(AutotoolsPackage):
     version("4.4.17", sha256="7665168d0409574a03f7b484682e68334764c29c21ca5df438955a381384ca07")
     version("4.4.16", sha256="a98f65b8baffa2b5ba68ee53c10c0a328166ef4116bce3baece190c8ce01f375")
     version("4.4.15", sha256="8bcdef03bc65f9dbda742e56820435b6f13eea59fb903765141c6467f4655e5a")
+
+    depends_on("c", type="build")  # generated
 
     variant(
         "obsolete_api",

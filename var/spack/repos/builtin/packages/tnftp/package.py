@@ -1,6 +1,5 @@
 # Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
-# Copyright 2023 EMBL-European Bioinformatics Institute
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,6 +16,8 @@ class Tnftp(AutotoolsPackage):
     maintainers("EbiArnie")
 
     version("20230507", sha256="be0134394bd7d418a3b34892b0709eeb848557e86474e1786f0d1a887d3a6580")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("bison")
     depends_on("ncurses")

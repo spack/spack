@@ -30,10 +30,11 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
     version("release", branch="release")
     version(
-        "2.1.0",
-        sha256="9cf3522b6dc0675281a1a16839464ebd1cc5f9c08c20eabee1719b3bcfdcf41f",
+        "2.2.0",
+        sha256="ee66b6bbd33f6ad6f2350e11a7c9328492e53935ba8f66b4b1d01f074eb96341",
         preferred=True,
     )
+    version("2.1.0", sha256="9cf3522b6dc0675281a1a16839464ebd1cc5f9c08c20eabee1719b3bcfdcf41f")
     version("2.0.0", sha256="32643cf3564fa77f8e2a2a5456a574b6b2355bb68918eb62ccde493993ade1a3")
     version("1.9.0", sha256="12355dea1a24ec32767260068037adeb71abb3df2f9f920c92ce483f35ff46e4")
     version("1.8.0", sha256="fcedee6e8f4ac50dde56e8c533d48604dbfb663cea1561542a837e8e80ba8768")
@@ -51,16 +52,12 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     version("1.2.0", sha256="607272992e05f8398d196f0acdcb4af025a4a96cd4f66614c6341f31d4561763")
     version("1.1.0", sha256="78618c81ca741b1fbba0853cb5d7af12c51973b514c268fc96dfb36b853cdb18")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=False, description="build shared libs")
 
     variant("doubleprecision", default=True, description="enable double precision")
     variant("logging", default=False, when="@1.3:", description="build logging support")
-    variant(
-        "ascent_types",
-        default=True,
-        when="~64bitids",
-        description="build support for ascent types",
-    )
     variant(
         "virtuals",
         default=False,
@@ -124,7 +121,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("hip@3.7:", when="+rocm")
     # CUDA thrust is already include in the CUDA pkg
-    depends_on("rocthrust", when="@2.1: +kokkos+rocm")
+    depends_on("rocthrust", when="@2.2: +kokkos+rocm ^cmake@3.24:")
 
     # The rocm variant is only valid options for >= 1.7. It would be better if
     # this could be expressed as a when clause to disable the rocm variant,
@@ -145,13 +142,28 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # Patch
     patch("diy-include-cstddef.patch", when="@1.5.3:1.8.0")
 
+    # VTK-M PR#3215
+    # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3215
+    patch("vtkm-mr3215-ext-geom-fix.patch", when="@2.1")
+
     # VTK-M PR#2972
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/2972
     patch("vtkm-cuda-swap-conflict-pr2972.patch", when="@1.9 +cuda ^cuda@12:")
 
     # VTK-M PR#3160
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3160
-    patch("mr3160-rocthrust-fix.patch", when="@2.1:")
+    patch("mr3160-rocthrust-fix.patch", when="@2.1")
+
+    # VTK-M PR#3258
+    # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3258
+    patch("mr3258-fix-typo-thrust-dependency-with-rocm.patch", when="@2.2:")
+
+    # Disable Thrust patch that is no longer needed in modern Thrust
+    patch(
+        "https://github.com/Kitware/VTK-m/commit/4a4466e7c8cd44d2be2bd3fe6f359faa8e9547aa.patch?full_index=1",
+        sha256="58dc104ba05ec99c359eeec3ac094cdb071053a4250f4ad9d72ef6a356c4346e",
+        when="@1.6.0:2.1 +cuda ^cuda@12.5:",
+    )
 
     def cmake_args(self):
         spec = self.spec
@@ -188,13 +200,18 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("VTKm_INSTALL_EXAMPLES", "examples"),
                 self.define_from_variant("VTKm_NO_DEPRECATED_VIRTUAL", "virtuals"),
                 self.define_from_variant("VTKm_USE_64BIT_IDS", "64bitids"),
-                self.define_from_variant("VTKm_USE_DEFAULT_TYPES_FOR_ASCENT", "ascent_types"),
                 self.define_from_variant("VTKm_USE_DOUBLE_PRECISION", "doubleprecision"),
+                self.define(
+                    "VTKm_USE_DEFAULT_TYPES_FOR_ASCENT", "~64bitids +doubleprecision" in spec
+                ),
             ]
 
             if "+tbb" in spec:
                 # vtk-m detectes tbb via TBB_ROOT env var
                 os.environ["TBB_ROOT"] = spec["tbb"].prefix
+
+            if "+kokkos" in spec and "+rocm" in spec and spec.satisfies("^kokkos@4:"):
+                options.append(f"-DCMAKE_CXX_COMPILER:BOOL={spec['hip'].prefix.bin.hipcc}")
 
             # Support for relocatable code
             if "~shared" in spec and "+fpic" in spec:
@@ -230,14 +247,12 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
         return options
 
-    # Delegate in the vtk-m built smoke test
-    def smoke_test(self):
+    def test_smoke_test(self):
+        """Build and run ctests"""
         spec = self.spec
 
         if "+examples" not in spec:
-            raise RuntimeError(
-                "Examples needed for smoke test missing", "reinstall with `+examples` variant"
-            )
+            raise SkipTest("Package must be installed with +examples")
 
         testdir = "smoke_test_build"
         with working_dir(testdir, create=True):
@@ -252,7 +267,4 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def build_test(self):
-        self.smoke_test()
-
-    def test(self):
-        self.smoke_test()
+        self.test_smoke_test()

@@ -31,6 +31,9 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("1.5.3", sha256="faefbe738bd364d0e26ce9ad079a11c93a18c6f075719a365fd4fa5f1f7a989a")
     version("1.5.2", sha256="a902cad3962471216cfa278ba0561c18751d415cd4d6b2417c02a43b0ab2ea33")
     version("1.5.1", sha256="447da564278f98366906d561d9c8bc4d31678c56d761679c2ff3e59ee7a2895c")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     # Older versions are no longer supported.
 
     variant("shared", default=True, description="Enables the build of shared libraries.")
@@ -129,6 +132,10 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("half", when="+half")
 
     depends_on("llvm-openmp", when="%apple-clang +openmp")
+
+    # Fixes https://github.com/spack/spack/issues/42286
+    # https://github.com/LLNL/Elemental/pull/177
+    patch("cmake-intel-mpi-escape-quotes-pr177.patch", when="@1.5.3")
 
     @property
     def libs(self):

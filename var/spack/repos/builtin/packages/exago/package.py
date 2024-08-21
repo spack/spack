@@ -60,6 +60,10 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     )
     version("kpp2", tag="kpp2", commit="1da764d80a2db793f4c43ca50e50981f7ed3880a", submodules=True)
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Progrmming model options
     variant("mpi", default=True, description="Enable/Disable MPI")
     variant("raja", default=False, description="Enable/Disable RAJA")
@@ -156,7 +160,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     # This is duplicated from HiOp
     # RAJA > 0.14 and Umpire > 6.0 require c++ std 14
     # We are working on supporting newer Umpire/RAJA versions
-    depends_on("raja@0.14.0:0.14", when="@1.1.0:+raja")
+    depends_on("raja@0.14.0:0.14 +shared", when="@1.1.0:+raja")
     depends_on("umpire@6.0.0:6", when="@1.1.0:+raja")
     depends_on("camp@0.2.3:0.2", when="@1.1.0:+raja")
     # This is no longer a requirement in RAJA > 0.14

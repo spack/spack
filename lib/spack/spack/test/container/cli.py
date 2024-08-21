@@ -17,7 +17,7 @@ def test_command(default_config, container_config_dir, capsys):
     with capsys.disabled():
         with fs.working_dir(container_config_dir):
             output = containerize()
-    assert "FROM spack/ubuntu-bionic" in output
+    assert "FROM spack/ubuntu-jammy" in output
 
 
 def test_listing_possible_os():
@@ -27,7 +27,7 @@ def test_listing_possible_os():
         assert expected_os in output
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == "windows", reason="test unsupported on Windows")
+@pytest.mark.not_on_windows("test unsupported on Windows")
 @pytest.mark.maybeslow
 @pytest.mark.requires_executables("git")
 def test_bootstrap_phase(minimal_configuration, config_dumper, capsys):

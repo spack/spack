@@ -25,6 +25,7 @@ import pathlib
 import socket
 import sys
 import time
+from json import JSONDecoder
 from typing import (
     Any,
     Callable,
@@ -818,7 +819,8 @@ class Database:
         """
         try:
             with open(filename, "r") as f:
-                fdata = sjson.load(f)
+                # In the future we may use a stream of JSON objects, hence `raw_decode` for compat.
+                fdata, _ = JSONDecoder().raw_decode(f.read())
         except Exception as e:
             raise CorruptDatabaseError("error parsing database:", str(e)) from e
 
@@ -833,27 +835,24 @@ class Database:
 
         # High-level file checks
         db = fdata["database"]
-        check("installs" in db, "no 'installs' in JSON DB.")
         check("version" in db, "no 'version' in JSON DB.")
-
-        installs = db["installs"]
 
         # TODO: better version checking semantics.
         version = vn.Version(db["version"])
         if version > _DB_VERSION:
             raise InvalidDatabaseVersionError(self, _DB_VERSION, version)
-        elif version < _DB_VERSION:
-            if not any(old == version and new == _DB_VERSION for old, new in _SKIP_REINDEX):
-                tty.warn(
-                    "Spack database version changed from %s to %s. Upgrading."
-                    % (version, _DB_VERSION)
-                )
+        elif version < _DB_VERSION and not any(
+            old == version and new == _DB_VERSION for old, new in _SKIP_REINDEX
+        ):
+            tty.warn(f"Spack database version changed from {version} to {_DB_VERSION}. Upgrading.")
 
-                self.reindex(spack.store.STORE.layout)
-                installs = dict(
-                    (k, v.to_dict(include_fields=self._record_fields))
-                    for k, v in self._data.items()
-                )
+            self.reindex(spack.store.STORE.layout)
+            installs = dict(
+                (k, v.to_dict(include_fields=self._record_fields)) for k, v in self._data.items()
+            )
+        else:
+            check("installs" in db, "no 'installs' in JSON DB.")
+            installs = db["installs"]
 
         spec_reader = reader(version)
 
@@ -1621,15 +1620,32 @@ class Database:
     query_local.__doc__ += _QUERY_DOCSTRING
 
     def query(self, *args, **kwargs):
-        """Query the Spack database including all upstream databases."""
+        """Query the Spack database including all upstream databases.
+
+        Additional Arguments:
+            install_tree (str): query 'all' (default), 'local', 'upstream', or upstream path
+        """
+        install_tree = kwargs.pop("install_tree", "all")
+        valid_trees = ["all", "upstream", "local", self.root] + [u.root for u in self.upstream_dbs]
+        if install_tree not in valid_trees:
+            msg = "Invalid install_tree argument to Database.query()\n"
+            msg += f"Try one of {', '.join(valid_trees)}"
+            tty.error(msg)
+            return []
+
         upstream_results = []
-        for upstream_db in self.upstream_dbs:
+        upstreams = self.upstream_dbs
+        if install_tree not in ("all", "upstream"):
+            upstreams = [u for u in self.upstream_dbs if u.root == install_tree]
+        for upstream_db in upstreams:
             # queries for upstream DBs need to *not* lock - we may not
             # have permissions to do this and the upstream DBs won't know about
             # us anyway (so e.g. they should never uninstall specs)
             upstream_results.extend(upstream_db._query(*args, **kwargs) or [])
 
-        local_results = set(self.query_local(*args, **kwargs))
+        local_results = []
+        if install_tree in ("all", "local") or self.root == install_tree:
+            local_results = set(self.query_local(*args, **kwargs))
 
         results = list(local_results) + list(x for x in upstream_results if x not in local_results)
 
@@ -1687,7 +1703,11 @@ class Database:
         with self.read_transaction():
             roots = [rec.spec for key, rec in self._data.items() if root(key, rec)]
             needed = set(id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype))
-            return [rec.spec for rec in self._data.values() if id(rec.spec) not in needed]
+            return [
+                rec.spec
+                for rec in self._data.values()
+                if id(rec.spec) not in needed and rec.installed
+            ]
 
     def update_explicit(self, spec, explicit):
         """

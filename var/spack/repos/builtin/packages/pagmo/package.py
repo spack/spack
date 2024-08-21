@@ -24,6 +24,9 @@ class Pagmo(CMakePackage):
 
     version("1.1.7", sha256="6d8fab89ef9d5d5f30f148225bf9b84b2e5a38997f3d68b85547840e9fd95172")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("examples", default=False, description="Build examples")
     variant("cxx", default=True, description="Build the C++ interface")
     variant("python", default=True, description="Build Python bindings")
@@ -99,10 +102,8 @@ class Pagmo(CMakePackage):
         if "+python" in spec:
             args.extend(
                 [
-                    # By default picks up the system python not the Spack build
-                    "-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path),
                     # By default installs to the python prefix not the pagmo prefix
-                    "-DPYTHON_MODULES_DIR={0}".format(python_platlib),
+                    "-DPYTHON_MODULES_DIR={0}".format(python_platlib)
                 ]
             )
 

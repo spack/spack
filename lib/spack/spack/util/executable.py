@@ -31,6 +31,7 @@ class Executable:
 
         self.default_envmod = EnvironmentModifications()
         self.returncode = None
+        self.ignore_quotes = False
 
         if not self.exe:
             raise ProcessError("Cannot construct executable for '%s'" % name)
@@ -38,6 +39,20 @@ class Executable:
     def add_default_arg(self, *args):
         """Add default argument(s) to the command."""
         self.exe.extend(args)
+
+    def with_default_args(self, *args):
+        """Same as add_default_arg, but returns a copy of the executable."""
+        new = self.copy()
+        new.add_default_arg(*args)
+        return new
+
+    def copy(self):
+        """Return a copy of this Executable."""
+        new = Executable(self.exe[0])
+        new.exe[:] = self.exe
+        new.default_env.update(self.default_env)
+        new.default_envmod.extend(self.default_envmod)
+        return new
 
     def add_default_env(self, key, value):
         """Set an environment variable when the command is run.
@@ -174,7 +189,7 @@ class Executable:
 
         fail_on_error = kwargs.pop("fail_on_error", True)
         ignore_errors = kwargs.pop("ignore_errors", ())
-        ignore_quotes = kwargs.pop("ignore_quotes", False)
+        ignore_quotes = kwargs.pop("ignore_quotes", self.ignore_quotes)
         timeout = kwargs.pop("timeout", None)
 
         # If they just want to ignore one error code, make it a tuple.

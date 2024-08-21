@@ -21,6 +21,9 @@ class Odgi(CMakePackage):
 
     # <<< Versions list starts here
     version("0.8.3", commit="34f006f31c3f6b35a1eb8d58a4edb1c458583de3", submodules=True)
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     # >>> Versions list ends here
 
     # compilation problem with ninja
@@ -41,8 +44,4 @@ class Odgi(CMakePackage):
     # >>> Dependencies list ends here
 
     def cmake_args(self):
-        args = [
-            "-DCMAKE_CXX_STANDARD_REQUIRED:BOOL=ON",
-            "-DPYTHON_EXECUTABLE:FILEPATH={0}".format(self.spec["python"].command),
-        ]
-        return args
+        return ["-DCMAKE_CXX_STANDARD_REQUIRED:BOOL=ON"]

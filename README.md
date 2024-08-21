@@ -32,7 +32,7 @@
 
 Spack is a multi-platform package manager that builds and installs
 multiple versions and configurations of software. It works on Linux,
-macOS, and many supercomputers. Spack is non-destructive: installing a
+macOS, Windows, and many supercomputers. Spack is non-destructive: installing a
 new version of a package does not break existing installations, so many
 configurations of the same package can coexist.
 
@@ -88,7 +88,7 @@ Resources:
   [bridged](https://github.com/matrix-org/matrix-appservice-slack#matrix-appservice-slack) to Slack.
 * [**Github Discussions**](https://github.com/spack/spack/discussions):
   for Q&A and discussions. Note the pinned discussions for announcements.
-* **Twitter**: [@spackpm](https://twitter.com/spackpm). Be sure to
+* **X**: [@spackpm](https://twitter.com/spackpm). Be sure to
   `@mention` us!
 * **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack):
   only for announcements. Please use other venues for discussions.

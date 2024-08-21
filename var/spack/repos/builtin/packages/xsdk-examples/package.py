@@ -10,7 +10,7 @@ from spack.package import *
 class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
     """xSDK Examples show usage of libraries in the xSDK package."""
 
-    homepage = "http://xsdk.info"
+    homepage = "https://xsdk.info"
     url = "https://github.com/xsdk-project/xsdk-examples/archive/v0.1.0.tar.gz"
     git = "https://github.com/xsdk-project/xsdk-examples"
 
@@ -23,6 +23,9 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
         sha256="e7444a403c0a69eeeb34a4068be4d6f4e5b54cbfd275629019b9236a538a739e",
         deprecated=True,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("xsdk+cuda", when="+cuda")
     depends_on("xsdk~cuda", when="~cuda")

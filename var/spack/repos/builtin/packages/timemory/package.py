@@ -28,6 +28,10 @@ class Timemory(CMakePackage, PythonExtension):
     version("3.0.1", commit="ef638e1cde90275ce7c0e12fc4902c27bcbdeefd", submodules=True)
     version("3.0.0", commit="b36b1673b2c6b7ff3126d8261bef0f8f176c7beb", submodules=True)
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("shared", default=True, description="Build shared libraries")
     variant("static", default=False, description="Build static libraries")
     variant("pic", default=True, description="Build position independent code")
@@ -321,11 +325,6 @@ class Timemory(CMakePackage, PythonExtension):
             self.define_from_variant("TIMEMORY_USE_STATISTICS", "statistics"),
             self.define_from_variant("TIMEMORY_USE_ALLINEA_MAP", "allinea_map"),
         ]
-
-        if "+python" in spec:
-            pyexe = spec["python"].command.path
-            args.append(self.define("PYTHON_EXECUTABLE=", pyexe))
-            args.append(self.define("Python3_EXECUTABLE", pyexe))
 
         if "+mpi" in spec:
             args.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))

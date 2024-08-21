@@ -35,7 +35,7 @@ def test_regression_8083(tmpdir, capfd, mock_packages, mock_fetch, config):
 
 
 @pytest.mark.regression("12345")
-def test_mirror_from_env(tmp_path, mock_packages, mock_fetch, config, mutable_mock_env_path):
+def test_mirror_from_env(tmp_path, mock_packages, mock_fetch, mutable_mock_env_path):
     mirror_dir = str(tmp_path / "mirror")
     env_name = "test"
 
@@ -88,6 +88,7 @@ class MockMirrorArgs:
         exclude_file=None,
         exclude_specs=None,
         directory=None,
+        private=False,
     ):
         self.specs = specs or []
         self.all = all
@@ -96,6 +97,7 @@ class MockMirrorArgs:
         self.dependencies = dependencies
         self.exclude_file = exclude_file
         self.exclude_specs = exclude_specs
+        self.private = private
         self.directory = directory
 
 
@@ -104,13 +106,26 @@ def test_exclude_specs(mock_packages, config):
         specs=["mpich"], versions_per_spec="all", exclude_specs="mpich@3.0.1:3.0.2 mpich@1.0"
     )
 
-    mirror_specs = spack.cmd.mirror.concrete_specs_from_user(args)
+    mirror_specs, _ = spack.cmd.mirror._specs_and_action(args)
     expected_include = set(
         spack.spec.Spec(x).concretized() for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
     )
     expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
     assert expected_include <= set(mirror_specs)
     assert not any(spec.satisfies(y) for spec in mirror_specs for y in expected_exclude)
+
+
+def test_exclude_specs_public_mirror(mock_packages, config):
+    args = MockMirrorArgs(
+        specs=["no-redistribute-dependent"],
+        versions_per_spec="all",
+        dependencies=True,
+        private=False,
+    )
+
+    mirror_specs, _ = spack.cmd.mirror._specs_and_action(args)
+    assert not any(s.name == "no-redistribute" for s in mirror_specs)
+    assert any(s.name == "no-redistribute-dependent" for s in mirror_specs)
 
 
 def test_exclude_file(mock_packages, tmpdir, config):
@@ -125,7 +140,7 @@ mpich@1.0
 
     args = MockMirrorArgs(specs=["mpich"], versions_per_spec="all", exclude_file=exclude_path)
 
-    mirror_specs = spack.cmd.mirror.concrete_specs_from_user(args)
+    mirror_specs, _ = spack.cmd.mirror._specs_and_action(args)
     expected_include = set(
         spack.spec.Spec(x).concretized() for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
     )
@@ -217,13 +232,7 @@ def test_mirror_name_collision(mutable_config):
 
 
 def test_mirror_destroy(
-    install_mockery_mutable_config,
-    mock_packages,
-    mock_fetch,
-    mock_archive,
-    mutable_config,
-    monkeypatch,
-    tmpdir,
+    install_mockery, mock_packages, mock_fetch, mock_archive, mutable_config, monkeypatch, tmpdir
 ):
     # Create a temp mirror directory for buildcache usage
     mirror_dir = tmpdir.join("mirror_dir")
@@ -262,11 +271,9 @@ def test_mirror_destroy(
 class TestMirrorCreate:
     @pytest.mark.regression("31736", "31985")
     def test_all_specs_with_all_versions_dont_concretize(self):
-        args = MockMirrorArgs(exclude_file=None, exclude_specs=None)
-        specs = spack.cmd.mirror.all_specs_with_all_versions(
-            selection_fn=spack.cmd.mirror.not_excluded_fn(args)
-        )
-        assert all(not s.concrete for s in specs)
+        args = MockMirrorArgs(all=True, exclude_file=None, exclude_specs=None)
+        mirror_specs, _ = spack.cmd.mirror._specs_and_action(args)
+        assert all(not s.concrete for s in mirror_specs)
 
     @pytest.mark.parametrize(
         "cli_args,error_str",
@@ -324,8 +331,8 @@ class TestMirrorCreate:
         ],
     )
     def test_exclude_specs_from_user(self, cli_args, not_expected, config):
-        specs = spack.cmd.mirror.concrete_specs_from_user(MockMirrorArgs(**cli_args))
-        assert not any(s.satisfies(y) for s in specs for y in not_expected)
+        mirror_specs, _ = spack.cmd.mirror._specs_and_action(MockMirrorArgs(**cli_args))
+        assert not any(s.satisfies(y) for s in mirror_specs for y in not_expected)
 
     @pytest.mark.parametrize("abstract_specs", [("bowtie", "callpath")])
     def test_specs_from_cli_are_the_same_as_from_file(self, abstract_specs, config, tmpdir):
@@ -407,3 +414,27 @@ def test_mirror_add_set_signed(mutable_config):
     assert spack.config.get("mirrors:example") == {"url": "http://example.com", "signed": False}
     mirror("set", "--signed", "example")
     assert spack.config.get("mirrors:example") == {"url": "http://example.com", "signed": True}
+
+
+def test_mirror_add_set_autopush(mutable_config):
+    # Add mirror without autopush
+    mirror("add", "example", "http://example.com")
+    assert spack.config.get("mirrors:example") == "http://example.com"
+    mirror("set", "--no-autopush", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": False}
+    mirror("set", "--autopush", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
+    mirror("set", "--no-autopush", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": False}
+    mirror("remove", "example")
+
+    # Add mirror with autopush
+    mirror("add", "--autopush", "example", "http://example.com")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
+    mirror("set", "--autopush", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
+    mirror("set", "--no-autopush", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": False}
+    mirror("set", "--autopush", "example")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
+    mirror("remove", "example")

@@ -24,6 +24,10 @@ class Alquimia(CMakePackage):
     version("xsdk-0.6.0", commit="9a0aedd3a927d4d5e837f8fd18b74ad5a78c3821")
     version("xsdk-0.5.0", commit="8397c3b00a09534c5473ff3ab21f0e32bb159380")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("shared", default=True, description="Enables the build of shared libraries")
 
     depends_on("mpi")

@@ -20,6 +20,8 @@ class ScineMolassembler(CMakePackage):
     version("master", branch="master")
     version("1.2.1", sha256="c9fea41d383b7f54cf8a3ed4dabebe9e942fe3ef5b47895e3533e8ce42dacd38")
 
+    depends_on("cxx", type="build")  # generated
+
     resource(
         name="dev",
         url="https://github.com/qcscine/development-utils/archive/refs/tags/5.0.1.tar.gz",
@@ -84,7 +86,7 @@ class ScineMolassembler(CMakePackage):
         )
 
     def cmake_args(self):
-        args = [
+        return [
             self.define("BUILD_SHARED_LIBS", True),
             self.define("SCINE_BUILD_TESTS", self.run_tests),
             self.define("SCINE_BUILD_PYTHON_BINDINGS", "+python" in self.spec),
@@ -95,6 +97,3 @@ class ScineMolassembler(CMakePackage):
             self.define("BOOST_NO_SYSTEM_PATHS", True),
             self.define("Boost_NO_BOOST_CMAKE", True),
         ]
-        if "+python" in self.spec:
-            args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
-        return args

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import shutil
+import sys
 
 import pytest
 
@@ -111,10 +112,10 @@ fi
 @pytest.mark.regression("37996")
 def test_compiler_remove(mutable_config, mock_packages):
     """Tests that we can remove a compiler from configuration."""
-    assert spack.spec.CompilerSpec("gcc@=4.5.0") in spack.compilers.all_compiler_specs()
-    args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@4.5.0", add_paths=[], scope=None)
+    assert spack.spec.CompilerSpec("gcc@=9.4.0") in spack.compilers.all_compiler_specs()
+    args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@9.4.0", add_paths=[], scope=None)
     spack.cmd.compiler.compiler_remove(args)
-    assert spack.spec.CompilerSpec("gcc@=4.5.0") not in spack.compilers.all_compiler_specs()
+    assert spack.spec.CompilerSpec("gcc@=9.4.0") not in spack.compilers.all_compiler_specs()
 
 
 @pytest.mark.regression("37996")
@@ -123,10 +124,10 @@ def test_removing_compilers_from_multiple_scopes(mutable_config, mock_packages):
     site_config = spack.config.get("compilers", scope="site")
     spack.config.set("compilers", site_config, scope="user")
 
-    assert spack.spec.CompilerSpec("gcc@=4.5.0") in spack.compilers.all_compiler_specs()
-    args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@4.5.0", add_paths=[], scope=None)
+    assert spack.spec.CompilerSpec("gcc@=9.4.0") in spack.compilers.all_compiler_specs()
+    args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@9.4.0", add_paths=[], scope=None)
     spack.cmd.compiler.compiler_remove(args)
-    assert spack.spec.CompilerSpec("gcc@=4.5.0") not in spack.compilers.all_compiler_specs()
+    assert spack.spec.CompilerSpec("gcc@=9.4.0") not in spack.compilers.all_compiler_specs()
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
@@ -174,7 +175,9 @@ def test_compiler_find_mixed_suffixes(
     assert "clang@11.0.0" in output
     assert "gcc@8.4.0" in output
 
-    config = spack.compilers.get_compiler_config("site", False)
+    config = spack.compilers.get_compiler_config(
+        no_compilers_yaml, scope="site", init_config=False
+    )
     clang = next(c["compiler"] for c in config if c["compiler"]["spec"] == "clang@=11.0.0")
     gcc = next(c["compiler"] for c in config if c["compiler"]["spec"] == "gcc@=8.4.0")
 
@@ -209,7 +212,9 @@ def test_compiler_find_prefer_no_suffix(no_compilers_yaml, working_env, compiler
     assert "clang@11.0.0" in output
     assert "gcc@8.4.0" in output
 
-    config = spack.compilers.get_compiler_config("site", False)
+    config = spack.compilers.get_compiler_config(
+        no_compilers_yaml, scope="site", init_config=False
+    )
     clang = next(c["compiler"] for c in config if c["compiler"]["spec"] == "clang@=11.0.0")
 
     assert clang["paths"]["cc"] == str(compilers_dir / "clang")
@@ -228,7 +233,9 @@ def test_compiler_find_path_order(no_compilers_yaml, working_env, compilers_dir)
 
     compiler("find", "--scope=site")
 
-    config = spack.compilers.get_compiler_config("site", False)
+    config = spack.compilers.get_compiler_config(
+        no_compilers_yaml, scope="site", init_config=False
+    )
     gcc = next(c["compiler"] for c in config if c["compiler"]["spec"] == "gcc@=8.4.0")
     assert gcc["paths"] == {
         "cc": str(new_dir / "gcc-8"),
@@ -247,3 +254,56 @@ def test_compiler_list_empty(no_compilers_yaml, working_env, compilers_dir):
     out = compiler("list")
     assert not out
     assert compiler.returncode == 0
+
+
+@pytest.mark.parametrize(
+    "external,expected",
+    [
+        (
+            {
+                "spec": "gcc@=7.7.7 languages=c,cxx,fortran os=foobar target=x86_64",
+                "prefix": "/path/to/fake",
+                "modules": ["gcc/7.7.7", "foobar"],
+                "extra_attributes": {
+                    "compilers": {
+                        "c": "/path/to/fake/gcc",
+                        "cxx": "/path/to/fake/g++",
+                        "fortran": "/path/to/fake/gfortran",
+                    },
+                    "flags": {"fflags": "-ffree-form"},
+                },
+            },
+            """gcc@7.7.7:
+\tpaths:
+\t\tcc = /path/to/fake/gcc
+\t\tcxx = /path/to/fake/g++
+\t\tf77 = /path/to/fake/gfortran
+\t\tfc = /path/to/fake/gfortran
+\tflags:
+\t\tfflags = ['-ffree-form']
+\tmodules  = ['gcc/7.7.7', 'foobar']
+\toperating system  = foobar
+""",
+        )
+    ],
+)
+def test_compilers_shows_packages_yaml(
+    external, expected, no_compilers_yaml, working_env, compilers_dir
+):
+    """Spack should see a single compiler defined from packages.yaml"""
+    external["prefix"] = external["prefix"].format(prefix=os.path.dirname(compilers_dir))
+    gcc_entry = {"externals": [external]}
+
+    packages = spack.config.get("packages")
+    packages["gcc"] = gcc_entry
+    spack.config.set("packages", packages)
+
+    out = compiler("list")
+    assert out.count("gcc@7.7.7") == 1
+
+    out = compiler("info", "gcc@7.7.7")
+    assert out == expected.format(
+        compilers_dir=str(compilers_dir),
+        sep=os.sep,
+        suffix=".bat" if sys.platform == "win32" else "",
+    )
