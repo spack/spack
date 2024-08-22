@@ -34,7 +34,7 @@ class Ddt(Package):
     )
 
     def url_for_version(self, version):
-        if version < Version("22.1.3"):
+        if version <= Version("22.1.3"):
             return (
                 f"https://downloads.linaroforge.com/{version}/arm-forge-{version}-linux-x86_64.tar"
             )
