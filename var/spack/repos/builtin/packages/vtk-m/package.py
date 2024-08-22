@@ -21,8 +21,8 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://m.vtk.org/"
     maintainers("kmorel", "vicentebolea")
 
-    url = "https://gitlab.kitware.com/vtk/vtk-m/-/archive/v1.5.1/vtk-m-v1.5.1.tar.gz"
-    git = "https://gitlab.kitware.com/vtk/vtk-m.git"
+    url = "https://github.com/Kitware/VTK-m/archive/refs/tags/v2.2.0.tar.gz"
+    git = "https://github.com/Kitware/VTK-m.git"
     tags = ["e4s"]
 
     test_requires_compiler = True
