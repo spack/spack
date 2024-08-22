@@ -72,7 +72,7 @@ class Geomodel(CMakePackage):
 
     def cmake_args(self):
         def cmake_variant(cmake_label, spack_variant):
-            enabled = spec.satisfies("+" + spack_variant)
+            enabled = self.spec.satisfies("+" + spack_variant)
             return f"-DGEOMODEL_BUILD_{cmake_label}={enabled}"
 
         args = [
