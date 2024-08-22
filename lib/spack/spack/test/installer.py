@@ -755,6 +755,33 @@ def test_install_task_add_compiler(install_mockery, monkeypatch, capfd):
     assert config_msg in out
 
 
+def test_install_task_requeue_build_specs(install_mockery, monkeypatch, capfd):
+    """Check that a missing build_spec spec is added by _install_task."""
+
+    # This test also ensures coverage of most of the new
+    # _requeue_with_build_spec_tasks method.
+    def _missing(*args, **kwargs):
+        return inst.ExecuteResult.MISSING_BUILD_SPEC
+
+    # Set the configuration to ensure _requeue_with_build_spec_tasks actually
+    # does something.
+    with spack.config.override("config:install_missing_compilers", True):
+        installer = create_installer(["depb"], {})
+        installer._init_queue()
+        request = installer.build_requests[0]
+        task = create_build_task(request.pkg)
+
+        # Drop one of the specs so its task is missing before _install_task
+        popped_task = installer._pop_task()
+        assert inst.package_id(popped_task.pkg.spec) not in installer.build_tasks
+
+        monkeypatch.setattr(task, "execute", _missing)
+        installer._install_task(task, None)
+
+        # Ensure the dropped task/spec was added back by _install_task
+        assert inst.package_id(popped_task.pkg.spec) in installer.build_tasks
+
+
 def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
     """Test _release_lock for supposed write lock with exception."""
     installer = create_installer(["trivial-install-test-package"], {})
