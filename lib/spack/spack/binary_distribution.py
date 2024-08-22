@@ -54,10 +54,10 @@ import spack.user_environment
 import spack.util.archive
 import spack.util.crypto
 import spack.util.file_cache as file_cache
+import spack.util.filesystem as ssys
 import spack.util.gpg
 import spack.util.parallel
 import spack.util.path
-import spack.util.filesystem as ssys
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.timer as timer

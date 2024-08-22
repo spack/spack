@@ -24,8 +24,8 @@ import spack.spec
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
-import spack.util.path
 import spack.util.filesystem as ssys
+import spack.util.path
 
 from .relocate_text import BinaryFilePrefixReplacer, TextFilePrefixReplacer
 
