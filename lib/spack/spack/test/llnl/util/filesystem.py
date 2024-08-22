@@ -1145,3 +1145,5 @@ def test_find_max_depth_symlinks(dir_structure_with_things_to_find_symlinks):
     root, locations = dir_structure_with_things_to_find_symlinks
     root = pathlib.Path(root)
     assert set(fs.find_max_depth(root, "l4-f1")) == {locations["l4-f1"]}
+    assert set(fs.find_max_depth(root / "l1-d3", "l4-f2", 0)) == {locations["l4-f2"]}
+    assert set(fs.find_max_depth(root / "l1-d1", "l2-f1")) == {}
