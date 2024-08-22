@@ -982,9 +982,9 @@ class Task:
             ):
                 # The compiler is in the queue, identify it as dependency
                 dep = spack.compilers.pkg_spec_for_compiler(compiler_spec)
-                dep.constrain("platform=%s" % str(arch_spec.platform))
-                dep.constrain("os=%s" % str(arch_spec.os))
-                dep.constrain("target=%s:" % arch_spec.target.microarchitecture.family.name)
+                dep.constrain(f"platform={str(arch_spec.platform)}")
+                dep.constrain(f"os={str(arch_spec.os)}")
+                dep.constrain(f"target={arch_spec.target.microarchitecture.family.name}:")
                 dep.concretize()
                 dep_id = package_id(dep.package.spec)
                 self.dependencies.add(dep_id)
@@ -1055,7 +1055,7 @@ class Task:
             installed (bool):  install status of the dependency package
         """
         if pkg_id != self.pkg_id and pkg_id not in self.dependencies:
-            tty.debug("Adding {0} as a depencency of {1}".format(pkg_id, self.pkg_id))
+            tty.debug(f"Adding {pkg_id} as a depencency of {self.pkg_id}")
             self.dependencies.add(pkg_id)
             if not installed:
                 self.uninstalled_deps.add(pkg_id)
@@ -1087,7 +1087,7 @@ class Task:
         # Move to a module level method.
         if not os.path.exists(pkg.spec.prefix):
             path = spack.util.path.debug_padded_filter(pkg.spec.prefix)
-            tty.debug("Creating the installation directory {0}".format(path))
+            tty.debug(f"Creating the installation directory {path}")
             spack.store.STORE.layout.create_install_directory(pkg.spec)
         else:
             # Set the proper group for the prefix
@@ -1211,9 +1211,9 @@ class BuildTask(Task):
         except spack.error.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
-            pid = "{0}: ".format(self.pid) if tty.show_pid() else ""
-            tty.debug("{0}{1}".format(pid, str(e)))
-            tty.debug("Package stage directory: {0}".format(pkg.stage.source_path))
+            pid = f"{self.pid}: " if tty.show_pid() else ""
+            tty.debug("f{pid}{str(e)}")
+            tty.debug(f"Package stage directory: {pkg.stage.source_path}")
         return ExecuteResult.SUCCESS
 
 
@@ -1386,7 +1386,7 @@ class PackageInstaller:
         all_deps: Dict[str, Set[str]],
     ) -> None:
         """
-        Creates and queus the initial task for the package.
+        Creates and queues the initial task for the package.
 
         Args:
             pkg: the package to be built and installed
@@ -1691,7 +1691,7 @@ class PackageInstaller:
         return self.locks[pkg_id]
 
     def _requeue_with_build_spec_tasks(self, task):
-        """TODO: Docstring"""
+        """Requeue the task and its missing build spec dependencies"""
         # Full install of the build_spec is necessary because it didn't already exist somewhere
         # TODO: Bootstrap compilers first (from add_tasks)
         install_compilers = spack.config.get("config:install_missing_compilers", False)
