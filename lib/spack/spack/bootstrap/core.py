@@ -465,12 +465,6 @@ def clingo_root_spec() -> str:
     return _root_spec("clingo-bootstrap@spack+python")
 
 
-def file_root_spec() -> str:
-    """Return the root spec used to bootstrap file"""
-    root_spec_name = "win-file" if IS_WINDOWS else "file"
-    return _root_spec(root_spec_name)
-
-
 def ensure_clingo_importable_or_raise() -> None:
     """Ensure that the clingo module is available for import."""
     ensure_module_importable_or_raise(module="clingo", abstract_spec=clingo_root_spec())
@@ -487,6 +481,12 @@ def ensure_gpg_in_path_or_raise() -> None:
     return ensure_executables_in_path_or_raise(
         executables=["gpg2", "gpg"], abstract_spec=gnupg_root_spec()
     )
+
+
+def file_root_spec() -> str:
+    """Return the root spec used to bootstrap file"""
+    root_spec_name = "win-file" if IS_WINDOWS else "file"
+    return _root_spec(root_spec_name)
 
 
 def ensure_file_in_path_or_raise() -> None:
