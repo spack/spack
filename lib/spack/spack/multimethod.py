@@ -28,9 +28,9 @@ import functools
 import inspect
 from contextlib import contextmanager
 
-import spack.directives
+import spack.directives_meta
 import spack.error
-from spack.spec import Spec
+import spack.spec
 
 
 class MultiMethodMeta(type):
@@ -163,9 +163,9 @@ class when:
             condition (str): condition to be met
         """
         if isinstance(condition, bool):
-            self.spec = Spec() if condition else None
+            self.spec = spack.spec.Spec() if condition else None
         else:
-            self.spec = Spec(condition)
+            self.spec = spack.spec.Spec(condition)
 
     def __call__(self, method):
         """This annotation lets packages declare multiple versions of
@@ -262,17 +262,17 @@ class when:
         and add their constraint to whatever may be already present in the directive
         `when=` argument.
         """
-        spack.directives.DirectiveMeta.push_to_context(str(self.spec))
+        spack.directives_meta.DirectiveMeta.push_to_context(str(self.spec))
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        spack.directives.DirectiveMeta.pop_from_context()
+        spack.directives_meta.DirectiveMeta.pop_from_context()
 
 
 @contextmanager
 def default_args(**kwargs):
-    spack.directives.DirectiveMeta.push_default_args(kwargs)
+    spack.directives_meta.DirectiveMeta.push_default_args(kwargs)
     yield
-    spack.directives.DirectiveMeta.pop_default_args()
+    spack.directives_meta.DirectiveMeta.pop_default_args()
 
 
 class MultiMethodError(spack.error.SpackError):
