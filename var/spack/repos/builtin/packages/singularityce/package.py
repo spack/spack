@@ -114,10 +114,10 @@ class SingularityBase(MakefilePackage):
             join_path(prefix.etc, self.singularity_name, self.singularity_name + ".conf"),
         )
         filter_file(
-             r"^shared loop devices = no",
-             "shared loop devices = yes",
-             join_path(prefix.etc, self.singularity_name, self.singularity_name + ".conf"),
-         )
+            r"^shared loop devices = no",
+            "shared loop devices = yes",
+            join_path(prefix.etc, self.singularity_name, self.singularity_name + ".conf"),
+        )
 
     #
     # Assemble a script that fixes the ownership and permissions of several
