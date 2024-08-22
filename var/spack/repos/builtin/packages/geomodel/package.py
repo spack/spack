@@ -71,16 +71,12 @@ class Geomodel(CMakePackage):
         depends_on("opengl")
 
     def cmake_args(self):
-        def cmake_variant(cmake_label, spack_variant):
-            enabled = self.spec.satisfies("+" + spack_variant)
-            return f"-DGEOMODEL_BUILD_{cmake_label}={enabled}"
-
         args = [
-            cmake_variant("VISUALIZATION", "visualization"),
-            cmake_variant("GEOMODELG4", "geomodelg4"),
-            cmake_variant("FULLSIMLIGHT", "fullsimlight"),
-            cmake_variant("FSL", "fsl"),
-            cmake_variant("EXAMPLES", "examples"),
-            cmake_variant("TOOLS", "tools"),
+            self.define_from_variant("GEOMODEL_BUILD_VISUALIZATION", "visualization"),
+            self.define_from_variant("GEOMODEL_BUILD_GEOMODELG4", "geomodelg4"),
+            self.define_from_variant("GEOMODEL_BUILD_FULLSIMLIGHT", "fullsimlight"),
+            self.define_from_variant("GEOMODEL_BUILD_FSL", "fsl"),
+            self.define_from_variant("GEOMODEL_BUILD_EXAMPLES", "examples"),
+            self.define_from_variant("GEOMODEL_BUILD_TOOLS", "tools"),
         ]
         return args
