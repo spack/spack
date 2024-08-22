@@ -42,6 +42,8 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("36.1.0", commit="3f19d1a0eec1d11937d66d0ef603f0b25b9b4e96", submodules=True)
+    version("36.0.0", commit="6eca77c45b136861272694edbb61bb77200948a5", submodules=True)
     version("35.2.0", commit="b3b09f46d064c43050dd3d21cdf51d7a412134fc", submodules=True)
     version("35.1.0", commit="9dfb47b8edeb8b9c75115462079bcb003dd3f031", submodules=True)
     version("35.0.0", commit="352b423ec31934f825deb9897780246d60ffc44e", submodules=True)
@@ -186,7 +188,11 @@ class Acts(CMakePackage, CudaPackage):
     variant(
         "benchmarks", default=False, description="Build the performance benchmarks", when="@0.16:"
     )
-    _cxxstd_values = (conditional("14", when="@:0.8.1"), "17", conditional("20", when="@24:"))
+    _cxxstd_values = (
+        conditional("14", when="@:0.8.1"),
+        conditional("17", when="@:35"),
+        conditional("20", when="@24:"),
+    )
     variant(
         "cxxstd",
         default="17",
@@ -218,6 +224,14 @@ class Acts(CMakePackage, CudaPackage):
         "log_failure_threshold",
         default="MAX",
         description="Log level above which examples should auto-crash",
+    )
+    variant(
+        "scalar",
+        default="double",
+        values=["float", "double"],
+        multi=False,
+        sticky=True,
+        description="Scalar type to use throughout Acts.",
     )
 
     # Variants that enable / disable Acts plugins
@@ -271,6 +285,7 @@ class Acts(CMakePackage, CudaPackage):
         "tgeo", default=False, description="Build the TGeo plugin", when="@:34 +identification"
     )
     variant("tgeo", default=False, description="Build the TGeo plugin", when="@35:")
+    variant("traccc", default=False, description="Build the Traccc plugin", when="@35.1:")
 
     # Variants that only affect Acts examples for now
     variant(
@@ -329,21 +344,28 @@ class Acts(CMakePackage, CudaPackage):
         depends_on("actsvg@0.4.35:", when="@28:")
         depends_on("actsvg@0.4.39:", when="@32:")
         depends_on("actsvg@0.4.40:", when="@32.1:")
+    depends_on("acts-algebra-plugins @0.24:", when="+traccc")
     depends_on("autodiff @0.6:", when="@17: +autodiff")
     depends_on("autodiff @0.5.11:0.5.99", when="@1.2:16 +autodiff")
     depends_on("boost @1.62:1.69 +program_options +test", when="@:0.10.3")
     depends_on("boost @1.71: +filesystem +program_options +test", when="@0.10.4:")
     depends_on("cmake @3.14:", type="build")
+    depends_on("covfie @0.10:", when="+traccc")
+    depends_on("cuda @12:", when="+traccc")
     depends_on("dd4hep @1.11: +dddetectors +ddrec", when="+dd4hep")
     depends_on("dd4hep @1.21: +dddetectors +ddrec", when="@20: +dd4hep")
     depends_on("dd4hep +ddg4", when="+dd4hep +geant4 +examples")
+    depends_on("detray @0.72.1 scalar=double", when="+traccc")
     depends_on("edm4hep @0.4.1:", when="+edm4hep")
     depends_on("edm4hep @0.7:", when="@25: +edm4hep")
     depends_on("eigen @3.3.7:", when="@15.1:")
     depends_on("eigen @3.3.7:3.3.99", when="@:15.0")
+    depends_on("eigen @3.4:", when="@36.1:")
     depends_on("geant4", when="+fatras_geant4")
     depends_on("geant4", when="+geant4")
+    depends_on("geomodel +geomodelg4", when="+geomodel")
     depends_on("geomodel @4.6.0:", when="+geomodel")
+    depends_on("geomodel @6.3.0:", when="+geomodel @36.1:")
     depends_on("git-lfs", when="@12.0.0:")
     depends_on("gperftools", when="+profilecpu")
     depends_on("gperftools", when="+profilemem")
@@ -364,6 +386,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("py-onnxruntime@:1.12", when="+onnx @:23.2")
     depends_on("py-onnxruntime@1.12:", when="+onnx @23.3:")
     depends_on("py-pybind11 @2.6.2:", when="+python @18:")
+    depends_on("py-pybind11 @2.13.1:", when="+python @36:")
     depends_on("py-pytest", when="+python +unit_tests")
 
     with when("+tgeo"):
@@ -463,6 +486,7 @@ class Acts(CMakePackage, CudaPackage):
             plugin_cmake_variant("TGEO", "tgeo"),
             example_cmake_variant("TBB", "tbb", "USE"),
             cmake_variant(unit_tests_label, "unit_tests"),
+            plugin_cmake_variant("TRACCC", "traccc"),
         ]
 
         log_failure_threshold = spec.variants["log_failure_threshold"].value
