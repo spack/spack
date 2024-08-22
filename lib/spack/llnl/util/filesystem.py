@@ -1845,11 +1845,11 @@ def find_max_depth(root, globs, max_depth=_unset):
 
     visited_dirs = set()
 
-    dir_queue = collections.deque([(0, root)])
+    dir_queue = collections.deque([(0, root, os.path.realpath(root))])
     while dir_queue:
-        depth, next_dir = dir_queue.pop()
+        depth, next_dir, next_dir_resolved = dir_queue.pop()
         try:
-            dir_iter = os.scandir(next_dir)
+            dir_iter = os.scandir(next_dir_resolved)
         except OSError:
             # Most commonly, this would be a permissions issue, for
             # example if we are scanning an external directory like /usr
@@ -1858,14 +1858,14 @@ def find_max_depth(root, globs, max_depth=_unset):
         with dir_iter:
             for dir_entry in dir_iter:
                 if dir_entry.is_dir(follow_symlinks=True):
-                    uniq_id = os.path.realpath(dir_entry.path)
-                    if len(uniq_id) < len(root):
+                    resolved_path = os.path.realpath(dir_entry.path)
+                    if len(resolved_path) < len(root):
                         # This is a symlink that points outside of the root
                         continue
                     not_reached_maxdepth = (max_depth is _unset) or depth < max_depth
-                    if not_reached_maxdepth and (uniq_id not in visited_dirs):
-                        dir_queue.appendleft((depth + 1, dir_entry.path))
-                        visited_dirs.add(uniq_id)
+                    if not_reached_maxdepth and (resolved_path not in visited_dirs):
+                        dir_queue.appendleft((depth + 1, os.path.join(next_dir, dir_entry.name), resolved_path))
+                        visited_dirs.add(resolved_path)
                 else:
                     fname = dir_entry.name
                     for pattern in regexes:
