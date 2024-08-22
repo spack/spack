@@ -423,7 +423,7 @@ class Root(CMakePackage):
     conflicts("+tmva-gpu", when="~cuda", msg="root+tmva-gpu requires CUDA")
     conflicts("+tmva-pymva", when="~tmva", msg="root+tmva-pymva requires TMVA")
     conflicts("+tmva-sofie", when="~tmva", msg="root+tmva-sofie requires TMVA")
-    conflicts("~http", when="@6.29.00: +webgui", msg="root+webgui requires HTTP")
+    conflicts("~http", when="+webgui", msg="root+webgui requires HTTP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
     conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root requires at least C++14")
     conflicts("cxxstd=14", when="@6.30.00:", msg="This version of root requires at least C++17")
