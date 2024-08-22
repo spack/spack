@@ -62,7 +62,7 @@ def common_windows_package_paths(pkg_cls=None) -> List[str]:
 
 def file_identifier(path):
     s = os.stat(path)
-    return (s.st_dev, s.st_ino)
+    return s.st_dev, s.st_ino
 
 
 def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
@@ -80,6 +80,8 @@ def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
             constructed based on the PATH environment variable.
     """
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
+    # Make use we don't doubly list /usr/lib and /lib etc
+    search_paths = list(llnl.util.lang.dedupe(search_paths, key=file_identifier))
     return path_to_dict(search_paths)
 
 
