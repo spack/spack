@@ -23,6 +23,7 @@ class PerlBioEnsemblIo(Package):
 
     variant("scripts", default=False, description="Install scripts")
 
+    depends_on("petl-bioperl")
     depends_on("perl-bio-bigfile")
     depends_on("perl-bio-db-hts")
     depends_on("perl-bio-ensembl")
