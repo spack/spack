@@ -1135,7 +1135,8 @@ def dir_structure_with_things_to_find_symlinks(tmpdir):
 
     locations = {}
     locations["l4-f1"] = str(l3_d2.join("l4-f1").ensure())
-    locations["l4-f2"] = str(l3_d4.join("l4-f2").ensure())
+    locations["l4-f2-full"] = str(l3_d4.join("l4-f2").ensure())
+    locations["l4-f2-link"] = str(pathlib.Path(tmpdir) / "l1-d3" / "l4-f2")
     locations["l2-f1"] = str(l1_d2.join("l2-f1").ensure())
 
     return str(tmpdir), locations
@@ -1145,5 +1146,5 @@ def test_find_max_depth_symlinks(dir_structure_with_things_to_find_symlinks):
     root, locations = dir_structure_with_things_to_find_symlinks
     root = pathlib.Path(root)
     assert set(fs.find_max_depth(root, "l4-f1")) == {locations["l4-f1"]}
-    assert set(fs.find_max_depth(root / "l1-d3", "l4-f2", 0)) == {locations["l4-f2"]}
-    assert set(fs.find_max_depth(root / "l1-d1", "l2-f1")) == {}
+    assert set(fs.find_max_depth(root / "l1-d3", "l4-f2", 0)) == {locations["l4-f2-link"]}
+    assert not set(fs.find_max_depth(root / "l1-d1", "l2-f1"))
