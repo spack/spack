@@ -1857,20 +1857,34 @@ def find_max_depth(root, globs, max_depth=_unset):
 
         with dir_iter:
             for dir_entry in dir_iter:
-                if dir_entry.is_dir(follow_symlinks=True):
+                if dir_entry.is_symlink():
                     resolved_path = os.path.realpath(dir_entry.path)
-                    if len(resolved_path) < len(root):
+                else:
+                    resolved_path = os.path.join(next_dir_resolved, dir_entry.name)
+
+                orig_path = os.path.join(next_dir, dir_entry.name)
+
+                if dir_entry.is_dir(follow_symlinks=True):
+                    if len(resolved_path) < len(next_dir_resolved):
                         # This is a symlink that points outside of the root
                         continue
+
                     not_reached_maxdepth = (max_depth is _unset) or depth < max_depth
                     if not_reached_maxdepth and (resolved_path not in visited_dirs):
-                        dir_queue.appendleft((depth + 1, os.path.join(next_dir, dir_entry.name), resolved_path))
+                        dir_queue.appendleft((depth + 1, orig_path, resolved_path))
                         visited_dirs.add(resolved_path)
                 else:
-                    fname = dir_entry.name
-                    for pattern in regexes:
-                        if pattern.match(os.path.normcase(fname)):
-                            found_files[pattern].append(os.path.join(next_dir, fname))
+                    if len(os.path.dirname(resolved_path)) < len(next_dir_resolved):
+                        # The symlink resides in a parent dir
+                        continue
+
+                    # If it's a symlink, make sure to check patterns against both
+                    # the link name and the name of the file the link resolves to
+                    fnames = set(os.path.basename(x) for x in [resolved_path, orig_path])
+                    for fname in fnames:
+                        for pattern in regexes:
+                            if pattern.match(os.path.normcase(fname)):
+                                found_files[pattern].append(os.path.join(next_dir, fname))
 
         # TODO: for fully-recursive searches, we can print a warning after
         # after having searched everything up to some fixed depth (which
