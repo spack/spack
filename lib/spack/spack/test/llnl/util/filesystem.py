@@ -1151,3 +1151,10 @@ def test_find_max_depth_symlinks(dir_structure_with_things_to_find_symlinks):
     assert set(fs.find_max_depth(root, "l4-f1")) == {locations["l4-f1"]}
     assert set(fs.find_max_depth(root / "l1-d3", "l4-f2", 0)) == {locations["l4-f2-link"]}
     assert not set(fs.find_max_depth(root / "l1-d1", "l2-f1"))
+    # File is accessible via symlink and subdir, the link path will be
+    # searched first, and the directory will not be searched again when
+    # it is encountered the second time (via not-link) in the traversal
+    assert set(fs.find_max_depth(root, "l4-f2")) == {locations["l4-f2-link"]}
+    # File is accessible only via the dir, so the full file path should
+    # be reported
+    assert not set(fs.find_max_depth(root / "l2-d1", "l4-f2")) == {locations["l4-f2-full"]}
