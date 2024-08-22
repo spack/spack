@@ -434,6 +434,7 @@ class FastPackageChecker(collections.abc.Mapping):
                 sinfo = os.stat(pkg_file)
             except OSError as e:
                 if e.errno == errno.ENOENT:
+                    warnings.warn(f"Empty directory: {self.packages_path}/{pkg_name}")
                     # No package.py file here.
                     continue
                 elif e.errno == errno.EACCES:

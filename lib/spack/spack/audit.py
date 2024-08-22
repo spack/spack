@@ -42,6 +42,7 @@ import glob
 import inspect
 import io
 import itertools
+import os
 import pathlib
 import pickle
 import re
@@ -210,6 +211,11 @@ config_packages = AuditClass(
     group="configs", tag="CFG-PACKAGES", description="Sanity checks on packages.yaml", kwargs=()
 )
 
+#: Sanity checks on packages.yaml
+config_repos = AuditClass(
+    group="configs", tag="CFG-REPOS", description="Sanity checks on repositories", kwargs=()
+)
+
 
 @config_packages
 def _search_duplicate_specs_in_externals(error_cls):
@@ -365,6 +371,27 @@ def _ensure_all_virtual_packages_have_default_providers(error_cls):
         for virtual in virtuals
         if virtual not in default_providers
     ]
+
+
+@config_repos
+def _ensure_no_folders_without_package_py(error_cls):
+    """Check that we don't leave any folder without a package.py in repos"""
+    errors = []
+    for repository in spack.repo.PATH.repos:
+        missing = []
+        for entry in os.scandir(repository.packages_path):
+            if not entry.is_dir():
+                continue
+            package_py = pathlib.Path(entry.path) / spack.repo.package_file_name
+            if not package_py.exists():
+                missing.append(entry.path)
+        if missing:
+            summary = (
+                f"The '{repository.namespace}' repository misses a package.py file"
+                f" in the following folders"
+            )
+            errors.append(error_cls(summary=summary, details=[f"{x}" for x in missing]))
+    return errors
 
 
 def _make_config_error(config_data, summary, error_cls):
@@ -527,7 +554,7 @@ def _ensure_all_package_names_are_lowercase(pkgs, error_cls):
     badname_regex, errors = re.compile(r"[_A-Z]"), []
     for pkg_name in pkgs:
         if badname_regex.search(pkg_name):
-            error_msg = "Package name '{}' is either lowercase or conatine '_'".format(pkg_name)
+            error_msg = f"Package name '{pkg_name}' should be lowercase and must not contain '_'"
             errors.append(error_cls(error_msg, []))
     return errors
 
