@@ -28,8 +28,6 @@ import functools
 import inspect
 from contextlib import contextmanager
 
-from llnl.util.lang import caller_locals
-
 import spack.directives
 import spack.error
 from spack.spec import Spec
@@ -229,11 +227,9 @@ class when:
            platform-specific versions.  There's not much we can do to get
            around this because of the way decorators work.
         """
-        # In Python 2, Get the first definition of the method in the
-        # calling scope by looking at the caller's locals. In Python 3,
-        # we handle this using MultiMethodMeta.__prepare__.
-        if MultiMethodMeta._locals is None:
-            MultiMethodMeta._locals = caller_locals()
+        assert (
+            MultiMethodMeta._locals is not None
+        ), "cannot use multimethod, missing MultiMethodMeta metaclass?"
 
         # Create a multimethod with this name if there is not one already
         original_method = MultiMethodMeta._locals.get(method.__name__)
