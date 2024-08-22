@@ -6,6 +6,7 @@
 """Tests for ``llnl/util/filesystem.py``"""
 import filecmp
 import os
+import pathlib
 import shutil
 import stat
 import sys
@@ -1103,3 +1104,44 @@ def test_max_depth_and_recursive_errors(tmpdir, recursive, max_depth):
 
     with pytest.raises(ValueError, match=error_str):
         fs.find_libraries(root, ["some_lib"], recursive=recursive, max_depth=max_depth)
+
+
+@pytest.fixture
+def dir_structure_with_things_to_find_symlinks(tmpdir):
+    """
+    <root>/
+        l1-d1/
+            l2-d1/
+                l3-d1 -> l1-d2 # points to directory above l2-d1
+                l3-d2/
+                    l4-f1
+                l3-d3 -> l1-d1 # cyclic link
+                l3-d4/
+                    l4-f2
+        l1-d2/
+            l2-f1
+            l2-d2
+        l1-d3 -> l3-d4
+    """
+    l1_d1 = tmpdir.join("l1-d1").ensure(dir=True)
+    l2_d1 = l1_d1.join("l2-d1").ensure(dir=True)
+    l3_d2 = l2_d1.join("l3-d2").ensure(dir=True)
+    l3_d4 = l2_d1.join("l3-d4").ensure(dir=True)
+
+    l1_d2 = tmpdir.join("l1-d2").ensure(dir=True)
+    os.symlink(l3_d4, pathlib.Path(tmpdir) / "l1-d3")
+    os.symlink(l1_d2, pathlib.Path(l2_d1) / "l3-d1")
+    os.symlink(l1_d1, pathlib.Path(l2_d1) / "l3-d3")
+
+    locations = {}
+    locations["l4-f1"] = str(l3_d2.join("l4-f1").ensure())
+    locations["l4-f2"] = str(l3_d4.join("l4-f2").ensure())
+    locations["l2-f1"] = str(l1_d2.join("l2-f1").ensure())
+
+    return str(tmpdir), locations
+
+
+def test_find_max_depth_symlinks(dir_structure_with_things_to_find_symlinks):
+    root, locations = dir_structure_with_things_to_find_symlinks
+    root = pathlib.Path(root)
+    assert set(fs.find_max_depth(root, "l4-f1")) == {locations["l4-f1"]}
