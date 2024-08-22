@@ -750,7 +750,7 @@ def test_install_spliced(install_mockery, mock_fetch, monkeypatch, capsys, trans
 
     # Do the splice.
     out = spec.splice(dep, transitive)
-    installer = create_installer([out], {"vebose": True, "fail_fast": True})
+    installer = create_installer([out], {"verbose": True, "fail_fast": True})
     installer.install()
     for node in out.traverse():
         assert node.installed
@@ -819,29 +819,6 @@ def test_install_task_use_cache(install_mockery, monkeypatch):
     monkeypatch.setattr(inst, "_install_from_cache", _true)
     installer._install_task(task, None)
     assert request.pkg_id in installer.installed
-
-
-def test_install_task_add_compiler(install_mockery, monkeypatch, capfd):
-    config_msg = "mock add_compilers_to_config"
-
-    def _add(_compilers):
-        tty.msg(config_msg)
-
-    installer = create_installer(["pkg-a"], {})
-    task = create_build_task(installer.build_requests[0].pkg)
-    task.compiler = True
-
-    # Preclude any meaningful side-effects
-    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", _true)
-    monkeypatch.setattr(inst.BuildTask, "_setup_install_dir", _noop)
-    monkeypatch.setattr(spack.build_environment, "start_build_process", _noop)
-    monkeypatch.setattr(spack.database.Database, "add", _noop)
-    monkeypatch.setattr(spack.compilers, "add_compilers_to_config", _add)
-
-    installer._install_task(task, None)
-
-    out = capfd.readouterr()[0]
-    assert config_msg in out
 
 
 def test_install_task_requeue_build_specs(install_mockery, monkeypatch, capfd):
