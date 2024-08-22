@@ -4158,26 +4158,45 @@ class Spec:
                         new_dependencies.add(edge)
             spec._dependencies = new_dependencies
 
-    def splice(self, other, transitive):
-        """Splices dependency "other" into this ("target") Spec, and return the
-        result as a concrete Spec.
-        If transitive, then other and its dependencies will be extrapolated to
-        a list of Specs and spliced in accordingly.
-        For example, let there exist a dependency graph as follows:
-        T
-        | \
-        Z<-H
-        In this example, Spec T depends on H and Z, and H also depends on Z.
-        Suppose, however, that we wish to use a different H, known as H'. This
-        function will splice in the new H' in one of two ways:
-        1. transitively, where H' depends on the Z' it was built with, and the
-        new T* also directly depends on this new Z', or
-        2. intransitively, where the new T* and H' both depend on the original
-        Z.
-        Since the Spec returned by this splicing function is no longer deployed
-        the same way it was built, any such changes are tracked by setting the
-        build_spec to point to the corresponding dependency from the original
-        Spec.
+    def splice(self, other: "Spec", transitive: bool) -> "Spec":
+        """Returns a new, spliced concrete Spec with the "other" dependency and,
+        optionally, its dependencies.
+
+        Args:
+            other: alternate dependency
+            transitive: include other's dependencies
+
+        Returns: a concrete, spliced version of the current Spec
+
+        When transitive is "True", then other and its dependencies are
+        extrapolated to a list of Specs that are spliced in accordingly.
+
+        For example, suppose we have the following dependency graph:
+
+            T
+            | \
+            Z<-H
+
+        Spec T depends on H and Z, and H also depends on Z. Now we want to use
+        a different H, called H'. This function can be used to splice in H' to
+        create a new spec, called T*. If H' was built with Z', then transitive
+        "True" will ensure H' and T* both depend on Z':
+
+            T*
+            | \
+            Z'<-H'
+
+        Otherwise, if transitive is "False", then H' and T* will both depend on
+        the original Z.
+
+            T*
+            | \
+            Z<-H'
+
+        Provenance of the build is tracked through the "build_spec" property
+        of the spliced spec and any correspondingly modified dependency specs.
+        This, the original, spec's provenance is unchanged.
+
         TODO: Extend this for non-concrete Specs.
         """
         assert self.concrete
