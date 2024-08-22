@@ -1863,7 +1863,7 @@ def find_max_depth(root, globs, max_depth=_unset):
                     # identifier
                     uniq_id = (stat_info.st_dev, stat_info.st_ino)
                     not_reached_maxdepth = (max_depth is _unset) or depth < max_depth
-                    if not_reached_maxdepth and (uniq_id not in visited):
+                    if not_reached_maxdepth and (uniq_id not in visited_dirs):
                         dir_queue.appendleft((depth + 1, dir_entry.path))
                         visited_dirs.add(uniq_id)
                 else:
