@@ -26,6 +26,9 @@ class PerlBioEnsemblIo(Package):
     depends_on("perl-bio-bigfile")
     depends_on("perl-bio-ensembl")
     depends_on("perl-try-tiny")
+    depends_on("perl-uri-escape")
+    depends_on("perl-json")
+    depends_on("perl-compression-bzip2")
 
     def install(self, spec, prefix):
         install_tree("modules", prefix.lib.perl5)
