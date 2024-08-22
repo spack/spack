@@ -496,7 +496,7 @@ You can also include an environment directly in the ``spack.yaml`` file. It
 involves adding the ``include_concrete`` heading in the yaml followed by the
 absolute path to the independent environments. Note, that you may use Spack
 config variables such as ``$spack`` or environment variables as long as the
-expands to a absolute path.
+expression expands to an absolute path.
 
 .. code-block:: yaml
 
