@@ -13,6 +13,8 @@ class PyIpykernel(PythonPackage):
     homepage = "https://github.com/ipython/ipykernel"
     pypi = "ipykernel/ipykernel-5.3.4.tar.gz"
 
+    maintainers("ChristopherChristofi")
+
     license("BSD-3-Clause")
 
     version("6.29.5", sha256="f093a22c4a40f8828f8e330a9c297cb93dcab13bd9678ded6de8e5cf81c56215")
