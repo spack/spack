@@ -157,8 +157,8 @@ def test_rewire_virtuals_mpi(mock_fetch, install_mockery):
     mpileaks = Spec("mpileaks^mpich@=3.0").concretized()
     mpileaks.package.do_install()
 
-    alt_dep = "mpich2@=1.3"
-    mpich2 = Spec(alt_dep).concretized()
+    mpich_dep = "mpich2@=1.3"
+    mpich2 = Spec(mpich_dep).concretized()
     mpich2.package.do_install()
 
     spliced_mpileaks = mpileaks.splice(mpich2, True)
@@ -167,5 +167,22 @@ def test_rewire_virtuals_mpi(mock_fetch, install_mockery):
     # Confirm the original spec still has the original virtual implementation
     assert mpileaks.satisfies("^mpich@=3.0")
 
+    # Confirm no provenance updates were made to original spec or its deps
+    assert mpileaks._build_spec is None
+
+    expected = "{0}: Expected {1}provenance updates to the {2} dependency spec"
+    for dep in mpileaks.dependencies():
+        assert dep._build_spec is None, expected.format(dep.name, "no ", "original")
+
     # Confirm the spliced spec uses the new virtual implementation
-    assert spliced_mpileaks.satisfies(f"^{alt_dep}")
+    assert spliced_mpileaks.satisfies(f"^{mpich_dep}")
+
+    # Confirm updates were made to the provenance of the spliced spec and, since
+    # transitive, the associated dependencies EXCEPT the spliced in dependency.
+    assert spliced_mpileaks._build_spec is not None
+    for dep in spliced_mpileaks.dependencies():
+        updates = "no " if dep.satisfies(mpich_dep) else ""
+        alt_spec_ok = updates == "no " and dep._build_spec is None
+        assert alt_spec_ok or dep._build_spec is not None, expected.format(
+            dep.name, updates, "spliced"
+        )
