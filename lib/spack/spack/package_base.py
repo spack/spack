@@ -197,13 +197,12 @@ class DetectablePackageMeta(type):
         # that "foo" was a possible executable.
 
         # If a package has the executables or libraries  attribute then it's
-        # assumed to be detectable
+        # assumed to be detectable. Add a tag, so finding them is faster
         if hasattr(cls, "executables") or hasattr(cls, "libraries"):
-            # Append a tag to each detectable package, so that finding them is faster
-            if not hasattr(cls, "tags"):
-                setattr(cls, "tags", [DetectablePackageMeta.TAG])
-            elif DetectablePackageMeta.TAG not in cls.tags:
-                cls.tags.append(DetectablePackageMeta.TAG)
+            # To add the tag, we need to copy the tags attribute, and attach it to
+            # the current class. We don't use append, since it might modify base classes,
+            # if "tags" is retrieved following the MRO.
+            cls.tags = getattr(cls, "tags", []) + [DetectablePackageMeta.TAG]
 
             @classmethod
             def platform_executables(cls):
@@ -1102,6 +1101,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             mirror_paths=spack.mirror.mirror_archive_paths(
                 resource.fetcher, os.path.join(self.name, pretty_resource_name)
             ),
+            mirrors=spack.mirror.MirrorCollection(source=True).values(),
             path=self.path,
         )
 
@@ -1122,6 +1122,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         stage = Stage(
             fetcher,
             mirror_paths=mirror_paths,
+            mirrors=spack.mirror.MirrorCollection(source=True).values(),
             name=stage_name,
             path=self.path,
             search_fn=self._download_search,

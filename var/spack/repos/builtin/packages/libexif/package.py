@@ -8,7 +8,7 @@ from spack.package import *
 class Libexif(AutotoolsPackage, SourceforgePackage):
     """A library to parse an EXIF file and read the data from those tags"""
 
-    homepage = "https://sourceforge.net/projects/libexif"
+    homepage = "https://sourceforge.net/projects/libexif/"
     sourceforge_mirror_path = "libexif/libexif-0.6.21.tar.bz2"
 
     maintainers("TheQueasle")

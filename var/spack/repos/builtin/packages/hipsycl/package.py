@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
+import os
 from os import path
 
 from llnl.util import filesystem
@@ -11,7 +12,7 @@ from llnl.util import filesystem
 from spack.package import *
 
 
-class Hipsycl(CMakePackage):
+class Hipsycl(CMakePackage, ROCmPackage):
     """hipSYCL is an implementation of the SYCL standard programming model
     over NVIDIA CUDA/AMD HIP"""
 
@@ -19,13 +20,12 @@ class Hipsycl(CMakePackage):
     url = "https://github.com/illuhad/hipSYCL/archive/v0.8.0.tar.gz"
     git = "https://github.com/illuhad/hipSYCL.git"
 
-    maintainers("nazavode")
-
     provides("sycl")
 
     license("BSD-2-Clause")
 
     version("stable", branch="stable", submodules=True)
+    version("24.02.0", commit="974adc33ea5a35dd8b5be68c7a744b37482b8b64", submodules=True)
     version("23.10.0", commit="3952b468c9da89edad9dff953cdcab0a3c3bf78c", submodules=True)
     version("0.9.4", commit="99d9e24d462b35e815e0e59c1b611936c70464ae", submodules=True)
     version("0.9.4", commit="99d9e24d462b35e815e0e59c1b611936c70464ae", submodules=True)
@@ -35,9 +35,8 @@ class Hipsycl(CMakePackage):
     version("0.8.0", commit="2daf8407e49dd32ebd1c266e8e944e390d28b22a", submodules=True)
     version("develop", branch="develop", submodules=True)
 
-    depends_on("cxx", type="build")  # generated
-
     variant("cuda", default=False, description="Enable CUDA backend for SYCL kernels")
+    variant("rocm", default=False, description="Enable ROCM backend for SYCL kernels")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("boost +filesystem", when="@:0.8")
@@ -78,8 +77,7 @@ class Hipsycl(CMakePackage):
         spec = self.spec
         args = [
             "-DWITH_CPU_BACKEND:Bool=TRUE",
-            # TODO: no ROCm stuff available in spack yet
-            "-DWITH_ROCM_BACKEND:Bool=FALSE",
+            "-DWITH_ROCM_BACKEND:Bool={0}".format("TRUE" if "+rocm" in spec else "FALSE"),
             "-DWITH_CUDA_BACKEND:Bool={0}".format("TRUE" if "+cuda" in spec else "FALSE"),
             # prevent hipSYCL's cmake to look for other LLVM installations
             # if the specified one isn't compatible
@@ -120,6 +118,11 @@ class Hipsycl(CMakePackage):
         # explicit CUDA toolkit
         if "+cuda" in spec:
             args.append("-DCUDA_TOOLKIT_ROOT_DIR:String={0}".format(spec["cuda"].prefix))
+        if "+rocm" in spec:
+            args.append("-DWITH_ACCELERATED_CPU:STRING=OFF")
+            args.append("-DROCM_PATH:STRING={0}".format(os.environ.get("ROCM_PATH")))
+            if self.spec.satisfies("@24.02.0:"):
+                args.append("-DWITH_SSCP_COMPILER=OFF")
         return args
 
     @run_after("install")
@@ -158,31 +161,32 @@ class Hipsycl(CMakePackage):
             #    the libc++.so and libc++abi.so dyn linked to the sycl
             #    ptx backend
             rpaths = set()
-            so_paths = filesystem.find_libraries(
-                "libc++", self.spec["llvm"].prefix, shared=True, recursive=True
-            )
-            if len(so_paths) != 1:
-                raise InstallError(
-                    "concretized llvm dependency must provide a "
-                    "unique directory containing libc++.so, "
-                    "found: {0}".format(so_paths)
+            if "~rocm" in spec:
+                so_paths = filesystem.find_libraries(
+                    "libc++", self.spec["llvm"].prefix, shared=True, recursive=True
                 )
-            rpaths.add(path.dirname(so_paths[0]))
-            so_paths = filesystem.find_libraries(
-                "libc++abi", self.spec["llvm"].prefix, shared=True, recursive=True
-            )
-            if len(so_paths) != 1:
-                raise InstallError(
-                    "concretized llvm dependency must provide a "
-                    "unique directory containing libc++abi, "
-                    "found: {0}".format(so_paths)
+                if len(so_paths) != 1:
+                    raise InstallError(
+                        "concretized llvm dependency must provide a "
+                        "unique directory containing libc++.so, "
+                        "found: {0}".format(so_paths)
+                    )
+                rpaths.add(path.dirname(so_paths[0]))
+                so_paths = filesystem.find_libraries(
+                    "libc++abi", self.spec["llvm"].prefix, shared=True, recursive=True
                 )
-            rpaths.add(path.dirname(so_paths[0]))
+                if len(so_paths) != 1:
+                    raise InstallError(
+                        "concretized llvm dependency must provide a "
+                        "unique directory containing libc++abi, "
+                        "found: {0}".format(so_paths)
+                    )
+                rpaths.add(path.dirname(so_paths[0]))
 
-            def adjust_cuda_config(config):
-                config["default-cuda-link-line"] += " " + " ".join(
-                    "-rpath {0}".format(p) for p in rpaths
-                )
-                return config
+                def adjust_cuda_config(config):
+                    config["default-cuda-link-line"] += " " + " ".join(
+                        "-rpath {0}".format(p) for p in rpaths
+                    )
+                    return config
 
-            edit_config(configfiles["cuda"], adjust_cuda_config)
+                edit_config(configfiles["cuda"], adjust_cuda_config)

@@ -10,7 +10,7 @@ from spack.package import *
 class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
     """xSDK Examples show usage of libraries in the xSDK package."""
 
-    homepage = "http://xsdk.info"
+    homepage = "https://xsdk.info"
     url = "https://github.com/xsdk-project/xsdk-examples/archive/v0.1.0.tar.gz"
     git = "https://github.com/xsdk-project/xsdk-examples"
 

@@ -117,4 +117,4 @@ class Genesis(AutotoolsPackage, CudaPackage):
     def cache_test_sources(self):
         """Copy test files after the package is installed for test()."""
         if self.spec.satisfies("@master"):
-            self.cache_extra_test_sources(["tests"])
+            cache_extra_test_sources(self, ["tests"])

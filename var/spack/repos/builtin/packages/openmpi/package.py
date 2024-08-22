@@ -542,6 +542,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant(
         "orterunprefix",
         default=False,
+        when="@1.3:4",
         description="Prefix Open MPI to PATH and LD_LIBRARY_PATH on local and remote hosts",
     )
     # Adding support to build a debug version of OpenMPI that activates
@@ -560,6 +561,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant(
         "legacylaunchers",
         default=False,
+        when="@1.6:4 schedulers=slurm",
         description="Do not remove mpirun/mpiexec when building with slurm",
     )
     # Variants to use internal packages
@@ -1030,9 +1032,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.append("--enable-mca-no-build=plm-rsh")
 
         # Useful for ssh-based environments
-        if spec.satisfies("@1.3:"):
-            if spec.satisfies("+orterunprefix"):
-                config_args.append("--enable-orterun-prefix-by-default")
+        # For v4 and lower
+        if spec.satisfies("+orterunprefix"):
+            config_args.append("--enable-orterun-prefix-by-default")
 
         # some scientific packages ignore deprecated/remove symbols. Re-enable
         # them for now, for discussion see
@@ -1264,6 +1266,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         if self.compiler.name == "nag":
             x.filter("-Wl,--enable-new-dtags", "", string=True, backup=False)
 
+    # For v4 and lower
     @run_after("install")
     def delete_mpirun_mpiexec(self):
         # The preferred way to run an application when Slurm is the
@@ -1273,7 +1276,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         # applications via mpirun or mpiexec, and leaves srun as the
         # only sensible choice (orterun is still present, but normal
         # users don't know about that).
-        if "@1.6: ~legacylaunchers schedulers=slurm" in self.spec:
+        if self.spec.satisfies("~legacylaunchers schedulers=slurm"):
             exe_list = [
                 self.prefix.bin.mpirun,
                 self.prefix.bin.mpiexec,
@@ -1295,7 +1298,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         Copy the example files after the package is installed to an
         install test subdirectory for use during `spack test run`.
         """
-        self.cache_extra_test_sources(self.extra_install_tests)
+        cache_extra_test_sources(self, self.extra_install_tests)
 
     def run_installed_binary(self, bin, options, expected):
         """run and check outputs for the installed binary"""

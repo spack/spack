@@ -21,6 +21,16 @@ class Cdo(AutotoolsPackage):
     maintainers("skosukhin", "Try2Code")
 
     version(
+        "2.4.2",
+        sha256="4df1fe2b8f92f54c27eb9f399edfab40d9322005a6732ca1524ef5c1627ac4e7",
+        url="https://code.mpimet.mpg.de/attachments/download/29481/cdo-2.4.2.tar.gz",
+    )
+    version(
+        "2.4.1",
+        sha256="9144d82b8ab7e73f4cb7a94cc4b884f64dff1a0455c4eb6c93ce4b568007aabf",
+        url="https://code.mpimet.mpg.de/attachments/download/29421/cdo-2.4.1.tar.gz",
+    )
+    version(
         "2.4.0",
         sha256="a4790fb8cc07f353b11f9bbe49218b8e4be8e5ae56aade8420bad390510b4d2c",
         url="https://code.mpimet.mpg.de/attachments/download/29313/cdo-2.4.0.tar.gz",
@@ -218,7 +228,7 @@ class Cdo(AutotoolsPackage):
             prefix = self.spec[spec_name].prefix
             return "yes" if is_system_path(prefix) else prefix
 
-        if "+netcdf" in self.spec:
+        if self.spec.satisfies("+netcdf"):
             config_args.append("--with-netcdf=" + yes_or_prefix("netcdf-c"))
             # We need to make sure that the libtool script of libcdi - the
             # internal library of CDO - finds the correct version of hdf5.
@@ -251,12 +261,12 @@ class Cdo(AutotoolsPackage):
             if self.spec.satisfies("@1.9:"):
                 config_args.append("--without-eccodes")
 
-        if "+external-grib1" in self.spec:
+        if self.spec.satisfies("+external-grib1"):
             config_args.append("--disable-cgribex")
         else:
             config_args.append("--enable-cgribex")
 
-        if "+szip" in self.spec:
+        if self.spec.satisfies("+szip"):
             config_args.append("--with-szlib=" + yes_or_prefix("szip"))
         else:
             config_args.append("--without-szlib")
@@ -267,7 +277,7 @@ class Cdo(AutotoolsPackage):
             "udunits2", activation_value=lambda x: yes_or_prefix("udunits")
         )
 
-        if "+libxml2" in self.spec:
+        if self.spec.satisfies("+libxml2"):
             libxml2_spec = self.spec["libxml2"]
             if is_system_path(libxml2_spec.prefix):
                 config_args.append("--with-libxml2=yes")

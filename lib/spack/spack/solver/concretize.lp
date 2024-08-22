@@ -18,38 +18,79 @@
 { attr("virtual_node", node(0..X-1, Package)) } :- max_dupes(Package, X), virtual(Package).
 
 % Integrity constraints on DAG nodes
-:- attr("root", PackageNode), not attr("node", PackageNode).
-:- attr("version", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode).
-:- attr("node_version_satisfies", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode).
-:- attr("hash", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_platform", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_os", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_target", PackageNode, _), not attr("node", PackageNode).
-:- attr("node_compiler_version", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode).
-:- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode).
-:- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode).
-:- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode).
-:- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode).
-:- attr("node_flag_source", ParentNode, _, _), not attr("node", ParentNode).
-:- attr("node_flag_source", _, _, ChildNode), not attr("node", ChildNode).
-:- attr("virtual_node", VirtualNode), not provider(_, VirtualNode), internal_error("virtual node with no provider").
-:- provider(_, VirtualNode), not attr("virtual_node", VirtualNode), internal_error("provider with no virtual node").
-:- provider(PackageNode, _), not attr("node", PackageNode), internal_error("provider with no real node").
+:- attr("root", PackageNode),
+   not attr("node", PackageNode),
+   internal_error("Every root must be a node").
+:- attr("version", PackageNode, _),
+   not attr("node", PackageNode),
+   not attr("virtual_node", PackageNode),
+   internal_error("Only nodes and virtual_nodes can have versions").
+:- attr("node_version_satisfies", PackageNode, _),
+   not attr("node", PackageNode),
+   not attr("virtual_node", PackageNode),
+   internal_error("Only nodes and virtual_nodes can have version satisfaction").
+:- attr("hash", PackageNode, _),
+   not attr("node", PackageNode),
+   internal_error("Only nodes can have hashes").
+:- attr("node_platform", PackageNode, _),
+   not attr("node", PackageNode),
+   internal_error("Only nodes can have platforms").
+:- attr("node_os", PackageNode, _), not attr("node", PackageNode),
+   internal_error("Only nodes can have node_os").
+:- attr("node_target", PackageNode, _), not attr("node", PackageNode),
+   internal_error("Only nodes can have node_target").
+:- attr("node_compiler_version", PackageNode, _, _), not attr("node", PackageNode),
+   internal_error("Only nodes can have node_compiler_version").
+:- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode),
+   internal_error("variant_value true for a non-node").
+:- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode),
+   internal_error("node_flag_compiler_default true for non-node").
+:- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode),
+   internal_error("node_flag assigned for non-node").
+:- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode),
+   internal_error("external_spec_selected for non-node").
+:- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode),
+   internal_error("non-node depends on something").
+:- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode),
+   internal_error("something depends_on a non-node").
+:- attr("node_flag_source", Node, _, _), not attr("node", Node),
+   internal_error("node_flag_source assigned for a non-node").
+:- attr("node_flag_source", _, _, SourceNode), not attr("node", SourceNode),
+   internal_error("node_flag_source assigned with a non-node source").
+:- attr("virtual_node", VirtualNode), not provider(_, VirtualNode),
+   internal_error("virtual node with no provider").
+:- provider(_, VirtualNode), not attr("virtual_node", VirtualNode),
+   internal_error("provider with no virtual node").
+:- provider(PackageNode, _), not attr("node", PackageNode),
+   internal_error("provider with no real node").
 
-:- attr("root", node(ID, PackageNode)), ID > min_dupe_id, internal_error("root with a non-minimal duplicate ID").
+:- attr("root", node(ID, PackageNode)), ID > min_dupe_id,
+   internal_error("root with a non-minimal duplicate ID").
 
 % Nodes in the "root" unification set cannot depend on non-root nodes if the dependency is "link" or "run"
 :- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "link"), ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)), internal_error("link dependency out of the root unification set").
 :- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "run"),  ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)), internal_error("run dependency out of the root unification set").
 
-% Namespaces are statically assigned by a package fact
-attr("namespace", node(ID, Package), Namespace) :- attr("node", node(ID, Package)), pkg_fact(Package, namespace(Namespace)).
+% Namespaces are statically assigned by a package fact if not otherwise set
+error(100, "{0} does not have a namespace", Package) :- attr("node", node(ID, Package)),
+   not attr("namespace", node(ID, Package), _),
+   internal_error("A node must have a namespace").
+error(100, "{0} cannot come from both {1} and {2} namespaces", Package, NS1, NS2) :- attr("node", node(ID, Package)),
+   attr("namespace", node(ID, Package), NS1),
+   attr("namespace", node(ID, Package), NS2),
+   NS1 != NS2,
+   internal_error("A node cannot have two namespaces").
+
+attr("namespace", node(ID, Package), Namespace) :- attr("namespace_set", node(ID, Package), Namespace).
+attr("namespace", node(ID, Package), Namespace)
+  :- attr("node", node(ID, Package)),
+     not attr("namespace_set", node(ID, Package), _),
+     pkg_fact(Package, namespace(Namespace)).
 
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
 unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
-:- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName).
+:- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName),
+   internal_error("Cannot have multiple unification sets IDs for one set").
 
 unification_set("root", PackageNode) :- attr("root", PackageNode).
 unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
@@ -75,7 +116,8 @@ unification_set(SetID, VirtualNode)
 % as a build dependency.
 %
 % We'll need to relax the rule before we get to actual cross-compilation
-:- depends_on(ParentNode, node(X, Dependency)), depends_on(ParentNode, node(Y, Dependency)), X < Y.
+:- depends_on(ParentNode, node(X, Dependency)), depends_on(ParentNode, node(Y, Dependency)), X < Y,
+   internal_error("Cannot split link/build deptypes for a single edge (yet)").
 
 
 #defined multiple_unification_sets/1.
@@ -131,7 +173,8 @@ mentioned_in_literal(Root, Mentioned) :- mentioned_in_literal(TriggerID, Root, M
 condition_set(node(min_dupe_id, Root), node(min_dupe_id, Root)) :-  mentioned_in_literal(Root, Root).
 
 1 { condition_set(node(min_dupe_id, Root), node(0..Y-1, Mentioned)) : max_dupes(Mentioned, Y) } 1 :-
-  mentioned_in_literal(Root, Mentioned), Mentioned != Root.
+  mentioned_in_literal(Root, Mentioned), Mentioned != Root,
+  internal_error("must have exactly one condition_set for literals").
 
 % Discriminate between "roots" that have been explicitly requested, and roots that are deduced from "virtual roots"
 explicitly_requested_root(node(min_dupe_id, Package)) :-
@@ -151,7 +194,8 @@ associated_with_root(RootNode, ChildNode) :-
 :- attr("root", RootNode),
    condition_set(RootNode, node(X, Package)),
    not virtual(Package),
-   not associated_with_root(RootNode, node(X, Package)).
+   not associated_with_root(RootNode, node(X, Package)),
+   internal_error("nodes in root condition set must be associated with root").
 
 #defined concretize_everything/0.
 #defined literal/1.
@@ -385,8 +429,10 @@ imposed_nodes(ConditionID, PackageNode, node(X, A1))
      condition_set(PackageNode, node(X, A1)),
      attr("hash", PackageNode, ConditionID).
 
-:- imposed_packages(ID, A1), impose(ID, PackageNode), not condition_set(PackageNode, node(_, A1)).
-:- imposed_packages(ID, A1), impose(ID, PackageNode), not imposed_nodes(ID, PackageNode, node(_, A1)).
+:- imposed_packages(ID, A1), impose(ID, PackageNode), not condition_set(PackageNode, node(_, A1)),
+   internal_error("Imposing constraint outside of condition set").
+:- imposed_packages(ID, A1), impose(ID, PackageNode), not imposed_nodes(ID, PackageNode, node(_, A1)),
+   internal_error("Imposing constraint outside of imposed_nodes").
 
 % Conditions that hold impose may impose constraints on other specs
 attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(ID, PackageNode, node(X, A1)).
@@ -416,7 +462,8 @@ provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, Virtua
 % satisfy the dependency.
 1 { attr("depends_on", node(X, A1), node(0..Y-1, A2), A3) : max_dupes(A2, Y) } 1
   :- impose(ID, node(X, A1)),
-     imposed_constraint(ID, "depends_on", A1, A2, A3).
+     imposed_constraint(ID, "depends_on", A1, A2, A3),
+     internal_error("Build deps must land in exactly one duplicate").
 
 % Reconstruct virtual dependencies for reused specs
 attr("virtual_on_edge", node(X, A1), node(Y, A2), Virtual)

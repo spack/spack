@@ -149,12 +149,12 @@ class ReposFinder:
     @contextlib.contextmanager
     def switch_repo(self, substitute: "RepoType"):
         """Switch the current repository list for the duration of the context manager."""
-        old = self.current_repository
+        old = self._repo
         try:
-            self.current_repository = substitute
+            self._repo = substitute
             yield
         finally:
-            self.current_repository = old
+            self._repo = old
 
     def find_spec(self, fullname, python_path, target=None):
         # "target" is not None only when calling importlib.reload()
@@ -683,7 +683,7 @@ class RepoPath:
     def __init__(
         self,
         *repos: Union[str, "Repo"],
-        cache: "spack.caches.FileCacheType",
+        cache: Optional["spack.caches.FileCacheType"],
         overrides: Optional[Dict[str, Any]] = None,
     ) -> None:
         self.repos: List[Repo] = []
@@ -696,6 +696,7 @@ class RepoPath:
         for repo in repos:
             try:
                 if isinstance(repo, str):
+                    assert cache is not None, "cache must hold a value, when repo is a string"
                     repo = Repo(repo, cache=cache, overrides=overrides)
                 repo.finder(self)
                 self.put_last(repo)
@@ -706,6 +707,10 @@ class RepoPath:
                     "To remove the bad repository, run this command:",
                     f"    spack repo rm {repo}",
                 )
+
+    def ensure_unwrapped(self) -> "RepoPath":
+        """Ensure we unwrap this object from any dynamic wrapper (like Singleton)"""
+        return self
 
     def put_first(self, repo: "Repo") -> None:
         """Add repo first in the search path."""
@@ -929,6 +934,16 @@ class RepoPath:
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
+
+    def marshal(self):
+        return (self.repos,)
+
+    @staticmethod
+    def unmarshal(repos):
+        return RepoPath(*repos, cache=None)
+
+    def __reduce__(self):
+        return RepoPath.unmarshal, self.marshal()
 
 
 class Repo:
@@ -1318,6 +1333,20 @@ class Repo:
 
     def __contains__(self, pkg_name: str) -> bool:
         return self.exists(pkg_name)
+
+    @staticmethod
+    def unmarshal(root, cache, overrides):
+        """Helper method to unmarshal keyword arguments"""
+        return Repo(root, cache=cache, overrides=overrides)
+
+    def marshal(self):
+        cache = self._cache
+        if isinstance(cache, llnl.util.lang.Singleton):
+            cache = cache.instance
+        return self.root, cache, self.overrides
+
+    def __reduce__(self):
+        return Repo.unmarshal, self.marshal()
 
 
 RepoType = Union[Repo, RepoPath]

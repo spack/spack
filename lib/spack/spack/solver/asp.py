@@ -285,16 +285,14 @@ def _create_counter(specs: List[spack.spec.Spec], tests: bool):
     return NoDuplicatesCounter(specs, tests=tests)
 
 
-def all_compilers_in_config(configuration):
-    return spack.compilers.all_compilers_from(configuration)
-
-
 def all_libcs() -> Set[spack.spec.Spec]:
     """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
     libc determined from the current Python process if dynamically linked."""
 
     libcs = {
-        c.default_libc for c in all_compilers_in_config(spack.config.CONFIG) if c.default_libc
+        c.default_libc
+        for c in spack.compilers.all_compilers_from(spack.config.CONFIG)
+        if c.default_libc
     }
 
     if libcs:
@@ -613,7 +611,7 @@ def _external_config_with_implicit_externals(configuration):
     if not using_libc_compatibility():
         return packages_yaml
 
-    for compiler in all_compilers_in_config(configuration):
+    for compiler in spack.compilers.all_compilers_from(configuration):
         libc = compiler.default_libc
         if libc:
             entry = {"spec": f"{libc} %{compiler.spec}", "prefix": libc.external_path}
@@ -1438,16 +1436,14 @@ class SpackSolverSetup:
             # caller, we won't emit partial facts.
 
             condition_id = next(self._id_counter)
-            self.gen.fact(fn.pkg_fact(required_spec.name, fn.condition(condition_id)))
-            self.gen.fact(fn.condition_reason(condition_id, msg))
-
             trigger_id = self._get_condition_id(
                 required_spec, cache=self._trigger_cache, body=True, transform=transform_required
             )
+            self.gen.fact(fn.pkg_fact(required_spec.name, fn.condition(condition_id)))
+            self.gen.fact(fn.condition_reason(condition_id, msg))
             self.gen.fact(
                 fn.pkg_fact(required_spec.name, fn.condition_trigger(condition_id, trigger_id))
             )
-
             if not imposed_spec:
                 return condition_id
 
@@ -1696,19 +1692,43 @@ class SpackSolverSetup:
                 spack.spec.parse_with_version_concrete(x["spec"]) for x in externals
             ]
 
-            external_specs = []
+            selected_externals = set()
             if spec_filters:
                 for current_filter in spec_filters:
                     current_filter.factory = lambda: candidate_specs
-                    external_specs.extend(current_filter.selected_specs())
-            else:
-                external_specs.extend(candidate_specs)
+                    selected_externals.update(current_filter.selected_specs())
+
+            # Emit facts for externals specs. Note that "local_idx" is the index of the spec
+            # in packages:<pkg_name>:externals. This means:
+            #
+            # packages:<pkg_name>:externals[local_idx].spec == spec
+            external_versions = []
+            for local_idx, spec in enumerate(candidate_specs):
+                msg = f"{spec.name} available as external when satisfying {spec}"
+
+                if spec_filters and spec not in selected_externals:
+                    continue
+
+                if not spec.versions.concrete:
+                    warnings.warn(f"cannot use the external spec {spec}: needs a concrete version")
+                    continue
+
+                def external_imposition(input_spec, requirements):
+                    return requirements + [
+                        fn.attr("external_conditions_hold", input_spec.name, local_idx)
+                    ]
+
+                try:
+                    self.condition(spec, spec, msg=msg, transform_imposed=external_imposition)
+                except (spack.error.SpecError, RuntimeError) as e:
+                    warnings.warn(f"while setting up external spec {spec}: {e}")
+                    continue
+                external_versions.append((spec.version, local_idx))
+                self.possible_versions[spec.name].add(spec.version)
+                self.gen.newline()
 
             # Order the external versions to prefer more recent versions
             # even if specs in packages.yaml are not ordered that way
-            external_versions = [
-                (x.version, external_id) for external_id, x in enumerate(external_specs)
-            ]
             external_versions = [
                 (v, idx, external_id)
                 for idx, (v, external_id) in enumerate(sorted(external_versions, reverse=True))
@@ -1717,19 +1737,6 @@ class SpackSolverSetup:
                 self.declared_versions[pkg_name].append(
                     DeclaredVersion(version=version, idx=idx, origin=Provenance.EXTERNAL)
                 )
-
-            # Declare external conditions with a local index into packages.yaml
-            for local_idx, spec in enumerate(external_specs):
-                msg = "%s available as external when satisfying %s" % (spec.name, spec)
-
-                def external_imposition(input_spec, requirements):
-                    return requirements + [
-                        fn.attr("external_conditions_hold", input_spec.name, local_idx)
-                    ]
-
-                self.condition(spec, spec, msg=msg, transform_imposed=external_imposition)
-                self.possible_versions[spec.name].add(spec.version)
-                self.gen.newline()
 
             self.trigger_rules()
             self.effect_rules()
@@ -1842,6 +1849,8 @@ class SpackSolverSetup:
 
         if spec.name:
             clauses.append(f.node(spec.name) if not spec.virtual else f.virtual_node(spec.name))
+        if spec.namespace:
+            clauses.append(f.namespace(spec.name, spec.namespace))
 
         clauses.extend(self.spec_versions(spec))
 
@@ -2739,6 +2748,7 @@ class _Head:
     """ASP functions used to express spec clauses in the HEAD of a rule"""
 
     node = fn.attr("node")
+    namespace = fn.attr("namespace_set")
     virtual_node = fn.attr("virtual_node")
     node_platform = fn.attr("node_platform_set")
     node_os = fn.attr("node_os_set")
@@ -2754,6 +2764,7 @@ class _Body:
     """ASP functions used to express spec clauses in the BODY of a rule"""
 
     node = fn.attr("node")
+    namespace = fn.attr("namespace")
     virtual_node = fn.attr("virtual_node")
     node_platform = fn.attr("node_platform")
     node_os = fn.attr("node_os")
@@ -2989,7 +3000,7 @@ class CompilerParser:
 
     def __init__(self, configuration) -> None:
         self.compilers: Set[KnownCompiler] = set()
-        for c in all_compilers_in_config(configuration):
+        for c in spack.compilers.all_compilers_from(configuration):
             if using_libc_compatibility() and not c_compiler_runs(c):
                 tty.debug(
                     f"the C compiler {c.cc} does not exist, or does not run correctly."
@@ -3453,7 +3464,7 @@ class SpecBuilder:
         """
         # reverse compilers so we get highest priority compilers that share a spec
         compilers = dict(
-            (c.spec, c) for c in reversed(all_compilers_in_config(spack.config.CONFIG))
+            (c.spec, c) for c in reversed(spack.compilers.all_compilers_from(spack.config.CONFIG))
         )
         cmd_specs = dict((s.name, s) for spec in self._command_line_specs for s in spec.traverse())
 

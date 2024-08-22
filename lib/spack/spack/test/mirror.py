@@ -10,7 +10,10 @@ import pytest
 
 from llnl.util.symlink import resolve_link_target_relative_to_the_link
 
+import spack.caches
+import spack.fetch_strategy
 import spack.mirror
+import spack.patch
 import spack.repo
 import spack.util.executable
 import spack.util.spack_json as sjson
@@ -20,10 +23,7 @@ from spack.stage import Stage
 from spack.util.executable import which
 from spack.util.spack_yaml import SpackYAMLError
 
-pytestmark = [
-    pytest.mark.not_on_windows("does not run on windows"),
-    pytest.mark.usefixtures("mutable_config", "mutable_mock_repo"),
-]
+pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_mock_repo")]
 
 # paths in repos that shouldn't be in the mirror tarballs.
 exclude = [".hg", ".git", ".svn"]
@@ -202,7 +202,7 @@ def test_invalid_json_mirror_collection(invalid_json, error_message):
 
 def test_mirror_archive_paths_no_version(mock_packages, mock_archive):
     spec = Spec("trivial-install-test-package@=nonexistingversion").concretized()
-    fetcher = spack.fetch_strategy.URLFetchStrategy(mock_archive.url)
+    fetcher = spack.fetch_strategy.URLFetchStrategy(url=mock_archive.url)
     spack.mirror.mirror_archive_paths(fetcher, "per-package-ref", spec)
 
 
@@ -270,10 +270,10 @@ def test_mirror_cache_symlinks(tmpdir):
     """Confirm that the cosmetic symlink created in the mirror cache (which may
     be relative) targets the storage path correctly.
     """
-    cosmetic_path = "zlib/zlib-1.2.11.tar.gz"
-    global_path = "_source-cache/archive/c3/c3e5.tar.gz"
+    cosmetic_path = os.path.join("zlib", "zlib-1.2.11.tar.gz")
+    global_path = os.path.join("_source-cache", "archive", "c3", "c3e5.tar.gz")
     cache = spack.caches.MirrorCache(str(tmpdir), False)
-    reference = spack.mirror.MirrorReference(cosmetic_path, global_path)
+    reference = spack.mirror.DefaultLayout(cosmetic_path, global_path)
 
     cache.store(MockFetcher(), reference.storage_path)
     cache.symlink(reference)

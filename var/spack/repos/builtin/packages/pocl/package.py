@@ -15,7 +15,7 @@ class Pocl(CMakePackage):
     and devices, both for homogeneous CPU and heterogeneous
     GPUs/accelerators."""
 
-    homepage = "http://portablecl.org"
+    homepage = "https://portablecl.org"
     url = "https://github.com/pocl/pocl/archive/v1.1.tar.gz"
     git = "https://github.com/pocl/pocl.git"
 
@@ -80,7 +80,7 @@ class Pocl(CMakePackage):
         if version >= Version("1.0"):
             url = "https://github.com/pocl/pocl/archive/v{0}.tar.gz"
         else:
-            url = "http://portablecl.org/downloads/pocl-{0}.tar.gz"
+            url = "https://portablecl.org/downloads/pocl-{0}.tar.gz"
 
         return url.format(version.up_to(2))
 

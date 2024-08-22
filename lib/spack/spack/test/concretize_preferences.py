@@ -113,7 +113,6 @@ class TestConcretizePreferences:
         spec = spack.spec.Spec(spec_str).concretized()
         assert spec.compiler == CompilerSpec(compiler_str)
 
-    @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_preferred_target(self, mutable_mock_repo):
         """Test preferred targets are applied correctly"""
         spec = concretize("mpich")
@@ -143,7 +142,6 @@ class TestConcretizePreferences:
         spec = concretize("mpileaks")
         assert spec.version == Version("2.2")
 
-    @pytest.mark.only_clingo("This behavior is not enforced for the old concretizer")
     def test_preferred_versions_mixed_version_types(self):
         update_packages("mixedversions", "version", ["=2.0"])
         spec = concretize("mixedversions")
@@ -225,7 +223,6 @@ mpileaks:
         spec.concretize()
         assert spec.version == Version("3.5.0")
 
-    @pytest.mark.only_clingo("This behavior is not enforced for the old concretizer")
     def test_preferred_undefined_raises(self):
         """Preference should not specify an undefined version"""
         update_packages("python", "version", ["3.5.0.1"])
@@ -233,7 +230,6 @@ mpileaks:
         with pytest.raises(spack.config.ConfigError):
             spec.concretize()
 
-    @pytest.mark.only_clingo("This behavior is not enforced for the old concretizer")
     def test_preferred_truncated(self):
         """Versions without "=" are treated as version ranges: if there is
         a satisfying version defined in the package.py, we should use that
@@ -510,7 +506,6 @@ mpich:
             assert s.satisfies("%gcc") and s.satisfies("+allow-gcc")
 
     @pytest.mark.regression("41134")
-    @pytest.mark.only_clingo("Not backporting the fix to the old concretizer")
     def test_default_preference_variant_different_type_does_not_error(self):
         """Tests that a different type for an existing variant in the 'all:' section of
         packages.yaml doesn't fail with an error.

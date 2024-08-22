@@ -8,7 +8,9 @@ import gzip
 import io
 import json
 import os
+import pathlib
 import platform
+import shutil
 import sys
 import tarfile
 import urllib.error
@@ -16,12 +18,11 @@ import urllib.request
 import urllib.response
 from pathlib import Path, PurePath
 
-import py
 import pytest
 
 import archspec.cpu
 
-from llnl.util.filesystem import join_path, visit_directory_tree
+from llnl.util.filesystem import copy_tree, join_path, visit_directory_tree
 from llnl.util.symlink import readlink
 
 import spack.binary_distribution as bindist
@@ -81,72 +82,67 @@ def test_mirror(mirror_dir):
 
 
 @pytest.fixture(scope="module")
-def config_directory(tmpdir_factory):
-    tmpdir = tmpdir_factory.mktemp("test_configs")
-    # restore some sane defaults for packages and config
-    config_path = py.path.local(spack.paths.etc_path)
-    modules_yaml = config_path.join("defaults", "modules.yaml")
-    os_modules_yaml = config_path.join(
-        "defaults", "%s" % platform.system().lower(), "modules.yaml"
-    )
-    packages_yaml = config_path.join("defaults", "packages.yaml")
-    config_yaml = config_path.join("defaults", "config.yaml")
-    repos_yaml = config_path.join("defaults", "repos.yaml")
-    tmpdir.ensure("site", dir=True)
-    tmpdir.ensure("user", dir=True)
-    tmpdir.ensure("site/%s" % platform.system().lower(), dir=True)
-    modules_yaml.copy(tmpdir.join("site", "modules.yaml"))
-    os_modules_yaml.copy(tmpdir.join("site/%s" % platform.system().lower(), "modules.yaml"))
-    packages_yaml.copy(tmpdir.join("site", "packages.yaml"))
-    config_yaml.copy(tmpdir.join("site", "config.yaml"))
-    repos_yaml.copy(tmpdir.join("site", "repos.yaml"))
-    yield tmpdir
-    tmpdir.remove()
+def config_directory(tmp_path_factory):
+    # Copy defaults to a temporary "site" scope
+    defaults_dir = tmp_path_factory.mktemp("test_configs")
+    config_path = pathlib.Path(spack.paths.etc_path)
+    copy_tree(str(config_path / "defaults"), str(defaults_dir / "site"))
+
+    # Create a "user" scope
+    (defaults_dir / "user").mkdir()
+
+    # Detect compilers
+    cfg_scopes = [
+        spack.config.DirectoryConfigScope(name, str(defaults_dir / name))
+        for name in [f"site/{platform.system().lower()}", "site", "user"]
+    ]
+    with spack.config.use_configuration(*cfg_scopes):
+        _ = spack.compilers.find_compilers(scope="site")
+
+    yield defaults_dir
+
+    shutil.rmtree(str(defaults_dir))
 
 
 @pytest.fixture(scope="function")
-def default_config(tmpdir, config_directory, monkeypatch, install_mockery):
+def default_config(tmp_path, config_directory, monkeypatch, install_mockery):
     # This fixture depends on install_mockery to ensure
     # there is a clear order of initialization. The substitution of the
     # config scopes here is done on top of the substitution that comes with
     # install_mockery
-    mutable_dir = tmpdir.mkdir("mutable_config").join("tmp")
-    config_directory.copy(mutable_dir)
+    mutable_dir = tmp_path / "mutable_config" / "tmp"
+    mutable_dir.mkdir(parents=True)
+    copy_tree(str(config_directory), str(mutable_dir))
 
-    cfg = spack.config.Configuration(
-        *[
-            spack.config.DirectoryConfigScope(name, str(mutable_dir))
-            for name in [f"site/{platform.system().lower()}", "site", "user"]
-        ]
-    )
+    scopes = [
+        spack.config.DirectoryConfigScope(name, str(mutable_dir / name))
+        for name in [f"site/{platform.system().lower()}", "site", "user"]
+    ]
 
-    spack.config.CONFIG, old_config = cfg, spack.config.CONFIG
-    spack.config.CONFIG.set("repos", [spack.paths.mock_packages_path])
-    njobs = spack.config.get("config:build_jobs")
-    if not njobs:
-        spack.config.set("config:build_jobs", 4, scope="user")
-    extensions = spack.config.get("config:template_dirs")
-    if not extensions:
-        spack.config.set(
-            "config:template_dirs",
-            [os.path.join(spack.paths.share_path, "templates")],
-            scope="user",
-        )
+    with spack.config.use_configuration(*scopes):
+        spack.config.CONFIG.set("repos", [spack.paths.mock_packages_path])
+        njobs = spack.config.get("config:build_jobs")
+        if not njobs:
+            spack.config.set("config:build_jobs", 4, scope="user")
+        extensions = spack.config.get("config:template_dirs")
+        if not extensions:
+            spack.config.set(
+                "config:template_dirs",
+                [os.path.join(spack.paths.share_path, "templates")],
+                scope="user",
+            )
 
-    mutable_dir.ensure("build_stage", dir=True)
-    build_stage = spack.config.get("config:build_stage")
-    if not build_stage:
-        spack.config.set(
-            "config:build_stage", [str(mutable_dir.join("build_stage"))], scope="user"
-        )
-    timeout = spack.config.get("config:connect_timeout")
-    if not timeout:
-        spack.config.set("config:connect_timeout", 10, scope="user")
+        (mutable_dir / "build_stage").mkdir()
+        build_stage = spack.config.get("config:build_stage")
+        if not build_stage:
+            spack.config.set(
+                "config:build_stage", [str(mutable_dir / "build_stage")], scope="user"
+            )
+        timeout = spack.config.get("config:connect_timeout")
+        if not timeout:
+            spack.config.set("config:connect_timeout", 10, scope="user")
 
-    yield spack.config.CONFIG
-
-    spack.config.CONFIG = old_config
-    mutable_dir.remove()
+        yield spack.config.CONFIG
 
 
 @pytest.fixture(scope="function")
@@ -337,7 +333,7 @@ def test_relative_rpaths_install_nondefault(mirror_dir):
     buildcache_cmd("install", "-uf", cspec.name)
 
 
-def test_push_and_fetch_keys(mock_gnupghome):
+def test_push_and_fetch_keys(mock_gnupghome, tmp_path):
     testpath = str(mock_gnupghome)
 
     mirror = os.path.join(testpath, "mirror")
@@ -357,7 +353,7 @@ def test_push_and_fetch_keys(mock_gnupghome):
         assert len(keys) == 1
         fpr = keys[0]
 
-        bindist.push_keys(mirror, keys=[fpr], regenerate_index=True)
+        bindist._url_push_keys(mirror, keys=[fpr], tmpdir=str(tmp_path), update_index=True)
 
     # dir 2: import the key from the mirror, and confirm that its fingerprint
     #        matches the one created above
@@ -464,7 +460,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
         assert "libelf" not in cache_list
 
 
-def test_generate_key_index_failure(monkeypatch):
+def test_generate_key_index_failure(monkeypatch, tmp_path):
     def list_url(url, recursive=False):
         if "fails-listing" in url:
             raise Exception("Couldn't list the directory")
@@ -477,13 +473,13 @@ def test_generate_key_index_failure(monkeypatch):
     monkeypatch.setattr(web_util, "push_to_url", push_to_url)
 
     with pytest.raises(CannotListKeys, match="Encountered problem listing keys"):
-        bindist.generate_key_index("s3://non-existent/fails-listing")
+        bindist.generate_key_index("s3://non-existent/fails-listing", str(tmp_path))
 
     with pytest.raises(GenerateIndexError, match="problem pushing .* Couldn't upload"):
-        bindist.generate_key_index("s3://non-existent/fails-uploading")
+        bindist.generate_key_index("s3://non-existent/fails-uploading", str(tmp_path))
 
 
-def test_generate_package_index_failure(monkeypatch, capfd):
+def test_generate_package_index_failure(monkeypatch, tmp_path, capfd):
     def mock_list_url(url, recursive=False):
         raise Exception("Some HTTP error")
 
@@ -492,15 +488,16 @@ def test_generate_package_index_failure(monkeypatch, capfd):
     test_url = "file:///fake/keys/dir"
 
     with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
-        bindist.generate_package_index(test_url)
+        bindist._url_generate_package_index(test_url, str(tmp_path))
 
     assert (
-        f"Warning: Encountered problem listing packages at {test_url}: Some HTTP error"
+        "Warning: Encountered problem listing packages at "
+        f"{test_url}/{bindist.BUILD_CACHE_RELATIVE_PATH}: Some HTTP error"
         in capfd.readouterr().err
     )
 
 
-def test_generate_indices_exception(monkeypatch, capfd):
+def test_generate_indices_exception(monkeypatch, tmp_path, capfd):
     def mock_list_url(url, recursive=False):
         raise Exception("Test Exception handling")
 
@@ -509,10 +506,10 @@ def test_generate_indices_exception(monkeypatch, capfd):
     url = "file:///fake/keys/dir"
 
     with pytest.raises(GenerateIndexError, match=f"Encountered problem listing keys at {url}"):
-        bindist.generate_key_index(url)
+        bindist.generate_key_index(url, str(tmp_path))
 
     with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
-        bindist.generate_package_index(url)
+        bindist._url_generate_package_index(url, str(tmp_path))
 
     assert f"Encountered problem listing packages at {url}" in capfd.readouterr().err
 

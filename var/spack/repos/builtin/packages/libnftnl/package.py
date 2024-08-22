@@ -11,7 +11,7 @@ class Libnftnl(AutotoolsPackage):
     over libmnl."""
 
     homepage = "https://git.netfilter.org/libnftnl/"
-    url = "http://ftp.netfilter.org/pub/libnftnl/libnftnl-1.1.5.tar.bz2"
+    url = "https://ftp.netfilter.org/pub/libnftnl/libnftnl-1.1.5.tar.bz2"
 
     license("GPL-2.0-or-later")
 
