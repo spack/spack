@@ -61,6 +61,7 @@ class Pcre(AutotoolsPackage, CMakePackage):
         depends_on("zlib")
         depends_on("bzip2")
 
+
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []

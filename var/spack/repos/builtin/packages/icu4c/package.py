@@ -8,7 +8,6 @@ import pathlib
 from spack.package import *
 
 
-
 class Icu4c(AutotoolsPackage, MSBuildPackage):
     """ICU is a mature, widely used set of C/C++ and Java libraries providing
     Unicode and Globalization support for software applications. ICU4C is the
