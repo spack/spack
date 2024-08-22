@@ -15,7 +15,7 @@ from contextlib import contextmanager
 import pytest
 
 import llnl.util.filesystem as fs
-from llnl.util.symlink import islink, readlink, symlink, _windows_can_symlink
+from llnl.util.symlink import _windows_can_symlink, islink, readlink, symlink
 
 import spack.paths
 
