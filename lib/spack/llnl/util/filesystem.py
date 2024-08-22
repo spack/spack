@@ -1858,10 +1858,10 @@ def find_max_depth(root, globs, max_depth=_unset):
         with dir_iter:
             for dir_entry in dir_iter:
                 if dir_entry.is_dir(follow_symlinks=True):
-                    stat_info = os.stat(dir_entry.path)
-                    # On POSIX systems, st_dev + st_ino forms a fully-unique
-                    # identifier
-                    uniq_id = (stat_info.st_dev, stat_info.st_ino)
+                    uniq_id = os.path.realpath(dir_entry.path)
+                    if len(uniq_id) < len(root):
+                        # This is a symlink that points outside of the root
+                        continue
                     not_reached_maxdepth = (max_depth is _unset) or depth < max_depth
                     if not_reached_maxdepth and (uniq_id not in visited_dirs):
                         dir_queue.appendleft((depth + 1, dir_entry.path))
