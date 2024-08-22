@@ -1248,7 +1248,7 @@ class BuildTask(Task):
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
             pid = f"{self.pid}: " if tty.show_pid() else ""
-            tty.debug("f{pid}{str(e)}")
+            tty.debug(f"{pid}{str(e)}")
             tty.debug(f"Package stage directory: {pkg.stage.source_path}")
         return ExecuteResult.SUCCESS
 
