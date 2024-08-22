@@ -150,3 +150,22 @@ def test_rewire_not_installed_fails(mock_fetch, install_mockery):
         match="failed due to missing install of build spec",
     ):
         spack.rewiring.rewire(spliced_spec)
+
+
+def test_rewire_virtuals_mpi(mock_fetch, install_mockery):
+    """Check installed package can successfully splice an alternate virtual implementation"""
+    mpileaks = Spec("mpileaks^mpich@=3.0").concretized()
+    mpileaks.package.do_install()
+
+    alt_dep = "mpich2@=1.3"
+    mpich2 = Spec(alt_dep).concretized()
+    mpich2.package.do_install()
+
+    spliced_mpileaks = mpileaks.splice(mpich2, True)
+    spack.rewiring.rewire(spliced_mpileaks)
+
+    # Confirm the original spec still has the original virtual implementation
+    assert mpileaks.satisfies("^mpich@=3.0")
+
+    # Confirm the spliced spec uses the new virtual implementation
+    assert spliced_mpileaks.satisfies(f"^{alt_dep}")
