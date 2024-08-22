@@ -15,7 +15,7 @@ from contextlib import contextmanager
 import pytest
 
 import llnl.util.filesystem as fs
-from llnl.util.symlink import islink, readlink, symlink
+from llnl.util.symlink import islink, readlink, symlink, _windows_can_symlink
 
 import spack.paths
 
@@ -1123,6 +1123,9 @@ def dir_structure_with_things_to_find_symlinks(tmpdir):
             l2-d2
         l1-d3 -> l3-d4
     """
+    if sys.platform == "win32" and not _windows_can_symlink():
+        pytest.skip("This Windows instance is not configured with symlink support")
+
     l1_d1 = tmpdir.join("l1-d1").ensure(dir=True)
     l2_d1 = l1_d1.join("l2-d1").ensure(dir=True)
     l3_d2 = l2_d1.join("l3-d2").ensure(dir=True)
