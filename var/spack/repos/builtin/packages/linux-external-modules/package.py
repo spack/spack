@@ -19,7 +19,8 @@ class LinuxExternalModules(MakefilePackage):
 
     homepage = "https://github.com/torvalds/linux"
     url = "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.10.2.tar.xz"
-    # url on how to build out-of-tree kernel modules
+    # See section 2.1 for how to build out-of-tree kernel modules using linux-external-modules.
+    # Specifically, <path_to_kernel_src> should point to the install directory of linux-external-modules.
     how_to = "https://docs.kernel.org/kbuild/modules.html"
 
     maintainers("fleshling", "rountree")
