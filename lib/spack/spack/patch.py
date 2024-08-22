@@ -9,7 +9,7 @@ import os.path
 import pathlib
 import sys
 import zipfile
-from typing import Any, Dict, Optional, Tuple, Type, Union
+from typing import Any, Dict, Optional, Set, Tuple, Type, Union
 
 import llnl.util.filesystem
 from llnl.url import allowed_archive
@@ -155,7 +155,7 @@ class Patch:
         return hash(self.sha256)
 
 
-zipfilecache = {}
+zipfilecache: Dict[str, Tuple[zipfile.ZipFile, Set[str]]] = {}
 
 
 class FilePatch(Patch):
@@ -202,9 +202,8 @@ class FilePatch(Patch):
             if "packages.zip" in path.parts:
                 # check if it exists in the zip file.
                 idx = path.parts.index("packages.zip")
-                zip_path, entry_path = pathlib.PurePath(*path.parts[: idx + 1]), pathlib.PurePath(
-                    *path.parts[idx + 1 :]
-                )
+                zip_path = str(pathlib.PurePath(*path.parts[: idx + 1]))
+                entry_path = str(pathlib.PurePath(*path.parts[idx + 1 :]))
 
                 lookup = zipfilecache.get(zip_path)
                 if lookup is None:
@@ -213,7 +212,7 @@ class FilePatch(Patch):
                     zipfilecache[zip_path] = (zip, namelist)
                 else:
                     zip, namelist = lookup
-                if str(entry_path) in namelist:
+                if entry_path in namelist:
                     abs_path = str(path)
                     break
             elif path.exists():
@@ -241,17 +240,16 @@ class FilePatch(Patch):
             if "packages.zip" in path.parts:
                 # split in path to packages.zip and the path within the zip
                 idx = path.parts.index("packages.zip")
-                path_to_zip, path_in_zip = pathlib.PurePath(
-                    *path.parts[: idx + 1]
-                ), pathlib.PurePath(*path.parts[idx + 1 :])
-                lookup = zipfilecache.get(path_to_zip)
+                zip_path = str(pathlib.PurePath(*path.parts[: idx + 1]))
+                entry_path = str(pathlib.PurePath(*path.parts[idx + 1 :]))
+                lookup = zipfilecache.get(zip_path)
                 if lookup is None:
-                    zip = zipfile.ZipFile(path_to_zip, "r")
+                    zip = zipfile.ZipFile(zip_path, "r")
                     namelist = set(zip.namelist())
-                    zipfilecache[path_to_zip] = (zip, namelist)
+                    zipfilecache[zip_path] = (zip, namelist)
                 else:
                     zip, namelist = lookup
-                f = zip.open(str(path_in_zip), "r")
+                f = zip.open(entry_path, "r")
             else:
                 f = open(self.path, "rb")
             self._sha256 = checksum_stream(hashlib.sha256, f)

@@ -168,8 +168,12 @@ def repo_zip(args):
     except spack.repo.RepoError:
         tty.die(f"No repository at path: {key}")
 
-    def _zip_repo_skip(entry: os.DirEntry):
-        return entry.name == "__pycache__"
+    def _zip_repo_skip(entry: os.DirEntry, depth: int):
+        if entry.name == "__pycache__":
+            return True
+        if depth == 0 and not os.path.exists(os.path.join(entry.path, "package.py")):
+            return True
+        return False
 
     def _zip_repo_path_to_name(path: str) -> str:
         # use spack/pkg/<repo>/* prefix and rename `package.py` as `__init__.py`

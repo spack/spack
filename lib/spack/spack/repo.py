@@ -26,6 +26,7 @@ import traceback
 import types
 import uuid
 import warnings
+import zipfile
 import zipimport
 from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
 
@@ -165,10 +166,10 @@ class ReposFinder:
                 if package_name:
                     # annoyingly there is a many to one mapping for pkg module to file, have to
                     # figure out how to deal with this properly.
-                    return (
-                        (repo.zipimporter, f"{namespace}.{package_name}")
-                        if repo.zipimporter
-                        else (
+                    if repo.zipimporter:
+                        return repo.zipimporter, f"{namespace}.{package_name}"
+                    else:
+                        return (
                             _PrependFileLoader(
                                 fullname=fullname,
                                 path=repo.filename_for_package_name(package_name),
@@ -176,7 +177,6 @@ class ReposFinder:
                             ),
                             fullname,
                         )
-                    )
 
             # We are importing a full namespace like 'spack.pkg.builtin'
             if fullname == repo.full_namespace:
@@ -362,6 +362,37 @@ class SpackNamespace(types.ModuleType):
             msg = "'{0}' object has no attribute {1}"
             raise AttributeError(msg.format(type(self), name))
         return getattr(self, name)
+
+
+class EvenFasterPackageChecker(collections.abc.Mapping):
+    def __init__(self, packages_path):
+        # The path of the repository managed by this instance
+        self.packages_path = packages_path
+        self.zipfile = zipfile.ZipFile(os.path.join(packages_path, "..", "packages.zip"), "r")
+        self.invalidate()
+
+    def invalidate(self):
+        self.mtime = os.stat(self.zipfile.filename).st_mtime
+        self.pkgs = {
+            f.rstrip("/"): self.mtime
+            for f in self.zipfile.namelist()
+            if f.endswith("/") and f.count("/") == 1 and f != "./"
+        }
+
+    def last_mtime(self):
+        return self.mtime
+
+    def modified_since(self, since: float) -> List[str]:
+        return list(self.pkgs) if self.mtime > since else []
+
+    def __getitem__(self, item):
+        return self.pkgs[item]
+
+    def __iter__(self):
+        return iter(self.pkgs)
+
+    def __len__(self):
+        return len(self.pkgs)
 
 
 class FastPackageChecker(collections.abc.Mapping):
@@ -578,7 +609,7 @@ class RepoIndex:
 
     def __init__(
         self,
-        package_checker: FastPackageChecker,
+        package_checker: Union[FastPackageChecker, EvenFasterPackageChecker],
         namespace: str,
         cache: "spack.caches.FileCacheType",
     ):
@@ -1016,7 +1047,9 @@ class Repo:
         self._finder: Optional[RepoPath] = None
 
         # Maps that goes from package name to corresponding file stat
-        self._fast_package_checker: Optional[FastPackageChecker] = None
+        self._fast_package_checker: Optional[
+            Union[EvenFasterPackageChecker, FastPackageChecker]
+        ] = None
 
         # Indexes for this repository, computed lazily
         self._repo_index: Optional[RepoIndex] = None
@@ -1190,9 +1223,12 @@ class Repo:
         return os.path.join(pkg_dir, package_file_name)
 
     @property
-    def _pkg_checker(self) -> FastPackageChecker:
+    def _pkg_checker(self) -> Union[FastPackageChecker, EvenFasterPackageChecker]:
         if self._fast_package_checker is None:
-            self._fast_package_checker = FastPackageChecker(self.packages_path)
+            if self.zipimporter:
+                self._fast_package_checker = EvenFasterPackageChecker(self.packages_path)
+            else:
+                self._fast_package_checker = FastPackageChecker(self.packages_path)
         return self._fast_package_checker
 
     def all_package_names(self, include_virtuals: bool = False) -> List[str]:

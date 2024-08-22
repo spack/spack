@@ -12,7 +12,7 @@ import tarfile
 import zipfile
 from contextlib import closing, contextmanager
 from gzip import GzipFile
-from typing import Callable, Dict, Tuple
+from typing import Callable, Dict, List, Tuple
 
 from llnl.util.symlink import readlink
 
@@ -236,13 +236,13 @@ def reproducible_zipfile_from_prefix(
     zip: zipfile.ZipFile,
     prefix: str,
     *,
-    skip: Callable[[os.DirEntry], bool] = lambda entry: False,
+    skip: Callable[[os.DirEntry, int], bool] = lambda entry, depth: False,
     path_to_name: Callable[[str], str] = default_path_to_name,
 ) -> None:
     """Similar to ``reproducible_tarfile_from_prefix`` but for zipfiles."""
-    dir_stack = [prefix]
+    dir_stack: List[Tuple[str, int]] = [(prefix, 0)]
     while dir_stack:
-        dir = dir_stack.pop()
+        dir, depth = dir_stack.pop()
 
         # Add the dir before its contents. zip.mkdir is Python 3.11.
         dir_info = zipfile.ZipInfo(path_to_name(dir))
@@ -259,11 +259,11 @@ def reproducible_zipfile_from_prefix(
 
         new_dirs = []
         for entry in entries:
-            if skip(entry):
+            if skip(entry, depth):
                 continue
 
             if entry.is_dir(follow_symlinks=False):
-                new_dirs.append(entry.path)
+                new_dirs.append((entry.path, depth + 1))
                 continue
 
             # symlink / hardlink support in ZIP is poor or non-existent: make copies.
