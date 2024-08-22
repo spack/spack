@@ -50,6 +50,8 @@ from urllib.request import urlopen
 
 import llnl.util.lang
 
+import spack.compiler
+import spack.compilers
 import spack.config
 import spack.patch
 import spack.repo
@@ -202,6 +204,32 @@ def _search_duplicate_compilers(error_cls):
             details = []
         errors.append(error_cls(summary=error_msg.format(spec), details=details))
 
+    return errors
+
+
+@config_compiler
+def _search_broken_compilers(error_cls):
+    """Report compilers with broken paths and associated languages"""
+    errors = []
+
+    compilers = spack.config.get("compilers")
+    for compiler in compilers:
+        spec = spack.spec.parse_with_version_concrete(compiler["spec"])
+        compiler_spec = spack.spec.CompilerSpec(
+            spack.compilers.package_name_to_compiler_name.get(spec.name, spec.name), spec.version
+        )
+        compiler_class = spack.compilers.class_for_compiler_name(compiler_spec.name)
+        errors_for_comp = {}
+        for cmp in compiler["paths"]:
+            cmp_pth = compiler["paths"][cmp]
+            try:
+                compiler_class.try_compiler(cmp_pth, cmp)
+            except spack.compiler.TryCompilerError as e:
+                errors_for_comp[cmp] = f"Component {cmp} failed with {str(e)}"
+        if errors_for_comp:
+            root_error = f"Compiler {spec.name}@{spec.version} contains broken components"
+            details = [errors_for_comp[x] for x in errors_for_comp]
+            errors.append(error_cls(summary=root_error, details=details))
     return errors
 
 
