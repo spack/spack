@@ -1066,18 +1066,16 @@ print(json.dumps(config))
         # The +shared variant isn't reliable, as `spack external find` currently can't
         # detect it. If +shared, prefer the shared libraries, but check for static if
         # those aren't found. Vice versa for ~shared.
-        #
-        # On Windows, we need to find the libs directory regardless of whether or
-        # not its a shared build, and .DLLs are next to the executable, so search
-        # for static first.
-        if not self.spec.satisfies("+shared") or self.spec.satisfies("platform=windows"):
-            candidates = static_libs + shared_libs
-        else:
+        if self.spec.satisfies("platform=windows"):
+            # Since we are searching for link libraries, on Windows search only for
+            # ".Lib" extensions by default as those represent import libraries for implict links.
+            candidates = static_libs
+        elif self.spec.satisfies("+shared"):
             candidates = shared_libs + static_libs
+        else:
+            candidates = static_libs + shared_libs
 
-        candidates = dedupe(candidates)
-
-        for candidate in candidates:
+        for candidate in dedupe(candidates):
             lib = self.find_library(candidate)
             if lib:
                 return lib
