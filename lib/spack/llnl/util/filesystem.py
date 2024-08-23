@@ -1876,7 +1876,8 @@ def find_max_depth(root, globs, max_depth=_unset):
                         resolved_path = os.path.join(next_dir_resolved, dir_entry.name)
 
                     if len(resolved_path) < len(next_dir_resolved):
-                        # This is a symlink that points outside of the root
+                        # Either the symlink target is entirely outside the root,
+                        # or it will be accounted for "directly"
                         continue
 
                     not_reached_maxdepth = (max_depth is _unset) or depth < max_depth
