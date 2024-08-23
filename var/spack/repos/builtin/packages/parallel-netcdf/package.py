@@ -153,7 +153,7 @@ class ParallelNetcdf(AutotoolsPackage):
 
         if self.version >= Version("1.9"):
             args += self.enable_or_disable("shared")
-            args.extent(["--disable-silent-rules"])
+            args.append("--disable-silent-rules")
 
         if self.spec.satisfies("%nag+fortran+shared"):
             args.extend(["ac_cv_prog_fc_v=-Wl,-v", "ac_cv_prog_f77_v=-Wl,-v"])
