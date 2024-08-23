@@ -174,7 +174,7 @@ class OmegaH(CMakePackage, CudaPackage):
 
     def test_mesh(self):
         """test construction, adaptation, and conversion of a mesh"""
-        if self.spec.satisfies("@:9.34.0"):
+        if self.spec.satisfies("@:9.34.0") and not self.spec.satisfies("@:scorec")
             raise SkipTest("Package must be installed as version 9.34.1 or later")
 
         with test_part(self, "test_mesh_create", purpose="mesh construction"):
