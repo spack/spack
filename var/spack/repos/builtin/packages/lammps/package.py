@@ -632,6 +632,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("fftw-api@3", when="+kspace fft=fftw3")
     depends_on("mkl", when="+kspace fft=mkl")
     depends_on("hipfft", when="+kokkos+kspace+rocm fft_kokkos=hipfft")
+    depends_on("fftw-api@3", when="+kokkos+kspace fft_kokkos=fftw3")
+    depends_on("mkl", when="+kokkos+kspace fft_kokkos=mkl")
     depends_on("voropp+pic", when="+voronoi")
     depends_on("netcdf-c+mpi", when="+user-netcdf")
     depends_on("netcdf-c+mpi", when="+netcdf")
