@@ -4468,12 +4468,12 @@ def substitute_abstract_variants(spec: Spec):
     # in $spack/lib/spack/spack/spec_list.py
     failed = []
     for name, v in spec.variants.items():
-        if name in vt.reserved_names:
-            if name == "dev_path":
-                new_variant = vt.SingleValuedVariant(name, v._original_value)
-                spec.variants.substitute(new_variant)
+        if name == "dev_path":
+            spec.variants.substitute(vt.SingleValuedVariant(name, v._original_value))
             continue
-        if name not in spec.package_class.variants:
+        elif name in vt.reserved_names:
+            continue
+        elif name not in spec.package_class.variants:
             failed.append(name)
             continue
         pkg_variant, _ = spec.package_class.variants[name]
