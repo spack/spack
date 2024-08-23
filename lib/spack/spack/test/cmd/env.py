@@ -157,13 +157,13 @@ def test_env_add_nonexistant_path_fails():
 
 
 def test_env_add_existing_env_fails():
-    env("create", "test")
+    env("create", "add_test")
 
     with pytest.raises(ev.SpackEnvironmentError, match=r"environment already exists"):
-        env("add", "--name", "test", ev.environment_dir_from_name("test"))
+        env("add", "--name", "add_test", ev.environment_dir_from_name("add_test"))
 
 
-def test_env_pkg_add_virtual():
+def test_env_add_virtual():
     env("create", "test")
 
     e = ev.read("test")
@@ -176,7 +176,7 @@ def test_env_pkg_add_virtual():
     assert spec.intersects("mpi")
 
 
-def test_env_pkg_add_nonexistant_fails():
+def test_env_add_nonexistant_fails():
     env("create", "test")
 
     e = ev.read("test")
@@ -4135,7 +4135,7 @@ all: post-install
 include include.mk
 
 example/post-install/%: example/install/%
-    $(info post-install: $(HASH)) # noqa: W191,E101
+	$(info post-install: $(HASH)) # noqa: W191,E101
 
 post-install: $(addprefix example/post-install/,$(example/SPACK_PACKAGE_IDS))
 """
