@@ -1845,6 +1845,9 @@ def find_max_depth(root, globs, max_depth=_unset):
 
     visited_dirs = set()
 
+    # Each queue item stores the depth, the path, and the realpath
+    # equivalent; the latter is used to avoid repeated symlink
+    # resolutions on a parent.
     dir_queue = collections.deque([(0, root, os.path.realpath(root))])
     while dir_queue:
         depth, next_dir, next_dir_resolved = dir_queue.pop()

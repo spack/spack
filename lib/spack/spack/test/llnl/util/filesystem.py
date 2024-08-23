@@ -1120,8 +1120,11 @@ def dir_structure_with_things_to_find_symlinks(tmpdir):
                     l4-f2
         l1-d2/
             l2-f1
-            l2-d2
+            l2-d2/
+                l3-f3
+            l2-d3 -> l2-d2
         l1-d3 -> l3-d4
+        l1-d4 -> l2-d3 # a link to a link to a dir
     """
     if sys.platform == "win32" and not _windows_can_symlink():
         pytest.skip("This Windows instance is not configured with symlink support")
@@ -1131,16 +1134,22 @@ def dir_structure_with_things_to_find_symlinks(tmpdir):
     l3_d2 = l2_d1.join("l3-d2").ensure(dir=True)
     l3_d4 = l2_d1.join("l3-d4").ensure(dir=True)
     l1_d2 = tmpdir.join("l1-d2").ensure(dir=True)
+    l2_d2 = l1_d2.join("l1-d2").ensure(dir=True)
 
     os.symlink(l1_d2, pathlib.Path(l2_d1) / "l3-d1")
     os.symlink(l1_d1, pathlib.Path(l2_d1) / "l3-d3")
     os.symlink(l3_d4, pathlib.Path(tmpdir) / "l1-d3")
+    l2_d3 = pathlib.Path(l1_d2) / "l2-d3"
+    os.symlink(l2_d2, l2_d3)
+    os.symlink(l2_d3, pathlib.Path(tmpdir) / "l1-d4")
 
     locations = {}
     locations["l4-f1"] = str(l3_d2.join("l4-f1").ensure())
     locations["l4-f2-full"] = str(l3_d4.join("l4-f2").ensure())
     locations["l4-f2-link"] = str(pathlib.Path(tmpdir) / "l1-d3" / "l4-f2")
     locations["l2-f1"] = str(l1_d2.join("l2-f1").ensure())
+    locations["l3-f3-full"] = str(l2_d2.join("l3-f3").ensure())
+    locations["l3-f3-link-l1"] = str(pathlib.Path(tmpdir) / "l1-d4" / "l3-f3")
 
     return str(tmpdir), locations
 
@@ -1157,4 +1166,4 @@ def test_find_max_depth_symlinks(dir_structure_with_things_to_find_symlinks):
     assert set(fs.find_max_depth(root, "l4-f2")) == {locations["l4-f2-link"]}
     # File is accessible only via the dir, so the full file path should
     # be reported
-    assert not set(fs.find_max_depth(root / "l2-d1", "l4-f2")) == {locations["l4-f2-full"]}
+    assert set(fs.find_max_depth(root / "l1-d1", "l4-f2")) == {locations["l4-f2-full"]} 
