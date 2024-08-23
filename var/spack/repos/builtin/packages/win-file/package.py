@@ -5,7 +5,6 @@
 import os
 import re
 import shutil
-import sys
 
 from spack.package import *
 
