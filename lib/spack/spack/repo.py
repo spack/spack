@@ -1261,16 +1261,7 @@ class Repo:
 
     def exists(self, pkg_name: str) -> bool:
         """Whether a package with the supplied name exists."""
-        if pkg_name is None:
-            return False
-
-        # if the FastPackageChecker is already constructed, use it
-        if self._fast_package_checker:
-            return pkg_name in self._pkg_checker
-
-        # if not, check for the package.py file
-        path = self.filename_for_package_name(pkg_name)
-        return os.path.exists(path)
+        return pkg_name is not None and pkg_name in self._pkg_checker
 
     def last_mtime(self):
         """Time a package file in this repo was last updated."""
