@@ -22,6 +22,12 @@ class Madgraph5amc(MakefilePackage):
     tags = ["hep"]
 
     version(
+        "3.5.5",
+        sha256="3b4262024cefb8a06082faa9a7ba43484b27a3f2b940a06fbe49c640c5b7ebd7",
+        url="https://launchpad.net/mg5amcnlo/3.0/3.5.x/+download/MG5_aMC_v3.5.5.tar.gz",
+    )
+
+    version(
         "2.8.1",
         sha256="acda34414beba201e529b8c03f87f4893fb3f99ed2956a131d60a387e76c5b8c",
         url="https://launchpad.net/mg5amcnlo/2.0/2.8.x/+download/MG5_aMC_v2.8.1.tar.gz",
@@ -49,8 +55,9 @@ class Madgraph5amc(MakefilePackage):
     depends_on("python@2.7.0:2.8.0,3.7:", when="@2.8.0:", type=("build", "run"))
     depends_on("libtirpc")
 
-    patch("array-bounds.patch")
+    patch("array-bounds.patch", when="@:2.8.1")
     patch("madgraph5amc.patch", level=0)
+    patch("gcc14.patch", when="@:3.5.5%gcc@14:")
     patch("madgraph5amc-2.7.3.atlas.patch", level=0, when="@2.7.3.py2+atlas")
     patch("madgraph5amc-2.7.3.atlas.patch", level=0, when="@2.7.3.py3+atlas")
     patch("madgraph5amc-2.8.0.atlas.patch", level=0, when="@2.8.0+atlas")
