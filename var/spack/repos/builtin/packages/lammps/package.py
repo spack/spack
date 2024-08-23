@@ -606,7 +606,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         when="+kspace",
         description="FFT library for KSPACE package",
         values=("kiss", "fftw3", "mkl"),
-        multi=False
+        multi=False,
     )
     variant(
         "fft_kokkos",
@@ -614,7 +614,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         when="@20240417: +kspace+kokkos",
         description="FFT library for Kokkos-enabled KSPACE package",
         values=("kiss", "fftw3", "mkl", "hipfft", "cufft"),
-        multi=False
+        multi=False,
     )
     variant(
         "gpu_precision",
