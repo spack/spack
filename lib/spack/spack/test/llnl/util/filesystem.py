@@ -1109,6 +1109,10 @@ def test_max_depth_and_recursive_errors(tmpdir, recursive, max_depth):
 @pytest.fixture
 def dir_structure_with_things_to_find_symlinks(tmpdir):
     """
+    "lx-dy" means "level x, directory y"
+    "lx-fy" means "level x, file y"
+    Symlinks also use "lx-dy" form
+
     <root>/
         l1-d1/
             l2-d1/
@@ -1166,4 +1170,6 @@ def test_find_max_depth_symlinks(dir_structure_with_things_to_find_symlinks):
     assert set(fs.find_max_depth(root, "l4-f2")) == {locations["l4-f2-link"]}
     # File is accessible only via the dir, so the full file path should
     # be reported
-    assert set(fs.find_max_depth(root / "l1-d1", "l4-f2")) == {locations["l4-f2-full"]} 
+    assert set(fs.find_max_depth(root / "l1-d1", "l4-f2")) == {locations["l4-f2-full"]}
+    # Check following links to links
+    assert set(fs.find_max_depth(root, "l3-f3")) == {locations["l3-f3-link-l1"]}
