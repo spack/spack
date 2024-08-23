@@ -17,9 +17,21 @@ import llnl.util.lang as lang
 import llnl.util.tty.color
 from llnl.string import comma_or
 
-import spack.directives
 import spack.error as error
 import spack.parser
+
+#: These are variant names used by Spack internally; packages can't use them
+reserved_names = [
+    "arch",
+    "architecture",
+    "dev_path",
+    "namespace",
+    "operating_system",
+    "os",
+    "patches",
+    "platform",
+    "target",
+]
 
 special_variant_values = [None, "none", "*"]
 
@@ -679,7 +691,7 @@ def substitute_abstract_variants(spec):
     # in $spack/lib/spack/spack/spec_list.py
     failed = []
     for name, v in spec.variants.items():
-        if name in spack.directives.reserved_names:
+        if name in reserved_names:
             if name == "dev_path":
                 new_variant = SingleValuedVariant(name, v._original_value)
                 spec.variants.substitute(new_variant)

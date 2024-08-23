@@ -32,7 +32,6 @@ import spack.compilers
 import spack.config
 import spack.config as sc
 import spack.deptypes as dt
-import spack.directives
 import spack.environment as ev
 import spack.error
 import spack.package_base
@@ -1878,8 +1877,7 @@ class SpackSolverSetup:
 
                 # validate variant value only if spec not concrete
                 if not spec.concrete:
-                    reserved_names = spack.directives.reserved_names
-                    if not spec.virtual and vname not in reserved_names:
+                    if not spec.virtual and vname not in spack.variant.reserved_names:
                         pkg_cls = self.pkg_class(spec.name)
                         try:
                             variant_def, _ = pkg_cls.variants[vname]

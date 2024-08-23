@@ -1639,7 +1639,7 @@ class Spec:
         Known flags currently include "arch"
         """
 
-        if propagate and name in spack.directives.reserved_names:
+        if propagate and name in vt.reserved_names:
             raise UnsupportedPropagationError(
                 f"Propagation with '==' is not supported for '{name}'."
             )
@@ -2935,9 +2935,7 @@ class Spec:
         pkg_variants = pkg_cls.variants
         # reserved names are variants that may be set on any package
         # but are not necessarily recorded by the package's class
-        not_existing = set(spec.variants) - (
-            set(pkg_variants) | set(spack.directives.reserved_names)
-        )
+        not_existing = set(spec.variants) - (set(pkg_variants) | set(vt.reserved_names))
         if not_existing:
             raise vt.UnknownVariantError(spec, not_existing)
 

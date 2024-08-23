@@ -80,19 +80,6 @@ __all__ = [
     "redistribute",
 ]
 
-#: These are variant names used by Spack internally; packages can't use them
-reserved_names = [
-    "arch",
-    "architecture",
-    "dev_path",
-    "namespace",
-    "operating_system",
-    "os",
-    "patches",
-    "platform",
-    "target",
-]
-
 
 _patch_order_index = 0
 
@@ -630,7 +617,7 @@ def variant(
         msg += " @*r{{[{0}, variant '{1}']}}"
         return llnl.util.tty.color.colorize(msg.format(pkg.name, name))
 
-    if name in reserved_names:
+    if name in spack.variant.reserved_names:
 
         def _raise_reserved_name(pkg):
             msg = "The name '%s' is reserved by Spack" % name
