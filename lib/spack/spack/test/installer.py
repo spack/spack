@@ -979,7 +979,6 @@ def test_install_fail_on_interrupt(install_mockery, mock_fetch, monkeypatch):
     assert any(
         i.startswith("pkg-b-") for i in installer.installed
     )  # ensure dependency of a is 'installed'
-    # assert spec_name not in installer.installed
 
 
 class MyBuildException(Exception):

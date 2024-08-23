@@ -4355,7 +4355,7 @@ class Spec:
         Provenance of the build is tracked through the "build_spec" property
         of the spliced spec and any correspondingly modified dependency specs.
         The build specs are set to that of the original spec, so the original
-        spec's provenance is unchanged."""
+        spec's provenance is preserved unchanged."""
         assert self.concrete
         assert other.concrete
 
