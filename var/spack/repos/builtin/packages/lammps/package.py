@@ -874,6 +874,10 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             # for transposing 3d FFT data.
             args.append(self.define("FFT_SINGLE", spec.satisfies("fftw_precision=single")))
 
+            if "+kokkos+rocm" in spec and "@20240207:" in spec:
+                # If Kokkos on AMDGPU, set Kokkos backend to use hipFFT for FFTs. New as of February 2024
+                args.append(self.define("FFT_KOKKOS", "HIPFFT"))
+
         if "+kokkos" in spec:
             args.append(self.define("EXTERNAL_KOKKOS", True))
         if "+user-adios" in spec or "+adios" in spec:
