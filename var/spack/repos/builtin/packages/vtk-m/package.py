@@ -160,7 +160,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     # VTK-M PR#3259
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3259
-    patch("mr3259-thrust-is_arithmetic-fix.patch", when="@2.2.0 +cuda ^cuda@12.6:")
+    patch("mr3259-thrust-is_arithmetic-fix.patch", when="@2.0.0:2.2.0 +cuda ^cuda@12.6:")
 
     # Disable Thrust patch that is no longer needed in modern Thrust
     patch(
