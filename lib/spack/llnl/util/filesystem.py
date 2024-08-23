@@ -1857,9 +1857,16 @@ def find_max_depth(root, globs, max_depth=_unset):
 
         with dir_iter:
             for dir_entry in dir_iter:
-                if dir_entry.is_symlink():
-                    resolved_path = os.path.realpath(dir_entry.path)
+                resolved_path = None
+                if sys.platform == "win32":
+                    # Note: DirEntry.is_junction is available starting with python 3.12
+                    # but this must work for earlier versions
+                    if symlink.islink(dir_entry.path):
+                        resolved_path = os.path.realpath(symlink.readlink(dir_entry.path))
                 else:
+                    if dir_entry.is_symlink():
+                        resolved_path = os.path.realpath(dir_entry.path)
+                if not resolved_path:
                     resolved_path = os.path.join(next_dir_resolved, dir_entry.name)
 
                 orig_path = os.path.join(next_dir, dir_entry.name)
