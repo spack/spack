@@ -365,9 +365,9 @@ class SpackNamespace(types.ModuleType):
 
     def __getattr__(self, name):
         """Getattr lazily loads modules if they're not already loaded."""
-        submodule = self.__package__ + "." + name
+        submodule = f"{self.__package__}.{name}"
         try:
-            setattr(self, name, __import__(submodule))
+            setattr(self, name, importlib.import_module(submodule))
         except ImportError:
             msg = "'{0}' object has no attribute {1}"
             raise AttributeError(msg.format(type(self), name))

@@ -7,6 +7,7 @@
 system and configuring Spack to use multiple compilers.
 """
 import collections
+import importlib
 import os
 import sys
 import warnings
@@ -651,7 +652,7 @@ def class_for_compiler_name(compiler_name):
         submodule_name = compiler_name.replace("-", "_")
 
     module_name = ".".join(["spack", "compilers", submodule_name])
-    module_obj = __import__(module_name, fromlist=[None])
+    module_obj = importlib.import_module(module_name)
     cls = getattr(module_obj, mod_to_class(compiler_name))
 
     # make a note of the name in the module so we can get to it easily.
