@@ -1871,7 +1871,7 @@ def find_max_depth(root, globs, max_depth=_unset):
                     resolved_path = os.path.realpath(dir_entry.path)
                     unix_dir_check = os.path.isdir(resolved_path)
 
-                if unix_dir_check or dir_entry.is_dir(follow_symlinks=True):
+                if unix_dir_check or dir_entry.is_dir(follow_symlinks=False):
                     if sys.platform == "win32":
                         # Note: DirEntry.is_junction is available starting with python 3.12
                         # but this must work for earlier versions
