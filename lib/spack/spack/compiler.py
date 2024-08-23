@@ -202,9 +202,6 @@ class Compiler:
     support for specific compilers, their possible names, arguments,
     and how to identify the particular type of compiler."""
 
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names: List[str] = []
-
     # Optional prefix regexes for searching for this type of compiler.
     # Prefixes are sometimes used for toolchains
     prefixes: List[str] = []

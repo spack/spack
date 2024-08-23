@@ -10,9 +10,6 @@ from spack.version import Version
 
 
 class Pgi(Compiler):
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["pgfortran", "pgf77"]
-
     # Named wrapper links within build_env_path
     link_paths = {
         "cc": os.path.join("pgi", "pgcc"),

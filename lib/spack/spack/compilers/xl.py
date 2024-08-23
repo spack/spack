@@ -10,9 +10,6 @@ from spack.version import Version
 
 
 class Xl(Compiler):
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["xlf"]
-
     # Named wrapper links within build_env_path
     link_paths = {
         "cc": os.path.join("xl", "xlc"),

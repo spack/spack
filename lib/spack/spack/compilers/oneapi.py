@@ -13,9 +13,6 @@ from spack.version import Version
 
 
 class Oneapi(Compiler):
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["ifx"]
-
     # Named wrapper links within build_env_path
     link_paths = {
         "cc": os.path.join("oneapi", "icx"),

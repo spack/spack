@@ -13,9 +13,6 @@ from spack.version import ver
 
 
 class Aocc(Compiler):
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["flang"]
-
     version_argument = "--version"
 
     @property

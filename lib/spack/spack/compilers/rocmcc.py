@@ -11,9 +11,6 @@ import spack.compilers.clang
 
 
 class Rocmcc(spack.compilers.clang.Clang):
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["amdflang"]
-
     @property
     def link_paths(self):
         link_paths = {

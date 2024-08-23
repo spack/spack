@@ -9,9 +9,6 @@ import spack.compilers.xl
 
 
 class XlR(spack.compilers.xl.Xl):
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["xlf_r"]
-
     # Named wrapper links within build_env_path
     link_paths = {
         "cc": os.path.join("xl_r", "xlc_r"),
