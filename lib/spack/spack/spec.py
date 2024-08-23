@@ -4221,7 +4221,7 @@ class Spec:
             }
         else:
             if other.name not in self:
-                msg = f"Cannot splice {ohter.name} into {self.name}/{self.dag_hash()}."
+                msg = f"Cannot splice {other.name} into {self.name}/{self.dag_hash()}."
                 msg += f" {self.name}/{self.dag_hash()} does not depend on {other.name}"
                 raise SpliceError(msg)
             deps_to_replace = {self[other.name]: other}
