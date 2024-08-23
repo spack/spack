@@ -6,7 +6,6 @@
 """This module contains functions related to finding compilers on the
 system and configuring Spack to use multiple compilers.
 """
-import collections
 import importlib
 import os
 import sys
@@ -662,20 +661,6 @@ def class_for_compiler_name(compiler_name):
     return cls
 
 
-def all_os_classes():
-    """
-    Return the list of classes for all operating systems available on
-    this platform
-    """
-    classes = []
-
-    platform = spack.platforms.host()
-    for os_class in platform.operating_sys.values():
-        classes.append(os_class)
-
-    return classes
-
-
 def all_compiler_types():
     return [class_for_compiler_name(c) for c in supported_compilers()]
 
@@ -884,11 +869,6 @@ class InvalidCompilerConfigurationError(spack.error.SpackError):
         )
 
 
-class NoCompilersError(spack.error.SpackError):
-    def __init__(self):
-        super().__init__("Spack could not find any compilers!")
-
-
 class UnknownCompilerError(spack.error.SpackError):
     def __init__(self, compiler_name):
         super().__init__("Spack doesn't support the requested compiler: {0}".format(compiler_name))
@@ -899,25 +879,3 @@ class NoCompilerForSpecError(spack.error.SpackError):
         super().__init__(
             "No compilers for operating system %s satisfy spec %s" % (target, compiler_spec)
         )
-
-
-class CompilerDuplicateError(spack.error.SpackError):
-    def __init__(self, compiler_spec, arch_spec):
-        config_file_to_duplicates = get_compiler_duplicates(compiler_spec, arch_spec)
-        duplicate_table = list((x, len(y)) for x, y in config_file_to_duplicates.items())
-        descriptor = lambda num: "time" if num == 1 else "times"
-        duplicate_msg = lambda cfgfile, count: "{0}: {1} {2}".format(
-            cfgfile, str(count), descriptor(count)
-        )
-        msg = (
-            "Compiler configuration contains entries with duplicate"
-            + " specification ({0}, {1})".format(compiler_spec, arch_spec)
-            + " in the following files:\n\t"
-            + "\n\t".join(duplicate_msg(x, y) for x, y in duplicate_table)
-        )
-        super().__init__(msg)
-
-
-class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):
-    def __init__(self, compiler_spec):
-        super().__init__("Multiple compilers satisfy spec %s" % compiler_spec)
