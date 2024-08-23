@@ -1056,7 +1056,6 @@ def test_install_fail_on_interrupt(install_mockery, mock_fetch, monkeypatch):
     spec_name = "pkg-a"
     err_msg = "mock keyboard interrupt for {0}".format(spec_name)
     installer = create_installer([spec_name], {})
-    # TODO: Clean this up in fixture with delattr.
     setattr(inst.PackageInstaller, "_real_install_task", inst.PackageInstaller._install_task)
     # Raise a KeyboardInterrupt error to trigger early termination
     monkeypatch.setattr(inst.PackageInstaller, "_install_task", _interrupt)
