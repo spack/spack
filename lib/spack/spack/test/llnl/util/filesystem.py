@@ -1127,7 +1127,7 @@ def dir_structure_with_things_to_find_symlinks(tmpdir):
             l2-d2/
                 l3-f3
             l2-d3 -> l2-d2
-        l1-d3 -> l3-d4
+        l1-d3 -> l3-d4 # a link that "skips" a directory level
         l1-d4 -> l2-d3 # a link to a link to a dir
     """
     if sys.platform == "win32" and not _windows_can_symlink():
