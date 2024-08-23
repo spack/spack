@@ -26,7 +26,6 @@ import traceback
 import types
 import uuid
 import warnings
-import zipfile
 import zipimport
 from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
 
@@ -48,6 +47,7 @@ import spack.util.git
 import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
+import spack.zipcache
 
 #: Package modules are imported as spack.pkg.<repo-namespace>.<pkg-name>
 ROOT_PYTHON_NAMESPACE = "spack.pkg"
@@ -365,17 +365,16 @@ class SpackNamespace(types.ModuleType):
 
 
 class EvenFasterPackageChecker(collections.abc.Mapping):
-    def __init__(self, packages_path):
+    def __init__(self, zip_path):
         # The path of the repository managed by this instance
-        self.packages_path = packages_path
-        self.zipfile = zipfile.ZipFile(os.path.join(packages_path, "..", "packages.zip"), "r")
+        self.zipfile, self.namelist = spack.zipcache.get(zip_path)
         self.invalidate()
 
     def invalidate(self):
         self.mtime = os.stat(self.zipfile.filename).st_mtime
         self.pkgs = {
             f.rstrip("/"): self.mtime
-            for f in self.zipfile.namelist()
+            for f in self.namelist
             if f.endswith("/") and f.count("/") == 1 and f != "./"
         }
 
@@ -614,9 +613,6 @@ class RepoIndex:
         cache: "spack.caches.FileCacheType",
     ):
         self.checker = package_checker
-        self.packages_path = self.checker.packages_path
-        if sys.platform == "win32":
-            self.packages_path = llnl.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
         self.indexers: Dict[str, Indexer] = {}
@@ -1226,7 +1222,7 @@ class Repo:
     def _pkg_checker(self) -> Union[FastPackageChecker, EvenFasterPackageChecker]:
         if self._fast_package_checker is None:
             if self.zipimporter:
-                self._fast_package_checker = EvenFasterPackageChecker(self.packages_path)
+                self._fast_package_checker = EvenFasterPackageChecker(self.zipimporter.archive)
             else:
                 self._fast_package_checker = FastPackageChecker(self.packages_path)
         return self._fast_package_checker

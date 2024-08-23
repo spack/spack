@@ -8,8 +8,7 @@ import os
 import os.path
 import pathlib
 import sys
-import zipfile
-from typing import Any, Dict, Optional, Set, Tuple, Type, Union
+from typing import Any, Dict, Optional, Tuple, Type, Union
 
 import llnl.util.filesystem
 from llnl.url import allowed_archive
@@ -21,6 +20,7 @@ import spack.mirror
 import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
+import spack.zipcache
 from spack.util.crypto import Checker, checksum_stream
 from spack.util.executable import which, which_string
 
@@ -155,9 +155,6 @@ class Patch:
         return hash(self.sha256)
 
 
-zipfilecache: Dict[str, Tuple[zipfile.ZipFile, Set[str]]] = {}
-
-
 class FilePatch(Patch):
     """Describes a patch that is retrieved from a file in the repository."""
 
@@ -205,13 +202,7 @@ class FilePatch(Patch):
                 zip_path = str(pathlib.PurePath(*path.parts[: idx + 1]))
                 entry_path = str(pathlib.PurePath(*path.parts[idx + 1 :]))
 
-                lookup = zipfilecache.get(zip_path)
-                if lookup is None:
-                    zip = zipfile.ZipFile(zip_path, "r")
-                    namelist = set(zip.namelist())
-                    zipfilecache[zip_path] = (zip, namelist)
-                else:
-                    zip, namelist = lookup
+                _, namelist = spack.zipcache.get(zip_path)
                 if entry_path in namelist:
                     abs_path = str(path)
                     break
@@ -242,13 +233,7 @@ class FilePatch(Patch):
                 idx = path.parts.index("packages.zip")
                 zip_path = str(pathlib.PurePath(*path.parts[: idx + 1]))
                 entry_path = str(pathlib.PurePath(*path.parts[idx + 1 :]))
-                lookup = zipfilecache.get(zip_path)
-                if lookup is None:
-                    zip = zipfile.ZipFile(zip_path, "r")
-                    namelist = set(zip.namelist())
-                    zipfilecache[zip_path] = (zip, namelist)
-                else:
-                    zip, namelist = lookup
+                zip, _ = spack.zipcache.get(zip_path)
                 f = zip.open(entry_path, "r")
             else:
                 f = open(self.path, "rb")
