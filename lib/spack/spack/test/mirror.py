@@ -237,7 +237,7 @@ def test_mirror_with_url_patches(mock_packages, monkeypatch):
         monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy, "expand", successful_expand)
         monkeypatch.setattr(spack.patch, "apply_patch", successful_apply)
         monkeypatch.setattr(spack.caches.MirrorCache, "store", record_store)
-        monkeypatch.setattr(spack.mirror.MirrorLayout, "make_alias", successful_make_alias)
+        monkeypatch.setattr(spack.mirror.DefaultLayout, "make_alias", successful_make_alias)
 
         with spack.config.override("config:checksum", False):
             spack.mirror.create(mirror_root, list(spec.traverse()))
