@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.variant import _ConditionalVariantValues
 
 
 class Acts(CMakePackage, CudaPackage):
@@ -33,7 +32,7 @@ class Acts(CMakePackage, CudaPackage):
     homepage = "https://acts.web.cern.ch/ACTS/"
     git = "https://github.com/acts-project/acts.git"
     list_url = "https://github.com/acts-project/acts/releases/"
-    maintainers("wdconinc")
+    maintainers("wdconinc", "stephenswat")
 
     tags = ["hep"]
 
@@ -193,13 +192,13 @@ class Acts(CMakePackage, CudaPackage):
         conditional("17", when="@:35"),
         conditional("20", when="@24:"),
     )
-    variant(
-        "cxxstd",
-        default="17",
-        values=_cxxstd_values,
-        multi=False,
-        description="Use the specified C++ standard when building.",
-    )
+    _cxxstd_common = {
+        "values": _cxxstd_values,
+        "multi": False,
+        "description": "Use the specified C++ standard when building.",
+    }
+    variant("cxxstd", default="17", when="@:35", **_cxxstd_common)
+    variant("cxxstd", default="20", when="@36:", **_cxxstd_common)
     variant(
         "examples",
         default=False,
@@ -225,10 +224,11 @@ class Acts(CMakePackage, CudaPackage):
         default="MAX",
         description="Log level above which examples should auto-crash",
     )
+    _scalar_values = ["float", "double"]
     variant(
         "scalar",
         default="double",
-        values=["float", "double"],
+        values=_scalar_values,
         multi=False,
         sticky=True,
         description="Scalar type to use throughout Acts.",
@@ -355,7 +355,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("dd4hep @1.11: +dddetectors +ddrec", when="+dd4hep")
     depends_on("dd4hep @1.21: +dddetectors +ddrec", when="@20: +dd4hep")
     depends_on("dd4hep +ddg4", when="+dd4hep +geant4 +examples")
-    depends_on("detray @0.72.1 scalar=double", when="+traccc")
+    depends_on("detray @0.72.1:", when="+traccc")
     depends_on("edm4hep @0.4.1:", when="+edm4hep")
     depends_on("edm4hep @0.7:", when="@25: +edm4hep")
     depends_on("eigen @3.3.7:", when="@15.1:")
@@ -398,24 +398,22 @@ class Acts(CMakePackage, CudaPackage):
 
     # ACTS imposes requirements on the C++ standard values used by ROOT
     for _cxxstd in _cxxstd_values:
-        if isinstance(_cxxstd, _ConditionalVariantValues):
-            for _v in _cxxstd:
-                depends_on(
-                    f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +geant4"
-                )
-                depends_on(
-                    f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +fatras_geant4"
-                )
-                depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +tgeo")
-        else:
+        for _v in _cxxstd:
             depends_on(f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +geant4")
             depends_on(
                 f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +fatras_geant4"
             )
-            depends_on(f"root cxxstd={_cxxstd}", when=f"cxxstd={_cxxstd} +tgeo")
+            depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +tgeo")
+
+    # When the traccc plugin is enabled, detray should match the Acts scalars
+    with when("+traccc"):
+        for _scalar in _scalar_values:
+            depends_on(f"detray scalar={_scalar}", when=f"scalar={_scalar}")
 
     # ACTS has been using C++17 for a while, which precludes use of old GCC
     conflicts("%gcc@:7", when="@0.23:")
+    # When using C++20, disable gcc 9 and lower.
+    conflicts("%gcc@:9", when="cxxstd=20")
 
     def cmake_args(self):
         spec = self.spec
@@ -487,6 +485,7 @@ class Acts(CMakePackage, CudaPackage):
             example_cmake_variant("TBB", "tbb", "USE"),
             cmake_variant(unit_tests_label, "unit_tests"),
             plugin_cmake_variant("TRACCC", "traccc"),
+            self.define_from_variant("ACTS_CUSTOM_SCALARTYPE", "scalar"),
         ]
 
         log_failure_threshold = spec.variants["log_failure_threshold"].value
