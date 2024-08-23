@@ -55,9 +55,9 @@ class RBuilder(GenericBuilder):
             with open(fs.join_path(self.stage.source_path, 'DESCRIPTION')) as file:
                 for desc in pycran.parse(file.read()):
                     if "Imports" in desc:
-                        r_deps.extend([d.strip() for d in desc["Imports"].split(",")])
+                        r_deps.extend([d.strip() for d in desc["Imports"].split(",") if d != ""])
                     if "Depends" in desc:
-                        r_deps.extend([d.strip() for d in desc["Depends"].split(",")])
+                        r_deps.extend([d.strip() for d in desc["Depends"].split(",") if d != ""])
 
             # Convert to spack dependencies format for comparison
             deps = {}
