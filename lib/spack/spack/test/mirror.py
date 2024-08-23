@@ -264,8 +264,8 @@ def test_mirror_layout_make_alias(tmpdir):
     """Confirm that the cosmetic symlink created in the mirror cache (which may
     be relative) targets the storage path correctly.
     """
-    alias = "zlib/zlib-1.2.11.tar.gz"
-    path = "_source-cache/archive/c3/c3e5.tar.gz"
+    alias = os.path.join("zlib", "zlib-1.2.11.tar.gz")
+    path = os.path.join("_source-cache", "archive", "c3", "c3e5.tar.gz")
     cache = spack.caches.MirrorCache(root=str(tmpdir), skip_unstable_versions=False)
     layout = spack.mirror.DefaultLayout(alias, path)
 
