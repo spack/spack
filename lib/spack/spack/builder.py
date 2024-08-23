@@ -12,6 +12,7 @@ from typing import List, Optional, Tuple
 from llnl.util import lang
 
 import spack.build_environment
+import spack.multimethod
 
 #: Builder classes, as registered by the "builder" decorator
 BUILDER_CLS = {}
@@ -295,7 +296,11 @@ class PhaseCallbacksMeta(type):
         return _decorator
 
 
-class BuilderMeta(PhaseCallbacksMeta, type(collections.abc.Sequence)):  # type: ignore
+class BuilderMeta(
+    PhaseCallbacksMeta,
+    spack.multimethod.MultiMethodMeta,
+    type(collections.abc.Sequence),  # type: ignore
+):
     pass
 
 

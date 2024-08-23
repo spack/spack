@@ -84,20 +84,6 @@ def index_by(objects, *funcs):
     return result
 
 
-def caller_locals():
-    """This will return the locals of the *parent* of the caller.
-    This allows a function to insert variables into its caller's
-    scope.  Yes, this is some black magic, and yes it's useful
-    for implementing things like depends_on and provides.
-    """
-    # Passing zero here skips line context for speed.
-    stack = inspect.stack(0)
-    try:
-        return stack[2][0].f_locals
-    finally:
-        del stack
-
-
 def attr_setdefault(obj, name, value):
     """Like dict.setdefault, but for objects."""
     if not hasattr(obj, name):
