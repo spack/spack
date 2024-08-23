@@ -187,6 +187,6 @@ jobs:
           VALIDATE_LAST_EXIT: ${{ matrix.runner == 'windows-latest' && './share/spack/qa/validate_last_exit.ps1' || '' }}
         run: |
           ${{ env.SETUP_SCRIPT_SOURCE }}share/spack/setup-env.${{ env.SETUP_SCRIPT_EXT }}
-          spack -d file list
+          spack -d python share/spack/qa/bootstrap-file.py
           ${{ env.VALIDATE_LAST_EXIT }}
           tree ${{ env.USER_SCOPE_PARENT_DIR }}/.spack/bootstrap/store/
