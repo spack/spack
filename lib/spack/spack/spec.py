@@ -4196,8 +4196,6 @@ class Spec:
         Provenance of the build is tracked through the "build_spec" property
         of the spliced spec and any correspondingly modified dependency specs.
         This, the original, spec's provenance is unchanged.
-
-        TODO: Extend this for non-concrete Specs.
         """
         assert self.concrete
         assert other.concrete
@@ -4221,11 +4219,12 @@ class Spec:
             deps_to_replace = {
                 self[v]: (other[v] if v in other else other) for v in virtuals_to_replace
             }
-            # deps_to_replace = [self[v] for v in virtuals_to_replace]
         else:
-            # TODO: sanity check and error raise here for other.name not in self
+            if other.name not in self:
+                msg = f"Cannot splice {ohter.name} into {self.name}/{self.dag_hash()}."
+                msg += f" {self.name}/{self.dag_hash()} does not depend on {other.name}"
+                raise SpliceError(msg)
             deps_to_replace = {self[other.name]: other}
-            # deps_to_replace = [self[other.name]]
 
         for d, od in deps_to_replace.items():
             virtuals = []
@@ -4276,7 +4275,9 @@ class Spec:
             else:
                 if name == other.name:
                     return False
-                if any(  # TODO: should this be all
+                # TODO: at some point we should readdress how this works for providers
+                # that are providing multiple virtuals in the DAG
+                if any(
                     v in other.package.virtuals_provided
                     for v in self[name].package.virtuals_provided
                 ):

@@ -908,7 +908,6 @@ class BuildRequest:
 class Task:
     """Base class for representing a task for a package."""
 
-    # TODO: Consider adding pid as a parameter here:
     def __init__(
         self,
         pkg: "spack.package_base.PackageBase",
@@ -961,7 +960,6 @@ class Task:
         self.status = status
 
         # Getting the PID again because it will be needed for execute functionality.
-        # TODO: Should this be cached in PackageInstaller?
         self.pid = os.getpid()
 
         # The initial start time for processing the spec
@@ -1257,7 +1255,15 @@ class RewireTask(Task):
     """Class for representing a rewire task for a package."""
 
     def execute(self, install_status):
-        # TODO: Docstring
+        """Execute rewire task
+
+        Rewire tasks are executed by either rewiring self.package.spec.build_spec that is already
+        installed or downloading and rewiring a binary for the it.
+
+        If not available installed or as binary, return ExecuteResult.MISSING_BUILD_SPEC.
+        This will prompt the Installer to requeue the task with a dependency on the BuildTask
+        to install self.pkg.spec.build_spec
+        """
         oldstatus = self.status
         self.status = STATUS_INSTALLING
         tty.msg(install_msg(self.pkg_id, self.pid, install_status))
@@ -1695,7 +1701,6 @@ class PackageInstaller:
     def _requeue_with_build_spec_tasks(self, task):
         """Requeue the task and its missing build spec dependencies"""
         # Full install of the build_spec is necessary because it didn't already exist somewhere
-        # TODO: Bootstrap compilers first (from add_tasks)
         install_compilers = spack.config.get("config:install_missing_compilers", False)
 
         spec = task.pkg.spec
@@ -1733,7 +1738,6 @@ class PackageInstaller:
 
             for compiler, archs in packages_per_compiler.items():
                 for arch, packages in archs.items():
-                    # TODO: Ensure that this works w.r.t all deps
                     self._add_bootstrap_compilers(
                         compiler, arch, packages, task.request, self.all_dependencies
                     )
@@ -1857,7 +1861,6 @@ class PackageInstaller:
         Args:
             task: the installation task for a package
             install_status: the installation status for the package"""
-        # TODO: use install_status
         rc = task.execute(install_status)
         if rc == ExecuteResult.MISSING_BUILD_SPEC:
             self._requeue_with_build_spec_tasks(task)
