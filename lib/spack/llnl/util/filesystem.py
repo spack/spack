@@ -1872,13 +1872,13 @@ def find_max_depth(root, globs, max_depth=_unset):
                             resolved_path = os.path.realpath(symlink.readlink(dir_entry.path))
                     else:
                         if dir_entry.is_symlink():
-                            # Note: we already followed the symlinks once to determine
-                            # if this is a directory. So if we're here, it would have
+                            # Note: we want the resolved path to avoid more symlink
+                            # resolutions when running `scandir` on children of this dir.
+                            # We already followed the symlinks once to determine
+                            # if this is a directory, so if we're here, it would have
                             # been more efficient to call os.realpath and then check
-                            # if the result was a dir. However, if it was a file, then
-                            # calling `isdir` would be extra work. Overall, we want
-                            # the resolved path to avoid more symlink resolutions when
-                            # running `scandir` on children of this dir.
+                            # if the result was a dir. However, if it *had been* a file,
+                            # then calling `isdir` would have been extra work.
                             resolved_path = os.path.realpath(dir_entry.path)
 
                     if not resolved_path:
