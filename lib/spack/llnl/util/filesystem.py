@@ -1843,12 +1843,13 @@ def find_max_depth(root, globs, max_depth=_unset):
 
     found_files = collections.defaultdict(list)
 
-    visited_dirs = set()
+    resolved_root = os.path.realpath(root)
+    visited_dirs = set([resolved_root])
 
     # Each queue item stores the depth, the path, and the realpath
     # equivalent; the latter is used to avoid repeated symlink
     # resolutions on a parent.
-    dir_queue = collections.deque([(0, root, os.path.realpath(root))])
+    dir_queue = collections.deque([(0, root, resolved_root)])
     while dir_queue:
         depth, next_dir, next_dir_resolved = dir_queue.pop()
         try:
@@ -1862,17 +1863,23 @@ def find_max_depth(root, globs, max_depth=_unset):
             for dir_entry in dir_iter:
                 orig_path = os.path.join(next_dir, dir_entry.name)
 
-                if dir_entry.is_dir(follow_symlinks=True):
-                    resolved_path = None
+                resolved_path = None
+                unix_dir_check = False
+                if dir_entry.is_symlink() and sys.platform != "win32":
+                    # On non-Windows, the link must be resolved to determine
+                    # if it is a directory or not
+                    resolved_path = os.path.realpath(dir_entry.path)
+                    unix_dir_check = os.path.isdir(resolved_path)
+
+                if unix_dir_check or dir_entry.is_dir(follow_symlinks=True):
                     if sys.platform == "win32":
                         # Note: DirEntry.is_junction is available starting with python 3.12
                         # but this must work for earlier versions
                         if symlink.islink(dir_entry.path):
                             resolved_path = os.path.realpath(symlink.readlink(dir_entry.path))
-                    else:
-                        if dir_entry.is_symlink():
-                            resolved_path = os.path.realpath(dir_entry.path)
+
                     if not resolved_path:
+                        # If resolved_path hasn't been assigned yet, it's not a link
                         resolved_path = os.path.join(next_dir_resolved, dir_entry.name)
 
                     if len(resolved_path) < len(next_dir_resolved):
