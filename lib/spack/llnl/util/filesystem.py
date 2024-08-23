@@ -1863,18 +1863,8 @@ def find_max_depth(root, globs, max_depth=_unset):
             for dir_entry in dir_iter:
                 orig_path = os.path.join(next_dir, dir_entry.name)
 
-                resolved_path = None
-                unix_dir_check = False
-                if dir_entry.is_symlink() and sys.platform != "win32":
-                    # On non-Windows, the link must be resolved to determine
-                    # if it is a directory or not. If it is a dir, we want the
-                    # resolved path (to speed up scandir calls on child
-                    # elements). If it's not a dir, then we don't need the
-                    # resolved path; we could have saved time.
-                    resolved_path = os.path.realpath(dir_entry.path)
-                    unix_dir_check = os.path.isdir(resolved_path)
-
                 if dir_entry.is_dir(follow_symlinks=True):
+                    resolved_path = None
                     if sys.platform == "win32":
                         # Note: DirEntry.is_junction is available starting with python 3.12
                         # but this must work for earlier versions
@@ -1882,6 +1872,13 @@ def find_max_depth(root, globs, max_depth=_unset):
                             resolved_path = os.path.realpath(symlink.readlink(dir_entry.path))
                     else:
                         if dir_entry.is_symlink():
+                            # Note: we already followed the symlinks once to determine
+                            # if this is a directory. So if we're here, it would have
+                            # been more efficient to call os.realpath and then check
+                            # if the result was a dir. However, if it was a file, then
+                            # calling `isdir` would be extra work. Overall, we want
+                            # the resolved path to avoid more symlink resolutions when
+                            # running `scandir` on children of this dir.
                             resolved_path = os.path.realpath(dir_entry.path)
 
                     if not resolved_path:
