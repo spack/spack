@@ -57,6 +57,7 @@ class ParallelNetcdf(AutotoolsPackage):
     variant("fortran", default=True, description="Build the Fortran Interface")
     variant("pic", default=True, description="Produce position-independent code (for shared libs)")
     variant("shared", default=True, description="Enable shared library")
+    variant("static", default=True, description="Enable static library")
     variant("burstbuffer", default=False, description="Enable burst buffer feature")
 
     depends_on("mpi")
@@ -71,6 +72,11 @@ class ParallelNetcdf(AutotoolsPackage):
     # Suport for shared libraries was introduced in version 1.9.0
     conflicts("+shared", when="@:1.8")
     conflicts("+burstbuffer", when="@:1.10")
+
+    # spack adds the full rpath to ld when building the static lib
+    # but macos ld does not support this
+    # https://github.com/spack/spack/issues/45919
+    conflicts("+static", when="platform=darwin")
 
     # Before 1.10.0, C utility programs (e.g. ncmpigen) were linked without
     # explicit specification of the Fortran runtime libraries, which is
@@ -119,8 +125,13 @@ class ParallelNetcdf(AutotoolsPackage):
 
         args += self.enable_or_disable("cxx")
         args += self.enable_or_disable("fortran")
+        args += self.enable_or_disable("static")
 
         flags = {"CFLAGS": [], "CXXFLAGS": [], "FFLAGS": [], "FCFLAGS": []}
+
+        if "~static" in self.spec and "~shared" in self.spec:
+            msg = "One of +static or +shared must be selected"
+            raise spack.error.NoLibrariesError(msg)
 
         if "+pic" in self.spec:
             flags["CFLAGS"].append(self.compiler.cc_pic_flag)
@@ -142,7 +153,7 @@ class ParallelNetcdf(AutotoolsPackage):
 
         if self.version >= Version("1.9"):
             args += self.enable_or_disable("shared")
-            args.extend(["--enable-static", "--disable-silent-rules"])
+            args.extent(["--disable-silent-rules"])
 
         if self.spec.satisfies("%nag+fortran+shared"):
             args.extend(["ac_cv_prog_fc_v=-Wl,-v", "ac_cv_prog_f77_v=-Wl,-v"])
