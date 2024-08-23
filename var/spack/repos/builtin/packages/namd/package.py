@@ -112,6 +112,11 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
     conflicts("+single_node_gpu", when="~cuda~rocm")
     conflicts("+avxtiles", when="@:2.14", msg="AVXTiles algorithm requires NAMD 2.15+")
     conflicts("+memopt", when="@:2.8", msg="memopt mode requires NAMD 2.8+")
+    conflicts(
+        "+memopt",
+        when="+single_node_gpu",
+        msg="memopt mode is not compatible with GPU-resident builds",
+    )
 
     # https://www.ks.uiuc.edu/Research/namd/2.12/features.html
     # https://www.ks.uiuc.edu/Research/namd/2.13/features.html
