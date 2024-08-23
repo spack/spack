@@ -680,32 +680,6 @@ def all_compiler_types():
     return [class_for_compiler_name(c) for c in supported_compilers()]
 
 
-#: Gathers the attribute values by which a detected compiler is considered
-#: unique in Spack.
-#:
-#:  - os: the operating system
-#:  - compiler_name: the name of the compiler (e.g. 'gcc', 'clang', etc.)
-#:  - version: the version of the compiler
-#:
-CompilerID = collections.namedtuple("CompilerID", ["os", "compiler_name", "version"])
-
-#: Variations on a matched compiler name
-NameVariation = collections.namedtuple("NameVariation", ["prefix", "suffix"])
-
-#: Groups together the arguments needed by `detect_version`. The four entries
-#: in the tuple are:
-#:
-#: - id: An instance of the CompilerID named tuple (version can be set to None
-#:       as it will be detected later)
-#: - variation: a NameVariation for file being tested
-#: - language: compiler language being tested (one of 'cc', 'cxx', 'fc', 'f77')
-#: - path: full path to the executable being tested
-#:
-DetectVersionArgs = collections.namedtuple(
-    "DetectVersionArgs", ["id", "variation", "language", "path"]
-)
-
-
 def is_mixed_toolchain(compiler):
     """Returns True if the current compiler is a mixed toolchain,
     False otherwise.
