@@ -231,6 +231,7 @@ class Seacas(CMakePackage):
     depends_on("cmake@3.17:", when="@:2023-05-30", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("zlib-api", when="+zlib")
+    depends_on("parallel")
     depends_on("trilinos~exodus+mpi+pamgen", when="+mpi+pamgen")
     depends_on("trilinos~exodus~mpi+pamgen", when="~mpi+pamgen")
     # Always depends on netcdf-c
