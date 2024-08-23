@@ -152,37 +152,65 @@ def test_rewire_not_installed_fails(mock_fetch, install_mockery):
         spack.rewiring.rewire(spliced_spec)
 
 
-def test_rewire_virtuals_mpi(mock_fetch, install_mockery):
+@pytest.mark.parametrize("transitive", [True, False])
+def test_rewire_virtual(mock_fetch, install_mockery, transitive):
     """Check installed package can successfully splice an alternate virtual implementation"""
-    mpileaks = Spec("mpileaks^mpich@=3.0").concretized()
-    mpileaks.package.do_install()
+    dep = "splice-a"
+    alt_dep = "splice-h"
 
-    mpich_dep = "mpich2@=1.3"
-    mpich2 = Spec(mpich_dep).concretized()
-    mpich2.package.do_install()
+    spec = Spec(f"splice-vt^{dep}").concretized()
+    spec.package.do_install()
 
-    spliced_mpileaks = mpileaks.splice(mpich2, True)
-    spack.rewiring.rewire(spliced_mpileaks)
+    alt_spec = Spec(alt_dep).concretized()
+    alt_spec.package.do_install()
 
-    # Confirm the original spec still has the original virtual implementation
-    assert mpileaks.satisfies("^mpich@=3.0")
+    spliced_spec = spec.splice(alt_spec, transitive)
+    spack.rewiring.rewire(spliced_spec)
 
-    # Confirm no provenance updates were made to original spec or its deps
-    assert mpileaks._build_spec is None
+    # Confirm the original spec still has the original virtual implementation.
+    assert spec.satisfies(f"^{dep}")
 
-    expected = "{0}: Expected {1}provenance updates to the {2} dependency spec"
-    for dep in mpileaks.dependencies():
-        assert dep._build_spec is None, expected.format(dep.name, "no ", "original")
+    # Confirm the spliced spec uses the new virtual implementation.
+    assert spliced_spec.satisfies(f"^{alt_dep}")
 
-    # Confirm the spliced spec uses the new virtual implementation
-    assert spliced_mpileaks.satisfies(f"^{mpich_dep}")
+    # Confirm expected provenance.
+    #
+    # Expanded dependencies for the spec with dependency and alternate show
+    # significant re-use with the spec, original dependency, and spliced
+    # dependency.
+    #
+    #   with dependency     with alternate dependency
+    #   ---------------     -------------------------
+    #   splice-vt       =>  splice-vt'
+    #     glibc               glibc
+    #     splice-a      =>    splice-h
+    #       glibc               glibc
+    #       splice-z            splice-z
+    #     splice-z            splice-z
+    #
+    # The spliced spec will have the provenance of the spec. The provenance
+    # of dependency specs will only be updated if they are intransitively
+    # sliced.
 
-    # Confirm updates were made to the provenance of the spliced spec and, since
-    # transitive, the associated dependencies EXCEPT the spliced in dependency.
-    assert spliced_mpileaks._build_spec is not None
-    for dep in spliced_mpileaks.dependencies():
-        updates = "no " if dep.satisfies(mpich_dep) else ""
-        alt_spec_ok = updates == "no " and dep._build_spec is None
-        assert alt_spec_ok or dep._build_spec is not None, expected.format(
-            dep.name, updates, "spliced"
-        )
+    assert spec._build_spec is None
+    assert spliced_spec._build_spec == spec, "Expected spec for provenance"
+
+    # Confirm no provenance updates were made to unchanged specs/dependencies
+    # and to changed dependencies when intransitive.
+    fmt = "{0}: Expected no provenance updates to the {1} spec"
+
+    def confirm_unchanged(spec_tuple):
+        for s, _type in spec_tuple:
+            assert s._build_spec is None, fmt.format(s.name, _type)
+
+    specs = [(spec, "original spec")]
+    specs.extend([(d, "original dependency") for d in spec.dependencies()])
+    confirm_unchanged(specs)
+
+    specs = []
+    for d in spliced_spec.dependencies():
+        if not transitive and d.satisfies(alt_dep):
+            assert d._build_spec is not None, f"{d.name}: Expected provenance update (to self)"
+            continue
+        specs.append((d, "spliced dependency"))
+    confirm_unchanged(specs)
