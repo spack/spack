@@ -1867,7 +1867,10 @@ def find_max_depth(root, globs, max_depth=_unset):
                 unix_dir_check = False
                 if dir_entry.is_symlink() and sys.platform != "win32":
                     # On non-Windows, the link must be resolved to determine
-                    # if it is a directory or not
+                    # if it is a directory or not. If it is a dir, we want the
+                    # resolved path (to speed up scandir calls on child
+                    # elements). If it's not a dir, then we don't need the
+                    # resolved path.
                     resolved_path = os.path.realpath(dir_entry.path)
                     unix_dir_check = os.path.isdir(resolved_path)
 
