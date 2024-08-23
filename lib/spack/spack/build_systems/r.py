@@ -65,7 +65,7 @@ class RBuilder(GenericBuilder):
                 p = re.search(r"^[\w_-]+", r_dep)  # first word, incl. underscore or dash
                 v = re.search("(?<=[(]).*(?=[)])", r_dep)  # everything between parentheses
                 # require valid package
-                assert(p, f"Unable to find package name in {r_dep}")
+                assert p, f"Unable to find package name in {r_dep}"
                 r_spec = f"r-{p[0].strip().lower()}" if p[0].lower() != "r" else "r"
                 # allow minimum or pinned versions
                 if v:
