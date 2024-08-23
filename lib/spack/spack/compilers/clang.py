@@ -31,9 +31,6 @@ fc_mapping = [
 
 
 class Clang(Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ["clang"]
-
     # Subclasses use possible names of C++ compiler
     cxx_names = ["clang++"]
 

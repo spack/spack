@@ -10,9 +10,6 @@ from spack.version import Version
 
 
 class Xl(Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ["xlc"]
-
     # Subclasses use possible names of C++ compiler
     cxx_names = ["xlC", "xlc++"]
 

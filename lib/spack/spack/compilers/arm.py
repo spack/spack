@@ -9,9 +9,6 @@ import spack.compiler
 
 
 class Arm(spack.compiler.Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ["armclang"]
-
     # Subclasses use possible names of C++ compiler
     cxx_names = ["armclang++"]
 

@@ -9,9 +9,6 @@ from spack.compiler import Compiler
 
 
 class Nvhpc(Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ["nvc"]
-
     # Subclasses use possible names of C++ compiler
     cxx_names = ["nvc++"]
 

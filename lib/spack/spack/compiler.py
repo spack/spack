@@ -202,9 +202,6 @@ class Compiler:
     support for specific compilers, their possible names, arguments,
     and how to identify the particular type of compiler."""
 
-    # Subclasses use possible names of C compiler
-    cc_names: List[str] = []
-
     # Subclasses use possible names of C++ compiler
     cxx_names: List[str] = []
 

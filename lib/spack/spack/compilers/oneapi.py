@@ -13,9 +13,6 @@ from spack.version import Version
 
 
 class Oneapi(Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ["icx"]
-
     # Subclasses use possible names of C++ compiler
     cxx_names = ["icpx"]
 

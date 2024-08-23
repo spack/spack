@@ -15,9 +15,6 @@ from spack.version import Version
 
 
 class Gcc(spack.compiler.Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ["gcc"]
-
     # Subclasses use possible names of C++ compiler
     cxx_names = ["g++"]
 

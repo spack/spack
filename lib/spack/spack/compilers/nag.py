@@ -13,9 +13,6 @@ import spack.compiler
 
 
 class Nag(spack.compiler.Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names: List[str] = []
-
     # Subclasses use possible names of C++ compiler
     cxx_names: List[str] = []
 

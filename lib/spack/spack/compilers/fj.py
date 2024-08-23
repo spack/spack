@@ -9,9 +9,6 @@ import spack.compiler
 
 
 class Fj(spack.compiler.Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ["fcc"]
-
     # Subclasses use possible names of C++ compiler
     cxx_names = ["FCC"]
 

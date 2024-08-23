@@ -19,9 +19,6 @@ class Cce(Compiler):
         if not self.is_clang_based:
             self.version_argument = "-V"
 
-    # Subclasses use possible names of C compiler
-    cc_names = ["craycc"]
-
     # Subclasses use possible names of C++ compiler
     cxx_names = ["crayCC"]
 

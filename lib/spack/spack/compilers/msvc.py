@@ -117,9 +117,6 @@ def get_valid_fortran_pth():
 
 
 class Msvc(Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names: List[str] = ["cl"]
-
     # Subclasses use possible names of C++ compiler
     cxx_names: List[str] = ["cl"]
 

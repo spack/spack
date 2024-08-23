@@ -10,9 +10,6 @@ from spack.version import Version
 
 
 class Pgi(Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ["pgcc"]
-
     # Subclasses use possible names of C++ compiler
     cxx_names = ["pgc++", "pgCC"]
 

@@ -11,9 +11,6 @@ import spack.compilers.clang
 
 
 class Rocmcc(spack.compilers.clang.Clang):
-    # Subclasses use possible names of C compiler
-    cc_names = ["amdclang"]
-
     # Subclasses use possible names of C++ compiler
     cxx_names = ["amdclang++"]
 

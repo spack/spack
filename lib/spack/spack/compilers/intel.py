@@ -11,9 +11,6 @@ from spack.version import Version
 
 
 class Intel(Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ["icc"]
-
     # Subclasses use possible names of C++ compiler
     cxx_names = ["icpc"]
 
