@@ -11,15 +11,16 @@ import pytest
 from llnl.util.symlink import resolve_link_target_relative_to_the_link
 
 import spack.caches
+import spack.config
 import spack.fetch_strategy
 import spack.mirror
 import spack.patch
 import spack.repo
+import spack.stage
 import spack.util.executable
 import spack.util.spack_json as sjson
 import spack.util.url as url_util
 from spack.spec import Spec
-from spack.stage import Stage
 from spack.util.executable import which
 from spack.util.spack_yaml import SpackYAMLError
 
@@ -51,7 +52,7 @@ def set_up_package(name, repository, url_attr):
 
 
 def check_mirror():
-    with Stage("spack-mirror-test") as stage:
+    with spack.stage.Stage("spack-mirror-test") as stage:
         mirror_root = os.path.join(stage.path, "test-mirror")
         # register mirror with spack config
         mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_root)}
@@ -207,9 +208,7 @@ def test_mirror_archive_paths_no_version(mock_packages, mock_archive):
 
 
 def test_mirror_with_url_patches(mock_packages, monkeypatch):
-    spec = Spec("patch-several-dependencies")
-    spec.concretize()
-
+    spec = Spec("patch-several-dependencies").concretized()
     files_cached_in_mirror = set()
 
     def record_store(_class, fetcher, relative_dst, cosmetic_path=None):
@@ -231,7 +230,7 @@ def test_mirror_with_url_patches(mock_packages, monkeypatch):
     def successful_make_alias(*args, **kwargs):
         pass
 
-    with Stage("spack-mirror-test") as stage:
+    with spack.stage.Stage("spack-mirror-test") as stage:
         mirror_root = os.path.join(stage.path, "test-mirror")
 
         monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy, "fetch", successful_fetch)
@@ -243,15 +242,10 @@ def test_mirror_with_url_patches(mock_packages, monkeypatch):
         with spack.config.override("config:checksum", False):
             spack.mirror.create(mirror_root, list(spec.traverse()))
 
-        assert not (
-            set(
-                [
-                    "abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234",
-                    "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd.gz",
-                ]
-            )
-            - files_cached_in_mirror
-        )
+        assert {
+            "abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234",
+            "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd.gz",
+        }.issubset(files_cached_in_mirror)
 
 
 class MockFetcher:
