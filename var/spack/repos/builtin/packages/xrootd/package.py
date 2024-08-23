@@ -11,7 +11,7 @@ class Xrootd(CMakePackage):
     """The XROOTD project aims at giving high performance, scalable fault
     tolerant access to data repositories of many kinds."""
 
-    homepage = "https://xrootd.slac.stanford.edu"
+    homepage = "https://xrootd.web.cern.ch"
     urls = [
         "https://xrootd.web.cern.ch/download/v5.7.0/xrootd-5.7.0.tar.gz",
         "https://github.com/xrootd/xrootd/releases/download/v5.7.0/xrootd-5.7.0.tar.gz",
