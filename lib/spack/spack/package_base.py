@@ -1505,8 +1505,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
-
-        return spack.compilers.compiler_for_spec(self.spec.compiler, self.spec.architecture)
+        raise NotImplementedError("Wrapper to old API still to be implemented")
 
     def url_version(self, version):
         """
