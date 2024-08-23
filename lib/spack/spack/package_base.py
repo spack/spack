@@ -15,6 +15,7 @@ import copy
 import functools
 import glob
 import hashlib
+import importlib
 import inspect
 import io
 import os
@@ -868,7 +869,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         We use this to add variables to package modules.  This makes
         install() methods easier to write (e.g., can call configure())
         """
-        return __import__(cls.__module__, fromlist=[cls.__name__])
+        return importlib.import_module(cls.__module__)
 
     @classproperty
     def namespace(cls):
