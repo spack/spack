@@ -1130,11 +1130,11 @@ def dir_structure_with_things_to_find_symlinks(tmpdir):
     l2_d1 = l1_d1.join("l2-d1").ensure(dir=True)
     l3_d2 = l2_d1.join("l3-d2").ensure(dir=True)
     l3_d4 = l2_d1.join("l3-d4").ensure(dir=True)
-
     l1_d2 = tmpdir.join("l1-d2").ensure(dir=True)
-    os.symlink(l3_d4, pathlib.Path(tmpdir) / "l1-d3")
+
     os.symlink(l1_d2, pathlib.Path(l2_d1) / "l3-d1")
     os.symlink(l1_d1, pathlib.Path(l2_d1) / "l3-d3")
+    os.symlink(l3_d4, pathlib.Path(tmpdir) / "l1-d3")
 
     locations = {}
     locations["l4-f1"] = str(l3_d2.join("l4-f1").ensure())
