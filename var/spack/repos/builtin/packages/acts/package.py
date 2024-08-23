@@ -479,13 +479,13 @@ class Acts(CMakePackage, CudaPackage):
             plugin_cmake_variant("PODIO", "podio"),
             example_cmake_variant("PYTHIA8", "pythia8"),
             example_cmake_variant("PYTHON_BINDINGS", "python"),
+            self.define_from_variant("ACTS_CUSTOM_SCALARTYPE", "scalar"),
             plugin_cmake_variant("ACTSVG", "svg"),
             plugin_cmake_variant("SYCL", "sycl"),
             plugin_cmake_variant("TGEO", "tgeo"),
             example_cmake_variant("TBB", "tbb", "USE"),
-            cmake_variant(unit_tests_label, "unit_tests"),
             plugin_cmake_variant("TRACCC", "traccc"),
-            self.define_from_variant("ACTS_CUSTOM_SCALARTYPE", "scalar"),
+            cmake_variant(unit_tests_label, "unit_tests"),
         ]
 
         log_failure_threshold = spec.variants["log_failure_threshold"].value
