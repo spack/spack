@@ -1870,16 +1870,19 @@ def find_max_depth(root, globs, max_depth=_unset):
                     # if it is a directory or not. If it is a dir, we want the
                     # resolved path (to speed up scandir calls on child
                     # elements). If it's not a dir, then we don't need the
-                    # resolved path.
+                    # resolved path; we could have saved time.
                     resolved_path = os.path.realpath(dir_entry.path)
                     unix_dir_check = os.path.isdir(resolved_path)
 
-                if unix_dir_check or dir_entry.is_dir(follow_symlinks=True):
+                if dir_entry.is_dir(follow_symlinks=True):
                     if sys.platform == "win32":
                         # Note: DirEntry.is_junction is available starting with python 3.12
                         # but this must work for earlier versions
                         if symlink.islink(dir_entry.path):
                             resolved_path = os.path.realpath(symlink.readlink(dir_entry.path))
+                    else:
+                        if dir_entry.is_symlink():
+                            resolved_path = os.path.realpath(dir_entry.path)
 
                     if not resolved_path:
                         # If resolved_path hasn't been assigned yet, it's not a link
