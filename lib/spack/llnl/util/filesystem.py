@@ -1857,21 +1857,21 @@ def find_max_depth(root, globs, max_depth=_unset):
 
         with dir_iter:
             for dir_entry in dir_iter:
-                resolved_path = None
-                if sys.platform == "win32":
-                    # Note: DirEntry.is_junction is available starting with python 3.12
-                    # but this must work for earlier versions
-                    if symlink.islink(dir_entry.path):
-                        resolved_path = os.path.realpath(symlink.readlink(dir_entry.path))
-                else:
-                    if dir_entry.is_symlink():
-                        resolved_path = os.path.realpath(dir_entry.path)
-                if not resolved_path:
-                    resolved_path = os.path.join(next_dir_resolved, dir_entry.name)
-
                 orig_path = os.path.join(next_dir, dir_entry.name)
 
                 if dir_entry.is_dir(follow_symlinks=True):
+                    resolved_path = None
+                    if sys.platform == "win32":
+                        # Note: DirEntry.is_junction is available starting with python 3.12
+                        # but this must work for earlier versions
+                        if symlink.islink(dir_entry.path):
+                            resolved_path = os.path.realpath(symlink.readlink(dir_entry.path))
+                    else:
+                        if dir_entry.is_symlink():
+                            resolved_path = os.path.realpath(dir_entry.path)
+                    if not resolved_path:
+                        resolved_path = os.path.join(next_dir_resolved, dir_entry.name)
+
                     if len(resolved_path) < len(next_dir_resolved):
                         # This is a symlink that points outside of the root
                         continue
@@ -1881,17 +1881,10 @@ def find_max_depth(root, globs, max_depth=_unset):
                         dir_queue.appendleft((depth + 1, orig_path, resolved_path))
                         visited_dirs.add(resolved_path)
                 else:
-                    if len(os.path.dirname(resolved_path)) < len(next_dir_resolved):
-                        # The symlink resides in a parent dir
-                        continue
-
-                    # If it's a symlink, make sure to check patterns against both
-                    # the link name and the name of the file the link resolves to
-                    fnames = set(os.path.basename(x) for x in [resolved_path, orig_path])
-                    for fname in fnames:
-                        for pattern in regexes:
-                            if pattern.match(os.path.normcase(fname)):
-                                found_files[pattern].append(os.path.join(next_dir, fname))
+                    fname = os.path.basename(orig_path)
+                    for pattern in regexes:
+                        if pattern.match(os.path.normcase(fname)):
+                            found_files[pattern].append(os.path.join(next_dir, fname))
 
         # TODO: for fully-recursive searches, we can print a warning after
         # after having searched everything up to some fixed depth (which
