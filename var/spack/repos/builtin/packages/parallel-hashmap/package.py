@@ -18,7 +18,7 @@ class ParallelHashmap(CMakePackage):
     version("1.3.12", sha256="0cc203144321924cfbfcc401f42d8204c0dd24e2760c7a1c091baa16d9777c08")
     version("1.3.11", sha256="0515a681bfb24207013786a7737e9d8561302e656689d8a65ea480bbabab460f")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.8:", type="build")
 
