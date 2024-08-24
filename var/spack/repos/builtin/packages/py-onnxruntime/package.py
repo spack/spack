@@ -21,7 +21,11 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     submodules = True
 
     license("MIT")
-
+    version("1.19.2", tag="v1.19.2", commit="ffceed9d44f2f3efb9dd69fa75fea51163c91d91")
+    version("1.19.0", tag="v1.19.0", commit="26250ae74d2c9a3c6860625ba4a147ddfb936907")
+    version("1.18.2", tag="v1.18.2", commit="9691af1a2a17b12af04652f4d8d2a18ce9507025")
+    version("1.18.1", tag="v1.18.1", commit="387127404e6c1d84b3468c387d864877ed1c67fe")
+    version("1.18.0", tag="v1.18.0", commit="45737400a2f3015c11f005ed7603611eaed306a6")
     version("1.17.3", tag="v1.17.3", commit="56b660f36940a919295e6f1e18ad3a9a93a10bf7")
     version("1.17.1", tag="v1.17.1", commit="8f5c79cb63f09ef1302e85081093a3fe4da1bc7d")
     version("1.10.0", tag="v1.10.0", commit="0d9030e79888d1d5828730b254fedc53c7b640c1")
