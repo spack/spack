@@ -49,10 +49,6 @@ class Rocmcc(spack.compilers.clang.Clang):
         if match:
             return ".".join(match.groups())
 
-    @classmethod
-    def fc_version(cls, fortran_compiler):
-        return cls.default_version(fortran_compiler)
-
     @property
     def stdcxx_libs(self):
         return ("-lstdc++",)
