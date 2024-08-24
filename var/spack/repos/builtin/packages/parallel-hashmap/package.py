@@ -31,7 +31,7 @@ class ParallelHashmap(CMakePackage):
 
         args = [
             from_variant("PHMAP_BUILD_EXAMPLES", "examples"),
-            define("PHMAP_BUILD_TESTS", False) # disable due to vendored gtest
+            define("PHMAP_BUILD_TESTS", False),  # disable due to vendored gtest
         ]
 
         return args
