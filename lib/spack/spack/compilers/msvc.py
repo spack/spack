@@ -381,7 +381,3 @@ class Msvc(Compiler):
             )
         clp = spack.util.executable.which_string("cl", path=sps)
         return cls.default_version(clp) if clp else fc_ver
-
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.fc_version(f77)

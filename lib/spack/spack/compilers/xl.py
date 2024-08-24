@@ -115,7 +115,3 @@ class Xl(Compiler):
         if c_version < 10:
             c_version = c_version - 0.1
         return str(c_version)
-
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.fc_version(f77)

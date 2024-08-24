@@ -199,10 +199,6 @@ class Gcc(spack.compiler.Compiler):
             version = cls.extract_version_from_output(output)
         return version
 
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.fc_version(f77)
-
     @property
     def stdcxx_libs(self):
         return ("-lstdc++",)

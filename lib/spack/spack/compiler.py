@@ -612,10 +612,6 @@ class Compiler:
         return cls.default_version(cxx)
 
     @classmethod
-    def f77_version(cls, f77):
-        return cls.default_version(f77)
-
-    @classmethod
     def fc_version(cls, fc):
         return cls.default_version(fc)
 

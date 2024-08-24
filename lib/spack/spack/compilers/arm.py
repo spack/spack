@@ -82,7 +82,3 @@ class Arm(spack.compiler.Compiler):
     @classmethod
     def fc_version(cls, fc):
         return cls.default_version(fc)
-
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.fc_version(f77)
