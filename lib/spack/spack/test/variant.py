@@ -8,6 +8,7 @@ import pytest
 
 import spack.error
 import spack.variant
+from spack.spec import VariantMap
 from spack.variant import (
     BoolValuedVariant,
     DuplicateVariantError,
@@ -18,7 +19,6 @@ from spack.variant import (
     SingleValuedVariant,
     UnsatisfiableVariantSpecError,
     Variant,
-    VariantMap,
     disjoint_sets,
 )
 

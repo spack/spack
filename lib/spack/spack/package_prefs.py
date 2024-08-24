@@ -5,8 +5,10 @@
 import stat
 import warnings
 
+import spack.config
 import spack.error
 import spack.repo
+import spack.spec
 from spack.config import ConfigError
 from spack.util.path import canonicalize_path
 from spack.version import Version
