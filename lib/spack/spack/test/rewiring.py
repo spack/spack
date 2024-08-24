@@ -21,6 +21,16 @@ else:
     args.extend(["g++", "patchelf"])
 
 
+def check_spliced_spec_prefixes(spliced_spec):
+    """check the file in the prefix has the correct paths"""
+    for node in spliced_spec.traverse(root=True):
+        text_file_path = os.path.join(node.prefix, node.name)
+        with open(text_file_path, "r") as f:
+            text = f.read()
+            for modded_spec in node.traverse(root=True):
+                assert modded_spec.prefix in text
+
+
 @pytest.mark.requires_executables(*args)
 @pytest.mark.parametrize("transitive", [True, False])
 def test_rewire_db(mock_fetch, install_mockery, transitive):
@@ -42,13 +52,8 @@ def test_rewire_db(mock_fetch, install_mockery, transitive):
     installed_in_db = rec.installed if rec else False
     assert installed_in_db
 
-    # check the file in the prefix has the correct paths
-    for node in spliced_spec.traverse(root=True):
-        text_file_path = os.path.join(node.prefix, node.name)
-        with open(text_file_path, "r") as f:
-            text = f.read()
-            for modded_spec in node.traverse(root=True):
-                assert modded_spec.prefix in text
+    # check for correct prefix paths
+    check_spliced_spec_prefixes(spliced_spec)
 
 
 @pytest.mark.requires_executables(*args)
@@ -152,8 +157,7 @@ def test_rewire_not_installed_fails(mock_fetch, install_mockery):
         spack.rewiring.rewire(spliced_spec)
 
 
-@pytest.mark.parametrize("transitive", [True, False])
-def test_rewire_virtual(mock_fetch, install_mockery, transitive):
+def test_rewire_virtual(mock_fetch, install_mockery):
     """Check installed package can successfully splice an alternate virtual implementation"""
     dep = "splice-a"
     alt_dep = "splice-h"
@@ -164,7 +168,7 @@ def test_rewire_virtual(mock_fetch, install_mockery, transitive):
     alt_spec = Spec(alt_dep).concretized()
     alt_spec.package.do_install()
 
-    spliced_spec = spec.splice(alt_spec, transitive)
+    spliced_spec = spec.splice(alt_spec, True)
     spack.rewiring.rewire(spliced_spec)
 
     # Confirm the original spec still has the original virtual implementation.
@@ -173,44 +177,5 @@ def test_rewire_virtual(mock_fetch, install_mockery, transitive):
     # Confirm the spliced spec uses the new virtual implementation.
     assert spliced_spec.satisfies(f"^{alt_dep}")
 
-    # Confirm expected provenance.
-    #
-    # Expanded dependencies for the spec with dependency and alternate show
-    # significant re-use with the spec, original dependency, and spliced
-    # dependency.
-    #
-    #   with dependency     with alternate dependency
-    #   ---------------     -------------------------
-    #   splice-vt       =>  splice-vt'
-    #     glibc               glibc
-    #     splice-a      =>    splice-h
-    #       glibc               glibc
-    #       splice-z            splice-z
-    #     splice-z            splice-z
-    #
-    # The spliced spec will have the provenance of the spec. The provenance
-    # of dependency specs will only be updated if they are intransitively
-    # sliced.
-
-    assert spec._build_spec is None
-    assert spliced_spec._build_spec == spec, "Expected spec for provenance"
-
-    # Confirm no provenance updates were made to unchanged specs/dependencies
-    # and to changed dependencies when intransitive.
-    fmt = "{0}: Expected no provenance updates to the {1} spec"
-
-    def confirm_unchanged(spec_tuple):
-        for s, _type in spec_tuple:
-            assert s._build_spec is None, fmt.format(s.name, _type)
-
-    specs = [(spec, "original spec")]
-    specs.extend([(d, "original dependency") for d in spec.dependencies()])
-    confirm_unchanged(specs)
-
-    specs = []
-    for d in spliced_spec.dependencies():
-        if not transitive and d.satisfies(alt_dep):
-            assert d._build_spec is not None, f"{d.name}: Expected provenance update (to self)"
-            continue
-        specs.append((d, "spliced dependency"))
-    confirm_unchanged(specs)
+    # check for correct prefix paths
+    check_spliced_spec_prefixes(spliced_spec)

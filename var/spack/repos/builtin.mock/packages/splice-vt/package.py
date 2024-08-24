@@ -19,6 +19,6 @@ class SpliceVt(Package):
 
     def install(self, spec, prefix):
         with open(prefix.join("splice-t"), "w") as f:
-            f.write("splice-t: {0}".format(prefix))
+            f.write("splice-vt: {0}".format(prefix))
             f.write("splice-h: {0}".format(spec["somethingelse"].prefix))
             f.write("splice-z: {0}".format(spec["splice-z"].prefix))
