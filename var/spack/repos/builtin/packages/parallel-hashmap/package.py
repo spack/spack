@@ -26,9 +26,12 @@ class ParallelHashmap(CMakePackage):
     patch("pthread.patch")
 
     def cmake_args(self):
+        define = self.define
         from_variant = self.define_from_variant
+
         args = [
             from_variant("PHMAP_BUILD_EXAMPLES", "examples"),
+            define("PHMAP_BUILD_TESTS", False) # disable due to vendored gtest
         ]
 
         return args
