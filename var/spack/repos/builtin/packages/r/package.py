@@ -135,16 +135,16 @@ class R(AutotoolsPackage):
         # R version 4.3.3 (2024-02-29) -- "Angel Food Cake"
         match = re.search(r"^R version ([^\s]+)", output)
         return match.group(1) if match else None
-    
+
     @classmethod
     def determine_variants(cls, exes, version):
         variants = []
         for exe in exes:
             output = Executable(exe)("CMD", "config", "--all", output=str, error=str)
-    
+
             if "-lX11" in output:
                 variants.append("+X")
-    
+
         return variants
 
     # R custom URL version
