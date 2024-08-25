@@ -211,11 +211,11 @@ class VepCache(Package):
             if spec.satisfies("+installer"):
                 self.install_with_installer()
             else:
-                tarball = self.(
+                tarball = self.get_resource_filename(
                     version=cache["version"],
                     species=cache["species"],
                     assembly=cache["assembly"],
-                    indexed=cache["indexed"],
                 )
                 tar = which("tar")
                 tar("xzvf", tarball, "-C", cache["root"])
+++
