@@ -119,8 +119,14 @@ def preferred_version(pkg: "PackageBase"):
     """
     # Here we sort first on the fact that a version is marked
     # as preferred in the package, then on the fact that the
+    # version is not deprecated, then on the fact that the
     # version is not develop, then lexicographically
-    key_fn = lambda v: (pkg.versions[v].get("preferred", False), not v.isdevelop(), v)
+    key_fn = lambda v: (
+        pkg.versions[v].get("preferred", False),
+        not pkg.versions[v].get("deprecated", False),
+        not v.isdevelop(),
+        v,
+    )
     return max(pkg.versions, key=key_fn)
 
 
