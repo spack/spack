@@ -12,61 +12,34 @@ class VepCache(Package):
     """Separate installation and management for the Ensembl Variant Effect Predictor (vep)"""
 
     homepage = "https://useast.ensembl.org/info/docs/tools/vep/index.html"
+    has_code = False
     maintainers("teaguesterling")
 
-    license("APACHE-2.0", checked_by="teaguesterling")
-
-    has_code = False
+    license("Apache-2.0", checked_by="teaguesterling")
 
     # The cache *should* be pinned to the VEP version, but there are reasons
     # that one may want to avoid that
     vep_versions = ["110", "111", "112"]
-    vep_species = [
-        ("bos_taurus", ["UMD3.1"]),
-        ("danio_rerio", ["GRCz11"]),
-        ("homo_sapiens", ["GRCh37", "GRCh38"]),
-        ("mus_musculus", ["GRCm38"]),
-        ("rattus_norvegicus", ["Rnor_6.0"]),
-    ]
-    # We only need (and can) specify an assembly for humans
-    vep_assembly_choices = [
-        assembly
-        for species, assemblies in vep_species
-        for assembly in assemblies
-        if species == "homo_sapiens"
-    ]
+    for major in vep_versions:
+        version(major)
+    
+    depends_on("vep+installer", type="build")
+    depends_on("vep", type="run")
 
     variant("installer", default=True, description="Use built-in VEP installer to download")
-    variant("indexed", default=True, description="Use indexed cache")
     variant("env", default=True, description="Setup VEP environment variables for this cache")
+
+    # Cache configuration options
     variant("fasta", default=True, description="Add FASTA files to the cache")
-    variant(
-        "type",
-        values=["ensembl", "refseq", "merged"],
-        default="ensembl",
-        description="What reference genome source to retrieve the cache for",
-    )
-    variant(
-        "species",
-        values=[species for species, _ in vep_species],
-        default="homo_sapiens",
-        description="Which species to download the cache for (only one at a time)",
-    )
-    variant(
-        "assembly",
-        values=[assembly.lower() for assembly in vep_assembly_choices],
-        default="grch38",
-        when="species=homo_sapiens",
-        description="Which assembly of genome to use (only needed for homo sapiens)",
-    )
+    variant("indexed", default=True, description="Use indexed cache")
 
     @staticmethod
     def get_resource_filename(major_version, species, assembly):
         return f"{species}_vep_{major_version}_{assembly}.tar.gz"
 
-    @staticmethod
-    def vep_cache_resource(version, species, assembly, indexed, dest=""):
-        filename = f"{species}_vep_{major_version}_{assembly}.tar.gz"
+    @classmethod
+    def vep_cache_resource(cls, version, species, assembly, indexed, dest=""):
+        filename = cls.get_resource_filename(version, species, assembly)
         dir_name = "indexed_vep_cache" if indexed else "vep"
         root = f"https://ftp.ensembl.org/pub/release-{version}/variation/{dir_name}"
         url = f"{root}/{filename}"
@@ -90,8 +63,6 @@ class VepCache(Package):
 
     for major in vep_versions:
         version(major)
-        depends_on(f"vep+installer@{major}", type="build", when=f"@{major}")
-        depends_on(f"vep@{major}", type="run", when=f"@{major}")
         for species, assembly, indexed in [
             (species, assembly, indexed)
             for species, assemblies in vep_species
@@ -99,6 +70,40 @@ class VepCache(Package):
             for indexed in [True, False]
         ]:
             vep_cache_resource(version=major, species=species, assembly=assembly, indexed=indexed)
+    
+    vep_species = [
+        ("bos_taurus", ["UMD3.1"]),
+        ("danio_rerio", ["GRCz11"]),
+        ("homo_sapiens", ["GRCh37", "GRCh38"]),
+        ("mus_musculus", ["GRCm38"]),
+        ("rattus_norvegicus", ["Rnor_6.0"]),
+    ]
+    # We only need to (and only can) specify an assembly for humans
+    vep_assembly_choices = [
+        assembly
+        for species, assemblies in vep_species
+        for assembly in assemblies
+        if species == "homo_sapiens"
+    ]
+    variant(
+        "type",
+        values=["ensembl", "refseq", "merged"],
+        default="ensembl",
+        description="What reference genome source to retrieve the cache for",
+    )
+    variant(
+        "species",
+        values=[species for species, _ in vep_species],
+        default="homo_sapiens",
+        description="Which species to download the cache for (only one at a time)",
+    )
+    variant(
+        "assembly",
+        values=[assembly.lower() for assembly in vep_assembly_choices],
+        default="grch38",
+        when="species=homo_sapiens",
+        description="Which assembly of genome to use (only needed for homo sapiens)",
+    )
 
     @property
     def vep(self):
@@ -206,7 +211,7 @@ class VepCache(Package):
             if spec.satisfies("+installer"):
                 self.install_with_installer()
             else:
-                tarball = self.get_resource_filename(
+                tarball = self.(
                     version=cache["version"],
                     species=cache["species"],
                     assembly=cache["assembly"],
