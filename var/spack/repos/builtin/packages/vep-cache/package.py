@@ -22,7 +22,7 @@ class VepCache(Package):
     vep_versions = ["110", "111", "112"]
     for major in vep_versions:
         version(major)
-    
+
     depends_on("vep+installer", type="build")
     depends_on("vep", type="run")
 
@@ -70,7 +70,7 @@ class VepCache(Package):
             for indexed in [True, False]
         ]:
             vep_cache_resource(version=major, species=species, assembly=assembly, indexed=indexed)
-    
+
     vep_species = [
         ("bos_taurus", ["UMD3.1"]),
         ("danio_rerio", ["GRCz11"]),
@@ -212,9 +212,7 @@ class VepCache(Package):
                 self.install_with_installer()
             else:
                 tarball = self.get_resource_filename(
-                    version=cache["version"],
-                    species=cache["species"],
-                    assembly=cache["assembly"],
+                    version=cache["version"], species=cache["species"], assembly=cache["assembly"]
                 )
                 tar = which("tar")
                 tar("xzvf", tarball, "-C", cache["root"])
