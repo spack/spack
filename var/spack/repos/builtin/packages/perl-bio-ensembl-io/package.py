@@ -15,7 +15,6 @@ class PerlBioEnsemblIo(Package):
 
     license("APACHE-2.0", checked_by="teaguesterling")
 
-
     for vers, sha in [
         ("112", "ccbffe7c15318075463db46be348655a5914762e05ff47da2d72a4c99414d39a"),
         ("111", "f81d4c1aea88aac7105aaa3fec548e39b79f129c7abc08b55be7d0345aa5482c"),
