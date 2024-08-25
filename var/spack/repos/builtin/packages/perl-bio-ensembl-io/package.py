@@ -22,7 +22,7 @@ class PerlBioEnsemblIo(Package):
         ("110", "83cf00ecdb6184be480fc3cbf0ffc322d3e9411e14602396fda8d153345d6c2e"),
     ]:
         version(vers, sha256=sha)
-        depends_on(f"perl-bio-ensembl@{vers}")
+        depends_on(f"perl-bio-ensembl@{vers}", when=f"@{vers}")
 
     extends("perl")
 
