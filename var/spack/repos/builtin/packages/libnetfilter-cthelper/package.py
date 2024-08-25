@@ -15,7 +15,7 @@ class LibnetfilterCthelper(AutotoolsPackage):
     license("GPL-2.0-or-later")
 
     version("1.0.1", sha256="14073d5487233897355d3ff04ddc1c8d03cc5ba8d2356236aa88161a9f2dc912")
-    
+
     # Versions that were initially sourced at a third party are now deprecated
     with default_args(deprecated=True):
         # This appears to be version 1.0.0

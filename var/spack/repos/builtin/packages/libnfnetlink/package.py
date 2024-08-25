@@ -18,7 +18,7 @@ class Libnfnetlink(AutotoolsPackage):
     license("GPL-2.0-only")
 
     version("1.0.2", sha256="b064c7c3d426efb4786e60a8e6859b82ee2f2c5e49ffeea640cfe4fe33cbc376")
-    
+
     # Versions that were initially sourced at a third party are now deprecated
     with default_args(deprecated=True):
         version(
