@@ -92,10 +92,12 @@ class VepCache(Package):
         version(major)
         depends_on(f"vep+installer@{major}", type="build", when=f"@{major}")
         depends_on(f"vep@{major}", type="run", when=f"@{major}")
-        for species, assembly, indexed in [(species, assembly, indexed) 
-                                           for species, assemblies in vep_species
-                                           for assembly in assemblies
-                                           for indexed in [True, False]]:
+        for species, assembly, indexed in [
+            (species, assembly, indexed)
+            for species, assemblies in vep_species
+            for assembly in assemblies
+            for indexed in [True, False]
+        ]:
             vep_cache_resource(version=major, species=species, assembly=assembly, indexed=indexed)
 
     @property
@@ -148,7 +150,7 @@ class VepCache(Package):
             "dir": cache_dir,
             "full_path": join_path(root, cache_dir),
         }
-    
+
     def url_for_version(self, version):
         major = version.up_to(1)
         url = f"https://raw.githubusercontent.com/Ensembl/ensembl-vep/release/{major}/INSTALL.pl"
