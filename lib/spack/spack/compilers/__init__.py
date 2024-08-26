@@ -394,8 +394,9 @@ def all_compiler_names() -> List[str]:
     return [replace_apple_clang(name) for name in all_compiler_module_names()]
 
 
+@llnl.util.lang.memoized
 def all_compiler_module_names() -> List[str]:
-    return [name for name in llnl.util.lang.list_modules(spack.paths.compilers_path)]
+    return list(llnl.util.lang.list_modules(spack.paths.compilers_path))
 
 
 @_auto_compiler_spec
