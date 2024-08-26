@@ -608,10 +608,6 @@ class Compiler:
         return cls.default_version(cc)
 
     @classmethod
-    def cxx_version(cls, cxx):
-        return cls.default_version(cxx)
-
-    @classmethod
     def search_regexps(cls, language):
         # Compile all the regular expressions used for files beforehand.
         # This searches for any combination of <prefix><name><suffix>
