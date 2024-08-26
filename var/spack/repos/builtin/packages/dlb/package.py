@@ -54,6 +54,7 @@ class Dlb(AutotoolsPackage):
         args.extend(self.enable_or_disable("instrumentation-debug", variant="debug"))
         args.extend(self.with_or_without("mpi"))
         args.extend(self.with_or_without("hwloc"))
-        args.extend(self.with_or_without("papi"))
+        if self.spec.satisfies("@3.4:"):
+            args.extend(self.with_or_without("papi"))
 
         return args
