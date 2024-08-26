@@ -178,7 +178,7 @@ def list_modules(directory, **kwargs):
             ):
                 yield entry.name
 
-            elif entry.is_file() and entry.name.endswith(".py") and not ignore.match(entry.name):
+            elif entry.is_file() and entry.name.endswith(".py") and not ignore.search(entry.name):
                 yield entry.name[:-3]  # strip .py
 
 
