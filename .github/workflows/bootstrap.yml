@@ -124,6 +124,10 @@ jobs:
         if: ${{ matrix.runner == 'ubuntu-latest' }}
         run: |
           sudo rm -rf $(which gpg) $(which gpg2) $(which patchelf)
+      - name: Setup Windows
+        if: ${{ matrix.runner == 'windows-latest' }}
+        run: |
+          Remove-Item -Path (Get-Command gpg).Path
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
