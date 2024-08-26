@@ -348,6 +348,20 @@ def check_packages_exist(specs):
                 raise spack.repo.UnknownPackageError(str(s.fullname))
 
 
+def concretization_version_order(version_info: Tuple[GitOrStandardVersion, dict]):
+    """Version order key for concretization, where preferred > not preferred,
+    not deprecated > deprecated, finite > any infinite component; only if all are
+    the same, do we use default version ordering."""
+    version, info = version_info
+    return (
+        info.get("preferred", False),
+        not info.get("deprecated", False),
+        not version.isdevelop(),
+        not version.is_prerelease(),
+        version,
+    )
+
+
 class Result:
     """Result of an ASP solve."""
 
@@ -577,20 +591,6 @@ def _is_checksummed_version(version_info: Tuple[GitOrStandardVersion, dict]):
             return True
         return "commit" in info and len(info["commit"]) == 40
     return _is_checksummed_git_version(version)
-
-
-def _concretization_version_order(version_info: Tuple[GitOrStandardVersion, dict]):
-    """Version order key for concretization, where preferred > not preferred,
-    not deprecated > deprecated, finite > any infinite component; only if all are
-    the same, do we use default version ordering."""
-    version, info = version_info
-    return (
-        info.get("preferred", False),
-        not info.get("deprecated", False),
-        not version.isdevelop(),
-        not version.is_prerelease(),
-        version,
-    )
 
 
 def _spec_with_default_name(spec_str, name):
@@ -2026,7 +2026,7 @@ class SpackSolverSetup:
             # like being a "develop" version or being preferred exist only at a
             # package.py level, sort them in this partial list here
             package_py_versions = sorted(
-                pkg_cls.versions.items(), key=_concretization_version_order, reverse=True
+                pkg_cls.versions.items(), key=concretization_version_order, reverse=True
             )
 
             if require_checksum and pkg_cls.has_code:

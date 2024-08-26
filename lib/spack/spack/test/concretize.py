@@ -2959,7 +2959,7 @@ def test_concretization_version_order():
     result = [
         v
         for v, _ in sorted(
-            versions, key=spack.solver.asp._concretization_version_order, reverse=True
+            versions, key=spack.solver.asp.concretization_version_order, reverse=True
         )
     ]
     assert result == [
