@@ -9,9 +9,6 @@ from spack.compiler import Compiler
 
 
 class Nvhpc(Compiler):
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ["nvc++"]
-
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["nvfortran"]
 

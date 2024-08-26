@@ -5,7 +5,6 @@
 
 import os
 import re
-from typing import List
 
 import llnl.util.lang
 
@@ -13,9 +12,6 @@ import spack.compiler
 
 
 class Nag(spack.compiler.Compiler):
-    # Subclasses use possible names of C++ compiler
-    cxx_names: List[str] = []
-
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["nagfor"]
 

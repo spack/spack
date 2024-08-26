@@ -13,9 +13,6 @@ from spack.version import Version
 
 
 class Oneapi(Compiler):
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ["icpx"]
-
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["ifx"]
 

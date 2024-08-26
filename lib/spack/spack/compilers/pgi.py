@@ -10,9 +10,6 @@ from spack.version import Version
 
 
 class Pgi(Compiler):
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ["pgc++", "pgCC"]
-
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["pgfortran", "pgf77"]
 

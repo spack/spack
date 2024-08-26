@@ -9,9 +9,6 @@ import spack.compiler
 
 
 class Arm(spack.compiler.Compiler):
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ["armclang++"]
-
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["armflang"]
 

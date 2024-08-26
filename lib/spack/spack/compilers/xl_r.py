@@ -9,9 +9,6 @@ import spack.compilers.xl
 
 
 class XlR(spack.compilers.xl.Xl):
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ["xlC_r", "xlc++_r"]
-
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["xlf_r"]
 

@@ -15,9 +15,6 @@ from spack.version import Version
 
 
 class Gcc(spack.compiler.Compiler):
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ["g++"]
-
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["gfortran"]
 

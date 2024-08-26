@@ -11,9 +11,6 @@ from spack.version import Version
 
 
 class Intel(Compiler):
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ["icpc"]
-
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["ifort"]
 
