@@ -33,10 +33,7 @@ class Bfs(MakefilePackage):
 
     @run_before("build", when="@4:")
     def configure(self):
-        args = [
-            "--enable-release",
-            f"--prefix={self.prefix}",
-        ]
+        args = ["--enable-release", f"--prefix={self.prefix}"]
 
         configure_exe = Executable("./configure")
         configure_exe(*args)
