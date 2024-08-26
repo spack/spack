@@ -45,7 +45,7 @@
    internal_error("variant_value true for a non-node").
 :- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode),
    internal_error("node_flag_compiler_default true for non-node").
-:- attr("node_flag", PackageNode, _, _, _, _), not attr("node", PackageNode),
+:- attr("node_flag", PackageNode, _), not attr("node", PackageNode),
    internal_error("node_flag assigned for non-node").
 :- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode),
    internal_error("external_spec_selected for non-node").
@@ -382,11 +382,10 @@ cannot_hold(TriggerID, PackageNode)
 
 trigger_condition_holds(ID, RequestorNode) :-
   trigger_node(ID, PackageNode, RequestorNode);
-  attr(Name, node(X, A1))                 : condition_requirement(ID, Name, A1),                 condition_nodes(ID, PackageNode, node(X, A1));
-  attr(Name, node(X, A1), A2)             : condition_requirement(ID, Name, A1, A2),             condition_nodes(ID, PackageNode, node(X, A1));
-  attr(Name, node(X, A1), A2, A3)         : condition_requirement(ID, Name, A1, A2, A3),         condition_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name);
-  attr(Name, node(X, A1), A2, A3, A4)     : condition_requirement(ID, Name, A1, A2, A3, A4),     condition_nodes(ID, PackageNode, node(X, A1));
-  attr(Name, node(X, A1), A2, A3, A4, A5) : condition_requirement(ID, Name, A1, A2, A3, A4, A5), condition_nodes(ID, PackageNode, node(X, A1));
+  attr(Name, node(X, A1))             : condition_requirement(ID, Name, A1),             condition_nodes(ID, PackageNode, node(X, A1));
+  attr(Name, node(X, A1), A2)         : condition_requirement(ID, Name, A1, A2),         condition_nodes(ID, PackageNode, node(X, A1));
+  attr(Name, node(X, A1), A2, A3)     : condition_requirement(ID, Name, A1, A2, A3),     condition_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name);
+  attr(Name, node(X, A1), A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4), condition_nodes(ID, PackageNode, node(X, A1));
   % Special cases
   not cannot_hold(ID, PackageNode).
 
@@ -410,7 +409,6 @@ imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1).
 imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _).
 imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _).
 imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _, _).
-imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _, _, _).
 imposed_packages(ID, A1) :- imposed_constraint(ID, "depends_on", _, A1, _).
 
 imposed_nodes(EffectID, node(NodeID, Package), node(X, A1))
@@ -431,11 +429,10 @@ imposed_nodes(ConditionID, PackageNode, node(X, A1))
    internal_error("Imposing constraint outside of imposed_nodes").
 
 % Conditions that hold impose may impose constraints on other specs
-attr(Name, node(X, A1))                 :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),                 imposed_nodes(ID, PackageNode, node(X, A1)).
-attr(Name, node(X, A1), A2)             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),             imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
-attr(Name, node(X, A1), A2, A3)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),         imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
-attr(Name, node(X, A1), A2, A3, A4)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4),     imposed_nodes(ID, PackageNode, node(X, A1)).
-attr(Name, node(X, A1), A2, A3, A4, A5) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4, A5), imposed_nodes(ID, PackageNode, node(X, A1)).
+attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(ID, PackageNode, node(X, A1)).
+attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),         imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
+attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
+attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(ID, PackageNode, node(X, A1)).
 
 % Provider set is relevant only for literals, since it's the only place where `^[virtuals=foo] bar`
 % might appear in the HEAD of a rule
@@ -477,8 +474,8 @@ virtual_condition_holds(node(Y, A2), Virtual)
 % we cannot have additional flag values when we are working with concrete specs
 :- attr("node", node(ID, Package)),
    attr("hash", node(ID, Package), Hash),
-   attr("node_flag", node(ID, Package), FlagType, Flag, _, _),
-   not imposed_constraint(Hash, "node_flag", Package, FlagType, Flag, _, _),
+   attr("node_flag", node(ID, Package), node_flag(FlagType, Flag, _, _)),
+   not imposed_constraint(Hash, "node_flag", Package, node_flag(FlagType, Flag, _, _)),
    internal_error("imposed hash without imposing all flag values").
 
 #defined condition/2.
@@ -486,12 +483,10 @@ virtual_condition_holds(node(Y, A2), Virtual)
 #defined condition_requirement/4.
 #defined condition_requirement/5.
 #defined condition_requirement/6.
-#defined condition_requirement/7.
 #defined imposed_constraint/3.
 #defined imposed_constraint/4.
 #defined imposed_constraint/5.
 #defined imposed_constraint/6.
-#defined imposed_constraint/7.
 
 %-----------------------------------------------------------------------------
 % Concrete specs
@@ -785,11 +780,11 @@ required_provider(Provider, Virtual)
 % flags if their only source is from a requirement. This is overly-specific
 % and should use a more-generic approach like in https://github.com/spack/spack/pull/37180
 
-{ attr("node_flag", node(ID, Package), FlagType, FlagValue, FlagGroup, Source) } :-
+{ attr("node_flag", node(ID, Package), NodeFlag) } :-
   requirement_group_member(ConditionID, Package, RequirementID),
   activate_requirement(node(ID, Package), RequirementID),
   pkg_fact(Package, condition_effect(ConditionID, EffectID)),
-  imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue, FlagGroup, Source).
+  imposed_constraint(EffectID, "node_flag_set", Package, NodeFlag).
 
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {
@@ -1047,7 +1042,7 @@ propagated_flag(node(PackageID, Package), node_flag(FlagType, Flag, FlagGroup, S
   node(PackageID, Package) != SourceNode,
   not runtime(Package).
 
-attr("node_flag", PackageNode, FlagType, Flag, FlagGroup, Source) :- propagated_flag(PackageNode, node_flag(FlagType, Flag, FlagGroup, Source), _).
+attr("node_flag", PackageNode, NodeFlag) :- propagated_flag(PackageNode, NodeFlag, _).
 
 % Cannot propagate the same flag from two distinct sources
 error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
@@ -1340,7 +1335,7 @@ error(100, "Compiler {1}@{2} requested for {0} cannot be found. Set install_miss
 %-----------------------------------------------------------------------------
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
-attr("node_flag", PackageNode, FlagType, Flag, FlagGroup, CompilerID)
+attr("node_flag", PackageNode, node_flag(FlagType, Flag, FlagGroup, CompilerID))
   :- compiler_flag(CompilerID, FlagType, Flag, FlagGroup),
      node_compiler(PackageNode, CompilerID),
      flag_type(FlagType),
@@ -1349,7 +1344,7 @@ attr("node_flag", PackageNode, FlagType, Flag, FlagGroup, CompilerID)
      compiler_version(CompilerID, Version).
 
 attr("node_flag_compiler_default", PackageNode)
-  :- not attr("node_flag_set", PackageNode, FlagType, _, _, _),
+  :- not attr("node_flag_set", PackageNode, node_flag(FlagType, _, _, _)),
      compiler_flag(CompilerID, FlagType, Flag, _),
      node_compiler(PackageNode, CompilerID),
      flag_type(FlagType),
@@ -1357,7 +1352,7 @@ attr("node_flag_compiler_default", PackageNode)
      compiler_name(CompilerID, CompilerName),
      compiler_version(CompilerID, Version).
 
-attr("node_flag", PackageNode, FlagType, Flag, FlagGroup, Source) :- attr("node_flag_set", PackageNode, FlagType, Flag, FlagGroup, Source).
+attr("node_flag", PackageNode, NodeFlag) :- attr("node_flag_set", PackageNode, NodeFlag).
 
 #defined compiler_flag/4.
 

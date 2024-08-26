@@ -1990,7 +1990,7 @@ class SpackSolverSetup:
         for flag_type, flags in spec.compiler_flags.items():
             flag_group = " ".join(flags)
             for flag in flags:
-                clauses.append(f.node_flag(spec.name, flag_type, flag, flag_group, source))
+                clauses.append(f.node_flag(spec.name, fn.node_flag(flag_type, flag, flag_group, source)))
                 if not spec.concrete and flag.propagate is True:
                     clauses.append(
                         f.propagate(
@@ -3474,8 +3474,10 @@ class SpecBuilder:
     def node_flag_compiler_default(self, node):
         self._flag_compiler_defaults.add(node)
 
-    def node_flag(self, node, flag_type, flag, flag_group, source):
-        self._specs[node].compiler_flags.add_flag(flag_type, flag, False, flag_group, source)
+    def node_flag(self, node, node_flag):
+        self._specs[node].compiler_flags.add_flag(
+            node_flag.flag_type, node_flag.flag, False, node_flag.flag_group, node_flag.source
+        )
 
     def external_spec_selected(self, node, idx):
         """This means that the external spec and index idx has been selected for this package."""
