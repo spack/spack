@@ -158,6 +158,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3258
     patch("mr3258-fix-typo-thrust-dependency-with-rocm.patch", when="@2.2:")
 
+    # VTK-M PR#3259
+    # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3259
+    patch("mr3259-thrust-is_arithmetic-fix.patch", when="@2.0.0:2.2.0 +cuda ^cuda@12.6:")
+
     # Disable Thrust patch that is no longer needed in modern Thrust
     patch(
         "https://github.com/Kitware/VTK-m/commit/4a4466e7c8cd44d2be2bd3fe6f359faa8e9547aa.patch?full_index=1",
