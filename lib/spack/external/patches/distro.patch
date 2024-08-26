@@ -1,8 +1,8 @@
 diff --git a/lib/spack/external/_vendoring/distro/distro.py b/lib/spack/external/_vendoring/distro/distro.py
-index 89e1868047..722c632280 100644
+index 89e1868047..50c3b18d4d 100644
 --- a/lib/spack/external/_vendoring/distro/distro.py
 +++ b/lib/spack/external/_vendoring/distro/distro.py
-@@ -1265,27 +1265,30 @@ def _distro_release_info(self) -> Dict[str, str]:
+@@ -1265,27 +1265,29 @@ def _distro_release_info(self) -> Dict[str, str]:
              match = _DISTRO_RELEASE_BASENAME_PATTERN.match(basename)
          else:
              try:
@@ -16,7 +16,6 @@ index 89e1868047..722c632280 100644
 +                    etc_files = [
 +                        p.path for p in it
 +                        if p.is_file() and p.name not in _DISTRO_RELEASE_IGNORE_BASENAMES
-+                        and _DISTRO_RELEASE_BASENAME_PATTERN.match(p.name)
 +                    ]
                  # We sort for repeatability in cases where there are multiple
                  # distro specific files; e.g. CentOS, Oracle, Enterprise all
