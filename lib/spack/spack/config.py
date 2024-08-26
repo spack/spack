@@ -148,6 +148,7 @@ class DirectoryConfigScope(ConfigScope):
         super().__init__(name)
         self.path = path
         self.writable = writable
+        self.exists = os.path.isdir(path)
 
     def get_section_filename(self, section: str) -> str:
         """Returns the filename associated with a given section"""
@@ -156,6 +157,8 @@ class DirectoryConfigScope(ConfigScope):
 
     def get_section(self, section: str) -> Optional[YamlConfigDict]:
         """Returns the data associated with a given section"""
+        if not self.exists:
+            return None
         if section not in self.sections:
             path = self.get_section_filename(section)
             schema = SECTION_SCHEMAS[section]
