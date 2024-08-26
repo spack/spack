@@ -30,6 +30,8 @@ class Lshw(MakefilePackage):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
-    def install(self, spec, prefix):
-        make("install")
-        install_tree(".", prefix)
+    def setup_build_environment(self, env):
+        env.set("PREFIX", self.prefix)
+
+    def setup_run_environment(self, env):
+        env.prepend_path("PATH", self.prefix.sbin)
