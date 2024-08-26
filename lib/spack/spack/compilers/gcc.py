@@ -18,9 +18,6 @@ class Gcc(spack.compiler.Compiler):
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["gfortran"]
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["gfortran"]
-
     # MacPorts builds gcc versions with prefixes and -mp-X or -mp-X.Y suffixes.
     # Homebrew and Linuxbrew may build gcc with -X, -X.Y suffixes.
     # Old compatibility versions may contain XY suffixes.

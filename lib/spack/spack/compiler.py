@@ -205,9 +205,6 @@ class Compiler:
     # Subclasses use possible names of Fortran 77 compiler
     f77_names: List[str] = []
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names: List[str] = []
-
     # Optional prefix regexes for searching for this type of compiler.
     # Prefixes are sometimes used for toolchains
     prefixes: List[str] = []

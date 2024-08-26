@@ -12,9 +12,6 @@ class Fj(spack.compiler.Compiler):
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["frt"]
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["frt"]
-
     # Named wrapper links within build_env_path
     link_paths = {
         "cc": os.path.join("fj", "fcc"),

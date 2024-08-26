@@ -13,9 +13,6 @@ class Xl(Compiler):
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["xlf"]
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["xlf90", "xlf95", "xlf2003", "xlf2008"]
-
     # Named wrapper links within build_env_path
     link_paths = {
         "cc": os.path.join("xl", "xlc"),

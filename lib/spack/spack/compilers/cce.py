@@ -22,9 +22,6 @@ class Cce(Compiler):
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["crayftn"]
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["crayftn"]
-
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
     suffixes = [r"-mp-\d\.\d"]
 

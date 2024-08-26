@@ -12,9 +12,6 @@ class Nvhpc(Compiler):
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["nvfortran"]
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["nvfortran"]
-
     # Named wrapper links within build_env_path
     link_paths = {
         "cc": os.path.join("nvhpc", "nvc"),

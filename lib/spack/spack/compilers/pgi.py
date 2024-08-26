@@ -13,9 +13,6 @@ class Pgi(Compiler):
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["pgfortran", "pgf77"]
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["pgfortran", "pgf95", "pgf90"]
-
     # Named wrapper links within build_env_path
     link_paths = {
         "cc": os.path.join("pgi", "pgcc"),

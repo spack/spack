@@ -14,9 +14,6 @@ class Intel(Compiler):
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["ifort"]
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["ifort"]
-
     # Named wrapper links within build_env_path
     link_paths = {
         "cc": os.path.join("intel", "icc"),

@@ -15,9 +15,6 @@ class Nag(spack.compiler.Compiler):
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["nagfor"]
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["nagfor"]
-
     # Named wrapper links within build_env_path
     # Use default wrappers for C and C++, in case provided in compilers.yaml
     link_paths = {
