@@ -1269,7 +1269,6 @@ class LinuxDistribution:
                     etc_files = [
                         p.path for p in it
                         if p.is_file() and p.name not in _DISTRO_RELEASE_IGNORE_BASENAMES
-                        and _DISTRO_RELEASE_BASENAME_PATTERN.match(p.name)
                     ]
                 # We sort for repeatability in cases where there are multiple
                 # distro specific files; e.g. CentOS, Oracle, Enterprise all
