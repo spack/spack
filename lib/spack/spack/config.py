@@ -1120,10 +1120,10 @@ def read_config_file(
         return None
 
     except IsADirectoryError as e:
-        raise ConfigFileError(f"Config file is a directory: {path}") from e
+        raise ConfigFileError(f"Invalid configuration. {path} exists but is not a file.") from e
 
     except OSError as e:
-        raise ConfigFileError(f"Error reading configuration file {path}: {str(e)}") from e
+        raise ConfigFileError(f"Config file is not readable: {path}: {str(e)}") from e
 
     except StopIteration as e:
         raise ConfigFileError(f"Config file is empty or is not a valid YAML dict: {path}") from e
