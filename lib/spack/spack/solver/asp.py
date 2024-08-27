@@ -1066,9 +1066,34 @@ class ConstraintOrigin:
         return -1, source
 
 
-class ConditionContext:
+class SourceContext:
     def __init__(self):
-        self.source = None
+        self.source = "none"
+
+
+class ConditionIdContext(SourceContext):
+    def __init__(self):
+        super().__init__()
+        self.transform = None
+
+
+class ConditionContext(SourceContext):
+    def __init__(self):
+        super().__init__()
+        self.transform_required = None
+        self.transform_imposed = None
+
+    def requirement_context(self) -> ConditionIdContext:
+        ctxt = ConditionIdContext()
+        ctxt.source = self.source
+        ctxt.transform = self.transform_required
+        return ctxt
+
+    def impose_context(self) -> ConditionIdContext:
+        ctxt = ConditionIdContext()
+        ctxt.source = self.source
+        ctxt.transform = self.transform_imposed
+        return ctxt
 
 
 class SpackSolverSetup:
@@ -1425,8 +1450,7 @@ class SpackSolverSetup:
         named_cond: spack.spec.Spec,
         cache: ConditionSpecCache,
         body: bool,
-        transform: Optional[TransformFunction] = None,
-        context: Optional[ConditionContext] = None,
+        context: ConditionIdContext,
     ) -> int:
         """Get the id for one half of a condition (either a trigger or an imposed constraint).
 
@@ -1440,15 +1464,15 @@ class SpackSolverSetup:
         """
         pkg_cache = cache[named_cond.name]
 
-        named_cond_key = (str(named_cond), transform)
+        named_cond_key = (str(named_cond), context.transform)
         result = pkg_cache.get(named_cond_key)
         if result:
             return result[0]
 
         cond_id = next(self._id_counter)
         requirements = self.spec_clauses(named_cond, body=body, context=context)
-        if transform:
-            requirements = transform(named_cond, requirements)
+        if context.transform:
+            requirements = context.transform(named_cond, requirements)
         pkg_cache[named_cond_key] = (cond_id, requirements)
 
         return cond_id
@@ -1459,8 +1483,6 @@ class SpackSolverSetup:
         imposed_spec: Optional[spack.spec.Spec] = None,
         name: Optional[str] = None,
         msg: Optional[str] = None,
-        transform_required: Optional[TransformFunction] = None,
-        transform_imposed: Optional[TransformFunction] = remove_node,
         context: Optional[ConditionContext] = None,
     ):
         """Generate facts for a dependency or virtual provider condition.
@@ -1487,12 +1509,11 @@ class SpackSolverSetup:
             # caller, we won't emit partial facts.
 
             condition_id = next(self._id_counter)
+            requirement_context = (
+                context.requirement_context() if context else ConditionIdContext()
+            )
             trigger_id = self._get_condition_id(
-                required_spec,
-                cache=self._trigger_cache,
-                body=True,
-                transform=transform_required,
-                context=context,
+                required_spec, cache=self._trigger_cache, body=True, context=requirement_context
             )
             self.gen.fact(fn.pkg_fact(required_spec.name, fn.condition(condition_id)))
             self.gen.fact(fn.condition_reason(condition_id, msg))
@@ -1502,12 +1523,9 @@ class SpackSolverSetup:
             if not imposed_spec:
                 return condition_id
 
+            impose_context = context.impose_context() if context else ConditionIdContext()
             effect_id = self._get_condition_id(
-                imposed_spec,
-                cache=self._effect_cache,
-                body=False,
-                transform=transform_imposed,
-                context=context,
+                imposed_spec, cache=self._effect_cache, body=False, context=impose_context
             )
             self.gen.fact(
                 fn.pkg_fact(required_spec.name, fn.condition_effect(condition_id, effect_id))
@@ -1592,16 +1610,10 @@ class SpackSolverSetup:
                 context.source = ConstraintOrigin.append_type_suffix(
                     pkg.name, ConstraintOriginType.DEPENDS_ON
                 )
+                context.transform_required = track_dependencies
+                context.transform_imposed = dependency_holds
 
-                self.condition(
-                    cond,
-                    dep.spec,
-                    name=pkg.name,
-                    msg=msg,
-                    transform_required=track_dependencies,
-                    transform_imposed=dependency_holds,
-                    context=context,
-                )
+                self.condition(cond, dep.spec, name=pkg.name, msg=msg, context=context)
 
                 self.gen.newline()
 
@@ -1679,21 +1691,19 @@ class SpackSolverSetup:
                     when_spec = spack.spec.Spec(pkg_name)
 
                 try:
-                    # With virtual we want to emit "node" and "virtual_node" in imposed specs
-                    transform: Optional[TransformFunction] = remove_node
-                    if virtual:
-                        transform = None
-
                     context = ConditionContext()
                     context.source = ConstraintOrigin.append_type_suffix(
                         pkg_name, ConstraintOriginType.REQUIRE
                     )
+                    if not virtual:
+                        context.transform_imposed = remove_node
+                    # else: for virtuals we want to emit "node" and
+                    # "virtual_node" in imposed specs
 
                     member_id = self.condition(
                         required_spec=when_spec,
                         imposed_spec=spec,
                         name=pkg_name,
-                        transform_imposed=transform,
                         msg=f"{input_spec} is a requirement for package {pkg_name}",
                         context=context,
                     )
@@ -1790,7 +1800,9 @@ class SpackSolverSetup:
                     ]
 
                 try:
-                    self.condition(spec, spec, msg=msg, transform_imposed=external_imposition)
+                    context = ConditionContext()
+                    context.transform_imposed = external_imposition
+                    self.condition(spec, spec, msg=msg, context=context)
                 except (spack.error.SpecError, RuntimeError) as e:
                     warnings.warn(f"while setting up external spec {spec}: {e}")
                     continue
@@ -1865,7 +1877,7 @@ class SpackSolverSetup:
         expand_hashes: bool = False,
         concrete_build_deps=False,
         required_from: Optional[str] = None,
-        context: Optional[ConditionContext] = None,
+        context: Optional[SourceContext] = None,
     ) -> List[AspFunction]:
         """Wrap a call to `_spec_clauses()` into a try/except block with better error handling.
 
@@ -1898,7 +1910,7 @@ class SpackSolverSetup:
         transitive: bool = True,
         expand_hashes: bool = False,
         concrete_build_deps: bool = False,
-        context: Optional[ConditionContext] = None,
+        context: Optional[SourceContext] = None,
     ) -> List[AspFunction]:
         """Return a list of clauses for a spec mandates are true.
 
@@ -2727,7 +2739,7 @@ class SpackSolverSetup:
                 effect_id, requirements = cache[imposed_spec_key]
             else:
                 effect_id = next(self._id_counter)
-                context = ConditionContext()
+                context = SourceContext()
                 context.source = "literal"
                 requirements = self.spec_clauses(spec, context=context)
             root_name = spec.name
