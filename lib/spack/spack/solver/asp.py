@@ -1990,7 +1990,9 @@ class SpackSolverSetup:
         for flag_type, flags in spec.compiler_flags.items():
             flag_group = " ".join(flags)
             for flag in flags:
-                clauses.append(f.node_flag(spec.name, fn.node_flag(flag_type, flag, flag_group, source)))
+                clauses.append(
+                    f.node_flag(spec.name, fn.node_flag(flag_type, flag, flag_group, source))
+                )
                 if not spec.concrete and flag.propagate is True:
                     clauses.append(
                         f.propagate(
@@ -2078,7 +2080,7 @@ class SpackSolverSetup:
                             body=body,
                             expand_hashes=expand_hashes,
                             concrete_build_deps=concrete_build_deps,
-                            source=source
+                            source=source,
                         )
                     )
 
