@@ -315,9 +315,9 @@ class PythonExtension(spack.package_base.PackageBase):
         )
 
         python_externals_detected = [
-            d.spec
-            for d in python_externals_detection.get("python", [])
-            if d.spec.external_path == self.spec.external_path
+            spec
+            for spec in python_externals_detection.get("python", [])
+            if spec.external_path == self.spec.external_path
         ]
         if python_externals_detected:
             return python_externals_detected[0]
