@@ -152,7 +152,7 @@ def _ensure_bootstrap_configuration() -> Generator:
     bootstrap_store_path = store_path()
     user_configuration = _read_and_sanitize_configuration()
     with spack.environment.no_active_environment():
-        with spack.platforms.prevent_cray_detection(), spack.platforms.use_platform(
+        with spack.platforms.use_platform(
             spack.platforms.real_host()
         ), spack.repo.use_repositories(spack.paths.packages_path):
             # Default configuration scopes excluding command line
