@@ -14,7 +14,6 @@
 """
 import collections
 import collections.abc
-import copy
 import ctypes
 import enum
 import functools
