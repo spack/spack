@@ -2078,6 +2078,7 @@ class SpackSolverSetup:
                             body=body,
                             expand_hashes=expand_hashes,
                             concrete_build_deps=concrete_build_deps,
+                            source=source
                         )
                     )
 
@@ -2713,7 +2714,7 @@ class SpackSolverSetup:
                 effect_id, requirements = cache[imposed_spec_key]
             else:
                 effect_id = next(self._id_counter)
-                requirements = self.spec_clauses(spec)
+                requirements = self.spec_clauses(spec, source="literal")
             root_name = spec.name
             for clause in requirements:
                 clause_name = clause.args[0]

@@ -254,9 +254,8 @@ def test_propagate_and_compiler_cfg(concretize_scope, test_repo):
     assert root_spec["y"].satisfies("cflags='-f1 -f2'")
 
 
-def test_propagate_and_spec_dep(concretize_scope, test_repo):
-    root_spec1 = Spec("v cflags=='-f1' ^y cflags='-f2'").concretized()
-    assert root_spec1["y"].satisfies("cflags='-f1 -f2'")
+# Note: setting flags on a dependency overrides propagation, which
+# is tested in test/concretize.py:test_compiler_flag_propagation
 
 
 def test_propagate_and_pkg_dep(concretize_scope, test_repo):

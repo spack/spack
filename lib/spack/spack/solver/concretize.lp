@@ -1032,9 +1032,7 @@ variant_is_propagated(PackageNode, Variant) :-
 
 propagated_flag(node(PackageID, Package), node_flag(FlagType, Flag, FlagGroup, Source), SourceNode) :-
   propagate(node(PackageID, Package), node_flag(FlagType, Flag, FlagGroup, Source), _),
-  % Disable to pass propagate_and_spec_dep, propagate_and_pkg_dep
-  % and propagate_and_require
-  % not attr("node_flag_set", node(PackageID, Package), FlagType, _, _, _),
+  not attr("node_flag_set", node(PackageID, Package), node_flag(FlagType, _, _, "literal")),
   % Same compiler as propagation source
   node_compiler(node(PackageID, Package), CompilerID),
   node_compiler(SourceNode, CompilerID),
