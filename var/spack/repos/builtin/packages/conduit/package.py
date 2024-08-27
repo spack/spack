@@ -268,7 +268,7 @@ class Conduit(CMakePackage):
     @run_before("install")
     def copy_host_config(self):
         src = self._get_host_config_path(self.spec)
-        dst =  join_path(self.spec.prefix, os.path.basename(src))
+        dst = join_path(self.spec.prefix, os.path.basename(src))
         copy(src, dst)
 
     @run_after("install")
