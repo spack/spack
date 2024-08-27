@@ -608,11 +608,11 @@ example request.
 
 .. code-block::
 
-  https://gantry.spack.io/allocation?spec=zlib-ng@2.1.6 +compat+opt+shared+pic+new_strategies arch=linux-ubuntu20.04-x86_64_v3%gcc@12.0.0
+  https://my-dyn-mapping.spack.io/allocation?spec=zlib-ng@2.1.6 +compat+opt+shared+pic+new_strategies arch=linux-ubuntu20.04-x86_64_v3%gcc@12.0.0
 
 
 With an example response the updates kubernetes request variables, overrides the max retries for gitlab,
-and prepends a note about the modifications made by the gantry.spack.io service.
+and prepends a note about the modifications made by the my-dyn-mapping.spack.io service.
 
 .. code-block::
 
@@ -627,7 +627,7 @@ and prepends a note about the modifications made by the gantry.spack.io service.
     "retry": { "max:": "1"}
     "script+:":
     [
-      "echo \"Job modified by gantry.spack.io\""
+      "echo \"Job modified by my-dyn-mapping.spack.io\""
     ]
   }
 
@@ -643,19 +643,19 @@ By default, the ``timeout`` is set to the option in ``config:timeout`` and ``ver
 Passing header parameters to the request can be achieved through the ``header`` section. The values of the variables passed to the
 header may be environment variables that are expanded at runtime, such as a private token configured on the runner.
 
-Here is an example configuration pointing to ``gantry.spack.io/allocation``.
+Here is an example configuration pointing to ``my-dyn-mapping.spack.io/allocation``.
 
 
 .. code-block:: yaml
 
   ci:
   - dynamic-mapping:
-      endpoint: gantry.spack.io/allocation
+      endpoint: my-dyn-mapping.spack.io/allocation
       timeout: 10
       verify_ssl: True
       header:
-        PRIVATE_TOKEN: ${GANTRY_PRIVATE_TOKEN}
-        GANTRY_CONFIG: "fuzz_allocation:false"
+        PRIVATE_TOKEN: ${MY_PRIVATE_TOKEN}
+        MY_CONFIG: "fuzz_allocation:false"
       attributes:
         allow:
         - variables
