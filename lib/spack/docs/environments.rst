@@ -893,8 +893,9 @@ The valid variables for a ``when`` clause are:
 
 #. ``env``. The user environment (usually ``os.environ`` in Python).
 
-#. ``hostname``. The hostname of the system (if ``hostname`` is an
-   executable in the user's PATH).
+#. ``hostname``. The hostname of the system.
+
+#. ``full_hostname``. The fully qualified hostname of the system.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 SpecLists as Constraints
