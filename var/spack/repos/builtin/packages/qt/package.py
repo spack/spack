@@ -138,7 +138,7 @@ class Qt(Package):
     # https://bugreports.qt.io/browse/QTBUG-84037
     patch("qt515-quick3d-assimp.patch", when="@5.15:5+opengl")
     # https://forum.qt.io/topic/130793/a-problem-with-python-path-when-i-try-to-build-qt-from-source-e-program-is-not-recognized-as-an-internal-or-external-command?_=1722965446110&lang=en-US
-    patch("qt515_masm_python.patch", when="platform=windows")
+    patch("qt515_masm_python.patch", when="@5.15 platform=windows")
 
     # https://bugreports.qt.io/browse/QTBUG-90395
     patch(
@@ -196,6 +196,10 @@ class Qt(Package):
             depends_on("glib", when="@4:")
             depends_on("libmng")
             depends_on("assimp@5.0.0:5", when="@5.5:+opengl")
+            depends_on("sqlite+column_metadata", when="+sql", type=("build", "run"))
+    # Windows sqlite has no column_metadata variant
+    with when("platform=windows +sql"):
+        depends_on("sqlite",  type=("build", "run"))
 
     depends_on("icu4c")
     depends_on("harfbuzz", when="@5:")
@@ -209,7 +213,6 @@ class Qt(Package):
     depends_on("zlib-api")
     depends_on("freetype", when="+gui")
     depends_on("gtkplus", when="+gtk")
-    depends_on("sqlite+column_metadata", when="+sql", type=("build", "run"))
 
     depends_on("libpng@1.2.57", when="@3")
     depends_on("pcre+multibyte", when="@5.0:5.8")
