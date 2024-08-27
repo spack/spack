@@ -147,6 +147,10 @@ jobs:
         run: |
           ${{ env.SETUP_SCRIPT_SOURCE }}share/spack/setup-env.${{ env.SETUP_SCRIPT_EXT }}
           spack bootstrap disable github-actions-v0.4
+      - name: Disable from source bootstrap
+        if: ${{ matrix.runner != 'windows-latest' }}
+        run: |
+          source share/spack/setup-env.sh
           spack bootstrap disable spack-install
       - name: Bootstrap clingo
         # No binary clingo on Windows yet
