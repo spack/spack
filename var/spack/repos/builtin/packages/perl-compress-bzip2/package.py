@@ -18,6 +18,14 @@ class PerlCompressBzip2(PerlPackage):
 
     version("2.28", sha256="859f835c3f5c998810d8b2a6f9e282ff99d6cb66ccfa55cae7e66dafb035116e")
 
+    depends_on("c", type="build")
+    depends_on("bzip2", type=("build", "test", "run"))
+
+    def setup_build_environment(self, env):
+        env.set("BZLIB_INCLUDE", self.spec["bzip2"].prefix.include)
+        env.set("BZLIB_LIB", self.spec["bzip2"].prefix.lib)
+        env.set("BZLIB_BIN", self.spec["bzip2"].prefix.bin)
+
     def test_use(self):
         """Test 'use module'"""
         options = ["-we", 'use strict; use Compress::Bzip2; print("OK\n")']
