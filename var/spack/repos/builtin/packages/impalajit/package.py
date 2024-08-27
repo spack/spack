@@ -42,7 +42,6 @@ class Impalajit(CMakePackage):
         args.append(self.define_from_variant("SHARED_LIB", "shared"))
         args.append(self.define("TESTS", self.run_tests))
 
-        if self.compiler.name != "intel":
+        if not self.spec.satisfies("%intel"):
             args.append("-DINTEL_COMPILER=OFF")
-
         return args
