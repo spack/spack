@@ -18,7 +18,7 @@ class WinGpg(Package):
     """
 
     homepage = "https://spack.github.io/windows-bootstrap-resources/"
-    url = "https://spack.github.io/windows-bootstrap-resources/resources/gpg/2.4.5/ggp4win_2.4.5.tar.gz"
+    url = "https://spack.github.io/windows-bootstrap-resources/resources/gpg/2.4.5/gpg4win_2.4.5.tar.gz"
 
     executables = ["^gpg$"]
 
