@@ -61,10 +61,10 @@ def test_find_external_two_instances_same_package(mock_executable):
     )
 
     assert len(detected_specs) == 2
-    spec_to_path = {e.spec: e.prefix for e in detected_specs}
+    spec_to_path = {e.spec: e.spec.external_path for e in detected_specs}
     assert spec_to_path[Spec("cmake@1.foo")] == (
         spack.detection.executable_prefix(str(cmake1.parent))
-    )
+    ), spec_to_path
     assert spec_to_path[Spec("cmake@3.17.2")] == (
         spack.detection.executable_prefix(str(cmake2.parent))
     )
@@ -73,10 +73,10 @@ def test_find_external_two_instances_same_package(mock_executable):
 def test_find_external_update_config(mutable_config):
     entries = [
         spack.detection.DetectedPackage(
-            Spec.from_detection("cmake@1.foo", external_path="/x/y1/"), "/x/y1/"
+            Spec.from_detection("cmake@1.foo", external_path="/x/y1/")
         ),
         spack.detection.DetectedPackage(
-            Spec.from_detection("cmake@3.17.2", external_path="/x/y2/"), "/x/y2/"
+            Spec.from_detection("cmake@3.17.2", external_path="/x/y2/")
         ),
     ]
     pkg_to_entries = {"cmake": entries}
@@ -237,10 +237,10 @@ def test_find_external_merge(mutable_config, mutable_mock_repo, tmp_path):
     mutable_config.update_config("packages", pkgs_cfg_init)
     entries = [
         spack.detection.DetectedPackage(
-            Spec.from_detection("find-externals1@1.1", external_path="/x/y1/"), "/x/y1/"
+            Spec.from_detection("find-externals1@1.1", external_path="/x/y1/")
         ),
         spack.detection.DetectedPackage(
-            Spec.from_detection("find-externals1@1.2", external_path="/x/y2/"), "/x/y2/"
+            Spec.from_detection("find-externals1@1.2", external_path="/x/y2/")
         ),
     ]
     pkg_to_entries = {"find-externals1": entries}

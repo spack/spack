@@ -13,7 +13,7 @@ def test_detection_update_config(mutable_config):
     detected_packages = collections.defaultdict(list)
     detected_packages["cmake"] = [
         spack.detection.common.DetectedPackage(
-            spec=spack.spec.Spec("cmake@3.27.5"), prefix="/usr/bin"
+            spec=spack.spec.Spec("cmake@3.27.5", external_path="/usr/bin")
         )
     ]
 

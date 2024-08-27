@@ -35,11 +35,13 @@ class DetectedPackage(NamedTuple):
 
     #: Spec that was detected
     spec: spack.spec.Spec
-    #: Prefix of the spec
-    prefix: str
 
     def __reduce__(self):
-        return DetectedPackage.restore, (str(self.spec), self.prefix, self.spec.extra_attributes)
+        return DetectedPackage.restore, (
+            str(self.spec),
+            self.spec.external_path,
+            self.spec.extra_attributes,
+        )
 
     @staticmethod
     def restore(
@@ -48,7 +50,7 @@ class DetectedPackage(NamedTuple):
         spec = spack.spec.Spec.from_detection(
             spec_str=spec_str, external_path=prefix, extra_attributes=extra_attributes
         )
-        return DetectedPackage(spec=spec, prefix=prefix)
+        return DetectedPackage(spec=spec)
 
 
 def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:
@@ -90,7 +92,7 @@ def _pkg_config_dict(
 
         external_items: List[Tuple[str, ExternalEntryType]] = [
             ("spec", str(e.spec)),
-            ("prefix", e.prefix),
+            ("prefix", e.spec.external_path),
         ]
         if e.spec.external_modules:
             external_items.append(("modules", e.spec.external_modules))

@@ -295,10 +295,10 @@ class Finder:
                     warnings.warn(msg)
                     continue
 
-                if spec.external_path:
-                    prefix = spec.external_path
+                if not spec.external_path:
+                    spec.external_path = prefix
 
-                result.append(DetectedPackage(spec=spec, prefix=prefix))
+                result.append(DetectedPackage(spec=spec))
 
         return result
 
