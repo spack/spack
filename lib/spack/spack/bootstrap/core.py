@@ -472,7 +472,7 @@ def ensure_clingo_importable_or_raise() -> None:
 
 def gnupg_root_spec() -> str:
     """Return the root spec used to bootstrap GnuPG"""
-    root_spec_name = "wingpg" if IS_WINDOWS else "gnupg"
+    root_spec_name = "win-gpg" if IS_WINDOWS else "gnupg"
     return _root_spec(f"{root_spec_name}@2.3:")
 
 
