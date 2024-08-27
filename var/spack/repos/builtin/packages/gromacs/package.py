@@ -162,7 +162,7 @@ class Gromacs(CMakePackage, CudaPackage):
         "nvshmem",
         default=False,
         when="@2024:+mpi+cuda",
-        description="Enable NVSHMEM support for Nvidia GPUs"
+        description="Enable NVSHMEM support for Nvidia GPUs",
     )
     conflicts(
         "+nvshmem",
