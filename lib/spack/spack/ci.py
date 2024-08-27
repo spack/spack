@@ -68,7 +68,7 @@ def _urlopen():
     # And dynamically dispatch based on the config:verify_ssl.
     def dispatch_open(fullurl, data=None, timeout=None, verify_ssl=True):
         opener = with_ssl if verify_ssl else without_ssl
-        timeout = timeout or spack.config.get("config:connect_timeout", 10)
+        timeout = timeout or spack.config.get("config:connect_timeout", 1)
         return opener.open(fullurl, data, timeout)
 
     return dispatch_open
@@ -583,6 +583,14 @@ class SpackCI:
             elif has_dynmapping:
                 mapping = section["dynamic-mapping"]
 
+                dynmap_name = mapping.get("name")
+
+                # Check if this section should be skipped
+                dynmap_skip = os.environ.get("SPACK_CI_SKIP_DYNAMIC_MAPPING")
+                if dynmap_name and dynmap_skip:
+                    if re.match(dynmap_skip, dynmap_name):
+                        continue
+
                 # Get the endpoint
                 endpoint = mapping["endpoint"]
                 endpoint_url = urlparse(endpoint)
@@ -597,7 +605,7 @@ class SpackCI:
                     value = os.path.expandvars(value)
 
                 verify_ssl = mapping.get("verify_ssl", spack.config.get("config:verify_ssl", True))
-                timeout = mapping.get("timeout", spack.config.get("config:connect_timeout", 10))
+                timeout = mapping.get("timeout", spack.config.get("config:connect_timeout", 1))
 
                 if "fields" in mapping:
                     required = mapping["fields"].get("required", [])

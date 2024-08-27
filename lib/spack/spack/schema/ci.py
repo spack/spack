@@ -86,7 +86,8 @@ dynamic_mapping_schema = {
             "type": "object",
             "required": ["endpoint"],
             "properties": {
-                # Cannot have patternProperties constaint on required field
+                "name": {"type": "string"},
+                # "endpoint" cannot have http patternProperties constaint as it is a required field
                 # Constrain is applied in code
                 "endpoint": {"type": "string"},
                 "timeout": {"type": "integer", "minimum": 0},
