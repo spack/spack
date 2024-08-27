@@ -878,7 +878,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     def fullnames(cls):
         """Fullnames for this package and any packages from which it inherits."""
         fullnames = []
-        for cls in inspect.getmro(cls):
+        for cls in cls.__mro__:
             namespace = getattr(cls, "namespace", None)
             if namespace:
                 fullnames.append("%s.%s" % (namespace, cls.name))

@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import inspect
 import itertools
 import os
 import re
@@ -700,7 +699,7 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
     ],
 )
 def test_cli_spec_roundtrip(args, expected):
-    if inspect.isclass(expected) and issubclass(expected, BaseException):
+    if isinstance(expected, type) and issubclass(expected, BaseException):
         with pytest.raises(expected):
             spack.cmd.parse_specs(args)
         return

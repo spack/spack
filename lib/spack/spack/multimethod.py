@@ -25,7 +25,6 @@ depending on the scenario, regular old conditionals might be clearer,
 so package authors should use their judgement.
 """
 import functools
-import inspect
 from contextlib import contextmanager
 
 import spack.directives_meta
@@ -133,7 +132,7 @@ class SpecMultiMethod:
         # its superclasses for successive calls. We don't have that
         # information within `SpecMultiMethod`, because it is not
         # associated with the package class.
-        for cls in inspect.getmro(package_or_builder_self.__class__)[1:]:
+        for cls in package_or_builder_self.__class__.__mro__[1:]:
             superself = cls.__dict__.get(self.__name__, None)
 
             if isinstance(superself, SpecMultiMethod):

@@ -1281,7 +1281,7 @@ class Repo:
             raise RepoError(msg) from e
 
         cls = getattr(module, class_name)
-        if not inspect.isclass(cls):
+        if not isinstance(cls, type):
             tty.die(f"{pkg_name}.{class_name} is not a class")
 
         # Clear any prior changes to class attributes in case the class was loaded from the

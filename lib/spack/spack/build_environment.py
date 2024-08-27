@@ -1559,7 +1559,7 @@ class ModuleChangePropagator:
 
         #: Modules for the classes in the MRO up to PackageBase
         modules_in_mro = []
-        for cls in inspect.getmro(type(package)):
+        for cls in type(package).__mro__:
             module = cls.module
 
             if module == self.current_module:
