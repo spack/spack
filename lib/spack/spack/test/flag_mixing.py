@@ -320,6 +320,13 @@ spack:
 
 
 def test_diamond_dep_flag_mixing(concretize_scope, test_repo):
+    """A diamond where each dependent applies flags to the bottom
+    dependency. The goal is to ensure that the flag ordering is
+    (a) topological and (b) repeatable for elements not subject to
+    this partial ordering (i.e. the flags for the left and right
+    nodes of the diamond always appear in the same order).
+    `Spec.traverse` is responsible for handling both of these needs.
+    """
     root_spec1 = Spec("t").concretized()
     spec1 = root_spec1["y"]
     assert spec1.satisfies('cflags="-c1 -c2 -d1 -d2 -e1 -e2"')
