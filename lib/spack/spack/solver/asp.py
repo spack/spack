@@ -1066,6 +1066,11 @@ class ConstraintOrigin:
         return -1, source
 
 
+class ConditionContext:
+    def __init__(self):
+        self.source = None
+
+
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
@@ -1421,7 +1426,7 @@ class SpackSolverSetup:
         cache: ConditionSpecCache,
         body: bool,
         transform: Optional[TransformFunction] = None,
-        source: Optional[str] = None,
+        context: Optional[ConditionContext] = None,
     ) -> int:
         """Get the id for one half of a condition (either a trigger or an imposed constraint).
 
@@ -1441,7 +1446,7 @@ class SpackSolverSetup:
             return result[0]
 
         cond_id = next(self._id_counter)
-        requirements = self.spec_clauses(named_cond, body=body, source=source)
+        requirements = self.spec_clauses(named_cond, body=body, context=context)
         if transform:
             requirements = transform(named_cond, requirements)
         pkg_cache[named_cond_key] = (cond_id, requirements)
@@ -1456,7 +1461,7 @@ class SpackSolverSetup:
         msg: Optional[str] = None,
         transform_required: Optional[TransformFunction] = None,
         transform_imposed: Optional[TransformFunction] = remove_node,
-        source: Optional[str] = None,
+        context: Optional[ConditionContext] = None,
     ):
         """Generate facts for a dependency or virtual provider condition.
 
@@ -1487,7 +1492,7 @@ class SpackSolverSetup:
                 cache=self._trigger_cache,
                 body=True,
                 transform=transform_required,
-                source=source,
+                context=context,
             )
             self.gen.fact(fn.pkg_fact(required_spec.name, fn.condition(condition_id)))
             self.gen.fact(fn.condition_reason(condition_id, msg))
@@ -1502,7 +1507,7 @@ class SpackSolverSetup:
                 cache=self._effect_cache,
                 body=False,
                 transform=transform_imposed,
-                source=source,
+                context=context,
             )
             self.gen.fact(
                 fn.pkg_fact(required_spec.name, fn.condition_effect(condition_id, effect_id))
@@ -1583,6 +1588,11 @@ class SpackSolverSetup:
                         if t & depflag
                     ]
 
+                context = ConditionContext()
+                context.source = ConstraintOrigin.append_type_suffix(
+                    pkg.name, ConstraintOriginType.DEPENDS_ON
+                )
+
                 self.condition(
                     cond,
                     dep.spec,
@@ -1590,9 +1600,7 @@ class SpackSolverSetup:
                     msg=msg,
                     transform_required=track_dependencies,
                     transform_imposed=dependency_holds,
-                    source=ConstraintOrigin.append_type_suffix(
-                        pkg.name, ConstraintOriginType.DEPENDS_ON
-                    ),
+                    context=context,
                 )
 
                 self.gen.newline()
@@ -1676,15 +1684,18 @@ class SpackSolverSetup:
                     if virtual:
                         transform = None
 
+                    context = ConditionContext()
+                    context.source = ConstraintOrigin.append_type_suffix(
+                        pkg_name, ConstraintOriginType.REQUIRE
+                    )
+
                     member_id = self.condition(
                         required_spec=when_spec,
                         imposed_spec=spec,
                         name=pkg_name,
                         transform_imposed=transform,
                         msg=f"{input_spec} is a requirement for package {pkg_name}",
-                        source=ConstraintOrigin.append_type_suffix(
-                            pkg_name, ConstraintOriginType.REQUIRE
-                        ),
+                        context=context,
                     )
                 except Exception as e:
                     # Do not raise if the rule comes from the 'all' subsection, since usability
@@ -1854,7 +1865,7 @@ class SpackSolverSetup:
         expand_hashes: bool = False,
         concrete_build_deps=False,
         required_from: Optional[str] = None,
-        source: Optional[str] = None,
+        context: Optional[ConditionContext] = None,
     ) -> List[AspFunction]:
         """Wrap a call to `_spec_clauses()` into a try/except block with better error handling.
 
@@ -1870,7 +1881,7 @@ class SpackSolverSetup:
                 transitive=transitive,
                 expand_hashes=expand_hashes,
                 concrete_build_deps=concrete_build_deps,
-                source=source,
+                context=context,
             )
         except RuntimeError as exc:
             msg = str(exc)
@@ -1887,7 +1898,7 @@ class SpackSolverSetup:
         transitive: bool = True,
         expand_hashes: bool = False,
         concrete_build_deps: bool = False,
-        source: Optional[str] = None,
+        context: Optional[ConditionContext] = None,
     ) -> List[AspFunction]:
         """Return a list of clauses for a spec mandates are true.
 
@@ -1986,7 +1997,7 @@ class SpackSolverSetup:
                 self.compiler_version_constraints.add(spec.compiler)
 
         # compiler flags
-        source = source or "none"
+        source = context.source if context else "none"
         for flag_type, flags in spec.compiler_flags.items():
             flag_group = " ".join(flags)
             for flag in flags:
@@ -2080,7 +2091,7 @@ class SpackSolverSetup:
                             body=body,
                             expand_hashes=expand_hashes,
                             concrete_build_deps=concrete_build_deps,
-                            source=source,
+                            context=context,
                         )
                     )
 
@@ -2716,7 +2727,9 @@ class SpackSolverSetup:
                 effect_id, requirements = cache[imposed_spec_key]
             else:
                 effect_id = next(self._id_counter)
-                requirements = self.spec_clauses(spec, source="literal")
+                context = ConditionContext()
+                context.source = "literal"
+                requirements = self.spec_clauses(spec, context=context)
             root_name = spec.name
             for clause in requirements:
                 clause_name = clause.args[0]
