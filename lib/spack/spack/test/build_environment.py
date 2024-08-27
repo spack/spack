@@ -513,8 +513,8 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
         assert dtags_to_add.value == expected_flag
 
 
-def test_module_globals_available_at_setup(monkeypatch):
-    def setup_dependent_package(self, module, dependent_spec):
+def test_module_globals_available_at_setup(monkeypatch, mutable_config, mock_packages):
+    def setup_dependent_package(module, dependent_spec):
         # Make sure set_package_py_globals was already called on
         # dependents
         # ninja is always set by the setup context and is not None
@@ -523,12 +523,8 @@ def test_module_globals_available_at_setup(monkeypatch):
         assert dependent_module.ninja is not None
         dependent_spec.package.test_attr = True
 
-    ext_config = {"externals": [{"spec": "externaltool@1.0", "prefix": "/fake/path"}]}
-    spack.config.set("packages:externaltool", ext_config)
-    externaltool = spack.spec.Spec("externaltool").concretized()
-    monkeypatch.setattr(
-        externaltool["externalprereq"].package, "setup_dependent_package", setup_dependent_package
-    )
+    externaltool = spack.spec.Spec("externaltest").concretized()
+    monkeypatch.setattr(externaltool["externaltool"].package, "setup_dependent_package", setup_dependent_package)
     spack.build_environment.setup_package(externaltool.package, False)
     assert externaltool.package.test_attr
 
