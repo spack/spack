@@ -27,7 +27,7 @@ import types
 import uuid
 import warnings
 import zipimport
-from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
+from typing import IO, Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
 
 import llnl.path
 import llnl.util.filesystem as fs
@@ -913,6 +913,9 @@ class RepoPath:
     def filename_for_package_name(self, pkg_name: str) -> str:
         return self.repo_for_pkg(pkg_name).filename_for_package_name(pkg_name)
 
+    def open_package(self, pkg_name: str) -> IO[bytes]:
+        return self.repo_for_pkg(pkg_name).open_package(pkg_name)
+
     def exists(self, pkg_name: str) -> bool:
         """Whether package with the give name exists in the path's repos.
 
@@ -1143,14 +1146,20 @@ class Repo:
                 f"Repository {self.namespace} does not contain package {spec.fullname}."
             )
 
-        package_path = self.filename_for_package_name(spec.name)
-        if not os.path.exists(package_path):
+        try:
+            package_py = self.open_package(spec.name)
+        except OSError:
             # Spec has no files (e.g., package, patches) to copy
             tty.debug(f"{spec.name} does not have a package to dump")
             return
 
         # Install patch files needed by the (concrete) package.
         fs.mkdirp(path)
+
+        # Install the package.py file itself.
+        with package_py as f, open(os.path.join(path, package_file_name), "wb") as g:
+            shutil.copyfileobj(f, g)
+
         if spec.concrete:
             for patch in itertools.chain.from_iterable(spec.package.patches.values()):
                 if patch.path:
@@ -1158,9 +1167,6 @@ class Repo:
                         fs.install(patch.path, path)
                     else:
                         warnings.warn(f"Patch file did not exist: {patch.path}")
-
-        # Install the package.py file itself.
-        fs.install(self.filename_for_package_name(spec.name), path)
 
     @property
     def index(self) -> RepoIndex:
@@ -1217,6 +1223,15 @@ class Repo:
         """
         pkg_dir = self.dirname_for_package_name(pkg_name)
         return os.path.join(pkg_dir, package_file_name)
+
+    def open_package(self, pkg_name: str) -> IO[bytes]:
+        """Open the package.py file for a package in this repo."""
+        if self.zipimporter:
+            zip, _ = spack.zipcache.get(self.zipimporter.archive)
+            _, unqualified_name = self.partition_package_name(pkg_name)
+            return zip.open(f"{unqualified_name}/__init__.py")
+        else:
+            return open(self.filename_for_package_name(pkg_name), "rb")
 
     @property
     def _pkg_checker(self) -> Union[FastPackageChecker, EvenFasterPackageChecker]:
