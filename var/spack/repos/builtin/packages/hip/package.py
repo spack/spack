@@ -359,6 +359,9 @@ class Hip(CMakePackage):
 
             if self.spec.satisfies("@5.7:"):
                 paths["hip-path"] = rocm_prefix
+            if self.spec.satisfies("@6.0:"):
+                paths["hsa-rocr-dev"] = rocm_prefix
+
         else:
             paths = {
                 "hip-path": self.spec.prefix,
