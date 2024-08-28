@@ -80,6 +80,12 @@ class Podio(CMakePackage):
     )
     variant("sio", default=False, description="Build the SIO I/O backend")
     variant("rntuple", default=False, description="Build the RNTuple backend")
+    variant(
+        "datasource",
+        default=False,
+        description="Build the RDataSource for reading podio collections",
+        when="@1.0.2:",
+    )
 
     depends_on("root@6.08.06: cxxstd=17", when="cxxstd=17")
     depends_on("root@6.28.04: +root7", when="+rntuple")
@@ -106,6 +112,7 @@ class Podio(CMakePackage):
         args = [
             self.define_from_variant("ENABLE_SIO", "sio"),
             self.define_from_variant("ENABLE_RNTUPLE", "rntuple"),
+            self.define_from_variant("ENABLE_DATASOURCE", "datasource"),
             self.define("CMAKE_CXX_STANDARD", self.spec.variants["cxxstd"].value),
             self.define("BUILD_TESTING", self.run_tests),
         ]
