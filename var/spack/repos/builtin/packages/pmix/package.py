@@ -179,7 +179,7 @@ class Pmix(AutotoolsPackage):
     depends_on("flex@2.5.39:", type="build", when="@master")
     depends_on("perl", type="build", when="@master")
     depends_on("python@3.7:", type="build", when="+docs")
-    depends_on("py-sphinx@5.0.0:", type="build", when="+docs")
+    depends_on("py-sphinx@5:", type="build", when="+docs")
     depends_on("py-recommonmark", type="build", when="+docs")
     depends_on("py-docutils", type="build", when="+docs")
     depends_on("py-sphinx-rtd-theme", type="build", when="+docs")
