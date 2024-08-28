@@ -257,7 +257,9 @@ These are optional, rarely-used dependencies that a user might find
 useful. You should **NOT** add these dependencies to your package.
 R packages already have enough dependencies as it is, and adding
 optional dependencies can really slow down the concretization
-process. They can also introduce circular dependencies.
+process. They can also introduce circular dependencies. If you really
+consider the installation of suggested packages to be important, then
+you can add these dependencies conditional on the `suggests` variant.
 
 A fifth rarely used section is:
 
