@@ -191,7 +191,7 @@ class Siesta(MakefilePackage, CMakePackage):
                                     )
                                 )
                                 libs_arg.append(
-                                    "-L{0}/lib -lhdf5_fortran -lhdf5".format(spec["hdf5"].prefix)
+                                    "-L{0}/lib -lhdf5".format(spec["hdf5"].prefix)
                                 )
 
                         if "+metis" in spec:
