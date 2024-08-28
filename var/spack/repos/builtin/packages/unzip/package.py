@@ -14,9 +14,7 @@ class Unzip(MakefilePackage):
 
     license("custom")
 
-    version(
-        "6.0", sha256="036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37"
-    )
+    version("6.0", sha256="036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37")
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
