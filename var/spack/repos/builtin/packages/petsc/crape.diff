@@ -1,0 +1,20 @@
+--- spack-src/config/BuildSystem/config/setCompilers.py	2024-08-26 16:33:45.394302234 +0200
++++ spack-src/config/BuildSystem/config/setCompilers.py.patched	2024-08-26 16:33:39.483376156 +0200
+@@ -519,7 +519,7 @@
+     '''Returns true if the compiler is a Cray Programming Environment (PE) wrapper compiler'''
+     # Note with Cray module PrgEnv-gnu, cc is a Cray PE wrapper around gcc, but not a Cray compiler on its own.
+     try:
+-      (output, error, status) = config.base.Configure.executeShellCommand(compiler+' --help', log = log)
++      (output, error, status) = config.base.Configure.executeShellCommand(compiler+' --cray-print-opts', log = log)
+       output = output + error
+       # On OLCF Spock, with PrgEnv-cray
+       #     $ cc --help |& grep "\-craype\-"
+@@ -527,7 +527,7 @@
+       # with PrgEnv-gnu, the output is
+       #     -craype-verbose    Print the command which is forwarded
+       #     ...
+-      if output.find('-craype-') >= 0:
++      if status:
+         if log: log.write('Detected Cray PE wrapper compiler\n')
+         return 1
+     except RuntimeError:
