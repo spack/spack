@@ -843,20 +843,19 @@ def uniq(sequence):
     return uniq_list
 
 
-def elide_list(line_list, max_num=10):
+def elide_list(line_list: List[str], max_num: int = 10) -> List[str]:
     """Takes a long list and limits it to a smaller number of elements,
     replacing intervening elements with '...'.  For example::
 
-        elide_list([1,2,3,4,5,6], 4)
+        elide_list(["1", "2", "3", "4", "5", "6"], 4)
 
     gives::
 
-        [1, 2, 3, '...', 6]
+        ["1", "2", "3", "...", "6"]
     """
     if len(line_list) > max_num:
-        return line_list[: max_num - 1] + ["..."] + line_list[-1:]
-    else:
-        return line_list
+        return [*line_list[: max_num - 1], "...", line_list[-1]]
+    return line_list
 
 
 @contextlib.contextmanager

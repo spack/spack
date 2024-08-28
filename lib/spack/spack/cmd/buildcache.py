@@ -460,7 +460,7 @@ def push_fn(args):
                 "The following {} specs were skipped as they already exist in the buildcache:\n"
                 "    {}\n"
                 "    Use --force to overwrite them.".format(
-                    len(skipped), ", ".join(elide_list(skipped, 5))
+                    len(skipped), ", ".join(elide_list([_format_spec(s) for s in skipped], 5))
                 )
             )
 
