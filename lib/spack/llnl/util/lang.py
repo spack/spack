@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from typing import Any, Callable, Iterable, List, Tuple
 
 # Ignore emacs backups when listing modules
-ignore_modules = [r"^\.#", "~$"]
+ignore_modules = r"^\.#|~$"
 
 
 def index_by(objects, *funcs):
@@ -82,20 +82,6 @@ def index_by(objects, *funcs):
         result[key] = index_by(objects, *funcs[1:])
 
     return result
-
-
-def caller_locals():
-    """This will return the locals of the *parent* of the caller.
-    This allows a function to insert variables into its caller's
-    scope.  Yes, this is some black magic, and yes it's useful
-    for implementing things like depends_on and provides.
-    """
-    # Passing zero here skips line context for speed.
-    stack = inspect.stack(0)
-    try:
-        return stack[2][0].f_locals
-    finally:
-        del stack
 
 
 def attr_setdefault(obj, name, value):
@@ -178,19 +164,22 @@ def list_modules(directory, **kwargs):
     order."""
     list_directories = kwargs.setdefault("directories", True)
 
-    for name in os.listdir(directory):
-        if name == "__init__.py":
-            continue
+    ignore = re.compile(ignore_modules)
 
-        path = os.path.join(directory, name)
-        if list_directories and os.path.isdir(path):
-            init_py = os.path.join(path, "__init__.py")
-            if os.path.isfile(init_py):
-                yield name
+    with os.scandir(directory) as it:
+        for entry in it:
+            if entry.name == "__init__.py" or entry.name == "__pycache__":
+                continue
 
-        elif name.endswith(".py"):
-            if not any(re.search(pattern, name) for pattern in ignore_modules):
-                yield re.sub(".py$", "", name)
+            if (
+                list_directories
+                and entry.is_dir()
+                and os.path.isfile(os.path.join(entry.path, "__init__.py"))
+            ):
+                yield entry.name
+
+            elif entry.name.endswith(".py") and entry.is_file() and not ignore.search(entry.name):
+                yield entry.name[:-3]  # strip .py
 
 
 def decorator_with_or_without_args(decorator):

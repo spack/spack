@@ -28,11 +28,9 @@ import functools
 import inspect
 from contextlib import contextmanager
 
-from llnl.util.lang import caller_locals
-
-import spack.directives
+import spack.directives_meta
 import spack.error
-from spack.spec import Spec
+import spack.spec
 
 
 class MultiMethodMeta(type):
@@ -165,9 +163,9 @@ class when:
             condition (str): condition to be met
         """
         if isinstance(condition, bool):
-            self.spec = Spec() if condition else None
+            self.spec = spack.spec.Spec() if condition else None
         else:
-            self.spec = Spec(condition)
+            self.spec = spack.spec.Spec(condition)
 
     def __call__(self, method):
         """This annotation lets packages declare multiple versions of
@@ -229,11 +227,9 @@ class when:
            platform-specific versions.  There's not much we can do to get
            around this because of the way decorators work.
         """
-        # In Python 2, Get the first definition of the method in the
-        # calling scope by looking at the caller's locals. In Python 3,
-        # we handle this using MultiMethodMeta.__prepare__.
-        if MultiMethodMeta._locals is None:
-            MultiMethodMeta._locals = caller_locals()
+        assert (
+            MultiMethodMeta._locals is not None
+        ), "cannot use multimethod, missing MultiMethodMeta metaclass?"
 
         # Create a multimethod with this name if there is not one already
         original_method = MultiMethodMeta._locals.get(method.__name__)
@@ -266,17 +262,17 @@ class when:
         and add their constraint to whatever may be already present in the directive
         `when=` argument.
         """
-        spack.directives.DirectiveMeta.push_to_context(str(self.spec))
+        spack.directives_meta.DirectiveMeta.push_to_context(str(self.spec))
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        spack.directives.DirectiveMeta.pop_from_context()
+        spack.directives_meta.DirectiveMeta.pop_from_context()
 
 
 @contextmanager
 def default_args(**kwargs):
-    spack.directives.DirectiveMeta.push_default_args(kwargs)
+    spack.directives_meta.DirectiveMeta.push_default_args(kwargs)
     yield
-    spack.directives.DirectiveMeta.pop_default_args()
+    spack.directives_meta.DirectiveMeta.pop_default_args()
 
 
 class MultiMethodError(spack.error.SpackError):

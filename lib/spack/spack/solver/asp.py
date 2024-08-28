@@ -32,7 +32,6 @@ import spack.compilers
 import spack.config
 import spack.config as sc
 import spack.deptypes as dt
-import spack.directives
 import spack.environment as ev
 import spack.error
 import spack.package_base
@@ -285,16 +284,14 @@ def _create_counter(specs: List[spack.spec.Spec], tests: bool):
     return NoDuplicatesCounter(specs, tests=tests)
 
 
-def all_compilers_in_config(configuration):
-    return spack.compilers.all_compilers_from(configuration)
-
-
 def all_libcs() -> Set[spack.spec.Spec]:
     """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
     libc determined from the current Python process if dynamically linked."""
 
     libcs = {
-        c.default_libc for c in all_compilers_in_config(spack.config.CONFIG) if c.default_libc
+        c.default_libc
+        for c in spack.compilers.all_compilers_from(spack.config.CONFIG)
+        if c.default_libc
     }
 
     if libcs:
@@ -613,7 +610,7 @@ def _external_config_with_implicit_externals(configuration):
     if not using_libc_compatibility():
         return packages_yaml
 
-    for compiler in all_compilers_in_config(configuration):
+    for compiler in spack.compilers.all_compilers_from(configuration):
         libc = compiler.default_libc
         if libc:
             entry = {"spec": f"{libc} %{compiler.spec}", "prefix": libc.external_path}
@@ -1880,8 +1877,7 @@ class SpackSolverSetup:
 
                 # validate variant value only if spec not concrete
                 if not spec.concrete:
-                    reserved_names = spack.directives.reserved_names
-                    if not spec.virtual and vname not in reserved_names:
+                    if not spec.virtual and vname not in spack.variant.reserved_names:
                         pkg_cls = self.pkg_class(spec.name)
                         try:
                             variant_def, _ = pkg_cls.variants[vname]
@@ -3002,7 +2998,7 @@ class CompilerParser:
 
     def __init__(self, configuration) -> None:
         self.compilers: Set[KnownCompiler] = set()
-        for c in all_compilers_in_config(configuration):
+        for c in spack.compilers.all_compilers_from(configuration):
             if using_libc_compatibility() and not c_compiler_runs(c):
                 tty.debug(
                     f"the C compiler {c.cc} does not exist, or does not run correctly."
@@ -3466,7 +3462,7 @@ class SpecBuilder:
         """
         # reverse compilers so we get highest priority compilers that share a spec
         compilers = dict(
-            (c.spec, c) for c in reversed(all_compilers_in_config(spack.config.CONFIG))
+            (c.spec, c) for c in reversed(spack.compilers.all_compilers_from(spack.config.CONFIG))
         )
         cmd_specs = dict((s.name, s) for spec in self._command_line_specs for s in spec.traverse())
 

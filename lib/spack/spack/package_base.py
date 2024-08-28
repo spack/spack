@@ -15,6 +15,7 @@ import copy
 import functools
 import glob
 import hashlib
+import importlib
 import inspect
 import io
 import os
@@ -740,7 +741,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             raise ValueError(msg.format(self))
 
         # init internal variables
-        self._stage = None
+        self._stage: Optional[StageComposite] = None
         self._fetcher = None
         self._tester: Optional["PackageTest"] = None
 
@@ -868,7 +869,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         We use this to add variables to package modules.  This makes
         install() methods easier to write (e.g., can call configure())
         """
-        return __import__(cls.__module__, fromlist=[cls.__name__])
+        return importlib.import_module(cls.__module__)
 
     @classproperty
     def namespace(cls):
@@ -1098,7 +1099,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             root=root_stage,
             resource=resource,
             name=self._resource_stage(resource),
-            mirror_paths=spack.mirror.mirror_archive_paths(
+            mirror_paths=spack.mirror.default_mirror_layout(
                 resource.fetcher, os.path.join(self.name, pretty_resource_name)
             ),
             mirrors=spack.mirror.MirrorCollection(source=True).values(),
@@ -1113,7 +1114,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         # Construct a mirror path (TODO: get this out of package.py)
         format_string = "{name}-{version}"
         pretty_name = self.spec.format_path(format_string)
-        mirror_paths = spack.mirror.mirror_archive_paths(
+        mirror_paths = spack.mirror.default_mirror_layout(
             fetcher, os.path.join(self.name, pretty_name), self.spec
         )
         # Construct a path where the stage should build..
@@ -1179,7 +1180,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         return self._stage
 
     @stage.setter
-    def stage(self, stage):
+    def stage(self, stage: StageComposite):
         """Allow a stage object to be set to override the default."""
         self._stage = stage
 

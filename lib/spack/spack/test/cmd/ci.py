@@ -687,7 +687,7 @@ def test_ci_rebuild_mock_failure_to_push(
             "Encountered problem pushing binary <url>: <expection>"
         )
 
-    monkeypatch.setattr(spack.binary_distribution, "push_or_raise", mock_push_or_raise)
+    monkeypatch.setattr(spack.binary_distribution.Uploader, "push_or_raise", mock_push_or_raise)
 
     with working_dir(rebuild_env.env_dir):
         activate_rebuild_env(tmp_path, pkg_name, rebuild_env)
@@ -1022,7 +1022,7 @@ def test_push_to_build_cache_exceptions(monkeypatch, tmp_path, capsys):
     def push_or_raise(*args, **kwargs):
         raise spack.binary_distribution.PushToBuildCacheError("Error: Access Denied")
 
-    monkeypatch.setattr(spack.binary_distribution, "push_or_raise", push_or_raise)
+    monkeypatch.setattr(spack.binary_distribution.Uploader, "push_or_raise", push_or_raise)
 
     # Input doesn't matter, as we are faking exceptional output
     url = tmp_path.as_uri()

@@ -326,7 +326,7 @@ class UrlPatch(Patch):
         name = "{0}-{1}".format(os.path.basename(self.url), fetch_digest[:7])
 
         per_package_ref = os.path.join(self.owner.split(".")[-1], name)
-        mirror_ref = spack.mirror.mirror_archive_paths(fetcher, per_package_ref)
+        mirror_ref = spack.mirror.default_mirror_layout(fetcher, per_package_ref)
         self._stage = spack.stage.Stage(
             fetcher,
             name=f"{spack.stage.stage_prefix}patch-{fetch_digest}",
