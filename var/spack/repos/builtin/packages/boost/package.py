@@ -750,7 +750,7 @@ class Boost(Package):
         if spec.satisfies("+graph") and spec.satisfies("+mpi"):
             with_libs.append("graph_parallel")
             remove_if_in_list("graph_parallel", without_libs)
-            
+
         # to make Boost find the user-config.jam
         env["BOOST_BUILD_PATH"] = self.stage.source_path
 
