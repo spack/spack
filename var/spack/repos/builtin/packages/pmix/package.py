@@ -218,7 +218,7 @@ class Pmix(AutotoolsPackage):
 
         config_args = ["--enable-shared", "--enable-static", "--without-munge"]
 
-        if spec.satisfies("~docs") or spec.satisfies("@4.1.1:5"):
+        if spec.satisfies("~docs") or spec.satisfies("@4.2.3:5"):
             config_args.append("--disable-sphinx")
 
         config_args.append("--with-libevent=" + spec["libevent"].prefix)
