@@ -14,7 +14,9 @@ class Unzip(MakefilePackage):
 
     license("custom")
 
-    version("6.0", sha256="036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37")
+    version(
+        "6.0", sha256="036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37"
+    )
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -22,6 +24,7 @@ class Unzip(MakefilePackage):
     # clang and oneapi need this patch, likely others
     # There is no problem with it on gcc, so make it a catch all
     patch("configure-cflags.patch")
+    patch("strip.patch", when="%cce@:18.0.1")
 
     def get_make_args(self):
         make_args = ["-f", join_path("unix", "Makefile")]
@@ -31,7 +34,7 @@ class Unzip(MakefilePackage):
         cflags.append("-Wno-error=implicit-int")
         cflags.append("-DLARGE_FILE_SUPPORT")
 
-        make_args.append(f"LOC=\"{' '.join(cflags)}\"")
+        make_args.append(f"LOC={' '.join(cflags)}")
         return make_args
 
     @property
