@@ -496,11 +496,11 @@ class MakefileBuilder(makefile.MakefileBuilder):
                 # (short-int vs int) which otherwise causes segfaults at
                 # runtime due to wrong offsets into the shared library
                 # symbols.
-                libs +=                    [
-                        join_path(spec["libint"].libs.directories[0], "libderiv.a"),
-                        join_path(spec["libint"].libs.directories[0], "libint.a"),
-                    ]
-                
+                libs += [
+                    join_path(spec["libint"].libs.directories[0], "libderiv.a"),
+                    join_path(spec["libint"].libs.directories[0], "libint.a"),
+                ]
+
             else:
                 fcflags += pkgconf("--cflags", "libint2", output=str).split()
                 libs += pkgconf("--libs", "libint2", output=str).split()
@@ -523,16 +523,14 @@ class MakefileBuilder(makefile.MakefileBuilder):
         if spec.satisfies("+pexsi"):
             cppflags.append("-D__LIBPEXSI")
             fcflags.append("-I" + join_path(spec["pexsi"].prefix, "fortran"))
-            libs +=                 [
-                    join_path(spec["pexsi"].libs.directories[0], "libpexsi.a"),
-                    join_path(spec["superlu-dist"].libs.directories[0], "libsuperlu_dist.a"),
-                    join_path(
-                        spec["parmetis"].libs.directories[0], "libparmetis.{0}".format(dso_suffix)
-                    ),
-                    join_path(
-                        spec["metis"].libs.directories[0], "libmetis.{0}".format(dso_suffix)
-                    ),
-                ]
+            libs += [
+                join_path(spec["pexsi"].libs.directories[0], "libpexsi.a"),
+                join_path(spec["superlu-dist"].libs.directories[0], "libsuperlu_dist.a"),
+                join_path(
+                    spec["parmetis"].libs.directories[0], "libparmetis.{0}".format(dso_suffix)
+                ),
+                join_path(spec["metis"].libs.directories[0], "libmetis.{0}".format(dso_suffix)),
+            ]
 
         if spec.satisfies("+elpa"):
             elpa = spec["elpa"]
