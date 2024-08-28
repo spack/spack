@@ -775,15 +775,15 @@ class TestConcretize:
         s = Spec("mpileaks")
         s.concretize()
 
-        assert llnl.util.lang.ObjectWrapper not in type(s).__mro__
+        assert llnl.util.lang.ObjectWrapper not in s.__class__.__mro__
 
         # Spec wrapped in a build interface
         build_interface = s["mpileaks"]
-        assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
+        assert llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
 
         # Mimics asking the build interface from a build interface
         build_interface = s["mpileaks"]["mpileaks"]
-        assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
+        assert llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
 
     @pytest.mark.regression("7705")
     def test_regression_issue_7705(self):
