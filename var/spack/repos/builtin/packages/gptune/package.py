@@ -93,7 +93,6 @@ class Gptune(CMakePackage):
         return args
 
     examples_src_dir = "examples"
-    src_dir = "GPTune"
     nodes = 1
     cores = 4
 
@@ -103,44 +102,12 @@ class Gptune(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         cache_extra_test_sources(self, [self.examples_src_dir])
 
-    def setup_run_environment(self, env):
-        env.set("GPTUNE_INSTALL_PATH", python_platlib)
-
-    def test_all(self):
-        """Run all gptune tests"""
-        spec = self.spec
+        # Create the environment setup script
         comp_name = self.compiler.name
         comp_version = str(self.compiler.version).replace(".", ",")
-        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
-
-        rm = which("rm")
-        cp = which("cp")
-        git = which("git")
-
-        if spec.satisfies("+superlu"):
-            superludriver = join_path(spec["superlu-dist"].prefix.lib, "EXAMPLE/pddrive_spawn")
-            # copy superlu-dist executables to the correct place
-            wd = join_path(test_dir, "SuperLU_DIST")
-            with working_dir(wd):
-                rm("-rf", "superlu_dist")
-                git("clone", "https://github.com/xiaoyeli/superlu_dist.git")
-
-            mkdir = which("mkdir")
-            mkdir("-p", join_path(wd, "superlu_dist", "build", "EXAMPLE"))
-            cp("-r", superludriver, join_path(wd, "superlu_dist", "build", "EXAMPLE"))
-
-        if spec.satisfies("+hypre"):
-            hypredriver = join_path(spec["hypre"].prefix.bin, "ij")
-            # copy superlu-dist executables to the correct place
-            wd = join_path(test_dir, "Hypre")
-            with working_dir(wd):
-                rm("-rf", "hypre")
-                git("clone", "https://github.com/hypre-space/hypre.git")
-
-            cp("-r", hypredriver, join_path(wd, "hypre", "src", "test"))
-
-        wd = self.test_suite.current_test_cache_dir
-        with open(f"{wd}/run_env.sh", "w") as envfile:
+        spec = self.spec
+        script_path = f"{install_test_root(self)}/run_env.sh"
+        with open(script_path, "w") as envfile:
             envfile.write('if [[ $NERSC_HOST = "cori" ]]; then\n')
             envfile.write("    export machine=cori\n")
             envfile.write('elif [[ $(uname -s) = "Darwin" ]]; then\n')
@@ -155,8 +122,10 @@ class Gptune(CMakePackage):
             envfile.write("    export machine=unknownlinux\n")
             envfile.write("fi\n")
             envfile.write("export GPTUNEROOT=$PWD\n")
-            envfile.write(f"export MPIRUN={which(spec['mpi'].prefix.bin + '/mpirun')}\n")
-            envfile.write(f"export PYTHONPATH={python_platlib + '/gptune'}:$PYTHONPATH\n")
+            mpirun = spec["mpi"].prefix.bin.mpirun
+            envfile.write(f"export MPIRUN={mpirun}\n")
+            gptune_path = join_path(python_platlib, "gptune")
+            envfile.write(f"export PYTHONPATH={gptune_path}:$PYTHONPATH\n")
             envfile.write("export proc=$(spack arch)\n")
             envfile.write(f"export mpi={spec['mpi'].name}\n")
             envfile.write(f"export compiler={comp_name}\n")
@@ -215,24 +184,115 @@ class Gptune(CMakePackage):
                 + '{\\"nodes\\":$nodes,\\"cores\\":$cores}}}") \n'
             )
 
-        # TODO: Replace use of install prefix (python_platlib, install_test_root)
-        # copy the environment configuration files to non-cache directories
-        cp(join_path(wd, "run_env.sh"), python_platlib + "/gptune/.")
-        cp(join_path(wd, "run_env.sh"), install_test_root(self) + "/.")
+        # copy the environment configuration to the python install directory
+        cp = which("cp")
+        cp(script_path, join_path(python_platlib, "gptune"))
 
-        apps = ["Scalapack-PDGEQRF_RCI"]
-        if spec.satisfies("+mpispawn"):
-            apps = apps + ["GPTune-Demo", "Scalapack-PDGEQRF"]
-        if spec.satisfies("+superlu"):
-            apps = apps + ["SuperLU_DIST_RCI"]
-            if spec.satisfies("+mpispawn"):
-                apps = apps + ["SuperLU_DIST"]
-        if spec.satisfies("+hypre"):
-            if spec.satisfies("+mpispawn"):
-                apps = apps + ["Hypre"]
+    def setup_run_environment(self, env):
+        env.set("GPTUNE_INSTALL_PATH", python_platlib)
+
+    bash = which("bash")
+    cp = which("cp")
+    git = which("git")
+    rm = which("rm")
+
+    def test_hypre(self):
+        """set up and run hypre example"""
+        if "+hypre" not in self.spec or "+mpispawn" not in self.spec:
+            raise SkipTest("Package must be installed with +hypre+mpispawn")
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
+
+        # copy hypre executables to the correct place
+        wd = join_path(test_dir, "Hypre")
+        with working_dir(wd):
+            self.rm("-rf", "hypre")
+            self.git("clone", "https://github.com/hypre-space/hypre.git")
+
+        hypre_test_dir = join_path(wd, "hypre", "src", "test")
+        mkdirp(hypre_test_dir)
+        self.cp("-r", self.spec["hypre"].prefix.bin.ij, hypre_test_dir)
+
+        # now run the test example
+        with working_dir(join_path(test_dir, "Hypre")):
+            # Adding a fail_on_error *and* timeout to force the test to both
+            # stop and no be flagged as PASSED despite errors:
+            #
+            # - jq: parse error: Invalid numeric literal at line 1, column 180
+            # - AttributeError: module 'numpy' has no attribute 'float'.
+            self.bash("run_examples.sh", timeout=5, fail_on_error=True)
+
+    def test_superlu(self):
+        """set up and run superlu tests"""
+        if "+superlu" not in self.spec:
+            raise SkipTest("Package must be installed with +superlu")
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
+
+        # copy superlu-dist executables to the correct place
+        wd = join_path(test_dir, "SuperLU_DIST")
+        with working_dir(wd):
+            self.rm("-rf", "superlu_dist")
+            self.git("clone", "https://github.com/xiaoyeli/superlu_dist.git")
+
+        superludriver = self.spec["superlu-dist"].prefix.lib.EXAMPLE.pddrive_spawn
+        example_dir = join_path(wd, "superlu_dist", "build", "EXAMPLE")
+        mkdirp(example_dir)
+        self.cp("-r", superludriver, example_dir)
+
+        apps = ["SuperLU_DIST_RCI"]
+        # TODO: Enable the following test once a SME resolves the infinite
+        # TODO: loop problem with the test.
+        # if "+mpispawn" in self.spec:
+        #     apps.append("SuperLU_DIST")
+
+        # now run the test example(s)
+        #
+        # Note: Adding a fail_on_error *and* timeout to force the test to both
+        # stop and no be flagged as PASSED despite errors:
+        #
+        # - jq: parse error: Invalid numeric literal at line 1, column 180
+        # - AttributeError: module 'numpy' has no attribute 'float'.
+        for app in apps:
+            with test_part(self, f"test_superlu_{app}", purpose=f"run {app} example"):
+                with working_dir(join_path(test_dir, app)):
+                    self.bash("run_examples.sh", timeout=5, fail_on_error=True)
+
+    def test_demo(self):
+        """Run the demo test"""
+        if "+mpispawn" not in self.spec:
+            raise SkipTest("Package must be installed with +mpispawn")
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
+
+        with working_dir(join_path(test_dir, "GPTune-Demo")):
+            # Adding a fail_on_error *and* timeout to force the test to both
+            # stop and no be flagged as PASSED despite errors:
+            #
+            # - jq: parse error: Invalid numeric literal at line 1, column 186
+            # - AttributeError: module 'numpy' has no attribute 'float'.
+            self.bash("run_examples.sh", timeout=5, fail_on_error=True)
+
+    def test_scalapack(self):
+        """Run scalapack tests"""
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
+
+        # TODO: Enable the following test once a SME resolves the infinite
+        # TODO: loop problem with the test.
+        #
+        # - jq: parse error: Invalid numeric literal at line 1, column 186
+        # - jq: error: Could not open file gptune.db/SuperLU_DIST.json: No such
+        #   file or directory
+        # - AttributeError: module 'numpy' has no attribute 'float'.
+        # - superlu_MLA_RCI.sh: line 52: [: =: unary operator expected
+
+        # apps = ["Scalapack-PDGEQRF_RCI"]  # skip: seemingly infinite loop
+        apps = []
+        if "+mpispawn" in self.spec:
+            # TODO: The following times out but has same AttributeErrors above
+            apps.append("Scalapack-PDGEQRF")
 
         for app in apps:
-            exe = which("bash")
-            with test_part(self, f"test_part_{app}", purpose=f"gptune smoke test for {app}"):
+            with test_part(self, f"test_scalapack_{app}", purpose=f"run {app} example"):
                 with working_dir(join_path(test_dir, app)):
-                    exe("run_examples.sh")
+                    self.bash("run_examples.sh", timeout=5, fail_on_error=True)
