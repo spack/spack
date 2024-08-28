@@ -187,6 +187,7 @@ class Pmix(AutotoolsPackage):
     depends_on("libevent@2.0.20:")
     depends_on("hwloc@1.11:", when="@3:")
     depends_on("hwloc@1", when="@:2")
+    depends_on("zlib-api", when="@2:")
     depends_on("curl", when="+restful")
     depends_on("jansson@2.11:", when="+restful")
     depends_on("python", when="+python")
@@ -222,6 +223,9 @@ class Pmix(AutotoolsPackage):
 
         if spec.satisfies("~docs") or spec.satisfies("@4.2.3:5"):
             config_args.append("--disable-sphinx")
+
+        if spec.satisfies("@2:"):
+            config_args.append("--with-zlib=" + spec["zlib-api"].prefix)
 
         config_args.append("--with-libevent=" + spec["libevent"].prefix)
         config_args.append("--with-hwloc=" + spec["hwloc"].prefix)
