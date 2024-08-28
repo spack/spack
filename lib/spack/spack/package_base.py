@@ -246,10 +246,7 @@ class DetectablePackageMeta(type):
                         if version_str:
                             objs_by_version[version_str].append(obj)
                     except Exception as e:
-                        msg = (
-                            "An error occurred when trying to detect " 'the version of "{0}" [{1}]'
-                        )
-                        tty.debug(msg.format(obj, str(e)))
+                        tty.debug(f"Cannot detect the version of '{obj}' [{str(e)}]")
 
                 specs = []
                 for version_str, objs in objs_by_version.items():
@@ -262,27 +259,23 @@ class DetectablePackageMeta(type):
                         if isinstance(variant, str):
                             variant = (variant, {})
                         variant_str, extra_attributes = variant
-                        spec_str = "{0}@{1} {2}".format(cls.name, version_str, variant_str)
+                        spec_str = f"{cls.name}@{version_str} {variant_str}"
 
                         # Pop a few reserved keys from extra attributes, since
                         # they have a different semantics
                         external_path = extra_attributes.pop("prefix", None)
                         external_modules = extra_attributes.pop("modules", None)
                         try:
-                            spec = spack.spec.Spec(
+                            spec = spack.spec.Spec.from_detection(
                                 spec_str,
                                 external_path=external_path,
                                 external_modules=external_modules,
+                                extra_attributes=extra_attributes,
                             )
                         except Exception as e:
-                            msg = 'Parsing failed [spec_str="{0}", error={1}]'
-                            tty.debug(msg.format(spec_str, str(e)))
+                            tty.debug(f'Parsing failed [spec_str="{spec_str}", error={str(e)}]')
                         else:
-                            specs.append(
-                                spack.spec.Spec.from_detection(
-                                    spec, extra_attributes=extra_attributes
-                                )
-                            )
+                            specs.append(spec)
 
                 return sorted(specs)
 
