@@ -167,7 +167,7 @@ class Gromacs(CMakePackage, CudaPackage):
     conflicts(
         "+nvshmem",
         when="+cufftmp",
-        msg=("The GROMACS suport for NVSHMEM does not work with the GROMACS support "
+        msg=("The GROMACS support for NVSHMEM does not work with the GROMACS support "
              "for cuFFTMp (even though cuFFTMp uses NVSHMEM in its implementation)",
     )
 
