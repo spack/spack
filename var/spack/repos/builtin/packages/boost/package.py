@@ -505,8 +505,10 @@ class Boost(Package):
             options.append("--with-toolset=gcc")
         else:
             options.append("--with-toolset=%s" % boost_toolset_id)
-        options.append("--with-libraries=%s" % ",".join(with_libs))
-        options.append("--without-libraries=%s" % ",".join(without_libs))
+        if with_libs:
+            options.append("--with-libraries=%s" % ",".join(with_libs))
+        else:
+            options.append("--without-libraries=%s" % ",".join(without_libs))
 
         if spec.satisfies("+python"):
             options.append("--with-python=%s" % spec["python"].command.path)
