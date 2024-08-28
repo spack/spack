@@ -77,6 +77,15 @@ class RPackage(Package):
 
     extends("r")
 
+    # R packages have a field "Suggests" in their DESCRIPTION file, and
+    # this build system wide variant allows for depending on these packages
+    # conditionally.
+    variant(
+        "suggests",
+        default=False,
+        description="Install suggested dependencies",
+    )
+
     @lang.classproperty
     def homepage(cls):
         if cls.cran:
