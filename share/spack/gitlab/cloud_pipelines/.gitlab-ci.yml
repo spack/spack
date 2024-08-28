@@ -851,6 +851,8 @@ aws-pcluster-build-neoverse_v1:
 .generate-cray:
   extends: [ ".generate-common", ".base-job" ]
   before_script:
+    - env -i ldd /opt/cray/pe/libsci/23.02.1.1/CRAY/9.0/x86_64/lib/libsci_cray.so
+    - nm --undefined-only --dynamic /opt/cray/pe/libsci/23.02.1.1/CRAY/9.0/x86_64/lib/libsci_cray.so
     - echo $PATH
     - module avail
     - module list
