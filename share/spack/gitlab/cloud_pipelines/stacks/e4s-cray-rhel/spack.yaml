@@ -14,8 +14,6 @@ spack:
       - "%cce"
       compiler: [cce]
       providers:
-        blas: [cray-libsci]
-        lapack: [cray-libsci]
         mpi: [cray-mpich]
         tbb: [intel-tbb]
         scalapack: [netlib-scalapack]

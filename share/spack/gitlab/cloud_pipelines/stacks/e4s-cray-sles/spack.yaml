@@ -12,8 +12,6 @@ spack:
     all:
       require: '%gcc'
       providers:
-        blas: [cray-libsci]
-        lapack: [cray-libsci]
         mpi: [cray-mpich]
         tbb: [intel-tbb]
         scalapack: [netlib-scalapack]
