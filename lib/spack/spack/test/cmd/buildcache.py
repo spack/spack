@@ -7,6 +7,7 @@ import errno
 import json
 import os
 import shutil
+from typing import List
 
 import pytest
 
@@ -16,6 +17,7 @@ import spack.deptypes
 import spack.environment as ev
 import spack.error
 import spack.main
+import spack.mirror
 import spack.spec
 import spack.util.url
 from spack.spec import Spec
@@ -380,18 +382,22 @@ def test_correct_specs_are_pushed(
     # Concretize dttop and add it to the temporary database (without prefixes)
     spec = default_mock_concretization("dttop")
     temporary_store.db.add(spec, directory_layout=None)
-    slash_hash = "/{0}".format(spec.dag_hash())
+    slash_hash = f"/{spec.dag_hash()}"
 
-    packages_to_push = []
+    class DontUpload(spack.binary_distribution.Uploader):
+        def __init__(self):
+            super().__init__(spack.mirror.Mirror.from_local_path(str(tmpdir)), False, False)
+            self.pushed = []
 
-    def fake_push(specs, *args, **kwargs):
-        assert all(isinstance(s, Spec) for s in specs)
-        packages_to_push.extend(s.name for s in specs)
-        skipped = []
-        errors = []
-        return skipped, errors
+        def push(self, specs: List[spack.spec.Spec]):
+            self.pushed.extend(s.name for s in specs)
+            return [], []  # nothing skipped, nothing errored
 
-    monkeypatch.setattr(spack.binary_distribution, "_push", fake_push)
+    uploader = DontUpload()
+
+    monkeypatch.setattr(
+        spack.binary_distribution, "make_uploader", lambda *args, **kwargs: uploader
+    )
 
     buildcache_create_args = ["create", "--unsigned"]
 
@@ -403,10 +409,10 @@ def test_correct_specs_are_pushed(
     buildcache(*buildcache_create_args)
 
     # Order is not guaranteed, so we can't just compare lists
-    assert set(packages_to_push) == set(expected)
+    assert set(uploader.pushed) == set(expected)
 
     # Ensure no duplicates
-    assert len(set(packages_to_push)) == len(packages_to_push)
+    assert len(set(uploader.pushed)) == len(uploader.pushed)
 
 
 @pytest.mark.parametrize("signed", [True, False])

@@ -104,7 +104,9 @@ class Runner:
     @property
     def expected_specs(self) -> List[spack.spec.Spec]:
         return [
-            spack.spec.Spec.from_detection(item.spec, extra_attributes=item.extra_attributes)
+            spack.spec.Spec.from_detection(
+                item.spec, external_path=self.tmpdir.name, extra_attributes=item.extra_attributes
+            )
             for item in self.test.results
         ]
 

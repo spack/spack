@@ -15,7 +15,7 @@ MACOS_VERSION = macos_version() if sys.platform == "darwin" else None
 class Graphviz(AutotoolsPackage):
     """Graph Visualization Software"""
 
-    homepage = "http://www.graphviz.org"
+    homepage = "https://www.graphviz.org"
     git = "https://gitlab.com/graphviz/graphviz.git"
     url = "https://gitlab.com/graphviz/graphviz/-/archive/2.46.0/graphviz-2.46.0.tar.bz2"
 

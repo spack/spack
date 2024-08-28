@@ -9,7 +9,7 @@ from spack.package import *
 class PyMypy(PythonPackage):
     """Optional static typing for Python."""
 
-    homepage = "http://www.mypy-lang.org/"
+    homepage = "https://www.mypy-lang.org/"
     pypi = "mypy/mypy-0.740.tar.gz"
     git = "https://github.com/python/mypy.git"
 

@@ -15,6 +15,7 @@ import copy
 import functools
 import glob
 import hashlib
+import importlib
 import inspect
 import io
 import os
@@ -245,10 +246,7 @@ class DetectablePackageMeta(type):
                         if version_str:
                             objs_by_version[version_str].append(obj)
                     except Exception as e:
-                        msg = (
-                            "An error occurred when trying to detect " 'the version of "{0}" [{1}]'
-                        )
-                        tty.debug(msg.format(obj, str(e)))
+                        tty.debug(f"Cannot detect the version of '{obj}' [{str(e)}]")
 
                 specs = []
                 for version_str, objs in objs_by_version.items():
@@ -261,27 +259,23 @@ class DetectablePackageMeta(type):
                         if isinstance(variant, str):
                             variant = (variant, {})
                         variant_str, extra_attributes = variant
-                        spec_str = "{0}@{1} {2}".format(cls.name, version_str, variant_str)
+                        spec_str = f"{cls.name}@{version_str} {variant_str}"
 
                         # Pop a few reserved keys from extra attributes, since
                         # they have a different semantics
                         external_path = extra_attributes.pop("prefix", None)
                         external_modules = extra_attributes.pop("modules", None)
                         try:
-                            spec = spack.spec.Spec(
+                            spec = spack.spec.Spec.from_detection(
                                 spec_str,
                                 external_path=external_path,
                                 external_modules=external_modules,
+                                extra_attributes=extra_attributes,
                             )
                         except Exception as e:
-                            msg = 'Parsing failed [spec_str="{0}", error={1}]'
-                            tty.debug(msg.format(spec_str, str(e)))
+                            tty.debug(f'Parsing failed [spec_str="{spec_str}", error={str(e)}]')
                         else:
-                            specs.append(
-                                spack.spec.Spec.from_detection(
-                                    spec, extra_attributes=extra_attributes
-                                )
-                            )
+                            specs.append(spec)
 
                 return sorted(specs)
 
@@ -740,7 +734,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             raise ValueError(msg.format(self))
 
         # init internal variables
-        self._stage = None
+        self._stage: Optional[StageComposite] = None
         self._fetcher = None
         self._tester: Optional["PackageTest"] = None
 
@@ -868,7 +862,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         We use this to add variables to package modules.  This makes
         install() methods easier to write (e.g., can call configure())
         """
-        return __import__(cls.__module__, fromlist=[cls.__name__])
+        return importlib.import_module(cls.__module__)
 
     @classproperty
     def namespace(cls):
@@ -884,7 +878,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     def fullnames(cls):
         """Fullnames for this package and any packages from which it inherits."""
         fullnames = []
-        for cls in inspect.getmro(cls):
+        for cls in cls.__mro__:
             namespace = getattr(cls, "namespace", None)
             if namespace:
                 fullnames.append("%s.%s" % (namespace, cls.name))
@@ -1098,7 +1092,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             root=root_stage,
             resource=resource,
             name=self._resource_stage(resource),
-            mirror_paths=spack.mirror.mirror_archive_paths(
+            mirror_paths=spack.mirror.default_mirror_layout(
                 resource.fetcher, os.path.join(self.name, pretty_resource_name)
             ),
             mirrors=spack.mirror.MirrorCollection(source=True).values(),
@@ -1113,7 +1107,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         # Construct a mirror path (TODO: get this out of package.py)
         format_string = "{name}-{version}"
         pretty_name = self.spec.format_path(format_string)
-        mirror_paths = spack.mirror.mirror_archive_paths(
+        mirror_paths = spack.mirror.default_mirror_layout(
             fetcher, os.path.join(self.name, pretty_name), self.spec
         )
         # Construct a path where the stage should build..
@@ -1179,7 +1173,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         return self._stage
 
     @stage.setter
-    def stage(self, stage):
+    def stage(self, stage: StageComposite):
         """Allow a stage object to be set to override the default."""
         self._stage = stage
 
@@ -1473,6 +1467,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             checksum
             and (self.version not in self.versions)
             and (not isinstance(self.version, GitVersion))
+            and ("dev_path" not in self.spec.variants)
         ):
             tty.warn(
                 "There is no checksum on file to fetch %s safely."

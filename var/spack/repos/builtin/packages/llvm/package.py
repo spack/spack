@@ -165,8 +165,12 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
         "or as a project (with the compiler in use)",
     )
 
+    variant("offload", default=True, when="@19:", description="Build the Offload subproject")
+    conflicts("+offload", when="~clang")
+
     variant("libomptarget", default=True, description="Build the OpenMP offloading library")
     conflicts("+libomptarget", when="~clang")
+    conflicts("+libomptarget", when="~offload @19:")
     for _p in ["darwin", "windows"]:
         conflicts("+libomptarget", when="platform={0}".format(_p))
     del _p
@@ -911,6 +915,9 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
                 runtimes.append("openmp")
             elif "openmp=project" in spec:
                 projects.append("openmp")
+
+            if "+offload" in spec:
+                runtimes.append("offload")
 
             if "+libomptarget" in spec:
                 cmake_args.append(define("OPENMP_ENABLE_LIBOMPTARGET", True))

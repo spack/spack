@@ -503,7 +503,7 @@ class Boost(Package):
             Path(spec["python"].libs[0]).parent.as_posix(),
         )
 
-    def determine_bootstrap_options(self, spec, with_libs, options):
+    def determine_bootstrap_options(self, spec, with_libs, without_libs, options):
         boost_toolset_id = self.determine_toolset(spec)
 
         # Arm compiler bootstraps with 'gcc' (but builds as 'clang')
@@ -511,7 +511,10 @@ class Boost(Package):
             options.append("--with-toolset=gcc")
         else:
             options.append("--with-toolset=%s" % boost_toolset_id)
-        options.append("--with-libraries=%s" % ",".join(with_libs))
+        if with_libs:
+            options.append("--with-libraries=%s" % ",".join(with_libs))
+        else:
+            options.append("--without-libraries=%s" % ",".join(without_libs))
 
         if spec.satisfies("+python"):
             options.append("--with-python=%s" % spec["python"].command.path)
@@ -713,37 +716,46 @@ class Boost(Package):
             env["PATH"] = newdir + ":" + env["PATH"]
 
         with_libs = list()
+        without_libs = list()
         for lib in Boost.all_libs:
             if "+{0}".format(lib) in spec:
                 with_libs.append(lib)
+            else:
+                without_libs.append(lib)
+
+        remove_if_in_list = lambda lib, libs: libs.remove(lib) if lib in libs else None
 
         # Remove libraries that the release version does not support
-        if spec.satisfies("@1.69.0:") and "signals" in with_libs:
-            with_libs.remove("signals")
-        if not spec.satisfies("@1.54.0:") and "log" in with_libs:
-            with_libs.remove("log")
-        if not spec.satisfies("@1.53.0:") and "atomic" in with_libs:
-            with_libs.remove("atomic")
-        if not spec.satisfies("@1.48.0:") and "locale" in with_libs:
-            with_libs.remove("locale")
-        if not spec.satisfies("@1.47.0:") and "chrono" in with_libs:
-            with_libs.remove("chrono")
-        if not spec.satisfies("@1.43.0:") and "random" in with_libs:
-            with_libs.remove("random")
-        if not spec.satisfies("@1.39.0:") and "exception" in with_libs:
-            with_libs.remove("exception")
+        if spec.satisfies("@1.69.0:"):
+            remove_if_in_list("signals", with_libs)
+            remove_if_in_list("signals", without_libs)
+        if not spec.satisfies("@1.54.0:"):
+            remove_if_in_list("log", with_libs)
+            remove_if_in_list("log", without_libs)
+        if not spec.satisfies("@1.53.0:"):
+            remove_if_in_list("atomic", with_libs)
+            remove_if_in_list("atomic", without_libs)
+        if not spec.satisfies("@1.48.0:"):
+            remove_if_in_list("locale", with_libs)
+            remove_if_in_list("locale", without_libs)
+        if not spec.satisfies("@1.47.0:"):
+            remove_if_in_list("chrono", with_libs)
+            remove_if_in_list("chrono", without_libs)
+        if not spec.satisfies("@1.43.0:"):
+            remove_if_in_list("random", with_libs)
+            remove_if_in_list("random", without_libs)
+        if not spec.satisfies("@1.39.0:"):
+            remove_if_in_list("exception", with_libs)
+            remove_if_in_list("exception", without_libs)
         if spec.satisfies("+graph") and spec.satisfies("+mpi"):
             with_libs.append("graph_parallel")
+            remove_if_in_list("graph_parallel", without_libs)
+            
+        # to make Boost find the user-config.jam
+        env["BOOST_BUILD_PATH"] = self.stage.source_path
 
-        if not with_libs:
-            # if no libraries are specified for compilation, then you dont have
-            # to configure/build anything, just copy over to the prefix
-            # directory.
-            src = join_path(self.stage.source_path, "boost")
-            mkdirp(join_path(prefix, "include"))
-            dst = join_path(prefix, "include", "boost")
-            install_tree(src, dst)
-            return
+        bootstrap_options = ["--prefix=%s" % prefix]
+        self.determine_bootstrap_options(spec, with_libs, without_libs, bootstrap_options)
 
         if self.spec.satisfies("platform=windows"):
             self.bootstrap_windows()

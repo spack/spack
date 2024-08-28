@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import hashlib
-import inspect
 import os
 import os.path
 import pathlib
@@ -185,8 +184,8 @@ class FilePatch(Patch):
         # search mro to look for the file
         abs_path: Optional[str] = None
         # At different times we call FilePatch on instances and classes
-        pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
-        for cls in inspect.getmro(pkg_cls):  # type: ignore
+        pkg_cls = pkg if isinstance(pkg, type) else pkg.__class__
+        for cls in pkg_cls.__mro__:  # type: ignore
             if not hasattr(cls, "module"):
                 # We've gone too far up the MRO
                 break
@@ -326,7 +325,7 @@ class UrlPatch(Patch):
         name = "{0}-{1}".format(os.path.basename(self.url), fetch_digest[:7])
 
         per_package_ref = os.path.join(self.owner.split(".")[-1], name)
-        mirror_ref = spack.mirror.mirror_archive_paths(fetcher, per_package_ref)
+        mirror_ref = spack.mirror.default_mirror_layout(fetcher, per_package_ref)
         self._stage = spack.stage.Stage(
             fetcher,
             name=f"{spack.stage.stage_prefix}patch-{fetch_digest}",

@@ -82,6 +82,10 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     # https://bitbucket.org/icl/magma/issues/25/error-cusparsesolveanalysisinfo_t-does-not
     conflicts("^cuda@11:", when="@:2.5.3")
 
+    # currently not compatible with CUDA-12.6
+    # https://github.com/icl-utk-edu/magma/issues/7
+    conflicts("^cuda@12.6:", when="@:2.8.0")
+
     # Many cuda_arch values are not yet recognized by MAGMA's CMakeLists.txt
     for target in [10, 11, 12, 13, 21, 32, 52, 53, 61, 62, 72, 86]:
         conflicts(f"cuda_arch={target}")
