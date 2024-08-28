@@ -108,6 +108,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("uvm", default=False, when="@13.2: +cuda", description="Turn on UVM for CUDA build")
     variant("wrapper", default=False, description="Use nvcc-wrapper for CUDA build")
+    variant("remove_me", default=True, description="Remove me")
 
     # Makes the Teuchos Memory Management classes (Teuchos::RCP, Teuchos::Ptr, Teuchos::Array,
     # Teuchos::ArrayView, and Teuchos::ArrayRCP) thread-safe. Requires at least the OMP kokkos

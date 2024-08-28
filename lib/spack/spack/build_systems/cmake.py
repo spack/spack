@@ -297,7 +297,10 @@ class CMakeBuilder(BaseBuilder):
     @property
     def archive_files(self):
         """Files to archive for packages based on CMake"""
-        files = [os.path.join(self.build_directory, "CMakeCache.txt")]
+        files = [
+            os.path.join(self.build_directory, "CMakeCache.txt"),
+            os.path.join(self.build_directory, "CMakeFiles", "CMakeConfigureLog.yaml"),
+        ]
         if _supports_compilation_databases(self):
             files.append(os.path.join(self.build_directory, "compile_commands.json"))
         return files
