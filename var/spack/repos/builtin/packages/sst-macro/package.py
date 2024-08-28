@@ -42,6 +42,10 @@ class SstMacro(AutotoolsPackage):
     version("master", branch="master")
     version("develop", branch="devel")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     for version_name in ("master", "develop"):
         depends_on("autoconf@1.68:", type="build", when="@{}".format(version_name))
         depends_on("automake@1.11.1:", type="build", when="@{}".format(version_name))

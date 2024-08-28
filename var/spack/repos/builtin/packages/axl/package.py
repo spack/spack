@@ -45,6 +45,8 @@ class Axl(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("kvtree")
     depends_on("zlib-api", type="link")
 

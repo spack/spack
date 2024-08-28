@@ -7,7 +7,7 @@ import itertools
 import os
 import sys
 
-from archspec.cpu import UnsupportedMicroarchitecture
+import archspec.cpu
 
 import llnl.util.tty as tty
 from llnl.util.symlink import readlink
@@ -34,8 +34,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
+    provides("c")
+    provides("cxx")
+    provides("fortran")
+
     version("master", branch="master")
 
+    version("14.2.0", sha256="a7b39bc69cbf9e25826c5a60ab26477001f7c08d85cec04bc0e29cabed6f3cc9")
     version("14.1.0", sha256="e283c654987afe3de9d8080bc0bd79534b5ca0d681a73a11ff2b5d3767426840")
 
     version("13.3.0", sha256="0845e9621c9543a13f484e94584a49ffc0129970e9914624235fc1d061a0c083")
@@ -97,6 +102,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     version("4.7.4", sha256="92e61c6dc3a0a449e62d72a38185fda550168a86702dea07125ebd3ec3996282")
     version("4.6.4", sha256="35af16afa0b67af9b8eb15cafb76d2bc5f568540552522f5dc2c88dd45d977e8")
     version("4.5.4", sha256="eef3f0456db8c3d992cbb51d5d32558190bc14f3bc19383dd93acc27acc6befc")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # We specifically do not add 'all' variant here because:
     # (i) Ada, D, Go, Jit, and Objective-C++ are not default languages.
@@ -526,48 +535,26 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     fortran_names = ["gfortran"]
     d_names = ["gdc"]
     go_names = ["gccgo"]
-    compiler_prefixes = [r"\w+-\w+-\w+-"]
     compiler_suffixes = [r"-mp-\d+(?:\.\d+)?", r"-\d+(?:\.\d+)?", r"\d\d"]
-    compiler_version_regex = r"(?<!clang version)\s?([0-9.]+)"
+    compiler_version_regex = r"([0-9.]+)"
     compiler_version_argument = ("-dumpfullversion", "-dumpversion")
 
     @classmethod
-    def determine_version(cls, exe):
-        try:
-            output = spack.compiler.get_compiler_version_output(exe, "--version")
-        except Exception:
-            output = ""
-        # Apple's gcc is actually apple clang, so skip it.
-        if "Apple" in output:
-            return None
-
-        return super().determine_version(exe)
-
-    @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
-        result = []
-        for exe in exes_in_prefix:
-            # On systems like Ubuntu we might get multiple executables
-            # with the string "gcc" in them. See:
-            # https://helpmanual.io/packages/apt/gcc/
-            basename = os.path.basename(exe)
-            substring_to_be_filtered = [
-                "c99-gcc",
-                "c89-gcc",
-                "-nm",
-                "-ar",
-                "ranlib",
-                "clang",  # clang++ matches g++ -> clan[g++]
-            ]
-            if any(x in basename for x in substring_to_be_filtered):
-                continue
-            # Filter out links in favor of real executables
-            if os.path.islink(exe):
-                continue
+        # Apple's gcc is actually apple clang, so skip it.
+        if str(spack.platforms.host()) == "darwin":
+            not_apple_clang = []
+            for exe in exes_in_prefix:
+                try:
+                    output = spack.compiler.get_compiler_version_output(exe, "--version")
+                except Exception:
+                    output = ""
+                if "clang version" in output:
+                    continue
+                not_apple_clang.append(exe)
+            return not_apple_clang
 
-            result.append(exe)
-
-        return result
+        return exes_in_prefix
 
     @classmethod
     def determine_variants(cls, exes, version_str):
@@ -696,7 +683,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         for uarch in microarchitectures:
             try:
                 return uarch.optimization_flags("gcc", str(spec.version))
-            except UnsupportedMicroarchitecture:
+            except archspec.cpu.UnsupportedMicroarchitecture:
                 pass
         # no arch specific flags in common, unlikely to happen.
         return ""

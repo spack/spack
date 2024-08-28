@@ -33,6 +33,8 @@ class Aluminum(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("1.3.0", sha256="d0442efbebfdfb89eec793ae65eceb8f1ba65afa9f2e48df009f81985a4c27e3")
     version("1.2.3", sha256="9b214bdf30f9b7e8e017f83e6615db6be2631f5be3dd186205dbe3aa62f4018a")
 
+    depends_on("cxx", type="build")  # generated
+
     # Library capabilities
     variant(
         "cuda_rma",

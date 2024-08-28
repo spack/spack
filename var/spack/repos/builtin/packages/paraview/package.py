@@ -6,6 +6,7 @@
 import itertools
 import os
 import sys
+from subprocess import Popen
 
 from spack.package import *
 
@@ -31,7 +32,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master", submodules=True)
     version(
-        "5.13.0-RC1", sha256="00aea2bbaf2eacd288a6cc95c1f4ed1a8a4965f27548b53ae473c1ee7caec30e"
+        "5.13.0-RC2", sha256="d10d0cec48c662d8c78470726af1b28cd39cbe434aef7fd0f75eec0112fa3f89"
     )
     version(
         "5.12.1",
@@ -61,6 +62,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     version("5.1.2", sha256="ff02b7307a256b7c6e8ad900dee5796297494df7f9a0804fe801eb2f66e6a187")
     version("5.0.1", sha256="caddec83ec284162a2cbc46877b0e5a9d2cca59fb4ab0ea35b0948d2492950bb")
     version("4.4.0", sha256="c2dc334a89df24ce5233b81b74740fc9f10bc181cd604109fd13f6ad2381fc73")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant(
         "development_files",
@@ -702,3 +707,54 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         cmake_args.append(self.define_from_variant("VTKOSPRAY_ENABLE_DENOISER", "raytracing"))
 
         return cmake_args
+
+    def test_smoke_test(self):
+        """Simple smoke test for ParaView"""
+        spec = self.spec
+
+        pvserver = Executable(spec["paraview"].prefix.bin.pvserver)
+        pvserver("--help")
+
+    def test_pvpython(self):
+        """Test pvpython"""
+        spec = self.spec
+
+        if "~python" in spec:
+            raise SkipTest("Package must be installed with +python")
+
+        pvpython = Executable(spec["paraview"].prefix.bin.pvpython)
+        pvpython("-c", "import paraview")
+
+    def test_mpi_ensemble(self):
+        """Test MPI ParaView Client/Server ensemble"""
+        spec = self.spec
+
+        if "~mpi" in spec or "~python" in spec:
+            raise SkipTest("Package must be installed with +mpi and +python")
+
+        mpirun = spec["mpi"].prefix.bin.mpirun
+        pvserver = spec["paraview"].prefix.bin.pvserver
+        pvpython = Executable(spec["paraview"].prefix.bin.pvpython)
+
+        with working_dir("smoke_test_build", create=True):
+            with Popen(
+                [mpirun, "-np", "3", pvserver, "--mpi", "--force-offscreen-rendering"]
+            ) as servers:
+                pvpython(
+                    "--force-offscreen-rendering",
+                    "-c",
+                    "from paraview.simple import *;"
+                    "Connect('127.0.0.1');"
+                    "sphere = Sphere(ThetaResolution=16, PhiResolution=32);"
+                    "sphere_remote = servermanager.Fetch(sphere);"
+                    "Show(sphere);"
+                    "Render()",
+                )
+                servers.terminate()
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
+        self.test_smoke_test()
+        self.test_pvpython()
+        self.test_mpi_ensemble()

@@ -89,6 +89,10 @@ class Gromacs(CMakePackage, CudaPackage):
     version("4.6.7", sha256="6afb1837e363192043de34b188ca3cf83db6bd189601f2001a1fc5b0b2a214d9")
     version("4.5.5", sha256="e0605e4810b0d552a8761fef5540c545beeaf85893f4a6e21df9905a33f871ba")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "mpi", default=True, description="Activate MPI support (disable for Thread-MPI support)"
     )
@@ -154,6 +158,21 @@ class Gromacs(CMakePackage, CudaPackage):
     conflicts(
         "+mdrun_only", when="@2021:", msg="mdrun-only build option was removed for GROMACS 2021."
     )
+    variant(
+        "nvshmem",
+        default=False,
+        when="@2024:+mpi+cuda",
+        description="Enable NVSHMEM support for Nvidia GPUs",
+    )
+    conflicts(
+        "+nvshmem",
+        when="+cufftmp",
+        msg=(
+            "The GROMACS support for NVSHMEM does not work with the GROMACS support "
+            "for cuFFTMp (even though cuFFTMp uses NVSHMEM in its implementation)"
+        ),
+    )
+
     variant("openmp", default=True, description="Enables OpenMP at configure time")
     variant("openmp_max_threads", default="none", description="Max number of OpenMP threads")
     conflicts(
@@ -298,6 +317,7 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("cp2k@8.1:", when="+cp2k")
 
     depends_on("nvhpc", when="+cufftmp")
+    depends_on("nvhpc", when="+nvshmem")
     depends_on("heffte", when="+heffte")
 
     requires(
@@ -405,6 +425,20 @@ class Gromacs(CMakePackage, CudaPackage):
                 filter_file(
                     r"-gencode;arch=compute_20,code=sm_21;?", "", "cmake/gmxManageNvccConfig.cmake"
                 )
+
+    def setup_run_environment(self, env):
+        if self.spec.satisfies("+cufftmp"):
+            env.append_path(
+                "LD_LIBRARY_PATH",
+                join_path(
+                    self.spec["nvhpc"].prefix,
+                    f"Linux_{self.spec.target.family}",
+                    self.spec["nvhpc"].version,
+                    "comm_libs",
+                    "nvshmem",
+                    "lib",
+                ),
+            )
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
@@ -541,6 +575,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
         if "+cuda" in self.spec:
             options.append("-DCUDA_TOOLKIT_ROOT_DIR:STRING=" + self.spec["cuda"].prefix)
+            if not self.spec.satisfies("cuda_arch=none"):
+                cuda_arch = self.spec.variants["cuda_arch"].value
+                options.append(f"-DGMX_CUDA_TARGET_SM:STRING={';'.join(cuda_arch)}")
 
         options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
         if self.spec["lapack"].libs:
@@ -656,6 +693,16 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             options.append(
                 "-DGMX_OPENMP_MAX_THREADS=%s" % self.spec.variants["openmp_max_threads"].value
             )
+        if self.spec.satisfies("+nvshmem"):
+            options.append("-DGMX_NVSHMEM:BOOL=ON")
+            nvshmem_root = join_path(
+                self.spec["nvhpc"].prefix,
+                f"Linux_{self.spec.target.family}",
+                self.spec["nvhpc"].version,
+                "comm_libs",
+                "nvshmem",
+            )
+            options.append(f"-DNVSHMEM_ROOT={nvshmem_root}")
 
         if self.spec["lapack"].name in INTEL_MATH_LIBRARIES:
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio
@@ -699,3 +746,17 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         else:
             options.append("-DGMX_VERSION_STRING_OF_FORK=spack")
         return options
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+cufftmp"):
+            env.append_path(
+                "LD_LIBRARY_PATH",
+                join_path(
+                    self.spec["nvhpc"].prefix,
+                    f"Linux_{self.spec.target.family}",
+                    self.spec["nvhpc"].version,
+                    "comm_libs",
+                    "nvshmem",
+                    "lib",
+                ),
+            )

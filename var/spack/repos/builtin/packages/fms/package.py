@@ -19,6 +19,7 @@ class Fms(CMakePackage):
     license("LGPL-3.0-or-later")
 
     maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett", "rem1776", "climbfuji")
+    version("2024.02", sha256="47e5740bb066f5eb032e1de163eb762c7258880a2932f4cc4e34e769e0cc2b0e")
     version(
         "2024.01.01", sha256="41c8686bad2b1aed76275e35cbe1af855f7dfce9b6d8907744ea2e8174758f6a"
     )
@@ -53,6 +54,9 @@ class Fms(CMakePackage):
     version(
         "2020.04.01", sha256="2c409242de7dea0cf29f8dbf7495698b6bcac1eeb5c4599a728bdea172ffe37c"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant(
         "precision",

@@ -20,6 +20,8 @@ class Sysstat(AutotoolsPackage):
     version("12.4.5", sha256="4e35abdd9eaf766ecdab55786f459093f3e1c350db23e57a15561afda417ff0d")
     version("12.2.0", sha256="614ab9fe8e7937a3edb7b2b6760792a3764ea3a7310ac540292dd0e3dfac86a6")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("pkgconfig", type="build")
     depends_on("gettext")
     depends_on("lm-sensors")

@@ -70,6 +70,10 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
     version("develop", branch="develop")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("jsrun", default=False, description="Enable/Disable jsrun command for testing")
     variant("shared", default=False, description="Enable/Disable shared libraries")
     variant("mpi", default=True, description="Enable/Disable MPI")
@@ -204,7 +208,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("HIOP_USE_COINHSL", "sparse"),
                 self.define_from_variant("HIOP_TEST_WITH_BSUB", "jsrun"),
                 self.define_from_variant("HIOP_USE_GINKGO", "ginkgo"),
-                self.define_from_variant("HIOP_USE_CUSOLVER_LU", "cusolver_lu"),
+                self.define_from_variant("HIOP_USE_RESOLVE", "cusolver_lu"),
             ]
         )
 

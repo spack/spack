@@ -40,6 +40,8 @@ class OpenpmdApi(CMakePackage):
     version("0.12.0", tag="0.12.0-alpha", commit="23be484dd2570b5277779eafcc5f1eb70c6d98f2")
     version("0.11.1", tag="0.11.1-alpha", commit="c40292aafbf564807710424d106304f9670a8304")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Build a shared version of the library")
     variant("mpi", default=True, description="Enable parallel I/O")
     variant("hdf5", default=True, description="Enable HDF5 support")
@@ -54,7 +56,7 @@ class OpenpmdApi(CMakePackage):
     depends_on("mpi@2.3:", when="+mpi")  # might become MPI 3.0+
     depends_on("nlohmann-json@3.9.1:")
     depends_on("mpark-variant@1.4.0:", when="@:0.14")  # pre C++17 releases
-    depends_on("toml11@3.7.1:", when="@0.15.0:")
+    depends_on("toml11@3.7.1:3.8.1", when="@0.15.0:")
     with when("+hdf5"):
         depends_on("hdf5@1.8.13:")
         depends_on("hdf5@1.8.13: ~mpi", when="~mpi")

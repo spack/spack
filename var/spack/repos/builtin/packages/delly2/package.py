@@ -25,6 +25,8 @@ class Delly2(MakefilePackage):
     version("0.9.1", tag="v0.9.1", commit="ef1cd626a85cfd1c1b7acfca2b5fd5957f2a05f1")
     version("2017-08-03", commit="e32a9cd55c7e3df5a6ae4a91f31a0deb354529fc", deprecated=True)
 
+    depends_on("cxx", type="build")  # generated
+
     variant("openmp", default=False, description="Build with openmp support")
 
     depends_on("htslib", type=("build", "link"))

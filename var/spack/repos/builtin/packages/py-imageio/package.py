@@ -35,6 +35,8 @@ class PyImageio(PythonPackage):
 
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-numpy@1.20:", when="@2.16", type=("build", "run"))
+    # https://github.com/imageio/imageio/issues/1077
+    depends_on("py-numpy@:1", when="@:2.34.1", type=("build", "run"))
     depends_on("pil@8.3.2:", when="@2.10:", type=("build", "run"))
     depends_on("pil", type=("build", "run"))
     depends_on("ffmpeg", type="run")

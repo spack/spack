@@ -253,17 +253,6 @@ can easily happen if it is not updated frequently, this behavior ensures that
 spack has a way to know for certain about the status of any concrete spec on
 the remote mirror, but can slow down pipeline generation significantly.
 
-The ``--optimize`` argument is experimental and runs the generated pipeline
-document through a series of optimization passes designed to reduce the size
-of the generated file.
-
-The ``--dependencies`` is also experimental and disables what in Gitlab is
-referred to as DAG scheduling, internally using the ``dependencies`` keyword
-rather than ``needs`` to list dependency jobs.  The drawback of using this option
-is that before any job can begin, all jobs in previous stages must first
-complete.  The benefit is that Gitlab allows more dependencies to be listed
-when using ``dependencies`` instead of ``needs``.
-
 The optional ``--output-file`` argument should be an absolute path (including
 file name) to the generated pipeline, and if not given, the default is
 ``./.gitlab-ci.yml``.

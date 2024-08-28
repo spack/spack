@@ -18,7 +18,7 @@ class Hip(CMakePackage):
 
     homepage = "https://github.com/ROCm/HIP"
     git = "https://github.com/ROCm/HIP.git"
-    url = "https://github.com/ROCm/HIP/archive/rocm-6.1.1.tar.gz"
+    url = "https://github.com/ROCm/HIP/archive/rocm-6.1.2.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
@@ -27,6 +27,7 @@ class Hip(CMakePackage):
     license("MIT")
 
     version("master", branch="master")
+    version("6.1.2", sha256="9ba5f70a553b48b2cea25c7e16b97ad49320750c0152763b173b63b9f151e783")
     version("6.1.1", sha256="09e8013b8071fca2cf914758001bbd1dccaa237e798e945970e4356cb9b90050")
     version("6.1.0", sha256="6fd57910a16d0b54df822807e67b6207146233a2de5a46c6a05b940a21e2c4d7")
     version("6.0.2", sha256="b47178db94f2acc106e1a88ceb029844805266ebaba11ef63744e90d224b11be")
@@ -45,8 +46,14 @@ class Hip(CMakePackage):
 
     variant("rocm", default=True, description="Enable ROCm support")
     variant("cuda", default=False, description="Build with CUDA")
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
+    conflicts("~rocm +asan", msg="ROCm must be enabled for asan")
+
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
 
     depends_on("cuda", when="+cuda")
 
@@ -59,6 +66,8 @@ class Hip(CMakePackage):
     with when("+rocm"):
         depends_on("gl@4.5:")
         depends_on("py-cppheaderparser", type="build", when="@5.3.3:")
+        depends_on("libx11", when="+asan")
+        depends_on("xproto", when="+asan")
         for ver in [
             "5.3.0",
             "5.3.3",
@@ -74,6 +83,7 @@ class Hip(CMakePackage):
             "6.0.2",
             "6.1.0",
             "6.1.1",
+            "6.1.2",
         ]:
             depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
             depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
@@ -95,6 +105,7 @@ class Hip(CMakePackage):
             "6.0.2",
             "6.1.0",
             "6.1.1",
+            "6.1.2",
         ]:
             depends_on(f"hipify-clang@{ver}", when=f"@{ver}")
 
@@ -109,13 +120,14 @@ class Hip(CMakePackage):
             "6.0.2",
             "6.1.0",
             "6.1.1",
+            "6.1.2",
         ]:
             depends_on(f"rocm-core@{ver}", when=f"@{ver}")
         # hipcc likes to add `-lnuma` by default :(
         # ref https://github.com/ROCm/HIP/pull/2202
         depends_on("numactl", when="@3.7.0:")
 
-    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1"]:
+    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2"]:
         depends_on(f"hipcc@{ver}", when=f"@{ver}")
 
     # roc-obj-ls requirements
@@ -177,6 +189,7 @@ class Hip(CMakePackage):
         )
     # Add hip-clr sources thru the below
     for d_version, d_shasum in [
+        ("6.1.2", "1a1e21640035d957991559723cd093f0c7e202874423667d2ba0c7662b01fea4"),
         ("6.1.1", "2db02f335c9d6fa69befcf7c56278e5cecfe3db0b457eaaa41206c2585ef8256"),
         ("6.1.0", "49b23eef621f4e8e528bb4de8478a17436f42053a2f7fde21ff221aa683205c7"),
         ("6.0.2", "cb8ac610c8d4041b74fb3129c084f1e7b817ce1a5a9943feca1fa7531dc7bdcc"),
@@ -229,6 +242,7 @@ class Hip(CMakePackage):
         )
     # Add hipother sources thru the below
     for d_version, d_shasum in [
+        ("6.1.2", "2740d1e3dcf1f2d07d2a8db6acf4c972941ae392172b83fd8ddcfe8706a40d0b"),
         ("6.1.1", "8b975623c8ed1db53feea2cfd5d29f2a615e890aee1157d0d17adeb97200643f"),
         ("6.1.0", "43a48ccc82f705a15852392ee7419e648d913716bfc04063a53d2d17979b1b46"),
         ("6.0.2", "0bebb3774debcecc0b29a0cc5aa98e373a3ee7acf161503d0d9c9d0ecc8b8010"),
@@ -246,6 +260,7 @@ class Hip(CMakePackage):
 
     # Add hiptests sources thru the below
     for d_version, d_shasum in [
+        ("6.1.2", "5b14e4a30d8d8fb56c43e262009646ba9188eac1c8ff882d9a606a4bec69b56b"),
         ("6.1.1", "10c96ee72adf4580056292ab17cfd858a2fd7bc07abeb41c6780bd147b47f7af"),
         ("6.1.0", "cf3a6a7c43116032d933cc3bc88bfc4b17a4ee1513c978e751755ca11a5ed381"),
         ("6.0.2", "740ca064f4909c20d83226a63c2f164f7555783ec5f5f70be5bc23d3587ad829"),
@@ -344,6 +359,9 @@ class Hip(CMakePackage):
 
             if self.spec.satisfies("@5.7:"):
                 paths["hip-path"] = rocm_prefix
+            if self.spec.satisfies("@6.0:"):
+                paths["hsa-rocr-dev"] = rocm_prefix
+
         else:
             paths = {
                 "hip-path": self.spec.prefix,
@@ -525,6 +543,24 @@ class Hip(CMakePackage):
             args.append(self.define("HIP_PLATFORM", "amd"))
             if self.spec.satisfies("@5.6.0:"):
                 args.append(self.define("HIP_LLVM_ROOT", self.spec["llvm-amdgpu"].prefix))
+            if self.spec.satisfies("@6.1.0:") and self.spec.satisfies("+asan"):
+                args.append(self.define("ADDRESS_SANITIZER", "ON"))
+                args.append(
+                    self.define("CMAKE_C_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+                )
+                args.append(
+                    self.define(
+                        "CMAKE_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++"
+                    )
+                )
+                args.append(
+                    self.define(
+                        "CMAKE_CXX_FLAGS",
+                        f"-I{self.spec['libx11'].prefix.include} "
+                        f"-I{self.spec['mesa'].prefix.include} "
+                        f"-I{self.spec['xproto'].prefix.include}",
+                    )
+                )
 
         if self.spec.satisfies("+cuda"):
             args.append(self.define("HIP_PLATFORM", "nvidia"))
@@ -561,9 +597,9 @@ class Hip(CMakePackage):
         """Copy the tests source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         if self.spec.satisfies("@5.1:5.5"):
-            self.cache_extra_test_sources([self.test_src_dir_old])
+            cache_extra_test_sources(self, [self.test_src_dir_old])
         elif self.spec.satisfies("@5.6:"):
-            self.cache_extra_test_sources([self.test_src_dir])
+            cache_extra_test_sources(self, [self.test_src_dir])
 
     def test_samples(self):
         # configure, build and run all hip samples

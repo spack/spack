@@ -20,7 +20,7 @@ class Boost(Package):
     """
 
     homepage = "https://www.boost.org"
-    url = "http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2"
+    url = "https://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2"
     git = "https://github.com/boostorg/boost.git"
     list_url = "https://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
@@ -78,6 +78,9 @@ class Boost(Package):
     version("1.41.0", sha256="1ef94e6749eaf13318284b4f629be063544c7015b45e38113b975ac1945cc726")
     version("1.40.0", sha256="36cf4a239b587067a4923fdf6e290525a14c3af29829524fa73f3dec6841530c")
     version("1.39.0", sha256="44785eae8c6cce61a29a8a51f9b737e57b34d66baa7c0bcd4af188832b8018fd")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     with_default_variants = "boost" + "".join(
         [
@@ -245,6 +248,8 @@ class Boost(Package):
     depends_on("zstd", when="+iostreams")
     depends_on("xz", when="+iostreams")
     depends_on("py-numpy", when="+numpy", type=("build", "run"))
+    # https://github.com/boostorg/python/issues/431
+    depends_on("py-numpy@:1", when="@:1.85+numpy", type=("build", "run"))
 
     # Improve the error message when the context-impl variant is conflicting
     conflicts("context-impl=fcontext", when="@:1.65.0")
@@ -445,7 +450,7 @@ class Boost(Package):
         if version >= Version("1.63.0"):
             url = "https://archives.boost.io/release/{0}/source/boost_{1}.tar.bz2"
         else:
-            url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
+            url = "https://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
 
         return url.format(version.dotted, version.underscored)
 
@@ -492,7 +497,7 @@ class Boost(Package):
             spec["python"].libs[0],
         )
 
-    def determine_bootstrap_options(self, spec, with_libs, options):
+    def determine_bootstrap_options(self, spec, with_libs, without_libs, options):
         boost_toolset_id = self.determine_toolset(spec)
 
         # Arm compiler bootstraps with 'gcc' (but builds as 'clang')
@@ -500,12 +505,15 @@ class Boost(Package):
             options.append("--with-toolset=gcc")
         else:
             options.append("--with-toolset=%s" % boost_toolset_id)
-        options.append("--with-libraries=%s" % ",".join(with_libs))
+        if with_libs:
+            options.append("--with-libraries=%s" % ",".join(with_libs))
+        else:
+            options.append("--without-libraries=%s" % ",".join(without_libs))
 
-        if "+python" in spec:
+        if spec.satisfies("+python"):
             options.append("--with-python=%s" % spec["python"].command.path)
 
-        if "+icu" in spec:
+        if spec.satisfies("+icu"):
             options.append("--with-icu")
         else:
             options.append("--without-icu")
@@ -517,7 +525,7 @@ class Boost(Package):
                 # Skip this on Windows since we don't have a cl.exe wrapper in spack
                 f.write("using {0} : : {1} ;\n".format(boost_toolset_id, spack_cxx))
 
-            if "+mpi" in spec:
+            if spec.satisfies("+mpi"):
                 # Use the correct mpi compiler.  If the compiler options are
                 # empty or undefined, Boost will attempt to figure out the
                 # correct options by running "${mpicxx} -show" or something
@@ -527,21 +535,21 @@ class Boost(Package):
                 mpi_line = "using mpi : %s" % spec["mpi"].mpicxx
                 f.write(mpi_line + " ;\n")
 
-            if "+python" in spec:
+            if spec.satisfies("+python"):
                 f.write(self.bjam_python_line(spec))
 
     def determine_b2_options(self, spec, options):
-        if "+debug" in spec:
+        if spec.satisfies("+debug"):
             options.append("variant=debug")
         else:
             options.append("variant=release")
 
-        if "+icu" in spec:
+        if spec.satisfies("+icu"):
             options.extend(["-s", "ICU_PATH=%s" % spec["icu4c"].prefix])
         else:
             options.append("--disable-icu")
 
-        if "+iostreams" in spec:
+        if spec.satisfies("+iostreams"):
             options.extend(
                 [
                     "-s",
@@ -563,17 +571,17 @@ class Boost(Package):
                 ]
             )
             # At least with older Xcode, _lzma_cputhreads is missing (#33998)
-            if "platform=darwin" in self.spec:
+            if self.spec.satisfies("platform=darwin"):
                 options.extend(["-s", "NO_LZMA=1"])
 
         link_types = ["static"]
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             link_types.append("shared")
 
         threading_opts = []
-        if "+multithreaded" in spec:
+        if spec.satisfies("+multithreaded"):
             threading_opts.append("multi")
-        if "+singlethreaded" in spec:
+        if spec.satisfies("+singlethreaded"):
             threading_opts.append("single")
         if not threading_opts:
             raise RuntimeError(
@@ -584,9 +592,9 @@ class Boost(Package):
         if "+context" in spec and "context-impl" in spec.variants:
             options.extend(["context-impl=%s" % spec.variants["context-impl"].value])
 
-        if "+taggedlayout" in spec:
+        if spec.satisfies("+taggedlayout"):
             layout = "tagged"
-        elif "+versionedlayout" in spec:
+        elif spec.satisfies("+versionedlayout"):
             layout = "versioned"
         else:
             if len(threading_opts) > 1:
@@ -618,7 +626,7 @@ class Boost(Package):
             if flag:
                 cxxflags.append(flag)
 
-        if "+pic" in self.spec:
+        if self.spec.satisfies("+pic"):
             cxxflags.append(self.compiler.cxx_pic_flag)
 
         # clang is not officially supported for pre-compiled headers
@@ -627,7 +635,7 @@ class Boost(Package):
         #   https://svn.boost.org/trac/boost/ticket/12496
         if spec.satisfies("%apple-clang") or spec.satisfies("%clang") or spec.satisfies("%fj"):
             options.extend(["pch=off"])
-            if "+clanglibcpp" in spec:
+            if spec.satisfies("+clanglibcpp"):
                 cxxflags.append("-stdlib=libc++")
                 options.extend(["toolset=clang", 'linkflags="-stdlib=libc++"'])
         elif spec.satisfies("%xl") or spec.satisfies("%xl_r"):
@@ -672,43 +680,46 @@ class Boost(Package):
             env["PATH"] = newdir + ":" + env["PATH"]
 
         with_libs = list()
+        without_libs = list()
         for lib in Boost.all_libs:
             if "+{0}".format(lib) in spec:
                 with_libs.append(lib)
+            else:
+                without_libs.append(lib)
+
+        remove_if_in_list = lambda lib, libs: libs.remove(lib) if lib in libs else None
 
         # Remove libraries that the release version does not support
-        if spec.satisfies("@1.69.0:") and "signals" in with_libs:
-            with_libs.remove("signals")
-        if not spec.satisfies("@1.54.0:") and "log" in with_libs:
-            with_libs.remove("log")
-        if not spec.satisfies("@1.53.0:") and "atomic" in with_libs:
-            with_libs.remove("atomic")
-        if not spec.satisfies("@1.48.0:") and "locale" in with_libs:
-            with_libs.remove("locale")
-        if not spec.satisfies("@1.47.0:") and "chrono" in with_libs:
-            with_libs.remove("chrono")
-        if not spec.satisfies("@1.43.0:") and "random" in with_libs:
-            with_libs.remove("random")
-        if not spec.satisfies("@1.39.0:") and "exception" in with_libs:
-            with_libs.remove("exception")
-        if "+graph" in spec and "+mpi" in spec:
+        if spec.satisfies("@1.69.0:"):
+            remove_if_in_list("signals", with_libs)
+            remove_if_in_list("signals", without_libs)
+        if not spec.satisfies("@1.54.0:"):
+            remove_if_in_list("log", with_libs)
+            remove_if_in_list("log", without_libs)
+        if not spec.satisfies("@1.53.0:"):
+            remove_if_in_list("atomic", with_libs)
+            remove_if_in_list("atomic", without_libs)
+        if not spec.satisfies("@1.48.0:"):
+            remove_if_in_list("locale", with_libs)
+            remove_if_in_list("locale", without_libs)
+        if not spec.satisfies("@1.47.0:"):
+            remove_if_in_list("chrono", with_libs)
+            remove_if_in_list("chrono", without_libs)
+        if not spec.satisfies("@1.43.0:"):
+            remove_if_in_list("random", with_libs)
+            remove_if_in_list("random", without_libs)
+        if not spec.satisfies("@1.39.0:"):
+            remove_if_in_list("exception", with_libs)
+            remove_if_in_list("exception", without_libs)
+        if spec.satisfies("+graph") and spec.satisfies("+mpi"):
             with_libs.append("graph_parallel")
-
-        if not with_libs:
-            # if no libraries are specified for compilation, then you dont have
-            # to configure/build anything, just copy over to the prefix
-            # directory.
-            src = join_path(self.stage.source_path, "boost")
-            mkdirp(join_path(prefix, "include"))
-            dst = join_path(prefix, "include", "boost")
-            install_tree(src, dst)
-            return
+            remove_if_in_list("graph_parallel", without_libs)
 
         # to make Boost find the user-config.jam
         env["BOOST_BUILD_PATH"] = self.stage.source_path
 
         bootstrap_options = ["--prefix=%s" % prefix]
-        self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
+        self.determine_bootstrap_options(spec, with_libs, without_libs, bootstrap_options)
 
         if self.spec.satisfies("platform=windows"):
             bootstrap = Executable("cmd.exe")
@@ -748,7 +759,7 @@ class Boost(Package):
         threading_opts = self.determine_b2_options(spec, b2_options)
 
         # Create headers if building from a git checkout
-        if "@develop" in spec:
+        if spec.satisfies("@develop"):
             b2("headers", *b2_options)
 
         b2("--clean", *b2_options)
@@ -761,7 +772,7 @@ class Boost(Package):
         else:
             b2("install", *b2_options)
 
-        if "+multithreaded" in spec and "~taggedlayout" in spec:
+        if spec.satisfies("+multithreaded") and spec.satisfies("~taggedlayout"):
             self.add_buildopt_symlinks(prefix)
 
         # The shared libraries are not installed correctly

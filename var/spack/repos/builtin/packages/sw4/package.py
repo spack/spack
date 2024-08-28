@@ -20,6 +20,9 @@ class Sw4(MakefilePackage):
     version("developer", branch="developer")
     version("3.0", tag="v3.0", commit="13e6d431976f7fc49124c997bf87353aa7afd35e")
 
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("openmp", default=True, description="build with OpenMP")
     variant("hdf5", default=True, description="build with HDF5")
     variant("proj", default=True, description="build with proj")

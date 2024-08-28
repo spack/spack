@@ -22,6 +22,8 @@ class Libressl(AutotoolsPackage):
     version("3.6.3", sha256="87b1bbe36e9eec8d0ae5f04c83d36b2c5b0e581784c7eb0817025ed29eadea37")
     version("3.6.1", sha256="acfac61316e93b919c28d62d53037ca734de85c46b4d703f19fd8395cf006774")
 
+    depends_on("c", type="build")  # generated
+
     variant("shared", default=True, description="Build shared libraries")
     variant("static", default=False, description="Build static libraries")
 

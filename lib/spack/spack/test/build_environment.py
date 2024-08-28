@@ -2,10 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import inspect
 import os
 import platform
 import posixpath
+import sys
 
 import pytest
 
@@ -177,7 +177,7 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
 
 
 def test_setup_dependent_package_inherited_modules(
-    config, working_env, mock_packages, install_mockery, mock_fetch
+    working_env, mock_packages, install_mockery, mock_fetch
 ):
     # This will raise on regression
     s = spack.spec.Spec("cmake-client-inheritor").concretized()
@@ -285,6 +285,25 @@ def test_compiler_config_modifications(
             assert os.environ[name] == value
             continue
         assert name not in os.environ
+
+
+def test_compiler_custom_env(config, mock_packages, monkeypatch, working_env):
+    if sys.platform == "win32":
+        test_path = r"C:\test\path\element\custom-env" + "\\"
+    else:
+        test_path = r"/test/path/element/custom-env/"
+
+    def custom_env(pkg, env):
+        env.prepend_path("PATH", test_path)
+        env.append_flags("ENV_CUSTOM_CC_FLAGS", "--custom-env-flag1")
+
+    pkg = spack.spec.Spec("cmake").concretized().package
+    monkeypatch.setattr(pkg.compiler, "setup_custom_environment", custom_env)
+    spack.build_environment.setup_package(pkg, False)
+
+    # Note: trailing slash may be stripped by internal logic
+    assert test_path[:-1] in os.environ["PATH"]
+    assert "--custom-env-flag1" in os.environ["ENV_CUSTOM_CC_FLAGS"]
 
 
 def test_external_config_env(mock_packages, mutable_config, working_env):
@@ -457,14 +476,14 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
     # a foobar=bar (parallel = False)
     # |
     # b (parallel =True)
-    s = default_mock_concretization("a foobar=bar")
+    s = default_mock_concretization("pkg-a foobar=bar")
 
     spack.build_environment.set_package_py_globals(s.package, context=Context.BUILD)
-    assert s["a"].package.module.make_jobs == 1
+    assert s["pkg-a"].package.module.make_jobs == 1
 
-    spack.build_environment.set_package_py_globals(s["b"].package, context=Context.BUILD)
-    assert s["b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
-        parallel=s["b"].package.parallel
+    spack.build_environment.set_package_py_globals(s["pkg-b"].package, context=Context.BUILD)
+    assert s["pkg-b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
+        parallel=s["pkg-b"].package.parallel
     )
 
 
@@ -573,7 +592,7 @@ class TestModuleMonkeyPatcher:
 
         # We can also propagate the settings to classes in the MRO
         module_wrapper.propagate_changes_to_mro()
-        for cls in inspect.getmro(type(s.package)):
+        for cls in type(s.package).__mro__:
             current_module = cls.module
             if current_module == spack.package_base:
                 break

@@ -45,7 +45,9 @@ class DetectedPackage(NamedTuple):
     def restore(
         spec_str: str, prefix: str, extra_attributes: Optional[Dict[str, str]]
     ) -> "DetectedPackage":
-        spec = spack.spec.Spec.from_detection(spec_str=spec_str, extra_attributes=extra_attributes)
+        spec = spack.spec.Spec.from_detection(
+            spec_str=spec_str, external_path=prefix, extra_attributes=extra_attributes
+        )
         return DetectedPackage(spec=spec, prefix=prefix)
 
 
@@ -136,10 +138,10 @@ def path_to_dict(search_paths: List[str]):
     # entry overrides later entries
     for search_path in reversed(search_paths):
         try:
-            for lib in os.listdir(search_path):
-                lib_path = os.path.join(search_path, lib)
-                if llnl.util.filesystem.is_readable_file(lib_path):
-                    path_to_lib[lib_path] = lib
+            with os.scandir(search_path) as entries:
+                path_to_lib.update(
+                    {entry.path: entry.name for entry in entries if entry.is_file()}
+                )
         except OSError as e:
             msg = f"cannot scan '{search_path}' for external software: {str(e)}"
             llnl.util.tty.debug(msg)
@@ -239,7 +241,7 @@ def update_configuration(
         external_entries = pkg_config.get("externals", [])
         assert not isinstance(external_entries, bool), "unexpected value for external entry"
 
-        all_new_specs.extend([spack.spec.Spec(x["spec"]) for x in external_entries])
+        all_new_specs.extend([x.spec for x in new_entries])
         if buildable is False:
             pkg_config["buildable"] = False
         pkg_to_cfg[package_name] = pkg_config
@@ -250,6 +252,27 @@ def update_configuration(
     spack.config.set("packages", pkgs_cfg, scope=scope)
 
     return all_new_specs
+
+
+def set_virtuals_nonbuildable(virtuals: Set[str], scope: Optional[str] = None) -> List[str]:
+    """Update packages:virtual:buildable:False for the provided virtual packages, if the property
+    is not set by the user. Returns the list of virtual packages that have been updated."""
+    packages = spack.config.get("packages")
+    new_config = {}
+    for virtual in virtuals:
+        # If the user has set the buildable prop do not override it
+        if virtual in packages and "buildable" in packages[virtual]:
+            continue
+        new_config[virtual] = {"buildable": False}
+
+    # Update the provided scope
+    spack.config.set(
+        "packages",
+        spack.config.merge_yaml(spack.config.get("packages", scope=scope), new_config),
+        scope=scope,
+    )
+
+    return list(new_config.keys())
 
 
 def _windows_drive() -> str:
