@@ -31,5 +31,5 @@ class WinFile(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix)
-        for subdir in os.path.listdir(self.stage.source_path):
+        for subdir in os.listdir(self.stage.source_path):
             shutil.move(subdir, prefix)
