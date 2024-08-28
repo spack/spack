@@ -155,6 +155,7 @@ class Pmix(AutotoolsPackage):
     )
 
     variant("docs", default=False, when="@master", description="Build documentation")
+    variant("munge", default=False, description="Enable MUNGE support")
     variant("python", default=False, when="@4.1.2:", description="Enable Python bindings")
     variant(
         "restful",
@@ -191,6 +192,7 @@ class Pmix(AutotoolsPackage):
     depends_on("python", when="+python")
     depends_on("py-cython", when="+python")
     depends_on("py-setuptools", when="+python")
+    depends_on("munge", when="+munge")
 
     def autoreconf(self, spec, prefix):
         """Only needed when building from git checkout"""
@@ -216,7 +218,7 @@ class Pmix(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        config_args = ["--enable-shared", "--enable-static", "--without-munge"]
+        config_args = ["--enable-shared", "--enable-static"]
 
         if spec.satisfies("~docs") or spec.satisfies("@4.2.3:5"):
             config_args.append("--disable-sphinx")
@@ -238,6 +240,11 @@ class Pmix(AutotoolsPackage):
                 config_args.append("--with-hwloc-libdir=" + dep_libpath)
 
         config_args.extend(self.enable_or_disable("python-bindings", variant="python"))
+
+        if spec.satisfies("+munge"):
+            config_args.append("--with-munge=" + spec["munge"].prefix)
+        else:
+            config_args.append("--without-munge")
 
         if spec.satisfies("+restful"):
             config_args.append("--with-curl=" + spec["curl"].prefix)
