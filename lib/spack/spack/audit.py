@@ -39,7 +39,6 @@ import ast
 import collections
 import collections.abc
 import glob
-import inspect
 import io
 import itertools
 import os
@@ -525,7 +524,7 @@ def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
         name_definitions = collections.defaultdict(list)
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
-        for cls_item in inspect.getmro(pkg_cls):
+        for cls_item in pkg_cls.__mro__:
             for name in RESERVED_NAMES:
                 current_value = cls_item.__dict__.get(name)
                 if current_value is None:
