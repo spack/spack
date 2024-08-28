@@ -161,9 +161,18 @@ class Gromacs(CMakePackage, CudaPackage):
     variant(
         "nvshmem",
         default=False,
-        description="Enable nvshmem support for nvidia gpus",
-        when="+cuda+mpi",
+        when="@2024:+mpi+cuda",
+        description="Enable NVSHMEM support for Nvidia GPUs",
     )
+    conflicts(
+        "+nvshmem",
+        when="+cufftmp",
+        msg=(
+            "The GROMACS support for NVSHMEM does not work with the GROMACS support "
+            "for cuFFTMp (even though cuFFTMp uses NVSHMEM in its implementation)"
+        ),
+    )
+
     variant("openmp", default=True, description="Enables OpenMP at configure time")
     variant("openmp_max_threads", default="none", description="Max number of OpenMP threads")
     conflicts(
