@@ -168,7 +168,7 @@ class Gromacs(CMakePackage, CudaPackage):
         "+nvshmem",
         when="+cufftmp",
         msg=("The GROMACS support for NVSHMEM does not work with the GROMACS support "
-             "for cuFFTMp (even though cuFFTMp uses NVSHMEM in its implementation)",
+             "for cuFFTMp (even though cuFFTMp uses NVSHMEM in its implementation)"),
     )
 
     variant("openmp", default=True, description="Enables OpenMP at configure time")
