@@ -579,7 +579,8 @@ def ensure_core_dependencies() -> None:
     """Ensure the presence of all the core dependencies."""
     if sys.platform.lower() == "linux":
         ensure_patchelf_in_path_or_raise()
-    ensure_file_in_path_or_raise()
+    elif sys.platform == "win32":
+        ensure_file_in_path_or_raise()
     ensure_gpg_in_path_or_raise()
     ensure_clingo_importable_or_raise()
 

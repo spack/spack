@@ -19,13 +19,21 @@ from llnl.util.lang import memoized
 from spack.util.executable import Executable, which
 
 
-@memoized
-def file_command(*args):
-    """Creates entry point to `file` system command with provided arguments"""
+def _ensure_file_on_win():
+    """Ensures the file command is available on Windows
+    If not, it is bootstrapped.
+    No-op on all other platforms"""
+    if sys.platform != "win32":
+        return
     import spack.bootstrap
 
     with spack.bootstrap.ensure_bootstrap_configuration():
         spack.bootstrap.ensure_file_in_path_or_raise()
+
+@memoized
+def file_command(*args):
+    """Creates entry point to `file` system command with provided arguments"""
+    _ensure_file_on_win()
     file_cmd = which("file", required=True)
     for arg in args:
         file_cmd.add_default_arg(arg)
