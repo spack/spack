@@ -2578,18 +2578,23 @@ class Spec:
         return Spec.from_dict(extracted_json)
 
     @staticmethod
-    def from_detection(spec_str, extra_attributes=None):
+    def from_detection(
+        spec_str: str,
+        *,
+        external_path: str,
+        external_modules: Optional[List[str]] = None,
+        extra_attributes: Optional[Dict] = None,
+    ) -> "Spec":
         """Construct a spec from a spec string determined during external
         detection and attach extra attributes to it.
 
         Args:
-            spec_str (str): spec string
-            extra_attributes (dict): dictionary containing extra attributes
-
-        Returns:
-            spack.spec.Spec: external spec
+            spec_str: spec string
+            external_path: prefix of the external spec
+            external_modules: optional module files to be loaded when the external spec is used
+            extra_attributes: dictionary containing extra attributes
         """
-        s = Spec(spec_str)
+        s = Spec(spec_str, external_path=external_path, external_modules=external_modules)
         extra_attributes = syaml.sorted_dict(extra_attributes or {})
         # This is needed to be able to validate multi-valued variants,
         # otherwise they'll still be abstract in the context of detection.
