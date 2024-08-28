@@ -30,6 +30,7 @@ aomp = [
     "832b7c48149a730619b577a2863b8d1bf1b2551eda5b815e1865a044929ab9fa",
     "62a5036a2299ed2e3053ee00b7ea1800469cd545fea486fa17266a8b3acfaf5d",
     "3de1c7a31a88c3f05a6a66ba6854ac8fdad1ce44462e561cb1e6ad59629029ce",
+    "5f54d7c7c798bcf1cd47d3a7f17ceaf79991bf166cc5e47e5372a68e7cf7d520",
 ]
 
 devlib = [
@@ -48,6 +49,7 @@ devlib = [
     "6bd9912441de6caf6b26d1323e1c899ecd14ff2431874a2f5883d3bc5212db34",
     "f1a67efb49f76a9b262e9735d3f75ad21e3bd6a05338c9b15c01e6c625c4460d",
     "300e9d6a137dcd91b18d5809a316fddb615e0e7f982dc7ef1bb56876dff6e097",
+    "12ce17dc920ec6dac0c5484159b3eec00276e4a5b301ab1250488db3b2852200",
 ]
 
 llvm = [
@@ -66,6 +68,7 @@ llvm = [
     "6bd9912441de6caf6b26d1323e1c899ecd14ff2431874a2f5883d3bc5212db34",
     "f1a67efb49f76a9b262e9735d3f75ad21e3bd6a05338c9b15c01e6c625c4460d",
     "300e9d6a137dcd91b18d5809a316fddb615e0e7f982dc7ef1bb56876dff6e097",
+    "12ce17dc920ec6dac0c5484159b3eec00276e4a5b301ab1250488db3b2852200",
 ]
 
 flang = [
@@ -84,6 +87,7 @@ flang = [
     "51ecd2c154568c971f5b46ff0e1e1b57063afe28d128fc88c503de88f7240267",
     "1bcaa73e73a688cb092f01987cf3ec9ace4aa1fcaab2b812888c610722c4501d",
     "12418ea61cca58811b7e75fd9df48be568b406f84a489a41ba5a1fd70c47f7ba",
+    "6af7785b1776aeb9229ce4e5083dcfd451e8450f6e5ebe34214560b13f679d96",
 ]
 
 extras = [
@@ -102,6 +106,7 @@ extras = [
     "57d6d9d26c0cb6ea7f8373996c41165f463ae7936d32e5793822cfae03900f8f",
     "3dc837fbfcac64e000e1b5518e4f8a6b260eaf1a3e74152d8b8c22f128f575b7",
     "2b9351fdb1cba229669233919464ae906ca8f70910c6fa508a2812b7c3bed123",
+    "7cef51c980f29d8b46d8d4b110e4f2f75d93544cf7d63c5e5d158cf531aeec7d",
 ]
 
 versions = [
@@ -120,6 +125,7 @@ versions = [
     "6.1.0",
     "6.1.1",
     "6.1.2",
+    "6.2.0",
 ]
 versions_dict = dict()  # type: Dict[str,Dict[str,str]]
 components = ["aomp", "devlib", "llvm", "flang", "extras"]
@@ -143,6 +149,7 @@ class RocmOpenmpExtras(Package):
     license("Apache-2.0")
 
     maintainers("srekolam", "renjithravindrankannath", "estewart08")
+    version("6.2.0", sha256=versions_dict["6.2.0"]["aomp"])
     version("6.1.2", sha256=versions_dict["6.1.2"]["aomp"])
     version("6.1.1", sha256=versions_dict["6.1.1"]["aomp"])
     version("6.1.0", sha256=versions_dict["6.1.0"]["aomp"])
@@ -187,6 +194,7 @@ class RocmOpenmpExtras(Package):
         "6.1.0",
         "6.1.1",
         "6.1.2",
+        "6.2.0",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
@@ -247,7 +255,7 @@ class RocmOpenmpExtras(Package):
             placement="llvm-project",
             when=f"@{ver}",
         )
-    for ver in ["6.1.0", "6.1.1", "6.1.2"]:
+    for ver in ["6.1.0", "6.1.1", "6.1.2", "6.2.0"]:
         depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
         depends_on(f"comgr@{ver}", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
@@ -361,75 +369,71 @@ class RocmOpenmpExtras(Package):
             "",
             libomptarget.format(src) + "/cmake/Modules/LibomptargetGetDependencies.cmake",
         )
+        if self.spec.satisfies("@:6.1"):
+            filter_file(
+                r"{OPENMP_INSTALL_LIBDIR}",
+                "{OPENMP_INSTALL_LIBDIR}/libdevice",
+                libomptarget.format(src) + "/deviceRTLs/amdgcn/CMakeLists.txt",
+            )
+            filter_file(
+                "-nogpulib",
+                "-nogpulib -nogpuinc",
+                libomptarget.format(src) + "/deviceRTLs/amdgcn/CMakeLists.txt",
+            )
+            filter_file(
+                "-x hip",
+                "-x hip -nogpulib -nogpuinc",
+                libomptarget.format(src) + "/deviceRTLs/amdgcn/CMakeLists.txt",
+            )
+            filter_file(
+                "-c ",
+                "-c -nogpulib -nogpuinc -I{LIMIT}",
+                libomptarget.format(src) + "/hostrpc/CMakeLists.txt",
+            )
+            filter_file(
+                r"${ROCM_DIR}/hsa/include ${ROCM_DIR}/hsa/include/hsa",
+                "${HSA_INCLUDE}/hsa/include ${HSA_INCLUDE}/hsa/include/hsa",
+                libomptarget.format(src) + plugin,
+                string=True,
+            )
 
-        filter_file(
-            r"{OPENMP_INSTALL_LIBDIR}",
-            "{OPENMP_INSTALL_LIBDIR}/libdevice",
-            libomptarget.format(src) + "/deviceRTLs/amdgcn/CMakeLists.txt",
-        )
+            filter_file("{ROCM_DIR}/hsa/lib", "{HSA_LIB}", libomptarget.format(src) + plugin)
 
-        filter_file(
-            "-nogpulib",
-            "-nogpulib -nogpuinc",
-            libomptarget.format(src) + "/deviceRTLs/amdgcn/CMakeLists.txt",
-        )
+            filter_file(
+                r"{ROCM_DIR}/lib\)",
+                "{HSAKMT_LIB})\nset(HSAKMT_LIB64 ${HSAKMT_LIB64})",
+                libomptarget.format(src) + plugin,
+            )
 
-        filter_file(
-            "-x hip",
-            "-x hip -nogpulib -nogpuinc",
-            libomptarget.format(src) + "/deviceRTLs/amdgcn/CMakeLists.txt",
-        )
+            filter_file(
+                r"-L${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}",
+                "-L${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS} -L${HSAKMT_LIB64}",
+                libomptarget.format(src) + plugin,
+                string=True,
+            )
 
-        filter_file(
-            "-c ",
-            "-c -nogpulib -nogpuinc -I{LIMIT}",
-            libomptarget.format(src) + "/hostrpc/CMakeLists.txt",
-        )
+            filter_file(
+                r"-rpath,${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}",
+                "-rpath,${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}" + ",-rpath,${HSAKMT_LIB64}",
+                libomptarget.format(src) + plugin,
+                string=True,
+            )
 
-        filter_file(
-            r"${ROCM_DIR}/hsa/include ${ROCM_DIR}/hsa/include/hsa",
-            "${HSA_INCLUDE}/hsa/include ${HSA_INCLUDE}/hsa/include/hsa",
-            libomptarget.format(src) + plugin,
-            string=True,
-        )
+            filter_file("{ROCM_DIR}/include", "{COMGR_INCLUDE}", libomptarget.format(src) + plugin)
 
-        filter_file("{ROCM_DIR}/hsa/lib", "{HSA_LIB}", libomptarget.format(src) + plugin)
+            filter_file(
+                r"-L${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX}",
+                "-L${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX} -L${COMGR_LIB}",
+                libomptarget.format(src) + plugin,
+                string=True,
+            )
 
-        filter_file(
-            r"{ROCM_DIR}/lib\)",
-            "{HSAKMT_LIB})\nset(HSAKMT_LIB64 ${HSAKMT_LIB64})",
-            libomptarget.format(src) + plugin,
-        )
-
-        filter_file(
-            r"-L${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}",
-            "-L${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS} -L${HSAKMT_LIB64}",
-            libomptarget.format(src) + plugin,
-            string=True,
-        )
-
-        filter_file(
-            r"-rpath,${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}",
-            "-rpath,${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}" + ",-rpath,${HSAKMT_LIB64}",
-            libomptarget.format(src) + plugin,
-            string=True,
-        )
-
-        filter_file("{ROCM_DIR}/include", "{COMGR_INCLUDE}", libomptarget.format(src) + plugin)
-
-        filter_file(
-            r"-L${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX}",
-            "-L${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX} -L${COMGR_LIB}",
-            libomptarget.format(src) + plugin,
-            string=True,
-        )
-
-        filter_file(
-            r"rpath,${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX}",
-            "rpath,${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX}" + "-Wl,-rpath,${COMGR_LIB}",
-            libomptarget.format(src) + plugin,
-            string=True,
-        )
+            filter_file(
+                r"rpath,${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX}",
+                "rpath,${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX}" + "-Wl,-rpath,${COMGR_LIB}",
+                libomptarget.format(src) + plugin,
+                string=True,
+            )
 
         filter_file(
             "ADDITIONAL_VERSIONS 2.7",

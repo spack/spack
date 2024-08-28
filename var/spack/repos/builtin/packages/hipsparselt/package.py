@@ -43,7 +43,7 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     )
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
-    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2"]:
+    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2", "6.2.0"]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"hipsparse@{ver}", when=f"@{ver}")
         depends_on(f"rocm-openmp-extras@{ver}", when=f"@{ver}", type="test")
