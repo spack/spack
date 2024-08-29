@@ -112,7 +112,7 @@ class Gptune(CMakePackage):
         comp_version = str(self.compiler.version).replace(".", ",")
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
-        if "+superlu" in spec:
+        if spec.satisfies("+superlu"):
             superludriver = join_path(spec["superlu-dist"].prefix.lib, "EXAMPLE/pddrive_spawn")
             op = ["-r", superludriver, "."]
             # copy superlu-dist executables to the correct place
@@ -127,7 +127,7 @@ class Gptune(CMakePackage):
             self.run_test("mkdir", options=["-p", "EXAMPLE"], work_dir=wd + "/superlu_dist/build")
             self.run_test("cp", options=op, work_dir=wd + "/superlu_dist/build/EXAMPLE")
 
-        if "+hypre" in spec:
+        if spec.satisfies("+hypre"):
             hypredriver = join_path(spec["hypre"].prefix.bin, "ij")
             op = ["-r", hypredriver, "."]
             # copy superlu-dist executables to the correct place
@@ -221,14 +221,14 @@ class Gptune(CMakePackage):
         self.run_test("cp", options=op, work_dir=wd)
 
         apps = ["Scalapack-PDGEQRF_RCI"]
-        if "+mpispawn" in spec:
+        if spec.satisfies("+mpispawn"):
             apps = apps + ["GPTune-Demo", "Scalapack-PDGEQRF"]
-        if "+superlu" in spec:
+        if spec.satisfies("+superlu"):
             apps = apps + ["SuperLU_DIST_RCI"]
-            if "+mpispawn" in spec:
+            if spec.satisfies("+mpispawn"):
                 apps = apps + ["SuperLU_DIST"]
-        if "+hypre" in spec:
-            if "+mpispawn" in spec:
+        if spec.satisfies("+hypre"):
+            if spec.satisfies("+mpispawn"):
                 apps = apps + ["Hypre"]
 
         for app in apps:
