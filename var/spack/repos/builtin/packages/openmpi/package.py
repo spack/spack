@@ -570,8 +570,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant("internal-libevent", default=False, description="Use internal libevent")
     variant("openshmem", default=False, description="Enable building OpenSHMEM")
 
-    provides("mpi")
-    provides("mpi@:2.2", when="@1.6.5")
+    provides("mpi@:2.0", when="@:1.2")
+    provides("mpi@:2.1", when="@1.3.0:")
+    provides("mpi@:2.2", when="@1.7.3:")
     provides("mpi@:3.0", when="@1.7.5:")
     provides("mpi@:3.1", when="@2.0.0:")
 
