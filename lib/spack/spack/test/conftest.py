@@ -715,8 +715,8 @@ def configuration_dir(tmpdir_factory, linux_os):
     config.write(config_template.read_text().format(install_tree_root, locks))
 
     target = str(archspec.cpu.host().family)
-    compilers = tmpdir.join("site", "compilers.yaml")
-    compilers_template = test_config / "compilers.yaml"
+    compilers = tmpdir.join("site", "packages.yaml")
+    compilers_template = test_config / "packages.yaml"
     compilers.write(compilers_template.read_text().format(linux_os=linux_os, target=target))
 
     modules = tmpdir.join("site", "modules.yaml")
@@ -810,12 +810,12 @@ def concretize_scope(mutable_config, tmpdir):
 
 
 @pytest.fixture
-def no_compilers_yaml(mutable_config):
+def no_packages_yaml(mutable_config):
     """Creates a temporary configuration without compilers.yaml"""
     for local_config in mutable_config.scopes.values():
         if not isinstance(local_config, spack.config.DirectoryConfigScope):
             continue
-        compilers_yaml = local_config.get_section_filename("compilers")
+        compilers_yaml = local_config.get_section_filename("packages")
         if os.path.exists(compilers_yaml):
             os.remove(compilers_yaml)
     return mutable_config

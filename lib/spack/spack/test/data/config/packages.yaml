@@ -51,3 +51,31 @@ packages:
         prefix: /usr
   version-test-dependency-preferred:
     version: ['5.2.5']
+  gcc:
+    externals:
+      - spec: "gcc@9.4.0 languages='c,c++' os={linux_os.name}{linux_os.version} target={target}"
+        prefix: /path
+        extra_attributes:
+          compilers:
+            c: /path/bin/gcc
+            cxx: /path/bin/g++
+      - spec: "gcc@9.4.0 languages='c,c++' os=redhat6 target={target}"
+        prefix: /path
+        extra_attributes:
+          compilers:
+            c: /path/bin/gcc
+            cxx: /path/bin/g++
+      - spec: "gcc@10.2.1 languages='c,c++' os={linux_os.name}{linux_os.version} target={target}"
+        prefix: /path
+        extra_attributes:
+          compilers:
+            c: /path/bin/gcc-10
+            cxx: /path/bin/g++-10
+  llvm:
+    externals:
+      - spec: "llvm@15.0.0 +clang os={linux_os.name}{linux_os.version} target={target}"
+        prefix: /path
+        extra_attributes:
+          compilers:
+            c: /path/bin/clang
+            cxx: /path/bin/clang++
