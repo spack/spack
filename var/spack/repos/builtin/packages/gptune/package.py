@@ -198,12 +198,13 @@ class Gptune(CMakePackage):
 
     def test_hypre(self):
         """set up and run hypre example"""
-        if "+hypre" not in self.spec or "+mpispawn" not in self.spec:
+        if "~hypre" in self.spec or "~mpispawn" in self.spec:
             raise SkipTest("Package must be installed with +hypre+mpispawn")
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
         # copy hypre executables to the correct place
+        # TBD: Is it safe to not have the version match that of the build?
         wd = join_path(test_dir, "Hypre")
         with working_dir(wd):
             self.rm("-rf", "hypre")
@@ -215,21 +216,17 @@ class Gptune(CMakePackage):
 
         # now run the test example
         with working_dir(join_path(test_dir, "Hypre")):
-            # Adding a fail_on_error *and* timeout to force the test to both
-            # stop and no be flagged as PASSED despite errors:
-            #
-            # - jq: parse error: Invalid numeric literal at line 1, column 180
-            # - AttributeError: module 'numpy' has no attribute 'float'.
-            self.bash("run_examples.sh", timeout=5, fail_on_error=True)
+            self.bash("run_examples.sh")
 
     def test_superlu(self):
         """set up and run superlu tests"""
-        if "+superlu" not in self.spec:
+        if "~superlu" in self.spec:
             raise SkipTest("Package must be installed with +superlu")
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
         # copy superlu-dist executables to the correct place
+        # TBD: Is it safe to not have the version match that of the build?
         wd = join_path(test_dir, "SuperLU_DIST")
         with working_dir(wd):
             self.rm("-rf", "superlu_dist")
@@ -240,59 +237,36 @@ class Gptune(CMakePackage):
         mkdirp(example_dir)
         self.cp("-r", superludriver, example_dir)
 
-        apps = ["SuperLU_DIST_RCI"]
-        # TODO: Enable the following test once a SME resolves the infinite
-        # TODO: loop problem with the test.
-        # if "+mpispawn" in self.spec:
-        #     apps.append("SuperLU_DIST")
-
-        # now run the test example(s)
-        #
-        # Note: Adding a fail_on_error *and* timeout to force the test to both
-        # stop and no be flagged as PASSED despite errors:
-        #
-        # - jq: parse error: Invalid numeric literal at line 1, column 180
-        # - AttributeError: module 'numpy' has no attribute 'float'.
+        apps = ["SuperLU_DIST", "SuperLU_DIST_RCI"]
         for app in apps:
             with test_part(self, f"test_superlu_{app}", purpose=f"run {app} example"):
+                if app == "SuperLU_DIST" and "~mpispawn" in self.spec:
+                    raise SkipTest("Package must be installed with +superlu+mpispawn")
                 with working_dir(join_path(test_dir, app)):
-                    self.bash("run_examples.sh", timeout=5, fail_on_error=True)
+                    # TODO: Remove (or adjust) the timeout once the infinite
+                    # TODO: loop is resolved.
+                    self.bash("run_examples.sh", timeout=2)
 
     def test_demo(self):
         """Run the demo test"""
-        if "+mpispawn" not in self.spec:
+        if "~mpispawn" in self.spec:
             raise SkipTest("Package must be installed with +mpispawn")
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
         with working_dir(join_path(test_dir, "GPTune-Demo")):
-            # Adding a fail_on_error *and* timeout to force the test to both
-            # stop and no be flagged as PASSED despite errors:
-            #
-            # - jq: parse error: Invalid numeric literal at line 1, column 186
-            # - AttributeError: module 'numpy' has no attribute 'float'.
-            self.bash("run_examples.sh", timeout=5, fail_on_error=True)
+            self.bash("run_examples.sh")
 
     def test_scalapack(self):
         """Run scalapack tests"""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
-        # TODO: Enable the following test once a SME resolves the infinite
-        # TODO: loop problem with the test.
-        #
-        # - jq: parse error: Invalid numeric literal at line 1, column 186
-        # - jq: error: Could not open file gptune.db/SuperLU_DIST.json: No such
-        #   file or directory
-        # - AttributeError: module 'numpy' has no attribute 'float'.
-        # - superlu_MLA_RCI.sh: line 52: [: =: unary operator expected
-
-        # apps = ["Scalapack-PDGEQRF_RCI"]  # skip: seemingly infinite loop
-        apps = []
-        if "+mpispawn" in self.spec:
-            # TODO: The following times out but has same AttributeErrors above
-            apps.append("Scalapack-PDGEQRF")
-
+        apps = ["Scalapack-PDGEQRF", "Scalapack-PDGEQRF_RCI"]
         for app in apps:
             with test_part(self, f"test_scalapack_{app}", purpose=f"run {app} example"):
+                if app == "Scalapack-PDGEQRF" and "~mpispawn" in self.spec:
+                    raise SkipTest("Package must be installed with +superlu+mpispawn")
                 with working_dir(join_path(test_dir, app)):
-                    self.bash("run_examples.sh", timeout=5, fail_on_error=True)
+                    # TODO: Remove (or adjust) the timeout once the infinite
+                    # TODO: loop is resolved.
+                    self.bash("run_examples.sh", timeout=2)
