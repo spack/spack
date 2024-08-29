@@ -108,7 +108,7 @@ def _conditional_cmake_defaults(pkg: spack.package_base.PackageBase, args: List[
     if _supports_compilation_databases(pkg):
         args.append(CMakeBuilder.define("CMAKE_EXPORT_COMPILE_COMMANDS", True))
 
-    # Enable MACOSX_RPATH by default
+    # Enable MACOSX_RPATH by default when cmake_minimum_required < 3
     # https://cmake.org/cmake/help/latest/policy/CMP0042.html
     if pkg.spec.satisfies("platform=darwin") and cmake.satisfies("@3:"):
         args.append(CMakeBuilder.define("CMAKE_POLICY_DEFAULT_CMP0042", "NEW"))
