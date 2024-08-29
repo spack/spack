@@ -108,6 +108,11 @@ def _conditional_cmake_defaults(pkg: spack.package_base.PackageBase, args: List[
     if _supports_compilation_databases(pkg):
         args.append(CMakeBuilder.define("CMAKE_EXPORT_COMPILE_COMMANDS", True))
 
+    # Enable MACOSX_RPATH by default
+    # https://cmake.org/cmake/help/latest/policy/CMP0042.html
+    if platform.mac_ver()[0] and cmake.satisfies("@3.0:"):
+        args.append(CMakeBuilder.define("CMAKE_POLICY_DEFAULT_CMP0042", "NEW"))
+
 
 def generator(*names: str, default: Optional[str] = None):
     """The build system generator to use.
