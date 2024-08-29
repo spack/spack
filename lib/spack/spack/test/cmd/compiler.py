@@ -85,10 +85,10 @@ def test_compiler_find_without_paths(no_compilers_yaml, working_env, mock_execut
 @pytest.mark.regression("37996")
 def test_compiler_remove(mutable_config, mock_packages):
     """Tests that we can remove a compiler from configuration."""
-    assert spack.spec.CompilerSpec("gcc@=9.4.0") in spack.compilers.all_compiler_specs()
+    assert spack.spec.CompilerSpec("gcc@=9.4.0") in spack.compilers.all_compilers()
     args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@9.4.0", add_paths=[], scope=None)
     spack.cmd.compiler.compiler_remove(args)
-    assert spack.spec.CompilerSpec("gcc@=9.4.0") not in spack.compilers.all_compiler_specs()
+    assert spack.spec.CompilerSpec("gcc@=9.4.0") not in spack.compilers.all_compilers()
 
 
 @pytest.mark.regression("37996")
@@ -97,10 +97,10 @@ def test_removing_compilers_from_multiple_scopes(mutable_config, mock_packages):
     site_config = spack.config.get("compilers", scope="site")
     spack.config.set("compilers", site_config, scope="user")
 
-    assert spack.spec.CompilerSpec("gcc@=9.4.0") in spack.compilers.all_compiler_specs()
+    assert spack.spec.CompilerSpec("gcc@=9.4.0") in spack.compilers.all_compilers()
     args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@9.4.0", add_paths=[], scope=None)
     spack.cmd.compiler.compiler_remove(args)
-    assert spack.spec.CompilerSpec("gcc@=9.4.0") not in spack.compilers.all_compiler_specs()
+    assert spack.spec.CompilerSpec("gcc@=9.4.0") not in spack.compilers.all_compilers()
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
@@ -120,7 +120,7 @@ done
     bin_dir = gcc_path.parent
     root_dir = bin_dir.parent
 
-    compilers_before_find = set(spack.compilers.all_compiler_specs())
+    compilers_before_find = set(spack.compilers.all_compilers())
     args = spack.util.pattern.Bunch(
         all=None,
         compiler_spec=None,
@@ -130,7 +130,7 @@ done
         jobs=1,
     )
     spack.cmd.compiler.compiler_find(args)
-    compilers_after_find = set(spack.compilers.all_compiler_specs())
+    compilers_after_find = set(spack.compilers.all_compilers())
 
     compilers_added_by_find = compilers_after_find - compilers_before_find
     assert len(compilers_added_by_find) == 1
