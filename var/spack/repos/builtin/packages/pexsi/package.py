@@ -91,7 +91,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         substitutions.append(("@FLDFLAGS", fldflags.lstrip()))
 
-        template = join_path(__file__, "make.inc")
+        template = join_path(os.path.dirname(__file__), "make.inc")
         makefile = join_path(pkg.stage.source_path, "make.inc")
         copy(template, makefile)
         for key, value in substitutions:
