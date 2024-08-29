@@ -15,4 +15,4 @@ class PyShapely(Package):
 
     extends("python")
     depends_on("py-numpy", type=("build", "link", "run"))
-    depends_on("py-setuptools@=60", type="build")
+    depends_on("py-setuptools@=60", type=("build", "run"))
