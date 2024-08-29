@@ -599,24 +599,6 @@ def compiler_for_spec(compiler_spec, arch_spec):
     return compilers[0]
 
 
-@_auto_compiler_spec
-def get_compiler_duplicates(compiler_spec, arch_spec):
-    config = spack.config.CONFIG
-
-    scope_to_compilers = {}
-    for scope in config.scopes:
-        compilers = compilers_for_spec(compiler_spec, arch_spec=arch_spec, scope=scope)
-        if compilers:
-            scope_to_compilers[scope] = compilers
-
-    cfg_file_to_duplicates = {}
-    for scope, compilers in scope_to_compilers.items():
-        config_file = config.get_config_filename(scope, "compilers")
-        cfg_file_to_duplicates[config_file] = compilers
-
-    return cfg_file_to_duplicates
-
-
 @llnl.util.lang.memoized
 def class_for_compiler_name(compiler_name):
     """Given a compiler module name, get the corresponding Compiler class."""
