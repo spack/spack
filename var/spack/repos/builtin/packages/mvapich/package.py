@@ -114,8 +114,6 @@ class Mvapich(AutotoolsPackage):
     depends_on("slurm", when="process_managers=slurm")
     depends_on("ucx", when="netmod=ucx")
 
-    
-
     with when("process_managers=slurm"):
         conflicts("pmi_version=pmi2")
 
