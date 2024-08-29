@@ -15,20 +15,20 @@ class PyTfKeras(PythonPackage):
      Keras 3 is being developed at keras-team/keras."""
 
     homepage = "https://github.com/keras-team/tf-keras"
-    url = "https://github.com/keras-team/tf-keras/archive/refs/tags/v2.16.0.tar.gz"
+    pypi = "tf-keras/tf-keras-2.17.0.tar.gz"
 
     maintainers("jonas-eschle")
 
     license("Apache-2.0", checked_by="jonas-eschle")
 
-    max_minor = 16
-    version("2.16.0", sha256="b98fa4d75c325c44aade329ac4269ab93515b308624854edbacf1cef707207da")
+    max_minor = 17
+    version("2.17.0", sha256="fda97c18da30da0f72a5a7e80f3eee343b09f4c206dad6c57c944fb2cd18560e")
 
     # Supported Python versions listed in multiple places:
     # * tf-keras/tools/pip_package/setup.py
     # * CONTRIBUTING.md
     # * PKG-INFO
-    depends_on("python@3.9:", type=("build", "run"), when="@2.16:")
+    depends_on("python@3.9:", type=("build", "run"), when="@2.17:")
     depends_on("py-setuptools", type="build")
 
     # Required dependencies listed in multiple places:
@@ -44,7 +44,7 @@ class PyTfKeras(PythonPackage):
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
     # the tf-keras versions are following along with TF versions
-    for minor_ver in range(16, max_minor + 1):
+    for minor_ver in range(17, max_minor + 1):
         depends_on(
             f"py-tensorflow@2.{minor_ver}",
             type=("build", "run"),
