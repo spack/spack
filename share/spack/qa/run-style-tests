@@ -24,7 +24,7 @@ else
 fi
 
 # verify that the code style is correct
-spack style --root-relative "${args[@]}"
+spack style --root-relative "${args[@]}" -s mypy
 
 # verify that the license headers are present
 spack license verify
