@@ -8,12 +8,15 @@ import pytest
 import spack.build_systems.generic
 import spack.config
 import spack.error
+from spack.main import SpackCommand
 import spack.package_base
 import spack.repo
 import spack.util.spack_yaml as syaml
 import spack.version
 from spack.spec import Spec
 from spack.test.conftest import create_test_repo
+
+solve = SpackCommand("solve")
 
 
 def update_packages_config(conf_str):
@@ -200,4 +203,7 @@ def test_version_range_null(concretize_scope, test_repo):
 # search
 def test_null_variant_for_requested_version(concretize_scope, test_repo):
     Spec("z1").concretized()
+    #output = solve("--show=asp", "z1@1.1")
+    #with open("/Users/scheibel1/Desktop/spack/spack/test-null-variant-for-requested-version.txt", "w") as f:
+    #    f.write(output)
     Spec("z1@1.1").concretized()
