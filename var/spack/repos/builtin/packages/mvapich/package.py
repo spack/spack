@@ -114,11 +114,15 @@ class Mvapich(AutotoolsPackage):
     depends_on("slurm", when="process_managers=slurm")
     depends_on("ucx", when="netmod=ucx")
 
+    
+
     with when("process_managers=slurm"):
         conflicts("pmi_version=pmi2")
 
     with when("process_managers=auto"):
         conflicts("pmi_version=pmi2")
+
+    patch("slurm.patch")
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
 
