@@ -88,6 +88,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
     variant("visitbridge", default=False, description="Enable VisItBridge support")
     variant("raytracing", default=False, description="Enable Raytracing support")
+    variant("cdi", default=False, description="Enable CDI support")
     variant(
         "openpmd",
         default=False,
@@ -233,6 +234,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("ospray@2.1:2", when="+raytracing")
     depends_on("openimagedenoise", when="+raytracing")
     depends_on("ospray +mpi", when="+raytracing +mpi")
+
+    depends_on("cdi", when="+cdi")
 
     depends_on("bzip2")
     depends_on("double-conversion")
@@ -705,6 +708,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         # Currently only support OSPRay ray tracing
         cmake_args.append(self.define_from_variant("VTK_ENABLE_OSPRAY", "raytracing"))
         cmake_args.append(self.define_from_variant("VTKOSPRAY_ENABLE_DENOISER", "raytracing"))
+
+        # CDI
+        cmake_args.append(self.define_from_variant("PARAVIEW_PLUGIN_ENABLE_CDIReader", "cdi"))
+        cmake_args.append(self.define_from_variant("PARAVIEW_PLUGIN_AUTOLOAD_CDIReader", "cdi"))
 
         return cmake_args
 
