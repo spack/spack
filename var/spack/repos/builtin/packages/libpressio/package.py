@@ -395,7 +395,7 @@ class Libpressio(CMakePackage, CudaPackage):
 
     def setup_run_environment(self, env):
         if "+hdf5" in self.spec and "+json" in self.spec:
-            env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib64)
+            env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.hdf5.lib.plugin)
 
     @run_after("build")
     @on_package_attributes(run_tests=True)

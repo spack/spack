@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from spack.package import *
 
 
@@ -94,6 +93,10 @@ class LibpressioTools(CMakePackage):
     variant("predict", default=False, description="depend on libpressio-predict", when="@0.4.6:")
     variant("jit", default=False, description="depend on libpressio-jit", when="@0.4.6:")
     conflicts("+opt", when="~mpi", msg="opt support requires MPI")
+
+    def setup_run_environment(self, env):
+        libraries = find_libraries(["liblibpressio_meta"], root=self.prefix, recursive=True)
+        env.set("LIBPRESSIO_PLUGINS", libraries)
 
     def cmake_args(self):
         args = [
