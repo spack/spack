@@ -1869,7 +1869,7 @@ def find_max_depth(root, globs, max_depth=_unset):
                         # Note: DirEntry.is_junction is available starting with python 3.12
                         # but this must work for earlier versions
                         if islink(dir_entry.path):
-                            resolved_path = os.path.realpath(symlink.readlink(dir_entry.path))
+                            resolved_path = os.path.realpath(readlink(dir_entry.path))
                     else:
                         if dir_entry.is_symlink():
                             # Note: we want the resolved path to avoid more symlink
