@@ -72,8 +72,12 @@ def test_find_external_two_instances_same_package(mock_executable):
 
 def test_find_external_update_config(mutable_config):
     entries = [
-        spack.detection.DetectedPackage(Spec.from_detection("cmake@1.foo"), "/x/y1/"),
-        spack.detection.DetectedPackage(Spec.from_detection("cmake@3.17.2"), "/x/y2/"),
+        spack.detection.DetectedPackage(
+            Spec.from_detection("cmake@1.foo", external_path="/x/y1/"), "/x/y1/"
+        ),
+        spack.detection.DetectedPackage(
+            Spec.from_detection("cmake@3.17.2", external_path="/x/y2/"), "/x/y2/"
+        ),
     ]
     pkg_to_entries = {"cmake": entries}
 
@@ -221,10 +225,8 @@ def test_find_external_manifest_failure(mutable_config, mutable_mock_repo, tmpdi
     assert "Skipping manifest and continuing" in output
 
 
-def test_find_external_merge(mutable_config, mutable_mock_repo):
-    """Check that 'spack find external' doesn't overwrite an existing spec
-    entry in packages.yaml.
-    """
+def test_find_external_merge(mutable_config, mutable_mock_repo, tmp_path):
+    """Checks that 'spack find external' doesn't overwrite an existing spec in packages.yaml."""
     pkgs_cfg_init = {
         "find-externals1": {
             "externals": [{"spec": "find-externals1@1.1", "prefix": "/preexisting-prefix/"}],
@@ -234,8 +236,12 @@ def test_find_external_merge(mutable_config, mutable_mock_repo):
 
     mutable_config.update_config("packages", pkgs_cfg_init)
     entries = [
-        spack.detection.DetectedPackage(Spec.from_detection("find-externals1@1.1"), "/x/y1/"),
-        spack.detection.DetectedPackage(Spec.from_detection("find-externals1@1.2"), "/x/y2/"),
+        spack.detection.DetectedPackage(
+            Spec.from_detection("find-externals1@1.1", external_path="/x/y1/"), "/x/y1/"
+        ),
+        spack.detection.DetectedPackage(
+            Spec.from_detection("find-externals1@1.2", external_path="/x/y2/"), "/x/y2/"
+        ),
     ]
     pkg_to_entries = {"find-externals1": entries}
     scope = spack.config.default_modify_scope("packages")

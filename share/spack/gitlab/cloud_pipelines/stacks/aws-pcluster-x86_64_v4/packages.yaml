@@ -26,8 +26,8 @@ packages:
   lammps:
     require:
       - one_of:
-          - "lammps_sizes=bigbig +molecule +kspace +rigid +asphere +opt +openmp +openmp-package +intel ^intel-oneapi-mkl target=x86_64_v4"
-          - "lammps_sizes=bigbig +molecule +kspace +rigid +asphere +opt +openmp +openmp-package ^intel-oneapi-mkl target=x86_64_v3"
+          - "lammps_sizes=bigbig +molecule +kspace +rigid +asphere +opt +openmp +openmp-package +intel fft=mkl ^intel-oneapi-mkl target=x86_64_v4"
+          - "lammps_sizes=bigbig +molecule +kspace +rigid +asphere +opt +openmp +openmp-package fft=mkl ^intel-oneapi-mkl target=x86_64_v3"
         when: "%intel"
   libidn2:
     require:

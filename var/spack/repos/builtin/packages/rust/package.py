@@ -113,7 +113,7 @@ class Rust(Package):
         match = re.match(r"rustc (\S+)", output)
         if match:
             version_str = match.group(1)
-            return Spec.from_detection(f"rust@{version_str}")
+            return Spec.from_detection(f"rust@{version_str}", external_path=prefix)
 
     def setup_dependent_package(self, module, dependent_spec):
         module.cargo = Executable(os.path.join(self.spec.prefix.bin, "cargo"))

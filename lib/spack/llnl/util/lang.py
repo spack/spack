@@ -6,7 +6,6 @@
 import collections.abc
 import contextlib
 import functools
-import inspect
 import itertools
 import os
 import re
@@ -89,15 +88,6 @@ def attr_setdefault(obj, name, value):
     if not hasattr(obj, name):
         setattr(obj, name, value)
     return getattr(obj, name)
-
-
-def has_method(cls, name):
-    for base in inspect.getmro(cls):
-        if base is object:
-            continue
-        if name in base.__dict__:
-            return True
-    return False
 
 
 def union_dicts(*dicts):
@@ -226,8 +216,8 @@ def key_ordering(cls):
         value.__name__ = name
         setattr(cls, name, value)
 
-    if not has_method(cls, "_cmp_key"):
-        raise TypeError("'%s' doesn't define _cmp_key()." % cls.__name__)
+    if not hasattr(cls, "_cmp_key"):
+        raise TypeError(f"'{cls.__name__}' doesn't define _cmp_key().")
 
     setter("__eq__", lambda s, o: (s is o) or (o is not None and s._cmp_key() == o._cmp_key()))
     setter("__lt__", lambda s, o: o is not None and s._cmp_key() < o._cmp_key())
@@ -377,8 +367,8 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
         TypeError: If the class does not have a ``_cmp_iter`` method
 
     """
-    if not has_method(cls, "_cmp_iter"):
-        raise TypeError("'%s' doesn't define _cmp_iter()." % cls.__name__)
+    if not hasattr(cls, "_cmp_iter"):
+        raise TypeError(f"'{cls.__name__}' doesn't define _cmp_iter().")
 
     # comparison operators are implemented in terms of lazy_eq and lazy_lt
     def eq(self, other):
@@ -853,20 +843,19 @@ def uniq(sequence):
     return uniq_list
 
 
-def elide_list(line_list, max_num=10):
+def elide_list(line_list: List[str], max_num: int = 10) -> List[str]:
     """Takes a long list and limits it to a smaller number of elements,
     replacing intervening elements with '...'.  For example::
 
-        elide_list([1,2,3,4,5,6], 4)
+        elide_list(["1", "2", "3", "4", "5", "6"], 4)
 
     gives::
 
-        [1, 2, 3, '...', 6]
+        ["1", "2", "3", "...", "6"]
     """
     if len(line_list) > max_num:
-        return line_list[: max_num - 1] + ["..."] + line_list[-1:]
-    else:
-        return line_list
+        return [*line_list[: max_num - 1], "...", line_list[-1]]
+    return line_list
 
 
 @contextlib.contextmanager

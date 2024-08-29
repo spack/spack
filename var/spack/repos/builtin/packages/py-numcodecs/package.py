@@ -22,7 +22,8 @@ class PyNumcodecs(PythonPackage):
 
     license("MIT")
 
-    version("master", branch="master", submodules=True)
+    version("main", branch="main", submodules=True)
+    version("master", branch="main", submodules=True, deprecated=True)
     version("0.11.0", sha256="6c058b321de84a1729299b0eae4d652b2e48ea1ca7f9df0da65cb13470e635eb")
     version("0.7.3", sha256="022b12ad83eb623ec53f154859d49f6ec43b15c36052fa864eaf2d9ee786dd85")
     version("0.6.4", sha256="ef4843d5db4d074e607e9b85156835c10d006afc10e175bda62ff5412fca6e4d")

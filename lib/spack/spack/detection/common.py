@@ -45,7 +45,9 @@ class DetectedPackage(NamedTuple):
     def restore(
         spec_str: str, prefix: str, extra_attributes: Optional[Dict[str, str]]
     ) -> "DetectedPackage":
-        spec = spack.spec.Spec.from_detection(spec_str=spec_str, extra_attributes=extra_attributes)
+        spec = spack.spec.Spec.from_detection(
+            spec_str=spec_str, external_path=prefix, extra_attributes=extra_attributes
+        )
         return DetectedPackage(spec=spec, prefix=prefix)
 
 

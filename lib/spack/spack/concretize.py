@@ -8,7 +8,6 @@
 from contextlib import contextmanager
 from itertools import chain
 
-import spack.abi
 import spack.compilers
 import spack.config
 import spack.environment

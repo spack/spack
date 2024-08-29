@@ -6,7 +6,6 @@
 """This module contains functions related to finding compilers on the
 system and configuring Spack to use multiple compilers.
 """
-import collections
 import importlib
 import os
 import sys
@@ -31,8 +30,6 @@ from spack.operating_systems import windows_os
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
-_path_instance_vars = ["cc", "cxx", "f77", "fc"]
-_flags_instance_vars = ["cflags", "cppflags", "cxxflags", "fflags"]
 _other_instance_vars = [
     "modules",
     "operating_system",
@@ -90,29 +87,7 @@ def _auto_compiler_spec(function):
 
 def _to_dict(compiler):
     """Return a dict version of compiler suitable to insert in YAML."""
-    d = {}
-    d["spec"] = str(compiler.spec)
-    d["paths"] = dict((attr, getattr(compiler, attr, None)) for attr in _path_instance_vars)
-    d["flags"] = dict((fname, " ".join(fvals)) for fname, fvals in compiler.flags.items())
-    d["flags"].update(
-        dict(
-            (attr, getattr(compiler, attr, None))
-            for attr in _flags_instance_vars
-            if hasattr(compiler, attr)
-        )
-    )
-    d["operating_system"] = str(compiler.operating_system)
-    d["target"] = str(compiler.target)
-    d["modules"] = compiler.modules or []
-    d["environment"] = compiler.environment or {}
-    d["extra_rpaths"] = compiler.extra_rpaths or []
-    if compiler.enable_implicit_rpaths is not None:
-        d["implicit_rpaths"] = compiler.enable_implicit_rpaths
-
-    if compiler.alias:
-        d["alias"] = compiler.alias
-
-    return {"compiler": d}
+    return {"compiler": compiler.to_dict()}
 
 
 def get_compiler_config(
@@ -488,13 +463,15 @@ def compiler_from_dict(items):
     os = items.get("operating_system", None)
     target = items.get("target", None)
 
-    if not ("paths" in items and all(n in items["paths"] for n in _path_instance_vars)):
+    if not (
+        "paths" in items and all(n in items["paths"] for n in spack.compiler.PATH_INSTANCE_VARS)
+    ):
         raise InvalidCompilerConfigurationError(cspec)
 
     cls = class_for_compiler_name(cspec.name)
 
     compiler_paths = []
-    for c in _path_instance_vars:
+    for c in spack.compiler.PATH_INSTANCE_VARS:
         compiler_path = items["paths"][c]
         if compiler_path != "None":
             compiler_paths.append(compiler_path)
@@ -662,48 +639,8 @@ def class_for_compiler_name(compiler_name):
     return cls
 
 
-def all_os_classes():
-    """
-    Return the list of classes for all operating systems available on
-    this platform
-    """
-    classes = []
-
-    platform = spack.platforms.host()
-    for os_class in platform.operating_sys.values():
-        classes.append(os_class)
-
-    return classes
-
-
 def all_compiler_types():
     return [class_for_compiler_name(c) for c in supported_compilers()]
-
-
-#: Gathers the attribute values by which a detected compiler is considered
-#: unique in Spack.
-#:
-#:  - os: the operating system
-#:  - compiler_name: the name of the compiler (e.g. 'gcc', 'clang', etc.)
-#:  - version: the version of the compiler
-#:
-CompilerID = collections.namedtuple("CompilerID", ["os", "compiler_name", "version"])
-
-#: Variations on a matched compiler name
-NameVariation = collections.namedtuple("NameVariation", ["prefix", "suffix"])
-
-#: Groups together the arguments needed by `detect_version`. The four entries
-#: in the tuple are:
-#:
-#: - id: An instance of the CompilerID named tuple (version can be set to None
-#:       as it will be detected later)
-#: - variation: a NameVariation for file being tested
-#: - language: compiler language being tested (one of 'cc', 'cxx', 'fc', 'f77')
-#: - path: full path to the executable being tested
-#:
-DetectVersionArgs = collections.namedtuple(
-    "DetectVersionArgs", ["id", "variation", "language", "path"]
-)
 
 
 def is_mixed_toolchain(compiler):
@@ -904,15 +841,10 @@ class CompilerConfigFactory:
 class InvalidCompilerConfigurationError(spack.error.SpackError):
     def __init__(self, compiler_spec):
         super().__init__(
-            'Invalid configuration for [compiler "%s"]: ' % compiler_spec,
-            "Compiler configuration must contain entries for all compilers: %s"
-            % _path_instance_vars,
+            f'Invalid configuration for [compiler "{compiler_spec}"]: ',
+            f"Compiler configuration must contain entries for "
+            f"all compilers: {spack.compiler.PATH_INSTANCE_VARS}",
         )
-
-
-class NoCompilersError(spack.error.SpackError):
-    def __init__(self):
-        super().__init__("Spack could not find any compilers!")
 
 
 class UnknownCompilerError(spack.error.SpackError):
@@ -925,25 +857,3 @@ class NoCompilerForSpecError(spack.error.SpackError):
         super().__init__(
             "No compilers for operating system %s satisfy spec %s" % (target, compiler_spec)
         )
-
-
-class CompilerDuplicateError(spack.error.SpackError):
-    def __init__(self, compiler_spec, arch_spec):
-        config_file_to_duplicates = get_compiler_duplicates(compiler_spec, arch_spec)
-        duplicate_table = list((x, len(y)) for x, y in config_file_to_duplicates.items())
-        descriptor = lambda num: "time" if num == 1 else "times"
-        duplicate_msg = lambda cfgfile, count: "{0}: {1} {2}".format(
-            cfgfile, str(count), descriptor(count)
-        )
-        msg = (
-            "Compiler configuration contains entries with duplicate"
-            + " specification ({0}, {1})".format(compiler_spec, arch_spec)
-            + " in the following files:\n\t"
-            + "\n\t".join(duplicate_msg(x, y) for x, y in duplicate_table)
-        )
-        super().__init__(msg)
-
-
-class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):
-    def __init__(self, compiler_spec):
-        super().__init__("Multiple compilers satisfy spec %s" % compiler_spec)
