@@ -216,13 +216,23 @@ class Tau(Package):
             if compiler_path:
                 compiler_path = compiler_path + "/bin/"
         os.environ["PATH"] = ":".join([compiler_path, os.environ["PATH"]])
-        compiler_options = [
-            "-c++=%s" % os.path.basename(self.compiler.cxx),
-            "-cc=%s" % os.path.basename(self.compiler.cc),
-        ]
+
+        cc_name = os.path.basename(self.compiler.cc)
+        cxx_name = os.path.basename(self.compiler.cxx)
+
+        # tau does not understand craycc, crayCC, crayftn; cc, c++ and ftn are OK.
+        if cc_name.startswith("cray"):
+            cc_name = cc_name[4:]
+        if cxx_name.startswith("cray"):
+            cxx_name = cxx_name[4:]
+
+        compiler_options = [f"-cc={cc_name}", f"-c++={cxx_name}"]
 
         if "+fortran" in spec and self.compiler.fc:
-            compiler_options.append("-fortran=%s" % os.path.basename(self.compiler.fc))
+            fortran_name = os.path.basename(self.compiler.fc)
+            if fortran_name.startswith("cray"):
+                fortran_name = fortran_name[4:]
+            compiler_options.append(f"-fortran={fortran_name}")
 
         ##########
 
