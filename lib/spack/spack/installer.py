@@ -450,7 +450,7 @@ def _process_binary_cache_tarball(
     """
     with timer.measure("fetch"):
         download_result = binary_distribution.download_tarball(
-            pkg.spec, unsigned, mirrors_for_spec
+            pkg.spec.build_spec, unsigned, mirrors_for_spec
         )
 
         if download_result is None:
@@ -460,6 +460,11 @@ def _process_binary_cache_tarball(
 
     with timer.measure("install"), spack.util.path.filter_padding():
         binary_distribution.extract_tarball(pkg.spec, download_result, force=False, timer=timer)
+
+        if pkg.spec.spliced:  # overwrite old metadata with new
+            spack.store.STORE.layout.write_spec(
+                pkg.spec, spack.store.STORE.layout.spec_file_path(pkg.spec)
+            )
 
         if hasattr(pkg, "_post_buildcache_install_hook"):
             pkg._post_buildcache_install_hook()
@@ -1233,11 +1238,11 @@ class RewireTask(Task):
             try:
                 install_args = self.request.install_args
                 unsigned = install_args.get("unsigned")
-                binary_distribution.install_root_node(self.pkg.spec, unsigned=unsigned)
+                _process_binary_cache_tarball(self.pkg, explicit=self.explicit, unsigned=unsigned)
                 _print_installed_pkg(self.pkg.prefix)
                 return ExecuteResult.SUCCESS
             except BaseException as e:
-                tty.debug(f"Failed to rewire {self.pkg.spec} from binary. {e}")
+                tty.error(f"Failed to rewire {self.pkg.spec} from binary. {e}")
                 self.status = oldstatus
                 return ExecuteResult.MISSING_BUILD_SPEC
         spack.rewiring.rewire_node(self.pkg.spec, self.explicit)
