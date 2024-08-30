@@ -22,7 +22,7 @@ class Unzip(MakefilePackage):
     # clang and oneapi need this patch, likely others
     # There is no problem with it on gcc, so make it a catch all
     patch("configure-cflags.patch")
-    patch("strip.patch", when="%cce@:18.0.1")
+    patch("strip.patch")
 
     def get_make_args(self):
         make_args = ["-f", join_path("unix", "Makefile")]
