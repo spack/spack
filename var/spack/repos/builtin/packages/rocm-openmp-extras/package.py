@@ -644,7 +644,6 @@ class RocmOpenmpExtras(Package):
             cmake_args.extend(std_cmake_args)
             if component == "flang-legacy-llvm":
                 with working_dir("spack-build-{0}/llvm-legacy".format(component), create=True):
-                    flang_legacy_dir = working_dir
                     cmake_args.append("-DCMAKE_BUILD_TYPE=Release")
                     cmake(*cmake_args)
                     make()
