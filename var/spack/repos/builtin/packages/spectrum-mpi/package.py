@@ -20,7 +20,7 @@ class SpectrumMpi(BundlePackage):
 
     provides("mpi")
 
-    conflicts("platform=windows")
+    requires("platform=linux")
 
     executables = ["^ompi_info$"]
 
