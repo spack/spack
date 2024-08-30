@@ -25,7 +25,6 @@ import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
-import spack.schema.splice
 import spack.schema.upstreams
 import spack.schema.view
 
@@ -44,7 +43,6 @@ properties: Dict[str, Any] = union_dicts(
     spack.schema.modules.properties,
     spack.schema.packages.properties,
     spack.schema.repos.properties,
-    spack.schema.splice.properties,
     spack.schema.upstreams.properties,
     spack.schema.view.properties,
 )
