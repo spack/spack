@@ -815,9 +815,11 @@ def test_lockfile_spliced_specs(environment_from_manifest, install_mockery):
 spack:
   specs:
   - mpileaks
-  splice:
-  - target: mpi
-    replacement: zmpi/{zmpi.dag_hash()}
+  concretizer:
+    splice:
+      explicit:
+      - target: mpi
+        replacement: zmpi/{zmpi.dag_hash()}
 """
     )
     with e1:
