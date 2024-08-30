@@ -20,7 +20,9 @@ class FastFloat(CMakePackage):
     depends_on("cxx", type="build")
     depends_on("cmake@3.9:", type="build")
 
+    depends_on("doctest", type="test")
+
     def cmake_args(self):
-        args = [self.define("FASTFLOAT_TEST", self.run_tests)]
+        args = [self.define("FASTFLOAT_TEST", self.run_tests), self.define("SYSTEM_DOCTEST", True)]
 
         return args
