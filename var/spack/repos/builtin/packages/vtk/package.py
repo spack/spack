@@ -128,6 +128,12 @@ class Vtk(CMakePackage):
 
     depends_on("xz")
     patch("vtk_find_liblzma.patch", when="@8.2")
+    patch(
+        "https://gitlab.kitware.com/vtk/vtk/-/commit/2100772c7840a712c61952afebe84ec4cae174eb.diff",
+        sha256="82a7d17535e732aa97e3cf895d8728f5fb42325a0cdae5befdb3a25bdb1615eb",
+        when="@9.0",
+    )
+
     patch("vtk_movie_link_ogg.patch", when="@8.2")
     patch("vtk_use_sqlite_name_vtk_expects.patch", when="@8.2")
     patch("vtk_proj_include_no_strict.patch", when="@9: platform=windows")

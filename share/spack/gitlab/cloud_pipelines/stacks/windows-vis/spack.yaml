@@ -6,7 +6,7 @@
 spack:
   view: false
   specs:
-  - vtk@9.3:~mpi
+  - vtk~mpi
 
   cdash:
     build-group: Windows Visualization (Kitware)
