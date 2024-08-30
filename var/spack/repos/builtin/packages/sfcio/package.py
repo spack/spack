@@ -27,7 +27,7 @@ class Sfcio(CMakePackage):
     depends_on("pfunit", type="test")
 
     conflicts("%oneapi", when="@:1.4.1", msg="Requires @1.4.2: for Intel oneAPI")
-    
+
     def cmake_args(self):
         args = [self.define("ENABLE_TESTS", self.run_tests)]
         return args
