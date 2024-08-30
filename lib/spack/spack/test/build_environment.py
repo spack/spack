@@ -575,28 +575,26 @@ def test_build_jobs_defaults():
     )
 
 
-class TestModuleMonkeyPatcher:
+class TestSetPackageGlobals:
     def test_getting_attributes(self, default_mock_concretization):
         s = default_mock_concretization("libelf")
-        module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
+        module_wrapper = spack.build_environment.SetPackageGlobals(s.package)
         assert module_wrapper.Libelf == s.package.module.Libelf
 
     def test_setting_attributes(self, default_mock_concretization):
         s = default_mock_concretization("libelf")
         module = s.package.module
-        module_wrapper = spack.build_environment.ModuleChangePropagator(s.package)
+        module_wrapper = spack.build_environment.SetPackageGlobals(s.package)
 
         # Setting an attribute has an immediate effect
         module_wrapper.SOME_ATTRIBUTE = 1
         assert module.SOME_ATTRIBUTE == 1
 
         # We can also propagate the settings to classes in the MRO
-        module_wrapper.propagate_changes_to_mro()
         for cls in s.package.__class__.__mro__:
-            current_module = cls.module
-            if current_module == spack.package_base:
+            if cls.module == spack.package_base:
                 break
-            assert current_module.SOME_ATTRIBUTE == 1
+            assert cls.module.SOME_ATTRIBUTE == 1
 
 
 def test_effective_deptype_build_environment(default_mock_concretization):

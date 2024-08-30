@@ -14,6 +14,7 @@ import llnl.util.tty as tty
 import spack.build_environment
 import spack.builder
 import spack.package_base
+from spack.build_environment import SetPackageGlobals
 from spack.directives import build_system, conflicts, depends_on
 from spack.multimethod import when
 from spack.operating_systems.mac_os import macos_version
@@ -577,9 +578,7 @@ To resolve this problem, please try the following:
             raise RuntimeError(msg.format(self.configure_directory))
 
         # Monkey-patch the configure script in the corresponding module
-        globals_for_pkg = spack.build_environment.ModuleChangePropagator(self.pkg)
-        globals_for_pkg.configure = Executable(self.configure_abs_path)
-        globals_for_pkg.propagate_changes_to_mro()
+        SetPackageGlobals(self.pkg).configure = Executable(self.configure_abs_path)
 
     def configure_args(self):
         """Return the list of all the arguments that must be passed to configure,

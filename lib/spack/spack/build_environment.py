@@ -555,7 +555,7 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
     """Populate the Python module of a package with some useful global names.
     This makes things easier for package writers.
     """
-    module = ModuleChangePropagator(pkg)
+    module = SetPackageGlobals(pkg)
 
     if context == Context.BUILD:
         module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
@@ -1016,7 +1016,7 @@ class SetupContext:
                 # setting globals for those.
                 if id(spec) not in self.nodes_in_subdag:
                     continue
-                dependent_module = ModuleChangePropagator(spec.package)
+                dependent_module = SetPackageGlobals(spec.package)
                 pkg.setup_dependent_package(dependent_module, spec)
                 dependent_module.propagate_changes_to_mro()
 
@@ -1543,7 +1543,7 @@ def write_log_summary(out, log_type, log, last=None):
         out.write(make_log_context(warnings))
 
 
-class ModuleChangePropagator:
+class SetPackageGlobals:
     """Wrapper class to accept changes to a package.py Python module, and propagate them in the
     MRO of the package.
 
@@ -1551,41 +1551,22 @@ class ModuleChangePropagator:
     "setup_dependent_package" function during build environment setup.
     """
 
-    _PROTECTED_NAMES = ("package", "current_module", "modules_in_mro", "_set_attributes")
-
     def __init__(self, package: spack.package_base.PackageBase) -> None:
-        self._set_self_attributes("package", package)
-        self._set_self_attributes("current_module", package.module)
-
         #: Modules for the classes in the MRO up to PackageBase
         modules_in_mro = []
         for cls in package.__class__.__mro__:
             module = getattr(cls, "module", None)
-
             if module is None or module is spack.package_base:
                 break
-
-            if module is self.current_module:
-                continue
-
             modules_in_mro.append(module)
-        self._set_self_attributes("modules_in_mro", modules_in_mro)
-        self._set_self_attributes("_set_attributes", {})
 
-    def _set_self_attributes(self, key, value):
-        super().__setattr__(key, value)
+        super().__setattr__("modules_in_mro", modules_in_mro)
 
     def __getattr__(self, item):
-        return getattr(self.current_module, item)
+        return getattr(self.modules_in_mro[0], item)
 
     def __setattr__(self, key, value):
-        if key in ModuleChangePropagator._PROTECTED_NAMES:
-            msg = f'Cannot set attribute "{key}" in ModuleMonkeyPatcher'
-            return AttributeError(msg)
-
-        setattr(self.current_module, key, value)
-        self._set_attributes[key] = value
-
-    def propagate_changes_to_mro(self):
-        for module_in_mro in self.modules_in_mro:
-            module_in_mro.__dict__.update(self._set_attributes)
+        if key == "modules_in_mro":
+            raise AttributeError(f'Cannot set attribute "{key}" in ModuleMonkeyPatcher')
+        for module in self.modules_in_mro:
+            setattr(module, key, value)
