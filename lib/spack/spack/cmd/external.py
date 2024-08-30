@@ -55,6 +55,12 @@ def setup_parser(subparser):
     find_parser.add_argument(
         "--all", action="store_true", help="search for all packages that Spack knows about"
     )
+    find_parser.add_argument(
+        "--debug-find", action="store_true", help="write all candidate paths seached to stdout"
+    )
+    find_parser.add_argument(
+        "--dependencies", action="store_true", help="search for all packages that are dependencies of packages"
+    )
     arguments.add_common_arguments(find_parser, ["tags", "jobs"])
     find_parser.add_argument("packages", nargs=argparse.REMAINDER)
     find_parser.epilog = (
@@ -133,10 +139,10 @@ def external_find(args):
         args.tags = ["core-packages", "build-tools"]
 
     candidate_packages = packages_to_search_for(
-        names=args.packages, tags=args.tags, exclude=args.exclude
+        names=args.packages, tags=args.tags, exclude=args.exclude, dependencies_only=args.dependencies
     )
     detected_packages = spack.detection.by_path(
-        candidate_packages, path_hints=args.path, max_workers=args.jobs
+        candidate_packages, path_hints=args.path, max_workers=args.jobs, debug_find=args.debug_find
     )
 
     new_specs = spack.detection.update_configuration(
@@ -164,7 +170,7 @@ def external_find(args):
 
 
 def packages_to_search_for(
-    *, names: Optional[List[str]], tags: List[str], exclude: Optional[List[str]]
+    *, names: Optional[List[str]], tags: List[str], exclude: Optional[List[str]], dependencies_only: Optional[bool]
 ):
     result = list(
         {pkg for tag in tags for pkg in spack.repo.PATH.packages_with_tags(tag, full=True)}
@@ -181,6 +187,18 @@ def packages_to_search_for(
         parts = [rf"(^{x}$|[.]{x}$)" for x in exclude]
         select_re = re.compile("|".join(parts))
         result = [x for x in result if not select_re.search(x)]
+
+    if dependencies_only:
+        deps_to_find = set()
+        # if we're writing dependencies "result" is now our source of
+        # packages to dervice dependencies from
+        for pkg in result:
+            pkg_cls = spack.repo.PATH.get_pkg_class(pkg)
+            deps_to_find = deps_to_find | set(pkg_cls.possible_dependencies(
+                    False, False
+                ).keys()
+            )
+        result = deps_to_find.difference(set(result))
 
     return result
 
