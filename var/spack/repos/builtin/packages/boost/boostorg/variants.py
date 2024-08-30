@@ -208,6 +208,12 @@ def load():
     #  possible (and it would be difficult to choose sensible defaults).
     # ----------------------------------------------------------------------
     variants.add(
+        "container",
+        when="@1.48.0:",
+        buildable="@1.56.0:",  # Extended Allocators need to be compiled
+        description="Standard library containers and extensions",
+    )
+    variants.add(
         "context",
         when="@1.51.0:",
         buildable="@1.51.0:",
