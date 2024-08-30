@@ -29,21 +29,43 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     #   marked deprecated=True
     # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
-    version("20240627", sha256="2174a99d266279823a8c57629ee1c21ec357816aefd85f964d9f859fe9222aa5")
-    version("20240417", sha256="158b288725c251fd8b30dbcf61749e0d6a042807da92af865a7d3c413efdd8ea")
     version(
-        "20240207.1", sha256="3ba62c2a1ed463fceedf313a1c3ea2997994aa102379a8d35b525ea424f56776"
+        "20240829",
+        sha256="6112e0cc352c3140a4874c7f74db3c0c8e30134024164509ecf3772b305fde2e",
+        preferred=True,
+    )
+    version(
+        "20240627",
+        sha256="2174a99d266279823a8c57629ee1c21ec357816aefd85f964d9f859fe9222aa5",
+        deprecated=True,
+    )
+    version(
+        "20240417",
+        sha256="158b288725c251fd8b30dbcf61749e0d6a042807da92af865a7d3c413efdd8ea",
+        deprecated=True,
+    )
+    version(
+        "20240207.1",
+        sha256="3ba62c2a1ed463fceedf313a1c3ea2997994aa102379a8d35b525ea424f56776",
+        deprecated=True,
     )
     version(
         "20240207",
         sha256="d518f32de4eb2681f2543be63926411e72072dd7d67c1670c090b5baabed98ac",
         deprecated=True,
     )
-    version("20231121", sha256="704d8a990874a425bcdfe0245faf13d712231ba23f014a3ebc27bc14398856f1")
+    version(
+        "20231121",
+        sha256="704d8a990874a425bcdfe0245faf13d712231ba23f014a3ebc27bc14398856f1",
+        deprecated=True,
+    )
+    version(
+        "20230802.4", sha256="6eed007cc24cda80b5dd43372b2ad4268b3982bb612669742c8c336b79137b5b"
+    )
     version(
         "20230802.3",
         sha256="6666e28cb90d3ff01cbbda6c81bdb85cf436bbb41604a87f2ab2fa559caa8510",
-        preferred=True,
+        deprecated=True,
     )
     version(
         "20230802.2",
@@ -372,7 +394,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("cxx", type="build")
 
     # mdi, scafacos, ml-quip, qmmm require C, but not available in Spack
-    for c_pkg in ("adios", "atc", "awpmd", "ml-pod", "electrode", "kim", "h5md", "tools"):
+    for c_pkg in ("adios", "atc", "awpmd", "ml-pod", "electrode", "kim", "h5md", "tools", "rheo"):
         depends_on("c", type="build", when=f"+{c_pkg}")
 
     # scafacos, ml-quip require Fortran, but not available in Spack
@@ -380,6 +402,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         depends_on("fortran", type="build", when=f"+{fc_pkg}")
 
     stable_versions = {
+        "20240829",
+        "20230802.4",
         "20230802.3",
         "20230802.2",
         "20230802.1",
@@ -495,6 +519,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         "reaction": {"when": "@20210702:"},
         "reax": {"when": "@:20181212"},
         "reaxff": {"when": "@20210702:"},
+        "rheo": {"when": "@20240829:"},
         "replica": {},
         "rigid": {"default": True},
         "shock": {},
@@ -688,6 +713,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("hipcub", when="~kokkos +rocm")
     depends_on("llvm-amdgpu ", when="+rocm", type="build")
     depends_on("rocm-openmp-extras", when="+rocm +openmp", type="build")
+    depends_on("gsl@2.6:", when="+rheo")
 
     # propagate CUDA and ROCm architecture when +kokkos
     for arch in CudaPackage.cuda_arch_values:
