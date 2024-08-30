@@ -224,6 +224,17 @@ def load():
         description="Cooperative multitasking on a single thread",
     )
     variants.add(
+        "coroutine",
+        when="@1.53.0:",
+        buildable="@1.54.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.Coroutine requires cxxstd >= 11"},
+            {"when": "cxxstd=03", "msg": "Boost.Coroutine requires cxxstd >= 11"},
+            {"when": "~context", "msg": "Boost.Coroutine requires Boost.Context"},
+        ],
+        description="DEPRECATED use coroutine2",
+    )
+    variants.add(
         "context-impl",
         when="@1.65.0:",
         default="fcontext",
