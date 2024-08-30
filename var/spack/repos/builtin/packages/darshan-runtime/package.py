@@ -100,14 +100,15 @@ class DarshanRuntime(AutotoolsPackage):
         spec = self.spec
         extra_args = []
 
+        scheduler = spec.variants["scheduler"].value
         job_id = "NONE"
-        if "+slurm" in spec:
+        if scheduler == "slurm":
             job_id = "SLURM_JOBID"
-        if "+cobalt" in spec:
+        elif scheduler == "cobalt":
             job_id = "COBALT_JOBID"
-        if "+pbs" in spec:
+        elif scheduler == "pbs":
             job_id = "PBS_JOBID"
-        if "+sge" in spec:
+        elif scheduler == "sge":
             job_id = "JOB_ID"
 
         if "+hdf5" in spec:
