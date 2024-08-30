@@ -1711,7 +1711,7 @@ class PackageInstaller:
             packages_per_compiler = {}
 
             # Queue all dependencies of the build spec.
-            for dep in spec.build_spec.traverse():
+            for dep in spec.build_spec.traverse(root=True):
                 pkg = dep.package
                 compiler = pkg.spec.compiler
                 arch = pkg.spec.architecture
@@ -1726,17 +1726,6 @@ class PackageInstaller:
                 if pkg_id not in self.build_tasks:
                     spack.store.STORE.failure_tracker.clear(dep, force=False)
                     self._add_init_task(dep.package, task.request, False, self.all_dependencies)
-
-            compiler = spec.build_spec.compiler
-            arch = spec.build_spec.architecture
-
-            if compiler not in packages_per_compiler:
-                packages_per_compiler[compiler] = {}
-
-            if arch not in packages_per_compiler[compiler]:
-                packages_per_compiler[compiler][arch] = []
-
-            packages_per_compiler[compiler][arch].append(spec.build_spec.package)
 
             for compiler, archs in packages_per_compiler.items():
                 for arch, packages in archs.items():
