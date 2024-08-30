@@ -57,19 +57,22 @@ properties: Dict[str, Any] = {
             },
             "splice": {
                 "type": "object",
+                "additionalProperties": False,
                 "properties": {
-                    "type": "array",
-                    "default": [],
-                    "items": {
-                        "type": "object",
-                        "required": ["target", "replacement"],
-                        "additionalProperties": False,
-                        "properties": {
-                            "target": {"type": "string"},
-                            "replacement": {"type": "string"},
-                            "transitive": {"type": "boolean", "default": False},
+                    "explicit": {
+                        "type": "array",
+                        "default": [],
+                        "items": {
+                            "type": "object",
+                            "required": ["target", "replacement"],
+                            "additionalProperties": False,
+                            "properties": {
+                                "target": {"type": "string"},
+                                "replacement": {"type": "string"},
+                                "transitive": {"type": "boolean", "default": False},
+                            },
                         },
-                    },
+                    }
                 },
             },
             "duplicates": {
