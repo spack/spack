@@ -273,24 +273,24 @@ def find_compilers(
 
     valid_compilers = {}
     for name, detected in detected_packages.items():
-        compilers = [x for x in detected if CompilerConfigFactory.from_external_spec(x.spec)]
+        compilers = [x for x in detected if CompilerConfigFactory.from_external_spec(x)]
         if not compilers:
             continue
         valid_compilers[name] = compilers
 
     def _has_fortran_compilers(x):
-        if "compilers" not in x.spec.extra_attributes:
+        if "compilers" not in x.extra_attributes:
             return False
 
-        return "fortran" in x.spec.extra_attributes["compilers"]
+        return "fortran" in x.extra_attributes["compilers"]
 
     if mixed_toolchain:
         gccs = [x for x in valid_compilers.get("gcc", []) if _has_fortran_compilers(x)]
         if gccs:
             best_gcc = sorted(
-                gccs, key=lambda x: spack.spec.parse_with_version_concrete(x.spec).version
+                gccs, key=lambda x: spack.spec.parse_with_version_concrete(x).version
             )[-1]
-            gfortran = best_gcc.spec.extra_attributes["compilers"]["fortran"]
+            gfortran = best_gcc.extra_attributes["compilers"]["fortran"]
             for name in ("llvm", "apple-clang"):
                 if name not in valid_compilers:
                     continue
@@ -298,11 +298,11 @@ def find_compilers(
                 for candidate in candidates:
                     if _has_fortran_compilers(candidate):
                         continue
-                    candidate.spec.extra_attributes["compilers"]["fortran"] = gfortran
+                    candidate.extra_attributes["compilers"]["fortran"] = gfortran
 
     new_compilers = []
     for name, detected in valid_compilers.items():
-        for config in CompilerConfigFactory.from_specs([x.spec for x in detected]):
+        for config in CompilerConfigFactory.from_specs(detected):
             c = _compiler_from_config_entry(config["compiler"])
             if c in known_compilers:
                 continue
