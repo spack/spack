@@ -480,7 +480,9 @@ class RocmOpenmpExtras(Package):
 
         os.symlink(os.path.join(omp_bin_dir, "flang1"), os.path.join(bin_dir, "flang1"))
         os.symlink(os.path.join(omp_bin_dir, "flang2"), os.path.join(bin_dir, "flang2"))
-        os.symlink(os.path.join(omp_bin_dir, "flang-legacy"), os.path.join(bin_dir, "flang-legacy"))
+        os.symlink(
+            os.path.join(omp_bin_dir, "flang-legacy"), os.path.join(bin_dir, "flang-legacy")
+        )
         os.symlink(os.path.join(omp_lib_dir, "libdevice"), os.path.join(lib_dir, "libdevice"))
         os.symlink(
             os.path.join(openmp_extras_prefix, "lib-debug"), os.path.join(llvm_prefix, "lib-debug")
@@ -587,7 +589,9 @@ class RocmOpenmpExtras(Package):
             "-DLLVM_INCLUDE_DOCS=0",
             "-DLLVM_INCLUDE_UTILS=0",
             "-DCLANG_DEFAULT_PIE_ON_LINUX=0",
-            "../../rocm-openmp-extras/flang/flang-legacy/{0}/llvm-legacy/llvm".format(flang_legacy_version),
+            "../../rocm-openmp-extras/flang/flang-legacy/{0}/llvm-legacy/llvm".format(
+                flang_legacy_version
+            ),
         ]
 
         components["flang-legacy"] = [
@@ -596,7 +600,11 @@ class RocmOpenmpExtras(Package):
             "../rocm-openmp-extras/flang/flang-legacy/{0}".format(flang_legacy_version),
         ]
 
-        if self.compiler.name == "gcc" and self.compiler.version >= Version("7.0.0") and self.compiler.version < Version("9.0.0"):
+        if (
+            self.compiler.name == "gcc"
+            and self.compiler.version >= Version("7.0.0")
+            and self.compiler.version < Version("9.0.0")
+        ):
             components["flang-legacy-llvm"] += ["-DCMAKE_CXX_FLAGS='-D_GLIBCXX_USE_CXX11_ABI=0'"]
             components["flang-legacy"] += ["-DCMAKE_CXX_FLAGS='-D_GLIBCXX_USE_CXX11_ABI=0'"]
 
@@ -616,7 +624,15 @@ class RocmOpenmpExtras(Package):
         ]
         components["flang-runtime"] += flang_common_args
 
-        build_order = ["aomp-extras", "openmp", "flang-legacy-llvm", "flang-legacy", "pgmath", "flang", "flang-runtime"]
+        build_order = [
+            "aomp-extras",
+            "openmp",
+            "flang-legacy-llvm",
+            "flang-legacy",
+            "pgmath",
+            "flang",
+            "flang-runtime",
+        ]
 
         # Override standard CMAKE_BUILD_TYPE
         for arg in std_cmake_args:
