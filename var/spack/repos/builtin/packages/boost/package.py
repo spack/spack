@@ -204,18 +204,6 @@ class Boost(Package):
         "for building static libraries",
     )
 
-    # https://boostorg.github.io/build/manual/develop/index.html#bbv2.builtin.features.visibility
-    variant(
-        "visibility",
-        values=("global", "protected", "hidden"),
-        default="hidden",
-        multi=False,
-        description="Default symbol visibility in compiled libraries " "(1.69.0 or later)",
-    )
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     # Unicode support
     depends_on("icu4c", when="+icu")
     depends_on("icu4c cxxstd=11", when="+icu cxxstd=11")
