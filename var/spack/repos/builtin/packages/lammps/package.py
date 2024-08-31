@@ -782,6 +782,12 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         sha256="3dedd807f63a21c543d1036439099f05c6031fd98e7cb1ea7825822fc074106e",
         when="@20220623.3:20230208 +kokkos +rocm +kspace",
     )
+    # Fixed in https://github.com/lammps/lammps/pull/4305
+    patch(
+        "https://github.com/lammps/lammps/commit/49bdc3e26449634f150602a66d0dab34d09dbc0e.patch?full_index=1",
+        sha256="b8d1f08a82329e493e040de2bde9d2291af173a0fe6c7deb24750cc22823c421",
+        when="@20240829 %cce",
+    )
 
     # Older LAMMPS does not compile with Kokkos 4.x
     conflicts(
