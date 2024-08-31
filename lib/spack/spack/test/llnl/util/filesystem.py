@@ -15,6 +15,7 @@ from contextlib import contextmanager
 import pytest
 
 import llnl.util.filesystem as fs
+import llnl.util.symlink
 from llnl.util.symlink import _windows_can_symlink, islink, readlink, symlink
 
 import spack.paths
@@ -1106,8 +1107,7 @@ def test_max_depth_and_recursive_errors(tmpdir, recursive, max_depth):
         fs.find_libraries(root, ["some_lib"], recursive=recursive, max_depth=max_depth)
 
 
-@pytest.fixture
-def dir_structure_with_things_to_find_symlinks(tmpdir):
+def dir_structure_with_things_to_find_links(tmpdir, use_junctions=False):
     """
     "lx-dy" means "level x, directory y"
     "lx-fy" means "level x, file y"
@@ -1130,7 +1130,7 @@ def dir_structure_with_things_to_find_symlinks(tmpdir):
         l1-s3 -> l3-d4 # a link that "skips" a directory level
         l1-s4 -> l2-s3 # a link to a link to a dir
     """
-    if sys.platform == "win32" and not _windows_can_symlink():
+    if sys.platform == "win32" and (not use_junctions) and (not _windows_can_symlink()):
         pytest.skip("This Windows instance is not configured with symlink support")
 
     l1_d1 = tmpdir.join("l1-d1").ensure(dir=True)
@@ -1140,12 +1140,17 @@ def dir_structure_with_things_to_find_symlinks(tmpdir):
     l1_d2 = tmpdir.join("l1-d2").ensure(dir=True)
     l2_d2 = l1_d2.join("l1-d2").ensure(dir=True)
 
-    os.symlink(l1_d2, pathlib.Path(l2_d1) / "l3-s1")
-    os.symlink(l1_d1, pathlib.Path(l2_d1) / "l3-s3")
-    os.symlink(l3_d4, pathlib.Path(tmpdir) / "l1-s3")
+    if use_junctions:
+        link_fn = llnl.util.symlink._windows_create_junction
+    else:
+        link_fn = os.symlink
+
+    link_fn(l1_d2, pathlib.Path(l2_d1) / "l3-s1")
+    link_fn(l1_d1, pathlib.Path(l2_d1) / "l3-s3")
+    link_fn(l3_d4, pathlib.Path(tmpdir) / "l1-s3")
     l2_s3 = pathlib.Path(l1_d2) / "l2-s3"
-    os.symlink(l2_d2, l2_s3)
-    os.symlink(l2_s3, pathlib.Path(tmpdir) / "l1-s4")
+    link_fn(l2_d2, l2_s3)
+    link_fn(l2_s3, pathlib.Path(tmpdir) / "l1-s4")
 
     locations = {}
     locations["l4-f1"] = str(l3_d2.join("l4-f1").ensure())
@@ -1158,8 +1163,7 @@ def dir_structure_with_things_to_find_symlinks(tmpdir):
     return str(tmpdir), locations
 
 
-def test_find_max_depth_symlinks(dir_structure_with_things_to_find_symlinks):
-    root, locations = dir_structure_with_things_to_find_symlinks
+def _check_find_links(root, locations):
     root = pathlib.Path(root)
     assert set(fs.find_max_depth(root, "l4-f1")) == {locations["l4-f1"]}
     assert set(fs.find_max_depth(root / "l1-s3", "l4-f2", 0)) == {locations["l4-f2-link"]}
@@ -1173,3 +1177,18 @@ def test_find_max_depth_symlinks(dir_structure_with_things_to_find_symlinks):
     assert set(fs.find_max_depth(root / "l1-d1", "l4-f2")) == {locations["l4-f2-full"]}
     # Check following links to links
     assert set(fs.find_max_depth(root, "l3-f3")) == {locations["l3-f3-link-l1"]}
+
+
+@pytest.mark.parametrize(
+    "use_junctions",
+    [
+        False,
+        pytest.param(
+            True,
+            marks=pytest.mark.skipif(sys.platform != "win32", reason="Only Windows has junctions"),
+        ),
+    ],
+)
+def test_find_max_depth_symlinks(tmpdir, use_junctions):
+    root, locations = dir_structure_with_things_to_find_links(tmpdir, use_junctions=use_junctions)
+    _check_find_links(root, locations)
