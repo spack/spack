@@ -524,7 +524,9 @@ def test_module_globals_available_at_setup(monkeypatch, mutable_config, mock_pac
         dependent_spec.package.test_attr = True
 
     externaltool = spack.spec.Spec("externaltest").concretized()
-    monkeypatch.setattr(externaltool["externaltool"].package, "setup_dependent_package", setup_dependent_package)
+    monkeypatch.setattr(
+        externaltool["externaltool"].package, "setup_dependent_package", setup_dependent_package
+    )
     spack.build_environment.setup_package(externaltool.package, False)
     assert externaltool.package.test_attr
 
