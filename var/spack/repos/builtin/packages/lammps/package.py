@@ -594,6 +594,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     variant("jpeg", default=False, description="Build with jpeg support")
     variant("png", default=False, description="Build with png support")
     variant("ffmpeg", default=False, description="Build with ffmpeg support")
+    variant("curl", default=False, description="Build with curl support", when="@20240829:")
     variant("openmp", default=True, description="Build with OpenMP")
     variant("opencl", default=False, description="Build with OpenCL")
     variant(
@@ -683,6 +684,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("jpeg", when="+jpeg")
     depends_on("kim-api", when="+kim")
     depends_on("curl", when="@20190329:+kim")
+    depends_on("curl", when="+curl")
     depends_on("libpng", when="+png")
     depends_on("ffmpeg", when="+ffmpeg")
     depends_on("kokkos+deprecated_code+shared@3.0.00", when="@20200303+kokkos")
@@ -905,6 +907,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         args.append(self.define_from_variant("WITH_JPEG", "jpeg"))
         args.append(self.define_from_variant("WITH_PNG", "png"))
         args.append(self.define_from_variant("WITH_FFMPEG", "ffmpeg"))
+        args.append(self.define_from_variant("WITH_CURL", "curl"))
 
         for pkg, params in self.supported_packages.items():
             if "when" not in params or spec.satisfies(params["when"]):
