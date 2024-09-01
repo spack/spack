@@ -94,7 +94,6 @@ spack:
   - flux-core
   - fortrilinos
   - gasnet
-  - geopm-runtime
   - ginkgo
   - globalarrays
   - glvis ^llvm
@@ -193,6 +192,7 @@ spack:
   # --
   # - chapel ~cuda ~rocm                                    # llvm: closures.c:(.text+0x305e): undefined reference to `_intel_fast_memset'
   # - cp2k +mpi                                             # dbcsr: dbcsr_api.F(973): #error: incomplete macro call DBCSR_ABORT.
+  # - geopm-runtime                                         # libelf: configure: error: installation or configuration problem: C compiler cannot create executables.
   # - hpctoolkit                                            # dyninst@13.0.0%gcc: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'
   # - lbann                                                 # 2024.2 internal compiler error
   # - plasma                                                # 2024.2 internal compiler error
