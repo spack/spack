@@ -14,6 +14,7 @@ class PyNanoplot(PythonPackage):
 
     maintainers("Pandapip1")
 
+    version("1.43.0", sha256="0f94096d689b552c32fd7246ad87cb6d5e5e2499dad5acc551091e0ff67f48df")
     version("1.42.0", sha256="0f8fd2cffd33a346b3306716058c6cb4091c931e8ab502f10b17a28749e8b6d9")
 
     depends_on("py-setuptools", type=("build",))
