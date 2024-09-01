@@ -569,6 +569,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant("internal-pmix", default=False, description="Use internal pmix")
     variant("internal-libevent", default=False, description="Use internal libevent")
     variant("openshmem", default=False, description="Enable building OpenSHMEM")
+    variant("debug", default=False, description="Make debug build", when="build_system=autotools")
 
     provides("mpi")
     provides("mpi@:2.2", when="@1.6.5")
@@ -1216,6 +1217,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         # environment variables.
         if spec.satisfies("%intel@2021.7.0:"):
             config_args.append("CPPFLAGS=-diag-disable=10441")
+
+        config_args += self.enable_or_disable("debug")
 
         return config_args
 
