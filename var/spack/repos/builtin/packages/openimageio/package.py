@@ -10,7 +10,8 @@ class Openimageio(CMakePackage):
     """Reading, writing, and processing images in a wide variety of file formats, using
     a format-agnostic API, aimed at VFX applications."""
 
-    homepage = "https://www.openimageio.org"
+    homepage = "https://openimageio.readthedocs.io"
+    git = "https://github.com/AcademySoftwareFoundation/OpenImageIO"
     url = "https://github.com/AcademySoftwareFoundation/OpenImageIO/archive/refs/tags/v2.5.14.0.tar.gz"
 
     license("Apache-2.0")
