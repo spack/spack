@@ -48,9 +48,9 @@ class Openimageio(CMakePackage):
     conflicts("target=aarch64:", when="@:1.8.15")
 
     def url_for_version(self, version):
-        if version >= Version('2'):
+        if version >= Version("2"):
             return super().url_for_version(version)
-        return f'https://github.com/AcademySoftwareFoundation/OpenImageIO/archive/refs/tags/Release-{version}.tar.gz'
+        return f"https://github.com/AcademySoftwareFoundation/OpenImageIO/archive/refs/tags/Release-{version}.tar.gz"
 
     def cmake_args(self):
         args = ["-DUSE_FFMPEG={0}".format("ON" if "+ffmpeg" in self.spec else "OFF")]
