@@ -30,4 +30,4 @@ class PyMysqlclient(PythonPackage):
     # https://github.com/PyMySQL/mysqlclient/issues/584 by backporting the
     # patch from @2.2.0rc1 that uses pkg-config instead of mysql_config
     # https://github.com/PyMySQL/mysqlclient/pull/586/files
-    patch("use-pkg-config.patch", when="@:2.1")
+    patch("use-pkg-config.patch", when="@1.4:2.1")
