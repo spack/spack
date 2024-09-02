@@ -333,24 +333,26 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         # ESMF_COMM must be set to indicate which MPI implementation
         # is used to build the ESMF library.
         if spec.satisfies("+mpi"):
-            if self.spec.satisfies("^cray-mpich"):
+            if self.spec.satisfies("^[virtuals=mpi] cray-mpich"):
                 env.set("ESMF_COMM", "mpi")
                 # https://github.com/jcsda/spack-stack/issues/517
                 if self.spec.satisfies("@:8.4.1"):
                     env.set("ESMF_CXXLINKLIBS", "-lmpifort -lmpi")
-            elif spec.satisfies("^mvapich2"):
+            elif spec.satisfies("^[virtuals=mpi] mvapich2"):
                 env.set("ESMF_COMM", "mvapich2")
-            elif spec.satisfies("^mpich"):
+            elif spec.satisfies("^[virtuals=mpi] mpich"):
                 if self.spec.satisfies("@:8.2.99"):
                     env.set("ESMF_COMM", "mpich3")
                 else:
                     env.set("ESMF_COMM", "mpich")
-            elif spec.satisfies("^openmpi") or spec.satisfies("^hpcx-mpi"):
+            elif spec.satisfies("^[virtuals=mpi] openmpi") or spec.satisfies(
+                "^[virtuals=mpi] hpcx-mpi"
+            ):
                 env.set("ESMF_COMM", "openmpi")
             elif (
-                "^intel-parallel-studio+mpi" in spec
-                or "^intel-mpi" in spec
-                or "^intel-oneapi-mpi" in spec
+                spec.satisfies("^[virtuals=mpi] intel-parallel-studio+mpi")
+                or spec.satisfies("^[virtuals=mpi] intel-mpi")
+                or spec.satisfies("^[virtuals=mpi] intel-oneapi-mpi")
             ):
                 env.set("ESMF_COMM", "intelmpi")
             elif spec.satisfies("^mpt"):
