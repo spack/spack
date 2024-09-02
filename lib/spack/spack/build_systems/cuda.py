@@ -145,7 +145,8 @@ class CudaPackage(PackageBase):
         conflicts("%clang@15:", when="+cuda ^cuda@:12.0")
         conflicts("%clang@16:", when="+cuda ^cuda@:12.1")
         conflicts("%clang@17:", when="+cuda ^cuda@:12.3")
-        conflicts("%clang@18:", when="+cuda ^cuda@:12.6")
+        conflicts("%clang@18:", when="+cuda ^cuda@:12.5")
+        conflicts("%clang@19:", when="+cuda ^cuda@:12.6")
 
         # https://gist.github.com/ax3l/9489132#gistcomment-3860114
         conflicts("%gcc@10", when="+cuda ^cuda@:11.4.0")
