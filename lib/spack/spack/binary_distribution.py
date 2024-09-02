@@ -2561,7 +2561,6 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
     with spack.util.path.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, force)
-        spec.package.windows_establish_runtime_linkage()
         spack.hooks.post_install(spec, False)
         spack.store.STORE.db.add(spec, spack.store.STORE.layout)
 
