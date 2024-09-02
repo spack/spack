@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
-from typing import Optional, Tuple
+from typing import Dict, Generator, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
@@ -41,6 +41,68 @@ class RBuilder(GenericBuilder):
         """Arguments to pass to install via ``--configure-vars``."""
         return []
 
+    def parse_description(data: str) -> Generator:
+        """Parses CRAN package metadata from
+        https://cran.r-project.org/src/contrib/PACKAGES
+        and returns the list of dictionaries.
+
+        Args:
+            data (str): raw text from the package list
+
+        Returns:
+            (Generator): each entry from packages as dictionary
+
+        Note: based on PyPI pycran v0.2.0 under Apache-2.0 license.
+        """
+        fields: Set = set()
+        package: Dict = {}
+
+        def append(field_value: Union[bytes, str]):
+            pairs = list(package.items())
+            if pairs:
+                last_field = pairs[-1][0]
+                package[last_field] += field_value
+
+        # We want to iterate over each line and accumulate
+        # keys in dictionary, once we meet the same key
+        # in our dictionary we have a single package
+        # metadata parsed so we yield and repeat again.
+        for line in data.splitlines():
+
+            if not line.strip():
+                continue
+
+            if ":" in line:
+                parts = line.split(":", maxsplit=1)
+                field = parts[0].strip()
+                value = str("".join(parts[1:]).strip())
+
+                if not field[0].isalpha():
+                    field = ""
+                    value = line
+
+                if field and field in fields:
+                    fields = {field}
+                    result = {**package}
+                    package = {field: value}
+                    if result:
+                        yield result
+                else:
+                    # Here we want to parse dangling lines
+                    # like the ones with long dependency
+                    # list, `R (>= 2.15.0), xtable, pbapply ... \n    and more`
+                    if field:
+                        package[field] = value.strip()
+                        fields.add(field)
+                    else:
+                        append(f" {value.strip()}")
+            else:
+                append(f" {line.strip()}")
+
+        # We also need to return the metadata for
+        # the last parsed package.
+        if package:
+            yield package
     def install(self, pkg, spec, prefix):
         """Installs an R package."""
         mkdirp(pkg.module.r_lib_dir)
