@@ -116,11 +116,10 @@ def preferred_version(pkg: "PackageBase"):
     Arguments:
         pkg: The package whose versions are to be assessed.
     """
-    # Here we sort first on the fact that a version is marked
-    # as preferred in the package, then on the fact that the
-    # version is not develop, then lexicographically
-    key_fn = lambda v: (pkg.versions[v].get("preferred", False), not v.isdevelop(), v)
-    return max(pkg.versions, key=key_fn)
+    from spack.solver.asp import concretization_version_order
+
+    version, _ = max(pkg.versions.items(), key=concretization_version_order)
+    return version
 
 
 class WindowsRPath:

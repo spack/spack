@@ -579,7 +579,7 @@ def _is_checksummed_version(version_info: Tuple[GitOrStandardVersion, dict]):
     return _is_checksummed_git_version(version)
 
 
-def _concretization_version_order(version_info: Tuple[GitOrStandardVersion, dict]):
+def concretization_version_order(version_info: Tuple[GitOrStandardVersion, dict]):
     """Version order key for concretization, where preferred > not preferred,
     not deprecated > deprecated, finite > any infinite component; only if all are
     the same, do we use default version ordering."""
@@ -2026,7 +2026,7 @@ class SpackSolverSetup:
             # like being a "develop" version or being preferred exist only at a
             # package.py level, sort them in this partial list here
             package_py_versions = sorted(
-                pkg_cls.versions.items(), key=_concretization_version_order, reverse=True
+                pkg_cls.versions.items(), key=concretization_version_order, reverse=True
             )
 
             if require_checksum and pkg_cls.has_code:
