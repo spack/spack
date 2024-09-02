@@ -8,11 +8,13 @@ from typing import Dict, Generator, Optional, Set, Tuple, Union
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
+import spack.builder
 import spack.deptypes as dt
 from llnl.util.filesystem import mkdirp
 
 from spack.dependency import Dependency
 from spack.directives import extends
+from spack.error import SpackError
 from spack.spec import Spec
 
 from .generic import GenericBuilder, Package
@@ -103,64 +105,108 @@ class RBuilder(GenericBuilder):
         # the last parsed package.
         if package:
             yield package
+
+
+    def verify_package(self):
+        if not self.pkg.run_tests:
+            return
+
+        # Read DESCRIPTION file with dependency information
+        r_deps = []
+        with open(fs.join_path(self.stage.source_path, "DESCRIPTION")) as file:
+            for desc in RBuilder.parse_description(file.read()):
+                for field in [f for f in ["Depends", "Imports", "LinkingTo"] if f in desc]:
+                    r_deps.extend([d.strip() for d in desc[field].split(",") if d != ""])
+        tty.debug(f"DESCRIPTION: {r_deps}")
+
+        # Convert to spack dependencies format for comparison
+        deps = {}
+        r_core = [
+            "r-compiler",
+            "r-graphics",
+            "r-grdevices",
+            "r-grid",
+            "r-methods",
+            "r-parallel",
+            "r-splines",
+            "r-stats",
+            "r-stats4",
+            "r-tcltk",
+            "r-tools",
+            "r-utils",
+        ]
+        for r_dep in r_deps:
+            p = re.search(r"^[\w_.-]+", r_dep)  # first word, incl. underscore, dot, or dash
+            v = re.search("(?<=[(]).*(?=[)])", r_dep)  # everything between parentheses
+            # require valid package
+            assert p, f"Unable to find package name in {r_dep}"
+            r_spec = f"r-{p[0].strip().lower()}" if p[0].lower() != "r" else "r"
+            r_spec = re.sub(r"\.", "-", r_spec)  # dot to dash
+            # filter R core packages
+            if r_spec in r_core:
+                r_spec = "r"
+            # allow minimum or pinned versions
+            if v:
+                v = re.sub(r">=\s([\d.-]+)", r"@\1:", v[0])  # >=
+                v = re.sub(r">\s([\d.-]+)", r"@\1.1:", v)  # >
+                v = re.sub(r"==\s([\d.-]+)", r"@\1", v)  # ==
+            else:
+                v = ""
+            # merge dependencies as they are added
+            if r_spec in deps:
+                deps[r_spec].merge(Dependency(self.pkg, Spec(r_spec + v), dt.BUILD | dt.RUN))
+            else:
+                deps[r_spec] = Dependency(self.pkg, Spec(r_spec + v), dt.BUILD | dt.RUN)
+        tty.debug(f"Converted: {deps}")
+
+        # Retrieve dependencies for current spack package and version
+        spack_dependencies = []
+        for when, dep in self.pkg.dependencies.items():
+            if self.spec.satisfies(when):
+                spack_dependencies.append(dep)
+        tty.debug(f"Spack as read: {spack_dependencies}")
+        merged_dependencies = {}
+        for dep in spack_dependencies:
+            for n, d in dep.items():
+                if n in merged_dependencies:
+                    merged_dependencies[n].merge(d)
+                else:
+                    merged_dependencies[n] = d
+        tty.debug(f"Spack merged: {merged_dependencies}")
+
+        # For each R dependency, ensure Spack dependency is at least as strong
+        missing_deps = []
+        for dep in sorted(deps.keys()):
+            if dep in list(merged_dependencies.keys()):
+                # Spack dependency must satisfy R dependency
+                if not merged_dependencies[dep].spec.satisfies(deps[dep].spec):
+                    missing_deps.append(
+                        f'    depends_on("{deps[dep].spec}", type=("build", "run"), when="@{self.pkg.version}:")'
+                    )
+                # Remove from dict
+                del merged_dependencies[dep]
+            else:
+                missing_deps.append(
+                    f'    depends_on("{deps[dep].spec}", type=("build", "run"), when="@{self.pkg.version}:")'
+                )
+        for dep in merged_dependencies:
+            if re.match("^r-.*", dep):
+                missing_deps.append(
+                    f'    #depends_on("{merged_dependencies[dep].spec}") not needed anymore'
+                )
+
+        # Raise exception
+        if len(missing_deps) > 0:
+            raise SpackError(
+                "This package requires stricter dependencies than specified:\n\n"
+                + "\n".join(missing_deps)
+            )
+
+    spack.builder.run_before("install")(verify_package)
+
     def install(self, pkg, spec, prefix):
         """Installs an R package."""
         mkdirp(pkg.module.r_lib_dir)
-
-        try:
-            # TODO: use a more sustainable dcf parser
-            import pycran
-
-            # Read DESCRIPTION file with dependency information
-            # https://r-pkgs.org/description.html
-            r_deps = []
-            with open(fs.join_path(self.stage.source_path, 'DESCRIPTION')) as file:
-                for desc in pycran.parse(file.read()):
-                    if "Imports" in desc:
-                        r_deps.extend([d.strip() for d in desc["Imports"].split(",") if d != ""])
-                    if "Depends" in desc:
-                        r_deps.extend([d.strip() for d in desc["Depends"].split(",") if d != ""])
-
-            # Convert to spack dependencies format for comparison
-            deps = {}
-            for r_dep in r_deps:
-                p = re.search(r"^[\w_-]+", r_dep)  # first word, incl. underscore or dash
-                v = re.search("(?<=[(]).*(?=[)])", r_dep)  # everything between parentheses
-                # require valid package
-                assert p, f"Unable to find package name in {r_dep}"
-                r_spec = f"r-{p[0].strip().lower()}" if p[0].lower() != "r" else "r"
-                # allow minimum or pinned versions
-                if v:
-                    v = re.sub(r">=\s([\d.-]+)", r"@\1:", v[0])  # >=
-                    v = re.sub(r"==\s([\d.-]+)", r"@\1", v)  # ==
-                    deps[r_spec] = Dependency(pkg, Spec(r_spec + v), dt.BUILD | dt.RUN)
-                else:
-                    deps[r_spec] = Dependency(pkg, Spec(r_spec), dt.BUILD | dt.RUN)
-
-            # Retrieve dependencies for current spack package and version
-            spack_dependencies = []
-            for when, dep in pkg.dependencies.items():
-                if spec.satisfies(when):
-                    spack_dependencies.append(dep)
-            merged_dependencies = {}
-            for dep in spack_dependencies:
-                for n, d in dep.items():
-                    if d in merged_dependencies:
-                        merged_dependencies[n].merge(d)
-                    else:
-                        merged_dependencies[n] = d
-
-            # For each R dependency, ensure Spack dependency is at least as strong
-            for dep in sorted(deps.keys()):
-                if dep in merged_dependencies:
-                    if not merged_dependencies[dep].spec.satisfies(deps[dep].spec):
-                        tty.debug(f'    depends_on("{deps[dep].spec}", when="@{pkg.version}:", type=("build", "run"))')
-                else:
-                    tty.debug(f'    depends_on("{deps[dep].spec}", when="@{pkg.version}:", type=("build", "run"))')
-
-        except ImportError:
-            tty.debug("R package dependency verification requires pycran")
-            pass
 
         config_args = self.configure_args()
         config_vars = self.configure_vars()
