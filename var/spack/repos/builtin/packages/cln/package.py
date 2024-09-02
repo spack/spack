@@ -18,7 +18,8 @@ class Cln(AutotoolsPackage):
     homepage = "https://www.ginac.de/CLN/"
     url = "https://www.ginac.de/CLN/cln-1.3.7.tar.bz2"
     git = "git://www.ginac.de/cln.git"
-
+    maintainers("prudhomm")
+    
     license("GPL-2.0-or-later")
 
     version("master", branch="master")
