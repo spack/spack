@@ -23,7 +23,7 @@ class Opencarp(CMakePackage):
         commit="295055b6a3859709730f62fc8d4fe0e87c4e20b9",
         submodules=False,
         no_cache=True,
-        preferred=True
+        preferred=True,
     )
     version(
         "15.0", commit="2271a3cccd7137f1e28c043c10adbd80480f1462", submodules=False, no_cache=True
