@@ -88,9 +88,6 @@ Patcher = Callable[[Union["spack.package_base.PackageBase", Dependency]], None]
 PatchesType = Optional[Union[Patcher, str, List[Union[Patcher, str]]]]
 
 
-SUPPORTED_LANGUAGES = ("fortran", "cxx", "c")
-
-
 def _make_when_spec(value: WhenType) -> Optional["spack.spec.Spec"]:
     """Create a ``Spec`` that indicates when a directive should be applied.
 
@@ -369,9 +366,6 @@ def depends_on(
 
     """
     dep_spec = spack.spec.Spec(spec)
-    if dep_spec.name in SUPPORTED_LANGUAGES:
-        assert type == "build", "languages must be of 'build' type"
-        return _language(lang_spec_str=spec, when=when)
 
     def _execute_depends_on(pkg: "spack.package_base.PackageBase"):
         _depends_on(pkg, dep_spec, when=when, type=type, patches=patches)
@@ -864,21 +858,6 @@ def requires(*requirement_specs: str, policy="one_of", when=None, msg=None):
         requirement_list.append((requirements, policy, msg_with_name))
 
     return _execute_requires
-
-
-@directive("languages")
-def _language(lang_spec_str: str, *, when: Optional[Union[str, bool]] = None):
-    """Temporary implementation of language virtuals, until compilers are proper dependencies."""
-
-    def _execute_languages(pkg: "spack.package_base.PackageBase"):
-        when_spec = _make_when_spec(when)
-        if not when_spec:
-            return
-
-        languages = pkg.languages.setdefault(when_spec, set())
-        languages.add(lang_spec_str)
-
-    return _execute_languages
 
 
 class DependencyError(DirectiveError):
