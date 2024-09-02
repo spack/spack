@@ -2108,8 +2108,11 @@ def do_not_check_runtimes_on_reuse(monkeypatch):
 def _c_compiler_always_exists():
     fn = spack.solver.asp.c_compiler_runs
     spack.solver.asp.c_compiler_runs = _true
+    mthd = spack.solver.libc.CompilerPropertyDetector.default_libc
+    spack.solver.libc.CompilerPropertyDetector.default_libc = _libc_from_python
     yield
     spack.solver.asp.c_compiler_runs = fn
+    spack.solver.libc.CompilerPropertyDetector.default_libc = mthd
 
 
 @pytest.fixture(scope="session")
