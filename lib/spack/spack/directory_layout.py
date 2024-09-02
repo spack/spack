@@ -22,13 +22,8 @@ import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
 
-# Note: Posixpath is used here as opposed to
-# os.path.join due to spack.spec.Spec.format
-# requiring forward slash path seperators at this stage
 default_projections = {
-    "all": posixpath.join(
-        "{architecture}", "{compiler.name}-{compiler.version}", "{name}-{version}-{hash}"
-    )
+    "all": "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
 }
 
 
