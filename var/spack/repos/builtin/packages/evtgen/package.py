@@ -97,7 +97,7 @@ class Evtgen(CMakePackage):
         options += self.configure_args()
 
         with working_dir(self.build_directory, create=True):
-            inspect.getmodule(self).configure(*options)
+            configure(*options)
 
     @when("@:01")
     def configure_args(self):

@@ -365,9 +365,9 @@ class SpackNamespace(types.ModuleType):
 
     def __getattr__(self, name):
         """Getattr lazily loads modules if they're not already loaded."""
-        submodule = self.__package__ + "." + name
+        submodule = f"{self.__package__}.{name}"
         try:
-            setattr(self, name, __import__(submodule))
+            setattr(self, name, importlib.import_module(submodule))
         except ImportError:
             msg = "'{0}' object has no attribute {1}"
             raise AttributeError(msg.format(type(self), name))
@@ -1281,7 +1281,7 @@ class Repo:
             raise RepoError(msg) from e
 
         cls = getattr(module, class_name)
-        if not inspect.isclass(cls):
+        if not isinstance(cls, type):
             tty.die(f"{pkg_name}.{class_name} is not a class")
 
         # Clear any prior changes to class attributes in case the class was loaded from the

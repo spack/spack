@@ -6,6 +6,7 @@
 import itertools
 import os
 import sys
+from subprocess import Popen
 
 from spack.package import *
 
@@ -31,7 +32,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master", submodules=True)
     version(
-        "5.13.0-RC1", sha256="00aea2bbaf2eacd288a6cc95c1f4ed1a8a4965f27548b53ae473c1ee7caec30e"
+        "5.13.0-RC2", sha256="d10d0cec48c662d8c78470726af1b28cd39cbe434aef7fd0f75eec0112fa3f89"
     )
     version(
         "5.12.1",
@@ -87,6 +88,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
     variant("visitbridge", default=False, description="Enable VisItBridge support")
     variant("raytracing", default=False, description="Enable Raytracing support")
+    variant("cdi", default=False, description="Enable CDI support")
     variant(
         "openpmd",
         default=False,
@@ -232,6 +234,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("ospray@2.1:2", when="+raytracing")
     depends_on("openimagedenoise", when="+raytracing")
     depends_on("ospray +mpi", when="+raytracing +mpi")
+
+    depends_on("cdi", when="+cdi")
 
     depends_on("bzip2")
     depends_on("double-conversion")
@@ -705,4 +709,59 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         cmake_args.append(self.define_from_variant("VTK_ENABLE_OSPRAY", "raytracing"))
         cmake_args.append(self.define_from_variant("VTKOSPRAY_ENABLE_DENOISER", "raytracing"))
 
+        # CDI
+        cmake_args.append(self.define_from_variant("PARAVIEW_PLUGIN_ENABLE_CDIReader", "cdi"))
+        cmake_args.append(self.define_from_variant("PARAVIEW_PLUGIN_AUTOLOAD_CDIReader", "cdi"))
+
         return cmake_args
+
+    def test_smoke_test(self):
+        """Simple smoke test for ParaView"""
+        spec = self.spec
+
+        pvserver = Executable(spec["paraview"].prefix.bin.pvserver)
+        pvserver("--help")
+
+    def test_pvpython(self):
+        """Test pvpython"""
+        spec = self.spec
+
+        if "~python" in spec:
+            raise SkipTest("Package must be installed with +python")
+
+        pvpython = Executable(spec["paraview"].prefix.bin.pvpython)
+        pvpython("-c", "import paraview")
+
+    def test_mpi_ensemble(self):
+        """Test MPI ParaView Client/Server ensemble"""
+        spec = self.spec
+
+        if "~mpi" in spec or "~python" in spec:
+            raise SkipTest("Package must be installed with +mpi and +python")
+
+        mpirun = spec["mpi"].prefix.bin.mpirun
+        pvserver = spec["paraview"].prefix.bin.pvserver
+        pvpython = Executable(spec["paraview"].prefix.bin.pvpython)
+
+        with working_dir("smoke_test_build", create=True):
+            with Popen(
+                [mpirun, "-np", "3", pvserver, "--mpi", "--force-offscreen-rendering"]
+            ) as servers:
+                pvpython(
+                    "--force-offscreen-rendering",
+                    "-c",
+                    "from paraview.simple import *;"
+                    "Connect('127.0.0.1');"
+                    "sphere = Sphere(ThetaResolution=16, PhiResolution=32);"
+                    "sphere_remote = servermanager.Fetch(sphere);"
+                    "Show(sphere);"
+                    "Render()",
+                )
+                servers.terminate()
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
+        self.test_smoke_test()
+        self.test_pvpython()
+        self.test_mpi_ensemble()

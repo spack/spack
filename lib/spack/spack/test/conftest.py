@@ -1003,7 +1003,7 @@ def temporary_store(tmpdir, request):
 def mock_fetch(mock_archive, monkeypatch):
     """Fake the URL for a package so it downloads from a file."""
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "fetcher", URLFetchStrategy(mock_archive.url)
+        spack.package_base.PackageBase, "fetcher", URLFetchStrategy(url=mock_archive.url)
     )
 
 
