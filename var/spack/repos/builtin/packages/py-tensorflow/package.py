@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
 import sys
 import tempfile
@@ -50,8 +51,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     version("2.16.1", sha256="c729e56efc945c6df08efe5c9f5b8b89329c7c91b8f40ad2bb3e13900bd4876d")
     version(
         "2.16.1-rocm-enhanced",
-        sha256="6765e85675734b8fe17bca3c0669aec2f9ee97699b413780bcf3c6f00661ce72",
-        url="https://github.com/ROCm/tensorflow-upstream/archive/refs/tags/r2.16-rocm-enhanced.tar.gz",
+        sha256="e1b63b1b5d5b014194ed33113c7fa7f26ecb8d36333282b8c550e795e0eb31c6",
+        url="https://github.com/ROCm/tensorflow-upstream/archive/refs/tags/v2.16.1-rocm-enhanced.tar.gz",
     )
     version("2.15.1", sha256="f36416d831f06fe866e149c7cd752da410a11178b01ff5620e9f265511ed57cf")
     version("2.15.0", sha256="9cec5acb0ecf2d47b16891f8bc5bc6fbfdffe1700bdadc0d9ebe27ea34f0c220")
@@ -381,7 +382,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
     # https://www.tensorflow.org/install/source#tested_build_configurations
     # https://github.com/tensorflow/tensorflow/issues/70199
-    conflicts("%gcc", when="@2.17:")
+    # (-mavx512fp16 exists in gcc@12:)
+    conflicts("%gcc@:11", when="@2.17:")
     conflicts("%gcc@:9.3.0", when="@2.9:")
     conflicts("%gcc@:7.3.0")
 
@@ -562,6 +564,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             for pkg_dep in rocm_dependencies:
                 pkg_dep_cap = pkg_dep.upper().replace("-", "_")
                 env.set(f"{pkg_dep_cap}_PATH", spec[pkg_dep].prefix)
+            env.set("TF_ROCM_AMDGPU_TARGETS", ",".join(self.spec.variants["amdgpu_target"].value))
         else:
             env.set("TF_NEED_ROCM", "0")
 
@@ -708,6 +711,14 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     def post_configure_fixes(self):
         spec = self.spec
 
+        if spec.satisfies("@2.17:"):
+            filter_file(
+                "patchelf",
+                spec["patchelf"].prefix.bin.patchelf,
+                "tensorflow/tools/pip_package/build_pip_package.py",
+                string=True,
+            )
+
         # make sure xla is actually turned off
         if spec.satisfies("~xla"):
             filter_file(
@@ -848,14 +859,27 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
         bazel(*args)
 
-        build_pip_package = Executable("bazel-bin/tensorflow/tools/pip_package/build_pip_package")
-        buildpath = join_path(self.stage.source_path, "spack-build")
-        build_pip_package("--src", buildpath)
+        if self.spec.satisfies("@:2.16"):
+            build_pip_package = Executable(
+                "bazel-bin/tensorflow/tools/pip_package/build_pip_package"
+            )
+            buildpath = join_path(self.stage.source_path, "spack-build")
+            build_pip_package("--src", buildpath)
 
     def install(self, spec, prefix):
         tmp_path = env["TEST_TMPDIR"]
-        buildpath = join_path(self.stage.source_path, "spack-build")
-        with working_dir(buildpath):
-            args = std_pip_args + ["--prefix=" + prefix, "."]
-            pip(*args)
+        if self.spec.satisfies("@2.17:"):
+            buildpath = join_path(
+                self.stage.source_path, "bazel-bin/tensorflow/tools/pip_package/wheel_house/"
+            )
+            with working_dir(buildpath):
+                wheel = glob.glob("*.whl")[0]
+                args = std_pip_args + ["--prefix=" + prefix, wheel]
+                pip(*args)
+        else:
+            buildpath = join_path(self.stage.source_path, "spack-build")
+            with working_dir(buildpath):
+                args = std_pip_args + ["--prefix=" + prefix, "."]
+                pip(*args)
+
         remove_linked_tree(tmp_path)

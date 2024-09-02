@@ -3,8 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
+import llnl.util.tty as tty
+
 from spack.package import *
 from spack.util.environment import set_env
+from spack.util.executable import ProcessError
 
 
 class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
@@ -203,9 +208,9 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([self.test_data_dir, self.test_src_dir])
+        cache_extra_test_sources(self, [self.test_data_dir, self.test_src_dir])
 
-    def _test_example(self, test_prog, test_cmd, test_args):
+    def _test_example(self, test_prog, test_cmd, pre_args=[]):
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         cmake_filename = join_path(test_dir, "CMakeLists.txt")
         with open(cmake_filename, "w") as mkfile:
@@ -218,9 +223,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             )
 
         with working_dir(test_dir):
-            opts = self.builder.std_cmake_args
-            opts += self.cmake_args()
-            opts += ["."]
+            opts = self.builder.std_cmake_args + self.cmake_args() + ["."]
             cmake = self.spec["cmake"].command
             cmake(*opts)
 
@@ -229,29 +232,32 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
 
             with set_env(OMP_NUM_THREADS="1"):
                 exe = which(test_cmd)
+                test_args = pre_args + [join_path("..", self.test_data_dir, "pde900.mtx")]
                 exe(*test_args)
 
     def test_sparse_seq(self):
         """Run sequential test_sparse"""
-        if "+mpi" in self.spec:
-            raise SkipTest("Package must be installed with '~mpi'")
         test_exe = "test_sparse_seq"
-        exe_arg = [join_path("..", self.test_data_dir, "pde900.mtx")]
-        self._test_example(test_exe, test_exe, exe_arg)
+        self._test_example(test_exe, test_exe)
 
     def test_sparse_mpi(self):
         """Run parallel test_sparse"""
         if "+mpi" not in self.spec:
             raise SkipTest("Package must be installed with '+mpi'")
         test_exe_mpi = "test_sparse_mpi"
-        test_args = ["-n", "1", test_exe_mpi, join_path("..", self.test_data_dir, "pde900.mtx")]
-        mpiexe_list = ["srun", "mpirun", "mpiexec"]
+        mpi_args = ["-n", "1", test_exe_mpi]
+
+        mpi_bin = self.spec["mpi"].prefix.bin
+        mpiexe_list = ["srun", mpi_bin.mpirun, mpi_bin.mpiexec]
         for exe in mpiexe_list:
+            tty.info(f"Attempting to build and launch with {os.path.basename(exe)}")
             try:
-                self._test_example(test_exe_mpi, exe, test_args)
+                args = ["--immediate=30"] + mpi_args if exe == "srun" else mpi_args
+                self._test_example(test_exe_mpi, exe, args)
                 return
-            except Exception:
-                pass
+            except (Exception, ProcessError) as err:
+                tty.info(f"Skipping {exe}: {str(err)}")
+
         assert False, "No MPI executable was found"
 
     def check(self):

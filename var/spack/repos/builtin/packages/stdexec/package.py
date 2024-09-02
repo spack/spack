@@ -19,7 +19,7 @@ class Stdexec(CMakePackage):
     version("23.03", sha256="2c9dfb6e56a190543049d2300ccccd1b626f4bb82af5b607869c626886fadd15")
     version("main", branch="main")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.23.1:", type="build")
 

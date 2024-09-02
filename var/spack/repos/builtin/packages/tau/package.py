@@ -204,25 +204,21 @@ class Tau(Package):
         #     ('CC', 'CXX' and 'FC')
         # 4 - if no -cc=<compiler> -cxx=<compiler> is passed tau is built with
         #     system compiler silently
-        # (regardless of what %<compiler> is used in the spec)
-        # 5 - On cray gnu compilers are not provied by self.compilers
-        #     Checking GCC_PATH will work if spack loads the gcc module
-        #
-        # In the following we give TAU what he expects and put compilers into
-        # PATH
-        compiler_path = os.path.dirname(self.compiler.cc)
-        if not compiler_path and self.compiler.cc_names[0] == "gcc":
-            compiler_path = os.environ.get("GCC_PATH", "")
-            if compiler_path:
-                compiler_path = compiler_path + "/bin/"
-        os.environ["PATH"] = ":".join([compiler_path, os.environ["PATH"]])
-        compiler_options = [
-            "-c++=%s" % os.path.basename(self.compiler.cxx),
-            "-cc=%s" % os.path.basename(self.compiler.cc),
-        ]
+        compiler_flags: Dict[str, str] = {
+            flag: os.path.basename(getattr(self.compiler, compiler))
+            for flag, compiler in (("-cc", "cc"), ("-c++", "cxx"), ("-fortran", "fc"))
+            if getattr(self.compiler, compiler)
+        }
 
-        if "+fortran" in spec and self.compiler.fc:
-            compiler_options.append("-fortran=%s" % os.path.basename(self.compiler.fc))
+        if "~fortran" in spec:
+            compiler_flags.pop("-fortran", None)
+
+        # tau does not understand `craycc`, `crayCC`, `crayftn`, strip off the `cray` prefix
+        for flag, value in compiler_flags.items():
+            if value.startswith("cray"):
+                compiler_flags[flag] = value[4:]
+
+        compiler_options = [f"{flag}={value}" for flag, value in compiler_flags.items()]
 
         ##########
 
@@ -462,23 +458,23 @@ class Tau(Package):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(self.matmult_test)
-        self.cache_extra_test_sources(self.makefile_test)
-        self.cache_extra_test_sources(self.makefile_inc_test)
+        cache_extra_test_sources(self, self.matmult_test)
+        cache_extra_test_sources(self, self.makefile_test)
+        cache_extra_test_sources(self, self.makefile_inc_test)
         if "+dyninst" in self.spec:
-            self.cache_extra_test_sources(self.dyninst_test)
+            cache_extra_test_sources(self, self.dyninst_test)
         if "+cuda" in self.spec:
-            self.cache_extra_test_sources(self.cuda_test)
+            cache_extra_test_sources(self, self.cuda_test)
         if "+level_zero" in self.spec:
-            self.cache_extra_test_sources(self.level_zero_test)
+            cache_extra_test_sources(self, self.level_zero_test)
         if "+rocm" in self.spec:
-            self.cache_extra_test_sources(self.rocm_test)
+            cache_extra_test_sources(self, self.rocm_test)
         if "+syscall" in self.spec:
-            self.cache_extra_test_sources(self.syscall_test)
+            cache_extra_test_sources(self, self.syscall_test)
         if "+ompt" in self.spec:
-            self.cache_extra_test_sources(self.ompt_test)
+            cache_extra_test_sources(self, self.ompt_test)
         if "+python" in self.spec:
-            self.cache_extra_test_sources(self.python_test)
+            cache_extra_test_sources(self, self.python_test)
 
     def _run_python_test(self, test_name, purpose, work_dir):
         tau_python = which(self.prefix.bin.tau_python)

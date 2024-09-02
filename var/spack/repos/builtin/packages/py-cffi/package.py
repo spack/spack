@@ -16,6 +16,7 @@ class PyCffi(PythonPackage):
 
     license("MIT")
 
+    version("1.16.0", sha256="bcb3ef43e58665bbda2fb198698fcae6776483e0c4a631aa5647806c25e02cc0")
     version("1.15.1", sha256="d400bfb9a37b1351253cb402671cea7e89bdecc294e8016a707f6d1d8ac934f9")
     version("1.15.0", sha256="920f0d66a896c2d99f0adbb391f990a84091179542c205fa53ce5787aff87954")
     version("1.14.6", sha256="c9a875ce9d7fe32887784274dd533c57909b7b1dcadcc128a2ac21331a9765dd")

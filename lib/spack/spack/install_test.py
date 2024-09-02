@@ -757,6 +757,10 @@ def test_process(pkg: Pb, kwargs):
             pkg.tester.status(pkg.spec.name, TestStatus.SKIPPED)
             return
 
+        # Make sure properly named build-time test methods actually run as
+        # stand-alone tests.
+        pkg.run_tests = True
+
         # run test methods from the package and all virtuals it provides
         v_names = virtuals(pkg)
         test_specs = [pkg.spec] + [spack.spec.Spec(v_name) for v_name in sorted(v_names)]

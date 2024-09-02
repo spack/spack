@@ -29,7 +29,7 @@ jobs:
         shell: ${{ matrix.system.shell }}
     steps:
     - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
-    - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
+    - uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3
       with:
         python-version: ${{inputs.python_version}}
     - name: Install Python packages
@@ -44,6 +44,7 @@ jobs:
       run: |
           . share/spack/setup-env.sh
           coverage run $(which spack) audit packages
+          coverage run $(which spack) audit configs
           coverage run $(which spack) -d audit externals
           coverage combine
           coverage xml
@@ -52,12 +53,15 @@ jobs:
       run: |
           . share/spack/setup-env.sh          
           spack -d audit packages
+          spack -d audit configs
           spack -d audit externals
     - name: Package audits (without coverage)
       if: ${{ runner.os == 'Windows' }}
       run: |
           . share/spack/setup-env.sh          
           spack -d audit packages
+          ./share/spack/qa/validate_last_exit.ps1
+          spack -d audit configs
           ./share/spack/qa/validate_last_exit.ps1
           spack -d audit externals
           ./share/spack/qa/validate_last_exit.ps1

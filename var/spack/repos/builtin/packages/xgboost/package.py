@@ -25,6 +25,12 @@ class Xgboost(CMakePackage, CudaPackage):
 
     version("master", branch="master", submodules=True)
     version(
+        "2.1.0", tag="v2.1.0", commit="213ebf7796b757448dfa2cfba532074696fa1524", submodules=True
+    )
+    version(
+        "1.7.6", tag="v1.7.6", commit="36eb41c960483c8b52b44082663c99e6a0de440a", submodules=True
+    )
+    version(
         "1.6.2", tag="v1.6.2", commit="b9934246faa9a25e10a12339685dfbe56d56f70b", submodules=True
     )
     version(
@@ -43,11 +49,23 @@ class Xgboost(CMakePackage, CudaPackage):
     variant("nccl", default=False, description="Build with NCCL to enable distributed GPU support")
     variant("openmp", default=True, description="Build with OpenMP support")
 
-    depends_on("cmake@3.13:", type="build")
-    depends_on("cmake@3.16:", when="platform=darwin", type="build")
-    depends_on("cuda@10:", when="+cuda")
-    # https://github.com/dmlc/xgboost/pull/7379
-    depends_on("cuda@10:11.4", when="@:1.5.0+cuda")
+    with default_args(type="build"):
+        depends_on("cmake@3.16:", when="platform=darwin")  # openmp issues
+        depends_on("cmake@3.13:")
+        depends_on("cmake@3.14:", when="@1.5:")
+        depends_on("cmake@3.18:", when="@2:")
+
+    with when("+cuda"):
+        depends_on("cuda@10:")
+        # https://github.com/dmlc/xgboost/pull/7379
+        depends_on("cuda@:11.4", when="@:1.5.0")
+        # https://github.com/dmlc/xgboost/commit/ca0547bb65966896254a99f7868943d606a18c53
+        depends_on("cuda@:11", when="@:1.6")
+        # thrust 2.3.1 tuple issues
+        depends_on("cuda@:12.3", when="@:1.7")
+        # https://github.com/dmlc/xgboost/issues/10555
+        depends_on("cuda@:12.4", when="@:2.1.0")  # assuming fix is backported
+
     depends_on("nccl", when="+nccl")
     depends_on("llvm-openmp", when="%apple-clang +openmp")
     depends_on("hwloc", when="%clang")

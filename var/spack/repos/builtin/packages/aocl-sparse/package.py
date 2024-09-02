@@ -121,7 +121,7 @@ class AoclSparse(CMakePackage):
                 "-DAOCL_LIBFLAME_INCLUDE_DIR={0}".format(self.spec["amdlibflame"].prefix.include)
             )
 
-        if "@4.2:" in self.spec:
+        if self.spec.satisfies("@4.2:"):
             args.append(f"-DAOCL_UTILS_LIB={self.spec['aocl-utils'].libs}")
             args.append(
                 "-DAOCL_UTILS_INCLUDE_DIR={0}".format(self.spec["aocl-utils"].prefix.include)

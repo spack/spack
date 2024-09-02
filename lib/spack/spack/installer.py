@@ -488,7 +488,6 @@ def _process_binary_cache_tarball(
 
     with timer.measure("install"), spack.util.path.filter_padding():
         binary_distribution.extract_tarball(pkg.spec, download_result, force=False, timer=timer)
-        pkg.windows_establish_runtime_linkage()
 
         if hasattr(pkg, "_post_buildcache_install_hook"):
             pkg._post_buildcache_install_hook()
@@ -1611,9 +1610,7 @@ class PackageInstaller:
 
     def _add_compiler_package_to_config(self, pkg: "spack.package_base.PackageBase") -> None:
         compiler_search_prefix = getattr(pkg, "compiler_search_prefix", pkg.spec.prefix)
-        spack.compilers.add_compilers_to_config(
-            spack.compilers.find_compilers([compiler_search_prefix])
-        )
+        spack.compilers.find_compilers([compiler_search_prefix])
 
     def _install_task(self, task: BuildTask, install_status: InstallStatus) -> None:
         """

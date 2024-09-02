@@ -6,6 +6,7 @@
 import os
 import platform
 import re
+import sys
 from datetime import datetime
 from glob import glob
 
@@ -62,9 +63,10 @@ def create_db_tarball(args):
 
     base = os.path.basename(str(spack.store.STORE.root))
     transform_args = []
+    # Currently --transform and -s are not supported by Windows native tar
     if "GNU" in tar("--version", output=str):
         transform_args = ["--transform", "s/^%s/%s/" % (base, tarball_name)]
-    else:
+    elif sys.platform != "win32":
         transform_args = ["-s", "/^%s/%s/" % (base, tarball_name)]
 
     wd = os.path.dirname(str(spack.store.STORE.root))
@@ -90,7 +92,6 @@ def report(args):
     print("* **Spack:**", get_version())
     print("* **Python:**", platform.python_version())
     print("* **Platform:**", architecture)
-    print("* **Concretizer:**", spack.config.get("config:concretizer"))
 
 
 def debug(parser, args):

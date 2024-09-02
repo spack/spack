@@ -113,7 +113,7 @@ class DarshanUtil(AutotoolsPackage):
     @run_after("install")
     def _copy_test_inputs(self):
         test_inputs = [self.tests_log_path]
-        self.cache_extra_test_sources(test_inputs)
+        cache_extra_test_sources(self, test_inputs)
 
     def test_parser(self):
         """process example log and check counters"""

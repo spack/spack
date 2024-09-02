@@ -16,8 +16,6 @@ from spack.util.executable import which
 
 debug = SpackCommand("debug")
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
-
 
 @pytest.mark.db
 def test_create_db_tarball(tmpdir, database):
@@ -60,4 +58,3 @@ def test_report():
     assert get_version() in out
     assert platform.python_version() in out
     assert str(architecture) in out
-    assert spack.config.get("config:concretizer") in out

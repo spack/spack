@@ -81,14 +81,17 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("kokkos+%s" % backend.lower(), when="~trilinos+%s" % backend.lower())
 
     for arch in CudaPackage.cuda_arch_values:
-        cuda_dep = "+cuda cuda_arch={0}".format(arch)
-        depends_on("kokkos {0}".format(cuda_dep), when=cuda_dep)
+        cuda_dep = f"+cuda cuda_arch={arch}"
+        depends_on(f"kokkos {cuda_dep}", when=f"~trilinos {cuda_dep}")
+        depends_on(f"trilinos {cuda_dep}", when=f"+trilinos {cuda_dep}")
 
     for arch in ROCmPackage.amdgpu_targets:
-        rocm_dep = "+rocm amdgpu_target={0}".format(arch)
-        depends_on("kokkos {0}".format(rocm_dep), when=rocm_dep)
+        rocm_dep = f"+rocm amdgpu_target={arch}"
+        depends_on(f"kokkos {rocm_dep}", when=f"~trilinos {rocm_dep}")
+        depends_on(f"trilinos {rocm_dep}", when=f"+trilinos {rocm_dep}")
 
     conflicts("+cuda", when="cuda_arch=none")
+    conflicts("^kokkos", when="+trilinos")
     depends_on("kokkos+cuda_lambda", when="~trilinos+cuda")
 
     # Trilinos/Kokkos
@@ -104,21 +107,23 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("trilinos@14.4.0:", when="@1.6:+trilinos")
     patch("trilinos14.0-kokkos-major-version.patch", when="@1.4+trilinos ^trilinos@14.0.0")
     conflicts("~serial", when="+trilinos")
-    conflicts("+cuda", when="+trilinos")
 
     def cmake_args(self):
         spec = self.spec
 
+        if "~trilinos" in spec:
+            kokkos_spec = spec["kokkos"]
+        else:
+            kokkos_spec = spec["trilinos"]
+
         options = [
-            "-DKokkos_ROOT=%s"
-            % (spec["kokkos"].prefix if "~trilinos" in spec else spec["trilinos"].prefix),
+            f"-DKokkos_ROOT={kokkos_spec.prefix}",
             self.define_from_variant("ARBORX_ENABLE_MPI", "mpi"),
         ]
 
-        if "+cuda" in spec:
-            # Only Kokkos allows '+cuda' for now
-            options.append("-DCMAKE_CXX_COMPILER=%s" % spec["kokkos"].kokkos_cxx)
-        if "+rocm" in spec:
+        if spec.satisfies("+cuda"):
+            options.append(f"-DCMAKE_CXX_COMPILER={kokkos_spec.kokkos_cxx}")
+        if spec.satisfies("+rocm"):
             options.append("-DCMAKE_CXX_COMPILER=%s" % spec["hip"].hipcc)
 
         return options
@@ -129,7 +134,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     def setup_build_tests(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([self.examples_src_dir])
+        cache_extra_test_sources(self, [self.examples_src_dir])
 
     @property
     def cached_tests_work_dir(self):
@@ -152,7 +157,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
             ),
             self.define("ArborX_ROOT", self.spec["arborx".prefix]),
         ]
-        if "+mpi" in self.spec:
+        if self.spec.satisfies("+mpi"):
             cmake_args.append(self.define("MPI_HOME", self.spec["mpi"].prefix))
         cmake = which(self.spec["cmake"].prefix.bin.cmake)
         make = which("make")
