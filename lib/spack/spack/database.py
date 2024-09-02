@@ -1006,7 +1006,7 @@ class Database:
                 # We already took care of this spec using spec file from its prefix.
                 if entry.spec in processed_specs:
                     tty.debug(
-                        f"SKIPPING RECONSTRUCTION FROM OLD DB: {entry.spec}"
+                        f"Skipping reconstruction from old db: {entry.spec}"
                         " [already reconstructed from spec file]"
                     )
                     continue
@@ -1014,7 +1014,7 @@ class Database:
                 # If we arrived here it very likely means that we have external specs that are not
                 # dependencies of other specs. This may be the case for externally installed
                 # compilers or externally installed applications.
-                tty.debug(f"RECONSTRUCTING FROM OLD DB: {entry.spec}")
+                tty.debug(f"Reconstructing from old db: {entry.spec}")
                 try:
                     self._add(
                         spec=entry.spec,
