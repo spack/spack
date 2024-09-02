@@ -863,7 +863,7 @@ named list ``compilers`` is ``['%gcc', '%clang', '%intel']`` on
    spack:
      definitions:
        - compilers: ['%gcc', '%clang']
-       - when: arch.satisfies('x86_64:')
+       - when: arch.satisfies('target=x86_64:')
          compilers: ['%intel']
 
 .. note::
