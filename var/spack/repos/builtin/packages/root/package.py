@@ -426,6 +426,10 @@ class Root(CMakePackage):
     # See https://github.com/root-project/root/issues/11128
     conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in root 6.26.08")
 
+    # See https://github.com/spack/spack/pull/44826
+    if sys.platform == "darwin" and macos_version() == Version("12"):
+        conflicts("@:6.27", when="+python", msg="macOS 12 python support for 6.28: only")
+
     # See https://github.com/root-project/root/issues/11714
     if sys.platform == "darwin" and macos_version() >= Version("13"):
         conflicts("@:6.26.09", msg="macOS 13 support was added in root 6.26.10")
