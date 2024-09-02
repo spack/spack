@@ -2675,10 +2675,7 @@ class TestConcretizeSeparately:
         with pytest.raises((spack.error.UnsatisfiableSpecError, vt.InvalidVariantForSpecError)):
             _ = Spec("py-shapely ^py-numpy+rundep").concretized()
 
-    @pytest.mark.parametrize("strategy", [
-        "minimal",
-        pytest.param("full", marks=pytest.mark.xfail(reason="Broken, needs to be fixed")),
-    ])
+    @pytest.mark.parametrize("strategy", ["minimal", "full"])
     def test_two_cmake_with_dep_gmake(self, strategy):
         """Tests that we can concretize separate build dependencies, when we
         are dealing with nested build tools.
@@ -2707,10 +2704,7 @@ class TestConcretizeSeparately:
         gmake = seemake[0].dependencies(name="gmake")
         assert len(gmake) == 1 and gmake[0].satisfies("@=3.0")
 
-    @pytest.mark.parametrize(
-        "strategy",
-        [pytest.param("full", marks=pytest.mark.xfail(reason="Broken, needs to be fixed"))],
-    )
+    @pytest.mark.parametrize("strategy", ["full"])
     def test_two_cmake_with_run_dep(self, strategy):
         """Tests that we can concretize separate build dependencies with conflicting
         (non-build-tool) dependencies in the build-tool stack.
@@ -2739,10 +2733,7 @@ class TestConcretizeSeparately:
         curl = seemake[0].dependencies(name="curl")
         assert len(curl) == 1 and curl[0].satisfies("@=3.0")
 
-    @pytest.mark.parametrize(
-        "strategy",
-        [pytest.param("full", marks=pytest.mark.xfail(reason="Broken, needs to be fixed"))],
-    )
+    @pytest.mark.parametrize("strategy", ["full"])
     def test_two_cmake_with_transient_run_dep(self, strategy):
         """Tests that we can concretize separate build dependencies with conflicting
         (non-build-tool) dependencies of nested build dependencies in the build-tool stack.
