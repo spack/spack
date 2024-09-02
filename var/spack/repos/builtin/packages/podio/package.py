@@ -88,6 +88,7 @@ class Podio(CMakePackage):
     )
 
     depends_on("root@6.08.06: cxxstd=17", when="cxxstd=17")
+    depends_on("root@6.14:", when="+datasource")
     depends_on("root@6.28.04: +root7", when="+rntuple")
     depends_on("root@6.28:", when="@0.17:")
     for cxxstd in ("17", "20"):
