@@ -180,13 +180,17 @@ class RBuilder(GenericBuilder):
                 # Spack dependency must satisfy R dependency
                 if not merged_dependencies[dep].spec.satisfies(deps[dep].spec):
                     missing_deps.append(
-                        f'    depends_on("{deps[dep].spec}", type=("build", "run"), when="@{self.pkg.version}:")'
+                        f'    depends_on("{deps[dep].spec}",'
+                        + f' type=("build", "run"),'
+                        + f' when="@{self.pkg.version}:")'
                     )
                 # Remove from dict
                 del merged_dependencies[dep]
             else:
                 missing_deps.append(
-                    f'    depends_on("{deps[dep].spec}", type=("build", "run"), when="@{self.pkg.version}:")'
+                    f'    depends_on("{deps[dep].spec}",'
+                    + f' type=("build", "run"),'
+                    + f' when="@{self.pkg.version}:")'
                 )
         for dep in merged_dependencies:
             if re.match("^r-.*", dep):
