@@ -44,6 +44,7 @@ class RBuilder(GenericBuilder):
         """Arguments to pass to install via ``--configure-vars``."""
         return []
 
+    @staticmethod
     def parse_description(data: str) -> Generator:
         """Parses CRAN package metadata from
         https://cran.r-project.org/src/contrib/PACKAGES
@@ -181,7 +182,7 @@ class RBuilder(GenericBuilder):
                 if not merged_dependencies[dep].spec.satisfies(deps[dep].spec):
                     missing_deps.append(
                         f'    depends_on("{deps[dep].spec}",'
-                        + f' type=("build", "run"),'
+                        + ' type=("build", "run"),'
                         + f' when="@{self.pkg.version}:")'
                     )
                 # Remove from dict
@@ -189,7 +190,7 @@ class RBuilder(GenericBuilder):
             else:
                 missing_deps.append(
                     f'    depends_on("{deps[dep].spec}",'
-                    + f' type=("build", "run"),'
+                    + ' type=("build", "run"),'
                     + f' when="@{self.pkg.version}:")'
                 )
         for dep in merged_dependencies:
