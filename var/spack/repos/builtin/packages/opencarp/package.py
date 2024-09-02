@@ -19,11 +19,14 @@ class Opencarp(CMakePackage):
     maintainers("MarieHouillon")
 
     version(
-        "15.0",
-        commit="2271a3cccd7137f1e28c043c10adbd80480f1462",
+        "16.0",
+        commit="295055b6a3859709730f62fc8d4fe0e87c4e20b9",
         submodules=False,
         no_cache=True,
-        preferred=True,
+        preferred=True
+    )
+    version(
+        "15.0", commit="2271a3cccd7137f1e28c043c10adbd80480f1462", submodules=False, no_cache=True
     )
     version(
         "13.0", commit="e1e0deca7eddcfd210835f54430361c85a97a5a4", submodules=False, no_cache=True
@@ -49,7 +52,6 @@ class Opencarp(CMakePackage):
     version(
         "7.0", commit="78da91952738b45760bcbc34610814a83c8c6299", submodules=False, no_cache=True
     )
-    version("16.0", commit="295055b6", submodules=False, no_cache=True, preferred=True)
     version("master", branch="master", submodules=False, no_cache=True)
 
     depends_on("c", type="build")  # generated
