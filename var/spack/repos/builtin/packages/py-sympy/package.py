@@ -38,4 +38,5 @@ class PySympy(PythonPackage):
 
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
-    depends_on("py-mpmath@0.19:", when="@1.0:", type=("build", "run"))
+    depends_on("py-mpmath@0.19:", when="@1.0:1.12", type=("build", "run"))
+    depends_on("py-mpmath@1.1.0:1.3", when="@1.13.0:", type=("build", "run"))
