@@ -172,6 +172,12 @@ class Root(CMakePackage):
             sha256="e68be5fe7b1ec873da134bd39c5c72730c4ca06d51b52eb436ae44fe81cd472d",
             when="@:6.30.04 +x",
         )
+        # Fix rpath for loading cppyy
+        patch(
+            "https://github.com/root-project/root/pull/15925.diff?full_index=1",
+            sha256="1937290a4d54cd2e3e8a8d23d93b8dedaca9ed8dcfdcfa2f0d16629ff53fb3b7",
+            when="@6.28: +python",
+        )
 
     # ###################### Variants ##########################
     # See README.md for specific notes about what ROOT configuration
@@ -442,6 +448,10 @@ class Root(CMakePackage):
 
     # See https://github.com/root-project/root/issues/11128
     conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in root 6.26.08")
+
+    # See https://github.com/spack/spack/pull/44826
+    if sys.platform == "darwin" and macos_version() == Version("12"):
+        conflicts("@:6.27", when="+python", msg="macOS 12 python support for 6.28: only")
 
     # See https://github.com/root-project/root/issues/11714
     if sys.platform == "darwin" and macos_version() >= Version("13"):
