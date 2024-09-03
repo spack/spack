@@ -1678,6 +1678,10 @@ class SpackSolverSetup:
             if pkg_name not in spack.repo.PATH:
                 continue
 
+            # This package is not among possible dependencies
+            if pkg_name not in self.pkgs:
+                continue
+
             # Check if the external package is buildable. If it is
             # not then "external(<pkg>)" is a fact, unless we can
             # reuse an already installed spec.
