@@ -471,8 +471,9 @@ class RocmOpenmpExtras(Package):
             os.unlink(os.path.join(bin_dir, "flang1"))
         if os.path.islink((os.path.join(bin_dir, "flang2"))):
             os.unlink(os.path.join(bin_dir, "flang2"))
-        if os.path.islink((os.path.join(bin_dir, "flang-legacy"))):
-            os.unlink(os.path.join(bin_dir, "flang-legacy"))
+        if self.spec.version >= Version("6.1.0"):
+            if os.path.islink((os.path.join(bin_dir, "flang-legacy"))):
+                os.unlink(os.path.join(bin_dir, "flang-legacy"))
         if os.path.islink((os.path.join(lib_dir, "libdevice"))):
             os.unlink(os.path.join(lib_dir, "libdevice"))
         if os.path.islink((os.path.join(llvm_prefix, "lib-debug"))):
@@ -480,9 +481,11 @@ class RocmOpenmpExtras(Package):
 
         os.symlink(os.path.join(omp_bin_dir, "flang1"), os.path.join(bin_dir, "flang1"))
         os.symlink(os.path.join(omp_bin_dir, "flang2"), os.path.join(bin_dir, "flang2"))
-        os.symlink(
-            os.path.join(omp_bin_dir, "flang-legacy"), os.path.join(bin_dir, "flang-legacy")
-        )
+
+        if self.spec.version >= Version("6.1.0"):
+            os.symlink(
+                os.path.join(omp_bin_dir, "flang-legacy"), os.path.join(bin_dir, "flang-legacy")
+            )
         os.symlink(os.path.join(omp_lib_dir, "libdevice"), os.path.join(lib_dir, "libdevice"))
         os.symlink(
             os.path.join(openmp_extras_prefix, "lib-debug"), os.path.join(llvm_prefix, "lib-debug")
@@ -627,13 +630,11 @@ class RocmOpenmpExtras(Package):
         build_order = [
             "aomp-extras",
             "openmp",
-            "flang-legacy-llvm",
-            "flang-legacy",
-            "pgmath",
-            "flang",
-            "flang-runtime",
         ]
+        if self.spec.version >= Version("6.1.0"):
+            build_order += ["flang-legacy-llvm", "flang-legacy"]
 
+        build_order += ["pgmath", "flang", "flang-runtime"]
         # Override standard CMAKE_BUILD_TYPE
         for arg in std_cmake_args:
             found = re.search("CMAKE_BUILD_TYPE", arg)
