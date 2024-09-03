@@ -668,14 +668,6 @@ class Database:
 
         self.upstream_dbs = list(upstream_dbs) if upstream_dbs else []
 
-        # whether there was an error at the start of a read transaction
-        self._error = None
-
-        # For testing: if this is true, an exception is thrown when missing
-        # dependencies are detected (rather than just printing a warning
-        # message)
-        self._fail_when_missing_deps = False
-
         self._write_transaction_impl = lk.WriteTransaction
         self._read_transaction_impl = lk.ReadTransaction
 
@@ -778,7 +770,13 @@ class Database:
         with self.read_transaction():
             return self._data.get(hash_key, None)
 
-    def _assign_dependencies(self, spec_reader, hash_key, installs, data):
+    def _assign_dependencies(
+        self,
+        spec_reader: Type["spack.spec.SpecfileReaderBase"],
+        hash_key: str,
+        installs: dict,
+        data: Dict[str, InstallRecord],
+    ):
         # Add dependencies from other records in the install DB to
         # form a full spec.
         spec = data[hash_key].spec
@@ -791,26 +789,20 @@ class Database:
             for dname, dhash, dtypes, _, virtuals in spec_reader.read_specfile_dep_specs(
                 yaml_deps
             ):
-                # It is important that we always check upstream installations
-                # in the same order, and that we always check the local
-                # installation first: if a downstream Spack installs a package
-                # then dependents in that installation could be using it.
-                # If a hash is installed locally and upstream, there isn't
-                # enough information to determine which one a local package
-                # depends on, so the convention ensures that this isn't an
-                # issue.
-                upstream, record = self.query_by_spec_hash(dhash, data=data)
+                # It is important that we always check upstream installations in the same order,
+                # and that we always check the local installation first: if a downstream Spack
+                # installs a package then dependents in that installation could be using it. If a
+                # hash is installed locally and upstream, there isn't enough information to
+                # determine which one a local package depends on, so the convention ensures that
+                # this isn't an issue.
+                _, record = self.query_by_spec_hash(dhash, data=data)
                 child = record.spec if record else None
 
                 if not child:
-                    msg = "Missing dependency not in database: " "%s needs %s-%s" % (
-                        spec.cformat("{name}{/hash:7}"),
-                        dname,
-                        dhash[:7],
+                    tty.warn(
+                        f"Missing dependency not in database: "
+                        f"{spec.cformat('{name}{/hash:7}')} needs {dname}-{dhash[:7]}"
                     )
-                    if self._fail_when_missing_deps:
-                        raise MissingDependenciesError(msg)
-                    tty.warn(msg)
                     continue
 
                 spec._add_dependency(child, depflag=dt.canonicalize(dtypes), virtuals=virtuals)
@@ -877,8 +869,8 @@ class Database:
         # (i.e., its specs are a true Merkle DAG, unlike most specs.)
 
         # Pass 1: Iterate through database and build specs w/o dependencies
-        data = {}
-        installed_prefixes = set()
+        data: Dict[str, InstallRecord] = {}
+        installed_prefixes: Set[str] = set()
         for hash_key, rec in installs.items():
             try:
                 # This constructs a spec DAG from the list of all installs
@@ -923,6 +915,8 @@ class Database:
         if self.is_upstream:
             raise UpstreamDatabaseLockingError("Cannot reindex an upstream database")
 
+        error: Optional[CorruptDatabaseError] = None
+
         # Special transaction to avoid recursive reindex calls and to
         # ignore errors if we need to rebuild a corrupt database.
         def _read_suppress_error():
@@ -930,7 +924,8 @@ class Database:
                 if os.path.isfile(self._index_path):
                     self._read_from_file(self._index_path)
             except CorruptDatabaseError as e:
-                self._error = e
+                nonlocal error
+                error = e
                 self._data = {}
                 self._installed_prefixes = set()
 
@@ -939,9 +934,8 @@ class Database:
         )
 
         with transaction:
-            if self._error:
-                tty.warn("Spack database was corrupt. Will rebuild. Error was:", str(self._error))
-                self._error = None
+            if error is not None:
+                tty.warn(f"Spack database was corrupt. Will rebuild. Error was: {error}")
 
             old_data = self._data
             old_installed_prefixes = self._installed_prefixes
@@ -1405,17 +1399,13 @@ class Database:
 
             for relative in to_add:
                 hash_key = relative.dag_hash()
-                upstream, record = self.query_by_spec_hash(hash_key)
+                _, record = self.query_by_spec_hash(hash_key)
                 if not record:
-                    reltype = "Dependent" if direction == "parents" else "Dependency"
-                    msg = "Inconsistent state! %s %s of %s not in DB" % (
-                        reltype,
-                        hash_key,
-                        spec.dag_hash(),
+                    tty.warn(
+                        f"Inconsistent state: "
+                        f"{'dependent' if direction == 'parents' else 'dependency'} {hash_key} of "
+                        f"{spec.dag_hash()} not in DB"
                     )
-                    if self._fail_when_missing_deps:
-                        raise MissingDependenciesError(msg)
-                    tty.warn(msg)
                     continue
 
                 if not record.installed:

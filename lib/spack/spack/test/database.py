@@ -148,8 +148,7 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
         downstream_db._check_ref_counts()
 
 
-@pytest.mark.usefixtures("config")
-def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir):
+def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir, capsys, config):
     upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout = (
         upstream_and_downstream_db
     )
@@ -159,21 +158,24 @@ def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir):
     builder.add_package("y", dependencies=[("z", None, None)])
 
     with spack.repo.use_repositories(builder):
-        spec = spack.spec.Spec("y").concretized()
+        y = spack.spec.Spec("y").concretized()
+        z = y["z"]
 
-        upstream_write_db.add(spec["z"], upstream_layout)
+        # add dependency to upstream, dependents to downstream
+        upstream_write_db.add(z, upstream_layout)
+        upstream_db._read()
+        downstream_db.add(y, downstream_layout)
+
+        # remove the dependency from the upstream DB
+        upstream_write_db.remove(z)
         upstream_db._read()
 
-        new_spec = spack.spec.Spec("y").concretized()
-        downstream_db.add(new_spec, downstream_layout)
-
-        upstream_write_db.remove(new_spec["z"])
-        upstream_db._read()
-
-        new_downstream = spack.database.Database(downstream_db.root, upstream_dbs=[upstream_db])
-        new_downstream._fail_when_missing_deps = True
-        with pytest.raises(spack.database.MissingDependenciesError):
-            new_downstream._read()
+        # then rereading the downstream DB should warn about the missing dep
+        downstream_db._read_from_file(downstream_db._index_path)
+        assert (
+            f"Missing dependency not in database: y/{y.dag_hash(7)} needs z"
+            in capsys.readouterr().err
+        )
 
 
 @pytest.mark.usefixtures("config")
@@ -226,7 +228,7 @@ def test_cannot_write_upstream(tmpdir, gen_mock_layout):
     with upstream_db_independent.write_transaction():
         pass
 
-    upstream_dbs = spack.store._construct_upstream_dbs_from_install_roots([roots[1]], _test=True)
+    upstream_dbs = spack.store._construct_upstream_dbs_from_install_roots([roots[1]])
 
     with spack.repo.use_repositories(builder.root):
         spec = spack.spec.Spec("x")
@@ -258,7 +260,7 @@ def test_recursive_upstream_dbs(tmpdir, gen_mock_layout):
         db_a.add(spec["x"], layouts[0])
 
         upstream_dbs_from_scratch = spack.store._construct_upstream_dbs_from_install_roots(
-            [roots[1], roots[2]], _test=True
+            [roots[1], roots[2]]
         )
         db_a_from_scratch = spack.database.Database(
             roots[0], upstream_dbs=upstream_dbs_from_scratch
