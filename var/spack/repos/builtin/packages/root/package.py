@@ -336,6 +336,7 @@ class Root(CMakePackage):
     depends_on("gl2ps", when="+opengl")
     depends_on("gl", when="+opengl")
     depends_on("glu", when="+opengl")
+    depends_on("libglx", when="+opengl+x")
 
     # Qt4
     depends_on("qt@:4", when="+qt4")
@@ -419,7 +420,9 @@ class Root(CMakePackage):
     conflicts("target=ppc64le:", when="@:6.24")
 
     # Incompatible variants
-    if sys.platform != "darwin":
+    if sys.platform == "darwin":
+        conflicts("+opengl", when="~x ~aqua", msg="root+opengl requires X or Aqua")
+    else:
         conflicts("+opengl", when="~x", msg="root+opengl requires X")
     conflicts("+math", when="~gsl", msg="root+math requires GSL")
     conflicts("+tmva", when="~gsl", msg="root+tmva requires GSL")
@@ -607,7 +610,7 @@ class Root(CMakePackage):
             define("builtin_freetype", False),
             define("builtin_ftgl", False),
             define("builtin_gl2ps", False),
-            define("builtin_glew", False),
+            define("builtin_glew", self.spec.satisfies("platform=darwin")),
             define("builtin_gsl", False),
             define("builtin_llvm", True),
             define("builtin_lz4", self.spec.satisfies("@6.12.02:6.12")),
