@@ -652,7 +652,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
 
     @classproperty
     def executables(cls):
-        return super().executables + ["^ld.lld(-[\d][\d]*)?$", "^lldb(-[\d][\d]*)?$"]
+        return super().executables + [r"^ld.lld(-[\d][\d]*)?$", r"^lldb(-[\d][\d]*)?$"]
 
     @classmethod
     def determine_version(cls, exe):
