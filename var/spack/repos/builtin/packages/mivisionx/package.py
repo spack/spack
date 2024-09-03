@@ -61,7 +61,7 @@ class Mivisionx(CMakePackage):
     conflicts("+asan", when="os=centos8")
 
     patch("0001-add-half-include-path.patch", when="@5.5")
-    patch("0001-add-half-include-path-5.6.patch", when="@5.6:")
+    patch("0001-add-half-include-path-5.6.patch", when="@5.6:6.1")
     patch("0002-add-half-include-path-for-tests.patch", when="@5.5:6.0 +add_tests")
     patch("0002-add-half-include-path-for-tests-6.1.0.patch", when="@6.1.0: +add_tests")
 
@@ -102,7 +102,7 @@ class Mivisionx(CMakePackage):
                 "amd_openvx_extensions/amd_nn/nn_hip/CMakeLists.txt",
                 string=True,
             )
-        if self.spec.satisfies("@5.5.0: + hip"):
+        if self.spec.satisfies("@5.5.0:6.1 + hip"):
             filter_file(
                 r"${ROCM_PATH}/llvm/bin/clang++",
                 "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),

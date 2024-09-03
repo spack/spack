@@ -52,7 +52,7 @@ class Hipblaslt(CMakePackage):
     patch("001_Set_LLVM_Paths_And_Add_Includes.patch", when="@6.0")
     # Below patch sets the proper path for clang++ and clang-offload-blunder.
     # Also adds hipblas and msgpack include directories for 6.1.0 release.
-    patch("0001-Set-LLVM_Path-Add-Hiblas-Include-to-CmakeLists-6.1.Patch", when="@6.1")
+    patch("0001-Set-LLVM_Path-Add-Hiblas-Include-to-CmakeLists-6.1.Patch", when="@6.1:6.2")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
