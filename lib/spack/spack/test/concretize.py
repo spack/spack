@@ -552,6 +552,20 @@ class TestConcretize:
                 "ascent++shared +adios2 ^adios2~shared",
                 [("ascent", "+shared"), ("adios2", "~shared"), ("bzip2", "+shared")],
             ),
+            (
+                "ascent++shared +adios2 ^bzip2~shared",
+                [("ascent", "+shared"), ("adios2", "+shared"), ("bzip2", "~shared")],
+            ),
+            # Propagate from a node that is not the root node
+            (
+                "ascent +adios2 ^adios2~~shared",
+                [("ascent", "+shared"), ("adios2", "~shared"), ("bzip2", "~shared")]
+            ),
+            # Propagate, but lower nnodes use the other valu explicitly
+            (
+                "ascennt~~shared +adios2 ^adios2+shared ^bzip2+shared",
+                [("ascent", "~shared"), ("adios2", "+shared"), ("bzip2", "+shared")]
+            ),
         ],
     )
     def test_concretize_propagate_disabled_variant(self, spec_str, expected_propagation):
@@ -559,14 +573,6 @@ class TestConcretize:
         spec = Spec(spec_str).concretized()
         for key, expected_satisfies in expected_propagation:
             spec[key].satisfies(expected_satisfies)
-
-    def test_concretize_propagated_variant_is_not_passed_to_dependent(self):
-        """Test a package variant value was passed from its parent."""
-        spec = Spec("ascent~~shared +adios2 ^adios2+shared")
-        spec.concretize()
-
-        assert spec.satisfies("^adios2+shared")
-        assert spec.satisfies("^bzip2~shared")
 
     def test_concretize_propagate_specified_variant(self):
         """Test that only the specified variant is propagated to the dependencies"""
@@ -576,10 +582,6 @@ class TestConcretize:
         assert spec.satisfies("~foo") and spec.satisfies("^dependency-foo-bar~foo")
         assert spec.satisfies("+bar") and not spec.satisfies("^dependency-foo-bar+bar")
 
-
-    @pytest.mark.only_clingo(
-        "Optional compiler propagation isn't deprecated for original concretizer"
-    )
     def test_concretize_propagate_one_variant(self):
         """Test that you can specify to propagate one variant and not all"""
         spec = Spec("parent-foo-bar ++bar ~foo")
@@ -588,7 +590,6 @@ class TestConcretize:
         assert spec.satisfies("~foo") and not spec.satisfies("^dependency-foo-bar~foo")
         assert spec.satisfies("+bar") and spec.satisfies("^dependency-foo-bar+bar")
 
-    @pytest.mark.only_clingo("Original concretizer is allowed to forego variant propagation")
     def test_concretize_propagate_multivalue_variant(self):
         """Test that multivalue variants are propagating the specified value(s)
         to their dependecies. The dependencies should not have the default value"""
@@ -600,9 +601,6 @@ class TestConcretize:
         assert not spec.satisfies("^pkg-a foo=bar")
         assert not spec.satisfies("^pkg-b foo=bar")
 
-    @pytest.mark.only_clingo(
-        "Optional compiler propagation isn't deprecated for original concretizer"
-    )
     def test_concretize_propagate_variant_not_in_source(self):
         """Test that variant is still propagated even if the source pkg
         doesn't have the variant"""
@@ -614,9 +612,6 @@ class TestConcretize:
         assert not spec.satisfies("callpath+debug")
         assert not spec.satisfies("^dyninst+debug")
 
-    @pytest.mark.only_clingo(
-        "Optional compiler propagation isn't deprecated for original concretizer"
-    )
     def test_concretize_propagate_variant_not_in_source_or_dependencies(self):
         """Test propagating a variant that is not in the source package
         or in any of the dependents fails"""
@@ -626,9 +621,6 @@ class TestConcretize:
 
         # raises some kind of error
 
-    @pytest.mark.only_clingo(
-        "Optional compiler propagation isn't deprecated for original concretizer"
-    )
     def test_concretize_propagate_variant_in_source_not_dependencies(self):
         """Does a thing"""
 

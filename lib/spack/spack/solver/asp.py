@@ -519,7 +519,7 @@ class Result:
                 node = SpecBuilder.make_node(pkg=providers[0])
             candidate = answer.get(node)
 
-            if candidate and candidate.satisfies(input_spec):
+            if candidate and candidate.satisfies(input_spec):   # Rikki: if input_spec is not propagating
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
             else:
@@ -1878,27 +1878,24 @@ class SpackSolverSetup:
                 if value == "*":
                     continue
 
+                pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
                 # validate variant value only if spec not concrete
                 if not spec.concrete:
                     reserved_names = spack.directives.reserved_names
                     if not spec.virtual and vname not in reserved_names:
-                        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
-                        if variant.propagate and vname not in pkg_cls.variants:
-                            clauses.append(
-                                f.propagate(spec.name, vname, value, spec.name)
-                            )
-                            continue
                         try:
                             variant_def, _ = pkg_cls.variants[vname]
                         except KeyError:
-                            msg = 'variant "{0}" not found in package "{1}"'
-                            raise RuntimeError(msg.format(vname, spec.name))
+                            if not variant.propagate:
+                                msg = 'variant "{0}" not found in package "{1}"'
+                                raise RuntimeError(msg.format(vname, spec.name))
                         else:
                             variant_def.validate_or_raise(
                                 variant, spack.repo.PATH.get_pkg_class(spec.name)
                             )
 
-                clauses.append(f.variant_value(spec.name, vname, value))
+                if vname in pkg_cls.variants:
+                    clauses.append(f.variant_value(spec.name, vname, value))
                 if variant.propagate:
                     clauses.append(f.propagate(spec.name, fn.variant_value(vname, value)))
 

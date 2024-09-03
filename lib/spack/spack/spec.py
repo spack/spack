@@ -3343,6 +3343,8 @@ class Spec:
         if not self.variants.satisfies(other.variants):
             return False
 
+        # Rikki: Check the deps has variant if propagating
+
         if self.architecture and other.architecture:
             if not self.architecture.satisfies(other.architecture):
                 return False
