@@ -601,6 +601,22 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         multi=False,
     )
     variant(
+        "fft",
+        default="fftw3",
+        when="+kspace",
+        description="FFT library for KSPACE package",
+        values=("kiss", "fftw3", "mkl"),
+        multi=False,
+    )
+    variant(
+        "fft_kokkos",
+        default="fftw3",
+        when="@20240417: +kspace+kokkos",
+        description="FFT library for Kokkos-enabled KSPACE package",
+        values=("kiss", "fftw3", "mkl", "hipfft", "cufft"),
+        multi=False,
+    )
+    variant(
         "gpu_precision",
         default="mixed",
         when="~kokkos",
@@ -613,8 +629,11 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("cmake@3.16:", when="@20231121:")
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+mpiio")
-    depends_on("fftw-api@3", when="+kspace")
-    depends_on("hipfft", when="+kspace+kokkos+rocm")
+    depends_on("fftw-api@3", when="+kspace fft=fftw3")
+    depends_on("mkl", when="+kspace fft=mkl")
+    depends_on("hipfft", when="+kokkos+kspace+rocm fft_kokkos=hipfft")
+    depends_on("fftw-api@3", when="+kokkos+kspace fft_kokkos=fftw3")
+    depends_on("mkl", when="+kokkos+kspace fft_kokkos=mkl")
     depends_on("voropp+pic", when="+voronoi")
     depends_on("netcdf-c+mpi", when="+user-netcdf")
     depends_on("netcdf-c+mpi", when="+netcdf")
@@ -817,6 +836,10 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
                 args.append(self.define_from_variant("HIP_ARCH", "amdgpu_target"))
             else:
                 args.append(self.define("PKG_GPU", False))
+        else:
+            args.append(self.define("EXTERNAL_KOKKOS", True))
+            if spec.satisfies("@20240207: +kokkos+kspace"):
+                args.append(self.define_from_variant("FFT_KOKKOS", "fft_kokkos"))
 
         if spec.satisfies("@20180629:+lib"):
             args.append(self.define("BUILD_LIB", True))
@@ -824,15 +847,20 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         if spec.satisfies("%aocc"):
             if spec.satisfies("+intel"):
                 cxx_flags = (
-                    "-Ofast -fno-math-errno -fno-unroll-loops "
+                    "-O3 -fno-math-errno -fno-unroll-loops "
                     "-fveclib=AMDLIBM -muse-unaligned-vector-move"
                 )
+                if spec.satisfies("%aocc@4.1:"):
+                    cxx_flags += (
+                        " -mllvm -force-gather-overhead-cost=50"
+                        " -mllvm -enable-masked-gather-sequence=false"
+                    )
                 # add -fopenmp-simd if OpenMP not already turned on
                 if spec.satisfies("~openmp"):
                     cxx_flags += " -fopenmp-simd"
                 cxx_flags += " -DLMP_SIMD_COMPILER -DUSE_OMP_SIMD -DLMP_INTEL_USELRT"
             else:
-                cxx_flags = "-Ofast -mfma -fvectorize -funroll-loops"
+                cxx_flags = "-O3 -mfma -fvectorize -funroll-loops"
             args.append(self.define("CMAKE_CXX_FLAGS_RELEASE", cxx_flags))
             args.append(self.define("CMAKE_CXX_FLAGS_RELWITHDEBINFO", cxx_flags))
 
@@ -851,15 +879,9 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
                 opt = "{0}_{1}".format(pkg_prefix, pkg.replace("-package", "").upper())
                 args.append(self.define(opt, "+{0}".format(pkg) in spec))
 
-        if "+kspace" in spec:
-            # If FFTW3 is selected, then CMake will try to detect, if threaded
-            # FFTW libraries are available and enable them by default.
-            if "^fftw" in spec or "^cray-fftw" in spec or "^amdfftw" in spec:
-                args.append(self.define("FFT", "FFTW3"))
-            elif spec["fftw-api"].name in INTEL_MATH_LIBRARIES:
-                args.append(self.define("FFT", "MKL"))
-            elif "^armpl-gcc" in spec or "^acfl" in spec:
-                args.append(self.define("FFT", "FFTW3"))
+        if spec.satisfies("+kspace"):
+            args.append(self.define_from_variant("FFT", "fft"))
+            if spec.satisfies("fft=fftw3 ^armpl-gcc") or spec.satisfies("fft=fftw3 ^acfl"):
                 args.append(self.define("FFTW3_LIBRARY", self.spec["fftw-api"].libs[0]))
                 args.append(
                     self.define("FFTW3_INCLUDE_DIR", self.spec["fftw-api"].headers.directories[0])
@@ -869,8 +891,6 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             # for transposing 3d FFT data.
             args.append(self.define("FFT_SINGLE", spec.satisfies("fftw_precision=single")))
 
-        if "+kokkos" in spec:
-            args.append(self.define("EXTERNAL_KOKKOS", True))
         if "+user-adios" in spec or "+adios" in spec:
             args.append(self.define("ADIOS2_DIR", self.spec["adios2"].prefix))
         if "+user-plumed" in spec or "+plumed" in spec:

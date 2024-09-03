@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import inspect
 from typing import Optional, Tuple
 
 import llnl.util.lang as lang
@@ -51,7 +50,7 @@ class RBuilder(GenericBuilder):
 
         args.extend(["--library={0}".format(self.pkg.module.r_lib_dir), self.stage.source_path])
 
-        inspect.getmodule(self.pkg).R(*args)
+        pkg.module.R(*args)
 
 
 class RPackage(Package):

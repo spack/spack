@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections.abc
-import inspect
 import os
 import pathlib
 import platform
@@ -107,6 +106,11 @@ def _conditional_cmake_defaults(pkg: spack.package_base.PackageBase, args: List[
     # Export a compilation database if supported.
     if _supports_compilation_databases(pkg):
         args.append(CMakeBuilder.define("CMAKE_EXPORT_COMPILE_COMMANDS", True))
+
+    # Enable MACOSX_RPATH by default when cmake_minimum_required < 3
+    # https://cmake.org/cmake/help/latest/policy/CMP0042.html
+    if pkg.spec.satisfies("platform=darwin") and cmake.satisfies("@3:"):
+        args.append(CMakeBuilder.define("CMAKE_POLICY_DEFAULT_CMP0042", "NEW"))
 
 
 def generator(*names: str, default: Optional[str] = None):
@@ -539,24 +543,24 @@ class CMakeBuilder(BaseBuilder):
         options += self.cmake_args()
         options.append(os.path.abspath(self.root_cmakelists_dir))
         with fs.working_dir(self.build_directory, create=True):
-            inspect.getmodule(self.pkg).cmake(*options)
+            pkg.module.cmake(*options)
 
     def build(self, pkg, spec, prefix):
         """Make the build targets"""
         with fs.working_dir(self.build_directory):
             if self.generator == "Unix Makefiles":
-                inspect.getmodule(self.pkg).make(*self.build_targets)
+                pkg.module.make(*self.build_targets)
             elif self.generator == "Ninja":
                 self.build_targets.append("-v")
-                inspect.getmodule(self.pkg).ninja(*self.build_targets)
+                pkg.module.ninja(*self.build_targets)
 
     def install(self, pkg, spec, prefix):
         """Make the install targets"""
         with fs.working_dir(self.build_directory):
             if self.generator == "Unix Makefiles":
-                inspect.getmodule(self.pkg).make(*self.install_targets)
+                pkg.module.make(*self.install_targets)
             elif self.generator == "Ninja":
-                inspect.getmodule(self.pkg).ninja(*self.install_targets)
+                pkg.module.ninja(*self.install_targets)
 
     spack.builder.run_after("build")(execute_build_time_tests)
 

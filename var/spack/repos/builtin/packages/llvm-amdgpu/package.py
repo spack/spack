@@ -75,6 +75,11 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     depends_on("ncurses+termlib", type="link")
     depends_on("pkgconfig", type="build")
 
+    # This flavour of LLVM doesn't work on MacOS, so we should ensure that it
+    # isn't used to satisfy any of the libllvm dependencies on the Darwin
+    # platform.
+    conflicts("platform=darwin")
+
     # OpenMP clang toolchain looks for bitcode files in llvm/bin/../lib
     # as per 5.2.0 llvm code. It used to be llvm/bin/../lib/libdevice.
     # Below patch is to look in the old path.
@@ -269,12 +274,12 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     # Make sure that the compiler paths are in the LD_LIBRARY_PATH
     def setup_run_environment(self, env):
         llvm_amdgpu_home = self.spec["llvm-amdgpu"].prefix
-        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/llvm/lib")
+        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/lib")
 
     # Make sure that the compiler paths are in the LD_LIBRARY_PATH
     def setup_dependent_run_environment(self, env, dependent_spec):
         llvm_amdgpu_home = self.spec["llvm-amdgpu"].prefix
-        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/llvm/lib")
+        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/lib")
 
     # Required for enabling asan on dependent packages
     def setup_dependent_build_environment(self, env, dependent_spec):

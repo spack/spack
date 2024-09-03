@@ -7,7 +7,7 @@ import itertools
 import os
 import sys
 
-from archspec.cpu import UnsupportedMicroarchitecture
+import archspec.cpu
 
 import llnl.util.tty as tty
 from llnl.util.symlink import readlink
@@ -535,45 +535,26 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     fortran_names = ["gfortran"]
     d_names = ["gdc"]
     go_names = ["gccgo"]
-    compiler_prefixes = [r"\w+-\w+-\w+-"]
     compiler_suffixes = [r"-mp-\d+(?:\.\d+)?", r"-\d+(?:\.\d+)?", r"\d\d"]
-    compiler_version_regex = r"(?<!clang version)\s?([0-9.]+)"
+    compiler_version_regex = r"([0-9.]+)"
     compiler_version_argument = ("-dumpfullversion", "-dumpversion")
 
     @classmethod
-    def determine_version(cls, exe):
-        try:
-            output = spack.compiler.get_compiler_version_output(exe, "--version")
-        except Exception:
-            output = ""
-        # Apple's gcc is actually apple clang, so skip it.
-        if "Apple" in output:
-            return None
-
-        return super().determine_version(exe)
-
-    @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
-        result = []
-        for exe in exes_in_prefix:
-            # On systems like Ubuntu we might get multiple executables
-            # with the string "gcc" in them. See:
-            # https://helpmanual.io/packages/apt/gcc/
-            basename = os.path.basename(exe)
-            substring_to_be_filtered = [
-                "c99-gcc",
-                "c89-gcc",
-                "-nm",
-                "-ar",
-                "ranlib",
-                "clang",  # clang++ matches g++ -> clan[g++]
-            ]
-            if any(x in basename for x in substring_to_be_filtered):
-                continue
+        # Apple's gcc is actually apple clang, so skip it.
+        if str(spack.platforms.host()) == "darwin":
+            not_apple_clang = []
+            for exe in exes_in_prefix:
+                try:
+                    output = spack.compiler.get_compiler_version_output(exe, "--version")
+                except Exception:
+                    output = ""
+                if "clang version" in output:
+                    continue
+                not_apple_clang.append(exe)
+            return not_apple_clang
 
-            result.append(exe)
-
-        return result
+        return exes_in_prefix
 
     @classmethod
     def determine_variants(cls, exes, version_str):
@@ -702,7 +683,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         for uarch in microarchitectures:
             try:
                 return uarch.optimization_flags("gcc", str(spec.version))
-            except UnsupportedMicroarchitecture:
+            except archspec.cpu.UnsupportedMicroarchitecture:
                 pass
         # no arch specific flags in common, unlikely to happen.
         return ""

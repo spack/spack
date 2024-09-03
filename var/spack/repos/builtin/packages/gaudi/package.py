@@ -109,7 +109,6 @@ class Gaudi(CMakePackage):
         depends_on(pv[0], when=pv[1] + " +examples")
 
     # Adding these dependencies triggers the build of most optional components
-    depends_on("cppgsl", when="+cppunit")
     depends_on("cppunit", when="+cppunit")
     depends_on("doxygen +graphviz", when="+docs")
     depends_on("gperftools", when="+gperftools")

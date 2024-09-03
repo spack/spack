@@ -24,7 +24,6 @@ import spack.util.environment as environment
 import spack.util.ld_so_conf
 
 from .common import (
-    DetectedPackage,
     WindowsCompilerExternalPaths,
     WindowsKitExternalPaths,
     _convert_to_iterable,
@@ -62,7 +61,7 @@ def common_windows_package_paths(pkg_cls=None) -> List[str]:
 
 def file_identifier(path):
     s = os.stat(path)
-    return (s.st_dev, s.st_ino)
+    return s.st_dev, s.st_ino
 
 
 def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
@@ -80,6 +79,8 @@ def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
             constructed based on the PATH environment variable.
     """
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
+    # Make use we don't doubly list /usr/lib and /lib etc
+    search_paths = list(llnl.util.lang.dedupe(search_paths, key=file_identifier))
     return path_to_dict(search_paths)
 
 
@@ -227,7 +228,7 @@ class Finder:
 
     def detect_specs(
         self, *, pkg: Type["spack.package_base.PackageBase"], paths: List[str]
-    ) -> List[DetectedPackage]:
+    ) -> List["spack.spec.Spec"]:
         """Given a list of files matching the search patterns, returns a list of detected specs.
 
         Args:
@@ -293,16 +294,16 @@ class Finder:
                     warnings.warn(msg)
                     continue
 
-                if spec.external_path:
-                    prefix = spec.external_path
+                if not spec.external_path:
+                    spec.external_path = prefix
 
-                result.append(DetectedPackage(spec=spec, prefix=prefix))
+                result.append(spec)
 
         return result
 
     def find(
         self, *, pkg_name: str, repository, initial_guess: Optional[List[str]] = None
-    ) -> List[DetectedPackage]:
+    ) -> List["spack.spec.Spec"]:
         """For a given package, returns a list of detected specs.
 
         Args:
@@ -386,7 +387,7 @@ def by_path(
     *,
     path_hints: Optional[List[str]] = None,
     max_workers: Optional[int] = None,
-) -> Dict[str, List[DetectedPackage]]:
+) -> Dict[str, List["spack.spec.Spec"]]:
     """Return the list of packages that have been detected on the system, keyed by
     unqualified package name.
 

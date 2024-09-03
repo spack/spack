@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import inspect
 import os
 import platform
 import posixpath
@@ -593,7 +592,7 @@ class TestModuleMonkeyPatcher:
 
         # We can also propagate the settings to classes in the MRO
         module_wrapper.propagate_changes_to_mro()
-        for cls in inspect.getmro(type(s.package)):
+        for cls in s.package.__class__.__mro__:
             current_module = cls.module
             if current_module == spack.package_base:
                 break
