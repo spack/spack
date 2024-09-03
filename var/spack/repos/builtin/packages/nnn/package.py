@@ -7,7 +7,8 @@ from spack.package import *
 
 
 class Nnn(MakefilePackage):
-    """nnn (n³) is a full-featured terminal file manager. It's tiny, nearly 0-config and incredibly fast."""
+    """nnn (n³) is a full-featured terminal file manager.
+    It's tiny, nearly 0-config and incredibly fast."""
 
     homepage = "https://github.com/jarun/nnn"
     url = "https://github.com/jarun/nnn/archive/refs/tags/v5.0.tar.gz"
@@ -43,19 +44,28 @@ class Nnn(MakefilePackage):
     depends_on("zip")
 
     variant("mouse", default=True, description="Enable mouse support")
-    variant("pcre", default=False, description="Use Perl Compatible Regular Expressions (default is POSIX)")
+    variant(
+        "pcre",
+        default=False,
+        description="Use Perl Compatible Regular Expressions (default is POSIX)",
+    )
     variant("readline", default=True)
     variant(
         "icons",
         values=("none", "emoji", "nerd", "icons-in-terminal"),
         default="none",
-        description="Choose the icons to use (see https://github.com/jarun/nnn/wiki/Advanced-use-cases#file-icons)"
+        description="Choose the icons to use "
+        "(see https://github.com/jarun/nnn/wiki/Advanced-use-cases#file-icons)",
     )
 
     variant("colemak", default=False, description="Key bindings for Colemak keyboard layout")
     variant("gitstatus", default=False, description="Add git status column to the detail view")
     variant("namefirst", default=False, description="Print filenames first in the detail view")
-    variant("restorepreview", default=False, description="Add pipe to close and restore preview-tui for internal undetached edits")
+    variant(
+        "restorepreview",
+        default=False,
+        description="Add pipe to close and restore preview-tui for internal undetached edits",
+    )
 
     def setup_build_environment(self, env):
         spec = self.spec
