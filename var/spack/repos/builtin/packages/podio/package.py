@@ -80,8 +80,15 @@ class Podio(CMakePackage):
     )
     variant("sio", default=False, description="Build the SIO I/O backend")
     variant("rntuple", default=False, description="Build the RNTuple backend")
+    variant(
+        "datasource",
+        default=False,
+        description="Build the RDataSource for reading podio collections",
+        when="@1.0.2:",
+    )
 
     depends_on("root@6.08.06: cxxstd=17", when="cxxstd=17")
+    depends_on("root@6.14:", when="+datasource")
     depends_on("root@6.28.04: +root7", when="+rntuple")
     depends_on("root@6.28:", when="@0.17:")
     for cxxstd in ("17", "20"):
@@ -99,6 +106,13 @@ class Podio(CMakePackage):
 
     conflicts("+rntuple", when="@:0.16", msg="rntuple support requires at least podio@0.17")
 
+    # See https://github.com/AIDASoft/podio/pull/600
+    patch(
+        "https://github.com/AIDASoft/podio/commit/0222a077aaff817b21a46a590af0f8329dd27d67.patch?full_index=1",
+        when="@0.17:0.99",
+        sha256="9e42e0995634f2afdd358cd19383e882dc9143cce1b6afb0d2c4a1ec9add6e15",
+    )
+
     # See https://github.com/AIDASoft/podio/pull/599 that landed after 0.99
     extends("python", when="@1.0:")
 
@@ -106,6 +120,7 @@ class Podio(CMakePackage):
         args = [
             self.define_from_variant("ENABLE_SIO", "sio"),
             self.define_from_variant("ENABLE_RNTUPLE", "rntuple"),
+            self.define_from_variant("ENABLE_DATASOURCE", "datasource"),
             self.define("CMAKE_CXX_STANDARD", self.spec.variants["cxxstd"].value),
             self.define("BUILD_TESTING", self.run_tests),
         ]

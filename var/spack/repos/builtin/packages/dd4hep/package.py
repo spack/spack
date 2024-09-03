@@ -140,6 +140,9 @@ class Dd4hep(CMakePackage):
     # See https://github.com/AIDASoft/DD4hep/pull/1191
     conflicts("^geant4 cxxstd=11", when="+ddg4")
 
+    # See https://github.com/AIDASoft/DD4hep/issues/1210
+    conflicts("^root@6.31.1:", when="@:1.27")
+
     @property
     def libs(self):
         # We need to override libs here, because we don't build a libdd4hep so

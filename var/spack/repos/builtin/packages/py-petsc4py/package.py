@@ -20,6 +20,7 @@ class PyPetsc4py(PythonPackage):
     license("BSD-2-Clause")
 
     version("main", branch="main")
+    version("3.21.5", sha256="70e6fa795e9abd8014faec0203cd0cc3efd79f4647c97cafc33776421c9ab1e8")
     version("3.21.4", sha256="4ba702558cc91186912eeacef26b171255f3adaa7ea02bec40c2f4c919eccecd")
     version("3.21.3", sha256="1c3664d5b527354171077c89c4b1fef3df4a41be7196d12bca74b2759c7e2648")
     version("3.21.2", sha256="6ce1e1a45407da300c6869d0d9abe17b5b077424aa4895713642dda0bb19ab4e")
