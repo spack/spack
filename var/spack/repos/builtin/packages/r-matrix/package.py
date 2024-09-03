@@ -18,6 +18,11 @@ class RMatrix(RPackage):
 
     license("GPL-3.0-only")
 
+    version("1.7-0", sha256="fb97bba0df370222eb4f7e2da2e94dd01053b5e054b1c51829ff9a6efc08ad37")
+    version("1.6-5", sha256="726c8d46626e73d1d6e76a74679813c6df96ffdee1aee45d94e7014cb4ceb97d")
+    version("1.6-4", sha256="70ca7bdaece68d4837da0523d067e1553947c3c81b0b55206223bb647617bb01")
+    version("1.6-3", sha256="91268498831f6240f14b1c35658eb9582cd1b139a2c2ee19897f1d591c4e9624")
+    version("1.6-2", sha256="a879b872ae4a7cba580494247322506ba93b9a8f611ee87a3e1ef177e2537ad2")
     version("1.5-4", sha256="15ceb61993d61b442068104abb46e6d91b5a1179c01eeb64563b853abab66f06")
     version("1.5-1", sha256="557dba0358172d67dc63eb5db90841915bb5ce1528f941a8005ae808d635575d")
     version("1.4-1", sha256="42b24f1d1e94482b0ff0ef1292e2df29f69694bdbee47b3d6bfeec46fafb2f7e")
