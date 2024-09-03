@@ -199,7 +199,7 @@ class Qt(Package):
             depends_on("sqlite+column_metadata", when="+sql", type=("build", "run"))
     # Windows sqlite has no column_metadata variant
     with when("platform=windows +sql"):
-        depends_on("sqlite",  type=("build", "run"))
+        depends_on("sqlite", type=("build", "run"))
 
     depends_on("icu4c")
     depends_on("harfbuzz", when="@5:")
