@@ -30,7 +30,7 @@ class LlvmDetection(PackageBase):
         reject = re.compile(
             r"-(vscode|cpp|cl|gpu|tidy|rename|scan-deps|format|refactor|offload|"
             r"check|query|doc|move|extdef|apply|reorder|change-namespace|"
-            r"include-fixer|import-test)"
+            r"include-fixer|import-test|dab|server)"
         )
         return [x for x in exes_in_prefix if not reject.search(x)]
 
@@ -652,7 +652,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
 
     @classproperty
     def executables(cls):
-        return super().executables + ["ld.lld", "lldb"]
+        return super().executables + [r"^ld.lld(-[\d][\d]*)?$", r"^lldb(-[\d][\d]*)?$"]
 
     @classmethod
     def determine_version(cls, exe):
