@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,10 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     version("4.0", sha256="a9cd39277fb15d977d468435eb9b894f79f468233f0131509aa540ffda4f5953")
     version("main", branch="main")
     version("develop", branch="develop")
-    maintainers = ["tomdeakin", "kaanolgu" "tom91136", "robj0nes"]
+
+    depends_on("cxx", type="build")  # generated
+
+    maintainers("tomdeakin", "kaanolgu", "tom91136", "robj0nes")
 
     # Languages
     # Also supported variants are cuda and rocm (for HIP)
@@ -53,7 +56,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
 
     # ACC conflict
     variant("cpu_arch", values=str, default="none", description="Enable CPU Target for ACC")
-    variant("target", values=str, default="none", description="Enable CPU Target for ACC")
+    variant("acc_target", values=str, default="none", description="Enable CPU Target for ACC")
 
     # STD conflicts
     conflicts("+stddata", when="%gcc@:10.1.0", msg="STD-data requires newer version of GCC")
@@ -74,7 +77,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     conflicts(
         "offload=none",
         when="+raja",
-        msg="RAJA requires architecture to be specfied by target=[CPU,NVIDIA]",
+        msg="RAJA requires architecture to be specfied by acc_target=[CPU,NVIDIA]",
     )
 
     # download raja from https://github.com/LLNL/RAJA
@@ -156,7 +159,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         when="+thrust",
         msg="Which Thrust implementation to use, supported options include:\
          - CUDA (via https://github.com/NVIDIA/thrust)\
-         - ROCM (via https://github.com/ROCmSoftwarePlatform/rocThrust)",
+         - ROCM (via https://github.com/ROCm/rocThrust)",
     )
 
     # This applies to all
@@ -250,7 +253,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         #             SYCL
         # ===================================
 
-        if "+sycl" in self.spec:
+        if self.spec.satisfies("+sycl"):
             args.append("-DSYCL_COMPILER=" + self.spec.variants["implementation"].value.upper())
             if self.spec.variants["implementation"].value.upper() != "ONEAPI-DPCPP":
                 args.append(
@@ -263,7 +266,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         #             SYCL 2020
         # ===================================
 
-        if "+sycl2020" in self.spec:
+        if self.spec.satisfies("+sycl2020"):
             if self.spec.satisfies("%oneapi"):
                 # -fsycl flag is required for setting up sycl/sycl.hpp seems like
                 #  it doesn't get it from the CMake file
@@ -285,7 +288,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         #             HIP(ROCM)
         # ===================================
 
-        if "+rocm" in self.spec:
+        if self.spec.satisfies("+rocm"):
             hip_comp = self.spec["rocm"].prefix + "/bin/hipcc"
             args.append("-DCMAKE_CXX_COMPILER=" + hip_comp)
             args.append(
@@ -300,14 +303,14 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         #             TBB
         # ===================================
 
-        if "+tbb" in self.spec:
+        if self.spec.satisfies("+tbb"):
             args.append("-DONE_TBB_DIR=" + self.spec["tbb"].prefix + "/tbb/latest/")
             args.append("-DPARTITIONER=" + self.spec.variants["partitioner"].value.upper())
 
         # ===================================
         #             OpenCL (ocl)
         # ===================================
-        if "+ocl" in self.spec:
+        if self.spec.satisfies("+ocl"):
             if "backend" in self.spec.variants:
                 if "cuda" in self.spec.variants["backend"].value:
                     cuda_dir = self.spec["cuda"].prefix
@@ -330,7 +333,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         # ===================================
         #             RAJA
         # ===================================
-        if "+raja" in self.spec:
+        if self.spec.satisfies("+raja"):
             args.append("-DCMAKE_CXX_COMPILER=" + self.compiler.cxx)
             args.append("-DRAJA_IN_TREE=" + self.spec.variants["dir"].value)
             if "offload" in self.spec.variants:
@@ -357,7 +360,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         # ===================================
         #             THRUST
         # ===================================
-        if "+thrust" in self.spec:
+        if self.spec.satisfies("+thrust"):
             if "cuda" in self.spec.variants["implementation"].value:
                 args.append("-DTHRUST_IMPL=" + self.spec.variants["implementation"].value.upper())
                 args.append("-SDK_DIR=" + self.spec["thrust"].prefix + "/include")
@@ -382,7 +385,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         # ===================================
         # kokkos implementation is versatile and it could use cuda or omp architectures as backend
         # The usage should be spack install babelstream +kokkos +cuda [or +omp]
-        if "+kokkos" in self.spec:
+        if self.spec.satisfies("+kokkos"):
             args.append("-DCMAKE_CXX_COMPILER=" + self.compiler.cxx)
             args.append("-DKOKKOS_IN_TREE=" + self.spec.variants["dir"].value)
             # args.append("-DKOKKOS_IN_PACKAGE=" + self.spec["kokkos"].prefix)

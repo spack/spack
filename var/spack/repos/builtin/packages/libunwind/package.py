@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Libunwind(AutotoolsPackage):
     git = "https://github.com/libunwind/libunwind"
     maintainers("mwkrentel")
 
+    license("MIT")
+
     version("master", branch="master")
     version("1.6-stable", branch="v1.6-stable")
     version("1.6.2", sha256="4a6aec666991fb45d0889c44aede8ad6eb108071c3554fcdff671f9c94794976")
@@ -28,6 +30,9 @@ class Libunwind(AutotoolsPackage):
         sha256="9dfe0fcae2a866de9d3942c66995e4b460230446887dbdab302d41a8aee8d09a",
         deprecated=True,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("docs", default=True, description="Build man page")
     variant(
@@ -85,7 +90,7 @@ class Libunwind(AutotoolsPackage):
     depends_on("m4", type="build", when=reconf_versions)
 
     depends_on("xz", type="link", when="+xz")
-    depends_on("zlib", type="link", when="+zlib")
+    depends_on("zlib-api", type="link", when="+zlib")
 
     conflicts("platform=darwin", msg="Non-GNU libunwind needs ELF libraries Darwin does not have")
 

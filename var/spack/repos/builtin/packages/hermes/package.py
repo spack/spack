@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,12 +16,17 @@ class Hermes(CMakePackage):
 
     maintainers("hyoklee")
 
+    license("GPL-2.0-only")
+
     version("master", branch="master")
     version(
         "0.9.0-beta",
         url="https://github.com/HDFGroup/hermes/archive/refs/tags/v0.9.0-beta.tar.gz",
         sha256="abf258a52fa79729dfeb28559957abf8945f3ad37cadefb3bc685227c5f057a8",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("vfd", default=False, description="Enable HDF5 VFD")
 
@@ -30,7 +35,7 @@ class Hermes(CMakePackage):
     depends_on("glpk")
     depends_on("glog@0.4.0:")
     depends_on("mpi")
-    depends_on("hdf5@1.13.0:", when="+vfd")
+    depends_on("hdf5@1.14.0:", when="+vfd")
     depends_on("yaml-cpp")
 
     def cmake_args(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class RMunsell(RPackage):
     Munsell colours and display colour palettes."""
 
     cran = "munsell"
+
+    license("MIT")
 
     version("0.5.0", sha256="d0f3a9fb30e2b5d411fa61db56d4be5733a2621c0edf017d090bdfa5e377e199")
     version("0.4.3", sha256="397c3c90af966f48eebe8f5d9e40c41b17541f0baaa102eec3ea4faae5a2bd49")

@@ -1,9 +1,7 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import inspect
 
 from spack.package import *
 
@@ -36,6 +34,8 @@ class PerlBioperl(PerlPackage):
     homepage = "https://metacpan.org/pod/BioPerl"
     url = "https://cpan.metacpan.org/authors/id/C/CD/CDRAUG/BioPerl-1.7.6.tar.gz"
 
+    license("Artistic-1.0")
+
     version(
         "1.7.6",
         sha256="df2a3efc991b9b5d7cc9d038a1452c6dac910c9ad2a0e47e408dd692c111688d",
@@ -46,6 +46,8 @@ class PerlBioperl(PerlPackage):
         sha256="17aa3aaab2f381bbcaffdc370002eaf28f2c341b538068d6586b2276a76464a1",
         url="https://cpan.metacpan.org/authors/id/C/CJ/CJFIELDS/BioPerl-1.007002.tar.gz",
     )
+
+    depends_on("fortran", type="build")  # generated
 
     # According to cpandeps.grinnz.com Module-Build is both a build and run
     # time dependency for BioPerl
@@ -101,7 +103,7 @@ class PerlBioperl(PerlPackage):
             f.writelines(config_answers)
 
         with open(config_answers_filename, "r") as f:
-            inspect.getmodule(self).perl("Build.PL", "--install_base=%s" % self.prefix, input=f)
+            perl("Build.PL", "--install_base=%s" % self.prefix, input=f)
 
     # Need to also override the build and install methods to make sure that the
     # Build script is run through perl and not use the shebang, as it might be
@@ -109,8 +111,8 @@ class PerlBioperl(PerlPackage):
     # `@run_after(configure)` step defined in `PerlPackage`.
     @when("@1.007002")
     def build(self, spec, prefix):
-        inspect.getmodule(self).perl("Build")
+        perl("Build")
 
     @when("@1.007002")
     def install(self, spec, prefix):
-        inspect.getmodule(self).perl("Build", "install")
+        perl("Build", "install")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class PyJsonschema(PythonPackage):
     homepage = "https://github.com/Julian/jsonschema"
     pypi = "jsonschema/jsonschema-3.2.0.tar.gz"
 
+    license("MIT")
+
     version("4.17.3", sha256="0f864437ab8b6076ba6707453ef8f98a6a0d512a80e93f8abdb676f737ecb60d")
     version("4.16.0", sha256="165059f076eff6971bae5b742fc029a7b4ef3f9bcf04c14e4776a7605de14b23")
     version("4.10.0", sha256="8ff7b44c6a99c6bfd55ca9ac45261c649cefd40aaba1124c29aaef1bcb378d84")
@@ -22,6 +24,14 @@ class PyJsonschema(PythonPackage):
     version("3.0.1", sha256="0c0a81564f181de3212efa2d17de1910f8732fa1b71c42266d983cd74304e20d")
     version("2.6.0", sha256="6ff5f3180870836cae40f06fa10419f557208175f13ad7bc26caa77beb1f6e02")
     version("2.5.1", sha256="36673ac378feed3daa5956276a829699056523d7961027911f064b52255ead41")
+
+    # for versions @:4.5 this same variant was called format_nongpl
+    variant(
+        "format-nongpl",
+        default=False,
+        when="@3.2:",
+        description="Enable format-nongpl functionality",
+    )
 
     depends_on("py-hatchling", when="@4.10:", type="build")
     depends_on("py-hatch-vcs", when="@4.10:", type="build")
@@ -45,3 +55,14 @@ class PyJsonschema(PythonPackage):
     depends_on("py-six@1.11:", when="@3", type=("build", "run"))
 
     conflicts("^py-pyrsistent@0.17.0:0.17.2")
+
+    with when("+format-nongpl"):
+        depends_on("py-fqdn", when="@4:", type=("build", "run"))
+        depends_on("py-idna", type=("build", "run"))
+        depends_on("py-isoduration", when="@4:", type=("build", "run"))
+        depends_on("py-jsonpointer@1.14:", type=("build", "run"))
+        depends_on("py-rfc3339-validator", type=("build", "run"))
+        depends_on("py-rfc3986-validator@0.1.1:", type=("build", "run"))
+        depends_on("py-uri-template", when="@4:", type=("build", "run"))
+        depends_on("py-webcolors@1.11:", when="@4:", type=("build", "run"))
+        depends_on("py-webcolors", type=("build", "run"))

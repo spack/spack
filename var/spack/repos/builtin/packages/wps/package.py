@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,10 +22,15 @@ class Wps(Package):
     version("4.3", sha256="1913cb24de549f029d65635feea27f3304a8f42ec025954a0887651fc89d1e9e")
     version("4.2", sha256="3e175d033355d3e7638be75bc7c0bc0de6da299ebd175a9bbc1b7a121acd0168")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Serial variant recommended in WRF/WPS docs
     variant(
         "build_type",
         default="serial",
+        description="Build type",
         values=("serial", "serial_NO_GRIB2", "dmpar", "dmpar_NO_GRIB2"),
     )
 
@@ -34,7 +39,7 @@ class Wps(Package):
     patch("patches/4.2/arch.configure.defaults.patch", when="@4.2")
     patch("patches/4.2/configure.patch", when="@4.2:4.3.1")
     patch("patches/4.2/preamble.patch", when="@4.2:")
-    patch("patches/4.3/arch.configure.defaults.patch", when="@4.3:4.3.0")
+    patch("patches/4.3/arch.configure.defaults.patch", when="@=4.3")
     patch("patches/4.3.1/arch.configure.defaults.patch", when="@4.3.1")
     patch("patches/4.4/configure.patch", when="@4.4:")
 

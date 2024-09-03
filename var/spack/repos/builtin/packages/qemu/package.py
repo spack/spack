@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,9 @@ class Qemu(AutotoolsPackage):
     url = "https://download.qemu.org/qemu-4.1.1.tar.xz"
 
     maintainers("anderbubble")
+
+    # Docs say TCG is "under a BSD license" but all the headers for TCG have the MIT license.
+    license("GPL-2.0-only AND LGPL-2.1-only AND MIT", checked_by="tgamblin")
 
     version("4.1.1", sha256="ed6fdbbdd272611446ff8036991e9b9f04a2ab2e3ffa9e79f3bab0eb9a95a1d2")
     version("4.1.0", sha256="656e60218689bdeec69903087fd7582d5d3e72238d02f4481d8dc6d79fd909c6")
@@ -100,6 +103,9 @@ class Qemu(AutotoolsPackage):
     version("0.10.1", sha256="632b8942d8c85b36997ce3ed893bc34c868b432fbaadd4ea86994ca881d6665b")
     version("0.10.0", sha256="cd554729fa9d0ec17164afbc1cea62d02bde3db8e16db3fd1b8e71d8e1b3dd41")
     version("0.9.1", sha256="a9655a471d0649f5540b890447b35849c162d9b986bf2bbddcb68461748e0f42")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("glib@2.40:")
     depends_on("pixman@0.21.8:")

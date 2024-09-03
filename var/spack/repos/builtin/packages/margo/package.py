@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Margo(AutotoolsPackage):
     git = "https://github.com/mochi-hpc/mochi-margo.git"
     url = "https://github.com/mochi-hpc/mochi-margo/archive/v0.9.tar.gz"
 
-    maintainers("carns", "mdorier", "fbudin69500", "chuckatkins")
+    maintainers("carns", "mdorier", "fbudin69500")
 
     version("master", branch="master", deprecated=True)
     version(
@@ -113,6 +113,8 @@ class Margo(AutotoolsPackage):
         sha256="91085e28f50e373b9616e1ae5c3c8d40a19a7d3776259592d8f361766890bcaa",
         deprecated=True,
     )
+
+    depends_on("c", type="build")  # generated
 
     depends_on("json-c", when="@0.9:")
     depends_on("autoconf@2.65:", type=("build"))

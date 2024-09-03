@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyJinja2(PythonPackage):
     homepage = "https://palletsprojects.com/p/jinja/"
     pypi = "Jinja2/Jinja2-2.10.3.tar.gz"
     git = "https://github.com/pallets/jinja"
+
+    license("BSD-3-Clause")
 
     version("3.1.2", sha256="31351a702a408a9e7595a8fc6150fc3f43bb6bf7e319770cbc0db9df9437e852")
     version("3.0.3", sha256="611bb273cd68f3b993fabdc4064fc858c5b47a973cb5aa7999ec1ba405c87cd7")
@@ -39,3 +41,6 @@ class PyJinja2(PythonPackage):
     depends_on("py-markupsafe@0.23:", type=("build", "run"))
     depends_on("py-babel@2.7:", when="@3:+i18n", type=("build", "run"))
     depends_on("py-babel@0.8:", when="+i18n", type=("build", "run"))
+
+    # https://github.com/pallets/jinja/issues/1585
+    conflicts("^py-markupsafe@2.1:", when="@:2")

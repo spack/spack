@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class RMulticool(RPackage):
     Python code are distributed without conditions."""
 
     cran = "multicool"
+
+    license("GPL-2.0-only")
 
     version("0.1-12", sha256="487d28d9c3c606be0cf56e2d8f8b0d79fb71949c68886ea9251fbb1c01664a36")
     version("0.1-11", sha256="1c907e64af2ac39facdf431a5691e69649f64af1f50e198ae39da5bf30026476")

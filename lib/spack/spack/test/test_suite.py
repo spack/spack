@@ -1,10 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import os
-import sys
 
 import pytest
 
@@ -12,6 +11,7 @@ from llnl.util.filesystem import join_path, mkdirp, touch
 
 import spack.install_test
 import spack.spec
+from spack.install_test import TestStatus
 from spack.util.executable import which
 
 
@@ -20,7 +20,7 @@ def _true(*args, **kwargs):
     return True
 
 
-def ensure_results(filename, expected):
+def ensure_results(filename, expected, present=True):
     assert os.path.exists(filename)
     with open(filename, "r") as fd:
         lines = fd.readlines()
@@ -29,7 +29,10 @@ def ensure_results(filename, expected):
             if expected in line:
                 have = True
                 break
-        assert have
+        if present:
+            assert have, f"Expected '{expected}' in the file"
+        else:
+            assert not have, f"Expected '{expected}' NOT to be in the file"
 
 
 def test_test_log_name(mock_packages, config):
@@ -78,8 +81,8 @@ def test_write_test_result(mock_packages, mock_test_stage):
         assert spec.name in msg
 
 
-def test_test_uninstalled(mock_packages, install_mockery, mock_test_stage):
-    """Attempt to perform stand-alone test for uninstalled package."""
+def test_test_not_installed(mock_packages, install_mockery, mock_test_stage):
+    """Attempt to perform stand-alone test for not_installed package."""
     spec = spack.spec.Spec("trivial-smoke-test").concretized()
     test_suite = spack.install_test.TestSuite([spec])
 
@@ -91,10 +94,7 @@ def test_test_uninstalled(mock_packages, install_mockery, mock_test_stage):
 
 @pytest.mark.parametrize(
     "arguments,status,msg",
-    [
-        ({}, spack.install_test.TestStatus.SKIPPED, "Skipped"),
-        ({"externals": True}, spack.install_test.TestStatus.NO_TESTS, "No tests"),
-    ],
+    [({}, TestStatus.SKIPPED, "Skipped"), ({"externals": True}, TestStatus.NO_TESTS, "No tests")],
 )
 def test_test_external(
     mock_packages, install_mockery, mock_test_stage, monkeypatch, arguments, status, msg
@@ -147,7 +147,7 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
         test_suite()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Cannot find echo executable")
+@pytest.mark.not_on_windows("Cannot find echo executable")
 def test_test_spec_passes(mock_packages, install_mockery, mock_test_stage, monkeypatch):
     spec = spack.spec.Spec("simple-standalone-test").concretized()
     monkeypatch.setattr(spack.spec.Spec, "installed", _true)
@@ -156,6 +156,7 @@ def test_test_spec_passes(mock_packages, install_mockery, mock_test_stage, monke
 
     ensure_results(test_suite.results_file, "PASSED")
     ensure_results(test_suite.log_file_for_spec(spec), "simple stand-alone")
+    ensure_results(test_suite.log_file_for_spec(spec), "standalone-ifc", present=False)
 
 
 def test_get_test_suite():
@@ -212,8 +213,10 @@ def test_test_functions_pkgless(mock_packages, install_mockery, ensure_debug, ca
     spec = spack.spec.Spec("simple-standalone-test").concretized()
     fns = spack.install_test.test_functions(spec.package, add_virtuals=True)
     out = capsys.readouterr()
-    assert len(fns) == 1, "Expected only one test function"
-    assert "does not appear to have a package file" in out[1]
+    assert len(fns) == 2, "Expected two test functions"
+    for f in fns:
+        assert f[1].__name__ in ["test_echo", "test_skip"]
+    assert "virtual does not appear to have a package file" in out[1]
 
 
 # TODO: This test should go away when compilers as dependencies is supported
@@ -288,7 +291,7 @@ def test_process_test_parts(mock_packages):
     assert "test suite is missing" in str(exc_info)
 
 
-def test_test_part_fail(tmpdir, install_mockery_mutable_config, mock_fetch, mock_test_stage):
+def test_test_part_fail(tmpdir, install_mockery, mock_fetch, mock_test_stage):
     """Confirm test_part with a ProcessError results in FAILED status."""
     s = spack.spec.Spec("trivial-smoke-test").concretized()
     pkg = s.package
@@ -301,10 +304,10 @@ def test_test_part_fail(tmpdir, install_mockery_mutable_config, mock_fetch, mock
 
     for part_name, status in pkg.tester.test_parts.items():
         assert part_name.endswith(name)
-        assert status == spack.install_test.TestStatus.FAILED
+        assert status == TestStatus.FAILED
 
 
-def test_test_part_pass(install_mockery_mutable_config, mock_fetch, mock_test_stage):
+def test_test_part_pass(install_mockery, mock_fetch, mock_test_stage):
     """Confirm test_part that succeeds results in PASSED status."""
     s = spack.spec.Spec("trivial-smoke-test").concretized()
     pkg = s.package
@@ -317,10 +320,10 @@ def test_test_part_pass(install_mockery_mutable_config, mock_fetch, mock_test_st
 
     for part_name, status in pkg.tester.test_parts.items():
         assert part_name.endswith(name)
-        assert status == spack.install_test.TestStatus.PASSED
+        assert status == TestStatus.PASSED
 
 
-def test_test_part_skip(install_mockery_mutable_config, mock_fetch, mock_test_stage):
+def test_test_part_skip(install_mockery, mock_fetch, mock_test_stage):
     """Confirm test_part that raises SkipTest results in test status SKIPPED."""
     s = spack.spec.Spec("trivial-smoke-test").concretized()
     pkg = s.package
@@ -331,12 +334,10 @@ def test_test_part_skip(install_mockery_mutable_config, mock_fetch, mock_test_st
 
     for part_name, status in pkg.tester.test_parts.items():
         assert part_name.endswith(name)
-        assert status == spack.install_test.TestStatus.SKIPPED
+        assert status == TestStatus.SKIPPED
 
 
-def test_test_part_missing_exe_fail_fast(
-    tmpdir, install_mockery_mutable_config, mock_fetch, mock_test_stage
-):
+def test_test_part_missing_exe_fail_fast(tmpdir, install_mockery, mock_fetch, mock_test_stage):
     """Confirm test_part with fail fast enabled raises exception."""
     s = spack.spec.Spec("trivial-smoke-test").concretized()
     pkg = s.package
@@ -354,12 +355,10 @@ def test_test_part_missing_exe_fail_fast(
     assert len(test_parts) == 1
     for part_name, status in test_parts.items():
         assert part_name.endswith(name)
-        assert status == spack.install_test.TestStatus.FAILED
+        assert status == TestStatus.FAILED
 
 
-def test_test_part_missing_exe(
-    tmpdir, install_mockery_mutable_config, mock_fetch, mock_test_stage
-):
+def test_test_part_missing_exe(tmpdir, install_mockery, mock_fetch, mock_test_stage):
     """Confirm test_part with missing executable fails."""
     s = spack.spec.Spec("trivial-smoke-test").concretized()
     pkg = s.package
@@ -375,7 +374,88 @@ def test_test_part_missing_exe(
     assert len(test_parts) == 1
     for part_name, status in test_parts.items():
         assert part_name.endswith(name)
-        assert status == spack.install_test.TestStatus.FAILED
+        assert status == TestStatus.FAILED
+
+
+# TODO (embedded test parts): Update this once embedded test part tracking
+# TODO (embedded test parts): properly handles the nested context managers.
+@pytest.mark.parametrize(
+    "current,substatuses,expected",
+    [
+        (TestStatus.PASSED, [TestStatus.PASSED, TestStatus.PASSED], TestStatus.PASSED),
+        (TestStatus.FAILED, [TestStatus.PASSED, TestStatus.PASSED], TestStatus.FAILED),
+        (TestStatus.SKIPPED, [TestStatus.PASSED, TestStatus.PASSED], TestStatus.SKIPPED),
+        (TestStatus.NO_TESTS, [TestStatus.PASSED, TestStatus.PASSED], TestStatus.NO_TESTS),
+        (TestStatus.PASSED, [TestStatus.PASSED, TestStatus.SKIPPED], TestStatus.PASSED),
+        (TestStatus.PASSED, [TestStatus.PASSED, TestStatus.FAILED], TestStatus.FAILED),
+        (TestStatus.PASSED, [TestStatus.SKIPPED, TestStatus.SKIPPED], TestStatus.SKIPPED),
+    ],
+)
+def test_embedded_test_part_status(
+    install_mockery, mock_fetch, mock_test_stage, current, substatuses, expected
+):
+    """Check to ensure the status of the enclosing test part reflects summary of embedded parts."""
+
+    s = spack.spec.Spec("trivial-smoke-test").concretized()
+    pkg = s.package
+    base_name = "test_example"
+    part_name = f"{pkg.__class__.__name__}::{base_name}"
+
+    pkg.tester.test_parts[part_name] = current
+    for i, status in enumerate(substatuses):
+        pkg.tester.test_parts[f"{part_name}_{i}"] = status
+
+    pkg.tester.status(base_name, current)
+    assert pkg.tester.test_parts[part_name] == expected
+
+
+@pytest.mark.parametrize(
+    "statuses,expected",
+    [
+        ([TestStatus.PASSED, TestStatus.PASSED], TestStatus.PASSED),
+        ([TestStatus.PASSED, TestStatus.SKIPPED], TestStatus.PASSED),
+        ([TestStatus.PASSED, TestStatus.FAILED], TestStatus.FAILED),
+        ([TestStatus.SKIPPED, TestStatus.SKIPPED], TestStatus.SKIPPED),
+        ([], TestStatus.NO_TESTS),
+    ],
+)
+def test_write_tested_status(
+    tmpdir, install_mockery, mock_fetch, mock_test_stage, statuses, expected
+):
+    """Check to ensure the status of the enclosing test part reflects summary of embedded parts."""
+    s = spack.spec.Spec("trivial-smoke-test").concretized()
+    pkg = s.package
+    for i, status in enumerate(statuses):
+        pkg.tester.test_parts[f"test_{i}"] = status
+        pkg.tester.counts[status] += 1
+
+    pkg.tester.tested_file = tmpdir.join("test-log.txt")
+    pkg.tester.write_tested_status()
+    with open(pkg.tester.tested_file, "r") as f:
+        status = int(f.read().strip("\n"))
+        assert TestStatus(status) == expected
+
+
+@pytest.mark.regression("37840")
+def test_write_tested_status_no_repeats(tmpdir, install_mockery, mock_fetch, mock_test_stage):
+    """Emulate re-running the same stand-alone tests a second time."""
+    s = spack.spec.Spec("trivial-smoke-test").concretized()
+    pkg = s.package
+    statuses = [TestStatus.PASSED, TestStatus.PASSED]
+    for i, status in enumerate(statuses):
+        pkg.tester.test_parts[f"test_{i}"] = status
+        pkg.tester.counts[status] += 1
+
+    pkg.tester.tested_file = tmpdir.join("test-log.txt")
+    pkg.tester.write_tested_status()
+    pkg.tester.write_tested_status()
+
+    # The test should NOT result in a ValueError: invalid literal for int()
+    # with base 10: '2\n2' (i.e., the results being appended instead of
+    # written to the file).
+    with open(pkg.tester.tested_file, "r") as f:
+        status = int(f.read().strip("\n"))
+        assert TestStatus(status) == TestStatus.PASSED
 
 
 def test_check_special_outputs(tmpdir):
@@ -433,7 +513,7 @@ def test_find_required_file(tmpdir):
 def test_packagetest_fails(mock_packages):
     MyPackage = collections.namedtuple("MyPackage", ["spec"])
 
-    s = spack.spec.Spec("a")
+    s = spack.spec.Spec("pkg-a")
     pkg = MyPackage(s)
     with pytest.raises(ValueError, match="require a concrete package"):
         spack.install_test.PackageTest(pkg)

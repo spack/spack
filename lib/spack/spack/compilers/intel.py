@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,9 +30,6 @@ class Intel(Compiler):
         "f77": os.path.join("intel", "ifort"),
         "fc": os.path.join("intel", "ifort"),
     }
-
-    PrgEnv = "PrgEnv-intel"
-    PrgEnv_compiler = "intel"
 
     if sys.platform == "win32":
         version_argument = "/QV"
@@ -87,9 +84,9 @@ class Intel(Compiler):
 
     @property
     def cxx17_flag(self):
-        # Adapted from CMake's Intel-CXX rules.
-        if self.real_version < Version("18"):
-            raise UnsupportedCompilerFlag(self, "the C++17 standard", "cxx17_flag", "< 18")
+        # https://www.intel.com/content/www/us/en/developer/articles/news/c17-features-supported-by-c-compiler.html
+        if self.real_version < Version("19"):
+            raise UnsupportedCompilerFlag(self, "the C++17 standard", "cxx17_flag", "< 19")
         else:
             return "-std=c++17"
 
@@ -134,3 +131,14 @@ class Intel(Compiler):
     @property
     def stdcxx_libs(self):
         return ("-cxxlib",)
+
+    def setup_custom_environment(self, pkg, env):
+        # Edge cases for Intel's oneAPI compilers when using the legacy classic compilers:
+        # Always pass flags to disable deprecation warnings, since these warnings can
+        # confuse tools that parse the output of compiler commands (e.g. version checks).
+        if self.cc and self.cc.endswith("icc") and self.real_version >= Version("2021"):
+            env.append_flags("SPACK_ALWAYS_CFLAGS", "-diag-disable=10441")
+        if self.cxx and self.cxx.endswith("icpc") and self.real_version >= Version("2021"):
+            env.append_flags("SPACK_ALWAYS_CXXFLAGS", "-diag-disable=10441")
+        if self.fc and self.fc.endswith("ifort") and self.real_version >= Version("2021"):
+            env.append_flags("SPACK_ALWAYS_FFLAGS", "-diag-disable=10448")

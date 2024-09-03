@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -66,7 +66,6 @@ def _core_requirements() -> List[RequiredResponseType]:
     _core_system_exes = {
         "make": _missing("make", "required to build software from sources"),
         "patch": _missing("patch", "required to patch source code before building"),
-        "bash": _missing("bash", "required for Spack compiler wrapper"),
         "tar": _missing("tar", "required to manage code archives"),
         "gzip": _missing("gzip", "required to compress/decompress code archives"),
         "unzip": _missing("unzip", "required to compress/decompress code archives"),
@@ -125,7 +124,7 @@ def _development_requirements() -> List[RequiredResponseType]:
     # Ensure we trigger environment modifications if we have an environment
     if BootstrapEnvironment.spack_yaml().exists():
         with BootstrapEnvironment() as env:
-            env.update_syspath_and_environ()
+            env.load()
 
     return [
         _required_executable(

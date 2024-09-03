@@ -1,9 +1,8 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import inspect
 import os.path
 
 from spack.package import *
@@ -51,9 +50,7 @@ class Grackle(Package):
             "@LINK_VARIABLES_DEFINITION": link_variables,
         }
 
-        template = join_path(
-            os.path.dirname(inspect.getmodule(self).__file__), "Make.mach.template"
-        )
+        template = join_path(os.path.dirname(__file__), "Make.mach.template")
         makefile = join_path(
             self.stage.source_path, "src", "clib", "Make.mach.{0}".format(grackle_architecture)
         )

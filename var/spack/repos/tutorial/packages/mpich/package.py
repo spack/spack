@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,7 +60,7 @@ spack package at this time.""",
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
-    patch("mpich32_clang.patch", when="@3.2:3.2.0%clang")
+    patch("mpich32_clang.patch", when="@=3.2%clang")
 
     depends_on("findutils", type="build")
 
@@ -88,16 +88,10 @@ spack package at this time.""",
         pass
 
     def setup_dependent_package(self, module, dependent_spec):
-        if "platform=cray" in self.spec:
-            self.spec.mpicc = spack_cc
-            self.spec.mpicxx = spack_cxx
-            self.spec.mpifc = spack_fc
-            self.spec.mpif77 = spack_f77
-        else:
-            self.spec.mpicc = join_path(self.prefix.bin, "mpicc")
-            self.spec.mpicxx = join_path(self.prefix.bin, "mpic++")
-            self.spec.mpifc = join_path(self.prefix.bin, "mpif90")
-            self.spec.mpif77 = join_path(self.prefix.bin, "mpif77")
+        self.spec.mpicc = join_path(self.prefix.bin, "mpicc")
+        self.spec.mpicxx = join_path(self.prefix.bin, "mpic++")
+        self.spec.mpifc = join_path(self.prefix.bin, "mpif90")
+        self.spec.mpif77 = join_path(self.prefix.bin, "mpif77")
 
         self.spec.mpicxx_shared_libs = [
             join_path(self.prefix.lib, "libmpicxx.{0}".format(dso_suffix)),

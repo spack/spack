@@ -1,13 +1,12 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import inspect
 from typing import Optional, Tuple
 
 import llnl.util.lang as lang
 
-from spack.directives import extends, maintainers
+from spack.directives import extends
 
 from .generic import GenericBuilder, Package
 
@@ -51,7 +50,7 @@ class RBuilder(GenericBuilder):
 
         args.extend(["--library={0}".format(self.pkg.module.r_lib_dir), self.stage.source_path])
 
-        inspect.getmodule(self.pkg).R(*args)
+        pkg.module.R(*args)
 
 
 class RPackage(Package):
@@ -70,8 +69,6 @@ class RPackage(Package):
     bioc: Optional[str] = None
 
     GenericBuilder = RBuilder
-
-    maintainers("glennpj")
 
     #: This attribute is used in UI queries that need to know the build
     #: system base class

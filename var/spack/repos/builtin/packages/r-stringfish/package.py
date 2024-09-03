@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RStringfish(RPackage):
     cran = "stringfish"
 
     maintainers("dorton21")
+
+    license("GPL-3.0-only")
 
     version("0.15.7", sha256="34b1703a8876a40860d35f88a94e069832a7d2bc86189ff07af84ff04fd4b735")
     version("0.15.5", sha256="9df21146a7710e5a9ab4bb53ebc231a580c798b7e541b8d78df53207283f8129")

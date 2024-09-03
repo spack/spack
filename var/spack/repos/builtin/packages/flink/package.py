@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Flink(Package):
     homepage = "https://flink.apache.org/"
     url = "https://archive.apache.org/dist/flink/flink-1.9.1/flink-1.9.1-bin-scala_2.11.tgz"
 
+    license("BSD-2-Clause")
+
     version("1.9.1", sha256="f69de344cd593e92f8261e19ae8a47b3910e9a70a7cd1ccfb1ecd1ff000b93ea")
     version("1.9.0", sha256="a2245f68309e94ed54d86a680232a518aed9c5ea030bcc0b298bc8f27165eeb7")
     version("1.8.3", sha256="1ba90e99f70ad7e2583d48d1404d1c09e327e8fb8fa716b1823e427464cc8dc0")
@@ -24,7 +26,7 @@ class Flink(Package):
     depends_on("java@8:", type="run")
 
     def url_for_version(self, version):
-        url = "http://archive.apache.org/dist/flink/flink-{0}/flink-{0}-bin-scala_2.11.tgz"
+        url = "https://archive.apache.org/dist/flink/flink-{0}/flink-{0}-bin-scala_2.11.tgz"
         return url.format(version)
 
     def install(self, spec, prefix):

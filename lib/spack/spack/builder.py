@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,10 +6,12 @@ import collections
 import collections.abc
 import copy
 import functools
-import inspect
 from typing import List, Optional, Tuple
 
+from llnl.util import lang
+
 import spack.build_environment
+import spack.multimethod
 
 #: Builder classes, as registered by the "builder" decorator
 BUILDER_CLS = {}
@@ -63,7 +65,7 @@ def create(pkg):
     return _BUILDERS[id(pkg)]
 
 
-class _PhaseAdapter(object):
+class _PhaseAdapter:
     def __init__(self, builder, phase_fn):
         self.builder = builder
         self.phase_fn = phase_fn
@@ -94,11 +96,10 @@ def _create(pkg):
     Args:
         pkg (spack.package_base.PackageBase): package object for which we need a builder
     """
-    package_module = inspect.getmodule(pkg)
     package_buildsystem = buildsystem_name(pkg)
     default_builder_cls = BUILDER_CLS[package_buildsystem]
     builder_cls_name = default_builder_cls.__name__
-    builder_cls = getattr(package_module, builder_cls_name, None)
+    builder_cls = getattr(pkg.module, builder_cls_name, None)
     if builder_cls:
         return builder_cls(pkg)
 
@@ -115,7 +116,7 @@ def _create(pkg):
     # package. The semantic should be the same as the method in the base builder were still
     # present in the base class of the package.
 
-    class _ForwardToBaseBuilder(object):
+    class _ForwardToBaseBuilder:
         def __init__(self, wrapped_pkg_object, root_builder):
             self.wrapped_package_object = wrapped_pkg_object
             self.root_builder = root_builder
@@ -188,7 +189,7 @@ def _create(pkg):
             # Attribute containing the package wrapped in dispatcher with a `__getattr__`
             # method that will forward certain calls to the default builder.
             self.pkg_with_dispatcher = _ForwardToBaseBuilder(pkg, root_builder=self)
-            super(Adapter, self).__init__(pkg)
+            super().__init__(pkg)
 
         # These two methods don't follow the (self, spec, prefix) signature of phases nor
         # the (self) signature of methods, so they are added explicitly to avoid using a
@@ -231,24 +232,27 @@ class PhaseCallbacksMeta(type):
         for temporary_stage in (_RUN_BEFORE, _RUN_AFTER):
             staged_callbacks = temporary_stage.callbacks
 
-            # We don't have callbacks in this class, move on
-            if not staged_callbacks:
+            # Here we have an adapter from an old-style package. This means there is no
+            # hierarchy of builders, and every callback that had to be combined between
+            # *Package and *Builder has been combined already by _PackageAdapterMeta
+            if name == "Adapter":
                 continue
 
-            # If we are here we have callbacks. To get a complete list, get first what
-            # was attached to parent classes, then prepend what we have registered here.
+            # If we are here we have callbacks. To get a complete list, we accumulate all the
+            # callbacks from base classes, we deduplicate them, then prepend what we have
+            # registered here.
             #
             # The order should be:
             # 1. Callbacks are registered in order within the same class
             # 2. Callbacks defined in derived classes precede those defined in base
             #    classes
+            callbacks_from_base = []
             for base in bases:
-                callbacks_from_base = getattr(base, temporary_stage.attribute_name, None)
-                if callbacks_from_base:
-                    break
-            else:
-                callbacks_from_base = []
-
+                current_callbacks = getattr(base, temporary_stage.attribute_name, None)
+                if not current_callbacks:
+                    continue
+                callbacks_from_base.extend(current_callbacks)
+            callbacks_from_base = list(lang.dedupe(callbacks_from_base))
             # Set the callbacks in this class and flush the temporary stage
             attr_dict[temporary_stage.attribute_name] = staged_callbacks[:] + callbacks_from_base
             del temporary_stage.callbacks[:]
@@ -290,7 +294,11 @@ class PhaseCallbacksMeta(type):
         return _decorator
 
 
-class BuilderMeta(PhaseCallbacksMeta, type(collections.abc.Sequence)):  # type: ignore
+class BuilderMeta(
+    PhaseCallbacksMeta,
+    spack.multimethod.MultiMethodMeta,
+    type(collections.abc.Sequence),  # type: ignore
+):
     pass
 
 
@@ -388,7 +396,7 @@ class _PackageAdapterMeta(BuilderMeta):
         return super(_PackageAdapterMeta, mcs).__new__(mcs, name, bases, attr_dict)
 
 
-class InstallationPhase(object):
+class InstallationPhase:
     """Manages a single phase of the installation.
 
     This descriptor stores at creation time the name of the method it should
@@ -530,9 +538,9 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
                 modifications to be applied when the package is built. Package authors
                 can call methods on it to alter the build environment.
         """
-        if not hasattr(super(Builder, self), "setup_build_environment"):
+        if not hasattr(super(), "setup_build_environment"):
             return
-        super(Builder, self).setup_build_environment(env)
+        super().setup_build_environment(env)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Sets up the build environment of packages that depend on this one.
@@ -563,9 +571,9 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        if not hasattr(super(Builder, self), "setup_dependent_build_environment"):
+        if not hasattr(super(), "setup_dependent_build_environment"):
             return
-        super(Builder, self).setup_dependent_build_environment(env, dependent_spec)
+        super().setup_dependent_build_environment(env, dependent_spec)
 
     def __getitem__(self, idx):
         key = self.phases[idx]

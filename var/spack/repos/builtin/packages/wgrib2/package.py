@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,6 +37,9 @@ class Wgrib2(MakefilePackage):
         sha256="d7f1a4f9872922c62b3c7818c022465532cca1f5666b75d3ac5735f0b2747793",
         extension="tar.gz",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("netcdf3", default=True, description="Link in netcdf3 library to write netcdf3 files")
     variant(
@@ -150,7 +153,7 @@ class Wgrib2(MakefilePackage):
             makefile.filter(r"^%s=.*" % makefile_option, "{}={}".format(makefile_option, value))
 
     def setup_build_environment(self, env):
-        if self.spec.compiler.name in "intel":
+        if self.spec.compiler.name in ["oneapi", "intel"]:
             comp_sys = "intel_linux"
         elif self.spec.compiler.name in ["gcc", "clang", "apple-clang"]:
             comp_sys = "gnu_linux"

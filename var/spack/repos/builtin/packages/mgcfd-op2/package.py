@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,9 @@ class MgcfdOp2(MakefilePackage):
     maintainers("tomdeakin", "gihanmudalige", "bozbez")
 
     version("v1.0.0-rc1")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("mpi", default=False, description="Enable MPI support")
 
@@ -53,11 +56,6 @@ class MgcfdOp2(MakefilePackage):
         if self.spec.compiler.name == "arm":
             makefile.filter(r"CPP := clang", r"CPP := armclang")
             makefile.filter(r"-cxx=clang.*", "")
-
-        # Cray systems require use of 'cc' and 'CC' to call correct mpi wrappers
-        if self.spec.platform == "cray":
-            makefile.filter("mpicc", "cc")
-            makefile.filter("mpicxx", "CC")
 
         if self.spec.compiler.name == "nvhpc":
             makefile.filter("pgc", "nvc")

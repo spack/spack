@@ -1,10 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
@@ -13,7 +12,7 @@ from spack.filesystem_view import SimpleFilesystemView, YamlFilesystemView
 from spack.spec import Spec
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_remove_extensions_ordered(install_mockery, mock_fetch, tmpdir):
     view_dir = str(tmpdir.join("view"))
     layout = DirectoryLayout(view_dir)
@@ -34,8 +33,8 @@ def test_view_with_spec_not_contributing_files(mock_packages, tmpdir):
     layout = DirectoryLayout(view_dir)
     view = SimpleFilesystemView(view_dir, layout)
 
-    a = Spec("a")
-    b = Spec("b")
+    a = Spec("pkg-a")
+    b = Spec("pkg-b")
     a.prefix = os.path.join(tmpdir, "a")
     b.prefix = os.path.join(tmpdir, "b")
     a._mark_concrete()

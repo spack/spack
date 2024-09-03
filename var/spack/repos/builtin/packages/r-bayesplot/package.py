@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class RBayesplot(RPackage):
     packages interfacing with 'Stan'."""
 
     cran = "bayesplot"
+
+    license("GPL-3.0-or-later")
 
     version("1.10.0", sha256="bb4cb92b1ae4cf8ae5f4b5cb092aba34af3d820d137e1f2265cca8f3e85113ff")
     version("1.9.0", sha256="0a81a4b99cf781334e57cfc3c469fad8b932a68204016a3bbca33cab4e2a1e43")

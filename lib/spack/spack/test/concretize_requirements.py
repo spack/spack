@@ -1,9 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import pathlib
-import sys
 
 import pytest
 
@@ -14,11 +14,12 @@ import spack.package_base
 import spack.repo
 import spack.util.spack_yaml as syaml
 import spack.version
-from spack.solver.asp import UnsatisfiableSpecError
+from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
 from spack.spec import Spec
+from spack.test.conftest import create_test_repo
 from spack.util.url import path_to_file_url
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows uses old concretizer")
+pytestmark = [pytest.mark.not_on_windows("Windows uses old concretizer")]
 
 
 def update_packages_config(conf_str):
@@ -66,55 +67,40 @@ class V(Package):
 )
 
 
+_pkgt = (
+    "t",
+    """\
+class T(Package):
+    version('2.1')
+    version('2.0')
+
+    depends_on('u', when='@2.1:')
+""",
+)
+
+
+_pkgu = (
+    "u",
+    """\
+class U(Package):
+    version('1.1')
+    version('1.0')
+""",
+)
+
+
 @pytest.fixture
-def create_test_repo(tmpdir, mutable_config):
-    repo_path = str(tmpdir)
-    repo_yaml = tmpdir.join("repo.yaml")
-    with open(str(repo_yaml), "w") as f:
-        f.write(
-            """\
-repo:
-  namespace: testcfgrequirements
-"""
-        )
-
-    packages_dir = tmpdir.join("packages")
-    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv]:
-        pkg_dir = packages_dir.ensure(pkg_name, dir=True)
-        pkg_file = pkg_dir.join("package.py")
-        with open(str(pkg_file), "w") as f:
-            f.write(pkg_str)
-
-    yield spack.repo.Repo(repo_path)
+def _create_test_repo(tmpdir, mutable_config):
+    yield create_test_repo(tmpdir, [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu])
 
 
 @pytest.fixture
-def test_repo(create_test_repo, monkeypatch, mock_stage):
-    with spack.repo.use_repositories(create_test_repo) as mock_repo_path:
+def test_repo(_create_test_repo, monkeypatch, mock_stage):
+    with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
         yield mock_repo_path
 
 
-class MakeStage(object):
-    def __init__(self, stage):
-        self.stage = stage
-
-    def __call__(self, *args, **kwargs):
-        return self.stage
-
-
-@pytest.fixture
-def fake_installs(monkeypatch, tmpdir):
-    stage_path = str(tmpdir.ensure("fake-stage", dir=True))
-    universal_unused_stage = spack.stage.DIYStage(stage_path)
-    monkeypatch.setattr(
-        spack.build_systems.generic.Package, "_make_stage", MakeStage(universal_unused_stage)
-    )
-
-
 def test_one_package_multiple_reqs(concretize_scope, test_repo):
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
     conf_str = """\
 packages:
   y:
@@ -131,9 +117,6 @@ def test_requirement_isnt_optional(concretize_scope, test_repo):
     """If a user spec requests something that directly conflicts
     with a requirement, make sure we get an error.
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
     conf_str = """\
 packages:
   x:
@@ -142,6 +125,39 @@ packages:
     update_packages_config(conf_str)
     with pytest.raises(UnsatisfiableSpecError):
         Spec("x@1.1").concretize()
+
+
+def test_require_undefined_version(concretize_scope, test_repo):
+    """If a requirement specifies a numbered version that isn't in
+    the associated package.py and isn't part of a Git hash
+    equivalence (hash=number), then Spack should raise an error
+    (it is assumed this is a typo, and raising the error here
+    avoids a likely error when Spack attempts to fetch the version).
+    """
+    conf_str = """\
+packages:
+  x:
+    require: "@1.2"
+"""
+    update_packages_config(conf_str)
+    with pytest.raises(spack.config.ConfigError):
+        Spec("x").concretize()
+
+
+def test_require_truncated(concretize_scope, test_repo):
+    """A requirement specifies a version range, with satisfying
+    versions defined in the package.py. Make sure we choose one
+    of the defined versions (vs. allowing the requirement to
+    define a new version).
+    """
+    conf_str = """\
+packages:
+  x:
+    require: "@1"
+"""
+    update_packages_config(conf_str)
+    xspec = Spec("x").concretized()
+    assert xspec.satisfies("@1.1")
 
 
 def test_git_user_supplied_reference_satisfaction(
@@ -195,9 +211,6 @@ def test_git_user_supplied_reference_satisfaction(
 def test_requirement_adds_new_version(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
@@ -220,11 +233,44 @@ packages:
     assert s1.version.ref == a_commit_hash
 
 
-def test_requirement_adds_git_hash_version(
+def test_requirement_adds_version_satisfies(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
+    """Make sure that new versions added by requirements are factored into
+    conditions. In this case create a new version that satisfies a
+    depends_on condition and make sure it is triggered (i.e. the
+    dependency is added).
+    """
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
+    )
+
+    # Sanity check: early version of T does not include U
+    s0 = Spec("t@2.0").concretized()
+    assert not ("u" in s0)
+
+    conf_str = """\
+packages:
+  t:
+    require: "@{0}=2.2"
+""".format(
+        commits[0]
+    )
+    update_packages_config(conf_str)
+
+    s1 = Spec("t").concretized()
+    assert "u" in s1
+    assert s1.satisfies("@2.2")
+
+
+@pytest.mark.parametrize("require_checksum", (True, False))
+def test_requirement_adds_git_hash_version(
+    require_checksum, concretize_scope, test_repo, mock_git_version_info, monkeypatch, working_env
+):
+    # A full commit sha is a checksummed version, so this test should pass in both cases
+    if require_checksum:
+        os.environ["SPACK_CONCRETIZER_REQUIRE_CHECKSUM"] = "yes"
 
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
@@ -247,9 +293,6 @@ packages:
 def test_requirement_adds_multiple_new_versions(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
@@ -272,9 +315,9 @@ packages:
 def test_preference_adds_new_version(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
+    """Normally a preference cannot define a new version, but that constraint
+    is ignored if the version is a Git hash-based version.
+    """
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
@@ -296,13 +339,30 @@ packages:
     assert not s3.satisfies("@2.3")
 
 
+def test_external_adds_new_version_that_is_preferred(concretize_scope, test_repo):
+    """Test that we can use a version, not declared in package recipe, as the
+    preferred version if that version appears in an external spec.
+    """
+    conf_str = """\
+packages:
+  y:
+    version: ["2.7"]
+    externals:
+    - spec: y@2.7 # Not defined in y
+      prefix: /fake/nonexistent/path/
+    buildable: false
+"""
+    update_packages_config(conf_str)
+
+    spec = Spec("x").concretized()
+    assert spec["y"].satisfies("@2.7")
+    assert spack.version.Version("2.7") not in spec["y"].package.versions
+
+
 def test_requirement_is_successfully_applied(concretize_scope, test_repo):
     """If a simple requirement can be satisfied, make sure the
     concretization succeeds and the requirement spec is applied.
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
     s1 = Spec("x").concretized()
     # Without any requirements/preferences, the later version is preferred
     assert s1.satisfies("@1.1")
@@ -322,9 +382,6 @@ def test_multiple_packages_requirements_are_respected(concretize_scope, test_rep
     """Apply requirements to two packages; make sure the concretization
     succeeds and both requirements are respected.
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
     conf_str = """\
 packages:
   x:
@@ -342,9 +399,6 @@ def test_oneof(concretize_scope, test_repo):
     """'one_of' allows forcing the concretizer to satisfy one of
     the specs in the group (but not all have to be satisfied).
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
     conf_str = """\
 packages:
   y:
@@ -362,9 +416,6 @@ def test_one_package_multiple_oneof_groups(concretize_scope, test_repo):
     """One package has two 'one_of' groups; check that both are
     applied.
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
     conf_str = """\
 packages:
   y:
@@ -382,19 +433,22 @@ packages:
 
 
 @pytest.mark.regression("34241")
-def test_require_cflags(concretize_scope, test_repo):
+def test_require_cflags(concretize_scope, mock_packages):
     """Ensures that flags can be required from configuration."""
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
-
     conf_str = """\
 packages:
-  y:
+  mpich2:
     require: cflags="-g"
+  mpi:
+    require: mpich cflags="-O1"
 """
     update_packages_config(conf_str)
-    spec = Spec("y").concretized()
-    assert spec.satisfies("cflags=-g")
+
+    spec_mpich2 = Spec("mpich2").concretized()
+    assert spec_mpich2.satisfies("cflags=-g")
+
+    spec_mpi = Spec("mpi").concretized()
+    assert spec_mpi.satisfies("mpich cflags=-O1")
 
 
 def test_requirements_for_package_that_is_not_needed(concretize_scope, test_repo):
@@ -402,9 +456,6 @@ def test_requirements_for_package_that_is_not_needed(concretize_scope, test_repo
     a dependency of a concretized spec (in other words, none of
     the requirements are used for the requested spec).
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
     # Note that the exact contents aren't important since this isn't
     # intended to be used, but the important thing is that a number of
     # packages have requirements applied
@@ -428,9 +479,6 @@ def test_oneof_ordering(concretize_scope, test_repo):
     This priority should override default priority (e.g. choosing
     later versions).
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
     conf_str = """\
 packages:
   y:
@@ -446,10 +494,7 @@ packages:
     assert s2.satisfies("@2.5")
 
 
-def test_reuse_oneof(concretize_scope, create_test_repo, mutable_database, fake_installs):
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
+def test_reuse_oneof(concretize_scope, _create_test_repo, mutable_database, mock_fetch):
     conf_str = """\
 packages:
   y:
@@ -457,7 +502,7 @@ packages:
     - one_of: ["@2.5", "%gcc"]
 """
 
-    with spack.repo.use_repositories(create_test_repo):
+    with spack.repo.use_repositories(_create_test_repo):
         s1 = Spec("y@2.5%gcc").concretized()
         s1.package.do_install(fake=True, explicit=True)
 
@@ -468,32 +513,42 @@ packages:
             assert not s2.satisfies("@2.5 %gcc")
 
 
-def test_requirements_are_higher_priority_than_deprecation(concretize_scope, test_repo):
-    """Test that users can override a deprecated version with a requirement."""
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
+@pytest.mark.parametrize(
+    "allow_deprecated,expected,not_expected",
+    [(True, ["@=2.3", "%gcc"], []), (False, ["%gcc"], ["@=2.3"])],
+)
+def test_requirements_and_deprecated_versions(
+    allow_deprecated, expected, not_expected, concretize_scope, test_repo
+):
+    """Tests the expected behavior of requirements and deprecated versions.
 
-    # @2.3 is a deprecated versions. Ensure that any_of picks both constraints,
+    If deprecated versions are not allowed, concretization should just pick
+    the other requirement.
+
+    If deprecated versions are allowed, both requirements are honored.
+    """
+    # 2.3 is a deprecated versions. Ensure that any_of picks both constraints,
     # since they are possible
     conf_str = """\
 packages:
   y:
     require:
-    - any_of: ["@2.3", "%gcc"]
+    - any_of: ["@=2.3", "%gcc"]
 """
     update_packages_config(conf_str)
 
-    s1 = Spec("y").concretized()
-    assert s1.satisfies("@2.3")
-    assert s1.satisfies("%gcc")
+    with spack.config.override("config:deprecated", allow_deprecated):
+        s1 = Spec("y").concretized()
+        for constrain in expected:
+            assert s1.satisfies(constrain)
+
+        for constrain in not_expected:
+            assert not s1.satisfies(constrain)
 
 
 @pytest.mark.parametrize("spec_str,requirement_str", [("x", "%gcc"), ("x", "%clang")])
 def test_default_requirements_with_all(spec_str, requirement_str, concretize_scope, test_repo):
     """Test that default requirements are applied to all packages."""
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
     conf_str = """\
 packages:
   all:
@@ -519,8 +574,6 @@ def test_default_and_package_specific_requirements(
     concretize_scope, requirements, expectations, test_repo
 ):
     """Test that specific package requirements override default package requirements."""
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
     generic_req, specific_req = requirements
     generic_exp, specific_exp = expectations
     conf_str = """\
@@ -542,8 +595,6 @@ packages:
 
 @pytest.mark.parametrize("mpi_requirement", ["mpich", "mpich2", "zmpi"])
 def test_requirements_on_virtual(mpi_requirement, concretize_scope, mock_packages):
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
     conf_str = """\
 packages:
   mpi:
@@ -565,8 +616,6 @@ packages:
 def test_requirements_on_virtual_and_on_package(
     mpi_requirement, specific_requirement, concretize_scope, mock_packages
 ):
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
     conf_str = """\
 packages:
   mpi:
@@ -585,8 +634,6 @@ packages:
 
 
 def test_incompatible_virtual_requirements_raise(concretize_scope, mock_packages):
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
     conf_str = """\
     packages:
       mpi:
@@ -595,13 +642,12 @@ def test_incompatible_virtual_requirements_raise(concretize_scope, mock_packages
     update_packages_config(conf_str)
 
     spec = Spec("callpath ^zmpi")
-    with pytest.raises(UnsatisfiableSpecError):
+    # TODO (multiple nodes): recover a better error message later
+    with pytest.raises((UnsatisfiableSpecError, InternalConcretizerError)):
         spec.concretize()
 
 
 def test_non_existing_variants_under_all(concretize_scope, mock_packages):
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
     conf_str = """\
     packages:
       all:
@@ -684,9 +730,6 @@ def test_conditional_requirements_from_packages_yaml(
     """Test that conditional requirements are required when the condition is met,
     and optional when the condition is not met.
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
     update_packages_config(packages_yaml)
     spec = Spec(spec_str).concretized()
     for match_str, expected in expected_satisfies:
@@ -762,9 +805,6 @@ def test_requirements_fail_with_custom_message(
     """Test that specs failing due to requirements not being satisfiable fail with a
     custom error message.
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
     update_packages_config(packages_yaml)
     with pytest.raises(spack.error.SpackError, match=expected_message):
         Spec(spec_str).concretized()
@@ -778,9 +818,6 @@ def test_skip_requirement_when_default_requirement_condition_cannot_be_met(
     package. For those packages the requirement rule is not emitted, since it can be
     determined to be always false.
     """
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
-
     packages_yaml = """
         packages:
           all:
@@ -798,9 +835,9 @@ def test_skip_requirement_when_default_requirement_condition_cannot_be_met(
 
 
 def test_requires_directive(concretize_scope, mock_packages):
-    if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
     compilers_yaml = pathlib.Path(concretize_scope) / "compilers.yaml"
+
+    # NOTE: target is omitted here so that the test works on aarch64, as well.
     compilers_yaml.write_text(
         """
 compilers::
@@ -812,11 +849,10 @@ compilers::
       f77: null
       fc: null
     operating_system: debian6
-    target: x86_64
     modules: []
 """
     )
-    spack.config.config.clear_caches()
+    spack.config.CONFIG.clear_caches()
 
     # This package requires either clang or gcc
     s = Spec("requires_clang_or_gcc").concretized()
@@ -825,3 +861,341 @@ compilers::
     # This package can only be compiled with clang
     with pytest.raises(spack.error.SpackError, match="can only be compiled with Clang"):
         Spec("requires_clang").concretized()
+
+
+@pytest.mark.parametrize(
+    "packages_yaml",
+    [
+        # Simple string
+        """
+        packages:
+          all:
+            require: "+shared"
+    """,
+        # List of strings
+        """
+        packages:
+          all:
+            require:
+            - "+shared"
+    """,
+        # Objects with attributes
+        """
+        packages:
+          all:
+            require:
+            - spec: "+shared"
+    """,
+        """
+        packages:
+          all:
+            require:
+            - one_of: ["+shared"]
+    """,
+    ],
+)
+def test_default_requirements_semantic(packages_yaml, concretize_scope, mock_packages):
+    """Tests that requirements under 'all:' are by default applied only if the variant/property
+    required exists, but are strict otherwise.
+
+    For example:
+
+      packages:
+        all:
+          require: "+shared"
+
+    should enforce the value of "+shared" when a Boolean variant named "shared" exists. This is
+    not overridable from the command line, so with the configuration above:
+
+    > spack spec zlib~shared
+
+    is unsatisfiable.
+    """
+    update_packages_config(packages_yaml)
+
+    # Regular zlib concretize to +shared
+    s = Spec("zlib").concretized()
+    assert s.satisfies("+shared")
+
+    # If we specify the variant we can concretize only the one matching the constraint
+    s = Spec("zlib +shared").concretized()
+    assert s.satisfies("+shared")
+    with pytest.raises(UnsatisfiableSpecError):
+        Spec("zlib ~shared").concretized()
+
+    # A spec without the shared variant still concretize
+    s = Spec("pkg-a").concretized()
+    assert not s.satisfies("pkg-a +shared")
+    assert not s.satisfies("pkg-a ~shared")
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,spec_str,expected,not_expected",
+    [
+        # The package has a 'libs' mv variant defaulting to 'libs=shared'
+        (
+            """
+        packages:
+          all:
+            require: "+libs"
+    """,
+            "multivalue-variant",
+            ["libs=shared"],
+            ["libs=static", "+libs"],
+        ),
+        (
+            """
+        packages:
+          all:
+            require: "libs=foo"
+    """,
+            "multivalue-variant",
+            ["libs=shared"],
+            ["libs=static", "libs=foo"],
+        ),
+        (
+            # (TODO): revisit this case when we'll have exact value semantic for mv variants
+            """
+        packages:
+          all:
+            require: "libs=static"
+    """,
+            "multivalue-variant",
+            ["libs=static", "libs=shared"],
+            [],
+        ),
+        (
+            # Constraint apply as a whole, so having a non-existing variant
+            # invalidate the entire constraint
+            """
+        packages:
+          all:
+            require: "libs=static +feefoo"
+    """,
+            "multivalue-variant",
+            ["libs=shared"],
+            ["libs=static"],
+        ),
+    ],
+)
+def test_default_requirements_semantic_with_mv_variants(
+    packages_yaml, spec_str, expected, not_expected, concretize_scope, mock_packages
+):
+    """Tests that requirements under 'all:' are behaving correctly under cases that could stem
+    from MV variants.
+    """
+    update_packages_config(packages_yaml)
+    s = Spec(spec_str).concretized()
+
+    for constraint in expected:
+        assert s.satisfies(constraint), constraint
+
+    for constraint in not_expected:
+        assert not s.satisfies(constraint), constraint
+
+
+@pytest.mark.regression("42084")
+def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages):
+    update_packages_config(
+        """
+    packages:
+      all:
+        providers:
+          scalapack: [netlib-scalapack]
+      blas:
+        require: intel-parallel-studio
+      lapack:
+        require: intel-parallel-studio
+      scalapack:
+        require: intel-parallel-studio
+    """
+    )
+    s = Spec("dla-future").concretized()
+
+    assert s["blas"].name == "intel-parallel-studio"
+    assert s["lapack"].name == "intel-parallel-studio"
+    assert s["scalapack"].name == "intel-parallel-studio"
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,spec_str,expected,not_expected",
+    [
+        (
+            """
+        packages:
+          all:
+            prefer:
+            - "%clang"
+            compiler: [gcc]
+    """,
+            "multivalue-variant",
+            ["%clang"],
+            ["%gcc"],
+        ),
+        (
+            """
+            packages:
+              all:
+                prefer:
+                - "%clang"
+        """,
+            "multivalue-variant %gcc",
+            ["%gcc"],
+            ["%clang"],
+        ),
+        # Test parsing objects instead of strings
+        (
+            """
+            packages:
+              all:
+                prefer:
+                - spec: "%clang"
+                compiler: [gcc]
+        """,
+            "multivalue-variant",
+            ["%clang"],
+            ["%gcc"],
+        ),
+    ],
+)
+def test_strong_preferences_packages_yaml(
+    packages_yaml, spec_str, expected, not_expected, concretize_scope, mock_packages
+):
+    """Tests that "preferred" specs are stronger than usual preferences, but can be overridden."""
+    update_packages_config(packages_yaml)
+    s = Spec(spec_str).concretized()
+
+    for constraint in expected:
+        assert s.satisfies(constraint), constraint
+
+    for constraint in not_expected:
+        assert not s.satisfies(constraint), constraint
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,spec_str",
+    [
+        (
+            """
+        packages:
+          all:
+            conflict:
+            - "%clang"
+    """,
+            "multivalue-variant %clang",
+        ),
+        # Use an object instead of a string in configuration
+        (
+            """
+        packages:
+          all:
+            conflict:
+            - spec: "%clang"
+              message: "cannot use clang"
+    """,
+            "multivalue-variant %clang",
+        ),
+        (
+            """
+            packages:
+              multivalue-variant:
+                conflict:
+                - spec: "%clang"
+                  when: "@2"
+                  message: "cannot use clang with version 2"
+        """,
+            "multivalue-variant@=2.3 %clang",
+        ),
+    ],
+)
+def test_conflict_packages_yaml(packages_yaml, spec_str, concretize_scope, mock_packages):
+    """Tests conflicts that are specified from configuration files."""
+    update_packages_config(packages_yaml)
+    with pytest.raises(UnsatisfiableSpecError):
+        Spec(spec_str).concretized()
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected,not_expected",
+    [
+        (
+            "forward-multi-value +cuda cuda_arch=10 ^dependency-mv~cuda",
+            ["cuda_arch=10", "^dependency-mv~cuda"],
+            ["cuda_arch=11", "^dependency-mv cuda_arch=10", "^dependency-mv cuda_arch=11"],
+        ),
+        (
+            "forward-multi-value +cuda cuda_arch=10 ^dependency-mv+cuda",
+            ["cuda_arch=10", "^dependency-mv cuda_arch=10"],
+            ["cuda_arch=11", "^dependency-mv cuda_arch=11"],
+        ),
+        (
+            "forward-multi-value +cuda cuda_arch=11 ^dependency-mv+cuda",
+            ["cuda_arch=11", "^dependency-mv cuda_arch=11"],
+            ["cuda_arch=10", "^dependency-mv cuda_arch=10"],
+        ),
+        (
+            "forward-multi-value +cuda cuda_arch=10,11 ^dependency-mv+cuda",
+            ["cuda_arch=10,11", "^dependency-mv cuda_arch=10,11"],
+            [],
+        ),
+    ],
+)
+def test_forward_multi_valued_variant_using_requires(
+    spec_str, expected, not_expected, config, mock_packages
+):
+    """Tests that a package can forward multivalue variants to dependencies, using
+    `requires` directives of the form:
+
+        for _val in ("shared", "static"):
+            requires(f"^some-virtual-mv libs={_val}", when=f"libs={_val} ^some-virtual-mv")
+    """
+    s = Spec(spec_str).concretized()
+
+    for constraint in expected:
+        assert s.satisfies(constraint)
+
+    for constraint in not_expected:
+        assert not s.satisfies(constraint)
+
+
+def test_strong_preferences_higher_priority_than_reuse(concretize_scope, mock_packages):
+    """Tests that strong preferences have a higher priority than reusing specs."""
+    reused_spec = Spec("adios2~bzip2").concretized()
+    reuse_nodes = list(reused_spec.traverse())
+    root_specs = [Spec("ascent+adios2")]
+
+    # Check that without further configuration adios2 is reused
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reuse_nodes)
+        ascent = result.specs[0]
+    assert ascent["adios2"].dag_hash() == reused_spec.dag_hash(), ascent
+
+    # If we stick a preference, adios2 is not reused
+    update_packages_config(
+        """
+    packages:
+      adios2:
+        prefer:
+        - "+bzip2"
+"""
+    )
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reuse_nodes)
+        ascent = result.specs[0]
+
+    assert ascent["adios2"].dag_hash() != reused_spec.dag_hash()
+    assert ascent["adios2"].satisfies("+bzip2")
+
+    # A preference is still preference, so we can override from input
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(
+            setup, [Spec("ascent+adios2 ^adios2~bzip2")], reuse=reuse_nodes
+        )
+        ascent = result.specs[0]
+    assert ascent["adios2"].dag_hash() == reused_spec.dag_hash(), ascent

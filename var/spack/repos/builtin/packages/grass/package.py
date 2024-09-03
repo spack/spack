@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,12 +19,17 @@ class Grass(AutotoolsPackage):
 
     maintainers("adamjstewart")
 
+    license("MIT")
+
     version("master", branch="master")
     version("8.2.0", sha256="621c3304a563be19c0220ae28f931a5e9ba74a53218c5556cd3f7fbfcca33a80")
     version("7.8.5", sha256="a359bb665524ecccb643335d70f5436b1c84ffb6a0e428b78dffebacd983ff37")
     version("7.8.2", sha256="33576f7078f805b39ca20c2fa416ac79c64260c0581072a6dc7d813f53aa9abb")
     version("7.8.1", sha256="6ae578fd67afcce7abec4ba4505dcc55b3d2dfe0ca46b99d966cb148c654abb3")
     version("7.8.0", sha256="4b1192294e959ffd962282344e4ff325c4472f73abe605e246a1da3beda7ccfa")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("cxx", default=True, description="Support C++ functionality")
     variant("tiff", default=False, description="Support TIFF functionality")
@@ -57,7 +62,7 @@ class Grass(AutotoolsPackage):
     # General requirements
     depends_on("gmake@3.81:", type="build")
     depends_on("iconv")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("flex", type="build")
     depends_on("bison", type="build")
     depends_on("proj")
@@ -87,7 +92,8 @@ class Grass(AutotoolsPackage):
     depends_on("opencl", when="+opencl")
     depends_on("bzip2", when="+bzlib")
     depends_on("zstd", when="+zstd")
-    depends_on("gdal@:3.2", when="+gdal")
+    depends_on("gdal", when="+gdal")
+    conflicts("^gdal@3.3:", when="@7.8")
     depends_on("liblas", when="+liblas")
     depends_on("wxwidgets", when="+wxwidgets")
     depends_on("py-wxpython@2.8.10.1:", when="+wxwidgets", type=("build", "run"))

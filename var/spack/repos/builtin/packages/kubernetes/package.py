@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,9 @@ class Kubernetes(Package):
 
     maintainers("alecbcs")
 
+    license("Apache-2.0")
+
+    version("1.27.2", sha256="c6fcfddd38f877ce49c49318973496f9a16672e83a29874a921242950cd1c5d2")
     version("1.27.1", sha256="3a3f7c6b8cf1d9f03aa67ba2f04669772b1205b89826859f1636062d5f8bec3f")
     version("1.27.0", sha256="536025dba2714ee5e940bb0a6b1df9ca97c244fa5b00236e012776a69121c323")
 
@@ -36,6 +39,8 @@ class Kubernetes(Package):
         sha256="b61a6eb3bd5251884f34853cc51aa31c6680e7e476268fe06eb33f3d95294f62",
         deprecated=True,
     )
+
+    depends_on("c", type="build")  # generated
 
     depends_on("bash", type="build")
     depends_on("go", type="build")

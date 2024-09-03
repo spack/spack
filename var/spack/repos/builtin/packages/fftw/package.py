@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,7 @@ class FftwBase(AutotoolsPackage):
     )
     variant("openmp", default=False, description="Enable OpenMP support.")
     variant("mpi", default=True, description="Activate MPI support")
+    variant("shared", default=True, description="Build shared libraries")
 
     depends_on("mpi", when="+mpi")
     depends_on("llvm-openmp", when="%apple-clang +openmp")
@@ -63,6 +64,13 @@ class FftwBase(AutotoolsPackage):
 
         return find_libraries(libraries, root=self.prefix, recursive=True)
 
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%clang@15:"):
+                flags.append("-Wno-error=int-conversion")
+
+        return flags, None, None
+
     def patch(self):
         # If fftw/config.h exists in the source tree, it will take precedence
         # over the copy in build dir.  As only the latter has proper config
@@ -97,7 +105,9 @@ class FftwBase(AutotoolsPackage):
 
     def configure(self, spec, prefix):
         # Base options
-        options = ["--prefix={0}".format(prefix), "--enable-shared", "--enable-threads"]
+        options = ["--prefix={0}".format(prefix), "--enable-threads"]
+        options.extend(self.enable_or_disable("shared"))
+
         if not self.compiler.f77 or not self.compiler.fc:
             options.append("--disable-fortran")
         if spec.satisfies("@:2"):
@@ -209,6 +219,8 @@ class Fftw(FftwBase):
     url = "https://www.fftw.org/fftw-3.3.4.tar.gz"
     list_url = "https://www.fftw.org/download.html"
 
+    license("GPL-2.0-or-later")
+
     version("3.3.10", sha256="56c932549852cddcfafdab3820b0200c7742675be92179e59e6215b340e26467")
     version("3.3.9", sha256="bf2c7ce40b04ae811af714deb512510cc2c17b9ab9d6ddcf49fe4487eea7af3d")
     version("3.3.8", sha256="6113262f6e92c5bd474f2875fa1b01054c4ad5040f6b0da7c03c98821d9ae303")
@@ -217,6 +229,9 @@ class Fftw(FftwBase):
     version("3.3.5", sha256="8ecfe1b04732ec3f5b7d279fdb8efcad536d555f9d1e8fabd027037d45ea8bcf")
     version("3.3.4", sha256="8f0cde90929bc05587c3368d2f15cd0530a60b8a9912a8e2979a72dbe5af0982")
     version("2.1.5", sha256="f8057fae1c7df8b99116783ef3e94a6a44518d49c72e2e630c24b689c6022630")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant(
         "pfft_patches",

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Rocketmq(Package):
 
     homepage = "https://rocketmq.apache.org/"
     url = "https://archive.apache.org/dist/rocketmq/4.5.2/rocketmq-all-4.5.2-bin-release.zip"
+
+    license("Apache-2.0")
 
     version("4.6.0", sha256="584910d50639297808dd0b86fcdfaf431efd9607009a44c6258d9a0e227748fe")
     version("4.5.2", sha256="f7711ef9c203d7133e70e0e1e887025d7dd80d29f6d5283ca6022b12576b8aba")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,9 +11,10 @@ import re
 import shutil
 import sys
 from contextlib import contextmanager
+from pathlib import Path
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
+from llnl.util.symlink import readlink
 
 import spack.config
 import spack.hash_types as ht
@@ -21,13 +22,8 @@ import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
 
-# Note: Posixpath is used here as opposed to
-# os.path.join due to spack.spec.Spec.format
-# requiring forward slash path seperators at this stage
 default_projections = {
-    "all": posixpath.join(
-        "{architecture}", "{compiler.name}-{compiler.version}", "{name}-{version}-{hash}"
-    )
+    "all": "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
 }
 
 
@@ -37,7 +33,7 @@ def _check_concrete(spec):
         raise ValueError("Specs passed to a DirectoryLayout must be concrete!")
 
 
-class DirectoryLayout(object):
+class DirectoryLayout:
     """A directory layout is used to associate unique paths with specs.
     Different installations are going to want different layouts for their
     install, and they can use this to customize the nesting structure of
@@ -103,8 +99,8 @@ class DirectoryLayout(object):
         _check_concrete(spec)
 
         projection = spack.projections.get_projection(self.projections, spec)
-        path = spec.format(projection)
-        return path
+        path = spec.format_path(projection)
+        return str(Path(path))
 
     def write_spec(self, spec, path):
         """Write a spec out to a file."""
@@ -119,10 +115,8 @@ class DirectoryLayout(object):
         versioning. We use it in the case that an analysis later needs to
         easily access this information.
         """
-        from spack.util.environment import get_host_environment_metadata
-
         env_file = self.env_metadata_path(spec)
-        environ = get_host_environment_metadata()
+        environ = spack.spec.get_host_environment_metadata()
         with open(env_file, "w") as fd:
             sjson.dump(environ, fd)
 
@@ -152,20 +146,9 @@ class DirectoryLayout(object):
     def spec_file_path(self, spec):
         """Gets full path to spec file"""
         _check_concrete(spec)
-        # Attempts to convert to JSON if possible.
-        # Otherwise just returns the YAML.
         yaml_path = os.path.join(self.metadata_path(spec), self._spec_file_name_yaml)
         json_path = os.path.join(self.metadata_path(spec), self.spec_file_name)
-        if os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path):
-            self.write_spec(spec, json_path)
-            try:
-                os.remove(yaml_path)
-            except OSError as err:
-                tty.debug("Could not remove deprecated {0}".format(yaml_path))
-                tty.debug(err)
-        elif os.path.exists(yaml_path):
-            return yaml_path
-        return json_path
+        return yaml_path if os.path.exists(yaml_path) else json_path
 
     def deprecated_file_path(self, deprecated_spec, deprecator_spec=None):
         """Gets full path to spec file for deprecated spec
@@ -182,7 +165,7 @@ class DirectoryLayout(object):
         base_dir = (
             self.path_for_spec(deprecator_spec)
             if deprecator_spec
-            else os.readlink(deprecated_spec.prefix)
+            else readlink(deprecated_spec.prefix)
         )
 
         yaml_path = os.path.join(
@@ -199,17 +182,7 @@ class DirectoryLayout(object):
             deprecated_spec.dag_hash() + "_" + self.spec_file_name,
         )
 
-        if os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path):
-            self.write_spec(deprecated_spec, json_path)
-            try:
-                os.remove(yaml_path)
-            except (IOError, OSError) as err:
-                tty.debug("Could not remove deprecated {0}".format(yaml_path))
-                tty.debug(err)
-        elif os.path.exists(yaml_path):
-            return yaml_path
-
-        return json_path
+        return yaml_path if os.path.exists(yaml_path) else json_path
 
     @contextmanager
     def disable_upstream_check(self):
@@ -325,7 +298,7 @@ class DirectoryLayout(object):
         if spec.external:
             return spec.external_path
         if self.check_upstream:
-            upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+            upstream, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
             if upstream:
                 raise SpackError(
                     "Internal error: attempted to call path_for_spec on"
@@ -388,14 +361,14 @@ class DirectoryLayoutError(SpackError):
     """Superclass for directory layout errors."""
 
     def __init__(self, message, long_msg=None):
-        super(DirectoryLayoutError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
 
 
 class RemoveFailedError(DirectoryLayoutError):
     """Raised when a DirectoryLayout cannot remove an install prefix."""
 
     def __init__(self, installed_spec, prefix, error):
-        super(RemoveFailedError, self).__init__(
+        super().__init__(
             "Could not remove prefix %s for %s : %s" % (prefix, installed_spec.short_spec, error)
         )
         self.cause = error
@@ -405,7 +378,7 @@ class InconsistentInstallDirectoryError(DirectoryLayoutError):
     """Raised when a package seems to be installed to the wrong place."""
 
     def __init__(self, message, long_msg=None):
-        super(InconsistentInstallDirectoryError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
 
 
 class SpecReadError(DirectoryLayoutError):
@@ -416,7 +389,7 @@ class InvalidDirectoryLayoutParametersError(DirectoryLayoutError):
     """Raised when a invalid directory layout parameters are supplied"""
 
     def __init__(self, message, long_msg=None):
-        super(InvalidDirectoryLayoutParametersError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
 
 
 class InvalidExtensionSpecError(DirectoryLayoutError):
@@ -427,16 +400,14 @@ class ExtensionAlreadyInstalledError(DirectoryLayoutError):
     """Raised when an extension is added to a package that already has it."""
 
     def __init__(self, spec, ext_spec):
-        super(ExtensionAlreadyInstalledError, self).__init__(
-            "%s is already installed in %s" % (ext_spec.short_spec, spec.short_spec)
-        )
+        super().__init__("%s is already installed in %s" % (ext_spec.short_spec, spec.short_spec))
 
 
 class ExtensionConflictError(DirectoryLayoutError):
     """Raised when an extension is added to a package that already has it."""
 
     def __init__(self, spec, ext_spec, conflict):
-        super(ExtensionConflictError, self).__init__(
+        super().__init__(
             "%s cannot be installed in %s because it conflicts with %s"
             % (ext_spec.short_spec, spec.short_spec, conflict.short_spec)
         )
