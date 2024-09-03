@@ -225,7 +225,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("mpi", when="+mpi")
 
-
     depends_on("qt@:4", when="@:5.2.0+qt")
     # explictly require sql
     depends_on("qt+opengl+sql", when="@5.3.0:+qt+opengl2")
@@ -238,7 +237,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     for plat in ["linux", "darwin", "cray"]:
         with when(f"platform={plat}"):
-            requires("^[virtuals=gl] glx", when="+qt", msg="Qt support requires GLX on non Windows")
+            requires(
+                "^[virtuals=gl] glx", when="+qt", msg="Qt support requires GLX on non Windows"
+            )
 
     depends_on("ospray@2.1:2", when="+raytracing")
     depends_on("openimagedenoise", when="+raytracing")
