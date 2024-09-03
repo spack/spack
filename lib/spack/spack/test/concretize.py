@@ -559,12 +559,12 @@ class TestConcretize:
             # Propagate from a node that is not the root node
             (
                 "ascent +adios2 ^adios2~~shared",
-                [("ascent", "+shared"), ("adios2", "~shared"), ("bzip2", "~shared")]
+                [("ascent", "+shared"), ("adios2", "~shared"), ("bzip2", "~shared")],
             ),
             # Propagate, but lower nnodes use the other valu explicitly
             (
                 "ascennt~~shared +adios2 ^adios2+shared ^bzip2+shared",
-                [("ascent", "~shared"), ("adios2", "+shared"), ("bzip2", "+shared")]
+                [("ascent", "~shared"), ("adios2", "+shared"), ("bzip2", "+shared")],
             ),
         ],
     )

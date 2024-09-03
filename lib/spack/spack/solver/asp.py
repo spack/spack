@@ -516,7 +516,9 @@ class Result:
                 node = SpecBuilder.make_node(pkg=providers[0])
             candidate = answer.get(node)
 
-            if candidate and candidate.satisfies(input_spec):   # Rikki: if input_spec is not propagating
+            if candidate and candidate.satisfies(
+                input_spec
+            ):  # Rikki: if input_spec is not propagating
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
             else:
