@@ -30,6 +30,7 @@ def _ensure_file_on_win():
     with spack.bootstrap.ensure_bootstrap_configuration():
         spack.bootstrap.ensure_file_in_path_or_raise()
 
+
 @memoized
 def file_command(*args):
     """Creates entry point to `file` system command with provided arguments"""
