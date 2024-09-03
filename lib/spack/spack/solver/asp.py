@@ -1678,6 +1678,10 @@ class SpackSolverSetup:
             if pkg_name not in spack.repo.PATH:
                 continue
 
+            # This package is not among possible dependencies
+            if pkg_name not in self.pkgs:
+                continue
+
             # Check if the external package is buildable. If it is
             # not then "external(<pkg>)" is a fact, unless we can
             # reuse an already installed spec.
@@ -3344,7 +3348,6 @@ class SpecBuilder:
         self._result = None
         self._command_line_specs = specs
         self._flag_sources = collections.defaultdict(lambda: set())
-        self._flag_compiler_defaults = set()
 
         # Pass in as arguments reusable specs and plug them in
         # from this dictionary during reconstruction
@@ -3401,9 +3404,6 @@ class SpecBuilder:
     def node_compiler_version(self, node, compiler, version):
         self._specs[node].compiler = spack.spec.CompilerSpec(compiler)
         self._specs[node].compiler.versions = vn.VersionList([vn.Version(version)])
-
-    def node_flag_compiler_default(self, node):
-        self._flag_compiler_defaults.add(node)
 
     def node_flag(self, node, flag_type, flag):
         self._specs[node].compiler_flags.add_flag(flag_type, flag, False)
