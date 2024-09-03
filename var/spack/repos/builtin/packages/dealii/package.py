@@ -28,28 +28,98 @@ class Dealii(CMakePackage, CudaPackage):
     generator("make")
 
     version("master", branch="master")
+    version("9.6.0", sha256="675323f0eb8eed2cfc93e2ced07a0ec5727c6a566ff9e7786c01a2ddcde17bed")
+    version("9.5.2", sha256="7930e5218a9807d60cc05c300a3b70f36f4af22c3551a2cd1141fbab013bbaf1")
     version("9.5.1", sha256="a818b535e6488d3aef7853311657c7b4fadc29a9abe91b7b202b131aad630f5e")
     version("9.5.0", sha256="a81f41565f0d3a22d491ee687957dd48053225da72e8d6d628d210358f4a0464")
     version("9.4.2", sha256="45a76cb400bfcff25cc2d9093d9a5c91545c8367985e6798811c5e9d2a6a6fd4")
     version("9.4.1", sha256="bfe5e4bf069159f93feb0f78529498bfee3da35baf5a9c6852aa59d7ea7c7a48")
     version("9.4.0", sha256="238677006cd9173658e5b69cdd1861f800556982db6005a3cc5eb8329cc1e36c")
-    version("9.3.3", sha256="5dfb59174b341589e92b434398a1b7cc11ad053ce2315cf673f5efc5ba271a29")
-    version("9.3.2", sha256="5341d76bfd75d3402fc6907a875513efb5fe8a8b99af688d94443c492d5713e8")
-    version("9.3.1", sha256="a62f4676ab2dc029892251d141427fb75cbb83cddd606019f615d0dde9c61ab8")
-    version("9.3.0", sha256="aef8c7a87510ce827dfae3bdd4ed7bff82004dc09f96fa7a65b2554f2839b931")
-    version("9.2.0", sha256="d05a82fb40f1f1e24407451814b5a6004e39366a44c81208b1ae9d65f3efa43a")
-    version("9.1.1", sha256="fc5b483f7fe58dfeb52d05054011280f115498e337af3e085bf272fd1fd81276")
-    version("9.1.0", sha256="5b070112403f8afbb72345c1bb24d2a38d11ce58891217e353aab97957a04600")
-    version("9.0.1", sha256="df2f0d666f2224be07e3741c0e8e02132fd67ea4579cd16a2429f7416146ee64")
-    version("9.0.0", sha256="c918dc5c1a31d62f6eea7b524dcc81c6d00b3c378d4ed6965a708ab548944f08")
-    version("8.5.1", sha256="d33e812c21a51f7e5e3d3e6af86aec343155650b611d61c1891fbc3cabce09ae")
-    version("8.5.0", sha256="e6913ff6f184d16bc2598c1ba31f879535b72b6dff043e15aef048043ff1d779")
-    version("8.4.2", sha256="ec7c00fadc9d298d1a0d16c08fb26818868410a9622c59ba624096872f3058e4")
-    version("8.4.1", sha256="00a0e92d069cdafd216816f1aff460f7dbd48744b0d9e0da193287ebf7d6b3ad")
-    version("8.4.0", sha256="36a20e097a03f17b557e11aad1400af8c6252d25f7feca40b611d5fc16d71990")
-    version("8.3.0", sha256="4ddf72632eb501e1c814e299f32fc04fd680d6fda9daff58be4209e400e41779")
-    version("8.2.1", sha256="d75674e45fe63cd9fa294460fe45228904d51a68f744dbb99cd7b60720f3b2a0")
-    version("8.1.0", sha256="d666bbda2a17b41b80221d7029468246f2658051b8c00d9c5907cd6434c4df99")
+    version(
+        "9.3.3",
+        sha256="5dfb59174b341589e92b434398a1b7cc11ad053ce2315cf673f5efc5ba271a29",
+        deprecated=True,
+    )
+    version(
+        "9.3.2",
+        sha256="5341d76bfd75d3402fc6907a875513efb5fe8a8b99af688d94443c492d5713e8",
+        deprecated=True,
+    )
+    version(
+        "9.3.1",
+        sha256="a62f4676ab2dc029892251d141427fb75cbb83cddd606019f615d0dde9c61ab8",
+        deprecated=True,
+    )
+    version(
+        "9.3.0",
+        sha256="aef8c7a87510ce827dfae3bdd4ed7bff82004dc09f96fa7a65b2554f2839b931",
+        deprecated=True,
+    )
+    version(
+        "9.2.0",
+        sha256="d05a82fb40f1f1e24407451814b5a6004e39366a44c81208b1ae9d65f3efa43a",
+        deprecated=True,
+    )
+    version(
+        "9.1.1",
+        sha256="fc5b483f7fe58dfeb52d05054011280f115498e337af3e085bf272fd1fd81276",
+        deprecated=True,
+    )
+    version(
+        "9.1.0",
+        sha256="5b070112403f8afbb72345c1bb24d2a38d11ce58891217e353aab97957a04600",
+        deprecated=True,
+    )
+    version(
+        "9.0.1",
+        sha256="df2f0d666f2224be07e3741c0e8e02132fd67ea4579cd16a2429f7416146ee64",
+        deprecated=True,
+    )
+    version(
+        "9.0.0",
+        sha256="c918dc5c1a31d62f6eea7b524dcc81c6d00b3c378d4ed6965a708ab548944f08",
+        deprecated=True,
+    )
+    version(
+        "8.5.1",
+        sha256="d33e812c21a51f7e5e3d3e6af86aec343155650b611d61c1891fbc3cabce09ae",
+        deprecated=True,
+    )
+    version(
+        "8.5.0",
+        sha256="e6913ff6f184d16bc2598c1ba31f879535b72b6dff043e15aef048043ff1d779",
+        deprecated=True,
+    )
+    version(
+        "8.4.2",
+        sha256="ec7c00fadc9d298d1a0d16c08fb26818868410a9622c59ba624096872f3058e4",
+        deprecated=True,
+    )
+    version(
+        "8.4.1",
+        sha256="00a0e92d069cdafd216816f1aff460f7dbd48744b0d9e0da193287ebf7d6b3ad",
+        deprecated=True,
+    )
+    version(
+        "8.4.0",
+        sha256="36a20e097a03f17b557e11aad1400af8c6252d25f7feca40b611d5fc16d71990",
+        deprecated=True,
+    )
+    version(
+        "8.3.0",
+        sha256="4ddf72632eb501e1c814e299f32fc04fd680d6fda9daff58be4209e400e41779",
+        deprecated=True,
+    )
+    version(
+        "8.2.1",
+        sha256="d75674e45fe63cd9fa294460fe45228904d51a68f744dbb99cd7b60720f3b2a0",
+        deprecated=True,
+    )
+    version(
+        "8.1.0",
+        sha256="d666bbda2a17b41b80221d7029468246f2658051b8c00d9c5907cd6434c4df99",
+        deprecated=True,
+    )
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -78,7 +148,10 @@ class Dealii(CMakePackage, CudaPackage):
         values=("default", "11", "14", "17"),
     )
     variant("doc", default=False, description="Compile with documentation")
-    variant("examples", default=True, description="Compile and install tutorial programs")
+    variant("examples", default=True, description="Install source files of tutorial programs")
+    variant(
+        "examples_compile", default=True, description="Install binary files of tutorial programs"
+    )
     variant("int64", default=False, description="Compile with 64 bit indices support")
     variant("mpi", default=True, description="Compile with MPI")
     variant("optflags", default=False, description="Compile using additional optimization flags")
@@ -100,7 +173,8 @@ class Dealii(CMakePackage, CudaPackage):
     variant("muparser", default=True, description="Compile with muParser")
     variant("nanoflann", default=False, description="Compile with Nanoflann")
     variant("netcdf", default=False, description="Compile with Netcdf (only with MPI)")
-    variant("oce", default=True, description="Compile with OCE")
+    variant("oce", default=False, description="Compile with OCE")
+    variant("opencascade", default=True, description="Compile with OPENCASCADE")
     variant("p4est", default=True, description="Compile with P4est (only with MPI)")
     variant("petsc", default=True, description="Compile with Petsc (only with MPI)")
     variant("scalapack", default=True, description="Compile with ScaLAPACK (only with MPI)")
@@ -132,7 +206,7 @@ class Dealii(CMakePackage, CudaPackage):
     # dealii does not build with Boost 1.80.0
     # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
     depends_on(
-        "boost@1.59.0:1.63,1.65.1,1.67.0:1.79+thread+system+serialization+iostreams",
+        "boost@1.59.0:1.63,1.65.1,1.67.0:1.79,1.83:+thread+system+serialization+iostreams",
         patches=[
             patch("boost_1.65.1_singleton.patch", level=1, when="@1.65.1"),
             patch("boost_1.68.0.patch", level=1, when="@1.68.0"),
@@ -186,7 +260,9 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("graphviz", when="+doc")
     depends_on("ginkgo", when="@9.1:+ginkgo")
     depends_on("ginkgo@1.4.0:", when="@9.4:+ginkgo")
-    depends_on("gmsh+tetgen+netgen+oce", when="@9.0:+gmsh", type=("build", "run"))
+    depends_on("gmsh+oce", when="@9.0:+gmsh+oce", type=("build", "run"))
+    depends_on("gmsh+opencascade", when="@9.0:+gmsh+opencascade", type=("build", "run"))
+    depends_on("gmsh", when="@9.0:+gmsh~opencascade~oce", type=("build", "run"))
     depends_on("gsl", when="@8.5.0:+gsl")
     # TODO: next line fixes concretization with petsc
     depends_on("hdf5+mpi+hl+fortran", when="+hdf5+mpi+petsc")
@@ -203,6 +279,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("netcdf-c+mpi", when="+netcdf+mpi")
     depends_on("netcdf-cxx", when="+netcdf+mpi")
     depends_on("oce", when="+oce")
+    depends_on("opencascade", when="+opencascade")
     depends_on("p4est", when="+p4est+mpi")
     depends_on("petsc+mpi~int64", when="+petsc+mpi~int64")
     depends_on("petsc+mpi+int64", when="+petsc+mpi+int64")
@@ -317,6 +394,8 @@ class Dealii(CMakePackage, CudaPackage):
         when="@9.6:",
         msg="Deal.II 9.6 onwards requires the C++ standard to be set to 17 or later.",
     )
+
+    conflicts("oce", when="+opencascade", msg="Only one among OCE or OPENCASCADE can be selected.")
 
     # Interfaces added in 8.5.0:
     for _package in ["gsl", "python"]:
@@ -475,7 +554,7 @@ class Dealii(CMakePackage, CudaPackage):
 
         # Examples / tutorial programs
         options.append(self.define_from_variant("DEAL_II_COMPONENT_EXAMPLES", "examples"))
-        options.append(self.define_from_variant("DEAL_II_COMPILE_EXAMPLES", "examples"))
+        options.append(self.define_from_variant("DEAL_II_COMPILE_EXAMPLES", "examples_compile"))
 
         # Enforce the specified C++ standard
         if spec.variants["cxxstd"].value != "default":
@@ -652,10 +731,14 @@ class Dealii(CMakePackage, CudaPackage):
                 ]
             )
 
-        # Open Cascade
-        options.append(self.define_from_variant("DEAL_II_WITH_OPENCASCADE", "oce"))
+        # Open Cascade -- OCE
         if "+oce" in spec:
+            options.append(self.define_from_variant("DEAL_II_WITH_OPENCASCADE", "oce"))
             options.append(self.define("OPENCASCADE_DIR", spec["oce"].prefix))
+
+        if "+opencascade" in spec:
+            options.append(self.define_from_variant("DEAL_II_WITH_OPENCASCADE", "opencascade"))
+            options.append(self.define("OPENCASCADE_DIR", spec["opencascade"].prefix))
 
         # As a final step, collect CXX flags that may have been
         # added anywhere above:
