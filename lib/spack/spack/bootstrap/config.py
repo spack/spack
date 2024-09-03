@@ -6,6 +6,7 @@
 
 import contextlib
 import os.path
+import pathlib
 import sys
 from typing import Any, Dict, Generator, MutableSequence, Sequence
 
@@ -24,6 +25,8 @@ import spack.util.path
 #: Reference counter for the bootstrapping configuration context manager
 _REF_COUNT = 0
 
+#: Whether the current platform is Windows
+IS_WINDOWS = sys.platform == "win32"
 
 def is_bootstrapping() -> bool:
     """Return True if we are in a bootstrapping context, False otherwise."""
@@ -166,6 +169,9 @@ def _ensure_bootstrap_configuration() -> Generator:
                 _add_compilers_if_missing()
                 spack.config.set("bootstrap", user_configuration["bootstrap"])
                 spack.config.set("config", user_configuration["config"])
-                with spack.modules.disable_modules():
-                    with spack_python_interpreter():
-                        yield
+                with contextlib.ExitStack() as stack:
+                    if IS_WINDOWS:
+                        stack.enter_context(spack.repo.use_repositories(str(pathlib.Path(spack.paths.repos_path) / "compiler.wrappers")))
+                    with spack.modules.disable_modules():
+                        with spack_python_interpreter():
+                            yield

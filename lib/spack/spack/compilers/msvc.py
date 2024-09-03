@@ -129,14 +129,36 @@ class Msvc(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names: List[str] = ["ifx"]
 
+    # There are no rpaths on Windows, so no special arguments should
+    # be set
+    @property
+    def cc_rpath_arg(self):
+        return ""
+
+    @property
+    def cxx_rpath_arg(self):
+        return ""
+
+    @property
+    def f77_rpath_arg(self):
+        return ""
+
+    @property
+    def fc_rpath_arg(self):
+        return ""
+
+    @property
+    def linker_arg(self):
+        """Flag that need to be used to pass an argument to the linker."""
+        return ""
+
     # Named wrapper links within build_env_path
     # Due to the challenges of supporting compiler wrappers
     # in Windows, we leave these blank, and dynamically compute
     # based on proper versions of MSVC from there
     # pending acceptance of #28117 for full support using
     # compiler wrappers
-    link_paths = {"cc": "", "cxx": "", "f77": "", "fc": ""}
-
+    link_paths = {"cc": "msvc\\cl", "cxx": "msvc\\cl", "f77": "msvc\\ifx", "fc": "msvc\\"}
     #: Compiler argument that produces version information
     version_argument = ""
 

@@ -180,6 +180,25 @@ class TermStatusLine:
         sys.stdout.flush()
 
 
+def _bootstrap_win_compiler_wrapper():
+    """
+    Ensures that the Windows compiler wrappers will be available at
+    build time
+
+    Runs the bootstrapping process to ensure all core deps are met
+    """
+    currently_bootstrapping = getattr(_bootstrap_win_compiler_wrapper, "_bootstrapping", False)
+    if currently_bootstrapping:
+        return
+    import spack.bootstrap
+    _bootstrap_win_compiler_wrapper._bootstrapping = True
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        try:
+            spack.bootstrap.ensure_win_compiler_wrappers_or_raise()
+        finally:
+            _bootstrap_win_compiler_wrapper._bootstrapping = False
+
+
 def _check_last_phase(pkg: "spack.package_base.PackageBase") -> None:
     """
     Ensures the specified package has a valid last phase before proceeding
@@ -1962,6 +1981,9 @@ class PackageInstaller:
 
     def install(self) -> None:
         """Install the requested package(s) and or associated dependencies."""
+        # Ensure all build dependencies are met
+        if sys.platform == "win32":
+            _bootstrap_win_compiler_wrapper()
 
         self._init_queue()
         fail_fast_err = "Terminating after first install failure"

@@ -27,14 +27,17 @@ import functools
 import json
 import os
 import os.path
+import pathlib
 import sys
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from llnl.util import tty
+from llnl.util.filesystem import copy, working_dir
 from llnl.util.lang import GroupedExceptionHandler
 
 import spack.binary_distribution
+import spack.compilers.msvc
 import spack.config
 import spack.detection
 import spack.environment
@@ -482,6 +485,31 @@ def ensure_gpg_in_path_or_raise() -> None:
     )
 
 
+def msvc_compiler_wrapper_root_spec() -> str:
+    """Return the root spec for the MSVC compiler wrapper package"""
+    return _root_spec("msvc-compiler-wrapper@main")
+
+
+def ensure_msvc_compiler_wrappers_or_raise(pkg=None) -> None:
+    msvc_build_env = pathlib.Path(spack.paths.build_env_path) / "msvc"
+    # Sanity check, this should be present but lets make it if not
+    msvc_build_env.mkdir(exist_ok=True)
+    msvc_comp_wrapper = msvc_build_env / "cl.exe"
+    if not msvc_comp_wrapper.exists():
+        ensure_executables_in_path_or_raise(
+            executables=["cl.exe"], abstract_spec=msvc_compiler_wrapper_root_spec()
+        )
+        # Spec is built, now copy it to the compiler wrapper directory
+        copy(spack.spec.Spec(msvc_compiler_wrapper_root_spec().prefix.bin + "\\cl.exe"), str(msvc_comp_wrapper))
+
+
+def ensure_win_compiler_wrappers_or_raise(pkg=None) -> None:
+    if pkg and type(pkg.compiler) == spack.compilers.msvc.Msvc:
+        ensure_msvc_compiler_wrappers_or_raise(pkg)
+    elif not pkg:
+        ensure_msvc_compiler_wrappers_or_raise()
+
+
 def patchelf_root_spec() -> str:
     """Return the root spec used to bootstrap patchelf"""
     # 0.13.1 is the last version not to require C++17.
@@ -567,6 +595,8 @@ def ensure_core_dependencies() -> None:
         ensure_patchelf_in_path_or_raise()
     if not IS_WINDOWS:
         ensure_gpg_in_path_or_raise()
+    else:
+        ensure_win_compiler_wrappers_or_raise()
     ensure_clingo_importable_or_raise()
 
 
