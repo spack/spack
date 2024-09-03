@@ -49,7 +49,7 @@ class Nnn(MakefilePackage):
         default=False,
         description="Use Perl Compatible Regular Expressions (default is POSIX)",
     )
-    variant("readline", default=True)
+    variant("readline", default=True, description="Compile with readline")
     variant(
         "icons",
         values=("none", "emoji", "nerd", "icons-in-terminal"),
