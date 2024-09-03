@@ -157,7 +157,12 @@ class Cdo(AutotoolsPackage):
 
     # patches
     # see https://code.mpimet.mpg.de/boards/1/topics/15594
-    patch("add_algorithm_header.patch", when="@2.4.0 %gcc@14")
+    patch("add_algorithm_header.patch",
+          when="@2.4.0:2.4.2 %gcc@14",
+          sha256="0bc20d2fcb14d8e4010d4222297f259eb7b4220effd97555ed3f027e63cf8b3")
+    patch("add_algorithm_header_222.patch",
+          when="@2.2.2:2.3.0 %gcc@14",
+          sha256="f713384de9e5eff686053dfb917fdd08f30f9720a8a9182549863f2ba12e779f")
 
     variant("netcdf", default=True, description="Enable NetCDF support")
     variant(
