@@ -79,7 +79,7 @@ class RocmTensile(CMakePackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
-	"6.2.0",
+        "6.2.0",
     ]:
         depends_on(f"rocm-cmake@{ver}", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
