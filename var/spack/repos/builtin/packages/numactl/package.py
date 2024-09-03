@@ -28,8 +28,9 @@ class Numactl(AutotoolsPackage):
     patch("numactl-2.0.11-sysmacros.patch", when="@2.0.11")
     # https://github.com/numactl/numactl/issues/94
     patch("numactl-2.0.14-symver.patch", when="@2.0.14")
-    patch("fix-empty-block.patch", when="@2.0.10:2.0.14")
+    patch("fix-empty-block.patch", when="@2.0.10:2.0.16")
     patch("link-with-latomic-if-needed.patch", when="@2.0.14")
+    patch("link-with-latomic-if-needed-v2.0.16.patch", when="@2.0.16")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
