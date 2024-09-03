@@ -4686,6 +4686,10 @@ class SpecfileReaderBase:
 
         return hash_dict[root_spec_hash]["node_spec"]
 
+    @classmethod
+    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name):
+        raise NotImplementedError("Subclasses must implement this method.")
+
 
 class SpecfileV1(SpecfileReaderBase):
     @classmethod
