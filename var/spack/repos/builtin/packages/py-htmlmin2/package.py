@@ -12,7 +12,7 @@ class PyHtmlmin2(PythonPackage):
     homepage = "https://github.com/wilhelmer/htmlmin"
     version(
         "0.1.13",
-        url = "https://files.pythonhosted.org/packages/be/31/a76f4bfa885f93b8167cb4c85cf32b54d1f64384d0b897d45bc6d19b7b45/htmlmin2-0.1.13-py3-none-any.whl",
+        url="https://files.pythonhosted.org/packages/be/31/a76f4bfa885f93b8167cb4c85cf32b54d1f64384d0b897d45bc6d19b7b45/htmlmin2-0.1.13-py3-none-any.whl",
     )
 
     license("BSD", checked_by="lizzyd710")
