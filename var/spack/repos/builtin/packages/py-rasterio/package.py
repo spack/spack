@@ -22,6 +22,7 @@ class PyRasterio(PythonPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("1.3.11", sha256="47aa70b4718ebc80d825bb7db3127577d74e31c53048ce215145c0baf530ece9")
     version("1.3.10", sha256="ce182c735b4f9e8735d90600607ecab15ef895eb8aa660bf665751529477e326")
     version("1.3.9", sha256="fc6d0d290492fa1a5068711cfebb21cc936968891b7ed9da0690c8a7388885c5")
     version("1.3.8", sha256="ffdd18e78efdf8ad5861065fd812a66dd34264293317ff6540a078ea891cdef8")
@@ -40,7 +41,7 @@ class PyRasterio(PythonPackage):
 
     # From pyproject.toml
     depends_on("py-setuptools@67.8:", when="@1.3.9:", type="build")
-    depends_on("py-cython@3.0.2:", when="@1.3.10:", type="build")
+    depends_on("py-cython@3.0.2:3", when="@1.3.10:", type="build")
     depends_on("py-cython@0.29.29:", when="@1.3.3:1.3.9", type="build")
     depends_on("py-cython@0.29.24:0.29", when="@1.3.0:1.3.2", type="build")
 
