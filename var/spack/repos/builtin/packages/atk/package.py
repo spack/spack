@@ -34,6 +34,8 @@ class Atk(Package):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("meson@0.40.1:", type="build", when="@2.28:")
     depends_on("meson@0.46.0:", type="build", when="@2.29:")
     depends_on("glib")

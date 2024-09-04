@@ -67,6 +67,10 @@ class Eccodes(CMakePackage):
     version("2.5.0", sha256="18ab44bc444168fd324d07f7dea94f89e056f5c5cd973e818c8783f952702e4e")
     version("2.2.0", sha256="1a4112196497b8421480e2a0a1164071221e467853486577c4f07627a702f4c3")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("tools", default=False, description="Build the command line tools")
     variant("netcdf", default=False, description="Enable GRIB to NetCDF conversion tool")
     variant(
@@ -113,7 +117,6 @@ class Eccodes(CMakePackage):
     depends_on("cmake@3.12:", when="@2.19:", type="build")
 
     depends_on("ecbuild", type="build", when="@develop")
-    depends_on("ecbuild@3.7:", type="build", when="@2.25:")
 
     conflicts("+openmp", when="+pthreads", msg="Cannot enable both POSIX threads and OMP")
 

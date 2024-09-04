@@ -27,6 +27,8 @@ class Evtgen(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+
     variant("pythia8", default=True, description="Build with pythia8")
     variant("tauola", default=False, description="Build with tauola")
     variant("photos", default=False, description="Build with photos")
@@ -95,7 +97,7 @@ class Evtgen(CMakePackage):
         options += self.configure_args()
 
         with working_dir(self.build_directory, create=True):
-            inspect.getmodule(self).configure(*options)
+            configure(*options)
 
     @when("@:01")
     def configure_args(self):

@@ -10,7 +10,7 @@ class Ngspice(AutotoolsPackage):
     """ngspice is the open source spice simulator for electric and
     electronic circuits."""
 
-    homepage = "http://ngspice.sourceforge.net/"
+    homepage = "https://ngspice.sourceforge.net/"
     url = "https://sourceforge.net/projects/ngspice/files/ngspice-33.tar.gz"
     list_url = "https://sourceforge.net/projects/ngspice/files/ng-spice-rework"
     list_depth = 1
@@ -35,6 +35,9 @@ class Ngspice(AutotoolsPackage):
     version("30", sha256="08fe0e2f3768059411328a33e736df441d7e6e7304f8dad0ed5f28e15d936097")
     version("29", sha256="8d6d0ffbc15f248eb6ec3bde3b9d1397fbc95cb677e1c6a14ff46065c7f95c4a")
     version("27", sha256="0c08c7d57a2e21cf164496f3237f66f139e0c78e38345fbe295217afaf150695")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # kicad needs build=lib, i.e. --with--ngshared
     variant(

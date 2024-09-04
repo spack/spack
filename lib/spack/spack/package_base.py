@@ -15,7 +15,7 @@ import copy
 import functools
 import glob
 import hashlib
-import inspect
+import importlib
 import io
 import os
 import re
@@ -35,6 +35,7 @@ from llnl.util.link_tree import LinkTree
 
 import spack.compilers
 import spack.config
+import spack.dependency
 import spack.deptypes as dt
 import spack.directives
 import spack.directory_layout
@@ -64,7 +65,7 @@ from spack.install_test import (
     install_test_root,
 )
 from spack.installer import InstallError, PackageInstaller
-from spack.stage import DIYStage, ResourceStage, Stage, StageComposite, compute_stage_name
+from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.version import GitVersion, StandardVersion
@@ -115,11 +116,10 @@ def preferred_version(pkg: "PackageBase"):
     Arguments:
         pkg: The package whose versions are to be assessed.
     """
-    # Here we sort first on the fact that a version is marked
-    # as preferred in the package, then on the fact that the
-    # version is not develop, then lexicographically
-    key_fn = lambda v: (pkg.versions[v].get("preferred", False), not v.isdevelop(), v)
-    return max(pkg.versions, key=key_fn)
+    from spack.solver.asp import concretization_version_order
+
+    version, _ = max(pkg.versions.items(), key=concretization_version_order)
+    return version
 
 
 class WindowsRPath:
@@ -161,7 +161,11 @@ class WindowsRPath:
 
         Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
         """
-        if sys.platform == "win32":
+        # If spec is an external, we should not be modifying its bin directory, as we would
+        # be doing in this method
+        # Spack should in general not modify things it has not installed
+        # we can reasonably expect externals to have their link interface properly established
+        if sys.platform == "win32" and not self.spec.external:
             self.win_rpath.add_library_dependent(*self.win_add_library_dependent())
             self.win_rpath.add_rpath(*self.win_add_rpath())
             self.win_rpath.establish_link()
@@ -192,13 +196,12 @@ class DetectablePackageMeta(type):
         # that "foo" was a possible executable.
 
         # If a package has the executables or libraries  attribute then it's
-        # assumed to be detectable
+        # assumed to be detectable. Add a tag, so finding them is faster
         if hasattr(cls, "executables") or hasattr(cls, "libraries"):
-            # Append a tag to each detectable package, so that finding them is faster
-            if hasattr(cls, "tags"):
-                getattr(cls, "tags").append(DetectablePackageMeta.TAG)
-            else:
-                setattr(cls, "tags", [DetectablePackageMeta.TAG])
+            # To add the tag, we need to copy the tags attribute, and attach it to
+            # the current class. We don't use append, since it might modify base classes,
+            # if "tags" is retrieved following the MRO.
+            cls.tags = getattr(cls, "tags", []) + [DetectablePackageMeta.TAG]
 
             @classmethod
             def platform_executables(cls):
@@ -241,10 +244,7 @@ class DetectablePackageMeta(type):
                         if version_str:
                             objs_by_version[version_str].append(obj)
                     except Exception as e:
-                        msg = (
-                            "An error occurred when trying to detect " 'the version of "{0}" [{1}]'
-                        )
-                        tty.debug(msg.format(obj, str(e)))
+                        tty.debug(f"Cannot detect the version of '{obj}' [{str(e)}]")
 
                 specs = []
                 for version_str, objs in objs_by_version.items():
@@ -257,27 +257,23 @@ class DetectablePackageMeta(type):
                         if isinstance(variant, str):
                             variant = (variant, {})
                         variant_str, extra_attributes = variant
-                        spec_str = "{0}@{1} {2}".format(cls.name, version_str, variant_str)
+                        spec_str = f"{cls.name}@{version_str} {variant_str}"
 
                         # Pop a few reserved keys from extra attributes, since
                         # they have a different semantics
                         external_path = extra_attributes.pop("prefix", None)
                         external_modules = extra_attributes.pop("modules", None)
                         try:
-                            spec = spack.spec.Spec(
+                            spec = spack.spec.Spec.from_detection(
                                 spec_str,
                                 external_path=external_path,
                                 external_modules=external_modules,
+                                extra_attributes=extra_attributes,
                             )
                         except Exception as e:
-                            msg = 'Parsing failed [spec_str="{0}", error={1}]'
-                            tty.debug(msg.format(spec_str, str(e)))
+                            tty.debug(f'Parsing failed [spec_str="{spec_str}", error={str(e)}]')
                         else:
-                            specs.append(
-                                spack.spec.Spec.from_detection(
-                                    spec, extra_attributes=extra_attributes
-                                )
-                            )
+                            specs.append(spec)
 
                 return sorted(specs)
 
@@ -468,7 +464,41 @@ def _names(when_indexed_dictionary):
     return sorted(all_names)
 
 
-class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
+class RedistributionMixin:
+    """Logic for determining whether a Package is source/binary
+    redistributable.
+    """
+
+    #: Store whether a given Spec source/binary should not be
+    #: redistributed.
+    disable_redistribute: Dict["spack.spec.Spec", "spack.directives.DisableRedistribute"]
+
+    # Source redistribution must be determined before concretization
+    # (because source mirrors work with un-concretized Specs).
+    @classmethod
+    def redistribute_source(cls, spec):
+        """Whether it should be possible to add the source of this
+        package to a Spack mirror.
+        """
+        for when_spec, disable_redistribute in cls.disable_redistribute.items():
+            if disable_redistribute.source and spec.satisfies(when_spec):
+                return False
+
+        return True
+
+    @property
+    def redistribute_binary(self):
+        """Whether it should be possible to create a binary out of an
+        installed instance of this package.
+        """
+        for when_spec, disable_redistribute in self.__class__.disable_redistribute.items():
+            if disable_redistribute.binary and self.spec.satisfies(when_spec):
+                return False
+
+        return True
+
+
+class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass=PackageMeta):
     """This is the superclass for all spack packages.
 
     ***The Package class***
@@ -566,6 +596,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     provided: Dict["spack.spec.Spec", Set["spack.spec.Spec"]]
     provided_together: Dict["spack.spec.Spec", List[Set[str]]]
     patches: Dict["spack.spec.Spec", List["spack.patch.Patch"]]
+    variants: Dict[str, Tuple["spack.variant.Variant", "spack.spec.Spec"]]
+    languages: Dict["spack.spec.Spec", Set[str]]
 
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
@@ -580,10 +612,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     #: By default do not run tests within package's install()
     run_tests = False
-
-    #: Keep -Werror flags, matches config:flags:keep_werror to override config
-    # NOTE: should be type Optional[Literal['all', 'specific', 'none']] in 3.8+
-    keep_werror: Optional[str] = None
 
     #: Most packages are NOT extendable. Set to True if you want extensions.
     extendable = False
@@ -704,7 +732,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             raise ValueError(msg.format(self))
 
         # init internal variables
-        self._stage = None
+        self._stage: Optional[StageComposite] = None
         self._fetcher = None
         self._tester: Optional["PackageTest"] = None
 
@@ -712,11 +740,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         self._fetch_time = 0.0
 
         self.win_rpath = fsys.WindowsSimulatedRPath(self)
-
-        if self.is_extension:
-            pkg_cls = spack.repo.PATH.get_pkg_class(self.extendee_spec.name)
-            pkg_cls(self.extendee_spec)._check_extendable()
-
         super().__init__()
 
     @classmethod
@@ -837,7 +860,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         We use this to add variables to package modules.  This makes
         install() methods easier to write (e.g., can call configure())
         """
-        return __import__(cls.__module__, fromlist=[cls.__name__])
+        return importlib.import_module(cls.__module__)
 
     @classproperty
     def namespace(cls):
@@ -853,7 +876,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def fullnames(cls):
         """Fullnames for this package and any packages from which it inherits."""
         fullnames = []
-        for cls in inspect.getmro(cls):
+        for cls in cls.__mro__:
             namespace = getattr(cls, "namespace", None)
             if namespace:
                 fullnames.append("%s.%s" % (namespace, cls.name))
@@ -889,6 +912,32 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return os.path.join(
             self.global_license_dir, self.name, os.path.basename(self.license_files[0])
         )
+
+    # NOTE: return type should be Optional[Literal['all', 'specific', 'none']] in
+    # Python 3.8+, but we still support 3.6.
+    @property
+    def keep_werror(self) -> Optional[str]:
+        """Keep ``-Werror`` flags, matches ``config:flags:keep_werror`` to override config.
+
+        Valid return values are:
+        * ``"all"``: keep all ``-Werror`` flags.
+        * ``"specific"``: keep only ``-Werror=specific-warning`` flags.
+        * ``"none"``: filter out all ``-Werror*`` flags.
+        * ``None``: respect the user's configuration (``"none"`` by default).
+        """
+        if self.spec.satisfies("%nvhpc@:23.3") or self.spec.satisfies("%pgi"):
+            # Filtering works by replacing -Werror with -Wno-error, but older nvhpc and
+            # PGI do not understand -Wno-error, so we disable filtering.
+            return "all"
+
+        elif self.spec.satisfies("%nvhpc@23.4:"):
+            # newer nvhpc supports -Wno-error but can't disable specific warnings with
+            # -Wno-error=warning. Skip -Werror=warning, but still filter -Werror.
+            return "specific"
+
+        else:
+            # use -Werror disablement by default for other compilers
+            return None
 
     @property
     def version(self):
@@ -1041,9 +1090,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             root=root_stage,
             resource=resource,
             name=self._resource_stage(resource),
-            mirror_paths=spack.mirror.mirror_archive_paths(
+            mirror_paths=spack.mirror.default_mirror_layout(
                 resource.fetcher, os.path.join(self.name, pretty_resource_name)
             ),
+            mirrors=spack.mirror.MirrorCollection(source=True).values(),
             path=self.path,
         )
 
@@ -1055,7 +1105,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Construct a mirror path (TODO: get this out of package.py)
         format_string = "{name}-{version}"
         pretty_name = self.spec.format_path(format_string)
-        mirror_paths = spack.mirror.mirror_archive_paths(
+        mirror_paths = spack.mirror.default_mirror_layout(
             fetcher, os.path.join(self.name, pretty_name), self.spec
         )
         # Construct a path where the stage should build..
@@ -1064,6 +1114,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         stage = Stage(
             fetcher,
             mirror_paths=mirror_paths,
+            mirrors=spack.mirror.MirrorCollection(source=True).values(),
             name=stage_name,
             path=self.path,
             search_fn=self._download_search,
@@ -1074,10 +1125,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # If it's a dev package (not transitively), use a DIY stage object
         dev_path_var = self.spec.variants.get("dev_path", None)
         if dev_path_var:
-            return DIYStage(dev_path_var.value)
-
-        # To fetch the current version
-        source_stage = self._make_root_stage(self.fetcher)
+            dev_path = dev_path_var.value
+            link_format = spack.config.get("config:develop_stage_link")
+            if not link_format:
+                link_format = "build-{arch}-{hash:7}"
+            stage_link = self.spec.format_path(link_format)
+            source_stage = DevelopStage(compute_stage_name(self.spec), dev_path, stage_link)
+        else:
+            source_stage = self._make_root_stage(self.fetcher)
 
         # all_stages is source + resources + patches
         all_stages = StageComposite()
@@ -1116,7 +1171,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return self._stage
 
     @stage.setter
-    def stage(self, stage):
+    def stage(self, stage: StageComposite):
         """Allow a stage object to be set to override the default."""
         self._stage = stage
 
@@ -1199,7 +1254,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Return the install test root directory."""
         tty.warn(
             "The 'pkg.install_test_root' property is deprecated with removal "
-            "expected v0.22. Use 'install_test_root(pkg)' instead."
+            "expected v0.23. Use 'install_test_root(pkg)' instead."
         )
         return install_test_root(self)
 
@@ -1406,12 +1461,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             return
 
         checksum = spack.config.get("config:checksum")
-        fetch = self.stage.managed_by_spack
         if (
             checksum
-            and fetch
             and (self.version not in self.versions)
             and (not isinstance(self.version, GitVersion))
+            and ("dev_path" not in self.spec.variants)
         ):
             tty.warn(
                 "There is no checksum on file to fetch %s safely."
@@ -1479,9 +1533,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if self.has_code:
             self.do_fetch(mirror_only)
             self.stage.expand_archive()
-
-            if not os.listdir(self.stage.path):
-                raise spack.error.FetchError("Archive was empty for %s" % self.name)
         else:
             # Support for post-install hooks requires a stage.source_path
             fsys.mkdirp(self.stage.source_path)
@@ -1515,17 +1566,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
         if os.path.isfile(bad_file):
-            if self.stage.managed_by_spack:
+            if self.stage.requires_patch_success:
                 tty.debug("Patching failed last time. Restaging.")
                 self.stage.restage()
             else:
-                # develop specs/ DIYStages may have patch failures but
-                # should never be restaged
-                msg = (
-                    "A patch failure was detected in %s." % self.name
-                    + " Build errors may occur due to this."
+                # develop specs may have patch failures but should never be restaged
+                tty.warn(
+                    f"A patch failure was detected in {self.name}."
+                    " Build errors may occur due to this."
                 )
-                tty.warn(msg)
                 return
 
         # If this file exists, then we already applied all the patches.
@@ -1536,6 +1585,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             tty.msg("No patches needed for {0}".format(self.name))
             return
 
+        errors = []
+
         # Apply all the patches for specs that match this one
         patched = False
         for patch in patches:
@@ -1545,12 +1596,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 tty.msg("Applied patch {0}".format(patch.path_or_url))
                 patched = True
             except spack.error.SpackError as e:
-                tty.debug(e)
-
                 # Touch bad file if anything goes wrong.
-                tty.msg("Patch %s failed." % patch.path_or_url)
                 fsys.touch(bad_file)
-                raise
+                error_msg = f"Patch {patch.path_or_url} failed."
+                if self.stage.requires_patch_success:
+                    tty.msg(error_msg)
+                    raise
+                else:
+                    tty.debug(error_msg)
+                    tty.debug(e)
+                    errors.append(e)
 
         if has_patch_fun:
             try:
@@ -1568,24 +1623,29 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     # printed a message for each patch.
                     tty.msg("No patches needed for {0}".format(self.name))
             except spack.error.SpackError as e:
-                tty.debug(e)
-
                 # Touch bad file if anything goes wrong.
-                tty.msg("patch() function failed for {0}".format(self.name))
                 fsys.touch(bad_file)
-                raise
+                error_msg = f"patch() function failed for {self.name}"
+                if self.stage.requires_patch_success:
+                    tty.msg(error_msg)
+                    raise
+                else:
+                    tty.debug(error_msg)
+                    tty.debug(e)
+                    errors.append(e)
 
-        # Get rid of any old failed file -- patches have either succeeded
-        # or are not needed.  This is mostly defensive -- it's needed
-        # if the restage() method doesn't clean *everything* (e.g., for a repo)
-        if os.path.isfile(bad_file):
-            os.remove(bad_file)
+        if not errors:
+            # Get rid of any old failed file -- patches have either succeeded
+            # or are not needed.  This is mostly defensive -- it's needed
+            # if we didn't restage
+            if os.path.isfile(bad_file):
+                os.remove(bad_file)
 
-        # touch good or no patches file so that we skip next time.
-        if patched:
-            fsys.touch(good_file)
-        else:
-            fsys.touch(no_patches_file)
+            # touch good or no patches file so that we skip next time.
+            if patched:
+                fsys.touch(good_file)
+            else:
+                fsys.touch(no_patches_file)
 
     @classmethod
     def all_patches(cls):
@@ -1682,7 +1742,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             bool: True if 'target' is found, else False
         """
         # Prevent altering LC_ALL for 'make' outside this function
-        make = copy.deepcopy(inspect.getmodule(self).make)
+        make = copy.deepcopy(self.module.make)
 
         # Use English locale for missing target message comparison
         make.add_default_env("LC_ALL", "C")
@@ -1732,7 +1792,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         if self._has_make_target(target):
             # Execute target
-            inspect.getmodule(self).make(target, *args, **kwargs)
+            self.module.make(target, *args, **kwargs)
 
     def _has_ninja_target(self, target):
         """Checks to see if 'target' is a valid target in a Ninja build script.
@@ -1743,7 +1803,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Returns:
             bool: True if 'target' is found, else False
         """
-        ninja = inspect.getmodule(self).ninja
+        ninja = self.module.ninja
 
         # Check if we have a Ninja build script
         if not os.path.exists("build.ninja"):
@@ -1772,7 +1832,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         if self._has_ninja_target(target):
             # Execute target
-            inspect.getmodule(self).ninja(target, *args, **kwargs)
+            self.module.ninja(target, *args, **kwargs)
 
     def _get_needed_resources(self):
         # We use intersects here cause it would also work if self.spec is abstract
@@ -1828,7 +1888,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             verbose (bool): Display verbose build output (by default,
                 suppresses it)
         """
-        PackageInstaller([(self, kwargs)]).install()
+        explicit = kwargs.get("explicit", True)
+        if isinstance(explicit, bool):
+            kwargs["explicit"] = {self.spec.dag_hash()} if explicit else set()
+        PackageInstaller([self], kwargs).install()
 
     # TODO (post-34236): Update tests and all packages that use this as a
     # TODO (post-34236): package method to the routine made available to
@@ -1849,7 +1912,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         msg = (
             "'pkg.cache_extra_test_sources(srcs) is deprecated with removal "
-            "expected in v0.22. Use 'cache_extra_test_sources(pkg, srcs)' "
+            "expected in v0.23. Use 'cache_extra_test_sources(pkg, srcs)' "
             "instead."
         )
         warnings.warn(msg)
@@ -2315,10 +2378,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         PackageBase.uninstall_by_spec(spec, force=True, deprecator=deprecator)
         link_fn(deprecator.prefix, spec.prefix)
 
-    def _check_extendable(self):
-        if not self.extendable:
-            raise ValueError("Package %s is not extendable!" % self.name)
-
     def view(self):
         """Create a view with the prefix of this package as the root.
         Extensions added to this view will modify the installation prefix of
@@ -2397,9 +2456,18 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # on Windows, libraries of runtime interest are typically
         # stored in the bin directory
+        # Do not include Windows system libraries in the rpath interface
+        # these libraries are handled automatically by VS/VCVARS and adding
+        # Spack derived system libs into the link path or address space of a program
+        # can result in conflicting versions, which makes Spack packages less useable
         if sys.platform == "win32":
             rpaths = [self.prefix.bin]
-            rpaths.extend(d.prefix.bin for d in deps if os.path.isdir(d.prefix.bin))
+            rpaths.extend(
+                d.prefix.bin
+                for d in deps
+                if os.path.isdir(d.prefix.bin)
+                and "windows-system" not in getattr(d.package, "tags", [])
+            )
         else:
             rpaths = [self.prefix.lib, self.prefix.lib64]
             rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
@@ -2506,7 +2574,12 @@ class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
 
     def __init__(self, spec, dependents):
-        super().__init__("Cannot uninstall %s" % spec)
+        spec_fmt = spack.spec.DEFAULT_FORMAT + " /{hash:7}"
+        dep_fmt = "{name}{@versions} /{hash:7}"
+        super().__init__(
+            f"Cannot uninstall {spec.format(spec_fmt)}, "
+            f"needed by {[dep.format(dep_fmt) for dep in dependents]}"
+        )
         self.spec = spec
         self.dependents = dependents
 

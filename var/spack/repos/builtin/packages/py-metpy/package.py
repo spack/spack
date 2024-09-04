@@ -30,7 +30,8 @@ class PyMetpy(PythonPackage):
     depends_on("py-matplotlib@2.1.0:", type=("build", "run"))
     depends_on("py-numpy@1.16.0:", type=("build", "run"))
     depends_on("py-pandas@0.24.0:", type=("build", "run"))
-    depends_on("py-pint@0.10.1:", type=("build", "run"))
+    # Unable to Find "pint.unit" -- Module Not Found Error with py-pint@0.20:
+    depends_on("py-pint@0.10.1:0.19", type=("build", "run"))
     depends_on("py-pooch@0.1:", type=("build", "run"))
     depends_on("py-pyproj@2.3.0:", type=("build", "run"))
     depends_on("py-scipy@1.0:", type=("build", "run"))

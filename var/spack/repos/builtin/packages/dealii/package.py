@@ -51,6 +51,10 @@ class Dealii(CMakePackage, CudaPackage):
     version("8.2.1", sha256="d75674e45fe63cd9fa294460fe45228904d51a68f744dbb99cd7b60720f3b2a0")
     version("8.1.0", sha256="d666bbda2a17b41b80221d7029468246f2658051b8c00d9c5907cd6434c4df99")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Configuration variants
     variant(
         "build_type",
@@ -177,6 +181,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("arpack-ng+mpi", when="+arpack+mpi")
     depends_on("assimp", when="@9.0:+assimp")
     depends_on("cgal", when="@9.4:+cgal")
+    depends_on("cgal@5:", when="@9.5:+cgal")
     depends_on("doxygen+graphviz", when="+doc")
     depends_on("graphviz", when="+doc")
     depends_on("ginkgo", when="@9.1:+ginkgo")
@@ -206,7 +211,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("slepc~arpack", when="+slepc+petsc+mpi+int64")
     depends_on("sundials@:3~pthread", when="@9.0:9.2+sundials")
     depends_on("sundials@5:5.8", when="@9.3:9.3.3+sundials")
-    depends_on("sundials@5:", when="@9.3.4:+sundials")
+    depends_on("sundials@5:6.7", when="@9.3.4:+sundials")
     depends_on("taskflow@3.4:", when="@9.6:+taskflow")
     depends_on("trilinos gotype=int", when="+trilinos@12.18.1:")
     # TODO: next line fixes concretization with trilinos and adol-c
@@ -288,6 +293,9 @@ class Dealii(CMakePackage, CudaPackage):
         sha256="c9884ebb0fe379c539012a225d8bcdcfe288edec8dc9d319fbfd64d8fbafba8e",
         when="@:9.4 +ginkgo ^ginkgo@1.5.0:",
     )
+
+    # deal.II's own CUDA backend does not support CUDA version 12.0 or newer.
+    conflicts("+cuda ^cuda@12:")
 
     # Check for sufficiently modern versions
     conflicts("cxxstd=11", when="@9.3:")

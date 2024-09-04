@@ -195,7 +195,7 @@ def _bootstrap_clingo() -> ModuleType:
     import spack.bootstrap
 
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_core_dependencies()
+        spack.bootstrap.ensure_clingo_importable_or_raise()
         clingo_mod = importlib.import_module("clingo")
 
     return clingo_mod

@@ -40,6 +40,8 @@ class Fenics(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+
     dolfin_versions = ["2019.1.0", "2018.1.0", "2017.2.0", "2016.2.0"]
 
     variant("python", default=True, description="Compile with Python interface")
@@ -156,7 +158,7 @@ class Fenics(CMakePackage):
     depends_on("py-sphinx@1.0.1:", when="+doc", type="build")
 
     def cmake_args(self):
-        args = [
+        return [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("DOLFIN_SKIP_BUILD_TESTS", True),
             self.define_from_variant("DOLFIN_ENABLE_OPENMP", "openmp"),
@@ -179,11 +181,6 @@ class Fenics(CMakePackage):
             self.define_from_variant("DOLFIN_ENABLE_VTK", "vtk"),
             self.define_from_variant("DOLFIN_ENABLE_ZLIB", "zlib"),
         ]
-
-        if "+python" in self.spec:
-            args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
-
-        return args
 
     # set environment for bulding python interface
     def setup_build_environment(self, env):

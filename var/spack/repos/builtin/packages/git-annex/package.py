@@ -47,7 +47,7 @@ class GitAnnex(Package):
     # - $ git annex whereis git-annex/linux/current/git-annex-standalone-arm64.tar.gz
     #     -> gives web url
 
-    skip_version_audit = ["platform=darwin"]
+    skip_version_audit = ["platform=darwin", "platform=windows"]
 
     license("AGPL-3.0-or-later")
 

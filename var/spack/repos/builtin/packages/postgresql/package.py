@@ -21,6 +21,7 @@ class Postgresql(AutotoolsPackage):
 
     license("PostgreSQL")
 
+    version("16.3", sha256="331963d5d3dc4caf4216a049fa40b66d6bcb8c730615859411b9518764e60585")
     version("15.2", sha256="99a2171fc3d6b5b5f56b757a7a3cb85d509a38e4273805def23941ed2b8468c7")
     version("14.0", sha256="ee2ad79126a7375e9102c4db77c4acae6ae6ffe3e082403b88826d96d927a122")
     version("13.1", sha256="12345c83b89aa29808568977f5200d6da00f88a035517f925293355432ffe61f")
@@ -40,6 +41,9 @@ class Postgresql(AutotoolsPackage):
     version("9.6.11", sha256="38250adc69a1e8613fb926c894cda1d01031391a03648894b9a6e13ff354a530")
     version("9.5.3", sha256="7385c01dc58acba8d7ac4e6ad42782bd7c0b59272862a3a3d5fe378d4503a0b4")
     version("9.3.4", sha256="9ee819574dfc8798a448dc23a99510d2d8924c2f8b49f8228cd77e4efc8a6621")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("client_only", default=False, description="Build and install client only.")
     variant("threadsafe", default=False, description="Build with thread safe.")
@@ -69,37 +73,35 @@ class Postgresql(AutotoolsPackage):
         return Executable(self.prefix.bin.pg_config)
 
     def configure_args(self):
-        config_args = ["--with-openssl"]
+        spec = self.spec
+        args = ["--with-openssl"]
 
-        if "+threadsafe" in self.spec:
-            config_args.append("--enable-thread-safety")
-        else:
-            config_args.append("--disable-thread-safety")
+        args.extend(self.enable_or_disable("thread-safety", variant="threadsafe"))
 
-        if self.spec.variants["lineedit"].value == "libedit":
-            config_args.append("--with-libedit-preferred")
-        elif self.spec.variants["lineedit"].value == "none":
-            config_args.append("--without-readline")
+        if spec.variants["lineedit"].value == "libedit":
+            args.append("--with-libedit-preferred")
+        elif spec.variants["lineedit"].value == "none":
+            args.append("--without-readline")
 
-        if "+gssapi" in self.spec:
-            config_args.append("--with-gssapi")
+        if spec.satisfies("+gssapi"):
+            args.append("--with-gssapi")
 
-        if "+python" in self.spec:
-            config_args.append("--with-python")
+        if spec.satisfies("+python"):
+            args.append("--with-python")
 
-        if "+perl" in self.spec:
-            config_args.append("--with-perl")
+        if spec.satisfies("+perl"):
+            args.append("--with-perl")
 
-        if "+tcl" in self.spec:
-            config_args.append("--with-tcl")
+        if spec.satisfies("+tcl"):
+            args.append("--with-tcl")
 
-        if "+xml" in self.spec:
-            config_args.append("--with-libxml")
+        if spec.satisfies("+xml"):
+            args.append("--with-libxml")
 
-        return config_args
+        return args
 
     def install(self, spec, prefix):
-        if "+client_only" in self.spec:
+        if spec.satisfies("+client_only"):
             for subdir in ("bin", "include", "interfaces", "pl"):
                 with working_dir(os.path.join("src", subdir)):
                     make("install")
@@ -109,31 +111,31 @@ class Postgresql(AutotoolsPackage):
     def setup_run_environment(self, env):
         spec = self.spec
 
-        if "+perl" in spec:
+        if spec.satisfies("+perl"):
             env.prepend_path("PERL5LIB", self.prefix.lib)
-        if "+tcl" in spec:
+        if spec.satisfies("+tcl"):
             env.prepend_path("TCLLIBPATH", self.prefix.lib)
-        if "+python" in spec:
+        if spec.satisfies("+python"):
             env.prepend_path("PYTHONPATH", self.prefix.lib)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         spec = self.spec
 
-        if "+perl" in spec:
+        if spec.satisfies("+perl"):
             env.prepend_path("PERL5LIB", self.prefix.lib)
-        if "+tcl" in spec:
+        if spec.satisfies("+tcp"):
             env.prepend_path("TCLLIBPATH", self.prefix.lib)
-        if "+python" in spec:
+        if spec.satisfies("+python"):
             env.prepend_path("PYTHONPATH", self.prefix.lib)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         spec = self.spec
 
-        if "+perl" in spec:
+        if spec.satisfies("+perl"):
             env.prepend_path("PERL5LIB", self.prefix.lib)
-        if "+tcl" in spec:
+        if spec.satisfies("+tcl"):
             env.prepend_path("TCLLIBPATH", self.prefix.lib)
-        if "+python" in spec:
+        if spec.satisfies("+python"):
             env.prepend_path("PYTHONPATH", self.prefix.lib)
 
     @property
