@@ -40,30 +40,35 @@ class PyRasterio(PythonPackage):
     version("1.1.5", sha256="ebe75c71f9257c780615caaec8ef81fa4602702cf9290a65c213e1639284acc9")
 
     # From pyproject.toml
-    depends_on("py-setuptools@67.8:", when="@1.3.9:", type="build")
-    depends_on("py-cython@3.0.2:3", when="@1.3.10:", type="build")
-    depends_on("py-cython@0.29.29:", when="@1.3.3:1.3.9", type="build")
-    depends_on("py-cython@0.29.24:0.29", when="@1.3.0:1.3.2", type="build")
+    with default_args(type="build"):
+        depends_on("py-setuptools@67.8:", when="@1.3.9:")
+        depends_on("py-cython@3.0.2:3", when="@1.3.10:")
+        depends_on("py-cython@0.29.29:", when="@1.3.3:1.3.9")
+        depends_on("py-cython@0.29.24:0.29", when="@1.3.0:1.3.2")
 
     # From setup.py
-    depends_on("python@3.8:", when="@1.3:", type=("build", "link", "run"))
-    depends_on("python@3.6:3.9", when="@1.2", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.5:3.8", when="@1.1", type=("build", "link", "run"))
-    depends_on("py-affine", type=("build", "run"))
-    depends_on("py-attrs", type=("build", "run"))
-    depends_on("py-certifi", when="@1.2:", type=("build", "run"))
-    depends_on("py-click@4:", when="@1.2.4:", type=("build", "run"))
-    depends_on("py-click@4:7", when="@:1.2.3", type=("build", "run"))
-    depends_on("py-cligj@0.5:", type=("build", "run"))
-    depends_on("py-importlib-metadata", when="@1.3.10: ^python@:3.9", type=("build", "run"))
-    depends_on("py-numpy@1.18:", when="@1.3:", type=("build", "link", "run"))
-    depends_on("py-numpy@1.15:", when="@1.2:", type=("build", "link", "run"))
-    depends_on("py-numpy", type=("build", "link", "run"))
-    # https://github.com/rasterio/rasterio/issues/3024
-    depends_on("py-numpy@:1", when="@:1.3.9", type=("build", "link", "run"))
-    depends_on("py-snuggs@1.4.1:", type=("build", "run"))
-    depends_on("py-click-plugins", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
+    with default_args(type=("build", "link", "run")):
+        depends_on("python@3.8:", when="@1.3:")
+        depends_on("python@3.6:3.9", when="@1.2")
+        depends_on("python@2.7:2.8,3.5:3.8", when="@1.1")
+
+        depends_on("py-numpy@1.18:", when="@1.3:")
+        depends_on("py-numpy@1.15:", when="@1.2:")
+        depends_on("py-numpy")
+        # https://github.com/rasterio/rasterio/issues/3024
+        depends_on("py-numpy@:1", when="@:1.3.9")
+
+    with default_args(type=("build", "run")):
+        depends_on("py-affine")
+        depends_on("py-attrs")
+        depends_on("py-certifi", when="@1.2:")
+        depends_on("py-click@4:", when="@1.2.4:")
+        depends_on("py-click@4:7", when="@:1.2.3")
+        depends_on("py-cligj@0.5:")
+        depends_on("py-importlib-metadata", when="@1.3.10: ^python@:3.9")
+        depends_on("py-snuggs@1.4.1:")
+        depends_on("py-click-plugins")
+        depends_on("py-setuptools")
 
     # From README.rst and setup.py
     depends_on("gdal@3.1:", when="@1.3:")
