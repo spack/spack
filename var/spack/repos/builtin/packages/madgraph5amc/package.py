@@ -150,7 +150,7 @@ class Madgraph5amc(MakefilePackage):
             mg5("install-pythia8-interface")
 
     def url_for_version(self, version):
-        major = version.split(".")[0]
-        minor = version.split(".")[1]
+        major = str(version).split(".")[0]
+        minor = str(version).split(".")[1]
         url = f"https://launchpad.net/mg5amcnlo/{major}.0/{major}.{minor}.x/+download/MG5_aMC_v{version}.tar.gz"
         return url
