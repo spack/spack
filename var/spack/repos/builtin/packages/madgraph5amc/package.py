@@ -66,7 +66,6 @@ class Madgraph5amc(MakefilePackage):
     depends_on("libtirpc")
     depends_on("pythia8", when="+pythia8")
 
-    patch("madgraph5amc-3.patch", when="@3")
     patch("array-bounds.patch", when="@:2.9")
     patch("madgraph5amc.patch", level=0, when="@:2.9")
     patch("madgraph5amc-2.7.3.atlas.patch", level=0, when="@2.7.3.py3+atlas")
