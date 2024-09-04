@@ -94,7 +94,7 @@ class Extrae(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        if spec.satisfies("^intel-oneapi-mpi"):
+        if spec.satisfies("^[virtuals=mpi] intel-oneapi-mpi"):
             mpiroot = spec["mpi"].component_prefix
         else:
             mpiroot = spec["mpi"].prefix
