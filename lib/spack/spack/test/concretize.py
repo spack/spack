@@ -574,6 +574,16 @@ class TestConcretize:
         for key, expected_satisfies in expected_propagation:
             spec[key].satisfies(expected_satisfies)
 
+    def test_concretize_propagate_variant_not_dependencies(self):
+        """Test that when propagating a variant it is not propagated to dependencies that
+        do not have that variant"""
+
+        spec = Spec("quantum-espresso~~invino")
+        spec.concretize()
+
+        for dep in spec.traverse(root=False):
+            assert ("invino" not in dep.variants.keys())
+
     def test_concretize_propagate_same_variant_multiple_sources_fail(self):
         """Test that when propagating a variant if the source package is excluded from the
         propagation an error is raised"""
@@ -622,7 +632,6 @@ class TestConcretize:
     def test_concretize_propagate_variant_not_in_source(self):
         """Test that variant is still propagated even if the source pkg
         doesn't have the variant"""
-
         spec = Spec("callpath++debug")
         spec.concretize()
 
@@ -630,23 +639,22 @@ class TestConcretize:
         assert not spec.satisfies("callpath+debug")
         assert not spec.satisfies("^dyninst+debug")
 
+    def test_cocnretize_propagate_variant_multiple_deps_not_in_source(self):
+        """Test does a thing"""  # TODO: Rikki fix
+        spec = Spec("netlib-lapack++shared")
+        spec.concretize()
+
+        assert spec.satisfies("^openblas+shared")
+        assert spec.satisfies("^perl+shared")
+        assert not spec.satisfies("netlib-lapack+shared")
+
     def test_concretize_propagate_variant_not_in_source_or_dependencies(self):
         """Test propagating a variant that is not in the source package
         or in any of the dependents fails"""
-
         spec = Spec("callpath++shared")
         spec.concretize()
 
         # raises some kind of error
-
-    def test_concretize_propagate_variant_in_source_not_dependencies(self):
-        """Does a thing"""
-
-        spec = Spec("hdf5~~mpi")
-        spec.concretize()
-
-        assert spec.satisfies("hdf5~mpi")
-        assert not spec.satisfies("^mpich~mpi")
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
