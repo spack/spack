@@ -355,7 +355,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 or spec.satisfies("^[virtuals=mpi] intel-oneapi-mpi")
             ):
                 env.set("ESMF_COMM", "intelmpi")
-            elif spec.satisfies("^mpt"):
+            elif spec.satisfies("^[virtuals=mpi] mpt"):
                 # MPT is the HPE (SGI) variant of mpich
                 env.set("ESMF_COMM", "mpt")
         else:
