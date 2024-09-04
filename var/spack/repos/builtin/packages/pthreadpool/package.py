@@ -52,6 +52,10 @@ class Pthreadpool(CMakePackage):
         placement="googlebenchmark",
     )
 
+    def setup_build_environment(self, env):
+        cflags = [self.compiler.cc_pic_flag]
+        env.set("CFLAGS", " ".join(cflags))
+
     def cmake_args(self):
         return [
             self.define("FXDIV_SOURCE_DIR", join_path(self.stage.source_path, "deps", "fxdiv")),
