@@ -88,7 +88,7 @@ class Texlive(AutotoolsPackage):
     depends_on("perl")
     depends_on("pixman")
     depends_on("poppler@:0.83", when="@:2019")
-    depends_on("poppler", when=":@2020")
+    depends_on("poppler", when="@:2020")
     depends_on("teckit")
     depends_on("zlib-api")
     depends_on("zziplib")
