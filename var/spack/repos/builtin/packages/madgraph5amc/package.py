@@ -28,7 +28,11 @@ class Madgraph5amc(MakefilePackage):
         sha256="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         deprecated=True,
     )
-    version("2.9.17", sha256="24026a534344c77a05b23a681437f825c41dc70c5bae5b7f79bb99e149d966b8")
+    version(
+        "2.9.17",
+        sha256="24026a534344c77a05b23a681437f825c41dc70c5bae5b7f79bb99e149d966b8",
+        deprecated=True,
+    )
     version(
         "2.8.1",
         sha256="acda34414beba201e529b8c03f87f4893fb3f99ed2956a131d60a387e76c5b8c",
@@ -134,6 +138,7 @@ class Madgraph5amc(MakefilePackage):
             join_path(prefix, "Template", "LO", "Source", "make_opts"),
         )
 
+        # TODO: Fix for reproducibility, see https://github.com/spack/spack/pull/41128#issuecomment-2305777485
         if "+pythia8" in spec:
             with open("install-pythia8-interface", "w") as f:
                 f.write(
@@ -143,3 +148,9 @@ class Madgraph5amc(MakefilePackage):
                 )
             mg5 = Executable(join_path(prefix, "bin", "mg5_aMC"))
             mg5("install-pythia8-interface")
+
+    def url_for_version(self, version):
+        major = version.split(".")[0]
+        minor = version.split(".")[1]
+        url = f"https://launchpad.net/mg5amcnlo/{major}.0/{major}.{minor}.x/+download/MG5_aMC_v{version}.tar.gz"
+        return url
