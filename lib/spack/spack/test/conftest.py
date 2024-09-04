@@ -1003,7 +1003,7 @@ def temporary_store(tmpdir, request):
 def mock_fetch(mock_archive, monkeypatch):
     """Fake the URL for a package so it downloads from a file."""
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "fetcher", URLFetchStrategy(mock_archive.url)
+        spack.package_base.PackageBase, "fetcher", URLFetchStrategy(url=mock_archive.url)
     )
 
 
@@ -1418,6 +1418,24 @@ def mock_git_repository(git, tmpdir_factory):
         r1 = rev_hash(branch)
         r1_file = branch_file
 
+        multiple_directories_branch = "many_dirs"
+        num_dirs = 3
+        num_files = 2
+        dir_files = []
+        for i in range(num_dirs):
+            for j in range(num_files):
+                dir_files.append(f"dir{i}/file{j}")
+
+        git("checkout", "-b", multiple_directories_branch)
+        for f in dir_files:
+            repodir.ensure(f, file=True)
+            git("add", f)
+
+        git("-c", "commit.gpgsign=false", "commit", "-m", "many_dirs add files")
+
+        # restore default
+        git("checkout", default_branch)
+
     # Map of version -> bunch. Each bunch includes; all the args
     # that must be specified as part of a version() declaration (used to
     # manufacture a version for the 'git-test' package); the associated
@@ -1436,6 +1454,11 @@ def mock_git_repository(git, tmpdir_factory):
         # would most-commonly assemble a Git fetcher
         "default-no-per-version-git": Bunch(
             revision=default_branch, file=r0_file, args={"branch": default_branch}
+        ),
+        "many-directories": Bunch(
+            revision=multiple_directories_branch,
+            file=dir_files[0],
+            args={"git": url, "branch": multiple_directories_branch},
         ),
     }
 

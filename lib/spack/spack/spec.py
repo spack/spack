@@ -51,6 +51,7 @@ line is a spec for a particular installation of the mpileaks package.
 import collections
 import collections.abc
 import enum
+import io
 import itertools
 import os
 import pathlib
@@ -1427,7 +1428,7 @@ class Spec:
         # init an empty spec that matches anything.
         self.name = None
         self.versions = vn.VersionList(":")
-        self.variants = vt.VariantMap(self)
+        self.variants = VariantMap(self)
         self.architecture = None
         self.compiler = None
         self.compiler_flags = FlagMap(self)
@@ -1551,7 +1552,9 @@ class Spec:
             raise spack.error.SpecError(err_msg.format(name, len(deps)))
         return deps[0]
 
-    def edges_from_dependents(self, name=None, depflag: dt.DepFlag = dt.ALL):
+    def edges_from_dependents(
+        self, name=None, depflag: dt.DepFlag = dt.ALL
+    ) -> List[DependencySpec]:
         """Return a list of edges connecting this node in the DAG
         to parents.
 
@@ -1561,7 +1564,9 @@ class Spec:
         """
         return [d for d in self._dependents.select(parent=name, depflag=depflag)]
 
-    def edges_to_dependencies(self, name=None, depflag: dt.DepFlag = dt.ALL):
+    def edges_to_dependencies(
+        self, name=None, depflag: dt.DepFlag = dt.ALL
+    ) -> List[DependencySpec]:
         """Return a list of edges connecting this node in the DAG
         to children.
 
@@ -1639,7 +1644,7 @@ class Spec:
         Known flags currently include "arch"
         """
 
-        if propagate and name in spack.directives.reserved_names:
+        if propagate and name in vt.reserved_names:
             raise UnsupportedPropagationError(
                 f"Propagation with '==' is not supported for '{name}'."
             )
@@ -2577,22 +2582,27 @@ class Spec:
         return Spec.from_dict(extracted_json)
 
     @staticmethod
-    def from_detection(spec_str, extra_attributes=None):
+    def from_detection(
+        spec_str: str,
+        *,
+        external_path: str,
+        external_modules: Optional[List[str]] = None,
+        extra_attributes: Optional[Dict] = None,
+    ) -> "Spec":
         """Construct a spec from a spec string determined during external
         detection and attach extra attributes to it.
 
         Args:
-            spec_str (str): spec string
-            extra_attributes (dict): dictionary containing extra attributes
-
-        Returns:
-            spack.spec.Spec: external spec
+            spec_str: spec string
+            external_path: prefix of the external spec
+            external_modules: optional module files to be loaded when the external spec is used
+            extra_attributes: dictionary containing extra attributes
         """
-        s = Spec(spec_str)
+        s = Spec(spec_str, external_path=external_path, external_modules=external_modules)
         extra_attributes = syaml.sorted_dict(extra_attributes or {})
         # This is needed to be able to validate multi-valued variants,
         # otherwise they'll still be abstract in the context of detection.
-        vt.substitute_abstract_variants(s)
+        substitute_abstract_variants(s)
         s.extra_attributes = extra_attributes
         return s
 
@@ -2915,7 +2925,7 @@ class Spec:
             # Ensure correctness of variants (if the spec is not virtual)
             if not spec.virtual:
                 Spec.ensure_valid_variants(spec)
-                vt.substitute_abstract_variants(spec)
+                substitute_abstract_variants(spec)
 
     @staticmethod
     def ensure_valid_variants(spec):
@@ -2935,9 +2945,7 @@ class Spec:
         pkg_variants = pkg_cls.variants
         # reserved names are variants that may be set on any package
         # but are not necessarily recorded by the package's class
-        not_existing = set(spec.variants) - (
-            set(pkg_variants) | set(spack.directives.reserved_names)
-        )
+        not_existing = set(spec.variants) - (set(pkg_variants) | set(vt.reserved_names))
         if not_existing:
             raise vt.UnknownVariantError(spec, not_existing)
 
@@ -3886,7 +3894,7 @@ class Spec:
                 if part.startswith("_"):
                     raise SpecFormatStringError("Attempted to format private attribute")
                 else:
-                    if part == "variants" and isinstance(current, vt.VariantMap):
+                    if part == "variants" and isinstance(current, VariantMap):
                         # subscript instead of getattr for variant names
                         current = current[part]
                     else:
@@ -4341,9 +4349,155 @@ class Spec:
                 v.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(self.fullname))
 
 
-def parse_with_version_concrete(string: str, compiler: bool = False):
+class VariantMap(lang.HashableMap):
+    """Map containing variant instances. New values can be added only
+    if the key is not already present."""
+
+    def __init__(self, spec: Spec):
+        super().__init__()
+        self.spec = spec
+
+    def __setitem__(self, name, vspec):
+        # Raise a TypeError if vspec is not of the right type
+        if not isinstance(vspec, vt.AbstractVariant):
+            raise TypeError(
+                "VariantMap accepts only values of variant types "
+                f"[got {type(vspec).__name__} instead]"
+            )
+
+        # Raise an error if the variant was already in this map
+        if name in self.dict:
+            msg = 'Cannot specify variant "{0}" twice'.format(name)
+            raise vt.DuplicateVariantError(msg)
+
+        # Raise an error if name and vspec.name don't match
+        if name != vspec.name:
+            raise KeyError(
+                f'Inconsistent key "{name}", must be "{vspec.name}" to ' "match VariantSpec"
+            )
+
+        # Set the item
+        super().__setitem__(name, vspec)
+
+    def substitute(self, vspec):
+        """Substitutes the entry under ``vspec.name`` with ``vspec``.
+
+        Args:
+            vspec: variant spec to be substituted
+        """
+        if vspec.name not in self:
+            raise KeyError(f"cannot substitute a key that does not exist [{vspec.name}]")
+
+        # Set the item
+        super().__setitem__(vspec.name, vspec)
+
+    def satisfies(self, other):
+        return all(k in self and self[k].satisfies(other[k]) for k in other)
+
+    def intersects(self, other):
+        return all(self[k].intersects(other[k]) for k in other if k in self)
+
+    def constrain(self, other: "VariantMap") -> bool:
+        """Add all variants in other that aren't in self to self. Also constrain all multi-valued
+        variants that are already present. Return True iff self changed"""
+        if other.spec is not None and other.spec._concrete:
+            for k in self:
+                if k not in other:
+                    raise vt.UnsatisfiableVariantSpecError(self[k], "<absent>")
+
+        changed = False
+        for k in other:
+            if k in self:
+                # If they are not compatible raise an error
+                if not self[k].compatible(other[k]):
+                    raise vt.UnsatisfiableVariantSpecError(self[k], other[k])
+                # If they are compatible merge them
+                changed |= self[k].constrain(other[k])
+            else:
+                # If it is not present copy it straight away
+                self[k] = other[k].copy()
+                changed = True
+
+        return changed
+
+    @property
+    def concrete(self):
+        """Returns True if the spec is concrete in terms of variants.
+
+        Returns:
+            bool: True or False
+        """
+        return self.spec._concrete or all(v in self for v in self.spec.package_class.variants)
+
+    def copy(self) -> "VariantMap":
+        clone = VariantMap(self.spec)
+        for name, variant in self.items():
+            clone[name] = variant.copy()
+        return clone
+
+    def __str__(self):
+        if not self:
+            return ""
+
+        # print keys in order
+        sorted_keys = sorted(self.keys())
+
+        # Separate boolean variants from key-value pairs as they print
+        # differently. All booleans go first to avoid ' ~foo' strings that
+        # break spec reuse in zsh.
+        bool_keys = []
+        kv_keys = []
+        for key in sorted_keys:
+            bool_keys.append(key) if isinstance(self[key].value, bool) else kv_keys.append(key)
+
+        # add spaces before and after key/value variants.
+        string = io.StringIO()
+
+        for key in bool_keys:
+            string.write(str(self[key]))
+
+        for key in kv_keys:
+            string.write(" ")
+            string.write(str(self[key]))
+
+        return string.getvalue()
+
+
+def substitute_abstract_variants(spec: Spec):
+    """Uses the information in `spec.package` to turn any variant that needs
+    it into a SingleValuedVariant.
+
+    This method is best effort. All variants that can be substituted will be
+    substituted before any error is raised.
+
+    Args:
+        spec: spec on which to operate the substitution
+    """
+    # This method needs to be best effort so that it works in matrix exlusion
+    # in $spack/lib/spack/spack/spec_list.py
+    failed = []
+    for name, v in spec.variants.items():
+        if name == "dev_path":
+            spec.variants.substitute(vt.SingleValuedVariant(name, v._original_value))
+            continue
+        elif name in vt.reserved_names:
+            continue
+        elif name not in spec.package_class.variants:
+            failed.append(name)
+            continue
+        pkg_variant, _ = spec.package_class.variants[name]
+        new_variant = pkg_variant.make_variant(v._original_value)
+        pkg_variant.validate_or_raise(new_variant, spec.package_class)
+        spec.variants.substitute(new_variant)
+
+    # Raise all errors at once
+    if failed:
+        raise vt.UnknownVariantError(spec, failed)
+
+
+def parse_with_version_concrete(spec_like: Union[str, Spec], compiler: bool = False):
     """Same as Spec(string), but interprets @x as @=x"""
-    s: Union[CompilerSpec, Spec] = CompilerSpec(string) if compiler else Spec(string)
+    s: Union[CompilerSpec, Spec] = CompilerSpec(spec_like) if compiler else Spec(spec_like)
     interpreted_version = s.versions.concrete_range_as_version
     if interpreted_version:
         s.versions = vn.VersionList([interpreted_version])
@@ -4531,6 +4685,10 @@ class SpecfileReaderBase:
                 node_spec._build_spec = hash_dict[bhash]["node_spec"]
 
         return hash_dict[root_spec_hash]["node_spec"]
+
+    @classmethod
+    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name):
+        raise NotImplementedError("Subclasses must implement this method.")
 
 
 class SpecfileV1(SpecfileReaderBase):
@@ -4742,6 +4900,7 @@ def get_host_environment() -> Dict[str, Any]:
         "architecture": arch_spec,
         "arch_str": str(arch_spec),
         "hostname": socket.gethostname(),
+        "full_hostname": socket.getfqdn(),
     }
 
 

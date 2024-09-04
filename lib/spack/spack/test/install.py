@@ -610,10 +610,9 @@ def test_install_from_binary_with_missing_patch_succeeds(
     temporary_store.db.add(s, directory_layout=temporary_store.layout, explicit=True)
 
     # Push it to a binary cache
-    build_cache = tmp_path / "my_build_cache"
-    binary_distribution.push_or_raise(
-        [s], out_url=build_cache.as_uri(), signing_key=None, force=False
-    )
+    mirror = spack.mirror.Mirror.from_local_path(str(tmp_path / "my_build_cache"))
+    with binary_distribution.make_uploader(mirror=mirror) as uploader:
+        uploader.push_or_raise([s])
 
     # Now re-install it.
     s.package.do_uninstall()
@@ -624,7 +623,7 @@ def test_install_from_binary_with_missing_patch_succeeds(
         s.package.do_install()
 
     # Binary install: succeeds, we don't need the patch.
-    spack.mirror.add(spack.mirror.Mirror.from_local_path(str(build_cache)))
+    spack.mirror.add(mirror)
     s.package.do_install(package_cache_only=True, dependencies_cache_only=True, unsigned=True)
 
     assert temporary_store.db.query_local_by_spec_hash(s.dag_hash())

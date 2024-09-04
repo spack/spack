@@ -43,8 +43,6 @@
    internal_error("Only nodes can have node_compiler_version").
 :- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode),
    internal_error("variant_value true for a non-node").
-:- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode),
-   internal_error("node_flag_compiler_default true for non-node").
 :- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode),
    internal_error("node_flag assigned for non-node").
 :- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode),
@@ -1360,15 +1358,6 @@ attr("node_flag_source", PackageNode, FlagType, PackageNode) :- attr("node_flag"
 % compiler flags from compilers.yaml are put on nodes if compiler matches
 attr("node_flag", PackageNode, FlagType, Flag)
   :- compiler_flag(CompilerID, FlagType, Flag),
-     node_compiler(PackageNode, CompilerID),
-     flag_type(FlagType),
-     compiler_id(CompilerID),
-     compiler_name(CompilerID, CompilerName),
-     compiler_version(CompilerID, Version).
-
-attr("node_flag_compiler_default", PackageNode)
-  :- not attr("node_flag_set", PackageNode, FlagType, _),
-     compiler_flag(CompilerID, FlagType, Flag),
      node_compiler(PackageNode, CompilerID),
      flag_type(FlagType),
      compiler_id(CompilerID),

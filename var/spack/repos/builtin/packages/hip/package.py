@@ -368,6 +368,9 @@ class Hip(CMakePackage):
 
             if self.spec.satisfies("@5.7:"):
                 paths["hip-path"] = rocm_prefix
+            if self.spec.satisfies("@6.0:"):
+                paths["hsa-rocr-dev"] = rocm_prefix
+
         else:
             paths = {
                 "hip-path": self.spec.prefix,
@@ -603,9 +606,9 @@ class Hip(CMakePackage):
         """Copy the tests source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         if self.spec.satisfies("@5.1:5.5"):
-            self.cache_extra_test_sources([self.test_src_dir_old])
+            cache_extra_test_sources(self, [self.test_src_dir_old])
         elif self.spec.satisfies("@5.6:"):
-            self.cache_extra_test_sources([self.test_src_dir])
+            cache_extra_test_sources(self, [self.test_src_dir])
 
     def test_samples(self):
         # configure, build and run all hip samples

@@ -19,6 +19,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSL-1.0")
 
+    version("0.27.0", sha256="4a58dc4014edc2074399e4a6ecfa244537c89ce1319b3e14ff3dfe617fb9f9e8")
     version("0.26.1", sha256="d7cc842238754019abdb536e22325e9a57186cd2ac8cc9c7140a5385f9d730f6")
     version("0.26.0", sha256="bbec5472c71006c1f55e7946c8dc517dae76c41cacb36fa98195312c74a1bb9a")
     version("0.25.0", sha256="6646e12f88049116d84ce0caeedaa039a13caaa0431964caea4660b739767b2e")

@@ -29,6 +29,9 @@ from spack.util.environment import filter_system_paths
 
 __all__ = ["Compiler"]
 
+PATH_INSTANCE_VARS = ["cc", "cxx", "f77", "fc"]
+FLAG_INSTANCE_VARS = ["cflags", "cppflags", "cxxflags", "fflags"]
+
 
 @llnl.util.lang.memoized
 def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
@@ -699,6 +702,30 @@ class Compiler:
             # Restore environment regardless of whether inner code succeeded
             os.environ.clear()
             os.environ.update(backup_env)
+
+    def to_dict(self):
+        flags_dict = {fname: " ".join(fvals) for fname, fvals in self.flags.items()}
+        flags_dict.update(
+            {attr: getattr(self, attr, None) for attr in FLAG_INSTANCE_VARS if hasattr(self, attr)}
+        )
+        result = {
+            "spec": str(self.spec),
+            "paths": {attr: getattr(self, attr, None) for attr in PATH_INSTANCE_VARS},
+            "flags": flags_dict,
+            "operating_system": str(self.operating_system),
+            "target": str(self.target),
+            "modules": self.modules or [],
+            "environment": self.environment or {},
+            "extra_rpaths": self.extra_rpaths or [],
+        }
+
+        if self.enable_implicit_rpaths is not None:
+            result["implicit_rpaths"] = self.enable_implicit_rpaths
+
+        if self.alias:
+            result["alias"] = self.alias
+
+        return result
 
 
 class CompilerAccessError(spack.error.SpackError):

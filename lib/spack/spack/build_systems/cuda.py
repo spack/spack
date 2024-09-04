@@ -138,7 +138,7 @@ class CudaPackage(PackageBase):
         conflicts("%gcc@11.2:", when="+cuda ^cuda@:11.5")
         conflicts("%gcc@12:", when="+cuda ^cuda@:11.8")
         conflicts("%gcc@13:", when="+cuda ^cuda@:12.3")
-        conflicts("%gcc@14:", when="+cuda ^cuda@:12.5")
+        conflicts("%gcc@14:", when="+cuda ^cuda@:12.6")
         conflicts("%clang@12:", when="+cuda ^cuda@:11.4.0")
         conflicts("%clang@13:", when="+cuda ^cuda@:11.5")
         conflicts("%clang@14:", when="+cuda ^cuda@:11.7")
@@ -146,6 +146,7 @@ class CudaPackage(PackageBase):
         conflicts("%clang@16:", when="+cuda ^cuda@:12.1")
         conflicts("%clang@17:", when="+cuda ^cuda@:12.3")
         conflicts("%clang@18:", when="+cuda ^cuda@:12.5")
+        conflicts("%clang@19:", when="+cuda ^cuda@:12.6")
 
         # https://gist.github.com/ax3l/9489132#gistcomment-3860114
         conflicts("%gcc@10", when="+cuda ^cuda@:11.4.0")

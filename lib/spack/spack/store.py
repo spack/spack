@@ -261,7 +261,7 @@ def restore(token):
 
 
 def _construct_upstream_dbs_from_install_roots(
-    install_roots: List[str], _test: bool = False
+    install_roots: List[str],
 ) -> List[spack.database.Database]:
     accumulated_upstream_dbs: List[spack.database.Database] = []
     for install_root in reversed(install_roots):
@@ -271,7 +271,6 @@ def _construct_upstream_dbs_from_install_roots(
             is_upstream=True,
             upstream_dbs=upstream_dbs,
         )
-        next_db._fail_when_missing_deps = _test
         next_db._read()
         accumulated_upstream_dbs.insert(0, next_db)
 
