@@ -11,14 +11,14 @@ class PyYour(PythonPackage):
 
     homepage = "https://github.com/thepetabyteproject/your"
 
-    # pypi tarball has requirements.txt missing
-    url = "https://github.com/thepetabyteproject/your/archive/refs/tags/0.6.7.tar.gz"
+    homepage = "https://github.com/thepetabyteproject/your"
+    git = "https://github.com/thepetabyteproject/your.git"
 
     maintainers("aweaver1fandm")
 
     license("GPL-3.0")
 
-    version("0.6.7", sha256="f2124a630d413621cce067805feb6b9c21c5c8938f41188bd89684968478d814")
+    version("main", branch="main", preferred=True)
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
