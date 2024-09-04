@@ -33,4 +33,5 @@ class RocprofilerRegister(CMakePackage):
 
     def cmake_args(self):
         args = ["-DROCPROFILER_REGISTER_BUILD_FMT=OFF", "-DROCPROFILER_REGISTER_BUILD_GLOG=OFF"]
+        args.append(self.define("ROCPROFILER_REGISTER_BUILD_TESTS", self.run_tests))
         return args
