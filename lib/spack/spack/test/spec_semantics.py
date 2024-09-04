@@ -689,6 +689,13 @@ class TestSpecSemantics:
             ("{/hash}", "/", lambda s: "/" + s.dag_hash()),
         ]
 
+        variants_segments = [
+            ("{variants.debug}", spec, "debug"),
+            ("{variants.foo}", spec, "foo"),
+            ("{^pkg-a.variants.bvv}", spec["pkg-a"], "bvv"),
+            ("{^pkg-a.variants.foo}", spec["pkg-a"], "foo"),
+        ]
+
         other_segments = [
             ("{spack_root}", spack.paths.spack_root),
             ("{spack_install}", spack.store.STORE.layout.root),
@@ -715,6 +722,12 @@ class TestSpecSemantics:
             assert spec.format(named_str) == getter(spec)
             callpath, fmt_str = depify("callpath", named_str, sigil)
             assert spec.format(fmt_str) == getter(callpath)
+
+        for named_str, test_spec, variant_name in variants_segments:
+            assert test_spec.format(named_str) == str(test_spec.variants[variant_name])
+            assert test_spec.format(named_str[:-1] + ".value}") == str(
+                test_spec.variants[variant_name].value
+            )
 
         for named_str, expected in other_segments:
             actual = spec.format(named_str)
@@ -775,6 +788,7 @@ class TestSpecSemantics:
             r"{dag_hash}",
             r"{foo}",
             r"{+variants.debug}",
+            r"{variants.this_variant_does_not_exist}",
         ],
     )
     def test_spec_formatting_bad_formats(self, default_mock_concretization, fmt_str):
