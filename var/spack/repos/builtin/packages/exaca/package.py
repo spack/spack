@@ -7,7 +7,7 @@ from spack.package import *
 from spack.pkg.builtin.kokkos import Kokkos
 
 
-class Exaca(CMakePackage):
+class Exaca(CMakePackage, CudaPackage, ROCmPackage):
     """ExaCA: an exascale cellular automata application for alloy solidification modeling"""
 
     homepage = "https://github.com/LLNL/ExaCA"
@@ -46,6 +46,19 @@ class Exaca(CMakePackage):
     depends_on("mpi")
     depends_on("nlohmann-json", when="@1.2:")
 
+    for _backend in _kokkos_backends:
+        # Handled separately below
+        if _backend != "cuda" and _backend != "rocm":
+            _backend_dep = "+{0}".format(_backend)
+            depends_on("kokkos {0}".format(_backend_dep), when=_backend_dep)
+
+    for arch in CudaPackage.cuda_arch_values:
+        cuda_dep = "+cuda cuda_arch={0}".format(arch)
+        depends_on("kokkos {0}".format(cuda_dep), when=cuda_dep)
+    for arch in ROCmPackage.amdgpu_targets:
+        rocm_dep = "+rocm amdgpu_target={0}".format(arch)
+        depends_on("kokkos {0}".format(rocm_dep), when=rocm_dep)
+
     def cmake_args(self):
         options = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
@@ -53,6 +66,14 @@ class Exaca(CMakePackage):
             options += [self.define_from_variant("ExaCA_ENABLE_TESTING", "testing")]
         # Only release with optional json
         if self.spec.satisfies("@1.2"):
-            options += [self.define_from_variant("ExaCA_ENABLE_JSON", "ON")]
+            options += [self.define("ExaCA_ENABLE_JSON", "ON")]
+        # Use the json dependency, not an internal download
+        if self.spec.satisfies("@2.0:"):
+            options += [self.define("ExaCA_REQUIRE_EXTERNAL_JSON", "ON")]
+
+        # Use hipcc if compiling for rocm. Modifying this instead of CMAKE_CXX_COMPILER
+        # keeps the spack wrapper
+        if self.spec.satisfies("+rocm"):
+            env["SPACK_CXX"] = self.spec["hip"].hipcc
 
         return options
