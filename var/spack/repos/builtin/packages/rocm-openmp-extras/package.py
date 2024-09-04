@@ -627,10 +627,7 @@ class RocmOpenmpExtras(Package):
         ]
         components["flang-runtime"] += flang_common_args
 
-        build_order = [
-            "aomp-extras",
-            "openmp",
-        ]
+        build_order = ["aomp-extras", "openmp"]
         if self.spec.version >= Version("6.1.0"):
             build_order += ["flang-legacy-llvm", "flang-legacy"]
 
