@@ -10,6 +10,7 @@ class PyCsscompressor(PythonPackage):
     """Port of YUI CSS Compressor to Python."""
 
     pypi = "csscompressor/csscompressor-0.9.5.tar.gz"
+    homepage = "https://github.com/sprymix/csscompressor"
 
     license("BSD", checked_by="lizzyd710")
 
