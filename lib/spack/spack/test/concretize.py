@@ -607,7 +607,7 @@ class TestConcretize:
         assert not spec.satisfies("^pkg-b foo=bar")
 
     def test_concretize_propagate_multiple_multivalue_variant(self):
-        """Tests mulitvalue blah blah""" # TODO: Rikki do this later!
+        """Tests mulitvalue blah blah"""  # TODO: Rikki do this later!
         spec = Spec("multivalue-variant foo==bar ^pkg-a foo==baz")
         spec.concretize()
 

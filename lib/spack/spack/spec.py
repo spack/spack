@@ -2949,8 +2949,8 @@ class Spec:
             if variant.propagate:
                 propagate.append(name)
 
-        not_existing = set(spec.variants) - (set(pkg_variants) | set(vt.reserved_names) | set(
-            propagate)
+        not_existing = set(spec.variants) - (
+            set(pkg_variants) | set(vt.reserved_names) | set(propagate)
         )
 
         if not_existing:
