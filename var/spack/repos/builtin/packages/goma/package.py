@@ -29,6 +29,10 @@ class Goma(CMakePackage):
     version("release", branch="release")
     version("main", branch="main")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Problem size variants
     variant(
         "max_conc",

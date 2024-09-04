@@ -114,6 +114,8 @@ class Margo(AutotoolsPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("json-c", when="@0.9:")
     depends_on("autoconf@2.65:", type=("build"))
     depends_on("m4", type=("build"))

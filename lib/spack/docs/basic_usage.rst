@@ -1433,22 +1433,12 @@ the reserved keywords ``platform``, ``os`` and ``target``:
    $ spack install libelf os=ubuntu18.04
    $ spack install libelf target=broadwell
 
-or together by using the reserved keyword ``arch``:
-
-.. code-block:: console
-
-   $ spack install libelf arch=cray-CNL10-haswell
-
 Normally users don't have to bother specifying the architecture if they
 are installing software for their current host, as in that case the
 values will be detected automatically.  If you need fine-grained control
 over which packages use which targets (or over *all* packages' default
 target), see :ref:`package-preferences`.
 
-.. admonition:: Cray machines
-
-  The situation is a little bit different for Cray machines and a detailed
-  explanation on how the architecture can be set on them can be found at :ref:`cray-support`
 
 .. _support-for-microarchitectures:
 

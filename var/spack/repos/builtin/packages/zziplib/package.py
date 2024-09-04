@@ -20,6 +20,8 @@ class Zziplib(AutotoolsPackage, CMakePackage):
     version("0.13.72", sha256="93ef44bf1f1ea24fc66080426a469df82fa631d13ca3b2e4abaeab89538518dc")
     version("0.13.69", sha256="846246d7cdeee405d8d21e2922c6e97f55f24ecbe3b6dcf5778073a88f120544")
 
+    depends_on("c", type="build")  # generated
+
     patch("python2to3.patch", when="@:0.13.69")
 
     # Switch to CMake from 0.13.70, first working release is 0.13.71

@@ -58,12 +58,6 @@ class ClingoBootstrap(Clingo):
         when="platform=linux",
         msg="GCC or clang are required to bootstrap clingo on Linux",
     )
-    requires(
-        "%gcc",
-        "%clang",
-        when="platform=cray",
-        msg="GCC or clang are required to bootstrap clingo on Cray",
-    )
     conflicts("%gcc@:5", msg="C++14 support is required to bootstrap clingo")
 
     # On Darwin we bootstrap with Apple Clang
@@ -142,7 +136,7 @@ class ClingoBootstrap(Clingo):
         cmake.add_default_envmod(use_mods)
 
     def setup_build_environment(self, env):
-        if "%apple-clang" in self.spec:
+        if self.spec.satisfies("%apple-clang"):
             env.append_flags("CFLAGS", "-mmacosx-version-min=10.13")
             env.append_flags("CXXFLAGS", "-mmacosx-version-min=10.13")
             env.append_flags("LDFLAGS", "-mmacosx-version-min=10.13")

@@ -10,10 +10,8 @@ class PyYour(PythonPackage):
     """Python library to read and process pulsar data in several different formats"""
 
     homepage = "https://github.com/thepetabyteproject/your"
-
-    homepage = "https://github.com/thepetabyteproject/your"
     git = "https://github.com/thepetabyteproject/your.git"
-
+    
     maintainers("aweaver1fandm")
 
     license("GPL-3.0")

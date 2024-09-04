@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Common basic functions used through the spack.bootstrap package"""
 import fnmatch
+import importlib
 import os.path
 import re
 import sys
@@ -28,7 +29,7 @@ QueryInfo = Dict[str, "spack.spec.Spec"]
 
 def _python_import(module: str) -> bool:
     try:
-        __import__(module)
+        importlib.import_module(module)
     except ImportError:
         return False
     return True
@@ -213,15 +214,18 @@ def _root_spec(spec_str: str) -> str:
     Args:
         spec_str: spec to be bootstrapped. Must be without compiler and target.
     """
-    # Add a compiler requirement to the root spec.
+    # Add a compiler and platform requirement to the root spec.
     platform = str(spack.platforms.host())
+
     if platform == "darwin":
         spec_str += " %apple-clang"
+    elif platform == "windows":
+        spec_str += " %msvc"
     elif platform == "linux":
         spec_str += " %gcc"
     elif platform == "freebsd":
         spec_str += " %clang"
-
+    spec_str += f" platform={platform}"
     target = archspec.cpu.host().family
     spec_str += f" target={target}"
 

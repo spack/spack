@@ -58,6 +58,8 @@ class EnvironmentModules(Package):
         url="http://prdownloads.sourceforge.net/modules/modules-3.2.10.tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+
     variant("X", default=True, description="Build with X functionality")
 
     depends_on("less", type=("build", "run"), when="@4.1:")

@@ -65,6 +65,10 @@ class Scr(CMakePackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("mpi")
     depends_on("zlib-api")
 
@@ -301,9 +305,6 @@ class Scr(CMakePackage):
         else:
             # PDSH required before this point
             args.append(self.define("WITH_PDSH_PREFIX", spec["pdsh"].prefix))
-
-            if "platform=cray" in spec:
-                args.append(self.define("SCR_LINK_STATIC", False))
 
         return args
 

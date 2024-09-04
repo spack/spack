@@ -56,6 +56,16 @@ spack:
     - openssl certs=system     # must be this, system external does not work
     - libtree
     - patchelf
+    - sed
+    - which
+    - elfutils
+    - fontconfig
+    - font-util
+    - gdb
+    - flex
+    - graphviz
+    - doxygen
+    - meson
 
   - arch:
     - '%gcc target=x86_64_v3'

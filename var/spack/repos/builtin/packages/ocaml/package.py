@@ -27,6 +27,9 @@ class Ocaml(Package):
     version("4.06.0", sha256="c17578e243c4b889fe53a104d8927eb8749c7be2e6b622db8b3c7b386723bf50")
     version("4.03.0", sha256="7fdf280cc6c0a2de4fc9891d0bf4633ea417046ece619f011fd44540fcfc8da2")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     patch("fix-duplicate-defs.patch", when="@4.08.0:4.09.0 %gcc@10.0:")
     # #9969, #9981: Added mergeable flag to ELF sections containing mergeable
     # constants.  Fixes compatibility with the integrated assembler in clang 11.0.0.
@@ -43,7 +46,7 @@ class Ocaml(Package):
     variant("force-safe-string", default=True, description="Enforce safe (immutable) strings")
 
     def url_for_version(self, version):
-        url = "http://caml.inria.fr/pub/distrib/ocaml-{0}/ocaml-{1}.tar.gz"
+        url = "https://caml.inria.fr/pub/distrib/ocaml-{0}/ocaml-{1}.tar.gz"
         return url.format(str(version)[:-2], version)
 
     def install(self, spec, prefix):

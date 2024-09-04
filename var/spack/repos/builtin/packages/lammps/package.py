@@ -29,6 +29,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     #   marked deprecated=True
     # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
+    version("20240627", sha256="2174a99d266279823a8c57629ee1c21ec357816aefd85f964d9f859fe9222aa5")
+    version("20240417", sha256="158b288725c251fd8b30dbcf61749e0d6a042807da92af865a7d3c413efdd8ea")
     version(
         "20240207.1", sha256="3ba62c2a1ed463fceedf313a1c3ea2997994aa102379a8d35b525ea424f56776"
     )
@@ -367,6 +369,16 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")
+
+    # mdi, scafacos, ml-quip, qmmm require C, but not available in Spack
+    for c_pkg in ("adios", "atc", "awpmd", "ml-pod", "electrode", "kim", "h5md", "tools"):
+        depends_on("c", type="build", when=f"+{c_pkg}")
+
+    # scafacos, ml-quip require Fortran, but not available in Spack
+    for fc_pkg in ("kim",):
+        depends_on("fortran", type="build", when=f"+{fc_pkg}")
+
     stable_versions = {
         "20230802.3",
         "20230802.2",
@@ -461,6 +473,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         "ml-pod": {"when": "@20221222:"},
         "ml-rann": {"when": "@20210702:"},
         "ml-snap": {"when": "@20210702:"},
+        "ml-uf3": {"when": "@20240627:"},
         "mliap": {"when": "@20200630:20210527"},
         "mofff": {"when": "@20210702:"},
         "molecule": {"default": True},
@@ -588,6 +601,22 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         multi=False,
     )
     variant(
+        "fft",
+        default="fftw3",
+        when="+kspace",
+        description="FFT library for KSPACE package",
+        values=("kiss", "fftw3", "mkl"),
+        multi=False,
+    )
+    variant(
+        "fft_kokkos",
+        default="fftw3",
+        when="@20240417: +kspace+kokkos",
+        description="FFT library for Kokkos-enabled KSPACE package",
+        values=("kiss", "fftw3", "mkl", "hipfft", "cufft"),
+        multi=False,
+    )
+    variant(
         "gpu_precision",
         default="mixed",
         when="~kokkos",
@@ -595,12 +624,16 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         values=("double", "mixed", "single"),
         multi=False,
     )
+    variant("tools", default=False, description="Build LAMMPS tools (msi2lmp, binary2txt, chain)")
 
     depends_on("cmake@3.16:", when="@20231121:")
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+mpiio")
-    depends_on("fftw-api@3", when="+kspace")
-    depends_on("hipfft", when="+kspace+kokkos+rocm")
+    depends_on("fftw-api@3", when="+kspace fft=fftw3")
+    depends_on("mkl", when="+kspace fft=mkl")
+    depends_on("hipfft", when="+kokkos+kspace+rocm fft_kokkos=hipfft")
+    depends_on("fftw-api@3", when="+kokkos+kspace fft_kokkos=fftw3")
+    depends_on("mkl", when="+kokkos+kspace fft_kokkos=mkl")
     depends_on("voropp+pic", when="+voronoi")
     depends_on("netcdf-c+mpi", when="+user-netcdf")
     depends_on("netcdf-c+mpi", when="+netcdf")
@@ -630,6 +663,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("kokkos+deprecated_code+shared@3.0.00", when="@20200303+kokkos")
     depends_on("kokkos+shared@3.1:", when="@20200505:+kokkos")
     depends_on("kokkos@3.7.01:", when="@20230208: +kokkos")
+    depends_on("kokkos@4.3.00:", when="@20240417: +kokkos")
+    depends_on("kokkos@4.3.01:", when="@20240627: +kokkos")
     depends_on("adios2", when="+user-adios")
     depends_on("adios2", when="+adios")
     depends_on("plumed", when="+user-plumed")
@@ -771,6 +806,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             self.define_from_variant("LAMMPS_EXCEPTIONS", "exceptions"),
             self.define_from_variant("{}_MPI".format(mpi_prefix), "mpi"),
             self.define_from_variant("BUILD_OMP", "openmp"),
+            self.define_from_variant("BUILD_TOOLS", "tools"),
             self.define("ENABLE_TESTING", self.run_tests),
             self.define("DOWNLOAD_POTENTIALS", False),
         ]
@@ -800,6 +836,10 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
                 args.append(self.define_from_variant("HIP_ARCH", "amdgpu_target"))
             else:
                 args.append(self.define("PKG_GPU", False))
+        else:
+            args.append(self.define("EXTERNAL_KOKKOS", True))
+            if spec.satisfies("@20240207: +kokkos+kspace"):
+                args.append(self.define_from_variant("FFT_KOKKOS", "fft_kokkos"))
 
         if spec.satisfies("@20180629:+lib"):
             args.append(self.define("BUILD_LIB", True))
@@ -807,15 +847,20 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
         if spec.satisfies("%aocc"):
             if spec.satisfies("+intel"):
                 cxx_flags = (
-                    "-Ofast -fno-math-errno -fno-unroll-loops "
+                    "-O3 -fno-math-errno -fno-unroll-loops "
                     "-fveclib=AMDLIBM -muse-unaligned-vector-move"
                 )
+                if spec.satisfies("%aocc@4.1:"):
+                    cxx_flags += (
+                        " -mllvm -force-gather-overhead-cost=50"
+                        " -mllvm -enable-masked-gather-sequence=false"
+                    )
                 # add -fopenmp-simd if OpenMP not already turned on
                 if spec.satisfies("~openmp"):
                     cxx_flags += " -fopenmp-simd"
                 cxx_flags += " -DLMP_SIMD_COMPILER -DUSE_OMP_SIMD -DLMP_INTEL_USELRT"
             else:
-                cxx_flags = "-Ofast -mfma -fvectorize -funroll-loops"
+                cxx_flags = "-O3 -mfma -fvectorize -funroll-loops"
             args.append(self.define("CMAKE_CXX_FLAGS_RELEASE", cxx_flags))
             args.append(self.define("CMAKE_CXX_FLAGS_RELWITHDEBINFO", cxx_flags))
 
@@ -834,15 +879,9 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
                 opt = "{0}_{1}".format(pkg_prefix, pkg.replace("-package", "").upper())
                 args.append(self.define(opt, "+{0}".format(pkg) in spec))
 
-        if "+kspace" in spec:
-            # If FFTW3 is selected, then CMake will try to detect, if threaded
-            # FFTW libraries are available and enable them by default.
-            if "^fftw" in spec or "^cray-fftw" in spec or "^amdfftw" in spec:
-                args.append(self.define("FFT", "FFTW3"))
-            elif spec["fftw-api"].name in INTEL_MATH_LIBRARIES:
-                args.append(self.define("FFT", "MKL"))
-            elif "^armpl-gcc" in spec or "^acfl" in spec:
-                args.append(self.define("FFT", "FFTW3"))
+        if spec.satisfies("+kspace"):
+            args.append(self.define_from_variant("FFT", "fft"))
+            if spec.satisfies("fft=fftw3 ^armpl-gcc") or spec.satisfies("fft=fftw3 ^acfl"):
                 args.append(self.define("FFTW3_LIBRARY", self.spec["fftw-api"].libs[0]))
                 args.append(
                     self.define("FFTW3_INCLUDE_DIR", self.spec["fftw-api"].headers.directories[0])
@@ -852,8 +891,6 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             # for transposing 3d FFT data.
             args.append(self.define("FFT_SINGLE", spec.satisfies("fftw_precision=single")))
 
-        if "+kokkos" in spec:
-            args.append(self.define("EXTERNAL_KOKKOS", True))
         if "+user-adios" in spec or "+adios" in spec:
             args.append(self.define("ADIOS2_DIR", self.spec["adios2"].prefix))
         if "+user-plumed" in spec or "+plumed" in spec:
@@ -892,6 +929,14 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             else:
                 env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
                 env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
+        if "+plugin" in self.spec:
+            env.prepend_path("LAMMPS_PLUGIN_PATH", self.prefix.lib.lammps.plugins)
+            env.prepend_path("LAMMPS_PLUGIN_PATH", self.prefix.lib64.lammps.plugins)
+
+    @run_after("install")
+    def make_plugins_directories(self):
+        os.makedirs(self.prefix.lib.lammps.plugins, exist_ok=True)
+        os.makedirs(self.prefix.lib64.lammps.plugins, exist_ok=True)
 
     @run_after("install")
     def install_python(self):

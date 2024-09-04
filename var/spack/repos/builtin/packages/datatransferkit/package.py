@@ -26,6 +26,10 @@ class Datatransferkit(CMakePackage):
     version("3.1-rc3", commit="691d5a1540f7cd42141a3b3d2a7c8370cbc3560a", submodules=True)
     version("3.1-rc2", commit="1abc1a43b33dffc7a16d7497b4185d09d865e36a", submodules=True)
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "external-arborx",
         default=False,
