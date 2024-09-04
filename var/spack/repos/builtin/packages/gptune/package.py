@@ -2,9 +2,16 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import os
 
 from spack.package import *
+
+
+def terminate_bash_failures():
+    """Ensure bash scripts fail as soon as a command within fails."""
+    for f in os.listdir("."):
+        if f.endswith(".sh"):
+            filter_file(r"#!/bin/bash", r"#!/bin/bash" + "\nset -e", f)
 
 
 class Gptune(CMakePackage):
@@ -201,14 +208,24 @@ class Gptune(CMakePackage):
         if "~hypre" in self.spec or "~mpispawn" in self.spec:
             raise SkipTest("Package must be installed with +hypre+mpispawn")
 
+        # https://github.com/spack/spack/pull/45383#discussion_r1737987370
+        if not self.spec["hypre"].satisfies("@2.19.0"):
+            raise SkipTest("Package test only works for hypre@2.19.0")
+
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
         # copy hypre executables to the correct place
-        # TBD: Is it safe to not have the version match that of the build?
         wd = join_path(test_dir, "Hypre")
         with working_dir(wd):
             self.rm("-rf", "hypre")
-            self.git("clone", "https://github.com/hypre-space/hypre.git")
+            self.git(
+                "clone",
+                "--depth",
+                "1",
+                "--branch",
+                f"v{self.spec['hypre'].version.string}",
+                "https://github.com/hypre-space/hypre.git",
+            )
 
         hypre_test_dir = join_path(wd, "hypre", "src", "test")
         mkdirp(hypre_test_dir)
@@ -216,6 +233,7 @@ class Gptune(CMakePackage):
 
         # now run the test example
         with working_dir(join_path(test_dir, "Hypre")):
+            terminate_bash_failures()
             self.bash("run_examples.sh")
 
     def test_superlu(self):
@@ -223,14 +241,29 @@ class Gptune(CMakePackage):
         if "~superlu" in self.spec:
             raise SkipTest("Package must be installed with +superlu")
 
+        # https://github.com/spack/spack/pull/45383#discussion_r1737987370
+        if self.spec["superlu-dist"].version < Version("7.1"):
+            raise SkipTest("Package must be installed with superlu-dist@:7.1")
+
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
-        # copy superlu-dist executables to the correct place
-        # TBD: Is it safe to not have the version match that of the build?
+        # copy only works for-dist executables to the correct place
         wd = join_path(test_dir, "SuperLU_DIST")
         with working_dir(wd):
             self.rm("-rf", "superlu_dist")
-            self.git("clone", "https://github.com/xiaoyeli/superlu_dist.git")
+            version = self.spec["superlu-dist"].version.string
+            tag = f"v{version}" if version.replace(".", "").isdigit() else version
+            # TODO: Replace this IF/when superlu-dist renames its "master"
+            # branch's version from "develop" to "master".
+            tag = "master" if tag == "develop" else tag
+            self.git(
+                "clone",
+                "--depth",
+                "1",
+                "--branch",
+                tag,
+                "https://github.com/xiaoyeli/superlu_dist.git",
+            )
 
         superludriver = self.spec["superlu-dist"].prefix.lib.EXAMPLE.pddrive_spawn
         example_dir = join_path(wd, "superlu_dist", "build", "EXAMPLE")
@@ -243,9 +276,8 @@ class Gptune(CMakePackage):
                 if app == "SuperLU_DIST" and "~mpispawn" in self.spec:
                     raise SkipTest("Package must be installed with +superlu+mpispawn")
                 with working_dir(join_path(test_dir, app)):
-                    # TODO: Remove (or adjust) the timeout once the infinite
-                    # TODO: loop is resolved.
-                    self.bash("run_examples.sh", timeout=2)
+                    terminate_bash_failures()
+                    self.bash("run_examples.sh")
 
     def test_demo(self):
         """Run the demo test"""
@@ -255,6 +287,7 @@ class Gptune(CMakePackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
         with working_dir(join_path(test_dir, "GPTune-Demo")):
+            terminate_bash_failures()
             self.bash("run_examples.sh")
 
     def test_scalapack(self):
@@ -267,6 +300,5 @@ class Gptune(CMakePackage):
                 if app == "Scalapack-PDGEQRF" and "~mpispawn" in self.spec:
                     raise SkipTest("Package must be installed with +superlu+mpispawn")
                 with working_dir(join_path(test_dir, app)):
-                    # TODO: Remove (or adjust) the timeout once the infinite
-                    # TODO: loop is resolved.
-                    self.bash("run_examples.sh", timeout=2)
+                    terminate_bash_failures()
+                    self.bash("run_examples.sh")
