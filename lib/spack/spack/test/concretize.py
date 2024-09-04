@@ -561,7 +561,7 @@ class TestConcretize:
                 "ascent +adios2 ^adios2~~shared",
                 [("ascent", "+shared"), ("adios2", "~shared"), ("bzip2", "~shared")],
             ),
-            # Propagate, but lower nnodes use the other valu explicitly
+            # Propagate, but lower nodes use the other value explicitly
             (
                 "ascent~~shared +adios2 ^adios2+shared ^bzip2+shared",
                 [("ascent", "~shared"), ("adios2", "+shared"), ("bzip2", "+shared")],
@@ -575,7 +575,8 @@ class TestConcretize:
             spec[key].satisfies(expected_satisfies)
 
     def test_concretize_propagate_same_variant_multiple_sources_fail(self):
-        """Test does a thing and should fail"""  # TODO: Rikki fix this
+        """Test that when propagating a variant if the source package is excluded from the
+        propagation an error is raised"""
         with pytest.raises(spack.parser.SpecParsingError):
             Spec("ascent +adios2 ^adios2 ~~shared +shared")
 
@@ -607,13 +608,14 @@ class TestConcretize:
         assert not spec.satisfies("^pkg-b foo=bar")
 
     def test_concretize_propagate_multiple_multivalue_variant(self):
-        """Tests mulitvalue blah blah"""  # TODO: Rikki do this later!
+        """Tests propagating the same mulitvalued variant from different sources allows
+        the dependents to accept all propagated values"""
         spec = Spec("multivalue-variant foo==bar ^pkg-a foo==baz")
         spec.concretize()
 
-        assert spec.satisfies("multivalue-variant foo==bar")
-        assert spec.satisfies("^pkg-a foo==baz")
-        assert spec.satisfies("^pkg-b foo==bar,baz")
+        assert spec.satisfies("multivalue-variant foo=bar")
+        assert spec.satisfies("^pkg-a foo=baz")
+        assert spec.satisfies("^pkg-b foo=bar,baz")
 
         assert not spec.satisfies("^pkg-a foo==bar")
 
