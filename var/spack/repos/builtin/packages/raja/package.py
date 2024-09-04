@@ -185,7 +185,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     # and remove the +tests conflict below.
     variant("tests", default=False, description="Build tests")
 
-    # we don’t use variants to express the failing test, we only add a variant to
+    # we don't use variants to express the failing test, we only add a variant to
     # define whether we want to run all the tests (including those known to fail)
     # or only the passing ones.
     variant(

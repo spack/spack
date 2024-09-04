@@ -775,15 +775,15 @@ class TestConcretize:
         s = Spec("mpileaks")
         s.concretize()
 
-        assert llnl.util.lang.ObjectWrapper not in type(s).__mro__
+        assert llnl.util.lang.ObjectWrapper not in s.__class__.__mro__
 
         # Spec wrapped in a build interface
         build_interface = s["mpileaks"]
-        assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
+        assert llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
 
         # Mimics asking the build interface from a build interface
         build_interface = s["mpileaks"]["mpileaks"]
-        assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
+        assert llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
 
     @pytest.mark.regression("7705")
     def test_regression_issue_7705(self):
@@ -2109,11 +2109,13 @@ class TestConcretize:
         """Test that python extensions have access to a python dependency
 
         when python isn't otherwise in the DAG"""
-        python_spec = Spec("python@=detected")
         prefix = os.path.sep + "fake"
+        python_spec = Spec.from_detection("python@=detected", external_path=prefix)
 
         def find_fake_python(classes, path_hints):
-            return {"python": [spack.detection.DetectedPackage(python_spec, prefix=path_hints[0])]}
+            return {
+                "python": [Spec.from_detection("python@=detected", external_path=path_hints[0])]
+            }
 
         monkeypatch.setattr(spack.detection, "by_path", find_fake_python)
         external_conf = {
@@ -2128,7 +2130,8 @@ class TestConcretize:
 
         assert "python" in spec["py-extension1"]
         assert spec["python"].prefix == prefix
-        assert spec["python"] == python_spec
+        assert spec["python"].external
+        assert spec["python"].satisfies(python_spec)
 
     def test_external_python_extension_find_unified_python(self):
         """Test that python extensions use the same python as other specs in unified env"""
@@ -2959,7 +2962,7 @@ def test_concretization_version_order():
     result = [
         v
         for v, _ in sorted(
-            versions, key=spack.solver.asp._concretization_version_order, reverse=True
+            versions, key=spack.solver.asp.concretization_version_order, reverse=True
         )
     ]
     assert result == [

@@ -231,6 +231,9 @@ class Seacas(CMakePackage):
     depends_on("cmake@3.17:", when="@:2023-05-30", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("zlib-api", when="+zlib")
+    depends_on("parallel", when="platform=linux", type="run")
+    depends_on("parallel", when="platform=darwin", type="run")
+    depends_on("parallel", when="platform=freebsd", type="run")
     depends_on("trilinos~exodus+mpi+pamgen", when="+mpi+pamgen")
     depends_on("trilinos~exodus~mpi+pamgen", when="~mpi+pamgen")
     # Always depends on netcdf-c
@@ -486,3 +489,9 @@ class Seacas(CMakePackage):
             options.append(define("CMAKE_INSTALL_NAME_DIR", self.prefix.lib))
 
         return options
+
+    @run_after("install")
+    def symlink_parallel(self):
+        if not self.spec.dependencies("parallel"):
+            return
+        symlink(self.spec["parallel"].prefix.bin.parallel, self.prefix.bin.parallel)
