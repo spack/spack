@@ -10,7 +10,7 @@ class TlExpected(CMakePackage):
     """C++11/14/17 std::expected with functional-style extensions."""
 
     homepage = "https://tl.tartanllama.xyz/en/latest/"
-    url = "https://github.com/TartanLlama/expected/archive/1.0.0.tar.gz"
+    url = "https://github.com/TartanLlama/expected/archive/refs/tags/v1.0.0.tar.gz"
     git = "https://github.com/TartanLlama/expected.git"
 
     maintainers("charmoniumQ")
