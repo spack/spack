@@ -60,7 +60,7 @@ class PyGeopandas(PythonPackage):
     depends_on("py-pyproj@2.6.1.post1:", type=("build", "run"), when="@0.11:")
     depends_on("py-pyproj@3.3.0:", type=("build", "run"), when="@0.14:")
     depends_on("py-packaging", type=("build", "run"), when="@0.11:")
-    # Only for versions 0.14.4+ ? Or all 0.14 and it was forgotten in pyproject.toml for 0.14.0 to 0.14.3?
+    # Only for versions 0.14.4+ ? Or was it forgotten in pyproject.toml for 0.14.0 to 0.14.3?
     depends_on("py-numpy@1.22:", type=("build", "run"), when="@0.14.4:")
     # Only for versions 0.x.y
     depends_on("py-fiona", type=("build", "run"), when="@:0.99")
