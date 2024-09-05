@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Gaudi(CMakePackage):
@@ -78,14 +77,22 @@ class Gaudi(CMakePackage):
 
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
-    depends_on(
-        "boost@1.70: +system +filesystem +regex +thread +python +test +program_options +log +graph",
-        when="@35:",
+    # The boost components that are required for Gaudi
+    boost_libs = "+".join(
+        [
+            "system",
+            "filesystem",
+            "regex",
+            "thread",
+            "python",
+            "test",
+            "program_options",
+            "log",
+            "graph",
+        ]
     )
-    depends_on(
-        "boost@1.70: +system +filesystem +regex +thread +python +test +program_options +log +graph +fiber",
-        when="@39:",
-    )
+    depends_on(f"boost@1.70: +{boost_libs}", when="@35:")
+    depends_on(f"boost@1.70: +{boost_libs}+fiber", when="@39:")
 
     depends_on("clhep")
     depends_on("cmake", type="build")
