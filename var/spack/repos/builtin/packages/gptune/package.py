@@ -7,11 +7,12 @@ import os
 from spack.package import *
 
 
-def terminate_bash_failures():
-    """Ensure bash scripts fail as soon as a command within fails."""
-    for f in os.listdir("."):
+def terminate_bash_failures(dir):
+    """Ensure bash scripts within the directory fail as soon as a command
+    within fails."""
+    for f in os.listdir(dir):
         if f.endswith(".sh"):
-            filter_file(r"#!/bin/bash", r"#!/bin/bash" + "\nset -e", f)
+            filter_file(r"#!/bin/bash", r"#!/bin/bash" + "\nset -e", join_path(dir, f))
 
 
 class Gptune(CMakePackage):
@@ -233,7 +234,7 @@ class Gptune(CMakePackage):
 
         # now run the test example
         with working_dir(join_path(test_dir, "Hypre")):
-            terminate_bash_failures()
+            terminate_bash_failures(".")
             self.bash("run_examples.sh")
 
     def test_superlu(self):
@@ -276,7 +277,7 @@ class Gptune(CMakePackage):
                 if app == "SuperLU_DIST" and "~mpispawn" in self.spec:
                     raise SkipTest("Package must be installed with +superlu+mpispawn")
                 with working_dir(join_path(test_dir, app)):
-                    terminate_bash_failures()
+                    terminate_bash_failures(".")
                     self.bash("run_examples.sh")
 
     def test_demo(self):
@@ -287,7 +288,7 @@ class Gptune(CMakePackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
         with working_dir(join_path(test_dir, "GPTune-Demo")):
-            terminate_bash_failures()
+            terminate_bash_failures(".")
             self.bash("run_examples.sh")
 
     def test_scalapack(self):
@@ -300,5 +301,5 @@ class Gptune(CMakePackage):
                 if app == "Scalapack-PDGEQRF" and "~mpispawn" in self.spec:
                     raise SkipTest("Package must be installed with +superlu+mpispawn")
                 with working_dir(join_path(test_dir, app)):
-                    terminate_bash_failures()
+                    terminate_bash_failures(".")
                     self.bash("run_examples.sh")
