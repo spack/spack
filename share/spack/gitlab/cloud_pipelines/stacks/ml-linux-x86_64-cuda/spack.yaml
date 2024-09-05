@@ -72,7 +72,7 @@ spack:
     - py-tensorflow
     - py-tensorflow-datasets
     - py-tensorflow-estimator
-    # - py-tensorflow-hub
+    - py-tensorflow-hub
     - py-tensorflow-metadata
     - py-tensorflow-probability
 
