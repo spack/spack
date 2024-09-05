@@ -648,20 +648,6 @@ class TestConcretize:
         assert "externalprereq" not in spec
         assert spec["externaltool"].compiler.satisfies("gcc")
 
-    def test_external_package_module(self):
-        # No tcl modules on darwin/linux machines
-        # and Windows does not (currently) allow for bash calls
-        # TODO: improved way to check for this.
-        platform = spack.platforms.real_host().name
-        if platform == "darwin" or platform == "linux" or platform == "windows":
-            return
-
-        spec = Spec("externalmodule")
-        spec.concretize()
-        assert spec["externalmodule"].external_modules == ["external-module"]
-        assert "externalprereq" not in spec
-        assert spec["externalmodule"].compiler.satisfies("gcc")
-
     def test_nobuild_package(self):
         """Test that a non-buildable package raise an error if no specs
         in packages.yaml are compatible with the request.
