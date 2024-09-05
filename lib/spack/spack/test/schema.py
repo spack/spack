@@ -105,14 +105,14 @@ def test_schema_validation(meta_schema, config_name):
 
 def test_deprecated_properties(module_suffixes_schema):
     # Test that an error is reported when 'error: True'
-    msg_fmt = r"deprecated properties detected [properties={properties}]"
+    msg_fmt = r"{name} is deprecated"
     module_suffixes_schema["deprecatedProperties"] = [
         {"names": ["tcl"], "message": msg_fmt, "error": True}
     ]
     v = spack.schema.Validator(module_suffixes_schema)
     data = {"tcl": {"all": {"suffixes": {"^python": "py"}}}}
 
-    expected_match = "deprecated properties detected"
+    expected_match = "tcl is deprecated"
     with pytest.raises(jsonschema.ValidationError, match=expected_match):
         v.validate(data)
 
