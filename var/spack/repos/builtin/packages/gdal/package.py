@@ -32,6 +32,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     license("MIT")
 
+    version("3.9.2", sha256="bfbcc9f087f012c36151c20c79f8eac9529e1e5298fbded79cd5a1365f0b113a")
     version("3.9.1", sha256="aff3086fee75f5773e33a5598df98d8a4d10be411f777d3ce23584b21d8171ca")
     version("3.9.0", sha256="577f80e9d14ff7c90b6bfbc34201652b4546700c01543efb4f4c3050e0b3fda2")
     version("3.8.5", sha256="e8b4df2a8a7d25272f867455c0c230459545972f81f0eff2ddbf6a6f60dcb1e4")
@@ -100,8 +101,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         version("2.0.1", sha256="2564c91ed8ed36274ee31002a25798f5babc4221e879cb5013867733d80f9920")
         version("2.0.0", sha256="91704fafeea2349c5e268dc1e2d03921b3aae64b05ee01d59fdfc1a6b0ffc061")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # Optional dependencies
     variant("archive", default=False, when="@3.7:", description="Optional for vsi7z VFS driver")
@@ -430,16 +431,19 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("googletest@1.10:", type="test")
 
     # https://gdal.org/development/rfc/rfc98_build_requirements_gdal_3_9.html
-    msg = "GDAL requires C++17 support"
-    conflicts("%gcc@:7", msg=msg)
-    conflicts("%clang@:4", msg=msg)
-    conflicts("%msvc@:19.14", msg=msg)
+    with default_args(when="@3.9:", msg="GDAL requires C++17 support"):
+        conflicts("%gcc@:7")
+        conflicts("%clang@:4")
+        conflicts("%msvc@:19.14")
 
     # https://gdal.org/development/rfc/rfc68_cplusplus11.html
-    msg = "GDAL requires C++11 support"
-    conflicts("%gcc@:4.8.0", msg=msg)
-    conflicts("%clang@:3.2", msg=msg)
-    conflicts("%msvc@:13", msg=msg)
+    with default_args(when="@2.3:", msg="GDAL requires C++11 support"):
+        conflicts("%gcc@:4.8.0")
+        conflicts("%clang@:3.2")
+        conflicts("%msvc@:13")
+
+    # https://github.com/OSGeo/gdal/issues/8693
+    conflicts("%gcc@11:", when="@:3.6")
 
     # https://github.com/OSGeo/gdal/issues/5994
     conflicts("~png", when="@3:3.5.0")

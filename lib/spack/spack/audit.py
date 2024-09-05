@@ -39,9 +39,9 @@ import ast
 import collections
 import collections.abc
 import glob
-import inspect
 import io
 import itertools
+import os
 import pathlib
 import pickle
 import re
@@ -210,6 +210,11 @@ config_packages = AuditClass(
     group="configs", tag="CFG-PACKAGES", description="Sanity checks on packages.yaml", kwargs=()
 )
 
+#: Sanity checks on packages.yaml
+config_repos = AuditClass(
+    group="configs", tag="CFG-REPOS", description="Sanity checks on repositories", kwargs=()
+)
+
 
 @config_packages
 def _search_duplicate_specs_in_externals(error_cls):
@@ -367,6 +372,27 @@ def _ensure_all_virtual_packages_have_default_providers(error_cls):
     ]
 
 
+@config_repos
+def _ensure_no_folders_without_package_py(error_cls):
+    """Check that we don't leave any folder without a package.py in repos"""
+    errors = []
+    for repository in spack.repo.PATH.repos:
+        missing = []
+        for entry in os.scandir(repository.packages_path):
+            if not entry.is_dir():
+                continue
+            package_py = pathlib.Path(entry.path) / spack.repo.package_file_name
+            if not package_py.exists():
+                missing.append(entry.path)
+        if missing:
+            summary = (
+                f"The '{repository.namespace}' repository misses a package.py file"
+                f" in the following folders"
+            )
+            errors.append(error_cls(summary=summary, details=[f"{x}" for x in missing]))
+    return errors
+
+
 def _make_config_error(config_data, summary, error_cls):
     s = io.StringIO()
     s.write("Occurring in the following file:\n")
@@ -498,7 +524,7 @@ def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
         name_definitions = collections.defaultdict(list)
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
-        for cls_item in inspect.getmro(pkg_cls):
+        for cls_item in pkg_cls.__mro__:
             for name in RESERVED_NAMES:
                 current_value = cls_item.__dict__.get(name)
                 if current_value is None:
@@ -527,7 +553,7 @@ def _ensure_all_package_names_are_lowercase(pkgs, error_cls):
     badname_regex, errors = re.compile(r"[_A-Z]"), []
     for pkg_name in pkgs:
         if badname_regex.search(pkg_name):
-            error_msg = "Package name '{}' is either lowercase or conatine '_'".format(pkg_name)
+            error_msg = f"Package name '{pkg_name}' should be lowercase and must not contain '_'"
             errors.append(error_cls(error_msg, []))
     return errors
 

@@ -457,9 +457,12 @@ def set_wrapper_variables(pkg, env):
     env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format("{name}-{hash:7}"))
     env.set(SPACK_DEBUG_LOG_DIR, spack.main.spack_working_dir)
 
-    # Find ccache binary and hand it to build environment
     if spack.config.get("config:ccache"):
+        # Enable ccache in the compiler wrapper
         env.set(SPACK_CCACHE_BINARY, spack.util.executable.which_string("ccache", required=True))
+    else:
+        # Avoid cache pollution if a build system forces `ccache <compiler wrapper invocation>`.
+        env.set("CCACHE_DISABLE", "1")
 
     # Gather information about various types of dependencies
     link_deps = set(pkg.spec.traverse(root=False, deptype=("link")))
@@ -1556,7 +1559,7 @@ class ModuleChangePropagator:
 
         #: Modules for the classes in the MRO up to PackageBase
         modules_in_mro = []
-        for cls in inspect.getmro(type(package)):
+        for cls in type(package).__mro__:
             module = cls.module
 
             if module == self.current_module:

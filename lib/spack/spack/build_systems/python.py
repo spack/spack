@@ -17,7 +17,7 @@ import archspec
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import HeaderList, LibraryList
+from llnl.util.filesystem import HeaderList, LibraryList, join_path
 
 import spack.builder
 import spack.config
@@ -119,6 +119,12 @@ class PythonExtension(spack.package_base.PackageBase):
             List of strings of module names.
         """
         return []
+
+    @property
+    def bindir(self) -> str:
+        """Path to Python package's bindir, bin on unix like OS's Scripts on Windows"""
+        windows = self.spec.satisfies("platform=windows")
+        return join_path(self.spec.prefix, "Scripts" if windows else "bin")
 
     def view_file_conflicts(self, view, merge_map):
         """Report all file conflicts, excepting special cases for python.
@@ -309,9 +315,9 @@ class PythonExtension(spack.package_base.PackageBase):
         )
 
         python_externals_detected = [
-            d.spec
-            for d in python_externals_detection.get("python", [])
-            if d.prefix == self.spec.external_path
+            spec
+            for spec in python_externals_detection.get("python", [])
+            if spec.external_path == self.spec.external_path
         ]
         if python_externals_detected:
             return python_externals_detected[0]

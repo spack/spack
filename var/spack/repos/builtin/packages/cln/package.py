@@ -76,7 +76,7 @@ class Cln(AutotoolsPackage):
 
         configure_args = []
 
-        if "+gmp" in spec:
+        if spec.satisfies("+gmp"):
             configure_args.append("--with-gmp={0}".format(spec["gmp"].prefix))
         else:
             configure_args.append("--without-gmp")

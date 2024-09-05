@@ -12,7 +12,7 @@ installations performed in Spack unit tests may include additional
 modifications to global state in memory that must be replicated in the
 child process.
 """
-
+import importlib
 import io
 import multiprocessing
 import pickle
@@ -118,7 +118,7 @@ class TestPatches:
     def restore(self):
         for module_name, attr_name, value in self.module_patches:
             value = pickle.load(value)
-            module = __import__(module_name)
+            module = importlib.import_module(module_name)
             setattr(module, attr_name, value)
         for class_fqn, attr_name, value in self.class_patches:
             value = pickle.load(value)

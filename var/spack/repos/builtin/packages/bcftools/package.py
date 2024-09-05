@@ -100,7 +100,7 @@ class Bcftools(AutotoolsPackage):
         options.append("prefix={0}".format(self.prefix))
         options.append("HTSDIR={0}".format(self.spec["htslib"].prefix))
 
-        if "+libgsl" in self.spec:
+        if self.spec.satisfies("+libgsl"):
             options.append("USE_GPL=1")
 
         return options

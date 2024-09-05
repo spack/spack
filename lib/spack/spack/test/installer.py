@@ -493,11 +493,13 @@ def test_update_tasks_for_compiler_packages_as_compiler(mock_packages, config, m
 def test_bootstrapping_compilers_with_different_names_from_spec(
     install_mockery, mutable_config, mock_fetch, archspec_host_is_spack_test_host
 ):
+    """Tests that, when we bootstrap '%oneapi' we can translate it to the
+    'intel-oneapi-compilers' package.
+    """
     with spack.config.override("config:install_missing_compilers", True):
         with spack.concretize.disable_compiler_existence_check():
             spec = spack.spec.Spec("trivial-install-test-package%oneapi@=22.2.0").concretized()
             spec.package.do_install()
-
             assert (
                 spack.spec.CompilerSpec("oneapi@=22.2.0") in spack.compilers.all_compiler_specs()
             )
@@ -582,7 +584,7 @@ def test_clear_failures_success(tmpdir):
         assert os.path.isfile(failures.locker.lock_path)
 
 
-@pytest.mark.xfail(sys.platform == "win32", reason="chmod does not prevent removal on Win")
+@pytest.mark.not_on_windows("chmod does not prevent removal on Win")
 def test_clear_failures_errs(tmpdir, capsys):
     """Test the clear_failures exception paths."""
     failures = spack.database.FailureTracker(str(tmpdir), default_timeout=0.1)
@@ -747,29 +749,6 @@ def test_install_task_use_cache(install_mockery, monkeypatch):
     monkeypatch.setattr(inst, "_install_from_cache", _true)
     installer._install_task(task, None)
     assert request.pkg_id in installer.installed
-
-
-def test_install_task_add_compiler(install_mockery, monkeypatch, capfd):
-    config_msg = "mock add_compilers_to_config"
-
-    def _add(_compilers):
-        tty.msg(config_msg)
-
-    installer = create_installer(["pkg-a"], {})
-    task = create_build_task(installer.build_requests[0].pkg)
-    task.compiler = True
-
-    # Preclude any meaningful side-effects
-    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", _true)
-    monkeypatch.setattr(inst.PackageInstaller, "_setup_install_dir", _noop)
-    monkeypatch.setattr(spack.build_environment, "start_build_process", _noop)
-    monkeypatch.setattr(spack.database.Database, "add", _noop)
-    monkeypatch.setattr(spack.compilers, "add_compilers_to_config", _add)
-
-    installer._install_task(task, None)
-
-    out = capfd.readouterr()[0]
-    assert config_msg in out
 
 
 def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):

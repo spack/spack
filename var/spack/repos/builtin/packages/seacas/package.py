@@ -36,6 +36,9 @@ class Seacas(CMakePackage):
     # ###################### Versions ##########################
     version("master", branch="master")
     version(
+        "2024-08-15", sha256="c85130b0dac5ab9a08dcb53c8ccff478122d72b08bd41d99c0adfddc5eb18a52"
+    )
+    version(
         "2024-07-10", sha256="b2ba6ca80359fed8ed2a8a210052582c7a3b7b837253bd1e9be941047dcab3ff"
     )
     version(
@@ -228,6 +231,9 @@ class Seacas(CMakePackage):
     depends_on("cmake@3.17:", when="@:2023-05-30", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("zlib-api", when="+zlib")
+    depends_on("parallel", when="platform=linux", type="run")
+    depends_on("parallel", when="platform=darwin", type="run")
+    depends_on("parallel", when="platform=freebsd", type="run")
     depends_on("trilinos~exodus+mpi+pamgen", when="+mpi+pamgen")
     depends_on("trilinos~exodus~mpi+pamgen", when="~mpi+pamgen")
     # Always depends on netcdf-c
@@ -236,8 +242,9 @@ class Seacas(CMakePackage):
     depends_on("hdf5+hl~mpi", when="~mpi")
     depends_on("hdf5+hl+mpi", when="+mpi")
 
-    depends_on("fmt@10.2.1:", when="@2024-03-11:")
-    depends_on("fmt@10.1.0:", when="@2023-10-24:2023-11-27")
+    depends_on("fmt@10:", when="@2024-08-15:")
+    depends_on("fmt@10.2.1:10", when="@2024-03-11:2024-07-10")
+    depends_on("fmt@10.1.0:10", when="@2023-10-24:2023-11-27")
     depends_on("fmt@9.1.0", when="@2022-10-14:2023-05-30")
     depends_on("fmt@8.1.0:9", when="@2022-03-04:2022-05-16")
 
@@ -262,7 +269,7 @@ class Seacas(CMakePackage):
         depends_on("cgns@4.2.0:~mpi+scoping", when="~mpi")
 
     with when("+adios2"):
-        depends_on("adios2@master")
+        depends_on("adios2@2.10.1")
         depends_on("adios2~mpi", when="~mpi")
         depends_on("adios2+mpi", when="+mpi")
 
@@ -482,3 +489,9 @@ class Seacas(CMakePackage):
             options.append(define("CMAKE_INSTALL_NAME_DIR", self.prefix.lib))
 
         return options
+
+    @run_after("install")
+    def symlink_parallel(self):
+        if not self.spec.dependencies("parallel"):
+            return
+        symlink(self.spec["parallel"].prefix.bin.parallel, self.prefix.bin.parallel)
