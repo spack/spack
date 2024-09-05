@@ -425,7 +425,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("ENABLE_TESTS", True))
         else:
             entries.append(cmake_cache_option("ENABLE_BENCHMARKS", False))
-            entries.append(cmake_cache_option("ENABLE_TESTS", spec.satisfies("tests=none" not)))
+            entries.append(cmake_cache_option("ENABLE_TESTS", not spec.satisfies("tests=none")))
 
         # Prefixed options that used to be name without one
         entries.append(cmake_cache_option("{}ENABLE_NUMA".format(option_prefix), spec.satisfies("+numa")))
