@@ -427,7 +427,7 @@ class Seacas(CMakePackage):
             [define("TPL_ENABLE_Netcdf", True), define("NetCDF_ROOT", spec["netcdf-c"].prefix)]
         )
 
-        if "+parmetis" in spec:
+        if spec.satisfies("+metis+mpi"):
             options.extend(
                 [
                     define("TPL_ENABLE_METIS", True),
