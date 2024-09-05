@@ -86,14 +86,30 @@ class Tau(Package):
     variant("gasnet", default=False, description="Activates GASNET support")
     variant("cuda", default=False, description="Activates CUDA support")
     variant("rocm", default=False, description="Activates ROCm support", when="@2.28:")
-    variant("level_zero", default=False, description="Activates Intel OneAPI Level Zero support", when="@2.30:")
-    variant("rocprofiler", default=False, description="Activates ROCm rocprofiler support", when="@2.29.1:")
-    variant("roctracer", default=False, description="Activates ROCm roctracer support", when="@2.28.1:")
-    variant("rocprofv2", default=False, description="Activates ROCm rocprofiler support", when="@2.34:")
+    variant(
+        "level_zero",
+        default=False,
+        description="Activates Intel OneAPI Level Zero support",
+        when="@2.30:",
+    )
+    variant(
+        "rocprofiler",
+        default=False,
+        description="Activates ROCm rocprofiler support",
+        when="@2.29.1:",
+    )
+    variant(
+        "roctracer", default=False, description="Activates ROCm roctracer support", when="@2.28.1:"
+    )
+    variant(
+        "rocprofv2", default=False, description="Activates ROCm rocprofiler support", when="@2.34:"
+    )
     variant("opencl", default=False, description="Activates OpenCL support")
     variant("fortran", default=darwin_default, description="Activates Fortran support")
     variant("io", default=True, description="Activates POSIX I/O support")
-    variant("adios2", default=False, description="Activates ADIOS2 output support", when="@2.26.3:")
+    variant(
+        "adios2", default=False, description="Activates ADIOS2 output support", when="@2.26.3:"
+    )
     variant("sqlite", default=False, description="Activates SQLite3 output support")
     variant("syscall", default=False, description="Activates syscall wrapper", when="@2.33:")
     variant(
