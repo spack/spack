@@ -1064,6 +1064,11 @@ class SourceContext:
     """
 
     def __init__(self):
+        # This can be "literal" for constraints that come from a user
+        # spec (e.g. from the command line); it can be the output of
+        # `ConstraintOrigin.append_type_suffix`; the default is "none"
+        # (which means it isn't important to keep track of the source
+        # in that case).
         self.source = "none"
 
 
@@ -1509,7 +1514,8 @@ class SpackSolverSetup:
             imposed_spec: the constraints that are imposed when this condition is triggered
             name: name for `required_spec` (required if required_spec is anonymous, ignored if not)
             msg: description of the condition
-            context: ...
+            context: if provided, indicates how to modify the clause-sets for the required/imposed
+                specs based on the type of constraint they are generated for (e.g. `depends_on`)
         Returns:
             int: id of the condition created by this function
         """
