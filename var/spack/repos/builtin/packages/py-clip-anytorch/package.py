@@ -21,7 +21,7 @@ class PyClipAnytorch(PythonPackage):
     # PyPI source is missing requirements.txt
     url = "https://github.com/rom1504/CLIP/archive/refs/tags/2.6.0.tar.gz"
 
-    license("MIT", checked_by="github_user1")
+    license("MIT", checked_by="qwertos")
 
     version("2.6.0", sha256="1ac1f6ca47dfb5d4e55be8f45cc2f3bdf6415b91973a04b4529e812a8ae29bea")
 
