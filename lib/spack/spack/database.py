@@ -59,7 +59,11 @@ import spack.traverse as tr
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.version as vn
-from spack.directory_layout import DirectoryLayoutError, InconsistentInstallDirectoryError
+from spack.directory_layout import (
+    DirectoryLayout,
+    DirectoryLayoutError,
+    InconsistentInstallDirectoryError,
+)
 from spack.error import SpackError
 from spack.util.crypto import bit_length
 
@@ -664,14 +668,6 @@ class Database:
 
         self.upstream_dbs = list(upstream_dbs) if upstream_dbs else []
 
-        # whether there was an error at the start of a read transaction
-        self._error = None
-
-        # For testing: if this is true, an exception is thrown when missing
-        # dependencies are detected (rather than just printing a warning
-        # message)
-        self._fail_when_missing_deps = False
-
         self._write_transaction_impl = lk.WriteTransaction
         self._read_transaction_impl = lk.ReadTransaction
 
@@ -774,7 +770,13 @@ class Database:
         with self.read_transaction():
             return self._data.get(hash_key, None)
 
-    def _assign_dependencies(self, spec_reader, hash_key, installs, data):
+    def _assign_dependencies(
+        self,
+        spec_reader: Type["spack.spec.SpecfileReaderBase"],
+        hash_key: str,
+        installs: dict,
+        data: Dict[str, InstallRecord],
+    ):
         # Add dependencies from other records in the install DB to
         # form a full spec.
         spec = data[hash_key].spec
@@ -787,26 +789,20 @@ class Database:
             for dname, dhash, dtypes, _, virtuals in spec_reader.read_specfile_dep_specs(
                 yaml_deps
             ):
-                # It is important that we always check upstream installations
-                # in the same order, and that we always check the local
-                # installation first: if a downstream Spack installs a package
-                # then dependents in that installation could be using it.
-                # If a hash is installed locally and upstream, there isn't
-                # enough information to determine which one a local package
-                # depends on, so the convention ensures that this isn't an
-                # issue.
-                upstream, record = self.query_by_spec_hash(dhash, data=data)
+                # It is important that we always check upstream installations in the same order,
+                # and that we always check the local installation first: if a downstream Spack
+                # installs a package then dependents in that installation could be using it. If a
+                # hash is installed locally and upstream, there isn't enough information to
+                # determine which one a local package depends on, so the convention ensures that
+                # this isn't an issue.
+                _, record = self.query_by_spec_hash(dhash, data=data)
                 child = record.spec if record else None
 
                 if not child:
-                    msg = "Missing dependency not in database: " "%s needs %s-%s" % (
-                        spec.cformat("{name}{/hash:7}"),
-                        dname,
-                        dhash[:7],
+                    tty.warn(
+                        f"Missing dependency not in database: "
+                        f"{spec.cformat('{name}{/hash:7}')} needs {dname}-{dhash[:7]}"
                     )
-                    if self._fail_when_missing_deps:
-                        raise MissingDependenciesError(msg)
-                    tty.warn(msg)
                     continue
 
                 spec._add_dependency(child, depflag=dt.canonicalize(dtypes), virtuals=virtuals)
@@ -873,8 +869,8 @@ class Database:
         # (i.e., its specs are a true Merkle DAG, unlike most specs.)
 
         # Pass 1: Iterate through database and build specs w/o dependencies
-        data = {}
-        installed_prefixes = set()
+        data: Dict[str, InstallRecord] = {}
+        installed_prefixes: Set[str] = set()
         for hash_key, rec in installs.items():
             try:
                 # This constructs a spec DAG from the list of all installs
@@ -919,6 +915,8 @@ class Database:
         if self.is_upstream:
             raise UpstreamDatabaseLockingError("Cannot reindex an upstream database")
 
+        error: Optional[CorruptDatabaseError] = None
+
         # Special transaction to avoid recursive reindex calls and to
         # ignore errors if we need to rebuild a corrupt database.
         def _read_suppress_error():
@@ -926,7 +924,8 @@ class Database:
                 if os.path.isfile(self._index_path):
                     self._read_from_file(self._index_path)
             except CorruptDatabaseError as e:
-                self._error = e
+                nonlocal error
+                error = e
                 self._data = {}
                 self._installed_prefixes = set()
 
@@ -935,9 +934,8 @@ class Database:
         )
 
         with transaction:
-            if self._error:
-                tty.warn("Spack database was corrupt. Will rebuild. Error was:", str(self._error))
-                self._error = None
+            if error is not None:
+                tty.warn(f"Spack database was corrupt. Will rebuild. Error was: {error}")
 
             old_data = self._data
             old_installed_prefixes = self._installed_prefixes
@@ -950,13 +948,17 @@ class Database:
                 raise
 
     def _construct_entry_from_directory_layout(
-        self, directory_layout, old_data, spec, deprecator=None
+        self,
+        directory_layout: DirectoryLayout,
+        old_data: Dict[str, InstallRecord],
+        spec: "spack.spec.Spec",
+        deprecator: Optional["spack.spec.Spec"] = None,
     ):
         # Try to recover explicit value from old DB, but
         # default it to True if DB was corrupt. This is
         # just to be conservative in case a command like
         # "autoremove" is run by the user after a reindex.
-        tty.debug("RECONSTRUCTING FROM SPEC.YAML: {0}".format(spec))
+        tty.debug(f"Reconstructing from spec file: {spec}")
         explicit = True
         inst_time = os.stat(spec.prefix).st_ctime
         if old_data is not None:
@@ -965,17 +967,17 @@ class Database:
                 explicit = old_info.explicit
                 inst_time = old_info.installation_time
 
-        extra_args = {"explicit": explicit, "installation_time": inst_time}
-        self._add(spec, directory_layout, **extra_args)
+        self._add(spec, directory_layout, explicit=explicit, installation_time=inst_time)
         if deprecator:
             self._deprecate(spec, deprecator)
 
-    def _construct_from_directory_layout(self, directory_layout, old_data):
-        # Read first the `spec.yaml` files in the prefixes. They should be
-        # considered authoritative with respect to DB reindexing, as
-        # entries in the DB may be corrupted in a way that still makes
-        # them readable. If we considered DB entries authoritative
-        # instead, we would perpetuate errors over a reindex.
+    def _construct_from_directory_layout(
+        self, directory_layout: DirectoryLayout, old_data: Dict[str, InstallRecord]
+    ):
+        # Read first the spec files in the prefixes. They should be considered authoritative with
+        # respect to DB reindexing, as entries in the DB may be corrupted in a way that still makes
+        # them readable. If we considered DB entries authoritative instead, we would perpetuate
+        # errors over a reindex.
         with directory_layout.disable_upstream_check():
             # Initialize data in the reconstructed DB
             self._data = {}
@@ -994,34 +996,29 @@ class Database:
                 )
                 processed_specs.add(spec)
 
-            for key, entry in old_data.items():
-                # We already took care of this spec using
-                # `spec.yaml` from its prefix.
+            for entry in old_data.values():
+                # We already took care of this spec using spec file from its prefix.
                 if entry.spec in processed_specs:
-                    msg = "SKIPPING RECONSTRUCTION FROM OLD DB: {0}"
-                    msg += " [already reconstructed from spec.yaml]"
-                    tty.debug(msg.format(entry.spec))
+                    tty.debug(
+                        f"Skipping reconstruction from old db: {entry.spec}"
+                        " [already reconstructed from spec file]"
+                    )
                     continue
 
-                # If we arrived here it very likely means that
-                # we have external specs that are not dependencies
-                # of other specs. This may be the case for externally
-                # installed compilers or externally installed
-                # applications.
-                tty.debug("RECONSTRUCTING FROM OLD DB: {0}".format(entry.spec))
+                # If we arrived here it very likely means that we have external specs that are not
+                # dependencies of other specs. This may be the case for externally installed
+                # compilers or externally installed applications.
+                tty.debug(f"Reconstructing from old db: {entry.spec}")
                 try:
-                    layout = None if entry.spec.external else directory_layout
-                    kwargs = {
-                        "spec": entry.spec,
-                        "directory_layout": layout,
-                        "explicit": entry.explicit,
-                        "installation_time": entry.installation_time,
-                    }
-                    self._add(**kwargs)
+                    self._add(
+                        spec=entry.spec,
+                        directory_layout=None if entry.spec.external else directory_layout,
+                        explicit=entry.explicit,
+                        installation_time=entry.installation_time,
+                    )
                     processed_specs.add(entry.spec)
                 except Exception as e:
-                    # Something went wrong, so the spec was not restored
-                    # from old data
+                    # Something went wrong, so the spec was not restored from old data
                     tty.debug(e)
 
             self._check_ref_counts()
@@ -1117,29 +1114,27 @@ class Database:
 
     def _add(
         self,
-        spec,
-        directory_layout=None,
-        explicit=False,
-        installation_time=None,
-        allow_missing=False,
+        spec: "spack.spec.Spec",
+        directory_layout: Optional[DirectoryLayout] = None,
+        explicit: bool = False,
+        installation_time: Optional[float] = None,
+        allow_missing: bool = False,
     ):
         """Add an install record for this spec to the database.
 
         Assumes spec is installed in ``directory_layout.path_for_spec(spec)``.
 
-        Also ensures dependencies are present and updated in the DB as
-        either installed or missing.
+        Also ensures dependencies are present and updated in the DB as either installed or missing.
 
         Args:
-            spec (spack.spec.Spec): spec to be added
+            spec: spec to be added
             directory_layout: layout of the spec installation
             explicit:
                 Possible values: True, False, any
 
-                A spec that was installed following a specific user
-                request is marked as explicit. If instead it was
-                pulled-in as a dependency of a user requested spec
-                it's considered implicit.
+                A spec that was installed following a specific user request is marked as explicit.
+                If instead it was pulled-in as a dependency of a user requested spec it's
+                considered implicit.
 
             installation_time:
                 Date and time of installation
@@ -1150,29 +1145,25 @@ class Database:
             raise NonConcreteSpecAddError("Specs added to DB must be concrete.")
 
         key = spec.dag_hash()
-        spec_pkg_hash = spec._package_hash
+        spec_pkg_hash = spec._package_hash  # type: ignore[attr-defined]
         upstream, record = self.query_by_spec_hash(key)
         if upstream:
             return
 
-        # Retrieve optional arguments
         installation_time = installation_time or _now()
 
         for edge in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
             if edge.spec.dag_hash() in self._data:
                 continue
-            # allow missing build-only deps. This prevents excessive
-            # warnings when a spec is installed, and its build dep
-            # is missing a build dep; there's no need to install the
-            # build dep's build dep first, and there's no need to warn
-            # about it missing.
-            dep_allow_missing = allow_missing or edge.depflag == dt.BUILD
             self._add(
                 edge.spec,
                 directory_layout,
                 explicit=False,
                 installation_time=installation_time,
-                allow_missing=dep_allow_missing,
+                # allow missing build-only deps. This prevents excessive warnings when a spec is
+                # installed, and its build dep is missing a build dep; there's no need to install
+                # the build dep's build dep first, and there's no need to warn about it missing.
+                allow_missing=allow_missing or edge.depflag == dt.BUILD,
             )
 
         # Make sure the directory layout agrees whether the spec is installed
@@ -1185,13 +1176,12 @@ class Database:
                 self._installed_prefixes.add(path)
             except DirectoryLayoutError as e:
                 if not (allow_missing and isinstance(e, InconsistentInstallDirectoryError)):
-                    msg = (
-                        "{0} is being {1} in the database with prefix {2}, "
-                        "but this directory does not contain an installation of "
-                        "the spec, due to: {3}"
-                    )
                     action = "updated" if key in self._data else "registered"
-                    tty.warn(msg.format(spec.short_spec, action, path, str(e)))
+                    tty.warn(
+                        f"{spec.short_spec} is being {action} in the database with prefix {path}, "
+                        "but this directory does not contain an installation of "
+                        f"the spec, due to: {e}"
+                    )
         elif spec.external_path:
             path = spec.external_path
             installed = True
@@ -1202,23 +1192,27 @@ class Database:
         if key not in self._data:
             # Create a new install record with no deps initially.
             new_spec = spec.copy(deps=False)
-            extra_args = {"explicit": explicit, "installation_time": installation_time}
-            # Commands other than 'spack install' may add specs to the DB,
-            # we can record the source of an installed Spec with 'origin'
-            if hasattr(spec, "origin"):
-                extra_args["origin"] = spec.origin
-            self._data[key] = InstallRecord(new_spec, path, installed, ref_count=0, **extra_args)
+            self._data[key] = InstallRecord(
+                new_spec,
+                path=path,
+                installed=installed,
+                ref_count=0,
+                explicit=explicit,
+                installation_time=installation_time,
+                origin=None if not hasattr(spec, "origin") else spec.origin,
+            )
 
             # Connect dependencies from the DB to the new copy.
             for dep in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
+                assert record, f"Missing dependency {dep.spec} in DB"
                 new_spec._add_dependency(record.spec, depflag=dep.depflag, virtuals=dep.virtuals)
                 if not upstream:
                     record.ref_count += 1
 
-            # Mark concrete once everything is built, and preserve
-            # the original hashes of concrete specs.
+            # Mark concrete once everything is built, and preserve the original hashes of concrete
+            # specs.
             new_spec._mark_concrete()
             new_spec._hash = key
             new_spec._package_hash = spec_pkg_hash
@@ -1405,17 +1399,13 @@ class Database:
 
             for relative in to_add:
                 hash_key = relative.dag_hash()
-                upstream, record = self.query_by_spec_hash(hash_key)
+                _, record = self.query_by_spec_hash(hash_key)
                 if not record:
-                    reltype = "Dependent" if direction == "parents" else "Dependency"
-                    msg = "Inconsistent state! %s %s of %s not in DB" % (
-                        reltype,
-                        hash_key,
-                        spec.dag_hash(),
+                    tty.warn(
+                        f"Inconsistent state: "
+                        f"{'dependent' if direction == 'parents' else 'dependency'} {hash_key} of "
+                        f"{spec.dag_hash()} not in DB"
                     )
-                    if self._fail_when_missing_deps:
-                        raise MissingDependenciesError(msg)
-                    tty.warn(msg)
                     continue
 
                 if not record.installed:

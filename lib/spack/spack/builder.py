@@ -6,7 +6,6 @@ import collections
 import collections.abc
 import copy
 import functools
-import inspect
 from typing import List, Optional, Tuple
 
 from llnl.util import lang
@@ -97,11 +96,10 @@ def _create(pkg):
     Args:
         pkg (spack.package_base.PackageBase): package object for which we need a builder
     """
-    package_module = inspect.getmodule(pkg)
     package_buildsystem = buildsystem_name(pkg)
     default_builder_cls = BUILDER_CLS[package_buildsystem]
     builder_cls_name = default_builder_cls.__name__
-    builder_cls = getattr(package_module, builder_cls_name, None)
+    builder_cls = getattr(pkg.module, builder_cls_name, None)
     if builder_cls:
         return builder_cls(pkg)
 

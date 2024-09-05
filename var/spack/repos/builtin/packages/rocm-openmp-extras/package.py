@@ -288,6 +288,7 @@ class RocmOpenmpExtras(Package):
         working_dir="rocm-openmp-extras/llvm-project/openmp/libomptarget",
         when="@6.1",
     )
+    patch("0001-Avoid-duplicate-registration-on-cuda-env.patch", when="@6.1:")
 
     def setup_run_environment(self, env):
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
@@ -308,6 +309,8 @@ class RocmOpenmpExtras(Package):
         llvm_prefix = self.spec["llvm-amdgpu"].prefix
         env.set("AOMP", "{0}".format(llvm_prefix))
         env.set("FC", "{0}/bin/flang".format(openmp_extras_prefix))
+        if self.spec.satisfies("@6.1:"):
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
         if self.spec.satisfies("+asan"):
             env.set("SANITIZER", 1)
             env.set("VERBOSE", 1)
@@ -435,6 +438,13 @@ class RocmOpenmpExtras(Package):
             "ADDITIONAL_VERSIONS 2.7",
             "ADDITIONAL_VERSIONS 3",
             flang.format(src) + "CMakeLists.txt",
+        )
+
+        filter_file(
+            "if (LIBOMPTARGET_DEP_CUDA_FOUND)",
+            "if (LIBOMPTARGET_DEP_CUDA_FOUND AND NOT LIBOMPTARGET_AMDGPU_ARCH)",
+            libomptarget.format(src) + "/hostexec/CMakeLists.txt",
+            string=True,
         )
 
     def install(self, spec, prefix):
