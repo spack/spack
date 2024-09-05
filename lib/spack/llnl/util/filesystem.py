@@ -1753,7 +1753,7 @@ class _DefaultValue:
 _unset = _DefaultValue()
 
 
-def find(root, files, recursive=True, max_depth=_unset):
+def find(root, files, recursive=True, max_depth: Optional[int] = None):
     """Search for ``files`` starting from the ``root`` directory.
 
     Like GNU/BSD find but written entirely in Python.
@@ -1801,11 +1801,14 @@ def find(root, files, recursive=True, max_depth=_unset):
     if isinstance(files, str):
         files = [files]
 
-    if max_depth is not _unset and not recursive:
+    # If recursive is false, max_depth can only be None or 0
+    if max_depth and not recursive:
         raise ValueError(f"max_depth ({max_depth}) cannot be set if recursive is False")
 
     if not recursive:
         max_depth = 0
+    elif max_depth is None:
+        max_depth = sys.maxsize
 
     tty.debug(f"Find (max depth = {max_depth}): {root} {str(files)}")
     result = find_max_depth(root, files, max_depth)
@@ -1815,7 +1818,7 @@ def find(root, files, recursive=True, max_depth=_unset):
 
 
 @system_path_filter(arg_slice=slice(1))
-def find_max_depth(root, globs, max_depth=_unset):
+def find_max_depth(root, globs, max_depth: int):
     """Given a set of non-recursive glob file patterns, finds all
     files matching those patterns up to a maximum specified depth.
 
@@ -1890,8 +1893,7 @@ def find_max_depth(root, globs, max_depth=_unset):
                         # or it will be accounted for "directly"
                         continue
 
-                    not_reached_maxdepth = (max_depth is _unset) or depth < max_depth
-                    if not_reached_maxdepth and (resolved_path not in visited_dirs):
+                    if (depth < max_depth) and (resolved_path not in visited_dirs):
                         dir_queue.appendleft((depth + 1, orig_path, resolved_path))
                         visited_dirs.add(resolved_path)
                 else:
@@ -2344,7 +2346,7 @@ def find_system_libraries(libraries, shared=True):
     return libraries_found
 
 
-def find_libraries(libraries, root, shared=True, recursive=False, runtime=True, max_depth=_unset):
+def find_libraries(libraries, root, shared=True, recursive=False, runtime=True, max_depth: Optional[int] = None):
     """Returns an iterable of full paths to libraries found in a root dir.
 
     Accepts any glob characters accepted by fnmatch:
@@ -2375,8 +2377,6 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True, 
     Returns:
         LibraryList: The libraries that have been found
     """
-    if max_depth is not _unset and not recursive:
-        raise ValueError(f"max_depth ({max_depth}) cannot be set if recursive is False")
 
     if isinstance(libraries, str):
         libraries = [libraries]
