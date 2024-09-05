@@ -10,7 +10,7 @@ import spack.platforms.cray
 from spack.package import *
 
 
-class Libfabric(AutotoolsPackage):
+class Libfabric(AutotoolsPackage, CudaPackage):
     """The Open Fabrics Interfaces (OFI) is a framework focused on exporting
     fabric communication services to applications."""
 
@@ -210,6 +210,9 @@ class Libfabric(AutotoolsPackage):
                 args.append("--enable-{0}=yes".format(fabric))
             else:
                 args.append("--enable-{0}=no".format(fabric))
+
+        if self.spec.satisfies("+cuda"):
+            args.append(f"--with-cuda={self.spec['cuda'].prefix}")
 
         return args
 

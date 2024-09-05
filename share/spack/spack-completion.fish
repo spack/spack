@@ -1373,7 +1373,7 @@ complete -c spack -n '__fish_spack_using_command deprecate' -s i -l install-depr
 complete -c spack -n '__fish_spack_using_command deprecate' -s I -l no-install-deprecator -f -a install
 complete -c spack -n '__fish_spack_using_command deprecate' -s I -l no-install-deprecator -d 'deprecator spec must already be installed (default)'
 complete -c spack -n '__fish_spack_using_command deprecate' -s l -l link-type -r -f -a 'soft hard'
-complete -c spack -n '__fish_spack_using_command deprecate' -s l -l link-type -r -d 'type of filesystem link to use for deprecation (default soft)'
+complete -c spack -n '__fish_spack_using_command deprecate' -s l -l link-type -r -d (deprecated)
 
 # spack dev-build
 set -g __fish_spack_optspecs_spack_dev_build h/help j/jobs= n/no-checksum d/source-path= i/ignore-dependencies keep-prefix skip-patch q/quiet drop-in= test= b/before= u/until= clean dirty U/fresh reuse fresh-roots deprecated

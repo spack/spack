@@ -105,7 +105,7 @@ class BuildCacheDatabase(spack_db.Database):
     record_fields = ("spec", "ref_count", "in_buildcache")
 
     def __init__(self, root):
-        super().__init__(root, lock_cfg=spack_db.NO_LOCK)
+        super().__init__(root, lock_cfg=spack_db.NO_LOCK, layout=None)
         self._write_transaction_impl = llnl.util.lang.nullcontext
         self._read_transaction_impl = llnl.util.lang.nullcontext
 
@@ -788,7 +788,9 @@ def sign_specfile(key: str, specfile_path: str) -> str:
     return signed_specfile_path
 
 
-def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_dir, concurrency):
+def _read_specs_and_push_index(
+    file_list, read_method, cache_prefix, db: BuildCacheDatabase, temp_dir, concurrency
+):
     """Read all the specs listed in the provided list, using thread given thread parallelism,
         generate the index, and push it to the mirror.
 
@@ -812,7 +814,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         else:
             continue
 
-        db.add(fetched_spec, None)
+        db.add(fetched_spec)
         db.mark(fetched_spec, "in_buildcache", True)
 
     # Now generate the index, compute its hash, and push the two files to
@@ -1765,7 +1767,7 @@ def _oci_update_index(
 
     for spec_dict in spec_dicts:
         spec = Spec.from_dict(spec_dict)
-        db.add(spec, directory_layout=None)
+        db.add(spec)
         db.mark(spec, "in_buildcache", True)
 
     # Create the index.json file
@@ -2562,7 +2564,7 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, force)
         spack.hooks.post_install(spec, False)
-        spack.store.STORE.db.add(spec, spack.store.STORE.layout)
+        spack.store.STORE.db.add(spec)
 
 
 def install_single_spec(spec, unsigned=False, force=False):

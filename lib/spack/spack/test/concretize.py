@@ -13,6 +13,7 @@ import archspec.cpu
 
 import llnl.util.lang
 
+import spack.binary_distribution
 import spack.compiler
 import spack.compilers
 import spack.concretize
@@ -647,20 +648,6 @@ class TestConcretize:
         )
         assert "externalprereq" not in spec
         assert spec["externaltool"].compiler.satisfies("gcc")
-
-    def test_external_package_module(self):
-        # No tcl modules on darwin/linux machines
-        # and Windows does not (currently) allow for bash calls
-        # TODO: improved way to check for this.
-        platform = spack.platforms.real_host().name
-        if platform == "darwin" or platform == "linux" or platform == "windows":
-            return
-
-        spec = Spec("externalmodule")
-        spec.concretize()
-        assert spec["externalmodule"].external_modules == ["external-module"]
-        assert "externalprereq" not in spec
-        assert spec["externalmodule"].compiler.satisfies("gcc")
 
     def test_nobuild_package(self):
         """Test that a non-buildable package raise an error if no specs
@@ -1301,7 +1288,7 @@ class TestConcretize:
             return [first_spec]
 
         if mock_db:
-            temporary_store.db.add(first_spec, None)
+            temporary_store.db.add(first_spec)
         else:
             monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", mock_fn)
 
@@ -1366,7 +1353,7 @@ class TestConcretize:
     def test_reuse_with_flags(self, mutable_database, mutable_config):
         spack.config.set("concretizer:reuse", True)
         spec = Spec("pkg-a cflags=-g cxxflags=-g").concretized()
-        spack.store.STORE.db.add(spec, None)
+        spec.package.do_install(fake=True)
 
         testspec = Spec("pkg-a cflags=-g")
         testspec.concretize()
