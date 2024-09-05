@@ -286,7 +286,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super().initconfig_compiler_entries()
 
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
         llnl_link_helpers(entries, spec, compiler)
@@ -301,14 +301,14 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("# Package custom hardware settings")
         entries.append("#------------------{0}\n".format("-" * 30))
 
-        entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
+        entries.append(cmake_cache_option("ENABLE_OPENMP", spec.satisfies("+openmp")))
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             entries.append(cmake_cache_option("ENABLE_HIP", True))
             hipcc_flags = []
             if self.spec.satisfies("@0.14.0:"):
@@ -340,46 +340,46 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("#------------------{0}\n".format("-" * 60))
 
         entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
-        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
+        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", spec.satisfies("+shared")))
 
-        entries.append(cmake_cache_option("RAJA_ENABLE_DESUL_ATOMICS", "+desul" in spec))
+        entries.append(cmake_cache_option("RAJA_ENABLE_DESUL_ATOMICS", spec.satisfies("+desul")))
 
-        entries.append(cmake_cache_option("RAJA_ENABLE_VECTORIZATION", "+vectorization" in spec))
+        entries.append(cmake_cache_option("RAJA_ENABLE_VECTORIZATION", spec.satisfies("+vectorization")))
 
-        entries.append(cmake_cache_option("RAJA_ENABLE_OPENMP_TASK", "+omptask" in spec))
+        entries.append(cmake_cache_option("RAJA_ENABLE_OPENMP_TASK", spec.satisfies("+omptask")))
 
-        entries.append(cmake_cache_option("RAJA_ENABLE_TARGET_OPENMP", "+omptarget" in spec))
+        entries.append(cmake_cache_option("RAJA_ENABLE_TARGET_OPENMP", spec.satisfies("+omptarget")))
 
-        entries.append(cmake_cache_option("RAJA_ENABLE_SYCL", "+sycl" in spec))
+        entries.append(cmake_cache_option("RAJA_ENABLE_SYCL", spec.satisfies("+sycl")))
 
         #C++17
-        if spec.satisfies("@0.17.0:") and "+sycl" in spec:
+        if spec.satisfies("@0.17.0:") and spec.satisfies("+sycl"):
             entries.append(cmake_cache_string("BLT_CXX_STD","c++17"))
         # C++14
         elif spec.satisfies("@0.14.0:"):
             entries.append(cmake_cache_string("BLT_CXX_STD", "c++14"))
 
-            if "+desul" in spec:
-                if "+cuda" in spec:
+            if spec.satisfies("+desul"):
+                if spec.satisfies("+cuda"):
                     entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "14"))
 
-        entries.append(cmake_cache_option("RAJA_ENABLE_RUNTIME_PLUGINS", "+plugins" in spec))
+        entries.append(cmake_cache_option("RAJA_ENABLE_RUNTIME_PLUGINS", spec.satisfies("+plugins")))
 
-        if "+omptarget" in spec:
+        if spec.satisfies("+omptarget"):
             entries.append(cmake_cache_string("BLT_OPENMP_COMPILE_FLAGS", "-fopenmp;-fopenmp-targets=nvptx64-nvidia-cuda"))
             entries.append(cmake_cache_string("BLT_OPENMP_LINK_FLAGS", "-fopenmp;-fopenmp-targets=nvptx64-nvidia-cuda"))
 
         entries.append(
-            cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), "+examples" in spec)
+            cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), spec.satisfies("+examples"))
         )
         if spec.satisfies("@0.14.0:"):
             entries.append(
                 cmake_cache_option(
-                    "{}ENABLE_EXERCISES".format(option_prefix), "+exercises" in spec
+                    "{}ENABLE_EXERCISES".format(option_prefix), spec.satisfies("+exercises")
                 )
             )
         else:
-            entries.append(cmake_cache_option("ENABLE_EXERCISES", "+exercises" in spec))
+            entries.append(cmake_cache_option("ENABLE_EXERCISES", spec.satisfies("+exercises")))
 
         # TODO: Treat the workaround when building tests with spack wrapper
         #       For now, removing it to test CI, which builds tests outside of wrapper.
@@ -388,12 +388,12 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         # removes -Werror from GTest flags
         #
         # if self.spec.satisfies("%clang target=ppc64le:")
-        #   or (not self.run_tests and "+tests" not in spec):
-        if not self.run_tests and "+tests" not in spec:
+        #   or (not self.run_tests and not spec.satisfies("+tests")):
+        if not self.run_tests and not spec.satisfies("+tests"):
             entries.append(cmake_cache_option("ENABLE_TESTS", False))
         else:
             entries.append(cmake_cache_option("ENABLE_TESTS", True))
-            if "+run-all-tests" not in spec:
+            if not spec.satisfies("+run-all-tests"):
                 if spec.satisfies("%clang@12.0.0:13.9.999"):
                     entries.append(
                         cmake_cache_string(
