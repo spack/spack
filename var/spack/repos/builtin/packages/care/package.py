@@ -8,14 +8,14 @@ from spack.package import *
 
 class Care(CMakePackage, CudaPackage, ROCmPackage):
     """
-    Algorithms for chai managed arrays.
+    CHAI and RAJA extensions (includes data structures and algorithms).
     """
 
     homepage = "https://github.com/LLNL/CARE"
     git = "https://github.com/LLNL/CARE.git"
     tags = ["radiuss"]
 
-    license("GPL-2.0-or-later")
+    license("BSD-3-Clause")
 
     maintainers("adayton1")
 
@@ -51,6 +51,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         commit="a9978083035eb00a090451bd36d7987bc935204d",
         submodules=False,
     )
+    version("0.10.0", tag="v0.10.0", submodules="True")
     version(
         "0.3.0", tag="v0.3.0", commit="5e2b69b2836c9f2215207ca9a36a690cb77eea33", submodules="True"
     )
@@ -62,29 +63,31 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
-    variant("openmp", default=False, description="Build Shared Libs")
+    variant("openmp", default=False, description="Build with OpenMP support")
     variant(
         "implicit_conversions",
-        default=True,
+        default=False,
         description="Enable implicit" "conversions to/from raw pointers",
     )
+    variant("tests", default=False, description="Build tests")
     variant("benchmarks", default=True, description="Build benchmarks.")
     variant("examples", default=True, description="Build examples.")
     variant("docs", default=False, description="Build documentation")
-    variant("tests", default=False, description="Build tests")
     variant("loop_fuser", default=False, description="Enable loop fusion capability")
 
     depends_on("cmake", type="build")
     depends_on("cmake@3.23:", type="build", when="@0.13.2:")
     depends_on("cmake@3.21:", type="build", when="@0.12.0:+rocm")
     depends_on("cmake@3.18:", type="build", when="@0.12.0:")
+    depends_on("cmake@3.14:", type="build", when="@0.10.0:")
     depends_on("cmake@3.9:", type="build", when="+cuda")
     depends_on("cmake@3.8:", type="build")
 
     depends_on("blt", type="build")
     depends_on("blt@0.6.2:", type="build", when="@0.13.0:")
     depends_on("blt@0.6.1:", type="build", when="@0.12.0:")
-    depends_on("blt@0.4.0:", type="build", when="@0.3.1:")
+    depends_on("blt@0.5.2:", type="build", when="@0.10.0:")
+    depends_on("blt@0.4.1:", type="build", when="@0.3.1:")
     depends_on("blt@:0.3.6", type="build", when="@:0.3.0")
     conflicts("^blt@:0.3.6", when="+rocm")
 
@@ -94,44 +97,56 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("umpire@2024.07.0:", when="@0.13.2:")
     depends_on("umpire@2024.02.1:", when="@0.13.0:")
     depends_on("umpire@2024.02.0:", when="@0.12.0:")
+    depends_on("umpire@2022.10.0:", when="@0.10.0:")
 
     depends_on("raja")
     depends_on("raja@2024.07.0:", when="@0.13.2:")
     depends_on("raja@2024.02.2:", when="@0.13.1:")
     depends_on("raja@2024.02.1:", when="@0.13.0:")
     depends_on("raja@2024.02.0:", when="@0.12.0:")
+    depends_on("raja@2022.10.5:", when="@0.10.0:")
 
+    # TODO: Add an enable_pick variant
     depends_on("chai+enable_pick+raja")
     depends_on("chai@2024.07.0:", when="@0.13.2:")
     depends_on("chai@2024.02.2:", when="@0.13.1:")
     depends_on("chai@2024.02.1:", when="@0.13.0:")
     depends_on("chai@2024.02.0:", when="@0.12.0:")
-
-    # pass on +cuda variants
-    # WARNING: this package currently only supports an internal cub
-    # package. This will cause a race condition if compiled with another
-    # package that uses cub. TODO: have all packages point to the same external
-    # cub package.
-    depends_on("cub", when="+cuda")
-    depends_on("camp+cuda", when="+cuda")
-    depends_on("umpire+cuda~shared", when="+cuda")
-    depends_on("raja+cuda~openmp", when="+cuda")
-    depends_on("chai+cuda~shared", when="+cuda")
-
-    # variants +rocm and amdgpu_targets are not automatically passed to
-    # dependencies, so do it manually.
-    depends_on("camp+rocm", when="+rocm")
-    depends_on("umpire+rocm", when="+rocm")
-    depends_on("raja+rocm~openmp", when="+rocm")
-    depends_on("chai+rocm", when="+rocm")
-    for val in ROCmPackage.amdgpu_targets:
-        depends_on("camp amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
-        depends_on("umpire amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
-        depends_on("raja amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
-        depends_on("chai amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
+    depends_on("chai@2022.10.0:", when="@0.10.0:")
 
     conflicts("+openmp", when="+rocm")
     conflicts("+openmp", when="+cuda")
+
+    with when("+openmp"):
+        depends_on("umpire+openmp")
+        depends_on("raja+openmp")
+        depends_on("chai+openmp")
+
+    with when("+cuda"):
+        # WARNING: this package currently only supports an internal cub
+        # package. This will cause a race condition if compiled with another
+        # package that uses cub. TODO: have all packages point to the same external
+        # cub package.
+        depends_on("cub")
+
+        depends_on("umpire+cuda")
+        depends_on("raja+cuda")
+        depends_on("chai+cuda")
+
+        for sm_ in CudaPackage.cuda_arch_values:
+            depends_on("umpire+cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
+            depends_on("raja+cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
+            depends_on("chai+cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
+
+    with when("+rocm"):
+        depends_on("umpire+rocm")
+        depends_on("raja+rocm")
+        depends_on("chai+rocm")
+
+        for arch_ in ROCmPackage.amdgpu_targets:
+            depends_on('umpire+rocm amdgpu_target={0}'.format(arch_), when='amdgpu_target={0}'.format(arch_))
+            depends_on('raja+rocm amdgpu_target={0}'.format(arch_), when='amdgpu_target={0}'.format(arch_))
+            depends_on('chai+rocm amdgpu_target={0}'.format(arch_), when='amdgpu_target={0}'.format(arch_))
 
     def cmake_args(self):
         spec = self.spec
