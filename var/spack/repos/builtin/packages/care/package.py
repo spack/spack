@@ -19,8 +19,8 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("adayton1")
 
-    version("develop", branch="develop", submodules="True")
-    version("master", branch="main", submodules="True")
+    version("develop", branch="develop", submodules=False)
+    version("master", branch="main", submodules=False)
     version(
         "0.13.3",
         tag="v0.13.3",
