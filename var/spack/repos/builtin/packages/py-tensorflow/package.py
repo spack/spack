@@ -157,7 +157,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
     with default_args(type="build"):
         # See .bazelversion
-        depends_on("bazel@6.5.0:", when="@2.16:")
+        depends_on("bazel@6.5.0", when="@2.16:")
         depends_on("bazel@6.1.0", when="@2.14:2.15")
         depends_on("bazel@5.3.0", when="@2.11:2.13")
         depends_on("bazel@5.1.1", when="@2.10")
