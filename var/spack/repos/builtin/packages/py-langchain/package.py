@@ -23,14 +23,14 @@ class PyLangchain(PythonPackage):
     depends_on("py-poetry-core@1:", type="build")
 
     with when("@0.0.101"):
-        depends_on('py-pydantic@1', type=("build", "run"))
-        depends_on('py-sqlalchemy@1', type=("build", "run"))
-        depends_on('py-requests@2', type=("build", "run"))
-        depends_on('py-pyyaml@6', type=("build", "run"))
-        depends_on('py-numpy@1', type=("build", "run"))
-        depends_on('py-dataclasses-json@0.5.7:0.5', type=("build", "run"))
-        depends_on('py-tenacity@8.1:8', type=("build", "run"))
-        depends_on('py-aiohttp@3.8.3:3', type=("build", "run"))
+        depends_on("py-pydantic@1", type=("build", "run"))
+        depends_on("py-sqlalchemy@1", type=("build", "run"))
+        depends_on("py-requests@2", type=("build", "run"))
+        depends_on("py-pyyaml@6", type=("build", "run"))
+        depends_on("py-numpy@1", type=("build", "run"))
+        depends_on("py-dataclasses-json@0.5.7:0.5", type=("build", "run"))
+        depends_on("py-tenacity@8.1:8", type=("build", "run"))
+        depends_on("py-aiohttp@3.8.3:3", type=("build", "run"))
 
     with when("@0.0.235"):
         depends_on("py-pydantic@1", type=("build", "run"))
