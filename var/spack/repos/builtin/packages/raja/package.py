@@ -183,6 +183,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant(
         "omptask", default=False, description="Build OpenMP task variants of internal algorithms"
     )
+    variant("omptarget", default=False, description="Build OpenMP on target device support")
+    variant("sycl", default=False, description="Build sycl backend")
 
     variant("plugins", default=False, description="Enable runtime plugins")
     variant("examples", default=True, description="Build examples.")
@@ -211,17 +213,17 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("blt@0.3.6:0.4.1", type="build", when="@:0.12.0")
     conflicts("^blt@:0.3.6", when="+rocm")
 
+    depends_on("camp")
     depends_on("camp+openmp", when="+openmp")
-    depends_on("camp@main", when="@develop")
-    depends_on("camp@main", when="@main")
-    depends_on("camp@main", when="@main")
-    depends_on("camp@2024.07.0:", type="build", when="@2024.07.0:")
-    depends_on("camp@2024.02.1:", type="build", when="@2024.02.1:")
-    depends_on("camp@2024.02.0:", type="build", when="@2024.02.0:")
-    depends_on("camp@2023.06.0", type="build", when="@2023.06.0:2023.06.1")
-    depends_on("camp@2022.10.1:2023.06.0", type="build", when="@2022.10.3:2022.10.5")
-    depends_on("camp@2022.10.0:2023.06.0", type="build", when="@2022.10.0:2022.10.2")
-    depends_on("camp@2022.03.2", type="build", when="@2022.03.0:2022.03.1")
+    depends_on("camp+omptarget", when="+omptarget")
+    depends_on("camp+sycl", when="+sycl")
+    depends_on("camp@2024.07.0:", when="@2024.02.2:")
+    depends_on("camp@2024.02.1:", when="@2024.02.1:")
+    depends_on("camp@2024.02.0:", when="@2024.02.0:")
+    depends_on("camp@2023.06.0", when="@2023.06.0:2023.06.1")
+    depends_on("camp@2022.10.1:2023.06.0", when="@2022.10.3:2022.10.5")
+    depends_on("camp@2022.10.0:2023.06.0", when="@2022.10.0:2022.10.2")
+    depends_on("camp@2022.03.2", when="@2022.03.0:2022.03.1")
     depends_on("camp@0.2.2:0.2.3", when="@0.14.0")
     depends_on("camp@0.1.0", when="@0.10.0:0.13.0")
 
@@ -245,6 +247,14 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("camp+cuda")
         for sm_ in CudaPackage.cuda_arch_values:
             depends_on("camp +cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
+
+    conflicts("+omptarget +rocm")
+    conflicts("+sycl +omptarget")
+    conflicts("+sycl +rocm")
+    conflicts("+sycl",
+              when="@:2024.02.99",
+              msg="Support for SYCL was introduced in RAJA after 2024.02 release, "
+                  "please use a newer release.")
 
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
@@ -338,8 +348,15 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_option("RAJA_ENABLE_OPENMP_TASK", "+omptask" in spec))
 
+        entries.append(cmake_cache_option("RAJA_ENABLE_TARGET_OPENMP", "+omptarget" in spec))
+
+        entries.append(cmake_cache_option("RAJA_ENABLE_SYCL", "+sycl" in spec))
+
+        #C++17
+        if spec.satisfies("@0.17.0:") and "+sycl" in spec:
+            entries.append(cmake_cache_string("BLT_CXX_STD","c++17"))
         # C++14
-        if spec.satisfies("@0.14.0:"):
+        elif spec.satisfies("@0.14.0:"):
             entries.append(cmake_cache_string("BLT_CXX_STD", "c++14"))
 
             if "+desul" in spec:
@@ -347,6 +364,10 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
                     entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "14"))
 
         entries.append(cmake_cache_option("RAJA_ENABLE_RUNTIME_PLUGINS", "+plugins" in spec))
+
+        if "+omptarget" in spec:
+            entries.append(cmake_cache_string("BLT_OPENMP_COMPILE_FLAGS", "-fopenmp;-fopenmp-targets=nvptx64-nvidia-cuda"))
+            entries.append(cmake_cache_string("BLT_OPENMP_LINK_FLAGS", "-fopenmp;-fopenmp-targets=nvptx64-nvidia-cuda"))
 
         entries.append(
             cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), "+examples" in spec)
