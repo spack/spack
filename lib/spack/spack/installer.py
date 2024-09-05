@@ -1207,7 +1207,7 @@ class BuildTask(Task):
 
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
-            spack.store.STORE.db.add(pkg.spec, spack.store.STORE.layout, explicit=self.explicit)
+            spack.store.STORE.db.add(pkg.spec, explicit=self.explicit)
         except spack.error.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
