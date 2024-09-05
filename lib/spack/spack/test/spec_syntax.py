@@ -864,8 +864,8 @@ def test_ambiguous_hash(mutable_database):
 
     assert x1 != x2  # doesn't hold when only the dag hash is modified.
 
-    mutable_database.add(x1, directory_layout=None)
-    mutable_database.add(x2, directory_layout=None)
+    mutable_database.add(x1)
+    mutable_database.add(x2)
 
     # ambiguity in first hash character
     s1 = SpecParser("/x").next_spec()
