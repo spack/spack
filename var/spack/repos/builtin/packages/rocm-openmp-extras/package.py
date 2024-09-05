@@ -620,17 +620,21 @@ class RocmOpenmpExtras(Package):
             "../rocm-openmp-extras/flang/flang-legacy/{0}".format(flang_legacy_version),
         ]
 
-        flang_legacy_flags=[]
+        flang_legacy_flags = []
         if (
             self.compiler.name == "gcc"
             and self.compiler.version >= Version("7.0.0")
             and self.compiler.version < Version("9.0.0")
         ):
             flang_legacy_flags.append("-D_GLIBCXX_USE_CXX11_ABI=0")
-        if(self.spec.satisfies("@6.2:")):
+        if (self.spec.satisfies("@6.2:")):
             flang_legacy_flags.append("-L{0}".format(ncurses_lib_dir))
-        components["flang-legacy-llvm"] += ["-DCMAKE_CXX_FLAGS={0}".format(",".join(flang_legacy_flags))]
-        components["flang-legacy"] += ["-DCMAKE_CXX_FLAGS={0}".format(",".join(flang_legacy_flags))]
+        components["flang-legacy-llvm"] += [
+            "-DCMAKE_CXX_FLAGS={0}".format(",".join(flang_legacy_flags))
+        ]
+        components["flang-legacy"] += [
+            "-DCMAKE_CXX_FLAGS={0}".format(",".join(flang_legacy_flags))
+        ]
 
         components["flang"] = [
             "../rocm-openmp-extras/flang",
