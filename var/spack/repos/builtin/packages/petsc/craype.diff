@@ -1,18 +1,18 @@
---- spack-src/config/BuildSystem/config/setCompilers.py	2024-08-29 14:52:04.889517604 +0200
-+++ spack-src/config/BuildSystem/config/setCompilers.py.patched	2024-08-29 14:52:33.554153906 +0200
+--- spack-src/config/BuildSystem/config/setCompilers.py	2024-07-30 18:45:24.000000000 +0200
++++ spack-src/config/BuildSystem/config/setCompilers.py.patched	2024-09-05 10:02:11.471106573 +0200
 @@ -516,19 +516,19 @@
  
    @staticmethod
    def isCrayPEWrapper(compiler, log):
 -    '''Returns true if the compiler is a Cray Programming Environment (PE) wrapper compiler'''
 -    # Note with Cray module PrgEnv-gnu, cc is a Cray PE wrapper around gcc, but not a Cray compiler on its own.
-+    '''Returns true if the compiler is a Cray Programming Environment (PE) wrapped compiler'''
-+    # NOTE: details on this method in: https://github.com/spack/spack/pull/46086
++    '''Returns true if the compiler is a Cray Programming Environment (PE) compiler wrapper'''
      try:
 -      (output, error, status) = config.base.Configure.executeShellCommand(compiler+' --help', log = log)
++      # Cray PE compiler wrappers (e.g., cc) when invoked with --version option will complain when CRAY_CPU_TARGET is set to erroneous value, but Cray raw compilers (e.g., craycc) won't. So use this behavior to differentiate cc from craycc.
 +      canary_value = '5dde31d2'
 +      (output, error, status) = config.base.Configure.executeShellCommand(
-+        f'CRAY_CPU_TARGET="{canary_value}" {compiler} --version',
++        'CRAY_CPU_TARGET="%s" %s --version' % (canary_value, compiler),
 +        checkCommand=config.base.Configure.passCheckCommand,
 +        log=log,
 +      )
