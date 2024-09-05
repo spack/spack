@@ -287,9 +287,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda", when="+rocm")
     conflicts("+tools", when="+rocm")
     conflicts(
-        "+rocm",
-        when="+omptarget",
-        msg="Cant support both rocm and openmp device backends at once",
+        "+rocm", when="+omptarget", msg="Cant support both rocm and openmp device backends at once"
     )
     conflicts("+ipc_shmem", when="@:5.0.1")
 
@@ -335,7 +333,9 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         else:
             entries.append(cmake_cache_option("ENABLE_FORTRAN", False))
 
-        entries.append(cmake_cache_option("{}ENABLE_C".format(option_prefix), spec.satisfies("+c")))
+        entries.append(
+            cmake_cache_option("{}ENABLE_C".format(option_prefix), spec.satisfies("+c"))
+        )
 
         llnl_link_helpers(entries, spec, compiler)
 
@@ -428,22 +428,30 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("ENABLE_TESTS", not spec.satisfies("tests=none")))
 
         # Prefixed options that used to be name without one
-        entries.append(cmake_cache_option("{}ENABLE_NUMA".format(option_prefix), spec.satisfies("+numa")))
+        entries.append(
+            cmake_cache_option("{}ENABLE_NUMA".format(option_prefix), spec.satisfies("+numa"))
+        )
         entries.append(
             cmake_cache_option(
-                "{}ENABLE_DEVELOPER_BENCHMARKS".format(option_prefix), spec.satisfies("+dev_benchmarks")
+                "{}ENABLE_DEVELOPER_BENCHMARKS".format(option_prefix),
+                spec.satisfies("+dev_benchmarks"),
             )
         )
         entries.append(
             cmake_cache_option("{}ENABLE_TOOLS".format(option_prefix), spec.satisfies("+tools"))
         )
         entries.append(
-            cmake_cache_option("{}ENABLE_BACKTRACE".format(option_prefix), spec.satisfies("+backtrace"))
+            cmake_cache_option(
+                "{}ENABLE_BACKTRACE".format(option_prefix), spec.satisfies("+backtrace")
+            )
         )
-        entries.append(cmake_cache_option("{}ENABLE_ASAN".format(option_prefix), spec.satisfies("+asan")))
+        entries.append(
+            cmake_cache_option("{}ENABLE_ASAN".format(option_prefix), spec.satisfies("+asan"))
+        )
         entries.append(
             cmake_cache_option(
-                "{}ENABLE_SANITIZER_TESTS".format(option_prefix), spec.satisfies("+sanitizer_tests")
+                "{}ENABLE_SANITIZER_TESTS".format(option_prefix),
+                spec.satisfies("+sanitizer_tests"),
             )
         )
 
@@ -452,7 +460,9 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
             cmake_cache_option("UMPIRE_ENABLE_DEVICE_ALLOCATOR", spec.satisfies("+device_alloc"))
         )
         entries.append(
-            cmake_cache_option("UMPIRE_ENABLE_SQLITE_EXPERIMENTAL", spec.satisfies("+sqlite_experimental"))
+            cmake_cache_option(
+                "UMPIRE_ENABLE_SQLITE_EXPERIMENTAL", spec.satisfies("+sqlite_experimental")
+            )
         )
         if spec.satisfies("+sqlite_experimental"):
             entries.append(cmake_cache_path("SQLite3_ROOT", spec["sqlite"].prefix))
@@ -463,7 +473,9 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
                 cmake_cache_option("UMPIRE_ENABLE_IPC_SHARED_MEMORY", spec.satisfies("+ipc_shmem"))
             )
         else:
-            entries.append(cmake_cache_option("ENABLE_IPC_SHARED_MEMORY", spec.satisfies("+ipc_shmem")))
+            entries.append(
+                cmake_cache_option("ENABLE_IPC_SHARED_MEMORY", spec.satisfies("+ipc_shmem"))
+            )
 
         if spec.satisfies("~fmt_header_only"):
             entries.append(cmake_cache_string("UMPIRE_FMT_TARGET", "fmt::fmt"))

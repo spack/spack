@@ -251,10 +251,12 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("+omptarget +rocm")
     conflicts("+sycl +omptarget")
     conflicts("+sycl +rocm")
-    conflicts("+sycl",
-              when="@:2024.02.99",
-              msg="Support for SYCL was introduced in RAJA after 2024.02 release, "
-                  "please use a newer release.")
+    conflicts(
+        "+sycl",
+        when="@:2024.02.99",
+        msg="Support for SYCL was introduced in RAJA after 2024.02 release, "
+        "please use a newer release.",
+    )
 
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
@@ -344,17 +346,21 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_option("RAJA_ENABLE_DESUL_ATOMICS", spec.satisfies("+desul")))
 
-        entries.append(cmake_cache_option("RAJA_ENABLE_VECTORIZATION", spec.satisfies("+vectorization")))
+        entries.append(
+            cmake_cache_option("RAJA_ENABLE_VECTORIZATION", spec.satisfies("+vectorization"))
+        )
 
         entries.append(cmake_cache_option("RAJA_ENABLE_OPENMP_TASK", spec.satisfies("+omptask")))
 
-        entries.append(cmake_cache_option("RAJA_ENABLE_TARGET_OPENMP", spec.satisfies("+omptarget")))
+        entries.append(
+            cmake_cache_option("RAJA_ENABLE_TARGET_OPENMP", spec.satisfies("+omptarget"))
+        )
 
         entries.append(cmake_cache_option("RAJA_ENABLE_SYCL", spec.satisfies("+sycl")))
 
-        #C++17
+        # C++17
         if spec.satisfies("@0.17.0:") and spec.satisfies("+sycl"):
-            entries.append(cmake_cache_string("BLT_CXX_STD","c++17"))
+            entries.append(cmake_cache_string("BLT_CXX_STD", "c++17"))
         # C++14
         elif spec.satisfies("@0.14.0:"):
             entries.append(cmake_cache_string("BLT_CXX_STD", "c++14"))
@@ -363,14 +369,26 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
                 if spec.satisfies("+cuda"):
                     entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "14"))
 
-        entries.append(cmake_cache_option("RAJA_ENABLE_RUNTIME_PLUGINS", spec.satisfies("+plugins")))
+        entries.append(
+            cmake_cache_option("RAJA_ENABLE_RUNTIME_PLUGINS", spec.satisfies("+plugins"))
+        )
 
         if spec.satisfies("+omptarget"):
-            entries.append(cmake_cache_string("BLT_OPENMP_COMPILE_FLAGS", "-fopenmp;-fopenmp-targets=nvptx64-nvidia-cuda"))
-            entries.append(cmake_cache_string("BLT_OPENMP_LINK_FLAGS", "-fopenmp;-fopenmp-targets=nvptx64-nvidia-cuda"))
+            entries.append(
+                cmake_cache_string(
+                    "BLT_OPENMP_COMPILE_FLAGS", "-fopenmp;-fopenmp-targets=nvptx64-nvidia-cuda"
+                )
+            )
+            entries.append(
+                cmake_cache_string(
+                    "BLT_OPENMP_LINK_FLAGS", "-fopenmp;-fopenmp-targets=nvptx64-nvidia-cuda"
+                )
+            )
 
         entries.append(
-            cmake_cache_option("{}ENABLE_EXAMPLES".format(option_prefix), spec.satisfies("+examples"))
+            cmake_cache_option(
+                "{}ENABLE_EXAMPLES".format(option_prefix), spec.satisfies("+examples")
+            )
         )
         if spec.satisfies("@0.14.0:"):
             entries.append(

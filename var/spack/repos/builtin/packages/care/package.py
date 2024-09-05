@@ -144,9 +144,16 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("chai+rocm")
 
         for arch_ in ROCmPackage.amdgpu_targets:
-            depends_on('umpire+rocm amdgpu_target={0}'.format(arch_), when='amdgpu_target={0}'.format(arch_))
-            depends_on('raja+rocm amdgpu_target={0}'.format(arch_), when='amdgpu_target={0}'.format(arch_))
-            depends_on('chai+rocm amdgpu_target={0}'.format(arch_), when='amdgpu_target={0}'.format(arch_))
+            depends_on(
+                "umpire+rocm amdgpu_target={0}".format(arch_),
+                when="amdgpu_target={0}".format(arch_),
+            )
+            depends_on(
+                "raja+rocm amdgpu_target={0}".format(arch_), when="amdgpu_target={0}".format(arch_)
+            )
+            depends_on(
+                "chai+rocm amdgpu_target={0}".format(arch_), when="amdgpu_target={0}".format(arch_)
+            )
 
     def cmake_args(self):
         spec = self.spec
