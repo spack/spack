@@ -20,4 +20,4 @@ class PySchema(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("py-contextlib2@0.5.5:", type=("build", "run"), when="@:0.7.5")
-    depends_on("py-contextlib2@0.5.5:", type=("build", "run"), when="python@:3.2")
+    depends_on("py-contextlib2@0.5.5:", type=("build", "run"), when="^python@:3.2")
