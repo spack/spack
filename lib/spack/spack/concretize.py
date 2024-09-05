@@ -25,13 +25,7 @@ class Concretizer:
 
     #: Controls whether we check that compiler versions actually exist
     #: during concretization. Used for testing and for mirror creation
-    check_for_compiler_existence = None
-
-    def __init__(self):
-        if Concretizer.check_for_compiler_existence is None:
-            Concretizer.check_for_compiler_existence = not spack.config.get(
-                "config:install_missing_compilers", False
-            )
+    check_for_compiler_existence = True
 
 
 @contextmanager

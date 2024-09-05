@@ -2376,26 +2376,6 @@ class TestConcretize:
         s = Spec("mpich").concretized()
         assert s.external
 
-    @pytest.mark.regression("43875")
-    def test_concretize_missing_compiler(self, mutable_config, monkeypatch):
-        """Tests that Spack can concretize a spec with a missing compiler when the
-        option is active.
-        """
-
-        def _default_libc(self):
-            if self.cc is None:
-                return None
-            return Spec("glibc@=2.28")
-
-        monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
-        monkeypatch.setattr(spack.compiler.Compiler, "default_libc", property(_default_libc))
-        monkeypatch.setattr(
-            spack.util.libc, "libc_from_current_python_process", lambda: Spec("glibc@=2.28")
-        )
-        mutable_config.set("config:install_missing_compilers", True)
-        s = Spec("pkg-a %gcc@=13.2.0").concretized()
-        assert s.satisfies("%gcc@13.2.0")
-
     @pytest.mark.regression("43267")
     def test_spec_with_build_dep_from_json(self, tmp_path):
         """Tests that we can correctly concretize a spec, when we express its dependency as a
