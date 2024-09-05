@@ -13,6 +13,7 @@ import archspec.cpu
 
 import llnl.util.lang
 
+import spack.binary_distribution
 import spack.compiler
 import spack.compilers
 import spack.concretize
@@ -648,20 +649,6 @@ class TestConcretize:
         assert "externalprereq" not in spec
         assert spec["externaltool"].compiler.satisfies("gcc")
 
-    def test_external_package_module(self):
-        # No tcl modules on darwin/linux machines
-        # and Windows does not (currently) allow for bash calls
-        # TODO: improved way to check for this.
-        platform = spack.platforms.real_host().name
-        if platform == "darwin" or platform == "linux" or platform == "windows":
-            return
-
-        spec = Spec("externalmodule")
-        spec.concretize()
-        assert spec["externalmodule"].external_modules == ["external-module"]
-        assert "externalprereq" not in spec
-        assert spec["externalmodule"].compiler.satisfies("gcc")
-
     def test_nobuild_package(self):
         """Test that a non-buildable package raise an error if no specs
         in packages.yaml are compatible with the request.
@@ -775,15 +762,15 @@ class TestConcretize:
         s = Spec("mpileaks")
         s.concretize()
 
-        assert llnl.util.lang.ObjectWrapper not in type(s).__mro__
+        assert llnl.util.lang.ObjectWrapper not in s.__class__.__mro__
 
         # Spec wrapped in a build interface
         build_interface = s["mpileaks"]
-        assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
+        assert llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
 
         # Mimics asking the build interface from a build interface
         build_interface = s["mpileaks"]["mpileaks"]
-        assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
+        assert llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
 
     @pytest.mark.regression("7705")
     def test_regression_issue_7705(self):
@@ -1301,7 +1288,7 @@ class TestConcretize:
             return [first_spec]
 
         if mock_db:
-            temporary_store.db.add(first_spec, None)
+            temporary_store.db.add(first_spec)
         else:
             monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", mock_fn)
 
@@ -1366,7 +1353,7 @@ class TestConcretize:
     def test_reuse_with_flags(self, mutable_database, mutable_config):
         spack.config.set("concretizer:reuse", True)
         spec = Spec("pkg-a cflags=-g cxxflags=-g").concretized()
-        spack.store.STORE.db.add(spec, None)
+        spec.package.do_install(fake=True)
 
         testspec = Spec("pkg-a cflags=-g")
         testspec.concretize()
@@ -2962,7 +2949,7 @@ def test_concretization_version_order():
     result = [
         v
         for v, _ in sorted(
-            versions, key=spack.solver.asp._concretization_version_order, reverse=True
+            versions, key=spack.solver.asp.concretization_version_order, reverse=True
         )
     ]
     assert result == [

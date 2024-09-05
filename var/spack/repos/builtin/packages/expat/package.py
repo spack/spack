@@ -176,7 +176,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
         args = ["--without-docbook", "--enable-static"]
-        if "+libbsd" in spec and "@2.2.1:" in spec:
+        if spec.satisfies("+libbsd") and spec.satisfies("@2.2.1:"):
             args.append("--with-libbsd")
         return args
 
@@ -188,7 +188,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
 
-        if "+libbsd" in self.spec and "@2.2.1:" in self.spec:
+        if self.spec.satisfies("+libbsd") and self.spec.satisfies("@2.2.1:"):
             args.append(self.define_from_variant("EXPAT_WITH_LIBBSD", "libbsd"))
 
         return args

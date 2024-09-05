@@ -107,6 +107,9 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
 
     conflicts("^cmake@3.19.0")
 
+    # https://github.com/spack/spack/issues/45746
+    conflicts("^ninja@1.12:", when="@:6.0")
+
     root_cmakelists_dir = "llvm"
     install_targets = ["clang-tidy", "install"]
 

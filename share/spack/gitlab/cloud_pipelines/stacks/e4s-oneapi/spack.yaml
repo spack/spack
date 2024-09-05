@@ -94,7 +94,6 @@ spack:
   - flux-core
   - fortrilinos
   - gasnet
-  - geopm-service
   - ginkgo
   - globalarrays
   - glvis ^llvm

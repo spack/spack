@@ -32,13 +32,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master", submodules=True)
     version(
-        "5.13.0-RC2", sha256="d10d0cec48c662d8c78470726af1b28cd39cbe434aef7fd0f75eec0112fa3f89"
-    )
-    version(
-        "5.12.1",
-        sha256="927f880c13deb6dde4172f4727d2b66f5576e15237b35778344f5dd1ddec863e",
+        "5.13.0",
+        sha256="886f530bebd6b24c6a7f8a5f4b1afa72c53d4737ccaa4b5fd5946b4e5a758c91",
         preferred=True,
     )
+    version("5.12.1", sha256="927f880c13deb6dde4172f4727d2b66f5576e15237b35778344f5dd1ddec863e")
     version("5.12.0", sha256="d289afe7b48533e2ca4a39a3b48d3874bfe67cf7f37fdd2131271c57e64de20d")
     version("5.11.2", sha256="5c5d2f922f30d91feefc43b4a729015dbb1459f54c938896c123d2ac289c7a1e")
     version("5.11.1", sha256="5cc2209f7fa37cd3155d199ff6c3590620c12ca4da732ef7698dec37fa8dbb34")
@@ -261,7 +259,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("libtheora")
     depends_on("libtiff")
     depends_on("netcdf-c")
-    depends_on("pegtl")
+    depends_on("pegtl@2.8.3")
     depends_on("protobuf@3.4:")
     # Paraview 5.10 can't build with protobuf > 3.18
     # https://github.com/spack/spack/issues/37437
