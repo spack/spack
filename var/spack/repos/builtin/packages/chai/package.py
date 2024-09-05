@@ -158,6 +158,8 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("umpire+cuda")
         for sm_ in CudaPackage.cuda_arch_values:
             depends_on("umpire+cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
+        with when("@2024.02.0:"):
+            depends_on("umpire~fmt_header_only")
 
     with when("+rocm"):
         depends_on("umpire+rocm")
@@ -239,7 +241,6 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
             if spec.satisfies("+separable_compilation"):
                 entries.append(cmake_cache_option("CMAKE_CUDA_SEPARABLE_COMPILATION", True))
                 entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
-
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
@@ -254,7 +255,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
 
         entries = super(Chai, self).initconfig_mpi_entries()
-        entries.append(cmake_cache_option("ENABLE_MPI", "+mpi" in spec))
+        entries.append(cmake_cache_option("ENABLE_MPI", spec.satisfies("+mpi")))
 
         return entries
 
@@ -282,22 +283,24 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         # Build options
         entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
-        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
+        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", spec.satisfies("+shared")))
 
         # Generic options that have a prefixed equivalent in CHAI CMake
-        entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
-        entries.append(cmake_cache_option("ENABLE_EXAMPLES", "+examples" in spec))
+        entries.append(cmake_cache_option("ENABLE_OPENMP", spec.satisfies("+openmp")))
+        entries.append(cmake_cache_option("ENABLE_EXAMPLES", spec.satisfies("+examples")))
         entries.append(cmake_cache_option("ENABLE_DOCS", False))
         if spec.satisfies("tests=benchmarks"):
             # BLT requires ENABLE_TESTS=True to enable benchmarks
             entries.append(cmake_cache_option("ENABLE_BENCHMARKS", True))
             entries.append(cmake_cache_option("ENABLE_TESTS", True))
         else:
-            entries.append(cmake_cache_option("ENABLE_TESTS", "tests=none" not in spec))
+            entries.append(cmake_cache_option("ENABLE_TESTS", not spec.satisfies("tests=none")))
 
         # Prefixed options that used to be name without one
         entries.append(
-            cmake_cache_option("{}ENABLE_PICK".format(option_prefix), "+enable_pick" in spec)
+            cmake_cache_option(
+                "{}ENABLE_PICK".format(option_prefix), spec.satisfies("+enable_pick")
+            )
         )
 
         return entries
