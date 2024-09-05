@@ -13,7 +13,7 @@ class PyPydanticCore(PythonPackage):
     homepage = "https://github.com/pydantic/pydantic-core"
     pypi = "pydantic_core/pydantic_core-2.18.4.tar.gz"
 
-    license("MIT", checked_by="github_user1")
+    license("MIT", checked_by="qwertos")
 
     version("2.18.4", sha256="ec3beeada09ff865c344ff3bc2f427f5e6c26401cc6113d77e372c3fdac73864")
 
