@@ -29,7 +29,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     )
     version(
         "2024.02.1",
-        tag="v2024.02.",
+        tag="v2024.02.1",
         commit="79c320fa09db987923b56884afdc9f82f4b70fc4",
         submodules=False,
     )
@@ -59,6 +59,8 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     # TODO: figure out gtest dependency and then set this default True.
     variant("tests", default=False, description="Build tests")
     variant("openmp", default=False, description="Build with OpenMP support")
+    variant("omptarget", default=False, description="Build with OpenMP Target support")
+    variant("sycl", default=False, description="Build with Sycl support")
 
     depends_on("cub", when="+cuda")
 
@@ -72,6 +74,15 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
     patch("camp-rocm6.patch", when="@0.2.3 +rocm ^hip@6:")
 
     conflicts("^blt@:0.3.6", when="+rocm")
+
+    conflicts("+omptarget +rocm")
+    conflicts("+sycl +omptarget")
+    conflicts("+sycl +rocm")
+    conflicts("+sycl",
+              when="@:2024.02.99",
+              msg="Support for SYCL was introduced in RAJA after 2024.02 release, "
+                  "please use a newer release.")
+
 
     def cmake_args(self):
         spec = self.spec
@@ -100,7 +111,12 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
             options.append("-DGPU_TARGETS={0}".format(archs))
             options.append("-DAMDGPU_TARGETS={0}".format(archs))
 
-        options.append(self.define_from_variant("ENABLE_OPENMP", "openmp"))
+        if spec.satisfies("+omptarget"):
+            options.append(cmake_cache_string("RAJA_DATA_ALIGN", 64))
+
         options.append(self.define_from_variant("ENABLE_TESTS", "tests"))
+        options.append(self.define_from_variant("ENABLE_OPENMP", "openmp"))
+        options.append(self.define_from_variant("CAMP_ENABLE_TARGET_OPENMP", "omptarget"))
+        options.append(self.define_from_variant("ENABLE_SYCL", "sycl"))
 
         return options

@@ -202,7 +202,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("numa", default=False, description="Enable NUMA support")
     variant("shared", default=True, description="Enable Shared libs")
     variant("openmp", default=False, description="Build with OpenMP support")
-    variant("openmp_target", default=False, description="Build with OpenMP 4.5 support")
+    variant("omptarget", default=False, description="Build with OpenMP 4.5 support")
     variant("deviceconst", default=False, description="Enables support for constant device memory")
     variant("examples", default=False, description="Build Umpire Examples")
     variant(
@@ -283,12 +283,12 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("+device_alloc", when="~rocm~cuda")
 
     conflicts("+deviceconst", when="~rocm~cuda")
-    conflicts("~openmp", when="+openmp_target", msg="OpenMP target requires OpenMP")
+    conflicts("~openmp", when="+omptarget", msg="OpenMP target requires OpenMP")
     conflicts("+cuda", when="+rocm")
     conflicts("+tools", when="+rocm")
     conflicts(
         "+rocm",
-        when="+openmp_target",
+        when="+omptarget",
         msg="Cant support both rocm and openmp device backends at once",
     )
     conflicts("+ipc_shmem", when="@:5.0.1")
@@ -371,11 +371,11 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(
             cmake_cache_option(
-                "{}ENABLE_OPENMP_TARGET".format(option_prefix), spec.satisfies("+openmp_target")
+                "{}ENABLE_OPENMP_TARGET".format(option_prefix), spec.satisfies("+omptarget")
             )
         )
 
-        if spec.satisfies("+openmp_target") and spec.satisfies("%xl"):
+        if spec.satisfies("+omptarget") and spec.satisfies("%xl"):
             entries.append(cmake_cache_string("OpenMP_CXX_FLAGS", "-qsmp;-qoffload"))
 
         return entries
