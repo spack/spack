@@ -42,9 +42,9 @@ class PerlBioperl(PerlPackage):
         preferred=True,
     )
     version(
-        "1.6.924", 
+        "1.6.924",
         sha256="616a7546bb3c58504de27304a0f6cb904e18b6bbcdb6a4ec8454f2bd37bb76d0",
-        url="https://cpan.metacpan.org/authors/id/C/CJ/CJFIELDS/BioPerl-1.6.924.tar.gz"
+        url="https://cpan.metacpan.org/authors/id/C/CJ/CJFIELDS/BioPerl-1.6.924.tar.gz",
     )
     version(
         "1.007002",
