@@ -56,11 +56,6 @@ class Gaudi(CMakePackage):
     variant("vtune", default=False, description="Build with Intel VTune profiler support")
     variant("xercesc", default=False, description="Build with Xerces-C XML support")
 
-    # only build subdirectory GaudiExamples when +examples
-    patch("build_testing.patch", when="@:34")
-    # fixes for the cmake config which could not find newer boost versions
-    patch("link_target_fixes.patch", when="@33.0:34")
-    patch("link_target_fixes32.patch", when="@:32.2")
     patch("fmt_fix.patch", when="@36.6:36.12 ^fmt@10:")
     # fix issues with catch2 3.1 and above
     patch(
