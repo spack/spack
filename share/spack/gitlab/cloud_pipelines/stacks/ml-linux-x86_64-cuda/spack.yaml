@@ -54,7 +54,8 @@ spack:
     - py-torchfile
     - py-torchgeo
     - py-torchmetrics
-    - py-torchtext
+    # torchtext requires older pytorch, which requires older cuda, which doesn't support newer GCC
+    # - py-torchtext
     - py-torchvision
     - py-vector-quantize-pytorch
 
