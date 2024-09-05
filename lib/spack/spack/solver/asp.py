@@ -1062,6 +1062,7 @@ class SourceContext:
 
     Facts generated for the spec may include this context.
     """
+
     def __init__(self):
         self.source = "none"
 
@@ -1076,6 +1077,7 @@ class ConditionIdContext(SourceContext):
     Is not a subclass of ``ConditionContext`` because it exists in a
     lower-level context with less information.
     """
+
     def __init__(self):
         super().__init__()
         self.transform = None
@@ -1088,6 +1090,7 @@ class ConditionContext(SourceContext):
     This may modify the required/imposed specs generated as relevant
     for the context.
     """
+
     def __init__(self):
         super().__init__()
         # transformation applied to facts from the required spec. Defaults
