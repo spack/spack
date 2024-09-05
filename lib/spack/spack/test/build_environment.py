@@ -513,7 +513,7 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
         assert dtags_to_add.value == expected_flag
 
 
-def test_module_globals_available_at_setup(monkeypatch, mutable_config, mock_packages):
+def test_module_globals_available_at_setup(monkeypatch, mutable_config, mock_packages, working_env):
     def setup_dependent_package(module, dependent_spec):
         # Make sure set_package_py_globals was already called on
         # dependents
