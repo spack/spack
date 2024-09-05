@@ -69,15 +69,15 @@ class Sleef(CMakePackage):
 
         return self.define(cmake_var, value)
 
-    def setup_build_environment(self, env):
-        cflags = [self.compiler.cc_pic_flag]
-        env.set("CFLAGS", " ".join(cflags))
-
     def cmake_args(self):
-        args = [self.sleef_define("BUILD_TESTS", self.run_tests)]
+        args = [
+            self.sleef_define("BUILD_TESTS", self.run_tests),
+            self.define("CMAKE_POSITION_INDEPENDENT_CODE", True),
+        ]
 
         # https://github.com/shibatch/sleef/issues/474
         if self.spec.satisfies("@:3.5.1_2024-02-08 platform=darwin"):
             args.append(self.sleef_define("DISABLE_SVE", True))
+            self.define("CMAKE_POSITION_INDEPENDENT_CODE", True)
 
         return args
