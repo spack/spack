@@ -19,5 +19,4 @@ class PyPydanticCore(PythonPackage):
 
     depends_on("rust@1.76:", type="build")
     depends_on("py-maturin@1", type="build")
-    depends_on("python", type="build")
     depends_on("py-typing-extensions@4.6,4.7.1:", type="build")
