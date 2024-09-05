@@ -19,5 +19,5 @@ class PyCocaPytorch(PythonPackage):
     version("0.1.0", sha256="119c83812d140ad197cf4e992db8c373d908af0bffd0a87015546b6a1cf0a316")
 
     depends_on("py-setuptools", type="build")
-    depends_on('py-einops@0.4:', type=("build", "run"))
-    depends_on('py-torch@1.6:', type=("build", "run"))
+    depends_on("py-einops@0.4:", type=("build", "run"))
+    depends_on("py-torch@1.6:", type=("build", "run"))
