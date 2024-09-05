@@ -42,6 +42,11 @@ class PerlBioperl(PerlPackage):
         preferred=True,
     )
     version(
+        "1.6.924", 
+        sha256="616a7546bb3c58504de27304a0f6cb904e18b6bbcdb6a4ec8454f2bd37bb76d0",
+        url="https://cpan.metacpan.org/authors/id/C/CJ/CJFIELDS/BioPerl-1.6.924.tar.gz"
+    )
+    version(
         "1.007002",
         sha256="17aa3aaab2f381bbcaffdc370002eaf28f2c341b538068d6586b2276a76464a1",
         url="https://cpan.metacpan.org/authors/id/C/CJ/CJFIELDS/BioPerl-1.007002.tar.gz",
@@ -76,7 +81,7 @@ class PerlBioperl(PerlPackage):
     depends_on("perl-libwww-perl", when="@1.7.6:", type=("build", "run"))
     depends_on("perl-libxml-perl", when="@1.7.6:", type=("build", "run"))
 
-    @when("@1.007002")
+    @when("@1.007002,1.6.924")
     def configure(self, spec, prefix):
         # Overriding default configure method in order to cater to interactive
         # Build.pl
@@ -109,10 +114,10 @@ class PerlBioperl(PerlPackage):
     # Build script is run through perl and not use the shebang, as it might be
     # too long. This is needed because this does not pick up the
     # `@run_after(configure)` step defined in `PerlPackage`.
-    @when("@1.007002")
+    @when("@1.007002,1.6.924")
     def build(self, spec, prefix):
         perl("Build")
 
-    @when("@1.007002")
+    @when("@1.007002,1.6.924")
     def install(self, spec, prefix):
         perl("Build", "install")
