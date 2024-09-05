@@ -1,3 +1,7 @@
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from llnl.util.filesystem import working_dir
 
 from spack.util.git import get_modified_files
