@@ -599,9 +599,11 @@ class Database:
     def __init__(
         self,
         root: str,
+        *,
         upstream_dbs: Optional[List["Database"]] = None,
         is_upstream: bool = False,
         lock_cfg: LockConfiguration = DEFAULT_LOCK_CFG,
+        layout: Optional[DirectoryLayout] = None,
     ) -> None:
         """Database for Spack installations.
 
@@ -624,6 +626,7 @@ class Database:
         """
         self.root = root
         self.database_directory = os.path.join(self.root, _DB_DIRNAME)
+        self.layout = layout
 
         # Set up layout of database files within the db dir
         self._index_path = os.path.join(self.database_directory, "index.json")
@@ -907,7 +910,7 @@ class Database:
         self._data = data
         self._installed_prefixes = installed_prefixes
 
-    def reindex(self, directory_layout):
+    def reindex(self):
         """Build database index from scratch based on a directory layout.
 
         Locks the DB if it isn't locked already.
@@ -940,7 +943,7 @@ class Database:
             old_data = self._data
             old_installed_prefixes = self._installed_prefixes
             try:
-                self._construct_from_directory_layout(directory_layout, old_data)
+                self._construct_from_directory_layout(old_data)
             except BaseException:
                 # If anything explodes, restore old data, skip write.
                 self._data = old_data
@@ -949,7 +952,6 @@ class Database:
 
     def _construct_entry_from_directory_layout(
         self,
-        directory_layout: DirectoryLayout,
         old_data: Dict[str, InstallRecord],
         spec: "spack.spec.Spec",
         deprecator: Optional["spack.spec.Spec"] = None,
@@ -967,18 +969,17 @@ class Database:
                 explicit = old_info.explicit
                 inst_time = old_info.installation_time
 
-        self._add(spec, directory_layout, explicit=explicit, installation_time=inst_time)
+        self._add(spec, explicit=explicit, installation_time=inst_time)
         if deprecator:
             self._deprecate(spec, deprecator)
 
-    def _construct_from_directory_layout(
-        self, directory_layout: DirectoryLayout, old_data: Dict[str, InstallRecord]
-    ):
+    def _construct_from_directory_layout(self, old_data: Dict[str, InstallRecord]):
         # Read first the spec files in the prefixes. They should be considered authoritative with
         # respect to DB reindexing, as entries in the DB may be corrupted in a way that still makes
         # them readable. If we considered DB entries authoritative instead, we would perpetuate
         # errors over a reindex.
-        with directory_layout.disable_upstream_check():
+        assert self.layout is not None, "Cannot reindex a database without a known layout"
+        with self.layout.disable_upstream_check():
             # Initialize data in the reconstructed DB
             self._data = {}
             self._installed_prefixes = set()
@@ -986,14 +987,12 @@ class Database:
             # Start inspecting the installed prefixes
             processed_specs = set()
 
-            for spec in directory_layout.all_specs():
-                self._construct_entry_from_directory_layout(directory_layout, old_data, spec)
+            for spec in self.layout.all_specs():
+                self._construct_entry_from_directory_layout(old_data, spec)
                 processed_specs.add(spec)
 
-            for spec, deprecator in directory_layout.all_deprecated_specs():
-                self._construct_entry_from_directory_layout(
-                    directory_layout, old_data, spec, deprecator
-                )
+            for spec, deprecator in self.layout.all_deprecated_specs():
+                self._construct_entry_from_directory_layout(old_data, spec, deprecator)
                 processed_specs.add(spec)
 
             for entry in old_data.values():
@@ -1012,7 +1011,6 @@ class Database:
                 try:
                     self._add(
                         spec=entry.spec,
-                        directory_layout=None if entry.spec.external else directory_layout,
                         explicit=entry.explicit,
                         installation_time=entry.installation_time,
                     )
@@ -1115,20 +1113,16 @@ class Database:
     def _add(
         self,
         spec: "spack.spec.Spec",
-        directory_layout: Optional[DirectoryLayout] = None,
         explicit: bool = False,
         installation_time: Optional[float] = None,
         allow_missing: bool = False,
     ):
         """Add an install record for this spec to the database.
 
-        Assumes spec is installed in ``directory_layout.path_for_spec(spec)``.
-
         Also ensures dependencies are present and updated in the DB as either installed or missing.
 
         Args:
             spec: spec to be added
-            directory_layout: layout of the spec installation
             explicit:
                 Possible values: True, False, any
 
@@ -1157,7 +1151,6 @@ class Database:
                 continue
             self._add(
                 edge.spec,
-                directory_layout,
                 explicit=False,
                 installation_time=installation_time,
                 # allow missing build-only deps. This prevents excessive warnings when a spec is
@@ -1167,11 +1160,11 @@ class Database:
             )
 
         # Make sure the directory layout agrees whether the spec is installed
-        if not spec.external and directory_layout:
-            path = directory_layout.path_for_spec(spec)
+        if not spec.external and self.layout:
+            path = self.layout.path_for_spec(spec)
             installed = False
             try:
-                directory_layout.ensure_installed(spec)
+                self.layout.ensure_installed(spec)
                 installed = True
                 self._installed_prefixes.add(path)
             except DirectoryLayoutError as e:
@@ -1225,7 +1218,7 @@ class Database:
         self._data[key].explicit = explicit
 
     @_autospec
-    def add(self, spec, directory_layout, explicit=False):
+    def add(self, spec: "spack.spec.Spec", *, explicit=False) -> None:
         """Add spec at path to database, locking and reading DB to sync.
 
         ``add()`` will lock and read from the DB on disk.
@@ -1234,7 +1227,7 @@ class Database:
         # TODO: ensure that spec is concrete?
         # Entire add is transactional.
         with self.write_transaction():
-            self._add(spec, directory_layout, explicit=explicit)
+            self._add(spec, explicit=explicit)
 
     def _get_matching_spec_key(self, spec, **kwargs):
         """Get the exact spec OR get a single spec that matches."""

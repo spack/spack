@@ -13,6 +13,7 @@ import archspec.cpu
 
 import llnl.util.lang
 
+import spack.binary_distribution
 import spack.compiler
 import spack.compilers
 import spack.concretize
@@ -1287,7 +1288,7 @@ class TestConcretize:
             return [first_spec]
 
         if mock_db:
-            temporary_store.db.add(first_spec, None)
+            temporary_store.db.add(first_spec)
         else:
             monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", mock_fn)
 
@@ -1352,7 +1353,7 @@ class TestConcretize:
     def test_reuse_with_flags(self, mutable_database, mutable_config):
         spack.config.set("concretizer:reuse", True)
         spec = Spec("pkg-a cflags=-g cxxflags=-g").concretized()
-        spack.store.STORE.db.add(spec, None)
+        spec.package.do_install(fake=True)
 
         testspec = Spec("pkg-a cflags=-g")
         testspec.concretize()
