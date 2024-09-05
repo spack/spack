@@ -48,12 +48,7 @@ def _make_validator():
         }
 
         # Get a list of the deprecated properties, return if there is none
-        issues = []
-        for entry in instance:
-            if entry not in deprecations:
-                continue
-            issues.append(entry)
-
+        issues = [entry for entry in instance if entry in deprecations]
         if not issues:
             return
 
