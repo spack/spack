@@ -96,12 +96,14 @@ properties: Dict[str, Any] = {
             "binary_index_ttl": {"type": "integer", "minimum": 0},
             "aliases": {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}},
         },
-        "deprecatedProperties": {
-            "properties": ["concretizer"],
-            "message": "Spack supports only clingo as a concretizer from v0.23. "
-            "The config:concretizer config option is ignored.",
-            "error": False,
-        },
+        "deprecatedProperties": [
+            {
+                "names": ["concretizer"],
+                "message": "Spack supports only clingo as a concretizer from v0.23. "
+                "The config:concretizer config option is ignored.",
+                "error": False,
+            }
+        ],
     }
 }
 
