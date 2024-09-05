@@ -690,6 +690,9 @@ class Boost(Package):
         remove_if_in_list = lambda lib, libs: libs.remove(lib) if lib in libs else None
 
         # Remove libraries that the release version does not support
+        if not spec.satisfies("@1.75.0:"):
+            remove_if_in_list("json", with_libs)
+            remove_if_in_list("json", without_libs)
         if spec.satisfies("@1.69.0:"):
             remove_if_in_list("signals", with_libs)
             remove_if_in_list("signals", without_libs)
