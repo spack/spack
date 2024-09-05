@@ -1958,6 +1958,42 @@ class PackageInstaller:
             self._update_installed(task)
         return rc  # Used by reporters to skip requeued tasks
 
+    def _overwrite_install_task(self, task: Task, install_status: InstallStatus) -> ExecuteResult:
+        """
+        Try to run the install task overwriting the package prefix.
+        If this fails, try to recover the original install prefix. If that fails
+        too, mark the spec as uninstalled. This function always the original
+        install error if installation fails.
+        """
+        try:
+            with fs.replace_directory_transaction(task.pkg.prefix):
+                rc = self._install_task(task, install_status)
+                if rc in requeue_results:
+                    raise Requeue  # raise to trigger transactional replacement of directory
+                return rc
+
+        except Requeue:
+            return rc  # This task is requeueing, not failing
+        except fs.CouldNotRestoreDirectoryBackup as e:
+            spack.store.STORE.db.remove(task.pkg.spec)
+            if isinstance(e.inner_exception, Requeue):
+                message_fn = tty.warn
+            else:
+                message_fn = tty.error
+
+            message_fn(
+                f"Recovery of install dir of {task.pkg.name} failed due to "
+                f"{e.outer_exception.__class__.__name__}: {str(e.outer_exception)}. "
+                "The spec is now uninstalled."
+            )
+
+            # Unwrap the actuall installation exception
+            if isinstance(e.inner_exception, Requeue):
+                tty.warn("Task will be requeued to build from source")
+                return rc
+            else:
+                raise e.inner_exception
+
     def _next_is_pri0(self) -> bool:
         """
         Determine if the next task has priority 0
@@ -2359,9 +2395,7 @@ class PackageInstaller:
                 if action == InstallAction.INSTALL:
                     self._install_task(task, install_status)
                 elif action == InstallAction.OVERWRITE:
-                    # spack.store.STORE.db is not really a Database object, but a small
-                    # wrapper -- silence mypy
-                    OverwriteInstall(self, spack.store.STORE.db, task, install_status).install()  # type: ignore[arg-type] # noqa: E501
+                    self._overwrite_install_task(task, install_status)
 
                 # If we installed then we should keep the prefix
                 stop_before_phase = getattr(pkg, "stop_before_phase", None)
@@ -2679,45 +2713,6 @@ def build_process(pkg: "spack.package_base.PackageBase", install_args: dict) -> 
     # don't print long padded paths in executable debug output.
     with spack.util.path.filter_padding():
         return installer.run()
-
-
-class OverwriteInstall:
-    def __init__(
-        self,
-        installer: PackageInstaller,
-        database: spack.database.Database,
-        task: Task,
-        install_status: InstallStatus,
-    ):
-        self.installer = installer
-        self.database = database
-        self.task = task
-        self.install_status = install_status
-
-    def install(self):
-        """
-        Try to run the install task overwriting the package prefix.
-        If this fails, try to recover the original install prefix. If that fails
-        too, mark the spec as uninstalled. This function always the original
-        install error if installation fails.
-        """
-        try:
-            with fs.replace_directory_transaction(self.task.pkg.prefix):
-                rc = self.installer._install_task(self.task, self.install_status)
-                if rc in requeue_results:
-                    raise Requeue  # raise to trigger transactional replacement of directory
-        except Requeue:
-            pass  # this job is requeuing, not failing
-        except fs.CouldNotRestoreDirectoryBackup as e:
-            self.database.remove(self.task.pkg.spec)
-            tty.error(
-                f"Recovery of install dir of {self.task.pkg.name} failed due to "
-                f"{e.outer_exception.__class__.__name__}: {str(e.outer_exception)}. "
-                "The spec is now uninstalled."
-            )
-
-            # Unwrap the actual installation exception.
-            raise e.inner_exception
 
 
 class Requeue(Exception):
