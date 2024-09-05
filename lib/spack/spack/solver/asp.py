@@ -1057,6 +1057,11 @@ class ConstraintOrigin(enum.Enum):
 
 
 class SourceContext:
+    """Tracks context in which a Spec's clause-set is generated (i.e.
+    with ``SpackSolverSetup.spec_clauses``).
+
+    Facts generated for the spec may include this context.
+    """
     def __init__(self):
         self.source = "none"
 
