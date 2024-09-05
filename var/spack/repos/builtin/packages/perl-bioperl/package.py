@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import inspect
-
 from spack.package import *
 
 
@@ -105,7 +103,7 @@ class PerlBioperl(PerlPackage):
             f.writelines(config_answers)
 
         with open(config_answers_filename, "r") as f:
-            inspect.getmodule(self).perl("Build.PL", "--install_base=%s" % self.prefix, input=f)
+            perl("Build.PL", "--install_base=%s" % self.prefix, input=f)
 
     # Need to also override the build and install methods to make sure that the
     # Build script is run through perl and not use the shebang, as it might be
@@ -113,8 +111,8 @@ class PerlBioperl(PerlPackage):
     # `@run_after(configure)` step defined in `PerlPackage`.
     @when("@1.007002")
     def build(self, spec, prefix):
-        inspect.getmodule(self).perl("Build")
+        perl("Build")
 
     @when("@1.007002")
     def install(self, spec, prefix):
-        inspect.getmodule(self).perl("Build", "install")
+        perl("Build", "install")

@@ -11,7 +11,7 @@ class Armadillo(CMakePackage):
     for the C++ language, aiming towards a good balance between speed and
     ease of use."""
 
-    homepage = "http://arma.sourceforge.net/"
+    homepage = "https://arma.sourceforge.net/"
     url = "http://sourceforge.net/projects/arma/files/armadillo-8.100.1.tar.xz"
 
     license("Apache-2.0")

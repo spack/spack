@@ -218,7 +218,7 @@ class Hdf(AutotoolsPackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(self.extra_install_tests)
+        cache_extra_test_sources(self, self.extra_install_tests)
 
     def _check_version_match(self, exe):
         """Ensure exe version check yields spec version."""

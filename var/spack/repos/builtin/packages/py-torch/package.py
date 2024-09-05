@@ -26,6 +26,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.4.0", tag="v2.4.0", commit="d990dada86a8ad94882b5c23e859b88c0c255bda")
     version("2.3.1", tag="v2.3.1", commit="63d5e9221bedd1546b7d364b5ce4171547db12a9")
     version("2.3.0", tag="v2.3.0", commit="97ff6cfd9c86c5c09d7ce775ab64ec5c99230f5d")
     version("2.2.2", tag="v2.2.2", commit="39901f229520a5256505ec24782f716ee7ddc843")
@@ -56,9 +57,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     version("1.5.0", tag="v1.5.0", commit="4ff3872a2099993bf7e8c588f7182f3df777205b")
     version("1.4.1", tag="v1.4.1", commit="74044638f755cd8667bedc73da4dbda4aa64c948")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     is_darwin = sys.platform == "darwin"
 
@@ -159,7 +159,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("py-networkx", when="@2:")
         depends_on("py-jinja2", when="@2:")
         depends_on("py-fsspec", when="@2.1:")
-        depends_on("mkl@2021.1.1:2021.4.0", when="@2.3: platform=windows")
 
         # pyproject.toml
         depends_on("py-setuptools")
@@ -236,14 +235,16 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("py-pybind11@2.10.0", when="@1.13:1")
         depends_on("py-pybind11@2.6.2", when="@1.8:1.12")
         depends_on("py-pybind11@2.3.0", when="@:1.7")
-    depends_on("sleef@3.5.1_2020-12-22", when="@1.8:")
+    depends_on("sleef@3.6.0_2024-03-20", when="@2.4:")
+    depends_on("sleef@3.5.1_2020-12-22", when="@1.8:2.3")
     depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
 
     # Optional dependencies
     with default_args(type=("build", "link", "run")):
         # cmake/public/cuda.cmake
+        depends_on("cuda@11:", when="@2.4:+cuda")
         # https://github.com/pytorch/pytorch/issues/122169
-        depends_on("cuda@11:12.3", when="@2:+cuda")
+        depends_on("cuda@11:12.3", when="@2.0:2.3+cuda")
         depends_on("cuda@10.2:12.3", when="@1.11:1+cuda")
         # https://discuss.pytorch.org/t/compiling-1-10-1-from-source-with-gcc-11-and-cuda-11-5/140971
         depends_on("cuda@10.2:11.4", when="@1.10+cuda")
@@ -287,6 +288,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # Historical dependencies
     with default_args(type=("build", "run")):
+        depends_on("mkl@2021.1.1:2021.4.0", when="@2.3 platform=windows")
         depends_on("py-cffi", when="@:1")
         depends_on("py-future", when="@1.5:1")
         depends_on("py-six", when="@1.13:1")
@@ -558,6 +560,11 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             # cmake/Modules_CUDA_fix/FindCUDNN.cmake
             env.set("CUDNN_INCLUDE_DIR", self.spec["cudnn"].prefix.include)
             env.set("CUDNN_LIBRARY", self.spec["cudnn"].libs[0])
+
+        # Flash attention has very high memory requirements that may cause the build to fail
+        # https://github.com/pytorch/pytorch/issues/111526
+        # https://github.com/pytorch/pytorch/issues/124018
+        env.set("USE_FLASH_ATTENTION", "OFF")
 
         enable_or_disable("fbgemm")
         enable_or_disable("kineto")

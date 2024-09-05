@@ -64,7 +64,7 @@ class HsakmtRoct(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
-        "6.1.0",
+        "6.1.2",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", type="test", when=f"@{ver}")
@@ -89,9 +89,9 @@ class HsakmtRoct(CMakePackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):
-        test_dir = "tests/kfdtest"
+        """Check if package is installed correctly"""
+        test_dir = join_path("tests", "kfdtest")
         with working_dir(test_dir, create=True):
-            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
             prefixes = ";".join(
                 [
                     self.spec["libdrm"].prefix,
@@ -109,9 +109,12 @@ class HsakmtRoct(CMakePackage):
                 "-DLIBHSAKMT_PATH=" + hsakmt_path,
                 ".",
             ]
-            self.run_test(cmake_bin, cc_options)
+            cmake = self.spec["cmake"].command
+            cmake(*cc_options)
+            make = which("make")
             make()
             os.environ["LD_LIBRARY_PATH"] = hsakmt_path
             os.environ["BIN_DIR"] = os.getcwd()
-            self.run_test("scripts/run_kfdtest.sh")
+            run_kfdtest = which(join_path("scripts", "run_kfdtest.sh"))
+            run_kfdtest()
             make("clean")

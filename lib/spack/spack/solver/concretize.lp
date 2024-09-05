@@ -43,8 +43,6 @@
    internal_error("Only nodes can have node_compiler_version").
 :- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode),
    internal_error("variant_value true for a non-node").
-:- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode),
-   internal_error("node_flag_compiler_default true for non-node").
 :- attr("node_flag", PackageNode, _), not attr("node", PackageNode),
    internal_error("node_flag assigned for non-node").
 :- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode),
@@ -1335,15 +1333,6 @@ error(100, "Compiler {1}@{2} requested for {0} cannot be found. Set install_miss
 % compiler flags from compilers.yaml are put on nodes if compiler matches
 attr("node_flag", PackageNode, node_flag(FlagType, Flag, FlagGroup, CompilerID))
   :- compiler_flag(CompilerID, FlagType, Flag, FlagGroup),
-     node_compiler(PackageNode, CompilerID),
-     flag_type(FlagType),
-     compiler_id(CompilerID),
-     compiler_name(CompilerID, CompilerName),
-     compiler_version(CompilerID, Version).
-
-attr("node_flag_compiler_default", PackageNode)
-  :- not attr("node_flag_set", PackageNode, node_flag(FlagType, _, _, _)),
-     compiler_flag(CompilerID, FlagType, Flag, _),
      node_compiler(PackageNode, CompilerID),
      flag_type(FlagType),
      compiler_id(CompilerID),
