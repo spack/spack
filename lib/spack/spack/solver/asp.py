@@ -3035,7 +3035,7 @@ class CompilerParser:
         Args:
             input_specs: specs to be concretized
         """
-        strict = spack.concretize.Concretizer().check_for_compiler_existence
+        strict = spack.concretize.CHECK_COMPILER_EXISTENCE
         default_os = str(spack.platforms.host().default_os)
         default_target = str(archspec.cpu.host().family)
         for s in traverse.traverse_nodes(input_specs):
