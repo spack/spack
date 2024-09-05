@@ -478,6 +478,8 @@ class RocmOpenmpExtras(Package):
         libpgmath = "/rocm-openmp-extras/flang/runtime/libpgmath/lib/common"
         elfutils_inc = spec["elfutils"].prefix.include
         ffi_inc = spec["libffi"].prefix.include
+        if self.spec.satisfies("@6.2:"):
+            ncurses_lib_dir = self.spec["ncurses"].prefix.lib
 
         # flang1 and flang2 symlink needed for build of flang-runtime
         # libdevice symlink to rocm-openmp-extras for runtime
@@ -618,13 +620,17 @@ class RocmOpenmpExtras(Package):
             "../rocm-openmp-extras/flang/flang-legacy/{0}".format(flang_legacy_version),
         ]
 
+        flang_legacy_flags=[]
         if (
             self.compiler.name == "gcc"
             and self.compiler.version >= Version("7.0.0")
             and self.compiler.version < Version("9.0.0")
         ):
-            components["flang-legacy-llvm"] += ["-DCMAKE_CXX_FLAGS='-D_GLIBCXX_USE_CXX11_ABI=0'"]
-            components["flang-legacy"] += ["-DCMAKE_CXX_FLAGS='-D_GLIBCXX_USE_CXX11_ABI=0'"]
+            flang_legacy_flags.append("-D_GLIBCXX_USE_CXX11_ABI=0")
+        if(self.spec.satisfies("@6.2:")):
+            flang_legacy_flags.append("-L{0}".format(ncurses_lib_dir))
+        components["flang-legacy-llvm"] += ["-DCMAKE_CXX_FLAGS={0}".format(",".join(flang_legacy_flags))]
+        components["flang-legacy"] += ["-DCMAKE_CXX_FLAGS={0}".format(",".join(flang_legacy_flags))]
 
         components["flang"] = [
             "../rocm-openmp-extras/flang",
