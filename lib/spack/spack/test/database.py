@@ -47,15 +47,14 @@ def upstream_and_downstream_db(tmpdir, gen_mock_layout):
     with open(upstream_write_db._index_path, "w") as db_file:
         upstream_write_db._write_to_file(db_file)
 
-    downstream_layout = gen_mock_layout("/b/")
     downstream_db_root = str(tmpdir.mkdir("mock_downstream_db_root"))
     downstream_db = spack.database.Database(
-        downstream_db_root, upstream_dbs=[upstream_db], layout=downstream_layout
+        downstream_db_root, upstream_dbs=[upstream_db], layout=gen_mock_layout("/b/")
     )
     with open(downstream_db._index_path, "w") as db_file:
         downstream_db._write_to_file(db_file)
 
-    yield upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout
+    yield upstream_write_db, upstream_db, downstream_db
 
 
 @pytest.mark.parametrize(
@@ -71,7 +70,7 @@ def upstream_and_downstream_db(tmpdir, gen_mock_layout):
 def test_query_by_install_tree(
     install_tree, result, upstream_and_downstream_db, mock_packages, monkeypatch, config
 ):
-    up_write_db, up_db, up_layout, down_db, down_layout = upstream_and_downstream_db
+    up_write_db, up_db, down_db = upstream_and_downstream_db
 
     # Set the upstream DB to contain "pkg-c" and downstream to contain "pkg-b")
     b = spack.spec.Spec("pkg-b").concretized()
@@ -88,9 +87,7 @@ def test_spec_installed_upstream(
     upstream_and_downstream_db, mock_custom_repository, config, monkeypatch
 ):
     """Test whether Spec.installed_upstream() works."""
-    upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout = (
-        upstream_and_downstream_db
-    )
+    upstream_write_db, upstream_db, downstream_db = upstream_and_downstream_db
 
     # a known installed spec should say that it's installed
     with spack.repo.use_repositories(mock_custom_repository):
@@ -114,9 +111,7 @@ def test_spec_installed_upstream(
 
 @pytest.mark.usefixtures("config")
 def test_installed_upstream(upstream_and_downstream_db, tmpdir):
-    upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout = (
-        upstream_and_downstream_db
-    )
+    upstream_write_db, upstream_db, downstream_db = upstream_and_downstream_db
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("x")
@@ -141,7 +136,7 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
         for dep in new_spec.traverse(root=False):
             upstream, record = downstream_db.query_by_spec_hash(dep.dag_hash())
             assert upstream
-            assert record.path == upstream_layout.path_for_spec(dep)
+            assert record.path == upstream_db.layout.path_for_spec(dep)
         upstream, record = downstream_db.query_by_spec_hash(new_spec.dag_hash())
         assert not upstream
         assert record.installed
@@ -151,9 +146,7 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
 
 
 def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir, capsys, config):
-    upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout = (
-        upstream_and_downstream_db
-    )
+    upstream_write_db, upstream_db, downstream_db = upstream_and_downstream_db
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("z")
@@ -186,9 +179,7 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
     DB. When a package is recorded as installed in both, the results should
     refer to the downstream DB.
     """
-    upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout = (
-        upstream_and_downstream_db
-    )
+    upstream_write_db, upstream_db, downstream_db = upstream_and_downstream_db
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("x")
@@ -211,7 +202,7 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
         try:
             orig_db = spack.store.STORE.db
             spack.store.STORE.db = downstream_db
-            assert queried_spec.prefix == downstream_layout.path_for_spec(spec)
+            assert queried_spec.prefix == downstream_db.layout.path_for_spec(spec)
         finally:
             spack.store.STORE.db = orig_db
 
