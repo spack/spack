@@ -2349,7 +2349,9 @@ def find_system_libraries(libraries, shared=True):
     return libraries_found
 
 
-def find_libraries(libraries, root, shared=True, recursive=False, runtime=True, max_depth: Optional[int] = None):
+def find_libraries(
+    libraries, root, shared=True, recursive=False, runtime=True, max_depth: Optional[int] = None
+):
     """Returns an iterable of full paths to libraries found in a root dir.
 
     Accepts any glob characters accepted by fnmatch:
