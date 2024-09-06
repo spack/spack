@@ -1818,7 +1818,7 @@ def find(root, files, recursive=True, max_depth: Optional[int] = None):
 
 
 @system_path_filter(arg_slice=slice(1))
-def find_max_depth(root, globs, max_depth: int):
+def find_max_depth(root, globs, max_depth: Optional[int] = None):
     """Given a set of non-recursive glob file patterns, finds all
     files matching those patterns up to a maximum specified depth.
 
@@ -1832,6 +1832,9 @@ def find_max_depth(root, globs, max_depth: int):
     """
     if not os.path.exists(root):
         return []
+
+    if max_depth is None:
+        max_depth = sys.maxsize
 
     if isinstance(globs, str):
         globs = [globs]
