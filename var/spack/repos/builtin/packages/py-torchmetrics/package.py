@@ -67,11 +67,10 @@ class PyTorchmetrics(PythonPackage):
         depends_on("py-lightning-utilities@0.8:", when="@1.1:")
         depends_on("py-lightning-utilities@0.7:", when="@1:")
 
-        depends_on("py-scipy@1:", when="+image")
+        depends_on("py-scipy@1.0.1:", when="+image")
         depends_on("py-torchvision@0.8:", when="+image")
-        depends_on("py-torch-fidelity@:0.3.0", when="@0.11.2:1.0.3+image")
-        depends_on("py-torch-fidelity@:0.4.0", when="@1.1:+image")
-        depends_on("py-lpips@:0.1.4", when="@:1.2.0+image")
+        depends_on("py-torch-fidelity", when="+image")
+        depends_on("py-lpips", when="@:1.2.0+image")
 
         # Historical dependencies
         depends_on("py-pretty-errors@1.2.25", when="@1.4.0")
