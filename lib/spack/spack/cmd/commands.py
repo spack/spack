@@ -7,6 +7,7 @@ import argparse
 import copy
 import os
 import re
+import shlex
 import sys
 from argparse import ArgumentParser, Namespace
 from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
@@ -436,14 +437,7 @@ class FishCompletionWriter(ArgparseWriter):
         Returns:
             Quoted string.
         """
-        # Goal here is to match fish_indent behavior
-
-        # Strings without spaces (or other special characters) do not need to be escaped
-        if not any([sub in string for sub in [" ", "'", '"']]):
-            return string
-
-        string = string.replace("'", r"\'")
-        return f"'{string}'"
+        return shlex.quote(string)
 
     def optspecs(
         self,
