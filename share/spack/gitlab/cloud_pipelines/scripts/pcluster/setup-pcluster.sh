@@ -98,7 +98,7 @@ install_compilers() {
     # The compilers needs to be in the same install tree as the rest of the software such that the path
     # relocation works correctly. This holds the danger that this part will fail when the current spack gets
     # incompatible with the one in $spack_intel_compiler_commit. Therefore, we make intel installations optional
-    # in package.yaml files and add a fallback `%gcc` version for each application.
+    # in packages.yaml files and add a fallback `%gcc` version for each application.
     if [ "x86_64" == "$(arch)" ]; then
         # If we are inside a gitlab CI container
         (
@@ -112,6 +112,8 @@ install_compilers() {
                 cd "${DIR}"
                 # This needs to include commit 361a185ddb such that `ifx` picks up the correct toolchain. Otherwise
                 # this leads to libstdc++.so errors during linking (e.g. slepc).
+
+                # TODO: oneapi@2024.1.0 is the last compiler which works with AL2 glibc!
                 git clone --depth=1 -b ${spack_intel_compiler_commit} https://github.com/spack/spack.git \
                     && cd spack \
                     && curl -sL https://github.com/spack/spack/pull/40557.patch | patch -p1 \
@@ -120,7 +122,8 @@ install_compilers() {
                     && cp "${CURRENT_SPACK_ROOT}/etc/spack/compilers.yaml" etc/spack/ \
                     && cp "${CURRENT_SPACK_ROOT}/etc/spack/packages.yaml" etc/spack/ \
                     && . share/spack/setup-env.sh \
-                    && spack install intel-oneapi-compilers-classic
+                    && spack install intel-oneapi-compilers@2024.1.0
+
                 rm -rf "${DIR}"
             fi
         )
