@@ -160,7 +160,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             "--openssldir=%s" % join_path(prefix, "etc", "openssl"),
         ]
         if spec.satisfies("platform=windows"):
-            if spec.satisfies("@1"):
+            if spec.satisfies("@:1"):
                 base_args.extend([f'CC="{self.compiler.cc}"', f'CXX="{self.compiler.cxx}"'])
             else:
                 base_args.extend([f"CC={self.compiler.cc}", f"CXX={self.compiler.cxx}"])

@@ -58,7 +58,8 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     @property
     def libs(self):
         compat_name = "zlib" if sys.platform == "win32" else "libz"
-        name = compat_name if self.spec.satisfies("+compat") else "libz-ng"
+        non_compat_name = "zlib-ng" if sys.platform == "win32" else "libz-ng"
+        name = compat_name if self.spec.satisfies("+compat") else non_compat_name
         return find_libraries(
             name,
             root=self.prefix,

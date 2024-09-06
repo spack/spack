@@ -227,8 +227,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("qt@:4", when="@:5.2.0+qt")
     # explictly require sql
-    depends_on("qt+opengl+sql", when="@5.3.0:+qt+opengl2")
-    depends_on("qt~opengl+sql", when="@5.3.0:+qt~opengl2")
+    depends_on("qt+sql", when="+qt")
+    with when("+qt"):
+        depends_on("qt+opengl", when="@5.3.0:+qt+opengl2")
+        depends_on("qt~opengl", when="@5.3.0:+qt~opengl2")
 
     depends_on("gl@3.2:", when="+opengl2")
     depends_on("gl@1.2:", when="~opengl2")

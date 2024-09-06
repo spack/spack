@@ -197,9 +197,35 @@ class Qt(Package):
             depends_on("libmng")
             depends_on("assimp@5.0.0:5", when="@5.5:+opengl")
             depends_on("sqlite+column_metadata", when="+sql", type=("build", "run"))
+            depends_on("inputproto", when="@:5.8")
+    for plat in ["linux", "freebsd"]:
+        with when(f"platform={plat} +gui")
+            depends_on("fontconfig")
+            depends_on("libsm")
+            depends_on("libx11")
+            depends_on("libxcb")
+            depends_on("libxkbcommon")
+            depends_on("xcb-util-image")
+            depends_on("xcb-util-keysyms")
+            depends_on("xcb-util-renderutil")
+            depends_on("xcb-util-wm")
+            depends_on("libxext")
+            depends_on("libxrender")
+
+        conflicts("+framework", msg="QT cannot be built as a framework except on macOS.")
     # Windows sqlite has no column_metadata variant
     with when("platform=windows +sql"):
         depends_on("sqlite", type=("build", "run"))
+
+    with when("platform=darwin"):
+        conflicts(
+            "platform=darwin", when="@:4.8.6", msg="QT 4 for macOS is only patched for 4.8.7"
+        )
+        conflicts(
+            "target=aarch64:",
+            when="@:5.15.3",
+            msg="Apple Silicon requires a very new version of qt",
+        )
 
     depends_on("icu4c")
     depends_on("harfbuzz", when="@5:")
@@ -216,9 +242,7 @@ class Qt(Package):
 
     depends_on("libpng@1.2.57", when="@3")
     depends_on("pcre+multibyte", when="@5.0:5.8")
-    for plat in ["linux", "darwin", "freebsd"]:
-        with when(f"platform={plat}"):
-            depends_on("inputproto", when="@:5.8")
+
 
     with when("+ssl"):
         depends_on("openssl")
@@ -282,31 +306,6 @@ class Qt(Package):
     conflicts("%oneapi", when="@:5.15.13")
     patch("qt51514-oneapi.patch", when="@5.15.14: %oneapi")
 
-    # Non-macOS dependencies and special macOS constraints
-    if MACOS_VERSION is None and not IS_WINDOWS:
-        with when("+gui"):
-            depends_on("fontconfig")
-            depends_on("libsm")
-            depends_on("libx11")
-            depends_on("libxcb")
-            depends_on("libxkbcommon")
-            depends_on("xcb-util-image")
-            depends_on("xcb-util-keysyms")
-            depends_on("xcb-util-renderutil")
-            depends_on("xcb-util-wm")
-            depends_on("libxext")
-            depends_on("libxrender")
-
-        conflicts("+framework", msg="QT cannot be built as a framework except on macOS.")
-    else:
-        conflicts(
-            "platform=darwin", when="@:4.8.6", msg="QT 4 for macOS is only patched for 4.8.7"
-        )
-        conflicts(
-            "target=aarch64:",
-            when="@:5.15.3",
-            msg="Apple Silicon requires a very new version of qt",
-        )
 
     # Mapping for compilers/systems in the QT 'mkspecs'
     compiler_mapping = {
@@ -606,15 +605,15 @@ class Qt(Package):
 
         if "+gui" in spec:
             use_spack_dep("freetype")
-            if LINUX_VERSION:
+            if spec.satisfies("platform=linux") or spec.satisfies("platform=freebsd"):
                 config_args.append("-fontconfig")
         else:
             config_args.append("-no-freetype")
             config_args.append("-no-gui")
 
         if "+ssl" in spec:
-            config_args.append("-openssl-linked")
             pkg = spec["openssl"]
+            config_args.append("-openssl-linked")
             config_args.extend(pkg.libs.search_flags.split())
             config_args.extend(pkg.headers.include_flags.split())
         else:
@@ -678,9 +677,6 @@ class Qt(Package):
         (_, qtplat) = self.get_mkspec()
         if qtplat is not None:
             config_args.extend(["-platform", qtplat])
-
-        if not IS_WINDOWS:
-            config_args.extend(["-mp", "-icu"])
 
         return config_args
 
@@ -830,7 +826,6 @@ class Qt(Package):
             config_args.extend(["-device-option", "QMAKE_APPLE_DEVICE_ARCHS=arm64"])
 
         if IS_WINDOWS:
-            global configure
             configure = Executable("configure.bat")
         configure(*config_args)
 
