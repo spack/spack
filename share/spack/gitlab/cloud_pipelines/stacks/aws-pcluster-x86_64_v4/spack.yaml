@@ -5,7 +5,7 @@ spack:
   - apps:
     - gromacs %oneapi
     - lammps %oneapi
-    - mpas-model %onapi
+    - mpas-model %oneapi
     - openfoam %gcc
     - palace %oneapi ^superlu-dist%oneapi # hack: force fortran-rt provider through superlu-dist
     - quantum-espresso %oneapi
