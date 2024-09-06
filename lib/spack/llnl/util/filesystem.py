@@ -1746,13 +1746,6 @@ def find_first(root: str, files: Union[Iterable[str], str], bfs_depth: int = 2) 
     return FindFirstFile(root, *files, bfs_depth=bfs_depth).find()
 
 
-class _DefaultValue:
-    pass
-
-
-_unset = _DefaultValue()
-
-
 def find(root, files, recursive=True, max_depth: Optional[int] = None):
     """Search for ``files`` starting from the ``root`` directory.
 
