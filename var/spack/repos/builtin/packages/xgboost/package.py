@@ -53,7 +53,7 @@ class Xgboost(CMakePackage, CudaPackage):
         # thrust 2.3.1 tuple issues
         depends_on("cuda@:12.3", when="@:1.7")
         # https://github.com/dmlc/xgboost/issues/10555
-        depends_on("cuda@:12.4", when="@:2.1.0")  # assuming fix is backported
+        depends_on("cuda@:12.4", when="@:2.1")
 
     depends_on("nccl", when="+nccl")
     depends_on("llvm-openmp", when="%apple-clang +openmp")
