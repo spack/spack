@@ -3,12 +3,12 @@ spack:
 
   definitions:
   - apps:
-    - gromacs %intel
-    - lammps %intel
-    - mpas-model %intel
+    - gromacs %oneapi
+    - lammps %oneapi
+    - mpas-model %onapi
     - openfoam %gcc
     - palace %oneapi ^superlu-dist%oneapi # hack: force fortran-rt provider through superlu-dist
-    - quantum-espresso %intel
+    - quantum-espresso %oneapi
     - openmpi %oneapi
     # - wrf : While building hdf5 cmake errors out with Detecting Fortran/C Interface: Failed to compile
     # Root cause: ifort cannot deal with arbitrarily long file names.
