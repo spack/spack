@@ -270,10 +270,17 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("# TPLs")
         entries.append("#------------------{0}\n".format("-" * 60))
 
+        # - BLT
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec["blt"].prefix))
+
+        # - RAJA
         if spec.satisfies("+raja"):
             entries.append(cmake_cache_option("{}ENABLE_RAJA_PLUGIN".format(option_prefix), True))
             entries.append(cmake_cache_path("RAJA_DIR", spec["raja"].prefix))
+        else:
+            entries.append(cmake_cache_option("{}ENABLE_RAJA_PLUGIN".format(option_prefix), False))
+
+        # - Umpire
         entries.append(cmake_cache_path("umpire_DIR", spec["umpire"].prefix))
 
         # Build options
@@ -281,7 +288,6 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("# Build Options")
         entries.append("#------------------{0}\n".format("-" * 60))
 
-        # Build options
         entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", spec.satisfies("+shared")))
 
