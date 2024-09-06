@@ -115,11 +115,11 @@ class ExecuteResult(enum.Enum):
 
 class InstallAction(enum.Enum):
     #: Don't perform an install
-    NONE = 0
+    NONE = enum.auto()
     #: Do a standard install
-    INSTALL = 1
+    INSTALL = enum.auto()
     #: Do an overwrite install
-    OVERWRITE = 2
+    OVERWRITE = enum.auto()
 
 
 class InstallStatus:
