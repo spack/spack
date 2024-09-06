@@ -43,9 +43,9 @@ class PyXgboost(PythonPackage):
         depends_on("py-pip@22.1:", when="@2:")
 
         # Historical dependencies
-        depends_on("py-setuptools")
+        depends_on("py-setuptools", when="@:1")
         # in newer pip versions --install-option does not exist
-        depends_on("py-pip@:23.0")
+        depends_on("py-pip@:23.0", when="@:1")
 
     with default_args(type=("build", "run")):
         depends_on("py-numpy", type=("build", "run"))
@@ -70,8 +70,8 @@ class PyXgboost(PythonPackage):
             depends_on("py-matplotlib")
 
     def patch(self):
+        # Hard-coded to search for system libxgboost in the Python installation prefix
         # https://github.com/dmlc/xgboost/issues/6706
-        # Library is hard-coded to search in Python installation prefix at build and run time
         files = [os.path.join("xgboost", "libpath.py")]
         if self.spec.satisfies("@2:"):
             regex = "sys.base_prefix"
