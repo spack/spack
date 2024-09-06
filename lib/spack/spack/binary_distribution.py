@@ -712,15 +712,21 @@ def get_buildfile_manifest(spec):
     return data
 
 
-def hashes_to_prefixes(spec):
-    """Return a dictionary of hashes to prefixes for a spec and its deps, excluding externals"""
-    return {
-        s.dag_hash(): (s.name, str(s.prefix))
+def deps_to_relocate(spec):
+    """Return the transitive link and direct run dependencies of the spec.
+
+    This special case of spec traversal is specific to binary relocation. Package relocation is
+    restricted to link and run dependencies. Package relocation needs transitive link dependencies
+    because transitive rpath information appears in libraries/executables, but packages only retain
+    references to their direct run dependencies."""
+    deps = [
+        s
         for s in itertools.chain(
             spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
         )
         if not s.external
-    }
+    ]
+    return llnl.util.lang.dedupe(deps, key=lambda s: s.dag_hash())
 
 
 def get_buildinfo_dict(spec):
@@ -736,7 +742,7 @@ def get_buildinfo_dict(spec):
         "relocate_binaries": manifest["binary_to_relocate"],
         "relocate_links": manifest["link_to_relocate"],
         "hardlinks_deduped": manifest["hardlinks_deduped"],
-        "hash_to_prefix": {h: info[1] for h, info in hashes_to_prefixes(spec).items()},
+        "hash_to_prefix": {d.dag_hash(): d.prefix for d in deps_to_relocate(spec)},
     }
 
 
@@ -2200,12 +2206,11 @@ def relocate_package(spec):
     # First match specific prefix paths. Possibly the *local* install prefix
     # of some dependency is in an upstream, so we cannot assume the original
     # spack store root can be mapped uniformly to the new spack store root.
-    for dag_hash, prefix_info in hashes_to_prefixes(spec).items():
-        name, new_dep_prefix = prefix_info
+    for dep in deps_to_relocate(spec):
         try:
-            lookup_dag_hash = spec.build_spec[name].dag_hash()
+            lookup_dag_hash = spec.build_spec[dep.name].dag_hash()
         except KeyError:
-            dependent_edges = spec[name].edges_from_dependents()
+            dependent_edges = spec[dep.name].edges_from_dependents()
             virtuals = set()
             for edge in dependent_edges:
                 virtuals.update(edge.virtuals)
@@ -2215,12 +2220,12 @@ def relocate_package(spec):
                     break
                 except KeyError:
                     # This is a new dependency
-                    tty.debug(f"{spec} does not have relocation for {name}")
+                    tty.debug(f"{spec} does not have relocation for {dep.name}")
 
         if lookup_dag_hash in hash_to_old_prefix:
             old_dep_prefix = hash_to_old_prefix[lookup_dag_hash]
-            prefix_to_prefix_bin[old_dep_prefix] = new_dep_prefix
-            prefix_to_prefix_text[old_dep_prefix] = new_dep_prefix
+            prefix_to_prefix_bin[old_dep_prefix] = dep.prefix
+            prefix_to_prefix_text[old_dep_prefix] = dep.prefix
 
     # Only then add the generic fallback of install prefix -> install prefix.
     prefix_to_prefix_text[old_prefix] = new_prefix
