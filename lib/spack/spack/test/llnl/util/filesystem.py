@@ -1093,9 +1093,8 @@ def test_find_max_depth_relative(dir_structure_with_things_to_find):
         assert set(fs.find_max_depth(".", "file_*", 0)) == {locations["file_four"]}
         assert set(fs.find_max_depth(".", "file_two", 2)) == {locations["file_two"]}
 
-@pytest.mark.parametrize(
-    "recursive,max_depth", [(False, -1), (False, 1)]
-)
+
+@pytest.mark.parametrize("recursive,max_depth", [(False, -1), (False, 1)])
 def test_max_depth_and_recursive_errors(tmpdir, recursive, max_depth):
     root = str(tmpdir)
     error_str = "cannot be set if recursive is False"
