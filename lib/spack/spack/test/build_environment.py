@@ -519,6 +519,7 @@ def test_module_globals_available_at_setup_dependent_time(
     """Spack built package externaltest depends on an external package
     externaltool. Externaltool's setup_dependent_package needs to be able to
     access globals on the dependent"""
+
     def setup_dependent_package(module, dependent_spec):
         # Make sure set_package_py_globals was already called on
         # dependents
