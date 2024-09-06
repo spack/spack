@@ -54,10 +54,10 @@ class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
         )
 
     def setup_build_environment(self, env):
-        jpeg_include = self.spec["jpeg"].prefix.include
-        tiff_include = self.spec["libtiff"].prefix.include
-        zlib_include = self.spec["zlib-api"].prefix.include
-        env.prepend_path("INCLUDE", ";".join([jpeg_include, tiff_include, zlib_include]))
+        env.prepend_path(
+            "INCLUDE",
+            ";".join([dep.prefix.include for dep in self.spec.dependencies(deptype="link")]),
+        )
 
     def msbuild_args(self):
         return ["lcms2.sln"]

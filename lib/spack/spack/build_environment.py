@@ -640,7 +640,9 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
 
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
-    module.configure = Executable("./configure")
+    # Only set this if it's an autotools package
+    if not sys.platform == "win32":
+        module.configure = Executable("./configure")
 
     # Put spack compiler paths in module scope. (Some packages use it
     # in setup_run_environment etc, so don't put it context == build)

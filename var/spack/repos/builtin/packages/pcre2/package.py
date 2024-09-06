@@ -47,7 +47,7 @@ class Pcre2(AutotoolsPackage, CMakePackage):
         is_shared = self.spec.satisfies("+shared")
         if not self.spec.satisfies("platform=windows"):
             name = "lib" + name
-        elif not is_shared:
+        if self.spec.satisfies("platform=windows") and not is_shared:
             name += "-static"
         return find_libraries(
             name, root=self.prefix, recursive=True, shared=is_shared, runtime=False

@@ -321,6 +321,8 @@ class Cmake(Package):
 
             if spec.satisfies("+qtgui"):
                 args.append("--qt-gui")
+            else:
+                args.append("--no-qt-gui")
 
             # Now for CMake arguments to pass after the initial bootstrap
             args.append("--")
