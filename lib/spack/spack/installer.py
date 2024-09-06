@@ -16,10 +16,10 @@ of separate packages associated with a spec.
 File system locks enable coordination such that no two processes attempt to
 build the same or a failed dependency package.
 
-Failures to install dependency packages result in removal of their
-dependents' tasks from the current process.  A failure file is also
-written (and locked) so that other processes can detect the failure
-and adjust their tasks accordingly.
+If a dependency package fails to install, its dependents' tasks will be
+removed from the installing process's queue.  A failure file is also written
+and locked. Other processes use this file to detect the failure and dequeue
+its dependents.
 
 This module supports the coordination of local and distributed concurrent
 installations of packages in a Spack instance.
@@ -760,14 +760,14 @@ class BuildRequest:
         )
 
     def __repr__(self) -> str:
-        """Returns a formal representation of the build request."""
+        """Return a formal representation of the build request."""
         rep = f"{self.__class__.__name__}("
         for attr, value in self.__dict__.items():
             rep += f"{attr}={value.__repr__()}, "
         return f"{rep.strip(', ')})"
 
     def __str__(self) -> str:
-        """Returns a printable version of the build request."""
+        """Return a printable version of the build request."""
         return f"package={self.pkg.name}, install_args={self.install_args}"
 
     def _add_default_args(self) -> None:
@@ -927,7 +927,7 @@ class Task:
             )
         self.status = status
 
-        # Getting the PID again because it will be needed for execute functionality.
+        # cache the PID, which is used for distributed build messages in self.execute
         self.pid = os.getpid()
 
         # The initial start time for processing the spec
@@ -968,7 +968,8 @@ class Task:
         self.attempts = attempts
         self._update()
 
-        # Is this task to install a compiler
+        # Does this task install a compiler
+        # TODO: remove when we remove install_missing_compilers config option
         self.compiler = compiler
 
         # Handle bootstrapped compiler
@@ -1038,8 +1039,7 @@ class Task:
 
     def add_dependent(self, pkg_id: str) -> None:
         """
-        Ensure the dependent package id is in the task's list so it will be
-        properly updated when this package is installed.
+        Ensure the package is in this task's ``dependents`` list.
 
         Args:
             pkg_id:  package identifier of the dependent package
@@ -1050,8 +1050,7 @@ class Task:
 
     def add_dependency(self, pkg_id, installed=False):
         """
-        Ensure the dependency package id is in the task's list so the task priority will be
-        correct.
+        Ensure the package is in this task's ``dependencies`` list.
 
         Args:
             pkg_id (str):  package identifier of the dependency package
