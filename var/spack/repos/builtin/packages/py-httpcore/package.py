@@ -26,6 +26,8 @@ class PyHttpcore(PythonPackage):
     depends_on("py-hatch-fancy-pypi-readme", when="@0.18:", type="build")
 
     with default_args(type=("build", "run")):
+        depends_on("py-certifi", when="@0.14.7:")
+
         depends_on("py-h11@0.8:0.9", when="@0.11.0")
         depends_on("py-h11@0.11:0.12", when="@0.14.7")
         depends_on("py-h11@0.13:0.14", when="@0.16.3:")
@@ -34,5 +36,3 @@ class PyHttpcore(PythonPackage):
 
         depends_on("py-anyio@3", when="@0.14.7")
         depends_on("py-anyio@3:4", when="@0.16.3:0.18")
-
-        depends_on("py-certifi", when="@0.14.7:")
