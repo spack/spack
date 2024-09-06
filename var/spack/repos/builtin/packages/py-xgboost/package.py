@@ -70,8 +70,8 @@ class PyXgboost(PythonPackage):
             depends_on("py-matplotlib")
 
     def patch(self):
+        # Hard-coded to search for system libxgboost in the Python installation prefix
         # https://github.com/dmlc/xgboost/issues/6706
-        # Library is hard-coded to search in Python installation prefix at build and run time
         files = [os.path.join("xgboost", "libpath.py")]
         if self.spec.satisfies("@2:"):
             regex = "sys.base_prefix"
