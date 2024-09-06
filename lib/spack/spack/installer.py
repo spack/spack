@@ -993,7 +993,11 @@ class Task:
                 dep_id = package_id(dep.package.spec)
                 self.dependencies.add(dep_id)
 
-    def execute(self, install_status):
+    def execute(self, install_status: InstallStatus) -> ExecuteResult:
+        """Execute the work of this task.
+
+        The ``install_status`` is an ``InstallStatus`` object used to format progress reporting for
+        this task in the context of the full ``BuildRequest``."""
         raise NotImplementedError
 
     def __eq__(self, other):
