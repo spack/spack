@@ -20,7 +20,7 @@ class PyPoxy(PythonPackage):
 
     with default_args(type=("build", "run")):
         depends_on("python@3.7:")
-        depends_on("py-misk")
+        depends_on("py-misk@0.8.1:")
         depends_on("py-beautifulsoup4")
         depends_on("py-jinja2")
         depends_on("py-pygments")
