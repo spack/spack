@@ -462,24 +462,24 @@ class Boost(Package):
 
     def determine_toolset(self, spec):
         toolsets = {
-            "g++": "gcc",
-            "icpc": "intel",
-            "icpx": "intel",
-            "clang++": "clang",
-            "armclang++": "clang",
-            "xlc++": "xlcpp",
-            "xlc++_r": "xlcpp",
-            "pgc++": "pgi",
-            "nvc++": "pgi",
-            "FCC": "clang",
+            "%gcc": "gcc",
+            "%intel": "intel",
+            "%oneapi": "intel",
+            "%clang": "clang",
+            "%arm": "clang",
+            "%xl": "xlcpp",
+            "%xl_r": "xlcpp",
+            "%pgi": "pgi",
+            "%nvhpc": "pgi",
+            "%fj": "clang",
         }
 
         if spec.satisfies("@1.47:"):
-            toolsets["icpc"] += "-linux"
-            toolsets["icpx"] += "-linux"
+            toolsets["%intel"] += "-linux"
+            toolsets["%oneapi"] += "-linux"
 
         for cc, toolset in toolsets.items():
-            if cc in self.compiler.cxx_names:
+            if self.spec.satisfies(cc):
                 return toolset
 
         # fallback to gcc if no toolset found
@@ -690,6 +690,9 @@ class Boost(Package):
         remove_if_in_list = lambda lib, libs: libs.remove(lib) if lib in libs else None
 
         # Remove libraries that the release version does not support
+        if not spec.satisfies("@1.75.0:"):
+            remove_if_in_list("json", with_libs)
+            remove_if_in_list("json", without_libs)
         if spec.satisfies("@1.69.0:"):
             remove_if_in_list("signals", with_libs)
             remove_if_in_list("signals", without_libs)

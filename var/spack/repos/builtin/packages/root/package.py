@@ -172,6 +172,12 @@ class Root(CMakePackage):
             sha256="e68be5fe7b1ec873da134bd39c5c72730c4ca06d51b52eb436ae44fe81cd472d",
             when="@:6.30.04 +x",
         )
+        # Fix rpath for loading cppyy
+        patch(
+            "https://github.com/root-project/root/pull/15925.diff?full_index=1",
+            sha256="1937290a4d54cd2e3e8a8d23d93b8dedaca9ed8dcfdcfa2f0d16629ff53fb3b7",
+            when="@6.28: +python",
+        )
 
     # ###################### Variants ##########################
     # See README.md for specific notes about what ROOT configuration
@@ -336,6 +342,7 @@ class Root(CMakePackage):
     depends_on("gl2ps", when="+opengl")
     depends_on("gl", when="+opengl")
     depends_on("glu", when="+opengl")
+    depends_on("libglx", when="+opengl+x")
 
     # Qt4
     depends_on("qt@:4", when="+qt4")
@@ -419,7 +426,9 @@ class Root(CMakePackage):
     conflicts("target=ppc64le:", when="@:6.24")
 
     # Incompatible variants
-    if sys.platform != "darwin":
+    if sys.platform == "darwin":
+        conflicts("+opengl", when="~x ~aqua", msg="root+opengl requires X or Aqua")
+    else:
         conflicts("+opengl", when="~x", msg="root+opengl requires X")
     conflicts("+math", when="~gsl", msg="root+math requires GSL")
     conflicts("+tmva", when="~gsl", msg="root+tmva requires GSL")
@@ -439,6 +448,10 @@ class Root(CMakePackage):
 
     # See https://github.com/root-project/root/issues/11128
     conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in root 6.26.08")
+
+    # See https://github.com/spack/spack/pull/44826
+    if sys.platform == "darwin" and macos_version() == Version("12"):
+        conflicts("@:6.27", when="+python", msg="macOS 12 python support for 6.28: only")
 
     # See https://github.com/root-project/root/issues/11714
     if sys.platform == "darwin" and macos_version() >= Version("13"):
@@ -607,7 +620,7 @@ class Root(CMakePackage):
             define("builtin_freetype", False),
             define("builtin_ftgl", False),
             define("builtin_gl2ps", False),
-            define("builtin_glew", False),
+            define("builtin_glew", self.spec.satisfies("platform=darwin")),
             define("builtin_gsl", False),
             define("builtin_llvm", True),
             define("builtin_lz4", self.spec.satisfies("@6.12.02:6.12")),

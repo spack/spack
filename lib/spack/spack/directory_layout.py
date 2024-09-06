@@ -14,7 +14,6 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 from llnl.util.symlink import readlink
 
 import spack.config
@@ -23,13 +22,8 @@ import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
 
-# Note: Posixpath is used here as opposed to
-# os.path.join due to spack.spec.Spec.format
-# requiring forward slash path seperators at this stage
 default_projections = {
-    "all": posixpath.join(
-        "{architecture}", "{compiler.name}-{compiler.version}", "{name}-{version}-{hash}"
-    )
+    "all": "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
 }
 
 
@@ -152,20 +146,9 @@ class DirectoryLayout:
     def spec_file_path(self, spec):
         """Gets full path to spec file"""
         _check_concrete(spec)
-        # Attempts to convert to JSON if possible.
-        # Otherwise just returns the YAML.
         yaml_path = os.path.join(self.metadata_path(spec), self._spec_file_name_yaml)
         json_path = os.path.join(self.metadata_path(spec), self.spec_file_name)
-        if os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path):
-            self.write_spec(spec, json_path)
-            try:
-                os.remove(yaml_path)
-            except OSError as err:
-                tty.debug("Could not remove deprecated {0}".format(yaml_path))
-                tty.debug(err)
-        elif os.path.exists(yaml_path):
-            return yaml_path
-        return json_path
+        return yaml_path if os.path.exists(yaml_path) else json_path
 
     def deprecated_file_path(self, deprecated_spec, deprecator_spec=None):
         """Gets full path to spec file for deprecated spec
@@ -199,17 +182,7 @@ class DirectoryLayout:
             deprecated_spec.dag_hash() + "_" + self.spec_file_name,
         )
 
-        if os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path):
-            self.write_spec(deprecated_spec, json_path)
-            try:
-                os.remove(yaml_path)
-            except (IOError, OSError) as err:
-                tty.debug("Could not remove deprecated {0}".format(yaml_path))
-                tty.debug(err)
-        elif os.path.exists(yaml_path):
-            return yaml_path
-
-        return json_path
+        return yaml_path if os.path.exists(yaml_path) else json_path
 
     @contextmanager
     def disable_upstream_check(self):
