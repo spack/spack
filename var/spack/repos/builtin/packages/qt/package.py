@@ -199,7 +199,7 @@ class Qt(Package):
             depends_on("sqlite+column_metadata", when="+sql", type=("build", "run"))
             depends_on("inputproto", when="@:5.8")
     for plat in ["linux", "freebsd"]:
-        with when(f"platform={plat} +gui")
+        with when(f"platform={plat} +gui"):
             depends_on("fontconfig")
             depends_on("libsm")
             depends_on("libx11")
@@ -242,7 +242,6 @@ class Qt(Package):
 
     depends_on("libpng@1.2.57", when="@3")
     depends_on("pcre+multibyte", when="@5.0:5.8")
-
 
     with when("+ssl"):
         depends_on("openssl")
@@ -305,7 +304,6 @@ class Qt(Package):
     # This has only been tested for 5.15.14 so far
     conflicts("%oneapi", when="@:5.15.13")
     patch("qt51514-oneapi.patch", when="@5.15.14: %oneapi")
-
 
     # Mapping for compilers/systems in the QT 'mkspecs'
     compiler_mapping = {
