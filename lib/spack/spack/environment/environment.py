@@ -2342,7 +2342,7 @@ class Environment:
                 )
 
             if "build_spec" in node_dict:
-                _, bhash, _ = reader.build_spec_from_node_dict(node_dict)
+                _, bhash, _ = reader.extract_build_spec_info_from_node_dict(node_dict)
                 specs_by_hash[lockfile_key]._build_spec = specs_by_hash[bhash]
 
         # Traverse the root specs one at a time in the order they appear.
