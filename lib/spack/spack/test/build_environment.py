@@ -513,9 +513,12 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
         assert dtags_to_add.value == expected_flag
 
 
-def test_module_globals_available_at_setup(
+def test_module_globals_available_at_setup_dependent_time(
     monkeypatch, mutable_config, mock_packages, working_env
 ):
+    """Spack built package externaltest depends on an external package
+    externaltool. Externaltool's setup_dependent_package needs to be able to
+    access globals on the dependent"""
     def setup_dependent_package(module, dependent_spec):
         # Make sure set_package_py_globals was already called on
         # dependents

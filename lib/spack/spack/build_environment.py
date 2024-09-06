@@ -1002,8 +1002,8 @@ class SetupContext:
     def set_all_package_py_globals(self):
         """Set the globals in modules of package.py files."""
         for dspec, flag in chain(self.external, self.nonexternal):
+            pkg = dspec.package
             if self.should_set_package_py_globals & flag:
-                pkg = dspec.package
                 if self.context == Context.BUILD and self.needs_build_context & flag:
                     set_package_py_globals(pkg, context=Context.BUILD)
                 else:
@@ -1015,8 +1015,8 @@ class SetupContext:
         # any package setup. This guarantees package setup methods have
         # access to expected module level definitions such as "spack_cc"
         for dspec, flag in chain(self.external, self.nonexternal):
+            pkg = dspec.package
             for spec in dspec.dependents():
-                pkg = dspec.package
                 # Note: some specs have dependents that are unreachable from the root, so avoid
                 # setting globals for those.
                 if id(spec) not in self.nodes_in_subdag:
