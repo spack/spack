@@ -2408,6 +2408,8 @@ def find_libraries(
     libraries = ["{0}.{1}".format(lib, suffix) for lib in libraries for suffix in suffixes]
 
     if not recursive:
+        if max_depth:
+            raise ValueError(f"max_depth ({max_depth}) cannot be set if recursive is False")
         # If not recursive, look for the libraries directly in root
         return LibraryList(find(root, libraries, recursive=False))
 
