@@ -218,7 +218,7 @@ default:
     - $ErrorActionPreference=$ErrorActionOld
 
   tags: ["spack", "public", "medium", "x86_64-win"]
-  image: "ghcr.io/johnwparent/windows-server21h2:sha-c749cf3"
+  image: "ghcr.io/johnwparent/windows-server21h2:sha-1c12b61"
 
 .generate-deprecated:
   extends: [ ".base-job" ]
