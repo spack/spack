@@ -584,7 +584,7 @@ class FishCompletionWriter(ArgparseWriter):
                 if value is not None:
                     commands.append(f"{head} {value}")
 
-        return f"{'\n'.join(commands)}\n"
+        return "\n".join(commands) + "\n"
 
     def prog_comment(self, prog: str) -> str:
         """Return a comment line for the command."""
@@ -654,7 +654,7 @@ class FishCompletionWriter(ArgparseWriter):
             if help:
                 commands.append(f"{prefix} -d {shlex.quote(help)}")
 
-        return f"{'\n'.join(commands)}\n"
+        return "\n".join(commands) + "\n"
 
     def subcommands(self, prog: str, subcommands: List[Tuple[ArgumentParser, str, str]]) -> str:
         """Return the completion for subcommands.
@@ -678,7 +678,7 @@ class FishCompletionWriter(ArgparseWriter):
 
             commands.append(command)
 
-        return f"{'\n'.join(commands)}\n"
+        return "\n".join(commands) + "\n"
 
 
 @formatter
