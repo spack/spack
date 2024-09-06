@@ -89,7 +89,7 @@ class Geos(CMakePackage):
         args = []
 
         # https://github.com/libgeos/geos/issues/460
-        if "%intel" in self.spec:
+        if self.spec.satisfies("%intel"):
             args.append(self.define("BUILD_ASTYLE", False))
 
         args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
