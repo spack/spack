@@ -78,7 +78,8 @@ spack:
     - py-tensorflow-probability
 
     # XGBoost
-    - py-xgboost
+    # xgboost requires older cuda, which doesn't support newer GCC
+    # - py-xgboost
 
   ci:
     pipeline-gen:
