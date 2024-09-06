@@ -4815,7 +4815,7 @@ class SpecfileReaderBase:
                     virtuals=virtuals,
                 )
             if "build_spec" in node.keys():
-                _, bhash, _ = cls.build_spec_from_node_dict(node, hash_type=hash_type)
+                _, bhash, _ = cls.extract_build_spec_info_from_node_dict(node, hash_type=hash_type)
                 node_spec._build_spec = hash_dict[bhash]["node_spec"]
 
         return hash_dict[root_spec_hash]["node_spec"]
@@ -4943,7 +4943,7 @@ class SpecfileV2(SpecfileReaderBase):
         return dep_hash, deptypes, hash_type, virtuals
 
     @classmethod
-    def build_spec_from_node_dict(cls, node, hash_type=ht.dag_hash.name):
+    def extract_build_spec_info_from_node_dict(cls, node, hash_type=ht.dag_hash.name):
         build_spec_dict = node["build_spec"]
         return build_spec_dict["name"], build_spec_dict[hash_type], hash_type
 
