@@ -19,10 +19,11 @@ class PyMonai(PythonPackage):
     version("0.8.0", sha256="a63df7d5a680d9641c223ea090ff843a7d6f20bdb62095bd44f3b0480a4706ed")
 
     depends_on("python@3.6:", type=("build", "run"))
+    depends_on("python@3.8:", when="@1.2:", type=("build", "run"))
+    depends_on("py-ninja", type="build")
+    depends_on("py-wheel", type="build")
     depends_on("py-setuptools", type="build")
     depends_on("py-torch@1.6:", type=("build", "run"))
     depends_on("py-torch@1.9:", when="@1.3.2:", type=("build", "run"))
     depends_on("py-numpy@1.17:", type=("build", "run"))
     depends_on("py-numpy@1.20:", when="@1.3.2:", type=("build", "run"))
-    depends_on("py-ninja", type="build")
-    depends_on("py-wheel", type="build")
