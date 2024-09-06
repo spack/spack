@@ -742,7 +742,7 @@ def get_buildinfo_dict(spec):
         "relocate_binaries": manifest["binary_to_relocate"],
         "relocate_links": manifest["link_to_relocate"],
         "hardlinks_deduped": manifest["hardlinks_deduped"],
-        "hash_to_prefix": {d.dag_hash(): d.prefix for d in deps_to_relocate(spec)},
+        "hash_to_prefix": {d.dag_hash(): str(d.prefix) for d in deps_to_relocate(spec)},
     }
 
 
@@ -2222,8 +2222,8 @@ def relocate_package(spec):
 
         if lookup_dag_hash in hash_to_old_prefix:
             old_dep_prefix = hash_to_old_prefix[lookup_dag_hash]
-            prefix_to_prefix_bin[old_dep_prefix] = dep.prefix
-            prefix_to_prefix_text[old_dep_prefix] = dep.prefix
+            prefix_to_prefix_bin[old_dep_prefix] = str(dep.prefix)
+            prefix_to_prefix_text[old_dep_prefix] = str(dep.prefix)
 
     # Only then add the generic fallback of install prefix -> install prefix.
     prefix_to_prefix_text[old_prefix] = new_prefix
