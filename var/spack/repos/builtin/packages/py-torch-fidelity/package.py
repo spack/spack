@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -23,3 +25,9 @@ class PyTorchFidelity(PythonPackage):
     depends_on("py-torch", type=("build", "run"))
     depends_on("py-torchvision", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"))
+
+    def patch(self):
+        os.rename(
+            join_path(self.stage.source_path, "torch_fidelity.egg-info", "requires.txt"),
+            join_path(self.stage.source_path, "requirements.txt"),
+        )
