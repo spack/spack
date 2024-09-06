@@ -4204,9 +4204,6 @@ spack:
 {''.join(includes)}
   specs:
   - mpileaks
-  packages:
-    mpileaks:
-      compiler: [gcc]
 """
     )
 
