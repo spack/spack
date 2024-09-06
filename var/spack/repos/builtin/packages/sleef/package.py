@@ -78,6 +78,5 @@ class Sleef(CMakePackage):
         # https://github.com/shibatch/sleef/issues/474
         if self.spec.satisfies("@:3.5.1_2024-02-08 platform=darwin"):
             args.append(self.sleef_define("DISABLE_SVE", True))
-            self.define("CMAKE_POSITION_INDEPENDENT_CODE", True)
 
         return args
