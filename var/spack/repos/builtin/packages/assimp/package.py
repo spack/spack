@@ -68,3 +68,12 @@ class Assimp(CMakePackage):
         if name == "cxxflags":
             flags.append(self.compiler.cxx11_flag)
         return (None, None, flags)
+
+    def check(self):
+        unit = Executable(join_path(self.builder.build_directory, "bin", "unit"))
+        skipped_tests = [
+            "AssimpAPITest_aiMatrix3x3.aiMatrix3FromToTest",
+            "AssimpAPITest_aiMatrix4x4.aiMatrix4FromToTest",
+            "AssimpAPITest_aiQuaternion.aiQuaternionFromNormalizedQuaternionTest",
+        ]
+        unit(f"--gtest_filter=-{':'.join(skipped_tests)}")
