@@ -1003,7 +1003,6 @@ class SetupContext:
         """Set the globals in modules of package.py files."""
         for dspec, flag in chain(self.external, self.nonexternal):
             pkg = dspec.package
-
             if self.should_set_package_py_globals & flag:
                 if self.context == Context.BUILD and self.needs_build_context & flag:
                     set_package_py_globals(pkg, context=Context.BUILD)
@@ -1011,6 +1010,12 @@ class SetupContext:
                     # This includes runtime dependencies, also runtime deps of direct build deps.
                     set_package_py_globals(pkg, context=Context.RUN)
 
+        # Looping over the set of packages a second time
+        # ensures all globals are loaded into the module space prior to
+        # any package setup. This guarantees package setup methods have
+        # access to expected module level definitions such as "spack_cc"
+        for dspec, flag in chain(self.external, self.nonexternal):
+            pkg = dspec.package
             for spec in dspec.dependents():
                 # Note: some specs have dependents that are unreachable from the root, so avoid
                 # setting globals for those.
