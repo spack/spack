@@ -13,18 +13,18 @@ class Ollama(GoPackage, CudaPackage):
     homepage = "https://ollama.com"
     git = "https://github.com/ollama/ollama.git"
 
-    maintainers("teaguesterling","brettviren")
+    maintainers("teaguesterling", "brettviren")
 
     # A shell script is run by `go generate` which assumes source is in a git
     # repo.  So we must use git VCS and not tarballs and defeat source caching.
     vargs = dict(submodules=True, no_cache=True)
-    
+
     version("0.3.9", commit="a1cef4d0a5f31280ea82b350605775931a6163cb", **vargs)
     version("0.1.31", commit="dc011d16b9ff160c0be3829fc39a43054f0315d0", **vargs)
     # This is the last verified non-preview version as of 20240413
     version("0.1.30", commit="756c2575535641f1b96d94b4214941b90f4c30c7", **vargs)
 
-    variant('cuda', default=False, description='Add support for CUDA')
+    variant("cuda", default=False, description="Add support for CUDA")
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -44,8 +44,6 @@ class Ollama(GoPackage, CudaPackage):
             env.set("CUDACXX", cuda_prefix.bin.nvcc)
             env.set("CUDA_LIB_DIR", cuda_prefix.lib)
             env.set("CMAKE_CUDA_ARCHITECTURES", spec.variants["cuda_arch"].value)
-
-
 
 
 class GoBuilder(spack.build_systems.go.GoBuilder):
