@@ -358,7 +358,7 @@ def print_variants_grouped_by_when(pkg):
     max_name_default_len = _print_variants_header(pkg)
 
     indent = 4
-    for when, variants_by_name in pkg.variants.items():
+    for when, variants_by_name in pkg.variant_items():
         padded_values = max_name_default_len + 4
         start_indent = indent
 

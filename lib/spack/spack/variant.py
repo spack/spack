@@ -11,7 +11,7 @@ import functools
 import inspect
 import itertools
 import re
-from typing import Any, List, Optional, Type
+from typing import Any, Callable, List, Optional, Sequence, Type, Union
 
 import llnl.util.lang as lang
 import llnl.util.tty.color
@@ -75,35 +75,39 @@ def make_variant(variant_type: str, name: str, value: Any) -> "AbstractVariant":
 
 
 class Variant:
-    """Represents a variant in a package, as declared in the
-    variant directive.
+    """Represents a variant definition, created by the ``variant()`` directive.
+
+    There can be multiple definitions of the same variant, and they are given precedence
+    by order of appearance in the package. Later definitions have higher precedence.
+    Similarly, definitions in derived classes have higher precedence than those in their
+    superclasses.
+
     """
 
     def __init__(
         self,
-        name,
-        default,
-        description,
-        values=(True, False),
-        multi=False,
-        validator=None,
-        sticky=False,
+        name: str,
+        default: Any,
+        description: str,
+        values: Union[Sequence, Callable] = (True, False),
+        multi: bool = False,
+        validator: Optional[Callable] = None,
+        sticky: bool = False,
+        precedence: int = 0,
     ):
         """Initialize a package variant.
 
         Args:
-            name (str): name of the variant
-            default (str): default value for the variant in case
-                nothing has been specified
-            description (str): purpose of the variant
-            values (sequence): sequence of allowed values or a callable
-                accepting a single value as argument and returning True if the
-                value is good, False otherwise
-            multi (bool): whether multiple CSV are allowed
-            validator (callable): optional callable used to enforce
-                additional logic on the set of values being validated
-            sticky (bool): if true the variant is set to the default value at
-                concretization time
+            name: name of the variant
+            default: default value for the variant, used when nothing is explicitly specified
+            description: purpose of the variant
+            values: sequence of allowed values or a callable accepting a single value as argument
+                and returning True if the value is good, False otherwise
+            multi: whether multiple values are allowed
+            validator: optional callable that can be used to perform additional validation
+            sticky: if true the variant is set to the default value at concretization time
+            precedence: int indicating precedence of this variant definition in the solve
+                (definition with highest precedence is used when multiple definitions are possible)
         """
         self.name = name
         self.default = default
@@ -137,6 +141,7 @@ class Variant:
         self.multi = multi
         self.group_validator = validator
         self.sticky = sticky
+        self.precedence = precedence
 
     def validate_or_raise(self, vspec, pkg_cls=None):
         """Validate a variant spec against this package variant. Raises an
@@ -255,7 +260,8 @@ class Variant:
             f"multi={self.multi}, "
             f"single_value_validator={self.single_value_validator}, "
             f"group_validator={self.group_validator}, "
-            f"sticky={self.sticky})"
+            f"sticky={self.sticky}, "
+            f"precedence={self.precedence})"
         )
 
 

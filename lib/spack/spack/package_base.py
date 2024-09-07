@@ -452,7 +452,7 @@ def _by_name(
     return dict(sorted(all_by_name.items()))
 
 
-def _names(when_indexed_dictionary):
+def _names(when_indexed_dictionary: WhenDict) -> List[str]:
     """Get sorted names from dicts keyed by when/name."""
     all_names = set()
     for when, by_name in when_indexed_dictionary.items():
@@ -460,6 +460,45 @@ def _names(when_indexed_dictionary):
             all_names.add(name)
 
     return sorted(all_names)
+
+
+WhenVariantList = List[Tuple["spack.spec.Spec", "spack.variant.Variant"]]
+
+
+def _remove_overridden_vdefs(variant_defs: WhenVariantList) -> None:
+    """Remove variant defs from the list if their when specs are satisfied by later ones.
+
+    Any such variant definitions are *always* overridden by their successor, as it will
+    match everything the predecessor matches, and the solver will prefer it because of
+    its higher precedence.
+
+    We can just remove these defs from variant definitions and avoid putting them in the
+    solver. This is also useful for, e.g., `spack info`, where we don't want to show a
+    variant from a superclass if it is always overridden by a variant defined in a
+    subclass.
+
+    Example::
+
+        class ROCmPackage:
+            variant("amdgpu_target", ..., when="+rocm")
+
+        class Hipblas:
+            variant("amdgpu_target", ...)
+
+    The subclass definition *always* overrides the superclass definition here, but they
+    have different when specs and the subclass def won't just replace the one in the
+    superclass. In this situation, the subclass should *probably* also have
+    ``when="+rocm"``, but we can't guarantee that will always happen when a vdef is
+    overridden. So we use this method to remove any overrides we can know statically.
+
+    """
+    i = 0
+    while i < len(variant_defs):
+        when, vdef = variant_defs[i]
+        if any(when.satisfies(successor) for successor, _ in variant_defs[i + 1 :]):
+            del variant_defs[i]
+        else:
+            i += 1
 
 
 class RedistributionMixin:
@@ -748,30 +787,72 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     def dependencies_by_name(cls, when: bool = False):
         return _by_name(cls.dependencies, when=when)
 
+    # Accessors for variants
+    # External code workingw with Variants should go through the methods below
+
     @classmethod
-    def variant_names(cls):
+    def variant_names(cls) -> List[str]:
         return _names(cls.variants)
 
     @classmethod
-    def has_variant(cls, name):
+    def has_variant(cls, name) -> bool:
         return any(name in dictionary for dictionary in cls.variants.values())
 
     @classmethod
-    def variant_definitions(cls, name: str):
+    def num_variant_definitions(cls) -> int:
+        """Total number of variant definitions in this class so far."""
+        return sum(len(variants_by_name) for variants_by_name in cls.variants.values())
+
+    @classmethod
+    def variant_definitions(cls, name: str) -> WhenVariantList:
         """Iterator over (when_spec, Variant) for all variant definitions for a particular name."""
+        # construct a list of defs sorted by precedence
+        defs: WhenVariantList = []
         for when, variants_by_name in cls.variants.items():
             variant_def = variants_by_name.get(name)
             if variant_def:
-                yield when, variant_def
+                defs.append((when, variant_def))
 
-    def variant_descriptor(self, name):
-        """Get the variant descriptor for a variant on this package's spec."""
-        if name not in self.spec.variants:
+        # With multiple definitions, ensure precedence order and simplify overrides
+        if len(defs) > 1:
+            defs.sort(key=lambda v: v[1].precedence)
+            _remove_overridden_vdefs(defs)
+
+        return defs
+
+    @classmethod
+    def variant_items(
+        cls,
+    ) -> Iterable[Tuple["spack.spec.Spec", Dict[str, "spack.variant.Variant"]]]:
+        """Iterate over ``cls.variants.items()`` with overridden definitions removed."""
+        # Note: This is quadratic in the average number of variant definitions per name.
+        # That is likely close to linear in practice, as there are few variants with
+        # multiple definitions (but it matters when they are there).
+        exclude = {
+            name: [id(vdef) for _, vdef in cls.variant_definitions(name)]
+            for name in cls.variant_names()
+        }
+
+        for when, variants_by_name in cls.variants.items():
+            filtered_variants_by_name = {
+                name: vdef for name, vdef in variants_by_name.items() if id(vdef) in exclude[name]
+            }
+
+            if filtered_variants_by_name:
+                yield when, filtered_variants_by_name
+
+    def get_variant(self, name: str) -> "spack.variant.Variant":
+        """Get the highest precedence variant definition matching this package's spec.
+
+        Arguments:
+            name: name of the variant definition to get
+        """
+        vdefs = [v for _, v in self.variant_definitions(name)]
+        if not vdefs:
             raise ValueError(f"No variant '{name}' on spec: {self.spec}")
 
-        for when, variants_by_name in reversed(list(self.variants.items())):
-            if self.spec.satisfies(when) and name in variants_by_name:
-                return variants_by_name[name]
+        # return the definition with highest precedence
+        return vdefs[-1]
 
     @classmethod
     def possible_dependencies(

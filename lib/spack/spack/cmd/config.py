@@ -537,8 +537,8 @@ def config_prefer_upstream(args):
             if var_name in ["patches"] or not spec.package.has_variant(var_name):
                 continue
 
-            variant_desc = spec.package.variant_descriptor(var_name)
-            if variant.value != variant_desc.default:
+            vdef = spec.package.get_variant(var_name)
+            if variant.value != vdef.default:
                 variants.append(str(variant))
         variants.sort()
         variants = " ".join(variants)

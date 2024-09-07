@@ -684,7 +684,14 @@ def variant(
         # NOTE: variant defaults and values can conflict if when conditions overlap.
         variants_by_name = pkg.variants.setdefault(when_spec, {})
         variants_by_name[name] = spack.variant.Variant(
-            name, default, description, values, multi, validator, sticky
+            name=name,
+            default=default,
+            description=description,
+            values=values,
+            multi=multi,
+            validator=validator,
+            sticky=sticky,
+            precedence=pkg.num_variant_definitions(),
         )
 
     return _execute_variant
