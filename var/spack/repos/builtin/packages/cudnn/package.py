@@ -16,7 +16,7 @@ _versions = {
     },
     "9.2.0.82-11": {
         "Linux-x86_64": "99dcb3fa2bf7eed7f35b0f8e58e7d1f04d9a52e01e382efc1de16fed230d3b26",
-        "Linux-aarch64": "62973737acc11c20f0640e63248a8d988b53b6aad219cf17eaff63a05970853d"
+        "Linux-aarch64": "62973737acc11c20f0640e63248a8d988b53b6aad219cf17eaff63a05970853d",
     },
     # cuDNN 8.9.7
     "8.9.7.29-12": {
@@ -406,3 +406,4 @@ class Cudnn(Package):
             target_include = os.path.join(prefix, "targets", "ppc64le-linux", "include")
             if os.path.isdir(target_include) and not os.path.isdir(prefix.include):
                 symlink(target_include, prefix.include)
+
