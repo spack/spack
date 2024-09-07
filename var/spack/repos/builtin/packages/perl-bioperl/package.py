@@ -37,7 +37,11 @@ class PerlBioperl(PerlPackage):
     license("Artistic-1.0")
 
     version("1.7.8", sha256="c490a3be7715ea6e4305efd9710e5edab82dabc55fd786b6505b550a30d71738")
-    version("1.7.6", sha256="df2a3efc991b9b5d7cc9d038a1452c6dac910c9ad2a0e47e408dd692c111688d")
+    version(
+        "1.7.6",
+        sha256="df2a3efc991b9b5d7cc9d038a1452c6dac910c9ad2a0e47e408dd692c111688d",
+        url="https://cpan.metacpan.org/authors/id/C/CD/CDRAUG/BioPerl-1.7.6.tar.gz",
+    )
     version("1.7.2", sha256="17aa3aaab2f381bbcaffdc370002eaf28f2c341b538068d6586b2276a76464a1")
     version("1.6.924", sha256="616a7546bb3c58504de27304a0f6cb904e18b6bbcdb6a4ec8454f2bd37bb76d0")
 
