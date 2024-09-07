@@ -2972,49 +2972,6 @@ class Spec:
                 f"No such variant {not_existing} for spec: '{spec}'", list(not_existing)
             )
 
-    def update_variant_validate(self, variant_name, values):
-        """If it is not already there, adds the variant named ``variant_name`` to
-        ``self`` based on the definition contained in the package metadata. Validates
-        the variant and values before returning.
-
-        Used to add values to a variant without being sensitive to the variant being
-        single or multi-valued. If the variant already exists on the spec it is assumed
-        to be multi-valued and the values are appended.
-
-        Args:
-           variant_name: the name of the variant to add or append to
-           values: the value or values (as a tuple) to add/append to the variant
-
-        """
-        if not isinstance(values, tuple):
-            values = (values,)
-
-        # assemble a list of possible ways the variant can behave
-        possible_variants = self.package_class.variants_for_spec(variant_name, self)
-        only_single_value = possible_variants and all(not pv.multi for pv in possible_variants)
-
-        # ensure that if we're appending a new value, that some possibility is multi-valued
-        variant = self.variants.get(variant_name)
-        for value in values:
-            if not variant:
-                pkg_variant = possible_variants[0]  # TODO: pick the right one if multiple
-                variant = self.variants[variant_name] = pkg_variant.make_variant(value)
-            else:
-                err = f"cannot append a new value '{value}' to the single-valued variant {variant}"
-                assert not only_single_value, err
-                variant.append(value)
-
-        # ensure that the values are ok according to some legal variant descriptor
-        errors = []
-        for pkg_variant in possible_variants:
-            try:
-                pkg_variant.validate_or_raise(variant, self.package_class)
-            except spack.error.SpecError as e:
-                errors.append(e)
-        assert not errors, f"Couldn't validate {variant_name}:\n" + "\n".join(
-            f"  {i}. {str(e)}" for i, e in enumerate(errors)
-        )
-
     def constrain(self, other, deps=True):
         """Intersect self with other in-place. Return True if self changed, False otherwise.
 
