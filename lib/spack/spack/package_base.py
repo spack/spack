@@ -764,22 +764,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             if variant_def:
                 yield when, variant_def
 
-    @classmethod
-    def variants_for_spec(
-        cls, variant_name: str, spec: "spack.spec.Spec"
-    ) -> List["spack.variant.Variant"]:
-        """Get any variant definitions for the variant 'name' that apply to the provided spec.
-
-        Arguments:
-            variant_name: name of variant of interest
-            spec: any variants whose ``when`` clause intersects this spec will be returned.
-        """
-        return [
-            variant_def
-            for when, variant_def in cls.variant_definitions(variant_name)
-            if when.intersects(spec)
-        ]
-
     def variant_descriptor(self, name):
         """Get the variant descriptor for a variant on this package's spec."""
         if name not in self.spec.variants:

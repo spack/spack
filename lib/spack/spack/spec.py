@@ -4472,16 +4472,16 @@ def substitute_abstract_variants(spec: Spec):
         elif name in vt.reserved_names:
             continue
 
-        pkg_variants = spec.package_class.variants_for_spec(name, spec)
-        if not pkg_variants:
+        variant_defs = spec.package_class.variant_definitions(name)
+        if not any(when.intersects(spec) for when, _ in variant_defs):
             if name not in spec.package_class.variant_names():
                 unknown.append(name)
             else:
-                whens = [str(when) for when, _ in spec.package_class.variant_definitions(name)]
+                whens = [str(when) for when, _ in variant_defs]
                 raise InvalidVariantForSpecError(v.name, f"({', '.join(whens)})", spec)
             continue
 
-        pkg_variant, *rest = pkg_variants
+        (_, pkg_variant), *rest = variant_defs
         if rest:
             continue
 
