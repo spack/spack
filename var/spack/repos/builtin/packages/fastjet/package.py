@@ -99,9 +99,9 @@ class Fastjet(AutotoolsPackage):
     )
     variant(
         "plugins",
-        multi=True,
-        values=("all", "cxx") + available_plugins,
-        default="all",
+        values=disjoint_sets(("all",), ("cxx",), available_plugins)
+        .prohibit_empty_set()
+        .with_default("all"),
         description="List of plugins to enable, or 'cxx' or 'all'",
     )
 
