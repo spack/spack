@@ -824,6 +824,7 @@ class Qt(Package):
             config_args.extend(["-device-option", "QMAKE_APPLE_DEVICE_ARCHS=arm64"])
 
         if IS_WINDOWS:
+            global configure
             configure = Executable("configure.bat")
         configure(*config_args)
 
