@@ -37,9 +37,6 @@ def test_module_function_change_env(tmp_path):
 
 
 def test_module_function_no_change(tmpdir):
-    import pdb
-
-    pdb.set_trace()
     src_file = str(tmpdir.join("src_me"))
     with open(src_file, "w") as f:
         f.write("echo TEST_MODULE_FUNCTION_PRINT")
