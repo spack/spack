@@ -9,7 +9,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import llnl.util.filesystem as fs
 from llnl.util.symlink import readlink
@@ -337,10 +337,18 @@ class DirectoryLayout:
                         raise e
             path = os.path.dirname(path)
 
-    def all_specs(self):
+    def all_specs(self) -> List["spack.spec.Spec"]:
+        """Returns a list of all specs detected in self.root, detected by `.spack` directories.
+        Their prefix is set to the directory containing the `.spack` directory. Note that these
+        specs may follow a different layout than the current layout if it was changed after
+        installation."""
         return specs_from_metadata_dirs(self.root)
 
-    def deprecated_for(self, specs: List["spack.spec.Spec"]):
+    def deprecated_for(
+        self, specs: List["spack.spec.Spec"]
+    ) -> List[Tuple["spack.spec.Spec", "spack.spec.Spec"]]:
+        """Returns a list of tuples of specs (new, old) where new is deprecated for old"""
+        spec_with_deprecated = []
         for spec in specs:
             try:
                 deprecated = os.scandir(
@@ -352,10 +360,11 @@ class DirectoryLayout:
             with deprecated as entries:
                 for entry in entries:
                     try:
-                        yield spec, spack.spec.Spec.from_specfile(entry.path)
+                        deprecated_spec = spack.spec.Spec.from_specfile(entry.path)
+                        spec_with_deprecated.append((spec, deprecated_spec))
                     except Exception:
                         continue
-        return specs
+        return spec_with_deprecated
 
 
 class DirectoryLayoutError(SpackError):

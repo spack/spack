@@ -969,7 +969,7 @@ class Database:
                 installed=edge.spec.external,
             )
 
-        # Store all nodes of known specs, exluding ones found in upstreams
+        # Store all nodes of known specs, excluding ones found in upstreams
         tr.traverse_breadth_first_with_visitor(
             known_specs,
             tr.CoverNodesVisitor(
@@ -986,8 +986,8 @@ class Database:
             record.installation_time = os.stat(s.prefix).st_ctime
 
         # Deprecate specs
-        for spec, deprecated in deprecated_for:
-            self._data[spec.dag_hash()].deprecated_for = deprecated.dag_hash()
+        for new, old in deprecated_for:
+            self._data[old.dag_hash()].deprecated_for = new.dag_hash()
 
         # Copy data we have from the old database
         for old_record in old_data.values():
