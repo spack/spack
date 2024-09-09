@@ -491,7 +491,7 @@ def test_update_tasks_for_compiler_packages_as_compiler(mock_packages, config, m
     reason="OneAPI compiler is not supported on other architectures",
 )
 def test_bootstrapping_compilers_with_different_names_from_spec(
-    install_mockery, mutable_config, mock_fetch, archspec_host_is_spack_test_host
+    install_mockery, mutable_config, mock_fetch
 ):
     """Tests that, when we bootstrap '%oneapi' we can translate it to the
     'intel-oneapi-compilers' package.
