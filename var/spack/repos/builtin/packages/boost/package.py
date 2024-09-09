@@ -116,7 +116,9 @@ class Boost(Package):
     # support. The header-only library is installed when no variant is given.
     all_libs = [
         "atomic",
+        "charconv",
         "chrono",
+        "cobalt",
         "container",
         "context",
         "contract",
@@ -146,6 +148,7 @@ class Boost(Package):
         "thread",
         "timer",
         "type_erasure",
+        "url",
         "wave",
     ]
 
@@ -687,6 +690,12 @@ class Boost(Package):
         remove_if_in_list = lambda lib, libs: libs.remove(lib) if lib in libs else None
 
         # Remove libraries that the release version does not support
+        if not spec.satisfies("@1.85.0:"):
+            remove_if_in_list("charconv", with_libs)
+        if not spec.satisfies("@1.84.0:"):
+            remove_if_in_list("cobalt", with_libs)
+        if not spec.satisfies("@1.81.0:"):
+            remove_if_in_list("url", with_libs)
         if not spec.satisfies("@1.75.0:"):
             remove_if_in_list("json", with_libs)
         if spec.satisfies("@1.69.0:"):
