@@ -38,7 +38,12 @@ class MsrSafe(MakefilePackage):
 
     @property
     def build_targets(self):
-        return ["-C", f"{self.spec['linux-external-modules'].prefix}", f"M={self.build_directory}", "modules"]
+        return [
+            "-C",
+            f"{self.spec['linux-external-modules'].prefix}",
+            f"M={self.build_directory}",
+            "modules",
+        ]
 
     @property
     def install_targets(self):
