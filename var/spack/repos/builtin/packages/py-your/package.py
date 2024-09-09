@@ -11,7 +11,7 @@ class PyYour(PythonPackage):
 
     homepage = "https://github.com/thepetabyteproject/your"
     git = "https://github.com/thepetabyteproject/your.git"
-    
+
     maintainers("aweaver1fandm")
 
     license("GPL-3.0")
