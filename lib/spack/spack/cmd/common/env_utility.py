@@ -41,7 +41,7 @@ def setup_parser(subparser):
     )
 
 
-class AreDepsInstalledVisitor:
+class AreDepsInstalledVisitor(traverse.AbstractVisitor):
     def __init__(self, context: Context = Context.BUILD):
         if context == Context.BUILD:
             # TODO: run deps shouldn't be required for build env.
@@ -53,27 +53,27 @@ class AreDepsInstalledVisitor:
 
         self.has_uninstalled_deps = False
 
-    def accept(self, item):
+    def accept(self, item: traverse.EdgeAndDepth) -> bool:
         # The root may be installed or uninstalled.
-        if item.depth == 0:
+        if item[1] == 0:
             return True
 
         # Early exit after we've seen an uninstalled dep.
         if self.has_uninstalled_deps:
             return False
 
-        spec = item.edge.spec
+        spec = item[0].spec
         if not spec.external and not spec.installed:
             self.has_uninstalled_deps = True
             return False
 
         return True
 
-    def neighbors(self, item):
+    def neighbors(self, item: traverse.EdgeAndDepth):
         # Direct deps: follow build & test edges.
         # Transitive deps: follow link / run.
-        depflag = self.direct_deps if item.depth == 0 else dt.LINK | dt.RUN
-        return item.edge.spec.edges_to_dependencies(depflag=depflag)
+        depflag = self.direct_deps if item[1] == 0 else dt.LINK | dt.RUN
+        return item[0].spec.edges_to_dependencies(depflag=depflag)
 
 
 def emulate_env_utility(cmd_name, context: Context, args):

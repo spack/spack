@@ -59,7 +59,7 @@ class DepfileNode:
             self.buildcache_flag = ""
 
 
-class DepfileSpecVisitor:
+class DepfileSpecVisitor(traverse.AbstractVisitor):
     """This visitor produces an adjacency list of a (reduced) DAG, which
     is used to generate depfile targets with their prerequisites. Currently
     it only drops build deps when using buildcache only mode.
@@ -75,17 +75,17 @@ class DepfileSpecVisitor:
         self.depflag_root = _deptypes(pkg_buildcache)
         self.depflag_deps = _deptypes(deps_buildcache)
 
-    def neighbors(self, node):
+    def neighbors(self, node: traverse.EdgeAndDepth) -> List[spack.spec.DependencySpec]:
         """Produce a list of spec to follow from node"""
-        depflag = self.depflag_root if node.depth == 0 else self.depflag_deps
-        return traverse.sort_edges(node.edge.spec.edges_to_dependencies(depflag=depflag))
+        depflag = self.depflag_root if node[1] == 0 else self.depflag_deps
+        return traverse.sort_edges(node[0].spec.edges_to_dependencies(depflag=depflag))
 
-    def accept(self, node):
+    def accept(self, node: traverse.EdgeAndDepth) -> bool:
         self.adjacency_list.append(
             DepfileNode(
-                target=node.edge.spec,
+                target=node[0].spec,
                 prereqs=[edge.spec for edge in self.neighbors(node)],
-                buildcache=self.pkg_buildcache if node.depth == 0 else self.deps_buildcache,
+                buildcache=self.pkg_buildcache if node[1] == 0 else self.deps_buildcache,
             )
         )
 
