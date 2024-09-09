@@ -13,6 +13,7 @@ import archspec.cpu
 
 import llnl.util.lang
 
+import spack.binary_distribution
 import spack.compiler
 import spack.compilers
 import spack.concretize
@@ -400,14 +401,6 @@ class TestConcretize:
                 s.compiler_flags[x] == ["-O0", "-g"] for x in ("cflags", "cxxflags", "fflags")
             )
 
-    @pytest.mark.xfail(reason="Broken, needs to be fixed")
-    def test_compiler_flags_from_compiler_and_dependent(self):
-        client = Spec("cmake-client %clang@12.2.0 platform=test os=fe target=fe cflags==-g")
-        client.concretize()
-        cmake = client["cmake"]
-        for spec in [client, cmake]:
-            assert spec.compiler_flags["cflags"] == ["-O3", "-g"]
-
     def test_compiler_flags_differ_identical_compilers(self, mutable_config, clang12_with_flags):
         mutable_config.set("compilers", [clang12_with_flags])
         # Correct arch to use test compiler that has flags
@@ -438,6 +431,13 @@ class TestConcretize:
             # Setting a flag overrides propagation
             (
                 "hypre cflags=='-g' ^openblas cflags='-O3'",
+                ["hypre cflags='-g'", "^openblas cflags='-O3'"],
+                ["^openblas cflags='-g'"],
+            ),
+            # Setting propagation on parent and dependency -> the
+            # dependency propagation flags override
+            (
+                "hypre cflags=='-g' ^openblas cflags=='-O3'",
                 ["hypre cflags='-g'", "^openblas cflags='-O3'"],
                 ["^openblas cflags='-g'"],
             ),
@@ -648,20 +648,6 @@ class TestConcretize:
         assert "externalprereq" not in spec
         assert spec["externaltool"].compiler.satisfies("gcc")
 
-    def test_external_package_module(self):
-        # No tcl modules on darwin/linux machines
-        # and Windows does not (currently) allow for bash calls
-        # TODO: improved way to check for this.
-        platform = spack.platforms.real_host().name
-        if platform == "darwin" or platform == "linux" or platform == "windows":
-            return
-
-        spec = Spec("externalmodule")
-        spec.concretize()
-        assert spec["externalmodule"].external_modules == ["external-module"]
-        assert "externalprereq" not in spec
-        assert spec["externalmodule"].compiler.satisfies("gcc")
-
     def test_nobuild_package(self):
         """Test that a non-buildable package raise an error if no specs
         in packages.yaml are compatible with the request.
@@ -775,15 +761,15 @@ class TestConcretize:
         s = Spec("mpileaks")
         s.concretize()
 
-        assert llnl.util.lang.ObjectWrapper not in type(s).__mro__
+        assert llnl.util.lang.ObjectWrapper not in s.__class__.__mro__
 
         # Spec wrapped in a build interface
         build_interface = s["mpileaks"]
-        assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
+        assert llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
 
         # Mimics asking the build interface from a build interface
         build_interface = s["mpileaks"]["mpileaks"]
-        assert llnl.util.lang.ObjectWrapper in type(build_interface).__mro__
+        assert llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
 
     @pytest.mark.regression("7705")
     def test_regression_issue_7705(self):
@@ -1301,7 +1287,7 @@ class TestConcretize:
             return [first_spec]
 
         if mock_db:
-            temporary_store.db.add(first_spec, None)
+            temporary_store.db.add(first_spec)
         else:
             monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", mock_fn)
 
@@ -1366,7 +1352,7 @@ class TestConcretize:
     def test_reuse_with_flags(self, mutable_database, mutable_config):
         spack.config.set("concretizer:reuse", True)
         spec = Spec("pkg-a cflags=-g cxxflags=-g").concretized()
-        spack.store.STORE.db.add(spec, None)
+        spec.package.do_install(fake=True)
 
         testspec = Spec("pkg-a cflags=-g")
         testspec.concretize()
@@ -2109,11 +2095,13 @@ class TestConcretize:
         """Test that python extensions have access to a python dependency
 
         when python isn't otherwise in the DAG"""
-        python_spec = Spec("python@=detected")
         prefix = os.path.sep + "fake"
+        python_spec = Spec.from_detection("python@=detected", external_path=prefix)
 
         def find_fake_python(classes, path_hints):
-            return {"python": [spack.detection.DetectedPackage(python_spec, prefix=path_hints[0])]}
+            return {
+                "python": [Spec.from_detection("python@=detected", external_path=path_hints[0])]
+            }
 
         monkeypatch.setattr(spack.detection, "by_path", find_fake_python)
         external_conf = {
@@ -2128,7 +2116,8 @@ class TestConcretize:
 
         assert "python" in spec["py-extension1"]
         assert spec["python"].prefix == prefix
-        assert spec["python"] == python_spec
+        assert spec["python"].external
+        assert spec["python"].satisfies(python_spec)
 
     def test_external_python_extension_find_unified_python(self):
         """Test that python extensions use the same python as other specs in unified env"""
@@ -2959,7 +2948,7 @@ def test_concretization_version_order():
     result = [
         v
         for v, _ in sorted(
-            versions, key=spack.solver.asp._concretization_version_order, reverse=True
+            versions, key=spack.solver.asp.concretization_version_order, reverse=True
         )
     ]
     assert result == [

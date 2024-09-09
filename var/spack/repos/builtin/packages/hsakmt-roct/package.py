@@ -64,7 +64,7 @@ class HsakmtRoct(CMakePackage):
         "6.0.2",
         "6.1.0",
         "6.1.1",
-        "6.1.0",
+        "6.1.2",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", type="test", when=f"@{ver}")

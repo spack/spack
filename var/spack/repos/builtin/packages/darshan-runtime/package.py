@@ -101,27 +101,27 @@ class DarshanRuntime(AutotoolsPackage):
         extra_args = []
 
         job_id = "NONE"
-        if "+slurm" in spec:
+        if spec.satisfies("+slurm"):
             job_id = "SLURM_JOBID"
-        if "+cobalt" in spec:
+        if spec.satisfies("+cobalt"):
             job_id = "COBALT_JOBID"
-        if "+pbs" in spec:
+        if spec.satisfies("+pbs"):
             job_id = "PBS_JOBID"
-        if "+sge" in spec:
+        if spec.satisfies("+sge"):
             job_id = "JOB_ID"
 
-        if "+hdf5" in spec:
+        if spec.satisfies("+hdf5"):
             if self.version < Version("3.3.2"):
                 extra_args.append("--enable-hdf5-mod=%s" % spec["hdf5"].prefix)
             else:
                 extra_args.append("--enable-hdf5-mod")
-        if "+parallel-netcdf" in spec:
+        if spec.satisfies("+parallel-netcdf"):
             extra_args.append("--enable-pnetcdf-mod")
-        if "+apmpi" in spec:
+        if spec.satisfies("+apmpi"):
             extra_args.append("--enable-apmpi-mod")
-        if "+apmpi_sync" in spec:
+        if spec.satisfies("+apmpi_sync"):
             extra_args.extend(["--enable-apmpi-mod", "--enable-apmpi-coll-sync"])
-        if "+apxc" in spec:
+        if spec.satisfies("+apxc"):
             extra_args.append("--enable-apxc-mod")
 
         extra_args.append("--with-mem-align=8")
@@ -129,7 +129,7 @@ class DarshanRuntime(AutotoolsPackage):
         extra_args.append("--with-jobid-env=%s" % job_id)
         extra_args.append("--with-zlib=%s" % spec["zlib-api"].prefix)
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             extra_args.append("CC=%s" % self.spec["mpi"].mpicc)
         else:
             extra_args.append("CC=%s" % self.compiler.cc)

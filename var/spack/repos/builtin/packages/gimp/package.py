@@ -100,7 +100,7 @@ class Gimp(AutotoolsPackage):
             "GIO_USE_TLS=gnutls",
             "GIO_EXTRA_MODULES={0}/lib/gio/modules".format(self.spec["glib-networking"].prefix),
         ]
-        if "+libxpm" in self.spec:
+        if self.spec.satisfies("+libxpm"):
             args.append("--with-libxpm={0}".format(self.spec["libxpm"].prefix))
         return args
 

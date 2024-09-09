@@ -96,7 +96,7 @@ class Duckdb(MakefilePackage):
     )
 
     def setup_build_environment(self, env):
-        if "+ninjabuild" in self.spec:
+        if self.spec.satisfies("+ninjabuild"):
             env.set("GEN", "ninja")
         variant_flags = [
             "autocomplete",

@@ -282,7 +282,7 @@ class Geant4(CMakePackage):
         options.append(self.define_from_variant("GEANT4_BUILD_MULTITHREADED", "threads"))
         options.append(self.define_from_variant("GEANT4_USE_TBB", "tbb"))
 
-        if "+threads" in spec:
+        if spec.satisfies("+threads"):
             # Locked at global-dynamic to allow use cases that load the
             # geant4 libs at application runtime
             options.append(self.define("GEANT4_BUILD_TLS_MODEL", "global-dynamic"))
@@ -297,22 +297,22 @@ class Geant4(CMakePackage):
         options.append(self.define("GEANT4_INSTALL_DATADIR", self.datadir))
 
         # Vecgeom
-        if "+vecgeom" in spec:
+        if spec.satisfies("+vecgeom"):
             options.append(self.define("GEANT4_USE_USOLIDS", True))
             options.append(self.define("USolids_DIR", spec["vecgeom"].prefix.lib.CMake.USolids))
 
         # Visualization options
         if "platform=darwin" not in spec:
-            if "+x11 +opengl" in spec:
+            if spec.satisfies("+x11 +opengl"):
                 options.append(self.define("GEANT4_USE_OPENGL_X11", True))
-            if "+motif +opengl" in spec:
+            if spec.satisfies("+motif +opengl"):
                 options.append(self.define("GEANT4_USE_XM", True))
-            if "+x11" in spec:
+            if spec.satisfies("+x11"):
                 options.append(self.define("GEANT4_USE_RAYTRACER_X11", True))
 
-        if "+qt" in spec:
+        if spec.satisfies("+qt"):
             options.append(self.define("GEANT4_USE_QT", True))
-            if "^[virtuals=qmake] qt-base" in spec:
+            if spec.satisfies("^[virtuals=qmake] qt-base"):
                 options.append(self.define("GEANT4_USE_QT_QT6", True))
             options.append(self.define("QT_QMAKE_EXECUTABLE", spec["qmake"].prefix.bin.qmake))
 

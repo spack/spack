@@ -1110,7 +1110,8 @@ def generate_gitlab_ci_yaml(
             cdash_handler.populate_buildgroup(all_job_names)
         except (SpackError, HTTPError, URLError, TimeoutError) as err:
             tty.warn(f"Problem populating buildgroup: {err}")
-    else:
+    elif cdash_config:
+        # warn only if there was actually a CDash configuration.
         tty.warn("Unable to populate buildgroup without CDash credentials")
 
     service_job_retries = {
@@ -1382,8 +1383,10 @@ def push_to_build_cache(spec: spack.spec.Spec, mirror_url: str, sign_binaries: b
     """
     tty.debug(f"Pushing to build cache ({'signed' if sign_binaries else 'unsigned'})")
     signing_key = bindist.select_signing_key() if sign_binaries else None
+    mirror = spack.mirror.Mirror.from_url(mirror_url)
     try:
-        bindist.push_or_raise([spec], out_url=mirror_url, signing_key=signing_key)
+        with bindist.make_uploader(mirror, signing_key=signing_key) as uploader:
+            uploader.push_or_raise([spec])
         return True
     except bindist.PushToBuildCacheError as e:
         tty.error(f"Problem writing to {mirror_url}: {e}")

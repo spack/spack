@@ -20,7 +20,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     measurements of a program's work, resource consumption, and inefficiency
     and attributes them to the full calling context in which they occur."""
 
-    homepage = "http://hpctoolkit.org"
+    homepage = "https://hpctoolkit.org"
     git = "https://gitlab.com/hpctoolkit/hpctoolkit.git"
     maintainers("mwkrentel")
 
