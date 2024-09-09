@@ -22,8 +22,6 @@ install = SpackCommand("install")
 buildcache = SpackCommand("buildcache")
 uninstall = SpackCommand("uninstall")
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
-
 
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.regression("8083")
@@ -231,6 +229,7 @@ def test_mirror_name_collision(mutable_config):
         mirror("add", "first", "1")
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 def test_mirror_destroy(
     install_mockery, mock_packages, mock_fetch, mock_archive, mutable_config, monkeypatch, tmpdir
 ):

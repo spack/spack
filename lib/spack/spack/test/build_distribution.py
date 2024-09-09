@@ -14,7 +14,7 @@ import spack.mirror
 import spack.spec
 import spack.util.url
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
+pytestmark = pytest.mark.not_on_windows("file not available on Windows")
 
 
 def test_build_tarball_overwrite(install_mockery, mock_fetch, monkeypatch, tmp_path):

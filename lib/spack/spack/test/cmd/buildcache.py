@@ -30,8 +30,6 @@ gpg = spack.main.SpackCommand("gpg")
 mirror = spack.main.SpackCommand("mirror")
 uninstall = spack.main.SpackCommand("uninstall")
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
-
 
 @pytest.fixture()
 def mock_get_specs(database, monkeypatch):
@@ -75,6 +73,7 @@ def test_buildcache_list_allarch(database, mock_get_specs_multiarch, capsys):
     assert output.count("mpileaks") == 2
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 def tests_buildcache_create(install_mockery, mock_fetch, monkeypatch, tmpdir):
     """ "Ensure that buildcache create creates output files"""
     pkg = "trivial-install-test-package"
@@ -89,6 +88,7 @@ def tests_buildcache_create(install_mockery, mock_fetch, monkeypatch, tmpdir):
     assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball))
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 def tests_buildcache_create_env(
     install_mockery, mock_fetch, monkeypatch, tmpdir, mutable_mock_env_path
 ):
@@ -116,6 +116,7 @@ def test_buildcache_create_fails_on_noargs(tmpdir):
         buildcache("push", "--unsigned", str(tmpdir))
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 def test_buildcache_create_fail_on_perm_denied(install_mockery, mock_fetch, monkeypatch, tmpdir):
     """Ensure that buildcache create fails on permission denied error."""
     install("trivial-install-test-package")
@@ -127,6 +128,7 @@ def test_buildcache_create_fail_on_perm_denied(install_mockery, mock_fetch, monk
     tmpdir.chmod(0o700)
 
 
+@pytest.mark.not_on_windows("gpg not available on Windows")
 def test_update_key_index(
     tmpdir,
     mutable_mock_env_path,
@@ -168,6 +170,7 @@ def test_update_key_index(
     assert "index.json" in key_dir_list
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 def test_buildcache_autopush(tmp_path, install_mockery, mock_fetch):
     """Test buildcache with autopush"""
     mirror_dir = tmp_path / "mirror"
@@ -187,6 +190,7 @@ def test_buildcache_autopush(tmp_path, install_mockery, mock_fetch):
     assert (mirror_autopush_dir / "build_cache" / metadata_file).exists()
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 def test_buildcache_sync(
     mutable_mock_env_path, install_mockery, mock_packages, mock_fetch, mock_stage, tmpdir
 ):
@@ -315,6 +319,7 @@ def test_buildcache_sync(
         shutil.rmtree(dest_mirror_dir)
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 def test_buildcache_create_install(
     mutable_mock_env_path,
     install_mockery,
@@ -414,6 +419,7 @@ def test_correct_specs_are_pushed(
     assert len(set(uploader.pushed)) == len(uploader.pushed)
 
 
+@pytest.mark.not_on_windows("gpg not available on Windows")
 @pytest.mark.parametrize("signed", [True, False])
 def test_push_and_install_with_mirror_marked_unsigned_does_not_require_extra_flags(
     tmp_path, mutable_database, mock_gnupghome, signed

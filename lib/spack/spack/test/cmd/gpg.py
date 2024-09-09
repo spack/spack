@@ -21,7 +21,7 @@ gpg = SpackCommand("gpg")
 bootstrap = SpackCommand("bootstrap")
 mirror = SpackCommand("mirror")
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
+pytestmark = pytest.mark.not_on_windows("gpg not available on Windows")
 
 
 # test gpg command detection

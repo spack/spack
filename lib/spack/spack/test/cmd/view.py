@@ -15,8 +15,6 @@ extensions = SpackCommand("extensions")
 install = SpackCommand("install")
 view = SpackCommand("view")
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
-
 
 def create_projection_file(tmpdir, projection):
     if "projections" not in projection:
@@ -27,6 +25,7 @@ def create_projection_file(tmpdir, projection):
     return projection_file
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 @pytest.mark.parametrize("cmd", ["hardlink", "symlink", "hard", "add", "copy", "relocate"])
 def test_view_link_type(tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery, cmd):
     install("libdwarf")
@@ -40,6 +39,7 @@ def test_view_link_type(tmpdir, mock_packages, mock_archive, mock_fetch, install
     assert os.path.islink(package_prefix) == is_link_cmd
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 @pytest.mark.parametrize("add_cmd", ["hardlink", "symlink", "hard", "add", "copy", "relocate"])
 def test_view_link_type_remove(
     tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery, add_cmd
@@ -54,6 +54,7 @@ def test_view_link_type_remove(
     assert not os.path.exists(bindir)
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 @pytest.mark.parametrize("cmd", ["hardlink", "symlink", "hard", "add", "copy", "relocate"])
 def test_view_projections(tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery, cmd):
     install("libdwarf@20130207")
@@ -173,6 +174,7 @@ def test_view_fails_with_missing_projections_file(tmpdir):
         view("symlink", "--projection-file", projection_file, viewpath, "foo")
 
 
+@pytest.mark.not_on_windows("file not available on Windows")
 @pytest.mark.parametrize("with_projection", [False, True])
 @pytest.mark.parametrize("cmd", ["symlink", "copy"])
 def test_view_files_not_ignored(
