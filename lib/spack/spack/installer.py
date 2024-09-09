@@ -42,6 +42,7 @@ from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
 import llnl.util.tty as tty
+from llnl.string import ordinal
 from llnl.util.lang import pretty_seconds
 from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
@@ -1707,14 +1708,10 @@ class PackageInstaller:
             return
 
         # Remove any associated build task since its sequence will change
-        def ord(num):
-            suffixes = {"1": "st", "2": "nd", "3": "rd"}
-            d = str(num)[-1]
-            suffix = suffixes[d] if d in suffixes and num % 100 not in [11, 12, 13] else "th"
-            return f"{num}{suffix}"
-
         self._remove_task(task.pkg_id)
-        desc = "Queueing" if task.attempts <= 1 else f"Requeueing ({ord(task.attempts)} time)"
+        desc = (
+            "Queueing" if task.attempts <= 1 else f"Requeueing ({ordinal(task.attempts)} attempt)"
+        )
         tty.debug(msg.format(desc, task.pkg_id, task.status))
 
         # Now add the new task to the queue with a new sequence number to

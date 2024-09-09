@@ -41,6 +41,20 @@ def comma_and(sequence: List[str]) -> str:
     return comma_list(sequence, "and")
 
 
+def ordinal(number: int) -> str:
+    """Return the ordinal number representation of the provided number.
+
+    Args:
+        number: value to convert to ordinal number
+
+    Returns: ordinal number (representation) of the number
+    """
+    suffixes = {"1": "st", "2": "nd", "3": "rd"}
+    d = str(number)[-1]
+    suffix = suffixes[d] if d in suffixes and number % 100 not in [11, 12, 13] else "th"
+    return f"{number}{suffix}"
+
+
 def quote(sequence: List[str], q: str = "'") -> List[str]:
     """Quotes each item in the input list with the quote character passed as second argument."""
     return [f"{q}{e}{q}" for e in sequence]
