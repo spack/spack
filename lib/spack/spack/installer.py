@@ -862,7 +862,8 @@ class BuildTask:
                 used to indicate the package was explicitly requested by the user
             compiler: whether task is for a bootstrap compiler
             start: the initial start time for the package, in seconds
-            attempts: the number of attempts to install the package
+            attempts: the number of attempts to install the package, which
+                should be 0 when the task is initially instantiated
             status: the installation status
             installed: the identifiers of packages that have
                 been installed so far
@@ -928,7 +929,7 @@ class BuildTask:
         )
 
         # Ensure key sequence-related properties are updated accordingly.
-        self.attempts = 0
+        self.attempts = attempts
         self._update()
 
     def __eq__(self, other):
@@ -1177,6 +1178,53 @@ class PackageInstaller:
         installed = f"installed ({len(self.installed)}) = {self.installed}"
         return f"{self.pid}: {requests}; {tasks}; {installed}; {failed}"
 
+    def _add_bootstrap_compilers(
+        self,
+        compiler: "spack.spec.CompilerSpec",
+        architecture: "spack.spec.ArchSpec",
+        pkgs: List["spack.package_base.PackageBase"],
+        request: BuildRequest,
+        all_deps,
+    ) -> None:
+        """
+        Add bootstrap compilers and dependencies to the build queue.
+
+        Args:
+            compiler: the compiler to boostrap
+            architecture: the architecture for which to bootstrap the compiler
+            pkgs: the package list with possible compiler dependencies
+            request: the associated install request
+            all_deps (defaultdict(set)): dictionary of all dependencies and
+                associated dependents
+        """
+        packages = _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs)
+        for comp_pkg, is_compiler in packages:
+            pkgid = package_id(comp_pkg.spec)
+            if pkgid not in self.build_tasks:
+                self._add_init_task(comp_pkg, request, is_compiler=is_compiler, all_deps=all_deps)
+            elif is_compiler:
+                # ensure it's queued as a compiler
+                self._modify_existing_task(pkgid, "compiler", True)
+
+    def _modify_existing_task(self, pkgid: str, attr, value) -> None:
+        """
+        Update a task in-place to modify its behavior.
+
+        Currently used to update the ``compiler`` field on tasks
+        that were originally created as a dependency of a compiler,
+        but are compilers in their own right.
+
+        For example, ``intel-oneapi-compilers-classic`` depends on
+        ``intel-oneapi-compilers``, which can cause the latter to be
+        queued first as a non-compiler, and only later as a compiler.
+        """
+        for i, tup in enumerate(self.build_pq):
+            key, task = tup
+            if task.pkg_id == pkgid:
+                tty.debug(f"Modifying task for {pkgid} to treat it as a compiler", level=2)
+                setattr(task, attr, value)
+                self.build_pq[i] = (key, task)
+
     def _add_init_task(
         self,
         pkg: "spack.package_base.PackageBase",
@@ -1189,14 +1237,20 @@ class PackageInstaller:
 
         Args:
             pkg: the package to be built and installed
-            request (BuildRequest or None): the associated install request
-                 where ``None`` can be used to indicate the package was
-                 explicitly requested by the user
-            is_compiler (bool): whether task is for a bootstrap compiler
-            all_deps (defaultdict(set)): dictionary of all dependencies and
-                associated dependents
+            request: the associated install request where ``None`` can be used
+                 to indicate the package was explicitly requested by the user
+            is_compiler: whether task is for a bootstrap compiler
+            all_deps: dictionary of all dependencies and associated dependents
         """
-        task = BuildTask(pkg, request, is_compiler, 0, 0, STATUS_ADDED, self.installed)
+        task = BuildTask(
+            pkg,
+            request,
+            compiler=is_compiler,
+            start=0,
+            attempts=0,
+            status=STATUS_ADDED,
+            installed=self.installed,
+        )
         for dep_id in task.dependencies:
             all_deps[dep_id].add(package_id(pkg.spec))
 
@@ -1514,7 +1568,7 @@ class PackageInstaller:
 
                 dep_id = package_id(dep)
                 if dep_id not in self.build_tasks:
-                    self._add_init_task(dep_pkg, request, False, all_deps)
+                    self._add_init_task(dep_pkg, request, is_compiler=False, all_deps=all_deps)
 
                 # Clear any persistent failure markings _unless_ they are
                 # associated with another process in this parallel build
@@ -1532,7 +1586,7 @@ class PackageInstaller:
                 self._check_deps_status(request)
 
             # Now add the package itself, if appropriate
-            self._add_init_task(request.pkg, request, False, all_deps)
+            self._add_init_task(request.pkg, request, is_compiler=False, all_deps=all_deps)
 
         # Ensure if one request is to fail fast then all requests will.
         fail_fast = bool(request.install_args.get("fail_fast"))
@@ -1653,8 +1707,14 @@ class PackageInstaller:
             return
 
         # Remove any associated build task since its sequence will change
+        def ord(num):
+            suffixes = {"1": "st", "2": "nd", "3": "rd"}
+            d = str(num)[-1]
+            suffix = suffixes[d] if d in suffixes and num % 100 not in [11, 12, 13] else "th"
+            return f"{num}{suffix}"
+
         self._remove_task(task.pkg_id)
-        desc = "Queueing" if task.attempts == 0 else "Requeueing"
+        desc = "Queueing" if task.attempts <= 1 else f"Requeueing ({ord(task.attempts)} time)"
         tty.debug(msg.format(desc, task.pkg_id, task.status))
 
         # Now add the new task to the queue with a new sequence number to
