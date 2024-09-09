@@ -126,6 +126,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/pika-org/pika/issues/686
     conflicts("^fmt@10:", when="@:0.15 +cuda")
     conflicts("^fmt@10:", when="@:0.15 +rocm")
+    # https://github.com/pika-org/pika/pull/1074
+    conflicts("^fmt@11:", when="@:0.23")
     depends_on("spdlog@1.9.2:", when="@0.25:")
     depends_on("hwloc@1.11.5:")
     # https://github.com/pika-org/pika/issues/1223
