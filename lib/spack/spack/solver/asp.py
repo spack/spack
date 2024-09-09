@@ -2613,9 +2613,6 @@ class SpackSolverSetup:
                 continue
 
             current_libc = compiler.compiler_obj.default_libc
-            # If this is a compiler yet to be built infer libc from the Python process
-            if not current_libc and compiler.compiler_obj.cc is None:
-                current_libc = spack.util.libc.libc_from_current_python_process()
 
             if using_libc_compatibility() and current_libc:
                 recorder("*").depends_on(
