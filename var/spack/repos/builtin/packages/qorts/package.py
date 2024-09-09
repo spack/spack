@@ -17,7 +17,7 @@ class Qorts(RPackage):
     technology."""
 
     homepage = "https://github.com/hartleys/QoRTs"
-    url = "https://github.com/hartleys/QoRTs/releases/download/v1.2.42/QoRTs_1.2.42.tar.gz"
+    urls = ["https://github.com/hartleys/QoRTs/releases/download/v1.2.42/QoRTs_1.2.42.tar.gz"]
 
     version("1.2.42", sha256="c9f73ce8d5aac1036d13c50475458a61a24cbe5c0baf7ac65b87a7118c51ec08")
 

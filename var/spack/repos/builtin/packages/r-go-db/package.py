@@ -13,7 +13,6 @@ class RGoDb(RPackage):
     Ontology assembled using data from GO."""
 
     bioc = "GO.db"
-    url = "https://www.bioconductor.org/packages/release/data/annotation/src/contrib/GO.db_3.4.1.tar.gz"
 
     version(
         "3.17.0",

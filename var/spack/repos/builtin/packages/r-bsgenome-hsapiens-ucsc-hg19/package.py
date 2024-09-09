@@ -15,7 +15,6 @@ class RBsgenomeHsapiensUcscHg19(RPackage):
 
     # This is a bioconductor package but there is no available git repo.
     bioc = "BSgenome.Hsapiens.UCSC.hg19"
-    url = "http://www.bioconductor.org/packages/release/data/annotation/src/contrib/BSgenome.Hsapiens.UCSC.hg19_1.4.0.tar.gz"
 
     version(
         "1.4.3",

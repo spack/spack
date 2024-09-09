@@ -18,10 +18,9 @@ class BioconductorEbseq(RPackage):
     are the same as those required for gene-level analysis)."""
 
     homepage = "https://www.biostat.wisc.edu/~kendzior/EBSEQ/"
-    url = "https://bioconductor.org/packages/release/bioc/src/contrib/EBSeq_1.40.0.tar.gz"
     maintainers("pabloaledo")
 
-    bioc = "ebseq"
+    bioc = "EBSeq"
 
     version(
         "1.40.0",

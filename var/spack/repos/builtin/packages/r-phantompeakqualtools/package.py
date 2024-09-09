@@ -14,7 +14,7 @@ class RPhantompeakqualtools(RPackage):
     package."""
 
     homepage = "https://github.com/kundajelab/phantompeakqualtools"
-    url = "https://github.com/kundajelab/phantompeakqualtools/raw/master/spp_1.14.tar.gz"
+    urls = ["https://github.com/kundajelab/phantompeakqualtools/raw/master/spp_1.14.tar.gz"]
 
     version("1.14", sha256="d03be6163e82aed72298e54a92c181570f9975a395f57a69b21ac02b1001520b")
 

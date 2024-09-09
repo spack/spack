@@ -16,7 +16,7 @@ class RTwosamplemr(RPackage):
     serious work we strongly recommend using this R package."""
 
     homepage = "https://mrcieu.github.io/TwoSampleMR/"
-    url = "https://github.com/MRCIEU/TwoSampleMR/archive/refs/tags/v0.5.6.tar.gz"
+    urls = ["https://github.com/MRCIEU/TwoSampleMR/archive/refs/tags/v0.5.6.tar.gz"]
 
     license("MIT")
 

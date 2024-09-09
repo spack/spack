@@ -9,8 +9,6 @@ from spack.package import *
 class BioconductorDupradar(RPackage):
     """Assessment of duplication rates in RNA-Seq datasets"""
 
-    homepage = "https://bioconductor.org/packages/3.16/bioc/html/dupRadar.html"
-    url = "https://bioconductor.org/packages/release/bioc/src/contrib/dupRadar_1.30.0.tar.gz"
     maintainers("pabloaledo")
 
     bioc = "dupradar"

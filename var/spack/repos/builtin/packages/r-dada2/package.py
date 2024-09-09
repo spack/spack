@@ -11,7 +11,7 @@ class RDada2(RPackage):
     resolution"""
 
     homepage = "https://benjjneb.github.io/dada2/"
-    url = "https://github.com/benjjneb/dada2/archive/v1.14.tar.gz"
+    urls = ["https://github.com/benjjneb/dada2/archive/v1.14.tar.gz"]
 
     license("LGPL-3.0-only")
 

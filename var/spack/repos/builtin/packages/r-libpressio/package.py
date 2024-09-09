@@ -10,7 +10,7 @@ class RLibpressio(RPackage):
     """R package for libpressio"""
 
     homepage = "https://github.com/robertu94/libpressio-r"
-    url = "https://github.com/robertu94/libpressio-r/archive/0.0.1.tar.gz"
+    urls = ["https://github.com/robertu94/libpressio-r/archive/0.0.1.tar.gz"]
 
     maintainers("robertu94")
 
