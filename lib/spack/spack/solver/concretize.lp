@@ -43,9 +43,7 @@
    internal_error("Only nodes can have node_compiler_version").
 :- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode),
    internal_error("variant_value true for a non-node").
-:- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode),
-   internal_error("node_flag_compiler_default true for non-node").
-:- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode),
+:- attr("node_flag", PackageNode, _), not attr("node", PackageNode),
    internal_error("node_flag assigned for non-node").
 :- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode),
    internal_error("external_spec_selected for non-node").
@@ -53,10 +51,6 @@
    internal_error("non-node depends on something").
 :- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode),
    internal_error("something depends_on a non-node").
-:- attr("node_flag_source", Node, _, _), not attr("node", Node),
-   internal_error("node_flag_source assigned for a non-node").
-:- attr("node_flag_source", _, _, SourceNode), not attr("node", SourceNode),
-   internal_error("node_flag_source assigned with a non-node source").
 :- attr("virtual_node", VirtualNode), not provider(_, VirtualNode),
    internal_error("virtual node with no provider").
 :- provider(_, VirtualNode), not attr("virtual_node", VirtualNode),
@@ -154,7 +148,6 @@ unification_set(SetID, VirtualNode)
 % TODO: literals, at the moment, can only influence the "root" unification set. This needs to be extended later.
 
 % Node attributes that have multiple node arguments (usually, only the first argument is a node)
-multiple_nodes_attribute("node_flag_source").
 multiple_nodes_attribute("depends_on").
 multiple_nodes_attribute("virtual_on_edge").
 multiple_nodes_attribute("provider_set").
@@ -392,7 +385,6 @@ trigger_condition_holds(ID, RequestorNode) :-
   attr(Name, node(X, A1), A2, A3)     : condition_requirement(ID, Name, A1, A2, A3),     condition_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name);
   attr(Name, node(X, A1), A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4), condition_nodes(ID, PackageNode, node(X, A1));
   % Special cases
-  attr("node_flag_source", node(X, A1), A2, node(Y, A3)) : condition_requirement(ID, "node_flag_source", A1, A2, A3), condition_nodes(ID, PackageNode, node(X, A1)), condition_nodes(ID, PackageNode, node(Y, A3));
   not cannot_hold(ID, PackageNode).
 
 condition_holds(ConditionID, node(X, Package))
@@ -440,13 +432,6 @@ attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constrai
 attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
 attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(ID, PackageNode, node(X, A1)).
 
-% For node flag sources we need to look at the condition_set of the source, since it is the dependent
-% of the package on which I want to impose the constraint
-attr("node_flag_source", node(X, A1), A2, node(Y, A3))
-  :- impose(ID, node(X, A1)),
-     imposed_constraint(ID, "node_flag_source", A1, A2, A3),
-     condition_set(node(Y, A3), node(X, A1)).
-
 % Provider set is relevant only for literals, since it's the only place where `^[virtuals=foo] bar`
 % might appear in the HEAD of a rule
 attr("provider_set", node(min_dupe_id, Provider), node(min_dupe_id, Virtual))
@@ -487,8 +472,8 @@ virtual_condition_holds(node(Y, A2), Virtual)
 % we cannot have additional flag values when we are working with concrete specs
 :- attr("node", node(ID, Package)),
    attr("hash", node(ID, Package), Hash),
-   attr("node_flag", node(ID, Package), FlagType, Flag),
-   not imposed_constraint(Hash, "node_flag", Package, FlagType, Flag),
+   attr("node_flag", node(ID, Package), node_flag(FlagType, Flag, _, _)),
+   not imposed_constraint(Hash, "node_flag", Package, node_flag(FlagType, Flag, _, _)),
    internal_error("imposed hash without imposing all flag values").
 
 #defined condition/2.
@@ -789,22 +774,15 @@ required_provider(Provider, Virtual)
 
 :- provider(node(Y, Package), node(X, Virtual)), required_provider(Provider, Virtual), Package != Provider.
 
-% TODO: the following two choice rules allow the solver to add compiler
+% TODO: the following choice rule allows the solver to add compiler
 % flags if their only source is from a requirement. This is overly-specific
 % and should use a more-generic approach like in https://github.com/spack/spack/pull/37180
 
-{ attr("node_flag", node(ID, Package), FlagType, FlagValue) } :-
+{ attr("node_flag", node(ID, Package), NodeFlag) } :-
   requirement_group_member(ConditionID, Package, RequirementID),
   activate_requirement(node(ID, Package), RequirementID),
   pkg_fact(Package, condition_effect(ConditionID, EffectID)),
-  imposed_constraint(EffectID, "node_flag_set", Package, FlagType, FlagValue).
-
-{ attr("node_flag_source", node(NodeID1, Package1), FlagType, node(NodeID2, Package2)) } :-
-  requirement_group_member(ConditionID, Package1, RequirementID),
-  activate_requirement(node(NodeID1, Package1), RequirementID),
-  pkg_fact(Package1, condition_effect(ConditionID, EffectID)),
-  imposed_constraint(EffectID, "node_flag_source", Package1, FlagType, Package2),
-  imposed_nodes(EffectID, node(NodeID2, Package2), node(NodeID1, Package1)).
+  imposed_constraint(EffectID, "node_flag_set", Package, NodeFlag).
 
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {
@@ -1050,23 +1028,22 @@ variant_is_propagated(PackageNode, Variant) :-
 % 1. The same flag type is not set on this node
 % 2. This node has the same compiler as the propagation source
 
-propagated_flag(node(PackageID, Package), node_flag(FlagType, Flag), SourceNode) :-
-  propagate(node(PackageID, Package), node_flag(FlagType, Flag), _),
-  not attr("node_flag_set", node(PackageID, Package), FlagType, _),
+propagated_flag(node(PackageID, Package), node_flag(FlagType, Flag, FlagGroup, Source), SourceNode) :-
+  propagate(node(PackageID, Package), node_flag(FlagType, Flag, FlagGroup, Source), _),
+  not attr("node_flag_set", node(PackageID, Package), node_flag(FlagType, _, _, "literal")),
   % Same compiler as propagation source
   node_compiler(node(PackageID, Package), CompilerID),
   node_compiler(SourceNode, CompilerID),
-  attr("propagate", SourceNode, node_flag(FlagType, Flag), _),
+  attr("propagate", SourceNode, node_flag(FlagType, Flag, FlagGroup, Source), _),
   node(PackageID, Package) != SourceNode,
   not runtime(Package).
 
-attr("node_flag", PackageNode, FlagType, Flag) :- propagated_flag(PackageNode, node_flag(FlagType, Flag), _).
-attr("node_flag_source", PackageNode, FlagType, SourceNode) :- propagated_flag(PackageNode, node_flag(FlagType, _), SourceNode).
+attr("node_flag", PackageNode, NodeFlag) :- propagated_flag(PackageNode, NodeFlag, _).
 
 % Cannot propagate the same flag from two distinct sources
 error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
-  propagated_flag(node(ID, Package), node_flag(FlagType, _), node(_, Source1)),
-  propagated_flag(node(ID, Package), node_flag(FlagType, _), node(_, Source2)),
+  propagated_flag(node(ID, Package), node_flag(FlagType, _, _, _), node(_, Source1)),
+  propagated_flag(node(ID, Package), node_flag(FlagType, _, _, _), node(_, Source2)),
   Source1 < Source2.
 
 %----
@@ -1353,32 +1330,18 @@ error(100, "Compiler {1}@{2} requested for {0} cannot be found. Set install_miss
 % Compiler flags
 %-----------------------------------------------------------------------------
 
-% remember where flags came from
-attr("node_flag_source", PackageNode, FlagType, PackageNode) :- attr("node_flag_set", PackageNode, FlagType, _).
-attr("node_flag_source", PackageNode, FlagType, PackageNode) :- attr("node_flag", PackageNode, FlagType, _), attr("hash", PackageNode, _).
-
 % compiler flags from compilers.yaml are put on nodes if compiler matches
-attr("node_flag", PackageNode, FlagType, Flag)
-  :- compiler_flag(CompilerID, FlagType, Flag),
+attr("node_flag", PackageNode, node_flag(FlagType, Flag, FlagGroup, CompilerID))
+  :- compiler_flag(CompilerID, FlagType, Flag, FlagGroup),
      node_compiler(PackageNode, CompilerID),
      flag_type(FlagType),
      compiler_id(CompilerID),
      compiler_name(CompilerID, CompilerName),
      compiler_version(CompilerID, Version).
 
-attr("node_flag_compiler_default", PackageNode)
-  :- not attr("node_flag_set", PackageNode, FlagType, _),
-     compiler_flag(CompilerID, FlagType, Flag),
-     node_compiler(PackageNode, CompilerID),
-     flag_type(FlagType),
-     compiler_id(CompilerID),
-     compiler_name(CompilerID, CompilerName),
-     compiler_version(CompilerID, Version).
+attr("node_flag", PackageNode, NodeFlag) :- attr("node_flag_set", PackageNode, NodeFlag).
 
-% Flag set to something
-attr("node_flag", PackageNode, FlagType, Flag) :- attr("node_flag_set", PackageNode, FlagType, Flag).
-
-#defined compiler_flag/3.
+#defined compiler_flag/4.
 
 
 %-----------------------------------------------------------------------------

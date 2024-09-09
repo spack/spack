@@ -58,9 +58,8 @@ from spack import traverse
 from spack.installer import PackageInstaller
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
-from spack.spec_list import InvalidSpecConstraintError, SpecList
+from spack.spec_list import SpecList
 from spack.util.path import substitute_path_variables
-from spack.variant import UnknownVariantError
 
 #: environment variable used to indicate the active environment
 spack_env_var = "SPACK_ENV"
@@ -1625,10 +1624,10 @@ class Environment:
 
         # Concretize any new user specs that we haven't concretized yet
         args, root_specs, i = [], [], 0
-        for uspec, uspec_constraints in zip(self.user_specs, self.user_specs.specs_as_constraints):
+        for uspec in self.user_specs:
             if uspec not in old_concretized_user_specs:
                 root_specs.append(uspec)
-                args.append((i, [str(x) for x in uspec_constraints], tests))
+                args.append((i, str(uspec), tests))
                 i += 1
 
         # Ensure we don't try to bootstrap clingo in parallel
@@ -2508,52 +2507,11 @@ def display_specs(specs):
     print(tree_string)
 
 
-def _concretize_from_constraints(spec_constraints, tests=False):
-    # Accept only valid constraints from list and concretize spec
-    # Get the named spec even if out of order
-    root_spec = [s for s in spec_constraints if s.name]
-    if len(root_spec) != 1:
-        m = "The constraints %s are not a valid spec " % spec_constraints
-        m += "concretization target. all specs must have a single name "
-        m += "constraint for concretization."
-        raise InvalidSpecConstraintError(m)
-    spec_constraints.remove(root_spec[0])
-
-    invalid_constraints = []
-    while True:
-        # Attach all anonymous constraints to one named spec
-        s = root_spec[0].copy()
-        for c in spec_constraints:
-            if c not in invalid_constraints:
-                s.constrain(c)
-        try:
-            return s.concretized(tests=tests)
-        except spack.spec.InvalidDependencyError as e:
-            invalid_deps_string = ["^" + d for d in e.invalid_deps]
-            invalid_deps = [
-                c
-                for c in spec_constraints
-                if any(c.satisfies(invd) for invd in invalid_deps_string)
-            ]
-            if len(invalid_deps) != len(invalid_deps_string):
-                raise e
-            invalid_constraints.extend(invalid_deps)
-        except UnknownVariantError as e:
-            invalid_variants = e.unknown_variants
-            inv_variant_constraints = [
-                c for c in spec_constraints if any(name in c.variants for name in invalid_variants)
-            ]
-            if len(inv_variant_constraints) != len(invalid_variants):
-                raise e
-            invalid_constraints.extend(inv_variant_constraints)
-
-
 def _concretize_task(packed_arguments) -> Tuple[int, Spec, float]:
-    index, spec_constraints, tests = packed_arguments
-    spec_constraints = [Spec(x) for x in spec_constraints]
+    index, spec_str, tests = packed_arguments
     with tty.SuppressOutput(msg_enabled=False):
         start = time.time()
-        spec = _concretize_from_constraints(spec_constraints, tests)
+        spec = Spec(spec_str).concretized(tests=tests)
         return index, spec, time.time() - start
 
 

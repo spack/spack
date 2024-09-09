@@ -16,7 +16,6 @@ import functools
 import glob
 import hashlib
 import importlib
-import inspect
 import io
 import os
 import re
@@ -117,11 +116,10 @@ def preferred_version(pkg: "PackageBase"):
     Arguments:
         pkg: The package whose versions are to be assessed.
     """
-    # Here we sort first on the fact that a version is marked
-    # as preferred in the package, then on the fact that the
-    # version is not develop, then lexicographically
-    key_fn = lambda v: (pkg.versions[v].get("preferred", False), not v.isdevelop(), v)
-    return max(pkg.versions, key=key_fn)
+    from spack.solver.asp import concretization_version_order
+
+    version, _ = max(pkg.versions.items(), key=concretization_version_order)
+    return version
 
 
 class WindowsRPath:
@@ -1744,7 +1742,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             bool: True if 'target' is found, else False
         """
         # Prevent altering LC_ALL for 'make' outside this function
-        make = copy.deepcopy(inspect.getmodule(self).make)
+        make = copy.deepcopy(self.module.make)
 
         # Use English locale for missing target message comparison
         make.add_default_env("LC_ALL", "C")
@@ -1794,7 +1792,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         """
         if self._has_make_target(target):
             # Execute target
-            inspect.getmodule(self).make(target, *args, **kwargs)
+            self.module.make(target, *args, **kwargs)
 
     def _has_ninja_target(self, target):
         """Checks to see if 'target' is a valid target in a Ninja build script.
@@ -1805,7 +1803,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         Returns:
             bool: True if 'target' is found, else False
         """
-        ninja = inspect.getmodule(self).ninja
+        ninja = self.module.ninja
 
         # Check if we have a Ninja build script
         if not os.path.exists("build.ninja"):
@@ -1834,7 +1832,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         """
         if self._has_ninja_target(target):
             # Execute target
-            inspect.getmodule(self).ninja(target, *args, **kwargs)
+            self.module.ninja(target, *args, **kwargs)
 
     def _get_needed_resources(self):
         # We use intersects here cause it would also work if self.spec is abstract

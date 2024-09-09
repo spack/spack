@@ -18,8 +18,6 @@ add = SpackCommand("add")
 develop = SpackCommand("develop")
 env = SpackCommand("env")
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
-
 
 @pytest.mark.usefixtures("mutable_mock_env_path", "mock_packages", "mock_fetch", "mutable_config")
 class TestDevelop:

@@ -592,7 +592,7 @@ class TestModuleMonkeyPatcher:
 
         # We can also propagate the settings to classes in the MRO
         module_wrapper.propagate_changes_to_mro()
-        for cls in type(s.package).__mro__:
+        for cls in s.package.__class__.__mro__:
             current_module = cls.module
             if current_module == spack.package_base:
                 break
