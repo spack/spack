@@ -207,7 +207,7 @@ class InstallRecord:
     def __init__(
         self,
         spec: "spack.spec.Spec",
-        path: str,
+        path: Optional[str],
         installed: bool,
         ref_count: int = 0,
         explicit: bool = False,
@@ -845,7 +845,7 @@ class Database:
         ):
             tty.warn(f"Spack database version changed from {version} to {_DB_VERSION}. Upgrading.")
 
-            self.reindex(spack.store.STORE.layout)
+            self.reindex()
             installs = dict(
                 (k, v.to_dict(include_fields=self._record_fields)) for k, v in self._data.items()
             )
@@ -918,8 +918,6 @@ class Database:
         if self.is_upstream:
             raise UpstreamDatabaseLockingError("Cannot reindex an upstream database")
 
-        error: Optional[CorruptDatabaseError] = None
-
         # Special transaction to avoid recursive reindex calls and to
         # ignore errors if we need to rebuild a corrupt database.
         def _read_suppress_error():
@@ -927,99 +925,116 @@ class Database:
                 if os.path.isfile(self._index_path):
                     self._read_from_file(self._index_path)
             except CorruptDatabaseError as e:
-                nonlocal error
-                error = e
+                tty.warn(f"Reindexing corrupt database, error was: {e}")
                 self._data = {}
                 self._installed_prefixes = set()
 
-        transaction = lk.WriteTransaction(
-            self.lock, acquire=_read_suppress_error, release=self._write
-        )
-
-        with transaction:
-            if error is not None:
-                tty.warn(f"Spack database was corrupt. Will rebuild. Error was: {error}")
-
-            old_data = self._data
-            old_installed_prefixes = self._installed_prefixes
+        with lk.WriteTransaction(self.lock, acquire=_read_suppress_error, release=self._write):
+            old_installed_prefixes, self._installed_prefixes = self._installed_prefixes, set()
+            old_data, self._data = self._data, {}
             try:
-                self._construct_from_directory_layout(old_data)
+                self._reindex(old_data)
             except BaseException:
                 # If anything explodes, restore old data, skip write.
                 self._data = old_data
                 self._installed_prefixes = old_installed_prefixes
                 raise
 
-    def _construct_entry_from_directory_layout(
-        self,
-        old_data: Dict[str, InstallRecord],
-        spec: "spack.spec.Spec",
-        deprecator: Optional["spack.spec.Spec"] = None,
-    ):
-        # Try to recover explicit value from old DB, but
-        # default it to True if DB was corrupt. This is
-        # just to be conservative in case a command like
-        # "autoremove" is run by the user after a reindex.
-        tty.debug(f"Reconstructing from spec file: {spec}")
-        explicit = True
-        inst_time = os.stat(spec.prefix).st_ctime
-        if old_data is not None:
-            old_info = old_data.get(spec.dag_hash())
-            if old_info is not None:
-                explicit = old_info.explicit
-                inst_time = old_info.installation_time
+    def _reindex(self, old_data: Dict[str, InstallRecord]):
+        # Specs on the file system are the source of truth for record.spec. The old database values
+        # if available are the source of truth for the rest of the record.
+        assert self.layout, "Database layout must be set to reindex"
 
-        self._add(spec, explicit=explicit, installation_time=inst_time)
-        if deprecator:
-            self._deprecate(spec, deprecator)
+        specs_from_fs = self.layout.all_specs()
+        deprecated_for = self.layout.deprecated_for(specs_from_fs)
 
-    def _construct_from_directory_layout(self, old_data: Dict[str, InstallRecord]):
-        # Read first the spec files in the prefixes. They should be considered authoritative with
-        # respect to DB reindexing, as entries in the DB may be corrupted in a way that still makes
-        # them readable. If we considered DB entries authoritative instead, we would perpetuate
-        # errors over a reindex.
-        assert self.layout is not None, "Cannot reindex a database without a known layout"
-        with self.layout.disable_upstream_check():
-            # Initialize data in the reconstructed DB
-            self._data = {}
-            self._installed_prefixes = set()
+        known_specs: List[spack.spec.Spec] = [
+            *specs_from_fs,
+            *(deprecated for _, deprecated in deprecated_for),
+            *(rec.spec for rec in old_data.values()),
+        ]
 
-            # Start inspecting the installed prefixes
-            processed_specs = set()
+        upstream_hashes = {
+            dag_hash for upstream in self.upstream_dbs for dag_hash in upstream._data
+        }
+        upstream_hashes.difference_update(spec.dag_hash() for spec in known_specs)
 
-            for spec in self.layout.all_specs():
-                self._construct_entry_from_directory_layout(old_data, spec)
-                processed_specs.add(spec)
+        def create_node(edge: spack.spec.DependencySpec, is_upstream: bool):
+            if is_upstream:
+                return
 
-            for spec, deprecator in self.layout.all_deprecated_specs():
-                self._construct_entry_from_directory_layout(old_data, spec, deprecator)
-                processed_specs.add(spec)
+            self._data[edge.spec.dag_hash()] = InstallRecord(
+                spec=edge.spec.copy(deps=False),
+                path=edge.spec.external_path if edge.spec.external else None,
+                installed=edge.spec.external,
+            )
 
-            for entry in old_data.values():
-                # We already took care of this spec using spec file from its prefix.
-                if entry.spec in processed_specs:
-                    tty.debug(
-                        f"Skipping reconstruction from old db: {entry.spec}"
-                        " [already reconstructed from spec file]"
-                    )
-                    continue
+        # Store all nodes of known specs, excluding ones found in upstreams
+        tr.traverse_breadth_first_with_visitor(
+            known_specs,
+            tr.CoverNodesVisitor(
+                NoUpstreamVisitor(upstream_hashes, create_node), key=tr.by_dag_hash
+            ),
+        )
 
-                # If we arrived here it very likely means that we have external specs that are not
-                # dependencies of other specs. This may be the case for externally installed
-                # compilers or externally installed applications.
-                tty.debug(f"Reconstructing from old db: {entry.spec}")
-                try:
-                    self._add(
-                        spec=entry.spec,
-                        explicit=entry.explicit,
-                        installation_time=entry.installation_time,
-                    )
-                    processed_specs.add(entry.spec)
-                except Exception as e:
-                    # Something went wrong, so the spec was not restored from old data
-                    tty.debug(e)
+        # Store the prefix and other information for specs were found on the file system
+        for s in specs_from_fs:
+            record = self._data[s.dag_hash()]
+            record.path = s.prefix
+            record.installed = True
+            record.explicit = True  # conservative assumption
+            record.installation_time = os.stat(s.prefix).st_ctime
 
-            self._check_ref_counts()
+        # Deprecate specs
+        for new, old in deprecated_for:
+            self._data[old.dag_hash()].deprecated_for = new.dag_hash()
+
+        # Copy data we have from the old database
+        for old_record in old_data.values():
+            record = self._data[old_record.spec.dag_hash()]
+            record.explicit = old_record.explicit
+            record.installation_time = old_record.installation_time
+            record.origin = old_record.origin
+            record.deprecated_for = old_record.deprecated_for
+
+            # Warn when the spec has been removed from the file system (i.e. it was not detected)
+            if not record.installed and old_record.installed:
+                tty.warn(
+                    f"Spec {old_record.spec.short_spec} was marked installed in the database "
+                    "but was not found on the file system. It is now marked as missing."
+                )
+
+        def create_edge(edge: spack.spec.DependencySpec, is_upstream: bool):
+            if not edge.parent:
+                return
+            parent_record = self._data[edge.parent.dag_hash()]
+            if is_upstream:
+                upstream, child_record = self.query_by_spec_hash(edge.spec.dag_hash())
+                assert upstream and child_record, "Internal error: upstream spec not found"
+            else:
+                child_record = self._data[edge.spec.dag_hash()]
+            parent_record.spec._add_dependency(
+                child_record.spec, depflag=edge.depflag, virtuals=edge.virtuals
+            )
+
+        # Then store edges
+        tr.traverse_breadth_first_with_visitor(
+            known_specs,
+            tr.CoverEdgesVisitor(
+                NoUpstreamVisitor(upstream_hashes, create_edge), key=tr.by_dag_hash
+            ),
+        )
+
+        # Finally update the ref counts
+        for record in self._data.values():
+            for dep in record.spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
+                dep_record = self._data.get(dep.dag_hash())
+                if dep_record:  # dep might be upstream
+                    dep_record.ref_count += 1
+            if record.deprecated_for:
+                self._data[record.deprecated_for].ref_count += 1
+
+        self._check_ref_counts()
 
     def _check_ref_counts(self):
         """Ensure consistency of reference counts in the DB.
@@ -1199,7 +1214,7 @@ class Database:
             for dep in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
-                assert record, f"Missing dependency {dep.spec} in DB"
+                assert record, f"Missing dependency {dep.spec.short_spec} in DB"
                 new_spec._add_dependency(record.spec, depflag=dep.depflag, virtuals=dep.virtuals)
                 if not upstream:
                     record.ref_count += 1
@@ -1709,6 +1724,33 @@ class Database:
                 status = "explicit" if explicit else "implicit"
                 tty.debug(message.format(status, s=spec))
                 rec.explicit = explicit
+
+
+class NoUpstreamVisitor:
+    """Gives edges to upstream specs, but does follow edges from upstream specs."""
+
+    def __init__(
+        self,
+        upstream_hashes: Set[str],
+        on_visit: Callable[["spack.spec.DependencySpec", bool], None],
+    ):
+        self.upstream_hashes = upstream_hashes
+        self.on_visit = on_visit
+
+    def accept(self, item: tr.EdgeAndDepth) -> bool:
+        self.on_visit(item.edge, self.is_upstream(item))
+        return True
+
+    def is_upstream(self, item: tr.EdgeAndDepth) -> bool:
+        return item.edge.spec.dag_hash() in self.upstream_hashes
+
+    def neighbors(self, item: tr.EdgeAndDepth):
+        # Prune edges from upstream nodes, only follow database tracked dependencies
+        return (
+            []
+            if self.is_upstream(item)
+            else item.edge.spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES)
+        )
 
 
 class UpstreamDatabaseLockingError(SpackError):

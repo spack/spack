@@ -55,12 +55,24 @@ def test_reindex_with_deprecated_packages(
 
     deprecate("-y", "libelf@0.8.12", "libelf@0.8.13")
 
-    all_installed = spack.store.STORE.db.query(installed=any)
-    non_deprecated = spack.store.STORE.db.query(installed=True)
+    db = spack.store.STORE.db
+
+    all_installed = db.query(installed=any)
+    non_deprecated = db.query(installed=True)
 
     _clear_db(tmp_path)
 
     reindex()
 
-    assert spack.store.STORE.db.query(installed=any) == all_installed
-    assert spack.store.STORE.db.query(installed=True) == non_deprecated
+    assert db.query(installed=any) == all_installed
+    assert db.query(installed=True) == non_deprecated
+
+    old_libelf = db.query_local_by_spec_hash(
+        db.query_local("libelf@0.8.12", installed=any)[0].dag_hash()
+    )
+    new_libelf = db.query_local_by_spec_hash(
+        db.query_local("libelf@0.8.13", installed=True)[0].dag_hash()
+    )
+    assert old_libelf.deprecated_for == new_libelf.spec.dag_hash()
+    assert new_libelf.deprecated_for is None
+    assert new_libelf.ref_count == 1
