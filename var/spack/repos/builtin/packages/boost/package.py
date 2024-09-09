@@ -751,19 +751,13 @@ class Boost(Package):
             with_libs.append("graph_parallel")
             remove_if_in_list("graph_parallel", without_libs)
 
-        # to make Boost find the user-config.jam
-        env["BOOST_BUILD_PATH"] = self.stage.source_path
-
-        bootstrap_options = ["--prefix=%s" % prefix]
-        self.determine_bootstrap_options(spec, with_libs, without_libs, bootstrap_options)
-
         if self.spec.satisfies("platform=windows"):
             self.bootstrap_windows()
         else:
             # to make Boost find the user-config.jam
             env["BOOST_BUILD_PATH"] = self.stage.source_path
             bootstrap_options = ["--prefix=%s" % prefix]
-            self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
+            self.determine_bootstrap_options(spec, with_libs, without_libs, bootstrap_options)
             bootstrap = Executable("./bootstrap.sh")
             bootstrap(*bootstrap_options)
 
