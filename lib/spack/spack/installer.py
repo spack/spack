@@ -1479,10 +1479,6 @@ class PackageInstaller:
         fail_fast = bool(request.install_args.get("fail_fast"))
         self.fail_fast = self.fail_fast or fail_fast
 
-    def _add_compiler_package_to_config(self, pkg: "spack.package_base.PackageBase") -> None:
-        compiler_search_prefix = getattr(pkg, "compiler_search_prefix", pkg.spec.prefix)
-        spack.compilers.find_compilers([compiler_search_prefix])
-
     def _install_task(self, task: BuildTask, install_status: InstallStatus) -> None:
         """
         Perform the installation of the requested spec and/or dependency
@@ -1510,8 +1506,6 @@ class PackageInstaller:
         if use_cache:
             if _install_from_cache(pkg, explicit, unsigned):
                 self._update_installed(task)
-                if task.compiler:
-                    self._add_compiler_package_to_config(pkg)
                 return
             elif cache_only:
                 raise InstallError("No binary found when cache-only was specified", pkg=pkg)
@@ -1541,9 +1535,6 @@ class PackageInstaller:
             # the database, so that we don't need to re-read from file.
             spack.store.STORE.db.add(pkg.spec, explicit=explicit)
 
-            # If a compiler, ensure it is added to the configuration
-            if task.compiler:
-                self._add_compiler_package_to_config(pkg)
         except spack.build_environment.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
@@ -1943,10 +1934,6 @@ class PackageInstaller:
                     self._update_installed(task)
                     path = spack.util.path.debug_padded_filter(pkg.prefix)
                     _print_installed_pkg(path)
-
-                    # It's an already installed compiler, add it to the config
-                    if task.compiler:
-                        self._add_compiler_package_to_config(pkg)
 
                 else:
                     # At this point we've failed to get a write or a read
