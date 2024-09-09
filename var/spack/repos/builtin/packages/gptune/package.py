@@ -206,7 +206,8 @@ class Gptune(CMakePackage):
 
     def test_hypre(self):
         """set up and run hypre example"""
-        if "~hypre" in self.spec or "~mpispawn" in self.spec:
+        spec = self.spec
+        if spec.satisfies("~hypre") or spec.satisfies("~mpispawn"):
             raise SkipTest("Package must be installed with +hypre+mpispawn")
 
         # https://github.com/spack/spack/pull/45383#discussion_r1737987370
@@ -239,7 +240,7 @@ class Gptune(CMakePackage):
 
     def test_superlu(self):
         """set up and run superlu tests"""
-        if "~superlu" in self.spec:
+        if self.spec.satisfies("~superlu"):
             raise SkipTest("Package must be installed with +superlu")
 
         # https://github.com/spack/spack/pull/45383#discussion_r1737987370
@@ -274,7 +275,7 @@ class Gptune(CMakePackage):
         apps = ["SuperLU_DIST", "SuperLU_DIST_RCI"]
         for app in apps:
             with test_part(self, f"test_superlu_{app}", purpose=f"run {app} example"):
-                if app == "SuperLU_DIST" and "~mpispawn" in self.spec:
+                if app == "SuperLU_DIST" and self.spec.satisfies("~mpispawn"):
                     raise SkipTest("Package must be installed with +superlu+mpispawn")
                 with working_dir(join_path(test_dir, app)):
                     terminate_bash_failures(".")
@@ -282,7 +283,7 @@ class Gptune(CMakePackage):
 
     def test_demo(self):
         """Run the demo test"""
-        if "~mpispawn" in self.spec:
+        if self.spec.satisfies("~mpispawn"):
             raise SkipTest("Package must be installed with +mpispawn")
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
@@ -298,7 +299,7 @@ class Gptune(CMakePackage):
         apps = ["Scalapack-PDGEQRF", "Scalapack-PDGEQRF_RCI"]
         for app in apps:
             with test_part(self, f"test_scalapack_{app}", purpose=f"run {app} example"):
-                if app == "Scalapack-PDGEQRF" and "~mpispawn" in self.spec:
+                if app == "Scalapack-PDGEQRF" and self.spec.satisfies("~mpispawn"):
                     raise SkipTest("Package must be installed with +superlu+mpispawn")
                 with working_dir(join_path(test_dir, app)):
                     terminate_bash_failures(".")
