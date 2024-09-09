@@ -4420,9 +4420,12 @@ class Spec:
                 if part.startswith("_"):
                     raise SpecFormatStringError("Attempted to format private attribute")
                 else:
-                    if part == "variants" and isinstance(current, vt.VariantMap):
+                    if isinstance(current, vt.VariantMap):
                         # subscript instead of getattr for variant names
-                        current = current[part]
+                        try:
+                            current = current[part]
+                        except KeyError:
+                            raise SpecFormatStringError(f"Variant '{part}' does not exist")
                     else:
                         # aliases
                         if part == "arch":
