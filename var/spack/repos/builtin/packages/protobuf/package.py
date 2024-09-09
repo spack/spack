@@ -120,6 +120,22 @@ class Protobuf(CMakePackage):
 
     patch("msvc-abseil-target-namespace.patch", when="@3.22 %msvc")
 
+    # Misisng #include "absl/container/internal/layout.h"
+    # See https://github.com/protocolbuffers/protobuf/pull/14042
+    patch(
+        "https://github.com/protocolbuffers/protobuf/commit/e052928c94f5a9a6a6cbdb82e09ab4ee92b7815f.patch?full_index=1",
+        when="@3.22:3.24.3 ^abseil-cpp@20240116:",
+        sha256="20e3cc99a9513b256e219653abe1bfc7d6b6a5413e269676e3d442830f99a1af",
+    )
+
+    # Missing #include "absl/strings/str_cat.h"
+    # See https://github.com/protocolbuffers/protobuf/pull/14054
+    patch(
+        "https://github.com/protocolbuffers/protobuf/commit/38a24729ec94e6576a1425951c898ad0b91ad2d2.patch?full_index=1",
+        when="@3.22:3.24.3 ^abseil-cpp@20240116:",
+        sha256="c061356db31cdce29c8cdd98a3a8219ef048ebc2318d0dec26c1f2c5e5dae29b",
+    )
+
     def fetch_remote_versions(self, *args, **kwargs):
         """Ignore additional source artifacts uploaded with releases,
         only keep known versions
