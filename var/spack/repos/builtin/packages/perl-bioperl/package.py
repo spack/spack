@@ -42,7 +42,6 @@ class PerlBioperl(PerlPackage):
         sha256="df2a3efc991b9b5d7cc9d038a1452c6dac910c9ad2a0e47e408dd692c111688d",
         url="https://cpan.metacpan.org/authors/id/C/CD/CDRAUG/BioPerl-1.7.6.tar.gz",
     )
-    version("1.7.2", sha256="17aa3aaab2f381bbcaffdc370002eaf28f2c341b538068d6586b2276a76464a1")
     version("1.6.924", sha256="616a7546bb3c58504de27304a0f6cb904e18b6bbcdb6a4ec8454f2bd37bb76d0")
 
     # This is technically the same as 1.7.2, but with a more conventional version number.
