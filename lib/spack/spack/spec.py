@@ -4181,77 +4181,102 @@ class Spec:
                         new_dependencies.add(edge)
             spec._dependencies = new_dependencies
 
-    def splice(self, other, transitive):
-        """Splices dependency "other" into this ("target") Spec, and return the
-        result as a concrete Spec.
-        If transitive, then other and its dependencies will be extrapolated to
-        a list of Specs and spliced in accordingly.
-        For example, let there exist a dependency graph as follows:
-        T
-        | \
-        Z<-H
-        In this example, Spec T depends on H and Z, and H also depends on Z.
-        Suppose, however, that we wish to use a different H, known as H'. This
-        function will splice in the new H' in one of two ways:
-        1. transitively, where H' depends on the Z' it was built with, and the
-        new T* also directly depends on this new Z', or
-        2. intransitively, where the new T* and H' both depend on the original
-        Z.
-        Since the Spec returned by this splicing function is no longer deployed
-        the same way it was built, any such changes are tracked by setting the
-        build_spec to point to the corresponding dependency from the original
-        Spec.
-        TODO: Extend this for non-concrete Specs.
+    def splice(self, other: "Spec", transitive: bool) -> "Spec":
+        """Returns a new, spliced concrete Spec with the "other" dependency and,
+        optionally, its dependencies.
+
+        Args:
+            other: alternate dependency
+            transitive: include other's dependencies
+
+        Returns: a concrete, spliced version of the current Spec
+
+        When transitive is "True", then other and its dependencies are
+        extrapolated to a list of Specs that are spliced in accordingly.
+
+        For example, suppose we have the following dependency graph:
+
+            T
+            | \
+            Z<-H
+
+        Spec T depends on H and Z, and H also depends on Z. Now we want to use
+        a different H, called H'. This function can be used to splice in H' to
+        create a new spec, called T*. If H' was built with Z', then transitive
+        "True" will ensure H' and T* both depend on Z':
+
+            T*
+            | \
+            Z'<-H'
+
+        Otherwise, if transitive is "False", then H' and T* will both depend on
+        the original Z.
+
+            T*
+            | \
+            Z<-H'
+
+        Provenance of the build is tracked through the "build_spec" property
+        of the spliced spec and any correspondingly modified dependency specs.
+        This, the original, spec's provenance is unchanged.
         """
         assert self.concrete
         assert other.concrete
 
-        virtuals_to_replace = [v.name for v in other.package.virtuals_provided if v in self]
-        if virtuals_to_replace:
-            deps_to_replace = dict((self[v], other) for v in virtuals_to_replace)
-            # deps_to_replace = [self[v] for v in virtuals_to_replace]
-        else:
-            # TODO: sanity check and error raise here for other.name not in self
-            deps_to_replace = {self[other.name]: other}
-            # deps_to_replace = [self[other.name]]
+        virtuals_to_replace = [
+            v.name
+            for v in other.package.virtuals_provided
+            if v in self or v in self.package.virtuals_provided
+        ]
+        if transitive:
+            virtuals_to_replace.extend(
+                [
+                    v.name
+                    for od in other.traverse(root=False)
+                    for v in od.package.virtuals_provided
+                    if v in self or v in self.package.virtuals_provided
+                ]
+            )
 
-        for d in deps_to_replace:
-            if not all(
-                v in other.package.virtuals_provided or v not in self
-                for v in d.package.virtuals_provided
-            ):
-                # There was something provided by the original that we don't
-                # get from its replacement.
-                raise SpliceError(
-                    ("Splice between {0} and {1} will not provide " "the same virtuals.").format(
-                        self.name, other.name
-                    )
-                )
-            for n in d.traverse(root=False):
-                if not all(
-                    any(
-                        v in other_n.package.virtuals_provided
-                        for other_n in other.traverse(root=False)
-                    )
-                    or v not in self
-                    for v in n.package.virtuals_provided
-                ):
+        if virtuals_to_replace:
+            deps_to_replace = {
+                self[v]: (other[v] if v in other else other) for v in virtuals_to_replace
+            }
+        else:
+            if other.name not in self:
+                msg = f"Cannot splice {other.name} into {self.name}/{self.dag_hash()}."
+                msg += f" {self.name}/{self.dag_hash()} does not depend on {other.name}"
+                raise SpliceError(msg)
+            deps_to_replace = {self[other.name]: other}
+
+        for d, od in deps_to_replace.items():
+            virtuals = []
+            for e in d.edges_from_dependents():
+                virtuals.extend(e.virtuals)
+
+            for v in virtuals:
+                if not any(ov.satisfies(v) for ov in od.package.virtuals_provided):
+                    # There was something provided by the original that we don't
+                    # get from its replacement.
                     raise SpliceError(
                         (
-                            "Splice between {0} and {1} will not provide " "the same virtuals."
-                        ).format(self.name, other.name)
+                            f"Splice between {self.name} and {other.name} will not provide "
+                            "the same virtuals."
+                        )
                     )
 
         # For now, check that we don't have DAG with multiple specs from the
         # same package
         def multiple_specs(root):
-            counter = collections.Counter([node.name for node in root.traverse()])
+            counter = collections.Counter(
+                [node.name for node in root.traverse(deptype=("link", "run"))]
+            )
             _, max_number = counter.most_common()[0]
             return max_number > 1
 
         if multiple_specs(self) or multiple_specs(other):
             msg = (
-                'Either "{0}" or "{1}" contain multiple specs from the same '
+                'Either "{0}"\n or "{1}"\n contain multiple specs from the same '
                 "package, which cannot be handled by splicing at the moment"
             )
             raise ValueError(msg.format(self, other))
@@ -4273,6 +4298,8 @@ class Spec:
             else:
                 if name == other.name:
                     return False
+                # TODO: at some point we should readdress how this works for providers
+                # that are providing multiple virtuals in the DAG
                 if any(
                     v in other.package.virtuals_provided
                     for v in self[name].package.virtuals_provided
@@ -4306,17 +4333,30 @@ class Spec:
                     nodes[name].add_dependency_edge(
                         nodes[dep_name], depflag=edge.depflag, virtuals=edge.virtuals
                     )
-                if any(dep not in self_nodes for dep in self[name]._dependencies):
-                    nodes[name].build_spec = self[name].build_spec
+                deps_to_check = []
+                for dep_name, dep_specs in self[name]._dependencies.items():
+                    deps_to_check.append(dep_name)
+                    for dep_spec in dep_specs:
+                        deps_to_check.extend(dep_spec.virtuals)
+
+                if any(dep not in self_nodes for dep in deps_to_check):
+                    nodes[name].build_spec = self[name].build_spec.copy()
             else:
                 for edge in other[name].edges_to_dependencies():
                     nodes[name].add_dependency_edge(
                         nodes[edge.spec.name], depflag=edge.depflag, virtuals=edge.virtuals
                     )
-                if any(dep not in other_nodes for dep in other[name]._dependencies):
-                    nodes[name].build_spec = other[name].build_spec
+                deps_to_check = []
+                for dep_name, dep_specs in other[name]._dependencies.items():
+                    deps_to_check.append(dep_name)
+                    for dep_spec in dep_specs:
+                        deps_to_check.extend(dep_spec.virtuals)
 
-        ret = nodes[self.name]
+                if any(dep not in other_nodes for dep in deps_to_check):
+                    nodes[name].build_spec = other[name].build_spec.copy()
+
+        # If self.name not in nodes then we spliced the root with a different virtual provider
+        ret = nodes[self.name] if self.name in nodes else nodes[other.name]
 
         # Clear cached hashes for all affected nodes
         # Do not touch unaffected nodes
@@ -4328,7 +4368,7 @@ class Spec:
 
                 dep.dag_hash()
 
-        return nodes[self.name]
+        return ret
 
     def clear_cached_hashes(self, ignore=()):
         """
@@ -4704,7 +4744,7 @@ class SpecfileReaderBase:
                     virtuals=virtuals,
                 )
             if "build_spec" in node.keys():
-                _, bhash, _ = cls.build_spec_from_node_dict(node, hash_type=hash_type)
+                _, bhash, _ = cls.extract_build_spec_info_from_node_dict(node, hash_type=hash_type)
                 node_spec._build_spec = hash_dict[bhash]["node_spec"]
 
         return hash_dict[root_spec_hash]["node_spec"]
@@ -4832,7 +4872,7 @@ class SpecfileV2(SpecfileReaderBase):
         return dep_hash, deptypes, hash_type, virtuals
 
     @classmethod
-    def build_spec_from_node_dict(cls, node, hash_type=ht.dag_hash.name):
+    def extract_build_spec_info_from_node_dict(cls, node, hash_type=ht.dag_hash.name):
         build_spec_dict = node["build_spec"]
         return build_spec_dict["name"], build_spec_dict[hash_type], hash_type
 

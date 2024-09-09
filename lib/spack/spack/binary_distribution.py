@@ -713,15 +713,21 @@ def get_buildfile_manifest(spec):
     return data
 
 
-def hashes_to_prefixes(spec):
-    """Return a dictionary of hashes to prefixes for a spec and its deps, excluding externals"""
-    return {
-        s.dag_hash(): str(s.prefix)
+def deps_to_relocate(spec):
+    """Return the transitive link and direct run dependencies of the spec.
+
+    This special case of spec traversal is specific to binary relocation. Package relocation is
+    restricted to link and run dependencies. Package relocation needs transitive link dependencies
+    because transitive rpath information appears in libraries/executables, but packages only retain
+    references to their direct run dependencies."""
+    deps = [
+        s
         for s in itertools.chain(
             spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
         )
         if not s.external
-    }
+    ]
+    return llnl.util.lang.dedupe(deps, key=lambda s: s.dag_hash())
 
 
 def get_buildinfo_dict(spec):
@@ -737,7 +743,7 @@ def get_buildinfo_dict(spec):
         "relocate_binaries": manifest["binary_to_relocate"],
         "relocate_links": manifest["link_to_relocate"],
         "hardlinks_deduped": manifest["hardlinks_deduped"],
-        "hash_to_prefix": hashes_to_prefixes(spec),
+        "hash_to_prefix": {d.dag_hash(): str(d.prefix) for d in deps_to_relocate(spec)},
     }
 
 
@@ -1630,7 +1636,6 @@ def _oci_push(
     Dict[str, spack.oci.oci.Blob],
     List[Tuple[Spec, BaseException]],
 ]:
-
     # Spec dag hash -> blob
     checksums: Dict[str, spack.oci.oci.Blob] = {}
 
@@ -2200,11 +2205,26 @@ def relocate_package(spec):
     # First match specific prefix paths. Possibly the *local* install prefix
     # of some dependency is in an upstream, so we cannot assume the original
     # spack store root can be mapped uniformly to the new spack store root.
-    for dag_hash, new_dep_prefix in hashes_to_prefixes(spec).items():
-        if dag_hash in hash_to_old_prefix:
-            old_dep_prefix = hash_to_old_prefix[dag_hash]
-            prefix_to_prefix_bin[old_dep_prefix] = new_dep_prefix
-            prefix_to_prefix_text[old_dep_prefix] = new_dep_prefix
+    for dep in deps_to_relocate(spec):
+        try:
+            lookup_dag_hash = spec.build_spec[dep.name].dag_hash()
+        except KeyError:
+            dependent_edges = spec[dep.name].edges_from_dependents()
+            virtuals = set()
+            for edge in dependent_edges:
+                virtuals.update(edge.virtuals)
+            for virtual in virtuals:
+                try:
+                    lookup_dag_hash = spec.build_spec[virtual].dag_hash()
+                    break
+                except KeyError:
+                    # This is a new dependency
+                    tty.debug(f"{spec} does not have relocation for {dep.name}")
+
+        if lookup_dag_hash in hash_to_old_prefix:
+            old_dep_prefix = hash_to_old_prefix[lookup_dag_hash]
+            prefix_to_prefix_bin[old_dep_prefix] = str(dep.prefix)
+            prefix_to_prefix_text[old_dep_prefix] = str(dep.prefix)
 
     # Only then add the generic fallback of install prefix -> install prefix.
     prefix_to_prefix_text[old_prefix] = new_prefix
@@ -2542,10 +2562,10 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
         return
 
-    download_result = download_tarball(spec, unsigned)
+    download_result = download_tarball(spec.build_spec, unsigned)
     if not download_result:
         msg = 'download of binary cache file for spec "{0}" failed'
-        raise RuntimeError(msg.format(spec.format()))
+        raise RuntimeError(msg.format(spec.build_spec.format()))
 
     if sha256:
         checker = spack.util.crypto.Checker(sha256)
@@ -2564,6 +2584,11 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
     with spack.util.path.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, force)
+        spec.package.windows_establish_runtime_linkage()
+        if spec.spliced:  # overwrite old metadata with new
+            spack.store.STORE.layout.write_spec(
+                spec, spack.store.STORE.layout.spec_file_path(spec)
+            )
         spack.hooks.post_install(spec, False)
         spack.store.STORE.db.add(spec)
 
