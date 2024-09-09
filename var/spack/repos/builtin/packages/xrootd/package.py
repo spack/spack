@@ -23,6 +23,7 @@ class Xrootd(CMakePackage):
 
     license("LGPL-3.0-only")
 
+    version("5.7.1", sha256="c28c9dc0a2f5d0134e803981be8b1e8b1c9a6ec13b49f5fa3040889b439f4041")
     version("5.7.0", sha256="214599bba98bc69875b82ac74f2d4b9ac8a554a1024119d8a9802b3d8b9986f8")
     version("5.6.9", sha256="44196167fbcf030d113e3749dfdecab934c43ec15e38e77481e29aac191ca3a8")
     version("5.6.8", sha256="19268fd9f0307d936da3598a5eb8471328e059c58f60d91d1ce7305ca0d57528")
