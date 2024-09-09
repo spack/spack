@@ -1099,25 +1099,6 @@ class PackageInstaller:
         installed = f"installed ({len(self.installed)}) = {self.installed}"
         return f"{self.pid}: {requests}; {tasks}; {installed}; {failed}"
 
-    def _modify_existing_task(self, pkgid: str, attr, value) -> None:
-        """
-        Update a task in-place to modify its behavior.
-
-        Currently used to update the ``compiler`` field on tasks
-        that were originally created as a dependency of a compiler,
-        but are compilers in their own right.
-
-        For example, ``intel-oneapi-compilers-classic`` depends on
-        ``intel-oneapi-compilers``, which can cause the latter to be
-        queued first as a non-compiler, and only later as a compiler.
-        """
-        for i, tup in enumerate(self.build_pq):
-            key, task = tup
-            if task.pkg_id == pkgid:
-                tty.debug(f"Modifying task for {pkgid} to treat it as a compiler", level=2)
-                setattr(task, attr, value)
-                self.build_pq[i] = (key, task)
-
     def _add_init_task(
         self,
         pkg: "spack.package_base.PackageBase",
