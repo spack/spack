@@ -10,7 +10,7 @@ index 465f1f9..0684e78 100644
  
  namespace cdo
  {
-diff -u src/cdo_options.h src/cdo_options_patched.h                                                                            [Mon 2024-09-02|16:00:46]
+diff -u src/cdo_options.h src/cdo_options_patched.h
 --- a/src/cdo_options.h
 +++ b/src/cdo_options_patched.h
 @@ -3,6 +3,7 @@
