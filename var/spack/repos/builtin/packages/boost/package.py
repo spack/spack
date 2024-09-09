@@ -509,7 +509,7 @@ class Boost(Package):
         else:
             options.append("--with-toolset=%s" % boost_toolset_id)
         if with_libs:
-            options.append("--with-libraries=%s" % ",".join(with_libs))
+            options.append("--with-libraries=%s" % ",".join(sorted(with_libs)))
         else:
             options.append("--with-libraries=headers")
 
@@ -682,38 +682,33 @@ class Boost(Package):
             force_symlink("/usr/bin/libtool", join_path(newdir, "libtool"))
             env["PATH"] = newdir + ":" + env["PATH"]
 
-        with_libs = list()
-        for lib in Boost.all_libs:
-            if "+{0}".format(lib) in spec:
-                with_libs.append(lib)
-
-        remove_if_in_list = lambda lib, libs: libs.remove(lib) if lib in libs else None
+        with_libs = {f"{lib}" for lib in Boost.all_libs if f"+{lib}" in spec}
 
         # Remove libraries that the release version does not support
         if not spec.satisfies("@1.85.0:"):
-            remove_if_in_list("charconv", with_libs)
+            with_libs.discard("charconv")
         if not spec.satisfies("@1.84.0:"):
-            remove_if_in_list("cobalt", with_libs)
+            with_libs.discard("cobalt")
         if not spec.satisfies("@1.81.0:"):
-            remove_if_in_list("url", with_libs)
+            with_libs.discard("url")
         if not spec.satisfies("@1.75.0:"):
-            remove_if_in_list("json", with_libs)
+            with_libs.discard("json")
         if spec.satisfies("@1.69.0:"):
-            remove_if_in_list("signals", with_libs)
+            with_libs.discard("signals")
         if not spec.satisfies("@1.54.0:"):
-            remove_if_in_list("log", with_libs)
+            with_libs.discard("log")
         if not spec.satisfies("@1.53.0:"):
-            remove_if_in_list("atomic", with_libs)
+            with_libs.discard("atomic")
         if not spec.satisfies("@1.48.0:"):
-            remove_if_in_list("locale", with_libs)
+            with_libs.discard("locale")
         if not spec.satisfies("@1.47.0:"):
-            remove_if_in_list("chrono", with_libs)
+            with_libs.discard("chrono")
         if not spec.satisfies("@1.43.0:"):
-            remove_if_in_list("random", with_libs)
+            with_libs.discard("random")
         if not spec.satisfies("@1.39.0:"):
-            remove_if_in_list("exception", with_libs)
+            with_libs.discard("exception")
         if spec.satisfies("+graph") and spec.satisfies("+mpi"):
-            with_libs.append("graph_parallel")
+            with_libs.add("graph_parallel")
 
         # to make Boost find the user-config.jam
         env["BOOST_BUILD_PATH"] = self.stage.source_path
