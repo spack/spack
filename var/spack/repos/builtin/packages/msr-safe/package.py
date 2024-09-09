@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class MsrSafe(MakefilePackage):
     """msr_safe provides controlled userspace access to model-specific registers (MSRs).
     It allows system administrators to give register-level read access and bit-level write
@@ -19,9 +20,11 @@ class MsrSafe(MakefilePackage):
 
     license("GPL-2.0-only", checked_by="fleshling")
 
-    version("linux-6.9.9-cleanup", md5="1201214a0260a258f0906e9c166bc19d",
-        url="https://github.com/rountree/msr-safe/archive/refs/heads/linux-6.9.9-cleanup.zip")
-
+    version(
+        "linux-6.9.9-cleanup",
+        sha256="2b68670eda4467eaa9ddd7340522ab2000cf9d16d083607f9c481650ea1a2fc9",
+        url="https://github.com/rountree/msr-safe/archive/refs/heads/linux-6.9.9-cleanup.zip",
+    )
     version("1.7.0", sha256="bdf4f96bde92a23dc3a98716611ebbe7d302005305adf6a368cb25da9c8a609a")
     version("1.6.0", sha256="defe9d12e2cdbcb1a9aa29bb09376d4156c3dbbeb7afc33315ca4b0b6859f5bb")
     version("1.5.0", sha256="e91bac281339bcb0d119a74d68a73eafb5944fd933a893e0e3209576b4c6f233")
@@ -35,17 +38,8 @@ class MsrSafe(MakefilePackage):
 
     @property
     def build_targets(self):
-        return [
-            f"-C",
-            f"{self.spec['linux'].prefix}",
-            f"M={self.build_directory}",
-            "modules"
-        ]
+        return ["-C", f"{self.spec['linux-external-modules'].prefix}", f"M={self.build_directory}", "modules"]
 
     @property
     def install_targets(self):
-        return [
-            f"DESTDIR={self.prefix}",
-            f"spack-install"
-        ]
-
+        return [f"DESTDIR={self.prefix}", "spack-install"]
