@@ -165,7 +165,7 @@ class Cdo(AutotoolsPackage):
     patch(
         "add_algorithm_header_222.patch",
         when="@2.2.2:2.3.0 %gcc@14:",
-        sha256="f713384de9e5eff686053dfb917fdd08f30f9720a8a9182549863f2ba12e779f",
+        sha256="db0d9bd32bbee01d914c1dbebd751403e9c918fafd540fd6ecc6a2f27e0900cf",
     )
     conflicts("%gcc@14:", when="@:2.2.0", msg="Compilation with gcc@14: requires cdo@2.2.2:")
 
