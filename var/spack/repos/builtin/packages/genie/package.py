@@ -132,17 +132,17 @@ class Genie(Package):
                 "--with-lhapdf6-inc=" + spec["lhapdf"].prefix.include,
                 "--with-lhapdf6-lib=" + spec["lhapdf"].prefix.lib,
             ]
-        if "+vleextension" in self.spec:
+        if self.spec.satisfies("+vleextension"):
             args += ["--enable-vle-extension"]
-        if "+t2k" in self.spec:
+        if self.spec.satisfies("+t2k"):
             args += ["--enable-t2k"]
-        if "+fnal" in self.spec:
+        if self.spec.satisfies("+fnal"):
             args += ["--enable-fnal"]
-        if "+atmo" in self.spec:
+        if self.spec.satisfies("+atmo"):
             args += ["--enable-atmo"]
-        if "+nucleondecay" in self.spec:
+        if self.spec.satisfies("+nucleondecay"):
             args += ["--enable-nucleon-decay"]
-        if "+masterclass" in self.spec:
+        if self.spec.satisfies("+masterclass"):
             args += ["--enable-masterclass"]
         return args
 

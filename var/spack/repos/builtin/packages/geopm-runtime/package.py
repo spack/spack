@@ -113,7 +113,7 @@ class GeopmRuntime(AutotoolsPackage):
     @property
     def install_targets(self):
         target = ["install"]
-        if "+checkprogs" in self.spec:
+        if self.spec.satisfies("+checkprogs"):
             target += ["checkprogs"]
         return target
 
@@ -161,7 +161,7 @@ class GeopmRuntime(AutotoolsPackage):
             lib_dir = self.prefix.lib
         env.prepend_path("LD_LIBRARY_PATH", lib_dir)
 
-        if "+checkprogs" in self.spec:
+        if self.spec.satisfies("+checkprogs"):
             env.set("GEOPM_SOURCE", self.stage.source_path)
             env.prepend_path("PYTHONPATH", self.stage.source_path)
         env.set("GEOPM_INSTALL", self.prefix)

@@ -91,7 +91,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         spec = self.spec
 
         toolkit = spec.variants["toolkit"].value
-        if "+X" in spec:
+        if spec.satisfies("+X"):
             args = ["--with-x", "--with-x-toolkit={0}".format(toolkit)]
         else:
             args = ["--without-x"]

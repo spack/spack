@@ -506,7 +506,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         return Executable(exe)("--version", output=str, error=str).rstrip()
 
     def setup_run_environment(self, env):
-        if "+java" in self.spec:
+        if self.spec.satisfies("+java"):
             class_paths = find(self.prefix, "*.jar")
             classpath = os.pathsep.join(class_paths)
             env.prepend_path("CLASSPATH", classpath)
@@ -523,7 +523,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
             env.prepend_path("LD_LIBRARY_PATH", ":".join(libs))
 
     def patch(self):
-        if "+java platform=darwin" in self.spec:
+        if self.spec.satisfies("+java platform=darwin"):
             filter_file("linux", "darwin", "swig/java/java.opt", string=True)
             filter_file("-lazy-ljvm", "-ljvm", "configure", string=True)
 
@@ -751,7 +751,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
             self.with_or_without("perl"),
             self.with_or_without("php"),
         ]
-        if "+iconv" in self.spec:
+        if self.spec.satisfies("+iconv"):
             if self.spec["iconv"].name == "libiconv":
                 args.append(f"--with-libiconv-prefix={self.spec['iconv'].prefix}")
             else:
@@ -787,7 +787,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
         else:
             args.append(self.with_or_without("dwgdirect", variant="teigha", package="teigha"))
 
-        if "+hdf4" in self.spec:
+        if self.spec.satisfies("+hdf4"):
             hdf4 = self.spec["hdf"]
             if "+external-xdr" in hdf4 and hdf4["rpc"].name == "libtirpc":
                 args.append("LIBS=" + hdf4["rpc"].libs.link_flags)
@@ -800,19 +800,19 @@ class AutotoolsBuilder(AutotoolsBuilder):
     def build(self, pkg, spec, prefix):
         # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
         make()
-        if "+java" in spec:
+        if spec.satisfies("+java"):
             with working_dir("swig/java"):
                 make()
 
     def check(self):
         # no top-level test target
-        if "+java" in self.spec:
+        if self.spec.satisfies("+java"):
             with working_dir("swig/java"):
                 make("test")
 
     def install(self, pkg, spec, prefix):
         make("install")
-        if "+java" in spec:
+        if spec.satisfies("+java"):
             with working_dir("swig/java"):
                 make("install")
                 install("*.jar", prefix)

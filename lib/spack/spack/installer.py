@@ -451,7 +451,7 @@ def _process_external_package(pkg: "spack.package_base.PackageBase", explicit: b
 
         # Add to the DB
         tty.debug(f"{pre} registering into DB")
-        spack.store.STORE.db.add(spec, None, explicit=explicit)
+        spack.store.STORE.db.add(spec, explicit=explicit)
 
 
 def _process_binary_cache_tarball(
@@ -493,7 +493,7 @@ def _process_binary_cache_tarball(
             pkg._post_buildcache_install_hook()
 
         pkg.installed_from_binary_cache = True
-        spack.store.STORE.db.add(pkg.spec, spack.store.STORE.layout, explicit=explicit)
+        spack.store.STORE.db.add(pkg.spec, explicit=explicit)
         return True
 
 
@@ -1668,7 +1668,7 @@ class PackageInstaller:
             )
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
-            spack.store.STORE.db.add(pkg.spec, spack.store.STORE.layout, explicit=explicit)
+            spack.store.STORE.db.add(pkg.spec, explicit=explicit)
 
             # If a compiler, ensure it is added to the configuration
             if task.compiler:
