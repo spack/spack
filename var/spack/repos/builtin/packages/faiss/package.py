@@ -35,6 +35,9 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
     version("1.6.3", sha256="e1a41c159f0b896975fbb133e0240a233af5c9286c09a28fde6aefff5336e542")
     version("1.5.3", sha256="b24d347b0285d01c2ed663ccc7596cd0ea95071f3dd5ebb573ccfc28f15f043b")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("python", default=False, description="Build Python bindings")
     variant("shared", default=False, description="Build shared library")
     variant("tests", default=False, description="Build Tests")
@@ -76,7 +79,7 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
     patch("fixes-in-v1.7.2.patch", when="@1.7.2")
 
     def setup_run_environment(self, env):
-        if "+python" in self.spec:
+        if self.spec.satisfies("+python"):
             env.prepend_path("PYTHONPATH", python_platlib)
             if self.spec.satisfies("platform=darwin"):
                 env.append_path(
@@ -97,7 +100,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define("FAISS_OPT_LEVEL", "generic"),
         ]
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             key = "CMAKE_CUDA_ARCHITECTURES"
             args.append(self.define_from_variant(key, "cuda_arch"))
             # args.append(self.define_from_variant(
@@ -106,7 +109,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
     def install(self, pkg, spec, prefix):
         super().install(pkg, spec, prefix)
-        if "+python" in spec:
+        if spec.satisfies("+python"):
 
             class CustomPythonPipBuilder(spack.build_systems.python.PythonPipBuilder):
                 def __init__(self, pkg, build_dirname):
@@ -130,17 +133,17 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def build(self, pkg, spec, prefix):
         make()
 
-        if "+python" in self.spec:
+        if self.spec.satisfies("+python"):
             make("-C", "python")
 
         # CPU tests
-        if "+tests" in self.spec:
+        if self.spec.satisfies("+tests"):
             with working_dir("tests"):
                 make("gtest")
                 make("tests")
 
         # GPU tests
-        if "+tests+cuda" in self.spec:
+        if self.spec.satisfies("+tests+cuda"):
             with working_dir(os.path.join("gpu", "test")):
                 make("gtest")
                 make("build")  # target added by the patch
@@ -149,7 +152,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def install(self, pkg, spec, prefix):
         make("install")
 
-        if "+python" in self.spec:
+        if self.spec.satisfies("+python"):
             with working_dir("python"):
                 args = std_pip_args + ["--prefix=" + prefix, "."]
                 pip(*args)
@@ -171,7 +174,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             _prefix_and_install("TestCpu")
 
         # GPU tests
-        if "+cuda" in self.spec:
+        if self.spec.satisfies("+cuda"):
             with working_dir(os.path.join("gpu", "test")):
                 _prefix_and_install("TestGpuIndexFlat")
                 _prefix_and_install("TestGpuIndexBinaryFlat")

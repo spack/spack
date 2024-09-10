@@ -39,6 +39,8 @@ class RocmValidationSuite(CMakePackage):
         version("5.3.3", sha256="9acbc8de9b2e18659f51bd49f6e92ab6c93742e2ed0046322025f017fc12497f")
         version("5.3.0", sha256="d6afb8a5f4eaf860fd510bcfe65e735cbf96d4b8817c758ea7aee84d4c994382")
 
+    depends_on("cxx", type="build")  # generated
+
     patch(
         "007-cleanup-path-reference-donot-download-googletest-yaml-library-path_5.3.patch",
         when="@5.3.0:5.5",

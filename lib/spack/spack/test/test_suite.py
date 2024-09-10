@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import os
+import sys
 
 import pytest
 
@@ -315,8 +316,11 @@ def test_test_part_pass(install_mockery, mock_fetch, mock_test_stage):
     name = "test_echo"
     msg = "nothing"
     with spack.install_test.test_part(pkg, name, "echo"):
-        echo = which("echo")
-        echo(msg)
+        if sys.platform == "win32":
+            print(msg)
+        else:
+            echo = which("echo")
+            echo(msg)
 
     for part_name, status in pkg.tester.test_parts.items():
         assert part_name.endswith(name)
@@ -513,7 +517,7 @@ def test_find_required_file(tmpdir):
 def test_packagetest_fails(mock_packages):
     MyPackage = collections.namedtuple("MyPackage", ["spec"])
 
-    s = spack.spec.Spec("a")
+    s = spack.spec.Spec("pkg-a")
     pkg = MyPackage(s)
     with pytest.raises(ValueError, match="require a concrete package"):
         spack.install_test.PackageTest(pkg)

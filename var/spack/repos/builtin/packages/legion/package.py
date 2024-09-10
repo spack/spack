@@ -51,6 +51,10 @@ class Legion(CMakePackage, ROCmPackage):
     version("cr-20210122", commit="181e63ad4187fbd9a96761ab3a52d93e157ede20", deprecated=True)
     version("cr-20191217", commit="572576b312509e666f2d72fafdbe9d968b1a6ac3", deprecated=True)
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake@3.16:", type="build")
     # TODO: Need to spec version of MPI v3 for use of the low-level MPI transport
     # layer. At present the MPI layer is still experimental and we discourge its
@@ -491,7 +495,7 @@ class Legion(CMakePackage, ROCmPackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([join_path("examples", "local_function_tasks")])
+        cache_extra_test_sources(self, [join_path("examples", "local_function_tasks")])
 
     def test_run_local_function_tasks(self):
         """Build and run external application example"""

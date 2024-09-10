@@ -77,6 +77,9 @@ class Protobuf(CMakePackage):
     version("3.1.0", sha256="fb2a314f4be897491bb2446697be693d489af645cb0e165a85e7e64e07eb134d")
     version("3.0.2", sha256="a0a265bcc9d4e98c87416e59c33afc37cede9fb277292523739417e449b18c1e")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant(
         "build_type",
@@ -116,6 +119,22 @@ class Protobuf(CMakePackage):
     )
 
     patch("msvc-abseil-target-namespace.patch", when="@3.22 %msvc")
+
+    # Misisng #include "absl/container/internal/layout.h"
+    # See https://github.com/protocolbuffers/protobuf/pull/14042
+    patch(
+        "https://github.com/protocolbuffers/protobuf/commit/e052928c94f5a9a6a6cbdb82e09ab4ee92b7815f.patch?full_index=1",
+        when="@3.22:3.24.3 ^abseil-cpp@20240116:",
+        sha256="20e3cc99a9513b256e219653abe1bfc7d6b6a5413e269676e3d442830f99a1af",
+    )
+
+    # Missing #include "absl/strings/str_cat.h"
+    # See https://github.com/protocolbuffers/protobuf/pull/14054
+    patch(
+        "https://github.com/protocolbuffers/protobuf/commit/38a24729ec94e6576a1425951c898ad0b91ad2d2.patch?full_index=1",
+        when="@3.22:3.24.3 ^abseil-cpp@20240116:",
+        sha256="c061356db31cdce29c8cdd98a3a8219ef048ebc2318d0dec26c1f2c5e5dae29b",
+    )
 
     def fetch_remote_versions(self, *args, **kwargs):
         """Ignore additional source artifacts uploaded with releases,

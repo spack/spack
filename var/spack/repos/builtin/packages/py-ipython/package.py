@@ -49,7 +49,7 @@ class PyIpython(PythonPackage):
     version("5.1.0", sha256="7ef4694e1345913182126b219aaa4a0047e191af414256da6772cf249571b961")
 
     depends_on("python@3.9:", when="@8.13.1:", type=("build", "run"))
-    depends_on("python@3.8:", when="@8:", type=("build", "run"))
+    depends_on("python@3.8: +sqlite3", when="@8:", type=("build", "run"))
     depends_on("py-setuptools@61.2:", when="@8.22:", type="build")
     depends_on("py-setuptools@51:", when="@8:", type="build")
     depends_on("py-setuptools@18.5:", when="@:7", type="run")

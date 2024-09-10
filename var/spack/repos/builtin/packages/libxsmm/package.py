@@ -63,6 +63,10 @@ class Libxsmm(MakefilePackage):
     version("1.4.1", sha256="c19be118694c9b4e9a61ef4205b1e1a7e0c400c07f9bce65ae430d2dc2be5fe1")
     version("1.4", sha256="cf483a370d802bd8800c06a12d14d2b4406a745c8a0b2c8722ccc992d0cd72dd")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("shared", default=False, description="With shared libraries (and static libraries).")
     variant("debug", default=False, description="With call-trace (LIBXSMM_TRACE); unoptimized.")
     variant(

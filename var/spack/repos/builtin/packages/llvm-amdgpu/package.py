@@ -40,6 +40,10 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         version("5.3.3", sha256="5296d5e474811c7d1e456cb6d5011db248b79b8d0512155e8a6c2aa5b5f12d38")
         version("5.3.0", sha256="4e3fcddb5b8ea8dcaa4417e0e31a9c2bbdc9e7d4ac3401635a636df32905c93e")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "rocm-device-libs",
         default=True,
@@ -71,6 +75,11 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     depends_on("ncurses+termlib", type="link")
     depends_on("pkgconfig", type="build")
 
+    # This flavour of LLVM doesn't work on MacOS, so we should ensure that it
+    # isn't used to satisfy any of the libllvm dependencies on the Darwin
+    # platform.
+    conflicts("platform=darwin")
+
     # OpenMP clang toolchain looks for bitcode files in llvm/bin/../lib
     # as per 5.2.0 llvm code. It used to be llvm/bin/../lib/libdevice.
     # Below patch is to look in the old path.
@@ -97,6 +106,9 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     )
 
     conflicts("^cmake@3.19.0")
+
+    # https://github.com/spack/spack/issues/45746
+    conflicts("^ninja@1.12:", when="@:6.0")
 
     root_cmakelists_dir = "llvm"
     install_targets = ["clang-tidy", "install"]
@@ -248,7 +260,7 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
             args.append(self.define("LLVM_ENABLE_PROJECTS", llvm_projects))
             args.append(self.define("LLVM_ENABLE_RUNTIMES", llvm_runtimes))
             args.append(self.define("LLVM_ENABLE_LIBCXX", "OFF"))
-            args.append(self.define("CLANG_LINK_FLANG_LEGACY", False))
+            args.append(self.define("CLANG_LINK_FLANG_LEGACY", True))
             args.append(self.define("CMAKE_CXX_STANDARD", 17))
             args.append(self.define("FLANG_INCLUDE_DOCS", False))
             args.append(self.define("LLVM_BUILD_DOCS", "ON"))
@@ -265,9 +277,17 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     # Make sure that the compiler paths are in the LD_LIBRARY_PATH
     def setup_run_environment(self, env):
         llvm_amdgpu_home = self.spec["llvm-amdgpu"].prefix
-        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/llvm/lib")
+        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/lib")
 
     # Make sure that the compiler paths are in the LD_LIBRARY_PATH
     def setup_dependent_run_environment(self, env, dependent_spec):
         llvm_amdgpu_home = self.spec["llvm-amdgpu"].prefix
-        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/llvm/lib")
+        env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/lib")
+
+    # Required for enabling asan on dependent packages
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        for root, _, files in os.walk(self.spec["llvm-amdgpu"].prefix):
+            if "libclang_rt.asan-x86_64.so" in files:
+                asan_lib_path = root
+        env.prepend_path("LD_LIBRARY_PATH", asan_lib_path)
+        env.prune_duplicate_paths("LD_LIBRARY_PATH")

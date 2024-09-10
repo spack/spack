@@ -92,6 +92,8 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
     version("1.0", tag="v1.0", commit="501a098ad879dc8deb4a74fcfe8c08c283a10627", submodules=True)
 
+    depends_on("cxx", type="build")  # generated
+
     # Patching Umpire for dual BLT targets import changed MPI target name in Umpire link interface
     # We propagate the patch here.
     patch("change_mpi_target_name_umpire_patch.patch", when="@2022.10.0:2023.06.0")
@@ -207,7 +209,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super().initconfig_compiler_entries()
 
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
         llnl_link_helpers(entries, spec, compiler)
@@ -222,16 +224,16 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("# Package custom hardware settings")
         entries.append("#------------------{0}\n".format("-" * 30))
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
-            if "+separable_compilation" in spec:
+            if spec.satisfies("+separable_compilation"):
                 entries.append(cmake_cache_option("CMAKE_CUDA_SEPARABLE_COMPILATION", True))
                 entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
 
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             entries.append(cmake_cache_option("ENABLE_HIP", True))
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
@@ -258,7 +260,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("#------------------{0}\n".format("-" * 60))
 
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec["blt"].prefix))
-        if "+raja" in spec:
+        if spec.satisfies("+raja"):
             entries.append(cmake_cache_option("{}ENABLE_RAJA_PLUGIN".format(option_prefix), True))
             entries.append(cmake_cache_path("RAJA_DIR", spec["raja"].prefix))
         entries.append(cmake_cache_path("umpire_DIR", spec["umpire"].prefix))
@@ -276,7 +278,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
         entries.append(cmake_cache_option("ENABLE_EXAMPLES", "+examples" in spec))
         entries.append(cmake_cache_option("ENABLE_DOCS", False))
-        if "tests=benchmarks" in spec:
+        if spec.satisfies("tests=benchmarks"):
             # BLT requires ENABLE_TESTS=True to enable benchmarks
             entries.append(cmake_cache_option("ENABLE_BENCHMARKS", True))
             entries.append(cmake_cache_option("ENABLE_TESTS", True))

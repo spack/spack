@@ -33,6 +33,9 @@ class Gnutls(AutotoolsPackage):
     version("3.5.9", sha256="82b10f0c4ef18f4e64ad8cef5dbaf14be732f5095a41cf366b4ecb4050382951")
     version("3.3.9", sha256="39166de5293a9d30ef1cd0a4d97f01fdeed7d7dbf8db95392e309256edcb13c1")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("zlib", default=True, description="Enable zlib compression support")
     variant("guile", default=False, description="Enable Guile bindings")
 
@@ -63,7 +66,7 @@ class Gnutls(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         spec = self.spec
-        if "+guile" in spec:
+        if spec.satisfies("+guile"):
             env.set("GUILE", spec["guile"].prefix.bin.guile)
 
     def configure_args(self):
@@ -76,12 +79,12 @@ class Gnutls(AutotoolsPackage):
             args.append("--with-included-unistring")
             args.append("--without-p11-kit")  # p11-kit@0.23.1: ...
 
-        if "+zlib" in spec:
+        if spec.satisfies("+zlib"):
             args.append("--with-zlib")
         else:
             args.append("--without-zlib")
 
-        if "+guile" in spec:
+        if spec.satisfies("+guile"):
             args.append("--enable-guile")
         else:
             args.append("--disable-guile")

@@ -16,6 +16,9 @@ class Seqfu(Package):
 
     version("1.20.3", sha256="1b287b99f3f1ac7045f4d551e781d6780ce168ba8e0a7bfaa0f5490f32e15938")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("nim@2", type="build")
     depends_on("zlib", type="build")
 

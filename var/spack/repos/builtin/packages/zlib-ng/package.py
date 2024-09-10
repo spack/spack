@@ -26,6 +26,9 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     version("2.0.7", sha256="6c0853bb27738b811f2b4d4af095323c3d5ce36ceed6b50e5f773204fb8f7200")
     version("2.0.0", sha256="86993903527d9b12fc543335c19c1d33a93797b3d4d37648b5addae83679ecd8")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("compat", default=True, description="Enable compatibility API")
     variant("opt", default=True, description="Enable optimizations")
     variant("shared", default=True, description="Build shared library")
@@ -42,7 +45,7 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     build_system("autotools", "cmake", default="autotools")
 
     # fix building with NVHPC, see https://github.com/zlib-ng/zlib-ng/pull/1698
-    patch("pr-1698.patch", when="@2.1.4:%nvhpc+opt")
+    patch("pr-1698.patch", when="@2.1.4:2.1.6%nvhpc+opt")
 
     with when("build_system=cmake"):
         depends_on("cmake@3.5.1:", type="build")

@@ -12,7 +12,7 @@ import llnl.util.tty as tty
 from spack.package import *
 
 
-class Namd(MakefilePackage, CudaPackage):
+class Namd(MakefilePackage, CudaPackage, ROCmPackage):
     """NAMD is a parallel molecular dynamics code designed for
     high-performance simulation of large biomolecular systems."""
 
@@ -75,8 +75,23 @@ class Namd(MakefilePackage, CudaPackage):
         description="Enables Tcl and/or python interface",
     )
 
-    variant("avxtiles", when="target=x86_64_v4:", default=False, description="Enable avxtiles")
+    variant(
+        "avxtiles",
+        when="target=x86_64_v4: @2.15:",
+        default=False,
+        description="Enable avxtiles supported with NAMD 2.15+",
+    )
     variant("single_node_gpu", default=False, description="Single node GPU")
+
+    # Adding memopt variant to build memory-optimized mode that utilizes a compressed
+    # version of the molecular structure and also supports parallel I/O.
+    # Refer: https://www.ks.uiuc.edu/Research/namd/wiki/index.cgi?NamdMemoryReduction
+    variant(
+        "memopt",
+        when="@2.8:",
+        default=False,
+        description="Enable memory-optimized build supported with NAMD 2.8+",
+    )
 
     # init_tcl_pointers() declaration and implementation are inconsistent
     # "src/colvarproxy_namd.C", line 482: error: inherited member is not
@@ -103,7 +118,13 @@ class Namd(MakefilePackage, CudaPackage):
     depends_on("tcl", when="interface=python")
     depends_on("python", when="interface=python")
 
-    conflicts("+avxtiles", when="@:2.14,3:", msg="AVXTiles algorithm requires NAMD 2.15")
+    conflicts("+rocm", when="+cuda", msg="NAMD supports only one GPU backend at a time")
+    conflicts("+single_node_gpu", when="~cuda~rocm")
+    conflicts(
+        "+memopt",
+        when="+single_node_gpu",
+        msg="memopt mode is not compatible with GPU-resident builds",
+    )
 
     # https://www.ks.uiuc.edu/Research/namd/2.12/features.html
     # https://www.ks.uiuc.edu/Research/namd/2.13/features.html
@@ -293,6 +314,17 @@ class Namd(MakefilePackage, CudaPackage):
 
             if "+single_node_gpu" in spec:
                 opts.extend(["--with-single-node-cuda"])
+
+        if "+rocm" in spec:
+            self._copy_arch_file("hip")
+            opts.append("--with-hip")
+            opts.extend(["--rocm-prefix", os.environ["ROCM_PATH"]])
+
+            if "+single_node_gpu" in spec:
+                opts.extend(["--with-single-node-hip"])
+
+        if spec.satisfies("+memopt"):
+            opts.append("--with-memopt")
 
         config = Executable("./config")
 

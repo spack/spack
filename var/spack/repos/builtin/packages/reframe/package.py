@@ -85,6 +85,9 @@ class Reframe(Package):
     version("2.17.2", sha256="092241cdc15918040aacb922c806aecb59c5bdc3ff7db034a4f355d39aecc101")
     version("2.17.1", sha256="0b0d32a892607840a7d668f5dcea6f03f7022a26b23e5042a0faf5b8c41cb146")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("docs", default=False, description="Build ReFrame's man page documentation")
     variant("gelf", default=False, description="Add graylog handler support")
 
