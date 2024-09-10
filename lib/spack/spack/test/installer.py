@@ -73,7 +73,7 @@ def create_build_task(
     pkg: spack.package_base.PackageBase, install_args: Optional[dict] = None
 ) -> inst.BuildTask:
     request = inst.BuildRequest(pkg, {} if install_args is None else install_args)
-    return inst.BuildTask(pkg, request, False, 0, 0, inst.STATUS_ADDED, set())
+    return inst.BuildTask(pkg, request=request, status=inst.BuildStatus.ADDED)
 
 
 def create_installer(
@@ -698,7 +698,7 @@ def test_requeue_task(install_mockery, capfd):
     ids = list(installer.build_tasks)
     assert len(ids) == 1
     qtask = installer.build_tasks[ids[0]]
-    assert qtask.status == inst.STATUS_INSTALLING
+    assert qtask.status == inst.BuildStatus.INSTALLING
     assert qtask.sequence > task.sequence
     assert qtask.attempts == task.attempts + 1
 

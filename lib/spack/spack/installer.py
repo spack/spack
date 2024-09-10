@@ -27,6 +27,7 @@ installations of packages in a Spack instance.
 """
 
 import copy
+import enum
 import glob
 import heapq
 import io
@@ -71,25 +72,32 @@ from spack.util.executable import which
 #: were added (see https://docs.python.org/2/library/heapq.html).
 _counter = itertools.count(0)
 
-#: Build status indicating task has been added.
-STATUS_ADDED = "queued"
 
-#: Build status indicating the spec failed to install
-STATUS_FAILED = "failed"
+class BuildStatus(enum.Enum):
+    """Different build (task) states."""
 
-#: Build status indicating the spec is being installed (possibly by another
-#: process)
-STATUS_INSTALLING = "installing"
+    #: Build status indicating task has been added.
+    ADDED = enum.auto()
 
-#: Build status indicating the spec was sucessfully installed
-STATUS_INSTALLED = "installed"
+    #: Build status indicating the spec failed to install
+    FAILED = enum.auto()
 
-#: Build status indicating the task has been popped from the queue
-STATUS_DEQUEUED = "dequeued"
+    #: Build status indicating the spec is being installed (possibly by another
+    #: process)
+    INSTALLING = enum.auto()
 
-#: Build status indicating task has been removed (to maintain priority
-#: queue invariants).
-STATUS_REMOVED = "removed"
+    #: Build status indicating the spec was sucessfully installed
+    INSTALLED = enum.auto()
+
+    #: Build status indicating the task has been popped from the queue
+    DEQUEUED = enum.auto()
+
+    #: Build status indicating task has been removed (to maintain priority
+    #: queue invariants).
+    REMOVED = enum.auto()
+
+    def __str__(self):
+        return "queued" if self == BuildStatus.ADDED else f"{self.name.lower()}"
 
 
 def _write_timer_json(pkg, timer, cache):
@@ -844,29 +852,21 @@ class BuildRequest:
 class BuildTask:
     """Class for representing the build task for a package."""
 
-    def __init__(
-        self,
-        pkg: "spack.package_base.PackageBase",
-        request: Optional[BuildRequest],
-        compiler: bool,
-        start: float,
-        attempts: int,
-        status: str,
-        installed: Set[str],
-    ):
+    def __init__(self, pkg: "spack.package_base.PackageBase", **kwargs):
         """
         Instantiate a build task for a package.
 
         Args:
             pkg: the package to be built and installed
-            request: the associated install request where ``None`` can be
-                used to indicate the package was explicitly requested by the user
-            compiler: whether task is for a bootstrap compiler
-            start: the initial start time for the package, in seconds
-            attempts: the number of attempts to install the package, which
-                should be 0 when the task is initially instantiated
-            status: the installation status
-            installed: the identifiers of packages that have
+            request (BuildRequest or None): the associated install request
+                where ``None`` can be used to indicate the package was
+                explicitly requested by the user
+            compiler (bool):  whether task is for a bootstrap compiler
+            start (float): the initial start time for the package, in seconds
+            attempts (int): the number of attempts to install the package,
+                which should be 0 when the task is initially instantiated
+            status (str): the installation status
+            installed (set): the (string) identifiers of packages that have
                 been installed so far
         """
 
@@ -882,26 +882,42 @@ class BuildTask:
         self.pkg_id = package_id(self.pkg.spec)
 
         # The explicit build request associated with the package
-        if not isinstance(request, BuildRequest):
-            raise ValueError(f"{str(pkg)} must have a build request")
-
-        self.request = request
+        self.request = kwargs.get("request", None)
+        if not isinstance(self.request, BuildRequest):
+            raise ValueError(f"request must be a BuildRequest, not {self.request}")
 
         # Initialize the status to an active state.  The status is used to
         # ensure priority queue invariants when tasks are "removed" from the
         # queue.
-        if status == STATUS_REMOVED:
-            raise spack.error.InstallError(
-                f"Cannot create a build task for {self.pkg_id} with status '{status}'", pkg=pkg
+        self.status = kwargs.get("status", None)
+        if not isinstance(self.status, BuildStatus):
+            raise ValueError(f"status must be a BuildStatus, not {self.status}")
+
+        if self.status == BuildStatus.REMOVED:
+            raise InstallError(
+                f"Cannot create a build task for {self.pkg_id} with status '{self.status}'",
+                pkg=pkg,
             )
 
-        self.status = status
-
         # Package is associated with a bootstrap compiler
-        self.compiler = compiler
+        self.compiler = kwargs.get("compiler", False)
+        if not isinstance(self.compiler, bool):
+            raise ValueError(f"compiler must be a bool, not {self.compiler}")
 
         # The initial start time for processing the spec
-        self.start = start
+        self.start = kwargs.get("start", 0.0)
+        if not isinstance(self.start, float):
+            raise ValueError(f"initial start time must be a float, not {self.start}")
+
+        # The set of installed specs
+        installed = kwargs.get("installed", set())
+        if not isinstance(installed, set) or any([not isinstance(p, str) for p in installed]):
+            raise ValueError(f"installed packages must be a set of package ids, not {installed}")
+
+        # The number of attempts to build the package
+        self.attempts = kwargs.get("attempts", 0)
+        if not isinstance(self.attempts, int):
+            raise ValueError(f"attempts must be an int, not {self.attempts}")
 
         # Set of dependents, which needs to include the requesting package
         # to support tracking of parallel, multi-spec, environment installs.
@@ -924,13 +940,11 @@ class BuildTask:
 
         # List of uninstalled dependencies, which is used to establish
         # the priority of the build task.
-        #
         self.uninstalled_deps = set(
             pkg_id for pkg_id in self.dependencies if pkg_id not in installed
         )
 
         # Ensure key sequence-related properties are updated accordingly.
-        self.attempts = attempts
         self._update()
 
     def __eq__(self, other):
@@ -1245,11 +1259,9 @@ class PackageInstaller:
         """
         task = BuildTask(
             pkg,
-            request,
+            request=request,
             compiler=is_compiler,
-            start=0,
-            attempts=0,
-            status=STATUS_ADDED,
+            status=BuildStatus.ADDED,
             installed=self.installed,
         )
         for dep_id in task.dependencies:
@@ -1614,7 +1626,7 @@ class PackageInstaller:
 
         tty.msg(install_msg(pkg_id, self.pid, install_status))
         task.start = task.start or time.time()
-        task.status = STATUS_INSTALLING
+        task.status = BuildStatus.INSTALLING
 
         # Use the binary cache if requested
         if use_cache:
@@ -1678,9 +1690,9 @@ class PackageInstaller:
         """
         while self.build_pq:
             task = heapq.heappop(self.build_pq)[1]
-            if task.status != STATUS_REMOVED:
+            if task.status != BuildStatus.REMOVED:
                 del self.build_tasks[task.pkg_id]
-                task.status = STATUS_DEQUEUED
+                task.status = BuildStatus.DEQUEUED
                 return task
         return None
 
@@ -1755,7 +1767,7 @@ class PackageInstaller:
         if pkg_id in self.build_tasks:
             tty.debug(f"Removing build task for {pkg_id} from list")
             task = self.build_tasks.pop(pkg_id)
-            task.status = STATUS_REMOVED
+            task.status = BuildStatus.REMOVED
             return task
         else:
             return None
@@ -1767,14 +1779,14 @@ class PackageInstaller:
         Args:
             task (BuildTask): the installation build task for a package
         """
-        if task.status not in [STATUS_INSTALLED, STATUS_INSTALLING]:
+        if task.status not in [BuildStatus.INSTALLED, BuildStatus.INSTALLING]:
             tty.debug(
                 f"{install_msg(task.pkg_id, self.pid, install_status)} "
                 "in progress by another process"
             )
 
         new_task = task.next_attempt(self.installed)
-        new_task.status = STATUS_INSTALLING
+        new_task.status = BuildStatus.INSTALLING
         self._push_task(new_task)
 
     def _setup_install_dir(self, pkg: "spack.package_base.PackageBase") -> None:
@@ -1829,7 +1841,7 @@ class PackageInstaller:
             self.failed[pkg_id] = spack.store.STORE.failure_tracker.mark(task.pkg.spec)
         else:
             self.failed[pkg_id] = None
-        task.status = STATUS_FAILED
+        task.status = BuildStatus.FAILED
 
         for dep_id in task.dependents:
             if dep_id in self.build_tasks:
@@ -1849,7 +1861,7 @@ class PackageInstaller:
         Args:
             task (BuildTask): the build task for the installed package
         """
-        task.status = STATUS_INSTALLED
+        task.status = BuildStatus.INSTALLED
         self._flag_installed(task.pkg, task.dependents)
 
     def _flag_installed(
