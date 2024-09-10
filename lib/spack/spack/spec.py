@@ -3911,45 +3911,42 @@ class Spec:
             for idx, part in enumerate(parts):
                 if not part:
                     raise SpecFormatStringError("Format string attributes must be non-empty")
-                if part.startswith("_"):
+                elif part.startswith("_"):
                     raise SpecFormatStringError("Attempted to format private attribute")
+                elif isinstance(current, VariantMap):
+                    # subscript instead of getattr for variant names
+                    try:
+                        current = current[part]
+                    except KeyError:
+                        raise SpecFormatStringError(f"Variant '{part}' does not exist")
                 else:
-                    if isinstance(current, VariantMap):
-                        # subscript instead of getattr for variant names
-                        try:
-                            current = current[part]
-                        except KeyError:
-                            raise SpecFormatStringError(f"Variant '{part}' does not exist")
-                    else:
-                        # aliases
-                        if part == "arch":
-                            part = "architecture"
-                        elif part == "version":
-                            # version (singular) requires a concrete versions list. Avoid
-                            # pedantic errors by using versions (plural) when not concrete.
-                            # These two are not entirely equivalent for pkg@=1.2.3:
-                            # - version prints '1.2.3'
-                            # - versions prints '=1.2.3'
-                            if not current.versions.concrete:
-                                part = "versions"
-                        try:
-                            current = getattr(current, part)
-                        except AttributeError:
-                            parent = ".".join(parts[:idx])
-                            m = "Attempted to format attribute %s." % attribute
-                            m += "Spec %s has no attribute %s" % (parent, part)
-                            raise SpecFormatStringError(m)
-                        if isinstance(current, vn.VersionList):
-                            if current == vn.any_version:
-                                # don't print empty version lists
-                                return ""
-
-                    if callable(current):
-                        raise SpecFormatStringError("Attempted to format callable object")
-
-                    if current is None:
-                        # not printing anything
+                    # aliases
+                    if part == "arch":
+                        part = "architecture"
+                    elif part == "version" and not current.versions.concrete:
+                        # version (singular) requires a concrete versions list. Avoid
+                        # pedantic errors by using versions (plural) when not concrete.
+                        # These two are not entirely equivalent for pkg@=1.2.3:
+                        # - version prints '1.2.3'
+                        # - versions prints '=1.2.3'
+                        part = "versions"
+                    try:
+                        current = getattr(current, part)
+                    except AttributeError:
+                        raise SpecFormatStringError(
+                            f"Attempted to format attribute {attribute}. "
+                            f"Spec {'.'.join(parts[:idx])} has no attribute {part}"
+                        )
+                    if isinstance(current, vn.VersionList) and current == vn.any_version:
+                        # don't print empty version lists
                         return ""
+
+                if callable(current):
+                    raise SpecFormatStringError("Attempted to format callable object")
+
+                if current is None:
+                    # not printing anything
+                    return ""
 
             # Set color codes for various attributes
             color = None
