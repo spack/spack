@@ -61,7 +61,7 @@ class Fms(CMakePackage):
     # https://github.com/NOAA-GFDL/FMS/issues/1417
     patch(
         "https://github.com/NOAA-GFDL/FMS/commit/c9bba516ba1115d4a7660fba92f9d67cf3fd32ad.patch?full_index=1",
-        sha256="f835c54b2898c980a4cc2a9786134af91a8b1e8b1f11b1734227c6dea26c3b79",
+        sha256="07d5b68838bba61ee547bd4cd7c12d81228c91a80a966b8693694fa236d0ac30",
         when="@2023.03",
     )
 
