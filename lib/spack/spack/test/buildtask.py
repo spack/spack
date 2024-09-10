@@ -12,57 +12,37 @@ import spack.spec
 
 
 def test_build_task_errors(install_mockery):
-    kwargs = {
-        "request": None,
-        "compiler": "False",
-        "start": "0",
-        "attempts": "0",
-        "status": "0",
-        "installed": "mpileaks",
-    }
-    with pytest.raises(ValueError, match="must be a package"):
-        inst.BuildTask(None, **kwargs)
-
-    with pytest.raises(ValueError, match="must be a package"):
-        inst.BuildTask("abc", **kwargs)
-
+    """Check expected errors when instantiating a BuildTask."""
     spec = spack.spec.Spec("trivial-install-test-package")
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
-    with pytest.raises(ValueError, match="must have a concrete spec"):
-        inst.BuildTask(pkg_cls(spec), **kwargs)
 
+    # The value of the request argument is expected to not be checked.
+    for pkg in [None, "abc"]:
+        with pytest.raises(TypeError, match="must be a package"):
+            inst.BuildTask(pkg, None)
+
+    with pytest.raises(ValueError, match="must have a concrete spec"):
+        inst.BuildTask(pkg_cls(spec), None)
+
+    # Using a concretized package now means the request argument is checked.
     spec.concretize()
     assert spec.concrete
-    with pytest.raises(ValueError, match="must be a BuildRequest"):
-        inst.BuildTask(spec.package, **kwargs)
+    with pytest.raises(TypeError, match="is not a valid build request"):
+        inst.BuildTask(spec.package, None)
 
-    kwargs["request"] = inst.BuildRequest(spec.package, {})
-    with pytest.raises(ValueError, match="must be a BuildStatus"):
-        inst.BuildTask(spec.package, **kwargs)
+    # Using a valid package and spec, the next check is the status argument.
+    request = inst.BuildRequest(spec.package, {})
+    with pytest.raises(TypeError, match="is not a valid build status"):
+        inst.BuildTask(spec.package, request, status="queued")
 
-    kwargs["status"] = "queued"
-    with pytest.raises(ValueError, match="must be a BuildStatus"):
-        inst.BuildTask(spec.package, **kwargs)
-
-    kwargs["status"] = inst.BuildStatus.REMOVED
+    # Now we can check that build tasks cannot be create when the status
+    # indicates the task is/should've been removed.
     with pytest.raises(inst.InstallError, match="Cannot create a build task"):
-        inst.BuildTask(spec.package, **kwargs)
+        inst.BuildTask(spec.package, request, status=inst.BuildStatus.REMOVED)
 
-    kwargs["status"] = inst.BuildStatus.INSTALLED
-    with pytest.raises(ValueError, match="must be a bool"):
-        inst.BuildTask(spec.package, **kwargs)
-
-    kwargs["compiler"] = False
-    with pytest.raises(ValueError, match="must be a float"):
-        inst.BuildTask(spec.package, **kwargs)
-
-    kwargs["start"] = 10.0
-    with pytest.raises(ValueError, match="must be a set"):
-        inst.BuildTask(spec.package, **kwargs)
-
-    kwargs["installed"] = ["mpileaks"]
-    with pytest.raises(ValueError, match="must be a set"):
-        inst.BuildTask(spec.package, **kwargs)
+    # Also make sure to not accept an incompatible installed argument value.
+    with pytest.raises(TypeError, match="not a valid installed value"):
+        inst.BuildTask(spec.package, request, installed="mpileaks")
 
 
 def test_build_task_basics(install_mockery):

@@ -852,27 +852,41 @@ class BuildRequest:
 class BuildTask:
     """Class for representing the build task for a package."""
 
-    def __init__(self, pkg: "spack.package_base.PackageBase", **kwargs):
+    def __init__(
+        self,
+        pkg: "spack.package_base.PackageBase",
+        request: BuildRequest,
+        *,
+        compiler: bool = False,
+        start: float = 0.0,
+        attempts: int = 0,
+        status: BuildStatus = BuildStatus.ADDED,
+        installed: Set[str] = set(),
+    ):
         """
         Instantiate a build task for a package.
 
         Args:
-            pkg: the package to be built and installed
-            request (BuildRequest or None): the associated install request
-                where ``None`` can be used to indicate the package was
-                explicitly requested by the user
-            compiler (bool):  whether task is for a bootstrap compiler
-            start (float): the initial start time for the package, in seconds
-            attempts (int): the number of attempts to install the package,
-                which should be 0 when the task is initially instantiated
-            status (str): the installation status
-            installed (set): the (string) identifiers of packages that have
+            pkg: the package to be built and installed and whose spec is
+                concrete
+            request: the associated install request
+            compiler:  whether task is for a bootstrap compiler
+            start: the initial start time for the package, in seconds
+            attempts: the number of attempts to install the package, which
+                should be 0 when the task is initially instantiated
+            status: the installation status
+            installed: the (string) identifiers of packages that have
                 been installed so far
+
+        Raises:
+            ``InstallError`` if the build status is incompatible with the task
+            ``TypeError`` if provided an argument of the wrong type
+            ``ValueError`` if provided an argument with the wrong value or state
         """
 
         # Ensure dealing with a package that has a concrete spec
         if not isinstance(pkg, spack.package_base.PackageBase):
-            raise ValueError(f"{str(pkg)} must be a package")
+            raise TypeError(f"{str(pkg)} must be a package")
 
         self.pkg = pkg
         if not self.pkg.spec.concrete:
@@ -882,42 +896,34 @@ class BuildTask:
         self.pkg_id = package_id(self.pkg.spec)
 
         # The explicit build request associated with the package
-        self.request = kwargs.get("request", None)
-        if not isinstance(self.request, BuildRequest):
-            raise ValueError(f"request must be a BuildRequest, not {self.request}")
+        if not isinstance(request, BuildRequest):
+            raise TypeError(f"{request} is not a valid build request")
+        self.request = request
 
         # Initialize the status to an active state.  The status is used to
         # ensure priority queue invariants when tasks are "removed" from the
         # queue.
-        self.status = kwargs.get("status", None)
-        if not isinstance(self.status, BuildStatus):
-            raise ValueError(f"status must be a BuildStatus, not {self.status}")
+        if not isinstance(status, BuildStatus):
+            raise TypeError(f"{status} is not a valid build status")
 
-        if self.status == BuildStatus.REMOVED:
+        if status == BuildStatus.REMOVED:
             raise InstallError(
-                f"Cannot create a build task for {self.pkg_id} with status '{self.status}'",
-                pkg=pkg,
+                f"Cannot create a build task for {self.pkg_id} with status '{status}'", pkg=pkg
             )
+        self.status = status
 
         # Package is associated with a bootstrap compiler
-        self.compiler = kwargs.get("compiler", False)
-        if not isinstance(self.compiler, bool):
-            raise ValueError(f"compiler must be a bool, not {self.compiler}")
+        self.compiler = compiler
 
         # The initial start time for processing the spec
-        self.start = kwargs.get("start", 0.0)
-        if not isinstance(self.start, float):
-            raise ValueError(f"initial start time must be a float, not {self.start}")
+        self.start = start
 
-        # The set of installed specs
-        installed = kwargs.get("installed", set())
-        if not isinstance(installed, set) or any([not isinstance(p, str) for p in installed]):
-            raise ValueError(f"installed packages must be a set of package ids, not {installed}")
+        # Make sure installed is an expected type
+        if isinstance(installed, (tuple, list)):
+            installed = set(installed)
 
-        # The number of attempts to build the package
-        self.attempts = kwargs.get("attempts", 0)
-        if not isinstance(self.attempts, int):
-            raise ValueError(f"attempts must be an int, not {self.attempts}")
+        if not isinstance(installed, set):
+            raise TypeError(f"{installed} is not a valid installed type")
 
         # Set of dependents, which needs to include the requesting package
         # to support tracking of parallel, multi-spec, environment installs.
@@ -945,6 +951,7 @@ class BuildTask:
         )
 
         # Ensure key sequence-related properties are updated accordingly.
+        self.attempts = attempts
         self._update()
 
     def __eq__(self, other):
@@ -1199,7 +1206,7 @@ class PackageInstaller:
         architecture: "spack.spec.ArchSpec",
         pkgs: List["spack.package_base.PackageBase"],
         request: BuildRequest,
-        all_deps,
+        all_deps: Dict[str, Set[str]],
     ) -> None:
         """
         Add bootstrap compilers and dependencies to the build queue.
@@ -1209,8 +1216,7 @@ class PackageInstaller:
             architecture: the architecture for which to bootstrap the compiler
             pkgs: the package list with possible compiler dependencies
             request: the associated install request
-            all_deps (defaultdict(set)): dictionary of all dependencies and
-                associated dependents
+            all_deps: dictionary of all dependencies and associated dependents
         """
         packages = _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs)
         for comp_pkg, is_compiler in packages:
