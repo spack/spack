@@ -160,7 +160,7 @@ class Cdo(AutotoolsPackage):
     patch(
         "add_algorithm_header.patch",
         when="@2.4.0:2.4.2 %gcc@14:",
-        sha256="0bc20d2fcb14d8e4010d4222297f259eb7b4220effd97555ed3f027e63cf8b3",
+        sha256="0bc20d2fcb14d8e4010d4222297f259eb7b4220effd97555ed3f027e63cf8b30",
     )
     patch(
         "add_algorithm_header_222.patch",
