@@ -101,7 +101,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         return [
             self.define("PYBIND11_TEST", self.pkg.run_tests),
-            self.define("prefix_for_pc_file", self.prefix)
+            self.define("prefix_for_pc_file", self.prefix),
         ]
 
     def install(self, pkg, spec, prefix):
