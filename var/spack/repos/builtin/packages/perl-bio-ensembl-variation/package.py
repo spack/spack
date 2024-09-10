@@ -21,8 +21,8 @@ class PerlBioEnsemblVariation(Package):
         ("110", "210d627dcb867d9fda3a0d94428da256f394c32e34df5171b9b9e604507e1f05"),
     ]:
         version(vers, sha256=sha)
-        depends_on(f"perl-bio-ensembl@{vers}")
-        depends_on(f"perl-bio-ensembl-io@{vers}", when="+tools", type="run")
+        depends_on(f"perl-bio-ensembl@{vers}", when=f"@{vers}")
+        depends_on(f"perl-bio-ensembl-io@{vers}", when=f"@{vers}+tools", type="run")
 
     extends("perl")
 
@@ -36,6 +36,8 @@ class PerlBioEnsemblVariation(Package):
     depends_on("perl-bioperl@1.6.924")
     depends_on("perl-bio-bigfile")
     depends_on("perl-bio-db-hts")
+    depends_on("perl-bio-ensembl")
+    depends_on("perl-bio-ensembl-io", type="run")
     depends_on("perl-sereal")
     depends_on("perl-json")
     depends_on("perl-set-intervaltree")
