@@ -197,7 +197,7 @@ class MiopenHip(CMakePackage):
             args.append(self.define("MIOPEN_USE_MLIR", "OFF"))
         if self.spec.satisfies("@5.7.0:"):
             args.append(self.define("MIOPEN_ENABLE_AI_IMMED_MODE_FALLBACK", "OFF"))
-        if self.spec.satisfies("@6.0.0:6.1"):
+        if self.spec.satisfies("@6:6.1"):
             args.append(
                 "-DROCTRACER_INCLUDE_DIR={0}".format(self.spec["roctracer-dev"].prefix.include)
             )
