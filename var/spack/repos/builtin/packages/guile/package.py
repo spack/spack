@@ -41,7 +41,7 @@ class Guile(AutotoolsPackage, GNUMirrorPackage):
     depends_on("bdw-gc@7.0: threads=dgux386", when="threads=dgux386")
     depends_on("gmp@4.2:")
     depends_on("gettext")
-    depends_on("libtool@1.5.6:")
+    depends_on("libtool@1.5.6:", type="link")  # links to libltdl.so
     depends_on("libunistring@0.9.3:")
     depends_on("libffi")
     depends_on("readline", when="+readline")
