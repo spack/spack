@@ -12,7 +12,7 @@ class Lcms(AutotoolsPackage):
     portable across several platforms (MIT license)."""
 
     homepage = "https://www.littlecms.com"
-    url = "http://downloads.sourceforge.net/project/lcms/lcms/2.9/lcms2-2.9.tar.gz"
+    url = "https://downloads.sourceforge.net/project/lcms/lcms/2.9/lcms2-2.9.tar.gz"
 
     license("MIT")
 
@@ -28,7 +28,7 @@ class Lcms(AutotoolsPackage):
     depends_on("cxx", type="build")  # generated
 
     def url_for_version(self, version):
-        url = "http://downloads.sourceforge.net/project/lcms/lcms/{0}/lcms2-{1}.tar.gz"
+        url = "https://downloads.sourceforge.net/project/lcms/lcms/{0}/lcms2-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
     depends_on("jpeg")

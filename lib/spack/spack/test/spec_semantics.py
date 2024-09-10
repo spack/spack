@@ -197,6 +197,9 @@ class TestSpecSemantics:
                 'multivalue-variant foo="baz"',
                 'multivalue-variant foo="bar,baz,barbaz"',
             ),
+            # Namespace (special case, but like variants
+            ("builtin.libelf", "namespace=builtin", "builtin.libelf"),
+            ("libelf", "namespace=builtin", "builtin.libelf"),
             # Flags
             ("mpich ", 'mpich cppflags="-O3"', 'mpich cppflags="-O3"'),
             (
@@ -241,6 +244,65 @@ class TestSpecSemantics:
         c2.constrain(lhs)
         assert c1 == c2
         assert c1 == expected
+
+    @pytest.mark.parametrize(
+        "lhs,rhs,expected_lhs,expected_rhs,propagated_lhs,propagated_rhs",
+        [
+            (
+                'mpich cppflags="-O3"',
+                'mpich cppflags="-O2"',
+                'mpich cppflags="-O3 -O2"',
+                'mpich cppflags="-O2 -O3"',
+                [],
+                [],
+            ),
+            (
+                'mpich cflags="-O3 -g"',
+                'mpich cflags=="-O3"',
+                'mpich cflags="-O3 -g"',
+                'mpich cflags=="-O3 -g"',
+                [("cflags", "-O3")],
+                [("cflags", "-O3")],
+            ),
+        ],
+    )
+    def test_constrain_compiler_flags(
+        self, lhs, rhs, expected_lhs, expected_rhs, propagated_lhs, propagated_rhs
+    ):
+        """Constraining is asymmetric for compiler flags. Also note that
+        Spec equality does not account for flag propagation, so the checks
+        here are manual.
+        """
+        lhs, rhs, expected_lhs, expected_rhs = (
+            Spec(lhs),
+            Spec(rhs),
+            Spec(expected_lhs),
+            Spec(expected_rhs),
+        )
+
+        assert lhs.intersects(rhs)
+        assert rhs.intersects(lhs)
+
+        c1, c2 = lhs.copy(), rhs.copy()
+        c1.constrain(rhs)
+        c2.constrain(lhs)
+
+        assert c1 == expected_lhs
+        assert c2 == expected_rhs
+        for x in [c1, c2]:
+            assert x.satisfies(lhs)
+            assert x.satisfies(rhs)
+
+        def _propagated_flags(_spec):
+            result = set()
+            for flagtype in _spec.compiler_flags:
+                for flag in _spec.compiler_flags[flagtype]:
+                    if flag.propagate:
+                        result.add((flagtype, flag))
+            return result
+
+        assert set(propagated_lhs) <= _propagated_flags(c1)
+        assert set(propagated_rhs) <= _propagated_flags(c2)
 
     def test_constrain_specs_by_hash(self, default_mock_concretization, database):
         """Test that Specs specified only by their hashes can constrain eachother."""
@@ -308,15 +370,13 @@ class TestSpecSemantics:
             ("mpich~~foo", "mpich++foo"),
             ("mpich++foo", "mpich~~foo"),
             ("mpich foo==True", "mpich foo==False"),
-            ('mpich cppflags="-O3"', 'mpich cppflags="-O2"'),
-            ('mpich cppflags="-O3"', 'mpich cppflags=="-O3"'),
             ("libelf@0:2.0", "libelf@2.1:3"),
             ("libelf@0:2.5%gcc@4.8:4.9", "libelf@2.1:3%gcc@4.5:4.7"),
             ("libelf+debug", "libelf~debug"),
             ("libelf+debug~foo", "libelf+debug+foo"),
             ("libelf debug=True", "libelf debug=False"),
-            ('libelf cppflags="-O3"', 'libelf cppflags="-O2"'),
             ("libelf platform=test target=be os=be", "libelf target=fe os=fe"),
+            ("namespace=builtin.mock", "namespace=builtin"),
         ],
     )
     def test_constraining_abstract_specs_with_empty_intersection(self, lhs, rhs):
@@ -343,10 +403,6 @@ class TestSpecSemantics:
             ("mpich", "mpich++foo"),
             ("mpich", "mpich~~foo"),
             ("mpich", "mpich foo==1"),
-            # Flags semantics is currently different from other variant
-            ("mpich", 'mpich cflags="-O3"'),
-            ("mpich cflags=-O3", 'mpich cflags="-O3 -Ofast"'),
-            ("mpich cflags=-O2", 'mpich cflags="-O3"'),
             ("multivalue-variant foo=bar", "multivalue-variant +foo"),
             ("multivalue-variant foo=bar", "multivalue-variant ~foo"),
             ("multivalue-variant fee=bar", "multivalue-variant fee=baz"),
@@ -405,6 +461,25 @@ class TestSpecSemantics:
         spec = Spec("singlevalue-variant-dependent")
         spec.concretize()
         assert "pkg-a@1.0" not in spec
+
+    def test_satisfied_namespace(self):
+        spec = Spec("zlib").concretized()
+        assert spec.satisfies("namespace=builtin.mock")
+        assert not spec.satisfies("namespace=builtin")
+
+    @pytest.mark.parametrize(
+        "spec_string",
+        [
+            "tcl namespace==foobar",
+            "tcl arch==foobar",
+            "tcl os==foobar",
+            "tcl patches==foobar",
+            "tcl dev_path==foobar",
+        ],
+    )
+    def test_propagate_reserved_variant_names(self, spec_string):
+        with pytest.raises(spack.parser.SpecParsingError, match="Propagation"):
+            Spec(spec_string)
 
     def test_unsatisfiable_multi_value_variant(self, default_mock_concretization):
         # Semantics for a multi-valued variant is different
@@ -514,27 +589,20 @@ class TestSpecSemantics:
         s = Spec("callpath")
         assert s["callpath"] == s
 
-    def test_dep_index(self):
-        s = Spec("callpath")
-        s.normalize()
+    def test_dep_index(self, default_mock_concretization):
+        """Tests __getitem__ and __contains__ for specs."""
+        s = default_mock_concretization("callpath")
 
         assert s["callpath"] == s
-        assert isinstance(s["dyninst"], Spec)
-        assert isinstance(s["libdwarf"], Spec)
-        assert isinstance(s["libelf"], Spec)
-        assert isinstance(s["mpi"], Spec)
 
-        assert s["dyninst"].name == "dyninst"
-        assert s["libdwarf"].name == "libdwarf"
-        assert s["libelf"].name == "libelf"
-        assert s["mpi"].name == "mpi"
+        # Real dependencies
+        for key in ("dyninst", "libdwarf", "libelf"):
+            assert isinstance(s[key], Spec)
+            assert s[key].name == key
+            assert key in s
 
-    def test_spec_contains_deps(self):
-        s = Spec("callpath")
-        s.normalize()
-        assert "dyninst" in s
-        assert "libdwarf" in s
-        assert "libelf" in s
+        # Virtual dependencies
+        assert s["mpi"].name == "mpich"
         assert "mpi" in s
 
     @pytest.mark.usefixtures("config")
@@ -656,6 +724,7 @@ class TestSpecSemantics:
             ("{@VERSIONS}", "@", "versions", lambda spec: spec),
             ("{%compiler}", "%", "compiler", lambda spec: spec),
             ("{arch=architecture}", "arch=", "architecture", lambda spec: spec),
+            ("{namespace=namespace}", "namespace=", "namespace", lambda spec: spec),
             ("{compiler.name}", "", "name", lambda spec: spec.compiler),
             ("{compiler.version}", "", "version", lambda spec: spec.compiler),
             ("{%compiler.name}", "%", "name", lambda spec: spec.compiler),
@@ -670,6 +739,13 @@ class TestSpecSemantics:
         hash_segments = [
             ("{hash:7}", "", lambda s: s.dag_hash(7)),
             ("{/hash}", "/", lambda s: "/" + s.dag_hash()),
+        ]
+
+        variants_segments = [
+            ("{variants.debug}", spec, "debug"),
+            ("{variants.foo}", spec, "foo"),
+            ("{^pkg-a.variants.bvv}", spec["pkg-a"], "bvv"),
+            ("{^pkg-a.variants.foo}", spec["pkg-a"], "foo"),
         ]
 
         other_segments = [
@@ -699,6 +775,12 @@ class TestSpecSemantics:
             callpath, fmt_str = depify("callpath", named_str, sigil)
             assert spec.format(fmt_str) == getter(callpath)
 
+        for named_str, test_spec, variant_name in variants_segments:
+            assert test_spec.format(named_str) == str(test_spec.variants[variant_name])
+            assert test_spec.format(named_str[:-1] + ".value}") == str(
+                test_spec.variants[variant_name].value
+            )
+
         for named_str, expected in other_segments:
             actual = spec.format(named_str)
             assert expected == actual
@@ -706,12 +788,39 @@ class TestSpecSemantics:
     @pytest.mark.parametrize(
         "fmt_str",
         [
-            "{@name}",
-            "{@version.concrete}",
-            "{%compiler.version}",
-            "{/hashd}",
-            "{arch=architecture.os}",
+            "{name}",
+            "{version}",
+            "{@version}",
+            "{%compiler}",
+            "{namespace}",
+            "{ namespace=namespace}",
+            "{ namespace =namespace}",
+            "{ name space =namespace}",
+            "{arch}",
+            "{architecture}",
+            "{arch=architecture}",
+            "{  arch=architecture}",
+            "{  arch =architecture}",
         ],
+    )
+    def test_spec_format_null_attributes(self, fmt_str):
+        """Ensure that attributes format to empty strings when their values are null."""
+        spec = spack.spec.Spec()
+        assert spec.format(fmt_str) == ""
+
+    def test_spec_formatting_spaces_in_key(self, default_mock_concretization):
+        spec = default_mock_concretization("multivalue-variant cflags=-O2")
+
+        # test that spaces are preserved, if they come after some other text, otherwise
+        # they are trimmed.
+        # TODO: should we be trimming whitespace from formats? Probably not.
+        assert spec.format("x{ arch=architecture}") == f"x arch={spec.architecture}"
+        assert spec.format("x{ namespace=namespace}") == f"x namespace={spec.namespace}"
+        assert spec.format("x{ name space =namespace}") == f"x name space ={spec.namespace}"
+        assert spec.format("x{ os =os}") == f"x os ={spec.os}"
+
+    @pytest.mark.parametrize(
+        "fmt_str", ["{@name}", "{@version.concrete}", "{%compiler.version}", "{/hashd}"]
     )
     def test_spec_formatting_sigil_mismatches(self, default_mock_concretization, fmt_str):
         spec = default_mock_concretization("multivalue-variant cflags=-O2")
@@ -731,6 +840,7 @@ class TestSpecSemantics:
             r"{dag_hash}",
             r"{foo}",
             r"{+variants.debug}",
+            r"{variants.this_variant_does_not_exist}",
         ],
     )
     def test_spec_formatting_bad_formats(self, default_mock_concretization, fmt_str):
@@ -740,11 +850,11 @@ class TestSpecSemantics:
 
     def test_combination_of_wildcard_or_none(self):
         # Test that using 'none' and another value raises
-        with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
+        with pytest.raises(spack.parser.SpecParsingError, match="cannot be combined"):
             Spec("multivalue-variant foo=none,bar")
 
         # Test that using wildcard and another value raises
-        with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
+        with pytest.raises(spack.parser.SpecParsingError, match="cannot be combined"):
             Spec("multivalue-variant foo=*,bar")
 
     def test_errors_in_variant_directive(self):
@@ -1072,9 +1182,6 @@ class TestSpecSemantics:
         ],
     )
     def test_virtual_deps_bindings(self, default_mock_concretization, spec_str, specs_in_dag):
-        if spack.config.get("config:concretizer") == "original":
-            pytest.skip("Use case not supported by the original concretizer")
-
         s = default_mock_concretization(spec_str)
         for label, expected in specs_in_dag:
             assert label in s
@@ -1090,9 +1197,6 @@ class TestSpecSemantics:
         ],
     )
     def test_unsatisfiable_virtual_deps_bindings(self, spec_str):
-        if spack.config.get("config:concretizer") == "original":
-            pytest.skip("Use case not supported by the original concretizer")
-
         with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
             Spec(spec_str).concretized()
 
@@ -1413,8 +1517,8 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (CompilerSpec, "gcc@5", "gcc@5-tag", (True, False, True)),
         # Flags (flags are a map, so for convenience we initialize a full Spec)
         # Note: the semantic is that of sv variants, not mv variants
-        (Spec, "cppflags=-foo", "cppflags=-bar", (False, False, False)),
-        (Spec, "cppflags='-bar -foo'", "cppflags=-bar", (False, False, False)),
+        (Spec, "cppflags=-foo", "cppflags=-bar", (True, False, False)),
+        (Spec, "cppflags='-bar -foo'", "cppflags=-bar", (True, True, False)),
         (Spec, "cppflags=-foo", "cppflags=-foo", (True, True, True)),
         (Spec, "cppflags=-foo", "cflags=-foo", (True, False, False)),
         # Versions

@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import sys
+import tempfile
 
 import llnl.util.tty as tty
 
@@ -81,6 +82,45 @@ class QtPackage(CMakePackage):
         # Warn users that this config summary is only for info purpose,
         # and should not be relied upon for downstream parsing.
         tty.warn("config.summary in prefix is a temporary feature only")
+
+    @run_after("install")
+    def add_qt_module_files(self):
+        """Qt modules need to drop a forwarding qt_module.pri file in the qt-base
+        mkspecs/modules directory. This violates the spack install prefix separation,
+        so we modify the downstream module files to work regardless."""
+
+        # No need to modify qt-base itself
+        if self.spec.name == "qt-base":
+            return
+
+        # Define qt_module.pri filename, but postpone writing until after loop
+        qt_module_pri = join_path(self.prefix.mkspecs.modules, "qt_module.pri")
+
+        # Include qt_module.pri file in every pri file
+        for old_file in find(self.prefix.mkspecs.modules, "*.pri"):
+            new_fd, new_file = tempfile.mkstemp(
+                prefix=os.path.basename(old_file), dir=self.prefix.mkspecs.modules
+            )
+            with os.fdopen(new_fd, "w") as new_fh:
+                new_fh.write("include(qt_module.pri)\n")
+                with open(old_file, "r") as old_fh:
+                    new_fh.write(old_fh.read())
+            shutil.move(new_file, old_file)
+
+        # Create qt_module.pri file with definitions
+        defs = []
+        for dir in ["BIN", "INCLUDE", "LIB"]:
+            if os.path.exists(join_path(self.prefix, dir.lower())):
+                defs.append(f"QT_MODULE_{dir}_BASE = {join_path(self.prefix, dir.lower())}\n")
+        with open(qt_module_pri, "w") as file:
+            file.write("\n".join(defs))
+
+    def setup_run_environment(self, env):
+        env.prepend_path("QMAKEPATH", self.prefix)
+        if os.path.exists(self.prefix.mkspecs.modules):
+            env.prepend_path("QMAKE_MODULE_PATH", self.prefix.mkspecs.modules)
+        if os.path.exists(self.prefix.plugins):
+            env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
 
 
 class QtBase(QtPackage):

@@ -123,6 +123,7 @@ class Dd4hep(CMakePackage):
     depends_on("podio@:0.16.03", when="@:1.23 +edm4hep")
     depends_on("podio@0.16:", when="@1.24: +edm4hep")
     depends_on("podio@0.16.3:", when="@1.26: +edm4hep")
+    depends_on("podio@:0", when="@:1.29 +edm4hep")
     depends_on("py-pytest", type=("build", "test"))
 
     # See https://github.com/AIDASoft/DD4hep/pull/771 and https://github.com/AIDASoft/DD4hep/pull/876
@@ -138,6 +139,9 @@ class Dd4hep(CMakePackage):
     # dependent on roots cxxstd. However, cxxstd=11 will never work
     # See https://github.com/AIDASoft/DD4hep/pull/1191
     conflicts("^geant4 cxxstd=11", when="+ddg4")
+
+    # See https://github.com/AIDASoft/DD4hep/issues/1210
+    conflicts("^root@6.31.1:", when="@:1.27")
 
     @property
     def libs(self):

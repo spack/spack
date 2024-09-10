@@ -18,6 +18,7 @@ from llnl.util.filesystem import join_path, touch, touchp
 import spack.config
 import spack.directory_layout
 import spack.environment as ev
+import spack.fetch_strategy
 import spack.main
 import spack.package_base
 import spack.paths
@@ -306,14 +307,14 @@ def test_add_config_path(mutable_config):
 
 @pytest.mark.regression("17543,23259")
 def test_add_config_path_with_enumerated_type(mutable_config):
-    spack.config.add("config:concretizer:clingo")
-    assert spack.config.get("config")["concretizer"] == "clingo"
+    spack.config.add("config:flags:keep_werror:all")
+    assert spack.config.get("config")["flags"]["keep_werror"] == "all"
 
-    spack.config.add("config:concretizer:original")
-    assert spack.config.get("config")["concretizer"] == "original"
+    spack.config.add("config:flags:keep_werror:specific")
+    assert spack.config.get("config")["flags"]["keep_werror"] == "specific"
 
     with pytest.raises(spack.config.ConfigError):
-        spack.config.add("config:concretizer:foo")
+        spack.config.add("config:flags:keep_werror:foo")
 
 
 def test_add_config_filename(mock_low_high_config, tmpdir):
