@@ -401,14 +401,6 @@ class TestConcretize:
                 s.compiler_flags[x] == ["-O0", "-g"] for x in ("cflags", "cxxflags", "fflags")
             )
 
-    @pytest.mark.xfail(reason="Broken, needs to be fixed")
-    def test_compiler_flags_from_compiler_and_dependent(self):
-        client = Spec("cmake-client %clang@12.2.0 platform=test os=fe target=fe cflags==-g")
-        client.concretize()
-        cmake = client["cmake"]
-        for spec in [client, cmake]:
-            assert spec.compiler_flags["cflags"] == ["-O3", "-g"]
-
     def test_compiler_flags_differ_identical_compilers(self, mutable_config, clang12_with_flags):
         mutable_config.set("compilers", [clang12_with_flags])
         # Correct arch to use test compiler that has flags
@@ -439,6 +431,13 @@ class TestConcretize:
             # Setting a flag overrides propagation
             (
                 "hypre cflags=='-g' ^openblas cflags='-O3'",
+                ["hypre cflags='-g'", "^openblas cflags='-O3'"],
+                ["^openblas cflags='-g'"],
+            ),
+            # Setting propagation on parent and dependency -> the
+            # dependency propagation flags override
+            (
+                "hypre cflags=='-g' ^openblas cflags=='-O3'",
                 ["hypre cflags='-g'", "^openblas cflags='-O3'"],
                 ["^openblas cflags='-g'"],
             ),

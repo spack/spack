@@ -6,6 +6,7 @@
 import os
 import re
 
+from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
 tools_url = "https://github.com/ROCm"
@@ -658,6 +659,7 @@ class RocmOpenmpExtras(Package):
 
         build_order += ["pgmath", "flang", "flang-runtime"]
         # Override standard CMAKE_BUILD_TYPE
+        std_cmake_args = CMakeBuilder.std_args(self, generator="Unix Makefiles")
         for arg in std_cmake_args:
             found = re.search("CMAKE_BUILD_TYPE", arg)
             if found:

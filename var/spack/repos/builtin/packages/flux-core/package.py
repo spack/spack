@@ -211,7 +211,7 @@ class FluxCore(AutotoolsPackage):
         args = ["--enable-pylint=no"]
         if "+docs" not in self.spec:
             args.append("--disable-docs")
-        if "+security" in self.spec:
+        if self.spec.satisfies("+security"):
             args.append("--with-flux-security")
         return args
 

@@ -162,7 +162,7 @@ class PyTorchgeo(PythonPackage):
         depends_on("py-radiant-mlhub@0.2.1:0.4", when="@:0.4.0")
         depends_on("py-rarfile@4:", when="@0.5")
         depends_on("py-rarfile@3:", when="@:0.4")
-        depends_on("py-zipfile-deflate64@0.2:", when="@0.2.1:")
+        depends_on("py-zipfile-deflate64@0.2:", when="@0.2.1:0.5")
 
     with when("+docs"), default_args(type="run"):
         depends_on("py-ipywidgets@7:")
