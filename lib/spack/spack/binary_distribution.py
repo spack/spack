@@ -2206,26 +2206,33 @@ def relocate_package(spec):
     # First match specific prefix paths. Possibly the *local* install prefix
     # of some dependency is in an upstream, so we cannot assume the original
     # spack store root can be mapped uniformly to the new spack store root.
-    for dep in deps_to_relocate(spec):
+    relocation_specs = deps_to_relocate(spec)
+    relocation_hashes = [s.dag_hash() for s in relocation_specs]
+    for s in relocation_specs:
         try:
-            lookup_dag_hash = spec.build_spec[dep.name].dag_hash()
+            lookup_dag_hash = spec.build_spec[s.name].dag_hash()
         except KeyError:
-            dependent_edges = spec[dep.name].edges_from_dependents()
+            # This must be a virtual provider
+            # For every virtual it provides in the context of this spec
+            # create relocation data for that virtual
             virtuals = set()
-            for edge in dependent_edges:
-                virtuals.update(edge.virtuals)
+            for edge in spec[s.name].edges_from_dependents():
+                # ignore dependents in other specs
+                if edge.spec.dag_hash() in relocation_hashes:
+                    virtuals.update(edge.virtuals)
+
             for virtual in virtuals:
                 try:
                     lookup_dag_hash = spec.build_spec[virtual].dag_hash()
                     break
                 except KeyError:
                     # This is a new dependency
-                    tty.debug(f"{spec} does not have relocation for {dep.name}")
+                    tty.debug(f"{spec} does not have relocation for {s.name}")
 
         if lookup_dag_hash in hash_to_old_prefix:
             old_dep_prefix = hash_to_old_prefix[lookup_dag_hash]
-            prefix_to_prefix_bin[old_dep_prefix] = str(dep.prefix)
-            prefix_to_prefix_text[old_dep_prefix] = str(dep.prefix)
+            prefix_to_prefix_bin[old_dep_prefix] = str(s.prefix)
+            prefix_to_prefix_text[old_dep_prefix] = str(s.prefix)
 
     # Only then add the generic fallback of install prefix -> install prefix.
     prefix_to_prefix_text[old_prefix] = new_prefix
