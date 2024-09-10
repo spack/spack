@@ -667,11 +667,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     conflicts("fabrics=knem", when="@:1.4")
 
     conflicts(
-        "schedulers=slurm ~pmi",
-        when="@1.5.4",
-        msg="+pmi is required for openmpi to work with Slurm.",
-    )
-    conflicts(
         "schedulers=loadleveler",
         when="@3:",
         msg="The loadleveler scheduler is not supported with " "openmpi(>=3).",

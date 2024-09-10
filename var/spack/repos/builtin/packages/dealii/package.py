@@ -358,16 +358,6 @@ class Dealii(CMakePackage, CudaPackage):
             "via ~{0}".format(_package),
         )
 
-    # interfaces added after 9.5.0:
-    for _package in ["vtk", "taskflow"]:
-        conflicts(
-            "+{0}".format(_package),
-            when="@:9.5",
-            msg="The interface to {0} is supported from version 9.6.0 "
-            "onwards. Please explicitly disable this variant "
-            "via ~{0}".format(_package),
-        )
-
     # Interfaces removed in 9.3.0:
     conflicts(
         "+nanoflann",
