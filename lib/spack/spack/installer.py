@@ -1249,7 +1249,7 @@ class PackageInstaller:
     def _add_init_task(
         self,
         pkg: "spack.package_base.PackageBase",
-        request: Optional[BuildRequest],
+        request: BuildRequest,
         is_compiler: bool,
         all_deps: Dict[str, Set[str]],
     ) -> None:
@@ -1258,8 +1258,7 @@ class PackageInstaller:
 
         Args:
             pkg: the package to be built and installed
-            request: the associated install request where ``None`` can be used
-                 to indicate the package was explicitly requested by the user
+            request: the associated install request
             is_compiler: whether task is for a bootstrap compiler
             all_deps: dictionary of all dependencies and associated dependents
         """
