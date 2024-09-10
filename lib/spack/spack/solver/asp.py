@@ -2731,10 +2731,6 @@ class SpackSolverSetup:
                 continue
 
             current_libc = compiler.compiler_obj.default_libc
-            # If this is a compiler yet to be built (config:install_missing_compilers:true)
-            # infer libc from the Python process
-            if not current_libc and compiler.compiler_obj.cc is None:
-                current_libc = spack.util.libc.libc_from_current_python_process()
 
             if using_libc_compatibility() and current_libc:
                 recorder("*").depends_on(
@@ -3156,7 +3152,7 @@ class CompilerParser:
         Args:
             input_specs: specs to be concretized
         """
-        strict = spack.concretize.Concretizer().check_for_compiler_existence
+        strict = spack.concretize.CHECK_COMPILER_EXISTENCE
         default_os = str(spack.platforms.host().default_os)
         default_target = str(archspec.cpu.host().family)
         for s in traverse.traverse_nodes(input_specs):
