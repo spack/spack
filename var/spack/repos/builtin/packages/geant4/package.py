@@ -78,6 +78,7 @@ class Geant4(CMakePackage):
     variant("x11", default=False, description="Optional X11 support")
     variant("motif", default=False, description="Optional motif support")
     variant("qt", default=False, description="Enable Qt support")
+    variant("hdf", default=False, description="Enable HDF5 support", when="@10.4:")
     variant("python", default=False, description="Enable Python bindings", when="@10.6.2:11.0")
     variant("tbb", default=False, description="Use TBB as a tasking backend", when="@11:")
     variant("timemory", default=False, description="Use TiMemory for profiling", when="@9.5:")
@@ -139,6 +140,9 @@ class Geant4(CMakePackage):
         depends_on("vecgeom@1.1.5", when="@10.6.0:10.6")
         depends_on("vecgeom@1.1.0", when="@10.5.0:10.5")
         depends_on("vecgeom@0.5.2", when="@10.4.0:10.4")
+
+    with when("+hdf"):
+        depends_on("hdf5 +threadsafe")
 
     def std_when(values):
         for v in values:
@@ -315,6 +319,9 @@ class Geant4(CMakePackage):
             if spec.satisfies("^[virtuals=qmake] qt-base"):
                 options.append(self.define("GEANT4_USE_QT_QT6", True))
             options.append(self.define("QT_QMAKE_EXECUTABLE", spec["qmake"].prefix.bin.qmake))
+
+        if "+hdf" in spec:
+            options.append(self.define("GEANT4_USE_HDF5", True))
 
         options.append(self.define_from_variant("GEANT4_USE_VTK", "vtk"))
 
