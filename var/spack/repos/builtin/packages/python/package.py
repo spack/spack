@@ -1023,8 +1023,13 @@ print(json.dumps(config))
             win_root_dir,
         ]
 
-        # The Python shipped with Xcode command line tools isn't in any of these locations
-        for subdir in ["lib", "lib64", "libs"]:
+        if self.spec.satisfies("platform=windows"):
+            lib_dirs = ["libs"]
+        else:
+            # The Python shipped with Xcode command line tools isn't in any of these locations
+            lib_dirs = ["lib", "lib64"]
+
+        for subdir in lib_dirs:
             directories.append(os.path.join(self.config_vars["base"], subdir))
 
         directories = dedupe(directories)
