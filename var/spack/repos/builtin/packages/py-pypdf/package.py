@@ -10,7 +10,7 @@ class PyPypdf(PythonPackage):
     """A pure-python PDF library capable of splitting, merging, cropping, and
     transforming PDF files"""
 
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/py-pdf/pypdf"
     pypi = "pypdf/pypdf-4.3.1.tar.gz"
 
     license("BSD-3-Clause", checked_by="qwertos")
