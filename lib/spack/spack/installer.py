@@ -906,7 +906,8 @@ class BuildTask:
         if not isinstance(status, BuildStatus):
             raise TypeError(f"{status} is not a valid build status")
 
-        if status == BuildStatus.REMOVED:
+        # The initial build task cannot have status "removed".
+        if attempts == 0 and status == BuildStatus.REMOVED:
             raise InstallError(
                 f"Cannot create a build task for {self.pkg_id} with status '{status}'", pkg=pkg
             )
