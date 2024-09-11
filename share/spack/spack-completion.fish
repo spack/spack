@@ -539,12 +539,10 @@ complete -c spack -n '__fish_spack_using_command audit packages-https' -l all -f
 complete -c spack -n '__fish_spack_using_command audit packages-https' -l all -d 'audit all packages'
 
 # spack audit packages
-set -g __fish_spack_optspecs_spack_audit_packages h/help strict-variants
+set -g __fish_spack_optspecs_spack_audit_packages h/help
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 audit packages' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command audit packages' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command audit packages' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command audit packages' -l strict-variants -f -a strict_variants
-complete -c spack -n '__fish_spack_using_command audit packages' -l strict-variants -d 'report if variant cannot exist in context where it'"'"'s referenced'
 
 # spack audit list
 set -g __fish_spack_optspecs_spack_audit_list h/help

@@ -861,30 +861,32 @@ def prevalidate_variant_value(
         except spack.error.SpecError as e:
             errors.append(e)
 
-    # value is valid for some definition
+    # value is valid for at least one definition -- return them all
     if valid_definitions:
         return valid_definitions
 
-    # there is no possible definition for this variant, given the constraints on the spec.
+    # no when spec intersected, so no possible definition for the variant in this configuration
     if strict and not possible_definitions:
         when_clause = f" when {spec}" if spec else ""
         raise InvalidVariantValueError(
             f"variant '{variant.name}' does not exist for '{pkg_cls.name}'{when_clause}"
         )
 
-    # there is a possible definition, but the value isn't valid for any possible definition
-    if errors:  # always true if strict
-        # if there is just one error, raise the specific error
-        if len(errors) == 1:
-            raise errors[0]
+    # There are only no errors if we're not strict and there are no possible_definitions.
+    # We are strict for audits but not for specs on the CLI or elsewhere. Being strict
+    # in these cases would violate our rule of being able to *talk* about any configuration,
+    # regardless of what the package.py currently says.
+    if not errors:
+        return []
 
-        raise InvalidVariantValueError(
-            "multiple variant issues:", "\n".join(e.message for e in errors)
-        )
+    # if there is just one error, raise the specific error
+    if len(errors) == 1:
+        raise errors[0]
 
-    # only happens if we're not strict and there are no possible_definitions
-    # TODO: always be strict?
-    return []
+    # otherwise combine all the errors and raise them together
+    raise InvalidVariantValueError(
+        "multiple variant issues:", "\n".join(e.message for e in errors)
+    )
 
 
 class _ConditionalVariantValues(lang.TypedMutableSequence):

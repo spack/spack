@@ -38,7 +38,6 @@ as input.
 import ast
 import collections
 import collections.abc
-import contextlib
 import glob
 import io
 import itertools
@@ -65,24 +64,6 @@ CALLBACKS = {}
 
 #: Map a group of checks to the list of related audit tags
 GROUPS = collections.defaultdict(list)
-
-# TODO: remove the strict option entirely and make prevalidate_variant_value
-# always strict) when we're ready to correct packages with invalid variant
-# specifications, e.g. @9:+foo when foo only exists for pkg@:8, or ~cuda~cudnn,
-# where cudnn doesn't exist when ~cuda.
-_strict_variants = False
-
-
-@contextlib.contextmanager
-def strict_variants(enabled):
-    global _strict_variants
-
-    old = _strict_variants
-    try:
-        _strict_variants = enabled
-        yield
-    finally:
-        _strict_variants = old
 
 
 class Error:
@@ -310,7 +291,7 @@ def _avoid_mismatched_variants(error_cls):
                 # Variant cannot accept this value
                 try:
                     spack.variant.prevalidate_variant_value(
-                        pkg_cls, variant, variant.value, strict=_strict_variants
+                        pkg_cls, variant, variant.value, strict=True
                     )
                 except Exception:
                     summary = (
@@ -959,11 +940,7 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                 for name, variant in dependency_variants.items():
                     try:
                         spack.variant.prevalidate_variant_value(
-                            dependency_pkg_cls,
-                            variant,
-                            variant.value,
-                            dep.spec,
-                            strict=_strict_variants,
+                            dependency_pkg_cls, variant, variant.value, dep.spec, strict=True
                         )
                     except Exception as e:
                         summary = (
@@ -1101,9 +1078,7 @@ def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
             continue
 
         try:
-            spack.variant.prevalidate_variant_value(
-                pkg, v, v.value, constraint, strict=_strict_variants
-            )
+            spack.variant.prevalidate_variant_value(pkg, v, v.value, constraint, strict=True)
         except (
             spack.variant.InconsistentValidationError,
             spack.variant.MultipleValuesInExclusiveVariantError,
