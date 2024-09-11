@@ -112,6 +112,8 @@ class Elsi(CMakePackage, CudaPackage):
         depends_on("matrix-switch")  # Direct dependency
     with when("+dlaf"):
         depends_on("dla-future-fortran")
+        conflicts("dla-future~cuda", when="+cuda")
+        conflicts("dla-future+cuda", when="~cuda")
 
     conflicts("^pexsi@2:", when="@:2.11")
 
