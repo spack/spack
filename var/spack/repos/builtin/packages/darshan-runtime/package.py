@@ -101,13 +101,13 @@ class DarshanRuntime(AutotoolsPackage):
         extra_args = []
 
         job_id = "NONE"
-        if spec.satisfies("+slurm"):
+        if spec.satisfies("scheduler=slurm"):
             job_id = "SLURM_JOBID"
-        if spec.satisfies("+cobalt"):
+        elif spec.satisfies("scheduler=cobalt"):
             job_id = "COBALT_JOBID"
-        if spec.satisfies("+pbs"):
+        elif spec.satisfies("scheduler=pbs"):
             job_id = "PBS_JOBID"
-        if spec.satisfies("+sge"):
+        elif spec.satisfies("scheduler=sge"):
             job_id = "JOB_ID"
 
         if spec.satisfies("+hdf5"):

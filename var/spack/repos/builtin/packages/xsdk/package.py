@@ -90,6 +90,7 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     variant("sycl", default=False, sticky=True, description="Enable sycl variant of xsdk packages")
     variant("trilinos", default=True, sticky=True, description="Enable trilinos package build")
     variant("datatransferkit", default=True, description="Enable datatransferkit package build")
+    variant("amrex", default=True, description="Enable amrex package build")
     variant("omega-h", default=True, description="Enable omega-h package build")
     variant("strumpack", default=True, description="Enable strumpack package build")
     variant("dealii", default=True, description="Enable dealii package build")
@@ -207,12 +208,8 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     xsdk_depends_on("magma@2.7.0", when="@0.8.0", cuda_var="?cuda", rocm_var="?rocm")
 
     xsdk_depends_on("amrex +sycl", when="@1.0.0: +sycl")
-    xsdk_depends_on("amrex@23.08+sundials", when="@1.0.0 %intel", cuda_var="cuda", rocm_var="rocm")
-    xsdk_depends_on("amrex@23.08+sundials", when="@1.0.0 %gcc", cuda_var="cuda", rocm_var="rocm")
-    xsdk_depends_on("amrex@23.08+sundials", when="@1.0.0 %cce", cuda_var="cuda", rocm_var="rocm")
-    xsdk_depends_on("amrex@22.09+sundials", when="@0.8.0 %intel", cuda_var="cuda", rocm_var="rocm")
-    xsdk_depends_on("amrex@22.09+sundials", when="@0.8.0 %gcc", cuda_var="cuda", rocm_var="rocm")
-    xsdk_depends_on("amrex@22.09+sundials", when="@0.8.0 %cce", cuda_var="cuda", rocm_var="rocm")
+    xsdk_depends_on("amrex@23.08+sundials", when="@1.0.0 +amrex", cuda_var="cuda", rocm_var="rocm")
+    xsdk_depends_on("amrex@22.09+sundials", when="@0.8.0 +amrex", cuda_var="cuda", rocm_var="rocm")
 
     xsdk_depends_on("slepc@3.20.0", when="@1.0.0", cuda_var="cuda", rocm_var="rocm")
     xsdk_depends_on("slepc@3.18.1", when="@0.8.0", cuda_var="cuda", rocm_var="rocm")

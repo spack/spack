@@ -18,6 +18,7 @@ class PyTorchaudio(PythonPackage):
     maintainers("adamjstewart")
 
     version("main", branch="main")
+    version("2.4.1", tag="v2.4.1", commit="e8cbe17769796ce963fbc71b8990f1474774e6d2")
     version("2.4.0", tag="v2.4.0", commit="69d40773dc4ed86643820c21a8a880e4d074a46e")
     version("2.3.1", tag="v2.3.1", commit="3edcf69e78a3c9a3077a11159861422440ec7d4a")
     version("2.3.0", tag="v2.3.0", commit="952ea7457bcc3ed0669e7741ff23015c426d6322")
@@ -61,6 +62,7 @@ class PyTorchaudio(PythonPackage):
         depends_on("python@:3.8", when="@:0.7.0")
 
         depends_on("py-torch@main", when="@main")
+        depends_on("py-torch@2.4.1", when="@2.4.1")
         depends_on("py-torch@2.4.0", when="@2.4.0")
         depends_on("py-torch@2.3.1", when="@2.3.1")
         depends_on("py-torch@2.3.0", when="@2.3.0")

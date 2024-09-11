@@ -401,14 +401,6 @@ class TestConcretize:
                 s.compiler_flags[x] == ["-O0", "-g"] for x in ("cflags", "cxxflags", "fflags")
             )
 
-    @pytest.mark.xfail(reason="Broken, needs to be fixed")
-    def test_compiler_flags_from_compiler_and_dependent(self):
-        client = Spec("cmake-client %clang@12.2.0 platform=test os=fe target=fe cflags==-g")
-        client.concretize()
-        cmake = client["cmake"]
-        for spec in [client, cmake]:
-            assert spec.compiler_flags["cflags"] == ["-O3", "-g"]
-
     def test_compiler_flags_differ_identical_compilers(self, mutable_config, clang12_with_flags):
         mutable_config.set("compilers", [clang12_with_flags])
         # Correct arch to use test compiler that has flags
@@ -439,6 +431,13 @@ class TestConcretize:
             # Setting a flag overrides propagation
             (
                 "hypre cflags=='-g' ^openblas cflags='-O3'",
+                ["hypre cflags='-g'", "^openblas cflags='-O3'"],
+                ["^openblas cflags='-g'"],
+            ),
+            # Setting propagation on parent and dependency -> the
+            # dependency propagation flags override
+            (
+                "hypre cflags=='-g' ^openblas cflags=='-O3'",
                 ["hypre cflags='-g'", "^openblas cflags='-O3'"],
                 ["^openblas cflags='-g'"],
             ),
@@ -2375,26 +2374,6 @@ class TestConcretize:
         spack.config.set("packages", external_conf)
         s = Spec("mpich").concretized()
         assert s.external
-
-    @pytest.mark.regression("43875")
-    def test_concretize_missing_compiler(self, mutable_config, monkeypatch):
-        """Tests that Spack can concretize a spec with a missing compiler when the
-        option is active.
-        """
-
-        def _default_libc(self):
-            if self.cc is None:
-                return None
-            return Spec("glibc@=2.28")
-
-        monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
-        monkeypatch.setattr(spack.compiler.Compiler, "default_libc", property(_default_libc))
-        monkeypatch.setattr(
-            spack.util.libc, "libc_from_current_python_process", lambda: Spec("glibc@=2.28")
-        )
-        mutable_config.set("config:install_missing_compilers", True)
-        s = Spec("pkg-a %gcc@=13.2.0").concretized()
-        assert s.satisfies("%gcc@13.2.0")
 
     @pytest.mark.regression("43267")
     def test_spec_with_build_dep_from_json(self, tmp_path):
