@@ -400,14 +400,9 @@ class Acts(CMakePackage, CudaPackage):
     # ACTS imposes requirements on the C++ standard values used by ROOT
     for _cxxstd in _cxxstd_values:
         for _v in _cxxstd:
-            if Spec(_v.when).satisfies("@0.23:"):  # geant4 variant only exists at 0.23 or higher
-                depends_on(
-                    f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +geant4"
-                )
-            depends_on(
-                f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +fatras_geant4"
-            )
-            depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +tgeo")
+            depends_on(f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} +geant4")
+            depends_on(f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} +fatras_geant4")
+            depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} +tgeo")
 
     # When the traccc plugin is enabled, detray should match the Acts scalars
     with when("+traccc"):
