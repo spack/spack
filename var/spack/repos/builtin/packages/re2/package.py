@@ -51,7 +51,12 @@ class Re2(CMakePackage):
 
     depends_on("cxx", type="build")
 
-    variant("icu", default=False, description="", when="@2023-02-01:")
+    variant(
+        "icu",
+        default=False,
+        description="Build against ICU for full Unicode properties support",
+        when="@2023-02-01:"
+    )
     variant("shared", default=False, description="Build shared instead of static libraries")
     variant("pic", default=True, description="Enable position independent code")
 
