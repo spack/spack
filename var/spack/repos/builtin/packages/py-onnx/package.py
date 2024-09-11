@@ -44,6 +44,7 @@ class PyOnnx(PythonPackage):
     # requirements.txt
     depends_on("py-setuptools@64:", type="build")
     depends_on("py-setuptools", type="build")
+    depends_on("protobuf")
     depends_on("py-protobuf@3.20.2:", type=("build", "run"), when="@1.15:")
     depends_on("py-protobuf@3.20.2:3", type=("build", "run"), when="@1.13")
     depends_on("py-protobuf@3.12.2:3.20.1", type=("build", "run"), when="@1.12")
@@ -55,7 +56,6 @@ class PyOnnx(PythonPackage):
     # https://github.com/protocolbuffers/protobuf/pull/8794, fixed in
     # https://github.com/onnx/onnx/pull/3112
     depends_on("py-protobuf@:3.17", type=("build", "run"), when="@:1.8")
-    depends_on("py-protobuf+cpp", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-numpy@1.16.6:", type=("build", "run"), when="@1.8.1:1.13")
     depends_on("py-numpy@1.20:", type=("build", "run"), when="@1.16.0:")
