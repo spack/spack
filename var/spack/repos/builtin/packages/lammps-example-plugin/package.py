@@ -46,8 +46,7 @@ class LammpsExamplePlugin(CMakePackage):
         "20230802.4", sha256="6eed007cc24cda80b5dd43372b2ad4268b3982bb612669742c8c336b79137b5b"
     )
     version(
-        "20230802.3",
-        sha256="6666e28cb90d3ff01cbbda6c81bdb85cf436bbb41604a87f2ab2fa559caa8510",
+        "20230802.3", sha256="6666e28cb90d3ff01cbbda6c81bdb85cf436bbb41604a87f2ab2fa559caa8510"
     )
 
     depends_on("cxx", type="build")
