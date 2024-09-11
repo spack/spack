@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -207,3 +207,29 @@ def test_default_download_name_dot_dot():
     assert url_util.default_download_filename("https://example.com/.") == "_"
     assert url_util.default_download_filename("https://example.com/..") == "_."
     assert url_util.default_download_filename("https://example.com/.abcdef") == "_abcdef"
+
+
+def test_parse_link_rel_next():
+    parse = url_util.parse_link_rel_next
+    assert parse(r'</abc>; rel="next"') == "/abc"
+    assert parse(r'</abc>; x=y; rel="next", </def>; x=y; rel="prev"') == "/abc"
+    assert parse(r'</abc>; rel="prev"; x=y, </def>; x=y; rel="next"') == "/def"
+
+    # example from RFC5988
+    assert (
+        parse(
+            r"""</TheBook/chapter2>; title*=UTF-8'de'letztes%20Kapitel; rel="previous","""
+            r"""</TheBook/chapter4>; title*=UTF-8'de'n%c3%a4chstes%20Kapitel; rel="next" """
+        )
+        == "/TheBook/chapter4"
+    )
+
+    assert (
+        parse(r"""<https://example.com/example>; key=";a=b, </c/d>; e=f"; rel="next" """)
+        == "https://example.com/example"
+    )
+
+    assert parse("https://example.com/example") is None
+    assert parse("<https://example.com/example; broken=broken") is None
+    assert parse("https://example.com/example; rel=prev") is None
+    assert parse("https://example.com/example; a=b; c=d; g=h") is None

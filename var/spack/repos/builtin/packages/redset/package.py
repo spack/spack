@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Redset(CMakePackage):
 
     maintainers("CamStan", "gonsie")
 
+    license("MIT")
+
     version("main", branch="main")
     version("0.3.0", sha256="007ca5e7e5f4400e22ad7bca82e366cd51c73f28067c955cc16d7d0ff0c06a1b")
     version("0.2.0", sha256="0438b0ba56dafcd5694a8fceeb5a932901307353e056ab29817d30b8387f787f")
@@ -23,6 +25,8 @@ class Redset(CMakePackage):
     version("0.0.5", sha256="4db4ae59ab9d333a6d1d80678dedf917d23ad461c88b6d39466fc4bf6467d1ee")
     version("0.0.4", sha256="c33fce458d5582f01ad632c6fae8eb0a03eaef00e3c240c713b03bb95e2787ad")
     version("0.0.3", sha256="30ac1a960f842ae23a960a88b312af3fddc4795f2053eeeec3433a61e4666a76")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("mpi")
     depends_on("kvtree+mpi")
@@ -49,8 +53,5 @@ class Redset(CMakePackage):
 
         if spec.satisfies("@0.1.0:"):
             args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
-        else:
-            if spec.satisfies("platform=cray"):
-                args.append(self.define("REDSET_LINK_STATIC", True))
 
         return args

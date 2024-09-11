@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,8 @@ class RIntervals(RPackage):
     """Tools for working with and comparing sets of points and intervals."""
 
     cran = "intervals"
+
+    license("Artistic-2.0")
 
     version("0.15.3", sha256="8501fef7c74b9be874e807839518aae85e79bf4a047cd52169b52c6d9b41dfc4")
     version("0.15.2", sha256="0bd23b0ce817ddd851238233d8a5420bf3a6d29e75fd361418cbc50118777c57")

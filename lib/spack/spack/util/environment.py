@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,21 +10,17 @@ import json
 import os
 import os.path
 import pickle
-import platform
 import re
-import socket
+import shlex
 import sys
 from functools import wraps
 from typing import Any, Callable, Dict, List, MutableMapping, Optional, Tuple, Union
 
+from llnl.path import path_to_os_path, system_path_filter
 from llnl.util import tty
 from llnl.util.lang import dedupe
 
-import spack.platforms
-import spack.spec
-
 from .executable import Executable, which
-from .path import path_to_os_path, system_path_filter
 
 if sys.platform == "win32":
     SYSTEM_PATHS = [
@@ -41,6 +37,8 @@ else:
 
 SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYSTEM_PATHS
 
+#: used in the compiler wrapper's `/usr/lib|/usr/lib64|...)` case entry
+SYSTEM_DIR_CASE_ENTRY = "|".join(sorted(f'"{d}{suff}"' for d in SYSTEM_DIRS for suff in ("", "/")))
 
 _SHELL_SET_STRINGS = {
     "sh": "export {0}={1};\n",
@@ -64,26 +62,6 @@ TRACING_ENABLED = False
 
 Path = str
 ModificationList = List[Union["NameModifier", "NameValueModifier"]]
-
-
-_find_unsafe = re.compile(r"[^\w@%+=:,./-]", re.ASCII).search
-
-
-def double_quote_escape(s):
-    """Return a shell-escaped version of the string *s*.
-
-    This is similar to how shlex.quote works, but it escapes with double quotes
-    instead of single quotes, to allow environment variable expansion within
-    quoted strings.
-    """
-    if not s:
-        return '""'
-    if _find_unsafe(s) is None:
-        return s
-
-    # use double quotes, and escape double quotes in the string
-    # the string $"b is then quoted as "$\"b"
-    return '"' + s.replace('"', r"\"") + '"'
 
 
 def system_env_normalize(func):
@@ -185,7 +163,7 @@ def _nix_env_var_to_source_line(var: str, val: str) -> str:
             fname=BASH_FUNCTION_FINDER.sub(r"\1", var), decl=val
         )
     else:
-        source_line = f"{var}={double_quote_escape(val)}; export {var}"
+        source_line = f"{var}={shlex.quote(val)}; export {var}"
     return source_line
 
 
@@ -222,43 +200,6 @@ def pickle_environment(path: Path, environment: Optional[Dict[str, str]] = None)
     """Pickle an environment dictionary to a file."""
     with open(path, "wb") as pickle_file:
         pickle.dump(dict(environment if environment else os.environ), pickle_file, protocol=2)
-
-
-def get_host_environment_metadata() -> Dict[str, str]:
-    """Get the host environment, reduce to a subset that we can store in
-    the install directory, and add the spack version.
-    """
-    import spack.main
-
-    environ = get_host_environment()
-    return {
-        "host_os": environ["os"],
-        "platform": environ["platform"],
-        "host_target": environ["target"],
-        "hostname": environ["hostname"],
-        "spack_version": spack.main.get_version(),
-        "kernel_version": platform.version(),
-    }
-
-
-def get_host_environment() -> Dict[str, Any]:
-    """Return a dictionary (lookup) with host information (not including the
-    os.environ).
-    """
-    host_platform = spack.platforms.host()
-    host_target = host_platform.target("default_target")
-    host_os = host_platform.operating_system("default_os")
-    arch_fmt = "platform={0} os={1} target={2}"
-    arch_spec = spack.spec.Spec(arch_fmt.format(host_platform, host_os, host_target))
-    return {
-        "target": str(host_target),
-        "os": str(host_os),
-        "platform": str(host_platform),
-        "arch": arch_spec,
-        "architecture": arch_spec,
-        "arch_str": str(arch_spec),
-        "hostname": socket.gethostname(),
-    }
 
 
 @contextlib.contextmanager
@@ -638,6 +579,14 @@ class EnvironmentModifications:
             modifications[item.name].append(item)
         return modifications
 
+    def drop(self, *name) -> bool:
+        """Drop all modifications to the variable with the given name."""
+        old_mods = self.env_modifications
+        new_mods = [x for x in self.env_modifications if x.name not in name]
+        self.env_modifications = new_mods
+
+        return len(old_mods) != len(new_mods)
+
     def is_unset(self, variable_name: str) -> bool:
         """Returns True if the last modification to a variable is to unset it, False otherwise."""
         modifications = self.group_by_name()
@@ -676,8 +625,8 @@ class EnvironmentModifications:
             elif isinstance(envmod, AppendFlagsEnv):
                 rev.remove_flags(envmod.name, envmod.value)
             else:
-                tty.warn(
-                    f"Skipping reversal of unreversable operation {type(envmod)} {envmod.name}"
+                tty.debug(
+                    f"Skipping reversal of irreversible operation {type(envmod)} {envmod.name}"
                 )
 
         return rev
@@ -711,8 +660,8 @@ class EnvironmentModifications:
             for modifier in actions:
                 modifier.execute(new_env)
 
-        if "MANPATH" in new_env and not new_env["MANPATH"].endswith(":"):
-            new_env["MANPATH"] += ":"
+        if "MANPATH" in new_env and not new_env["MANPATH"].endswith(os.pathsep):
+            new_env["MANPATH"] += os.pathsep
 
         cmds = ""
 
@@ -723,11 +672,10 @@ class EnvironmentModifications:
                 if new is None:
                     cmds += _SHELL_UNSET_STRINGS[shell].format(name)
                 else:
-                    if sys.platform != "win32":
-                        new_env_name = double_quote_escape(new_env[name])
-                    else:
-                        new_env_name = new_env[name]
-                    cmd = _SHELL_SET_STRINGS[shell].format(name, new_env_name)
+                    value = new_env[name]
+                    if shell not in ("bat", "pwsh"):
+                        value = shlex.quote(value)
+                    cmd = _SHELL_SET_STRINGS[shell].format(name, value)
                     cmds += cmd
         return cmds
 
@@ -750,9 +698,9 @@ class EnvironmentModifications:
                 (default: ``&> /dev/null``)
             concatenate_on_success (str): operator used to execute a command
                 only when the previous command succeeds (default: ``&&``)
-            exclude ([str or re]): ignore any modifications of these
+            exclude ([str or re.Pattern[str]]): ignore any modifications of these
                 variables (default: [])
-            include ([str or re]): always respect modifications of these
+            include ([str or re.Pattern[str]]): always respect modifications of these
                 variables (default: []). Supersedes any excluded variables.
             clean (bool): in addition to removing empty entries,
                 also remove duplicate entries (default: False).

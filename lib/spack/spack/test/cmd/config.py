@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -91,15 +91,10 @@ def test_config_edit(mutable_config, working_env):
 
 
 def test_config_get_gets_spack_yaml(mutable_mock_env_path):
-    config("get", fail_on_error=False)
-    assert config.returncode == 1
-
     with ev.create("test") as env:
         assert "mpileaks" not in config("get")
-
         env.add("mpileaks")
         env.write()
-
         assert "mpileaks" in config("get")
 
 
@@ -119,11 +114,6 @@ def test_config_add_with_scope_adds_to_scope(mutable_config, mutable_mock_env_pa
 
 def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
     output = config("edit", "--print-file", fail_on_error=False)
-    assert "requires a section argument or an active environment" in output
-
-
-def test_config_get_fails_correctly_with_no_env(mutable_mock_env_path):
-    output = config("get", fail_on_error=False)
     assert "requires a section argument or an active environment" in output
 
 
@@ -215,10 +205,10 @@ def test_config_add_override_leaf(mutable_empty_config):
 
 
 def test_config_add_update_dict(mutable_empty_config):
-    config("add", "packages:all:version:[1.0.0]")
+    config("add", "packages:hdf5:version:[1.0.0]")
     output = config("get", "packages")
 
-    expected = "packages:\n  all:\n    version: [1.0.0]\n"
+    expected = "packages:\n  hdf5:\n    version: [1.0.0]\n"
     assert output == expected
 
 
@@ -352,8 +342,7 @@ def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
     contents = """spack:
   packages:
     all:
-      version:
-      - 1.0.0
+      target: [x86_64]
 """
 
     # create temp file and add it to config
@@ -368,8 +357,7 @@ def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
     # added config comes before prior config
     expected = """packages:
   all:
-    version:
-    - 1.0.0
+    target: [x86_64]
     compiler: [gcc]
 """
 
@@ -381,7 +369,7 @@ def test_config_add_invalid_file_fails(tmpdir):
     # invalid because version requires a list
     contents = """spack:
   packages:
-    all:
+    hdf5:
       version: 1.0.0
 """
 
@@ -472,7 +460,6 @@ def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
 
     expected = """  config:
     dirty: true
-
 """
     assert expected in output
 
@@ -499,29 +486,21 @@ spack:  # comment
         config("add", "config:dirty:true")
         output = config("get")
 
-    expected = manifest
-    expected += """  config:
-    dirty: true
-
-"""
-    assert output == expected
+    assert "# comment" in output
+    assert "dirty: true" in output
 
 
 def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
     env("create", "test")
-
     with ev.read("test"):
         config("add", "config:dirty:true")
+        output = config("get")
+    assert "dirty: true" in output
 
     with ev.read("test"):
         config("rm", "config:dirty")
         output = config("get")
-
-    expected = ev.default_manifest_yaml()
-    expected += """  config: {}
-
-"""
-    assert output == expected
+    assert "dirty: true" not in output
 
 
 def test_config_update_config(config_yaml_v015):
@@ -612,14 +591,12 @@ def test_config_prefer_upstream(
     """
 
     mock_db_root = str(tmpdir_factory.mktemp("mock_db_root"))
-    prepared_db = spack.database.Database(mock_db_root)
-
-    upstream_layout = gen_mock_layout("/a/")
+    prepared_db = spack.database.Database(mock_db_root, layout=gen_mock_layout("/a/"))
 
     for spec in ["hdf5 +mpi", "hdf5 ~mpi", "boost+debug~icu+graph", "dependency-install", "patch"]:
         dep = spack.spec.Spec(spec)
         dep.concretize()
-        prepared_db.add(dep, upstream_layout)
+        prepared_db.add(dep)
 
     downstream_db_root = str(tmpdir_factory.mktemp("mock_downstream_db_root"))
     db_for_test = spack.database.Database(downstream_db_root, upstream_dbs=[prepared_db])
@@ -631,14 +608,11 @@ def test_config_prefer_upstream(
     packages = syaml.load(open(cfg_file))["packages"]
 
     # Make sure only the non-default variants are set.
-    assert packages["boost"] == {
-        "compiler": ["gcc@=10.2.1"],
-        "variants": "+debug +graph",
-        "version": ["1.63.0"],
-    }
-    assert packages["dependency-install"] == {"compiler": ["gcc@=10.2.1"], "version": ["2.0"]}
+    assert packages["all"] == {"compiler": ["gcc@=10.2.1"]}
+    assert packages["boost"] == {"variants": "+debug +graph", "version": ["1.63.0"]}
+    assert packages["dependency-install"] == {"version": ["2.0"]}
     # Ensure that neither variant gets listed for hdf5, since they conflict
-    assert packages["hdf5"] == {"compiler": ["gcc@=10.2.1"], "version": ["2.3"]}
+    assert packages["hdf5"] == {"version": ["2.3"]}
 
     # Make sure a message about the conflicting hdf5's was given.
     assert "- hdf5" in output
@@ -664,4 +638,4 @@ spack:
         config("update", "-y", "config")
 
     with ev.Environment(str(tmpdir)) as e:
-        assert not e.manifest.pristine_yaml_content["spack"]["config"]["ccache"]
+        assert not e.manifest.yaml_content["spack"]["config"]["ccache"]

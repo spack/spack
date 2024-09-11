@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,9 +28,6 @@ class Nvhpc(Compiler):
         "f77": os.path.join("nvhpc", "nvfortran"),
         "fc": os.path.join("nvhpc", "nvfortran"),
     }
-
-    PrgEnv = "PrgEnv-nvhpc"
-    PrgEnv_compiler = "nvhpc"
 
     version_argument = "--version"
     version_regex = r"nv[^ ]* (?:[^ ]+ Dev-r)?([0-9.]+)(?:-[0-9]+)?"

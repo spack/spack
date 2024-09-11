@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,11 @@ class Amg2023(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/LLNL/AMG2023"
     git = "https://github.com/LLNL/AMG2023.git"
 
+    license("Apache-2.0")
+
     version("develop", branch="main")
-    version("cmake-build", git="https://github.com/dyokelson/AMG2023.git", branch="cmake")
+
+    depends_on("c", type="build")  # generated
 
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=False, description="Enable OpenMP support")
@@ -40,7 +43,7 @@ class Amg2023(CMakePackage, CudaPackage, ROCmPackage):
         cmake_options = []
         cmake_options.append(self.define_from_variant("AMG_WITH_CALIPER", "caliper"))
         cmake_options.append(self.define_from_variant("AMG_WITH_OMP", "openmp"))
-        cmake_options.append("-DHYPRE_PREFIX={0}".format(self.spec["hypre"].prefix))
+        cmake_options.append(self.define("HYPRE_PREFIX", self.spec["hypre"].prefix))
         if self.spec["hypre"].satisfies("+cuda"):
             cmake_options.append("-DAMG_WITH_CUDA=ON")
         if self.spec["hypre"].satisfies("+rocm"):

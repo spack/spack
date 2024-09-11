@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Dire(Package):
     maintainer = ["mdiefent"]
 
     version("2.004", sha256="8cc1213b58fec744fdaa50834560a14b141de99efb2c3e3d3d47f3d6d84b179f")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("zlib-api")
 

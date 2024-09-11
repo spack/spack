@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class SstDumpi(AutotoolsPackage):
 
     maintainers("berquist", "jpkenny", "calewis")
 
+    license("BSD-3-Clause")
+
     version("13.0.0", sha256="0eaa5cf5826c9fbba6cfeed42f52af67c5a7d45bc8cbb485c2a3867b7438229b")
     version("12.1.0", sha256="b718658cbb0be957d28883f7cc914617bff97b3629fad7017cd62e14ed667d9d")
     version("12.0.1", sha256="6e74e5f16ee26c83b17ecd5c272a61ec37977f07f531066533dd610805f9117b")
@@ -27,6 +29,10 @@ class SstDumpi(AutotoolsPackage):
     version("11.1.0", sha256="58144b4b7543705ef648ca86ea4ebf3c739554ea8a472123aadc2967a8201cdd")
 
     version("master", branch="master")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("autoconf@1.68:", type="build")
     depends_on("automake@1.11.1:", type="build")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyHorovod(PythonPackage, CudaPackage):
     git = "https://github.com/horovod/horovod.git"
 
     maintainers("adamjstewart", "aweits", "tgaddair", "thomas-bouvier")
+
+    license("Apache-2.0")
 
     version("master", branch="master", submodules=True)
     version(
@@ -123,6 +125,10 @@ class PyHorovod(PythonPackage, CudaPackage):
         "0.16.2", tag="v0.16.2", commit="217774652eeccfcd60aa6e268dfd6b766d71b768", submodules=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # https://github.com/horovod/horovod/blob/master/docs/install.rst
     variant(
         "frameworks",
@@ -225,6 +231,8 @@ class PyHorovod(PythonPackage, CudaPackage):
     conflicts(
         "controllers=gloo", when="@:0.20.0 platform=darwin", msg="Gloo cannot be compiled on MacOS"
     )
+    # https://github.com/horovod/horovod/issues/3996
+    conflicts("^py-torch@2.1:", when="@:0.28.1")
 
     # https://github.com/horovod/horovod/pull/1835
     patch("fma.patch", when="@0.19.0:0.19.1")

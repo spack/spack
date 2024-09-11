@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class PyPyprecice(PythonPackage):
     url = "https://github.com/precice/python-bindings/archive/v2.4.0.0.tar.gz"
     maintainers("ajaust", "BenjaminRodenberg", "IshaanDesai")
 
+    license("LGPL-3.0")
+
     # Always prefer final version of release candidate
     version("develop", branch="develop")
     version("2.5.0.2", sha256="6d7b78da830db6c5133b44617196ee90be8c7d6c8e14c8994a4800b3d4856416")
@@ -34,6 +36,8 @@ class PyPyprecice(PythonPackage):
     version("2.0.1.1", sha256="2791e7c7e2b04bc918f09f3dfca2d3371e6f8cbb7e57c82bd674703f4fa00be7")
     version("2.0.0.2", sha256="5f055d809d65ec2e81f4d001812a250f50418de59990b47d6bcb12b88da5f5d7")
     version("2.0.0.1", sha256="96eafdf421ec61ad6fcf0ab1d3cf210831a815272984c470b2aea57d4d0c9e0e")
+
+    depends_on("cxx", type="build")  # generated
 
     for ver in [
         "develop",

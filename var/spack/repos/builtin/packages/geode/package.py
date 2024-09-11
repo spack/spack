@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Geode(Package):
 
     homepage = "https://geode.apache.org/"
     url = "https://archive.apache.org/dist/geode/1.9.2/apache-geode-1.9.2.tgz"
+
+    license("Apache-2.0")
 
     version("1.9.2", sha256="4b8118114ef43166f6bf73af56b93aadbf9108fcab06d1fbbb8e27f7d559d7e0")
     version("1.9.0", sha256="8794808ebc89bc855f0b989b32e91e890d446cfd058e123f6ccb9e12597c1c4f")

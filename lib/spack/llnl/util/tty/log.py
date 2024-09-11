@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ import ctypes
 import errno
 import io
 import multiprocessing
+import multiprocessing.connection
 import os
 import re
 import select
@@ -33,8 +34,23 @@ except ImportError:
     pass
 
 
+esc, bell, lbracket, bslash, newline = r"\x1b", r"\x07", r"\[", r"\\", r"\n"
+# Ansi Control Sequence Introducers (CSI) are a well-defined format
+# Standard ECMA-48: Control Functions for Character-Imaging I/O Devices, section 5.4
+# https://www.ecma-international.org/wp-content/uploads/ECMA-48_5th_edition_june_1991.pdf
+csi_pre = f"{esc}{lbracket}"
+csi_param, csi_inter, csi_post = r"[0-?]", r"[ -/]", r"[@-~]"
+ansi_csi = f"{csi_pre}{csi_param}*{csi_inter}*{csi_post}"
+# General ansi escape sequences have well-defined prefixes,
+#  but content and suffixes are less reliable.
+# Conservatively assume they end with either "<ESC>\" or "<BELL>",
+#  with no intervening "<ESC>"/"<BELL>" keys or newlines
+esc_pre = f"{esc}[@-_]"
+esc_content = f"[^{esc}{bell}{newline}]"
+esc_post = f"(?:{esc}{bslash}|{bell})"
+ansi_esc = f"{esc_pre}{esc_content}*{esc_post}"
 # Use this to strip escape sequences
-_escape = re.compile(r"\x1b[^m]*m|\x1b\[?1034h|\x1b\][0-9]+;[^\x07]*\x07")
+_escape = re.compile(f"{ansi_csi}|{ansi_esc}")
 
 # control characters for enabling/disabling echo
 #

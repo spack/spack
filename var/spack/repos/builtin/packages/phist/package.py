@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class Phist(CMakePackage):
     # phist is a required part of spack GitLab CI pipelines. In them, mpich is requested
     # to provide 'mpi' like this: spack install phist ^mpich %gcc@7.5.0
     # Failure of this command to succeed breaks spack's gitlab CI pipelines!
+
+    license("BSD-3-Clause")
 
     version("develop", branch="devel")
     version("master", branch="master")
@@ -68,6 +70,10 @@ class Phist(CMakePackage):
     version("1.6.1", sha256="4ed4869f24f920a494aeae0f7d1d94fe9efce55ebe0d298a5948c9603e07994d")
     version("1.6.0", sha256="667a967b37d248242c275226c96efc447ef73a2b15f241c6a588d570d7fac07b")
     version("1.4.3", sha256="9cc1c7ba7f7a04e94f4497da14199e4631a0d02d0e4187f3e16f4c242dc777c1")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant(
         name="kernel_lib",
@@ -138,7 +144,7 @@ class Phist(CMakePackage):
     conflicts("^trilinos@14:", when="@:1.11.2")
     # Build error with cray-libsci because they define macro 'I', workaround in phist-1.11.2
     conflicts("^cray-libsci", when="@:1.11.1")
-    # phist@1.11.2 got rid of some deprecated python code
+    # phist@1.11.2 got rid of some deprecated python code + a patch below
     conflicts("^python@3.11:", when="@:1.11.1")
     # The builtin kernels switched from the 'mpi' to the 'mpi_f08' module in
     # phist 1.9.6, which causes compile-time errors with mpich and older
@@ -155,6 +161,8 @@ class Phist(CMakePackage):
 
     # ###################### Patches ##########################
 
+    # remove 'rU' file mode in a python script
+    patch("remove_rU_mode_in_python_script.patch", when="@:1.12.0 +fortran ^python@3.11:")
     # Avoid trying to compile some SSE code if SSE is not available
     # This patch will be part of phist 1.11.3 and greater and only affects
     # the 'builtin' kernel_lib.
@@ -233,6 +241,13 @@ class Phist(CMakePackage):
         test.filter("1 2 3 12", "1 2 3")
         test.filter("12/", "6/")
         test.filter("TEST_DRIVERS_NUM_THREADS 6", "TEST_DRIVERS_NUM_THREADS 3")
+        # Avoid finding external modules like:
+        #    /opt/rocm/llvm/include/iso_fortran_env.mod
+        filter_file(
+            "use iso_fortran_env",
+            "use, intrinsic :: iso_fortran_env",
+            "drivers/matfuncs/matpde3d.F90",
+        )
 
     def setup_build_environment(self, env):
         env.set("SPACK_SBANG", sbang.sbang_install_path())

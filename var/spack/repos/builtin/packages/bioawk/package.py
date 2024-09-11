@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,9 @@ class Bioawk(MakefilePackage):
     depends_on("bison", type=("build"))
 
     parallel = False
+
+    def build(self, spec, prefix):
+        make("CC={0}".format(spack_cc))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

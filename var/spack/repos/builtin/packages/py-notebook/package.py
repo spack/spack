@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,9 +40,7 @@ class PyNotebook(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"), when="@6.4:")
     depends_on("python@3.6:", type=("build", "run"), when="@6.3:")
-    # TODO: replace this after concretizer learns how to concretize separate build deps
-    depends_on("py-jupyter-packaging11", when="@6.4.1:", type="build")
-    # depends_on('py-jupyter-packaging@0.9:0', when='@6.4.1:', type='build')
+    depends_on("py-jupyter-packaging@0.9:0", when="@6.4.1:", type="build")
 
     depends_on("py-setuptools", when="@5:", type="build")
     depends_on("py-jinja2", type=("build", "run"))

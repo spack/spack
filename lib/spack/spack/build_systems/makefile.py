@@ -1,15 +1,15 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import inspect
 from typing import List
 
 import llnl.util.filesystem as fs
 
 import spack.builder
 import spack.package_base
-from spack.directives import build_system, conflicts
+from spack.directives import build_system, conflicts, depends_on
+from spack.multimethod import when
 
 from ._checks import (
     BaseBuilder,
@@ -20,7 +20,7 @@ from ._checks import (
 
 
 class MakefilePackage(spack.package_base.PackageBase):
-    """Specialized class for packages built using a Makefiles."""
+    """Specialized class for packages built using Makefiles."""
 
     #: This attribute is used in UI queries that need to know the build
     #: system base class
@@ -29,7 +29,10 @@ class MakefilePackage(spack.package_base.PackageBase):
     legacy_buildsystem = "makefile"
 
     build_system("makefile")
-    conflicts("platform=windows", when="build_system=makefile")
+
+    with when("build_system=makefile"):
+        conflicts("platform=windows")
+        depends_on("gmake", type="build")
 
 
 @spack.builder.builder("makefile")
@@ -99,12 +102,12 @@ class MakefileBuilder(BaseBuilder):
     def build(self, pkg, spec, prefix):
         """Run "make" on the build targets specified by the builder."""
         with fs.working_dir(self.build_directory):
-            inspect.getmodule(self.pkg).make(*self.build_targets)
+            pkg.module.make(*self.build_targets)
 
     def install(self, pkg, spec, prefix):
         """Run "make" on the install targets specified by the builder."""
         with fs.working_dir(self.build_directory):
-            inspect.getmodule(self.pkg).make(*self.install_targets)
+            pkg.module.make(*self.install_targets)
 
     spack.builder.run_after("build")(execute_build_time_tests)
 

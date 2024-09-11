@@ -1,7 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 from spack.package import *
 
@@ -19,6 +21,8 @@ class Gxsview(QMakePackage):
 
     # Support email for questions ohnishi@m.mpat.go.jp
     maintainers("cessenat")
+
+    license("LGPL-3.0-only")
 
     version(
         "2023.05.29", sha256="1e768fd7afd22198b7f73adeb42f4ccf7e0ff68996a3843b1ea138225c4c1da3"
@@ -49,11 +53,25 @@ class Gxsview(QMakePackage):
         vtk_suffix = self.spec["vtk"].version.up_to(2)
         vtk_lib_dir = self.spec["vtk"].prefix.lib
         vtk_include_dir = join_path(self.spec["vtk"].prefix.include, "vtk-{0}".format(vtk_suffix))
-        args = [
-            "VTK_LIB_DIR={0}".format(vtk_lib_dir),
-            "VTK_INC_DIR={0}".format(vtk_include_dir),
-            "VTK_MAJOR_VER={0}".format(str(vtk_suffix)),
-        ]
+        args = []
+        if not os.path.exists(vtk_include_dir):
+            vtk_include_dir = join_path(self.spec["vtk"].prefix.include, "vtk")
+            args.append("VTK_NO_VER_SUFFIX=ON")
+        args.extend(
+            [
+                "VTK_LIB_DIR={0}".format(vtk_lib_dir),
+                "VTK_INC_DIR={0}".format(vtk_include_dir),
+                "VTK_MAJOR_VER={0}".format(str(vtk_suffix)),
+            ]
+        )
+        # Below to avoid undefined reference to `std::filesystem::__cxx11::path::_M_split_cmpts()'
+        if self.spec.satisfies("%gcc@8.0:8.9") or self.spec.satisfies("%fj"):
+            if self.spec.satisfies("^vtk@9:"):
+                fic = "vtk9.pri"
+            else:
+                fic = "vtk8.pri"
+            with open(fic, "a") as fh:
+                fh.write("-lstdc++fs\n")
         return args
 
     def install(self, spec, prefix):

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,22 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pika-org/pika.git"
     maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    license("BSL-1.0")
+
+    version("0.28.0", sha256="a64ebac04135c0c8d392ddcd8d683fe02e2c0782abfe130754244d58f27ae6cf")
+    version("0.27.0", sha256="4a58dc4014edc2074399e4a6ecfa244537c89ce1319b3e14ff3dfe617fb9f9e8")
+    version("0.26.1", sha256="d7cc842238754019abdb536e22325e9a57186cd2ac8cc9c7140a5385f9d730f6")
+    version("0.26.0", sha256="bbec5472c71006c1f55e7946c8dc517dae76c41cacb36fa98195312c74a1bb9a")
+    version("0.25.0", sha256="6646e12f88049116d84ce0caeedaa039a13caaa0431964caea4660b739767b2e")
+    version("0.24.0", sha256="3b97c684107f892a633f598d94bcbd1e238d940e88e1c336f205e81b99326cc3")
+    version("0.23.0", sha256="d1981e198ac4f8443770cebbeff7a132b8f6c1a42e32b0b06fea02cc9df99595")
+    version("0.22.2", sha256="eeffa8584336b239aca167f0056e815b1b6d911e46cbb3cd6b8b811d101c1052")
+    version("0.22.1", sha256="b0de0649bee336847622f97b59b34a80cb3cfd9a931bbdb38299bc4904f19b92")
+    version("0.22.0", sha256="75f8932f3a233958c69802b483335eeeb39032ea66f12442f6f77048e259bdea")
+    version("0.21.0", sha256="0ab24966e6ae026b355147f02354af4bd2117c342915fe844addf8e493735a33")
+    version("0.20.0", sha256="f338cceea66a0e3954806b2aca08f6560bba524ecea222f04bc18b483851c877")
+    version("0.19.1", sha256="674675abf0dd4c6f5a0b2fa3db944b277ed65c62f654029d938a8cab608a9c1d")
+    version("0.19.0", sha256="f45cc16e4e50cbb183ed743bdc8b775d49776ee33c13ea39a650f4230a5744cb")
     version("0.18.0", sha256="f34890e0594eeca6ac57f2b988d0807b502782817e53a7f7043c3f921b08c99f")
     version("0.17.0", sha256="717429fc1bc986d62cbec190a69939e91608122d09d54bda1b028871c9ca9ad4")
     version("0.16.0", sha256="59f2baec91cc9bf71ca96d21d0da1ec0092bf59da106efa51789089e0d7adcbb")
@@ -38,10 +54,14 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     version("0.1.0", sha256="aa0ae2396cd264d821a73c4c7ecb118729bb3de042920c9248909d33755e7327")
     version("main", branch="main")
 
+    depends_on("cxx", type="build")
+
     generator("ninja")
 
-    map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
-    cxxstds = ("17", "20")
+    variant("shared", default=True, description="Build shared libraries")
+    conflicts("~shared", when="@:0.25")
+
+    cxxstds = ("17", "20", "23")
     variant(
         "cxxstd",
         default="17",
@@ -71,6 +91,13 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     variant("apex", default=False, description="Enable APEX support", when="@0.2:")
     variant("tracy", default=False, description="Enable Tracy support", when="@0.7:")
     variant(
+        "sanitizers",
+        default=False,
+        description="Enable support for sanitizers. "
+        "Specific sanitizers must be explicitly enabled with -fsanitize=*.",
+    )
+    variant("valgrind", default=False, description="Enable support for valgrind")
+    variant(
         "stdexec",
         default=False,
         description="Use stdexec for sender/receiver functionality",
@@ -88,6 +115,10 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("%gcc@:8", when="@0.2:")
     conflicts("%clang@:8", when="@0.2:")
     conflicts("+stdexec", when="cxxstd=17")
+    conflicts("cxxstd=23", when="^cmake@:3.20.2")
+    # nvcc version <= 11 does not support C++20 and newer
+    for cxxstd in filter(lambda x: x != "17", cxxstds):
+        requires("%nvhpc", when=f"cxxstd={cxxstd} ^cuda@:11")
 
     # Other dependencies
     depends_on("boost@1.71:")
@@ -95,7 +126,12 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/pika-org/pika/issues/686
     conflicts("^fmt@10:", when="@:0.15 +cuda")
     conflicts("^fmt@10:", when="@:0.15 +rocm")
+    # https://github.com/pika-org/pika/pull/1074
+    conflicts("^fmt@11:", when="@:0.23")
+    depends_on("spdlog@1.9.2:", when="@0.25:")
     depends_on("hwloc@1.11.5:")
+    # https://github.com/pika-org/pika/issues/1223
+    conflicts("^hwloc@2.11:", when="@:0.27 target=aarch64:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
     depends_on("jemalloc", when="malloc=jemalloc")
@@ -115,29 +151,21 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("whip@0.1: +rocm", when="@0.9: +rocm")
     depends_on("whip@0.1: +cuda", when="@0.9: +cuda")
 
+    depends_on("valgrind", when="+valgrind")
+
     with when("+rocm"):
         for val in ROCmPackage.amdgpu_targets:
-            depends_on(
-                "whip@0.1: amdgpu_target={0}".format(val),
-                when="@0.9: amdgpu_target={0}".format(val),
-            )
-            depends_on(
-                "rocsolver amdgpu_target={0}".format(val),
-                when="@0.5: amdgpu_target={0}".format(val),
-            )
-            depends_on(
-                "rocblas amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
-            )
+            depends_on(f"whip@0.1: amdgpu_target={val}", when=f"@0.9: amdgpu_target={val}")
+            depends_on(f"rocsolver amdgpu_target={val}", when=f"@0.5: amdgpu_target={val}")
+            depends_on(f"rocblas amdgpu_target={val}", when=f"amdgpu_target={val}")
 
     with when("+cuda"):
         for val in CudaPackage.cuda_arch_values:
-            depends_on(
-                "whip@0.1: cuda_arch={0}".format(val), when="@0.9: cuda_arch={0}".format(val)
-            )
+            depends_on(f"whip@0.1: cuda_arch={val}", when=f"@0.9: cuda_arch={val}")
 
     for cxxstd in cxxstds:
-        depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
-        depends_on("fmt cxxstd={0}".format(cxxstd), when="@0.11: cxxstd={0}".format(cxxstd))
+        depends_on(f"boost cxxstd={cxxstd}", when=f"cxxstd={cxxstd}")
+        depends_on(f"fmt cxxstd={cxxstd}", when=f"@0.11: cxxstd={cxxstd}")
 
     # COROUTINES
     # ~generic_coroutines conflict is not fully implemented
@@ -175,6 +203,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
         spec, args = self.spec, []
 
         args += [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("PIKA_WITH_CXX_STANDARD", spec.variants["cxxstd"].value),
             self.define_from_variant("PIKA_WITH_EXAMPLES", "examples"),
             self.define_from_variant("PIKA_WITH_MALLOC", "malloc"),
@@ -183,6 +212,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PIKA_WITH_MPI", "mpi"),
             self.define_from_variant("PIKA_WITH_APEX", "apex"),
             self.define_from_variant("PIKA_WITH_TRACY", "tracy"),
+            self.define_from_variant("PIKA_WITH_SANITIZERS", "sanitizers"),
+            self.define_from_variant("PIKA_WITH_VALGRIND", "valgrind"),
             self.define("PIKA_WITH_TESTS", self.run_tests),
             self.define_from_variant("PIKA_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
             self.define("BOOST_ROOT", spec["boost"].prefix),

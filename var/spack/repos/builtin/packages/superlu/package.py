@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Superlu(CMakePackage, Package):
 
     test_requires_compiler = True
 
+    license("BSD-3-Clause")
+
     version("6.0.0", sha256="5c199eac2dc57092c337cfea7e422053e8f8229f24e029825b0950edd1d17e8e")
     version(
         "5.3.0",
@@ -32,19 +34,22 @@ class Superlu(CMakePackage, Package):
     version(
         "4.3",
         sha256="169920322eb9b9c6a334674231479d04df72440257c17870aaa0139d74416781",
-        deprecated=True,
         url="https://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_4.3.tar.gz",
     )
     version(
         "4.2",
         sha256="5a06e19bf5a597405dfeea39fe92aa8c5dd41da73c72c7187755a75f581efb28",
-        deprecated=True,
         url="https://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_4.2.tar.gz",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     build_system(
         conditional("cmake", when="@5:"), conditional("generic", when="@:4"), default="cmake"
     )
+
+    requires("build_system=cmake", when="platform=windows")
 
     variant("pic", default=True, description="Build with position independent code")
 
@@ -111,7 +116,7 @@ class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
         filter_file(r"include \.\./" + filename, "include ./" + filename, makefile)
 
         # Cache the examples directory for use by stand-alone tests
-        self.pkg.cache_extra_test_sources(self.pkg.examples_src_dir)
+        cache_extra_test_sources(self.pkg, self.pkg.examples_src_dir)
 
     def _make_hdr_for_test(self, lib):
         """Standard configure arguments for make.inc"""

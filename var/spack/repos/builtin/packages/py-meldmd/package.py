@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,12 @@ class PyMeldmd(CMakePackage, PythonExtension, CudaPackage):
     homepage = "http://meldmd.org/"
     url = "https://github.com/maccallumlab/meld/archive/refs/tags/0.4.20.tar.gz"
 
+    license("LGPL-3.0-or-later")
+
     version("0.6.1", sha256="aae8e5bfbdacc1e6de61768a3298314c51575cda477a511e98dc11f5730fd918")
     version("0.4.20", sha256="8c8d2b713f8dc0ecc137d19945b3957e12063c8dda569696e47c8820eeac6c92")
+
+    depends_on("cxx", type="build")  # generated
 
     extends("python")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Papyrus(CMakePackage):
     git = "https://code.ornl.gov/eck/papyrus.git"
 
     tags = ["e4s"]
+
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("1.0.2", sha256="b6cfcff99f73ded8e4ca4b165bc182cd5cac60f0c0cf4f93649b77d074445645")
@@ -40,7 +42,7 @@ class Papyrus(CMakePackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(join_path("kv", "tests"))
+        cache_extra_test_sources(self, join_path("kv", "tests"))
 
     @property
     def _lib_dir(self):

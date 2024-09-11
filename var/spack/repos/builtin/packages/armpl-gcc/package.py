@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,9 +21,10 @@ _os_map_before_23 = {
     "amzn2023": "RHEL-7",
 }
 
-_os_map = {
+_os_map_before_24 = {
     "ubuntu20.04": "Ubuntu-20.04",
     "ubuntu22.04": "Ubuntu-22.04",
+    "debian12": "Ubuntu-22.04",
     "sles15": "SLES-15",
     "centos7": "RHEL-7",
     "centos8": "RHEL-8",
@@ -31,11 +32,83 @@ _os_map = {
     "rhel8": "RHEL-8",
     "rhel9": "RHEL-9",
     "rocky8": "RHEL-8",
+    "rocky9": "RHEL-9",
     "amzn2": "AmazonLinux-2",
     "amzn2023": "AmazonLinux-2023",
 }
 
+_os_pkg_map = {
+    "ubuntu20.04": "deb",
+    "ubuntu22.04": "deb",
+    "debian12": "deb",
+    "sles15": "rpm",
+    "centos7": "rpm",
+    "centos8": "rpm",
+    "rhel7": "rpm",
+    "rhel8": "rpm",
+    "rhel9": "rpm",
+    "rocky8": "rpm",
+    "rocky9": "rpm",
+    "amzn2": "rpm",
+    "amzn2023": "rpm",
+}
+
 _versions = {
+    "24.04": {
+        "deb": ("a323074cd08af82f4d79988cc66088b18e47dea4b93323b1b8a0f994f769f2f0"),
+        "macOS": ("228bf3a2c25dbd45c2f89c78f455ee3c7dfb25e121c20d2765138b5174e688dc"),
+        "rpm": ("d3917523034cf5a35e4f31f9a8bf4e53e7cc97892e89739d5757cb65ce40dc2e"),
+    },
+    "23.10_gcc-12.2": {
+        "RHEL-7": ("e5e2c69ad281a676f2a06c835fbf31d4f9fdf46aa3f3f7c8aafff46985f64902"),
+        "RHEL-8": ("cc0f3572ead93d1e31797b7a39a40cff3414878df9bd24a452bf4877dc35ca4c"),
+        "RHEL-9": ("18c75f57333031e454921cc3f4f22fd567e5a701424ff9ac219bbfe9955a8a96"),
+        "SLES-15": ("e1e891eceaffedecf7351e2c499ef2b49a36c9af29174b366ff470d0a568c18f"),
+        "Ubuntu-20.04": ("976424875c52c2062fc76cbc5d527ee82413cdc0432d7c59f423295a3b0cc612"),
+        "Ubuntu-22.04": ("6dd778edf55e13e8b766d75c340f0259f6cb507a93966d76d188b8b3943c769b"),
+        "AmazonLinux-2": ("423ac3df262b5fcca6cea480503b693306c970dd8e8e05c753ece92446ac7fee"),
+        "AmazonLinux-2023": ("acadf3b6cde866cb41f7363b290a646a492769aaa5819d4c0d60df89913342a9"),
+    },
+    "23.10_gcc-11.3": {
+        "RHEL-7": ("b2afbdc056ae01fb5c71935448b19300ef368962a94ae76b8811f1d328c723c2"),
+        "RHEL-8": ("79b83a8a2c46b949896b3964c761cbd0b66c37826996afb62c466af5fb420bc2"),
+        "RHEL-9": ("7a84f561bcf941bb25123b3ef730b4c02616bc51215933870677163e78af38e3"),
+        "SLES-15": ("9243c405d092d3eabff112ccabc300e96f13c3d2c5c319df04d7093bb6f535a2"),
+        "Ubuntu-20.04": ("a16df088ef9303040d92b017b233c6e4c6f0300d09c2ad0a66c0318831bf009c"),
+        "Ubuntu-22.04": ("fabda66dc6388fa8c094443fa53deece5590db66caaa6a1e39e99e64d5bb0709"),
+        "AmazonLinux-2": ("db5d039fa1d07695a71b8733584d878bb778d41bc0ecc3e19059b75cffdcf8cd"),
+        "AmazonLinux-2023": ("977fd465702f086a69e3f7fc28f2bcb6c79a7af381dc7d865345115b26f4631f"),
+    },
+    "23.10_gcc-10.4": {
+        "RHEL-7": ("3c8bad3af82a76ca1a45705afd47028cc26c7093377a554e692e1cd6f61cb304"),
+        "RHEL-8": ("381afae0e3e94aa91029f571de0e51c2342e50b4f855db7a9b9ca66e16e26276"),
+        "SLES-15": ("226e9519407331b4ad5ded8699cd15f1d9b845843304bbf21f47009a399fe2a0"),
+        "Ubuntu-20.04": ("45de59f795ad9026a838ab611b03b1644169a034ce59d6cca2c7940850fa17ad"),
+        "AmazonLinux-2": ("637b51da12548dc66da9132328fe2ea39ba0736af66fb30332ca8eeb540e3373"),
+    },
+    "23.10_gcc-9.3": {
+        "RHEL-7": ("6fc2e3319b83ea2b1bf8d98ec43f614b937bb5f23d15aefe9e9171c882d24a60"),
+        "RHEL-8": ("1a05548a7051d1df42280fdcfcffeaf89d519aa7978bffd29171da60fdbccecf"),
+        "SLES-15": ("389ddd34e1299e4d942864f63f236158a81ce4190f59af512a1bea3221153bfe"),
+        "Ubuntu-20.04": ("a1a221859b5f0962df3a0c6ce31669827bff0bfffb185b80429620f14b40f4f4"),
+        "AmazonLinux-2": ("2eef9b28e95e75f0040eb61c9e1b406ec4d0b81cce3e95a652029aa0898733a0"),
+    },
+    "23.10_gcc-8.2": {
+        "RHEL-7": ("d6596721e74e7bdc8d9ce7b8b2a4c5ab2bd430f3ca69b9ec84f587f1aa181083"),
+        "RHEL-8": ("004aed52003e19a6c14df303456318e486ad783eb543b79285c7953a23722a4a"),
+        "SLES-15": ("12c638c0cc5bdc220699499ec6bb160a7b889f105901f4354bd2748a77d25c8e"),
+        "AmazonLinux-2": ("d039134236cda298cd0920c3c5b017eeef83fcab82949221dc7deb081026252f"),
+    },
+    "23.10_gcc-7.5": {
+        "RHEL-7": ("1a0ca860c168987d174923dfc7800e10521303914793162a8bae2b2cd3f68203"),
+        "AmazonLinux-2": ("58b201a6bbe7ee10563d8d42b32a77c4b15c57b4e81abb35d24b8c3fc9cff4d9"),
+    },
+    "23.10_flang-new_clang_17": {
+        "macOS": ("baf09cd6d1d1b7c780b8b31cfe1dd709596b182dc714127fbc9f23007ff9e23a")
+    },
+    "23.06_flang-new_clang_16": {
+        "macOS": ("232f5e89e0f1f4777480c64a790e477dfd2f423d3cf5704a116a2736f36250ea")
+    },
     "23.04.1_gcc-12.2": {
         "RHEL-7": ("789cc093cb7e0d9294aff0fdf94b74987435a09cdff4c1b7118a03350548d03c"),
         "RHEL-8": ("1b668baec6d3df2d48c5aedc70baa6a9b638983b94bf2cd58d378859a1da49f0"),
@@ -176,21 +249,33 @@ _versions = {
 }
 
 
-def get_os(ver):
-    spack_os = spack.platforms.host().default_os
+def get_os_or_pkg_manager(ver):
+    platform = spack.platforms.host()
+    if platform.name == "darwin":
+        return "macOS"
     if ver.startswith("22."):
-        return _os_map_before_23.get(spack_os, "")
+        return _os_map_before_23.get(platform.default_os, "")
+    elif ver.startswith("23."):
+        return _os_map_before_24.get(platform.default_os, "RHEL-7")
     else:
-        return _os_map.get(spack_os, "RHEL-7")
+        return _os_pkg_map.get(platform.default_os, "rpm")
 
 
-def get_package_url(version):
-    base_url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/"
+def get_package_url_before_24(base_url, version):
     armpl_version = version.split("_")[0]
     armpl_version_dashed = armpl_version.replace(".", "-")
-    gcc_version = version.split("_")[1]
-    os = get_os(armpl_version)
-    filename = "arm-performance-libraries_" + armpl_version + "_" + os + "_" + gcc_version + ".tar"
+    compiler_version = version.split("_", 1)[1]
+    os = get_os_or_pkg_manager(armpl_version)
+    if os == "macOS":
+        if armpl_version.startswith("23.06"):
+            return (
+                f"{base_url}/{armpl_version_dashed}/"
+                + f"armpl_{armpl_version}_{compiler_version}.dmg"
+            )
+        else:
+            filename = f"arm-performance-libraries_{armpl_version}_macOS.dmg"
+            return f"{base_url}/{armpl_version_dashed}/macos/{filename}"
+    filename = f"arm-performance-libraries_{armpl_version}_{os}_{compiler_version}.tar"
     os_short = ""
     if armpl_version.startswith("22.0."):
         os_short = os.replace("-", "")
@@ -198,11 +283,51 @@ def get_package_url(version):
         os_short = os.split(".")[0].lower()
         if "amazonlinux" in os_short:
             os_short = os_short.replace("amazonlinux", "al")
-    return base_url + armpl_version_dashed + "/" + os_short + "/" + filename
+    return f"{base_url}/{armpl_version_dashed}/{os_short}/{filename}"
+
+
+def get_package_url_from_24(base, version):
+    pkg_system = get_os_or_pkg_manager(version)
+    os = "macOS" if pkg_system == "macOS" else "linux"
+
+    extension = "tgz" if pkg_system == "macOS" else "tar"
+
+    full_name_library = f"arm-performance-libraries_{version}_{pkg_system}"
+
+    if pkg_system != "macOS":
+        full_name_library = f"{full_name_library}_gcc"
+    file_name = f"{full_name_library}.{extension}"
+
+    vn = version.replace(".", "-")
+    url_parts = f"{base}/{vn}/{os}/{file_name}"
+    return url_parts
+
+
+def get_package_url(version):
+    base_url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries"
+    if version[:2] >= "24":
+        return get_package_url_from_24(base_url, version)
+    else:
+        return get_package_url_before_24(base_url, version)
 
 
 def get_armpl_prefix(spec):
-    return os.path.join(spec.prefix, "armpl_" + spec.version.string)
+    armpl_dir = [
+        d
+        for d in os.listdir(spec.prefix)
+        if os.path.isdir(os.path.join(spec.prefix, d)) and d.startswith("armpl_")
+    ][0]
+    return os.path.join(spec.prefix, armpl_dir)
+
+
+def get_armpl_suffix(spec):
+    suffix = ""
+    if spec.satisfies("@24:"):
+        suffix += "_ilp64" if spec.satisfies("+ilp64") else "_lp64"
+    else:
+        suffix += "_ilp64" if spec.satisfies("+ilp64") else ""
+    suffix += "_mp" if spec.satisfies("threads=openmp") else ""
+    return suffix
 
 
 class ArmplGcc(Package):
@@ -210,20 +335,30 @@ class ArmplGcc(Package):
     high-performance computing applications on Arm processors."""
 
     homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries"
-    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/23-04-1/ubuntu-22/arm-performance-libraries_23.04.1_Ubuntu-22.04_gcc-12.2.tar"
+    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/24-04/linux/arm-performance-libraries_24.04_deb_gcc.tar"
 
-    maintainers("annop-w")
+    maintainers("paolotricerri")
 
     for ver, packages in _versions.items():
-        key = "{0}".format(get_os(ver))
+        key = get_os_or_pkg_manager(ver)
         sha256sum = packages.get(key)
         url = get_package_url(ver)
         if sha256sum:
-            version(ver, sha256=sha256sum, url=url)
+            extension = os.path.splitext(url)[1]
+            # Don't attempt to expand .dmg files
+            expand = extension != ".dmg"
+            version(ver, sha256=sha256sum, url=url, extension=extension, expand=expand)
 
     conflicts("target=x86:", msg="Only available on Aarch64")
     conflicts("target=ppc64:", msg="Only available on Aarch64")
     conflicts("target=ppc64le:", msg="Only available on Aarch64")
+
+    conflicts("%gcc@:11", when="@23.10_gcc-12.2")
+    conflicts("%gcc@:10", when="@23.10_gcc-11.3")
+    conflicts("%gcc@:9", when="@23.10_gcc-10.4")
+    conflicts("%gcc@:8", when="@23.10_gcc-9.3")
+    conflicts("%gcc@:7", when="@23.10_gcc-8.2")
+    conflicts("%gcc@:6", when="@23.10_gcc-7.5")
 
     conflicts("%gcc@:11", when="@23.04.1_gcc-12.2")
     conflicts("%gcc@:10", when="@23.04.1_gcc-11.3")
@@ -250,6 +385,8 @@ class ArmplGcc(Package):
     conflicts("%gcc@:7", when="@22.0.1_gcc-8.2")
     conflicts("%gcc@:6", when="@22.0.1_gcc-7.5")
 
+    conflicts("%msvc", msg="Not compatible with MSVC compiler.")
+
     variant("ilp64", default=False, description="use ilp64 specific Armpl library")
     variant("shared", default=True, description="enable shared libs")
     variant(
@@ -266,25 +403,44 @@ class ArmplGcc(Package):
 
     # Run the installer with the desired install directory
     def install(self, spec, prefix):
+        if spec.platform == "darwin":
+            hdiutil = which("hdiutil")
+            # Mount image
+            mountpoint = os.path.join(self.stage.path, "mount")
+            if spec.satisfies("@:23"):
+                dmg_file = self.stage.archive_file
+            else:
+                # The archive file only extracts to one .dmg file
+                dmg_file = os.path.join(
+                    self.stage.source_path, os.listdir(self.stage.source_path)[0]
+                )
+            hdiutil("attach", "-mountpoint", mountpoint, dmg_file)
+            try:
+                # Run installer
+                exe_name = [f for f in os.listdir(mountpoint) if f.endswith(".sh")][0]
+                installer = Executable(os.path.join(mountpoint, exe_name))
+                installer("-y", f"--install_dir={prefix}")
+            finally:
+                # Unmount image
+                hdiutil("detach", mountpoint)
+            return
         if self.compiler.name != "gcc":
             raise spack.error.SpackError(("Only compatible with GCC.\n"))
 
         with when("@:22"):
-            armpl_version = "{}".format(spec.version.up_to(3)).split("_")[0]
+            armpl_version = spec.version.up_to(3).string.split("_")[0]
         with when("@23:"):
-            armpl_version = "{}".format(spec.version).split("_")[0]
+            armpl_version = spec.version.string.split("_")[0]
 
         exe = Executable(
-            "./arm-performance-libraries_{0}_{1}.sh".format(armpl_version, get_os(armpl_version))
+            f"./arm-performance-libraries_{armpl_version}_"
+            + f"{get_os_or_pkg_manager(armpl_version)}.sh"
         )
         exe("--accept", "--force", "--install-to", prefix)
 
     @property
     def lib_suffix(self):
-        suffix = ""
-        suffix += "_ilp64" if self.spec.satisfies("+ilp64") else ""
-        suffix += "_mp" if self.spec.satisfies("threads=openmp") else ""
-        return suffix
+        return get_armpl_suffix(self.spec)
 
     @property
     def blas_libs(self):
@@ -320,7 +476,10 @@ class ArmplGcc(Package):
     def headers(self):
         armpl_dir = get_armpl_prefix(self.spec)
 
-        suffix = "include" + self.lib_suffix
+        if self.spec.satisfies("@24:"):
+            suffix = "include"
+        else:
+            suffix = "include" + self.lib_suffix
 
         incdir = join_path(armpl_dir, suffix)
 
@@ -330,14 +489,24 @@ class ArmplGcc(Package):
 
     def setup_run_environment(self, env):
         armpl_dir = get_armpl_prefix(self.spec)
-        env.prepend_path("LD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
+        if self.spec.platform == "darwin":
+            env.prepend_path("DYLD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
+        else:
+            env.prepend_path("LD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
 
     @run_after("install")
     def check_install(self):
         armpl_dir = get_armpl_prefix(self.spec)
-        armpl_example_dir = join_path(armpl_dir, "examples")
+        suffix = get_armpl_suffix(self.spec)
+        armpl_example_dir = join_path(armpl_dir, f"examples{suffix}")
+
         # run example makefile
-        make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir)
+        if self.spec.platform == "darwin":
+            # Fortran examples on MacOS requires flang-new which is
+            # not commonly installed, so only run the C examples.
+            make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir, "c_examples")
+        else:
+            make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir)
         # clean up
         make("-C", armpl_example_dir, "ARMPL_DIR=" + armpl_dir, "clean")
 

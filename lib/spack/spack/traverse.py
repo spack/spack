@@ -1,10 +1,10 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from collections import defaultdict, namedtuple
-from typing import Union
+from collections import defaultdict
+from typing import NamedTuple, Union
 
 import spack.deptypes as dt
 import spack.spec
@@ -12,11 +12,14 @@ import spack.spec
 # Export only the high-level API.
 __all__ = ["traverse_edges", "traverse_nodes", "traverse_tree"]
 
+
 #: Data class that stores a directed edge together with depth at
 #: which the target vertex was found. It is passed to ``accept``
 #: and ``neighbors`` of visitors, so they can decide whether to
 #: follow the edge or not.
-EdgeAndDepth = namedtuple("EdgeAndDepth", ["edge", "depth"])
+class EdgeAndDepth(NamedTuple):
+    edge: "spack.spec.DependencySpec"
+    depth: int
 
 
 def sort_edges(edges):
@@ -251,7 +254,7 @@ def traverse_depth_first_edges_generator(edges, visitor, post_order=False, root=
         neighbors = [EdgeAndDepth(edge=n, depth=edge.depth + 1) for n in visitor.neighbors(edge)]
 
         # This extra branch is just for efficiency.
-        if len(neighbors) >= 0:
+        if len(neighbors) > 0:
             for item in traverse_depth_first_edges_generator(
                 neighbors, visitor, post_order, root, depth
             ):
@@ -563,10 +566,10 @@ def traverse_tree(
     # identical to DFS, which is much more efficient then.
     if not depth_first and cover == "edges":
         edges, parents = breadth_first_to_tree_edges(specs, deptype, key)
-        return traverse_breadth_first_tree_edges(None, edges, parents)
+        return traverse_breadth_first_tree_edges(None, edges, parents, key)
     elif not depth_first and cover == "nodes":
         edges = breadth_first_to_tree_nodes(specs, deptype, key)
-        return traverse_breadth_first_tree_nodes(None, edges)
+        return traverse_breadth_first_tree_nodes(None, edges, key)
 
     return traverse_edges(specs, order="pre", cover=cover, deptype=deptype, key=key, depth=True)
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,7 @@ import os
 import pytest
 
 import spack.directives
+import spack.directives_meta
 import spack.paths
 import spack.repo
 import spack.util.package_hash as ph
@@ -211,13 +212,13 @@ class HasManyDirectives:
 
 {directives}
 """.format(
-    directives="\n".join("    %s()" % name for name in spack.directives.directive_names)
+    directives="\n".join("    %s()" % name for name in spack.directives_meta.directive_names)
 )
 
 
 def test_remove_all_directives():
     """Ensure all directives are removed from packages before hashing."""
-    for name in spack.directives.directive_names:
+    for name in spack.directives_meta.directive_names:
         assert name in many_directives
 
     tree = ast.parse(many_directives)
@@ -225,7 +226,7 @@ def test_remove_all_directives():
     tree = ph.RemoveDirectives(spec).visit(tree)
     unparsed = unparse(tree, py_ver_consistent=True)
 
-    for name in spack.directives.directive_names:
+    for name in spack.directives_meta.directive_names:
         assert name not in unparsed
 
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,9 @@ class Pdt(AutotoolsPackage):
 
     tags = ["e4s"]
 
+    license("GPL-2.0-only")
+
+    version("3.25.2", sha256="01c2d403bc6672b2b264a182c325806541066c5ed5713878eb598f5506428cbe")
     version("3.25.1", sha256="0b6f8a6b8769c181b2ae6cae7298f04b8e3e3d68066f598ed24574e19500bc97")
     version("3.25", sha256="1037628d854edfeded3d847150d3e8fbd3774e8146407ce32f5021c80f6299be")
     version("3.24", sha256="4a2bb31f3f7f2e52ed49d9b7189ade05170a4386ef76771280a06e8b3ca97ab2")
@@ -34,6 +37,8 @@ class Pdt(AutotoolsPackage):
     version("3.20", sha256="561c3559fba7c3d053df3b98f75f3c2087c64a6d51204b40825a1737677f780b")
     version("3.19", sha256="d57234077e2e999f2acf9860ea84369a4694b50cc17fa6728e5255dc5f4a2160")
     version("3.18.1", sha256="d06c2d1793fadebf169752511e5046d7e02cf3fead6135a35c34b1fee6d6d3b2")
+
+    depends_on("cxx", type="build")  # generated
 
     variant("pic", default=False, description="Builds with pic")
 
@@ -48,18 +53,23 @@ class Pdt(AutotoolsPackage):
         options = ["-prefix=%s" % prefix]
         if self.compiler.name == "xl":
             options.append("-XLC")
-        elif self.compiler.name == "intel" or self.compiler.name == "oneapi":
+        elif self.compiler.name == "intel":
             options.append("-icpc")
+        elif self.compiler.name == "oneapi":
+            if spec.satisfies("@3.25.2:"):
+                options.append("-icpx")
+            else:
+                options.append("-icpc")
         elif self.compiler.name == "pgi":
             options.append("-pgCC")
         elif self.compiler.name == "gcc":
             options.append("-GNU")
-        elif self.compiler.name == "clang":
+        elif self.compiler.name in ["clang", "apple-clang", "aocc"]:
             options.append("-clang")
         elif self.compiler.name == "cce":
             options.append("-CC")
         else:
-            raise InstallError("Unknown/unsupported compiler family")
+            raise InstallError("Unknown/unsupported compiler family: " + self.compiler.name)
 
         if "+pic" in spec:
             options.append("-useropt=" + self.compiler.cxx_pic_flag)

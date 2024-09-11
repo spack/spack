@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="master")
     version("amd", branch="amd")
+    version("8.2.1", sha256="b77d065cafa6bc1a1dcc15bf23fd854f54b05762b165badcffc195835ad2bddf")
+    version("8.2.0", sha256="d53573e5a399b2b4ab1fcc36e8421c1b6fab36345c0af14f8fa20326e3365f1f")
     version("8.1.2", sha256="7b16c442bb01ea8b298c0aab9a2584aa4615d09786aac968cb2f3118c058206b")
     version("8.1.1", sha256="766d70b84ece79d88249fe10ff51d2a397a29f274d9fd1e4a4ac39179a9ef23f")
     version("8.1.0", sha256="9308844b99a7e762d5704934f7e9f79daf158b0bfc582994303c2e0b31518b34")
@@ -43,6 +45,10 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
     version("5.1.0", sha256="73f292ab748b590b6dd7469e6986aeb95d279b8b8b3da511c695a396bdbc996c")
     version("5.0.0", sha256="78d1d6460ff16b3f71e4bcd7306397574d54d421249553ccc26567f00a10bfc6")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("int64", default=False, description="Build with 64 bit integers")
     variant(
         "openmp",
@@ -53,14 +59,16 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         ),
     )
     variant("shared", default=True, description="Build shared libraries")
+    variant("parmetis", default=True, description="Enable ParMETIS library")
 
     depends_on("mpi")
     depends_on("blas")
     depends_on("lapack")
-    depends_on("parmetis +int64", when="+int64")
-    depends_on("metis@5: +int64", when="+int64")
-    depends_on("parmetis ~int64", when="~int64")
-    depends_on("metis@5: ~int64", when="~int64")
+    with when("+parmetis"):
+        depends_on("metis@5: +int64", when="+int64")
+        depends_on("parmetis +int64", when="+int64")
+        depends_on("metis@5: ~int64", when="~int64")
+        depends_on("parmetis ~int64", when="~int64")
     depends_on("cmake@3.18.1:", type="build", when="@7.1.0:")
     depends_on("hipblas", when="+rocm")
     depends_on("rocsolver", when="+rocm")
@@ -89,17 +97,21 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         append_define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx)
         append_define("CMAKE_INSTALL_LIBDIR", self.prefix.lib)
         append_define("CMAKE_INSTALL_BINDIR", self.prefix.bin)
-        append_define("TPL_BLAS_LIBRARIES", spec["blas"].libs)
-        append_define("TPL_LAPACK_LIBRARIES", spec["lapack"].libs)
+        append_define("TPL_BLAS_LIBRARIES", spec["blas"].libs.ld_flags)
+        append_define("TPL_LAPACK_LIBRARIES", spec["lapack"].libs.ld_flags)
         append_define("TPL_ENABLE_LAPACKLIB", True)
         append_define("USE_XSDK_DEFAULTS", True)
-        append_define(
-            "TPL_PARMETIS_LIBRARIES", [spec["parmetis"].libs.ld_flags, spec["metis"].libs.ld_flags]
-        )
-        append_define(
-            "TPL_PARMETIS_INCLUDE_DIRS",
-            [spec["parmetis"].prefix.include, spec["metis"].prefix.include],
-        )
+
+        append_from_variant("TPL_ENABLE_PARMETISLIB", "parmetis")
+        if "+parmetis" in spec:
+            append_define(
+                "TPL_PARMETIS_LIBRARIES",
+                [spec["parmetis"].libs.ld_flags, spec["metis"].libs.ld_flags],
+            )
+            append_define(
+                "TPL_PARMETIS_INCLUDE_DIRS",
+                [spec["parmetis"].prefix.include, spec["metis"].prefix.include],
+            )
 
         append_define("XSDK_INDEX_SIZE", "64" if "+int64" in spec else "32")
 
@@ -134,8 +146,6 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         flags = list(flags)
         if name == "cxxflags":
             flags.append(self.compiler.cxx11_flag)
-        if name == "cflags" and "%pgi" not in self.spec:
-            flags.append("-std=c99")
         if (
             name == "cflags"
             and (self.spec.satisfies("%xl") or self.spec.satisfies("%xl_r"))
@@ -159,7 +169,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
     def cache_test_sources(self):
         """Copy the example matrices after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([self.examples_src_dir])
+        cache_extra_test_sources(self, [self.examples_src_dir])
 
     def test_pddrive(self):
         """run cached pddrive"""

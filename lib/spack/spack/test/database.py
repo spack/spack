@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import datetime
 import functools
 import json
 import os
+import re
 import shutil
 import sys
 
@@ -25,6 +26,7 @@ import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
 
 import spack.database
+import spack.deptypes as dt
 import spack.package_base
 import spack.repo
 import spack.spec
@@ -39,41 +41,62 @@ pytestmark = pytest.mark.db
 @pytest.fixture()
 def upstream_and_downstream_db(tmpdir, gen_mock_layout):
     mock_db_root = str(tmpdir.mkdir("mock_db_root"))
-    upstream_write_db = spack.database.Database(mock_db_root)
-    upstream_db = spack.database.Database(mock_db_root, is_upstream=True)
+    upstream_layout = gen_mock_layout("/a/")
+    upstream_write_db = spack.database.Database(mock_db_root, layout=upstream_layout)
+    upstream_db = spack.database.Database(mock_db_root, is_upstream=True, layout=upstream_layout)
     # Generate initial DB file to avoid reindex
     with open(upstream_write_db._index_path, "w") as db_file:
         upstream_write_db._write_to_file(db_file)
-    upstream_layout = gen_mock_layout("/a/")
 
     downstream_db_root = str(tmpdir.mkdir("mock_downstream_db_root"))
-    downstream_db = spack.database.Database(downstream_db_root, upstream_dbs=[upstream_db])
+    downstream_db = spack.database.Database(
+        downstream_db_root, upstream_dbs=[upstream_db], layout=gen_mock_layout("/b/")
+    )
     with open(downstream_db._index_path, "w") as db_file:
         downstream_db._write_to_file(db_file)
-    downstream_layout = gen_mock_layout("/b/")
 
-    yield upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout
+    yield upstream_write_db, upstream_db, downstream_db
+
+
+@pytest.mark.parametrize(
+    "install_tree,result",
+    [
+        ("all", ["pkg-b", "pkg-c"]),
+        ("upstream", ["pkg-c"]),
+        ("local", ["pkg-b"]),
+        ("{u}", ["pkg-c"]),
+        ("{d}", ["pkg-b"]),
+    ],
+)
+def test_query_by_install_tree(
+    install_tree, result, upstream_and_downstream_db, mock_packages, monkeypatch, config
+):
+    up_write_db, up_db, down_db = upstream_and_downstream_db
+
+    # Set the upstream DB to contain "pkg-c" and downstream to contain "pkg-b")
+    b = spack.spec.Spec("pkg-b").concretized()
+    c = spack.spec.Spec("pkg-c").concretized()
+    up_write_db.add(c)
+    up_db._read()
+    down_db.add(b)
+
+    specs = down_db.query(install_tree=install_tree.format(u=up_db.root, d=down_db.root))
+    assert [s.name for s in specs] == result
 
 
 def test_spec_installed_upstream(
     upstream_and_downstream_db, mock_custom_repository, config, monkeypatch
 ):
     """Test whether Spec.installed_upstream() works."""
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    upstream_write_db, upstream_db, downstream_db = upstream_and_downstream_db
 
     # a known installed spec should say that it's installed
     with spack.repo.use_repositories(mock_custom_repository):
-        spec = spack.spec.Spec("c").concretized()
+        spec = spack.spec.Spec("pkg-c").concretized()
         assert not spec.installed
         assert not spec.installed_upstream
 
-        upstream_write_db.add(spec, upstream_layout)
+        upstream_write_db.add(spec)
         upstream_db._read()
 
         monkeypatch.setattr(spack.store.STORE, "db", downstream_db)
@@ -89,13 +112,7 @@ def test_spec_installed_upstream(
 
 @pytest.mark.usefixtures("config")
 def test_installed_upstream(upstream_and_downstream_db, tmpdir):
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    upstream_write_db, upstream_db, downstream_db = upstream_and_downstream_db
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("x")
@@ -106,7 +123,7 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
     with spack.repo.use_repositories(builder.root):
         spec = spack.spec.Spec("w").concretized()
         for dep in spec.traverse(root=False):
-            upstream_write_db.add(dep, upstream_layout)
+            upstream_write_db.add(dep)
         upstream_db._read()
 
         for dep in spec.traverse(root=False):
@@ -116,11 +133,11 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
                 upstream_db.get_by_hash(dep.dag_hash())
 
         new_spec = spack.spec.Spec("w").concretized()
-        downstream_db.add(new_spec, downstream_layout)
+        downstream_db.add(new_spec)
         for dep in new_spec.traverse(root=False):
             upstream, record = downstream_db.query_by_spec_hash(dep.dag_hash())
             assert upstream
-            assert record.path == upstream_layout.path_for_spec(dep)
+            assert record.path == upstream_db.layout.path_for_spec(dep)
         upstream, record = downstream_db.query_by_spec_hash(new_spec.dag_hash())
         assert not upstream
         assert record.installed
@@ -129,36 +146,32 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
         downstream_db._check_ref_counts()
 
 
-@pytest.mark.usefixtures("config")
-def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir):
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir, capsys, config):
+    upstream_write_db, upstream_db, downstream_db = upstream_and_downstream_db
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("z")
     builder.add_package("y", dependencies=[("z", None, None)])
 
     with spack.repo.use_repositories(builder):
-        spec = spack.spec.Spec("y").concretized()
+        y = spack.spec.Spec("y").concretized()
+        z = y["z"]
 
-        upstream_write_db.add(spec["z"], upstream_layout)
+        # add dependency to upstream, dependents to downstream
+        upstream_write_db.add(z)
+        upstream_db._read()
+        downstream_db.add(y)
+
+        # remove the dependency from the upstream DB
+        upstream_write_db.remove(z)
         upstream_db._read()
 
-        new_spec = spack.spec.Spec("y").concretized()
-        downstream_db.add(new_spec, downstream_layout)
-
-        upstream_write_db.remove(new_spec["z"])
-        upstream_db._read()
-
-        new_downstream = spack.database.Database(downstream_db.root, upstream_dbs=[upstream_db])
-        new_downstream._fail_when_missing_deps = True
-        with pytest.raises(spack.database.MissingDependenciesError):
-            new_downstream._read()
+        # then rereading the downstream DB should warn about the missing dep
+        downstream_db._read_from_file(downstream_db._index_path)
+        assert (
+            f"Missing dependency not in database: y/{y.dag_hash(7)} needs z"
+            in capsys.readouterr().err
+        )
 
 
 @pytest.mark.usefixtures("config")
@@ -167,13 +180,7 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
     DB. When a package is recorded as installed in both, the results should
     refer to the downstream DB.
     """
-    (
-        upstream_write_db,
-        upstream_db,
-        upstream_layout,
-        downstream_db,
-        downstream_layout,
-    ) = upstream_and_downstream_db
+    upstream_write_db, upstream_db, downstream_db = upstream_and_downstream_db
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("x")
@@ -181,8 +188,8 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
     with spack.repo.use_repositories(builder.root):
         spec = spack.spec.Spec("x").concretized()
 
-        downstream_db.add(spec, downstream_layout)
-        upstream_write_db.add(spec, upstream_layout)
+        downstream_db.add(spec)
+        upstream_write_db.add(spec)
         upstream_db._read()
 
         upstream, record = downstream_db.query_by_spec_hash(spec.dag_hash())
@@ -196,33 +203,22 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
         try:
             orig_db = spack.store.STORE.db
             spack.store.STORE.db = downstream_db
-            assert queried_spec.prefix == downstream_layout.path_for_spec(spec)
+            assert queried_spec.prefix == downstream_db.layout.path_for_spec(spec)
         finally:
             spack.store.STORE.db = orig_db
 
 
-@pytest.mark.usefixtures("config", "temporary_store")
-def test_cannot_write_upstream(tmpdir, gen_mock_layout):
-    roots = [str(tmpdir.mkdir(x)) for x in ["a", "b"]]
-    layouts = [gen_mock_layout(x) for x in ["/ra/", "/rb/"]]
-
-    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
-    builder.add_package("x")
-
+def test_cannot_write_upstream(tmp_path, mock_packages, config):
     # Instantiate the database that will be used as the upstream DB and make
     # sure it has an index file
-    upstream_db_independent = spack.database.Database(roots[1])
-    with upstream_db_independent.write_transaction():
+    with spack.database.Database(str(tmp_path)).write_transaction():
         pass
 
-    upstream_dbs = spack.store._construct_upstream_dbs_from_install_roots([roots[1]], _test=True)
+    # Create it as an upstream
+    db = spack.database.Database(str(tmp_path), is_upstream=True)
 
-    with spack.repo.use_repositories(builder.root):
-        spec = spack.spec.Spec("x")
-        spec.concretize()
-
-        with pytest.raises(spack.database.ForbiddenLockError):
-            upstream_dbs[0].add(spec, layouts[1])
+    with pytest.raises(spack.database.ForbiddenLockError):
+        db.add(spack.spec.Spec("pkg-a").concretized())
 
 
 @pytest.mark.usefixtures("config", "temporary_store")
@@ -237,17 +233,17 @@ def test_recursive_upstream_dbs(tmpdir, gen_mock_layout):
 
     with spack.repo.use_repositories(builder.root):
         spec = spack.spec.Spec("x").concretized()
-        db_c = spack.database.Database(roots[2])
-        db_c.add(spec["z"], layouts[2])
+        db_c = spack.database.Database(roots[2], layout=layouts[2])
+        db_c.add(spec["z"])
 
-        db_b = spack.database.Database(roots[1], upstream_dbs=[db_c])
-        db_b.add(spec["y"], layouts[1])
+        db_b = spack.database.Database(roots[1], upstream_dbs=[db_c], layout=layouts[1])
+        db_b.add(spec["y"])
 
-        db_a = spack.database.Database(roots[0], upstream_dbs=[db_b, db_c])
-        db_a.add(spec["x"], layouts[0])
+        db_a = spack.database.Database(roots[0], upstream_dbs=[db_b, db_c], layout=layouts[0])
+        db_a.add(spec["x"])
 
         upstream_dbs_from_scratch = spack.store._construct_upstream_dbs_from_install_roots(
-            [roots[1], roots[2]], _test=True
+            [roots[1], roots[2]]
         )
         db_a_from_scratch = spack.database.Database(
             roots[0], upstream_dbs=upstream_dbs_from_scratch
@@ -355,7 +351,7 @@ def _check_db_sanity(database):
     _check_merkleiness()
 
 
-def _check_remove_and_add_package(database, spec):
+def _check_remove_and_add_package(database: spack.database.Database, spec):
     """Remove a spec from the DB, then add it and make sure everything's
     still ok once it is added.  This checks that it was
     removed, that it's back when added again, and that ref
@@ -375,7 +371,7 @@ def _check_remove_and_add_package(database, spec):
     assert concrete_spec not in remaining
 
     # add it back and make sure everything is ok.
-    database.add(concrete_spec, spack.store.STORE.layout)
+    database.add(concrete_spec)
     installed = database.query()
     assert concrete_spec in installed
     assert installed == original
@@ -385,7 +381,7 @@ def _check_remove_and_add_package(database, spec):
     database._check_ref_counts()
 
 
-def _mock_install(spec):
+def _mock_install(spec: str):
     s = spack.spec.Spec(spec).concretized()
     s.package.do_install(fake=True)
 
@@ -625,7 +621,7 @@ def test_080_root_ref_counts(mutable_database):
     assert mutable_database.get_record("mpich").ref_count == 1
 
     # Put the spec back
-    mutable_database.add(rec.spec, spack.store.STORE.layout)
+    mutable_database.add(rec.spec)
 
     # record is present again
     assert len(mutable_database.query("mpileaks ^mpich", installed=any)) == 1
@@ -778,9 +774,39 @@ def test_query_unused_specs(mutable_database):
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
 
-    unused = spack.store.STORE.db.unused_specs
-    assert len(unused) == 1
-    assert unused[0].name == "cmake"
+    si = s.dag_hash()
+    ml_mpich = spack.store.STORE.db.query_one("mpileaks ^mpich").dag_hash()
+    ml_mpich2 = spack.store.STORE.db.query_one("mpileaks ^mpich2").dag_hash()
+    ml_zmpi = spack.store.STORE.db.query_one("mpileaks ^zmpi").dag_hash()
+    externaltest = spack.store.STORE.db.query_one("externaltest").dag_hash()
+    trivial_smoke_test = spack.store.STORE.db.query_one("trivial-smoke-test").dag_hash()
+
+    def check_unused(roots, deptype, expected):
+        unused = spack.store.STORE.db.unused_specs(root_hashes=roots, deptype=deptype)
+        assert set(u.name for u in unused) == set(expected)
+
+    default_dt = dt.LINK | dt.RUN
+    check_unused(None, default_dt, ["cmake"])
+    check_unused(
+        [si, ml_mpich, ml_mpich2, ml_zmpi, externaltest],
+        default_dt,
+        ["trivial-smoke-test", "cmake"],
+    )
+    check_unused(
+        [si, ml_mpich, ml_mpich2, ml_zmpi, externaltest],
+        dt.LINK | dt.RUN | dt.BUILD,
+        ["trivial-smoke-test"],
+    )
+    check_unused(
+        [si, ml_mpich, ml_mpich2, externaltest, trivial_smoke_test],
+        dt.LINK | dt.RUN | dt.BUILD,
+        ["mpileaks", "callpath", "zmpi", "fake"],
+    )
+    check_unused(
+        [si, ml_mpich, ml_mpich2, ml_zmpi],
+        default_dt,
+        ["trivial-smoke-test", "cmake", "externaltest", "externaltool", "externalvirtual"],
+    )
 
 
 @pytest.mark.regression("10019")
@@ -803,9 +829,17 @@ def test_query_spec_with_non_conditional_virtual_dependency(database):
     assert len(results) == 1
 
 
+def test_query_virtual_spec(database):
+    """Make sure we can query for virtuals in the DB"""
+    results = spack.store.STORE.db.query_local("mpi")
+    assert len(results) == 3
+    names = [s.name for s in results]
+    assert all(name in names for name in ["mpich", "mpich2", "zmpi"])
+
+
 def test_failed_spec_path_error(database):
     """Ensure spec not concrete check is covered."""
-    s = spack.spec.Spec("a")
+    s = spack.spec.Spec("pkg-a")
     with pytest.raises(AssertionError, match="concrete spec required"):
         spack.store.STORE.failure_tracker.mark(s)
 
@@ -820,14 +854,14 @@ def test_clear_failure_keep(mutable_database, monkeypatch, capfd):
     # Pretend the spec has been failure locked
     monkeypatch.setattr(spack.database.FailureTracker, "lock_taken", _is)
 
-    s = spack.spec.Spec("a").concretized()
+    s = spack.spec.Spec("pkg-a").concretized()
     spack.store.STORE.failure_tracker.clear(s)
     out = capfd.readouterr()[0]
     assert "Retaining failure marking" in out
 
 
 @pytest.mark.db
-def test_clear_failure_forced(default_mock_concretization, mutable_database, monkeypatch, capfd):
+def test_clear_failure_forced(mutable_database, monkeypatch, capfd):
     """Add test coverage for clear_failure operation when force."""
 
     def _is(self, spec):
@@ -838,7 +872,7 @@ def test_clear_failure_forced(default_mock_concretization, mutable_database, mon
     # Ensure raise OSError when try to remove the non-existent marking
     monkeypatch.setattr(spack.database.FailureTracker, "persistent_mark", _is)
 
-    s = default_mock_concretization("a")
+    s = spack.spec.Spec("pkg-a").concretized()
     spack.store.STORE.failure_tracker.clear(s, force=True)
     out = capfd.readouterr()[1]
     assert "Removing failure marking despite lock" in out
@@ -846,30 +880,30 @@ def test_clear_failure_forced(default_mock_concretization, mutable_database, mon
 
 
 @pytest.mark.db
-def test_mark_failed(default_mock_concretization, mutable_database, monkeypatch, tmpdir, capsys):
+def test_mark_failed(mutable_database, monkeypatch, tmpdir, capsys):
     """Add coverage to mark_failed."""
 
     def _raise_exc(lock):
         raise lk.LockTimeoutError("write", "/mock-lock", 1.234, 10)
 
-    # Ensure attempt to acquire write lock on the mark raises the exception
-    monkeypatch.setattr(lk.Lock, "acquire_write", _raise_exc)
-
     with tmpdir.as_cwd():
-        s = default_mock_concretization("a")
-        spack.store.STORE.failure_tracker.mark(s)
+        s = spack.spec.Spec("pkg-a").concretized()
 
+        # Ensure attempt to acquire write lock on the mark raises the exception
+        monkeypatch.setattr(lk.Lock, "acquire_write", _raise_exc)
+
+        spack.store.STORE.failure_tracker.mark(s)
         out = str(capsys.readouterr()[1])
-        assert "Unable to mark a as failed" in out
+        assert "Unable to mark pkg-a as failed" in out
 
     spack.store.STORE.failure_tracker.clear_all()
 
 
 @pytest.mark.db
-def test_prefix_failed(default_mock_concretization, mutable_database, monkeypatch):
+def test_prefix_failed(mutable_database, monkeypatch):
     """Add coverage to failed operation."""
 
-    s = default_mock_concretization("a")
+    s = spack.spec.Spec("pkg-a").concretized()
 
     # Confirm the spec is not already marked as failed
     assert not spack.store.STORE.failure_tracker.has_failed(s)
@@ -887,13 +921,13 @@ def test_prefix_failed(default_mock_concretization, mutable_database, monkeypatc
     assert spack.store.STORE.failure_tracker.has_failed(s)
 
 
-def test_prefix_write_lock_error(default_mock_concretization, mutable_database, monkeypatch):
+def test_prefix_write_lock_error(mutable_database, monkeypatch):
     """Cover the prefix write lock exception."""
 
     def _raise(db, spec):
         raise lk.LockError("Mock lock error")
 
-    s = default_mock_concretization("a")
+    s = spack.spec.Spec("pkg-a").concretized()
 
     # Ensure subsequent lock operations fail
     monkeypatch.setattr(lk.Lock, "acquire_write", _raise)
@@ -949,9 +983,12 @@ def test_reindex_removed_prefix_is_not_installed(mutable_database, mock_store, c
     # Reindex should pick up libelf as a dependency of libdwarf
     spack.store.STORE.reindex()
 
-    # Reindexing should warn about libelf not being found on the filesystem
-    err = capfd.readouterr()[1]
-    assert "this directory does not contain an installation of the spec" in err
+    # Reindexing should warn about libelf not found on the filesystem
+    assert re.search(
+        "libelf@0.8.13.+ was marked installed in the database "
+        "but was not found on the file system",
+        capfd.readouterr().err,
+    )
 
     # And we should still have libelf in the database, but not installed.
     assert not mutable_database.query_one("libelf", installed=True)
@@ -998,6 +1035,16 @@ def test_check_parents(spec_str, parent_name, expected_nparents, database):
 
     edges = s.edges_from_dependents(name=parent_name)
     assert len(edges) == expected_nparents
+
+
+def test_db_all_hashes(database):
+    # ensure we get the right number of hashes without a read transaction
+    hashes = database.all_hashes()
+    assert len(hashes) == 17
+
+    # and make sure the hashes match
+    with database.read_transaction():
+        assert set(s.dag_hash() for s in database.query()) == set(hashes)
 
 
 def test_consistency_of_dependents_upon_remove(mutable_database):
@@ -1053,3 +1100,81 @@ def test_database_construction_doesnt_use_globals(tmpdir, config, nullify_global
     lock_cfg = lock_cfg or spack.database.lock_configuration(config)
     db = spack.database.Database(str(tmpdir), lock_cfg=lock_cfg)
     assert os.path.exists(db.database_directory)
+
+
+def test_database_read_works_with_trailing_data(tmp_path, default_mock_concretization):
+    # Populate a database
+    root = str(tmp_path)
+    db = spack.database.Database(root, layout=None)
+    spec = default_mock_concretization("pkg-a")
+    db.add(spec)
+    specs_in_db = db.query_local()
+    assert spec in specs_in_db
+
+    # Append anything to the end of the database file
+    with open(db._index_path, "a") as f:
+        f.write(json.dumps({"hello": "world"}))
+
+    # Read the database and check that it ignores the trailing data
+    assert spack.database.Database(root).query_local() == specs_in_db
+
+
+def test_database_errors_with_just_a_version_key(tmp_path):
+    root = str(tmp_path)
+    db = spack.database.Database(root)
+    next_version = f"{spack.database._DB_VERSION}.next"
+    with open(db._index_path, "w") as f:
+        f.write(json.dumps({"database": {"version": next_version}}))
+
+    with pytest.raises(spack.database.InvalidDatabaseVersionError):
+        spack.database.Database(root).query_local()
+
+
+def test_reindex_with_upstreams(tmp_path, monkeypatch, mock_packages, config):
+    # Reindexing should not put install records of upstream entries into the local database. Here
+    # we install `mpileaks` locally with dependencies in the upstream. And we even install
+    # `mpileaks` with the same hash in the upstream. After reindexing, `mpileaks` should still be
+    # in the local db, and `callpath` should not.
+    mpileaks = spack.spec.Spec("mpileaks").concretized()
+    callpath = mpileaks.dependencies("callpath")[0]
+
+    upstream_store = spack.store.create(
+        {"config": {"install_tree": {"root": str(tmp_path / "upstream")}}}
+    )
+    monkeypatch.setattr(spack.store, "STORE", upstream_store)
+    callpath.package.do_install(fake=True)
+
+    local_store = spack.store.create(
+        {
+            "config": {"install_tree": {"root": str(tmp_path / "local")}},
+            "upstreams": {"my-upstream": {"install_tree": str(tmp_path / "upstream")}},
+        }
+    )
+    monkeypatch.setattr(spack.store, "STORE", local_store)
+    mpileaks.package.do_install(fake=True)
+
+    # Sanity check that callpath is from upstream.
+    assert not local_store.db.query_local("callpath")
+    assert local_store.db.query("callpath")
+
+    # Install mpileaks also upstream with the same hash to ensure that determining upstreamness
+    # checks local installs before upstream databases, even when the local database is being
+    # reindexed.
+    monkeypatch.setattr(spack.store, "STORE", upstream_store)
+    mpileaks.package.do_install(fake=True)
+
+    # Delete the local database
+    shutil.rmtree(local_store.db.database_directory)
+
+    # Create a new instance s.t. we don't have cached specs in memory
+    reindexed_local_store = spack.store.create(
+        {
+            "config": {"install_tree": {"root": str(tmp_path / "local")}},
+            "upstreams": {"my-upstream": {"install_tree": str(tmp_path / "upstream")}},
+        }
+    )
+    reindexed_local_store.db.reindex()
+
+    assert not reindexed_local_store.db.query_local("callpath")
+    assert reindexed_local_store.db.query("callpath") == [callpath]
+    assert reindexed_local_store.db.query_local("mpileaks") == [mpileaks]

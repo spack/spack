@@ -1,10 +1,11 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import io
 import sys
 
+import llnl.string
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
 
@@ -24,7 +25,7 @@ def report_tags(category, tags):
     if isatty:
         num = len(tags)
         fmt = "{0} package tag".format(category)
-        buffer.write("{0}:\n".format(spack.util.string.plural(num, fmt)))
+        buffer.write("{0}:\n".format(llnl.string.plural(num, fmt)))
 
     if tags:
         colify.colify(tags, output=buffer, tty=isatty, indent=4)

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ from typing import Callable, List, Optional, Tuple, Type, TypeVar, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.string import plural
 from llnl.util.lang import nullcontext
 from llnl.util.tty.color import colorize
 
@@ -26,7 +27,6 @@ import spack.util.spack_json as sjson
 from spack.installer import InstallError
 from spack.spec import Spec
 from spack.util.prefix import Prefix
-from spack.util.string import plural
 
 #: Stand-alone test failure info type
 TestFailureType = Tuple[BaseException, str]
@@ -757,6 +757,10 @@ def test_process(pkg: Pb, kwargs):
             pkg.tester.status(pkg.spec.name, TestStatus.SKIPPED)
             return
 
+        # Make sure properly named build-time test methods actually run as
+        # stand-alone tests.
+        pkg.run_tests = True
+
         # run test methods from the package and all virtuals it provides
         v_names = virtuals(pkg)
         test_specs = [pkg.spec] + [spack.spec.Spec(v_name) for v_name in sorted(v_names)]
@@ -1039,7 +1043,7 @@ class TestSuite:
         Returns:
             str: the install test package identifier
         """
-        return spec.format("{name}-{version}-{hash:7}")
+        return spec.format_path("{name}-{version}-{hash:7}")
 
     @classmethod
     def test_log_name(cls, spec):

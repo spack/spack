@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,6 +54,7 @@ import spack.util.url
 import spack.version
 
 from ._common import _executables_in_store, _python_import, _root_spec, _try_import_from_store
+from .clingo import ClingoBootstrapConcretizer
 from .config import spack_python_interpreter, spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
@@ -173,35 +174,14 @@ class BuildcacheBootstrapper(Bootstrapper):
         return data
 
     def _install_by_hash(
-        self,
-        pkg_hash: str,
-        pkg_sha256: str,
-        index: List[spack.spec.Spec],
-        bincache_platform: spack.platforms.Platform,
+        self, pkg_hash: str, pkg_sha256: str, bincache_platform: spack.platforms.Platform
     ) -> None:
-        index_spec = next(x for x in index if x.dag_hash() == pkg_hash)
-        # Reconstruct the compiler that we need to use for bootstrapping
-        compiler_entry = {
-            "modules": [],
-            "operating_system": str(index_spec.os),
-            "paths": {
-                "cc": "/dev/null",
-                "cxx": "/dev/null",
-                "f77": "/dev/null",
-                "fc": "/dev/null",
-            },
-            "spec": str(index_spec.compiler),
-            "target": str(index_spec.target.family),
-        }
         with spack.platforms.use_platform(bincache_platform):
-            with spack.config.override("compilers", [{"compiler": compiler_entry}]):
-                spec_str = "/" + pkg_hash
-                query = spack.binary_distribution.BinaryCacheQuery(all_architectures=True)
-                matches = spack.store.find([spec_str], multiple=False, query_fn=query)
-                for match in matches:
-                    spack.binary_distribution.install_root_node(
-                        match, unsigned=True, force=True, sha256=pkg_sha256
-                    )
+            query = spack.binary_distribution.BinaryCacheQuery(all_architectures=True)
+            for match in spack.store.find([f"/{pkg_hash}"], multiple=False, query_fn=query):
+                spack.binary_distribution.install_root_node(
+                    match, unsigned=True, force=True, sha256=pkg_sha256
+                )
 
     def _install_and_test(
         self,
@@ -214,7 +194,7 @@ class BuildcacheBootstrapper(Bootstrapper):
         with spack.config.override(self.mirror_scope):
             # This index is currently needed to get the compiler used to build some
             # specs that we know by dag hash.
-            spack.binary_distribution.binary_index.regenerate_spec_cache()
+            spack.binary_distribution.BINARY_INDEX.regenerate_spec_cache()
             index = spack.binary_distribution.update_cache_and_get_specs()
 
             if not index:
@@ -228,11 +208,11 @@ class BuildcacheBootstrapper(Bootstrapper):
                 if not abstract_spec.intersects(candidate_spec):
                     continue
 
-                if python_spec is not None and python_spec not in abstract_spec:
+                if python_spec is not None and not abstract_spec.intersects(f"^{python_spec}"):
                     continue
 
                 for _, pkg_hash, pkg_sha256 in item["binaries"]:
-                    self._install_by_hash(pkg_hash, pkg_sha256, index, bincache_platform)
+                    self._install_by_hash(pkg_hash, pkg_sha256, bincache_platform)
 
                 info: ConfigDictionary = {}
                 if test_fn(query_spec=abstract_spec, query_info=info):
@@ -289,15 +269,13 @@ class SourceBootstrapper(Bootstrapper):
 
         # Try to build and install from sources
         with spack_python_interpreter():
-            # Add hint to use frontend operating system on Cray
-            concrete_spec = spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python())
-
             if module == "clingo":
-                # TODO: remove when the old concretizer is deprecated  # pylint: disable=fixme
-                concrete_spec._old_concretize(  # pylint: disable=protected-access
-                    deprecation_warning=False
-                )
+                bootstrapper = ClingoBootstrapConcretizer(configuration=spack.config.CONFIG)
+                concrete_spec = bootstrapper.concretize()
             else:
+                concrete_spec = spack.spec.Spec(
+                    abstract_spec_str + " ^" + spec_for_current_python()
+                )
                 concrete_spec.concretize()
 
         msg = "[BOOTSTRAP MODULE {0}] Try installing '{1}' from sources"
@@ -324,14 +302,7 @@ class SourceBootstrapper(Bootstrapper):
         # might reduce compilation time by a fair amount
         _add_externals_if_missing()
 
-        concrete_spec = spack.spec.Spec(abstract_spec_str)
-        if concrete_spec.name == "patchelf":
-            concrete_spec._old_concretize(  # pylint: disable=protected-access
-                deprecation_warning=False
-            )
-        else:
-            concrete_spec.concretize()
-
+        concrete_spec = spack.spec.Spec(abstract_spec_str).concretized()
         msg = "[BOOTSTRAP] Try installing '{0}' from sources"
         tty.debug(msg.format(abstract_spec_str))
         with spack.config.override(self.mirror_scope):
@@ -382,7 +353,7 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
     exception_handler = GroupedExceptionHandler()
 
     for current_config in bootstrapping_sources():
-        with exception_handler.forward(current_config["name"]):
+        with exception_handler.forward(current_config["name"], Exception):
             source_is_enabled_or_raise(current_config)
             current_bootstrapper = create_bootstrapper(current_config)
             if current_bootstrapper.try_import(module, abstract_spec):
@@ -437,7 +408,7 @@ def ensure_executables_in_path_or_raise(
     exception_handler = GroupedExceptionHandler()
 
     for current_config in bootstrapping_sources():
-        with exception_handler.forward(current_config["name"]):
+        with exception_handler.forward(current_config["name"], Exception):
             source_is_enabled_or_raise(current_config)
             current_bootstrapper = create_bootstrapper(current_config)
             if current_bootstrapper.try_search_path(executables, abstract_spec):
@@ -446,16 +417,11 @@ def ensure_executables_in_path_or_raise(
                     current_bootstrapper.last_search["spec"],
                     current_bootstrapper.last_search["command"],
                 )
-                env_mods = spack.util.environment.EnvironmentModifications()
-                for dep in concrete_spec.traverse(
-                    root=True, order="post", deptype=("link", "run")
-                ):
-                    env_mods.extend(
-                        spack.user_environment.environment_modifications_for_spec(
-                            dep, set_package_py_globals=False
-                        )
+                cmd.add_default_envmod(
+                    spack.user_environment.environment_modifications_for_specs(
+                        concrete_spec, set_package_py_globals=False
                     )
-                cmd.add_default_envmod(env_mods)
+                )
                 return cmd
 
     assert exception_handler, (
@@ -506,13 +472,27 @@ def ensure_clingo_importable_or_raise() -> None:
 
 def gnupg_root_spec() -> str:
     """Return the root spec used to bootstrap GnuPG"""
-    return _root_spec("gnupg@2.3:")
+    root_spec_name = "win-gpg" if IS_WINDOWS else "gnupg"
+    return _root_spec(f"{root_spec_name}@2.3:")
 
 
 def ensure_gpg_in_path_or_raise() -> None:
     """Ensure gpg or gpg2 are in the PATH or raise."""
     return ensure_executables_in_path_or_raise(
         executables=["gpg2", "gpg"], abstract_spec=gnupg_root_spec()
+    )
+
+
+def file_root_spec() -> str:
+    """Return the root spec used to bootstrap file"""
+    root_spec_name = "win-file" if IS_WINDOWS else "file"
+    return _root_spec(root_spec_name)
+
+
+def ensure_file_in_path_or_raise() -> None:
+    """Ensure file is in the PATH or raise"""
+    return ensure_executables_in_path_or_raise(
+        executables=["file"], abstract_spec=file_root_spec()
     )
 
 
@@ -543,7 +523,7 @@ def verify_patchelf(patchelf: "spack.util.executable.Executable") -> bool:
     return version >= spack.version.Version("0.13.1")
 
 
-def ensure_patchelf_in_path_or_raise() -> None:
+def ensure_patchelf_in_path_or_raise() -> spack.util.executable.Executable:
     """Ensure patchelf is in the PATH or raise."""
     # The old concretizer is not smart and we're doing its job: if the latest patchelf
     # does not concretize because the compiler doesn't support C++17, we try to
@@ -560,18 +540,54 @@ def ensure_patchelf_in_path_or_raise() -> None:
         )
 
 
+def ensure_winsdk_external_or_raise() -> None:
+    """Ensure the Windows SDK + WGL are available on system
+    If both of these package are found, the Spack user or bootstrap
+    configuration (depending on where Spack is running)
+    will be updated to include all versions and variants detected.
+    If either the WDK or WSDK are not found, this method will raise
+    a RuntimeError.
+
+    **NOTE:** This modifies the Spack config in the current scope,
+    either user or environment depending on the calling context.
+    This is different from all other current bootstrap dependency
+    checks.
+    """
+    if set(["win-sdk", "wgl"]).issubset(spack.config.get("packages").keys()):
+        return
+    externals = spack.detection.by_path(["win-sdk", "wgl"])
+    if not set(["win-sdk", "wgl"]) == externals.keys():
+        missing_packages_lst = []
+        if "wgl" not in externals:
+            missing_packages_lst.append("wgl")
+        if "win-sdk" not in externals:
+            missing_packages_lst.append("win-sdk")
+        missing_packages = " & ".join(missing_packages_lst)
+        raise RuntimeError(
+            f"Unable to find the {missing_packages}, please install these packages \
+via the Visual Studio installer \
+before proceeding with Spack or provide the path to a non standard install with \
+'spack external find --path'"
+        )
+    # wgl/sdk are not required for bootstrapping Spack, but
+    # are required for building anything non trivial
+    # add to user config so they can be used by subsequent Spack ops
+    spack.detection.update_configuration(externals, buildable=False)
+
+
 def ensure_core_dependencies() -> None:
     """Ensure the presence of all the core dependencies."""
     if sys.platform.lower() == "linux":
         ensure_patchelf_in_path_or_raise()
-    if not IS_WINDOWS:
-        ensure_gpg_in_path_or_raise()
+    elif sys.platform == "win32":
+        ensure_file_in_path_or_raise()
+    ensure_gpg_in_path_or_raise()
     ensure_clingo_importable_or_raise()
 
 
 def all_core_root_specs() -> List[str]:
     """Return a list of all the core root specs that may be used to bootstrap Spack"""
-    return [clingo_root_spec(), gnupg_root_spec(), patchelf_root_spec()]
+    return [clingo_root_spec(), gnupg_root_spec(), patchelf_root_spec(), file_root_spec()]
 
 
 def bootstrapping_sources(scope: Optional[str] = None):

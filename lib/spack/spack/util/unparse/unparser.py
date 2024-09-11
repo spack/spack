@@ -270,16 +270,6 @@ class Unparser:
             self.write(", ")
             self.dispatch(node.msg)
 
-    def visit_Exec(self, node):
-        self.fill("exec ")
-        self.dispatch(node.body)
-        if node.globals:
-            self.write(" in ")
-            self.dispatch(node.globals)
-        if node.locals:
-            self.write(", ")
-            self.dispatch(node.locals)
-
     def visit_Global(self, node):
         self.fill("global ")
         interleave(lambda: self.write(", "), self.write, node.names)
@@ -338,31 +328,6 @@ class Unparser:
             with self.block():
                 self.dispatch(node.finalbody)
 
-    def visit_TryExcept(self, node):
-        self.fill("try")
-        with self.block():
-            self.dispatch(node.body)
-
-        for ex in node.handlers:
-            self.dispatch(ex)
-        if node.orelse:
-            self.fill("else")
-            with self.block():
-                self.dispatch(node.orelse)
-
-    def visit_TryFinally(self, node):
-        if len(node.body) == 1 and isinstance(node.body[0], ast.TryExcept):
-            # try-except-finally
-            self.dispatch(node.body)
-        else:
-            self.fill("try")
-            with self.block():
-                self.dispatch(node.body)
-
-        self.fill("finally")
-        with self.block():
-            self.dispatch(node.finalbody)
-
     def visit_ExceptHandler(self, node):
         self.fill("except")
         if node.type:
@@ -380,6 +345,10 @@ class Unparser:
             self.fill("@")
             self.dispatch(deco)
         self.fill("class " + node.name)
+        if getattr(node, "type_params", False):
+            self.write("[")
+            interleave(lambda: self.write(", "), self.dispatch, node.type_params)
+            self.write("]")
         with self.delimit_if("(", ")", condition=node.bases or node.keywords):
             comma = False
             for e in node.bases:
@@ -394,21 +363,6 @@ class Unparser:
                 else:
                     comma = True
                 self.dispatch(e)
-            if sys.version_info[:2] < (3, 5):
-                if node.starargs:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.write("*")
-                    self.dispatch(node.starargs)
-                if node.kwargs:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.write("**")
-                    self.dispatch(node.kwargs)
         with self.block():
             self.dispatch(node.body)
 
@@ -425,6 +379,10 @@ class Unparser:
             self.dispatch(deco)
         def_str = fill_suffix + " " + node.name
         self.fill(def_str)
+        if getattr(node, "type_params", False):
+            self.write("[")
+            interleave(lambda: self.write(", "), self.dispatch, node.type_params)
+            self.write("]")
         with self.delimit("(", ")"):
             self.dispatch(node.args)
         if getattr(node, "returns", False):
@@ -596,9 +554,7 @@ class Unparser:
 
     def _fstring_JoinedStr(self, node, write):
         for value in node.values:
-            print("   ", value)
             meth = getattr(self, "_fstring_" + type(value).__name__)
-            print(meth)
             meth(value, write)
 
     def _fstring_Str(self, node, write):
@@ -639,11 +595,6 @@ class Unparser:
 
     def visit_NameConstant(self, node):
         self.write(repr(node.value))
-
-    def visit_Repr(self, node):
-        self.write("`")
-        self.dispatch(node.value)
-        self.write("`")
 
     def _write_constant(self, value):
         if isinstance(value, (float, complex)):
@@ -985,16 +936,10 @@ class Unparser:
                 self.write(", ")
             self.write("*")
             if node.vararg:
-                if hasattr(node.vararg, "arg"):
-                    self.write(node.vararg.arg)
-                    if node.vararg.annotation:
-                        self.write(": ")
-                        self.dispatch(node.vararg.annotation)
-                else:
-                    self.write(node.vararg)
-                    if getattr(node, "varargannotation", None):
-                        self.write(": ")
-                        self.dispatch(node.varargannotation)
+                self.write(node.vararg.arg)
+                if node.vararg.annotation:
+                    self.write(": ")
+                    self.dispatch(node.vararg.annotation)
 
         # keyword-only arguments
         if getattr(node, "kwonlyargs", False):
@@ -1014,16 +959,10 @@ class Unparser:
                 first = False
             else:
                 self.write(", ")
-            if hasattr(node.kwarg, "arg"):
-                self.write("**" + node.kwarg.arg)
-                if node.kwarg.annotation:
-                    self.write(": ")
-                    self.dispatch(node.kwarg.annotation)
-            else:
-                self.write("**" + node.kwarg)
-                if getattr(node, "kwargannotation", None):
-                    self.write(": ")
-                    self.dispatch(node.kwargannotation)
+            self.write("**" + node.kwarg.arg)
+            if node.kwarg.annotation:
+                self.write(": ")
+                self.dispatch(node.kwarg.annotation)
 
     def visit_keyword(self, node):
         if node.arg is None:
@@ -1138,3 +1077,27 @@ class Unparser:
         with self.require_parens(_Precedence.BOR, node):
             self.set_precedence(pnext(_Precedence.BOR), *node.patterns)
             interleave(lambda: self.write(" | "), self.dispatch, node.patterns)
+
+    def visit_TypeAlias(self, node):
+        self.fill("type ")
+        self.dispatch(node.name)
+        if node.type_params:
+            self.write("[")
+            interleave(lambda: self.write(", "), self.dispatch, node.type_params)
+            self.write("]")
+        self.write(" = ")
+        self.dispatch(node.value)
+
+    def visit_TypeVar(self, node):
+        self.write(node.name)
+        if node.bound:
+            self.write(": ")
+            self.dispatch(node.bound)
+
+    def visit_TypeVarTuple(self, node):
+        self.write("*")
+        self.write(node.name)
+
+    def visit_ParamSpec(self, node):
+        self.write("**")
+        self.write(node.name)

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ installations performed in Spack unit tests may include additional
 modifications to global state in memory that must be replicated in the
 child process.
 """
-
+import importlib
 import io
 import multiprocessing
 import pickle
@@ -79,9 +79,11 @@ class PackageInstallContext:
         self.test_state.restore()
         spack.main.spack_working_dir = self.spack_working_dir
         env = pickle.load(self.serialized_env) if _SERIALIZE else self.env
-        pkg = pickle.load(self.serialized_pkg) if _SERIALIZE else self.pkg
         if env:
             spack.environment.activate(env)
+        # Order of operation is important, since the package might be retrieved
+        # from a repo defined within the environment configuration
+        pkg = pickle.load(self.serialized_pkg) if _SERIALIZE else self.pkg
         return pkg
 
 
@@ -116,7 +118,7 @@ class TestPatches:
     def restore(self):
         for module_name, attr_name, value in self.module_patches:
             value = pickle.load(value)
-            module = __import__(module_name)
+            module = importlib.import_module(module_name)
             setattr(module, attr_name, value)
         for class_fqn, attr_name, value in self.class_patches:
             value = pickle.load(value)

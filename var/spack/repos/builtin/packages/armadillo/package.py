@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,9 +11,14 @@ class Armadillo(CMakePackage):
     for the C++ language, aiming towards a good balance between speed and
     ease of use."""
 
-    homepage = "http://arma.sourceforge.net/"
+    homepage = "https://arma.sourceforge.net/"
     url = "http://sourceforge.net/projects/arma/files/armadillo-8.100.1.tar.xz"
 
+    license("Apache-2.0")
+
+    version("12.8.3", sha256="2922589f6387796504b340da6bb954bef3d87574c298515893289edd2d890151")
+    version("12.8.2", sha256="03b62f8c09e4f5d74643b478520741b8e27b55e7e4525978fcae2f5d791ac3bf")
+    version("12.8.1", sha256="2781dd3a6cc5f9a49c91a4519dde2b1c24335a5bfe0cc1c9881b6363142452b4")
     version("12.4.0", sha256="9905282781ced3f99769b0e45a705ecb50192ca1622300707b3302ea167dc883")
     version("12.2.0", sha256="b0dce042297e865add3351dad77f78c2c7638d6632f58357b015e50edcbd2186")
     version("12.0.1", sha256="230a5c75daad52dc47e1adce8f5a50f9aa4e4354e0f1bb18ea84efa2e70e20df")
@@ -21,6 +26,8 @@ class Armadillo(CMakePackage):
     version("9.800.3", sha256="a481e1dc880b7cb352f8a28b67fe005dc1117d4341277f12999a2355d40d7599")
     version("8.100.1", sha256="54773f7d828bd3885c598f90122b530ded65d9b195c9034e082baea737cd138d")
     version("7.950.1", sha256="a32da32a0ea420b8397a53e4b40ed279c1a5fc791dd492a2ced81ffb14ad0d1b")
+
+    depends_on("cxx", type="build")  # generated
 
     variant("hdf5", default=False, description="Include HDF5 support")
 
@@ -36,6 +43,14 @@ class Armadillo(CMakePackage):
     # E.g. `/path/linux-x86_64/dir` -> `/path/1-x86_64/dir` if/when a linux
     # platform's compiler is adding `#define linux 1`.
     patch("undef_linux.patch", when="platform=linux")
+
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        if name == "ldflags":
+            if spec.satisfies("%apple-clang@15:"):
+                flags.append("-Wl,-ld_classic")
+
+        return (flags, None, None)
 
     def patch(self):
         # Do not include Find{BLAS_type} because we are specifying the
@@ -66,14 +81,14 @@ class Armadillo(CMakePackage):
 
         return [
             # ARPACK support
-            "-DARPACK_LIBRARY={0}".format(spec["arpack-ng"].libs.joined(";")),
+            self.define("ARPACK_LIBRARY", spec["arpack-ng"].libs.joined(";")),
             # BLAS support
-            "-DBLAS_LIBRARY={0}".format(spec["blas"].libs.joined(";")),
+            self.define("BLAS_LIBRARY", spec["blas"].libs.joined(";")),
             # LAPACK support
-            "-DLAPACK_LIBRARY={0}".format(spec["lapack"].libs.joined(";")),
+            self.define("LAPACK_LIBRARY", spec["lapack"].libs.joined(";")),
             # SuperLU support
-            "-DSuperLU_INCLUDE_DIR={0}".format(spec["superlu"].prefix.include),
-            "-DSuperLU_LIBRARY={0}".format(spec["superlu"].libs.joined(";")),
+            self.define("SuperLU_INCLUDE_DIR", spec["superlu"].prefix.include),
+            self.define("SuperLU_LIBRARY", spec["superlu"].libs.joined(";")),
             # HDF5 support
-            "-DDETECT_HDF5={0}".format("ON" if "+hdf5" in spec else "OFF"),
+            self.define("DETECT_HDF5", "ON" if spec.satisfies("+hdf5") else "OFF"),
         ]

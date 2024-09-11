@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,12 @@ class Embree(CMakePackage):
     url = "https://github.com/embree/embree/archive/v3.7.0.tar.gz"
     maintainers("aumuell")
 
+    license("Apache-2.0")
+
+    version("4.3.3", sha256="8a3bc3c3e21aa209d9861a28f8ba93b2f82ed0dc93341dddac09f1f03c36ef2d")
+    version("4.3.2", sha256="dc7bb6bac095b2e7bc64321435acd07c6137d6d60e4b79ec07bb0b215ddf81cb")
+    version("4.3.1", sha256="824edcbb7a8cd393c5bdb7a16738487b21ecc4e1d004ac9f761e934f97bb02a4")
+    version("4.3.0", sha256="baf0a57a45837fc055ba828a139467bce0bc0c6a9a5f2dccb05163d012c12308")
     version("4.2.0", sha256="b0479ce688045d17aa63ce6223c84b1cdb5edbf00d7eda71c06b7e64e21f53a0")
     version("4.1.0", sha256="117efd87d6dddbf7b164edd94b0bc057da69d6422a25366283cded57ed94738b")
     version("4.0.1", sha256="1fa3982fa3531f1b6e81f19e6028ae8a62b466597f150b853440fe35ef7c6c06")
@@ -32,10 +38,24 @@ class Embree(CMakePackage):
     version("3.8.0", sha256="40cbc90640f63c318e109365d29aea00003e4bd14aaba8bb654fc1010ea5753a")
     version("3.7.0", sha256="2b6300ebe30bb3d2c6e5f23112b4e21a25a384a49c5e3c35440aa6f3c8d9fe84")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("ispc", default=True, description="Enable ISPC support")
     depends_on("ispc", when="+ispc", type="build")
 
     depends_on("tbb")
+
+    # official aarch64 support on macOS starting with 3.13.0, on Linux since 4.0.0
+    # upstream patch for Linux/aarch64 applies cleanly to 3.13.5, and 3.13.3 works by chance
+    conflicts("@:3.12", when="target=aarch64:")
+    conflicts("@:3.13.2", when="target=aarch64: platform=linux")
+    conflicts("@3.13.4", when="target=aarch64: platform=linux")
+    patch(
+        "https://github.com/embree/embree/commit/82ca6b5ccb7abe0403a658a0e079926478f04cb1.patch?full_index=1",
+        sha256="3af5a65e8875549b4c930d4b0f2840660beba4a7f295d8c89068250a1df376f2",
+        when="@3.13.5",
+    )
 
     def cmake_args(self):
         spec = self.spec
@@ -45,7 +65,6 @@ class Embree(CMakePackage):
             "-DEMBREE_TUTORIALS=OFF",
             "-DEMBREE_IGNORE_CMAKE_CXX_FLAGS=ON",
             self.define_from_variant("EMBREE_ISPC_SUPPORT", "ispc"),
-            self.define("EMBREE_TBB_ROOT", spec["tbb"].prefix),
         ]
 
         if spec.satisfies("target=x86_64:") or spec.satisfies("target=x86:"):

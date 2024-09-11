@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -83,7 +83,7 @@ class Fplo(MakefilePackage):
         filter_file(r"^\s*F90\s*=.*", "F90=" + spack_fc, *files)
 
         # patch for 64 bit integers
-        if "^mkl+ilp64" in spec:
+        if spec["mkl"].satisfies("+ilp64"):
             setuphelper = FileFilter(join_path(self.build_directory, "PYTHON", "setuphelper.py"))
             setuphelper.filter("mkl 64bit integer 32bit", "mkl 64bit integer 64bit")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -205,7 +205,6 @@ def test_in_memory_consistency_when_uninstalling(mutable_database, monkeypatch):
 
 # Note: I want to use https://docs.pytest.org/en/7.1.x/how-to/skipping.html#skip-all-test-functions-of-a-class-or-module
 # the style formatter insists on separating these two lines.
-@pytest.mark.not_on_windows("Envs unsupported on Windows")
 class TestUninstallFromEnv:
     """Tests an installation with two environments e1 and e2, which each have
     shared package installations:
@@ -222,7 +221,7 @@ class TestUninstallFromEnv:
 
     @pytest.fixture(scope="function")
     def environment_setup(
-        self, mutable_mock_env_path, config, mock_packages, mutable_database, install_mockery
+        self, mutable_mock_env_path, mock_packages, mutable_database, install_mockery
     ):
         TestUninstallFromEnv.env("create", "e1")
         e1 = spack.environment.read("e1")

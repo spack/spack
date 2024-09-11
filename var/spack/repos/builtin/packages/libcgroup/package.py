@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,14 @@ class Libcgroup(AutotoolsPackage):
     homepage = "https://sourceforge.net/projects/libcg/"
     url = "https://sourceforge.net/projects/libcg/files/libcgroup/v0.41/libcgroup-0.41.tar.bz2"
 
+    license("LGPL-2.1-only")
+
     version("0.41", sha256="e4e38bdc7ef70645ce33740ddcca051248d56b53283c0dc6d404e17706f6fb51")
     version("0.37", sha256="15c8f3febb546530d3495af4e4904b3189c273277ca2d8553dec882cde1cd0f6")
     version("0.36", sha256="8dcd2ae220435b3de736d3efb0023fdf1192d7a7f4032b439f3cf5342cff7b4c")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("m4", type="build")
     depends_on("autoconf", type="build")

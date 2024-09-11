@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,9 @@ class PyTimm(PythonPackage):
 
     maintainers("adamjstewart")
 
+    license("Apache-2.0")
+
+    version("0.9.7", sha256="2bfb1029e90b72e65eb9c75556169815f2e82257eaa1f6ebd623a4b4a52867a2")
     version("0.9.5", sha256="669835f0030cfb2412c464b7b563bb240d4d41a141226afbbf1b457e4f18cff1")
     version("0.9.2", sha256="d0977cc5e02c69bda979fca8b52aa315a5f2cb64ebf8ad2c4631b1e452762c14")
     version("0.9.1", sha256="171420ac499e7999d38fb8b08fffa5ca3950b38db23bba84763cd92621ca80a2")

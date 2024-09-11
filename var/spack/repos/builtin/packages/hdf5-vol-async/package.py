@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,10 +23,14 @@ class Hdf5VolAsync(CMakePackage):
 
     tags = ["e4s"]
 
+    license("BSD-3-Clause-LBNL")
+
     version("develop", branch="develop")
     version("1.7", tag="v1.7", commit="70a22cf9863a7c1386d97be865342deb751ca501")
     version("1.6", tag="v1.6", commit="f3406d62ec055cdcfe077979a1068bd102c598a5")
     version("1.5", tag="v1.5", commit="b917713ffcb207d9799c6d6863cf805ee54ccfea")
+
+    depends_on("c", type="build")  # generated
 
     variant("memcpy", default=False, description="Enable buffer copy for dataset write")
 
@@ -35,9 +39,8 @@ class Hdf5VolAsync(CMakePackage):
     depends_on("hdf5@1.14.0: +mpi +threadsafe")
 
     # Require MPI_THREAD_MULTIPLE.
-    depends_on("openmpi +thread_multiple", when="^openmpi@:2")
-    depends_on("openmpi", when="^openmpi@3:")
-    depends_on("mvapich2 threads=multiple", when="^mvapich2")
+    depends_on("openmpi +thread_multiple", when="^[virtuals=mpi] openmpi@:2")
+    depends_on("mvapich2 threads=multiple", when="^[virtuals=mpi] mvapich2")
 
     def setup_run_environment(self, env):
         env.prepend_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)

@@ -1,10 +1,11 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack.package import *
+from spack.variant import _ConditionalVariantValues
 
 
 class Vecgeom(CMakePackage, CudaPackage):
@@ -20,7 +21,26 @@ class Vecgeom(CMakePackage, CudaPackage):
     maintainers("drbenmorgan", "sethrj")
 
     version("master", branch="master")
-    version("1.2.5", sha256="af76f0aac34ec3748120969b0fca0f899d91b25cb5727f2c022a6e8304e91327")
+    version(
+        "1.2.8",
+        url="https://gitlab.cern.ch/VecGeom/VecGeom/uploads/db11697eb81d6f369e9ded1078de946b/VecGeom-v1.2.8.tar.gz",
+        sha256="769f59e8377f8268e253a9b2a3eee86868a9ebc1fa66c968b96e19c31440c12b",
+    )
+    version(
+        "1.2.7",
+        url="https://gitlab.cern.ch/VecGeom/VecGeom/uploads/e4172cca4f6f731ef15e2780ecbb1645/VecGeom-v1.2.7.tar.gz",
+        sha256="d264c69b78bf431b9542be1f1af087517eac629da03cf2da62eb1e433fe06021",
+    )
+    version(
+        "1.2.6",
+        url="https://gitlab.cern.ch/VecGeom/VecGeom/uploads/0b16aed9907cea62aa5f5914bec99a90/VecGeom-v1.2.6.tar.gz",
+        sha256="337f8846491930f3d8bfa4b45a1589d46e5d1d87f2d38c8f7006645c3aa90df8",
+    )
+    version(
+        "1.2.5",
+        url="https://gitlab.cern.ch/VecGeom/VecGeom/uploads/33b93e656c5bc49d81cfcba291f5be51/VecGeom-v1.2.5.tar.gz",
+        sha256="d79ea05125e4d03c5605e5ea232994c500841d207b4543ac3d84758adddc15a9",
+    )
     version(
         "1.2.4",
         sha256="4f5d43a9cd34a5e0200c41547a438cbb1ed4439f5bb757857c5a225d708590ce",
@@ -132,13 +152,10 @@ class Vecgeom(CMakePackage, CudaPackage):
         commit="a7e0828c915ff936a79e672d1dd84b087a323b51",
         deprecated=True,
     )
-    version(
-        "0.3.rc",
-        sha256="a87a9ea4ab126b59ff9c79182bc0911ead3d76dd197194742e2a35ccd341299d",
-        deprecated=True,
-    )
 
-    _cxxstd_values = ("11", "14", "17")
+    depends_on("cxx", type="build")
+
+    _cxxstd_values = (conditional("11", "14", when="@:1.1"), "17", conditional("20", when="@1.2:"))
     variant(
         "cxxstd",
         default="17",
@@ -158,8 +175,6 @@ class Vecgeom(CMakePackage, CudaPackage):
     depends_on("veccore@0.4.2", when="@:1.0")
 
     conflicts("+cuda", when="@:1.1.5")
-    conflicts("cxxstd=14", when="@1.2:")
-    conflicts("cxxstd=11", when="@1.2:")
 
     # Fix missing CMAKE_CUDA_STANDARD
     patch(
@@ -174,10 +189,18 @@ class Vecgeom(CMakePackage, CudaPackage):
         when="@1.1.18 +cuda ^cuda@:11.4",
     )
 
-    for std in _cxxstd_values:
-        depends_on("geant4 cxxstd=" + std, when="+geant4 cxxstd=" + std)
-        depends_on("root cxxstd=" + std, when="+root cxxstd=" + std)
-        depends_on("xerces-c cxxstd=" + std, when="+gdml cxxstd=" + std)
+    def std_when(values):
+        for v in values:
+            if isinstance(v, _ConditionalVariantValues):
+                for c in v:
+                    yield (c.value, c.when)
+            else:
+                yield (v, "")
+
+    for _std, _when in std_when(_cxxstd_values):
+        depends_on(f"geant4 cxxstd={_std}", when=f"{_when} +geant4 cxxstd={_std}")
+        depends_on(f"root cxxstd={_std}", when=f"{_when} +root cxxstd={_std}")
+        depends_on(f"xerces-c cxxstd={_std}", when=f"{_when} +gdml cxxstd={_std}")
 
     def cmake_args(self):
         spec = self.spec

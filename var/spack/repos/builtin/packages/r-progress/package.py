@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RProgress(RPackage):
     also provides a 'C++' 'API', that works with or without 'Rcpp'."""
 
     cran = "progress"
+
+    license("MIT")
 
     version("1.2.2", sha256="b4a4d8ed55db99394b036a29a0fb20b5dd2a91c211a1d651c52a1023cc58ff35")
     version("1.2.1", sha256="7401e86ff76bef4d26508b74ee8bd169a0377b2738d9ec79ebff0b7fd5c55326")

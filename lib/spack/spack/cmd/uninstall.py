@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,14 +10,13 @@ from llnl.util import tty
 from llnl.util.tty.colify import colify
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
+import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
-import spack.error
 import spack.package_base
-import spack.repo
 import spack.spec
 import spack.store
 import spack.traverse as traverse
+from spack.cmd.common import arguments
 from spack.database import InstallStatuses
 
 description = "remove installed packages"
@@ -152,7 +151,8 @@ def installed_dependents(specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
         key=lambda s: s.dag_hash(),
     )
 
-    return [spec for spec in specs if is_installed(spec)]
+    with spack.store.STORE.db.read_transaction():
+        return [spec for spec in specs if is_installed(spec)]
 
 
 def dependent_environments(
@@ -240,6 +240,8 @@ def get_uninstall_list(args, specs: List[spack.spec.Spec], env: Optional[ev.Envi
             print()
             tty.info("The following environments still reference these specs:")
             colify([e.name for e in other_dependent_envs.keys()], indent=4)
+            if env:
+                msgs.append("use `spack remove` to remove the spec from the current environment")
             msgs.append("use `spack env remove` to remove environments")
         msgs.append("use `spack uninstall --force` to override")
         print()
@@ -278,7 +280,7 @@ def uninstall_specs(args, specs):
         return
 
     if not args.yes_to_all:
-        confirm_removal(uninstall_list)
+        confirmation.confirm_action(uninstall_list, "uninstalled", "uninstall")
 
     # Uninstall everything on the list
     do_uninstall(uninstall_list, args.force)
@@ -290,21 +292,6 @@ def uninstall_specs(args, specs):
             env.write()
 
         env.regenerate_views()
-
-
-def confirm_removal(specs: List[spack.spec.Spec]):
-    """Display the list of specs to be removed and ask for confirmation.
-
-    Args:
-        specs: specs to be removed
-    """
-    tty.msg("The following {} packages will be uninstalled:\n".format(len(specs)))
-    spack.cmd.display_specs(specs, **display_args)
-    print("")
-    answer = tty.get_yes_or_no("Do you want to proceed?", default=False)
-    if not answer:
-        tty.msg("Aborting uninstallation")
-        sys.exit(0)
 
 
 def uninstall(parser, args):

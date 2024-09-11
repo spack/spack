@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class PyMetpy(PythonPackage):
     # https://github.com/Unidata/MetPy/issues/1888
     import_modules = ["metpy", "metpy._vendor", "metpy.calc", "metpy.interpolate"]
 
+    license("BSD-3-Clause")
+
     version("1.0.1", sha256="16fa9806facc24f31f454b898741ec5639a72ba9d4ff8a19ad0e94629d93cb95")
 
     depends_on("python@3.6:", type=("build", "run"))
@@ -28,7 +30,8 @@ class PyMetpy(PythonPackage):
     depends_on("py-matplotlib@2.1.0:", type=("build", "run"))
     depends_on("py-numpy@1.16.0:", type=("build", "run"))
     depends_on("py-pandas@0.24.0:", type=("build", "run"))
-    depends_on("py-pint@0.10.1:", type=("build", "run"))
+    # Unable to Find "pint.unit" -- Module Not Found Error with py-pint@0.20:
+    depends_on("py-pint@0.10.1:0.19", type=("build", "run"))
     depends_on("py-pooch@0.1:", type=("build", "run"))
     depends_on("py-pyproj@2.3.0:", type=("build", "run"))
     depends_on("py-scipy@1.0:", type=("build", "run"))

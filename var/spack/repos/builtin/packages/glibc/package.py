@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,8 +20,19 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     maintainers("haampie")
 
     build_directory = "build"
+    tags = ["runtime"]
+
+    # This is used when the package is external and we need to find the actual default include path
+    # which may be in a multiarch subdir.
+    representative_headers = ["ieee754.h"]
+
+    license("LGPL-2.1-or-later")
+
+    provides("libc")
+    provides("iconv")
 
     version("master", branch="master")
+    version("2.39", sha256="97f84f3b7588cd54093a6f6389b0c1a81e70d99708d74963a2e3eab7c7dc942d")
     version("2.38", sha256="16e51e0455e288f03380b436e41d5927c60945abd86d0c9852b84be57dd6ed5e")
     version("2.37", sha256="e3a790c2f84eed5c5d569ed6172c253c607dd3962135437da413aa39aa4fd352")
     version("2.36", sha256="02efa6ffbbaf3e10e88f16818a862608d04b0ef838c66f6025ae120530792c9c")
@@ -57,10 +68,8 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     version("2.6.1", sha256="6be7639ccad715d25eef560ce9d1637ef206fb9a162714f6ab8167fc0d971cae")
     version("2.5", sha256="16d3ac4e86eed75d85d80f1f214a6bd58d27f13590966b5ad0cc181df85a3493")
 
-    # Spack commit 29aa7117f42f758bc537e03e4bedf66ced0accfa has older versions
-    # of glibc, but they are removed, because glibc < 2.17 links against
-    # libgcc_s and libgcc_eh, see glibc commit "Avoid use of libgcc_s and
-    # libgcc_eh when building glibc." 95f5a9a866695da4e038aa4e6ccbbfd5d9cf63b7
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Fix for newer GCC, related to -fno-common
     patch("locs.patch", when="@2.23:2.25")
@@ -75,6 +84,13 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     # rpc/types.h include issue, should be from local version, not system.
     patch("fb21f89.patch", when="@:2.16")
 
+    # Avoid linking libgcc_eh
+    patch("95f5a9a-stub.patch", when="@:2.16")
+    patch("95f5a9a-2.16.patch", when="@2.16")
+    patch("95f5a9a-2.15.patch", when="@2.14:2.15")
+    patch("95f5a9a-2.13.patch", when="@2.12:2.13")
+    patch("95f5a9a-2.11.patch", when="@:2.11")
+
     # Use init_array (modified commit 4a531bb to unconditionally define
     # NO_CTORS_DTORS_SECTIONS)
     patch("4a531bb.patch", when="@:2.12")
@@ -84,6 +100,14 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
 
     # linker flag output regex
     patch("7c8a673.patch", when="@:2.9")
+
+    # Use AT_RANDOM provided by the kernel instead of /dev/urandom;
+    # recent gcc + binutils have issues with the inline assembly in
+    # the fallback code, so better to use the kernel-provided value.
+    patch("965cb60.patch", when="@2.8:2.9")
+    patch("965cb60-2.7.patch", when="@2.7")
+    patch("965cb60-2.6.patch", when="@2.6")
+    patch("965cb60-2.5.patch", when="@2.5")
 
     # include_next <limits.h> not working
     patch("67fbfa5.patch", when="@:2.7")
@@ -95,6 +119,12 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
             # for some reason CPPFLAGS -U_FORTIFY_SOURCE is not enough, it has to be CFLAGS
             env.append_flags("CPPFLAGS", "-U_FORTIFY_SOURCE")
             env.append_flags("CFLAGS", "-O2 -g -fno-stack-protector -U_FORTIFY_SOURCE")
+        if self.spec.satisfies("@:2.9"):
+            # missing defines in elf.h after 965cb60.patch
+            env.append_flags("CFLAGS", "-DAT_BASE_PLATFORM=24 -DAT_RANDOM=25")
+        if self.spec.satisfies("@:2.6"):
+            # change of defaults in gcc 10
+            env.append_flags("CFLAGS", "-fcommon")
         if self.spec.satisfies("@2.5"):
             env.append_flags("CFLAGS", "-fgnu89-inline")
 
@@ -147,6 +177,8 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
 
     # See 2d7ed98add14f75041499ac189696c9bd3d757fe
     depends_on("gmake@:4.3", type="build", when="@:2.36")
+    # Since f2873d2da0ac9802e0b570e8e0b9e7e04a82bf55
+    depends_on("gmake@4.0:", type="build", when="@2.28:")
 
     # From 2.29: generates locale/C-translit.h
     # before that it's a test dependency.
@@ -174,3 +206,11 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
             make("-C", "..", f"objdir={os.getcwd()}", "lib")
             delete_rpath(join_path("elf", "ld.so"))
             make()
+
+    @property
+    def libs(self):
+        return LibraryList([])
+
+    @property
+    def headers(self):
+        return HeaderList([])

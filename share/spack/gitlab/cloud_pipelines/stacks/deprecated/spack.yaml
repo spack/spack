@@ -7,7 +7,6 @@ spack:
     reuse: false
     unify: false
   config:
-    concretizer: clingo
     db_lock_timeout: 120
     install_tree:
       padded_length: 256
@@ -35,6 +34,8 @@ spack:
     - . "./share/spack/setup-env.sh"
     - spack --version
     - spack arch
+    - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
     script:
     - spack compiler find
     - cd ${SPACK_CONCRETE_ENV_DIR}
@@ -54,11 +55,15 @@ spack:
       2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
     after_script:
     - cat /proc/loadavg || true
+    - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
     match_behavior: first
     mappings:
     - match:
       - '@:'
       runner-attributes:
+        id_tokens:
+          GITLAB_OIDC_TOKEN:
+            aud: "${OIDC_TOKEN_AUDIENCE}"
         tags: [spack, public, small, x86_64]
         variables:
           CI_JOB_SIZE: small
@@ -66,6 +71,9 @@ spack:
           KUBERNETES_CPU_REQUEST: 500m
           KUBERNETES_MEMORY_REQUEST: 500M
     signing-job-attributes:
+      id_tokens:
+        GITLAB_OIDC_TOKEN:
+          aud: "${OIDC_TOKEN_AUDIENCE}"
       image: {name: 'ghcr.io/spack/notary:latest', entrypoint: ['']}
       tags: [aws]
       script:
@@ -77,6 +85,9 @@ spack:
         --recursive --exclude "*" --include "*.pub"
 
     service-job-attributes:
+      id_tokens:
+        GITLAB_OIDC_TOKEN:
+          aud: "${OIDC_TOKEN_AUDIENCE}"
       image: ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02
       before_script:
       - . "./share/spack/setup-env.sh"

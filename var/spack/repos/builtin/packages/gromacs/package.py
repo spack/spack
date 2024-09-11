@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,12 +26,24 @@ class Gromacs(CMakePackage, CudaPackage):
     url = "https://ftp.gromacs.org/gromacs/gromacs-2022.2.tar.gz"
     list_url = "https://ftp.gromacs.org/gromacs"
     git = "https://gitlab.com/gromacs/gromacs.git"
-    maintainers("danielahlin", "eirrgang", "junghans")
+    maintainers("mabraham", "eirrgang", "junghans")
+
+    license("GPL-2.0-or-later", when="@:4.5")
+    license("LGPL-2.1-or-later", when="@4.6:")
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2024.3", sha256="bbda056ee59390be7d58d84c13a9ec0d4e3635617adf2eb747034922cba1f029")
+    version("2024.2", sha256="802a7e335f2e895770f57b159e4ec368ebb0ff2ce6daccf706c6e8025c36852b")
+    version("2024.1", sha256="937d8f12a36fffbf2af7add71adbb5aa5c5537892d46c9a76afbecab1aa0aac7")
+    version("2024", sha256="04d226d52066a8bc3a42e00d6213de737b4ec292e26703065924ff01956801e2")
+    version("2023.5", sha256="9cc491d3601a5fe0ec0de727e4432c34877f596fe8a463d4cf0f0f53fb34d08b")
+    version("2023.4", sha256="e5d6c4d9e7ccacfaccb0888619bd21b5ea8911f82b410e68d6db5d40f695f231")
+    version("2023.3", sha256="4ec8f8d0c7af76b13f8fd16db8e2c120e749de439ae9554d9f653f812d78d1cb")
+    version("2023.2", sha256="bce1480727e4b2bb900413b75d99a3266f3507877da4f5b2d491df798f9fcdae")
     version("2023.1", sha256="eef2bb4a6cb6314cf9da47f26df2a0d27af4bf7b3099723d43601073ab0a42f4")
     version("2023", sha256="ac92c6da72fbbcca414fd8a8d979e56ecf17c4c1cdabed2da5cfb4e7277b7ba8")
+    version("2022.6", sha256="75d277138475679dd3e334e384a71516570cde767310476687f2a5b72333ea41")
     version("2022.5", sha256="083cc3c424bb93ffe86c12f952e3e5b4e6c9f6520de5338761f24b75e018c223")
     version("2022.4", sha256="c511be602ff29402065b50906841def98752639b92a95f1b0a1060d9b5e27297")
     version("2022.3", sha256="14cfb130ddaf8f759a3af643c04f5a0d0d32b09bc3448b16afa5b617f5e35dae")
@@ -78,6 +90,10 @@ class Gromacs(CMakePackage, CudaPackage):
     version("4.6.7", sha256="6afb1837e363192043de34b188ca3cf83db6bd189601f2001a1fc5b0b2a214d9")
     version("4.5.5", sha256="e0605e4810b0d552a8761fef5540c545beeaf85893f4a6e21df9905a33f871ba")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "mpi", default=True, description="Activate MPI support (disable for Thread-MPI support)"
     )
@@ -87,9 +103,26 @@ class Gromacs(CMakePackage, CudaPackage):
         default=False,
         description="Produces a double precision version of the executables",
     )
-    variant("cufftmp", default=False, when="+cuda+mpi", description="Enable Multi GPU FFT support")
+    variant(
+        "cufftmp",
+        default=False,
+        when="@2022: +cuda+mpi",
+        description="Enable multi-GPU FFT support with cuFFTMp",
+    )
+    variant(
+        "heffte",
+        default=False,
+        when="@2021: +sycl+mpi",
+        description="Enable multi-GPU FFT support with HeFFTe",
+    )
     variant("opencl", default=False, description="Enable OpenCL support")
-    variant("sycl", default=False, description="Enable SYCL support")
+    variant("sycl", default=False, when="@2021:", description="Enable SYCL support")
+    variant(
+        "intel-data-center-gpu-max",
+        default=False,
+        when="@2022: +sycl",
+        description="Enable support for Intel Data Center GPU Max",
+    )
     variant("nosuffix", default=False, description="Disable default suffixes")
     variant(
         "build_type",
@@ -106,6 +139,18 @@ class Gromacs(CMakePackage, CudaPackage):
         ),
     )
     variant(
+        "nblib",
+        default=True,
+        when="@2021:",
+        description="Build and install the NB-LIB C++ API for GROMACS",
+    )
+    variant(
+        "gmxapi",
+        default=True,
+        when="@2019:",
+        description="Build and install the gmxlib python API for GROMACS",
+    )
+    variant(
         "mdrun_only",
         default=False,
         description="Enables the build of a cut-down version"
@@ -114,6 +159,21 @@ class Gromacs(CMakePackage, CudaPackage):
     conflicts(
         "+mdrun_only", when="@2021:", msg="mdrun-only build option was removed for GROMACS 2021."
     )
+    variant(
+        "nvshmem",
+        default=False,
+        when="@2024:+mpi+cuda",
+        description="Enable NVSHMEM support for Nvidia GPUs",
+    )
+    conflicts(
+        "+nvshmem",
+        when="+cufftmp",
+        msg=(
+            "The GROMACS support for NVSHMEM does not work with the GROMACS support "
+            "for cuFFTMp (even though cuFFTMp uses NVSHMEM in its implementation)"
+        ),
+    )
+
     variant("openmp", default=True, description="Enables OpenMP at configure time")
     variant("openmp_max_threads", default="none", description="Max number of OpenMP threads")
     conflicts(
@@ -123,7 +183,7 @@ class Gromacs(CMakePackage, CudaPackage):
         "sve",
         default=True,
         description="Enable SVE on aarch64 if available",
-        when="target=neoverse_v1",
+        when="target=neoverse_v1:,neoverse_v2:",
     )
     variant(
         "sve", default=True, description="Enable SVE on aarch64 if available", when="target=a64fx"
@@ -139,8 +199,6 @@ class Gromacs(CMakePackage, CudaPackage):
         msg="GMX_RELAXED_DOUBLE_PRECISION option removed for GROMACS 2021.",
     )
     variant("hwloc", default=True, description="Use the hwloc portable hardware locality library")
-    variant("lapack", default=False, description="Enables an external LAPACK library")
-    variant("blas", default=False, description="Enables an external BLAS library")
     variant("cycle_subcounters", default=False, description="Enables cycle subcounters")
 
     variant("cp2k", default=False, description="CP2K QM/MM interface integration")
@@ -148,16 +206,6 @@ class Gromacs(CMakePackage, CudaPackage):
         "+cp2k", when="@:2021", msg="CP2K QM/MM support have been introduced in GROMACS 2022"
     )
     conflicts("+shared", when="+cp2k", msg="Enabling CP2K requires static build")
-    conflicts(
-        "~lapack",
-        when="+cp2k",
-        msg="GROMACS and CP2K should use the same lapack, please disable bundled lapack",
-    )
-    conflicts(
-        "~blas",
-        when="+cp2k",
-        msg="GROMACS and CP2K should use the same blas, please disable bundled blas",
-    )
     conflicts("%intel", when="@2022:", msg="GROMACS %intel support was removed in version 2022")
     conflicts("%gcc@:8", when="@2023:", msg="GROMACS requires GCC 9 or later since version 2023")
     conflicts(
@@ -199,16 +247,21 @@ class Gromacs(CMakePackage, CudaPackage):
     # Above dependencies can be verified, and new versions added, by going to
     # https://github.com/plumed/plumed2/tree/v2.9.0/patches
     # and switching tags.
+
+    # Versions without minor release number, such as `2023` and `2021`,
+    # require exact specifcation using `@=`, starting from Spack v0.20.0,
+    # see https://github.com/spack/spack/releases/tag/v0.20.0
+
     plumed_patches = {
-        "2023": "2.9.0",
-        "2022.5": "2.8.2:2.9.0",
+        "=2023": "2.9.1",
+        "2022.5": "2.8.2:2.9.1",
         "2022.3": "2.8.1",
-        "2021.7": "2.8.2:2.9.0",
+        "2021.7": "2.8.2:2.9.1",
         "2021.6": "2.8.1",
         "2021.5": "2.7.5:2.7.6",
         "2021.4": "2.7.3:2.8.0",
-        "2021": "2.7.1:2.7.2",
-        "2020.7": "2.8.1:2.9.0",
+        "=2021": "2.7.1:2.7.2",
+        "2020.7": "2.8.1:2.9.1",
         "2020.6": "2.7.2:2.8.0",
         "2020.5": "2.7.1",
         "2020.4": "2.6.2:2.7.0",
@@ -250,10 +303,12 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("cmake@3.16.3:3", type="build", when="@2022:")
     depends_on("cmake@3.18.4:3", type="build", when="@main")
     depends_on("cmake@3.16.0:3", type="build", when="%fj")
+    depends_on("pkgconfig", type="build")
+
     depends_on("cuda", when="+cuda")
     depends_on("sycl", when="+sycl")
-    depends_on("lapack", when="+lapack")
-    depends_on("blas", when="+blas")
+    depends_on("lapack")
+    depends_on("blas")
     depends_on("gcc", when="%oneapi ~intel_provided_gcc")
     depends_on("gcc", when="%intel ~intel_provided_gcc")
 
@@ -261,9 +316,10 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("hwloc", when="+hwloc@2019:")
 
     depends_on("cp2k@8.1:", when="+cp2k")
-    depends_on("dbcsr", when="+cp2k")
 
     depends_on("nvhpc", when="+cufftmp")
+    depends_on("nvhpc", when="+nvshmem")
+    depends_on("heffte", when="+heffte")
 
     requires(
         "%intel",
@@ -272,6 +328,11 @@ class Gromacs(CMakePackage, CudaPackage):
         when="+intel_provided_gcc",
         msg="Only attempt to find gcc libs for Intel compiler if Intel compiler is used.",
     )
+
+    # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
+    for _intel_pkg in INTEL_MATH_LIBRARIES:
+        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
+        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
 
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
@@ -323,14 +384,14 @@ class Gromacs(CMakePackage, CudaPackage):
                 string=True,
             )
 
-        if "+plumed" in self.spec:
+        if self.spec.satisfies("+plumed"):
             self.spec["plumed"].package.apply_patch(self)
 
         if self.spec.satisfies("%nvhpc"):
             # Disable obsolete workaround
             filter_file("ifdef __PGI", "if 0", "src/gromacs/fileio/xdrf.h")
 
-        if "+cuda" in self.spec:
+        if self.spec.satisfies("+cuda"):
             # Upstream supports building of last two major versions of Gromacs.
             # Older versions of Gromacs need to be patched to build with more recent
             # versions of CUDA library.
@@ -365,6 +426,20 @@ class Gromacs(CMakePackage, CudaPackage):
                 filter_file(
                     r"-gencode;arch=compute_20,code=sm_21;?", "", "cmake/gmxManageNvccConfig.cmake"
                 )
+
+    def setup_run_environment(self, env):
+        if self.spec.satisfies("+cufftmp"):
+            env.append_path(
+                "LD_LIBRARY_PATH",
+                join_path(
+                    self.spec["nvhpc"].prefix,
+                    f"Linux_{self.spec.target.family}",
+                    self.spec["nvhpc"].version,
+                    "comm_libs",
+                    "nvshmem",
+                    "lib",
+                ),
+            )
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
@@ -411,7 +486,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         # In other words, the mapping between package variants and the
         # GMX CMake variables is often non-trivial.
 
-        if "+mpi" in self.spec:
+        if self.spec.satisfies("+mpi"):
             options.append("-DGMX_MPI:BOOL=ON")
             if self.pkg.version < Version("2020"):
                 # Ensures gmxapi builds properly
@@ -467,67 +542,75 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             else:
                 options.append("-DGMX_GPLUSPLUS_PATH=%s/g++" % self.spec["gcc"].prefix.bin)
 
-        if "+double" in self.spec:
+        if self.spec.satisfies("+double"):
             options.append("-DGMX_DOUBLE:BOOL=ON")
 
-        if "+nosuffix" in self.spec:
+        if self.spec.satisfies("+nosuffix"):
             options.append("-DGMX_DEFAULT_SUFFIX:BOOL=OFF")
 
-        if "~shared" in self.spec:
+        if self.spec.satisfies("~shared"):
             options.append("-DBUILD_SHARED_LIBS:BOOL=OFF")
             options.append("-DGMXAPI:BOOL=OFF")
 
-        if "+hwloc" in self.spec:
+        if self.spec.satisfies("+hwloc"):
             options.append("-DGMX_HWLOC:BOOL=ON")
         else:
             options.append("-DGMX_HWLOC:BOOL=OFF")
 
         if self.pkg.version >= Version("2021"):
-            if "+cuda" in self.spec:
+            if self.spec.satisfies("+cuda"):
                 options.append("-DGMX_GPU:STRING=CUDA")
-            elif "+opencl" in self.spec:
+            elif self.spec.satisfies("+opencl"):
                 options.append("-DGMX_GPU:STRING=OpenCL")
-            elif "+sycl" in self.spec:
+            elif self.spec.satisfies("+sycl"):
                 options.append("-DGMX_GPU:STRING=SYCL")
             else:
                 options.append("-DGMX_GPU:STRING=OFF")
         else:
-            if "+cuda" in self.spec or "+opencl" in self.spec:
+            if self.spec.satisfies("+cuda") or self.spec.satisfies("+opencl"):
                 options.append("-DGMX_GPU:BOOL=ON")
-                if "+opencl" in self.spec:
+                if self.spec.satisfies("+opencl"):
                     options.append("-DGMX_USE_OPENCL=ON")
             else:
                 options.append("-DGMX_GPU:BOOL=OFF")
 
-        if "+cuda" in self.spec:
+        if self.spec.satisfies("+cuda"):
             options.append("-DCUDA_TOOLKIT_ROOT_DIR:STRING=" + self.spec["cuda"].prefix)
+            if not self.spec.satisfies("cuda_arch=none"):
+                cuda_arch = self.spec.variants["cuda_arch"].value
+                options.append(f"-DGMX_CUDA_TARGET_SM:STRING={';'.join(cuda_arch)}")
 
-        if "+lapack" in self.spec:
-            options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
-            if self.spec["lapack"].libs:
-                options.append(
-                    "-DGMX_LAPACK_USER={0}".format(self.spec["lapack"].libs.joined(";"))
-                )
-        else:
-            options.append("-DGMX_EXTERNAL_LAPACK:BOOL=OFF")
+        options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
+        if self.spec["lapack"].libs:
+            options.append("-DGMX_LAPACK_USER={0}".format(self.spec["lapack"].libs.joined(";")))
 
-        if "+blas" in self.spec:
-            options.append("-DGMX_EXTERNAL_BLAS:BOOL=ON")
-            if self.spec["blas"].libs:
-                options.append("-DGMX_BLAS_USER={0}".format(self.spec["blas"].libs.joined(";")))
-        else:
-            options.append("-DGMX_EXTERNAL_BLAS:BOOL=OFF")
+        options.append("-DGMX_EXTERNAL_BLAS:BOOL=ON")
+        if self.spec["blas"].libs:
+            options.append("-DGMX_BLAS_USER={0}".format(self.spec["blas"].libs.joined(";")))
 
-        if "+cp2k" in self.spec:
+        if self.spec.satisfies("+cp2k"):
             options.append("-DGMX_CP2K:BOOL=ON")
             options.append("-DCP2K_DIR:STRING={0}".format(self.spec["cp2k"].prefix))
 
-        if "+cufftmp" in self.spec:
+        if self.spec.satisfies("+cufftmp"):
             options.append("-DGMX_USE_CUFFTMP=ON")
             options.append(
                 f'-DcuFFTMp_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}'
                 + f'/{self.spec["nvhpc"].version}/math_libs'
             )
+
+        if self.spec.satisfies("+heffte"):
+            options.append("-DGMX_USE_HEFFTE=on")
+            options.append(f'-DHeffte_ROOT={self.spec["heffte"].prefix}')
+
+        if self.spec.satisfies("+intel-data-center-gpu-max"):
+            options.append("-DGMX_GPU_NB_CLUSTER_SIZE=8")
+            options.append("-DGMX_GPU_NB_NUM_CLUSTER_PER_CELL_X=1")
+
+        if self.spec.satisfies("~nblib"):
+            options.append("-DGMX_INSTALL_NBLIB_API=OFF")
+        if self.spec.satisfies("~gmxapi"):
+            options.append("-DGMXAPI=OFF")
 
         # Activate SIMD based on properties of the target
         target = self.spec.target
@@ -602,7 +685,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 )
             )
 
-        if "+cycle_subcounters" in self.spec:
+        if self.spec.satisfies("+cycle_subcounters"):
             options.append("-DGMX_CYCLE_SUBCOUNTERS:BOOL=ON")
         else:
             options.append("-DGMX_CYCLE_SUBCOUNTERS:BOOL=OFF")
@@ -611,12 +694,22 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             options.append(
                 "-DGMX_OPENMP_MAX_THREADS=%s" % self.spec.variants["openmp_max_threads"].value
             )
+        if self.spec.satisfies("+nvshmem"):
+            options.append("-DGMX_NVSHMEM:BOOL=ON")
+            nvshmem_root = join_path(
+                self.spec["nvhpc"].prefix,
+                f"Linux_{self.spec.target.family}",
+                self.spec["nvhpc"].version,
+                "comm_libs",
+                "nvshmem",
+            )
+            options.append(f"-DNVSHMEM_ROOT={nvshmem_root}")
 
-        if "^mkl" in self.spec:
+        if self.spec["lapack"].name in INTEL_MATH_LIBRARIES:
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio
             # we use the mkl interface of gromacs
             options.append("-DGMX_FFT_LIBRARY=mkl")
-            if not self.spec["mkl"].satisfies("@2023:"):
+            if self.spec.satisfies("@:2022"):
                 options.append(
                     "-DMKL_INCLUDE_DIR={0}".format(self.spec["mkl"].headers.directories[0])
                 )
@@ -626,7 +719,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         else:
             # we rely on the fftw-api@3
             options.append("-DGMX_FFT_LIBRARY=fftw3")
-            if "^amdfftw" in self.spec:
+            if self.spec.satisfies("^[virtuals=fftw-api] amdfftw"):
                 options.append("-DGMX_FFT_LIBRARY=fftw3")
                 options.append(
                     "-DFFTWF_INCLUDE_DIRS={0}".format(self.spec["amdfftw"].headers.directories[0])
@@ -634,14 +727,14 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 options.append(
                     "-DFFTWF_LIBRARIES={0}".format(self.spec["amdfftw"].libs.joined(";"))
                 )
-            elif "^armpl-gcc" in self.spec:
+            elif self.spec.satisfies("^armpl-gcc"):
                 options.append(
                     "-DFFTWF_INCLUDE_DIR={0}".format(self.spec["armpl-gcc"].headers.directories[0])
                 )
                 options.append(
                     "-DFFTWF_LIBRARY={0}".format(self.spec["armpl-gcc"].libs.joined(";"))
                 )
-            elif "^acfl" in self.spec:
+            elif self.spec.satisfies("^acfl"):
                 options.append(
                     "-DFFTWF_INCLUDE_DIR={0}".format(self.spec["acfl"].headers.directories[0])
                 )
@@ -649,8 +742,22 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
         # Ensure that the GROMACS log files report how the code was patched
         # during the build, so that any problems are easier to diagnose.
-        if "+plumed" in self.spec:
+        if self.spec.satisfies("+plumed"):
             options.append("-DGMX_VERSION_STRING_OF_FORK=PLUMED-spack")
         else:
             options.append("-DGMX_VERSION_STRING_OF_FORK=spack")
         return options
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+cufftmp"):
+            env.append_path(
+                "LD_LIBRARY_PATH",
+                join_path(
+                    self.spec["nvhpc"].prefix,
+                    f"Linux_{self.spec.target.family}",
+                    self.spec["nvhpc"].version,
+                    "comm_libs",
+                    "nvshmem",
+                    "lib",
+                ),
+            )

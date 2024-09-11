@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,13 @@ class Discotec(CMakePackage):
 
     maintainers("freifrauvonbleifrei", "pfluegdk")
 
+    license("LGPL-3.0-only")
+
     version("main", branch="main")
 
+    depends_on("cxx", type="build")  # generated
+
+    variant("compression", default=False, description="Write sparse grid files compressed")
     variant("ft", default=False, description="DisCoTec with algorithm-based fault tolerance")
     variant("gene", default=False, description="Build for GENE (as task library)")
     variant("hdf5", default=True, description="Interpolation output with HDF5")
@@ -31,12 +36,15 @@ class Discotec(CMakePackage):
     depends_on("cmake@3.24.2:", type="build")
     depends_on("glpk")
     depends_on("highfive+mpi+boost+ipo", when="+hdf5")
+    depends_on("lz4", when="+compression")
     depends_on("mpi")
+    depends_on("selalib", when="+selalib")
     depends_on("vtk", when="+vtk")
 
     def cmake_args(self):
         args = [
             self.define("DISCOTEC_BUILD_MISSING_DEPS", False),
+            self.define_from_variant("DISCOTEC_WITH_COMPRESSION", "compression"),
             self.define_from_variant("DISCOTEC_ENABLEFT", "ft"),
             self.define_from_variant("DISCOTEC_GENE", "gene"),
             self.define_from_variant("DISCOTEC_OPENMP", "openmp"),
@@ -46,5 +54,7 @@ class Discotec(CMakePackage):
             self.define_from_variant("DISCOTEC_USE_VTK", "vtk"),
             self.define_from_variant("DISCOTEC_WITH_SELALIB", "selalib"),
         ]
+        if self.spec.satisfies("+selalib"):
+            args.append(self.define("SELALIB_DIR", self.spec["selalib"].prefix.cmake))
 
         return args

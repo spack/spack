@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class RRcppcnpy(RPackage):
     default on all platforms since the release of R 3.3.0."""
 
     cran = "RcppCNPy"
+
+    license("BitTorrent-1.0")
 
     version("0.2.11", sha256="5dbb36f2526c276fd79b8e08a30503dc401cdf54d8c40f61af758c9ee1192f55")
     version("0.2.10", sha256="77d6fbc86520a08da40d44c0b82767099f8f719ca95870d91efff1a9cab1ab9c")

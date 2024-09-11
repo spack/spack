@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,6 +40,8 @@ class Lvarray(CMakePackage, CudaPackage):
 
     maintainers("corbett5")
 
+    license("BSD-3-Clause")
+
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
     version(
@@ -51,6 +53,9 @@ class Lvarray(CMakePackage, CudaPackage):
     version(
         "0.1.0", tag="v0.1.0", commit="0bf5f7d077de4a08f58db24baed207f9dba95f6e", submodules=True
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("shared", default=True, description="Build Shared Libs")
     variant("umpire", default=False, description="Build Umpire support")

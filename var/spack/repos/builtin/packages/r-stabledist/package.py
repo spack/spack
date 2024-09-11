@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class RStabledist(RPackage):
     for (skew) stable distributions, using the parametrizations of Nolan."""
 
     cran = "stabledist"
+
+    license("GPL-2.0-or-later")
 
     version("0.7-1", sha256="06c5704d3a3c179fa389675c537c39a006867bc6e4f23dd7e406476ed2c88a69")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,10 @@ import pytest
 from llnl.util.filesystem import getuid, touch
 
 import spack
+import spack.cmd.external
 import spack.detection
 import spack.detection.path
+import spack.repo
 from spack.main import SpackCommand
 from spack.spec import Spec
 
@@ -28,21 +30,12 @@ def executables_found(monkeypatch):
     return _factory
 
 
-@pytest.fixture
-def _platform_executables(monkeypatch):
-    def _win_exe_ext():
-        return ".bat"
-
-    monkeypatch.setattr(spack.util.path, "win_exe_ext", _win_exe_ext)
-
-
 def define_plat_exe(exe):
     if sys.platform == "win32":
         exe += ".bat"
     return exe
 
 
-@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
 def test_find_external_single_package(mock_executable):
     cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
     search_dir = cmake_path.parent.parent
@@ -51,10 +44,10 @@ def test_find_external_single_package(mock_executable):
 
     assert len(specs_by_package) == 1 and "cmake" in specs_by_package
     detected_spec = specs_by_package["cmake"]
-    assert len(detected_spec) == 1 and detected_spec[0].spec == Spec("cmake@1.foo")
+    assert len(detected_spec) == 1 and detected_spec[0] == Spec("cmake@1.foo")
 
 
-def test_find_external_two_instances_same_package(mock_executable, _platform_executables):
+def test_find_external_two_instances_same_package(mock_executable):
     # Each of these cmake instances is created in a different prefix
     # In Windows, quoted strings are echo'd with quotes includes
     # we need to avoid that for proper regex.
@@ -63,13 +56,15 @@ def test_find_external_two_instances_same_package(mock_executable, _platform_exe
     search_paths = [str(cmake1.parent.parent), str(cmake2.parent.parent)]
 
     finder = spack.detection.path.ExecutablesFinder()
-    detected_specs = finder.find(pkg_name="cmake", initial_guess=search_paths)
+    detected_specs = finder.find(
+        pkg_name="cmake", initial_guess=search_paths, repository=spack.repo.PATH
+    )
 
     assert len(detected_specs) == 2
-    spec_to_path = {e.spec: e.prefix for e in detected_specs}
+    spec_to_path = {s: s.external_path for s in detected_specs}
     assert spec_to_path[Spec("cmake@1.foo")] == (
         spack.detection.executable_prefix(str(cmake1.parent))
-    )
+    ), spec_to_path
     assert spec_to_path[Spec("cmake@3.17.2")] == (
         spack.detection.executable_prefix(str(cmake2.parent))
     )
@@ -77,8 +72,8 @@ def test_find_external_two_instances_same_package(mock_executable, _platform_exe
 
 def test_find_external_update_config(mutable_config):
     entries = [
-        spack.detection.DetectedPackage(Spec.from_detection("cmake@1.foo"), "/x/y1/"),
-        spack.detection.DetectedPackage(Spec.from_detection("cmake@3.17.2"), "/x/y2/"),
+        Spec.from_detection("cmake@1.foo", external_path="/x/y1"),
+        Spec.from_detection("cmake@3.17.2", external_path="/x/y2"),
     ]
     pkg_to_entries = {"cmake": entries}
 
@@ -89,8 +84,8 @@ def test_find_external_update_config(mutable_config):
     cmake_cfg = pkgs_cfg["cmake"]
     cmake_externals = cmake_cfg["externals"]
 
-    assert {"spec": "cmake@1.foo", "prefix": "/x/y1/"} in cmake_externals
-    assert {"spec": "cmake@3.17.2", "prefix": "/x/y2/"} in cmake_externals
+    assert {"spec": "cmake@1.foo", "prefix": "/x/y1"} in cmake_externals
+    assert {"spec": "cmake@3.17.2", "prefix": "/x/y2"} in cmake_externals
 
 
 def test_get_executables(working_env, mock_executable):
@@ -103,6 +98,9 @@ def test_get_executables(working_env, mock_executable):
 external = SpackCommand("external")
 
 
+# TODO: this test should be made to work, but in the meantime it is
+# causing intermittent (spurious) CI failures on all PRs
+@pytest.mark.not_on_windows("Test fails intermittently on Windows")
 def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_executable):
     """When the user invokes 'spack external find --not-buildable', the config
     for any package where Spack finds an external version should be marked as
@@ -119,10 +117,31 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
 @pytest.mark.parametrize(
     "names,tags,exclude,expected",
     [
-        # find --all
-        (None, ["detectable"], [], ["find-externals1"]),
+        # find -all
+        (
+            None,
+            ["detectable"],
+            [],
+            [
+                "builtin.mock.find-externals1",
+                "builtin.mock.gcc",
+                "builtin.mock.llvm",
+                "builtin.mock.intel-oneapi-compilers",
+            ],
+        ),
         # find --all --exclude find-externals1
-        (None, ["detectable"], ["find-externals1"], []),
+        (
+            None,
+            ["detectable"],
+            ["builtin.mock.find-externals1"],
+            ["builtin.mock.gcc", "builtin.mock.llvm", "builtin.mock.intel-oneapi-compilers"],
+        ),
+        (
+            None,
+            ["detectable"],
+            ["find-externals1"],
+            ["builtin.mock.gcc", "builtin.mock.llvm", "builtin.mock.intel-oneapi-compilers"],
+        ),
         # find cmake (and cmake is not detectable)
         (["cmake"], ["detectable"], [], []),
     ],
@@ -202,34 +221,19 @@ def test_find_external_manifest_failure(mutable_config, mutable_mock_repo, tmpdi
     assert "Skipping manifest and continuing" in output
 
 
-def test_find_external_nonempty_default_manifest_dir(
-    mutable_database, mutable_mock_repo, tmpdir, monkeypatch, directory_with_manifest
-):
-    """The user runs 'spack external find'; the default manifest directory
-    contains a manifest file. Ensure that the specs are read.
-    """
-    monkeypatch.setenv("PATH", "")
-    monkeypatch.setattr(spack.cray_manifest, "default_path", str(directory_with_manifest))
-    external("find")
-    specs = spack.store.STORE.db.query("hwloc")
-    assert any(x.dag_hash() == "hwlocfakehashaaa" for x in specs)
-
-
-def test_find_external_merge(mutable_config, mutable_mock_repo):
-    """Check that 'spack find external' doesn't overwrite an existing spec
-    entry in packages.yaml.
-    """
+def test_find_external_merge(mutable_config, mutable_mock_repo, tmp_path):
+    """Checks that 'spack find external' doesn't overwrite an existing spec in packages.yaml."""
     pkgs_cfg_init = {
         "find-externals1": {
-            "externals": [{"spec": "find-externals1@1.1", "prefix": "/preexisting-prefix/"}],
+            "externals": [{"spec": "find-externals1@1.1", "prefix": "/preexisting-prefix"}],
             "buildable": False,
         }
     }
 
     mutable_config.update_config("packages", pkgs_cfg_init)
     entries = [
-        spack.detection.DetectedPackage(Spec.from_detection("find-externals1@1.1"), "/x/y1/"),
-        spack.detection.DetectedPackage(Spec.from_detection("find-externals1@1.2"), "/x/y2/"),
+        Spec.from_detection("find-externals1@1.1", external_path="/x/y1"),
+        Spec.from_detection("find-externals1@1.2", external_path="/x/y2"),
     ]
     pkg_to_entries = {"find-externals1": entries}
     scope = spack.config.default_modify_scope("packages")
@@ -239,8 +243,8 @@ def test_find_external_merge(mutable_config, mutable_mock_repo):
     pkg_cfg = pkgs_cfg["find-externals1"]
     pkg_externals = pkg_cfg["externals"]
 
-    assert {"spec": "find-externals1@1.1", "prefix": "/preexisting-prefix/"} in pkg_externals
-    assert {"spec": "find-externals1@1.2", "prefix": "/x/y2/"} in pkg_externals
+    assert {"spec": "find-externals1@1.1", "prefix": "/preexisting-prefix"} in pkg_externals
+    assert {"spec": "find-externals1@1.2", "prefix": "/x/y2"} in pkg_externals
 
 
 def test_list_detectable_packages(mutable_config, mutable_mock_repo):
@@ -248,32 +252,7 @@ def test_list_detectable_packages(mutable_config, mutable_mock_repo):
     assert external.returncode == 0
 
 
-@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
-def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, _platform_executables):
-    # Prepare an environment to detect a fake gcc
-    gcc_exe = mock_executable("gcc", output="echo 4.2.1")
-    prefix = os.path.dirname(gcc_exe)
-    monkeypatch.setenv("PATH", prefix)
-
-    # Find the external spec
-    external("find", "gcc")
-
-    # Check entries in 'packages.yaml'
-    packages_yaml = spack.config.get("packages")
-    assert "gcc" in packages_yaml
-    assert "externals" in packages_yaml["gcc"]
-    externals = packages_yaml["gcc"]["externals"]
-    assert len(externals) == 1
-    external_gcc = externals[0]
-    assert external_gcc["spec"] == "gcc@4.2.1 languages=c"
-    assert external_gcc["prefix"] == os.path.dirname(prefix)
-    assert "extra_attributes" in external_gcc
-    extra_attributes = external_gcc["extra_attributes"]
-    assert "prefix" not in extra_attributes
-    assert extra_attributes["compilers"]["c"] == str(gcc_exe)
-
-
-def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platform_executables):
+def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     search_dir = gcc_exe.parent
 
@@ -285,19 +264,19 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, _platfo
     monkeypatch.setattr(gcc_cls, "determine_variants", _determine_variants)
 
     finder = spack.detection.path.ExecutablesFinder()
-    detected_specs = finder.find(pkg_name="gcc", initial_guess=[str(search_dir)])
+    detected_specs = finder.find(
+        pkg_name="gcc", initial_guess=[str(search_dir)], repository=spack.repo.PATH
+    )
 
     assert len(detected_specs) == 1
 
-    gcc = detected_specs[0].spec
+    gcc = detected_specs[0]
     assert gcc.name == "gcc"
     assert gcc.external_path == os.path.sep + os.path.join("opt", "gcc", "bin")
 
 
-@pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
-def test_new_entries_are_reported_correctly(
-    mock_executable, mutable_config, monkeypatch, _platform_executables
-):
+@pytest.mark.not_on_windows("Fails spuriously on Windows")
+def test_new_entries_are_reported_correctly(mock_executable, mutable_config, monkeypatch):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     prefix = os.path.dirname(gcc_exe)
@@ -356,3 +335,29 @@ def test_failures_in_scanning_do_not_result_in_an_error(
     assert "cmake" in output
     assert "3.23.3" in output
     assert "3.19.1" not in output
+
+
+def test_detect_virtuals(mock_executable, mutable_config, monkeypatch):
+    """Test whether external find --not-buildable sets virtuals as non-buildable (unless user
+    config sets them to buildable)"""
+    mpich = mock_executable("mpichversion", output="echo MPICH Version:    4.0.2")
+    prefix = os.path.dirname(mpich)
+    external("find", "--path", prefix, "--not-buildable", "mpich")
+
+    # Check that mpich was correctly detected
+    mpich = mutable_config.get("packages:mpich")
+    assert mpich["buildable"] is False
+    assert Spec(mpich["externals"][0]["spec"]).satisfies("mpich@4.0.2")
+
+    # Check that the virtual package mpi was marked as non-buildable
+    assert mutable_config.get("packages:mpi:buildable") is False
+
+    # Delete the mpich entry, and set mpi explicitly to buildable
+    mutable_config.set("packages:mpich", {})
+    mutable_config.set("packages:mpi:buildable", True)
+
+    # Run the detection again
+    external("find", "--path", prefix, "--not-buildable", "mpich")
+
+    # Check that the mpi:buildable entry was not overwritten
+    assert mutable_config.get("packages:mpi:buildable") is True

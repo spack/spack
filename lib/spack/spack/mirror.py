@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,27 +18,29 @@ import os.path
 import sys
 import traceback
 import urllib.parse
-from typing import Optional, Union
+from typing import List, Optional, Union
 
+import llnl.url
+import llnl.util.symlink
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
 import spack.caches
 import spack.config
 import spack.error
-import spack.fetch_strategy as fs
+import spack.fetch_strategy
 import spack.mirror
+import spack.oci.image
+import spack.repo
 import spack.spec
-import spack.url as url
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
-from spack.util.spack_yaml import syaml_dict
-from spack.version import VersionList
+import spack.version
 
 #: What schemes do we support
-supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs")
+supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci")
 
 
 def _url_or_path_to_url(url_or_path: str) -> str:
@@ -134,6 +136,16 @@ class Mirror:
         return isinstance(self._data, str) or self._data.get("source", True)
 
     @property
+    def signed(self) -> bool:
+        return isinstance(self._data, str) or self._data.get("signed", True)
+
+    @property
+    def autopush(self) -> bool:
+        if isinstance(self._data, str):
+            return False
+        return self._data.get("autopush", False)
+
+    @property
     def fetch_url(self):
         """Get the valid, canonicalized fetch URL"""
         return self.get_url("fetch")
@@ -146,7 +158,7 @@ class Mirror:
     def _update_connection_dict(self, current_data: dict, new_data: dict, top_level: bool):
         keys = ["url", "access_pair", "access_token", "profile", "endpoint_url"]
         if top_level:
-            keys += ["binary", "source"]
+            keys += ["binary", "source", "signed", "autopush"]
         changed = False
         for key in keys:
             if key in new_data and current_data.get(key) != new_data[key]:
@@ -230,12 +242,12 @@ class Mirror:
         value = self._data.get(direction, {})
 
         # Return top-level entry if only a URL was set.
-        if isinstance(value, str):
-            return self._data.get(attribute, None)
+        if isinstance(value, str) or attribute not in value:
+            return self._data.get(attribute)
 
-        return self._data.get(direction, {}).get(attribute, None)
+        return value[attribute]
 
-    def get_url(self, direction: str):
+    def get_url(self, direction: str) -> str:
         if direction not in ("fetch", "push"):
             raise ValueError(f"direction must be either 'fetch' or 'push', not {direction}")
 
@@ -255,18 +267,21 @@ class Mirror:
             elif "url" in info:
                 url = info["url"]
 
-        return _url_or_path_to_url(url) if url else None
+        if not url:
+            raise ValueError(f"Mirror {self.name} has no URL configured")
 
-    def get_access_token(self, direction: str):
+        return _url_or_path_to_url(url)
+
+    def get_access_token(self, direction: str) -> Optional[str]:
         return self._get_value("access_token", direction)
 
-    def get_access_pair(self, direction: str):
+    def get_access_pair(self, direction: str) -> Optional[List]:
         return self._get_value("access_pair", direction)
 
-    def get_profile(self, direction: str):
+    def get_profile(self, direction: str) -> Optional[str]:
         return self._get_value("profile", direction)
 
-    def get_endpoint_url(self, direction: str):
+    def get_endpoint_url(self, direction: str) -> Optional[str]:
         return self._get_value("endpoint_url", direction)
 
 
@@ -279,6 +294,7 @@ class MirrorCollection(collections.abc.Mapping):
         scope=None,
         binary: Optional[bool] = None,
         source: Optional[bool] = None,
+        autopush: Optional[bool] = None,
     ):
         """Initialize a mirror collection.
 
@@ -290,21 +306,27 @@ class MirrorCollection(collections.abc.Mapping):
                     If None, do not filter on binary mirrors.
             source: If True, only include source mirrors.
                     If False, omit source mirrors.
-                    If None, do not filter on source mirrors."""
-        self._mirrors = {
-            name: Mirror(data=mirror, name=name)
-            for name, mirror in (
-                mirrors.items()
-                if mirrors is not None
-                else spack.config.get("mirrors", scope=scope).items()
-            )
-        }
+                    If None, do not filter on source mirrors.
+            autopush: If True, only include mirrors that have autopush enabled.
+                      If False, omit mirrors that have autopush enabled.
+                      If None, do not filter on autopush."""
+        mirrors_data = (
+            mirrors.items()
+            if mirrors is not None
+            else spack.config.get("mirrors", scope=scope).items()
+        )
+        mirrors = (Mirror(data=mirror, name=name) for name, mirror in mirrors_data)
 
-        if source is not None:
-            self._mirrors = {k: v for k, v in self._mirrors.items() if v.source == source}
+        def _filter(m: Mirror):
+            if source is not None and m.source != source:
+                return False
+            if binary is not None and m.binary != binary:
+                return False
+            if autopush is not None and m.autopush != autopush:
+                return False
+            return True
 
-        if binary is not None:
-            self._mirrors = {k: v for k, v in self._mirrors.items() if v.binary == binary}
+        self._mirrors = {m.name: m for m in mirrors if _filter(m)}
 
     def __eq__(self, other):
         return self._mirrors == other._mirrors
@@ -330,7 +352,7 @@ class MirrorCollection(collections.abc.Mapping):
             raise sjson.SpackJSONError("error parsing JSON mirror collection:", str(e)) from e
 
     def to_dict(self, recursive=False):
-        return syaml_dict(
+        return syaml.syaml_dict(
             sorted(
                 ((k, (v.to_dict() if recursive else v)) for (k, v) in self._mirrors.items()),
                 key=operator.itemgetter(0),
@@ -372,10 +394,10 @@ class MirrorCollection(collections.abc.Mapping):
 
 
 def _determine_extension(fetcher):
-    if isinstance(fetcher, fs.URLFetchStrategy):
+    if isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy):
         if fetcher.expand_archive:
             # If we fetch with a URLFetchStrategy, use URL's archive type
-            ext = url.determine_url_file_extension(fetcher.url)
+            ext = llnl.url.determine_url_file_extension(fetcher.url)
 
             if ext:
                 # Remove any leading dots
@@ -406,38 +428,74 @@ Spack not to expand it with the following syntax:
     return ext
 
 
-class MirrorReference:
-    """A ``MirrorReference`` stores the relative paths where you can store a
-    package/resource in a mirror directory.
+class MirrorLayout:
+    """A ``MirrorLayout`` object describes the relative path of a mirror entry."""
 
-    The appropriate storage location is given by ``storage_path``. The
-    ``cosmetic_path`` property provides a reference that a human could generate
-    themselves based on reading the details of the package.
-
-    A user can iterate over a ``MirrorReference`` object to get all the
-    possible names that might be used to refer to the resource in a mirror;
-    this includes names generated by previous naming schemes that are no-longer
-    reported by ``storage_path`` or ``cosmetic_path``.
-    """
-
-    def __init__(self, cosmetic_path, global_path=None):
-        self.global_path = global_path
-        self.cosmetic_path = cosmetic_path
-
-    @property
-    def storage_path(self):
-        if self.global_path:
-            return self.global_path
-        else:
-            return self.cosmetic_path
+    def __init__(self, path: str) -> None:
+        self.path = path
 
     def __iter__(self):
-        if self.global_path:
-            yield self.global_path
-        yield self.cosmetic_path
+        """Yield all paths including aliases where the resource can be found."""
+        yield self.path
+
+    def make_alias(self, root: str) -> None:
+        """Make the entry ``root / self.path`` available under a human readable alias"""
+        pass
 
 
-def mirror_archive_paths(fetcher, per_package_ref, spec=None):
+class DefaultLayout(MirrorLayout):
+    def __init__(self, alias_path: str, digest_path: Optional[str] = None) -> None:
+        # When we have a digest, it is used as the primary storage location. If not, then we use
+        # the human-readable alias. In case of mirrors of a VCS checkout, we currently do not have
+        # a digest, that's why an alias is required and a digest optional.
+        super().__init__(path=digest_path or alias_path)
+        self.alias = alias_path
+        self.digest_path = digest_path
+
+    def make_alias(self, root: str) -> None:
+        """Symlink a human readible path in our mirror to the actual storage location."""
+        # We already use the human-readable path as the main storage location.
+        if not self.digest_path:
+            return
+
+        alias, digest = os.path.join(root, self.alias), os.path.join(root, self.digest_path)
+
+        alias_dir = os.path.dirname(alias)
+        relative_dst = os.path.relpath(digest, start=alias_dir)
+
+        mkdirp(alias_dir)
+        tmp = f"{alias}.tmp"
+        llnl.util.symlink.symlink(relative_dst, tmp)
+
+        try:
+            os.rename(tmp, alias)
+        except OSError:
+            # Clean up the temporary if possible
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            raise
+
+    def __iter__(self):
+        if self.digest_path:
+            yield self.digest_path
+        yield self.alias
+
+
+class OCILayout(MirrorLayout):
+    """Follow the OCI Image Layout Specification to archive blobs where paths are of the form
+    ``blobs/<algorithm>/<digest>``"""
+
+    def __init__(self, digest: spack.oci.image.Digest) -> None:
+        super().__init__(os.path.join("blobs", digest.algorithm, digest.digest))
+
+
+def default_mirror_layout(
+    fetcher: "spack.fetch_strategy.FetchStrategy",
+    per_package_ref: str,
+    spec: Optional["spack.spec.Spec"] = None,
+) -> MirrorLayout:
     """Returns a ``MirrorReference`` object which keeps track of the relative
     storage path of the resource associated with the specified ``fetcher``."""
     ext = None
@@ -461,7 +519,7 @@ def mirror_archive_paths(fetcher, per_package_ref, spec=None):
     if global_ref and ext:
         global_ref += ".%s" % ext
 
-    return MirrorReference(per_package_ref, global_ref)
+    return DefaultLayout(per_package_ref, global_ref)
 
 
 def get_all_versions(specs):
@@ -482,7 +540,7 @@ def get_all_versions(specs):
 
         for version in pkg_cls.versions:
             version_spec = spack.spec.Spec(pkg_cls.name)
-            version_spec.versions = VersionList([version])
+            version_spec.versions = spack.version.VersionList([version])
             version_specs.append(version_spec)
 
     return version_specs
@@ -521,7 +579,7 @@ def get_matching_versions(specs, num_versions=1):
             # Generate only versions that satisfy the spec.
             if spec.concrete or v.intersects(spec.versions):
                 s = spack.spec.Spec(pkg.name)
-                s.versions = VersionList([v])
+                s.versions = spack.version.VersionList([v])
                 s.variants = spec.variants.copy()
                 # This is needed to avoid hanging references during the
                 # concretization phase
@@ -591,14 +649,14 @@ def add(mirror: Mirror, scope=None):
     """Add a named mirror in the given scope"""
     mirrors = spack.config.get("mirrors", scope=scope)
     if not mirrors:
-        mirrors = syaml_dict()
+        mirrors = syaml.syaml_dict()
 
     if mirror.name in mirrors:
         tty.die("Mirror with name {} already exists.".format(mirror.name))
 
     items = [(n, u) for n, u in mirrors.items()]
     items.insert(0, (mirror.name, mirror.to_dict()))
-    mirrors = syaml_dict(items)
+    mirrors = syaml.syaml_dict(items)
     spack.config.set("mirrors", mirrors, scope=scope)
 
 
@@ -606,7 +664,7 @@ def remove(name, scope):
     """Remove the named mirror in the given scope"""
     mirrors = spack.config.get("mirrors", scope=scope)
     if not mirrors:
-        mirrors = syaml_dict()
+        mirrors = syaml.syaml_dict()
 
     if name not in mirrors:
         tty.die("No mirror with name %s" % name)

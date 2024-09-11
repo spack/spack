@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,16 +9,28 @@ variants both in packages and in specs.
 import collections.abc
 import functools
 import inspect
-import io
 import itertools
 import re
 
 import llnl.util.lang as lang
 import llnl.util.tty.color
+from llnl.string import comma_or
 
-import spack.directives
 import spack.error as error
-from spack.util.string import comma_or
+import spack.parser
+
+#: These are variant names used by Spack internally; packages can't use them
+reserved_names = [
+    "arch",
+    "architecture",
+    "dev_path",
+    "namespace",
+    "operating_system",
+    "os",
+    "patches",
+    "platform",
+    "target",
+]
 
 special_variant_values = [None, "none", "*"]
 
@@ -74,7 +86,7 @@ class Variant:
 
             self.single_value_validator = isa_type
 
-        if callable(values):
+        elif callable(values):
             # If 'values' is a callable, assume it is a single value
             # validator and reset the values to be explicit during debug
             self.single_value_validator = values
@@ -399,13 +411,12 @@ class AbstractVariant:
         return item in self._value
 
     def __repr__(self):
-        cls = type(self)
-        return "{0.__name__}({1}, {2})".format(cls, repr(self.name), repr(self._original_value))
+        return f"{type(self).__name__}({repr(self.name)}, {repr(self._original_value)})"
 
     def __str__(self):
-        if self.propagate:
-            return "{0}=={1}".format(self.name, ",".join(str(x) for x in self.value))
-        return "{0}={1}".format(self.name, ",".join(str(x) for x in self.value))
+        delim = "==" if self.propagate else "="
+        values = spack.parser.quote_if_needed(",".join(str(v) for v in self.value))
+        return f"{self.name}{delim}{values}"
 
 
 class MultiValuedVariant(AbstractVariant):
@@ -443,15 +454,14 @@ class MultiValuedVariant(AbstractVariant):
         self._original_value = ",".join(self._value)
 
     def __str__(self):
-        # Special-case patches to not print the full 64 character hashes
+        # Special-case patches to not print the full 64 character sha256
         if self.name == "patches":
             values_str = ",".join(x[:7] for x in self.value)
         else:
             values_str = ",".join(str(x) for x in self.value)
 
-        if self.propagate:
-            return "{0}=={1}".format(self.name, values_str)
-        return "{0}={1}".format(self.name, values_str)
+        delim = "==" if self.propagate else "="
+        return f"{self.name}{delim}{spack.parser.quote_if_needed(values_str)}"
 
 
 class SingleValuedVariant(AbstractVariant):
@@ -467,9 +477,8 @@ class SingleValuedVariant(AbstractVariant):
         self._value = str(self._value[0])
 
     def __str__(self):
-        if self.propagate:
-            return "{0}=={1}".format(self.name, self.value)
-        return "{0}={1}".format(self.name, self.value)
+        delim = "==" if self.propagate else "="
+        return f"{self.name}{delim}{spack.parser.quote_if_needed(self.value)}"
 
     @implicit_variant_conversion
     def satisfies(self, other):
@@ -538,162 +547,6 @@ class BoolValuedVariant(SingleValuedVariant):
         if self.propagate:
             return "{0}{1}".format("++" if self.value else "~~", self.name)
         return "{0}{1}".format("+" if self.value else "~", self.name)
-
-
-class VariantMap(lang.HashableMap):
-    """Map containing variant instances. New values can be added only
-    if the key is not already present.
-    """
-
-    def __init__(self, spec):
-        super().__init__()
-        self.spec = spec
-
-    def __setitem__(self, name, vspec):
-        # Raise a TypeError if vspec is not of the right type
-        if not isinstance(vspec, AbstractVariant):
-            msg = "VariantMap accepts only values of variant types"
-            msg += " [got {0} instead]".format(type(vspec).__name__)
-            raise TypeError(msg)
-
-        # Raise an error if the variant was already in this map
-        if name in self.dict:
-            msg = 'Cannot specify variant "{0}" twice'.format(name)
-            raise DuplicateVariantError(msg)
-
-        # Raise an error if name and vspec.name don't match
-        if name != vspec.name:
-            msg = 'Inconsistent key "{0}", must be "{1}" to match VariantSpec'
-            raise KeyError(msg.format(name, vspec.name))
-
-        # Set the item
-        super().__setitem__(name, vspec)
-
-    def substitute(self, vspec):
-        """Substitutes the entry under ``vspec.name`` with ``vspec``.
-
-        Args:
-            vspec: variant spec to be substituted
-        """
-        if vspec.name not in self:
-            msg = "cannot substitute a key that does not exist [{0}]"
-            raise KeyError(msg.format(vspec.name))
-
-        # Set the item
-        super().__setitem__(vspec.name, vspec)
-
-    def satisfies(self, other):
-        return all(k in self and self[k].satisfies(other[k]) for k in other)
-
-    def intersects(self, other):
-        return all(self[k].intersects(other[k]) for k in other if k in self)
-
-    def constrain(self, other):
-        """Add all variants in other that aren't in self to self. Also
-        constrain all multi-valued variants that are already present.
-        Return True if self changed, False otherwise
-
-        Args:
-            other (VariantMap): instance against which we constrain self
-
-        Returns:
-            bool: True or False
-        """
-        if other.spec is not None and other.spec._concrete:
-            for k in self:
-                if k not in other:
-                    raise UnsatisfiableVariantSpecError(self[k], "<absent>")
-
-        changed = False
-        for k in other:
-            if k in self:
-                # If they are not compatible raise an error
-                if not self[k].compatible(other[k]):
-                    raise UnsatisfiableVariantSpecError(self[k], other[k])
-                # If they are compatible merge them
-                changed |= self[k].constrain(other[k])
-            else:
-                # If it is not present copy it straight away
-                self[k] = other[k].copy()
-                changed = True
-
-        return changed
-
-    @property
-    def concrete(self):
-        """Returns True if the spec is concrete in terms of variants.
-
-        Returns:
-            bool: True or False
-        """
-        return self.spec._concrete or all(v in self for v in self.spec.package_class.variants)
-
-    def copy(self):
-        """Return an instance of VariantMap equivalent to self.
-
-        Returns:
-            VariantMap: a copy of self
-        """
-        clone = VariantMap(self.spec)
-        for name, variant in self.items():
-            clone[name] = variant.copy()
-        return clone
-
-    def __str__(self):
-        # print keys in order
-        sorted_keys = sorted(self.keys())
-
-        # Separate boolean variants from key-value pairs as they print
-        # differently. All booleans go first to avoid ' ~foo' strings that
-        # break spec reuse in zsh.
-        bool_keys = []
-        kv_keys = []
-        for key in sorted_keys:
-            bool_keys.append(key) if isinstance(self[key].value, bool) else kv_keys.append(key)
-
-        # add spaces before and after key/value variants.
-        string = io.StringIO()
-
-        for key in bool_keys:
-            string.write(str(self[key]))
-
-        for key in kv_keys:
-            string.write(" ")
-            string.write(str(self[key]))
-
-        return string.getvalue()
-
-
-def substitute_abstract_variants(spec):
-    """Uses the information in `spec.package` to turn any variant that needs
-    it into a SingleValuedVariant.
-
-    This method is best effort. All variants that can be substituted will be
-    substituted before any error is raised.
-
-    Args:
-        spec: spec on which to operate the substitution
-    """
-    # This method needs to be best effort so that it works in matrix exlusion
-    # in $spack/lib/spack/spack/spec_list.py
-    failed = []
-    for name, v in spec.variants.items():
-        if name in spack.directives.reserved_names:
-            if name == "dev_path":
-                new_variant = SingleValuedVariant(name, v._original_value)
-                spec.variants.substitute(new_variant)
-            continue
-        if name not in spec.package_class.variants:
-            failed.append(name)
-            continue
-        pkg_variant, _ = spec.package_class.variants[name]
-        new_variant = pkg_variant.make_variant(v._original_value)
-        pkg_variant.validate_or_raise(new_variant, spec.package_class)
-        spec.variants.substitute(new_variant)
-
-    # Raise all errors at once
-    if failed:
-        raise UnknownVariantError(spec, failed)
 
 
 # The class below inherit from Sequence to disguise as a tuple and comply
@@ -916,7 +769,7 @@ class UnknownVariantError(error.SpecError):
         variant_str = "variant" if len(variants) == 1 else "variants"
         msg = (
             'trying to set {0} "{1}" in package "{2}", but the package'
-            " has no such {0} [happened during concretization of {3}]"
+            " has no such {0} [happened when validating '{3}']"
         )
         msg = msg.format(variant_str, comma_or(variants), spec.name, spec.root)
         super().__init__(msg)

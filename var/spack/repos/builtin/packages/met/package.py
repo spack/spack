@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Met(AutotoolsPackage):
     maintainers("AlexanderRichert-NOAA")
 
     version("develop", branch="develop")
+    version("11.1.0", sha256="e2e371ae1f49185ff8bf08201b1a3e90864a467aa3369b04132d231213c3c9e5")
     version("11.0.2", sha256="f720d15e1d6c235c9a41fd97dbeb0eb1082fb8ae99e1bcdcb5e51be9b50bdfbf")
     version("11.0.1", sha256="48d471ad4634f1b969d9358c51925ce36bf0a1cec5312a6755203a4794b81646")
     version("11.0.0", sha256="648ebb54d07ca099680f4fc23b7ef5095c1a8ac5537c0a5d0e8587bf15991cff")
@@ -28,6 +29,9 @@ class Met(AutotoolsPackage):
     version("10.0.1", sha256="8e965bb0eb8353229a730af511c5fa62bad9744606ab6a218d741d29eb5f3acd")
     version("10.0.0", sha256="92f37c8bd83c951d86026cce294a16e4d3aa6dd41905629d0a729fa1bebe668a")
     version("9.1.3", sha256="7356a5ad79ca961fd965cadd93a7bf6c73b3aa5fb1a01a932580b94e66d0d0c8")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("openmp", default=True, description="Use OpenMP multithreading")
     variant("grib2", default=False, description="Enable compilation of utilities using GRIB2")
@@ -105,7 +109,7 @@ class Met(AutotoolsPackage):
             ldflags.append(nc_config("--libs", "--static", output=str).strip())
             libs.append(nc_config("--libs", "--static", output=str).strip())
 
-        zlib = spec["zlib"]
+        zlib = spec["zlib-api"]
         cppflags.append("-D__64BIT__")
         ldflags.append("-L" + zlib.prefix.lib)
         libs.append("-lz")
@@ -127,6 +131,7 @@ class Met(AutotoolsPackage):
         if "+python" in spec:
             python = spec["python"]
             env.set("MET_PYTHON", python.command.path)
+            env.set("MET_PYTHON_BIN_EXE", python.command.path)
             env.set("MET_PYTHON_CC", "-I" + python.headers.directories[0])
             py_ld = [python.libs.ld_flags]
             if spec["python"].satisfies("~shared"):
@@ -141,6 +146,11 @@ class Met(AutotoolsPackage):
             hdfeos = spec["hdf-eos2"]
             env.set("MET_HDF5", hdf.prefix)
             env.set("MET_HDFEOS", hdfeos.prefix)
+
+            if "+szip" in hdf:
+                libs.append(" ".join(hdf["szip"].libs))
+            if "+external-xdr" in hdf:
+                libs.append(" ".join(hdf["rpc"].libs))
 
         if "+graphics" in spec:
             cairo = spec["cairo"]

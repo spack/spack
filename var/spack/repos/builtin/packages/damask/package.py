@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,10 +28,30 @@ class Damask(BundlePackage):
 
     maintainers("MarDiehl")
 
+    version("3.0.0")
+    version("3.0.0-beta2")
+    version("3.0.0-beta")
+    version("3.0.0-alpha8")
     version("3.0.0-alpha7")
     version("3.0.0-alpha6")
     version("3.0.0-alpha5")
     version("3.0.0-alpha4")
+
+    depends_on("damask-grid@3.0.0", when="@3.0.0", type="run")
+    depends_on("damask-mesh@3.0.0", when="@3.0.0", type="run")
+    depends_on("py-damask@3.0.0", when="@3.0.0", type="run")
+
+    depends_on("damask-grid@3.0.0-beta2", when="@3.0.0-beta2", type="run")
+    depends_on("damask-mesh@3.0.0-beta2", when="@3.0.0-beta2", type="run")
+    depends_on("py-damask@3.0.0-beta2", when="@3.0.0-beta2", type="run")
+
+    depends_on("damask-grid@3.0.0-beta", when="@3.0.0-beta", type="run")
+    depends_on("damask-mesh@3.0.0-beta", when="@3.0.0-beta", type="run")
+    depends_on("py-damask@3.0.0-beta", when="@3.0.0-beta", type="run")
+
+    depends_on("damask-grid@3.0.0-alpha8", when="@3.0.0-alpha8", type="run")
+    depends_on("damask-mesh@3.0.0-alpha8", when="@3.0.0-alpha8", type="run")
+    depends_on("py-damask@3.0.0-alpha8", when="@3.0.0-alpha8", type="run")
 
     depends_on("damask-grid@3.0.0-alpha7", when="@3.0.0-alpha7", type="run")
     depends_on("damask-mesh@3.0.0-alpha7", when="@3.0.0-alpha7", type="run")

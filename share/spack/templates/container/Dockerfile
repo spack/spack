@@ -4,7 +4,7 @@
 {% endif %}
 {% if render_phase.build %}
 # Build stage with Spack pre-installed and ready to be used
-FROM {{ build.image }} as builder
+FROM {{ build.image }} AS builder
 
 {% block build_stage %}
 {% if os_packages_build %}
@@ -16,7 +16,8 @@ RUN {% if os_package_update %}{{ os_packages_build.update }} \
 
 # What we want to install and how we want to install it
 # is specified in a manifest file (spack.yaml)
-RUN mkdir {{ paths.environment }} \
+RUN mkdir -p {{ paths.environment }} && \
+set -o noclobber \
 {{ manifest }} > {{ paths.environment }}/spack.yaml
 
 # Install the software, remove unnecessary deps
@@ -39,9 +40,6 @@ RUN find -L {{ paths.view }}/* -type f -exec readlink -f '{}' \; | \
 RUN cd {{ paths.environment }} && \
     spack env activate --sh -d . > activate.sh
 
-{% if extra_instructions.build %}
-{{ extra_instructions.build }}
-{% endif %}
 {% endblock build_stage %}
 {% endif %}
 
@@ -69,10 +67,6 @@ RUN { \
 RUN {% if os_package_update %}{{ os_packages_final.update }} \
  && {% endif %}{{ os_packages_final.install }} {{ os_packages_final.list | join | replace('\n', ' ') }} \
  && {{ os_packages_final.clean }}
-{% endif %}
-{% if extra_instructions.final %}
-
-{{ extra_instructions.final }}
 {% endif %}
 {% endblock final_stage %}
 {% for label, value in labels.items() %}

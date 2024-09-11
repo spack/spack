@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Kibana(Package):
     url = "https://artifacts.elastic.co/downloads/kibana/kibana-6.4.0-linux-x86_64.tar.gz"
 
     version("6.4.0", sha256="df2056105a08c206a1adf9caed09a152a53429a0f1efc1ba3ccd616092d78aee")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("java", type="run")
 
