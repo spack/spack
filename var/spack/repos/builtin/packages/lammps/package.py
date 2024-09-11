@@ -734,7 +734,6 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     conflicts("+cuda", when="+opencl")
     conflicts("+rocm", when="+opencl")
     conflicts("+body", when="+poems@:20180628")
-    conflicts("+latte", when="@:20170921")
     conflicts("+python", when="~lib")
     conflicts("+qeq", when="~manybody")
     conflicts("+user-atc", when="~manybody")
