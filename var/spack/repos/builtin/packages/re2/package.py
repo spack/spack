@@ -64,6 +64,9 @@ class Re2(CMakePackage):
 
     depends_on("icu4c", when="+icu")
 
+    depends_on("googletest", type="test")
+    depends_on("benchmark ~performance_counters", type="test")
+
     # shared libs must have position-independent code
     conflicts("+shared ~pic")
 
