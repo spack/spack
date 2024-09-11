@@ -622,7 +622,7 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
         module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
         module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
-    jobs = spack.config.determine_number_of_jobs(parallel=pkg.parallel)
+    jobs = determine_number_of_jobs(parallel=pkg.parallel)
     module.make_jobs = jobs
 
     # TODO: make these build deps that can be installed if not found.
@@ -1063,6 +1063,12 @@ class SetupContext:
                     # This includes runtime dependencies, also runtime deps of direct build deps.
                     set_package_py_globals(pkg, context=Context.RUN)
 
+        # Looping over the set of packages a second time
+        # ensures all globals are loaded into the module space prior to
+        # any package setup. This guarantees package setup methods have
+        # access to expected module level definitions such as "spack_cc"
+        for dspec, flag in chain(self.external, self.nonexternal):
+            pkg = dspec.package
             for spec in dspec.dependents():
                 # Note: some specs have dependents that are unreachable from the root, so avoid
                 # setting globals for those.
@@ -1071,6 +1077,15 @@ class SetupContext:
                 dependent_module = ModuleChangePropagator(spec.package)
                 pkg.setup_dependent_package(dependent_module, spec)
                 dependent_module.propagate_changes_to_mro()
+
+        for dspec, flag in chain(self.external, self.nonexternal):
+            pkg = dspec.pkg
+            if self.context == Context.BUILD:
+                module = ModuleChangePropagator(pkg)
+                module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
+                module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
+                module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
+                module.propegate_changes_to_mro()
 
     def get_env_modifications(self) -> EnvironmentModifications:
         """Returns the environment variable modifications for the given input specs and context.
