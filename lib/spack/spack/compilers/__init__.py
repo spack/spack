@@ -243,7 +243,6 @@ def find_compilers(
     *,
     scope: Optional[str] = None,
     mixed_toolchain: bool = False,
-    max_workers: Optional[int] = None,
 ) -> List["spack.compiler.Compiler"]:
     """Searches for compiler in the paths given as argument. If any new compiler is found, the
     configuration is updated, and the list of new compiler objects is returned.
@@ -254,7 +253,6 @@ def find_compilers(
         scope: configuration scope to modify
         mixed_toolchain: allow mixing compilers from different toolchains if otherwise missing for
             a certain language
-        max_workers: number of processes used to search for compilers
     """
     import spack.detection
 
@@ -267,9 +265,7 @@ def find_compilers(
         default_paths.extend(windows_os.WindowsOs().compiler_search_paths)
     compiler_pkgs = spack.repo.PATH.packages_with_tags(COMPILER_TAG, full=True)
 
-    detected_packages = spack.detection.by_path(
-        compiler_pkgs, path_hints=default_paths, max_workers=max_workers
-    )
+    detected_packages = spack.detection.by_path(compiler_pkgs, path_hints=default_paths)
 
     valid_compilers = {}
     for name, detected in detected_packages.items():
