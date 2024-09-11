@@ -15,8 +15,6 @@ extensions = SpackCommand("extensions")
 install = SpackCommand("install")
 view = SpackCommand("view")
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
-
 
 def create_projection_file(tmpdir, projection):
     if "projections" not in projection:
