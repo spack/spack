@@ -72,6 +72,7 @@ class Re2(CMakePackage):
             self.define_from_variant("RE2_USE_ICU", "icu"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
+            self.define("RE2_BUILD_TESTING", self.run_tests),
         ]
 
         abseil = self.spec.dependencies("abseil-cpp")
