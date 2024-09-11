@@ -54,4 +54,6 @@ class DlaFutureFortran(CMakePackage):
 
     @property
     def libs(self):
-        return find_libraries("libDLAF_Fortran", root=self.home, shared=self.spec.satisfies("+shared"))
+        return find_libraries(
+            "libDLAF_Fortran", root=self.home, shared=self.spec.satisfies("+shared")
+        )
