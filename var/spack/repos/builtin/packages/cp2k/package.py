@@ -145,7 +145,6 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
             when="@:7",  # req in CP2K v8+
             description="Use CUBLAS for general matrix operations in DBCSR",
         )
-    variant("rocm", description="building with rocm", default=False)
 
     HFX_LMAX_RANGE = range(4, 8)
 
@@ -373,7 +372,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
     def patch(self):
         # Patch for an undefined constant due to incompatible changes in ELPA
-        if ("@9.1:2022.2 +elpa") in self.spec:
+        if self.spec.satisfies("@9.1:2022.2 +elpa"):
             if self.spec["elpa"].satisfies("@2022.05.001:"):
                 filter_file(
                     r"ELPA_2STAGE_REAL_INTEL_GPU",
@@ -382,7 +381,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
                 )
 
         # Patch for resolving .mod file conflicts in ROCm by implementing 'USE, INTRINSIC'
-        if ("+rocm") in self.spec:
+        if self.spec.satisfies("+rocm"):
             for directory, subdirectory, files in os.walk(os.getcwd()):
                 for i in files:
                     file_path = os.path.join(directory, i)
