@@ -1200,52 +1200,6 @@ class PackageInstaller:
         installed = f"installed ({len(self.installed)}) = {self.installed}"
         return f"{self.pid}: {requests}; {tasks}; {installed}; {failed}"
 
-    def _add_bootstrap_compilers(
-        self,
-        compiler: "spack.spec.CompilerSpec",
-        architecture: "spack.spec.ArchSpec",
-        pkgs: List["spack.package_base.PackageBase"],
-        request: BuildRequest,
-        all_deps: Dict[str, Set[str]],
-    ) -> None:
-        """
-        Add bootstrap compilers and dependencies to the build queue.
-
-        Args:
-            compiler: the compiler to boostrap
-            architecture: the architecture for which to bootstrap the compiler
-            pkgs: the package list with possible compiler dependencies
-            request: the associated install request
-            all_deps: dictionary of all dependencies and associated dependents
-        """
-        packages = _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs)
-        for comp_pkg, is_compiler in packages:
-            pkgid = package_id(comp_pkg.spec)
-            if pkgid not in self.build_tasks:
-                self._add_init_task(comp_pkg, request, is_compiler=is_compiler, all_deps=all_deps)
-            elif is_compiler:
-                # ensure it's queued as a compiler
-                self._modify_existing_task(pkgid, "compiler", True)
-
-    def _modify_existing_task(self, pkgid: str, attr, value) -> None:
-        """
-        Update a task in-place to modify its behavior.
-
-        Currently used to update the ``compiler`` field on tasks
-        that were originally created as a dependency of a compiler,
-        but are compilers in their own right.
-
-        For example, ``intel-oneapi-compilers-classic`` depends on
-        ``intel-oneapi-compilers``, which can cause the latter to be
-        queued first as a non-compiler, and only later as a compiler.
-        """
-        for i, tup in enumerate(self.build_pq):
-            key, task = tup
-            if task.pkg_id == pkgid:
-                tty.debug(f"Modifying task for {pkgid} to treat it as a compiler", level=2)
-                setattr(task, attr, value)
-                self.build_pq[i] = (key, task)
-
     def _add_init_task(
         self,
         pkg: "spack.package_base.PackageBase",
