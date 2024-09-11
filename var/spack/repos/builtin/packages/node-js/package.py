@@ -72,6 +72,7 @@ class NodeJs(Package):
     depends_on("python@2.7,3.5:3.8", when="@15", type="build")
     depends_on("python@2.7,3.6:3.10", when="@14.18.2:14", type="build")
     depends_on("python@2.7,3.5:3.8", when="@13.1:14.18.1", type="build")
+    depends_on("libtool", type="build", when=sys.platform != "darwin")
     depends_on("pkgconfig", type="build")
     # depends_on('bash-completion', when="+bash-completion")
     depends_on("icu4c", when="+icu4c")
