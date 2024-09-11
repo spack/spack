@@ -19,6 +19,10 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSL-1.0")
 
+    version("0.28.0", sha256="a64ebac04135c0c8d392ddcd8d683fe02e2c0782abfe130754244d58f27ae6cf")
+    version("0.27.0", sha256="4a58dc4014edc2074399e4a6ecfa244537c89ce1319b3e14ff3dfe617fb9f9e8")
+    version("0.26.1", sha256="d7cc842238754019abdb536e22325e9a57186cd2ac8cc9c7140a5385f9d730f6")
+    version("0.26.0", sha256="bbec5472c71006c1f55e7946c8dc517dae76c41cacb36fa98195312c74a1bb9a")
     version("0.25.0", sha256="6646e12f88049116d84ce0caeedaa039a13caaa0431964caea4660b739767b2e")
     version("0.24.0", sha256="3b97c684107f892a633f598d94bcbd1e238d940e88e1c336f205e81b99326cc3")
     version("0.23.0", sha256="d1981e198ac4f8443770cebbeff7a132b8f6c1a42e32b0b06fea02cc9df99595")
@@ -50,7 +54,12 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     version("0.1.0", sha256="aa0ae2396cd264d821a73c4c7ecb118729bb3de042920c9248909d33755e7327")
     version("main", branch="main")
 
+    depends_on("cxx", type="build")
+
     generator("ninja")
+
+    variant("shared", default=True, description="Build shared libraries")
+    conflicts("~shared", when="@:0.25")
 
     cxxstds = ("17", "20", "23")
     variant(
@@ -87,6 +96,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
         description="Enable support for sanitizers. "
         "Specific sanitizers must be explicitly enabled with -fsanitize=*.",
     )
+    variant("valgrind", default=False, description="Enable support for valgrind")
     variant(
         "stdexec",
         default=False,
@@ -116,8 +126,12 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/pika-org/pika/issues/686
     conflicts("^fmt@10:", when="@:0.15 +cuda")
     conflicts("^fmt@10:", when="@:0.15 +rocm")
+    # https://github.com/pika-org/pika/pull/1074
+    conflicts("^fmt@11:", when="@:0.23")
     depends_on("spdlog@1.9.2:", when="@0.25:")
     depends_on("hwloc@1.11.5:")
+    # https://github.com/pika-org/pika/issues/1223
+    conflicts("^hwloc@2.11:", when="@:0.27 target=aarch64:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
     depends_on("jemalloc", when="malloc=jemalloc")
@@ -136,6 +150,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^tracy-client@0.9:", when="@:0.9")
     depends_on("whip@0.1: +rocm", when="@0.9: +rocm")
     depends_on("whip@0.1: +cuda", when="@0.9: +cuda")
+
+    depends_on("valgrind", when="+valgrind")
 
     with when("+rocm"):
         for val in ROCmPackage.amdgpu_targets:
@@ -187,6 +203,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
         spec, args = self.spec, []
 
         args += [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("PIKA_WITH_CXX_STANDARD", spec.variants["cxxstd"].value),
             self.define_from_variant("PIKA_WITH_EXAMPLES", "examples"),
             self.define_from_variant("PIKA_WITH_MALLOC", "malloc"),
@@ -196,6 +213,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PIKA_WITH_APEX", "apex"),
             self.define_from_variant("PIKA_WITH_TRACY", "tracy"),
             self.define_from_variant("PIKA_WITH_SANITIZERS", "sanitizers"),
+            self.define_from_variant("PIKA_WITH_VALGRIND", "valgrind"),
             self.define("PIKA_WITH_TESTS", self.run_tests),
             self.define_from_variant("PIKA_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
             self.define("BOOST_ROOT", spec["boost"].prefix),

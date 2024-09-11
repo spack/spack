@@ -5,7 +5,7 @@
 
 import ast
 
-import spack.directives
+import spack.directives_meta
 import spack.error
 import spack.package_base
 import spack.repo
@@ -82,7 +82,7 @@ class RemoveDirectives(ast.NodeTransformer):
                 node.value
                 and isinstance(node.value, ast.Call)
                 and isinstance(node.value.func, ast.Name)
-                and node.value.func.id in spack.directives.directive_names
+                and node.value.func.id in spack.directives_meta.directive_names
             )
             else node
         )

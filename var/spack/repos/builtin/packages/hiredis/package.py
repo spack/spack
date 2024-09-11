@@ -26,6 +26,9 @@ class Hiredis(MakefilePackage, CMakePackage):
     version("0.13.3", sha256="717e6fc8dc2819bef522deaca516de9e51b9dfa68fe393b7db5c3b6079196f78")
     version("0.13.2", sha256="b0cf73ebe039fe25ecaaa881acdda8bdc393ed997e049b04fc20865835953694")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     build_system(
         conditional("cmake", when="@1:"), conditional("makefile", when="@:0"), default="cmake"
     )

@@ -71,7 +71,7 @@ def unload(parser, args):
             "Cannot specify specs on command line when unloading all specs with '--all'"
         )
 
-    hashes = os.environ.get(uenv.spack_loaded_hashes_var, "").split(":")
+    hashes = os.environ.get(uenv.spack_loaded_hashes_var, "").split(os.pathsep)
     if args.specs:
         specs = [
             spack.cmd.disambiguate_spec_from_hashes(spec, hashes)

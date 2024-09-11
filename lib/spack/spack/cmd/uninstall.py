@@ -151,7 +151,8 @@ def installed_dependents(specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
         key=lambda s: s.dag_hash(),
     )
 
-    return [spec for spec in specs if is_installed(spec)]
+    with spack.store.STORE.db.read_transaction():
+        return [spec for spec in specs if is_installed(spec)]
 
 
 def dependent_environments(

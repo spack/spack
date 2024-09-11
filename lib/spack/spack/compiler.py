@@ -18,7 +18,6 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
 
-import spack.compilers
 import spack.error
 import spack.schema.environment
 import spack.spec
@@ -29,6 +28,9 @@ import spack.version
 from spack.util.environment import filter_system_paths
 
 __all__ = ["Compiler"]
+
+PATH_INSTANCE_VARS = ["cc", "cxx", "f77", "fc"]
+FLAG_INSTANCE_VARS = ["cflags", "cppflags", "cxxflags", "fflags"]
 
 
 @llnl.util.lang.memoized
@@ -278,11 +280,6 @@ class Compiler:
     @property
     def opt_flags(self):
         return ["-O", "-O0", "-O1", "-O2", "-O3"]
-
-    # Cray PrgEnv name that can be used to load this compiler
-    PrgEnv: Optional[str] = None
-    # Name of module used to switch versions of this compiler
-    PrgEnv_compiler: Optional[str] = None
 
     def __init__(
         self,
@@ -695,10 +692,6 @@ class Compiler:
         try:
             # load modules and set env variables
             for module in self.modules:
-                # On cray, mic-knl module cannot be loaded without cce module
-                # See: https://github.com/spack/spack/issues/3153
-                if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-                    spack.util.module_cmd.load_module("cce")
                 spack.util.module_cmd.load_module(module)
 
             # apply other compiler environment changes
@@ -709,6 +702,30 @@ class Compiler:
             # Restore environment regardless of whether inner code succeeded
             os.environ.clear()
             os.environ.update(backup_env)
+
+    def to_dict(self):
+        flags_dict = {fname: " ".join(fvals) for fname, fvals in self.flags.items()}
+        flags_dict.update(
+            {attr: getattr(self, attr, None) for attr in FLAG_INSTANCE_VARS if hasattr(self, attr)}
+        )
+        result = {
+            "spec": str(self.spec),
+            "paths": {attr: getattr(self, attr, None) for attr in PATH_INSTANCE_VARS},
+            "flags": flags_dict,
+            "operating_system": str(self.operating_system),
+            "target": str(self.target),
+            "modules": self.modules or [],
+            "environment": self.environment or {},
+            "extra_rpaths": self.extra_rpaths or [],
+        }
+
+        if self.enable_implicit_rpaths is not None:
+            result["implicit_rpaths"] = self.enable_implicit_rpaths
+
+        if self.alias:
+            result["alias"] = self.alias
+
+        return result
 
 
 class CompilerAccessError(spack.error.SpackError):

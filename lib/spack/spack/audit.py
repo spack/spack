@@ -39,9 +39,9 @@ import ast
 import collections
 import collections.abc
 import glob
-import inspect
 import io
 import itertools
+import os
 import pathlib
 import pickle
 import re
@@ -210,6 +210,11 @@ config_packages = AuditClass(
     group="configs", tag="CFG-PACKAGES", description="Sanity checks on packages.yaml", kwargs=()
 )
 
+#: Sanity checks on packages.yaml
+config_repos = AuditClass(
+    group="configs", tag="CFG-REPOS", description="Sanity checks on repositories", kwargs=()
+)
+
 
 @config_packages
 def _search_duplicate_specs_in_externals(error_cls):
@@ -248,40 +253,6 @@ def _search_duplicate_specs_in_externals(error_cls):
             details = []
 
         errors.append(error_cls(summary=error_msg, details=details))
-
-    return errors
-
-
-@config_packages
-def _deprecated_preferences(error_cls):
-    """Search package preferences deprecated in v0.21 (and slated for removal in v0.23)"""
-    # TODO (v0.23): remove this audit as the attributes will not be allowed in config
-    errors = []
-    packages_yaml = spack.config.CONFIG.get_config("packages")
-
-    def make_error(attribute_name, config_data, summary):
-        s = io.StringIO()
-        s.write("Occurring in the following file:\n")
-        dict_view = syaml.syaml_dict((k, v) for k, v in config_data.items() if k == attribute_name)
-        syaml.dump_config(dict_view, stream=s, blame=True)
-        return error_cls(summary=summary, details=[s.getvalue()])
-
-    if "all" in packages_yaml and "version" in packages_yaml["all"]:
-        summary = "Using the deprecated 'version' attribute under 'packages:all'"
-        errors.append(make_error("version", packages_yaml["all"], summary))
-
-    for package_name in packages_yaml:
-        if package_name == "all":
-            continue
-
-        package_conf = packages_yaml[package_name]
-        for attribute in ("compiler", "providers", "target"):
-            if attribute not in package_conf:
-                continue
-            summary = (
-                f"Using the deprecated '{attribute}' attribute " f"under 'packages:{package_name}'"
-            )
-            errors.append(make_error(attribute, package_conf, summary))
 
     return errors
 
@@ -348,6 +319,43 @@ def _wrongly_named_spec(error_cls):
             if regular_pkg_is_wrong or virtual_pkg_is_wrong:
                 summary = f"Wrong external spec detected for '{pkg_name}': {spec}"
                 errors.append(_make_config_error(entry, summary, error_cls=error_cls))
+    return errors
+
+
+@config_packages
+def _ensure_all_virtual_packages_have_default_providers(error_cls):
+    """All virtual packages must have a default provider explicitly set."""
+    configuration = spack.config.create()
+    defaults = configuration.get("packages", scope="defaults")
+    default_providers = defaults["all"]["providers"]
+    virtuals = spack.repo.PATH.provider_index.providers
+    default_providers_filename = configuration.scopes["defaults"].get_section_filename("packages")
+
+    return [
+        error_cls(f"'{virtual}' must have a default provider in {default_providers_filename}", [])
+        for virtual in virtuals
+        if virtual not in default_providers
+    ]
+
+
+@config_repos
+def _ensure_no_folders_without_package_py(error_cls):
+    """Check that we don't leave any folder without a package.py in repos"""
+    errors = []
+    for repository in spack.repo.PATH.repos:
+        missing = []
+        for entry in os.scandir(repository.packages_path):
+            if not entry.is_dir():
+                continue
+            package_py = pathlib.Path(entry.path) / spack.repo.package_file_name
+            if not package_py.exists():
+                missing.append(entry.path)
+        if missing:
+            summary = (
+                f"The '{repository.namespace}' repository misses a package.py file"
+                f" in the following folders"
+            )
+            errors.append(error_cls(summary=summary, details=[f"{x}" for x in missing]))
     return errors
 
 
@@ -482,7 +490,7 @@ def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
         name_definitions = collections.defaultdict(list)
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
-        for cls_item in inspect.getmro(pkg_cls):
+        for cls_item in pkg_cls.__mro__:
             for name in RESERVED_NAMES:
                 current_value = cls_item.__dict__.get(name)
                 if current_value is None:
@@ -511,7 +519,7 @@ def _ensure_all_package_names_are_lowercase(pkgs, error_cls):
     badname_regex, errors = re.compile(r"[_A-Z]"), []
     for pkg_name in pkgs:
         if badname_regex.search(pkg_name):
-            error_msg = "Package name '{}' is either lowercase or conatine '_'".format(pkg_name)
+            error_msg = f"Package name '{pkg_name}' should be lowercase and must not contain '_'"
             errors.append(error_cls(error_msg, []))
     return errors
 
@@ -791,7 +799,7 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                         return
                     error = error_cls(
                         f"{pkg_name}: {msg}",
-                        f"remove variants from '{spec}' in depends_on directive in {filename}",
+                        [f"remove variants from '{spec}' in depends_on directive in {filename}"],
                     )
                     errors.append(error)
 

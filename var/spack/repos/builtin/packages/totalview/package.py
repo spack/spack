@@ -45,13 +45,6 @@ class Totalview(Package):
 
     # Version 2022.3.6
     resource(
-        name="crayx86",
-        url="file://totalview_2022.3.6_linux_x86-64.tar",
-        destination=".",
-        sha256="a2639c52bfd4c7484b728d6a0158239074ff0e0c52208a5452b12b878016a519",
-        when="@2022.3.6 platform=cray target=x86_64:",
-    )
-    resource(
         name="x86-64",
         url="file://totalview.2022.3.6-linux-x86-64.tar",
         destination=".",
@@ -81,13 +74,6 @@ class Totalview(Package):
     )
 
     # Version 2022.2.13
-    resource(
-        name="crayx86",
-        url="file://totalview_2022.2.13_linux_x86-64.tar",
-        destination=".",
-        sha256="aebd11b837ce18b8200859ea762caa56e2cea346daa114f2841aa0f05a422309",
-        when="@2022.2.13 platform=cray target=x86_64:",
-    )
     resource(
         name="x86-64",
         url="file://totalview.2022.2.13-linux-x86-64.tar",
@@ -119,13 +105,6 @@ class Totalview(Package):
 
     # Version 2022.1.11
     resource(
-        name="crayx86",
-        url="file://totalview_2022.1.11_linux_x86-64.tar",
-        destination=".",
-        sha256="3ec9a7d702572dbbafa41726a036c94b549f9a5911ed6fd6aa55f7b377554bac",
-        when="@2022.1.11 platform=cray target=x86_64:",
-    )
-    resource(
         name="x86-64",
         url="file://totalview.2022.1.11-linux-x86-64.tar",
         destination=".",
@@ -155,13 +134,6 @@ class Totalview(Package):
     )
 
     # Version 2021.4.10
-    resource(
-        name="crayx86",
-        url="file://totalview_2021.4.10_linux_x86-64.tar",
-        destination=".",
-        sha256="7e5509b2cfb219100b0032304bdad7d422657c0736c386ba64bdb1bf11d10a1d",
-        when="@2021.4.10 platform=cray target=x86_64:",
-    )
     resource(
         name="x86-64",
         url="file://totalview.2021.4.10-linux-x86-64.tar",
@@ -230,8 +202,6 @@ class Totalview(Package):
             arg_list.extend(["-platform", "linux-x86-64"])
         elif spec.target.family == "x86_64" and spec.platform == "darwin":
             arg_list.extend(["-platform", "darwin-x86"])
-        elif spec.target.family == "x86_64" and spec.platform == "cray":
-            arg_list.extend(["-platform", "linux-x86-64"])
         elif spec.target.family == "x86":
             arg_list.extend(["-platform", "linux-x86"])
         elif spec.target.family == "aarch64":

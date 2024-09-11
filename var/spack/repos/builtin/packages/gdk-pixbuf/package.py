@@ -46,7 +46,9 @@ class GdkPixbuf(Package):
         deprecated=True,
     )
 
-    variant("x11", default=False, description="Enable X11 support")
+    depends_on("c", type="build")  # generated
+
+    variant("x11", default=False, description="Enable X11 support", when="@:2.41")
     variant("tiff", default=False, description="Enable TIFF support(partially broken)")
     # Man page creation was getting docbook errors, see issue #18853
     variant("man", default=False, description="Enable man page creation")
@@ -56,7 +58,6 @@ class GdkPixbuf(Package):
     depends_on("meson@0.45.0:", type="build", when="@2.37.0:")
     depends_on("ninja", type="build", when="@2.37.0:")
     depends_on("shared-mime-info", when="@2.36.8: platform=linux")
-    depends_on("shared-mime-info", when="@2.36.8: platform=cray")
     depends_on("pkgconfig", type="build")
     # Building the man pages requires libxslt and the Docbook stylesheets
     depends_on("libxslt", type="build", when="+man")
@@ -99,7 +100,7 @@ class GdkPixbuf(Package):
                 meson_args += ["-Dtests={0}".format(self.run_tests)]
             # Based on suggestion by luigi-calori and the fixup shown by lee218llnl:
             # https://github.com/spack/spack/pull/27254#issuecomment-974464174
-            if "+x11" in spec:
+            if spec.satisfies("+x11"):
                 if self.version >= Version("2.42"):
                     raise InstallError("+x11 is not valid for {0}".format(self.version))
                 meson_args += ["-Dx11=true"]

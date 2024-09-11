@@ -44,6 +44,9 @@ class AoclSparse(CMakePackage):
     version("3.0", sha256="1d04ba16e04c065051af916b1ed9afce50296edfa9b1513211a7378e1d6b952e")
     version("2.2", sha256="33c2ed6622cda61d2613ee63ff12c116a6cd209c62e54307b8fde986cd65f664")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Build shared library")
     variant("ilp64", default=False, description="Build with ILP64 support")
     variant("examples", default=False, description="Build sparse examples")
@@ -118,7 +121,7 @@ class AoclSparse(CMakePackage):
                 "-DAOCL_LIBFLAME_INCLUDE_DIR={0}".format(self.spec["amdlibflame"].prefix.include)
             )
 
-        if "@4.2:" in self.spec:
+        if self.spec.satisfies("@4.2:"):
             args.append(f"-DAOCL_UTILS_LIB={self.spec['aocl-utils'].libs}")
             args.append(
                 "-DAOCL_UTILS_INCLUDE_DIR={0}".format(self.spec["aocl-utils"].prefix.include)

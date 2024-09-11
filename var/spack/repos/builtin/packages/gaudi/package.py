@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Gaudi(CMakePackage):
@@ -17,6 +16,8 @@ class Gaudi(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("38.3", sha256="47e8c65ea446656d2dae54a32205525e08257778cf80f9f029cd244d6650486e")
+    version("38.2", sha256="08759b1398336987ad991602e37079f0744e8d8e4e3d5df2d253b8dedf925068")
     version("38.1", sha256="79d42833edcebc2099f91badb6f72708640c05f678cc4521a86e857f112486dc")
     version("38.0", sha256="52f2733fa0af760c079b3438bb9c7e36b28ea704f78b0085458e1918c11e1653")
     version("37.2", sha256="9b866caab46e182de98b59eddbde80d6fa0e670fe4a35906f1518b04bd99b2d2")
@@ -39,6 +40,8 @@ class Gaudi(CMakePackage):
     version("36.0", sha256="8a0458cef5b616532f9db7cca9fa0e892e602b64c9e93dc0cc6d972e03034830")
     version("35.0", sha256="c01b822f9592a7bf875b9997cbeb3c94dea97cb13d523c12649dbbf5d69b5fa6")
 
+    depends_on("cxx", type="build")  # generated
+
     maintainers("drbenmorgan", "vvolkl", "jmcarcell")
 
     variant("aida", default=False, description="Build AIDA interfaces support")
@@ -53,11 +56,6 @@ class Gaudi(CMakePackage):
     variant("vtune", default=False, description="Build with Intel VTune profiler support")
     variant("xercesc", default=False, description="Build with Xerces-C XML support")
 
-    # only build subdirectory GaudiExamples when +examples
-    patch("build_testing.patch", when="@:34")
-    # fixes for the cmake config which could not find newer boost versions
-    patch("link_target_fixes.patch", when="@33.0:34")
-    patch("link_target_fixes32.patch", when="@:32.2")
     patch("fmt_fix.patch", when="@36.6:36.12 ^fmt@10:")
     # fix issues with catch2 3.1 and above
     patch(
@@ -74,22 +72,33 @@ class Gaudi(CMakePackage):
 
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
-    depends_on("boost@1.67.0: +python")
+    # The boost components that are required for Gaudi
+    boost_libs = "+".join(
+        [
+            "system",
+            "filesystem",
+            "regex",
+            "thread",
+            "python",
+            "test",
+            "program_options",
+            "log",
+            "graph",
+        ]
+    )
+    depends_on(f"boost@1.70: +{boost_libs}", when="@35:")
+    depends_on(f"boost@1.70: +{boost_libs}+fiber", when="@39:")
 
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
     depends_on("clhep")
     depends_on("cmake", type="build")
     depends_on("cppgsl")
-    depends_on("fmt")
     depends_on("fmt@:8", when="@:36.9")
+    depends_on("fmt@:10")
     depends_on("intel-tbb@:2020.3", when="@:37.0")
     depends_on("tbb", when="@37.1:")
     depends_on("uuid")
     depends_on("nlohmann-json")
-    depends_on("python", type=("build", "run"))
+    depends_on("python +dbm", type=("build", "run"))
     depends_on("py-networkx", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run", "test"))
@@ -104,7 +113,6 @@ class Gaudi(CMakePackage):
         depends_on(pv[0], when=pv[1] + " +examples")
 
     # Adding these dependencies triggers the build of most optional components
-    depends_on("cppgsl", when="+cppunit")
     depends_on("cppunit", when="+cppunit")
     depends_on("doxygen +graphviz", when="+docs")
     depends_on("gperftools", when="+gperftools")
