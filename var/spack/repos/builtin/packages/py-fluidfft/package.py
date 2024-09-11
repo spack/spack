@@ -26,11 +26,11 @@ class PyFluidfft(PythonPackage):
 
     with default_args(type="build"):
         depends_on("py-meson-python")
-        depends_on("py-pythran")
+        depends_on("py-pythran@0.9.7:")
 
     with default_args(type="run"):
         depends_on("py-fluiddyn@0.2.3:")
-        depends_on("py-pyfftw")
+        depends_on("py-pyfftw@0.10.4:")
         depends_on("py-importlib_metadata", when="^python@:3.10")
 
     def config_settings(self, spec, prefix):

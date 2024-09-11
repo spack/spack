@@ -26,7 +26,7 @@ class PyFluidfftP3dfft(PythonPackage):
 
     with default_args(type="build"):
         depends_on("py-meson-python")
-        depends_on("py-transonic")
+        depends_on("py-transonic@0.6.4:")
         depends_on("py-fluidfft-builder")
 
     depends_on("py-fluidfft", type="run")

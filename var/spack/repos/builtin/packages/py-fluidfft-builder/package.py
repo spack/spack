@@ -17,4 +17,4 @@ class PyFluidfftBuilder(PythonPackage):
     version("0.0.2", sha256="c0af9ceca27ae3a00ccf2f160703be9e394d8b886b8a02653b6c0a12a4f54a90")
 
     depends_on("python@3.9:", type=("build", "run"))
-    depends_on("py-flit-core", type="build")
+    depends_on("py-flit-core@3.2:3", type="build")
