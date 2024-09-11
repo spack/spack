@@ -82,10 +82,7 @@ def compiler_find(args):
     """
     paths = args.add_paths or None
     new_compilers = spack.compilers.find_compilers(
-        path_hints=paths,
-        scope=args.scope,
-        mixed_toolchain=args.mixed_toolchain,
-        max_workers=args.jobs,
+        path_hints=paths, scope=args.scope, mixed_toolchain=args.mixed_toolchain
     )
     if new_compilers:
         n = len(new_compilers)
