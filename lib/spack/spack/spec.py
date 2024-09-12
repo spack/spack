@@ -4177,7 +4177,7 @@ class Spec:
             and self._virtuals_provided(self_root) <= other._virtuals_provided(other_root)
         )
 
-    def _locally_splice(self, replacement, other):
+    def _splice_detach_and_add_dependents(self, replacement, other):
         """Helper method for Spec._intransitive_splice.
 
         replacement is a copy of other with all deps cleared. Other is the argument from splice."""
@@ -4202,42 +4202,20 @@ class Spec:
                 edge.depflag = dt.BUILD
                 parent_edge[0].depflag = dt.BUILD
             else:
-                edge.parent._dependencies[self.name].remove(edge)
-                self._dependents[edge.parent.name].remove(edge)
+                edge.parent._dependencies.edges[self.name].remove(edge)
+                self._dependents.edges[edge.parent.name].remove(edge)
 
             if other_dep:
                 edge.parent._add_dependency(replacement, depflag=other_dep, virtuals=edge.virtuals)
 
-        # Take build-only deps from other -- FUTURE WORK: node splitting for all build deps
-        for edge in other.edges_to_dependencies():
-            if edge.depflag == dt.BUILD:  # build-only dep
-                replacement._add_dependency(
-                    edge.spec.copy(), depflag=edge.depflag, virtuals=edge.virtuals
-                )
-
         # Detach all dependent edges into node
-        for edge in self.edges_to_dependencies():
+        for dep in self.dependencies(deptype=dt.LINK | dt.RUN):
             # Remove the dependency's dependent references to node
-            edge.spec._dependents.edges[self.name] = [
-                e for e in edge.spec._dependents[self.name] if e.parent is not self
-            ]
-
-        # recreate link/run edges from node on replacement
-        for edge in self.edges_to_dependencies(depflag=dt.LINK | dt.RUN):
-            # Recreate any analogous edges from other in replacement, using dep from
-            # node as the child
-            analogues = [
-                analogue
-                for analogue in other.edges_to_dependencies()
-                if (
-                    analogue.spec._splice_match(edge.spec, self_root=other, other_root=self)
-                    and analogue.depflag & (dt.LINK | dt.RUN)
-                )
-            ]
-            for analogue in analogues:
-                replacement._add_dependency(
-                    edge.spec, depflag=(analogue.depflag & ~dt.BUILD), virtuals=analogue.virtuals
-                )
+            for edge in dep._dependents[self.name]:
+                if edge.depflag & dt.BUILD:
+                    edge.depflag = dt.BUILD
+                else:
+                    dep._dependents.edges.remove(edge)
 
     def _splice_add_dependencies(self, spec, node, node_from_other, other):
         for edge in node_from_other.edges_to_dependencies():
@@ -4245,12 +4223,16 @@ class Spec:
             analogue = edge.spec.copy()
             new_node = True
             # Find an analogous node in spec
-            for dep in spec.traverse(root=False, deptype=dt.LINK | dt.RUN):
-                # We're effectively splicing in the reverse -- node would splice into other
-                if dep._splice_match(edge.spec, self_root=other, other_root=self):
-                    analogue = dep
-                    new_node = False
-                    break
+            analogues = [
+                dep
+                for dep in spec.traverse(root=False, deptype=dt.LINK | dt.RUN)
+                # We're effectively splicing in reverse -- dep is splicing into other
+                if dep._splice_match(edge.spec, self_root=other, other_root=self)
+            ]
+            if analogues:
+                # TODO: find best match instead of first match
+                analogue = analogues[0]
+                new_node = False
 
             # Keep build dependencies as-is
             if edge.depflag & dt.BUILD:
@@ -4290,16 +4272,11 @@ class Spec:
         for node in spec.traverse(deptype=dt.LINK | dt.RUN):
             if node._splice_match(other, self_root=spec, other_root=other):
                 # This handles all edges into replacement
-                # All edges out of replacement into spec
                 # updating build_spec pointers for dependents
-                node._locally_splice(replacement, other)
+                node._splice_detach_and_add_dependents(replacement, other)
 
-        # All that is left is to attach all nodes from other that are not present in self.
+        # This handles all edges out of replacement and any nodes unique to other that are added
         self._splice_add_dependencies(spec, replacement, other, other)
-
-        # Update build_spec information for replacement if it was modified
-        if replacement._dependencies != other._dependencies:
-            replacement._build_spec = other
 
         return spec
 
