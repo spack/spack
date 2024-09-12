@@ -17,12 +17,11 @@ class Ollama(GoPackage, CudaPackage):
 
     # A shell script is run by `go generate` which assumes source is in a git
     # repo.  So we must use git VCS and not tarballs and defeat source caching.
-    vargs = dict(submodules=True, no_cache=True)
-
-    version("0.3.9", commit="a1cef4d0a5f31280ea82b350605775931a6163cb", **vargs)
-    version("0.1.31", commit="dc011d16b9ff160c0be3829fc39a43054f0315d0", **vargs)
-    # This is the last verified non-preview version as of 20240413
-    version("0.1.30", commit="756c2575535641f1b96d94b4214941b90f4c30c7", **vargs)
+    with default_args(submodules=True, no_cache=True):
+        version("0.3.9", commit="a1cef4d0a5f31280ea82b350605775931a6163cb")
+        version("0.1.31", commit="dc011d16b9ff160c0be3829fc39a43054f0315d0")
+        # This is the last verified non-preview version as of 20240413
+        version("0.1.30", commit="756c2575535641f1b96d94b4214941b90f4c30c7")
 
     variant("cuda", default=False, description="Add support for CUDA")
 
@@ -37,7 +36,7 @@ class Ollama(GoPackage, CudaPackage):
     depends_on("cuda", when="+cuda")
 
     def setup_build_environment(self, env):
-        if "+cuda" in self.spec:
+        if self.spec.satisfies("+cuda"):
             # These variables are consumed by gen_linux.sh which is called by
             # "go generate".
             cuda_prefix = self.spec["cuda"].prefix
