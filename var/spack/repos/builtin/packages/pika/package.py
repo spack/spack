@@ -69,11 +69,12 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
         description="Use the specified C++ standard when building",
     )
 
+    mallocs = ("system", "jemalloc", "mimalloc", "tbbmalloc", "tcmalloc")
     variant(
         "malloc",
         default="mimalloc",
         description="Define which allocator will be linked in",
-        values=("system", "jemalloc", "mimalloc", "tbbmalloc", "tcmalloc"),
+        values=mallocs,
     )
 
     default_generic_coroutines = True
@@ -137,6 +138,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("jemalloc", when="malloc=jemalloc")
     depends_on("mimalloc", when="malloc=mimalloc")
     depends_on("tbb", when="malloc=tbbmalloc")
+    for malloc in filter(lambda x: x != "system", mallocs):
+        conflicts("^apex +gperftools", when=f"+apex malloc={malloc}")
+        conflicts("^apex +jemalloc", when=f"+apex malloc={malloc}")
 
     depends_on("apex", when="+apex")
     depends_on("cuda@11:", when="+cuda")
