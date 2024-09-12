@@ -58,6 +58,6 @@ class Fio(AutotoolsPackage):
 
     @run_after("build")
     def build_docs(self):
-        if "+doc" in self.spec:
+        if self.spec.satisfies("+doc"):
             make("-C", "doc", "html")
             make("-C", "doc", "man")

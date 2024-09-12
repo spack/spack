@@ -104,6 +104,7 @@ from spack.package_base import (
 from spack.spec import InvalidSpecDetected, Spec
 from spack.util.cpus import determine_number_of_jobs
 from spack.util.executable import *
+from spack.util.filesystem import file_command, fix_darwin_install_name, mime_type
 from spack.variant import (
     any_combination_of,
     auto_or_any_combination_of,

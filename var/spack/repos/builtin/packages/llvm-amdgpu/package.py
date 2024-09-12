@@ -107,6 +107,9 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
 
     conflicts("^cmake@3.19.0")
 
+    # https://github.com/spack/spack/issues/45746
+    conflicts("^ninja@1.12:", when="@:6.0")
+
     root_cmakelists_dir = "llvm"
     install_targets = ["clang-tidy", "install"]
 
@@ -257,7 +260,7 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
             args.append(self.define("LLVM_ENABLE_PROJECTS", llvm_projects))
             args.append(self.define("LLVM_ENABLE_RUNTIMES", llvm_runtimes))
             args.append(self.define("LLVM_ENABLE_LIBCXX", "OFF"))
-            args.append(self.define("CLANG_LINK_FLANG_LEGACY", False))
+            args.append(self.define("CLANG_LINK_FLANG_LEGACY", True))
             args.append(self.define("CMAKE_CXX_STANDARD", 17))
             args.append(self.define("FLANG_INCLUDE_DOCS", False))
             args.append(self.define("LLVM_BUILD_DOCS", "ON"))
