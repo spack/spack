@@ -69,11 +69,7 @@ class Elsi(CMakePackage, CudaPackage):
     variant(
         "internal_elpa_version",
         default="2020",
-        values=(
-            "2020",
-            "2021",
-            conditional("2023", "2023_11", "2024", when="@:2.11"),
-        ),
+        values=("2020", "2021", conditional("2023", "2023_11", "2024", when="@:2.11")),
         description="Internal ELPA version",
         multi=False,
     )
@@ -105,6 +101,7 @@ class Elsi(CMakePackage, CudaPackage):
         depends_on("pexsi+fortran")
         depends_on("superlu-dist+cuda", when="+cuda")
         depends_on("superlu-dist~cuda", when="~cuda")
+        conflicts("^pexsi@2:", when="@:2.11")
     with when("+use_external_omm"):
         depends_on("omm")
         depends_on("matrix-switch")  # Direct dependency
@@ -112,8 +109,6 @@ class Elsi(CMakePackage, CudaPackage):
         depends_on("dla-future-fortran")
         conflicts("dla-future~cuda", when="+cuda")
         conflicts("dla-future+cuda", when="~cuda")
-
-    conflicts("^pexsi@2:", when="@:2.11")
 
     def cmake_args(self):
         libs_names = ["scalapack", "lapack", "blas"]
