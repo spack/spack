@@ -1448,10 +1448,10 @@ def verify_checksum(file: str, digest: str, url: str, effective_url: Optional[st
         size, contents = fs.filesummary(file)
         long_msg = (
             f"Expected {digest} but got {checker.sum}. "
-            f"File size = {size} bytes. Contents = {contents!r}"
+            f"File size = {size} bytes. Contents = {contents!r}. "
             f"URL = {url}"
         )
-        if effective_url != url:
+        if effective_url and effective_url != url:
             long_msg += f", redirected to = {effective_url}"
         raise ChecksumError(f"{checker.hash_name} checksum failed for {file}", long_msg)
 
