@@ -847,12 +847,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         Arguments:
             name: name of the variant definition to get
         """
-        vdefs = [v for _, v in self.variant_definitions(name)]
-        if not vdefs:
+        try:
+            highest_to_lowest = reversed(self.variant_definitions(name))
+            return next(vdef for when, vdef in highest_to_lowest if self.spec.satisfies(when))
+        except StopIteration:
             raise ValueError(f"No variant '{name}' on spec: {self.spec}")
-
-        # return the definition with highest precedence
-        return vdefs[-1]
 
     @classmethod
     def possible_dependencies(
