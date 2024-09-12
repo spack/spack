@@ -4194,7 +4194,7 @@ class Spec:
         for edge in self.edges_from_dependents():
             index = edge.parent._dependencies[self.name].index(edge)
             build_dep = edge.depflag & dt.BUILD
-            other_dep = edge.depflag & dt.LINK | dt.RUN | dt.TEST
+            other_dep = edge.depflag & ~dt.BUILD
             if build_dep:
                 parent_edge = [e for e in edge.parent._dependencies[self.name] if e.spec is self]
                 assert len(parent_edge) == 1
