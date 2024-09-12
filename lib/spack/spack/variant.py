@@ -37,12 +37,14 @@ reserved_names = [
 special_variant_values = [None, "none", "*"]
 
 
-class ValidValue:
+class _ValueValidator:
+    """Callable to validate whether a value is present in a set of values."""
+
     def __init__(self, values):
         self._values = values
 
-    def __call__(self, v):
-        return v in self._values
+    def __call__(self, value):
+        return value in self._values
 
     def __eq__(self, other):
         return self._values == other._values
@@ -136,7 +138,7 @@ class Variant:
         else:
             # Otherwise, assume values is the set of allowed explicit values
             self.values = _flatten(values)
-            self.single_value_validator = ValidValue(self.values)
+            self.single_value_validator = _ValueValidator(self.values)
 
         self.multi = multi
         self.group_validator = validator
