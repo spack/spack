@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import inspect
-
 import llnl.util.filesystem as fs
 
 import spack.builder
@@ -72,7 +70,7 @@ class GoBuilder(BaseBuilder):
     def build_args(self):
         """Arguments for ``go build``."""
         # Pass ldflags -s = --strip-all and -w = --no-warnings by default
-        return ["-ldflags", "-s -w", "-o", f"{self.pkg.name}"]
+        return ["-modcacherw", "-ldflags", "-s -w", "-o", f"{self.pkg.name}"]
 
     @property
     def check_args(self):
@@ -82,7 +80,7 @@ class GoBuilder(BaseBuilder):
     def build(self, pkg, spec, prefix):
         """Runs ``go build`` in the source directory"""
         with fs.working_dir(self.build_directory):
-            inspect.getmodule(pkg).go("build", *self.build_args)
+            pkg.module.go("build", *self.build_args)
 
     def install(self, pkg, spec, prefix):
         """Install built binaries into prefix bin."""
@@ -95,4 +93,4 @@ class GoBuilder(BaseBuilder):
     def check(self):
         """Run ``go test .`` in the source directory"""
         with fs.working_dir(self.build_directory):
-            inspect.getmodule(self.pkg).go("test", *self.check_args)
+            self.pkg.module.go("test", *self.check_args)

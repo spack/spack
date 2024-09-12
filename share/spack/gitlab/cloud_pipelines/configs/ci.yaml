@@ -2,7 +2,6 @@ ci:
   target: gitlab
 
   broken-tests-packages:
-    - gptune
     - superlu-dist    # srun -n 4 hangs
     - papyrus
 

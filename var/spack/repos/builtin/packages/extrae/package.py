@@ -51,6 +51,10 @@ class Extrae(AutotoolsPackage):
     version("3.7.1", sha256="c83ddd18a380c9414d64ee5de263efc6f7bac5fe362d5b8374170c7f18360378")
     version("3.4.1", sha256="77bfec16d6b5eee061fbaa879949dcef4cad28395d6a546b1ae1b9246f142725")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
@@ -90,7 +94,7 @@ class Extrae(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        if "^intel-oneapi-mpi" in spec:
+        if spec.satisfies("^[virtuals=mpi] intel-oneapi-mpi"):
             mpiroot = spec["mpi"].component_prefix
         else:
             mpiroot = spec["mpi"].prefix
@@ -123,7 +127,7 @@ class Extrae(AutotoolsPackage):
             else ["--without-cuda"]
         )
 
-        if "+cupti" in self.spec:
+        if self.spec.satisfies("+cupti"):
             cupti_h = find_headers("cupti", spec["cuda"].prefix, recursive=True)
             cupti_dir = os.path.dirname(os.path.dirname(cupti_h[0]))
 

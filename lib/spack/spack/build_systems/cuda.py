@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+from typing import Iterable, List
+
 import spack.variant
 from spack.directives import conflicts, depends_on, variant
 from spack.multimethod import when
@@ -44,6 +47,7 @@ class CudaPackage(PackageBase):
         "87",
         "89",
         "90",
+        "90a",
     )
 
     # FIXME: keep cuda and cuda_arch separate to make usage easier until
@@ -69,6 +73,27 @@ class CudaPackage(PackageBase):
             ).format(s)
             for s in arch_list
         ]
+
+    @staticmethod
+    def compute_capabilities(arch_list: Iterable[str]) -> List[str]:
+        """Adds a decimal place to each CUDA arch.
+
+        >>> compute_capabilities(['90', '90a'])
+        ['9.0', '9.0a']
+
+        Args:
+            arch_list: A list of integer strings, optionally followed by a suffix.
+
+        Returns:
+            A list of float strings, optionally followed by a suffix
+        """
+        pattern = re.compile(r"(\d+)")
+        capabilities = []
+        for arch in arch_list:
+            _, number, letter = re.split(pattern, arch)
+            number = "{0:.1f}".format(float(number) / 10.0)
+            capabilities.append(number + letter)
+        return capabilities
 
     depends_on("cuda", when="+cuda")
 
@@ -124,6 +149,8 @@ class CudaPackage(PackageBase):
         # minimum supported versions
         conflicts("%gcc@:4", when="+cuda ^cuda@11.0:")
         conflicts("%gcc@:5", when="+cuda ^cuda@11.4:")
+        conflicts("%gcc@:7.2", when="+cuda ^cuda@12.4:")
+        conflicts("%clang@:6", when="+cuda ^cuda@12.2:")
 
         # maximum supported version
         # NOTE:
@@ -136,7 +163,7 @@ class CudaPackage(PackageBase):
         conflicts("%gcc@11.2:", when="+cuda ^cuda@:11.5")
         conflicts("%gcc@12:", when="+cuda ^cuda@:11.8")
         conflicts("%gcc@13:", when="+cuda ^cuda@:12.3")
-        conflicts("%gcc@14:", when="+cuda ^cuda@:12.5")
+        conflicts("%gcc@14:", when="+cuda ^cuda@:12.6")
         conflicts("%clang@12:", when="+cuda ^cuda@:11.4.0")
         conflicts("%clang@13:", when="+cuda ^cuda@:11.5")
         conflicts("%clang@14:", when="+cuda ^cuda@:11.7")
@@ -144,6 +171,7 @@ class CudaPackage(PackageBase):
         conflicts("%clang@16:", when="+cuda ^cuda@:12.1")
         conflicts("%clang@17:", when="+cuda ^cuda@:12.3")
         conflicts("%clang@18:", when="+cuda ^cuda@:12.5")
+        conflicts("%clang@19:", when="+cuda ^cuda@:12.6")
 
         # https://gist.github.com/ax3l/9489132#gistcomment-3860114
         conflicts("%gcc@10", when="+cuda ^cuda@:11.4.0")
@@ -211,12 +239,16 @@ class CudaPackage(PackageBase):
         conflicts("%intel@19.0:", when="+cuda ^cuda@:10.0")
         conflicts("%intel@19.1:", when="+cuda ^cuda@:10.1")
         conflicts("%intel@19.2:", when="+cuda ^cuda@:11.1.0")
+        conflicts("%intel@2021:", when="+cuda ^cuda@:11.4.0")
 
         # XL is mostly relevant for ppc64le Linux
         conflicts("%xl@:12,14:", when="+cuda ^cuda@:9.1")
         conflicts("%xl@:12,14:15,17:", when="+cuda ^cuda@9.2")
         conflicts("%xl@:12,17:", when="+cuda ^cuda@:11.1.0")
 
+        # PowerPC.
+        conflicts("target=ppc64le", when="+cuda ^cuda@12.5:")
+
         # Darwin.
         # TODO: add missing conflicts for %apple-clang cuda@:10
-        conflicts("platform=darwin", when="+cuda ^cuda@11.0.2: ")
+        conflicts("platform=darwin", when="+cuda ^cuda@11.0.2:")

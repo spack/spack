@@ -53,6 +53,9 @@ class Duckdb(MakefilePackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("python@3.7:")
     depends_on("cmake", type="build")
     depends_on("gmake", type="build")
@@ -93,7 +96,7 @@ class Duckdb(MakefilePackage):
     )
 
     def setup_build_environment(self, env):
-        if "+ninjabuild" in self.spec:
+        if self.spec.satisfies("+ninjabuild"):
             env.set("GEN", "ninja")
         variant_flags = [
             "autocomplete",

@@ -22,6 +22,9 @@ class Qpdf(CMakePackage):
 
     version("11.9.0", sha256="9f5d6335bb7292cc24a7194d281fc77be2bbf86873e8807b85aeccfbff66082f")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "crypto",
         values=["openssl", "gnutls", "native", "implicit"],

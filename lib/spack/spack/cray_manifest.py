@@ -14,12 +14,14 @@ import jsonschema.exceptions
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.compilers
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as hash_types
 import spack.platforms
 import spack.repo
 import spack.spec
+import spack.store
 from spack.schema.cray_manifest import schema as manifest_schema
 
 #: Cray systems can store a Spack-compatible description of system
@@ -237,7 +239,7 @@ def read(path, apply_updates):
                 tty.debug(f"Include this\n{traceback.format_exc()}")
     if apply_updates:
         for spec in specs.values():
-            spack.store.STORE.db.add(spec, directory_layout=None)
+            spack.store.STORE.db.add(spec)
 
 
 class ManifestValidationError(spack.error.SpackError):

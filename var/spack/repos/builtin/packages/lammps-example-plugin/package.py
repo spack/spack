@@ -43,6 +43,8 @@ class LammpsExamplePlugin(CMakePackage):
         preferred=True,
     )
 
+    depends_on("cxx", type="build")
+
     def url_for_version(self, version):
         split_ver = str(version).split(".")
         vdate = dt.datetime.strptime(split_ver[0], "%Y%m%d")

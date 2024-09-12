@@ -46,6 +46,10 @@ class DarshanUtil(AutotoolsPackage):
     version("3.1.0", sha256="b847047c76759054577823fbe21075cfabb478cdafad341d480274fb1cef861c")
     version("3.0.0", sha256="95232710f5631bbf665964c0650df729c48104494e887442596128d189da43e0")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("bzip2", default=False, description="Enable bzip2 compression")
     variant(
         "apmpi",
@@ -80,12 +84,12 @@ class DarshanUtil(AutotoolsPackage):
 
         extra_args.append("CC=%s" % self.compiler.cc)
         extra_args.append("--with-zlib=%s" % spec["zlib-api"].prefix)
-        if "+apmpi" in spec:
+        if spec.satisfies("+apmpi"):
             if self.version < Version("3.3.2"):
                 extra_args.append("--enable-autoperf-apmpi")
             else:
                 extra_args.append("--enable-apmpi-mod")
-        if "+apxc" in spec:
+        if spec.satisfies("+apxc"):
             if self.version < Version("3.3.2"):
                 extra_args.append("--enable-autoperf-apxc")
             else:
@@ -109,7 +113,7 @@ class DarshanUtil(AutotoolsPackage):
     @run_after("install")
     def _copy_test_inputs(self):
         test_inputs = [self.tests_log_path]
-        self.cache_extra_test_sources(test_inputs)
+        cache_extra_test_sources(self, test_inputs)
 
     def test_parser(self):
         """process example log and check counters"""

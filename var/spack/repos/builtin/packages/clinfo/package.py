@@ -28,6 +28,8 @@ class Clinfo(MakefilePackage):
         "2.2.18.04.06", sha256="f77021a57b3afcdebc73107e2254b95780026a9df9aa4f8db6aff11c03f0ec6c"
     )
 
+    depends_on("c", type="build")  # generated
+
     depends_on("opencl")
 
     def install(self, spec, prefix):
