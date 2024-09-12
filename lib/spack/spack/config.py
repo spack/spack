@@ -1090,7 +1090,7 @@ def validate(
 
 
 def read_config_file(
-    filename: str, schema: Optional[YamlConfigDict] = None
+    path: str, schema: Optional[YamlConfigDict] = None
 ) -> Optional[YamlConfigDict]:
     """Read a YAML configuration file.
 
@@ -1100,21 +1100,9 @@ def read_config_file(
     # to preserve flexibility in calling convention (don't need to provide
     # schema when it's not necessary) while allowing us to validate against a
     # known schema when the top-level key could be incorrect.
-
-    if not os.path.exists(filename):
-        # Ignore nonexistent files.
-        tty.debug(f"Skipping nonexistent config path {filename}", level=3)
-        return None
-
-    elif not os.path.isfile(filename):
-        raise ConfigFileError(f"Invalid configuration. {filename} exists but is not a file.")
-
-    elif not os.access(filename, os.R_OK):
-        raise ConfigFileError(f"Config file is not readable: {filename}")
-
     try:
-        tty.debug(f"Reading config from file {filename}")
-        with open(filename) as f:
+        with open(path) as f:
+            tty.debug(f"Reading config from file {path}")
             data = syaml.load_config(f)
 
         if data:
@@ -1125,14 +1113,19 @@ def read_config_file(
 
         return data
 
-    except StopIteration:
-        raise ConfigFileError(f"Config file is empty or is not a valid YAML dict: {filename}")
+    except FileNotFoundError:
+        # Ignore nonexistent files.
+        tty.debug(f"Skipping nonexistent config path {path}", level=3)
+        return None
+
+    except OSError as e:
+        raise ConfigFileError(f"Path is not a file or is not readable: {path}: {str(e)}") from e
+
+    except StopIteration as e:
+        raise ConfigFileError(f"Config file is empty or is not a valid YAML dict: {path}") from e
 
     except syaml.SpackYAMLError as e:
         raise ConfigFileError(str(e)) from e
-
-    except OSError as e:
-        raise ConfigFileError(f"Error reading configuration file {filename}: {str(e)}") from e
 
 
 def _override(string: str) -> bool:

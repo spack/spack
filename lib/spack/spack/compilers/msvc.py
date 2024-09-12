@@ -224,6 +224,30 @@ class Msvc(Compiler):
         self.msvc_compiler_environment = CmdCall(*env_cmds)
 
     @property
+    def cxx11_flag(self):
+        return "/std:c++11"
+
+    @property
+    def cxx14_flag(self):
+        return "/std:c++14"
+
+    @property
+    def cxx17_flag(self):
+        return "/std:c++17"
+
+    @property
+    def cxx20_flag(self):
+        return "/std:c++20"
+
+    @property
+    def c11_flag(self):
+        return "/std:c11"
+
+    @property
+    def c17_flag(self):
+        return "/std:c17"
+
+    @property
     def msvc_version(self):
         """This is the VCToolset version *NOT* the actual version of the cl compiler
         For CL version, query `Msvc.cl_version`"""

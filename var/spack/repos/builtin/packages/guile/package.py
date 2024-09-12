@@ -70,12 +70,12 @@ class Guile(AutotoolsPackage, GNUMirrorPackage):
             "--with-libintl-prefix={0}".format(spec["gettext"].prefix),
         ]
 
-        if "threads=none" in spec:
+        if spec.satisfies("threads=none"):
             config_args.append("--without-threads")
         else:
             config_args.append("--with-threads")
 
-        if "+readline" in spec:
+        if spec.satisfies("+readline"):
             config_args.append("--with-libreadline-prefix={0}".format(spec["readline"].prefix))
         else:
             config_args.append("--without-libreadline-prefix")

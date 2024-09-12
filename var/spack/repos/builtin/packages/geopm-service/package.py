@@ -141,7 +141,7 @@ class GeopmService(AutotoolsPackage):
 
         args += self.enable_or_disable("levelzero")
         args += self.enable_or_disable("nvml")
-        if "+nvml" in self.spec:
+        if self.spec.satisfies("+nvml"):
             args += [
                 "--with-nvml="
                 + join_path(

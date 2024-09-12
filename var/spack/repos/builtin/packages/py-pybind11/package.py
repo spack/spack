@@ -27,6 +27,11 @@ class PyPybind11(CMakePackage, PythonExtension):
     maintainers("ax3l")
 
     version("master", branch="master")
+    version("2.13.4", sha256="efc901aa0aab439a3fea6efeaf930b5a349fb06394bf845c64ce15a9cf8f0240")
+    version("2.13.3", sha256="6e7a84ec241544f2f5e30c7a82c09c81f0541dd14e9d9ef61051e07105f9c445")
+    version("2.13.2", sha256="50eebef369d28f07ce1fe1797f38149e5928817be8e539239f2aadfd95b227f3")
+    version("2.13.1", sha256="51631e88960a8856f9c497027f55c9f2f9115cafb08c0005439838a05ba17bfc")
+    version("2.13.0", sha256="8ac2bd138ea3c12683d3496361af6bee0f7754f86bf050e6c61e3966de688215")
     version("2.12.0", sha256="bf8f242abd1abcd375d516a7067490fb71abd79519a282d22b6e4d19282185a7")
     version("2.11.1", sha256="d475978da0cdc2d43b73f30910786759d593a9d8ee05b1b6846d1eb16c6d2e0c")
     version("2.11.0", sha256="7af30a84c6810e721829c4646e31927af9d8861e085aa5dd37c3c8b8169fcda1")
@@ -76,6 +81,9 @@ class PyPybind11(CMakePackage, PythonExtension):
     conflicts("%gcc@:4.7")
     conflicts("%msvc@:16")
     conflicts("%intel@:17")
+
+    # https://github.com/pybind/pybind11/pull/5208
+    conflicts("%gcc@14:", when="@:2.13.1")
 
     # https://github.com/pybind/pybind11/pull/1995
     @when("@:2.4")

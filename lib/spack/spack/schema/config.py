@@ -75,7 +75,6 @@ properties: Dict[str, Any] = {
             "verify_ssl": {"type": "boolean"},
             "ssl_certs": {"type": "string"},
             "suppress_gpg_warnings": {"type": "boolean"},
-            "install_missing_compilers": {"type": "boolean"},
             "debug": {"type": "boolean"},
             "checksum": {"type": "boolean"},
             "deprecated": {"type": "boolean"},
@@ -96,12 +95,21 @@ properties: Dict[str, Any] = {
             "binary_index_ttl": {"type": "integer", "minimum": 0},
             "aliases": {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}},
         },
-        "deprecatedProperties": {
-            "properties": ["concretizer"],
-            "message": "Spack supports only clingo as a concretizer from v0.23. "
-            "The config:concretizer config option is ignored.",
-            "error": False,
-        },
+        "deprecatedProperties": [
+            {
+                "names": ["concretizer"],
+                "message": "Spack supports only clingo as a concretizer from v0.23. "
+                "The config:concretizer config option is ignored.",
+                "error": False,
+            },
+            {
+                "names": ["install_missing_compilers"],
+                "message": "The config:install_missing_compilers option has been deprecated in "
+                "Spack v0.23, and is currently ignored. It will be removed from config in "
+                "Spack v0.25.",
+                "error": False,
+            },
+        ],
     }
 }
 
