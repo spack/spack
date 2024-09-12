@@ -20,3 +20,6 @@ class PyTestCallback(mp.Python):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
+
+    def test_callback(self):
+        print("PyTestCallback test")
