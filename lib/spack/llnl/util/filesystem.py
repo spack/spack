@@ -1672,7 +1672,7 @@ def find_first(root: str, files: Union[Iterable[str], str], bfs_depth: int = 2) 
     return FindFirstFile(root, *files, bfs_depth=bfs_depth).find()
 
 
-def find(root, files, recursive=True):
+def find(root, files, recursive=True, max_depth: Optional[int] = None):
     """Search for ``files`` starting from the ``root`` directory.
 
     Like GNU/BSD find but written entirely in Python.
@@ -1711,6 +1711,8 @@ def find(root, files, recursive=True):
         files (str or collections.abc.Sequence): Library name(s) to search for
         recursive (bool): if False search only root folder,
             if True descends top-down from the root. Defaults to True.
+        max_depth (int): if set, don't search below this depth. Cannot be set
+            if recursive is False
 
     Returns:
         list: The files that have been found
@@ -1718,59 +1720,116 @@ def find(root, files, recursive=True):
     if isinstance(files, str):
         files = [files]
 
-    if recursive:
-        tty.debug(f"Find (recursive): {root} {str(files)}")
-        result = _find_recursive(root, files)
-    else:
-        tty.debug(f"Find (not recursive): {root} {str(files)}")
-        result = _find_non_recursive(root, files)
+    # If recursive is false, max_depth can only be None or 0
+    if max_depth and not recursive:
+        raise ValueError(f"max_depth ({max_depth}) cannot be set if recursive is False")
+
+    if not recursive:
+        max_depth = 0
+    elif max_depth is None:
+        max_depth = sys.maxsize
+
+    tty.debug(f"Find (max depth = {max_depth}): {root} {str(files)}")
+    result = find_max_depth(root, files, max_depth)
 
     tty.debug(f"Find complete: {root} {str(files)}")
     return result
 
 
-@system_path_filter
-def _find_recursive(root, search_files):
-    # The variable here is **on purpose** a defaultdict. The idea is that
-    # we want to poke the filesystem as little as possible, but still maintain
-    # stability in the order of the answer. Thus we are recording each library
-    # found in a key, and reconstructing the stable order later.
-    found_files = collections.defaultdict(list)
+@system_path_filter(arg_slice=slice(1))
+def find_max_depth(root, globs, max_depth: Optional[int] = None):
+    """Given a set of non-recursive glob file patterns, finds all
+    files matching those patterns up to a maximum specified depth.
 
-    # Make the path absolute to have os.walk also return an absolute path
-    root = os.path.abspath(root)
-    for path, _, list_files in os.walk(root):
-        for search_file in search_files:
-            matches = glob.glob(os.path.join(path, search_file))
-            matches = [os.path.join(path, x) for x in matches]
-            found_files[search_file].extend(matches)
+    If a directory has a name which matters an input pattern, it will
+    not be included in the results.
 
-    answer = []
-    for search_file in search_files:
-        answer.extend(found_files[search_file])
+    Does not search in directories below the specified depth.
 
-    return answer
+    If ``globs`` is a list, files matching earlier entries are placed
+    in the return value before files matching later entries.
+    """
+    if not os.path.exists(root):
+        return []
 
+    if max_depth is None:
+        max_depth = sys.maxsize
 
-@system_path_filter
-def _find_non_recursive(root, search_files):
-    # The variable here is **on purpose** a defaultdict as os.list_dir
-    # can return files in any order (does not preserve stability)
-    found_files = collections.defaultdict(list)
+    if isinstance(globs, str):
+        globs = [globs]
+    # Apply normcase to regular expressions and to the filenames:
+    # this respects case-sensitivity semantics of different OSes
+    # (e.g. file search is typically case-insensitive on Windows)
+    regexes = [re.compile(fnmatch.translate(os.path.normcase(x))) for x in globs]
 
-    # Make the path absolute to have absolute path returned
+    # Note later calls to os.scandir etc. return abspaths if the
+    # input is absolute, see https://docs.python.org/3/library/os.html#os.DirEntry.path
     root = os.path.abspath(root)
 
-    for search_file in search_files:
-        matches = glob.glob(os.path.join(root, search_file))
-        matches = [os.path.join(root, x) for x in matches]
-        found_files[search_file].extend(matches)
+    found_files = collections.defaultdict(list)
 
-    answer = []
-    for search_file in search_files:
-        answer.extend(found_files[search_file])
+    resolved_root = os.path.realpath(root)
+    visited_dirs = set([resolved_root])
 
-    return answer
+    # Each queue item stores the depth, the path, and the realpath
+    # equivalent; the latter is used to avoid repeated symlink
+    # resolutions on a parent.
+    dir_queue = collections.deque([(0, root, resolved_root)])
+    while dir_queue:
+        depth, next_dir, next_dir_resolved = dir_queue.pop()
+        try:
+            dir_iter = os.scandir(next_dir_resolved)
+        except OSError:
+            # Most commonly, this would be a permissions issue, for
+            # example if we are scanning an external directory like /usr
+            continue
+
+        with dir_iter:
+            for dir_entry in dir_iter:
+                orig_path = os.path.join(next_dir, dir_entry.name)
+
+                if dir_entry.is_dir(follow_symlinks=True):
+                    resolved_path = None
+                    if sys.platform == "win32":
+                        # Note: DirEntry.is_junction is available starting with python 3.12
+                        # but this must work for earlier versions
+                        if islink(dir_entry.path):
+                            resolved_path = os.path.realpath(readlink(dir_entry.path))
+                    else:
+                        if dir_entry.is_symlink():
+                            # Note: we want the resolved path to avoid more symlink
+                            # resolutions when running `scandir` on children of this dir.
+                            # We already followed the symlinks once to determine
+                            # if this is a directory, so if we're here, it would have
+                            # been more efficient to call os.realpath and then check
+                            # if the result was a dir. However, if it *had been* a file,
+                            # then calling `isdir` would have been extra work.
+                            resolved_path = os.path.realpath(dir_entry.path)
+
+                    if not resolved_path:
+                        # If resolved_path hasn't been assigned yet, it's not a link
+                        resolved_path = os.path.join(next_dir_resolved, dir_entry.name)
+
+                    if len(resolved_path) < len(next_dir_resolved):
+                        # Either the symlink target is entirely outside the root,
+                        # or it will be accounted for "directly"
+                        continue
+
+                    if (depth < max_depth) and (resolved_path not in visited_dirs):
+                        dir_queue.appendleft((depth + 1, orig_path, resolved_path))
+                        visited_dirs.add(resolved_path)
+                else:
+                    fname = os.path.basename(orig_path)
+                    for pattern in regexes:
+                        if pattern.match(os.path.normcase(fname)):
+                            found_files[pattern].append(os.path.join(next_dir, fname))
+
+        # TODO: for fully-recursive searches, we can print a warning after
+        # after having searched everything up to some fixed depth (which
+        # requires BFS) or after searching some number of directories
+        # (which doesn't require BFS, but is not repeatable)
+
+    return list(itertools.chain(*[found_files[x] for x in regexes]))
 
 
 # Utilities for libraries and headers
@@ -2209,7 +2268,9 @@ def find_system_libraries(libraries, shared=True):
     return libraries_found
 
 
-def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
+def find_libraries(
+    libraries, root, shared=True, recursive=False, runtime=True, max_depth: Optional[int] = None
+):
     """Returns an iterable of full paths to libraries found in a root dir.
 
     Accepts any glob characters accepted by fnmatch:
@@ -2230,6 +2291,8 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
             otherwise for static. Defaults to True.
         recursive (bool): if False search only root folder,
             if True descends top-down from the root. Defaults to False.
+        max_depth (int): if set, don't search below this depth. Cannot be set
+            if recursive is False
         runtime (bool): Windows only option, no-op elsewhere. If true,
             search for runtime shared libs (.DLL), otherwise, search
             for .Lib files. If shared is false, this has no meaning.
@@ -2238,6 +2301,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
     Returns:
         LibraryList: The libraries that have been found
     """
+
     if isinstance(libraries, str):
         libraries = [libraries]
     elif not isinstance(libraries, collections.abc.Sequence):
@@ -2270,8 +2334,10 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
     libraries = ["{0}.{1}".format(lib, suffix) for lib in libraries for suffix in suffixes]
 
     if not recursive:
+        if max_depth:
+            raise ValueError(f"max_depth ({max_depth}) cannot be set if recursive is False")
         # If not recursive, look for the libraries directly in root
-        return LibraryList(find(root, libraries, False))
+        return LibraryList(find(root, libraries, recursive=False))
 
     # To speedup the search for external packages configured e.g. in /usr,
     # perform first non-recursive search in root/lib then in root/lib64 and
@@ -2289,7 +2355,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
         if found_libs:
             break
     else:
-        found_libs = find(root, libraries, True)
+        found_libs = find(root, libraries, recursive=True, max_depth=max_depth)
 
     return LibraryList(found_libs)
 
