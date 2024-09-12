@@ -199,7 +199,7 @@ class Seacas(CMakePackage):
     variant(
         "libcatalyst",
         default=False,
-        description="Enable libcatalyst tpl (catalyst api 2). Opensource kitware catalyst insitu library",
+        description="Enable libcatalyst tpl (catalyst api 2); Kitware insitu library",
     )
     variant(
         "matio",
