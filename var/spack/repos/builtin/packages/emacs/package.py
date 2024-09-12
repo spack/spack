@@ -13,7 +13,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     """The Emacs programmable text editor."""
 
     homepage = "https://www.gnu.org/software/emacs"
-    git = "git://git.savannah.gnu.org/emacs.git"
+    git = "https://git.savannah.gnu.org/git/emacs.git"
     gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
     list_url = " https://ftpmirror.gnu.org/emacs/"
     list_depth = 0
