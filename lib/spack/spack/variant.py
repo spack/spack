@@ -7,6 +7,7 @@
 variants both in packages and in specs.
 """
 import collections.abc
+import enum
 import functools
 import inspect
 import itertools
@@ -56,24 +57,21 @@ class _ValueValidator:
 always_true = lambda x: True
 
 
-def variant_class_for_type(variant_type: str) -> type:
-    """Associates string representation of variant type with classes."""
-    variant_class = {
-        "multi": MultiValuedVariant,
-        "bool": BoolValuedVariant,
-        "single": SingleValuedVariant,
-    }.get(variant_type)
+class VariantType(enum.Enum):
+    """Enum representing the three concrete variant types."""
 
-    if variant_class is None:
-        raise ValueError(f"Invalid variant type: {variant_type}")
+    MULTI = "multi"
+    BOOL = "bool"
+    SINGLE = "single"
 
-    return variant_class
-
-
-def make_variant(variant_type: str, name: str, value: Any) -> "AbstractVariant":
-    """Make concrete variant instance given a type, name, and value."""
-    cls = variant_class_for_type(variant_type)
-    return cls(name, value)
+    @property
+    def variant_class(self) -> Type:
+        if self is self.MULTI:
+            return MultiValuedVariant
+        elif self is self.BOOL:
+            return BoolValuedVariant
+        else:
+            return SingleValuedVariant
 
 
 class Variant:
@@ -215,7 +213,7 @@ class Variant:
         """
         return self.make_variant(self.default)
 
-    def make_variant(self, value):
+    def make_variant(self, value) -> "AbstractVariant":
         """Factory that creates a variant holding the value passed as
         a parameter.
 
@@ -226,17 +224,17 @@ class Variant:
             MultiValuedVariant or SingleValuedVariant or BoolValuedVariant:
                 instance of the proper variant
         """
-        return make_variant(self.variant_type, self.name, value)
+        return self.variant_type.variant_class(self.name, value)
 
     @property
-    def variant_type(self) -> str:
+    def variant_type(self) -> VariantType:
         """String representation of the type of this variant (single/multi/bool)"""
         if self.multi:
-            return "multi"
+            return VariantType.MULTI
         elif self.values == (True, False):
-            return "bool"
+            return VariantType.BOOL
         else:
-            return "single"
+            return VariantType.SINGLE
 
     def __eq__(self, other):
         return (

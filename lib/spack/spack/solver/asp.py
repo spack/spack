@@ -43,7 +43,7 @@ import spack.util.crypto
 import spack.util.libc
 import spack.util.path
 import spack.util.timer
-import spack.variant
+import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
@@ -1374,7 +1374,7 @@ class SpackSolverSetup:
         pkg: "Type[spack.package_base.PackageBase]",
         name: str,
         when: spack.spec.Spec,
-        variant_def: spack.variant.Variant,
+        variant_def: vt.Variant,
     ):
         pkg_fact = lambda f: self.gen.fact(fn.pkg_fact(pkg.name, f))
 
@@ -1395,7 +1395,7 @@ class SpackSolverSetup:
             pkg_fact(fn.variant_condition(name, vid, cond_id))
 
         # record type so we can construct the variant when we read it back in
-        self.gen.fact(fn.variant_type(vid, variant_def.variant_type))
+        self.gen.fact(fn.variant_type(vid, variant_def.variant_type.value))
 
         if variant_def.sticky:
             pkg_fact(fn.variant_sticky(vid))
@@ -1410,7 +1410,7 @@ class SpackSolverSetup:
         if values is None:
             values = []
 
-        elif isinstance(values, spack.variant.DisjointSetsOfValues):
+        elif isinstance(values, vt.DisjointSetsOfValues):
             union = set()
             for sid, s in enumerate(values.sets):
                 for value in s:
@@ -1468,7 +1468,11 @@ class SpackSolverSetup:
         self.gen.h3(f"Special variant: {name}")
         vid = next(self._id_counter)
         self.gen.fact(fn.auto_variant(name, vid))
-        self.gen.fact(fn.variant_type(vid, "multi" if multi else "single"))
+        self.gen.fact(
+            fn.variant_type(
+                vid, vt.VariantType.MULTI.value if multi else vt.VariantType.SINGLE.value
+            )
+        )
 
     def variant_rules(self, pkg: "Type[spack.package_base.PackageBase]"):
         for name in pkg.variant_names():
@@ -1887,10 +1891,10 @@ class SpackSolverSetup:
 
             # perform validation of the variant and values
             try:
-                variant_defs = spack.variant.prevalidate_variant_value(
+                variant_defs = vt.prevalidate_variant_value(
                     self.pkg_class(pkg_name), variant, values
                 )
-            except (spack.variant.InvalidVariantValueError, KeyError, ValueError) as e:
+            except (vt.InvalidVariantValueError, KeyError, ValueError) as e:
                 tty.debug(
                     f"[SETUP]: rejected {str(variant)} as a preference for {pkg_name}: {str(e)}"
                 )
@@ -2020,7 +2024,7 @@ class SpackSolverSetup:
             for value in values:
                 # ensure that the value *can* be valid for the spec
                 if spec.name and not spec.concrete and not spec.virtual:
-                    variant_defs = spack.variant.prevalidate_variant_value(
+                    variant_defs = vt.prevalidate_variant_value(
                         self.pkg_class(spec.name), variant, value, spec
                     )
 
@@ -3533,9 +3537,9 @@ class SpecBuilder:
         spec = self._specs[node]
         variant = spec.variants.get(name)
         if not variant:
-            spec.variants[name] = spack.variant.make_variant(variant_type, name, value)
+            spec.variants[name] = vt.VariantType(variant_type).variant_class(name, value)
         else:
-            assert variant_type == "multi", (
+            assert variant_type == vt.VariantType.MULTI.value, (
                 f"Can't have multiple values for single-valued variant: "
                 f"{node}, {name}, {value}, {variant_type}, {variant_id}"
             )
@@ -3819,7 +3823,7 @@ def _develop_specs_from_env(spec, env):
 
         assert spec.variants["dev_path"].value == path, error_msg
     else:
-        spec.variants.setdefault("dev_path", spack.variant.SingleValuedVariant("dev_path", path))
+        spec.variants.setdefault("dev_path", vt.SingleValuedVariant("dev_path", path))
 
     assert spec.satisfies(dev_info["spec"])
 
