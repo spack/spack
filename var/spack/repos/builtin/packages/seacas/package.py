@@ -267,7 +267,7 @@ class Seacas(CMakePackage):
     depends_on("catch2@3:", when="@2024-03-11:+tests")
 
     depends_on("matio", when="+matio")
-    
+
     depends_on("libcatalyst+mpi~python", when="+libcatalyst+mpi")
     depends_on("libcatalyst~mpi~python", when="+libcatalyst~mpi")
 
