@@ -47,7 +47,7 @@ def test_rewire_db(mock_fetch, install_mockery, transitive):
         text_file_path = os.path.join(node.prefix, node.name)
         with open(text_file_path, "r") as f:
             text = f.read()
-            for modded_spec in node.traverse(root=True):
+            for modded_spec in node.traverse(root=True, deptype=("link", "run")):
                 assert modded_spec.prefix in text
 
 
@@ -60,6 +60,7 @@ def test_rewire_bin(mock_fetch, install_mockery, transitive):
     spec.package.do_install()
     dep.package.do_install()
     spliced_spec = spec.splice(dep, transitive=transitive)
+
     assert spec.dag_hash() != spliced_spec.dag_hash()
 
     spack.rewiring.rewire(spliced_spec)

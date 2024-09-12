@@ -1725,13 +1725,18 @@ class Spec:
         try:
             dspec = next(dspec for dspec in orig if depflag == dspec.depflag)
         except StopIteration:
-            edge_attrs = f"deptypes={dt.flag_to_chars(depflag).strip()}"
-            required_dep_str = f"^[{edge_attrs}] {str(spec)}"
+            # Error if we have overlapping deptypes
+            if any(dspec.depflag & depflag for dspec in orig):
+                edge_attrs = f"deptypes={dt.flag_to_chars(depflag).strip()}"
+                required_dep_str = f"^[{edge_attrs}] {str(spec)}"
 
-            raise DuplicateDependencyError(
-                f"{spec.name} is a duplicate dependency, with conflicting dependency types\n"
-                f"\t'{str(self)}' cannot depend on '{required_dep_str}'"
-            )
+                raise DuplicateDependencyError(
+                    f"{spec.name} is a duplicate dependency, with conflicting dependency types\n"
+                    f"\t'{str(self)}' cannot depend on '{required_dep_str}'"
+                )
+
+            self.add_dependency_edge(spec, depflag=depflag, virtuals=virtuals)
+            return
 
         try:
             dspec.spec.constrain(spec)
@@ -1765,7 +1770,7 @@ class Spec:
                     )
                 )
 
-            if any(v in edge.virtuals for v in virtuals):
+            if any(v in edge.virtuals and edge.depflag & depflag for v in virtuals):
                 has_errors = True
                 details.append(
                     (
@@ -4146,6 +4151,147 @@ class Spec:
                         new_dependencies.add(edge)
             spec._dependencies = new_dependencies
 
+    def _virtuals_provided(self, root):
+        """Return set of virtuals provided by self in the context of root"""
+        if root is self:
+            # Could be using any virtual the package can provide
+            return set(self.package.virtuals_provided)
+
+        virtuals = set()
+        hashes = [s.dag_hash() for s in root.traverse()]
+        in_edges = set(
+            [edge for edge in self.edges_from_dependents() if edge.parent.dag_hash() in hashes]
+        )
+        for edge in in_edges:
+            virtuals |= set(edge.virtuals)
+
+        return virtuals
+
+    def _splice_match(self, other, self_root, other_root):
+        """Return True if other is a match for self in a splice of other_root into self_root"""
+        if other.name == self.name:
+            return True
+
+        return bool(
+            self._virtuals_provided(self.root)
+            and self._virtuals_provided(self_root) <= other._virtuals_provided(other_root)
+        )
+
+    def _locally_splice(self, replacement, other):
+        """Helper method for Spec._intransitive_splice.
+
+        replacement is a copy of other with all deps cleared. Other is the argument from splice."""
+        # Update build_spec attributes for all transitive dependents
+        # before we start changing their dependencies
+        for ancestor in self.traverse(root=False, direction="parents"):
+            # Only set it if it hasn't been spliced before
+            ancestor._build_spec = ancestor._build_spec or ancestor.copy()
+            ancestor.clear_cached_hashes(ignore=(ht.package_hash.attr,))
+
+        # For each direct dependent in the link/run graph, replace the dependency on
+        # node with one on replacement
+        # For each build dependent, restrict the edge to build-only
+        for edge in self.edges_from_dependents():
+            index = edge.parent._dependencies[self.name].index(edge)
+            build_dep = edge.depflag & dt.BUILD
+            other_dep = edge.depflag & dt.LINK | dt.RUN | dt.TEST
+            if build_dep:
+                parent_edge = [e for e in edge.parent._dependencies[self.name] if e.spec is self]
+                assert len(parent_edge) == 1
+
+                edge.depflag = dt.BUILD
+                parent_edge[0].depflag = dt.BUILD
+            else:
+                edge.parent._dependencies[self.name].remove(edge)
+                self._dependents[edge.parent.name].remove(edge)
+
+            if other_dep:
+                edge.parent._add_dependency(replacement, depflag=other_dep, virtuals=edge.virtuals)
+
+        # Take build-only deps from other -- FUTURE WORK: node splitting for all build deps
+        for edge in other.edges_to_dependencies():
+            if edge.depflag == dt.BUILD:  # build-only dep
+                replacement._add_dependency(
+                    edge.spec.copy(), depflag=edge.depflag, virtuals=edge.virtuals
+                )
+
+        # Detach all dependent edges into node
+        for edge in self.edges_to_dependencies():
+            # Remove the dependency's dependent references to node
+            edge.spec._dependents.edges[self.name] = [
+                e for e in edge.spec._dependents[self.name] if e.parent is not self
+            ]
+
+        # recreate link/run edges from node on replacement
+        for edge in self.edges_to_dependencies(depflag=dt.LINK | dt.RUN):
+            # Recreate any analogous edges from other in replacement, using dep from
+            # node as the child
+            analogues = [
+                analogue
+                for analogue in other.edges_to_dependencies()
+                if (
+                    analogue.spec._splice_match(edge.spec, self_root=other, other_root=self)
+                    and analogue.depflag & (dt.LINK | dt.RUN)
+                )
+            ]
+            for analogue in analogues:
+                replacement._add_dependency(
+                    edge.spec, depflag=(analogue.depflag & ~dt.BUILD), virtuals=analogue.virtuals
+                )
+
+    def _splice_add_dependencies(self, spec, node, node_from_other, other):
+        for edge in node_from_other.edges_to_dependencies():
+            # If we can't find an analogous node in spec, use the one from here
+            analogue = edge.spec.copy()
+            new_node = True
+            # Find an analogous node in spec
+            for dep in spec.traverse(root=False, deptype=dt.LINK | dt.RUN):
+                # We're effectively splicing in the reverse -- node would splice into other
+                if dep._splice_match(edge.spec, self_root=other, other_root=self):
+                    analogue = dep
+                    new_node = False
+                    break
+
+            # Keep build dependencies as-is
+            if edge.depflag & dt.BUILD:
+                child = analogue if new_node else edge.spec.copy()
+                node._add_dependency(child, depflag=dt.BUILD, virtuals=edge.virtuals)
+
+            # non-build components are applied to analogue
+            depflag = edge.depflag & ~dt.BUILD
+            if depflag:
+                node._add_dependency(analogue, depflag=depflag, virtuals=edge.virtuals)
+                if not new_node:
+                    node._build_spec = node._build_spec or node_from_other.copy()
+                    node.clear_cached_hashes(ignore=(ht.package_hash.attr,))
+
+            # If we added a new node to spec with a non-build dep, we need to recurse
+            if new_node and depflag:
+                self._splice_add_dependencies(self, spec, analogue, edge.spec, other)
+
+    def _splice_intransitive(self, other):
+        """Execute an intransitive splice. See ``Spec.splice`` for details"""
+        # Defensive copy
+        spec = self.copy()
+        replacement = other.copy(deps=False, cleardeps=True)
+        replacement.clear_cached_hashes(ignore=(ht.package_hash.attr,))
+
+        for node in spec.traverse(deptype=dt.LINK | dt.RUN):
+            if node._splice_match(other, self_root=spec, other_root=other):
+                # This handles all edges into replacement
+                # All edges out of replacement into spec
+                # updating build_spec pointers for dependents
+                node._locally_splice(replacement, other)
+
+        # All that is left is to attach all nodes from other that are not present in self.
+        self._splice_add_dependencies(spec, replacement, other, other)
+
+        # Update build_spec information for replacement if it was modified
+        if replacement._dependencies != other._dependencies:
+            replacement._build_spec = other
+
+        return spec
+
     def splice(self, other, transitive):
         """Splices dependency "other" into this ("target") Spec, and return the
         result as a concrete Spec.
@@ -4206,6 +4352,9 @@ class Spec:
                             "Splice between {0} and {1} will not provide " "the same virtuals."
                         ).format(self.name, other.name)
                     )
+
+        if not transitive:
+            return self._splice_intransitive(other)
 
         # For now, check that we don't have DAG with multiple specs from the
         # same package

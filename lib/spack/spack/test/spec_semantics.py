@@ -1098,7 +1098,7 @@ class TestSpecSemantics:
 
     @pytest.mark.parametrize("transitive", [True, False])
     def test_splice_swap_names(self, default_mock_concretization, transitive):
-        spec = default_mock_concretization("splice-t")
+        spec = default_mock_concretization("splice-vt")
         dep = default_mock_concretization("splice-a+foo")
         out = spec.splice(dep, transitive)
         assert dep.name in out
