@@ -7,6 +7,7 @@ import pathlib
 
 import pytest
 
+import spack.deptypes as dt
 import spack.directives
 import spack.error
 import spack.parser
@@ -15,6 +16,7 @@ import spack.solver.asp
 import spack.spec
 import spack.store
 import spack.variant
+import spack.version as vn
 from spack.error import SpecError, UnsatisfiableSpecError
 from spack.spec import (
     ArchSpec,
@@ -965,6 +967,129 @@ class TestSpecSemantics:
 
         # Finally, the spec should know it's been spliced:
         assert out.spliced
+
+    def test_splice_intransitive_complex(self, monkeypatch):
+        def splice_match(self, other, self_root, other_root):
+            return self.name == other.name
+
+        monkeypatch.setattr(Spec, "_validate_version", lambda s: None)
+        monkeypatch.setattr(Spec, "_splice_match", splice_match)
+
+        g1_red = Spec("g color=red")
+        g1_red.versions = vn.VersionList([vn.Version("1")])
+        g2_red = Spec("g color=red")
+        g2_red.versions = vn.VersionList([vn.Version("2")])
+        g2_blue = Spec("g color=blue")
+        g2_blue.versions = vn.VersionList([vn.Version("2")])
+        g3_blue = Spec("g color=blue")
+        g3_blue.versions = vn.VersionList([vn.Version("3")])
+
+        depflag = dt.LINK | dt.BUILD
+        e_red = Spec("e color=red")
+        e_red._add_dependency(g1_red, depflag=depflag, virtuals=())
+        e_blue = Spec("e color=blue")
+        e_blue._add_dependency(g3_blue, depflag=depflag, virtuals=())
+
+        d_red = Spec("d color=red")
+        d_red._add_dependency(g1_red, depflag=depflag, virtuals=())
+        d_blue = Spec("d color=blue")
+        d_blue._add_dependency(g2_blue, depflag=depflag, virtuals=())
+
+        b_red = Spec("b color=red")
+        b_red._add_dependency(e_red, depflag=depflag, virtuals=())
+        b_red._add_dependency(d_red, depflag=depflag, virtuals=())
+        b_red._add_dependency(g1_red, depflag=depflag, virtuals=())
+
+        f_blue = Spec("f color=blue")
+        f_blue._add_dependency(e_blue, depflag=depflag, virtuals=())
+        f_blue._add_dependency(g3_blue, depflag=depflag, virtuals=())
+
+        c_red = Spec("c color=red")
+        c_red._add_dependency(d_red, depflag=depflag, virtuals=())
+        c_red._add_dependency(g2_red, depflag=depflag, virtuals=())
+        c_blue = Spec("c color=blue")
+        c_blue._add_dependency(d_blue, depflag=depflag, virtuals=())
+        c_blue._add_dependency(f_blue, depflag=depflag, virtuals=())
+        c_blue._add_dependency(g3_blue, depflag=depflag, virtuals=())
+
+        a_red = Spec("a color=red")
+        a_red._add_dependency(b_red, depflag=depflag, virtuals=())
+        a_red._add_dependency(c_red, depflag=depflag, virtuals=())
+        a_red._add_dependency(g2_red, depflag=depflag, virtuals=())
+
+        for spec in [e_red, e_blue, d_red, d_blue, b_red, f_blue, c_red, c_blue, a_red]:
+            spec.versions = vn.VersionList([vn.Version("1")])
+
+            a_red._mark_concrete()
+            c_blue._mark_concrete()
+
+        spliced = a_red.splice(c_blue, transitive=False)
+        assert spliced.satisfies(
+            "a color=red ^b color=red ^c color=blue ^d color=red ^e color=red ^f color=blue ^g@3 color=blue"
+        )
+        assert spliced.build_spec == a_red
+        # We cannot check spliced["b"].build_spec is spliced["b"] because Spec.__getitem__ creates
+        # a new wrapper object on each invocation. So we select once and check on that object
+        # For the rest of the unchanged specs we will just check the s._build_spec is None.
+        b = spliced["b"]
+        assert b == b_red
+        assert b.build_spec is b
+        assert set(b.dependents()) == {spliced}
+
+        assert spliced["c"].satisfies(
+            "c color=blue ^d color=red ^e color=red ^f color=blue ^g@3 color=blue"
+        )
+        assert spliced["c"].build_spec == c_blue
+        assert set(spliced["c"].dependents()) == {spliced}
+
+        assert spliced["d"] == d_red
+        assert spliced["d"]._build_spec is None
+        # Since D had a parent changed, it has a split edge for link vs build dependent
+        # note: spliced["b"] == b_red, referenced differently to preserve logic
+        assert set(spliced["d"].dependents()) == {spliced["b"], spliced["c"], c_red}
+        assert set(spliced["d"].dependents(deptype=dt.BUILD)) == {b_red, c_red}
+
+        assert spliced["e"] == e_red
+        assert spliced["e"]._build_spec is None
+        assert set(spliced["e"].dependents()) == {spliced["b"], spliced["f"]}
+
+        assert spliced["f"].satisfies("f color=blue ^e color=red ^g@3 color=blue")
+        assert spliced["f"].build_spec == f_blue
+        assert set(spliced["f"].dependents()) == {spliced["c"]}
+
+        # spliced["g"] is g3, but spliced["b"]["g"] is g1
+        assert spliced["g"] == g3_blue
+        assert spliced["g"]._build_spec is None
+        for edge in spliced["g"].edges_from_dependents():
+            print(edge)
+        print(spliced["c"]["g"])
+        assert set(spliced["g"].dependents(deptype=dt.LINK)) == {
+            spliced,
+            spliced["c"],
+            spliced["f"],
+        }
+        assert set(spliced["g"].dependents(deptype=dt.BUILD)) == {c_blue, f_blue, e_blue}
+
+        assert spliced["b"]["g"] == g1_red
+        assert spliced["b"]["g"]._build_spec is None
+        assert set(spliced["b"]["g"].dependents()) == {spliced["b"], spliced["d"], spliced["e"]}
+
+        for edge in spliced.traverse_edges(cover="edges", deptype=dt.LINK | dt.RUN):
+            # traverse_edges creates a synthetic edge with no deptypes to the root
+            if edge.depflag:
+                depflag = dt.LINK
+                if (edge.parent.name, edge.spec.name) not in [
+                    ("a", "c"),  # These are the spliced edges
+                    ("c", "d"),
+                    ("f", "e"),
+                    ("a", "g"),
+                ]:
+                    depflag |= dt.BUILD
+                print(edge)
+                assert edge.depflag == depflag
+
+        print(spliced)
+        assert False
 
     @pytest.mark.parametrize("transitive", [True, False])
     def test_splice_with_cached_hashes(self, default_mock_concretization, transitive):

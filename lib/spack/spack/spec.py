@@ -4206,21 +4206,17 @@ class Spec:
                 self._dependents.edges[edge.parent.name].remove(edge)
 
             if other_dep:
+                print("ADDING EDGE INTO REPLACMENT", edge.parent.name, replacement.name, other_dep)
                 edge.parent._add_dependency(replacement, depflag=other_dep, virtuals=edge.virtuals)
 
-        # Detach all dependent edges into node
-        for dep in self.dependencies(deptype=dt.LINK | dt.RUN):
-            # Remove the dependency's dependent references to node
-            for edge in dep._dependents[self.name]:
-                if edge.depflag & dt.BUILD:
-                    edge.depflag = dt.BUILD
-                else:
-                    dep._dependents.edges.remove(edge)
-
     def _splice_add_dependencies(self, spec, node, node_from_other, other):
+        """Add analogues for all dependencies from node_from_other to node
+
+        If there is no analogue in spec, new nodes from other are copied and added to spec.
+        This method is recursive on the new nodes."""
         for edge in node_from_other.edges_to_dependencies():
             # If we can't find an analogous node in spec, use the one from here
-            analogue = edge.spec.copy()
+            analogue = edge.spec.copy(deps=False)
             new_node = True
             # Find an analogous node in spec
             analogues = [
@@ -4230,26 +4226,115 @@ class Spec:
                 if dep._splice_match(edge.spec, self_root=other, other_root=self)
             ]
             if analogues:
-                # TODO: find best match instead of first match
-                analogue = analogues[0]
-                new_node = False
+                # If there is a perfect match, use it
+                perfect_analogues = [a for a in analogues if a == edge.spec]
+                if perfect_analogues:
+                    analogues = perfect_analogues
 
-            # Keep build dependencies as-is
-            if edge.depflag & dt.BUILD:
-                child = analogue if new_node else edge.spec.copy()
+                # If there are multiple analogues, first prefer one that matches name
+                name_analogues = [a for a in analogues if a.name == edge.spec.name]
+                if name_analogues:
+                    analogues = name_analogues
+
+                # If there are multiple analogues, prefer one that matches version
+                version_analogues = [a for a in analogues if a.version == edge.spec.version]
+                if version_analogues:
+                    analogues = version_analogues
+
+                # Here, we assume that all multiples in the link/run graph follow:
+                # 1. perfect backwards compatibility between versions
+                # 2. widely depended on such that the root will win the loader race
+                # If there are multiple, then it's fine to add one and we do not redirect
+                # this dependency
+                # This does require a later step to ensure the root is redirected to the new node
+                if len(analogues) == 1:
+                    analogue = analogues[0]
+                    new_node = False
+
+            if new_node:
+                if edge.depflag & ~dt.BUILD:
+                    print("ADDING NEW", node.name, node.variants, analogue, edge.depflag)
+                    # We just add the entire node, this isn't making a local change
+                    node._add_dependency(analogue, depflag=edge.depflag, virtuals=edge.virtuals)
+                    # recurse for next layer of dependencies
+                    self._splice_add_dependencies(spec, analogue, edge.spec, other)
+                else:
+                    # If it's a build-only dep, we can copy deps and avoid recursion
+                    print("ADDING NEW BUILD", node.name, edge.spec)
+                    node._add_dependency(
+                        edge.spec.copy(), depflag=dt.BUILD, virtuals=edge.virtuals
+                    )
+                continue
+
+            # If it's a perfect match, map all deptypes
+            # Otherwise, separate out the build deptype
+            if edge.depflag & dt.BUILD and analogue != edge.spec:
+                print("ADDING BUILD", node.name, node.variants, edge.spec, dt.BUILD)
+                print(node)
+                child = edge.spec.copy()
+                child._dependents = _EdgeMap(store_by=EdgeDirection.parent)
                 node._add_dependency(child, depflag=dt.BUILD, virtuals=edge.virtuals)
-
-            # non-build components are applied to analogue
-            depflag = edge.depflag & ~dt.BUILD
+                print(child.dependents())
+            depflag = edge.depflag
+            if analogue != edge.spec:
+                depflag &= ~dt.BUILD
             if depflag:
+                print("ADDING IN DEPS", node.name, node.variants, analogue, depflag)
                 node._add_dependency(analogue, depflag=depflag, virtuals=edge.virtuals)
-                if not new_node:
-                    node._build_spec = node._build_spec or node_from_other.copy()
-                    node.clear_cached_hashes(ignore=(ht.package_hash.attr,))
+                node._build_spec = node._build_spec or node_from_other.copy()
+                node.clear_cached_hashes(ignore=(ht.package_hash.attr,))
 
-            # If we added a new node to spec with a non-build dep, we need to recurse
-            if new_node and depflag:
-                self._splice_add_dependencies(self, spec, analogue, edge.spec, other)
+            # # Keep build dependencies as-is
+            # if edge.depflag & dt.BUILD:
+            #     child = analogue if new_node else edge.spec.copy()
+            #     print("ADDING BUILD-ONLY", node.name, child, new_node, edge.depflag)
+            #     node._add_dependency(child, depflag=dt.BUILD, virtuals=edge.virtuals)
+
+            # # non-build components are applied to analogue
+            # depflag = edge.depflag & ~dt.BUILD
+            # if depflag:
+            #     node._add_dependency(analogue, depflag=depflag, virtuals=edge.virtuals)
+            #     if not new_node:
+            #         node._build_spec = node._build_spec or node_from_other.copy()
+            #         node.clear_cached_hashes(ignore=(ht.package_hash.attr,))
+
+            # # If we added a new node to spec with a non-build dep, we need to recurse
+            # if new_node and depflag:
+            #     self._splice_add_dependencies(spec, analogue, edge.spec, other)
+
+    def _splice_fixup_duplicate_dependencies(self):
+        """Ensure every node depends on the highest version of any duplicate dependencies
+
+        If a node has duplicates in the link/run DAG, the node must depend on the highest
+        versioned duplicate."""
+        for node in self.traverse(deptype=dt.LINK | dt.RUN):
+            deps = [d for d in node.traverse(deptype=dt.LINK | dt.RUN)]
+            for edge in node.edges_to_dependencies(depflag=dt.LINK | dt.RUN):
+                dep = edge.spec
+
+                # Get list of all duplicates
+                dupes = [d for d in deps if d.name == dep.name and d.version > dep.version]
+                if not dupes:
+                    continue
+
+                # Find highest versioned duplicate
+                dupes.sort(key=lambda s: s.version)
+                dupe = dupes[-1]
+
+                # cache value because we may change it
+                depflag = edge.depflag
+                # Detach the link/run dependency from edge
+                if depflag & dt.BUILD:
+                    print("CONSTRICTING IN FIXUP", node.name, dep)
+                    edge.depflag = dt.BUILD
+                else:
+                    print("REMOVING IN FIXUP", node.name, dep)
+                    node._dependencies.edges[dep.name].remove(edge)
+
+                # Attach new dependency
+                new_depflag = depflag & ~dt.BUILD
+                print("ADDING IN FIXUP", node.name, dupe, new_depflag)
+                node._add_dependency(dupe, depflag=new_depflag, virtuals=edge.virtuals)
 
     def _splice_intransitive(self, other):
         """Execute an intransitive splice. See ``Spec.splice`` for details"""
@@ -4277,6 +4362,10 @@ class Spec:
 
         # This handles all edges out of replacement and any nodes unique to other that are added
         self._splice_add_dependencies(spec, replacement, other, other)
+
+        # This handles redirecting duplicate link/run dependencies to ensure the invariant that
+        # an ancestor cannot depend on an older version than its descendent depends on
+        spec._splice_fixup_duplicate_dependencies()
 
         return spec
 
