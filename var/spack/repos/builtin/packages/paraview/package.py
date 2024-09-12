@@ -5,6 +5,7 @@
 
 import itertools
 import os
+import re
 import sys
 from subprocess import Popen
 
@@ -182,8 +183,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # Starting from cmake@3.18, CUDA architecture managament can be delegated to CMake.
     # Hence, it is possible to rely on it instead of relying on custom logic updates from VTK-m for
     # newer architectures (wrt mapping).
-    for _arch in [arch for arch in CudaPackage.cuda_arch_values if int(arch) > 86]:
-        conflicts("cmake@:3.17", when=f"cuda_arch={_arch}")
+    pattern = re.compile(r"\d+")
+    for _arch in CudaPackage.cuda_arch_values:
+        _number = re.match(pattern, _arch).group()
+        if int(_number) > 86:
+            conflicts("cmake@:3.17", when=f"cuda_arch={_arch}")
 
     # We only support one single Architecture
     for _arch, _other_arch in itertools.permutations(CudaPackage.cuda_arch_values, 2):
