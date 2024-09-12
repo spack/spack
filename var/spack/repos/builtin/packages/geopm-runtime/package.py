@@ -58,6 +58,7 @@ class GeopmRuntime(AutotoolsPackage):
 
     # Autotools dependencies
     depends_on("automake", type="build")
+    depends_on("autoconf", type="build")
     depends_on("libtool", type="build")
     depends_on("file")
 
