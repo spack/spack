@@ -4486,7 +4486,7 @@ def substitute_abstract_variants(spec: Spec):
             continue
 
         new_variant = pkg_variant.make_variant(v._original_value)
-        pkg_variant.validate_or_raise(new_variant, spec.package_class)
+        pkg_variant.validate_or_raise(new_variant, spec.name)
         spec.variants.substitute(new_variant)
 
     if unknown:

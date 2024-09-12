@@ -541,7 +541,7 @@ class TestVariant:
         )
         # Valid vspec, shouldn't raise
         vspec = a.make_variant("bar")
-        a.validate_or_raise(vspec)
+        a.validate_or_raise(vspec, "test-package")
 
         # Multiple values are not allowed
         with pytest.raises(MultipleValuesInExclusiveVariantError):
@@ -550,16 +550,16 @@ class TestVariant:
         # Inconsistent vspec
         vspec.name = "FOO"
         with pytest.raises(InconsistentValidationError):
-            a.validate_or_raise(vspec)
+            a.validate_or_raise(vspec, "test-package")
 
         # Valid multi-value vspec
         a.multi = True
         vspec = a.make_variant("bar,baz")
-        a.validate_or_raise(vspec)
+        a.validate_or_raise(vspec, "test-package")
         # Add an invalid value
         vspec.value = "bar,baz,barbaz"
         with pytest.raises(InvalidVariantValueError):
-            a.validate_or_raise(vspec)
+            a.validate_or_raise(vspec, "test-package")
 
     def test_callable_validator(self):
         def validator(x):
@@ -570,12 +570,12 @@ class TestVariant:
 
         a = Variant("foo", default=1024, description="", values=validator, multi=False)
         vspec = a.make_default()
-        a.validate_or_raise(vspec)
+        a.validate_or_raise(vspec, "test-package")
         vspec.value = 2056
-        a.validate_or_raise(vspec)
+        a.validate_or_raise(vspec, "test-package")
         vspec.value = "foo"
         with pytest.raises(InvalidVariantValueError):
-            a.validate_or_raise(vspec)
+            a.validate_or_raise(vspec, "test-package")
 
     def test_representation(self):
         a = Variant(
@@ -765,9 +765,9 @@ def test_wild_card_valued_variants_equivalent_to_str():
     several_arbitrary_values = ("doe", "re", "mi")
     # "*" case
     wild_output = wild_var.make_variant(several_arbitrary_values)
-    wild_var.validate_or_raise(wild_output)
+    wild_var.validate_or_raise(wild_output, "test-package")
     # str case
     str_output = str_var.make_variant(several_arbitrary_values)
-    str_var.validate_or_raise(str_output)
+    str_var.validate_or_raise(str_output, "test-package")
     # equivalence each instance already validated
     assert str_output.value == wild_output.value

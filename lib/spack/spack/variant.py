@@ -145,14 +145,13 @@ class Variant:
         self.sticky = sticky
         self.precedence = precedence
 
-    def validate_or_raise(self, vspec, pkg_cls=None):
+    def validate_or_raise(self, vspec: "AbstractVariant", pkg_name: str):
         """Validate a variant spec against this package variant. Raises an
         exception if any error is found.
 
         Args:
-            vspec (Variant): instance to be validated
-            pkg_cls (spack.package_base.PackageBase): the package class
-                that required the validation, if available
+            vspec: variant spec to be validated
+            pkg_name: the name of the package class that required this validation (for errors)
 
         Raises:
             InconsistentValidationError: if ``vspec.name != self.name``
@@ -174,21 +173,20 @@ class Variant:
 
         # If the value is exclusive there must be at most one
         if not self.multi and len(value) != 1:
-            raise MultipleValuesInExclusiveVariantError(vspec, pkg_cls)
+            raise MultipleValuesInExclusiveVariantError(vspec, pkg_name)
 
         # Check and record the values that are not allowed
-        invalid_values = ", ".join(
+        invalid_vals = ", ".join(
             f"'{v}'" for v in value if v != "*" and self.single_value_validator(v) is False
         )
-        if invalid_values:
-            pkg_info = f" in package '{pkg_cls.name}'" if pkg_cls else ""
+        if invalid_vals:
             raise InvalidVariantValueError(
-                f"invalid values for variant '{self.name}'{pkg_info}: {invalid_values}\n"
+                f"invalid values for variant '{self.name}' in package {pkg_name}: {invalid_vals}\n"
             )
 
         # Validate the group of values if needed
         if self.group_validator is not None and value != ("*",):
-            self.group_validator(pkg_cls.name, self.name, value)
+            self.group_validator(pkg_name, self.name, value)
 
     @property
     def allowed_values(self):
@@ -536,7 +534,7 @@ class SingleValuedVariant(AbstractVariant):
 
         # Then check if there's only a single value
         if len(self._value) != 1:
-            raise MultipleValuesInExclusiveVariantError(self, None)
+            raise MultipleValuesInExclusiveVariantError(self)
         self._value = str(self._value[0])
 
     def __str__(self):
@@ -813,7 +811,7 @@ class Value:
 
 def prevalidate_variant_value(
     pkg_cls: "Type[spack.package_base.PackageBase]",
-    variant: Variant,
+    variant: AbstractVariant,
     value: Any,
     spec: Optional["spack.spec.Spec"] = None,
     strict: bool = False,
@@ -858,7 +856,7 @@ def prevalidate_variant_value(
         possible_definitions.append(pkg_variant_def)
 
         try:
-            pkg_variant_def.validate_or_raise(variant, pkg_cls)
+            pkg_variant_def.validate_or_raise(variant, pkg_cls.name)
             valid_definitions.append(pkg_variant_def)
         except spack.error.SpecError as e:
             errors.append(e)
@@ -927,11 +925,10 @@ class MultipleValuesInExclusiveVariantError(error.SpecError, ValueError):
     only one.
     """
 
-    def __init__(self, variant, pkg):
-        msg = 'multiple values are not allowed for variant "{0.name}"{1}'
-        pkg_info = ""
-        if pkg is not None:
-            pkg_info = ' in package "{0}"'.format(pkg.name)
+    def __init__(self, variant: AbstractVariant, pkg_name: Optional[str] = None):
+        pkg_info = "" if pkg_name is None else f" in package '{pkg_name}'"
+        msg = f"multiple values are not allowed for variant '{variant.name}'{pkg_info}"
+
         super().__init__(msg.format(variant, pkg_info))
 
 

@@ -982,7 +982,7 @@ def _ensure_variant_defaults_are_parsable(pkgs, error_cls):
             return [error_cls(msg, [])]
 
         try:
-            variant.validate_or_raise(vspec, pkg_cls=pkg_cls)
+            variant.validate_or_raise(vspec, pkg_cls.name)
         except spack.variant.InvalidVariantValueError:
             msg = "Default value of variant '{vname}' in package '{pkg.name}' is invalid"
             question = "Is it among the allowed values?"
