@@ -78,7 +78,7 @@ class Geant4(CMakePackage):
     variant("x11", default=False, description="Optional X11 support")
     variant("motif", default=False, description="Optional motif support")
     variant("qt", default=False, description="Enable Qt support")
-    variant("hdf", default=False, description="Enable HDF5 support", when="@10.4:")
+    variant("hdf5", default=False, description="Enable HDF5 support", when="@10.4:")
     variant("python", default=False, description="Enable Python bindings", when="@10.6.2:11.0")
     variant("tbb", default=False, description="Use TBB as a tasking backend", when="@11:")
     variant("timemory", default=False, description="Use TiMemory for profiling", when="@9.5:")
