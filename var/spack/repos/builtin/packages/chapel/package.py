@@ -48,6 +48,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     # TODO: add chapel-project github account
     maintainers("arezaii", "bonachea")
 
+    tags = ["e4s"]
+
     # See https://spdx.org/licenses/ for a list.
     license("Apache-2.0")
 
