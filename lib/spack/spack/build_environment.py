@@ -1081,15 +1081,14 @@ class SetupContext:
                 pkg.setup_dependent_package(dependent_module, spec)
                 dependent_module.propagate_changes_to_mro()
 
-        for dspec, flag in chain(self.external, self.nonexternal):
-            pkg = dspec.pkg
-            if self.context == Context.BUILD:
-                module = ModuleChangePropagator(pkg)
-                # std_cmake_args is not sufficiently static to be defined
-                # in set_package_py_globals and is deprecated so its handled
-                # here as a special case
-                module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
-                module.propegate_changes_to_mro()
+        pkg = self.specs[0].pkg
+        if self.context == Context.BUILD:
+            module = ModuleChangePropagator(pkg)
+            # std_cmake_args is not sufficiently static to be defined
+            # in set_package_py_globals and is deprecated so its handled
+            # here as a special case
+            module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
+            module.propegate_changes_to_mro()
 
     def get_env_modifications(self) -> EnvironmentModifications:
         """Returns the environment variable modifications for the given input specs and context.
