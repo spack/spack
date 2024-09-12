@@ -70,6 +70,9 @@ class Gaudi(CMakePackage):
         when="@:38.1",
     )
 
+    # add a few missing includes for GCC 14
+    patch("gcc14-includes.patch", when="@37:38 %gcc@14")
+
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
     # The boost components that are required for Gaudi
