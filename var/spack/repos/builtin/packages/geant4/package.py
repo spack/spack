@@ -141,7 +141,7 @@ class Geant4(CMakePackage):
         depends_on("vecgeom@1.1.0", when="@10.5.0:10.5")
         depends_on("vecgeom@0.5.2", when="@10.4.0:10.4")
 
-    with when("+hdf"):
+    with when("+hdf5"):
         depends_on("hdf5 +threadsafe")
 
     def std_when(values):
