@@ -87,6 +87,7 @@ class Variant:
     def __init__(
         self,
         name: str,
+        *,
         default: Any,
         description: str,
         values: Union[Sequence, Callable] = (True, False),
