@@ -1108,7 +1108,7 @@ class TestSpecSemantics:
     def test_splice_swap_names_mismatch_virtuals(self, default_mock_concretization, transitive):
         spec = default_mock_concretization("splice-t")
         dep = default_mock_concretization("splice-vh+foo")
-        with pytest.raises(spack.spec.SpliceError, match="will not provide the same virtuals."):
+        with pytest.raises(spack.spec.SpliceError, match="virtual"):
             spec.splice(dep, transitive)
 
     def test_spec_override(self):

@@ -4276,6 +4276,17 @@ class Spec:
         replacement = other.copy(deps=False, cleardeps=True)
         replacement.clear_cached_hashes(ignore=(ht.package_hash.attr,))
 
+        if not any(
+            node._splice_match(other, self_root=spec, other_root=other)
+            for node in spec.traverse(deptype=dt.LINK | dt.RUN)
+        ):
+            other_str = other.format("{name}/{hash:7}")
+            self_str = self.format("{name}/{hash:7}")
+            msg = f"Cannot splice {other_str} into {self_str}."
+            msg += f" Either {self_str} cannot depend on {other_str},"
+            msg += f" or {other_str} fails to provide a virtual used in {self_str}"
+            raise SpliceError(msg)
+
         for node in spec.traverse(deptype=dt.LINK | dt.RUN):
             if node._splice_match(other, self_root=spec, other_root=other):
                 # This handles all edges into replacement
@@ -4317,6 +4328,9 @@ class Spec:
         assert self.concrete
         assert other.concrete
 
+        if not transitive:
+            return self._splice_intransitive(other)
+
         virtuals_to_replace = [v.name for v in other.package.virtuals_provided if v in self]
         if virtuals_to_replace:
             deps_to_replace = dict((self[v], other) for v in virtuals_to_replace)
@@ -4352,9 +4366,6 @@ class Spec:
                             "Splice between {0} and {1} will not provide " "the same virtuals."
                         ).format(self.name, other.name)
                     )
-
-        if not transitive:
-            return self._splice_intransitive(other)
 
         # For now, check that we don't have DAG with multiple specs from the
         # same package
