@@ -625,6 +625,9 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
     jobs = determine_number_of_jobs(parallel=pkg.parallel)
     module.make_jobs = jobs
 
+    module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
+    module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
+
     # TODO: make these build deps that can be installed if not found.
     module.make = MakeExecutable("make", jobs)
     module.gmake = MakeExecutable("gmake", jobs)
@@ -1082,9 +1085,10 @@ class SetupContext:
             pkg = dspec.pkg
             if self.context == Context.BUILD:
                 module = ModuleChangePropagator(pkg)
+                # std_cmake_args is not sufficiently static to be defined
+                # in set_package_py_globals and is deprecated so its handled
+                # here as a special case
                 module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
-                module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
-                module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
                 module.propegate_changes_to_mro()
 
     def get_env_modifications(self) -> EnvironmentModifications:
