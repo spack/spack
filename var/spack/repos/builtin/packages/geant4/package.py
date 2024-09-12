@@ -320,7 +320,7 @@ class Geant4(CMakePackage):
                 options.append(self.define("GEANT4_USE_QT_QT6", True))
             options.append(self.define("QT_QMAKE_EXECUTABLE", spec["qmake"].prefix.bin.qmake))
 
-        options.append(self.define_from_variant("GEANT4_USE_HDF5", "hdf"))
+        options.append(self.define_from_variant("GEANT4_USE_HDF5", "hdf5"))
 
         options.append(self.define_from_variant("GEANT4_USE_VTK", "vtk"))
 
