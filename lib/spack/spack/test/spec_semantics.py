@@ -1051,7 +1051,10 @@ class TestSpecSemantics:
 
         assert spliced["e"] == e_red
         assert spliced["e"]._build_spec is None
+        # Because a copy of e is used, it does not have dependnets in the original specs
         assert set(spliced["e"].dependents()) == {spliced["b"], spliced["f"]}
+        # Build dependent edge to f because f originally dependended on the e this was copied from
+        assert set(spliced["e"].dependents(deptype=dt.BUILD)) == {spliced["b"]}
 
         assert spliced["f"].satisfies("f color=blue ^e color=red ^g@3 color=blue")
         assert spliced["f"].build_spec == f_blue
@@ -1060,15 +1063,15 @@ class TestSpecSemantics:
         # spliced["g"] is g3, but spliced["b"]["g"] is g1
         assert spliced["g"] == g3_blue
         assert spliced["g"]._build_spec is None
-        for edge in spliced["g"].edges_from_dependents():
-            print(edge)
-        print(spliced["c"]["g"])
         assert set(spliced["g"].dependents(deptype=dt.LINK)) == {
             spliced,
             spliced["c"],
             spliced["f"],
         }
-        assert set(spliced["g"].dependents(deptype=dt.BUILD)) == {c_blue, f_blue, e_blue}
+        # Because a copy of g3 is used, it does not have dependents in the original specs
+        # It has build dependents on these spliced specs because it is an unchanged dependency
+        # for them
+        assert set(spliced["g"].dependents(deptype=dt.BUILD)) == {spliced["c"], spliced["f"]}
 
         assert spliced["b"]["g"] == g1_red
         assert spliced["b"]["g"]._build_spec is None
@@ -1085,11 +1088,7 @@ class TestSpecSemantics:
                     ("a", "g"),
                 ]:
                     depflag |= dt.BUILD
-                print(edge)
                 assert edge.depflag == depflag
-
-        print(spliced)
-        assert False
 
     @pytest.mark.parametrize("transitive", [True, False])
     def test_splice_with_cached_hashes(self, default_mock_concretization, transitive):
