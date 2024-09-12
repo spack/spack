@@ -72,9 +72,7 @@ class Elsi(CMakePackage, CudaPackage):
         values=(
             "2020",
             "2021",
-            conditional("2023", when="@:2.11"),
-            conditional("2023_11", when="@:2.11"),
-            conditional("2024", when="@:2.11"),
+            conditional("2023", "2023_11", "2024", when="@:2.11"),
         ),
         description="Internal ELPA version",
         multi=False,
