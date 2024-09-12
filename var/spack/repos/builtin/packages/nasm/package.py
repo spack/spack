@@ -23,7 +23,6 @@ class Nasm(AutotoolsPackage, Package):
     license("BSD-2-Clause")
 
     version("2.16.03", sha256="5bc940dd8a4245686976a8f7e96ba9340a0915f2d5b88356874890e207bdb581")
-    version("2.16.02", sha256="3ab7ca964f741fc05efc50689382f6730fce96bc73e4e74e5fcce66cc973abce")
     version("2.15.05", sha256="9182a118244b058651c576baa9d0366ee05983c4d4ae1d9ddd3236a9f2304997")
     version("2.14.02", sha256="b34bae344a3f2ed93b2ca7bf25f1ed3fb12da89eeda6096e3551fd66adeae9fc")
     version("2.13.03", sha256="23e1b679d64024863e2991e5c166e19309f0fe58a9765622b35bd31be5b2cc99")
