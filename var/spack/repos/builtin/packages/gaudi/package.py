@@ -130,7 +130,7 @@ class Gaudi(CMakePackage):
     # The Intel VTune dependency is taken aside because it requires a license
     depends_on("intel-parallel-studio -mpi +vtune", when="+vtune")
 
-    conflicts("gcc@14:", when="@:36")
+    conflicts("%gcc@14:", when="@:36")
 
     def cmake_args(self):
         args = [
