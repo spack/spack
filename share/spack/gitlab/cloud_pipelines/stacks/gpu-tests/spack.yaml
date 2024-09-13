@@ -3,7 +3,6 @@ spack:
 
   packages:
     all:
-      compiler: [gcc@11.1.0]
       providers:
         blas: [openblas]
         mpi: [mpich]

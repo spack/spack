@@ -12,9 +12,11 @@ spack:
     all:
       prefer:
       - "%cce"
-      compiler: [cce]
       providers:
         blas: [cray-libsci]
+        c: [cce]
+        cxx: [cce]
+        fortran: [cce]
         lapack: [cray-libsci]
         mpi: [cray-mpich]
         tbb: [intel-tbb]
