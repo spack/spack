@@ -4322,22 +4322,9 @@ class Spec:
 
     def _splice_intransitive(self, other):
         """Execute an intransitive splice. See ``Spec.splice`` for details"""
-        # FUTURE WORK: make this copy only the specs that will be modified
-        # (i.e. those that depend on a match for other)
         spec = self.copy()
         replacement = other.copy(deps=False, cleardeps=True)
         replacement.clear_cached_hashes(ignore=(ht.package_hash.attr,))
-
-        if not any(
-            node._splice_match(other, self_root=spec, other_root=other)
-            for node in spec.traverse(deptype=dt.LINK | dt.RUN)
-        ):
-            other_str = other.format("{name}/{hash:7}")
-            self_str = self.format("{name}/{hash:7}")
-            msg = f"Cannot splice {other_str} into {self_str}."
-            msg += f" Either {self_str} cannot depend on {other_str},"
-            msg += f" or {other_str} fails to provide a virtual used in {self_str}"
-            raise SpliceError(msg)
 
         for node in spec.traverse(deptype=dt.LINK | dt.RUN):
             if node._splice_match(other, self_root=spec, other_root=other):
@@ -4359,21 +4346,13 @@ class Spec:
         spec = self.copy()
         replacement = other.copy()
 
-        if not any(
-            node._splice_match(other, self_root=spec, other_root=other)
-            for node in spec.traverse(deptype=dt.LINK | dt.RUN)
-        ):
-            other_str = other.format("{name}/{hash:7}")
-            self_str = self.format("{name}/{hash:7}")
-            msg = f"Cannot splice {other_str} into {self_str}."
-            msg += f" Either {self_str} cannot depend on {other_str},"
-            msg += f" or {other_str} fails to provide a virtual used in {self_str}"
-            raise SpliceError(msg)
-
         changed = True
         while changed:
             changed = False
 
+            # Intentionally allowing traversal to change on each iteration
+            # using breadth-first traversal to ensure we only reach nodes that will
+            # be in final result
             for node in spec.traverse(order="breadth", deptype=dt.LINK | dt.RUN):
                 analogues = node._get_analogues(
                     replacement.traverse(deptype=dt.LINK | dt.RUN),
@@ -4421,6 +4400,17 @@ class Spec:
         """
         assert self.concrete
         assert other.concrete
+
+        if not any(
+            node._splice_match(other, self_root=self, other_root=other)
+            for node in self.traverse(deptype=dt.LINK | dt.RUN)
+        ):
+            other_str = other.format("{name}/{hash:7}")
+            self_str = self.format("{name}/{hash:7}")
+            msg = f"Cannot splice {other_str} into {self_str}."
+            msg += f" Either {self_str} cannot depend on {other_str},"
+            msg += f" or {other_str} fails to provide a virtual used in {self_str}"
+            raise SpliceError(msg)
 
         if not transitive:
             return self._splice_intransitive(other)
