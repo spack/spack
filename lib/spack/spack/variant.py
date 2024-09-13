@@ -12,7 +12,7 @@ import functools
 import inspect
 import itertools
 import re
-from typing import Any, Callable, List, Optional, Sequence, Type, Union
+from typing import Any, Callable, Collection, List, Optional, Type, Union
 
 import llnl.util.lang as lang
 import llnl.util.tty.color
@@ -65,13 +65,22 @@ class Variant:
 
     """
 
+    name: str
+    default: Any
+    values: Optional[Collection]  #: if None, valid values are defined only by validators
+    multi: bool
+    single_value_validator: Callable
+    group_validator: Optional[Callable]
+    sticky: bool
+    precedence: int
+
     def __init__(
         self,
         name: str,
         *,
         default: Any,
         description: str,
-        values: Union[Sequence, Callable] = (True, False),
+        values: Union[Collection, Callable] = (True, False),
         multi: bool = False,
         validator: Optional[Callable] = None,
         sticky: bool = False,
@@ -117,8 +126,9 @@ class Variant:
             self.single_value_validator = values
         else:
             # Otherwise, assume values is the set of allowed explicit values
-            self.values = _flatten(values)
-            self.single_value_validator = lambda v: v in self.values
+            values = _flatten(values)
+            self.values = values
+            self.single_value_validator = lambda v: v in values
 
         self.multi = multi
         self.group_validator = validator
@@ -252,12 +262,12 @@ def implicit_variant_conversion(method):
     return convert
 
 
-def _flatten(values):
+def _flatten(values) -> Collection:
     """Flatten instances of _ConditionalVariantValues for internal representation"""
     if isinstance(values, DisjointSetsOfValues):
         return values
 
-    flattened = []
+    flattened: List = []
     for item in values:
         if isinstance(item, _ConditionalVariantValues):
             flattened.extend(item)
