@@ -19,8 +19,8 @@ class Texlive(AutotoolsPackage):
 
     homepage = "https://www.tug.org/texlive"
     url = "https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2020/texlive-20200406-source.tar.xz"
-    base_url = "http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/{year}/texlive-{version}-{dist}.tar.xz"
-    list_url = "http://ftp.math.utah.edu/pub/tex/historic/systems/texlive"
+    base_url = "https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/{year}/texlive-{version}-{dist}.tar.xz"
+    list_url = "https://ftp.math.utah.edu/pub/tex/historic/systems/texlive"
     list_depth = 1
 
     license("GPL-2.0-or-later AND GPL-3.0-or-later", checked_by="tgamblin")
