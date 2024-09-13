@@ -261,8 +261,8 @@ class Plumed(AutotoolsPackage):
     def patch(self):
         # Ensure Spack's wrappers are used to compile the Python interface
         env = (
-            'CXX={0} LDSHARED="{0} -pthread -shared" '
-            'LDCXXSHARED="{0} -pthread -shared"'.format(spack_cxx)
+            'CC="{0}" LDSHARED="{0} -pthread -shared" '
+            'CXX="{1}" LDCXXSHARED="{1} -pthread -shared"'.format(spack_cc, spack_cxx)
         )
         filter_file(
             "plumed_program_name=plumed",

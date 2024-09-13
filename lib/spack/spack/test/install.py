@@ -11,6 +11,8 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.config
+import spack.database
 import spack.error
 import spack.mirror
 import spack.patch
@@ -255,8 +257,8 @@ def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
     installs are using the upstream installs).
     """
     mock_db_root = str(tmpdir_factory.mktemp("mock_db_root"))
-    prepared_db = spack.database.Database(mock_db_root)
     upstream_layout = gen_mock_layout("/a/")
+    prepared_db = spack.database.Database(mock_db_root, layout=upstream_layout)
     spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(
             name="install-upstream-fixture",
@@ -266,8 +268,7 @@ def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
 
     def _install_upstream(*specs):
         for spec_str in specs:
-            s = spack.spec.Spec(spec_str).concretized()
-            prepared_db.add(s, upstream_layout)
+            prepared_db.add(Spec(spec_str).concretized())
         downstream_root = str(tmpdir_factory.mktemp("mock_downstream_db_root"))
         return downstream_root, upstream_layout
 
@@ -280,7 +281,7 @@ def test_installed_upstream_external(install_upstream, mock_fetch):
     """
     store_root, _ = install_upstream("externaltool")
     with spack.store.use_store(store_root):
-        dependent = spack.spec.Spec("externaltest")
+        dependent = Spec("externaltest")
         dependent.concretize()
 
         new_dependency = dependent["externaltool"]
@@ -299,8 +300,8 @@ def test_installed_upstream(install_upstream, mock_fetch):
     """
     store_root, upstream_layout = install_upstream("dependency-install")
     with spack.store.use_store(store_root):
-        dependency = spack.spec.Spec("dependency-install").concretized()
-        dependent = spack.spec.Spec("dependent-install").concretized()
+        dependency = Spec("dependency-install").concretized()
+        dependent = Spec("dependent-install").concretized()
 
         new_dependency = dependent["dependency-install"]
         assert new_dependency.installed_upstream
@@ -607,7 +608,7 @@ def test_install_from_binary_with_missing_patch_succeeds(
         s.to_json(f)
 
     # And register it in the database
-    temporary_store.db.add(s, directory_layout=temporary_store.layout, explicit=True)
+    temporary_store.db.add(s, explicit=True)
 
     # Push it to a binary cache
     mirror = spack.mirror.Mirror.from_local_path(str(tmp_path / "my_build_cache"))

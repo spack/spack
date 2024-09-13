@@ -46,6 +46,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
     license("GPL-2.0-or-later")
 
+    version("2024.3", sha256="a6eeee773b6b1fb417def576e4049a89a08a0ed5feffcd7f0b33c7d7b48f19ba")
     version("2024.2", sha256="cc3e56c971dee9e89b705a1103765aba57bf41ad39a11c89d3de04c8b8cdf473")
     version("2024.1", sha256="a7abf149a278dfd5283dc592a2c4ae803b37d040df25d62a5e35af5c4557668f")
     version("2023.2", sha256="adbcc903c1a78cba98f49fe6905a62b49f12e3dfd7cedea00616d1a5f50550db")
@@ -271,8 +272,6 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("sirius+rocm", when="+rocm")
         depends_on("sirius+openmp", when="+openmp")
         depends_on("sirius~openmp", when="~openmp")
-        depends_on("sirius@7.0.0:7.0", when="@8:8.2")
-        depends_on("sirius@7.2", when="@8.3:8.9")
         depends_on("sirius@7.3:", when="@9.1")
         depends_on("sirius@7.4:7.5", when="@2023.2")
         depends_on("sirius@7.5:", when="@2024.1:")
