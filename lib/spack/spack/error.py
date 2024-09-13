@@ -132,3 +132,15 @@ class UnsatisfiableSpecError(SpecError):
 
 class FetchError(SpackError):
     """Superclass for fetch-related errors."""
+
+
+class NoSuchPatchError(SpackError):
+    """Raised when a patch file doesn't exist."""
+
+
+class PatchDirectiveError(SpackError):
+    """Raised when the wrong arguments are suppled to the patch directive."""
+
+
+class PatchLookupError(NoSuchPatchError):
+    """Raised when a patch file cannot be located from sha256."""

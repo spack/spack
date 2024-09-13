@@ -76,7 +76,6 @@ import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
 import spack.parser
-import spack.patch
 import spack.paths
 import spack.platforms
 import spack.provider_index
@@ -3465,7 +3464,7 @@ class Spec:
                     pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
                     try:
                         patch = index.patch_for_package(sha256, pkg_cls)
-                    except spack.patch.PatchLookupError as e:
+                    except spack.error.PatchLookupError as e:
                         raise spack.error.SpecError(
                             f"{e}. This usually means the patch was modified or removed. "
                             "To fix this, either reconcretize or use the original package "
