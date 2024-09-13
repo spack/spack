@@ -4215,6 +4215,25 @@ class Spec:
             if other_dep:
                 edge.parent._add_dependency(replacement, depflag=other_dep, virtuals=edge.virtuals)
 
+    def _get_analogues(self, candidates_generator, self_root, other_root):
+        analogues = [
+            dep
+            for dep in candidates_generator
+            if self._splice_match(dep, self_root=self_root, other_root=other_root)
+        ]
+        if not analogues:
+            return []
+        perfect_analogues = [a for a in analogues if a == self]
+        if perfect_analogues:
+            return perfect_analogues
+
+        name_analogues = [a for a in analogues if a.name == self.name]
+        if not name_analogues:
+            return analogues
+
+        version_analogues = [a for a in name_analogues if a.version == self.version]
+        return version_analogues or name_analogues
+
     def _splice_add_dependencies(self, spec, node, node_from_other, other):
         """Add analogues for all dependencies from node_from_other to node
 
@@ -4225,37 +4244,22 @@ class Spec:
             analogue = edge.spec.copy(deps=False)
             new_node = True
             # Find an analogous node in spec
-            analogues = [
-                dep
-                for dep in spec.traverse(root=False, deptype=dt.LINK | dt.RUN)
-                # We're effectively splicing in reverse -- dep is splicing into other
-                if dep._splice_match(edge.spec, self_root=other, other_root=self)
-            ]
-            if analogues:
-                # If there is a perfect match, use it
-                perfect_analogues = [a for a in analogues if a == edge.spec]
-                if perfect_analogues:
-                    analogues = perfect_analogues
-
-                # If there are multiple analogues, first prefer one that matches name
-                name_analogues = [a for a in analogues if a.name == edge.spec.name]
-                if name_analogues:
-                    analogues = name_analogues
-
-                # If there are multiple analogues, prefer one that matches version
-                version_analogues = [a for a in analogues if a.version == edge.spec.version]
-                if version_analogues:
-                    analogues = version_analogues
-
-                # Here, we assume that all multiples in the link/run graph follow:
-                # 1. perfect backwards compatibility between versions
-                # 2. widely depended on such that the root will win the loader race
-                # If there are multiple, then it's fine to add one and we do not redirect
-                # this dependency
-                # This does require a later step to ensure the root is redirected to the new node
-                if len(analogues) == 1:
-                    analogue = analogues[0]
-                    new_node = False
+            # This is effectively a reverse-splice, so self/other_root are reversed
+            analogues = edge.spec._get_analogues(
+                spec.traverse(root=False, deptype=dt.LINK | dt.RUN),
+                self_root=other,
+                other_root=self,
+            )
+            # Here, we assume that all multiples in the link/run graph follow:
+            # 1. perfect backwards compatibility between versions
+            # 2. widely depended on such that the root will win the loader race
+            # If there are multiple, then it's fine to add one and we do not redirect
+            # this dependency
+            # This does require a later step to ensure the root is redirected to the new node
+            # handled in `Spec._splice_fixup_duplicate_dependencies`
+            if len(analogues) == 1:
+                analogue = analogues[0]
+                new_node = False
 
             if new_node:
                 if edge.depflag & ~dt.BUILD:
@@ -4371,27 +4375,19 @@ class Spec:
             changed = False
 
             for node in spec.traverse(order="breadth", deptype=dt.LINK | dt.RUN):
-                analogues = [
-                    repl
-                    for repl in replacement.traverse(deptype=dt.LINK | dt.RUN)
-                    if node._splice_match(repl, self_root=spec, other_root=other)
-                ]
+                analogues = node._get_analogues(
+                    replacement.traverse(deptype=dt.LINK | dt.RUN),
+                    self_root=spec,
+                    other_root=other,
+                )
+                # No match, keep searching
                 if not analogues:
                     continue
-
-                perfect_analogues = [a for a in analogues if a == node]
-                if perfect_analogues:
-                    continue
-
-                name_analogues = [a for a in analogues if a.name == node.name]
-                if name_analogues:
-                    analogues = name_analogues
-                    version_analogues = [a for a in analogues if a.version == node.version]
-                    if version_analogues:
-                        analogues = version_analogues
-
                 analogues.sort(key=lambda s: s.version)
                 analogue = analogues[-1]
+                # No splice needed here, keep checking
+                if analogue == node:
+                    continue
                 node._splice_detach_and_add_dependents(analogue, context=spec)
                 changed = True
                 break
