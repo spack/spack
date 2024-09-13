@@ -574,18 +574,18 @@ class VCSFetchStrategy(FetchStrategy):
         # Set a URL based on the type of fetch strategy.
         self.url = kwargs.get(self.url_attr, None)
         if not self.url:
-            raise ValueError("%s requires %s argument." % (self.__class__, self.url_attr))
+            raise ValueError(f"{self.__class__} requires {self.url_attr} argument.")
 
         for attr in self.optional_attrs:
             setattr(self, attr, kwargs.get(attr, None))
 
     @_needs_stage
     def check(self):
-        tty.debug("No checksum needed when fetching with {0}".format(self.url_attr))
+        tty.debug(f"No checksum needed when fetching with {self.url_attr}")
 
     @_needs_stage
     def expand(self):
-        tty.debug("Source fetched with %s is already expanded." % self.url_attr)
+        tty.debug(f"Source fetched with {self.url_attr} is already expanded.")
 
     @_needs_stage
     def archive(self, destination, *, exclude: Optional[str] = None):
@@ -605,10 +605,10 @@ class VCSFetchStrategy(FetchStrategy):
             )
 
     def __str__(self):
-        return "VCS: %s" % self.url
+        return f"VCS: {self.url}"
 
     def __repr__(self):
-        return "%s<%s>" % (self.__class__, self.url)
+        return f"{self.__class__}<{self.url}>"
 
 
 @fetcher
@@ -717,6 +717,11 @@ class GitFetchStrategy(VCSFetchStrategy):
     git_version_re = r"git version (\S+)"
 
     def __init__(self, **kwargs):
+
+        self.commit: Optional[str] = None
+        self.tag: Optional[str] = None
+        self.branch: Optional[str] = None
+
         # Discards the keywords in kwargs that may conflict with the next call
         # to __init__
         forwarded_args = copy.copy(kwargs)
@@ -765,43 +770,42 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def cachable(self):
-        return self.cache_enabled and bool(self.commit or self.tag)
+        return self.cache_enabled and bool(self.commit)
 
     def source_id(self):
-        return self.commit or self.tag
+        # TODO: tree-hash would secure download cache and mirrors, commit only secures checkouts.
+        return self.commit
 
     def mirror_id(self):
-        repo_ref = self.commit or self.tag or self.branch
-        if repo_ref:
+        if self.commit:
             repo_path = urllib.parse.urlparse(self.url).path
-            result = os.path.sep.join(["git", repo_path, repo_ref])
+            result = os.path.sep.join(["git", repo_path, self.commit])
             return result
 
     def _repo_info(self):
         args = ""
-
         if self.commit:
-            args = " at commit {0}".format(self.commit)
+            args = f" at commit {self.commit}"
         elif self.tag:
-            args = " at tag {0}".format(self.tag)
+            args = f" at tag {self.tag}"
         elif self.branch:
-            args = " on branch {0}".format(self.branch)
+            args = f" on branch {self.branch}"
 
-        return "{0}{1}".format(self.url, args)
+        return f"{self.url}{args}"
 
     @_needs_stage
     def fetch(self):
         if self.stage.expanded:
-            tty.debug("Already fetched {0}".format(self.stage.source_path))
+            tty.debug(f"Already fetched {self.stage.source_path}")
             return
 
         if self.git_sparse_paths:
-            self._sparse_clone_src(commit=self.commit, branch=self.branch, tag=self.tag)
+            self._sparse_clone_src()
         else:
-            self._clone_src(commit=self.commit, branch=self.branch, tag=self.tag)
+            self._clone_src()
         self.submodule_operations()
 
-    def bare_clone(self, dest):
+    def bare_clone(self, dest: str) -> None:
         """
         Execute a bare clone for metadata only
 
@@ -809,7 +813,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         and shouldn't be used for staging.
         """
         # Default to spack source path
-        tty.debug("Cloning git repository: {0}".format(self._repo_info()))
+        tty.debug(f"Cloning git repository: {self._repo_info()}")
 
         git = self.git
         debug = spack.config.get("config:debug")
@@ -821,24 +825,16 @@ class GitFetchStrategy(VCSFetchStrategy):
         clone_args.extend([self.url, dest])
         git(*clone_args)
 
-    def _clone_src(self, commit=None, branch=None, tag=None):
-        """
-        Clone a repository to a path using git.
-
-        Arguments:
-            commit (str or None): A commit to fetch from the remote. Only one of
-                commit, branch, and tag may be non-None.
-            branch (str or None): A branch to fetch from the remote.
-            tag (str or None): A tag to fetch from the remote.
-        """
+    def _clone_src(self) -> None:
+        """Clone a repository to a path using git."""
         # Default to spack source path
         dest = self.stage.source_path
-        tty.debug("Cloning git repository: {0}".format(self._repo_info()))
+        tty.debug(f"Cloning git repository: {self._repo_info()}")
 
         git = self.git
         debug = spack.config.get("config:debug")
 
-        if commit:
+        if self.commit:
             # Need to do a regular clone and check out everything if
             # they asked for a particular commit.
             clone_args = ["clone", self.url]
@@ -857,7 +853,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                 )
 
             with working_dir(dest):
-                checkout_args = ["checkout", commit]
+                checkout_args = ["checkout", self.commit]
                 if not debug:
                     checkout_args.insert(1, "--quiet")
                 git(*checkout_args)
@@ -869,10 +865,10 @@ class GitFetchStrategy(VCSFetchStrategy):
                 args.append("--quiet")
 
             # If we want a particular branch ask for it.
-            if branch:
-                args.extend(["--branch", branch])
-            elif tag and self.git_version >= spack.version.Version("1.8.5.2"):
-                args.extend(["--branch", tag])
+            if self.branch:
+                args.extend(["--branch", self.branch])
+            elif self.tag and self.git_version >= spack.version.Version("1.8.5.2"):
+                args.extend(["--branch", self.tag])
 
             # Try to be efficient if we're using a new enough git.
             # This checks out only one branch's history
@@ -904,7 +900,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                 # For tags, be conservative and check them out AFTER
                 # cloning.  Later git versions can do this with clone
                 # --branch, but older ones fail.
-                if tag and self.git_version < spack.version.Version("1.8.5.2"):
+                if self.tag and self.git_version < spack.version.Version("1.8.5.2"):
                     # pull --tags returns a "special" error code of 1 in
                     # older versions that we have to ignore.
                     # see: https://github.com/git/git/commit/19d122b
@@ -917,16 +913,8 @@ class GitFetchStrategy(VCSFetchStrategy):
                     git(*pull_args, ignore_errors=1)
                     git(*co_args)
 
-    def _sparse_clone_src(self, commit=None, branch=None, tag=None, **kwargs):
-        """
-        Use git's sparse checkout feature to clone portions of a git repository
-
-        Arguments:
-            commit (str or None): A commit to fetch from the remote. Only one of
-                commit, branch, and tag may be non-None.
-            branch (str or None): A branch to fetch from the remote.
-            tag (str or None): A tag to fetch from the remote.
-        """
+    def _sparse_clone_src(self, **kwargs):
+        """Use git's sparse checkout feature to clone portions of a git repository"""
         dest = self.stage.source_path
         git = self.git
 
@@ -945,12 +933,12 @@ class GitFetchStrategy(VCSFetchStrategy):
                     "Cloning the full repository instead."
                 )
             )
-            self._clone_src(commit, branch, tag)
+            self._clone_src()
         else:
             # default to depth=2 to allow for retention of some git properties
             depth = kwargs.get("depth", 2)
-            needs_fetch = branch or tag
-            git_ref = branch or tag or commit
+            needs_fetch = self.branch or self.tag
+            git_ref = self.branch or self.tag or self.commit
 
             assert git_ref
 
@@ -1050,7 +1038,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         return not (self.url.startswith("http://") or self.url.startswith("/"))
 
     def __str__(self):
-        return "[git] {0}".format(self._repo_info())
+        return f"[git] {self._repo_info()}"
 
 
 @fetcher
@@ -1668,7 +1656,7 @@ def for_package_version(pkg, version=None):
     raise InvalidArgsError(pkg, version, **args)
 
 
-def from_url_scheme(url: str, **kwargs):
+def from_url_scheme(url: str, **kwargs) -> FetchStrategy:
     """Finds a suitable FetchStrategy by matching its url_attr with the scheme
     in the given url."""
     parsed_url = urllib.parse.urlparse(url, scheme="file")

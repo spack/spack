@@ -1553,20 +1553,20 @@ class ModuleChangePropagator:
 
     _PROTECTED_NAMES = ("package", "current_module", "modules_in_mro", "_set_attributes")
 
-    def __init__(self, package):
+    def __init__(self, package: spack.package_base.PackageBase) -> None:
         self._set_self_attributes("package", package)
         self._set_self_attributes("current_module", package.module)
 
         #: Modules for the classes in the MRO up to PackageBase
         modules_in_mro = []
-        for cls in inspect.getmro(type(package)):
-            module = cls.module
+        for cls in package.__class__.__mro__:
+            module = getattr(cls, "module", None)
 
-            if module == self.current_module:
-                continue
-
-            if module == spack.package_base:
+            if module is None or module is spack.package_base:
                 break
+
+            if module is self.current_module:
+                continue
 
             modules_in_mro.append(module)
         self._set_self_attributes("modules_in_mro", modules_in_mro)

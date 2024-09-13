@@ -1110,7 +1110,8 @@ def generate_gitlab_ci_yaml(
             cdash_handler.populate_buildgroup(all_job_names)
         except (SpackError, HTTPError, URLError, TimeoutError) as err:
             tty.warn(f"Problem populating buildgroup: {err}")
-    else:
+    elif cdash_config:
+        # warn only if there was actually a CDash configuration.
         tty.warn("Unable to populate buildgroup without CDash credentials")
 
     service_job_retries = {
