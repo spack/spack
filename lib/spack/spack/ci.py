@@ -1219,8 +1219,8 @@ def generate_gitlab_ci_yaml(
         # Capture the version of Spack used to generate the pipeline, that can be
         # passed to `git checkout` for version consistency. If we aren't in a Git
         # repository, presume we are a Spack release and use the Git tag instead.
-        spack_version = spack.main.get_version()
-        version_to_clone = spack.main.get_spack_commit() or f"v{spack.spack_version}"
+        spack_version = spack.get_version()
+        version_to_clone = spack.get_spack_commit() or f"v{spack.spack_version}"
 
         output_object["variables"] = {
             "SPACK_ARTIFACTS_ROOT": rel_artifacts_root,

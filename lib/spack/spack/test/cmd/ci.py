@@ -305,8 +305,8 @@ def test_ci_generate_with_custom_settings(
     ci_generate_test, tmp_path, mock_binary_index, monkeypatch
 ):
     """Test use of user-provided scripts and attributes"""
-    monkeypatch.setattr(spack.main, "get_version", lambda: "0.15.3")
-    monkeypatch.setattr(spack.main, "get_spack_commit", lambda: "big ol commit sha")
+    monkeypatch.setattr(spack, "get_version", lambda: "0.15.3")
+    monkeypatch.setattr(spack, "get_spack_commit", lambda: "big ol commit sha")
     spack_yaml, outputfile, _ = ci_generate_test(
         f"""\
 spack:
@@ -1040,8 +1040,8 @@ def test_ci_generate_override_runner_attrs(
     inherit them from the top level, as well as when we override one or
     more at the runner level"""
     monkeypatch.setattr(spack, "spack_version", "0.20.0.test0")
-    monkeypatch.setattr(spack.main, "get_version", lambda: "0.20.0.test0 (blah)")
-    monkeypatch.setattr(spack.main, "get_spack_commit", lambda: git_version)
+    monkeypatch.setattr(spack, "get_version", lambda: "0.20.0.test0 (blah)")
+    monkeypatch.setattr(spack, "get_spack_commit", lambda: git_version)
     spack_yaml, outputfile, _ = ci_generate_test(
         f"""\
 spack:

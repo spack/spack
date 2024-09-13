@@ -68,6 +68,7 @@ import llnl.util.lang as lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
 
+import spack
 import spack.compiler
 import spack.compilers
 import spack.config
@@ -4890,7 +4891,6 @@ def get_host_environment_metadata() -> Dict[str, str]:
     """Get the host environment, reduce to a subset that we can store in
     the install directory, and add the spack version.
     """
-    import spack.main
 
     environ = get_host_environment()
     return {
@@ -4898,7 +4898,7 @@ def get_host_environment_metadata() -> Dict[str, str]:
         "platform": environ["platform"],
         "host_target": environ["target"],
         "hostname": environ["hostname"],
-        "spack_version": spack.main.get_version(),
+        "spack_version": spack.get_version(),
         "kernel_version": platform.version(),
     }
 
