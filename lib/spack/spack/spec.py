@@ -3354,7 +3354,14 @@ class Spec:
         if not self.variants.satisfies(other.variants):
             return False
 
+        print(f"self,variants: {self.variants}")
+        print(f"other.variants: {other.variants}")
+        print(f"type(self.variants): {type(self.variants)}")
+        print(f"type(other.variants): {type(other.variants)}")
+
         # Rikki: Check the deps has variant if propagating
+        # if variant is propagating
+        # check that any of the dependencies contain that variant
 
         if self.architecture and other.architecture:
             if not self.architecture.satisfies(other.architecture):
@@ -4402,8 +4409,16 @@ class VariantMap(lang.HashableMap):
         # Set the item
         super().__setitem__(vspec.name, vspec)
 
-    def satisfies(self, other):
-        return all(k in self and self[k].satisfies(other[k]) for k in other)
+    def satisfies(self, other):  # Rikki: loosen constrains
+        for k in other:
+            if k not in self:
+                if not other[k].propagate:
+                    return False
+                else:
+                    continue
+            if not self[k].satisfies(other[k]):
+                return False
+        return True
 
     def intersects(self, other):
         return all(self[k].intersects(other[k]) for k in other if k in self)
