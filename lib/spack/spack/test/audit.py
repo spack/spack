@@ -27,8 +27,12 @@ import spack.config
         (["invalid-gitlab-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has invalid GitLab patch URLs
         (["invalid-selfhosted-gitlab-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
-        # This package has a stand-alone 'test*' method in build-time callbacks
-        (["fail-test-audit"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
+        # This package has a stand-alone test method in build-time callbacks
+        (["fail-test-audit"], ["PKG-PROPERTIES"]),
+        # This package has stand-alone test methods without non-trivial docstrings
+        (["fail-test-audit-docstring"], ["PKG-PROPERTIES"]),
+        # This package has a stand-alone test method without an implementation
+        (["fail-test-audit-impl"], ["PKG-PROPERTIES"]),
         # This package has no issues
         (["mpileaks"], None),
         # This package has a conflict with a trigger which cannot constrain the constraint

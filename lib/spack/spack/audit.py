@@ -39,6 +39,7 @@ import ast
 import collections
 import collections.abc
 import glob
+import inspect
 import io
 import itertools
 import os
@@ -404,9 +405,13 @@ package_https_directives = AuditClass(
 )
 
 
-@package_directives
+@package_properties
 def _check_build_test_callbacks(pkgs, error_cls):
-    """Ensure stand-alone test method is not included in build-time callbacks"""
+    """Ensure stand-alone test methods are not included in build-time callbacks.
+
+    Test methods are for checking the installed software as stand-alone tests.
+    They could also be called during the post-install phase of a build.
+    """
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
@@ -414,12 +419,9 @@ def _check_build_test_callbacks(pkgs, error_cls):
 
         has_test_method = test_callbacks and any([m.startswith("test_") for m in test_callbacks])
         if has_test_method:
-            msg = (
-                f'{", ".join(test_callbacks)} package contains "test_*" method(s) in '
-                "build_time_test_callbacks"
-            )
-            instr = 'Remove all methods whose names start with "test_"'
-            instr = instr + f' from: [{", ".join(test_callbacks)}]'
+            msg = f"{pkg_name} includes stand-alone test methods in build-time checks."
+            callbacks = ", ".join(test_callbacks)
+            instr = f"Remove the following from build_time_test_callbacks: {callbacks}"
             errors.append(error_cls(msg.format(pkg_name), [instr]))
 
     return errors
@@ -767,6 +769,71 @@ def _uses_deprecated_globals(pkgs, error_cls):
                     ],
                 )
             )
+
+    return errors
+
+
+@package_properties
+def _ensure_test_docstring(pkgs, error_cls):
+    """Ensure stand-alone test methods have a docstring.
+
+    The docstring of a test method is implicitly used as the description of
+    the corresponding test part during test results reporting.
+    """
+    doc_regex = r'\s+("""[\w\s\(\)\-\,\;\:]+""")'
+
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        methods = inspect.getmembers(pkg_cls, predicate=lambda x: inspect.isfunction(x))
+        for name, test_fn in methods:
+            if not name.startswith("test_"):
+                continue
+
+            # Ensure the test method has a docstring
+            source = inspect.getsource(test_fn)
+            match = re.search(doc_regex, source)
+            if match is None or len(match.group(0).replace('"', "").strip()) == 0:
+                msg = f"{pkg_name} {name}'s has empty or missing docstring."
+                instr = (
+                    "The docstring is used as the description of the test in test outputs."
+                    "\n    Add a concise summary of the test to the docstring."
+                )
+                errors.append(error_cls(msg, [instr]))
+
+    return errors
+
+
+@package_properties
+def _ensure_test_implemented(pkgs, error_cls):
+    """Ensure stand-alone test methods are implemented.
+
+    The test method is also required to be non-empty.
+    """
+
+    def skip(line):
+        ln = line.strip()
+        return ln.startswith("#") or "pass" in ln
+
+    doc_regex = r'\s+("""[\w\s\(\)\-\,\;\:]+""")'
+
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        methods = inspect.getmembers(pkg_cls, predicate=lambda x: inspect.isfunction(x))
+        for name, test_fn in methods:
+            if not name.startswith("test_"):
+                continue
+
+            source = inspect.getsource(test_fn)
+
+            # Attempt to ensure the test method is implemented.
+            impl = re.sub(doc_regex, r"", source).splitlines()[1:]
+            lines = [ln.strip() for ln in impl if not skip(ln)]
+            if not lines:
+                msg = f"{pkg_name}'s {name} appears to be empty."
+                instr = "Implement the test functionality or remove the method."
+                errors.append(error_cls(msg, [instr]))
 
     return errors
 
