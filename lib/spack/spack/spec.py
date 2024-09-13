@@ -4177,13 +4177,18 @@ class Spec:
             and self._virtuals_provided(self_root) <= other._virtuals_provided(other_root)
         )
 
-    def _splice_detach_and_add_dependents(self, replacement, other):
+    def _splice_detach_and_add_dependents(self, replacement, context):
         """Helper method for Spec._intransitive_splice.
 
         replacement is a copy of other with all deps cleared. Other is the argument from splice."""
         # Update build_spec attributes for all transitive dependents
         # before we start changing their dependencies
-        for ancestor in self.traverse(root=False, direction="parents"):
+        ancestors_in_context = [
+            a
+            for a in self.traverse(root=False, direction="parents")
+            if a in context.traverse(deptype=dt.LINK | dt.RUN)
+        ]
+        for ancestor in ancestors_in_context:
             # Only set it if it hasn't been spliced before
             ancestor._build_spec = ancestor._build_spec or ancestor.copy()
             ancestor.clear_cached_hashes(ignore=(ht.package_hash.attr,))
@@ -4192,6 +4197,8 @@ class Spec:
         # node with one on replacement
         # For each build dependent, restrict the edge to build-only
         for edge in self.edges_from_dependents():
+            if edge.parent not in ancestors_in_context:
+                continue
             index = edge.parent._dependencies[self.name].index(edge)
             build_dep = edge.depflag & dt.BUILD
             other_dep = edge.depflag & ~dt.BUILD
@@ -4303,6 +4310,7 @@ class Spec:
                     edge.depflag = dt.BUILD
                 else:
                     node._dependencies.edges[dep.name].remove(edge)
+                    dep._dependents.edges[node.name].remove(edge)
 
                 # Attach new dependency
                 new_depflag = depflag & ~dt.BUILD
@@ -4331,10 +4339,62 @@ class Spec:
             if node._splice_match(other, self_root=spec, other_root=other):
                 # This handles all edges into replacement
                 # updating build_spec pointers for dependents
-                node._splice_detach_and_add_dependents(replacement, other)
+                node._splice_detach_and_add_dependents(replacement, context=spec)
 
         # This handles all edges out of replacement and any nodes unique to other that are added
         self._splice_add_dependencies(spec, replacement, other, other)
+
+        # This handles redirecting duplicate link/run dependencies to ensure the invariant that
+        # an ancestor cannot depend on an older version than its descendent depends on
+        spec._splice_fixup_duplicate_dependencies()
+
+        return spec
+
+    def _splice_transitive(self, other):
+        """Execute a transitive splice. See ``Spec.splice`` for details"""
+        spec = self.copy()
+        replacement = other.copy()
+
+        if not any(
+            node._splice_match(other, self_root=spec, other_root=other)
+            for node in spec.traverse(deptype=dt.LINK | dt.RUN)
+        ):
+            other_str = other.format("{name}/{hash:7}")
+            self_str = self.format("{name}/{hash:7}")
+            msg = f"Cannot splice {other_str} into {self_str}."
+            msg += f" Either {self_str} cannot depend on {other_str},"
+            msg += f" or {other_str} fails to provide a virtual used in {self_str}"
+            raise SpliceError(msg)
+
+        changed = True
+        while changed:
+            changed = False
+
+            for node in spec.traverse(order="breadth", deptype=dt.LINK | dt.RUN):
+                analogues = [
+                    repl
+                    for repl in replacement.traverse(deptype=dt.LINK | dt.RUN)
+                    if node._splice_match(repl, self_root=spec, other_root=other)
+                ]
+                if not analogues:
+                    continue
+
+                perfect_analogues = [a for a in analogues if a == node]
+                if perfect_analogues:
+                    continue
+
+                name_analogues = [a for a in analogues if a.name == node.name]
+                if name_analogues:
+                    analogues = name_analogues
+                    version_analogues = [a for a in analogues if a.version == node.version]
+                    if version_analogues:
+                        analogues = version_analogues
+
+                analogues.sort(key=lambda s: s.version)
+                analogue = analogues[-1]
+                node._splice_detach_and_add_dependents(analogue, context=spec)
+                changed = True
+                break
 
         # This handles redirecting duplicate link/run dependencies to ensure the invariant that
         # an ancestor cannot depend on an older version than its descendent depends on
@@ -4362,137 +4422,14 @@ class Spec:
         the same way it was built, any such changes are tracked by setting the
         build_spec to point to the corresponding dependency from the original
         Spec.
-        TODO: Extend this for non-concrete Specs.
         """
         assert self.concrete
         assert other.concrete
 
         if not transitive:
             return self._splice_intransitive(other)
-
-        virtuals_to_replace = [v.name for v in other.package.virtuals_provided if v in self]
-        if virtuals_to_replace:
-            deps_to_replace = dict((self[v], other) for v in virtuals_to_replace)
-            # deps_to_replace = [self[v] for v in virtuals_to_replace]
         else:
-            # TODO: sanity check and error raise here for other.name not in self
-            deps_to_replace = {self[other.name]: other}
-            # deps_to_replace = [self[other.name]]
-
-        for d in deps_to_replace:
-            if not all(
-                v in other.package.virtuals_provided or v not in self
-                for v in d.package.virtuals_provided
-            ):
-                # There was something provided by the original that we don't
-                # get from its replacement.
-                raise SpliceError(
-                    ("Splice between {0} and {1} will not provide " "the same virtuals.").format(
-                        self.name, other.name
-                    )
-                )
-            for n in d.traverse(root=False):
-                if not all(
-                    any(
-                        v in other_n.package.virtuals_provided
-                        for other_n in other.traverse(root=False)
-                    )
-                    or v not in self
-                    for v in n.package.virtuals_provided
-                ):
-                    raise SpliceError(
-                        (
-                            "Splice between {0} and {1} will not provide " "the same virtuals."
-                        ).format(self.name, other.name)
-                    )
-
-        # For now, check that we don't have DAG with multiple specs from the
-        # same package
-        def multiple_specs(root):
-            counter = collections.Counter([node.name for node in root.traverse()])
-            _, max_number = counter.most_common()[0]
-            return max_number > 1
-
-        if multiple_specs(self) or multiple_specs(other):
-            msg = (
-                'Either "{0}" or "{1}" contain multiple specs from the same '
-                "package, which cannot be handled by splicing at the moment"
-            )
-            raise ValueError(msg.format(self, other))
-
-        # Multiple unique specs with the same name will collide, so the
-        # _dependents of these specs should not be trusted.
-        # Variants may also be ignored here for now...
-
-        # Keep all cached hashes because we will invalidate the ones that need
-        # invalidating later, and we don't want to invalidate unnecessarily
-
-        def from_self(name, transitive):
-            if transitive:
-                if name in other:
-                    return False
-                if any(v in other for v in self[name].package.virtuals_provided):
-                    return False
-                return True
-            else:
-                if name == other.name:
-                    return False
-                if any(
-                    v in other.package.virtuals_provided
-                    for v in self[name].package.virtuals_provided
-                ):
-                    return False
-                return True
-
-        self_nodes = dict(
-            (s.name, s.copy(deps=False))
-            for s in self.traverse(root=True)
-            if from_self(s.name, transitive)
-        )
-
-        if transitive:
-            other_nodes = dict((s.name, s.copy(deps=False)) for s in other.traverse(root=True))
-        else:
-            # NOTE: Does not fully validate providers; loader races possible
-            other_nodes = dict(
-                (s.name, s.copy(deps=False))
-                for s in other.traverse(root=True)
-                if s is other or s.name not in self
-            )
-
-        nodes = other_nodes.copy()
-        nodes.update(self_nodes)
-
-        for name in nodes:
-            if name in self_nodes:
-                for edge in self[name].edges_to_dependencies():
-                    dep_name = deps_to_replace.get(edge.spec, edge.spec).name
-                    nodes[name].add_dependency_edge(
-                        nodes[dep_name], depflag=edge.depflag, virtuals=edge.virtuals
-                    )
-                if any(dep not in self_nodes for dep in self[name]._dependencies):
-                    nodes[name].build_spec = self[name].build_spec
-            else:
-                for edge in other[name].edges_to_dependencies():
-                    nodes[name].add_dependency_edge(
-                        nodes[edge.spec.name], depflag=edge.depflag, virtuals=edge.virtuals
-                    )
-                if any(dep not in other_nodes for dep in other[name]._dependencies):
-                    nodes[name].build_spec = other[name].build_spec
-
-        ret = nodes[self.name]
-
-        # Clear cached hashes for all affected nodes
-        # Do not touch unaffected nodes
-        for dep in ret.traverse(root=True, order="post"):
-            opposite = other_nodes if dep.name in self_nodes else self_nodes
-            if any(name in dep for name in opposite.keys()):
-                # package hash cannot be affected by splice
-                dep.clear_cached_hashes(ignore=["package_hash"])
-
-                dep.dag_hash()
-
-        return nodes[self.name]
+            return self._splice_transitive(other)
 
     def clear_cached_hashes(self, ignore=()):
         """

@@ -102,6 +102,8 @@ def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
         )
         assert os.path.exists(manifest_file_path)
         orig_node = spec[node.name]
+        if node == orig_node:
+            continue
         orig_manifest_file_path = os.path.join(
             orig_node.prefix,
             spack.store.STORE.layout.metadata_dir,
