@@ -4199,7 +4199,6 @@ class Spec:
         for edge in self.edges_from_dependents():
             if edge.parent not in ancestors_in_context:
                 continue
-            index = edge.parent._dependencies[self.name].index(edge)
             build_dep = edge.depflag & dt.BUILD
             other_dep = edge.depflag & ~dt.BUILD
             if build_dep:

@@ -36,7 +36,7 @@ from spack.variant import (
 
 @pytest.fixture()
 def setup_complex_splice(monkeypatch):
-    """Fixture to set up splicing for two complex specs.
+    r"""Fixture to set up splicing for two complex specs.
 
     a_red is a spec in which every node has the variant color=red
     c_blue is a spec in which every node has the variant color=blue
@@ -1058,7 +1058,8 @@ class TestSpecSemantics:
 
         spliced = a_red.splice(c_blue, transitive=False)
         assert spliced.satisfies(
-            "a color=red ^b color=red ^c color=blue ^d color=red ^e color=red ^f color=blue ^g@3 color=blue"
+            "a color=red ^b color=red ^c color=blue "
+            "^d color=red ^e color=red ^f color=blue ^g@3 color=blue"
         )
         assert spliced.build_spec == a_red
         # We cannot check spliced["b"].build_spec is spliced["b"] because Spec.__getitem__ creates
@@ -1128,7 +1129,8 @@ class TestSpecSemantics:
 
         spliced = a_red.splice(c_blue, transitive=True)
         assert spliced.satisfies(
-            "a color=red ^b color=red ^c color=blue ^d color=blue ^e color=blue ^f color=blue ^g@3 color=blue"
+            "a color=red ^b color=red"
+            "^c color=blue ^d color=blue ^e color=blue ^f color=blue ^g@3 color=blue"
         )
         assert spliced.build_spec == a_red
 
