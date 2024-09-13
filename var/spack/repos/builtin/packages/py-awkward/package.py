@@ -90,9 +90,6 @@ class PyAwkward(PythonPackage):
     depends_on("cmake@3.13:", type="build")
     depends_on("py-wheel@0.36.0:", when="@:1.7.0", type="build")
 
-    # https://github.com/scikit-hep/awkward/issues/3132#issuecomment-2136042870
-    conflicts("%gcc@14:", when="@:2.6.4")
-
     @when("@1.9.0:")
     def setup_build_environment(self, env):
         env.set("CMAKE_ARGS", "-DAWKWARD_EXTERNAL_PYBIND11=TRUE")

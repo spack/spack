@@ -43,3 +43,6 @@ class PyAwkwardCpp(PythonPackage):
     # older versions
     depends_on("py-numpy@1.14.5:", when="@:11", type=("build", "run"))
     depends_on("py-scikit-build-core@0.1.3:+pyproject", when="@:9", type="build")
+
+    # https://github.com/scikit-hep/awkward/issues/3132#issuecomment-2136042870
+    conflicts("%gcc@14:", when="@:33")
