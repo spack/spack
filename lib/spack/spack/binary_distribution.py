@@ -44,6 +44,7 @@ import spack.mirror
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
+import spack.paths
 import spack.platforms
 import spack.relocate as relocate
 import spack.repo
