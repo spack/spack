@@ -8,7 +8,6 @@ spack:
   packages:
     all:
       require: "%gcc@9.4.0 target=ppc64le"
-      compiler: [gcc@9.4.0]
       providers:
         blas: [openblas]
         mpi: [mpich]
