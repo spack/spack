@@ -213,8 +213,9 @@ class Qt(Package):
             depends_on("libxrender")
 
         conflicts("+framework", msg="QT cannot be built as a framework except on macOS.")
-    # Windows sqlite has no column_metadata variant
+
     with when("platform=windows +sql"):
+        # Windows sqlite has no column_metadata variant unlike all other platforms
         depends_on("sqlite", type=("build", "run"))
 
     with when("platform=darwin"):
@@ -597,7 +598,7 @@ class Qt(Package):
             if IS_WINDOWS:
                 config_args.append("desktop")
         else:
-            config_args.append("-noopengl")
+            config_args.append("-no-opengl")
 
         use_spack_dep = self._dep_appender_factory(config_args)
 
