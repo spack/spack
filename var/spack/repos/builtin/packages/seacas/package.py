@@ -197,6 +197,11 @@ class Seacas(CMakePackage):
         description="Enable Faodel. See https://github.com/sandialabs/faodel",
     )
     variant(
+        "libcatalyst",
+        default=False,
+        description="Enable libcatalyst tpl (catalyst api 2); Kitware insitu library",
+    )
+    variant(
         "matio",
         default=True,
         description="Compile with matio (MatLab) support."
@@ -262,6 +267,10 @@ class Seacas(CMakePackage):
     depends_on("catch2@3:", when="@2024-03-11:+tests")
 
     depends_on("matio", when="+matio")
+
+    depends_on("libcatalyst+mpi~python", when="+libcatalyst+mpi")
+    depends_on("libcatalyst~mpi~python", when="+libcatalyst~mpi")
+
     depends_on("libx11", when="+x11")
 
     with when("+cgns"):
@@ -480,6 +489,9 @@ class Seacas(CMakePackage):
         options.append(from_variant("TPL_ENABLE_ADIOS2", "adios2"))
         if "+adios2" in spec:
             options.append(define("ADIOS2_ROOT", spec["adios2"].prefix))
+
+        if "+libcatalyst" in spec:
+            options.append(define("TPL_ENABLE_Catalyst2", "ON"))
 
         # ################# RPath Handling ######################
         if sys.platform == "darwin" and macos_version() >= Version("10.12"):
