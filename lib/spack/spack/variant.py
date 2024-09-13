@@ -38,25 +38,6 @@ reserved_names = [
 special_variant_values = [None, "none", "*"]
 
 
-class _ValueValidator:
-    """Callable to validate whether a value is present in a set of values."""
-
-    def __init__(self, values):
-        self._values = values
-
-    def __call__(self, value):
-        return value in self._values
-
-    def __eq__(self, other):
-        return self._values == other._values
-
-    def __str__(self):
-        return f"<valid if in {self._values}>"
-
-
-always_true = lambda x: True
-
-
 class VariantType(enum.Enum):
     """Enum representing the three concrete variant types."""
 
@@ -117,7 +98,7 @@ class Variant:
         self.values = None
         if values == "*":
             # wildcard is a special case to make it easy to say any value is ok
-            self.single_value_validator = always_true
+            self.single_value_validator = lambda v: True
 
         elif isinstance(values, type):
             # supplying a type means any value *of that type*
@@ -137,7 +118,7 @@ class Variant:
         else:
             # Otherwise, assume values is the set of allowed explicit values
             self.values = _flatten(values)
-            self.single_value_validator = _ValueValidator(self.values)
+            self.single_value_validator = lambda v: v in self.values
 
         self.multi = multi
         self.group_validator = validator
@@ -236,20 +217,6 @@ class Variant:
             return VariantType.BOOL
         else:
             return VariantType.SINGLE
-
-    def __eq__(self, other):
-        return (
-            self.name == other.name
-            and self.default == other.default
-            and self.values == other.values
-            and self.multi == other.multi
-            and self.single_value_validator == other.single_value_validator
-            and self.group_validator == other.group_validator
-            and self.sticky == other.sticky
-        )
-
-    def __ne__(self, other):
-        return not self == other
 
     def __str__(self):
         return (
