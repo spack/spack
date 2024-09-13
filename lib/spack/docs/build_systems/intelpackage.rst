@@ -611,11 +611,13 @@ follow `the next section <intel-install-libs_>`_ instead.
    command.
    It may be wise to provide the anticipated compiler (`see above
    <verify-compiler-anticipated_>`_) as an explicit concretization
-   element:
+   element. Note that ``intel-parallel-studio`` itself depends on ``patchelf``.
+   This cannot be compiled with the stub compilers, so an existing compiler
+   (e.g. ``gcc``) must be selected for ``patchelf``:
 
    .. code-block:: console
 
-      $ spack install intel-parallel-studio@cluster.2018.3  %intel@18.0.3
+      $ spack install intel-parallel-studio@cluster.2018.3 %intel@18.0.3 ^patchelf%gcc
 
 5. Follow the same steps as under `Integrating external compilers`_ to tell
    Spack the minutiae for actually using those compilers with client packages.
