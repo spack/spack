@@ -691,6 +691,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("+cuda"):
             # TODO: why must we add to LD_LIBRARY_PATH to find libcudart?
             env.prepend_path("LD_LIBRARY_PATH", self.spec["cuda"].prefix.lib64)
+            env.set("CHPL_CUDA_PATH", self.spec["cuda"].prefix)
             env.set("CHPL_LOCALE_MODEL", "gpu")
             env.set("CHPL_GPU", "nvidia")
 
