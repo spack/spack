@@ -593,9 +593,9 @@ the attributes will be merged starting from the bottom match going up to the top
 In the case that no match is found in a submapping section, no additional attributes will be applied.
 
 
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 Dynamic Mapping Sections
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 For large scale CI where cost optimization is required, dynamic mapping allows for the use of real-time
 mapping schemes served by a web service. This type of mapping does not support the ``-remove`` type
