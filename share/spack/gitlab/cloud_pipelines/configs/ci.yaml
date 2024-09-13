@@ -32,6 +32,12 @@ ci:
           --prefix /home/software/spack:${CI_PROJECT_DIR}/opt/spack
           --log install_times.json
           ${SPACK_ARTIFACTS_ROOT}/user_data/install_times.json || true
+      - - export RETRY_FILE="${SPACK_ARTIFACTS_ROOT}/user_data/retry_count.txt"
+        - [ -f retry_count.txt ] || echo "0" > retry_count.txt
+        - export RETRY_NUMBER=`cat $RETRY_FILE`
+        - export RETRY_NUMBER=$((RETRY_NUMBER+1))
+        - echo $RETRY_NUMBER > $RETRY_FILE
+
       variables:
         CI_JOB_SIZE: "default"
         CI_GPG_KEY_ROOT: /mnt/key
