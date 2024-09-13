@@ -1307,7 +1307,7 @@ class SpecBuildInterface(lang.ObjectWrapper):
 
 
 def tree(
-    specs: List["spack.spec.Spec"],
+    specs: List["Spec"],
     *,
     color: Optional[bool] = None,
     depth: bool = False,
@@ -2032,7 +2032,7 @@ class Spec:
             raise InvalidHashError(self, self.abstract_hash)
 
         if len(matches) != 1:
-            raise spack.spec.AmbiguousHashError(
+            raise AmbiguousHashError(
                 f"Multiple packages specify hash beginning '{self.abstract_hash}'.", *matches
             )
 
@@ -4535,7 +4535,7 @@ def merge_abstract_anonymous_specs(*abstract_specs: Spec):
     Args:
         *abstract_specs: abstract specs to be merged
     """
-    merged_spec = spack.spec.Spec()
+    merged_spec = Spec()
     for current_spec_constraint in abstract_specs:
         merged_spec.constrain(current_spec_constraint, deps=False)
 
