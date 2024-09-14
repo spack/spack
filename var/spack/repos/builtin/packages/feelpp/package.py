@@ -53,7 +53,7 @@ class Feelpp(CMakePackage):
     depends_on("petsc@3.20 +mumps+hwloc+ptscotch +suite-sparse+hdf5 +hypre+kokkos")
     depends_on("llvm@18:", type="build")  # Require LLVM (Clang) version 18 or higher
     depends_on("slepc")
-    depends_on("mpi")   # Require MPI                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+    depends_on("mpi")
     depends_on("cln@1.3.6")
     depends_on("fftw")
     depends_on("libunwind")
