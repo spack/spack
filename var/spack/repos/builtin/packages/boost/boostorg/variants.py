@@ -129,6 +129,11 @@ def load():
         description="C++ standard",
     )
     variants.add(
+        "debug",
+        default=False,
+        description="Build in debug mode",
+    )
+    variants.add(
         "taggedlayout",
         default=False,
         when="@1.40.0:",
