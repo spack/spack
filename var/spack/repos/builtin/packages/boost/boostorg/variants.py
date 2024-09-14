@@ -336,6 +336,18 @@ def load():
         description="The backend for Boost.Context",
     )
     variants.add(
+        "contract",
+        when="@1.67.0:",
+        buildable="@1.67.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.Contract requires cxxstd >= 11"},
+            {"when": "cxxstd=03", "msg": "Boost.Contract requires cxxstd >= 11"},
+        ],
+        description=(
+            "Contract programming with subcontracting, class invariants, and pre/postconditions."
+        ),
+    )
+    variants.add(
         "leaf",
         when="@1.75.0:",
         conflicts=[
