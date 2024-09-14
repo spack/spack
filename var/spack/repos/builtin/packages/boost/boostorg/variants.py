@@ -134,6 +134,15 @@ def load():
         description="Build in debug mode",
     )
     variants.add(
+        "multithreaded",
+        description="Enable use of multiple threads",
+    )
+    variants.add(
+        "singlethreaded",
+        default=False,
+        description="Disable use of multiple threads",
+    )
+    variants.add(
         "taggedlayout",
         default=False,
         when="@1.40.0:",
