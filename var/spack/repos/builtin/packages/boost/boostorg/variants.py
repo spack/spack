@@ -290,6 +290,12 @@ def load():
         description="Cooperative multitasking on a single thread",
     )
     variants.add(
+        "atomic",
+        when="@1.53.0:",
+        buildable="@1.53.0:",
+        description="C++11-style atomic<>.",
+    )
+    variants.add(
         "coroutine",
         when="@1.53.0:",
         buildable="@1.54.0:",
