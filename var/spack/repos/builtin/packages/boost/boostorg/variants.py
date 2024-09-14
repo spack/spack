@@ -209,6 +209,14 @@ def load():
     # ----------------------------------------------------------------------
 
     variants.add(
+        "graph",
+        when="@1.18.0:",
+        buildable="@1.18.0:",
+        description=(
+            "Generic components for mathematical graphs (collections of nodes and edges)."
+        ),
+    )
+    variants.add(
         "python",
         default=False,
         sticky=False,
