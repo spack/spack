@@ -23,8 +23,6 @@ class Ollama(GoPackage, CudaPackage):
         # This is the last verified non-preview version as of 20240413
         version("0.1.30", commit="756c2575535641f1b96d94b4214941b90f4c30c7")
 
-    variant("cuda", default=False, description="Add support for CUDA")
-
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
@@ -33,7 +31,9 @@ class Ollama(GoPackage, CudaPackage):
     depends_on("cmake@3.24:", type="build")
     depends_on("go@1.4.0:", type="build")
     depends_on("git", type="build")
-    depends_on("cuda", when="+cuda")
+
+class GoBuilder(spack.build_systems.go.GoBuilder):
+    phases = ("generate", "build", "install")
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("+cuda"):
@@ -43,10 +43,6 @@ class Ollama(GoPackage, CudaPackage):
             env.set("CUDACXX", cuda_prefix.bin.nvcc)
             env.set("CUDA_LIB_DIR", cuda_prefix.lib)
             env.set("CMAKE_CUDA_ARCHITECTURES", spec.variants["cuda_arch"].value)
-
-
-class GoBuilder(spack.build_systems.go.GoBuilder):
-    phases = ("generate", "build", "install")
 
     @property
     def generate_args(self):
