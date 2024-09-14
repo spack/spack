@@ -59,6 +59,8 @@ class PyOnnx(PythonPackage):
 
     depends_on("py-protobuf+cpp", type=("build", "run"), when="%gcc@:13")
     depends_on("py-protobuf+cpp", type=("build", "run"), when="%clang")
+    # Depending on protobuf is necessary to avoid compilation of the
+    # vendored protobuf sources
     depends_on("protobuf", type=("build", "run"), when="%gcc@14:")
 
     depends_on("py-numpy", type=("build", "run"))
