@@ -48,8 +48,9 @@ class Hypar(AutotoolsPackage):
         args = []
         spec = self.spec
         if "+mpi" in spec:
-            args.append("--enable-mpi")
             args.append("--with-mpi-dir={0}".format(spec["mpi"].prefix))
+        else:
+            args.append("--enable-serial")
         if "+openmp" in spec:
             args.append("--enable-omp")
         if "+scalapack" in spec:
