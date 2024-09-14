@@ -134,6 +134,10 @@ def load():
         description="Build in debug mode",
     )
     variants.add(
+        "pic",
+        description="Generate binaries with position-independent code",
+    )
+    variants.add(
         "multithreaded",
         description="Enable use of multiple threads",
     )
