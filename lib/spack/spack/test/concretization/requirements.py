@@ -490,8 +490,10 @@ packages:
     update_packages_config(conf_str)
 
     spec = Spec(spec_str).concretized()
+    assert "c" in spec
     for s in spec.traverse():
-        assert s.satisfies(requirement_str)
+        if "c" in s:
+            assert s.satisfies(requirement_str)
 
 
 @pytest.mark.parametrize(
@@ -518,8 +520,7 @@ packages:
 
     spec = Spec("x").concretized()
     assert spec.satisfies(specific_exp)
-    for s in spec.traverse(root=False):
-        assert s.satisfies(generic_exp)
+    assert spec["y"].satisfies(generic_exp)
 
 
 @pytest.mark.parametrize("mpi_requirement", ["mpich", "mpich2", "zmpi"])
@@ -759,33 +760,22 @@ def test_skip_requirement_when_default_requirement_condition_cannot_be_met(
     assert "shared" not in s["callpath"].variants
 
 
-def test_requires_directive(concretize_scope, mock_packages):
-    compilers_yaml = pathlib.Path(concretize_scope) / "compilers.yaml"
-
-    # NOTE: target is omitted here so that the test works on aarch64, as well.
-    compilers_yaml.write_text(
-        """
-compilers::
-- compiler:
-    spec: gcc@12.0.0
-    paths:
-      cc: /usr/bin/clang-12
-      cxx: /usr/bin/clang++-12
-      f77: null
-      fc: null
-    operating_system: debian6
-    modules: []
-"""
-    )
-    spack.config.CONFIG.clear_caches()
-
+def test_requires_directive(mock_packages, config):
     # This package requires either clang or gcc
     s = Spec("requires_clang_or_gcc").concretized()
-    assert s.satisfies("%gcc@12.0.0")
+    assert s.satisfies("%gcc")
+    s = Spec("requires_clang_or_gcc %gcc").concretized()
+    assert s.satisfies("%gcc")
+    s = Spec("requires_clang_or_gcc %clang").concretized()
+    assert s.satisfies("%llvm")
 
     # This package can only be compiled with clang
+    s = Spec("requires_clang").concretized()
+    assert s.satisfies("%llvm")
+    s = Spec("requires_clang %clang").concretized()
+    assert s.satisfies("%llvm")
     with pytest.raises(spack.error.SpackError, match="can only be compiled with Clang"):
-        Spec("requires_clang").concretized()
+        Spec("requires_clang %gcc").concretized()
 
 
 @pytest.mark.parametrize(
@@ -951,11 +941,10 @@ def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages)
           all:
             prefer:
             - "%clang"
-            compiler: [gcc]
     """,
             "multivalue-variant",
-            ["%clang"],
-            ["%gcc"],
+            ["llvm"],
+            ["gcc"],
         ),
         (
             """
@@ -965,8 +954,8 @@ def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages)
                 - "%clang"
         """,
             "multivalue-variant %gcc",
-            ["%gcc"],
-            ["%clang"],
+            ["gcc"],
+            ["llvm"],
         ),
         # Test parsing objects instead of strings
         (
@@ -975,26 +964,25 @@ def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages)
               all:
                 prefer:
                 - spec: "%clang"
-                compiler: [gcc]
         """,
             "multivalue-variant",
-            ["%clang"],
-            ["%gcc"],
+            ["llvm"],
+            ["gcc"],
         ),
     ],
 )
-def test_strong_preferences_packages_yaml(
+def test_compiler_strong_preferences_packages_yaml(
     packages_yaml, spec_str, expected, not_expected, concretize_scope, mock_packages
 ):
-    """Tests that "preferred" specs are stronger than usual preferences, but can be overridden."""
+    """Tests that strong preferences are taken into account for compilers."""
     update_packages_config(packages_yaml)
     s = Spec(spec_str).concretized()
 
     for constraint in expected:
-        assert s.satisfies(constraint), constraint
+        assert s.dependencies(deptype="build", name=constraint)
 
     for constraint in not_expected:
-        assert not s.satisfies(constraint), constraint
+        assert not s.dependencies(deptype="build", name=constraint)
 
 
 @pytest.mark.parametrize(
