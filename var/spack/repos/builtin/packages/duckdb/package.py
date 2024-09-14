@@ -23,7 +23,7 @@ class Duckdb(MakefilePackage):
     version("0.10.3", sha256="7855587b3491dd488993287caee28720bee43ae28e92e8f41ea4631e9afcbf88")
     version("0.10.2", sha256="662a0ba5c35d678ab6870db8f65ffa1c72e6096ad525a35b41b275139684cea6")
     version(
-        "0.10.0", 
+        "0.10.0",
         sha256="5a925b8607d00a97c1a3ffe6df05c0a62a4df063abd022ada82ac1e917792013",
         deprecated=True,
     )
