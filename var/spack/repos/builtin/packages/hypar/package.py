@@ -18,8 +18,8 @@ class Hypar(AutotoolsPackage):
     """
 
     homepage = "http://hypar.github.io/"
-    url = "https://bitbucket.org/deboghosh/hypar/get/v4.1.tar.gz"
-    git = "https://bitbucket.org/deboghosh/hypar.git"
+    url = "https://github.com/debog/hypar/archive/refs/tags/v4.1.tar.gz"
+    git = "https://github.com/debog/hypar.git"
 
     maintainers("debog")
 
