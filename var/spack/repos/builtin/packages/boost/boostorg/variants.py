@@ -243,6 +243,14 @@ def load():
         description="Managed signals & slots callback implementation",
     )
     variants.add(
+        "filesystem",
+        when="@1.30.0:",
+        buildable="@1.30.0:",
+        description=(
+            "Portable facilities to query and manipulate paths, files, and directories"
+        ),
+    )
+    variants.add(
         "iostreams",
         when="@1.33.0:",
         buildable="@1.33.0:",
