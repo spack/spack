@@ -55,6 +55,10 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
         "0.9.0", tag="v0.9.0", commit="cf66ebe31fd5f27b76a83451cd22f346e7a67160", submodules=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("hypre", default=False, description="Enable Hypre integration")
     variant("ascent", default=False, description="Enable Ascent integration")
     variant("masa", default=False, description="Enable MASA integration")
@@ -152,9 +156,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             args.append(define("HDF5_IS_PARALLEL", spec.satisfies("+mpi")))
 
         if spec.satisfies("+cuda"):
-            amrex_arch = [
-                "{0:.1f}".format(float(i) / 10.0) for i in spec.variants["cuda_arch"].value
-            ]
+            amrex_arch = CudaPackage.compute_capabilities(spec.variants["cuda_arch"].value)
             if amrex_arch:
                 args.append(define("AMReX_CUDA_ARCH", amrex_arch))
 

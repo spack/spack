@@ -16,10 +16,16 @@ class Actsvg(CMakePackage):
     list_url = "https://github.com/acts-project/actsvg/tags"
     git = "https://github.com/acts-project/actsvg.git"
 
-    maintainers("HadrienG2", "wdconinc")
+    maintainers("wdconinc", "stephenswat")
 
     license("MPL-2.0")
 
+    version("0.4.47", sha256="11924fddbdd01f6337875797dc3a97b62be565688e678485e992bcfc9bfb142f")
+    version("0.4.46", sha256="0b75e91de240aeac8b91cd4fb8e314d0ab2a4b220048fb373dee9352d571b792")
+    version("0.4.45", sha256="402ca863e453055e5abc65a37908f44b03b15f90c694807d78627d7800d2e39c")
+    version("0.4.44", sha256="6eda7306b8b863e1860e090f328ac6e7982dc2d3b3d674db2799c13007ffd07f")
+    version("0.4.43", sha256="e2aef32185db37cfdc023282b25c003e63dc974a11118ab2040bd30b2d346147")
+    version("0.4.42", sha256="a8439d50b469ccc4428973507db1adf56aa68b34900ce0c6077ddb92a133a4f2")
     version("0.4.41", sha256="c675795e74efcf42c3015d6efc8d7a1848b677f1d4efe6dcaa4fb490b46268ff")
     version("0.4.40", sha256="e24f51e70cff57c74d3b5f51c08f6ea1f409ef85ef7b4bad4a29520ecda032a6")
     version("0.4.39", sha256="2d9605ecf8c9975d600cafb6d076969d77c634fa92844bd9586c38066da31739")

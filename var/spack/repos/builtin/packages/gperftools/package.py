@@ -34,6 +34,9 @@ class Gperftools(AutotoolsPackage, CMakePackage):
     version("2.4", sha256="982a37226eb42f40714e26b8076815d5ea677a422fb52ff8bfca3704d9c30a2d")
     version("2.3", sha256="093452ad45d639093c144b4ec732a3417e8ee1f3744f2b0f8d45c996223385ce")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     variant("sized_delete", default=False, description="Build sized delete operator")
     variant(
         "dynamic_sized_delete_support",

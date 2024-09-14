@@ -40,6 +40,9 @@ class IntelMpiBenchmarks(MakefilePackage):
     version("2018.1", sha256="718a4eb155f18cf15a736f6496332407b5837cf1f19831723d4cfe5266c43507")
     version("2018.0", sha256="2e60a9894a686a95791be2227bc569bf81ca3875421b5307df7d83f885b1de88")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("mpi", when="@2019:")
     depends_on("intel-mpi", when="@2018")
     depends_on("gmake", type="build", when="@2018")

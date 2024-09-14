@@ -308,8 +308,7 @@ class PathContext(tengine.Context):
         return t.render(**self.to_dict())
 
 
-import spack.container.writers.docker  # noqa: E402
-
 # Import after function definition all the modules in this package,
 # so that registration of writers will happen automatically
-import spack.container.writers.singularity  # noqa: E402
+from . import docker  # noqa: F401 E402
+from . import singularity  # noqa: F401 E402

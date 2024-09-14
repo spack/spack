@@ -30,9 +30,6 @@ class Pgi(Compiler):
         "fc": os.path.join("pgi", "pgfortran"),
     }
 
-    PrgEnv = "PrgEnv-pgi"
-    PrgEnv_compiler = "pgi"
-
     version_argument = "-V"
     ignore_version_errors = [2]  # `pgcc -V` on PowerPC annoyingly returns 2
     version_regex = r"pg[^ ]* ([0-9.]+)-[0-9]+ (LLVM )?[^ ]+ target on "

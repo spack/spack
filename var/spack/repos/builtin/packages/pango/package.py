@@ -33,6 +33,9 @@ class Pango(MesonPackage):
     version("1.44.6", sha256="3e1e41ba838737e200611ff001e3b304c2ca4cdbba63d200a20db0b0ddc0f86c")
     version("1.42.4", sha256="1d2b74cd63e8bd41961f2f8d952355aa0f9be6002b52c8aa7699d9f5da597c9d")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("X", default=False, description="Enable an X toolkit")
 
     depends_on("pkgconfig@0.9.0:", type="build")
