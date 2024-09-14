@@ -85,7 +85,7 @@ class Hpcc(MakefilePackage):
     }
 
     def patch(self):
-        if "fftw" in self.spec:
+        if self.spec.satisfies("^fftw"):
             # spack's fftw2 prefix headers with floating point type
             filter_file(r"^\s*#include <fftw.h>", "#include <sfftw.h>", "FFT/wrapfftw.h")
             filter_file(
