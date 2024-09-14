@@ -325,5 +325,11 @@ def load():
         multi=False,
         description="The backend for Boost.Context",
     )
+    variants.add(
+        "charconv",
+        when="@1.85.0:",
+        buildable="@1.85.0:",
+        description="An implementation of C++20's <charconv> in C++11",
+    )
 
     return variants
