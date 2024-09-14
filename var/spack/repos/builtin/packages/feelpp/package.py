@@ -2,42 +2,16 @@ from spack.package import *
 
 class Feelpp(CMakePackage):
     """
-    Feel++ is an Open-Source C++ library designed to solve a wide range of partial differential equations (PDEs) using advanced Galerkin methods. 
-    These methods include the finite element method (FEM), spectral element method, discontinuous Galerkin methods, and reduced basis methods.
+    Feel++ is an Open-Source C++ library designed to solve a wide range of
+    partial differential equations (PDEs) using advanced Galerkin methods.
+    These methods include the finite element method (FEM), spectral element
+    method, discontinuous Galerkin methods, and reduced basis methods.
 
-    Feel++ is optimized for high-performance computing, enabling seamless parallel computing on large-scale systems, ranging from desktop machines to supercomputers with tens of thousands of cores. 
-    The library supports multi-physics simulations and provides a modular structure to simplify the development of applications.
-
-    Key Features:
-    - **Toolboxes**: Predefined toolboxes for common PDE problems, enabling faster development and deployment of complex simulations. These toolboxes include:
-      - **Coefficient Form PDEs**: For general PDEs in coefficient form.
-      - **Computational Solid Mechanics**: For simulations of solid mechanics problems.
-      - **Computational Fluid Mechanics**: For solving fluid dynamics problems.
-      - **Heat Transfer**: For heat conduction and convection problems.
-      - **Heat & Fluid**: Coupled heat and fluid dynamics simulations.
-      - **Fluid Structure Interaction (FSI)**: For problems involving interactions between fluid flow and structural mechanics.
-      - **Electric**: For solving electric field and current problems.
-      - **Thermo-Electric**: For coupled thermoelectric simulations.
-      - **Maxwell**: For simulating electromagnetic field problems based on Maxwell's equations.
-      - **Hybridized Discontinuous Galerkin**: For high-order accurate discontinuous Galerkin methods with hybridization techniques.
-    
-    - **Model Order Reduction (MOR)**: Provides efficient techniques for reducing the computational complexity of large-scale simulations, enabling faster simulations while maintaining accuracy.
-    
-    - **Python Wrappers**: Python bindings allow for seamless integration of Feel++ functionalities into Python-based workflows, enabling rapid prototyping, interactive simulations, and data visualization.
-
-    - **High-Performance Computing (HPC)**: Fully optimized for distributed (MPI) and shared-memory (multithread) parallelism, Feel++ can efficiently scale from small multi-core systems to large HPC clusters.
-
-    - **C++ Standards**: Support for C++17, C++20, and C++23 standards, allowing users to leverage modern language features and optimizations.
-
-    - **Extensive Scientific Libraries Integration**: Feel++ integrates with major scientific computing libraries, including PETSc, SLEPc, Boost, FFTW, and others, to extend its functionality and scalability.
-
-    Optional Variants:
-    - **+toolboxes**: Enable specialized toolboxes for common PDEs, such as fluid mechanics, solid mechanics, and coupled heat and fluid simulations.
-    - **+mor**: Enable Model Order Reduction (MOR) for computationally expensive large-scale systems.
-    - **+python**: Enable Python bindings to allow Python-based interaction with Feel++.
-    - **+quickstart**: Enable quickstart examples for easier onboarding and usage.
-    - **+tests**: Enable tests to verify the integrity of the Feel++ installation.
-    - **cpp17/cpp20/cpp23**: Choose the C++ standard (C++17, C++20, or C++23) for compilation.
+    Feel++ is optimized for high-performance computing, enabling seamless
+    parallel computing on large-scale systems, ranging from desktop machines
+    to supercomputers with tens of thousands of cores. The library supports
+    multi-physics simulations and provides a modular structure to simplify
+    the development of applications.
     """
 
 
