@@ -265,6 +265,14 @@ def load():
         ),
     )
     variants.add(
+        "exception",
+        when="@1.36.0:",
+        buildable="@1.47.0:",
+        description=(
+            "Transport arbitrary data in exceptions, and exceptions between threads"
+        ),
+    )
+    variants.add(
         "signals2",
         when="@1.39.0:",
         conflicts=[
