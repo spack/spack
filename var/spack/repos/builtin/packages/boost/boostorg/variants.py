@@ -220,6 +220,12 @@ def load():
         description="C++ wrapper for interacting with Python.",
     )
     variants.add(
+        "iostreams",
+        when="@1.33.0:",
+        buildable="@1.33.0:",
+        description="Streams, stream buffers, and i/o filters",
+    )
+    variants.add(
         "mpi",
         default=False,
         sticky=False,
