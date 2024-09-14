@@ -2,35 +2,35 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import llnl.util.tty as tty
+import glob
 import importlib
 import inspect
-import glob
 import os
 import shutil
 import time
 
 import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 
-import spack.builder
 import spack.build_systems.cmake
+import spack.builder
 import spack.util.log_parse
-
 from spack.builder import run_after
-from spack.directives import depends_on, variant, requires
+from spack.directives import depends_on, requires, variant
 from spack.package import CMakePackage
 
 
 class CTestBuilder(spack.build_systems.cmake.CMakeBuilder):
     """
     This builider mirrors the behavior of a CMakeBuilder, but all commands are run through
-    CTest. This ensures that xml files are created through CTest.  This provides a unified 
+    CTest. This ensures that xml files are created through CTest.  This provides a unified
     buildstamp and improved xml over the spack generated ones.
 
     An additional phase is added for running tests post installation.  This allows for things
-    like regression tests that can be used to monitior differences in behavior/performance 
+    like regression tests that can be used to monitior differences in behavior/performance
     without failing the install.
     """
+
     phases = ("cmake", "build", "install", "analysis")
 
     @property
@@ -46,23 +46,25 @@ class CTestBuilder(spack.build_systems.cmake.CMakeBuilder):
         """
         args = super().std_cmake_args
         if self.spec.variants["cdash_submit"].value:
-            args.extend([
-                        "-D",
-                        f"BUILDNAME={self.pkg.spec.name}",
-                        "-D",
-                        f"CTEST_BUILD_OPTIONS={self.pkg.spec.short_spec}",
-                        "-D",
-                        "SITE=TODO"
-            ])
+            args.extend(
+                [
+                    "-D",
+                    f"BUILDNAME={self.pkg.spec.name}",
+                    "-D",
+                    f"CTEST_BUILD_OPTIONS={self.pkg.spec.short_spec}",
+                    "-D",
+                    "SITE=TODO",
+                ]
+            )
         return args
 
     def ctest_args(self):
         args = ["-T", "Test"]
         args.append("--stop-time")
-        overall_test_timeout=60*60*4 # 4 hours TODO should probably be a variant
+        overall_test_timeout = 60 * 60 * 4  # 4 hours TODO should probably be a variant
         args.append(time.strftime("%H:%M:%S", time.localtime(time.time() + overall_test_timeout)))
-        args.append("-VV") # make sure lots of output can go to the log
-        # a way to parse additional information to ctest exectution. 
+        args.append("-VV")  # make sure lots of output can go to the log
+        # a way to parse additional information to ctest exectution.
         # for ecample in exawind, we default to running unit-tests, but for nightly tests
         # we expand to our regression test suite through this variant
         extra_args = self.pkg.spec.variants["ctest_args"].value
@@ -84,7 +86,7 @@ class CTestBuilder(spack.build_systems.cmake.CMakeBuilder):
             "Configure",
             "-T",
             "Build",
-            "-VV"
+            "-VV",
         ]
         return args
 
@@ -93,23 +95,18 @@ class CTestBuilder(spack.build_systems.cmake.CMakeBuilder):
         """
         CTest arguments just for sumbmission.  Allows us to split phases, where default CTest behavior is to configure, build, test and submit from a single command.
         """
-        args = [
-            "-T",
-            "Submit",
-            "-V"
-        ]
+        args = ["-T", "Submit", "-V"]
         return args
 
     def submit_cdash(self, pkg, spec, prefix):
         ctest = Executable(self.spec["cmake"].prefix.bin.ctest)
         ctest.add_default_env("CTEST_PARALLEL_LEVEL", str(make_jobs))
         build_env = os.environ.copy()
-        ctest(*self.submit_args, env = build_env)
-
+        ctest(*self.submit_args, env=build_env)
 
     def build(self, pkg, spec, prefix):
         """
-        The only reason to run through the CTest interface is if we want to submit to CDash with 
+        The only reason to run through the CTest interface is if we want to submit to CDash with
         unified CTest xml's.
         If we aren't going to submit then we can just run as the CMakeBuilder
         """
@@ -117,17 +114,19 @@ class CTestBuilder(spack.build_systems.cmake.CMakeBuilder):
             ctest = Executable(self.spec["cmake"].prefix.bin.ctest)
             ctest.add_default_env("CMAKE_BUILD_PARALLEL_LEVEL", str(make_jobs))
             with fs.working_dir(self.build_directory):
-                 build_env = os.environ.copy()
-                 # have ctest run, but we still want to submit if there are build failures where spack would stop.
-                 # check for errors and submit to cdash if there are failures
-                 output = ctest(*self.build_args, env=build_env, output=str.split, error=str.split).split("\n")
-                 errors, warnings = spack.util.log_parse.parse_log_events(output)
-                 if len(errors) > 0:
-                     errs = [str(e) for e in errors]
-                     tty.warn(f"Errors: {errs}")
-                     tty.warn(f"returncode {ctest.returncode}")
-                     self.submit_cdash(pkg, spec, prefix)
-                     raise BaseException(f"{self.pkg.spec.name} had build errors")
+                build_env = os.environ.copy()
+                # have ctest run, but we still want to submit if there are build failures where spack would stop.
+                # check for errors and submit to cdash if there are failures
+                output = ctest(
+                    *self.build_args, env=build_env, output=str.split, error=str.split
+                ).split("\n")
+                errors, warnings = spack.util.log_parse.parse_log_events(output)
+                if len(errors) > 0:
+                    errs = [str(e) for e in errors]
+                    tty.warn(f"Errors: {errs}")
+                    tty.warn(f"returncode {ctest.returncode}")
+                    self.submit_cdash(pkg, spec, prefix)
+                    raise BaseException(f"{self.pkg.spec.name} had build errors")
 
         else:
             super().build(pkg, spec, prefix)
@@ -141,12 +140,12 @@ class CTestBuilder(spack.build_systems.cmake.CMakeBuilder):
         with working_dir(self.build_directory):
             args = self.ctest_args()
             tty.debug("{} running CTest".format(self.pkg.spec.name))
-            tty.debug("Running:: ctest"+" ".join(args))
+            tty.debug("Running:: ctest" + " ".join(args))
             ctest = Executable(self.spec["cmake"].prefix.bin.ctest)
             ctest.add_default_env("CTEST_PARALLEL_LEVEL", str(make_jobs))
             ctest.add_default_env("CMAKE_BUILD_PARALLEL_LEVEL", str(make_jobs))
             build_env = os.environ.copy()
-            ctest(*args, "-j", str(make_jobs),  env=build_env, fail_on_error=False)
+            ctest(*args, "-j", str(make_jobs), env=build_env, fail_on_error=False)
 
             if self.pkg.spec.variants["cdash_submit"].value:
                 self.submit_cdash(pkg, spec, prefix)
@@ -154,8 +153,9 @@ class CTestBuilder(spack.build_systems.cmake.CMakeBuilder):
 
 class CtestPackage(CMakePackage):
     """
-    This package's default behavior is to act as a Standard CMakePackage, 
+    This package's default behavior is to act as a Standard CMakePackage,
     """
+
     CMakeBuilder = CTestBuilder
     variant("cdash_submit", default=False, description="Submit results to cdash")
     variant("ctest_args", default="", description="quoted string of arguments to send to ctest")
@@ -190,4 +190,3 @@ class CtestPackage(CMakePackage):
             source = os.path.join(self.build_directory, "compile_commands.json")
             if os.path.isfile(source):
                 shutil.copyfile(source, target)
-
