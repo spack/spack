@@ -44,9 +44,7 @@ class Feelpp(CMakePackage):
 
     # Specify dependencies with the required versions
     depends_on("cmake@3.21:", type="build")  # Require CMake > 3.21
-    depends_on(
-        "boost@1.74: +filesystem+iostreams+mpi+multithreaded+shared"
-    )
+    depends_on("boost@1.74: +filesystem+iostreams+mpi+multithreaded+shared")
     depends_on("petsc@3.20 +mumps+hwloc+ptscotch +suite-sparse+hdf5 +hypre+kokkos")
     depends_on("llvm@18:", type="build")  # Require LLVM (Clang) version 18 or higher
     depends_on("slepc")
