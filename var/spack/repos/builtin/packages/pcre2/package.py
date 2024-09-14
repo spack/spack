@@ -31,16 +31,10 @@ class Pcre2(AutotoolsPackage, CMakePackage):
 
     variant("multibyte", default=True, description="Enable support for 16 and 32 bit characters.")
     variant("jit", default=False, description="enable Just-In-Time compiling support")
-    # This variant is CMake only as by default the autotools system builds both
-    # static and shared which is perfectly fine on all platforms that are compatible
-    # with autotools. The CMake system is also capable of building both at once,
-    # but CMake regards this as bad practice and further, this can result in actual
-    # build errors on Windows, due to naming collisions/changes and unexpected use
-    # If both static and shared are built with no Spack modeling of that behavior,
-    # Spack is making of static vs shared libraries, which can result in symbol
-    # resolution failures choices for the dependent, rather than allowing the
-    # dependent to express their needs
-    variant("shared", default=True, description="build shared pcre2", when="build_system=cmake")
+    # Building static+shared can cause naming colisions and other problems
+    # for dependents on Windows. It generally does not cause problems on
+    # other systems, so this variant is not exposed for non-Windows.
+    variant("shared", default=True, description="build shared pcre2", when="platform=windows")
     build_system("autotools", "cmake", default="autotools")
 
     with when("build_system=cmake"):
