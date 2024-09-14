@@ -4173,7 +4173,7 @@ class Spec:
             return True
 
         return bool(
-            self._virtuals_provided(self.root)
+            self._virtuals_provided(self_root)
             and self._virtuals_provided(self_root) <= other._virtuals_provided(other_root)
         )
 
@@ -4342,8 +4342,17 @@ class Spec:
 
     def _splice_transitive(self, other):
         """Execute a transitive splice. See ``Spec.splice`` for details"""
-        spec = self.copy()
+        spec = self.copy(deps=dt.ALL & ~dt.BUILD)
         replacement = other.copy()
+
+        # Ignore build deps in spec while doing the splice
+        # They will be added back in at the end
+        for edge in spec.traverse_edges(cover="edges"):
+            edge.depflag &= ~dt.BUILD
+
+        # We’ll come back to these later
+        # We need the list of pairs while the two specs still match
+        node_pairs = list(zip(self.traverse(deptype=dt.ALL & ~dt.BUILD), spec.traverse()))
 
         changed = True
         while changed:
@@ -4373,6 +4382,14 @@ class Spec:
         # This handles redirecting duplicate link/run dependencies to ensure the invariant that
         # an ancestor cannot depend on an older version than its descendent depends on
         spec._splice_fixup_duplicate_dependencies()
+
+        # Set up build dependencies for modified nodes
+        # Also modify build_spec because the existing ones had build deps removed
+        for orig, copy in node_pairs:
+            for edge in orig.edges_to_dependencies(depflag=dt.BUILD):
+                copy._add_dependency(edge.spec, depflag=dt.BUILD, virtuals=edge.virtuals)
+            if copy._build_spec:
+                copy._build_spec = orig.build_spec.copy()
 
         return spec
 

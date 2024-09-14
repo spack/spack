@@ -1061,6 +1061,9 @@ class TestSpecSemantics:
             "a color=red ^b color=red ^c color=blue "
             "^d color=red ^e color=red ^f color=blue ^g@3 color=blue"
         )
+        assert set(spliced.dependencies(deptype=dt.BUILD)) == set(
+            a_red.dependencies(deptype=dt.BUILD)
+        )
         assert spliced.build_spec == a_red
         # We cannot check spliced["b"].build_spec is spliced["b"] because Spec.__getitem__ creates
         # a new wrapper object on each invocation. So we select once and check on that object
@@ -1072,6 +1075,9 @@ class TestSpecSemantics:
 
         assert spliced["c"].satisfies(
             "c color=blue ^d color=red ^e color=red ^f color=blue ^g@3 color=blue"
+        )
+        assert set(spliced["c"].dependencies(deptype=dt.BUILD)) == set(
+            c_blue.dependencies(deptype=dt.BUILD)
         )
         assert spliced["c"].build_spec == c_blue
         assert set(spliced["c"].dependents()) == {spliced}
@@ -1091,6 +1097,9 @@ class TestSpecSemantics:
         assert set(spliced["e"].dependents(deptype=dt.BUILD)) == {spliced["b"]}
 
         assert spliced["f"].satisfies("f color=blue ^e color=red ^g@3 color=blue")
+        assert set(spliced["f"].dependencies(deptype=dt.BUILD)) == set(
+            c_blue["f"].dependencies(deptype=dt.BUILD)
+        )
         assert spliced["f"].build_spec == c_blue["f"]
         assert set(spliced["f"].dependents()) == {spliced["c"]}
 
@@ -1132,9 +1141,15 @@ class TestSpecSemantics:
             "a color=red ^b color=red"
             "^c color=blue ^d color=blue ^e color=blue ^f color=blue ^g@3 color=blue"
         )
+        assert set(spliced.dependencies(deptype=dt.BUILD)) == set(
+            a_red.dependencies(deptype=dt.BUILD)
+        )
         assert spliced.build_spec == a_red
 
         assert spliced["b"].satisfies("b color=red ^d color=blue ^e color=blue ^g@2 color=blue")
+        assert set(spliced["b"].dependencies(deptype=dt.BUILD)) == set(
+            a_red["b"].dependencies(deptype=dt.BUILD)
+        )
         assert spliced["b"].build_spec == a_red["b"]
         assert set(spliced["b"].dependents()) == {spliced}
 
@@ -1191,6 +1206,7 @@ class TestSpecSemantics:
                     ("b", "d"),
                     ("b", "e"),
                     ("b", "g"),
+                    ("a", "b"),  # This edge not spliced, but b was spliced invalidating edge
                 ]:
                     depflag |= dt.BUILD
                 assert edge.depflag == depflag
