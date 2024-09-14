@@ -229,7 +229,7 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         ]
 
         # Enable rocm-device-libs as a external project
-        if "+rocm-device-libs" in self.spec:
+        if self.spec.satisfies("+rocm-device-libs"):
             if self.spec.satisfies("@:6.0"):
                 dir = os.path.join(self.stage.source_path, "rocm-device-libs")
             elif self.spec.satisfies("@6.1:"):
@@ -242,10 +242,10 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
                 ]
             )
 
-        if "+llvm_dylib" in self.spec:
+        if self.spec.satisfies("+llvm_dylib"):
             args.append(self.define("LLVM_BUILD_LLVM_DYLIB", True))
 
-        if "+link_llvm_dylib" in self.spec:
+        if self.spec.satisfies("+link_llvm_dylib"):
             args.append(self.define("LLVM_LINK_LLVM_DYLIB", True))
             args.append(self.define("CLANG_LINK_CLANG_DYLIB", True))
 

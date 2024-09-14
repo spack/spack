@@ -123,7 +123,7 @@ class Libxsmm(MakefilePackage):
         # make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']
 
         # include call trace as the build is already de-optimized
-        if "+debug" in spec:
+        if spec.satisfies("+debug"):
             make_args += ["DBG=1"]
             make_args += ["TRACE=1"]
 
@@ -131,10 +131,10 @@ class Libxsmm(MakefilePackage):
         if blas_val != "default":
             make_args += ["BLAS={0}".format(blas_val)]
 
-        if "+large_jit_buffer" in spec:
+        if spec.satisfies("+large_jit_buffer"):
             make_args += ["CODE_BUF_MAXSIZE=262144"]
 
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             make(*(make_args + ["STATIC=0"]))
 
         # builds static libraries by default
@@ -151,16 +151,16 @@ class Libxsmm(MakefilePackage):
         # always install libraries
         install_tree("lib", prefix.lib)
 
-        if "+header-only" in spec:
+        if spec.satisfies("+header-only"):
             install_tree("src", prefix.src)
 
-        if "+generator" in spec:
+        if spec.satisfies("+generator"):
             install_tree("bin", prefix.bin)
 
         mkdirp(prefix.doc)
         install(join_path("documentation", "*.md"), prefix.doc)
         install(join_path("documentation", "*.pdf"), prefix.doc)
-        if "@1.8.2:" in spec:
+        if spec.satisfies("@1.8.2:"):
             install("LICENSE.md", prefix.doc)
         else:
             install("README.md", prefix.doc)
