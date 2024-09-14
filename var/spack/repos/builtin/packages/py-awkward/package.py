@@ -18,6 +18,18 @@ class PyAwkward(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.3.3", sha256="66a454184c91efba071f4a0574bfe57f4e50a0d5d9bd4931edfd429139242bb8")
+    version("2.3.2", sha256="365467b7eecc869fe1e34ef6ef9214b28e5fd1257b16f629d863d21045c9094c")
+    version("2.3.1", sha256="34b44e5c46e1e0c2af045ba3fb8f966b6bb7ecff6fb90d16c3c90af82616b791")
+    version("2.3.0", sha256="66dcb1f5d26de22b742fcf6089f0dd5514527966acd7cab0922b57732fd72e44")
+    version("2.2.4", sha256="bf4ea661da0ffd67c87f3eb1ebe309bd2e183ac4ecc96aa10b2032919d5de6fe")
+    version("2.2.3", sha256="cb1ff3f254ea5569cc4e9ed3947fabb401dbddcb249b589589979d85fb341142")
+    version("2.2.2", sha256="2ee8b7649ac490f106739cb3d4cf51f303c379d370e88c9fe2c2190a8591d753")
+    version("2.2.1", sha256="653e5b69f1c8e32d1d59445a8414d03f850d327eb933f45aad163f0778861dc2")
+    version("2.2.0", sha256="17a853b74b3925f1116d87a2d049d230f7d179177fb36f81941318e7c545a93d")
+    version("2.1.4", sha256="9d09f6a03a224e7bdff9f8157cc8f0dd66a205b1ee23e2780a8901331b946cd3")
+    version("2.1.3", sha256="d7f8a600aa1031df87b2c9bd2fc5c41fb78dac514e1feb37f8b5034f358aaf97")
+    version("2.1.2", sha256="f69dd75f4c18f78af0eb0c4a9c0d4a0ee8996ea68225dddb6442af383185bb24")
     version("2.1.1", sha256="fda8e1634161b8b46b151c074ff0fc631fc0feaec2ec277c4b40a2095110b0dd")
     version("2.1.0", sha256="73f7a76a1fb43e2557befee54b1381f3e6d90636983cdc54da1c2bcb9ad4c1a8")
     version("2.0.10", sha256="8dae67afe50f5cf1677b4062f9b29dc7e6893420d0af5a0649364b117a3502af")
@@ -66,7 +78,17 @@ class PyAwkward(PythonPackage):
         ("@2.0.8", "@9"),
         ("@2.0.9", "@10"),
         ("@2.0.10", "@11"),
-        ("@2.1.0:", "@12"),
+        ("@2.1.0:2.1.1", "@12"),
+        ("@2.1.2", "@13"),
+        ("@2.1.3", "@14"),
+        ("@2.1.4:2.2.1", "@15"),
+        ("@2.2.2", "@16"),
+        ("@2.2.3", "@17"),
+        ("@2.2.4", "@18"),
+        ("@2.3.0", "@19"),
+        ("@2.3.1", "@20"),
+        ("@2.3.2", "@21"),
+        ("@2.3.3", "@22"),
     ]
     for _awkward, _awkward_cpp in _awkward_to_awkward_cpp_map:
         depends_on("py-awkward-cpp{}".format(_awkward_cpp), when=_awkward, type=("build", "run"))
@@ -74,9 +96,11 @@ class PyAwkward(PythonPackage):
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
     depends_on("python@3.6:", when="@1.9:", type=("build", "run"))
     depends_on("python@3.7:", when="@1.10:", type=("build", "run"))
+    depends_on("python@3.8:", when="@2.3:", type=("build", "run"))
     depends_on("py-numpy@1.13.1:", when="@:1", type=("build", "run"))
     depends_on("py-numpy@1.14.5:", when="@2.0", type=("build", "run"))
     depends_on("py-numpy@1.17.0:", when="@2.1:", type=("build", "run"))
+    depends_on("py-numpy@1.18.0:", when="@2.3:", type=("build", "run"))
     depends_on("py-pybind11", type=("build", "link"))
     depends_on("py-importlib-resources", when="@2: ^python@:3.8", type=("build", "run"))
     depends_on("py-typing-extensions@4.1:", when="@2: ^python@:3.10", type=("build", "run"))

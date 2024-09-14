@@ -18,6 +18,16 @@ class PyAwkwardCpp(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("22", sha256="21679636fb21cfe3715f88a32326a579199384db2da4a62995c310502d7fe85f")
+    version("21", sha256="b286e63de803048ff812f769c6b636f13b0d3bcbf22e1b91b15f6cfb9593851e")
+    version("20", sha256="45e59d981f90d2e6a678e03578767ff2dd0cfe00c9bd01b751178caf749140f2")
+    version("19", sha256="c7400c3888e2686be6d634e25eec2f2d499d4fca0e21b9b22c30cdd9c958f09c")
+    version("18", sha256="d5ed0c368a9ef24ef51ce31925fe22ab303b55cd189aba3b9d924acda8b86006")
+    version("17", sha256="8133bbaf18248dd5204a417a66dab96e1b62e55529b2b86870e2f3ecbeb19651")
+    version("16", sha256="c84d5d5856b0e242fa837f0db608087d958956179bd55377ea393f139c1b9b86")
+    version("15", sha256="f6c825db2db981f852903d9574a07015c5d53ef8e4630772f18c7f167045aa0d")
+    version("14", sha256="eb6b436681ad02feabb8dccdec20efdd3c47154a9bf49144b847828f67fd0760")
+    version("13", sha256="2211067581cefbff368468390e024cb07fa32b71eff1a16a89e6ddb3c9824bec")
     version("12", sha256="429f7fcc37a671afa67fe9680f2edc3a123d1c74d399e5889c654f9529f9f8f2")
     version("11", sha256="02d719a4da7487564b29b8e8b78925a32ac818b6f5572c2f55912b4e0e59c7a4")
     version("10", sha256="d1c856cb6ef5cf3d4f67506a7efc59239f595635865cc9f4ab18440b8bfb11c6")
@@ -33,9 +43,11 @@ class PyAwkwardCpp(PythonPackage):
     depends_on("cxx", type="build")  # generated
 
     depends_on("python@3.7:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"), when="@19:")
     depends_on("py-scikit-build-core@0.2.0:+pyproject", when="@11:", type="build")
     depends_on("py-pybind11", type=("build", "link"))
     depends_on("py-numpy@1.17.0:", when="@12:", type=("build", "run"))
+    depends_on("py-numpy@1.18.0:", when="@19:", type=("build", "run"))
 
     # older versions
     depends_on("py-numpy@1.14.5:", when="@:11", type=("build", "run"))

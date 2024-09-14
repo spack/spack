@@ -16,7 +16,7 @@ class PyUproot(PythonPackage):
     on C++ ROOT. Instead, it uses Numpy to cast blocks of data from the ROOT
     file as Numpy arrays."""
 
-    homepage = "https://github.com/scikit-hep/uproot4"
+    homepage = "https://github.com/scikit-hep/uproot5"
     pypi = "uproot/uproot-4.0.6.tar.gz"
 
     maintainers("vvolkl")
@@ -25,6 +25,12 @@ class PyUproot(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("5.0.11", sha256="54f3d9c133978c8e5ccbbcb8eb720c8f0eeebab0e4805567827e6a5888279902")
+    version("5.0.10", sha256="f703992a37f6b6d0146ebaf03016afdb394008faaede2476ff53e51fa8fcd8d1")
+    version("5.0.9", sha256="e8b732c8afef3d10b5db5f9b0563d5d10e06bda1cd1cb5aaf784cf084a82fa81")
+    version("5.0.8", sha256="93afa5d62a8679549dc81135668553bc4765c024bb5f9151accc72fa9e4e8460")
+    version("5.0.7", sha256="bbf198fd7a723034bb6237883885f39f5d42c2eb0ca86f326669f0aac83aeae2")
+    version("5.0.6", sha256="133b71e45bf8d3e26590ed6859ec3d26a0b3b350eeb1b77597e895c6c2430dda")
     version("5.0.5", sha256="1a2ac98d595bde7c83c7d5b716d33bb74abd44df6e8d84af62c638edb6c9abab")
     version("5.0.4", sha256="c4ea1af198e3292a4649e3fe789d11b038c1ed57c10f167fc3f52100300c2eea")
     version("5.0.3", sha256="a4ab3f2ea0b98746f601d43115a64b36f9c2145e9793da1e1cd9aaca72f311ab")
