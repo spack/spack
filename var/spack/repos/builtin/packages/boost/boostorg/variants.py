@@ -207,6 +207,18 @@ def load():
     #  dependencies and/or because there is a great deal of customization
     #  possible (and it would be difficult to choose sensible defaults).
     # ----------------------------------------------------------------------
+
+    variants.add(
+        "python",
+        default=False,
+        sticky=False,
+        when="@1.19.0:",
+        buildable="@1.19.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.python requires cxxstd >= 03"},
+        ],
+        description="C++ wrapper for interacting with Python.",
+    )
     variants.add(
         "container",
         when="@1.48.0:",

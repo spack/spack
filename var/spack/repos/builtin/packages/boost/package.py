@@ -134,7 +134,6 @@ class Boost(Package):
         "mqtt5",
         "nowide",
         "program_options",
-        "python",
         "random",
         "regex",
         "serialization",
@@ -171,9 +170,11 @@ class Boost(Package):
         for std in ["11", "14", "17"]:
             depends_on(f"icu4c cxxstd={std}", when=f"cxxstd={std}")
 
-    depends_on("python", when="+python")
-    # https://github.com/boostorg/python/commit/cbd2d9f033c61d29d0a1df14951f4ec91e7d05cd
-    depends_on("python@:3.9", when="@:1.75 +python")
+    with when("+python"):
+        depends_on("python")
+
+        # https://github.com/boostorg/python/commit/cbd2d9f033c61d29d0a1df14951f4ec91e7d05cd
+        depends_on("python@:3.9", when="@:1.75")
 
     depends_on("mpi", when="+mpi")
     depends_on("bzip2", when="+iostreams")
