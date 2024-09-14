@@ -336,6 +336,33 @@ def load():
         description="The backend for Boost.Context",
     )
     variants.add(
+        "leaf",
+        when="@1.75.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.LEAF requires cxxstd >= 11"},
+            {"when": "cxxstd=03", "msg": "Boost.LEAF requires cxxstd >= 11"},
+        ],
+        description="Lightweight error-handling",
+    )
+    variants.add(
+        "cobalt",
+        default=False,
+        when="@1.84.0:",
+        buildable="@1.84.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.cobalt requires cxxstd >= 20"},
+            {"when": "cxxstd=03", "msg": "Boost.cobalt requires cxxstd >= 20"},
+            {"when": "cxxstd=11", "msg": "Boost.cobalt requires cxxstd >= 20"},
+            {"when": "cxxstd=14", "msg": "Boost.cobalt requires cxxstd >= 20"},
+            {"when": "cxxstd=17", "msg": "Boost.cobalt requires cxxstd >= 20"},
+            {"when": "~leaf", "msg": "Boost.cobalt requires Boost.leaf"},
+            {"when": "~variant2", "msg": "Boost.cobalt requires Boost.variant2"},
+        ],
+        description=(
+            "Simple single-threaded asynchronicity akin to node.js and asyncio in python"
+        ),
+    )
+    variants.add(
         "charconv",
         when="@1.85.0:",
         buildable="@1.85.0:",
