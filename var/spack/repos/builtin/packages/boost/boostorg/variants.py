@@ -220,6 +220,12 @@ def load():
         description="C++ wrapper for interacting with Python.",
     )
     variants.add(
+        "date_time",
+        when="@1.29.0:",
+        buildable="@1.29.0:",
+        description="Calculate, format, and convert dates and times",
+    )
+    variants.add(
         "signals",
         default=False,
         when="@1.29.0:1.68.0",
