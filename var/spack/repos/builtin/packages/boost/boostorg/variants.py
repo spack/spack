@@ -269,6 +269,17 @@ def load():
         description="DEPRECATED use coroutine2",
     )
     variants.add(
+        "fiber",
+        when="@1.62.0:",
+        buildable="@1.62.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.Fiber requires cxxstd >= 11"},
+            {"when": "cxxstd=03", "msg": "Boost.Fiber requires cxxstd >= 11"},
+            {"when": "~context", "msg": "Boost.Fiber requires Boost.Context"}
+        ],
+        description="Lightweight userland threads",
+    )
+    variants.add(
         "context-impl",
         when="@1.65.0:",
         default="fcontext",

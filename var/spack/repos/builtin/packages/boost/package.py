@@ -120,7 +120,6 @@ class Boost(Package):
         "contract",
         "date_time",
         "exception",
-        "fiber",
         "filesystem",
         "graph",
         "graph_parallel",
@@ -180,10 +179,6 @@ class Boost(Package):
 
     with when("+numpy"):
         depends_on("py-numpy", type=("build", "run"))
-
-    conflicts("+fiber", when="@:1.61")  # Fiber since 1.62.0.
-    conflicts("cxxstd=98", when="+fiber")  # Fiber requires >=C++11.
-    conflicts("~context", when="+fiber")  # Fiber requires Context.
 
     with when("+mpi"):
         depends_on("mpi")
