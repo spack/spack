@@ -47,6 +47,7 @@ import spack.paths
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.solver.libc
 import spack.spec
 import spack.stage
 import spack.store
@@ -55,6 +56,7 @@ import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
 import spack.util.gpg
+import spack.util.libc
 import spack.util.parallel
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
@@ -358,18 +360,6 @@ def no_chdir():
     yield
     if os.path.isdir(original_wd):
         assert os.getcwd() == original_wd
-
-
-@pytest.fixture(scope="function", autouse=True)
-def reset_compiler_cache():
-    """Ensure that the compiler cache is not shared across Spack tests
-
-    This cache can cause later tests to fail if left in a state incompatible
-    with the new configuration. Since tests can make almost unlimited changes
-    to their setup, default to not use the compiler cache across tests."""
-    spack.compilers._compiler_cache = {}
-    yield
-    spack.compilers._compiler_cache = {}
 
 
 def onerror(func, path, error_info):
@@ -2075,15 +2065,11 @@ repo:
 def compiler_factory():
     """Factory for a compiler dict, taking a spec and an OS as arguments."""
 
-    def _factory(*, spec, operating_system):
+    def _factory(*, spec):
         return {
-            "compiler": {
-                "spec": spec,
-                "operating_system": operating_system,
-                "paths": {"cc": "/path/to/cc", "cxx": "/path/to/cxx", "f77": None, "fc": None},
-                "modules": [],
-                "target": str(archspec.cpu.host().family),
-            }
+            "spec": f"{spec}",
+            "prefix": "/path",
+            "extra_attributes": {"compilers": {"c": "/path/bin/cc", "cxx": "/path/bin/cxx"}},
         }
 
     return _factory
@@ -2097,6 +2083,10 @@ def host_architecture_str():
 
 def _true(x):
     return True
+
+
+def _libc_from_python(self):
+    return spack.spec.Spec("glibc@=2.28")
 
 
 @pytest.fixture()
