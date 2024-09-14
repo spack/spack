@@ -33,3 +33,6 @@ class Aspell(AutotoolsPackage, GNUMirrorPackage):
     def make_missing_files(self):
         make("gen/dirs.h")
         make("gen/static_filters.src.cpp")
+
+    def setup_run_environment(self, env):
+        env.set("ASPELL_CONF", f"prefix {self.prefix}")
