@@ -67,7 +67,7 @@ class PyAwkward(PythonPackage):
         ("@2.0.8", "@9"),
         ("@2.0.9", "@10"),
         ("@2.0.10", "@11"),
-        ("@2.1.0", "@12"),
+        ("@2.1.0:2.1.1", "@12"),
         ("@2.6.6:", "@35"),
     ]
     for _awkward, _awkward_cpp in _awkward_to_awkward_cpp_map:
