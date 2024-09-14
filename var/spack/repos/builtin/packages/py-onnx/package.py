@@ -56,7 +56,11 @@ class PyOnnx(PythonPackage):
     # https://github.com/protocolbuffers/protobuf/pull/8794, fixed in
     # https://github.com/onnx/onnx/pull/3112
     depends_on("py-protobuf@:3.17", type=("build", "run"), when="@:1.8")
-    depends_on("py-protobuf+cpp", type=("build", "run"))
+
+    depends_on("py-protobuf+cpp", type=("build", "run"), when="%gcc@:13")
+    depends_on("py-protobuf+cpp", type=("build", "run"), when="%clang")
+    depends_on("protobuf", type=("build", "run"), when="%gcc@14:")
+
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-numpy@1.16.6:", type=("build", "run"), when="@1.8.1:1.13")
     depends_on("py-numpy@1.20:", type=("build", "run"), when="@1.16.0:")
