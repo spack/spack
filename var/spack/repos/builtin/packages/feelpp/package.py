@@ -1,5 +1,6 @@
 from spack.package import *
 
+
 class Feelpp(CMakePackage):
     """
     Feel++ is an Open-Source C++ library designed to solve a wide range of
@@ -19,7 +20,7 @@ class Feelpp(CMakePackage):
     git = "https://github.com/feelpp/feelpp.git"
 
     license("LGPL-3.0-or-later AND GPL-3.0-or-later")
-    maintainers( "prudhomm", "vincentchabannes" )
+    maintainers("prudhomm", "vincentchabannes")
 
     version("develop", branch="develop")
     version("preset", branch="2284-add-spack-environment-to-the-main-ci")
@@ -41,12 +42,13 @@ class Feelpp(CMakePackage):
     conflicts("+cpp17", when="+cpp23", msg="Cannot enable both C++17 and C++23")
     conflicts("+cpp20", when="+cpp23", msg="Cannot enable both C++20 and C++23")
 
-
     # Specify dependencies with the required versions
     depends_on("cmake@3.21:", type="build")  # Require CMake > 3.21
-    depends_on("boost@1.74: +regex+date_time+filesystem+iostreams+mpi+multithreaded+program_options+serialization+shared+system+test")
+    depends_on(
+        "boost@1.74: +regex+date_time+filesystem+iostreams+mpi+multithreaded+program_options+serialization+shared+system+test"
+    )
     depends_on("petsc@3.20 +mumps+hwloc+ptscotch +suite-sparse+hdf5 +hypre+kokkos")
-    depends_on("llvm@18:",type="build")  # Require LLVM (Clang) version 18 or higher
+    depends_on("llvm@18:", type="build")  # Require LLVM (Clang) version 18 or higher
     depends_on("slepc")
     depends_on("mpi")
     depends_on("cln@1.3.6")
@@ -63,9 +65,6 @@ class Feelpp(CMakePackage):
     depends_on("gmsh +opencascade+mmg+fltk")
     depends_on("ruby")
     depends_on("curl")
-
-
-
 
     # Python dependencies if +python variant is enabled
     depends_on("py-pytest", when="+python")
@@ -117,7 +116,6 @@ class Feelpp(CMakePackage):
         cmake = which("cmake")
 
         cmake("--build", "--preset", self.get_preset_name())
-
 
     def install(self, spec, prefix):
         """Override the default install command to use CMake presets."""
