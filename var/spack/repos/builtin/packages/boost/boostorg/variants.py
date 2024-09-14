@@ -220,6 +220,23 @@ def load():
         description="C++ wrapper for interacting with Python.",
     )
     variants.add(
+        "signals",
+        default=False,
+        when="@1.29.0:1.68.0",
+        buildable="@1.29.0:1.68.0",
+        conflicts=[
+            {"when": "@1.69.0:", "msg": "Boost.signals was removed in 1.68.0"}
+        ],
+        requires=[
+            {
+                "spec": "+signals",
+                "when": "platform=windows @1.29.0:1.68.0",
+                "msg": "Boost.Signals is requires on Windows"
+            }
+        ],
+        description="Managed signals & slots callback implementation",
+    )
+    variants.add(
         "iostreams",
         when="@1.33.0:",
         buildable="@1.33.0:",
@@ -240,6 +257,21 @@ def load():
         description=(
             "C++ wrapper to the Message Passing Interface for distributed-memory parallelism"
         ),
+    )
+    variants.add(
+        "signals2",
+        when="@1.39.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.Signals2 requires cxxstd >= 03"}
+        ],
+        requires=[
+            {
+                "spec": "+signals2",
+                "when": "platform=windows @1.68.0:",
+                "msg": "Boost.Signals2 is requires on Windows"
+            }
+        ],
+        description="Thread-safe managed signals & slots callback implementation",
     )
     variants.add(
         "container",

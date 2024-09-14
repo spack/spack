@@ -100,7 +100,6 @@ class Boost(Package):
             "+random",
             "+regex",
             "+serialization",
-            "+signals",
             "+system",
             "+test",
             "+thread",
@@ -132,7 +131,6 @@ class Boost(Package):
         "random",
         "regex",
         "serialization",
-        "signals",
         "stacktrace",
         "system",
         "test",
@@ -194,11 +192,6 @@ class Boost(Package):
     # Boost 1.80 does not build with the Intel oneapi compiler
     # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
     conflicts("%oneapi", when="@1.80")
-
-    # On Windows, the signals variant is required when building any of
-    # the all_libs variants.
-    for lib in all_libs:
-        requires("+signals", when=f"+{lib} platform=windows")
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch("boost_11856.patch", when="@1.60.0%gcc@4.4.7")
