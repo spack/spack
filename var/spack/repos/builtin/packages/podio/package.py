@@ -105,7 +105,7 @@ class Podio(CMakePackage):
     depends_on("py-tabulate", type=("run", "test"), when="@0.16.6:")
 
     conflicts("+rntuple", when="@:0.16", msg="rntuple support requires at least podio@0.17")
-    conflicts("%gcc@14", when="@:0.99")
+    conflicts("%gcc@14", when="@:0.99", msg="missing include files to define std functions")
 
     # See https://github.com/AIDASoft/podio/pull/600
     patch(
