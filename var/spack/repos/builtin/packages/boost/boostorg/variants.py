@@ -304,6 +304,17 @@ def load():
         description="Thread-safe managed signals & slots callback implementation",
     )
     variants.add(
+        "graph_parallel",
+        default=False,
+        when="@1.40.0:",
+        buildable="@1.40.0:",
+        conflicts=[
+            {"when": "~mpi", "msg": "Boost.GraphParallel requires Boost.MPI"},
+            {"when": "~graph", "msg": "Boost.GraphParallel requires Boost.Graph"},
+        ],
+        description="Scalable parallel version of Boost.Graph using MPI multiprocessing",
+    )
+    variants.add(
         "chrono",
         when="@1.47.0:",
         buildable="@1.47.0:",
