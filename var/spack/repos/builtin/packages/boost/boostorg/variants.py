@@ -281,6 +281,14 @@ def load():
         ),
     )
     variants.add(
+        "program_options",
+        when="@1.32.0:",
+        buildable="@1.32.0:",
+        description=(
+            "Parse command-line options similar to POSIX getops or from config files"
+        ),
+    )
+    variants.add(
         "iostreams",
         when="@1.33.0:",
         buildable="@1.33.0:",
