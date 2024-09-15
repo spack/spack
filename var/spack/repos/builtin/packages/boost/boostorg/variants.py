@@ -368,6 +368,12 @@ def load():
         description="DEPRECATED use coroutine2",
     )
     variants.add(
+        "log",
+        when="@1.54.0:",
+        buildable="@1.54.0:",
+        description="Simple, extensible, and fast logging",
+    )
+    variants.add(
         "fiber",
         when="@1.62.0:",
         buildable="@1.62.0:",
