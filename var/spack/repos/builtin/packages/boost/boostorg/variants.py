@@ -449,6 +449,12 @@ def load():
         description="The backend for Boost.Context",
     )
     variants.add(
+        "stacktrace",
+        when="@1.65.0:",
+        buildable="@1.65.0:",
+        description="Gather, store, copy, and print backtraces",
+    )
+    variants.add(
         "contract",
         when="@1.67.0:",
         buildable="@1.67.0:",
