@@ -228,6 +228,28 @@ def load():
         description="C++ wrapper for interacting with Python.",
     )
     variants.add(
+        "math",
+        when="@1.23.0:",
+        buildable="@1.23.0:",
+        conflicts=[
+            {"when": "~octonions", "msg": "Boost.Math requires Boost.Octonions"},
+            {"when": "~quaternions", "msg": "Boost.Math requires Boost.Quaternions"},
+        ],
+        description=(
+            "Extensive collection of integer, real, and complex mathematical operations"
+        ),
+    )
+    variants.add(
+        "octonions",
+        when="@1.23.0:",
+        description="Octonions",
+    )
+    variants.add(
+        "quaternions",
+        when="@1.23.0:",
+        description="Quaternions",
+    )
+    variants.add(
         "date_time",
         when="@1.29.0:",
         buildable="@1.29.0:",
