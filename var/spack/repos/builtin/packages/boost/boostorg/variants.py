@@ -427,6 +427,17 @@ def load():
         ),
     )
     variants.add(
+        "nowide",
+        default=False,
+        when="@1.73.0:",
+        buildable="@1.73.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.Nowide requires cxxstd >= 11"},
+            {"when": "cxxstd=03", "msg": "Boost.Nowide requires cxxstd >= 11"},
+        ],
+        description="Standard library functions with UTF-8 API on Windows",
+    )
+    variants.add(
         "json",
         when="@1.75.0:",
         buildable="@1.75.0:",
