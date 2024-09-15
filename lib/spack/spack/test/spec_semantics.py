@@ -1104,17 +1104,15 @@ class TestSpecSemantics:
         assert set(spliced["f"].dependents()) == {spliced["c"]}
 
         # spliced["g"] is g3, but spliced["b"]["g"] is g1
-        assert spliced["g"] == c_blue["g"]
+        assert spliced["g"] == a_red["g"]
         assert spliced["g"]._build_spec is None
         assert set(spliced["g"].dependents(deptype=dt.LINK)) == {
             spliced,
             spliced["c"],
             spliced["f"],
+            a_red["c"],
         }
-        # Because a copy of g3 is used, it does not have dependents in the original specs
-        # It has build dependents on these spliced specs because it is an unchanged dependency
-        # for them
-        assert set(spliced["g"].dependents(deptype=dt.BUILD)) == {spliced["c"], spliced["f"]}
+        assert set(spliced["g"].dependents(deptype=dt.BUILD)) == {spliced, a_red["c"]}
 
         assert spliced["b"]["g"] == a_red["b"]["g"]
         assert spliced["b"]["g"]._build_spec is None
@@ -1128,7 +1126,9 @@ class TestSpecSemantics:
                     ("a", "c"),  # These are the spliced edges
                     ("c", "d"),
                     ("f", "e"),
-                    ("a", "g"),
+                    ("c", "g"),
+                    ("f", "g"),
+                    ("c", "f"),  # ancestor to spliced edge
                 ]:
                     depflag |= dt.BUILD
                 assert edge.depflag == depflag

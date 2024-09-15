@@ -4233,60 +4233,6 @@ class Spec:
         version_analogues = [a for a in name_analogues if a.version == self.version]
         return version_analogues or name_analogues
 
-    def _splice_add_dependencies(self, spec, node, node_from_other, other):
-        """Add analogues for all dependencies from node_from_other to node
-
-        If there is no analogue in spec, new nodes from other are copied and added to spec.
-        This method is recursive on the new nodes."""
-        for edge in node_from_other.edges_to_dependencies():
-            # If we can't find an analogous node in spec, use the one from here
-            analogue = edge.spec.copy(deps=False)
-            new_node = True
-            # Find an analogous node in spec
-            # This is effectively a reverse-splice, so self/other_root are reversed
-            analogues = edge.spec._get_analogues(
-                spec.traverse(root=False, deptype=dt.LINK | dt.RUN),
-                self_root=other,
-                other_root=self,
-            )
-            # Here, we assume that all multiples in the link/run graph follow:
-            # 1. perfect backwards compatibility between versions
-            # 2. widely depended on such that the root will win the loader race
-            # If there are multiple, then it's fine to add one and we do not redirect
-            # this dependency
-            # This does require a later step to ensure the root is redirected to the new node
-            # handled in `Spec._splice_fixup_duplicate_dependencies`
-            if len(analogues) == 1:
-                analogue = analogues[0]
-                new_node = False
-
-            if new_node:
-                if edge.depflag & ~dt.BUILD:
-                    # We just add the entire node, this isn't making a local change
-                    node._add_dependency(analogue, depflag=edge.depflag, virtuals=edge.virtuals)
-                    # recurse for next layer of dependencies
-                    self._splice_add_dependencies(spec, analogue, edge.spec, other)
-                else:
-                    # If it's a build-only dep, we can copy deps and avoid recursion
-                    node._add_dependency(
-                        edge.spec.copy(), depflag=dt.BUILD, virtuals=edge.virtuals
-                    )
-                continue
-
-            # If it's a perfect match, map all deptypes
-            # Otherwise, separate out the build deptype
-            if edge.depflag & dt.BUILD and analogue != edge.spec:
-                child = edge.spec.copy()
-                child._dependents = _EdgeMap(store_by=EdgeDirection.parent)
-                node._add_dependency(child, depflag=dt.BUILD, virtuals=edge.virtuals)
-            depflag = edge.depflag
-            if analogue != edge.spec:
-                depflag &= ~dt.BUILD
-            if depflag:
-                node._add_dependency(analogue, depflag=depflag, virtuals=edge.virtuals)
-                node._build_spec = node._build_spec or node_from_other.copy()
-                node.clear_cached_hashes(ignore=(ht.package_hash.attr,))
-
     def _splice_fixup_duplicate_dependencies(self):
         """Ensure every node depends on the highest version of any duplicate dependencies
 
@@ -4320,23 +4266,60 @@ class Spec:
                 node._add_dependency(dupe, depflag=new_depflag, virtuals=edge.virtuals)
 
     def _splice_intransitive(self, other):
-        """Execute an intransitive splice. See ``Spec.splice`` for details"""
         spec = self.copy()
-        replacement = other.copy(deps=False, cleardeps=True)
-        replacement.clear_cached_hashes(ignore=(ht.package_hash.attr,))
+        replacement = other.copy()
 
-        for node in spec.traverse(deptype=dt.LINK | dt.RUN):
+        # Ignore build deps in spec while doing the splice
+        # They will be added back in at the end
+        for edge in replacement.traverse_edges(cover="edges"):
+            if edge.depflag & dt.BUILD:
+                edge.depflag &= ~dt.BUILD
+                edge.parent.clear_cached_hashes(ignore=(ht.package_hash.attr,))
+
+        # We’ll come back to these later
+        # We need the list of pairs while the two specs still match
+        node_pairs = list(zip(other.traverse(deptype=dt.ALL & ~dt.BUILD), replacement.traverse()))
+
+        changed = True
+        while changed:
+            changed = False
+
+            # Intentionally allowing traversal to change on each iteration
+            # using breadth-first traversal to ensure we only reach nodes that will
+            # be in final result
+            for node in replacement.traverse(root=False, order="topo", deptype=dt.LINK | dt.RUN):
+                analogues = node._get_analogues(
+                    spec.traverse(deptype=dt.LINK | dt.RUN), self_root=spec, other_root=other
+                )
+                # No match, keep searching
+                if not analogues:
+                    continue
+                analogues.sort(key=lambda s: s.version)
+                analogue = analogues[-1]
+                # No splice needed here, keep checking
+                if analogue == node:
+                    continue
+                node._splice_detach_and_add_dependents(analogue, context=replacement)
+                changed = True
+                break
+
+        for node in spec.traverse(order="topo", deptype=dt.LINK | dt.RUN):
             if node._splice_match(other, self_root=spec, other_root=other):
                 # This handles all edges into replacement
                 # updating build_spec pointers for dependents
                 node._splice_detach_and_add_dependents(replacement, context=spec)
 
-        # This handles all edges out of replacement and any nodes unique to other that are added
-        self._splice_add_dependencies(spec, replacement, other, other)
-
         # This handles redirecting duplicate link/run dependencies to ensure the invariant that
         # an ancestor cannot depend on an older version than its descendent depends on
         spec._splice_fixup_duplicate_dependencies()
+
+        # Set up build dependencies for modified nodes
+        # Also modify build_spec because the existing ones had build deps removed
+        for orig, copy in node_pairs:
+            for edge in orig.edges_to_dependencies(depflag=dt.BUILD):
+                copy._add_dependency(edge.spec, depflag=dt.BUILD, virtuals=edge.virtuals)
+            if copy._build_spec:
+                copy._build_spec = orig.build_spec.copy()
 
         return spec
 
@@ -4361,7 +4344,7 @@ class Spec:
             # Intentionally allowing traversal to change on each iteration
             # using breadth-first traversal to ensure we only reach nodes that will
             # be in final result
-            for node in spec.traverse(order="breadth", deptype=dt.LINK | dt.RUN):
+            for node in spec.traverse(order="topo", deptype=dt.LINK | dt.RUN):
                 analogues = node._get_analogues(
                     replacement.traverse(deptype=dt.LINK | dt.RUN),
                     self_root=spec,
