@@ -4266,6 +4266,7 @@ class Spec:
                 node._add_dependency(dupe, depflag=new_depflag, virtuals=edge.virtuals)
 
     def _splice_intransitive(self, other):
+        """Execute an intransitive splice. See ``Spec.splice`` for details."""
         spec = self.copy()
         replacement = other.copy()
 
