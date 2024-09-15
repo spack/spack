@@ -106,6 +106,15 @@ class Feelpp(CMakePackage):
         # Add options based on the variants
         args = [
             f"--preset={self.get_preset_name()}",
+
+            # Enable/Disable optional dependencies
+            "-DFEELPP_ENABLE_VTK=OFF",
+            "-DFEELPP_ENABLE_OPENTURNS=OFF",
+            "-DFEELPP_ENABLE_OMC=OFF",
+            "-DFEELPP_ENABLE_ANN=OFF",
+            "-DFEELPP_USE_EXTERNAL_CLN=ON",
+
+            # Enable optional dependencies based on variants
             self.define_from_variant("FEELPP_ENABLE_QUICKSTART", "quickstart"),
             self.define_from_variant("FEELPP_ENABLE_TESTS", "tests"),
             self.define_from_variant("FEELPP_ENABLE_TOOLBOXES", "toolboxes"),
