@@ -219,6 +219,16 @@ def load():
         description="A complete system for random number generation",
     )
     variants.add(
+        "regex",
+        when="@1.18.0:",
+        buildable="@1.18.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.regex requires cxxstd >= 11"},
+            {"when": "cxxstd=03", "msg": "Boost.regex requires cxxstd >= 11"},
+        ],
+        description="Perl and POSIX regular expressions",
+    )
+    variants.add(
         "graph",
         when="@1.18.0:",
         buildable="@1.18.0:",
