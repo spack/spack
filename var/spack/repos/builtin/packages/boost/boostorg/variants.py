@@ -331,6 +331,16 @@ def load():
         description="Standard library containers and extensions",
     )
     variants.add(
+        "locale",
+        default=False,
+        when="@1.48.0:",
+        buildable="@1.48.0:",
+        conflicts=[
+            {"when": "~icu", "msg": "Boost.Locale requires Unicode support"}
+        ],
+        description="Localization and Unicode facilities",
+    )
+    variants.add(
         "context",
         when="@1.51.0:",
         buildable="@1.51.0:",
