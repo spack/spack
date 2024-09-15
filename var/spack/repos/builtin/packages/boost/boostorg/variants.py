@@ -469,6 +469,15 @@ def load():
         description="Simple, extensible, and fast logging",
     )
     variants.add(
+        "type_erasure",
+        when="@1.54.0:",
+        buildable="@1.60.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.TypeErasure requires cxxstd >= 03"}
+        ],
+        description="Runtime polymorphism based on concepts",
+    )
+    variants.add(
         "fiber",
         when="@1.62.0:",
         buildable="@1.62.0:",
