@@ -209,6 +209,16 @@ def load():
     # ----------------------------------------------------------------------
 
     variants.add(
+        "random",
+        when="@1.15.0:",
+        buildable="@1.43.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.random requires cxxstd >= 11"},
+            {"when": "cxxstd=03", "msg": "Boost.random requires cxxstd >= 11"},
+        ],
+        description="A complete system for random number generation",
+    )
+    variants.add(
         "graph",
         when="@1.18.0:",
         buildable="@1.18.0:",
