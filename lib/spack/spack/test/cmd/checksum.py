@@ -8,6 +8,7 @@ import argparse
 import pytest
 
 import spack.cmd.checksum
+import spack.error
 import spack.package_base
 import spack.parser
 import spack.repo
@@ -304,7 +305,7 @@ def test_checksum_deprecated_version(mock_packages, can_fetch_versions):
 
 def test_checksum_url(mock_packages, config):
     pkg_cls = spack.repo.PATH.get_pkg_class("zlib")
-    with pytest.raises(spack.parser.SpecSyntaxError):
+    with pytest.raises(spack.error.SpecSyntaxError):
         spack_checksum(f"{pkg_cls.url}")
 
 

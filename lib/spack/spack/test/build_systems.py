@@ -16,7 +16,7 @@ import llnl.util.filesystem as fs
 import spack.build_systems.autotools
 import spack.build_systems.cmake
 import spack.environment
-import spack.package_base
+import spack.error
 import spack.paths
 import spack.platforms
 import spack.platforms.test
@@ -268,7 +268,7 @@ class TestCMakePackage:
 
     def test_cmake_bad_generator(self, default_mock_concretization):
         s = default_mock_concretization("cmake-client")
-        with pytest.raises(spack.package_base.InstallError):
+        with pytest.raises(spack.error.InstallError):
             spack.build_systems.cmake.CMakeBuilder.std_args(
                 s.package, generator="Yellow Sticky Notes"
             )

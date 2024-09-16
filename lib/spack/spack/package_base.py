@@ -55,6 +55,7 @@ import spack.util.environment
 import spack.util.executable
 import spack.util.path
 import spack.util.web
+from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import (
     PackageTest,
@@ -64,7 +65,7 @@ from spack.install_test import (
     cache_extra_test_sources,
     install_test_root,
 )
-from spack.installer import InstallError, PackageInstaller
+from spack.installer import PackageInstaller
 from spack.solver.version_order import concretization_version_order
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
@@ -2582,20 +2583,6 @@ class PackageStillNeededError(InstallError):
         )
         self.spec = spec
         self.dependents = dependents
-
-
-class PackageError(spack.error.SpackError):
-    """Raised when something is wrong with a package definition."""
-
-    def __init__(self, message, long_msg=None):
-        super().__init__(message, long_msg)
-
-
-class NoURLError(PackageError):
-    """Raised when someone tries to build a URL for a package with no URLs."""
-
-    def __init__(self, cls):
-        super().__init__("Package %s has no version with a URL." % cls.__name__)
 
 
 class InvalidPackageOpError(PackageError):

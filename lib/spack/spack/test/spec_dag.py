@@ -742,7 +742,7 @@ class TestSpecDag:
 
     def test_invalid_literal_spec(self):
         # Can't give type 'build' to a top-level spec
-        with pytest.raises(spack.parser.SpecSyntaxError):
+        with pytest.raises(spack.error.SpecSyntaxError):
             Spec.from_literal({"foo:build": None})
 
         # Can't use more than one ':' separator

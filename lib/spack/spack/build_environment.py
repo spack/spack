@@ -75,9 +75,8 @@ import spack.subprocess_context
 import spack.util.executable
 from spack import traverse
 from spack.context import Context
-from spack.error import NoHeadersError, NoLibrariesError
+from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
-from spack.installer import InstallError
 from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,

@@ -49,17 +49,23 @@ import spack.schema.ci
 import spack.schema.compilers
 import spack.schema.concretizer
 import spack.schema.config
+import spack.schema.definitions
+
+# import spack.spec
+import spack.schema.develop
 import spack.schema.env
 import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
 import spack.schema.upstreams
+import spack.schema.view
+import spack.spec
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
-from spack.error import SpackError
+from spack.error import SpackError, SpecSyntaxError
 from spack.util.cpus import cpus_available
 
 #: Dict from section names -> schema for that section
@@ -1020,7 +1026,7 @@ def change_or_add(
 
     if found:
         update_fn(section)
-        spack.config.set(section_name, section, scope=scope)
+        set(section_name, section, scope=scope)
         return
 
     # If no scope meets the criteria specified by ``find_fn``,
@@ -1033,14 +1039,14 @@ def change_or_add(
             break
 
     if found:
-        spack.config.set(section_name, section, scope=scope)
+        set(section_name, section, scope=scope)
         return
 
     # If no scopes define any config for the named section, then
     # modify the highest-priority scope.
     scope, section = configs_by_section[0]
     update_fn(section)
-    spack.config.set(section_name, section, scope=scope)
+    set(section_name, section, scope=scope)
 
 
 def update_all(section_name: str, change_fn: Callable[[str], bool]) -> None:
@@ -1052,7 +1058,7 @@ def update_all(section_name: str, change_fn: Callable[[str], bool]) -> None:
     for scope, section in configs_by_section:
         modified = change_fn(section)
         if modified:
-            spack.config.set(section_name, section, scope=scope)
+            set(section_name, section, scope=scope)
 
 
 def _validate_section_name(section: str) -> None:
@@ -1269,7 +1275,7 @@ def remove_yaml(dest, source):
             unmerge = sk in dest
             old_dest_value = dest.pop(sk, None)
 
-            if unmerge and not spack.config._override(sk):
+            if unmerge and not _override(sk):
                 dest[sk] = remove_yaml(old_dest_value, sv)
 
         return dest
@@ -1719,11 +1725,11 @@ def parse_spec_from_yaml_string(string: str) -> "spack.spec.Spec":
     try:
         spec = spack.spec.Spec(string)
         return spec
-    except spack.parser.SpecSyntaxError as e:
-        mark = spack.config.get_mark_from_yaml_data(string)
+    except SpecSyntaxError as e:
+        mark = get_mark_from_yaml_data(string)
         if mark:
             msg = f"{mark.name}:{mark.line + 1}: {str(e)}"
-            raise spack.parser.SpecSyntaxError(msg) from e
+            raise SpecSyntaxError(msg) from e
         raise e
 
 

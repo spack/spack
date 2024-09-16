@@ -26,7 +26,7 @@ import spack.package_base
 import spack.repo
 import spack.spec
 from spack.build_systems.generic import Package
-from spack.installer import InstallError
+from spack.error import InstallError
 
 
 @pytest.fixture(scope="module")

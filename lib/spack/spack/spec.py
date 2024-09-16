@@ -2016,6 +2016,7 @@ class Spec:
     def _lookup_hash(self):
         """Lookup just one spec with an abstract hash, returning a spec from the the environment,
         store, or finally, binary caches."""
+        import spack.binary_distribution
         import spack.environment
 
         active_env = spack.environment.active_environment()

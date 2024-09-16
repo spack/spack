@@ -142,7 +142,7 @@ def test_spec_returncode():
 
 
 def test_spec_parse_error():
-    with pytest.raises(spack.parser.SpecSyntaxError) as e:
+    with pytest.raises(spack.error.SpecSyntaxError) as e:
         spec("1.15:")
 
     # make sure the error is formatted properly

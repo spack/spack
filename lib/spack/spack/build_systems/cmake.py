@@ -15,6 +15,7 @@ import llnl.util.filesystem as fs
 import spack.build_environment
 import spack.builder
 import spack.deptypes as dt
+import spack.error
 import spack.package_base
 from spack.directives import build_system, conflicts, depends_on, variant
 from spack.multimethod import when
@@ -344,7 +345,7 @@ class CMakeBuilder(BaseBuilder):
             msg = "Invalid CMake generator: '{0}'\n".format(generator)
             msg += "CMakePackage currently supports the following "
             msg += "primary generators: '{0}'".format("', '".join(valid_primary_generators))
-            raise spack.package_base.InstallError(msg)
+            raise spack.error.InstallError(msg)
 
         try:
             build_type = pkg.spec.variants["build_type"].value

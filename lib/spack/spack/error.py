@@ -144,3 +144,33 @@ class PatchDirectiveError(SpackError):
 
 class PatchLookupError(NoSuchPatchError):
     """Raised when a patch file cannot be located from sha256."""
+
+
+class SpecSyntaxError(Exception):
+    """Base class for Spec syntax errors"""
+
+
+class PackageError(SpackError):
+    """Raised when something is wrong with a package definition."""
+
+    def __init__(self, message, long_msg=None):
+        super().__init__(message, long_msg)
+
+
+class NoURLError(PackageError):
+    """Raised when someone tries to build a URL for a package with no URLs."""
+
+    def __init__(self, cls):
+        super().__init__("Package %s has no version with a URL." % cls.__name__)
+
+
+class InstallError(SpackError):
+    """Raised when something goes wrong during install or uninstall.
+
+    The error can be annotated with a ``pkg`` attribute to allow the
+    caller to get the package for which the exception was raised.
+    """
+
+    def __init__(self, message, long_msg=None, pkg=None):
+        super().__init__(message, long_msg)
+        self.pkg = pkg

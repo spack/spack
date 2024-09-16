@@ -137,7 +137,9 @@ def test_install_from_cache_errors(install_mockery):
     assert spec.concrete
 
     # Check with cache-only
-    with pytest.raises(inst.InstallError, match="No binary found when cache-only was specified"):
+    with pytest.raises(
+        spack.error.InstallError, match="No binary found when cache-only was specified"
+    ):
         spec.package.do_install(package_cache_only=True, dependencies_cache_only=True)
     assert not spec.package.installed_from_binary_cache
 
@@ -583,7 +585,7 @@ def test_check_deps_status_install_failure(install_mockery):
     installer = create_installer(["pkg-a"], {})
     request = installer.build_requests[0]
 
-    with pytest.raises(inst.InstallError, match="install failure"):
+    with pytest.raises(spack.error.InstallError, match="install failure"):
         installer._check_deps_status(request)
 
 
@@ -594,7 +596,7 @@ def test_check_deps_status_write_locked(install_mockery, monkeypatch):
     # Ensure the lock is not acquired
     monkeypatch.setattr(inst.PackageInstaller, "_ensure_locked", _not_locked)
 
-    with pytest.raises(inst.InstallError, match="write locked by another"):
+    with pytest.raises(spack.error.InstallError, match="write locked by another"):
         installer._check_deps_status(request)
 
 
@@ -801,7 +803,7 @@ def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(inst.PackageInstaller, "_update_failed", _noop)
 
     msg = "Cannot proceed with dependent-install"
-    with pytest.raises(inst.InstallError, match=msg):
+    with pytest.raises(spack.error.InstallError, match=msg):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -815,7 +817,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     # Make sure the package is identified as failed
     monkeypatch.setattr(spack.database.FailureTracker, "has_failed", _true)
 
-    with pytest.raises(inst.InstallError, match="request failed"):
+    with pytest.raises(spack.error.InstallError, match="request failed"):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -830,7 +832,7 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
     # Make sure the package is identified as failed
     monkeypatch.setattr(spack.database.FailureTracker, "has_failed", _true)
 
-    with pytest.raises(inst.InstallError, match="request failed"):
+    with pytest.raises(spack.error.InstallError, match="request failed"):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -906,7 +908,7 @@ def test_install_fail_multi(install_mockery, monkeypatch):
     # Raise a KeyboardInterrupt error to trigger early termination
     monkeypatch.setattr(inst.PackageInstaller, "_install_task", _install)
 
-    with pytest.raises(inst.InstallError, match="Installation request failed"):
+    with pytest.raises(spack.error.InstallError, match="Installation request failed"):
         installer.install()
 
     assert "pkg-a" in installer.installed  # ensure the the second spec installed
@@ -924,7 +926,7 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     # This will prevent b from installing, which will cause the build of c to be skipped.
     monkeypatch.setattr(spack.database.FailureTracker, "has_failed", _true)
 
-    with pytest.raises(inst.InstallError, match="after first install failure"):
+    with pytest.raises(spack.error.InstallError, match="after first install failure"):
         installer.install()
 
     assert b_id in installer.failed, "Expected b to be marked as failed"
@@ -952,7 +954,7 @@ def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
         spack.package_base.PackageBase, "do_patch", _test_install_fail_fast_on_except_patch
     )
 
-    with pytest.raises(inst.InstallError, match="mock patch failure"):
+    with pytest.raises(spack.error.InstallError, match="mock patch failure"):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -973,7 +975,7 @@ def test_install_lock_failures(install_mockery, monkeypatch, capfd):
     # Ensure don't continually requeue the task
     monkeypatch.setattr(inst.PackageInstaller, "_requeue_task", _requeued)
 
-    with pytest.raises(inst.InstallError, match="request failed"):
+    with pytest.raises(spack.error.InstallError, match="request failed"):
         installer.install()
 
     out = capfd.readouterr()[0]
@@ -1004,7 +1006,7 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
     # Ensure don't continually requeue the task
     monkeypatch.setattr(inst.PackageInstaller, "_requeue_task", _requeued)
 
-    with pytest.raises(inst.InstallError, match="request failed"):
+    with pytest.raises(spack.error.InstallError, match="request failed"):
         installer.install()
 
     assert b_pkg_id not in installer.installed
@@ -1040,7 +1042,7 @@ def test_install_read_locked_requeue(install_mockery, monkeypatch, capfd):
 
     installer = create_installer(["pkg-b"], {})
 
-    with pytest.raises(inst.InstallError, match="request failed"):
+    with pytest.raises(spack.error.InstallError, match="request failed"):
         installer.install()
 
     assert "b" not in installer.installed
