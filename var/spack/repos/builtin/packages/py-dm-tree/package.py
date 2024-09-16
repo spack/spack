@@ -46,7 +46,7 @@ class PyDmTree(PythonPackage):
         sha256="77dbd895611d412da99a5afbf312c3c49984ad02bd0e56ad342b2002a87d789c",
         when="@0.1.8",
     )
-    conflicts("%gcc@11:", when="@:0.1.7")
+    conflicts("%gcc@13:", when="@:0.1.7")
 
     # Historical dependencies
     depends_on("bazel@:5", when="@:0.1.6", type="build")
