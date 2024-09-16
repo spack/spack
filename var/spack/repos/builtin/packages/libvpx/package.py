@@ -21,6 +21,9 @@ class Libvpx(AutotoolsPackage):
 
     version("1.10.0", sha256="85803ccbdbdd7a3b03d930187cb055f1353596969c1f92ebec2db839fa4f834a")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("pic", default=True, description="Produce position-independent code (for shared libs)")
 
     depends_on("yasm")

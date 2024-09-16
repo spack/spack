@@ -7,7 +7,6 @@ import pathlib
 
 import pytest
 
-import spack.build_systems.generic
 import spack.config
 import spack.error
 import spack.package_base
@@ -18,11 +17,6 @@ from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
 from spack.spec import Spec
 from spack.test.conftest import create_test_repo
 from spack.util.url import path_to_file_url
-
-pytestmark = [
-    pytest.mark.not_on_windows("Windows uses old concretizer"),
-    pytest.mark.only_clingo("Original concretizer does not support configuration requirements"),
-]
 
 
 def update_packages_config(conf_str):
@@ -927,9 +921,9 @@ def test_default_requirements_semantic(packages_yaml, concretize_scope, mock_pac
         Spec("zlib ~shared").concretized()
 
     # A spec without the shared variant still concretize
-    s = Spec("a").concretized()
-    assert not s.satisfies("a +shared")
-    assert not s.satisfies("a ~shared")
+    s = Spec("pkg-a").concretized()
+    assert not s.satisfies("pkg-a +shared")
+    assert not s.satisfies("pkg-a ~shared")
 
 
 @pytest.mark.parametrize(

@@ -106,9 +106,6 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         extension="tar.gz",
     )
 
-    # Tagged development version used by xSDK
-    version("4.0.1-xsdk", commit="c55c80d17b82d80de04b849dd526e17044f8c99a")
-
     version(
         "4.0.0",
         sha256="df5bdac798ea84a263979f6fbf79de9013e1c55562f95f98644c3edcacfbc727",
@@ -160,6 +157,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         url="http://goo.gl/xrScXn",
         extension="tar.gz",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     variant("static", default=True, description="Build static library")
     variant("shared", default=False, description="Build shared library")
@@ -307,8 +306,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("sundials@2.7.0+mpi+hypre", when="@:3.3.0+sundials+mpi")
     depends_on("sundials@2.7.0:", when="@3.3.2:+sundials~mpi")
     depends_on("sundials@2.7.0:+mpi+hypre", when="@3.3.2:+sundials+mpi")
-    depends_on("sundials@5.0.0:5", when="@4.0.1-xsdk:4.4+sundials~mpi")
-    depends_on("sundials@5.0.0:5+mpi+hypre", when="@4.0.1-xsdk:4.4+sundials+mpi")
+    depends_on("sundials@5.0.0:5", when="@4.1.0:4.4+sundials~mpi")
+    depends_on("sundials@5.0.0:5+mpi+hypre", when="@4.1.0:4.4+sundials+mpi")
     depends_on("sundials@5.0.0:6.7.0", when="@4.5.0:+sundials~mpi")
     depends_on("sundials@5.0.0:6.7.0+mpi+hypre", when="@4.5.0:+sundials+mpi")
     conflicts("cxxstd=11", when="^sundials@6.4.0:")
@@ -974,6 +973,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "^rocthrust" in spec and not spec["hip"].external:
                 # petsc+rocm needs the rocthrust header path
                 hip_headers += spec["rocthrust"].headers
+            if "^rocprim" in spec and not spec["hip"].external:
+                # rocthrust [via petsc+rocm] has a dependency on rocprim
+                hip_headers += spec["rocprim"].headers
             if "^hipblas" in spec and not spec["hip"].external:
                 # superlu-dist+rocm needs the hipblas header path
                 hip_headers += spec["hipblas"].headers
@@ -1221,7 +1223,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         # Clean the 'examples' directory -- at least one example is always built
         # and we do not want to cache executables.
         make("examples/clean", parallel=False)
-        self.cache_extra_test_sources([self.examples_src_dir, self.examples_data_dir])
+        cache_extra_test_sources(self, [self.examples_src_dir, self.examples_data_dir])
 
     def test_ex10(self):
         """build and run ex10(p)"""

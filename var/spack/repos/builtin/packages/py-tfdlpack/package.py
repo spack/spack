@@ -22,6 +22,9 @@ class PyTfdlpack(CMakePackage, PythonExtension):
         "0.1.1", tag="v0.1.1", commit="a1fdb53096158c2ec9189bb1ff46c92c6f571bbe", submodules=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("cuda", default=True, description="Build with CUDA support")
 
     depends_on("cmake@3.5:", type="build")

@@ -46,6 +46,10 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         "0.2.0", tag="v0.2.0", commit="30135e03b14b1dc753634e9147dafede0663906f", submodules="True"
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("openmp", default=False, description="Build Shared Libs")
     variant(
         "implicit_conversions",
@@ -119,7 +123,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         options = []
         options.append("-DBLT_SOURCE_DIR={0}".format(spec["blt"].prefix))
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             options.extend(
                 [
                     "-DENABLE_CUDA=ON",
@@ -139,7 +143,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         else:
             options.append("-DENABLE_CUDA=OFF")
 
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             options.extend(["-DENABLE_HIP=ON", "-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix)])
 
             archs = self.spec.variants["amdgpu_target"].value

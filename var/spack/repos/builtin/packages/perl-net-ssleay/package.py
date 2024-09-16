@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import inspect
-
 from spack.package import *
 
 
@@ -19,11 +17,13 @@ class PerlNetSsleay(PerlPackage):
     version("1.85", sha256="9d8188b9fb1cae3bd791979c20554925d5e94a138d00414f1a6814549927b0c8")
     version("1.82", sha256="5895c519c9986a5e5af88e3b8884bbdc70e709ee829dc6abb9f53155c347c7e5")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("openssl")
 
     def configure(self, spec, prefix):
         self.build_method = "Makefile.PL"
-        self.build_executable = inspect.getmodule(self).make
+        self.build_executable = make
         # Do you want to run external tests?
         config_answers = ["\n"]
         config_answers_filename = "spack-config.in"
@@ -33,4 +33,4 @@ class PerlNetSsleay(PerlPackage):
 
         with open(config_answers_filename, "r") as f:
             env["OPENSSL_PREFIX"] = self.spec["openssl"].prefix
-            inspect.getmodule(self).perl("Makefile.PL", "INSTALL_BASE={0}".format(prefix), input=f)
+            perl("Makefile.PL", "INSTALL_BASE={0}".format(prefix), input=f)

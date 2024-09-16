@@ -23,6 +23,10 @@ class Icon(AutotoolsPackage):
     version("2024.01-1", sha256="3e57608b7e1e3cf2f4cb318cfe2fdb39678bd53ca093955d99570bd6d7544184")
     version("2024.01", sha256="d9408fdd6a9ebf5990298e9a09c826e8c15b1e79b45be228f7a5670a3091a613")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Model Features:
     variant("atmo", default=True, description="Enable the atmosphere component")
     variant("les", default=True, description="Enable the Large-Eddy Simulation component")

@@ -18,14 +18,14 @@ class Hypar(AutotoolsPackage):
     """
 
     homepage = "http://hypar.github.io/"
-    url = "https://bitbucket.org/deboghosh/hypar/get/v4.1.tar.gz"
-    git = "https://bitbucket.org/deboghosh/hypar.git"
+    url = "https://github.com/debog/hypar/archive/refs/tags/v4.1.tar.gz"
+    git = "https://github.com/debog/hypar.git"
 
     maintainers("debog")
 
     tags = ["proxy-app", "ecp-proxy-app"]
 
-    version("4.1", sha256="36c11dcfda006115f4656ff73790992e5caea99dbc64776c9db4e0a29b4c60da")
+    version("4.1", sha256="b3bfc6da28d78e2cc89868a35990617e4f77521b68911772887c2f8d0b1fec21")
 
     variant("mpi", default=True, description="Build with MPI support")
     variant("openmp", default=False, description="Build with OpenMP support")
@@ -48,8 +48,9 @@ class Hypar(AutotoolsPackage):
         args = []
         spec = self.spec
         if "+mpi" in spec:
-            args.append("--enable-mpi")
             args.append("--with-mpi-dir={0}".format(spec["mpi"].prefix))
+        else:
+            args.append("--enable-serial")
         if "+openmp" in spec:
             args.append("--enable-omp")
         if "+scalapack" in spec:

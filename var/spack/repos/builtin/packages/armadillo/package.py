@@ -11,7 +11,7 @@ class Armadillo(CMakePackage):
     for the C++ language, aiming towards a good balance between speed and
     ease of use."""
 
-    homepage = "http://arma.sourceforge.net/"
+    homepage = "https://arma.sourceforge.net/"
     url = "http://sourceforge.net/projects/arma/files/armadillo-8.100.1.tar.xz"
 
     license("Apache-2.0")
@@ -26,6 +26,8 @@ class Armadillo(CMakePackage):
     version("9.800.3", sha256="a481e1dc880b7cb352f8a28b67fe005dc1117d4341277f12999a2355d40d7599")
     version("8.100.1", sha256="54773f7d828bd3885c598f90122b530ded65d9b195c9034e082baea737cd138d")
     version("7.950.1", sha256="a32da32a0ea420b8397a53e4b40ed279c1a5fc791dd492a2ced81ffb14ad0d1b")
+
+    depends_on("cxx", type="build")  # generated
 
     variant("hdf5", default=False, description="Include HDF5 support")
 

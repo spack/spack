@@ -17,8 +17,6 @@ import spack.build_environment
 import spack.cmd
 import spack.config
 import spack.environment as ev
-import spack.fetch_strategy
-import spack.package_base
 import spack.paths
 import spack.report
 import spack.spec

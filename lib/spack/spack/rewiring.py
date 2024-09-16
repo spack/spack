@@ -14,9 +14,7 @@ from llnl.util.symlink import readlink, symlink
 import spack.binary_distribution as bindist
 import spack.error
 import spack.hooks
-import spack.paths
 import spack.relocate as relocate
-import spack.stage
 import spack.store
 
 
@@ -116,7 +114,7 @@ def rewire_node(spec, explicit):
     # spec being added to look for mismatches)
     spack.store.STORE.layout.write_spec(spec, spack.store.STORE.layout.spec_file_path(spec))
     # add to database, not sure about explicit
-    spack.store.STORE.db.add(spec, spack.store.STORE.layout, explicit=explicit)
+    spack.store.STORE.db.add(spec, explicit=explicit)
 
     # run post install hooks
     spack.hooks.post_install(spec, explicit)

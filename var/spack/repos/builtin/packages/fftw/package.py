@@ -79,7 +79,7 @@ class FftwBase(AutotoolsPackage):
             os.rename("fftw/config.h", "fftw/config.h.SPACK_RENAMED")
 
     def autoreconf(self, spec, prefix):
-        if "+pfft_patches" in spec:
+        if spec.satisfies("+pfft_patches"):
             autoreconf = which("autoreconf")
             autoreconf("-ifv")
 
@@ -114,13 +114,13 @@ class FftwBase(AutotoolsPackage):
             options.append("--enable-type-prefix")
 
         # Variants that affect every precision
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             options.append("--enable-openmp")
             if spec.satisfies("@:2"):
                 # TODO: libtool strips CFLAGS, so 2.x libxfftw_threads
                 #       isn't linked to the openmp library. Patch Makefile?
                 options.insert(0, "CFLAGS=" + self.compiler.openmp_flag)
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             options.append("--enable-mpi")
 
         # Specific SIMD support.
@@ -229,6 +229,9 @@ class Fftw(FftwBase):
     version("3.3.5", sha256="8ecfe1b04732ec3f5b7d279fdb8efcad536d555f9d1e8fabd027037d45ea8bcf")
     version("3.3.4", sha256="8f0cde90929bc05587c3368d2f15cd0530a60b8a9912a8e2979a72dbe5af0982")
     version("2.1.5", sha256="f8057fae1c7df8b99116783ef3e94a6a44518d49c72e2e630c24b689c6022630")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant(
         "pfft_patches",
