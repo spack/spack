@@ -1136,7 +1136,7 @@ def _setup_pkg_and_run(
         return_value = function(pkg, kwargs)
         write_pipe.send(return_value)
 
-    except StopPhase as e:
+    except spack.error.StopPhase as e:
         # Do not create a full ChildError from this, it's not an error
         # it's a control statement.
         write_pipe.send(e)
@@ -1297,7 +1297,7 @@ def start_build_process(pkg, function, kwargs):
     p.join()
 
     # If returns a StopPhase, raise it
-    if isinstance(child_result, StopPhase):
+    if isinstance(child_result, spack.error.StopPhase):
         # do not print
         raise child_result
 
@@ -1504,17 +1504,6 @@ class ChildError(InstallError):
 def _make_child_error(msg, module, name, traceback, log, log_type, context):
     """Used by __reduce__ in ChildError to reconstruct pickled errors."""
     return ChildError(msg, module, name, traceback, log, log_type, context)
-
-
-class StopPhase(spack.error.SpackError):
-    """Pickle-able exception to control stopped builds."""
-
-    def __reduce__(self):
-        return _make_stop_phase, (self.message, self.long_message)
-
-
-def _make_stop_phase(msg, long_msg):
-    return StopPhase(msg, long_msg)
 
 
 def write_log_summary(out, log_type, log, last=None):

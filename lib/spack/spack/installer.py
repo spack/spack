@@ -1517,7 +1517,7 @@ class PackageInstaller:
             # the database, so that we don't need to re-read from file.
             spack.store.STORE.db.add(pkg.spec, explicit=explicit)
 
-        except spack.build_environment.StopPhase as e:
+        except spack.error.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
             pid = f"{self.pid}: " if tty.show_pid() else ""

@@ -178,3 +178,14 @@ class InstallError(SpackError):
 
 class ConfigError(SpackError):
     """Superclass for all Spack config related errors."""
+
+
+class StopPhase(SpackError):
+    """Pickle-able exception to control stopped builds."""
+
+    def __reduce__(self):
+        return _make_stop_phase, (self.message, self.long_message)
+
+
+def _make_stop_phase(msg, long_msg):
+    return StopPhase(msg, long_msg)
