@@ -15,8 +15,6 @@ from llnl.util import tty
 
 import spack.environment
 import spack.tengine
-import spack.util.cpus
-import spack.util.executable
 
 from ._common import _root_spec
 from .config import root_path, spec_for_current_python, store_path

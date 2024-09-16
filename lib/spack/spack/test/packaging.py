@@ -24,8 +24,6 @@ import spack.cmd.buildcache as buildcache
 import spack.error
 import spack.fetch_strategy
 import spack.package_base
-import spack.repo
-import spack.store
 import spack.util.gpg
 import spack.util.url as url_util
 from spack.fetch_strategy import URLFetchStrategy

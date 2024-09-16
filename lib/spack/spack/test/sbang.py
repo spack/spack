@@ -18,7 +18,6 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.hooks.sbang as sbang
-import spack.paths
 import spack.store
 import spack.util.spack_yaml as syaml
 from spack.util.executable import which

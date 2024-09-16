@@ -10,7 +10,6 @@ import platform
 import pytest
 
 import spack
-import spack.config
 import spack.platforms
 from spack.main import SpackCommand
 from spack.util.executable import which

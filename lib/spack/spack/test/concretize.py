@@ -28,7 +28,6 @@ import spack.solver.asp
 import spack.solver.version_order
 import spack.store
 import spack.util.file_cache
-import spack.util.libc
 import spack.variant as vt
 from spack.concretize import find_spec
 from spack.spec import CompilerSpec, Spec

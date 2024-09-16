@@ -53,7 +53,6 @@ import llnl.util.lang
 
 import spack.config
 import spack.patch
-import spack.paths
 import spack.repo
 import spack.spec
 import spack.util.crypto

@@ -17,15 +17,11 @@ import llnl.util.tty as tty
 from llnl.util.lang import memoized
 from llnl.util.symlink import readlink, symlink
 
-import spack.paths
 import spack.platforms
-import spack.repo
-import spack.spec
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
 import spack.util.filesystem as ssys
-import spack.util.path
 
 from .relocate_text import BinaryFilePrefixReplacer, TextFilePrefixReplacer
 

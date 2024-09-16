@@ -84,7 +84,6 @@ import spack.solver
 import spack.store
 import spack.target
 import spack.traverse as traverse
-import spack.util.crypto
 import spack.util.executable
 import spack.util.hash
 import spack.util.module_cmd as md

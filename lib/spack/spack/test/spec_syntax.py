@@ -12,7 +12,6 @@ import pytest
 import spack.cmd
 import spack.platforms.test
 import spack.spec
-import spack.variant
 from spack.parser import (
     UNIX_FILENAME,
     WINDOWS_FILENAME,

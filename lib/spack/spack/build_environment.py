@@ -65,16 +65,12 @@ import spack.main
 import spack.package_base
 import spack.paths
 import spack.platforms
-import spack.repo
 import spack.schema.environment
 import spack.spec
 import spack.stage
 import spack.store
 import spack.subprocess_context
-import spack.user_environment
 import spack.util.executable
-import spack.util.path
-import spack.util.pattern
 from spack import traverse
 from spack.context import Context
 from spack.error import NoHeadersError, NoLibrariesError

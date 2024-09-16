@@ -40,7 +40,6 @@ import spack.modules
 import spack.paths
 import spack.platforms
 import spack.repo
-import spack.solver.asp
 import spack.spec
 import spack.store
 import spack.util.debug
