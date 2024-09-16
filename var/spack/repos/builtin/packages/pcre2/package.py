@@ -77,10 +77,16 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         args.append(self.define_from_variant("PCRE2_BUILD_PCRE2_16", "multibyte"))
         args.append(self.define_from_variant("PCRE2_BUILD_PCRE2_32", "multibyte"))
         args.append(self.define_from_variant("PCRE2_SUPPORT_JIT", "jit"))
-        args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
-        # PCRE allows building shared and static at the same time
-        # this is bad practice and a problem on some platforms
-        # Enforce mutual exclusivity here
-        args.append(self.define("BUILD_STATIC_LIBS", not self.spec.satisfies("shared")))
+        # Don't need to check for on or off, just if the variant is available
+        # If not specified, the build system will build both static and shared
+        # by default, this is in parity with the autotools build, so on
+        # linux and MacOS, the produced binaries are identical, Windows is the
+        # only outlier
+        if "shared" in spec:
+            args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+            # PCRE allows building shared and static at the same time
+            # this is bad practice and a problem on some platforms
+            # Enforce mutual exclusivity here
+            args.append(self.define("BUILD_STATIC_LIBS", not self.spec.satisfies("+shared")))
 
         return args
