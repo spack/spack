@@ -13,6 +13,7 @@ import pytest
 
 from llnl.util.filesystem import mkdirp, touch, working_dir
 
+import spack.error
 import spack.patch
 import spack.paths
 import spack.repo
@@ -434,7 +435,7 @@ def test_patch_no_file():
 
     patch = spack.patch.Patch(fp, "nonexistent_file", 0, "")
     patch.path = "test"
-    with pytest.raises(spack.patch.NoSuchPatchError, match="No such patch:"):
+    with pytest.raises(spack.error.NoSuchPatchError, match="No such patch:"):
         patch.apply("")
 
 
@@ -444,10 +445,10 @@ def test_patch_no_sha256():
     fp = FakePackage("fake-package", "test", "fake-package")
     url = url_util.path_to_file_url("foo.tgz")
     match = "Compressed patches require 'archive_sha256' and patch 'sha256' attributes: file://"
-    with pytest.raises(spack.patch.PatchDirectiveError, match=match):
+    with pytest.raises(spack.error.PatchDirectiveError, match=match):
         spack.patch.UrlPatch(fp, url, sha256="", archive_sha256="")
     match = "URL patches require a sha256 checksum"
-    with pytest.raises(spack.patch.PatchDirectiveError, match=match):
+    with pytest.raises(spack.error.PatchDirectiveError, match=match):
         spack.patch.UrlPatch(fp, url, sha256="", archive_sha256="abc")
 
 

@@ -25,6 +25,7 @@ import spack.hash_types as ht
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.solver.version_order
 import spack.store
 import spack.util.file_cache
 import spack.util.libc
@@ -2928,7 +2929,7 @@ def test_concretization_version_order():
     result = [
         v
         for v, _ in sorted(
-            versions, key=spack.solver.asp.concretization_version_order, reverse=True
+            versions, key=spack.solver.version_order.concretization_version_order, reverse=True
         )
     ]
     assert result == [

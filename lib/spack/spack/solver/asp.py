@@ -64,6 +64,7 @@ from .core import (
     parse_term,
 )
 from .counter import FullDuplicatesCounter, MinimalDuplicatesCounter, NoDuplicatesCounter
+from .version_order import concretization_version_order
 
 GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVersion]
 
@@ -577,20 +578,6 @@ def _is_checksummed_version(version_info: Tuple[GitOrStandardVersion, dict]):
             return True
         return "commit" in info and len(info["commit"]) == 40
     return _is_checksummed_git_version(version)
-
-
-def concretization_version_order(version_info: Tuple[GitOrStandardVersion, dict]):
-    """Version order key for concretization, where preferred > not preferred,
-    not deprecated > deprecated, finite > any infinite component; only if all are
-    the same, do we use default version ordering."""
-    version, info = version_info
-    return (
-        info.get("preferred", False),
-        not info.get("deprecated", False),
-        not version.isdevelop(),
-        not version.is_prerelease(),
-        version,
-    )
 
 
 def _spec_with_default_name(spec_str, name):

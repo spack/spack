@@ -24,25 +24,20 @@ import llnl.util.tty.color as clr
 from llnl.util.link_tree import ConflictingSpecsError
 from llnl.util.symlink import readlink, symlink
 
+import spack
 import spack.caches
-import spack.cmd
 import spack.compilers
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.error
-import spack.fetch_strategy
 import spack.filesystem_view as fsv
 import spack.hash_types as ht
-import spack.hooks
-import spack.main
 import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.spec
-import spack.stage
 import spack.store
-import spack.subprocess_context
 import spack.user_environment as uenv
 import spack.util.cpus
 import spack.util.environment
@@ -53,7 +48,6 @@ import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url
-import spack.version
 from spack import traverse
 from spack.installer import PackageInstaller
 from spack.schema.env import TOP_LEVEL_KEY
@@ -2179,7 +2173,7 @@ class Environment:
         root_specs = self._concrete_roots_dict()
 
         spack_dict = {"version": spack.spack_version}
-        spack_commit = spack.main.get_spack_commit()
+        spack_commit = spack.get_spack_commit()
         if spack_commit:
             spack_dict["type"] = "git"
             spack_dict["commit"] = spack_commit

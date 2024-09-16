@@ -44,6 +44,7 @@ import spack.mirror
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
+import spack.paths
 import spack.platforms
 import spack.relocate as relocate
 import spack.repo
@@ -1447,7 +1448,9 @@ def _oci_push_pkg_blob(
     filename = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
 
     # Create an oci.image.layer aka tarball of the package
-    compressed_tarfile_checksum, tarfile_checksum = spack.oci.oci.create_tarball(spec, filename)
+    compressed_tarfile_checksum, tarfile_checksum = _do_create_tarball(
+        filename, spec.prefix, get_buildinfo_dict(spec)
+    )
 
     blob = spack.oci.oci.Blob(
         Digest.from_sha256(compressed_tarfile_checksum),
