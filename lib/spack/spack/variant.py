@@ -523,11 +523,8 @@ class SingleValuedVariant(AbstractVariant):
         values = self.value_as_tuple
         if len(values) != 1:
             raise MultipleValuesInExclusiveVariantError(self)
-        self._value = values[0]
 
-    def __str__(self) -> str:
-        delim = "==" if self.propagate else "="
-        return f"{self.name}{delim}{spack.parser.quote_if_needed(str(self.value))}"
+        self._value = values[0]
 
     @implicit_variant_conversion
     def satisfies(self, other: "AbstractVariant") -> bool:
@@ -566,6 +563,10 @@ class SingleValuedVariant(AbstractVariant):
         assert isinstance(self.value, (bool, str))
         return self.name, self.value
 
+    def __str__(self) -> str:
+        delim = "==" if self.propagate else "="
+        return f"{self.name}{delim}{spack.parser.quote_if_needed(str(self.value))}"
+
 
 class BoolValuedVariant(SingleValuedVariant):
     """A variant that can hold either True or False.
@@ -594,9 +595,10 @@ class BoolValuedVariant(SingleValuedVariant):
         return item is self.value
 
     def __str__(self) -> str:
+        sigil = "+" if self.value else "~"
         if self.propagate:
-            return "{0}{1}".format("++" if self.value else "~~", self.name)
-        return "{0}{1}".format("+" if self.value else "~", self.name)
+            sigil *= 2
+        return f"{sigil}{self.name}"
 
 
 # The class below inherit from Sequence to disguise as a tuple and comply
