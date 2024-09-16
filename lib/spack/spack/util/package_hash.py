@@ -7,6 +7,7 @@ import ast
 
 import spack.directives_meta
 import spack.error
+import spack.fetch_strategy
 import spack.package_base
 import spack.repo
 import spack.spec
