@@ -582,7 +582,7 @@ class TestConcretize:
         spec.concretize()
 
         for dep in spec.traverse(root=False):
-            assert ("invino" not in dep.variants.keys())
+            assert "invino" not in dep.variants.keys()
 
     def test_concretize_propagate_same_variant_multiple_sources_fail(self):
         """Test that when propagating a variant if the source package is excluded from the
