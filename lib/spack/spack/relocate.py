@@ -17,6 +17,7 @@ import llnl.util.tty as tty
 from llnl.util.lang import memoized
 from llnl.util.symlink import readlink, symlink
 
+import spack.error
 import spack.platforms
 import spack.store
 import spack.util.elf as elf
@@ -25,7 +26,7 @@ import spack.util.filesystem as ssys
 
 from .relocate_text import BinaryFilePrefixReplacer, TextFilePrefixReplacer
 
-is_macos = str(spack.platforms.real_host()) == "darwin"
+is_macos = str(spack.platforms.real_host()) == "darwin"  # type: ignore
 
 
 class InstallRootStringError(spack.error.SpackError):

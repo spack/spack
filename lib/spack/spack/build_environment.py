@@ -53,6 +53,7 @@ from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
 
+import spack.build_systems._checks
 import spack.build_systems.cmake
 import spack.build_systems.meson
 import spack.build_systems.python
@@ -62,6 +63,7 @@ import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.main
+import spack.multimethod
 import spack.package_base
 import spack.paths
 import spack.platforms

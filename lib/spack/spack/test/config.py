@@ -20,12 +20,14 @@ import spack.directory_layout
 import spack.environment as ev
 import spack.package_base
 import spack.paths
+import spack.platforms
 import spack.repo
 import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
 import spack.schema.mirrors
 import spack.schema.repos
+import spack.spec
 import spack.store
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml

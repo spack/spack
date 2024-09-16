@@ -11,6 +11,8 @@ import pytest
 import spack.config
 import spack.package_prefs
 import spack.repo
+import spack.spec
+import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
 from spack.config import ConfigError
 from spack.spec import CompilerSpec, Spec

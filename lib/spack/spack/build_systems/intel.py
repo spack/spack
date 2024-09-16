@@ -22,6 +22,7 @@ from llnl.util.filesystem import (
     install,
 )
 
+import spack.builder
 import spack.error
 from spack.build_environment import dso_suffix
 from spack.package_base import InstallError

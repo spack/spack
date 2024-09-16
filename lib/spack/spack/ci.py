@@ -31,6 +31,7 @@ from llnl.util.tty.color import cescape, colorize
 
 import spack
 import spack.binary_distribution as bindist
+import spack.concretize
 import spack.config as cfg
 import spack.environment as ev
 import spack.main

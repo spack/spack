@@ -7,6 +7,7 @@
 
 import pytest
 
+import spack.config
 import spack.platforms
 import spack.spec
 from spack.multimethod import NoSuchMethodError

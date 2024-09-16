@@ -39,8 +39,10 @@ import spack.config
 import spack.error
 import spack.patch
 import spack.provider_index
+import spack.repo
 import spack.spec
 import spack.tag
+import spack.tengine
 import spack.util.git
 import spack.util.naming as nm
 import spack.util.path

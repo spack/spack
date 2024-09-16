@@ -7,8 +7,10 @@ import os
 
 import pytest
 
+import spack.build_environment
 import spack.directives
 import spack.fetch_strategy
+import spack.package_base
 import spack.repo
 from spack.paths import mock_packages_path
 from spack.spec import Spec

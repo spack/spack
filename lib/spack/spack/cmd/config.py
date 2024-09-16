@@ -14,6 +14,7 @@ import llnl.util.tty as tty
 import spack.config
 import spack.environment as ev
 import spack.schema.env
+import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
 from spack.cmd.common import arguments

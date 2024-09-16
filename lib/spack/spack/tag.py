@@ -8,6 +8,7 @@ import copy
 from collections.abc import Mapping
 
 import spack.error
+import spack.repo
 import spack.util.spack_json as sjson
 
 

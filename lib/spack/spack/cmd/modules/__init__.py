@@ -15,6 +15,7 @@ from llnl.util.tty import color
 
 import spack.cmd
 import spack.config
+import spack.error
 import spack.modules
 import spack.modules.common
 import spack.repo

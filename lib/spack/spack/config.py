@@ -39,6 +39,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 from llnl.util import filesystem, lang, tty
 
+import spack.error
 import spack.paths
 import spack.platforms
 import spack.schema

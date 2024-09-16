@@ -11,10 +11,13 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.build_environment
 import spack.config
 import spack.database
 import spack.error
+import spack.installer
 import spack.mirror
+import spack.package_base
 import spack.patch
 import spack.repo
 import spack.store

@@ -27,7 +27,9 @@ from llnl.util.lang import elide_list
 
 import spack
 import spack.binary_distribution
+import spack.bootstrap.core
 import spack.compilers
+import spack.concretize
 import spack.config
 import spack.config as sc
 import spack.deptypes as dt

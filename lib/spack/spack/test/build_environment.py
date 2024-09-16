@@ -16,6 +16,7 @@ import spack.build_environment
 import spack.config
 import spack.deptypes as dt
 import spack.package_base
+import spack.paths
 import spack.spec
 import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix

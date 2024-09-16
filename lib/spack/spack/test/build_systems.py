@@ -16,7 +16,10 @@ import llnl.util.filesystem as fs
 import spack.build_systems.autotools
 import spack.build_systems.cmake
 import spack.environment
+import spack.package_base
+import spack.paths
 import spack.platforms
+import spack.platforms.test
 from spack.build_environment import ChildError, setup_package
 from spack.spec import Spec
 from spack.util.executable import which

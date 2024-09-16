@@ -13,6 +13,7 @@ import sys
 import llnl.util.tty as tty
 
 import spack
+import spack.cmd.python
 
 description = "launch an interpreter as spack would launch a command"
 section = "developer"

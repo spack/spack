@@ -19,6 +19,8 @@ import llnl.util.tty as tty
 import spack.binary_distribution
 import spack.database
 import spack.deptypes as dt
+import spack.error
+import spack.hooks
 import spack.installer as inst
 import spack.package_base
 import spack.package_prefs as prefs

@@ -5,6 +5,7 @@
 
 import pytest
 
+import spack.error
 import spack.installer as inst
 import spack.repo
 import spack.spec

@@ -12,8 +12,11 @@ from llnl.util.symlink import readlink
 import spack.cmd.modules
 import spack.config
 import spack.error
+import spack.modules.common
 import spack.modules.tcl
 import spack.package_base
+import spack.package_prefs
+import spack.repo
 import spack.spec
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
