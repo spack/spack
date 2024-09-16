@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.hooks.sbang import filter_shebang
 from spack.package import *
 
 
@@ -40,7 +41,8 @@ class Parallel(AutotoolsPackage, GNUMirrorPackage):
     @run_before("install")
     def filter_sbang(self):
         """Run before install so that the standard Spack sbang install hook
-        can fix up the path to the perl binary.
+        can fix up the path to the perl binary. Note that the `parallel` script
+        is run during installation to 
         """
         perl = self.spec["perl"].command
         kwargs = {"ignore_absent": False, "backup": False, "string": False}
@@ -50,3 +52,6 @@ class Parallel(AutotoolsPackage, GNUMirrorPackage):
             substitute = f"#!{perl}"
             files = ["parallel", "niceload", "parcat", "sql"]
             filter_file(match, substitute, *files, **kwargs)
+            # Since scripts are run during installation, we need to add sbang
+            for file in files:
+                filter_shebang(file)
