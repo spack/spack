@@ -10,7 +10,6 @@ import pytest
 import spack.cmd.checksum
 import spack.error
 import spack.package_base
-import spack.parser
 import spack.repo
 import spack.spec
 import spack.stage
