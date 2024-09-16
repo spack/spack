@@ -29,6 +29,10 @@ class Arm(spack.compiler.Compiler):
         "fc": os.path.join("arm", "armflang"),
     }
 
+    @property
+    def is_clang_based(self):
+        return True
+
     # The ``--version`` option seems to be the most consistent one for
     # arm compilers. Output looks like this:
     #

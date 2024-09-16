@@ -28,6 +28,10 @@ class Aocc(Compiler):
     version_argument = "--version"
 
     @property
+    def is_clang_based(self):
+        return True
+
+    @property
     def debug_flags(self):
         return [
             "-gcodeview",
