@@ -9,7 +9,6 @@ from spack.package import *
 class PyEvodiff(PythonPackage):
     """Python package for generation of protein sequences and evolutionary alignments via discrete diffusion models"""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://github.com/microsoft/evodiff"
     pypi = "evodiff/evodiff-1.1.0.tar.gz"
 
