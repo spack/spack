@@ -49,6 +49,19 @@ class LlvmOpenmp(CMakePackage):
 
     variant("multicompat", default=True, description="Support the GNU OpenMP runtime interface.")
 
+    # variant for building llvm-openmp as a stand alone library
+    variant(
+        "standalone",
+        default=False,
+        description="Build llvm openmpi ompt library as a \
+                         stand alone entity.",
+    )
+
+    # variant for building libomptarget
+    variant(
+        "libomptarget", default=True, description="Enable building libomptarget for offloading"
+    )
+
     depends_on("cmake@3.13.4:", when="@12:", type="build")
     depends_on("cmake@2.8:", type="build")
     depends_on("py-lit", type="test")
@@ -75,11 +88,35 @@ class LlvmOpenmp(CMakePackage):
         if os.path.isdir(cmake_mod_dir):
             os.rename(cmake_mod_dir, os.path.join(self.stage.path, "cmake"))
 
+    variant('multicompat', default=False,
+            description="Support gomp and the Intel openMP runtime library.")
+
     def cmake_args(self):
-        cmake_args = []
+
+        # Disable LIBOMP_INSTALL_ALIASES, otherwise the library is installed as
+        # libgomp alias which can conflict with GCC's libgomp.
+        cmake_args = ["-DLIBOMP_INSTALL_ALIASES=OFF"]
+        cmake_args.append("-DOPENMP_STANDALONE_BUILD=1")
         # Add optional support for both Intel and gcc compilers
         if self.spec.satisfies("+multicompat"):
             cmake_args.append("-DKMP_GOMP_COMPAT=1")
+
+        # Build llvm-openmp-ompt as a stand alone library
+        # CMAKE rpath variable prevents standalone error
+        # where this package wants the llvm tools path
+        if "+standalone" in self.spec:
+            cmake_args.extend(
+                [
+                    "-DLIBOMP_STANDALONE_BUILD=true",
+                    "-DCMAKE_BUILD_WITH_INSTALL_RPATH=true",
+                    "-DLIBOMP_USE_DEBUGGER=false",
+                ]
+            )
+
+        # Disable support for libomptarget
+        if "~libomptarget" in self.spec:
+            cmake_args.extend(["-DOPENMP_ENABLE_LIBOMPTARGET=OFF"])
+
         return cmake_args
 
     @property
