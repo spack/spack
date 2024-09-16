@@ -46,6 +46,7 @@ import pathlib
 import pickle
 import re
 import warnings
+from typing import Iterable, List, Set, Tuple
 from urllib.request import urlopen
 
 import llnl.util.lang
@@ -73,7 +74,9 @@ class Error:
         self.details = tuple(details)
 
     def __str__(self):
-        return self.summary + "\n" + "\n".join(["    " + detail for detail in self.details])
+        if self.details:
+            return f"{self.summary}\n" + "\n".join(f"    {detail}" for detail in self.details)
+        return self.summary
 
     def __eq__(self, other):
         if self.summary != other.summary or self.details != other.details:
@@ -253,40 +256,6 @@ def _search_duplicate_specs_in_externals(error_cls):
             details = []
 
         errors.append(error_cls(summary=error_msg, details=details))
-
-    return errors
-
-
-@config_packages
-def _deprecated_preferences(error_cls):
-    """Search package preferences deprecated in v0.21 (and slated for removal in v0.23)"""
-    # TODO (v0.23): remove this audit as the attributes will not be allowed in config
-    errors = []
-    packages_yaml = spack.config.CONFIG.get_config("packages")
-
-    def make_error(attribute_name, config_data, summary):
-        s = io.StringIO()
-        s.write("Occurring in the following file:\n")
-        dict_view = syaml.syaml_dict((k, v) for k, v in config_data.items() if k == attribute_name)
-        syaml.dump_config(dict_view, stream=s, blame=True)
-        return error_cls(summary=summary, details=[s.getvalue()])
-
-    if "all" in packages_yaml and "version" in packages_yaml["all"]:
-        summary = "Using the deprecated 'version' attribute under 'packages:all'"
-        errors.append(make_error("version", packages_yaml["all"], summary))
-
-    for package_name in packages_yaml:
-        if package_name == "all":
-            continue
-
-        package_conf = packages_yaml[package_name]
-        for attribute in ("compiler", "providers", "target"):
-            if attribute not in package_conf:
-                continue
-            summary = (
-                f"Using the deprecated '{attribute}' attribute " f"under 'packages:{package_name}'"
-            )
-            errors.append(make_error(attribute, package_conf, summary))
 
     return errors
 
@@ -709,6 +678,88 @@ def _ensure_env_methods_are_ported_to_builders(pkgs, error_cls):
                     " appropriate builder class".format(pkg_name, method_name)
                 )
                 errors.append(error_cls(msg, []))
+
+    return errors
+
+
+class DeprecatedMagicGlobals(ast.NodeVisitor):
+    def __init__(self, magic_globals: Iterable[str]):
+        super().__init__()
+
+        self.magic_globals: Set[str] = set(magic_globals)
+
+        # State to track whether we're in a class function
+        self.depth: int = 0
+        self.in_function: bool = False
+        self.path = (ast.Module, ast.ClassDef, ast.FunctionDef)
+
+        # Defined locals in the current function (heuristically at least)
+        self.locals: Set[str] = set()
+
+        # List of (name, lineno) tuples for references to magic globals
+        self.references_to_globals: List[Tuple[str, int]] = []
+
+    def descend_in_function_def(self, node: ast.AST) -> None:
+        if not isinstance(node, self.path[self.depth]):
+            return
+        self.depth += 1
+        if self.depth == len(self.path):
+            self.in_function = True
+        super().generic_visit(node)
+        if self.depth == len(self.path):
+            self.in_function = False
+            self.locals.clear()
+        self.depth -= 1
+
+    def generic_visit(self, node: ast.AST) -> None:
+        # Recurse into function definitions
+        if self.depth < len(self.path):
+            return self.descend_in_function_def(node)
+        elif not self.in_function:
+            return
+        elif isinstance(node, ast.Global):
+            for name in node.names:
+                if name in self.magic_globals:
+                    self.references_to_globals.append((name, node.lineno))
+        elif isinstance(node, ast.Assign):
+            # visit the rhs before lhs
+            super().visit(node.value)
+            for target in node.targets:
+                super().visit(target)
+        elif isinstance(node, ast.Name) and node.id in self.magic_globals:
+            if isinstance(node.ctx, ast.Load) and node.id not in self.locals:
+                self.references_to_globals.append((node.id, node.lineno))
+            elif isinstance(node.ctx, ast.Store):
+                self.locals.add(node.id)
+        else:
+            super().generic_visit(node)
+
+
+@package_properties
+def _uses_deprecated_globals(pkgs, error_cls):
+    """Ensure that packages do not use deprecated globals"""
+    errors = []
+
+    for pkg_name in pkgs:
+        # some packages scheduled to be removed in v0.23 are not worth fixing.
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        if all(v.get("deprecated", False) for v in pkg_cls.versions.values()):
+            continue
+
+        file = spack.repo.PATH.filename_for_package_name(pkg_name)
+        tree = ast.parse(open(file).read())
+        visitor = DeprecatedMagicGlobals(("std_cmake_args",))
+        visitor.visit(tree)
+        if visitor.references_to_globals:
+            errors.append(
+                error_cls(
+                    f"Package '{pkg_name}' uses deprecated globals",
+                    [
+                        f"{file}:{line} references '{name}'"
+                        for name, line in visitor.references_to_globals
+                    ],
+                )
+            )
 
     return errors
 

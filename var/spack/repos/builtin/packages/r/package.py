@@ -297,8 +297,3 @@ class R(AutotoolsPackage):
 
         # Add variable for library directry
         module.r_lib_dir = join_path(dependent_spec.prefix, self.r_lib_dir)
-
-        # Make the site packages directory for extensions, if it does not exist
-        # already.
-        if dependent_spec.package.is_extension:
-            mkdirp(module.r_lib_dir)

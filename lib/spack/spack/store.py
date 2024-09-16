@@ -173,7 +173,12 @@ class Store:
         self.hash_length = hash_length
         self.upstreams = upstreams
         self.lock_cfg = lock_cfg
-        self.db = spack.database.Database(root, upstream_dbs=upstreams, lock_cfg=lock_cfg)
+        self.layout = spack.directory_layout.DirectoryLayout(
+            root, projections=projections, hash_length=hash_length
+        )
+        self.db = spack.database.Database(
+            root, upstream_dbs=upstreams, lock_cfg=lock_cfg, layout=self.layout
+        )
 
         timeout_format_str = (
             f"{str(lock_cfg.package_timeout)}s" if lock_cfg.package_timeout else "No timeout"
@@ -187,13 +192,9 @@ class Store:
             self.root, default_timeout=lock_cfg.package_timeout
         )
 
-        self.layout = spack.directory_layout.DirectoryLayout(
-            root, projections=projections, hash_length=hash_length
-        )
-
     def reindex(self) -> None:
         """Convenience function to reindex the store DB with its own layout."""
-        return self.db.reindex(self.layout)
+        return self.db.reindex()
 
     def __reduce__(self):
         return Store, (

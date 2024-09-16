@@ -36,10 +36,8 @@ import spack.config
 import spack.error
 import spack.fetch_strategy as fs
 import spack.mirror
-import spack.paths
 import spack.resource
 import spack.spec
-import spack.stage
 import spack.util.crypto
 import spack.util.lock
 import spack.util.path as sup
@@ -981,8 +979,8 @@ def interactive_version_filter(
             data = buffer.getvalue().encode("utf-8")
 
             short_hash = hashlib.sha1(data).hexdigest()[:7]
-            filename = f"{spack.stage.stage_prefix}versions-{short_hash}.txt"
-            filepath = os.path.join(spack.stage.get_stage_root(), filename)
+            filename = f"{stage_prefix}versions-{short_hash}.txt"
+            filepath = os.path.join(get_stage_root(), filename)
 
             # Write contents
             with open(filepath, "wb") as f:

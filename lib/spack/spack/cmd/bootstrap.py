@@ -16,7 +16,6 @@ import spack.bootstrap
 import spack.bootstrap.config
 import spack.bootstrap.core
 import spack.config
-import spack.main
 import spack.mirror
 import spack.spec
 import spack.stage

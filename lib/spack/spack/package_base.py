@@ -38,16 +38,13 @@ import spack.config
 import spack.dependency
 import spack.deptypes as dt
 import spack.directives
-import spack.directory_layout
 import spack.environment
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
 import spack.mirror
-import spack.mixins
 import spack.multimethod
 import spack.patch
-import spack.paths
 import spack.repo
 import spack.spec
 import spack.store
@@ -65,6 +62,7 @@ from spack.install_test import (
     install_test_root,
 )
 from spack.installer import InstallError, PackageInstaller
+from spack.solver.version_order import concretization_version_order
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
@@ -116,7 +114,6 @@ def preferred_version(pkg: "PackageBase"):
     Arguments:
         pkg: The package whose versions are to be assessed.
     """
-    from spack.solver.asp import concretization_version_order
 
     version, _ = max(pkg.versions.items(), key=concretization_version_order)
     return version

@@ -203,6 +203,9 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
             args.append(f"--with-libiconv-prefix={spec['iconv'].prefix}")
         else:
             args.append("--without-libiconv-prefix")
+        # bash malloc relies on sbrk which fails intentionally in musl
+        if spec.satisfies("^[virtuals=libc] musl"):
+            options.append("--without-bash-malloc")
         return args
 
     def check(self):

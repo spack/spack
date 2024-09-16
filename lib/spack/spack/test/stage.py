@@ -19,7 +19,6 @@ from llnl.util.symlink import readlink
 
 import spack.error
 import spack.fetch_strategy
-import spack.paths
 import spack.stage
 import spack.util.executable
 import spack.util.url as url_util

@@ -159,11 +159,11 @@ class Eospac(Package):
             # This looks goofy because eospac does not actually respect the
             # value of DO_OFFLOAD and instead only attempts to check for its
             # existence; a quirk of eospac.
-            if "+offload" in spec:
+            if spec.satisfies("+offload"):
                 compilerArgs.append("DO_OFFLOAD=1")
             # Eospac depends on fcommon behavior
             #   but gcc@10 flipped to default fno-common
-            if "%gcc@10:" in spec:
+            if spec.satisfies("%gcc@10:"):
                 compilerArgs.append("CFLAGS=-fcommon")
             if self.run_tests:
                 make("check", *compilerArgs)

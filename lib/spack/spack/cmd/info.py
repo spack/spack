@@ -48,6 +48,7 @@ def setup_parser(subparser):
     options = [
         ("--detectable", print_detectable.__doc__),
         ("--maintainers", print_maintainers.__doc__),
+        ("--namespace", print_namespace.__doc__),
         ("--no-dependencies", "do not " + print_dependencies.__doc__),
         ("--no-variants", "do not " + print_variants.__doc__),
         ("--no-versions", "do not " + print_versions.__doc__),
@@ -187,6 +188,15 @@ def print_maintainers(pkg, args):
         mnt = " ".join(["@@" + m for m in pkg.maintainers])
         color.cprint("")
         color.cprint(section_title("Maintainers: ") + mnt)
+
+
+def print_namespace(pkg, args):
+    """output package namespace"""
+
+    repo = spack.repo.PATH.get_repo(pkg.namespace)
+    color.cprint("")
+    color.cprint(section_title("Namespace:"))
+    color.cprint(f"    @c{{{repo.namespace}}} at {repo.root}")
 
 
 def print_phases(pkg, args):
@@ -522,6 +532,7 @@ def info(parser, args):
     # Now output optional information in expected order
     sections = [
         (args.all or args.maintainers, print_maintainers),
+        (args.all or args.namespace, print_namespace),
         (args.all or args.detectable, print_detectable),
         (args.all or args.tags, print_tags),
         (args.all or not args.no_versions, print_versions),

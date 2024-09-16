@@ -18,8 +18,6 @@ from llnl.util.filesystem import join_path, touch, touchp
 import spack.config
 import spack.directory_layout
 import spack.environment as ev
-import spack.fetch_strategy
-import spack.main
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -27,7 +25,6 @@ import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
 import spack.schema.mirrors
-import spack.schema.packages
 import spack.schema.repos
 import spack.store
 import spack.util.path as spack_path

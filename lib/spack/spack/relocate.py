@@ -12,20 +12,16 @@ from typing import List, Optional
 import macholib.mach_o
 import macholib.MachO
 
-import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
 from llnl.util.symlink import readlink, symlink
 
-import spack.paths
 import spack.platforms
-import spack.repo
-import spack.spec
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
-import spack.util.path
+import spack.util.filesystem as ssys
 
 from .relocate_text import BinaryFilePrefixReplacer, TextFilePrefixReplacer
 
@@ -664,7 +660,7 @@ def is_binary(filename):
     Returns:
         True or False
     """
-    m_type, _ = fs.mime_type(filename)
+    m_type, _ = ssys.mime_type(filename)
 
     msg = "[{0}] -> ".format(filename)
     if m_type == "application":
@@ -692,7 +688,7 @@ def fixup_macos_rpath(root, filename):
         True if fixups were applied, else False
     """
     abspath = os.path.join(root, filename)
-    if fs.mime_type(abspath) != ("application", "x-mach-binary"):
+    if ssys.mime_type(abspath) != ("application", "x-mach-binary"):
         return False
 
     # Get Mach-O header commands
