@@ -50,8 +50,6 @@ import spack.schema.compilers
 import spack.schema.concretizer
 import spack.schema.config
 import spack.schema.definitions
-
-# import spack.spec
 import spack.schema.develop
 import spack.schema.env
 import spack.schema.mirrors
@@ -1026,7 +1024,7 @@ def change_or_add(
 
     if found:
         update_fn(section)
-        set(section_name, section, scope=scope)
+        CONFIG.set(section_name, section, scope=scope)
         return
 
     # If no scope meets the criteria specified by ``find_fn``,
@@ -1039,14 +1037,14 @@ def change_or_add(
             break
 
     if found:
-        set(section_name, section, scope=scope)
+        CONFIG.set(section_name, section, scope=scope)
         return
 
     # If no scopes define any config for the named section, then
     # modify the highest-priority scope.
     scope, section = configs_by_section[0]
     update_fn(section)
-    set(section_name, section, scope=scope)
+    CONFIG.set(section_name, section, scope=scope)
 
 
 def update_all(section_name: str, change_fn: Callable[[str], bool]) -> None:
@@ -1058,7 +1056,7 @@ def update_all(section_name: str, change_fn: Callable[[str], bool]) -> None:
     for scope, section in configs_by_section:
         modified = change_fn(section)
         if modified:
-            set(section_name, section, scope=scope)
+            CONFIG.set(section_name, section, scope=scope)
 
 
 def _validate_section_name(section: str) -> None:
