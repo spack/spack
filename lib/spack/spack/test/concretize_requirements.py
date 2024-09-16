@@ -522,13 +522,11 @@ packages:
 
 @pytest.mark.parametrize("mpi_requirement", ["mpich", "mpich2", "zmpi"])
 def test_requirements_on_virtual(mpi_requirement, concretize_scope, mock_packages):
-    conf_str = """\
+    conf_str = f"""\
 packages:
   mpi:
-    require: "{}"
-""".format(
-        mpi_requirement
-    )
+    require: "{mpi_requirement}"
+"""
     update_packages_config(conf_str)
 
     spec = Spec("callpath").concretized()
