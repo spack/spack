@@ -7,8 +7,8 @@ import numbers
 import pytest
 
 import spack.error
-import spack.variant
 import spack.repo
+import spack.variant
 from spack.spec import VariantMap
 from spack.variant import (
     BoolValuedVariant,
@@ -783,3 +783,90 @@ def test_wild_card_valued_variants_equivalent_to_str():
     str_var.validate_or_raise(str_output, "test-package")
     # equivalence each instance already validated
     assert str_output.value == wild_output.value
+
+
+def test_variant_definitions(mock_packages):
+    pkg = spack.repo.PATH.get_pkg_class("variant-values")
+
+    # two variant names
+    assert len(pkg.variant_names()) == 2
+    assert "build_system" in pkg.variant_names()
+    assert "v" in pkg.variant_names()
+
+    # this name doesn't exist
+    assert len(pkg.variant_definitions("no-such-variant")) == 0
+
+    # there are 4 definitions but one is completely shadowed by another
+    assert len(pkg.variants) == 4
+
+    # variant_items ignores the shadowed definition
+    assert len(list(pkg.variant_items())) == 3
+
+    # variant_definitions also ignores the shadowed definition
+    defs = [vdef for _, vdef in pkg.variant_definitions("v")]
+    assert len(defs) == 2
+    assert defs[0].default == "foo"
+    assert defs[0].values == ("foo",)
+
+    assert defs[1].default == "bar"
+    assert defs[1].values == ("foo", "bar")
+
+
+@pytest.mark.parametrize(
+    "value,spec,def_ids",
+    [
+        ("foo", "", [0, 1]),
+        ("bar", "", [1]),
+        ("foo", "variant-values@1.0", [0]),
+        ("foo", "variant-values@2.0", [1]),
+        ("foo", "variant-values@3.0", [1]),
+        ("foo", "variant-values@4.0", []),
+        ("bar", "variant-values@2.0", [1]),
+        ("bar", "variant-values@3.0", [1]),
+        ("bar", "variant-values@4.0", []),
+    ],
+)
+def test_prevalidate_variant_value(mock_packages, value, spec, def_ids):
+    pkg = spack.repo.PATH.get_pkg_class("variant-values")
+
+    all_defs = [vdef for _, vdef in pkg.variant_definitions("v")]
+
+    valid_defs = spack.variant.prevalidate_variant_value(
+        pkg, SingleValuedVariant("v", value), spack.spec.Spec(spec)
+    )
+    assert len(valid_defs) == len(def_ids)
+
+    for vdef, i in zip(valid_defs, def_ids):
+        assert vdef is all_defs[i]
+
+
+@pytest.mark.parametrize(
+    "value,spec",
+    [
+        ("baz", ""),
+        ("bar", "variant-values@1.0"),
+        ("bar", "variant-values@4.0"),
+        ("baz", "variant-values@3.0"),
+        ("baz", "variant-values@4.0"),
+    ],
+)
+def test_strict_invalid_variant_values(mock_packages, value, spec):
+    pkg = spack.repo.PATH.get_pkg_class("variant-values")
+
+    with pytest.raises(spack.variant.InvalidVariantValueError):
+        spack.variant.prevalidate_variant_value(
+            pkg, SingleValuedVariant("v", value), spack.spec.Spec(spec), strict=True
+        )
+
+
+def test_concretize_variant_default_with_multiple_defs(mock_packages, config):
+    # default for v1.0 is foo
+    v = spack.spec.Spec("variant-values@1.0").concretized()
+    assert v.satisfies("v=foo")
+
+    # default changes at version 2.0
+    v = spack.spec.Spec("variant-values@2.0").concretized()
+    assert v.satisfies("v=bar")
+
+    v = spack.spec.Spec("variant-values@3.0").concretized()
+    assert v.satisfies("v=bar")
