@@ -3351,10 +3351,13 @@ class Spec:
         elif other.compiler and not self.compiler:
             return False
 
-        if not self.variants.satisfies(other.variants):
+        satisfies, var = self.variants.satisfies(other.variants)
+        if not satisfies:
+            # if var is None: return False
+            # else:  # check dependencies for the variant
             return False
 
-        print(f"self,variants: {self.variants}")
+        print(f"\n\nself,variants: {self.variants}")
         print(f"other.variants: {other.variants}")
         print(f"type(self.variants): {type(self.variants)}")
         print(f"type(other.variants): {type(other.variants)}")
@@ -4410,15 +4413,20 @@ class VariantMap(lang.HashableMap):
         super().__setitem__(vspec.name, vspec)
 
     def satisfies(self, other):  # Rikki: loosen constrains
+        propagating_variants = []
+        satisfies = True if other is not None else False
+
         for k in other:
             if k not in self:
                 if not other[k].propagate:
-                    return False
+                    satisfies = False
                 else:
-                    continue
+                    propagating_variants.append(k)
+                continue
             if not self[k].satisfies(other[k]):
-                return False
-        return True
+                satisfies = False
+
+        return satisfies, propagating_variants
 
     def intersects(self, other):
         return all(self[k].intersects(other[k]) for k in other if k in self)

@@ -655,6 +655,7 @@ class TestConcretize:
         spec.concretize()
 
         # raises some kind of error
+        assert False
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
