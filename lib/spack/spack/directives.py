@@ -40,10 +40,8 @@ import llnl.util.lang
 import llnl.util.tty.color
 
 import spack.deptypes as dt
-import spack.error
 import spack.patch
 import spack.spec
-import spack.url
 import spack.util.crypto
 import spack.variant
 from spack.dependency import Dependency

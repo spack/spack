@@ -41,7 +41,6 @@ import spack.patch
 import spack.provider_index
 import spack.spec
 import spack.tag
-import spack.util.file_cache
 import spack.util.git
 import spack.util.naming as nm
 import spack.util.path

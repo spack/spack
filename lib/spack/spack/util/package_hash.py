@@ -12,7 +12,6 @@ import spack.package_base
 import spack.repo
 import spack.spec
 import spack.util.hash
-import spack.util.naming
 from spack.util.unparse import unparse
 
 

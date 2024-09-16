@@ -14,7 +14,6 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
 import spack
-import spack.config
 import spack.paths
 import spack.platforms
 import spack.util.git

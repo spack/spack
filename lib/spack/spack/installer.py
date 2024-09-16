@@ -48,7 +48,6 @@ from llnl.util.tty.log import log_output
 
 import spack.binary_distribution as binary_distribution
 import spack.build_environment
-import spack.compilers
 import spack.config
 import spack.database
 import spack.deptypes as dt

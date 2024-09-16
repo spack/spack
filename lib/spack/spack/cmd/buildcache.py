@@ -23,14 +23,9 @@ import spack.environment as ev
 import spack.error
 import spack.mirror
 import spack.oci.oci
-import spack.oci.opener
-import spack.relocate
-import spack.repo
 import spack.spec
 import spack.stage
 import spack.store
-import spack.user_environment
-import spack.util.crypto
 import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util

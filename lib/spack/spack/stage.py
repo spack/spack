@@ -36,7 +36,6 @@ import spack.config
 import spack.error
 import spack.fetch_strategy as fs
 import spack.mirror
-import spack.paths
 import spack.resource
 import spack.spec
 import spack.util.crypto

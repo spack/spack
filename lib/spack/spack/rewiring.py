@@ -14,9 +14,7 @@ from llnl.util.symlink import readlink, symlink
 import spack.binary_distribution as bindist
 import spack.error
 import spack.hooks
-import spack.paths
 import spack.relocate as relocate
-import spack.stage
 import spack.store
 
 

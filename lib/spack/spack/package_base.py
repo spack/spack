@@ -38,16 +38,13 @@ import spack.config
 import spack.dependency
 import spack.deptypes as dt
 import spack.directives
-import spack.directory_layout
 import spack.environment
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
 import spack.mirror
-import spack.mixins
 import spack.multimethod
 import spack.patch
-import spack.paths
 import spack.repo
 import spack.spec
 import spack.store
