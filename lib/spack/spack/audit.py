@@ -780,7 +780,7 @@ def _ensure_test_docstring(pkgs, error_cls):
     The docstring of a test method is implicitly used as the description of
     the corresponding test part during test results reporting.
     """
-    doc_regex = r'\s+("""[\w\s\(\)\-\,\;\:]+""")'
+    doc_regex = r'\s+("""[^"]+""")'
 
     errors = []
     for pkg_name in pkgs:
@@ -815,7 +815,7 @@ def _ensure_test_implemented(pkgs, error_cls):
         ln = line.strip()
         return ln.startswith("#") or "pass" in ln
 
-    doc_regex = r'\s+("""[\w\s\(\)\-\,\;\:]+""")'
+    doc_regex = r'\s+("""[^"]+""")'
 
     errors = []
     for pkg_name in pkgs:
@@ -826,6 +826,7 @@ def _ensure_test_implemented(pkgs, error_cls):
                 continue
 
             source = inspect.getsource(test_fn)
+            print(f"source={source}")
 
             # Attempt to ensure the test method is implemented.
             impl = re.sub(doc_regex, r"", source).splitlines()[1:]
