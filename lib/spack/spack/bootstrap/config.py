@@ -122,21 +122,19 @@ def _read_and_sanitize_configuration() -> Dict[str, Any]:
 
 
 def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
-    tty.debug("[BOOTSTRAP CONFIG SCOPE] name=_builtin")
     config_scopes: MutableSequence["spack.config.ConfigScope"] = [
         spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS)
     ]
+    tty.debug("[BOOTSTRAP CONFIG SCOPE] name=_builtin")
     configuration_paths = (spack.config.CONFIGURATION_DEFAULTS_PATH, ("bootstrap", _config_path()))
     for name, path in configuration_paths:
-        platform = spack.platforms.host().name
-        platform_scope = spack.config.DirectoryConfigScope(
-            f"{name}/{platform}", os.path.join(path, platform)
-        )
+        msg = "[BOOTSTRAP CONFIG SCOPE] {name}, {path}"
+        tty.debug(msg.format(name=name, path=path))
         generic_scope = spack.config.DirectoryConfigScope(name, path)
-        config_scopes.extend([generic_scope, platform_scope])
-        msg = "[BOOTSTRAP CONFIG SCOPE] name={0}, path={1}"
-        tty.debug(msg.format(generic_scope.name, generic_scope.path))
-        tty.debug(msg.format(platform_scope.name, platform_scope.path))
+        config_scopes.append(generic_scope)
+        for scope in spack.config.platform_scopes(name, path):
+            tty.debug(msg.format(name=scope.name, path=scope.path))
+            config_scopes.append(scope)
     return config_scopes
 
 

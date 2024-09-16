@@ -35,7 +35,7 @@ import functools
 import os
 import re
 import sys
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Sequence, Tuple, Union
 
 from llnl.util import filesystem, lang, tty
 
@@ -105,7 +105,9 @@ CONFIG_DEFAULTS = {
 
 #: metavar to use for commands that accept scopes
 #: this is shorter and more readable than listing all choices
-SCOPES_METAVAR = "{defaults,system,site,user,command_line}[/PLATFORM] or env:ENVIRONMENT"
+SCOPES_METAVAR = (
+    "{defaults,system,site,user,command_line}[/PLATFORM[/OS[/TARGET]]] or env:ENVIRONMENT"
+)
 
 #: Base name for the (internal) overrides scope.
 _OVERRIDES_BASE_NAME = "overrides-"
@@ -753,15 +755,13 @@ def override(
 COMMAND_LINE_SCOPES: List[str] = []
 
 
-def _add_platform_scope(
+def _add_platform_scopes(
     cfg: Union[Configuration, lang.Singleton], name: str, path: str, writable: bool = True
 ) -> None:
-    """Add a platform-specific subdirectory for the current platform."""
-    platform = spack.platforms.host().name
-    scope = DirectoryConfigScope(
-        f"{name}/{platform}", os.path.join(path, platform), writable=writable
-    )
-    cfg.push_scope(scope)
+    """Add subdirectories for the current platform, os, and target."""
+
+    for scope in platform_scopes(name, path, writable):
+        cfg.push_scope(scope)
 
 
 def config_paths_from_entry_points() -> List[Tuple[str, str]]:
@@ -804,7 +804,7 @@ def _add_command_line_scopes(
             manifest = env.EnvironmentManifestFile(path)
         elif os.path.isdir(path):  # directory with config files
             cfg.push_scope(DirectoryConfigScope(name, path, writable=False))
-            _add_platform_scope(cfg, name, path, writable=False)
+            _add_platform_scopes(cfg, name, path, writable=False)
             continue
         else:
             raise ConfigError(f"Invalid configuration scope: {path}")
@@ -859,7 +859,7 @@ def create() -> Configuration:
         cfg.push_scope(DirectoryConfigScope(name, path))
 
         # Each scope can have per-platfom overrides in subdirectories
-        _add_platform_scope(cfg, name, path)
+        _add_platform_scopes(cfg, name, path)
 
     # add command-line scopes
     _add_command_line_scopes(cfg, COMMAND_LINE_SCOPES)
@@ -1724,6 +1724,29 @@ def parse_spec_from_yaml_string(string: str) -> "spack.spec.Spec":
             msg = f"{mark.name}:{mark.line + 1}: {str(e)}"
             raise spack.parser.SpecSyntaxError(msg) from e
         raise e
+
+
+def platform_scopes(name: str, path: str, writable: bool = True) -> Sequence[DirectoryConfigScope]:
+    """Generate a triplet of scopes for platform/os/target."""
+
+    host_platform = spack.platforms.host()
+    platform = host_platform.name
+    oss = str(host_platform.operating_system("frontend"))
+    host_target = str(host_platform.target("frontend"))
+
+    scope_name = os.path.join(name, platform)
+    scope_path = os.path.join(path, platform)
+    scopes = [DirectoryConfigScope(scope_name, scope_path, writable=writable)]
+
+    scope_name = os.path.join(scope_name, oss)
+    scope_path = os.path.join(scope_path, oss)
+    scopes.append(DirectoryConfigScope(scope_name, scope_path, writable=writable))
+
+    scope_name = os.path.join(scope_name, host_target)
+    scope_path = os.path.join(scope_path, host_target)
+    scopes.append(DirectoryConfigScope(scope_name, scope_path, writable=writable))
+
+    return scopes
 
 
 class ConfigError(SpackError):
