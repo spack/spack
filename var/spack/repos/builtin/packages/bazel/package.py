@@ -110,14 +110,6 @@ class Bazel(Package):
         when="@5.0:5.4.0,6.0",
     )
 
-    # https://github.com/bazelbuild/bazel/pull/20785
-    patch(
-        "https://github.com/bazelbuild/bazel/pull/20785.patch?full_index=1",
-        sha256="85dde31d129bbd31e004c5c87f23cdda9295fbb22946dc6d362f23d83bae1fd8",
-        when="@6.0:6.4",
-    )
-    conflicts("%gcc@13:", when="@:5")
-
     # Fix build with Fujitsu compiler
     patch("blaze_util_posix-0.29.1.patch", when="%fj")
     patch("unix_cc_configure_fj-5.2.patch", when="@5.2:%fj")
@@ -127,6 +119,14 @@ class Bazel(Package):
 
     # https://blog.bazel.build/2021/05/21/bazel-4-1.html
     conflicts("platform=darwin target=aarch64:", when="@:4.0")
+
+    # https://github.com/bazelbuild/bazel/issues/18642
+    patch(
+        "https://github.com/bazelbuild/bazel/pull/20785.patch?full_index=1",
+        sha256="85dde31d129bbd31e004c5c87f23cdda9295fbb22946dc6d362f23d83bae1fd8",
+        when="@6.0:6.4",
+    )
+    conflicts("%gcc@13:", when="@:5")
 
     # Patches for compiling various older bazels which had ICWYU violations revealed by
     # (but not unique to) GCC 11 header changes. These are derived from
@@ -139,8 +139,6 @@ class Bazel(Package):
     # Bazel-4.0.0 does not compile with gcc-11
     # Newer versions of grpc and abseil dependencies are needed but are not in bazel-4.0.0
     conflicts("@4.0.0", when="%gcc@11:")
-    # https://github.com/bazelbuild/bazel/issues/18642
-    # conflicts("@:6", when="%gcc@13:")
 
     executables = ["^bazel$"]
 
