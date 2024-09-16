@@ -67,6 +67,7 @@ class Variant:
 
     name: str
     default: Any
+    description: str
     values: Optional[Collection]  #: if None, valid values are defined only by validators
     multi: bool
     single_value_validator: Callable
@@ -228,6 +229,7 @@ class Variant:
         return (
             f"Variant('{self.name}', "
             f"default='{self.default}', "
+            f"description='{self.description}', "
             f"values={self.values}, "
             f"multi={self.multi}, "
             f"single_value_validator={self.single_value_validator}, "

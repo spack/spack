@@ -8,6 +8,7 @@ import pytest
 
 import spack.error
 import spack.variant
+import spack.repo
 from spack.spec import VariantMap
 from spack.variant import (
     BoolValuedVariant,
@@ -582,6 +583,17 @@ class TestVariant:
             "foo", default="", description="", values=("bar", "baz", "foobar"), multi=False
         )
         assert a.allowed_values == "bar, baz, foobar"
+
+    def test_str(self):
+        string = str(
+            Variant(
+                "foo", default="", description="", values=("bar", "baz", "foobar"), multi=False
+            )
+        )
+        assert "'foo'" in string
+        assert "default=''" in string
+        assert "description=''" in string
+        assert "values=('foo', 'bar', 'baz') in string"
 
 
 class TestVariantMapTest:
