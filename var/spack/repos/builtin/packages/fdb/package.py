@@ -24,6 +24,9 @@ class Fdb(CMakePackage):
     version("5.10.8", sha256="6a0db8f98e13c035098dd6ea2d7559f883664cbf9cba8143749539122ac46099")
     version("5.7.8", sha256="6adac23c0d1de54aafb3c663d077b85d0f804724596623b381ff15ea4a835f60")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("tools", default=True, description="Build the command line tools")
     variant(
         "backends",
@@ -65,6 +68,10 @@ class Fdb(CMakePackage):
         sha256="8b4bf3a473ec86fd4d7672faa7d74292dde443719299f2ba59a2c8501d6f0906",
         when="@5.7.1:5.7.10+tools",
     )
+
+    @property
+    def libs(self):
+        return find_libraries("libfdb5", root=self.prefix, shared=True, recursive=True)
 
     def cmake_args(self):
         enable_build_tools = "+tools" in self.spec

@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import inspect
 import os
 import os.path
 import stat
@@ -434,11 +433,6 @@ To resolve this problem, please try the following:
                 r"crtendS\.o",
             ]:
                 x.filter(regex=(rehead + o), repl="")
-        elif self.pkg.compiler.name == "dpcpp":
-            # Hack to filter out spurious predep_objects when building with Intel dpcpp
-            # (see https://github.com/spack/spack/issues/32863):
-            x.filter(regex=r"^(predep_objects=.*)/tmp/conftest-[0-9A-Fa-f]+\.o", repl=r"\1")
-            x.filter(regex=r"^(predep_objects=.*)/tmp/a-[0-9A-Fa-f]+\.o", repl=r"\1")
         elif self.pkg.compiler.name == "nag":
             for tag in ["fc", "f77"]:
                 marker = markers[tag]
@@ -541,7 +535,7 @@ To resolve this problem, please try the following:
         if os.path.exists(self.configure_abs_path):
             return
 
-        # Else try to regenerate it, which reuquires a few build dependencies
+        # Else try to regenerate it, which requires a few build dependencies
         ensure_build_dependencies_or_raise(
             spec=spec,
             dependencies=["autoconf", "automake", "libtool"],
@@ -554,13 +548,12 @@ To resolve this problem, please try the following:
         tty.warn("*        a custom AUTORECONF phase in the package       *")
         tty.warn("*********************************************************")
         with fs.working_dir(self.configure_directory):
-            m = inspect.getmodule(self.pkg)
             # This line is what is needed most of the time
             # --install, --verbose, --force
             autoreconf_args = ["-ivf"]
             autoreconf_args += self.autoreconf_search_path_args
             autoreconf_args += self.autoreconf_extra_args
-            m.autoreconf(*autoreconf_args)
+            self.pkg.module.autoreconf(*autoreconf_args)
 
     @property
     def autoreconf_search_path_args(self):
@@ -584,7 +577,9 @@ To resolve this problem, please try the following:
             raise RuntimeError(msg.format(self.configure_directory))
 
         # Monkey-patch the configure script in the corresponding module
-        inspect.getmodule(self.pkg).configure = Executable(self.configure_abs_path)
+        globals_for_pkg = spack.build_environment.ModuleChangePropagator(self.pkg)
+        globals_for_pkg.configure = Executable(self.configure_abs_path)
+        globals_for_pkg.propagate_changes_to_mro()
 
     def configure_args(self):
         """Return the list of all the arguments that must be passed to configure,
@@ -601,7 +596,7 @@ To resolve this problem, please try the following:
         options += self.configure_args()
 
         with fs.working_dir(self.build_directory, create=True):
-            inspect.getmodule(self.pkg).configure(*options)
+            pkg.module.configure(*options)
 
     def build(self, pkg, spec, prefix):
         """Run "make" on the build targets specified by the builder."""
@@ -609,12 +604,12 @@ To resolve this problem, please try the following:
         params = ["V=1"]
         params += self.build_targets
         with fs.working_dir(self.build_directory):
-            inspect.getmodule(self.pkg).make(*params)
+            pkg.module.make(*params)
 
     def install(self, pkg, spec, prefix):
         """Run "make" on the install targets specified by the builder."""
         with fs.working_dir(self.build_directory):
-            inspect.getmodule(self.pkg).make(*self.install_targets)
+            pkg.module.make(*self.install_targets)
 
     spack.builder.run_after("build")(execute_build_time_tests)
 

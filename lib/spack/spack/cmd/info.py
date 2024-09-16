@@ -48,6 +48,7 @@ def setup_parser(subparser):
     options = [
         ("--detectable", print_detectable.__doc__),
         ("--maintainers", print_maintainers.__doc__),
+        ("--namespace", print_namespace.__doc__),
         ("--no-dependencies", "do not " + print_dependencies.__doc__),
         ("--no-variants", "do not " + print_variants.__doc__),
         ("--no-versions", "do not " + print_versions.__doc__),
@@ -189,6 +190,15 @@ def print_maintainers(pkg, args):
         color.cprint(section_title("Maintainers: ") + mnt)
 
 
+def print_namespace(pkg, args):
+    """output package namespace"""
+
+    repo = spack.repo.PATH.get_repo(pkg.namespace)
+    color.cprint("")
+    color.cprint(section_title("Namespace:"))
+    color.cprint(f"    @c{{{repo.namespace}}} at {repo.root}")
+
+
 def print_phases(pkg, args):
     """output installation phases"""
 
@@ -263,8 +273,8 @@ def _fmt_name_and_default(variant):
     return color.colorize(f"@c{{{variant.name}}} @C{{[{_fmt_value(variant.default)}]}}")
 
 
-def _fmt_when(when, indent):
-    return color.colorize(f"{indent * ' '}@B{{when}} {color.cescape(when)}")
+def _fmt_when(when: "spack.spec.Spec", indent: int):
+    return color.colorize(f"{indent * ' '}@B{{when}} {color.cescape(str(when))}")
 
 
 def _fmt_variant_description(variant, width, indent):
@@ -441,7 +451,7 @@ def print_versions(pkg, args):
                 return "No URL"
 
         url = get_url(preferred) if pkg.has_code else ""
-        line = version("    {0}".format(pad(preferred))) + color.cescape(url)
+        line = version("    {0}".format(pad(preferred))) + color.cescape(str(url))
         color.cwrite(line)
 
         print()
@@ -464,7 +474,7 @@ def print_versions(pkg, args):
                 continue
 
             for v, url in vers:
-                line = version("    {0}".format(pad(v))) + color.cescape(url)
+                line = version("    {0}".format(pad(v))) + color.cescape(str(url))
                 color.cprint(line)
 
 
@@ -475,10 +485,7 @@ def print_virtuals(pkg, args):
     color.cprint(section_title("Virtual Packages: "))
     if pkg.provided:
         for when, specs in reversed(sorted(pkg.provided.items())):
-            line = "    %s provides %s" % (
-                when.colorized(),
-                ", ".join(s.colorized() for s in specs),
-            )
+            line = "    %s provides %s" % (when.cformat(), ", ".join(s.cformat() for s in specs))
             print(line)
 
     else:
@@ -497,13 +504,15 @@ def print_licenses(pkg, args):
         pad = padder(pkg.licenses, 4)
         for when_spec in pkg.licenses:
             license_identifier = pkg.licenses[when_spec]
-            line = license("    {0}".format(pad(license_identifier))) + color.cescape(when_spec)
+            line = license("    {0}".format(pad(license_identifier))) + color.cescape(
+                str(when_spec)
+            )
             color.cprint(line)
 
 
 def info(parser, args):
     spec = spack.spec.Spec(args.package)
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.fullname)
     pkg = pkg_cls(spec)
 
     # Output core package information
@@ -523,6 +532,7 @@ def info(parser, args):
     # Now output optional information in expected order
     sections = [
         (args.all or args.maintainers, print_maintainers),
+        (args.all or args.namespace, print_namespace),
         (args.all or args.detectable, print_detectable),
         (args.all or args.tags, print_tags),
         (args.all or not args.no_versions, print_versions),

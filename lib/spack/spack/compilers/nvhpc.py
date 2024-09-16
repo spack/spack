@@ -29,9 +29,6 @@ class Nvhpc(Compiler):
         "fc": os.path.join("nvhpc", "nvfortran"),
     }
 
-    PrgEnv = "PrgEnv-nvhpc"
-    PrgEnv_compiler = "nvhpc"
-
     version_argument = "--version"
     version_regex = r"nv[^ ]* (?:[^ ]+ Dev-r)?([0-9.]+)(?:-[0-9]+)?"
 

@@ -181,10 +181,6 @@ Spec-related modules
 :mod:`spack.parser`
   Contains :class:`~spack.parser.SpecParser` and functions related to parsing specs.
 
-:mod:`spack.concretize`
-  Contains :class:`~spack.concretize.Concretizer` implementation,
-  which allows site administrators to change Spack's :ref:`concretization-policies`.
-
 :mod:`spack.version`
   Implements a simple :class:`~spack.version.Version` class with simple
   comparison semantics.  Also implements :class:`~spack.version.VersionRange`
@@ -552,11 +548,11 @@ With either interpreter you can run a single command:
 
 .. code-block:: console
 
-   $ spack python -c 'import distro; distro.linux_distribution()'
-   ('Ubuntu', '18.04', 'Bionic Beaver')
+   $ spack python -c 'from spack.spec import Spec; Spec("python").concretized()'
+   ...
 
-   $ spack python -i ipython -c 'import distro; distro.linux_distribution()'
-   Out[1]: ('Ubuntu', '18.04', 'Bionic Beaver')
+   $ spack python -i ipython -c 'from spack.spec import Spec; Spec("python").concretized()'
+   Out[1]: ...
 
 or a file:
 
@@ -1071,9 +1067,9 @@ Announcing a release
 
 We announce releases in all of the major Spack communication channels.
 Publishing the release takes care of GitHub. The remaining channels are
-Twitter, Slack, and the mailing list. Here are the steps:
+X, Slack, and the mailing list. Here are the steps:
 
-#. Announce the release on Twitter.
+#. Announce the release on X.
 
    * Compose the tweet on the ``@spackpm`` account per the
      ``spack-twitter`` slack channel.

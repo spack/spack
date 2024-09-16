@@ -9,7 +9,6 @@ import sys
 import spack.cmd
 import spack.error
 import spack.user_environment as uenv
-import spack.util.environment
 from spack.cmd.common import arguments
 
 description = "remove package from the user environment"
@@ -71,7 +70,7 @@ def unload(parser, args):
             "Cannot specify specs on command line when unloading all specs with '--all'"
         )
 
-    hashes = os.environ.get(uenv.spack_loaded_hashes_var, "").split(":")
+    hashes = os.environ.get(uenv.spack_loaded_hashes_var, "").split(os.pathsep)
     if args.specs:
         specs = [
             spack.cmd.disambiguate_spec_from_hashes(spec, hashes)

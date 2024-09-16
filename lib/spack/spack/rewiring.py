@@ -9,14 +9,12 @@ import shutil
 import tempfile
 from collections import OrderedDict
 
-from llnl.util.symlink import symlink
+from llnl.util.symlink import readlink, symlink
 
 import spack.binary_distribution as bindist
 import spack.error
 import spack.hooks
-import spack.paths
 import spack.relocate as relocate
-import spack.stage
 import spack.store
 
 
@@ -26,7 +24,7 @@ def _relocate_spliced_links(links, orig_prefix, new_prefix):
     in our case. This still needs to be called after the copy to destination
     because it expects the new directory structure to be in place."""
     for link in links:
-        link_target = os.readlink(os.path.join(orig_prefix, link))
+        link_target = readlink(os.path.join(orig_prefix, link))
         link_target = re.sub("^" + orig_prefix, new_prefix, link_target)
         new_link_path = os.path.join(new_prefix, link)
         os.unlink(new_link_path)
@@ -116,7 +114,7 @@ def rewire_node(spec, explicit):
     # spec being added to look for mismatches)
     spack.store.STORE.layout.write_spec(spec, spack.store.STORE.layout.spec_file_path(spec))
     # add to database, not sure about explicit
-    spack.store.STORE.db.add(spec, spack.store.STORE.layout, explicit=explicit)
+    spack.store.STORE.db.add(spec, explicit=explicit)
 
     # run post install hooks
     spack.hooks.post_install(spec, explicit)

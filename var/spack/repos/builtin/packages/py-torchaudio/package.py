@@ -15,8 +15,14 @@ class PyTorchaudio(PythonPackage):
     submodules = True
 
     license("BSD-2-Clause")
+    maintainers("adamjstewart")
 
     version("main", branch="main")
+    version("2.4.1", tag="v2.4.1", commit="e8cbe17769796ce963fbc71b8990f1474774e6d2")
+    version("2.4.0", tag="v2.4.0", commit="69d40773dc4ed86643820c21a8a880e4d074a46e")
+    version("2.3.1", tag="v2.3.1", commit="3edcf69e78a3c9a3077a11159861422440ec7d4a")
+    version("2.3.0", tag="v2.3.0", commit="952ea7457bcc3ed0669e7741ff23015c426d6322")
+    version("2.2.2", tag="v2.2.2", commit="cefdb369247668e1dba74de503d4d996124b6b11")
     version("2.2.1", tag="v2.2.1", commit="06ea59c97d56868e487490702d01b3cf59103b9c")
     version("2.2.0", tag="v2.2.0", commit="08901ade5d17d3e3cf6fc039cbd601cbd2853686")
     version("2.1.2", tag="v2.1.2", commit="c4c1957d24b423200fd83591d46066135979a5a8")
@@ -44,6 +50,9 @@ class PyTorchaudio(PythonPackage):
     version("0.5.0", tag="v0.5.0", commit="09494ea545738538f9db2dceeffe10d421060ee5")
     version("0.4.0", tag="v0.4.0", commit="8afed303af3de41f3586007079c0534543c8f663")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     with default_args(type=("build", "link", "run")):
         # Based on PyPI wheel availability
         depends_on("python@3.8:3.12", when="@2.2:")
@@ -53,6 +62,11 @@ class PyTorchaudio(PythonPackage):
         depends_on("python@:3.8", when="@:0.7.0")
 
         depends_on("py-torch@main", when="@main")
+        depends_on("py-torch@2.4.1", when="@2.4.1")
+        depends_on("py-torch@2.4.0", when="@2.4.0")
+        depends_on("py-torch@2.3.1", when="@2.3.1")
+        depends_on("py-torch@2.3.0", when="@2.3.0")
+        depends_on("py-torch@2.2.2", when="@2.2.2")
         depends_on("py-torch@2.2.1", when="@2.2.1")
         depends_on("py-torch@2.2.0", when="@2.2.0")
         depends_on("py-torch@2.1.2", when="@2.1.2")
@@ -91,17 +105,15 @@ class PyTorchaudio(PythonPackage):
     depends_on("pkgconfig", type="build")
     depends_on("sox")
 
+    # https://github.com/pytorch/audio/pull/3811
+    depends_on("cuda@:12.4", when="^py-torch+cuda")
+
     def setup_build_environment(self, env):
         # tools/setup_helpers/extension.py
         env.set("BUILD_SOX", 0)
 
         if "+cuda" in self.spec["py-torch"]:
             env.set("USE_CUDA", 1)
-            torch_cuda_arch_list = ";".join(
-                "{0:.1f}".format(float(i) / 10.0)
-                for i in self.spec["py-torch"].variants["cuda_arch"].value
-            )
-            env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch_list)
         else:
             env.set("USE_CUDA", 0)
 

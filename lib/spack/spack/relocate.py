@@ -12,19 +12,16 @@ from typing import List, Optional
 import macholib.mach_o
 import macholib.MachO
 
-import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
-from llnl.util.symlink import symlink
+from llnl.util.symlink import readlink, symlink
 
-import spack.paths
 import spack.platforms
-import spack.repo
-import spack.spec
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
+import spack.util.filesystem as ssys
 
 from .relocate_text import BinaryFilePrefixReplacer, TextFilePrefixReplacer
 
@@ -565,7 +562,7 @@ def make_link_relative(new_links, orig_links):
         orig_links (list): original links
     """
     for new_link, orig_link in zip(new_links, orig_links):
-        target = os.readlink(orig_link)
+        target = readlink(orig_link)
         relative_target = os.path.relpath(target, os.path.dirname(orig_link))
         os.unlink(new_link)
         symlink(relative_target, new_link)
@@ -613,7 +610,7 @@ def relocate_links(links, prefix_to_prefix):
     """Relocate links to a new install prefix."""
     regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
     for link in links:
-        old_target = os.readlink(link)
+        old_target = readlink(link)
         match = regex.match(old_target)
 
         # No match.
@@ -663,7 +660,7 @@ def is_binary(filename):
     Returns:
         True or False
     """
-    m_type, _ = fs.mime_type(filename)
+    m_type, _ = ssys.mime_type(filename)
 
     msg = "[{0}] -> ".format(filename)
     if m_type == "application":
@@ -691,7 +688,7 @@ def fixup_macos_rpath(root, filename):
         True if fixups were applied, else False
     """
     abspath = os.path.join(root, filename)
-    if fs.mime_type(abspath) != ("application", "x-mach-binary"):
+    if ssys.mime_type(abspath) != ("application", "x-mach-binary"):
         return False
 
     # Get Mach-O header commands

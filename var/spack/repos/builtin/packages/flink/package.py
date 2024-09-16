@@ -26,7 +26,7 @@ class Flink(Package):
     depends_on("java@8:", type="run")
 
     def url_for_version(self, version):
-        url = "http://archive.apache.org/dist/flink/flink-{0}/flink-{0}-bin-scala_2.11.tgz"
+        url = "https://archive.apache.org/dist/flink/flink-{0}/flink-{0}-bin-scala_2.11.tgz"
         return url.format(version)
 
     def install(self, spec, prefix):

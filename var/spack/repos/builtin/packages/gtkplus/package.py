@@ -39,6 +39,9 @@ class Gtkplus(MesonPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("cups", default=False, description="enable cups support")
 
     # See meson.build for version requirements
@@ -121,7 +124,7 @@ class Gtkplus(MesonPackage):
             "GTKDOC_MKPDF={0}".format(true),
             "GTKDOC_REBASE={0}".format(true),
         ]
-        if "~cups" in self.spec:
+        if self.spec.satisfies("~cups"):
             args.append("--disable-cups")
         return args
 

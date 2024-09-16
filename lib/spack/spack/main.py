@@ -32,6 +32,7 @@ import llnl.util.tty.colify
 import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
 
+import spack
 import spack.cmd
 import spack.config
 import spack.environment as ev
@@ -39,13 +40,10 @@ import spack.modules
 import spack.paths
 import spack.platforms
 import spack.repo
-import spack.solver.asp
 import spack.spec
 import spack.store
 import spack.util.debug
 import spack.util.environment
-import spack.util.git
-import spack.util.path
 from spack.error import SpackError
 
 #: names of profile statistics
@@ -120,51 +118,6 @@ def add_all_commands(parser):
     """Add all spack subcommands to the parser."""
     for cmd in spack.cmd.all_commands():
         parser.add_command(cmd)
-
-
-def get_spack_commit():
-    """Get the Spack git commit sha.
-
-    Returns:
-        (str or None) the commit sha if available, otherwise None
-    """
-    git_path = os.path.join(spack.paths.prefix, ".git")
-    if not os.path.exists(git_path):
-        return None
-
-    git = spack.util.git.git()
-    if not git:
-        return None
-
-    rev = git(
-        "-C",
-        spack.paths.prefix,
-        "rev-parse",
-        "HEAD",
-        output=str,
-        error=os.devnull,
-        fail_on_error=False,
-    )
-    if git.returncode != 0:
-        return None
-
-    match = re.match(r"[a-f\d]{7,}$", rev)
-    return match.group(0) if match else None
-
-
-def get_version():
-    """Get a descriptive version of this instance of Spack.
-
-    Outputs '<PEP440 version> (<git commit sha>)'.
-
-    The commit sha is only added when available.
-    """
-    version = spack.spack_version
-    commit = get_spack_commit()
-    if commit:
-        version += " ({0})".format(commit)
-
-    return version
 
 
 def index_commands():
@@ -427,7 +380,7 @@ def make_argument_parser(**kwargs):
     parser.add_argument(
         "--color",
         action="store",
-        default=os.environ.get("SPACK_COLOR", "auto"),
+        default=None,
         choices=("always", "never", "auto"),
         help="when to colorize output (default: auto)",
     )
@@ -444,8 +397,9 @@ def make_argument_parser(**kwargs):
         "--config-scope",
         dest="config_scopes",
         action="append",
-        metavar="DIR",
-        help="add a custom configuration scope",
+        metavar="DIR|ENV",
+        help="add directory or environment as read-only configuration scope, without activating "
+        "the environment.",
     )
     parser.add_argument(
         "-d",
@@ -622,7 +576,8 @@ def setup_main_options(args):
     # with color
     color.try_enable_terminal_color_on_windows()
     # when to use color (takes always, auto, or never)
-    color.set_color_when(args.color)
+    if args.color is not None:
+        color.set_color_when(args.color)
 
 
 def allows_unknown_args(command):
@@ -950,13 +905,9 @@ def _main(argv=None):
         parser.print_help()
         return 1
 
-    # -h, -H, and -V are special as they do not require a command, but
-    # all the other options do nothing without a command.
+    # version is special as it does not require a command or loading and additional infrastructure
     if args.version:
-        print(get_version())
-        return 0
-    elif args.help:
-        sys.stdout.write(parser.format_help(level=args.help))
+        print(spack.get_version())
         return 0
 
     # ------------------------------------------------------------------------
@@ -994,6 +945,12 @@ def _main(argv=None):
     # ------------------------------------------------------------------------
     if args.print_shell_vars:
         print_setup_info(*args.print_shell_vars.split(","))
+        return 0
+
+    # -h and -H are special as they do not require a command, but
+    # all the other options do nothing without a command.
+    if args.help:
+        sys.stdout.write(parser.format_help(level=args.help))
         return 0
 
     # At this point we've considered all the options to spack itself, so we

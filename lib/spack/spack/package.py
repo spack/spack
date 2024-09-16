@@ -39,6 +39,7 @@ from spack.build_systems.cached_cmake import (
 )
 from spack.build_systems.cargo import CargoPackage
 from spack.build_systems.cmake import CMakePackage, generator
+from spack.build_systems.compiler import CompilerPackage
 from spack.build_systems.cuda import CudaPackage
 from spack.build_systems.generic import Package
 from spack.build_systems.gnu import GNUMirrorPackage
@@ -103,6 +104,7 @@ from spack.package_base import (
 from spack.spec import InvalidSpecDetected, Spec
 from spack.util.cpus import determine_number_of_jobs
 from spack.util.executable import *
+from spack.util.filesystem import file_command, fix_darwin_install_name, mime_type
 from spack.variant import (
     any_combination_of,
     auto_or_any_combination_of,

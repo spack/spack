@@ -16,6 +16,7 @@ class Glab(Package):
 
     license("MIT")
 
+    version("1.46.1", sha256="935f732ddacc6e54fc83d06351fc25454ac8a58c465c3efa43e066ea226257c2")
     version("1.36.0", sha256="8d6c759ebfe9c6942fcdb7055a4a5c7209a3b22beb25947f906c9aef3bc067e8")
     version("1.35.0", sha256="7ed31c7a9b425fc15922f83c5dd8634a2758262a4f25f92583378655fcad6303")
     version("1.33.0", sha256="447a9b76acb5377642a4975908f610a3082026c176329c7c8cfed1461d2e1570")
@@ -31,8 +32,14 @@ class Glab(Package):
     version("1.20.0", sha256="6beb0186fa50d0dea3b05fcfe6e4bc1f9be0c07aa5fa15b37ca2047b16980412")
 
     depends_on("go@1.13:", type="build")
-    depends_on("go@1.17:", type="build", when="@1.22.0:")
-    depends_on("go@1.18:", type="build", when="@1.23.0:")
+    depends_on("go@1.17:", type="build", when="@1.22:")
+    depends_on("go@1.18:", type="build", when="@1.23:")
+    depends_on("go@1.19:", type="build", when="@1.35:")
+    depends_on("go@1.21:", type="build", when="@1.37:")
+    depends_on("go@1.22.3:", type="build", when="@1.41:")
+    depends_on("go@1.22.4:", type="build", when="@1.42:")
+    depends_on("go@1.22.5:", type="build", when="@1.44:")
+    depends_on("go@1.23:", type="build", when="@1.46:")
 
     phases = ["build", "install"]
 

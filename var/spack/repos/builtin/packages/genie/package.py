@@ -43,6 +43,8 @@ class Genie(Package):
     version("2.9.0", sha256="8229beb73f65f5af86a77bf141acfbe4a8b68cba9d797aae083a929906f6f2a2")
     version("2.8.6", sha256="310dc8e0d17a65e6b9773e398250703a3a6f94ceafe94f599ae0f7b3fecf7e6c")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("root+pythia6")
     depends_on("pythia6")
     depends_on("lhapdf", when="@3:")
@@ -130,17 +132,17 @@ class Genie(Package):
                 "--with-lhapdf6-inc=" + spec["lhapdf"].prefix.include,
                 "--with-lhapdf6-lib=" + spec["lhapdf"].prefix.lib,
             ]
-        if "+vleextension" in self.spec:
+        if self.spec.satisfies("+vleextension"):
             args += ["--enable-vle-extension"]
-        if "+t2k" in self.spec:
+        if self.spec.satisfies("+t2k"):
             args += ["--enable-t2k"]
-        if "+fnal" in self.spec:
+        if self.spec.satisfies("+fnal"):
             args += ["--enable-fnal"]
-        if "+atmo" in self.spec:
+        if self.spec.satisfies("+atmo"):
             args += ["--enable-atmo"]
-        if "+nucleondecay" in self.spec:
+        if self.spec.satisfies("+nucleondecay"):
             args += ["--enable-nucleon-decay"]
-        if "+masterclass" in self.spec:
+        if self.spec.satisfies("+masterclass"):
             args += ["--enable-masterclass"]
         return args
 

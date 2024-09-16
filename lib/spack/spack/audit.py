@@ -39,13 +39,14 @@ import ast
 import collections
 import collections.abc
 import glob
-import inspect
 import io
 import itertools
+import os
 import pathlib
 import pickle
 import re
 import warnings
+from typing import Iterable, List, Set, Tuple
 from urllib.request import urlopen
 
 import llnl.util.lang
@@ -73,7 +74,9 @@ class Error:
         self.details = tuple(details)
 
     def __str__(self):
-        return self.summary + "\n" + "\n".join(["    " + detail for detail in self.details])
+        if self.details:
+            return f"{self.summary}\n" + "\n".join(f"    {detail}" for detail in self.details)
+        return self.summary
 
     def __eq__(self, other):
         if self.summary != other.summary or self.details != other.details:
@@ -210,6 +213,11 @@ config_packages = AuditClass(
     group="configs", tag="CFG-PACKAGES", description="Sanity checks on packages.yaml", kwargs=()
 )
 
+#: Sanity checks on packages.yaml
+config_repos = AuditClass(
+    group="configs", tag="CFG-REPOS", description="Sanity checks on repositories", kwargs=()
+)
+
 
 @config_packages
 def _search_duplicate_specs_in_externals(error_cls):
@@ -248,40 +256,6 @@ def _search_duplicate_specs_in_externals(error_cls):
             details = []
 
         errors.append(error_cls(summary=error_msg, details=details))
-
-    return errors
-
-
-@config_packages
-def _deprecated_preferences(error_cls):
-    """Search package preferences deprecated in v0.21 (and slated for removal in v0.22)"""
-    # TODO (v0.22): remove this audit as the attributes will not be allowed in config
-    errors = []
-    packages_yaml = spack.config.CONFIG.get_config("packages")
-
-    def make_error(attribute_name, config_data, summary):
-        s = io.StringIO()
-        s.write("Occurring in the following file:\n")
-        dict_view = syaml.syaml_dict((k, v) for k, v in config_data.items() if k == attribute_name)
-        syaml.dump_config(dict_view, stream=s, blame=True)
-        return error_cls(summary=summary, details=[s.getvalue()])
-
-    if "all" in packages_yaml and "version" in packages_yaml["all"]:
-        summary = "Using the deprecated 'version' attribute under 'packages:all'"
-        errors.append(make_error("version", packages_yaml["all"], summary))
-
-    for package_name in packages_yaml:
-        if package_name == "all":
-            continue
-
-        package_conf = packages_yaml[package_name]
-        for attribute in ("compiler", "providers", "target"):
-            if attribute not in package_conf:
-                continue
-            summary = (
-                f"Using the deprecated '{attribute}' attribute " f"under 'packages:{package_name}'"
-            )
-            errors.append(make_error(attribute, package_conf, summary))
 
     return errors
 
@@ -348,6 +322,43 @@ def _wrongly_named_spec(error_cls):
             if regular_pkg_is_wrong or virtual_pkg_is_wrong:
                 summary = f"Wrong external spec detected for '{pkg_name}': {spec}"
                 errors.append(_make_config_error(entry, summary, error_cls=error_cls))
+    return errors
+
+
+@config_packages
+def _ensure_all_virtual_packages_have_default_providers(error_cls):
+    """All virtual packages must have a default provider explicitly set."""
+    configuration = spack.config.create()
+    defaults = configuration.get("packages", scope="defaults")
+    default_providers = defaults["all"]["providers"]
+    virtuals = spack.repo.PATH.provider_index.providers
+    default_providers_filename = configuration.scopes["defaults"].get_section_filename("packages")
+
+    return [
+        error_cls(f"'{virtual}' must have a default provider in {default_providers_filename}", [])
+        for virtual in virtuals
+        if virtual not in default_providers
+    ]
+
+
+@config_repos
+def _ensure_no_folders_without_package_py(error_cls):
+    """Check that we don't leave any folder without a package.py in repos"""
+    errors = []
+    for repository in spack.repo.PATH.repos:
+        missing = []
+        for entry in os.scandir(repository.packages_path):
+            if not entry.is_dir():
+                continue
+            package_py = pathlib.Path(entry.path) / spack.repo.package_file_name
+            if not package_py.exists():
+                missing.append(entry.path)
+        if missing:
+            summary = (
+                f"The '{repository.namespace}' repository misses a package.py file"
+                f" in the following folders"
+            )
+            errors.append(error_cls(summary=summary, details=[f"{x}" for x in missing]))
     return errors
 
 
@@ -421,6 +432,10 @@ def _check_patch_urls(pkgs, error_cls):
         r"^https?://(?:patch-diff\.)?github(?:usercontent)?\.com/"
         r".+/.+/(?:commit|pull)/[a-fA-F0-9]+\.(?:patch|diff)"
     )
+    github_pull_commits_re = (
+        r"^https?://(?:patch-diff\.)?github(?:usercontent)?\.com/"
+        r".+/.+/pull/\d+/commits/[a-fA-F0-9]+\.(?:patch|diff)"
+    )
     # Only .diff URLs have stable/full hashes:
     # https://forum.gitlab.com/t/patches-with-full-index/29313
     gitlab_patch_url_re = (
@@ -436,14 +451,24 @@ def _check_patch_urls(pkgs, error_cls):
                 if not isinstance(patch, spack.patch.UrlPatch):
                     continue
 
-                if re.match(github_patch_url_re, patch.url):
+                if re.match(github_pull_commits_re, patch.url):
+                    url = re.sub(r"/pull/\d+/commits/", r"/commit/", patch.url)
+                    url = re.sub(r"^(.*)(?<!full_index=1)$", r"\1?full_index=1", url)
+                    errors.append(
+                        error_cls(
+                            f"patch URL in package {pkg_cls.name} "
+                            + "must not be a pull request commit; "
+                            + f"instead use {url}",
+                            [patch.url],
+                        )
+                    )
+                elif re.match(github_patch_url_re, patch.url):
                     full_index_arg = "?full_index=1"
                     if not patch.url.endswith(full_index_arg):
                         errors.append(
                             error_cls(
-                                "patch URL in package {0} must end with {1}".format(
-                                    pkg_cls.name, full_index_arg
-                                ),
+                                f"patch URL in package {pkg_cls.name} "
+                                + f"must end with {full_index_arg}",
                                 [patch.url],
                             )
                         )
@@ -451,9 +476,7 @@ def _check_patch_urls(pkgs, error_cls):
                     if not patch.url.endswith(".diff"):
                         errors.append(
                             error_cls(
-                                "patch URL in package {0} must end with .diff".format(
-                                    pkg_cls.name
-                                ),
+                                f"patch URL in package {pkg_cls.name} must end with .diff",
                                 [patch.url],
                             )
                         )
@@ -470,7 +493,7 @@ def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
         name_definitions = collections.defaultdict(list)
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
-        for cls_item in inspect.getmro(pkg_cls):
+        for cls_item in pkg_cls.__mro__:
             for name in RESERVED_NAMES:
                 current_value = cls_item.__dict__.get(name)
                 if current_value is None:
@@ -499,7 +522,7 @@ def _ensure_all_package_names_are_lowercase(pkgs, error_cls):
     badname_regex, errors = re.compile(r"[_A-Z]"), []
     for pkg_name in pkgs:
         if badname_regex.search(pkg_name):
-            error_msg = "Package name '{}' is either lowercase or conatine '_'".format(pkg_name)
+            error_msg = f"Package name '{pkg_name}' should be lowercase and must not contain '_'"
             errors.append(error_cls(error_msg, []))
     return errors
 
@@ -659,6 +682,88 @@ def _ensure_env_methods_are_ported_to_builders(pkgs, error_cls):
     return errors
 
 
+class DeprecatedMagicGlobals(ast.NodeVisitor):
+    def __init__(self, magic_globals: Iterable[str]):
+        super().__init__()
+
+        self.magic_globals: Set[str] = set(magic_globals)
+
+        # State to track whether we're in a class function
+        self.depth: int = 0
+        self.in_function: bool = False
+        self.path = (ast.Module, ast.ClassDef, ast.FunctionDef)
+
+        # Defined locals in the current function (heuristically at least)
+        self.locals: Set[str] = set()
+
+        # List of (name, lineno) tuples for references to magic globals
+        self.references_to_globals: List[Tuple[str, int]] = []
+
+    def descend_in_function_def(self, node: ast.AST) -> None:
+        if not isinstance(node, self.path[self.depth]):
+            return
+        self.depth += 1
+        if self.depth == len(self.path):
+            self.in_function = True
+        super().generic_visit(node)
+        if self.depth == len(self.path):
+            self.in_function = False
+            self.locals.clear()
+        self.depth -= 1
+
+    def generic_visit(self, node: ast.AST) -> None:
+        # Recurse into function definitions
+        if self.depth < len(self.path):
+            return self.descend_in_function_def(node)
+        elif not self.in_function:
+            return
+        elif isinstance(node, ast.Global):
+            for name in node.names:
+                if name in self.magic_globals:
+                    self.references_to_globals.append((name, node.lineno))
+        elif isinstance(node, ast.Assign):
+            # visit the rhs before lhs
+            super().visit(node.value)
+            for target in node.targets:
+                super().visit(target)
+        elif isinstance(node, ast.Name) and node.id in self.magic_globals:
+            if isinstance(node.ctx, ast.Load) and node.id not in self.locals:
+                self.references_to_globals.append((node.id, node.lineno))
+            elif isinstance(node.ctx, ast.Store):
+                self.locals.add(node.id)
+        else:
+            super().generic_visit(node)
+
+
+@package_properties
+def _uses_deprecated_globals(pkgs, error_cls):
+    """Ensure that packages do not use deprecated globals"""
+    errors = []
+
+    for pkg_name in pkgs:
+        # some packages scheduled to be removed in v0.23 are not worth fixing.
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        if all(v.get("deprecated", False) for v in pkg_cls.versions.values()):
+            continue
+
+        file = spack.repo.PATH.filename_for_package_name(pkg_name)
+        tree = ast.parse(open(file).read())
+        visitor = DeprecatedMagicGlobals(("std_cmake_args",))
+        visitor.visit(tree)
+        if visitor.references_to_globals:
+            errors.append(
+                error_cls(
+                    f"Package '{pkg_name}' uses deprecated globals",
+                    [
+                        f"{file}:{line} references '{name}'"
+                        for name, line in visitor.references_to_globals
+                    ],
+                )
+            )
+
+    return errors
+
+
 @package_https_directives
 def _linting_package_file(pkgs, error_cls):
     """Check for correctness of links"""
@@ -779,7 +884,7 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                         return
                     error = error_cls(
                         f"{pkg_name}: {msg}",
-                        f"remove variants from '{spec}' in depends_on directive in {filename}",
+                        [f"remove variants from '{spec}' in depends_on directive in {filename}"],
                     )
                     errors.append(error)
 
@@ -1046,7 +1151,7 @@ external_detection = AuditClass(
     group="externals",
     tag="PKG-EXTERNALS",
     description="Sanity checks for external software detection",
-    kwargs=("pkgs",),
+    kwargs=("pkgs", "debug_log"),
 )
 
 
@@ -1069,7 +1174,7 @@ def packages_with_detection_tests():
 
 
 @external_detection
-def _test_detection_by_executable(pkgs, error_cls):
+def _test_detection_by_executable(pkgs, debug_log, error_cls):
     """Test drive external detection for packages"""
     import spack.detection
 
@@ -1095,6 +1200,7 @@ def _test_detection_by_executable(pkgs, error_cls):
         for idx, test_runner in enumerate(
             spack.detection.detection_tests(pkg_name, spack.repo.PATH)
         ):
+            debug_log(f"[{__file__}]: running test {idx} for package {pkg_name}")
             specs = test_runner.execute()
             expected_specs = test_runner.expected_specs
 
@@ -1110,5 +1216,76 @@ def _test_detection_by_executable(pkgs, error_cls):
                 msg = '"{0}" was detected, but was not expected [test_id={1}]'
                 details = [msg.format(s, idx) for s in sorted(not_expected)]
                 errors.append(error_cls(summary=summary, details=details))
+
+            matched_detection = []
+            for candidate in expected_specs:
+                try:
+                    idx = specs.index(candidate)
+                    matched_detection.append((candidate, specs[idx]))
+                except (AttributeError, ValueError):
+                    pass
+
+            def _compare_extra_attribute(_expected, _detected, *, _spec):
+                result = []
+                # Check items are of the same type
+                if not isinstance(_detected, type(_expected)):
+                    _summary = f'{pkg_name}: error when trying to detect "{_expected}"'
+                    _details = [f"{_detected} was detected instead"]
+                    return [error_cls(summary=_summary, details=_details)]
+
+                # If they are string expected is a regex
+                if isinstance(_expected, str):
+                    try:
+                        _regex = re.compile(_expected)
+                    except re.error:
+                        _summary = f'{pkg_name}: illegal regex in "{_spec}" extra attributes'
+                        _details = [f"{_expected} is not a valid regex"]
+                        return [error_cls(summary=_summary, details=_details)]
+
+                    if not _regex.match(_detected):
+                        _summary = (
+                            f'{pkg_name}: error when trying to match "{_expected}" '
+                            f"in extra attributes"
+                        )
+                        _details = [f"{_detected} does not match the regex"]
+                        return [error_cls(summary=_summary, details=_details)]
+
+                if isinstance(_expected, dict):
+                    _not_detected = set(_expected.keys()) - set(_detected.keys())
+                    if _not_detected:
+                        _summary = f"{pkg_name}: cannot detect some attributes for spec {_spec}"
+                        _details = [
+                            f'"{_expected}" was expected',
+                            f'"{_detected}" was detected',
+                        ] + [f'attribute "{s}" was not detected' for s in sorted(_not_detected)]
+                        result.append(error_cls(summary=_summary, details=_details))
+
+                    _common = set(_expected.keys()) & set(_detected.keys())
+                    for _key in _common:
+                        result.extend(
+                            _compare_extra_attribute(_expected[_key], _detected[_key], _spec=_spec)
+                        )
+
+                return result
+
+            for expected, detected in matched_detection:
+                # We might not want to test all attributes, so avoid not_expected
+                not_detected = set(expected.extra_attributes) - set(detected.extra_attributes)
+                if not_detected:
+                    summary = f"{pkg_name}: cannot detect some attributes for spec {expected}"
+                    details = [
+                        f'"{s}" was not detected [test_id={idx}]' for s in sorted(not_detected)
+                    ]
+                    errors.append(error_cls(summary=summary, details=details))
+
+                common = set(expected.extra_attributes) & set(detected.extra_attributes)
+                for key in common:
+                    errors.extend(
+                        _compare_extra_attribute(
+                            expected.extra_attributes[key],
+                            detected.extra_attributes[key],
+                            _spec=expected,
+                        )
+                    )
 
     return errors
