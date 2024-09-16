@@ -138,7 +138,7 @@ packages:
     require: "@1.2"
 """
     update_packages_config(conf_str)
-    with pytest.raises(spack.config.ConfigError):
+    with pytest.raises(spack.error.ConfigError):
         Spec("x").concretize()
 
 

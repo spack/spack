@@ -174,3 +174,7 @@ class InstallError(SpackError):
     def __init__(self, message, long_msg=None, pkg=None):
         super().__init__(message, long_msg)
         self.pkg = pkg
+
+
+class ConfigError(SpackError):
+    """Superclass for all Spack config related errors."""

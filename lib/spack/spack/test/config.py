@@ -18,6 +18,7 @@ from llnl.util.filesystem import join_path, touch, touchp
 import spack.config
 import spack.directory_layout
 import spack.environment as ev
+import spack.error
 import spack.package_base
 import spack.paths
 import spack.platforms
@@ -312,7 +313,7 @@ def test_add_config_path_with_enumerated_type(mutable_config):
     spack.config.add("config:flags:keep_werror:specific")
     assert spack.config.get("config")["flags"]["keep_werror"] == "specific"
 
-    with pytest.raises(spack.config.ConfigError):
+    with pytest.raises(spack.error.ConfigError):
         spack.config.add("config:flags:keep_werror:foo")
 
 
@@ -871,10 +872,10 @@ def test_bad_command_line_scopes(tmp_path, config):
 
     file_path.write_text("")
 
-    with pytest.raises(spack.config.ConfigError):
+    with pytest.raises(spack.error.ConfigError):
         spack.config._add_command_line_scopes(cfg, [str(file_path)])
 
-    with pytest.raises(spack.config.ConfigError):
+    with pytest.raises(spack.error.ConfigError):
         spack.config._add_command_line_scopes(cfg, [str(non_existing_path)])
 
 
@@ -992,7 +993,7 @@ config:
     data = scope.get_section("config")
     assert data["config"]["install_tree"] == {"root": "dummy_tree_value"}
 
-    with pytest.raises(spack.config.ConfigError):
+    with pytest.raises(spack.error.ConfigError):
         scope._write_section("config")
 
 

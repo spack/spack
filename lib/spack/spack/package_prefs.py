@@ -9,7 +9,7 @@ import spack.config
 import spack.error
 import spack.repo
 import spack.spec
-from spack.config import ConfigError
+from spack.error import ConfigError
 from spack.version import Version
 
 _lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": Version}

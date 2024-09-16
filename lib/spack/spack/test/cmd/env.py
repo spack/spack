@@ -1166,7 +1166,7 @@ spack:
     )
     with ev.Environment(tmp_path):
         assert spack.spec.Spec("mpich").concretized().satisfies("@3.0.3")
-        with pytest.raises(spack.config.ConfigError, match="not a list"):
+        with pytest.raises(spack.error.ConfigError, match="not a list"):
             config("change", "packages:mpich:require:~debug")
 
 
@@ -1194,7 +1194,7 @@ def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
     with spack_yaml.open("w") as f:
         f.write("spack:\n  include:\n    - {0}\n".format(missing_file.strpath))
 
-    with pytest.raises(spack.config.ConfigError, match="missing include path"):
+    with pytest.raises(spack.error.ConfigError, match="missing include path"):
         ev.Environment(tmpdir.strpath)
 
 
