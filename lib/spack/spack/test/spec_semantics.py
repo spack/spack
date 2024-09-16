@@ -228,6 +228,16 @@ class TestSpecSemantics:
                 'libelf cflags="-O3" cppflags="-Wall"',
                 'libelf cflags="-O3" cppflags="-Wall"',
             ),
+            (
+                "libelf patches=ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2",
+                "libelf patches=ba5e3",  # constrain by a patch sha256 prefix
+                # TODO: the result below is not ideal. Prefix satisfies() works for patches, but
+                # constrain() isn't similarly special-cased to do the same thing
+                (
+                    "libelf patches=ba5e3,"
+                    "ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2"
+                ),
+            ),
         ],
     )
     def test_abstract_specs_can_constrain_each_other(self, lhs, rhs, expected):
