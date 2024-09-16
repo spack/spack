@@ -219,9 +219,7 @@ class Qt(Package):
         depends_on("sqlite", type=("build", "run"))
 
     with when("platform=darwin"):
-        conflicts(
-            "platform=darwin", when="@:4.8.6", msg="QT 4 for macOS is only patched for 4.8.7"
-        )
+        conflicts("@:4.8.6", msg="QT 4 for macOS is only patched for 4.8.7")
         conflicts(
             "target=aarch64:",
             when="@:5.15.3",
