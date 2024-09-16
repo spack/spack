@@ -42,7 +42,6 @@ import spack.provider_index
 import spack.repo
 import spack.spec
 import spack.tag
-import spack.tengine
 import spack.util.git
 import spack.util.naming as nm
 import spack.util.path
@@ -1524,6 +1523,8 @@ class MockRepositoryBuilder:
                 Both "dep_type" and "condition" can default to ``None`` in which case
                 ``spack.dependency.default_deptype`` and ``spack.spec.Spec()`` are used.
         """
+        import spack.tengine  # avoid circular import
+
         dependencies = dependencies or []
         context = {"cls_name": nm.mod_to_class(name), "dependencies": dependencies}
         template = spack.tengine.make_environment().get_template("mock-repository/package.pyt")
