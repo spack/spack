@@ -32,6 +32,7 @@ class Ollama(GoPackage, CudaPackage):
     depends_on("go@1.4.0:", type="build")
     depends_on("git", type="build")
 
+
 class GoBuilder(spack.build_systems.go.GoBuilder):
     phases = ("generate", "build", "install")
 
