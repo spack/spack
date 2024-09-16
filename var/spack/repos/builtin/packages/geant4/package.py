@@ -83,7 +83,6 @@ class Geant4(CMakePackage):
     variant("tbb", default=False, description="Use TBB as a tasking backend", when="@11:")
     variant("timemory", default=False, description="Use TiMemory for profiling", when="@9.5:")
     variant("vtk", default=False, description="Enable VTK support", when="@11:")
-    variant("zlib", default=False, description="Use external zlib")
 
     depends_on("cmake@3.16:", type="build", when="@11.0.0:")
     depends_on("cmake@3.8:", type="build", when="@10.6.0:")
@@ -113,7 +112,7 @@ class Geant4(CMakePackage):
         depends_on("geant4-data@" + _vers, type="run", when="@" + _vers)
 
     depends_on("expat")
-    depends_on("zlib-api", when="+zlib")
+    depends_on("zlib-api")
 
     depends_on("tbb", when="+tbb")
     depends_on("timemory@3.2:", when="+timemory")
@@ -198,6 +197,7 @@ class Geant4(CMakePackage):
 
     # NVHPC: "thread-local declaration follows non-thread-local declaration"
     conflicts("%nvhpc", when="+threads")
+    conflicts("^[virtuals=zlib-api] zlib-ng", when="@:11.2")
 
     @classmethod
     def determine_version(cls, exe):
@@ -263,7 +263,7 @@ class Geant4(CMakePackage):
         options = [
             self.define("GEANT4_USE_SYSTEM_CLHEP", True),
             self.define("GEANT4_USE_SYSTEM_EXPAT", True),
-            self.define_from_variant("GEANT4_USE_SYSTEM_ZLIB", "zlib"),
+            self.define("GEANT4_USE_SYSTEM_ZLIB", True),
             self.define("GEANT4_USE_G3TOG4", True),
             self.define("GEANT4_USE_GDML", True),
             self.define("XERCESC_ROOT_DIR", spec["xerces-c"].prefix),
