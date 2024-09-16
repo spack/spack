@@ -17,7 +17,6 @@ import spack.error
 import spack.patch
 import spack.paths
 import spack.repo
-import spack.util.compression
 import spack.util.url as url_util
 from spack.spec import Spec
 from spack.stage import Stage

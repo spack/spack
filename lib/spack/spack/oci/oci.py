@@ -15,16 +15,10 @@ from urllib.request import Request
 
 import llnl.util.tty as tty
 
-import spack.config
-import spack.error
 import spack.fetch_strategy
 import spack.mirror
 import spack.oci.opener
-import spack.repo
-import spack.spec
 import spack.stage
-import spack.traverse
-import spack.util.crypto
 import spack.util.url
 
 from .image import Digest, ImageReference

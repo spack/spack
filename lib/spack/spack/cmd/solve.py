@@ -15,7 +15,6 @@ import spack.cmd
 import spack.config
 import spack.environment
 import spack.hash_types as ht
-import spack.package_base
 import spack.solver.asp as asp
 from spack.cmd.common import arguments
 

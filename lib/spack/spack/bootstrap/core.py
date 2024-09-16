@@ -37,16 +37,10 @@ from llnl.util.lang import GroupedExceptionHandler
 import spack.binary_distribution
 import spack.config
 import spack.detection
-import spack.environment
-import spack.modules
-import spack.paths
 import spack.platforms
-import spack.platforms.linux
-import spack.repo
 import spack.spec
 import spack.store
 import spack.user_environment
-import spack.util.environment
 import spack.util.executable
 import spack.util.path
 import spack.util.spack_yaml

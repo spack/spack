@@ -38,7 +38,6 @@ import spack.mirror
 import spack.paths
 import spack.repo
 import spack.spec
-import spack.stage
 import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml

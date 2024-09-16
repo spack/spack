@@ -4,14 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pytest
 
-import spack.build_systems.generic
 import spack.config
 import spack.environment as ev
-import spack.error
-import spack.package_base
 import spack.repo
 import spack.util.spack_yaml as syaml
-import spack.version
 from spack.spec import Spec
 from spack.test.conftest import create_test_repo
 

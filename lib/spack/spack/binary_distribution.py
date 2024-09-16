@@ -33,7 +33,6 @@ from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_t
 from llnl.util.symlink import readlink
 
 import spack.caches
-import spack.cmd
 import spack.config as config
 import spack.database as spack_db
 import spack.error
@@ -47,7 +46,6 @@ import spack.oci.opener
 import spack.paths
 import spack.platforms
 import spack.relocate as relocate
-import spack.repo
 import spack.spec
 import spack.stage
 import spack.store

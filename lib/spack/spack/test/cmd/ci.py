@@ -18,13 +18,11 @@ import spack
 import spack.binary_distribution
 import spack.ci as ci
 import spack.cmd.ci
-import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.main
 import spack.paths as spack_paths
 import spack.repo as repo
-import spack.util.gpg
 import spack.util.spack_yaml as syaml
 from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
 from spack.schema.buildcache_spec import schema as specfile_schema

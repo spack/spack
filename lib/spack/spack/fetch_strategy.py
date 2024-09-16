@@ -46,7 +46,6 @@ from llnl.util.symlink import symlink
 import spack.config
 import spack.error
 import spack.oci.opener
-import spack.url
 import spack.util.archive
 import spack.util.crypto as crypto
 import spack.util.git

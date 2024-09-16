@@ -27,7 +27,6 @@ from llnl.util.lang import elide_list
 
 import spack
 import spack.binary_distribution
-import spack.cmd
 import spack.compilers
 import spack.config
 import spack.config as sc
@@ -36,13 +35,11 @@ import spack.environment as ev
 import spack.error
 import spack.package_base
 import spack.package_prefs
-import spack.parser
 import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
 import spack.util.crypto
-import spack.util.elf
 import spack.util.libc
 import spack.util.path
 import spack.util.timer

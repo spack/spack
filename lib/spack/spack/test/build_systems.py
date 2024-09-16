@@ -17,7 +17,6 @@ import spack.build_systems.autotools
 import spack.build_systems.cmake
 import spack.environment
 import spack.platforms
-import spack.repo
 from spack.build_environment import ChildError, setup_package
 from spack.spec import Spec
 from spack.util.executable import which
