@@ -20,7 +20,9 @@ view = SpackCommand("view")
 
 if sys.platform == "win32":
     if not _windows_can_symlink():
-        pytest.skip("Windows must be able to create symlinks to run tests.", allow_module_level=True)
+        pytest.skip(
+            "Windows must be able to create symlinks to run tests.", allow_module_level=True
+        )
     # TODO: Skipping hardlink command testing on windows until robust checks can be added.
     #   See https://github.com/spack/spack/pull/46335#discussion_r1757411915
     commands = ["symlink", "add", "copy", "relocate"]
