@@ -165,9 +165,17 @@ class PyHorovod(PythonPackage, CudaPackage):
     patch(
         "https://github.com/horovod/horovod/pull/3998.patch?full_index=1",
         sha256="9ecd4e8e315764afab20f2086e24baccf8178779a3c663196b24dc55a23a6aca",
-        when="@0.25:0.28",
+        when="@0.25:0.28.1",
     )
     conflicts("^py-torch@2.1:", when="@:0.24")
+
+    # https://github.com/horovod/horovod/pull/3957
+    patch(
+        "https://github.com/horovod/horovod/pull/3957.patch?full_index=1",
+        sha256="9e22e312c0cbf224b4135ba70bd4fd2e4170d8316c996643e360112abaac8f93",
+        when="@0.21:0.28.1",
+    )
+    conflicts("%gcc@13:", when="@:0.20")
 
     # https://github.com/horovod/horovod/pull/1835
     patch("fma.patch", when="@0.19.0:0.19.1")
