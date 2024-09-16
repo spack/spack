@@ -47,7 +47,11 @@ class LlvmOpenmp(CMakePackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
-    variant("multicompat", default=True, description="Support the GNU OpenMP runtime interface.")
+    variant(
+        "multicompat",
+        default=False,
+        description="Support gomp and the Intel openMP runtime library.",
+    )
 
     # variant for building llvm-openmp as a stand alone library
     variant(
