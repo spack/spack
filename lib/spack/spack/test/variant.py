@@ -813,21 +813,31 @@ def test_variant_definitions(mock_packages):
 
 
 @pytest.mark.parametrize(
-    "value,spec,def_ids",
+    "pkg_name,value,spec,def_ids",
     [
-        ("foo", "", [0, 1]),
-        ("bar", "", [1]),
-        ("foo", "variant-values@1.0", [0]),
-        ("foo", "variant-values@2.0", [1]),
-        ("foo", "variant-values@3.0", [1]),
-        ("foo", "variant-values@4.0", []),
-        ("bar", "variant-values@2.0", [1]),
-        ("bar", "variant-values@3.0", [1]),
-        ("bar", "variant-values@4.0", []),
+        ("variant-values", "foo", "", [0, 1]),
+        ("variant-values", "bar", "", [1]),
+        ("variant-values", "foo", "@1.0", [0]),
+        ("variant-values", "foo", "@2.0", [1]),
+        ("variant-values", "foo", "@3.0", [1]),
+        ("variant-values", "foo", "@4.0", []),
+        ("variant-values", "bar", "@2.0", [1]),
+        ("variant-values", "bar", "@3.0", [1]),
+        ("variant-values", "bar", "@4.0", []),
+        # now with a global override
+        ("variant-values-override", "bar", "", [0]),
+        ("variant-values-override", "bar", "@1.0", [0]),
+        ("variant-values-override", "bar", "@2.0", [0]),
+        ("variant-values-override", "bar", "@3.0", [0]),
+        ("variant-values-override", "bar", "@4.0", [0]),
+        ("variant-values-override", "baz", "", [0]),
+        ("variant-values-override", "baz", "@2.0", [0]),
+        ("variant-values-override", "baz", "@3.0", [0]),
+        ("variant-values-override", "baz", "@4.0", [0]),
     ],
 )
-def test_prevalidate_variant_value(mock_packages, value, spec, def_ids):
-    pkg = spack.repo.PATH.get_pkg_class("variant-values")
+def test_prevalidate_variant_value(mock_packages, pkg_name, value, spec, def_ids):
+    pkg = spack.repo.PATH.get_pkg_class(pkg_name)
 
     all_defs = [vdef for _, vdef in pkg.variant_definitions("v")]
 
@@ -841,17 +851,23 @@ def test_prevalidate_variant_value(mock_packages, value, spec, def_ids):
 
 
 @pytest.mark.parametrize(
-    "value,spec",
+    "pkg_name,value,spec",
     [
-        ("baz", ""),
-        ("bar", "variant-values@1.0"),
-        ("bar", "variant-values@4.0"),
-        ("baz", "variant-values@3.0"),
-        ("baz", "variant-values@4.0"),
+        ("variant-values", "baz", ""),
+        ("variant-values", "bar", "@1.0"),
+        ("variant-values", "bar", "@4.0"),
+        ("variant-values", "baz", "@3.0"),
+        ("variant-values", "baz", "@4.0"),
+        # and with override
+        ("variant-values-override", "foo", ""),
+        ("variant-values-override", "foo", "@1.0"),
+        ("variant-values-override", "foo", "@2.0"),
+        ("variant-values-override", "foo", "@3.0"),
+        ("variant-values-override", "foo", "@4.0"),
     ],
 )
-def test_strict_invalid_variant_values(mock_packages, value, spec):
-    pkg = spack.repo.PATH.get_pkg_class("variant-values")
+def test_strict_invalid_variant_values(mock_packages, pkg_name, value, spec):
+    pkg = spack.repo.PATH.get_pkg_class(pkg_name)
 
     with pytest.raises(spack.variant.InvalidVariantValueError):
         spack.variant.prevalidate_variant_value(
@@ -859,14 +875,23 @@ def test_strict_invalid_variant_values(mock_packages, value, spec):
         )
 
 
-def test_concretize_variant_default_with_multiple_defs(mock_packages, config):
-    # default for v1.0 is foo
-    v = spack.spec.Spec("variant-values@1.0").concretized()
-    assert v.satisfies("v=foo")
+@pytest.mark.parametrize(
+    "pkg_name,spec,satisfies,def_id",
+    [
+        ("variant-values", "@1.0", "v=foo", 0),
+        ("variant-values", "@2.0", "v=bar", 1),
+        ("variant-values", "@3.0", "v=bar", 1),
+        ("variant-values-override", "@1.0", "v=baz", 0),
+        ("variant-values-override", "@2.0", "v=baz", 0),
+        ("variant-values-override", "@3.0", "v=baz", 0),
+    ],
+)
+def test_concretize_variant_default_with_multiple_defs(
+    mock_packages, config, pkg_name, spec, satisfies, def_id
+):
+    pkg = spack.repo.PATH.get_pkg_class(pkg_name)
+    pkg_defs = [vdef for _, vdef in pkg.variant_definitions("v")]
 
-    # default changes at version 2.0
-    v = spack.spec.Spec("variant-values@2.0").concretized()
-    assert v.satisfies("v=bar")
-
-    v = spack.spec.Spec("variant-values@3.0").concretized()
-    assert v.satisfies("v=bar")
+    spec = spack.spec.Spec(f"{pkg_name}{spec}").concretized()
+    assert spec.satisfies(satisfies)
+    assert spec.package.get_variant("v") is pkg_defs[def_id]
