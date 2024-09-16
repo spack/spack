@@ -35,16 +35,12 @@ from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, 
 import spack.binary_distribution
 import spack.bootstrap.core
 import spack.caches
-import spack.cmd.buildcache
 import spack.compiler
 import spack.compilers
 import spack.config
-import spack.database
-import spack.directory_layout
 import spack.environment as ev
 import spack.error
 import spack.package_base
-import spack.package_prefs
 import spack.paths
 import spack.platforms
 import spack.repo
@@ -52,7 +48,6 @@ import spack.solver.asp
 import spack.stage
 import spack.store
 import spack.subprocess_context
-import spack.test.cray_manifest
 import spack.util.executable
 import spack.util.git
 import spack.util.gpg

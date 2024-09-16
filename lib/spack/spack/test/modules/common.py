@@ -14,7 +14,6 @@ import spack.config
 import spack.error
 import spack.modules.tcl
 import spack.package_base
-import spack.schema.modules
 import spack.spec
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec

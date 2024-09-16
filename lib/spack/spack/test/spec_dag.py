@@ -9,7 +9,6 @@ import pytest
 
 import spack.deptypes as dt
 import spack.error
-import spack.package_base
 import spack.parser
 import spack.repo
 import spack.util.hash as hashutil

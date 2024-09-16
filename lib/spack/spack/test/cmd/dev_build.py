@@ -9,7 +9,6 @@ import pytest
 
 import llnl.util.filesystem as fs
 
-import spack.build_environment
 import spack.environment as ev
 import spack.error
 import spack.spec

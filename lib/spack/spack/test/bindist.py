@@ -32,7 +32,6 @@ import spack.fetch_strategy
 import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirror
-import spack.repo
 import spack.store
 import spack.util.gpg
 import spack.util.spack_yaml as syaml

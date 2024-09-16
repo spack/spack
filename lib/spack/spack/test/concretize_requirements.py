@@ -7,7 +7,6 @@ import pathlib
 
 import pytest
 
-import spack.build_systems.generic
 import spack.config
 import spack.error
 import spack.package_base

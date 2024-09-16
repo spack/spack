@@ -9,10 +9,8 @@ import os.path
 import pytest
 
 import spack.binary_distribution as bd
-import spack.main
 import spack.mirror
 import spack.spec
-import spack.util.url
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 

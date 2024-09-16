@@ -17,9 +17,6 @@ import llnl.util.lock as ulk
 import llnl.util.tty as tty
 
 import spack.binary_distribution
-import spack.compilers
-import spack.concretize
-import spack.config
 import spack.database
 import spack.deptypes as dt
 import spack.installer as inst
@@ -29,7 +26,6 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
-import spack.version
 
 
 def _mock_repo(root, namespace):
