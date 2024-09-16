@@ -41,8 +41,7 @@ class Parallel(AutotoolsPackage, GNUMirrorPackage):
     @run_before("install")
     def filter_sbang(self):
         """Run before install so that the standard Spack sbang install hook
-        can fix up the path to the perl binary. Note that the `parallel` script
-        is run during installation to 
+        can fix up the path to the perl binary.
         """
         perl = self.spec["perl"].command
         kwargs = {"ignore_absent": False, "backup": False, "string": False}
