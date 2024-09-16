@@ -2216,7 +2216,7 @@ def relocate_package(spec):
             # For every virtual it provides in the context of this spec
             # create relocation data for that virtual
             virtuals = set()
-            for edge in spec[s.name].edges_from_dependents():
+            for edge in s.edges_from_dependents():
                 # ignore dependents in other specs
                 if edge.spec.dag_hash() in relocation_hashes:
                     virtuals.update(edge.virtuals)
