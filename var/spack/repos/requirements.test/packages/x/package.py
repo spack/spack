@@ -5,9 +5,12 @@
 from spack.package import *
 
 
-class U(Package):
-    version("6.0")
+class X(Package):
+    version("1.1")
+    version("1.0")
+    version("0.9")
 
-    depends_on("y cflags='-e1 -e2'")
+    variant("shared", default=True, description="Build shared libraries")
 
+    depends_on("y")
     depends_on("c", type="build")

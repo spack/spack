@@ -6,8 +6,7 @@ from spack.package import *
 
 
 class U(Package):
-    version("6.0")
-
-    depends_on("y cflags='-e1 -e2'")
+    version("1.1")
+    version("1.0")
 
     depends_on("c", type="build")

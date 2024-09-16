@@ -5,9 +5,10 @@
 from spack.package import *
 
 
-class U(Package):
-    version("6.0")
+class T(Package):
+    version("2.1")
+    version("2.0")
 
-    depends_on("y cflags='-e1 -e2'")
+    depends_on("u", when="@2.1:")
 
     depends_on("c", type="build")
