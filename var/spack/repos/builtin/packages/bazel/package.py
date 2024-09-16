@@ -110,6 +110,14 @@ class Bazel(Package):
         when="@5.0:5.4.0,6.0",
     )
 
+    # https://github.com/bazelbuild/bazel/pull/20785
+    patch(
+        "https://github.com/bazelbuild/bazel/pull/20785.patch?full_index=1",
+        sha256="85dde31d129bbd31e004c5c87f23cdda9295fbb22946dc6d362f23d83bae1fd8",
+        when="@6.0:6.4",
+    )
+    conflicts("%gcc@13:", when="@:5")
+
     # Fix build with Fujitsu compiler
     patch("blaze_util_posix-0.29.1.patch", when="%fj")
     patch("unix_cc_configure_fj-5.2.patch", when="@5.2:%fj")
