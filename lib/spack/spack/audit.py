@@ -290,9 +290,7 @@ def _avoid_mismatched_variants(error_cls):
 
                 # Variant cannot accept this value
                 try:
-                    spack.variant.prevalidate_variant_value(
-                        pkg_cls, variant, variant.value, strict=True
-                    )
+                    spack.variant.prevalidate_variant_value(pkg_cls, variant, strict=True)
                 except Exception:
                     summary = (
                         f"Setting the variant '{variant.name}' of the '{pkg_name}' package "
@@ -940,7 +938,7 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                 for name, variant in dependency_variants.items():
                     try:
                         spack.variant.prevalidate_variant_value(
-                            dependency_pkg_cls, variant, variant.value, dep.spec, strict=True
+                            dependency_pkg_cls, variant, dep.spec, strict=True
                         )
                     except Exception as e:
                         summary = (
@@ -1078,7 +1076,7 @@ def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
             continue
 
         try:
-            spack.variant.prevalidate_variant_value(pkg, v, v.value, constraint, strict=True)
+            spack.variant.prevalidate_variant_value(pkg, v, constraint, strict=True)
         except (
             spack.variant.InconsistentValidationError,
             spack.variant.MultipleValuesInExclusiveVariantError,

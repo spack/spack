@@ -1884,23 +1884,17 @@ class SpackSolverSetup:
 
         for variant_name in sorted(preferred_variants):
             variant = preferred_variants[variant_name]
-            values = variant.value
-
-            if not isinstance(values, tuple):
-                values = (values,)
 
             # perform validation of the variant and values
             try:
-                variant_defs = vt.prevalidate_variant_value(
-                    self.pkg_class(pkg_name), variant, values
-                )
+                variant_defs = vt.prevalidate_variant_value(self.pkg_class(pkg_name), variant)
             except (vt.InvalidVariantValueError, KeyError, ValueError) as e:
                 tty.debug(
                     f"[SETUP]: rejected {str(variant)} as a preference for {pkg_name}: {str(e)}"
                 )
                 continue
 
-            for value in values:
+            for value in variant.value_as_tuple:
                 for variant_def in variant_defs:
                     self.variant_values_from_specs.add((pkg_name, id(variant_def), value))
                 self.gen.fact(
@@ -2008,24 +2002,17 @@ class SpackSolverSetup:
 
         # variants
         for vname, variant in sorted(spec.variants.items()):
-            # make sure values is a tuple
-            values = variant.value
-            if isinstance(values, list):
-                values = tuple(values)
-            elif not isinstance(values, tuple):
-                values = (values,)
-
             # TODO: variant="*" means 'variant is defined to something', which used to
             # be meaningless in concretization, as all variants had to be defined. But
             # now that variants can be conditional, it should force a variant to exist.
-            if values == ("*",):
+            if variant.value == ("*",):
                 continue
 
-            for value in values:
+            for value in variant.value_as_tuple:
                 # ensure that the value *can* be valid for the spec
                 if spec.name and not spec.concrete and not spec.virtual:
                     variant_defs = vt.prevalidate_variant_value(
-                        self.pkg_class(spec.name), variant, value, spec
+                        self.pkg_class(spec.name), variant, spec
                     )
 
                     # Record that that this is a valid possible value. Accounts for
