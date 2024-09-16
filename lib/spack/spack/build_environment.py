@@ -624,9 +624,9 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
 
     jobs = determine_number_of_jobs(parallel=pkg.parallel)
     module.make_jobs = jobs
-
-    module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
-    module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
+    if context == Context.BUILD:
+        module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
+        module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
     # TODO: make these build deps that can be installed if not found.
     module.make = MakeExecutable("make", jobs)
