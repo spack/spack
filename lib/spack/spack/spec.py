@@ -4284,7 +4284,9 @@ class Spec:
 
         # Transitively splice any relevant nodes from spec into replacement
         # This handles all shared dependencies between self and other
-        replacement._splice_helper(spec, self_root=spec, other_root=other)
+        # This is basically a reverse transitive splice for all shared dependencies
+        # so self_root and other_root are swapped
+        replacement._splice_helper(spec, self_root=other, other_root=spec)
 
         # Intransitively splice replacement into spec
         # This is very simple now that all shared dependencies have been handled
