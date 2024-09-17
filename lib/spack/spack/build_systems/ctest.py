@@ -22,7 +22,7 @@ from spack.package import CMakePackage
 
 class CTestBuilder(spack.build_systems.cmake.CMakeBuilder):
     """
-    This builider mirrors the behavior of a CMakeBuilder, but all commands are run through
+    This builder mirrors the behavior of a CMakeBuilder, but all commands are run through
     CTest. This ensures that xml files are created through CTest.  This provides a unified
     buildstamp and improved xml over the spack generated ones.
 
