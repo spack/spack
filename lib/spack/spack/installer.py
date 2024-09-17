@@ -1682,7 +1682,7 @@ class PackageInstaller:
         # Remove any associated build task since its sequence will change
         self._remove_task(task.pkg_id)
         desc = (
-            "Queueing" if task.attempts <= 1 else f"Requeueing ({ordinal(task.attempts)} attempt)"
+            "Queueing" if task.attempts == 1 else f"Requeueing ({ordinal(task.attempts)} attempt)"
         )
         tty.debug(msg.format(desc, task.pkg_id, task.status))
 
