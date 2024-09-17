@@ -4178,7 +4178,7 @@ class Spec:
         )
 
     def _splice_detach_and_add_dependents(self, replacement, context):
-        """Helper method for Spec._intransitive_splice.
+        """Helper method for Spec._splice_helper.
 
         replacement is a node to splice in, context is the scope of dependents to consider relevant
         to this splice."""
