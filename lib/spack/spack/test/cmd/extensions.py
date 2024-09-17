@@ -16,7 +16,7 @@ extensions = SpackCommand("extensions")
 @pytest.fixture
 def python_database(mock_packages, mutable_database):
     specs = [Spec(s).concretized() for s in ["python", "py-extension1", "py-extension2"]]
-    PackageInstaller([s.package for s in specs], {"explicit": True, "fake": True}).install()
+    PackageInstaller([s.package for s in specs], explicit=True, fake=True).install()
     yield
 
 

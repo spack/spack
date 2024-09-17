@@ -183,7 +183,7 @@ def test_setup_dependent_package_inherited_modules(
 ):
     # This will raise on regression
     s = spack.spec.Spec("cmake-client-inheritor").concretized()
-    PackageInstaller([s.package], {}).install()
+    PackageInstaller([s.package]).install()
 
 
 @pytest.mark.parametrize(

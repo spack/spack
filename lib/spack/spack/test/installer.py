@@ -83,7 +83,7 @@ def create_installer(
     concretized."""
     _specs = [spack.spec.Spec(s).concretized() if isinstance(s, str) else s for s in specs]
     _install_args = {} if install_args is None else install_args
-    return inst.PackageInstaller([spec.package for spec in _specs], _install_args)
+    return inst.PackageInstaller([spec.package for spec in _specs], **_install_args)
 
 
 @pytest.mark.parametrize(
@@ -142,7 +142,7 @@ def test_install_from_cache_errors(install_mockery):
         spack.error.InstallError, match="No binary found when cache-only was specified"
     ):
         PackageInstaller(
-            [spec.package], {"package_cache_only": True, "dependencies_cache_only": True}
+            [spec.package], package_cache_only=True, dependencies_cache_only=True
         ).install()
     assert not spec.package.installed_from_binary_cache
 

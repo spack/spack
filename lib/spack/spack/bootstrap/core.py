@@ -278,7 +278,7 @@ class SourceBootstrapper(Bootstrapper):
 
         # Install the spec that should make the module importable
         with spack.config.override(self.mirror_scope):
-            PackageInstaller([concrete_spec.package], {"fail_fast": True}).install()
+            PackageInstaller([concrete_spec.package], fail_fast=True).install()
 
         if _try_import_from_store(module, query_spec=concrete_spec, query_info=info):
             self.last_search = info
@@ -301,7 +301,7 @@ class SourceBootstrapper(Bootstrapper):
         msg = "[BOOTSTRAP] Try installing '{0}' from sources"
         tty.debug(msg.format(abstract_spec_str))
         with spack.config.override(self.mirror_scope):
-            PackageInstaller([concrete_spec.package], {"fail_fast": True}).install()
+            PackageInstaller([concrete_spec.package], fail_fast=True).install()
         if _executables_in_store(executables, concrete_spec, query_info=info):
             self.last_search = info
             return True

@@ -179,7 +179,7 @@ def test_buildcache_autopush(tmp_path, install_mockery, mock_fetch):
     s = Spec("libdwarf").concretized()
 
     # Install and generate build cache index
-    PackageInstaller([s.package], {"explicit": True}).install()
+    PackageInstaller([s.package], explicit=True).install()
 
     metadata_file = spack.binary_distribution.tarball_name(s, ".spec.json")
 
@@ -380,7 +380,7 @@ def test_correct_specs_are_pushed(
     things_to_install, expected, tmpdir, monkeypatch, default_mock_concretization, temporary_store
 ):
     spec = default_mock_concretization("dttop")
-    PackageInstaller([spec.package], {"explicit": True, "fake": True}).install()
+    PackageInstaller([spec.package], explicit=True, fake=True).install()
     slash_hash = f"/{spec.dag_hash()}"
 
     class DontUpload(spack.binary_distribution.Uploader):
@@ -445,7 +445,7 @@ def test_push_and_install_with_mirror_marked_unsigned_does_not_require_extra_fla
         kwargs = {"explicit": True, "cache_only": True}
 
     spec.package.do_uninstall(force=True)
-    PackageInstaller([spec.package], kwargs).install()
+    PackageInstaller([spec.package], **kwargs).install()
 
 
 def test_skip_no_redistribute(mock_packages, config):
@@ -490,7 +490,7 @@ def test_push_without_build_deps(tmp_path, temporary_store, mock_packages, mutab
     mirror("add", "--unsigned", "my-mirror", str(tmp_path))
 
     s = spack.spec.Spec("dtrun3").concretized()
-    PackageInstaller([s.package], {"explicit": True, "fake": True}).install()
+    PackageInstaller([s.package], explicit=True, fake=True).install()
     s["dtbuild3"].package.do_uninstall()
 
     # fails when build deps are required

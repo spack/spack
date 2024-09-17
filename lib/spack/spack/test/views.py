@@ -18,7 +18,7 @@ def test_remove_extensions_ordered(install_mockery, mock_fetch, tmpdir):
     layout = DirectoryLayout(view_dir)
     view = YamlFilesystemView(view_dir, layout)
     e2 = Spec("extension2").concretized()
-    PackageInstaller([e2.package], {"explicit": True}).install()
+    PackageInstaller([e2.package], explicit=True).install()
     view.add_specs(e2)
 
     e1 = e2["extension1"]

@@ -181,7 +181,7 @@ def test_view_files_not_ignored(
 ):
     spec = Spec("view-not-ignored").concretized()
     pkg = spec.package
-    PackageInstaller([pkg], {"explicit": True}).install()
+    PackageInstaller([pkg], explicit=True).install()
     pkg.assert_installed(spec.prefix)
 
     install("view-file")  # Arbitrary package to add noise

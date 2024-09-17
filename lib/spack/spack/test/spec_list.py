@@ -201,9 +201,7 @@ class TestSpecList:
         # Put mpich in the database so it can be referred to by hash.
         mpich_1 = Spec("mpich+debug").concretized()
         mpich_2 = Spec("mpich~debug").concretized()
-        PackageInstaller(
-            [mpich_1.package, mpich_2.package], {"explicit": True, "fake": True}
-        ).install()
+        PackageInstaller([mpich_1.package, mpich_2.package], explicit=True, fake=True).install()
 
         # Create matrix and exclude +debug, which excludes the first mpich after its abstract hash
         # is resolved.

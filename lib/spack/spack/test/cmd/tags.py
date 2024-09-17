@@ -49,7 +49,7 @@ def test_tags_no_tags(monkeypatch):
 
 def test_tags_installed(install_mockery, mock_fetch):
     s = spack.spec.Spec("mpich").concretized()
-    PackageInstaller([s.package], {"explicit": True, "fake": True}).install()
+    PackageInstaller([s.package], explicit=True, fake=True).install()
 
     out = tags("-i")
     for tag in ["tag1", "tag2"]:

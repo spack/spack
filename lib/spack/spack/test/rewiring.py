@@ -28,7 +28,7 @@ def test_rewire_db(mock_fetch, install_mockery, transitive):
     """Tests basic rewiring without binary executables."""
     spec = Spec("splice-t^splice-h~foo").concretized()
     dep = Spec("splice-h+foo").concretized()
-    PackageInstaller([spec.package, dep.package], {"explicit": True}).install()
+    PackageInstaller([spec.package, dep.package], explicit=True).install()
     spliced_spec = spec.splice(dep, transitive=transitive)
     assert spec.dag_hash() != spliced_spec.dag_hash()
 
@@ -57,7 +57,7 @@ def test_rewire_bin(mock_fetch, install_mockery, transitive):
     """Tests basic rewiring with binary executables."""
     spec = Spec("quux").concretized()
     dep = Spec("garply cflags=-g").concretized()
-    PackageInstaller([spec.package, dep.package], {"explicit": True}).install()
+    PackageInstaller([spec.package, dep.package], explicit=True).install()
     spliced_spec = spec.splice(dep, transitive=transitive)
     assert spec.dag_hash() != spliced_spec.dag_hash()
 
@@ -85,7 +85,7 @@ def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
     Accuracy of metadata is left to other tests."""
     spec = Spec("quux").concretized()
     dep = Spec("garply cflags=-g").concretized()
-    PackageInstaller([spec.package, dep.package], {"explicit": True}).install()
+    PackageInstaller([spec.package, dep.package], explicit=True).install()
     spliced_spec = spec.splice(dep, transitive=True)
     spack.rewiring.rewire(spliced_spec)
 
@@ -127,7 +127,7 @@ def test_uninstall_rewired_spec(mock_fetch, install_mockery, transitive):
     """Test that rewired packages can be uninstalled as normal."""
     spec = Spec("quux").concretized()
     dep = Spec("garply cflags=-g").concretized()
-    PackageInstaller([spec.package, dep.package], {"explicit": True}).install()
+    PackageInstaller([spec.package, dep.package], explicit=True).install()
     spliced_spec = spec.splice(dep, transitive=transitive)
     spack.rewiring.rewire(spliced_spec)
     spliced_spec.package.do_uninstall()

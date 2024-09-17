@@ -186,7 +186,7 @@ def test_setdefault_command(mutable_database, mutable_config):
     other_spec, preferred = "pkg-a@1.0", "pkg-a@2.0"
 
     specs = [spack.spec.Spec(other_spec).concretized(), spack.spec.Spec(preferred).concretized()]
-    PackageInstaller([s.package for s in specs], {"explicit": True, "fake": True}).install()
+    PackageInstaller([s.package for s in specs], explicit=True, fake=True).install()
 
     writers = {
         preferred: writer_cls(spack.spec.Spec(preferred).concretized(), "default"),

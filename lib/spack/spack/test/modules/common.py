@@ -181,7 +181,7 @@ module_index:
 def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeypatch):
     """Test that installed packages that have been removed are still loadable"""
     spec = Spec("trivial-install-test-package").concretized()
-    PackageInstaller([spec.package], {"explicit": True}).install()
+    PackageInstaller([spec.package], explicit=True).install()
     spack.modules.module_types["tcl"](spec, "default", True).write()
 
     def find_nothing(*args):

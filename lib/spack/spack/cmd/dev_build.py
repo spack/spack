@@ -134,17 +134,14 @@ def dev_build(self, args):
 
     PackageInstaller(
         [spec.package],
-        {
-            "tests": tests,
-            "make_jobs": args.jobs,
-            "keep_prefix": args.keep_prefix,
-            "install_deps": not args.ignore_deps,
-            "verbose": not args.quiet,
-            "dirty": args.dirty,
-            "stop_before": args.before,
-            "skip_patch": args.skip_patch,
-            "stop_at": args.until,
-        },
+        tests=tests,
+        keep_prefix=args.keep_prefix,
+        install_deps=not args.ignore_deps,
+        verbose=not args.quiet,
+        dirty=args.dirty,
+        stop_before=args.before,
+        skip_patch=args.skip_patch,
+        stop_at=args.until,
     ).install()
 
     # drop into the build environment of the package?

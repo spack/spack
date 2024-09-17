@@ -51,7 +51,7 @@ def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
     # Install a test package
     spec = Spec("trivial-install-test-package").concretized()
     monkeypatch.setattr(spec.package, "fetcher", URLFetchStrategy(url=mock_archive.url))
-    PackageInstaller([spec.package], {"explicit": True}).install()
+    PackageInstaller([spec.package], explicit=True).install()
     pkghash = "/" + str(spec.dag_hash(7))
 
     # Put some non-relocatable file in there

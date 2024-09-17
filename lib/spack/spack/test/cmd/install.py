@@ -137,7 +137,7 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     # when nested AND in pytest
     spec = Spec("printing-package").concretized()
     pkg = spec.package
-    PackageInstaller([pkg], {"explicit": True, "verbose": True}).install()
+    PackageInstaller([pkg], explicit=True, verbose=True).install()
 
     with gzip.open(pkg.install_log_path, "rt") as f:
         out = f.read()
@@ -262,7 +262,7 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
 
     # Use the earliest commit in the respository
     spec = Spec(f"git-test-commit@{commits[-1]}").concretized()
-    PackageInstaller([spec.package], {"explicit": True}).install()
+    PackageInstaller([spec.package], explicit=True).install()
 
     # Ensure first commit file contents were written
     installed = os.listdir(spec.prefix.bin)

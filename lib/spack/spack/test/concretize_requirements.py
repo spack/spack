@@ -437,7 +437,7 @@ packages:
     store_dir = tmp_path / "store"
     with spack.store.use_store(str(store_dir)):
         s1 = Spec("y@2.5 ~shared").concretized()
-        PackageInstaller([s1.package], {"fake": True, "explicit": True}).install()
+        PackageInstaller([s1.package], fake=True, explicit=True).install()
 
         update_packages_config(conf_str)
 
