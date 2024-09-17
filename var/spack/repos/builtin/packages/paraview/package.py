@@ -236,7 +236,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("glew")
     depends_on("libxt", when="platform=linux ^[virtuals=gl] glx")
 
-    for plat in ["linux", "darwin", "cray"]:
+    for plat in ["linux", "darwin", "freebsd"]:
         with when(f"platform={plat}"):
             requires(
                 "^[virtuals=gl] glx", when="+qt", msg="Qt support requires GLX on non Windows"
