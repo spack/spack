@@ -227,6 +227,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda", when="cxxstd=17 ^cuda@:10")
     conflicts("+cuda", when="cxxstd=20 ^cuda@:11")
 
+    variant("async_malloc", default=True, description="Use CudaMallocAsync or HipMallocAsync", when="@4.2:")
+    conflicts("+async_malloc", when="~cuda ~rocm")
+
     # SYCL and OpenMPTarget require C++17 or higher
     for cxxstdver in cxxstds[: cxxstds.index("17")]:
         conflicts(
@@ -371,12 +374,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
             options.append(self.define("CMAKE_CXX_FLAGS", "-fp-model=precise"))
 
-        # Kokkos 4.2.00+ changed the default to Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=on
-        # which breaks GPU-aware with Cray-MPICH
-        # See https://github.com/kokkos/kokkos/pull/6402
-        # TODO: disable this once Cray-MPICH is fixed
-        if self.spec.satisfies("@4.2.00:") and self.spec.satisfies("^[virtuals=mpi] cray-mpich"):
-            options.append(self.define("Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC", False))
+        if "+cuda" in self.spec:
+            options.append(self.define_from_variant(Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC, "async_malloc"))
 
         # Remove duplicate options
         return lang.dedupe(options)
