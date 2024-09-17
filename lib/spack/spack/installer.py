@@ -1055,6 +1055,10 @@ class PackageInstaller:
     def __init__(
         self, packages: List["spack.package_base.PackageBase"], install_args: dict
     ) -> None:
+        # map `explicit: True` to the set of hashes of roots passed to the installer
+        if "explicit" in install_args and install_args["explicit"] is True:
+            install_args["explicit"] = {pkg.spec.dag_hash() for pkg in packages}
+
         # List of build requests
         self.build_requests = [BuildRequest(pkg, install_args) for pkg in packages]
 
@@ -1518,8 +1522,8 @@ class PackageInstaller:
             spack.store.STORE.db.add(pkg.spec, explicit=explicit)
 
         except spack.error.StopPhase as e:
-            # A StopPhase exception means that do_install was asked to
-            # stop early from clients, and is not an error at this point
+            # A StopPhase exception means that the installer was asked to stop early from clients,
+            # and is not an error at this point
             pid = f"{self.pid}: " if tty.show_pid() else ""
             tty.debug(f"{pid}{str(e)}")
             tty.debug(f"Package stage directory: {pkg.stage.source_path}")
@@ -2070,7 +2074,7 @@ class BuildProcessInstaller:
 
         Arguments:
             pkg: the package being installed.
-            install_args: arguments to do_install() from parent process.
+            install_args: arguments to the installer from parent process.
 
         """
         self.pkg = pkg
@@ -2274,7 +2278,7 @@ def build_process(pkg: "spack.package_base.PackageBase", install_args: dict) -> 
 
     Arguments:
         pkg: the package being installed.
-        install_args: arguments to do_install() from parent process.
+        install_args: arguments to installer from parent process.
 
     """
     installer = BuildProcessInstaller(pkg, install_args)
@@ -2282,6 +2286,33 @@ def build_process(pkg: "spack.package_base.PackageBase", install_args: dict) -> 
     # don't print long padded paths in executable debug output.
     with spack.util.path.filter_padding():
         return installer.run()
+
+
+def deprecate(spec: spack.spec.Spec, deprecator: spack.spec.Spec, link_fn) -> None:
+    """Deprecate this package in favor of deprecator spec"""
+    # Install deprecator if it isn't installed already
+    if not spack.store.STORE.db.query(deprecator):
+        PackageInstaller([deprecator.package], {"explicit": True}).install()
+
+    old_deprecator = spack.store.STORE.db.deprecator(spec)
+    if old_deprecator:
+        # Find this spec file from its old deprecation
+        specfile = spack.store.STORE.layout.deprecated_file_path(spec, old_deprecator)
+    else:
+        specfile = spack.store.STORE.layout.spec_file_path(spec)
+
+    # copy spec metadata to "deprecated" dir of deprecator
+    depr_specfile = spack.store.STORE.layout.deprecated_file_path(spec, deprecator)
+    fs.mkdirp(os.path.dirname(depr_specfile))
+    shutil.copy2(specfile, depr_specfile)
+
+    # Any specs deprecated in favor of this spec are re-deprecated in favor of its new deprecator
+    for deprecated in spack.store.STORE.db.specs_deprecated_by(spec):
+        deprecate(deprecated, deprecator, link_fn)
+
+    # Now that we've handled metadata, uninstall and replace with link
+    spack.package_base.PackageBase.uninstall_by_spec(spec, force=True, deprecator=deprecator)
+    link_fn(deprecator.prefix, spec.prefix)
 
 
 class OverwriteInstall:

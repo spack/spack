@@ -14,6 +14,7 @@ import spack.cmd.common.arguments
 import spack.config
 import spack.repo
 from spack.cmd.common import arguments
+from spack.installer import PackageInstaller
 
 description = "developer build: build from code in current working directory"
 section = "build"
@@ -131,17 +132,20 @@ def dev_build(self, args):
     elif args.test == "root":
         tests = [spec.name for spec in specs]
 
-    spec.package.do_install(
-        tests=tests,
-        make_jobs=args.jobs,
-        keep_prefix=args.keep_prefix,
-        install_deps=not args.ignore_deps,
-        verbose=not args.quiet,
-        dirty=args.dirty,
-        stop_before=args.before,
-        skip_patch=args.skip_patch,
-        stop_at=args.until,
-    )
+    PackageInstaller(
+        [spec.package],
+        {
+            "tests": tests,
+            "make_jobs": args.jobs,
+            "keep_prefix": args.keep_prefix,
+            "install_deps": not args.ignore_deps,
+            "verbose": not args.quiet,
+            "dirty": args.dirty,
+            "stop_before": args.before,
+            "skip_patch": args.skip_patch,
+            "stop_at": args.until,
+        },
+    ).install()
 
     # drop into the build environment of the package?
     if args.shell is not None:

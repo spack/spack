@@ -33,6 +33,7 @@ import spack.store
 import spack.util.file_cache
 import spack.variant as vt
 from spack.concretize import find_spec
+from spack.installer import PackageInstaller
 from spack.spec import CompilerSpec, Spec
 from spack.version import Version, VersionList, ver
 
@@ -1317,7 +1318,7 @@ class TestConcretize:
         # Install a spec
         root = Spec("root").concretized()
         dependency = root["changing"].copy()
-        root.package.do_install(fake=True, explicit=True)
+        PackageInstaller([root.package], {"fake": True, "explicit": True}).install()
 
         # Modify package.py
         repo_with_changing_recipe.change(context)
@@ -1343,7 +1344,7 @@ class TestConcretize:
 
         # Install a spec for which the `version_based` variant condition does not hold
         old = Spec("conditional-variant-pkg @1").concretized()
-        old.package.do_install(fake=True, explicit=True)
+        PackageInstaller([old.package], {"fake": True, "explicit": True}).install()
 
         # Then explicitly require a spec with `+version_based`, which shouldn't reuse previous spec
         new1 = Spec("conditional-variant-pkg +version_based").concretized()
@@ -1355,7 +1356,7 @@ class TestConcretize:
     def test_reuse_with_flags(self, mutable_database, mutable_config):
         spack.config.set("concretizer:reuse", True)
         spec = Spec("pkg-a cflags=-g cxxflags=-g").concretized()
-        spec.package.do_install(fake=True)
+        PackageInstaller([spec.package], {"fake": True}).install()
 
         testspec = Spec("pkg-a cflags=-g")
         testspec.concretize()
@@ -1656,7 +1657,7 @@ class TestConcretize:
         declared in package.py
         """
         root = Spec("root").concretized()
-        root.package.do_install(fake=True, explicit=True)
+        PackageInstaller([root.package], {"fake": True, "explicit": True}).install()
         repo_with_changing_recipe.change({"delete_version": True})
 
         with spack.config.override("concretizer:reuse", True):
@@ -1674,7 +1675,7 @@ class TestConcretize:
         # Install a dependency that cannot be reused with "root"
         # because of a conflict in a variant, then delete its version
         dependency = Spec("changing@1.0~foo").concretized()
-        dependency.package.do_install(fake=True, explicit=True)
+        PackageInstaller([dependency.package], {"fake": True, "explicit": True}).install()
         repo_with_changing_recipe.change({"delete_version": True})
 
         with spack.config.override("concretizer:reuse", True):
@@ -1689,7 +1690,7 @@ class TestConcretize:
         with spack.repo.use_repositories(mock_custom_repository, override=False):
             s = Spec("pkg-c").concretized()
             assert s.namespace != "builtin.mock"
-            s.package.do_install(fake=True, explicit=True)
+            PackageInstaller([s.package], {"fake": True, "explicit": True}).install()
 
         with spack.config.override("concretizer:reuse", True):
             s = Spec("pkg-c").concretized()
@@ -1701,7 +1702,7 @@ class TestConcretize:
         myrepo.add_package("zlib")
 
         builtin = Spec("zlib").concretized()
-        builtin.package.do_install(fake=True, explicit=True)
+        PackageInstaller([builtin.package], {"fake": True, "explicit": True}).install()
 
         with spack.repo.use_repositories(myrepo.root, override=False):
             with spack.config.override("concretizer:reuse", True):
@@ -1716,7 +1717,7 @@ class TestConcretize:
         with spack.repo.use_repositories(builder.root, override=False):
             s = Spec("pkg-c").concretized()
             assert s.namespace == "myrepo"
-            s.package.do_install(fake=True, explicit=True)
+            PackageInstaller([s.package], {"fake": True, "explicit": True}).install()
 
         del sys.modules["spack.pkg.myrepo.pkg-c"]
         del sys.modules["spack.pkg.myrepo"]
@@ -1934,7 +1935,7 @@ class TestConcretize:
 
         # Install the external spec
         external1 = Spec("changing@1.0").concretized()
-        external1.package.do_install(fake=True, explicit=True)
+        PackageInstaller([external1.package], {"fake": True, "explicit": True}).install()
         assert external1.external
 
         # Modify the package.py file
@@ -2307,7 +2308,7 @@ class TestConcretize:
         """
         s = Spec("py-extension1").concretized()
         python_hash = s["python"].dag_hash()
-        s.package.do_install(fake=True, explicit=True)
+        PackageInstaller([s.package], {"fake": True, "explicit": True}).install()
 
         with spack.config.override("concretizer:reuse", True):
             with_reuse = Spec(f"py-extension2 ^/{python_hash}").concretized()
@@ -3021,7 +3022,7 @@ def test_spec_filters(specs, include, exclude, expected):
 @pytest.mark.regression("38484")
 def test_git_ref_version_can_be_reused(install_mockery, do_not_check_runtimes_on_reuse):
     first_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5~opt").concretized()
-    first_spec.package.do_install(fake=True, explicit=True)
+    PackageInstaller([first_spec.package], {"fake": True, "explicit": True}).install()
 
     with spack.config.override("concretizer:reuse", True):
         # reproducer of the issue is that spack will solve when there is a change to the base spec
@@ -3045,10 +3046,10 @@ def test_reuse_prefers_standard_over_git_versions(
     so install git ref last and ensure it is not picked up by reuse
     """
     standard_spec = spack.spec.Spec(f"git-ref-package@{standard_version}").concretized()
-    standard_spec.package.do_install(fake=True, explicit=True)
+    PackageInstaller([standard_spec.package], {"fake": True, "explicit": True}).install()
 
     git_spec = spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5").concretized()
-    git_spec.package.do_install(fake=True, explicit=True)
+    PackageInstaller([git_spec.package], {"fake": True, "explicit": True}).install()
 
     with spack.config.override("concretizer:reuse", True):
         test_spec = spack.spec.Spec("git-ref-package@2").concretized()

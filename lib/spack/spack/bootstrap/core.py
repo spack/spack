@@ -46,6 +46,7 @@ import spack.util.path
 import spack.util.spack_yaml
 import spack.util.url
 import spack.version
+from spack.installer import PackageInstaller
 
 from ._common import _executables_in_store, _python_import, _root_spec, _try_import_from_store
 from .clingo import ClingoBootstrapConcretizer
@@ -277,7 +278,7 @@ class SourceBootstrapper(Bootstrapper):
 
         # Install the spec that should make the module importable
         with spack.config.override(self.mirror_scope):
-            concrete_spec.package.do_install(fail_fast=True)
+            PackageInstaller([concrete_spec.package], {"fail_fast": True}).install()
 
         if _try_import_from_store(module, query_spec=concrete_spec, query_info=info):
             self.last_search = info
@@ -300,7 +301,7 @@ class SourceBootstrapper(Bootstrapper):
         msg = "[BOOTSTRAP] Try installing '{0}' from sources"
         tty.debug(msg.format(abstract_spec_str))
         with spack.config.override(self.mirror_scope):
-            concrete_spec.package.do_install()
+            PackageInstaller([concrete_spec.package], {"fail_fast": True}).install()
         if _executables_in_store(executables, concrete_spec, query_info=info):
             self.last_search = info
             return True
