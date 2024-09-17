@@ -36,7 +36,7 @@ class CTestBuilder(spack.build_systems.cmake.CMakeBuilder):
     @property
     def std_cmake_args(self):
         """
-        Args to alawys supply to CMake. CDash args don't do anything if you don't submit
+        Args to always supply to CMake. CDash args don't do anything if you don't submit
 
         TODO: workout how to get the track,build,site mapped correctly
         Currently this ignores the spack flags, and injests the CTestConfig.cmake files
