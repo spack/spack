@@ -226,12 +226,10 @@ class Qt(Package):
             msg="Apple Silicon requires a very new version of qt",
         )
 
-    depends_on("icu4c")
-    depends_on("harfbuzz", when="@5:")
-
     depends_on("python", when="@5.7.0:", type="build")
 
     # Dependencies, then variant- and version-specific dependencies
+    depends_on("icu4c")
     depends_on("jpeg")
     depends_on("libtiff")
     depends_on("libxml2")
@@ -251,6 +249,7 @@ class Qt(Package):
     depends_on("dbus", when="@4:+dbus")
     depends_on("gl", when="@4:+opengl")
 
+    depends_on("harfbuzz", when="@5:")
     depends_on("double-conversion", when="@5.7:")
     depends_on("pcre2+multibyte", when="@5.9:")
     depends_on("llvm", when="@5.11: +doc")
