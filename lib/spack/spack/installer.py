@@ -35,6 +35,7 @@ import os
 import shutil
 import sys
 import time
+import traceback
 from collections import defaultdict
 from gzip import GzipFile
 from typing import Dict, Iterator, List, Optional, Set, Tuple
@@ -2007,7 +2008,7 @@ class PackageInstaller:
                 if task.is_build_request:
                     if single_requested_spec:
                         raise
-                    failed_build_requests.append((pkg, pkg_id, str(exc)))
+                    failed_build_requests.append((pkg, pkg_id, exc))
 
             finally:
                 # Remove the install prefix if anything went wrong during
@@ -2033,6 +2034,9 @@ class PackageInstaller:
         if failed_build_requests or missing:
             for _, pkg_id, err in failed_build_requests:
                 tty.error(f"{pkg_id}: {err}")
+                if spack.error.debug:
+                    # note: in python 3.10+ this can just be print_exception(err)
+                    traceback.print_exception(type(err), err, err.__traceback__)
 
             for _, pkg_id in missing:
                 tty.error(f"{pkg_id}: Package was not installed")
