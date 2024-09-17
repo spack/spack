@@ -62,7 +62,6 @@ import spack.compilers
 import spack.config
 import spack.deptypes as dt
 import spack.error
-import spack.main
 import spack.multimethod
 import spack.package_base
 import spack.paths
@@ -452,7 +451,7 @@ def set_wrapper_variables(pkg, env):
         env.set(SPACK_DEBUG, "TRUE")
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
     env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format("{name}-{hash:7}"))
-    env.set(SPACK_DEBUG_LOG_DIR, spack.main.spack_working_dir)
+    env.set(SPACK_DEBUG_LOG_DIR, spack.paths.spack_working_dir)
 
     if spack.config.get("config:ccache"):
         # Enable ccache in the compiler wrapper
