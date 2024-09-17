@@ -1980,12 +1980,14 @@ def pytest_runtest_setup(item):
         pytest.skip(*not_on_windows_marker.args)
 
 
+def _sequential_executor(*args, **kwargs):
+    return spack.util.parallel.SequentialExecutor()
+
+
 @pytest.fixture(autouse=True)
 def disable_parallel_buildcache_push(monkeypatch):
     """Disable process pools in tests."""
-    monkeypatch.setattr(
-        spack.util.parallel, "make_concurrent_executor", spack.util.parallel.SequentialExecutor
-    )
+    monkeypatch.setattr(spack.util.parallel, "make_concurrent_executor", _sequential_executor)
 
 
 def _root_path(x, y, *, path):
