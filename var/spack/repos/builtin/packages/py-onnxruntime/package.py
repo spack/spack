@@ -5,6 +5,29 @@
 
 from spack.package import *
 
+rocm_dependencies = [
+    "hsa-rocr-dev",
+    "hip",
+    "hiprand",
+    "hipsparse",
+    "hipfft",
+    "hipcub",
+    "hipblas",
+    "llvm-amdgpu",
+    "miopen-hip",
+    "migraphx",
+    "rocblas",
+    "rccl",
+    "rocprim",
+    "rocminfo",
+    "rocm-core",
+    "rocm-cmake",
+    "roctracer-dev",
+    "rocthrust",
+    "rocrand",
+    "rocsparse",
+]
+
 
 class PyOnnxruntime(CMakePackage, PythonExtension):
     """ONNX Runtime is a performance-focused complete scoring
@@ -31,6 +54,7 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     depends_on("cxx", type="build")  # generated
 
     variant("cuda", default=False, description="Build with CUDA support")
+    variant("rocm", default=False, description="Build with ROCm support")
 
     # cmake/CMakeLists.txt
     depends_on("cmake@3.26:", when="@1.17:", type="build")
@@ -66,6 +90,11 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     depends_on("cudnn", when="+cuda")
     depends_on("iconv", type=("build", "link", "run"))
     depends_on("re2+shared")
+    with when("+rocm"):
+        for pkg_dep in rocm_dependencies:
+            depends_on(f"{pkg_dep}@5.7:6.1", when="@1.17")
+            depends_on(f"{pkg_dep}@6.1:", when="@1.18:")
+            depends_on(pkg_dep)
 
     # Adopted from CMS experiment's fork of onnxruntime
     # https://github.com/cms-externals/onnxruntime/compare/5bc92df...d594f80
@@ -84,6 +113,7 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
         sha256="537c43b061d31bf97d2778d723a41fbd390160f9ebc304f06726e3bfd8dc4583",
         when="@1.10:1.15",
     )
+    patch("0001-Find-ROCm-Packages-Individually.patch", when="@1.17: +rocm")
 
     dynamic_cpu_arch_values = ("NOAVX", "AVX", "AVX2", "AVX512")
 
@@ -99,10 +129,28 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     root_cmakelists_dir = "cmake"
     build_directory = "."
 
+    def patch(self):
+        if self.spec.satisfies("@1.7: + rocm"):
+            filter_file(
+                r"${onnxruntime_ROCM_HOME}/.info/version-dev",
+                "{0}/.info/version".format(self.spec["rocm-core"].prefix),
+                "cmake/CMakeLists.txt",
+                string=True,
+            )
+        if self.spec.satisfies("@1.8: + rocm"):
+            filter_file(
+                r"${onnxruntime_ROCM_HOME}/.info/version",
+                "{0}/.info/version".format(self.spec["rocm-core"].prefix),
+                "cmake/CMakeLists.txt",
+                string=True,
+            )
+
     def setup_build_environment(self, env):
         value = self.spec.variants["dynamic_cpu_arch"].value
         value = self.dynamic_cpu_arch_values.index(value)
         env.set("MLAS_DYNAMIC_CPU_ARCH", str(value))
+        if self.spec.satisfies("+rocm"):
+            env.set("MIOPEN_PATH", self.spec["miopen-hip"].prefix)
 
     def setup_run_environment(self, env):
         value = self.spec.variants["dynamic_cpu_arch"].value
@@ -137,6 +185,18 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
                 )
             )
 
+        if self.spec.satisfies("+rocm"):
+            args.extend(
+                (
+                    define("CMAKE_HIP_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++"),
+                    define("onnxruntime_USE_MIGRAPHX", "ON"),
+                    define("onnxruntime_MIGRAPHX_HOME", self.spec["migraphx"].prefix),
+                    define("onnxruntime_USE_ROCM", "ON"),
+                    define("onnxruntime_ROCM_HOME", self.spec["hip"].prefix),
+                    define("onnxruntime_ROCM_VERSION", self.spec["hip"].version),
+                    define("onnxruntime_USE_COMPOSABLE_KERNEL", "OFF"),
+                )
+            )
         return args
 
     @run_after("install")
