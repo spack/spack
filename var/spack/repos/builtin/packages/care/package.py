@@ -3,10 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import socket
+
 from spack.package import *
 
+from .blt import llnl_link_helpers
 
-class Care(CMakePackage, CudaPackage, ROCmPackage):
+
+class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     """
     CHAI and RAJA extensions (includes data structures and algorithms).
     """
@@ -64,6 +68,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("fortran", type="build")  # generated
 
     variant("openmp", default=False, description="Build with OpenMP support")
+    variant("mpi", default=False, description="Enable MPI support")
     variant(
         "implicit_conversions",
         default=False,
@@ -94,6 +99,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("camp", when="@:0.11.1")
 
     depends_on("umpire")
+    depends_on("umpire+mpi", when="+mpi")
     depends_on("umpire@2024.07.0:", when="@0.13.2:")
     depends_on("umpire@2024.02.1:", when="@0.13.0:")
     depends_on("umpire@2024.02.0:", when="@0.12.0:")
@@ -155,71 +161,163 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
                 "chai+rocm amdgpu_target={0}".format(arch_), when="amdgpu_target={0}".format(arch_)
             )
 
-    def cmake_args(self):
-        spec = self.spec
-        from_variant = self.define_from_variant
 
-        options = []
-        options.append("-DBLT_SOURCE_DIR={0}".format(spec["blt"].prefix))
+    def _get_sys_type(self, spec):
+        sys_type = spec.architecture
 
-        if spec.satisfies("+cuda"):
-            options.extend(
-                [
-                    "-DENABLE_CUDA=ON",
-                    "-DCUDA_TOOLKIT_ROOT_DIR=" + spec["cuda"].prefix,
-                    "-DNVTOOLSEXT_DIR=" + spec["cuda"].prefix,
-                    "-DCUB_DIR=" + spec["cub"].prefix,
-                ]
-            )
+        if "SYS_TYPE" in env:
+            sys_type = env["SYS_TYPE"]
+        return sys_type
 
-            if not spec.satisfies("cuda_arch=none"):
-                cuda_arch = spec.variants["cuda_arch"].value
-                # Please note that within care, CUDA_ARCH is assigned to -code
-                # and likewise CUDA_CODE is assigned to -arch, so these are
-                # intentionally flipped here.
-                options.append("-DCUDA_ARCH=sm_{0}".format(cuda_arch[0]))
-                options.append("-DCUDA_CODE=compute_{0}".format(cuda_arch[0]))
-        else:
-            options.append("-DENABLE_CUDA=OFF")
 
-        if spec.satisfies("+rocm"):
-            options.extend(["-DENABLE_HIP=ON", "-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix)])
+    @property
+    def cache_name(self):
+        hostname = socket.gethostname()
 
-            archs = self.spec.variants["amdgpu_target"].value
-            if archs != "none":
-                arch_str = ",".join(archs)
-                options.append("-DHIP_HIPCC_FLAGS=--amdgpu-target={0}".format(arch_str))
-        else:
-            options.append("-DENABLE_HIP=OFF")
-
-        options.extend(
-            [
-                from_variant("CARE_ENABLE_IMPLICIT_CONVERSIONS", "implicit_conversions"),
-                from_variant("CARE_ENABLE_LOOP_FUSER", "loop_fuser"),
-                self.define("CAMP_DIR", spec["camp"].prefix.share.camp.cmake),
-                self.define("UMPIRE_DIR", spec["umpire"].prefix.share.umpire.cmake),
-                self.define("RAJA_DIR", spec["raja"].prefix.share.raja.cmake),
-                self.define("CHAI_DIR", spec["chai"].prefix.share.chai.cmake),
-                from_variant("CARE_ENABLE_TESTS", "tests"),
-            ]
+        if "SYS_TYPE" in env:
+            hostname = hostname.rstrip("1234567890")
+        return "{0}-{1}-{2}@{3}-{4}.cmake".format(
+            hostname,
+            self._get_sys_type(self.spec),
+            self.spec.compiler.name,
+            self.spec.compiler.version,
+            self.spec.dag_hash(8)
         )
 
+
+    def initconfig_compiler_entries(self):
+        spec = self.spec
+        compiler = self.compiler
+        entries = super().initconfig_compiler_entries()
+
+        #### BEGIN: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
+        flags = spec.compiler_flags
+
+        # use global spack compiler flags
+        cppflags = " ".join(flags["cppflags"])
+
+        if cppflags:
+            # avoid always ending up with " " with no flags defined
+            cppflags += " "
+
+        cflags = cppflags + " ".join(flags["cflags"])
+
+        if cflags:
+            entries.append(cmake_cache_string("CMAKE_C_FLAGS", cflags))
+
+        cxxflags = cppflags + " ".join(flags["cxxflags"])
+
+        if cxxflags:
+            entries.append(cmake_cache_string("CMAKE_CXX_FLAGS", cxxflags))
+
+        fflags = " ".join(flags["fflags"])
+
+        if fflags:
+            entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
+
+        #### END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
+
+        llnl_link_helpers(entries, spec, compiler)
+
+        return entries
+
+
+    def initconfig_hardware_entries(self):
+        spec = self.spec
+        entries = super().initconfig_hardware_entries()
+
+        entries.append(cmake_cache_option("ENABLE_OPENMP", spec.satisfies("+openmp")))
+
+        if spec.satisfies("+cuda"):
+            entries.append(cmake_cache_option("ENABLE_CUDA", True))
+            entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION", True))
+            entries.append(cmake_cache_string("NVTOOLSEXT_DIR", spec["cuda"].prefix))
+            entries.append(cmake_cache_string("CUB_DIR", spec["cub"].prefix))
+        else:
+            entries.append(cmake_cache_option("ENABLE_CUDA", False))
+
+        if spec.satisfies("+rocm"):
+            entries.append(cmake_cache_option("ENABLE_HIP", True))
+            if archs != "none":
+                arch_str = ",".join(archs)
+                entries.append(cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str)))
+        else:
+            entries.append(cmake_cache_option("ENABLE_HIP", False))
+
+        return entries
+
+
+    def initconfig_mpi_entries(self):
+        spec = self.spec
+
+        entries = super(Care, self).initconfig_mpi_entries()
+        entries.append(cmake_cache_option("ENABLE_MPI", spec.satisfies("+mpi")))
+
+        return entries
+
+
+    def initconfig_package_entries(self):
+        spec = self.spec
+        entries = []
+
+        # TPL locations
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# TPLs")
+        entries.append("#------------------{0}\n".format("-" * 60))
+
+        entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec["blt"].prefix))
+        entries.append(cmake_cache_path("CAMP_DIR", spec["camp"].prefix))
+        entries.append(cmake_cache_path("UMPIRE_DIR", spec["umpire"].prefix))
+        entries.append(cmake_cache_path("RAJA_DIR", spec["raja"].prefix))
+        entries.append(cmake_cache_path("CHAI_DIR", spec["chai"].prefix))
+
+        # Build options
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# Build Options")
+        entries.append("#------------------{0}\n".format("-" * 60))
+
+        entries.append(cmake_cache_string(
+            "CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
+
+        entries.append(cmake_cache_option(
+            "ENABLE_TESTS", spec.satisfies("+tests")))
+        entries.append(cmake_cache_option(
+            "CARE_ENABLE_TESTS", spec.satisfies("+tests")))
         # For tests to work, we also need BLT_ENABLE_TESTS to be on.
         # This will take care of the gtest dependency. CARE developers should
         # consider consolidating these flags in the future.
-        options.append(from_variant("BLT_ENABLE_TESTS", "tests"))
+        entries.append(cmake_cache_option(
+            "BLT_ENABLE_TESTS", spec.satisfies("+tests")))
 
         # There are both CARE_ENABLE_* and ENABLE_* variables in here because
         # one controls the BLT infrastructure and the other controls the CARE
         # infrastructure. The goal is to just be able to use the CARE_ENABLE_*
         # variables, but CARE isn't set up correctly for that yet.
-        options.append(from_variant("ENABLE_BENCHMARKS", "benchmarks"))
-        options.append(from_variant("CARE_ENABLE_BENCHMARKS", "benchmarks"))
+        entries.append(cmake_cache_option(
+            "ENABLE_BENCHMARKS", spec.satisfies("+benchmarks")))
+        entries.append(cmake_cache_option(
+            "CARE_ENABLE_BENCHMARKS", spec.satisfies("+benchmarks")))
 
-        options.append(from_variant("ENABLE_EXAMPLES", "examples"))
-        options.append(from_variant("CARE_ENABLE_EXAMPLES", "examples"))
+        entries.append(cmake_cache_option(
+            "ENABLE_EXAMPLES", spec.satisfies("+examples")))
+        entries.append(cmake_cache_option(
+            "CARE_ENABLE_EXAMPLES", spec.satisfies("+examples")))
 
-        options.append(from_variant("ENABLE_DOCS", "docs"))
-        options.append(from_variant("CARE_ENABLE_DOCS", "docs"))
+        entries.append(cmake_cache_option(
+            "ENABLE_DOCS", spec.satisfies("+docs")))
+        entries.append(cmake_cache_option(
+            "CARE_ENABLE_DOCS", spec.satisfies("+docs")))
 
+        entries.append(cmake_cache_option(
+            "CARE_ENABLE_IMPLICIT_CONVERSIONS", spec.satisfies("+implicit_conversions")))
+
+        entries.append(cmake_cache_option(
+            "CARE_ENABLE_LOOP_FUSER", spec.satisfies("+loop_fuser")))
+
+        return entries
+
+
+    def cmake_args(self):
+        options = []
         return options
+
