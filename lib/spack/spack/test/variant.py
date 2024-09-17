@@ -9,7 +9,7 @@ import pytest
 import spack.error
 import spack.repo
 import spack.variant
-from spack.spec import VariantMap
+from spack.spec import Spec, VariantMap
 from spack.variant import (
     BoolValuedVariant,
     DuplicateVariantError,
@@ -597,9 +597,9 @@ class TestVariant:
 
 
 class TestVariantMapTest:
-    def test_invalid_values(self):
+    def test_invalid_values(self) -> None:
         # Value with invalid type
-        a = VariantMap(None)
+        a = VariantMap(Spec())
         with pytest.raises(TypeError):
             a["foo"] = 2
 
@@ -618,17 +618,17 @@ class TestVariantMapTest:
         with pytest.raises(KeyError):
             a["bar"] = MultiValuedVariant("foo", "bar")
 
-    def test_set_item(self):
+    def test_set_item(self) -> None:
         # Check that all the three types of variants are accepted
-        a = VariantMap(None)
+        a = VariantMap(Spec())
 
         a["foo"] = BoolValuedVariant("foo", True)
         a["bar"] = SingleValuedVariant("bar", "baz")
         a["foobar"] = MultiValuedVariant("foobar", "a, b, c, d, e")
 
-    def test_substitute(self):
+    def test_substitute(self) -> None:
         # Check substitution of a key that exists
-        a = VariantMap(None)
+        a = VariantMap(Spec())
         a["foo"] = BoolValuedVariant("foo", True)
         a.substitute(SingleValuedVariant("foo", "bar"))
 
@@ -637,15 +637,15 @@ class TestVariantMapTest:
         with pytest.raises(KeyError):
             a.substitute(BoolValuedVariant("bar", True))
 
-    def test_satisfies_and_constrain(self):
+    def test_satisfies_and_constrain(self) -> None:
         # foo=bar foobar=fee feebar=foo
-        a = VariantMap(None)
+        a = VariantMap(Spec())
         a["foo"] = MultiValuedVariant("foo", "bar")
         a["foobar"] = SingleValuedVariant("foobar", "fee")
         a["feebar"] = SingleValuedVariant("feebar", "foo")
 
         # foo=bar,baz foobar=fee shared=True
-        b = VariantMap(None)
+        b = VariantMap(Spec())
         b["foo"] = MultiValuedVariant("foo", "bar, baz")
         b["foobar"] = SingleValuedVariant("foobar", "fee")
         b["shared"] = BoolValuedVariant("shared", True)
@@ -657,7 +657,7 @@ class TestVariantMapTest:
         assert not b.satisfies(a)
 
         # foo=bar,baz foobar=fee feebar=foo shared=True
-        c = VariantMap(None)
+        c = VariantMap(Spec())
         c["foo"] = MultiValuedVariant("foo", "bar, baz")
         c["foobar"] = SingleValuedVariant("foobar", "fee")
         c["feebar"] = SingleValuedVariant("feebar", "foo")
@@ -666,8 +666,8 @@ class TestVariantMapTest:
         assert a.constrain(b)
         assert a == c
 
-    def test_copy(self):
-        a = VariantMap(None)
+    def test_copy(self) -> None:
+        a = VariantMap(Spec())
         a["foo"] = BoolValuedVariant("foo", True)
         a["bar"] = SingleValuedVariant("bar", "baz")
         a["foobar"] = MultiValuedVariant("foobar", "a, b, c, d, e")
@@ -675,13 +675,30 @@ class TestVariantMapTest:
         c = a.copy()
         assert a == c
 
-    def test_str(self):
-        c = VariantMap(None)
+    def test_str(self) -> None:
+        c = VariantMap(Spec())
         c["foo"] = MultiValuedVariant("foo", "bar, baz")
         c["foobar"] = SingleValuedVariant("foobar", "fee")
         c["feebar"] = SingleValuedVariant("feebar", "foo")
         c["shared"] = BoolValuedVariant("shared", True)
         assert str(c) == "+shared feebar=foo foo=bar,baz foobar=fee"
+
+    def test_concrete(self, mock_packages, config) -> None:
+        spec = Spec("pkg-a")
+        vm = VariantMap(spec)
+        assert not vm.concrete
+
+        # concrete if associated spec is concrete
+        spec.concretize()
+        assert vm.concrete
+
+        # concrete if all variants are present (even if spec not concrete)
+        spec._mark_concrete(False)
+        assert spec.variants.concrete
+
+        # remove a variant to test the condition
+        del spec.variants["foo"]
+        assert not spec.variants.concrete
 
 
 def test_disjoint_set_initialization_errors():
