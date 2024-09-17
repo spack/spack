@@ -38,7 +38,6 @@ import spack.config
 import spack.dependency
 import spack.deptypes as dt
 import spack.directives
-import spack.environment
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
@@ -1696,8 +1695,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
                 # should this attempt to download the source and set one? This
                 # probably only happens for source repositories which are
                 # referenced by branch name rather than tag or commit ID.
-                env = spack.environment.active_environment()
-                from_local_sources = env and env.is_develop(self.spec)
+                from_local_sources = "dev_path" in self.spec.variants
                 if self.has_code and not self.spec.external and not from_local_sources:
                     message = "Missing a source id for {s.name}@{s.version}"
                     tty.debug(message.format(s=self))
