@@ -4180,7 +4180,8 @@ class Spec:
     def _splice_detach_and_add_dependents(self, replacement, context):
         """Helper method for Spec._intransitive_splice.
 
-        replacement is a copy of other with all deps cleared. Other is the argument from splice."""
+        replacement is a node to splice in, context is the scope of dependents to consider relevant
+        to this splice."""
         # Update build_spec attributes for all transitive dependents
         # before we start changing their dependencies
         ancestors_in_context = [
