@@ -8,9 +8,11 @@ import pytest
 
 import spack.error
 import spack.repo
+import spack.spec
 import spack.variant
 from spack.spec import Spec, VariantMap
 from spack.variant import (
+    AbstractVariant,
     BoolValuedVariant,
     DuplicateVariantError,
     InconsistentValidationError,
@@ -912,3 +914,36 @@ def test_concretize_variant_default_with_multiple_defs(
     spec = spack.spec.Spec(f"{pkg_name}{spec}").concretized()
     assert spec.satisfies(satisfies)
     assert spec.package.get_variant("v") is pkg_defs[def_id]
+
+
+@pytest.mark.parametrize(
+    "spec,variant_name,after",
+    [
+        # dev_path is a special case
+        ("foo dev_path=/path/to/source", "dev_path", SingleValuedVariant),
+        # reserved name: won't be touched
+        ("foo patches=2349dc44", "patches", AbstractVariant),
+        # simple case -- one definition applies
+        ("variant-values@1.0 v=foo", "v", SingleValuedVariant),
+        # simple, but with bool valued variant
+        ("pkg-a bvv=true", "bvv", BoolValuedVariant),
+        # variant doesn't exist at version
+        ("variant-values@4.0 v=bar", "v", spack.spec.InvalidVariantForSpecError),
+        # multiple definitions, so not yet knowable
+        ("variant-values@2.0 v=bar", "v", AbstractVariant),
+    ],
+)
+def test_substitute_abstract_variants(mock_packages, spec, variant_name, after):
+    spec = Spec(spec)
+
+    # all variants start out as AbstractVariant
+    assert isinstance(spec.variants[variant_name], AbstractVariant)
+
+    if issubclass(after, Exception):
+        # if we're checking for an error, use pytest.raises
+        with pytest.raises(after):
+            spack.spec.substitute_abstract_variants(spec)
+    else:
+        # ensure that the type of the variant on the spec has been narrowed (or not)
+        spack.spec.substitute_abstract_variants(spec)
+        assert isinstance(spec.variants[variant_name], after)

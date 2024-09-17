@@ -4454,7 +4454,7 @@ class VariantMap(lang.HashableMap):
 
 def substitute_abstract_variants(spec: Spec):
     """Uses the information in `spec.package` to turn any variant that needs
-    it into a SingleValuedVariant.
+    it into a SingleValuedVariant or BoolValuedVariant.
 
     This method is best effort. All variants that can be substituted will be
     substituted before any error is raised.
@@ -4473,7 +4473,12 @@ def substitute_abstract_variants(spec: Spec):
             continue
 
         variant_defs = spec.package_class.variant_definitions(name)
-        if not any(when.intersects(spec) for when, _ in variant_defs):
+        valid_defs = []
+        for when, vdef in variant_defs:
+            if when.intersects(spec):
+                valid_defs.append(vdef)
+
+        if not valid_defs:
             if name not in spec.package_class.variant_names():
                 unknown.append(name)
             else:
@@ -4481,7 +4486,7 @@ def substitute_abstract_variants(spec: Spec):
                 raise InvalidVariantForSpecError(v.name, f"({', '.join(whens)})", spec)
             continue
 
-        (_, pkg_variant), *rest = variant_defs
+        pkg_variant, *rest = valid_defs
         if rest:
             continue
 
