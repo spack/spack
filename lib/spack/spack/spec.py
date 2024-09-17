@@ -4270,7 +4270,7 @@ class Spec:
 
     def _splice_intransitive(self, other):
         """Execute an intransitive splice. See ``Spec.splice`` for details."""
-        spec = self.copy()
+        spec = self.copy(deps=dt.ALL & ~dt.BUILD)
         replacement = other.copy(deps=dt.ALL & ~dt.BUILD)
 
         # Ignore build deps in spec while doing the splice
@@ -4305,7 +4305,7 @@ class Spec:
     def _splice_transitive(self, other):
         """Execute a transitive splice. See ``Spec.splice`` for details"""
         spec = self.copy(deps=dt.ALL & ~dt.BUILD)
-        replacement = other.copy()
+        replacement = other.copy(deps=dt.ALL & ~dt.BUILD)
 
         # Ignore build deps in spec while doing the splice
         # They will be added back in at the end
