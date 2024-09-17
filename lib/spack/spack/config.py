@@ -1731,6 +1731,39 @@ def parse_spec_from_yaml_string(string: str) -> "spack.spec.Spec":
         raise e
 
 
+def determine_number_of_jobs(
+    *,
+    parallel: bool = False,
+    max_cpus: int = cpus_available(),
+    config: Optional[Configuration] = None,
+) -> int:
+    """
+    Packages that require sequential builds need 1 job. Otherwise we use the
+    number of jobs set on the command line. If not set, then we use the config
+    defaults (which is usually set through the builtin config scope), but we
+    cap to the number of CPUs available to avoid oversubscription.
+
+    Parameters:
+        parallel: true when package supports parallel builds
+        max_cpus: maximum number of CPUs to use (defaults to cpus_available())
+        config: configuration object (defaults to global config)
+    """
+    if not parallel:
+        return 1
+
+    cfg = config or CONFIG
+
+    # Command line overrides all
+    try:
+        command_line = cfg.get("config:build_jobs", default=None, scope="command_line")
+        if command_line is not None:
+            return command_line
+    except ValueError:
+        pass
+
+    return min(max_cpus, cfg.get("config:build_jobs", 16))
+
+
 class ConfigSectionError(spack.error.ConfigError):
     """Error for referring to a bad config section name in a configuration."""
 

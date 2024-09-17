@@ -77,7 +77,6 @@ from spack import traverse
 from spack.context import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
-from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
@@ -559,7 +558,7 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
         module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
         module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
-    jobs = determine_number_of_jobs(parallel=pkg.parallel)
+    jobs = spack.config.determine_number_of_jobs(parallel=pkg.parallel)
     module.make_jobs = jobs
 
     # TODO: make these build deps that can be installed if not found.
