@@ -53,7 +53,7 @@ def check_spec(abstract, concrete):
             cflag = concrete.compiler_flags[flag]
             assert set(aflag) <= set(cflag)
 
-    for name in spack.repo.PATH.get_pkg_class(abstract.name).variants:
+    for name in spack.repo.PATH.get_pkg_class(abstract.name).variant_names():
         assert name in concrete.variants
 
     for flag in concrete.compiler_flags.valid_compiler_flags():
@@ -931,7 +931,9 @@ class TestConcretize:
         ],
     )
     def test_conditional_variants_fail(self, bad_spec):
-        with pytest.raises((spack.error.UnsatisfiableSpecError, vt.InvalidVariantForSpecError)):
+        with pytest.raises(
+            (spack.error.UnsatisfiableSpecError, spack.spec.InvalidVariantForSpecError)
+        ):
             _ = Spec("conditional-variant-pkg" + bad_spec).concretized()
 
     @pytest.mark.parametrize(
@@ -1374,7 +1376,7 @@ class TestConcretize:
     )
     def test_error_message_for_inconsistent_variants(self, spec_str):
         s = Spec(spec_str)
-        with pytest.raises(RuntimeError, match="not found in package"):
+        with pytest.raises(vt.UnknownVariantError):
             s.concretize()
 
     @pytest.mark.regression("22533")
