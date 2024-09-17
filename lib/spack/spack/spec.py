@@ -4268,69 +4268,6 @@ class Spec:
                 changed = True
                 break
 
-    def _splice_intransitive(self, other):
-        """Execute an intransitive splice. See ``Spec.splice`` for details."""
-        spec = self.copy(deps=dt.ALL & ~dt.BUILD)
-        replacement = other.copy(deps=dt.ALL & ~dt.BUILD)
-
-        # Ignore build deps in spec while doing the splice
-        # They will be added back in at the end
-        for edge in replacement.traverse_edges(cover="edges"):
-            edge.depflag &= ~dt.BUILD
-
-        # We’ll come back to these later
-        # We need the list of pairs while the two specs still match
-        node_pairs = list(zip(other.traverse(deptype=dt.ALL & ~dt.BUILD), replacement.traverse()))
-
-        # Transitively splice any relevant nodes from spec into replacement
-        # This handles all shared dependencies between self and other
-        # This is basically a reverse transitive splice for all shared dependencies
-        # so self_root and other_root are swapped
-        replacement._splice_helper(spec, self_root=other, other_root=spec)
-
-        # Intransitively splice replacement into spec
-        # This is very simple now that all shared dependencies have been handled
-        for node in spec.traverse(order="topo", deptype=dt.LINK | dt.RUN):
-            if node._splice_match(other, self_root=spec, other_root=other):
-                node._splice_detach_and_add_dependents(replacement, context=spec)
-
-        # Set up build dependencies for modified nodes
-        # Also modify build_spec because the existing ones had build deps removed
-        for orig, copy in node_pairs:
-            for edge in orig.edges_to_dependencies(depflag=dt.BUILD):
-                copy._add_dependency(edge.spec, depflag=dt.BUILD, virtuals=edge.virtuals)
-            if copy._build_spec:
-                copy._build_spec = orig.build_spec.copy()
-
-        return spec
-
-    def _splice_transitive(self, other):
-        """Execute a transitive splice. See ``Spec.splice`` for details"""
-        spec = self.copy(deps=dt.ALL & ~dt.BUILD)
-        replacement = other.copy(deps=dt.ALL & ~dt.BUILD)
-
-        # Ignore build deps in spec while doing the splice
-        # They will be added back in at the end
-        for edge in spec.traverse_edges(cover="edges"):
-            edge.depflag &= ~dt.BUILD
-
-        # We’ll come back to these later
-        # We need the list of pairs while the two specs still match
-        node_pairs = list(zip(self.traverse(deptype=dt.ALL & ~dt.BUILD), spec.traverse()))
-
-        # Execute the main loop of the splice
-        spec._splice_helper(replacement, self_root=spec, other_root=other)
-
-        # Set up build dependencies for modified nodes
-        # Also modify build_spec because the existing ones had build deps removed
-        for orig, copy in node_pairs:
-            for edge in orig.edges_to_dependencies(depflag=dt.BUILD):
-                copy._add_dependency(edge.spec, depflag=dt.BUILD, virtuals=edge.virtuals)
-            if copy._build_spec:
-                copy._build_spec = orig.build_spec.copy()
-
-        return spec
-
     def splice(self, other, transitive):
         """Splices dependency "other" into this ("target") Spec, and return the
         result as a concrete Spec.
@@ -4366,10 +4303,47 @@ class Spec:
             msg += f" or {other_str} fails to provide a virtual used in {self_str}"
             raise SpliceError(msg)
 
+        # Copies of all non-build deps, build deps will get added at the end
+        spec = self.copy(deps=dt.ALL & ~dt.BUILD)
+        replacement = other.copy(deps=dt.ALL & ~dt.BUILD)
+
+        # For an intransitive splice, we do a reverse transitive splice
+        # to handle the shared dependencies, and then a single pass to
+        # handle the intransitive splice itself
+        base = spec if transitive else replacement
+        source = self if transitive else other
+        new = replacement if transitive else spec
+        new_source = other if transitive else self
+
+        # Ignore build deps in the modified spec while doing the splice
+        # They will be added back in at the end
+        for edge in base.traverse_edges(cover="edges"):
+            edge.depflag &= ~dt.BUILD
+
+        # We’ll come back to these later
+        # We need the list of pairs while the two specs still match
+        node_pairs = list(zip(source.traverse(deptype=dt.ALL & ~dt.BUILD), base.traverse()))
+
+        # Transitively splice any relevant nodes from new into base
+        # This handles all shared dependencies between self and other
+        base._splice_helper(new, self_root=source, other_root=new_source)
+
+        # Intransitively splice replacement into spec
+        # This is very simple now that all shared dependencies have been handled
         if not transitive:
-            return self._splice_intransitive(other)
-        else:
-            return self._splice_transitive(other)
+            for node in spec.traverse(order="topo", deptype=dt.LINK | dt.RUN):
+                if node._splice_match(other, self_root=spec, other_root=other):
+                    node._splice_detach_and_add_dependents(replacement, context=spec)
+
+        # Set up build dependencies for modified nodes
+        # Also modify build_spec because the existing ones had build deps removed
+        for orig, copy in node_pairs:
+            for edge in orig.edges_to_dependencies(depflag=dt.BUILD):
+                copy._add_dependency(edge.spec, depflag=dt.BUILD, virtuals=edge.virtuals)
+            if copy._build_spec:
+                copy._build_spec = orig.build_spec.copy()
+
+        return spec
 
     def clear_cached_hashes(self, ignore=()):
         """
