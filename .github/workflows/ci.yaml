@@ -88,13 +88,13 @@ jobs:
     - name: Success
       run: "true"
 
-  code-coverage:
+  coverage:
     needs: [ unit-tests, prechecks ]
     uses: ./.github/workflows/coverage.yml
     secrets: inherit
 
   all:
-    needs: [ upload-coverage, bootstrap ]
+    needs: [ coverage, bootstrap ]
     runs-on: ubuntu-latest
     steps:
     - name: Success
