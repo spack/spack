@@ -1064,7 +1064,6 @@ class PackageInstaller:
         overwrite: Optional[Union[List[str], Set[str]]] = None,
         fail_fast: bool = False,
         fake: bool = False,
-        force: bool = False,
         include_build_deps: bool = False,
         install_deps: bool = True,
         install_package: bool = True,
@@ -1090,7 +1089,6 @@ class PackageInstaller:
             fail_fast: Fail if any dependency fails to install; otherwise, the default is to
                 install as many dependencies as possible (i.e., best effort installation).
             fake: Don't really build; install fake stub files instead.
-            force: Install again, even if already installed.
             install_deps: Install dependencies before installing this package
             install_source: By default, source is not installed, but for debugging it might be
                 useful to keep it around.
@@ -1117,7 +1115,6 @@ class PackageInstaller:
             "explicit": explicit,
             "fail_fast": fail_fast,
             "fake": fake,
-            "force": force,
             "include_build_deps": include_build_deps,
             "install_deps": install_deps,
             "install_package": install_package,
