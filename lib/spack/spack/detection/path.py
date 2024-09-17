@@ -18,6 +18,7 @@ import llnl.util.filesystem
 import llnl.util.lang
 import llnl.util.tty
 
+import spack.spec
 import spack.util.elf as elf_utils
 import spack.util.environment
 import spack.util.environment as environment

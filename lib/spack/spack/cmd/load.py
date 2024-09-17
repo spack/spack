@@ -6,6 +6,7 @@
 import sys
 
 import spack.cmd
+import spack.cmd.common
 import spack.environment as ev
 import spack.store
 import spack.user_environment as uenv
