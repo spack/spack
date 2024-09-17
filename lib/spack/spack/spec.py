@@ -4230,24 +4230,15 @@ class Spec:
         name_analogues = [a for a in analogues if a.name == self.name]
         return name_analogues or analogues
 
-    def _splice_intransitive(self, other):
-        """Execute an intransitive splice. See ``Spec.splice`` for details."""
-        spec = self.copy()
-        replacement = other.copy()
+    def _splice_helper(self, replacement, self_root, other_root):
+        """Main loop of a transitive splice.
 
-        # Ignore build deps in spec while doing the splice
-        # They will be added back in at the end
-        for edge in replacement.traverse_edges(cover="edges"):
-            if edge.depflag & dt.BUILD:
-                edge.depflag &= ~dt.BUILD
-                edge.parent.clear_cached_hashes(ignore=(ht.package_hash.attr,))
-
-        # We’ll come back to these later
-        # We need the list of pairs while the two specs still match
-        node_pairs = list(zip(other.traverse(deptype=dt.ALL & ~dt.BUILD), replacement.traverse()))
-
-        # Lookups to help make sure we don't try to replace nodes from spec with nodes from spec
-        spec_ids = [id(s) for s in spec.traverse()]
+        Topo traversal of self ensures that if a node is unreachable in the end result, we will
+        never consider it.
+        For each node, find any analogue in replacement and swap it in.
+        We assume only build deps are handled outside of this method
+        """
+        ids = [id(s) for s in replacement.traverse()]
 
         changed = True
         while changed:
@@ -4256,12 +4247,14 @@ class Spec:
             # Intentionally allowing traversal to change on each iteration
             # using breadth-first traversal to ensure we only reach nodes that will
             # be in final result
-            for node in replacement.traverse(root=False, order="topo", deptype=dt.LINK | dt.RUN):
-                # If this node is already part of Spec that's been swapped in, don't consider it
-                if id(node) in spec_ids:
+            for node in self.traverse(root=False, order="topo", deptype=dt.ALL & ~dt.BUILD):
+                # If this node has already been swapped in, don't consider it again
+                if id(node) in ids:
                     continue
                 analogues = node.get_analogues(
-                    spec.traverse(deptype=dt.LINK | dt.RUN), self_root=spec, other_root=other
+                    replacement.traverse(deptype=dt.ALL & ~dt.BUILD),
+                    self_root=self_root,
+                    other_root=other_root,
                 )
                 # No match, keep searching
                 if not analogues:
@@ -4271,14 +4264,32 @@ class Spec:
                 # No splice needed here, keep checking
                 if analogue == node:
                     continue
-                node._splice_detach_and_add_dependents(analogue, context=replacement)
+                node._splice_detach_and_add_dependents(analogue, context=self)
                 changed = True
                 break
 
+    def _splice_intransitive(self, other):
+        """Execute an intransitive splice. See ``Spec.splice`` for details."""
+        spec = self.copy()
+        replacement = other.copy(deps=dt.ALL & ~dt.BUILD)
+
+        # Ignore build deps in spec while doing the splice
+        # They will be added back in at the end
+        for edge in replacement.traverse_edges(cover="edges"):
+            edge.depflag &= ~dt.BUILD
+
+        # We’ll come back to these later
+        # We need the list of pairs while the two specs still match
+        node_pairs = list(zip(other.traverse(deptype=dt.ALL & ~dt.BUILD), replacement.traverse()))
+
+        # Transitively splice any relevant nodes from spec into replacement
+        # This handles all shared dependencies between self and other
+        replacement._splice_helper(spec, self_root=spec, other_root=other)
+
+        # Intransitively splice replacement into spec
+        # This is very simple now that all shared dependencies have been handled
         for node in spec.traverse(order="topo", deptype=dt.LINK | dt.RUN):
             if node._splice_match(other, self_root=spec, other_root=other):
-                # This handles all edges into replacement
-                # updating build_spec pointers for dependents
                 node._splice_detach_and_add_dependents(replacement, context=spec)
 
         # Set up build dependencies for modified nodes
@@ -4305,36 +4316,8 @@ class Spec:
         # We need the list of pairs while the two specs still match
         node_pairs = list(zip(self.traverse(deptype=dt.ALL & ~dt.BUILD), spec.traverse()))
 
-        # Lookups to help make sure we don't try to replace nodes from other with nodes from other
-        replacement_ids = [id(s) for s in replacement.traverse()]
-
-        changed = True
-        while changed:
-            changed = False
-
-            # Intentionally allowing traversal to change on each iteration
-            # using breadth-first traversal to ensure we only reach nodes that will
-            # be in final result
-            for node in spec.traverse(order="topo", deptype=dt.LINK | dt.RUN):
-                # If this node already came from replacement, don't consider it again
-                if id(node) in replacement_ids:
-                    continue
-                analogues = node.get_analogues(
-                    replacement.traverse(deptype=dt.LINK | dt.RUN),
-                    self_root=spec,
-                    other_root=other,
-                )
-                # No match, keep searching
-                if not analogues:
-                    continue
-                analogues.sort(key=lambda s: s.version)
-                analogue = analogues[-1]
-                # No splice needed here, keep checking
-                if analogue == node:
-                    continue
-                node._splice_detach_and_add_dependents(analogue, context=spec)
-                changed = True
-                break
+        # Execute the main loop of the splice
+        spec._splice_helper(replacement, self_root=spec, other_root=other)
 
         # Set up build dependencies for modified nodes
         # Also modify build_spec because the existing ones had build deps removed
@@ -4372,7 +4355,7 @@ class Spec:
 
         if not any(
             node._splice_match(other, self_root=self, other_root=other)
-            for node in self.traverse(deptype=dt.LINK | dt.RUN)
+            for node in self.traverse(root=False, deptype=dt.LINK | dt.RUN)
         ):
             other_str = other.format("{name}/{hash:7}")
             self_str = self.format("{name}/{hash:7}")
