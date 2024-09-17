@@ -4214,7 +4214,10 @@ class Spec:
             if other_dep:
                 edge.parent._add_dependency(replacement, depflag=other_dep, virtuals=edge.virtuals)
 
-    def _get_analogues(self, candidates_generator, self_root, other_root):
+    def get_analogues(self, candidates_generator, self_root, other_root):
+        """Find all specs in candidate_generator that are splice matches for self
+
+        self_root and other_root are passed as arguments to ``self._splie_match``."""
         analogues = [
             dep
             for dep in candidates_generator
@@ -4222,48 +4225,9 @@ class Spec:
         ]
         if not analogues:
             return []
-        perfect_analogues = [a for a in analogues if a == self]
-        if perfect_analogues:
-            return perfect_analogues
 
         name_analogues = [a for a in analogues if a.name == self.name]
-        if not name_analogues:
-            return analogues
-
-        version_analogues = [a for a in name_analogues if a.version == self.version]
-        return version_analogues or name_analogues
-
-    def _splice_fixup_duplicate_dependencies(self):
-        """Ensure every node depends on the highest version of any duplicate dependencies
-
-        If a node has duplicates in the link/run DAG, the node must depend on the highest
-        versioned duplicate."""
-        for node in self.traverse(deptype=dt.LINK | dt.RUN):
-            deps = [d for d in node.traverse(deptype=dt.LINK | dt.RUN)]
-            for edge in node.edges_to_dependencies(depflag=dt.LINK | dt.RUN):
-                dep = edge.spec
-
-                # Get list of all duplicates
-                dupes = [d for d in deps if d.name == dep.name and d.version > dep.version]
-                if not dupes:
-                    continue
-
-                # Find highest versioned duplicate
-                dupes.sort(key=lambda s: s.version)
-                dupe = dupes[-1]
-
-                # cache value because we may change it
-                depflag = edge.depflag
-                # Detach the link/run dependency from edge
-                if depflag & dt.BUILD:
-                    edge.depflag = dt.BUILD
-                else:
-                    node._dependencies.edges[dep.name].remove(edge)
-                    dep._dependents.edges[node.name].remove(edge)
-
-                # Attach new dependency
-                new_depflag = depflag & ~dt.BUILD
-                node._add_dependency(dupe, depflag=new_depflag, virtuals=edge.virtuals)
+        return name_analogues or analogues
 
     def _splice_intransitive(self, other):
         """Execute an intransitive splice. See ``Spec.splice`` for details."""
@@ -4281,6 +4245,9 @@ class Spec:
         # We need the list of pairs while the two specs still match
         node_pairs = list(zip(other.traverse(deptype=dt.ALL & ~dt.BUILD), replacement.traverse()))
 
+        # Lookups to help make sure we don't try to replace nodes from spec with nodes from spec
+        spec_ids = [id(s) for s in spec.traverse()]
+
         changed = True
         while changed:
             changed = False
@@ -4289,7 +4256,10 @@ class Spec:
             # using breadth-first traversal to ensure we only reach nodes that will
             # be in final result
             for node in replacement.traverse(root=False, order="topo", deptype=dt.LINK | dt.RUN):
-                analogues = node._get_analogues(
+                # If this node is already part of Spec that's been swapped in, don't consider it
+                if id(node) in spec_ids:
+                    continue
+                analogues = node.get_analogues(
                     spec.traverse(deptype=dt.LINK | dt.RUN), self_root=spec, other_root=other
                 )
                 # No match, keep searching
@@ -4309,10 +4279,6 @@ class Spec:
                 # This handles all edges into replacement
                 # updating build_spec pointers for dependents
                 node._splice_detach_and_add_dependents(replacement, context=spec)
-
-        # This handles redirecting duplicate link/run dependencies to ensure the invariant that
-        # an ancestor cannot depend on an older version than its descendent depends on
-        spec._splice_fixup_duplicate_dependencies()
 
         # Set up build dependencies for modified nodes
         # Also modify build_spec because the existing ones had build deps removed
@@ -4338,6 +4304,9 @@ class Spec:
         # We need the list of pairs while the two specs still match
         node_pairs = list(zip(self.traverse(deptype=dt.ALL & ~dt.BUILD), spec.traverse()))
 
+        # Lookups to help make sure we don't try to replace nodes from other with nodes from other
+        replacement_ids = [id(s) for s in replacement.traverse()]
+
         changed = True
         while changed:
             changed = False
@@ -4346,7 +4315,10 @@ class Spec:
             # using breadth-first traversal to ensure we only reach nodes that will
             # be in final result
             for node in spec.traverse(order="topo", deptype=dt.LINK | dt.RUN):
-                analogues = node._get_analogues(
+                # If this node already came from replacement, don't consider it again
+                if id(node) in replacement_ids:
+                    continue
+                analogues = node.get_analogues(
                     replacement.traverse(deptype=dt.LINK | dt.RUN),
                     self_root=spec,
                     other_root=other,
@@ -4362,10 +4334,6 @@ class Spec:
                 node._splice_detach_and_add_dependents(analogue, context=spec)
                 changed = True
                 break
-
-        # This handles redirecting duplicate link/run dependencies to ensure the invariant that
-        # an ancestor cannot depend on an older version than its descendent depends on
-        spec._splice_fixup_duplicate_dependencies()
 
         # Set up build dependencies for modified nodes
         # Also modify build_spec because the existing ones had build deps removed
