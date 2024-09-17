@@ -47,7 +47,7 @@ class Scalpel(MakefilePackage, SourceforgePackage):
                 "FindVariants.pl",
                 "FindSomatic.pl",
             ]
-            too(match, substitute, *files, **kwargs)
+            filter_file(match, substitute, *files, **kwargs)
 
     # Scalpel doesn't actually *have* an install step.  The authors
     # expect you to unpack the tarball, build it in the resulting
