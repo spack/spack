@@ -62,10 +62,10 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("eigen@3.4.0")
 
     depends_on("zlib-api")
-    depends_on("petsc@3.14.6:3.21.2 +int64 +mumps +scalapack memalign=32")
-    depends_on("petsc@3.14.6:3.21.2 +int64 +mumps +scalapack +knl", when="target=skylake:")
-    depends_on("petsc@3.14.6:3.21.2 +int64 +mumps +scalapack memalign=32 +cuda", when="+cuda")
-    depends_on("petsc@3.14.6:3.21.2 +int64 +mumps +scalapack memalign=32 +rocm", when="+rocm")
+    depends_on("petsc@3.14.6: +int64 +mumps +scalapack memalign=32")
+    depends_on("petsc@3.14.6: +int64 +mumps +scalapack +knl", when="target=skylake:")
+    depends_on("petsc@3.14.6: +int64 +mumps +scalapack memalign=32 +cuda", when="+cuda")
+    depends_on("petsc@3.14.6: +int64 +mumps +scalapack memalign=32 +rocm", when="+rocm")
 
     depends_on("python@3", type="build", when="+python")
     depends_on("py-numpy", type="build", when="+python")
