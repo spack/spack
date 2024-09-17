@@ -6,7 +6,6 @@
 import codecs
 import collections
 import concurrent.futures
-import contextlib
 import copy
 import hashlib
 import io
@@ -25,7 +24,7 @@ import urllib.parse
 import urllib.request
 import warnings
 from contextlib import closing
-from typing import Dict, Generator, Iterable, List, NamedTuple, Optional, Set, Tuple, Union
+from typing import Dict, Iterable, List, NamedTuple, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fsys
 import llnl.util.lang
@@ -34,7 +33,6 @@ from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_t
 from llnl.util.symlink import readlink
 
 import spack.caches
-import spack.cmd
 import spack.config as config
 import spack.database as spack_db
 import spack.error
@@ -45,9 +43,9 @@ import spack.mirror
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
+import spack.paths
 import spack.platforms
 import spack.relocate as relocate
-import spack.repo
 import spack.spec
 import spack.stage
 import spack.store
@@ -55,6 +53,7 @@ import spack.user_environment
 import spack.util.archive
 import spack.util.crypto
 import spack.util.file_cache as file_cache
+import spack.util.filesystem as ssys
 import spack.util.gpg
 import spack.util.parallel
 import spack.util.path
@@ -106,7 +105,7 @@ class BuildCacheDatabase(spack_db.Database):
     record_fields = ("spec", "ref_count", "in_buildcache")
 
     def __init__(self, root):
-        super().__init__(root, lock_cfg=spack_db.NO_LOCK)
+        super().__init__(root, lock_cfg=spack_db.NO_LOCK, layout=None)
         self._write_transaction_impl = llnl.util.lang.nullcontext
         self._read_transaction_impl = llnl.util.lang.nullcontext
 
@@ -688,7 +687,7 @@ def get_buildfile_manifest(spec):
     # Non-symlinks.
     for rel_path in visitor.files:
         abs_path = os.path.join(root, rel_path)
-        m_type, m_subtype = fsys.mime_type(abs_path)
+        m_type, m_subtype = ssys.mime_type(abs_path)
 
         if relocate.needs_binary_relocation(m_type, m_subtype):
             # Why is this branch not part of needs_binary_relocation? :(
@@ -789,7 +788,9 @@ def sign_specfile(key: str, specfile_path: str) -> str:
     return signed_specfile_path
 
 
-def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_dir, concurrency):
+def _read_specs_and_push_index(
+    file_list, read_method, cache_prefix, db: BuildCacheDatabase, temp_dir, concurrency
+):
     """Read all the specs listed in the provided list, using thread given thread parallelism,
         generate the index, and push it to the mirror.
 
@@ -813,7 +814,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         else:
             continue
 
-        db.add(fetched_spec, None)
+        db.add(fetched_spec)
         db.mark(fetched_spec, "in_buildcache", True)
 
     # Now generate the index, compute its hash, and push the two files to
@@ -958,7 +959,7 @@ def _spec_files_from_cache(url: str):
     raise ListMirrorSpecsError("Failed to get list of specs from {0}".format(url))
 
 
-def generate_package_index(url: str, tmpdir: str, concurrency: int = 32):
+def _url_generate_package_index(url: str, tmpdir: str, concurrency: int = 32):
     """Create or replace the build cache index on the given mirror.  The
     buildcache index contains an entry for each binary package under the
     cache_prefix.
@@ -1119,7 +1120,7 @@ def _exists_in_buildcache(spec: Spec, tmpdir: str, out_url: str) -> ExistsInBuil
     return ExistsInBuildcache(signed, unsigned, tarball)
 
 
-def _upload_tarball_and_specfile(
+def _url_upload_tarball_and_specfile(
     spec: Spec, tmpdir: str, out_url: str, exists: ExistsInBuildcache, signing_key: Optional[str]
 ):
     files = BuildcacheFiles(spec, tmpdir, out_url)
@@ -1154,47 +1155,144 @@ def _upload_tarball_and_specfile(
     )
 
 
+class Uploader:
+    def __init__(self, mirror: spack.mirror.Mirror, force: bool, update_index: bool):
+        self.mirror = mirror
+        self.force = force
+        self.update_index = update_index
+
+        self.tmpdir: str
+        self.executor: concurrent.futures.Executor
+
+    def __enter__(self):
+        self._tmpdir = tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root())
+        self._executor = spack.util.parallel.make_concurrent_executor()
+
+        self.tmpdir = self._tmpdir.__enter__()
+        self.executor = self.executor = self._executor.__enter__()
+
+        return self
+
+    def __exit__(self, *args):
+        self._executor.__exit__(*args)
+        self._tmpdir.__exit__(*args)
+
+    def push_or_raise(self, specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
+        skipped, errors = self.push(specs)
+        if errors:
+            raise PushToBuildCacheError(
+                f"Failed to push {len(errors)} specs to {self.mirror.push_url}:\n"
+                + "\n".join(
+                    f"Failed to push {_format_spec(spec)}: {error}" for spec, error in errors
+                )
+            )
+        return skipped
+
+    def push(
+        self, specs: List[spack.spec.Spec]
+    ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
+        raise NotImplementedError
+
+    def tag(self, tag: str, roots: List[spack.spec.Spec]):
+        """Make a list of selected specs together available under the given tag"""
+        pass
+
+
+class OCIUploader(Uploader):
+    def __init__(
+        self,
+        mirror: spack.mirror.Mirror,
+        force: bool,
+        update_index: bool,
+        base_image: Optional[str],
+    ) -> None:
+        super().__init__(mirror, force, update_index)
+        self.target_image = spack.oci.oci.image_from_mirror(mirror)
+        self.base_image = ImageReference.from_string(base_image) if base_image else None
+
+    def push(
+        self, specs: List[spack.spec.Spec]
+    ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
+        skipped, base_images, checksums, upload_errors = _oci_push(
+            target_image=self.target_image,
+            base_image=self.base_image,
+            installed_specs_with_deps=specs,
+            force=self.force,
+            tmpdir=self.tmpdir,
+            executor=self.executor,
+        )
+
+        self._base_images = base_images
+        self._checksums = checksums
+
+        # only update index if any binaries were uploaded
+        if self.update_index and len(skipped) + len(upload_errors) < len(specs):
+            _oci_update_index(self.target_image, self.tmpdir, self.executor)
+
+        return skipped, upload_errors
+
+    def tag(self, tag: str, roots: List[spack.spec.Spec]):
+        tagged_image = self.target_image.with_tag(tag)
+
+        # _push_oci may not populate self._base_images if binaries were already in the registry
+        for spec in roots:
+            _oci_update_base_images(
+                base_image=self.base_image,
+                target_image=self.target_image,
+                spec=spec,
+                base_image_cache=self._base_images,
+            )
+        _oci_put_manifest(
+            self._base_images, self._checksums, tagged_image, self.tmpdir, None, None, *roots
+        )
+
+
+class URLUploader(Uploader):
+    def __init__(
+        self,
+        mirror: spack.mirror.Mirror,
+        force: bool,
+        update_index: bool,
+        signing_key: Optional[str],
+    ) -> None:
+        super().__init__(mirror, force, update_index)
+        self.url = mirror.push_url
+        self.signing_key = signing_key
+
+    def push(
+        self, specs: List[spack.spec.Spec]
+    ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
+        return _url_push(
+            specs,
+            out_url=self.url,
+            force=self.force,
+            update_index=self.update_index,
+            signing_key=self.signing_key,
+            tmpdir=self.tmpdir,
+            executor=self.executor,
+        )
+
+
+def make_uploader(
+    mirror: spack.mirror.Mirror,
+    force: bool = False,
+    update_index: bool = False,
+    signing_key: Optional[str] = None,
+    base_image: Optional[str] = None,
+) -> Uploader:
+    """Builder for the appropriate uploader based on the mirror type"""
+    if mirror.push_url.startswith("oci://"):
+        return OCIUploader(
+            mirror=mirror, force=force, update_index=update_index, base_image=base_image
+        )
+    else:
+        return URLUploader(
+            mirror=mirror, force=force, update_index=update_index, signing_key=signing_key
+        )
+
+
 def _format_spec(spec: Spec) -> str:
     return spec.cformat("{name}{@version}{/hash:7}")
-
-
-@contextlib.contextmanager
-def default_push_context() -> Generator[Tuple[str, concurrent.futures.Executor], None, None]:
-    with tempfile.TemporaryDirectory(
-        dir=spack.stage.get_stage_root()
-    ) as tmpdir, spack.util.parallel.make_concurrent_executor() as executor:
-        yield tmpdir, executor
-
-
-def push_or_raise(
-    specs: List[Spec],
-    out_url: str,
-    signing_key: Optional[str],
-    force: bool = False,
-    update_index: bool = False,
-) -> List[Spec]:
-    """Same as push, but raises an exception on error. Returns a list of skipped specs already
-    present in the build cache when force=False."""
-    skipped, errors = push(specs, out_url, signing_key, force, update_index)
-    if errors:
-        raise PushToBuildCacheError(
-            f"Failed to push {len(errors)} specs to {out_url}:\n"
-            + "\n".join(f"Failed to push {_format_spec(spec)}: {error}" for spec, error in errors)
-        )
-    return skipped
-
-
-def push(
-    specs: List[Spec],
-    out_url: str,
-    signing_key: Optional[str],
-    force: bool = False,
-    update_index: bool = False,
-) -> Tuple[List[Spec], List[Tuple[Spec, BaseException]]]:
-    """Pushes to the provided build cache, and returns a list of skipped specs that were already
-    present (when force=False). Does not raise on error."""
-    with default_push_context() as (tmpdir, executor):
-        return _push(specs, out_url, signing_key, force, update_index, tmpdir, executor)
 
 
 class FancyProgress:
@@ -1234,7 +1332,7 @@ class FancyProgress:
         tty.info(f"{self.pre}Failed to push {self.pretty_spec}")
 
 
-def _push(
+def _url_push(
     specs: List[Spec],
     out_url: str,
     signing_key: Optional[str],
@@ -1279,7 +1377,7 @@ def _push(
 
     upload_futures = [
         executor.submit(
-            _upload_tarball_and_specfile,
+            _url_upload_tarball_and_specfile,
             spec,
             tmpdir,
             out_url,
@@ -1309,12 +1407,12 @@ def _push(
     if signing_key:
         keys_tmpdir = os.path.join(tmpdir, "keys")
         os.mkdir(keys_tmpdir)
-        push_keys(out_url, keys=[signing_key], update_index=update_index, tmpdir=keys_tmpdir)
+        _url_push_keys(out_url, keys=[signing_key], update_index=update_index, tmpdir=keys_tmpdir)
 
     if update_index:
         index_tmpdir = os.path.join(tmpdir, "index")
         os.mkdir(index_tmpdir)
-        generate_package_index(out_url, index_tmpdir)
+        _url_generate_package_index(out_url, index_tmpdir)
 
     return skipped, errors
 
@@ -1348,7 +1446,9 @@ def _oci_push_pkg_blob(
     filename = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
 
     # Create an oci.image.layer aka tarball of the package
-    compressed_tarfile_checksum, tarfile_checksum = spack.oci.oci.create_tarball(spec, filename)
+    compressed_tarfile_checksum, tarfile_checksum = _do_create_tarball(
+        filename, spec.prefix, get_buildinfo_dict(spec)
+    )
 
     blob = spack.oci.oci.Blob(
         Digest.from_sha256(compressed_tarfile_checksum),
@@ -1517,7 +1617,7 @@ def _oci_update_base_images(
         )
 
 
-def _push_oci(
+def _oci_push(
     *,
     target_image: ImageReference,
     base_image: Optional[ImageReference],
@@ -1669,7 +1769,7 @@ def _oci_update_index(
 
     for spec_dict in spec_dicts:
         spec = Spec.from_dict(spec_dict)
-        db.add(spec, directory_layout=None)
+        db.add(spec)
         db.mark(spec, "in_buildcache", True)
 
     # Create the index.json file
@@ -2465,9 +2565,8 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
     with spack.util.path.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, force)
-        spec.package.windows_establish_runtime_linkage()
         spack.hooks.post_install(spec, False)
-        spack.store.STORE.db.add(spec, spack.store.STORE.layout)
+        spack.store.STORE.db.add(spec)
 
 
 def install_single_spec(spec, unsigned=False, force=False):
@@ -2643,7 +2742,7 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
                     )
 
 
-def push_keys(
+def _url_push_keys(
     *mirrors: Union[spack.mirror.Mirror, str],
     keys: List[str],
     tmpdir: str,

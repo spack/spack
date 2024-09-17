@@ -49,9 +49,5 @@ class GoBuilder(spack.build_systems.go.GoBuilder):
 
     def generate(self, pkg, spec, prefix):
         """Runs ``go generate`` in the source directory"""
-        import inspect
-
-        import llnl.util.filesystem as fs
-
-        with fs.working_dir(self.build_directory):
-            inspect.getmodule(pkg).go("generate", *self.generate_args)
+        with working_dir(self.build_directory):
+            go("generate", *self.generate_args)
