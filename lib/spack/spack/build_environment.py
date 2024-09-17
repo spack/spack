@@ -622,7 +622,7 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
         module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
         module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
-    jobs = determine_number_of_jobs(parallel=pkg.parallel)
+    jobs = spack.config.determine_number_of_jobs(parallel=pkg.parallel)
     module.make_jobs = jobs
     if context == Context.BUILD:
         module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
