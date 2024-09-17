@@ -161,14 +161,12 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
                 "chai+rocm amdgpu_target={0}".format(arch_), when="amdgpu_target={0}".format(arch_)
             )
 
-
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
 
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
         return sys_type
-
 
     @property
     def cache_name(self):
@@ -181,9 +179,8 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
             self._get_sys_type(self.spec),
             self.spec.compiler.name,
             self.spec.compiler.version,
-            self.spec.dag_hash(8)
+            self.spec.dag_hash(8),
         )
-
 
     def initconfig_compiler_entries(self):
         spec = self.spec
@@ -221,7 +218,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         return entries
 
-
     def initconfig_hardware_entries(self):
         spec = self.spec
         entries = super().initconfig_hardware_entries()
@@ -240,12 +236,13 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("ENABLE_HIP", True))
             if archs != "none":
                 arch_str = ",".join(archs)
-                entries.append(cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str)))
+                entries.append(
+                    cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str))
+                )
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 
         return entries
-
 
     def initconfig_mpi_entries(self):
         spec = self.spec
@@ -254,7 +251,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option("ENABLE_MPI", spec.satisfies("+mpi")))
 
         return entries
-
 
     def initconfig_package_entries(self):
         spec = self.spec
@@ -276,48 +272,38 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("# Build Options")
         entries.append("#------------------{0}\n".format("-" * 60))
 
-        entries.append(cmake_cache_string(
-            "CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
+        entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
 
-        entries.append(cmake_cache_option(
-            "ENABLE_TESTS", spec.satisfies("+tests")))
-        entries.append(cmake_cache_option(
-            "CARE_ENABLE_TESTS", spec.satisfies("+tests")))
+        entries.append(cmake_cache_option("ENABLE_TESTS", spec.satisfies("+tests")))
+        entries.append(cmake_cache_option("CARE_ENABLE_TESTS", spec.satisfies("+tests")))
         # For tests to work, we also need BLT_ENABLE_TESTS to be on.
         # This will take care of the gtest dependency. CARE developers should
         # consider consolidating these flags in the future.
-        entries.append(cmake_cache_option(
-            "BLT_ENABLE_TESTS", spec.satisfies("+tests")))
+        entries.append(cmake_cache_option("BLT_ENABLE_TESTS", spec.satisfies("+tests")))
 
         # There are both CARE_ENABLE_* and ENABLE_* variables in here because
         # one controls the BLT infrastructure and the other controls the CARE
         # infrastructure. The goal is to just be able to use the CARE_ENABLE_*
         # variables, but CARE isn't set up correctly for that yet.
-        entries.append(cmake_cache_option(
-            "ENABLE_BENCHMARKS", spec.satisfies("+benchmarks")))
-        entries.append(cmake_cache_option(
-            "CARE_ENABLE_BENCHMARKS", spec.satisfies("+benchmarks")))
+        entries.append(cmake_cache_option("ENABLE_BENCHMARKS", spec.satisfies("+benchmarks")))
+        entries.append(cmake_cache_option("CARE_ENABLE_BENCHMARKS", spec.satisfies("+benchmarks")))
 
-        entries.append(cmake_cache_option(
-            "ENABLE_EXAMPLES", spec.satisfies("+examples")))
-        entries.append(cmake_cache_option(
-            "CARE_ENABLE_EXAMPLES", spec.satisfies("+examples")))
+        entries.append(cmake_cache_option("ENABLE_EXAMPLES", spec.satisfies("+examples")))
+        entries.append(cmake_cache_option("CARE_ENABLE_EXAMPLES", spec.satisfies("+examples")))
 
-        entries.append(cmake_cache_option(
-            "ENABLE_DOCS", spec.satisfies("+docs")))
-        entries.append(cmake_cache_option(
-            "CARE_ENABLE_DOCS", spec.satisfies("+docs")))
+        entries.append(cmake_cache_option("ENABLE_DOCS", spec.satisfies("+docs")))
+        entries.append(cmake_cache_option("CARE_ENABLE_DOCS", spec.satisfies("+docs")))
 
-        entries.append(cmake_cache_option(
-            "CARE_ENABLE_IMPLICIT_CONVERSIONS", spec.satisfies("+implicit_conversions")))
+        entries.append(
+            cmake_cache_option(
+                "CARE_ENABLE_IMPLICIT_CONVERSIONS", spec.satisfies("+implicit_conversions")
+            )
+        )
 
-        entries.append(cmake_cache_option(
-            "CARE_ENABLE_LOOP_FUSER", spec.satisfies("+loop_fuser")))
+        entries.append(cmake_cache_option("CARE_ENABLE_LOOP_FUSER", spec.satisfies("+loop_fuser")))
 
         return entries
-
 
     def cmake_args(self):
         options = []
         return options
-
