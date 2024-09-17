@@ -173,7 +173,7 @@ def loads(module_type, specs, args, out=None):
     modules = list(
         (
             spec,
-            spack.modules.common.get_module(
+            spack.modules.get_module(
                 module_type,
                 spec,
                 get_full_path=False,
@@ -222,7 +222,7 @@ def find(module_type, specs, args):
 
     try:
         modules = [
-            spack.modules.common.get_module(
+            spack.modules.get_module(
                 module_type,
                 spec,
                 args.full_path,
@@ -233,7 +233,7 @@ def find(module_type, specs, args):
         ]
 
         modules.append(
-            spack.modules.common.get_module(
+            spack.modules.get_module(
                 module_type,
                 single_spec,
                 args.full_path,
