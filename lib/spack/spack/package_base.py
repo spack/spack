@@ -1513,18 +1513,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         return self.spec.prefix
 
     @property
-    def bash_completion_path(self):
-        return f"{self.prefix}/share/bash-completion/completions"
-
-    @property
-    def zsh_completion_path(self):
-        return f"{self.prefix}/share/zsh/site-functions"
-
-    @property
-    def fish_completion_path(self):
-        return f"{self.prefix}/share/fish/vendor_completions.d"
-
-    @property
     def home(self):
         return self.prefix
 

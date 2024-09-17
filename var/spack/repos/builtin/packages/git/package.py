@@ -263,14 +263,14 @@ class Git(AutotoolsPackage):
 
     @run_after("install")
     def install_completions(self):
-        mkdirp(self.bash_completion_path)
+        mkdirp(bash_completion_path(self))
         install(
-            "contrib/completion/git-completion.bash", join_path(self.bash_completion_path, "git")
+            "contrib/completion/git-completion.bash", join_path(bash_completion_path(self), "git")
         )
 
-        mkdirp(self.zsh_completion_path)
+        mkdirp(zsh_completion_path(self))
         install(
-            "contrib/completion/git-completion.zsh", join_path(self.zsh_completion_path, "_git")
+            "contrib/completion/git-completion.zsh", join_path(zsh_completion_path(self), "_git")
         )
 
     @run_after("install")

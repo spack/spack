@@ -31,7 +31,7 @@ class Ripgrep(CargoPackage):
     def install_completions(self):
         rg = Executable(self.prefix.bin.rg)
 
-        mkdirp(self.bash_completion_path)
+        mkdirp(bash_completion_path(self))
         with open(join_path(bash_completion_path(self), "rg"), "w") as file:
             rg("--generate", "complete-bash", output=file)
 
