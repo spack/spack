@@ -96,20 +96,20 @@ jobs:
     - uses: julia-actions/cache@v2
 
     # PR: use the base of the PR as the old commit
-    - name: Checkout old commit
+    - name: Checkout PR base commit
       if: github.event_name == 'pull_request'
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       with:
         ref: ${{ github.event.pull_request.base.sha }}
         path: old
     # not a PR: use the previous commit as the old commit
-    - name: Checkout old commit
+    - name: Checkout previous commit
       if: github.event_name != 'pull_request'
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       with:
         fetch-depth: 2
         path: old
-    - name: Checkout old commit
+    - name: Checkout previous commit
       if: github.event_name != 'pull_request'
       run: git -C old reset --hard HEAD^
 
