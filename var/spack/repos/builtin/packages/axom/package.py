@@ -624,8 +624,9 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     def test_install_using_cmake(self):
         """build example with cmake and run"""
         example_src_dir = join_path(self.prefix.examples.axom, "using-with-cmake")
-        shutil.copytree(example_src_dir, "./cmake")
-        with working_dir("./cmake/build", create=True):
+        example_stage_dir = "./cmake"
+        shutil.copytree(example_src_dir, example_stage_dir)
+        with working_dir(join_path(example_stage_dir, "build"), create=True):
             cmake_args = ["-C ../host-config.cmake", example_src_dir]
             cmake = self.spec["cmake"].command
             cmake(*cmake_args)
@@ -639,8 +640,9 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     def test_install_using_make(self):
         """build example with make and run"""
         example_src_dir = join_path(self.prefix.examples.axom, "using-with-make")
-        shutil.copytree(example_src_dir, "./make")
-        with working_dir("./make", create=True):
+        example_stage_dir = "./make"
+        shutil.copytree(example_src_dir, example_stage_dir)
+        with working_dir(example_stage_dir, create=True):
             make(f"AXOM_DIR={self.prefix}")
             example = Executable("./example")
             example()
