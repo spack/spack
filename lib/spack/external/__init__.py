@@ -12,6 +12,7 @@ altgraph
 * Homepage: https://altgraph.readthedocs.io/en/latest/index.html
 * Usage: dependency of macholib
 * Version: 0.17.3
+* License: MIT
 
 archspec
 --------
@@ -19,6 +20,7 @@ archspec
 * Homepage: https://pypi.python.org/pypi/archspec
 * Usage: Labeling, comparison and detection of microarchitectures
 * Version: 0.2.5-dev (commit 7e6740012b897ae4a950f0bba7e9726b767e921f)
+* License: Apache-2.0 or MIT
 
 astunparse
 ----------------
@@ -26,6 +28,7 @@ astunparse
 * Homepage: https://github.com/simonpercivall/astunparse
 * Usage: Unparsing Python ASTs for package hashes in Spack
 * Version: 1.6.3 (plus modifications)
+* License: PSF-2.0
 * Note: This is in ``spack.util.unparse`` because it's very heavily
   modified, and we want to track coverage for it.
   Specifically, we have modified this library to generate consistent unparsed ASTs
@@ -42,6 +45,7 @@ attrs
 * Homepage: https://github.com/python-attrs/attrs
 * Usage: Needed by jsonschema.
 * Version: 22.1.0
+* License: MIT
 
 ctest_log_parser
 ----------------
@@ -49,6 +53,7 @@ ctest_log_parser
 * Homepage: https://github.com/Kitware/CMake/blob/master/Source/CTest/cmCTestBuildHandler.cxx
 * Usage: Functions to parse build logs and extract error messages.
 * Version: Unversioned
+* License: BSD-3-Clause
 * Note: This is a homemade port of Kitware's CTest build handler.
 
 distro
@@ -57,6 +62,7 @@ distro
 * Homepage: https://pypi.python.org/pypi/distro
 * Usage: Provides a more stable linux distribution detection.
 * Version: 1.8.0
+* License: Apache-2.0
 
 jinja2
 ------
@@ -64,6 +70,7 @@ jinja2
 * Homepage: https://pypi.python.org/pypi/Jinja2
 * Usage: A modern and designer-friendly templating language for Python.
 * Version: 3.0.3 (last version supporting Python 3.6)
+* License: BSD-3-Clause
 
 jsonschema
 ----------
@@ -71,6 +78,7 @@ jsonschema
 * Homepage: https://pypi.python.org/pypi/jsonschema
 * Usage: An implementation of JSON Schema for Python.
 * Version: 3.2.0 (last version before 2.7 and 3.6 support was dropped)
+* License: MIT
 * Note: We don't include tests or benchmarks; just what Spack needs.
 
 macholib
@@ -79,6 +87,7 @@ macholib
 * Homepage: https://macholib.readthedocs.io/en/latest/index.html#
 * Usage: Manipulation of Mach-o binaries for relocating macOS buildcaches on Linux
 * Version: 1.16.2
+* License: MIT
 
 markupsafe
 ----------
@@ -86,6 +95,7 @@ markupsafe
 * Homepage: https://pypi.python.org/pypi/MarkupSafe
 * Usage: Implements a XML/HTML/XHTML Markup safe string for Python.
 * Version: 2.0.1 (last version supporting Python 3.6)
+* License: BSD-3-Clause
 
 pyrsistent
 ----------
@@ -93,6 +103,7 @@ pyrsistent
 * Homepage: http://github.com/tobgu/pyrsistent/
 * Usage: Needed by `jsonschema`
 * Version: 0.18.0
+* License: MIT
 
 ruamel.yaml
 ------
@@ -102,6 +113,7 @@ ruamel.yaml
   actively maintained and has more features, including round-tripping
   comments read from config files.
 * Version: 0.17.21
+* License: MIT
 
 six
 ---
@@ -109,5 +121,6 @@ six
 * Homepage: https://pypi.python.org/pypi/six
 * Usage: Python 2 and 3 compatibility utilities.
 * Version: 1.16.0
+* License: MIT
 
 """
