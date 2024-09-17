@@ -16,12 +16,8 @@ import spack.repo
 import spack.spec
 import spack.store
 
-from .common import (
-    BaseModuleFileWriter,
-    ModuleNotFoundError,
-    disable_modules,
-    upstream_module_index,
-)
+from . import common
+from .common import BaseModuleFileWriter, disable_modules
 from .lmod import LmodModulefileWriter
 from .tcl import TclModulefileWriter
 
@@ -63,7 +59,7 @@ def get_module(
     except spack.repo.UnknownPackageError:
         upstream, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
     if upstream:
-        module = upstream_module_index.upstream_module(spec, module_type)
+        module = common.upstream_module_index.upstream_module(spec, module_type)
         if not module:
             return None
 
@@ -76,7 +72,7 @@ def get_module(
         if not os.path.isfile(writer.layout.filename):
             fmt_str = "{name}{@version}{/hash:7}"
             if not writer.conf.excluded:
-                raise ModuleNotFoundError(
+                raise common.ModuleNotFoundError(
                     "The module for package {} should be at {}, but it does not exist".format(
                         spec.format(fmt_str), writer.layout.filename
                     )
