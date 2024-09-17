@@ -117,7 +117,7 @@ class InstallStatus:
         self.pkg_count: int = pkg_count
         self.pkg_ids: Set[str] = set()
 
-    def next_pkg(self, pkg: spack.package_base.PackageBase):
+    def next_pkg(self, pkg: "spack.package_base.PackageBase"):
         pkg_id = package_id(pkg.spec)
 
         if pkg_id not in self.pkg_ids:
@@ -179,7 +179,7 @@ class TermStatusLine:
         sys.stdout.flush()
 
 
-def _check_last_phase(pkg: spack.package_base.PackageBase) -> None:
+def _check_last_phase(pkg: "spack.package_base.PackageBase") -> None:
     """
     Ensures the specified package has a valid last phase before proceeding
     with its installation.
@@ -205,7 +205,7 @@ def _check_last_phase(pkg: spack.package_base.PackageBase) -> None:
         pkg.last_phase = None  # type: ignore[attr-defined]
 
 
-def _handle_external_and_upstream(pkg: spack.package_base.PackageBase, explicit: bool) -> bool:
+def _handle_external_and_upstream(pkg: "spack.package_base.PackageBase", explicit: bool) -> bool:
     """
     Determine if the package is external or upstream and register it in the
     database if it is external package.
@@ -238,7 +238,7 @@ def _handle_external_and_upstream(pkg: spack.package_base.PackageBase, explicit:
     return False
 
 
-def _do_fake_install(pkg: spack.package_base.PackageBase) -> None:
+def _do_fake_install(pkg: "spack.package_base.PackageBase") -> None:
     """Make a fake install directory with fake executables, headers, and libraries."""
     command = pkg.name
     header = pkg.name
@@ -315,7 +315,7 @@ def _print_installed_pkg(message: str) -> None:
         print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
-def print_install_test_log(pkg: spack.package_base.PackageBase) -> None:
+def print_install_test_log(pkg: "spack.package_base.PackageBase") -> None:
     """Output install test log file path but only if have test failures.
 
     Args:
@@ -335,7 +335,7 @@ def _print_timer(pre: str, pkg_id: str, timer: timer.BaseTimer) -> None:
 
 
 def _install_from_cache(
-    pkg: spack.package_base.PackageBase, explicit: bool, unsigned: Optional[bool] = False
+    pkg: "spack.package_base.PackageBase", explicit: bool, unsigned: Optional[bool] = False
 ) -> bool:
     """
     Install the package from binary cache
@@ -366,7 +366,7 @@ def _install_from_cache(
     return True
 
 
-def _process_external_package(pkg: spack.package_base.PackageBase, explicit: bool) -> None:
+def _process_external_package(pkg: "spack.package_base.PackageBase", explicit: bool) -> None:
     """
     Helper function to run post install hooks and register external packages.
 
@@ -408,7 +408,7 @@ def _process_external_package(pkg: spack.package_base.PackageBase, explicit: boo
 
 
 def _process_binary_cache_tarball(
-    pkg: spack.package_base.PackageBase,
+    pkg: "spack.package_base.PackageBase",
     explicit: bool,
     unsigned: Optional[bool],
     mirrors_for_spec: Optional[list] = None,
@@ -451,7 +451,7 @@ def _process_binary_cache_tarball(
 
 
 def _try_install_from_binary_cache(
-    pkg: spack.package_base.PackageBase,
+    pkg: "spack.package_base.PackageBase",
     explicit: bool,
     unsigned: Optional[bool] = None,
     timer: timer.BaseTimer = timer.NULL_TIMER,
@@ -497,7 +497,7 @@ def combine_phase_logs(phase_log_files: List[str], log_path: str) -> None:
                 shutil.copyfileobj(phase_log, log_file)
 
 
-def dump_packages(spec: spack.spec.Spec, path: str) -> None:
+def dump_packages(spec: "spack.spec.Spec", path: str) -> None:
     """
     Dump all package information for a spec and its dependencies.
 
@@ -555,7 +555,7 @@ def dump_packages(spec: spack.spec.Spec, path: str) -> None:
             fs.install_tree(source_pkg_dir, dest_pkg_dir)
 
 
-def get_dependent_ids(spec: spack.spec.Spec) -> List[str]:
+def get_dependent_ids(spec: "spack.spec.Spec") -> List[str]:
     """
     Return a list of package ids for the spec's dependents
 
@@ -586,7 +586,7 @@ def install_msg(name: str, pid: int, install_status: InstallStatus) -> str:
     return pre + colorize("@*{Installing} @*g{%s}%s" % (name, post))
 
 
-def archive_install_logs(pkg: spack.package_base.PackageBase, phase_log_dir: str) -> None:
+def archive_install_logs(pkg: "spack.package_base.PackageBase", phase_log_dir: str) -> None:
     """
     Copy install logs to their destination directory(ies)
     Args:
@@ -604,7 +604,7 @@ def archive_install_logs(pkg: spack.package_base.PackageBase, phase_log_dir: str
     pkg.archive_install_test_log()
 
 
-def log(pkg: spack.package_base.PackageBase) -> None:
+def log(pkg: "spack.package_base.PackageBase") -> None:
     """
     Copy provenance into the install directory on success
 
@@ -674,7 +674,7 @@ def log(pkg: spack.package_base.PackageBase) -> None:
     dump_packages(pkg.spec, packages_dir)
 
 
-def package_id(spec: spack.spec.Spec) -> str:
+def package_id(spec: "spack.spec.Spec") -> str:
     """A "unique" package identifier for installation purposes
 
     The identifier is used to track build tasks, locks, install, and
@@ -695,7 +695,7 @@ def package_id(spec: spack.spec.Spec) -> str:
 class BuildRequest:
     """Class for representing an installation request."""
 
-    def __init__(self, pkg: spack.package_base.PackageBase, install_args: dict):
+    def __init__(self, pkg: "spack.package_base.PackageBase", install_args: dict):
         """
         Instantiate a build request for a package.
 
@@ -770,7 +770,7 @@ class BuildRequest:
         ]:
             _ = self.install_args.setdefault(arg, default)
 
-    def get_depflags(self, pkg: spack.package_base.PackageBase) -> int:
+    def get_depflags(self, pkg: "spack.package_base.PackageBase") -> int:
         """Determine the required dependency types for the associated package.
 
         Args:
@@ -802,7 +802,7 @@ class BuildRequest:
         of the requested package, ``False`` otherwise."""
         return dep_id in self.dependencies
 
-    def run_tests(self, pkg: spack.package_base.PackageBase) -> bool:
+    def run_tests(self, pkg: "spack.package_base.PackageBase") -> bool:
         """Determine if the tests should be run for the provided packages
 
         Args:
@@ -815,11 +815,11 @@ class BuildRequest:
         return tests is True or (tests and pkg.name in tests)
 
     @property
-    def spec(self) -> spack.spec.Spec:
+    def spec(self) -> "spack.spec.Spec":
         """The specification associated with the package."""
         return self.pkg.spec
 
-    def traverse_dependencies(self, spec=None, visited=None) -> Iterator[spack.spec.Spec]:
+    def traverse_dependencies(self, spec=None, visited=None) -> Iterator["spack.spec.Spec"]:
         """Yield any dependencies of the appropriate type(s)"""
         # notice: deptype is not constant across nodes, so we cannot use
         # spec.traverse_edges(deptype=...).
@@ -845,7 +845,7 @@ class BuildTask:
 
     def __init__(
         self,
-        pkg: spack.package_base.PackageBase,
+        pkg: "spack.package_base.PackageBase",
         request: Optional[BuildRequest],
         compiler: bool,
         start: float,
@@ -1054,7 +1054,7 @@ class PackageInstaller:
 
     def __init__(
         self,
-        packages: List[spack.package_base.PackageBase],
+        packages: List["spack.package_base.PackageBase"],
         *,
         cache_only: bool = False,
         dependencies_cache_only: bool = False,
@@ -1179,7 +1179,7 @@ class PackageInstaller:
 
     def _add_init_task(
         self,
-        pkg: spack.package_base.PackageBase,
+        pkg: "spack.package_base.PackageBase",
         request: Optional[BuildRequest],
         is_compiler: bool,
         all_deps: Dict[str, Set[str]],
@@ -1203,7 +1203,7 @@ class PackageInstaller:
         self._push_task(task)
 
     def _check_db(
-        self, spec: spack.spec.Spec
+        self, spec: "spack.spec.Spec"
     ) -> Tuple[Optional[spack.database.InstallRecord], bool]:
         """Determine if the spec is flagged as installed in the database
 
@@ -1359,7 +1359,7 @@ class PackageInstaller:
             except Exception as exc:
                 tty.warn(err.format(exc.__class__.__name__, pkg_id, str(exc)))
 
-    def _cleanup_task(self, pkg: spack.package_base.PackageBase) -> None:
+    def _cleanup_task(self, pkg: "spack.package_base.PackageBase") -> None:
         """
         Cleanup the build task for the spec
 
@@ -1372,7 +1372,7 @@ class PackageInstaller:
         # spec during our installation.
         self._ensure_locked("read", pkg)
 
-    def _ensure_install_ready(self, pkg: spack.package_base.PackageBase) -> None:
+    def _ensure_install_ready(self, pkg: "spack.package_base.PackageBase") -> None:
         """
         Ensure the package is ready to install locally, which includes
         already locked.
@@ -1396,7 +1396,7 @@ class PackageInstaller:
             raise InstallLockError(f"{pre} not locked")
 
     def _ensure_locked(
-        self, lock_type: str, pkg: spack.package_base.PackageBase
+        self, lock_type: str, pkg: "spack.package_base.PackageBase"
     ) -> Tuple[str, Optional[lk.Lock]]:
         """
         Add a prefix lock of the specified type for the package spec
@@ -1720,7 +1720,7 @@ class PackageInstaller:
         new_task.status = STATUS_INSTALLING
         self._push_task(new_task)
 
-    def _setup_install_dir(self, pkg: spack.package_base.PackageBase) -> None:
+    def _setup_install_dir(self, pkg: "spack.package_base.PackageBase") -> None:
         """
         Create and ensure proper access controls for the install directory.
         Write a small metadata file with the current spack environment.
@@ -1796,7 +1796,7 @@ class PackageInstaller:
         self._flag_installed(task.pkg, task.dependents)
 
     def _flag_installed(
-        self, pkg: spack.package_base.PackageBase, dependent_ids: Optional[Set[str]] = None
+        self, pkg: "spack.package_base.PackageBase", dependent_ids: Optional[Set[str]] = None
     ) -> None:
         """
         Flag the package as installed and ensure known by all build tasks of
@@ -2141,7 +2141,7 @@ class PackageInstaller:
 class BuildProcessInstaller:
     """This class implements the part installation that happens in the child process."""
 
-    def __init__(self, pkg: spack.package_base.PackageBase, install_args: dict):
+    def __init__(self, pkg: "spack.package_base.PackageBase", install_args: dict):
         """Create a new BuildProcessInstaller.
 
         It is assumed that the lifecycle of this object is the same as the child
@@ -2340,7 +2340,7 @@ class BuildProcessInstaller:
         log(pkg)
 
 
-def build_process(pkg: spack.package_base.PackageBase, install_args: dict) -> bool:
+def build_process(pkg: "spack.package_base.PackageBase", install_args: dict) -> bool:
     """Perform the installation/build of the package.
 
     This runs in a separate child process, and has its own process and
@@ -2363,7 +2363,7 @@ def build_process(pkg: spack.package_base.PackageBase, install_args: dict) -> bo
         return installer.run()
 
 
-def deprecate(spec: spack.spec.Spec, deprecator: spack.spec.Spec, link_fn) -> None:
+def deprecate(spec: "spack.spec.Spec", deprecator: "spack.spec.Spec", link_fn) -> None:
     """Deprecate this package in favor of deprecator spec"""
     # Install deprecator if it isn't installed already
     if not spack.store.STORE.db.query(deprecator):
