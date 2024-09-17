@@ -33,7 +33,7 @@ import spack.spec
 import spack.util.executable
 import spack.util.path
 import spack.util.spack_json as sjson
-from spack.installer import InstallError
+from spack.error import InstallError
 from spack.spec import Spec
 from spack.util.prefix import Prefix
 
@@ -119,7 +119,7 @@ def cache_extra_test_sources(pkg: Pb, srcs: ListOrStringType):
             location(s) under the install testing directory.
 
     Raises:
-        spack.installer.InstallError: if any of the source paths are absolute
+        spack.error.InstallError: if any of the source paths are absolute
             or do not exist
             under the build stage
     """

@@ -17,6 +17,7 @@ import pytest
 from llnl.util.filesystem import getuid, mkdirp, partition_path, touch, working_dir
 from llnl.util.symlink import readlink
 
+import spack.config
 import spack.error
 import spack.fetch_strategy
 import spack.stage

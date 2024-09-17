@@ -11,6 +11,8 @@ Everything in this module is automatically imported into Spack package files.
 from os import chdir, environ, getcwd, makedirs, mkdir, remove, removedirs
 from shutil import move, rmtree
 
+from spack.error import InstallError
+
 # Emulate some shell commands for convenience
 env = environ
 cd = chdir
@@ -84,12 +86,7 @@ from spack.install_test import (
     install_test_root,
     test_part,
 )
-from spack.installer import (
-    ExternalPackageError,
-    InstallError,
-    InstallLockError,
-    UpstreamPackageError,
-)
+from spack.installer import ExternalPackageError, InstallLockError, UpstreamPackageError
 from spack.mixins import filter_compiler_wrappers
 from spack.multimethod import default_args, when
 from spack.package_base import (

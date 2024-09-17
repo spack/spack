@@ -11,6 +11,7 @@ import spack.config
 import spack.error
 import spack.package_base
 import spack.repo
+import spack.solver.asp
 import spack.util.spack_yaml as syaml
 import spack.version
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
@@ -70,7 +71,7 @@ packages:
     require: "@1.2"
 """
     update_packages_config(conf_str)
-    with pytest.raises(spack.config.ConfigError):
+    with pytest.raises(spack.error.ConfigError):
         Spec("x").concretize()
 
 

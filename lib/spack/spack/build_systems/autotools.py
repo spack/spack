@@ -13,6 +13,7 @@ import llnl.util.tty as tty
 
 import spack.build_environment
 import spack.builder
+import spack.error
 import spack.package_base
 from spack.directives import build_system, conflicts, depends_on
 from spack.multimethod import when
@@ -248,7 +249,7 @@ class AutotoolsBuilder(BaseBuilder):
 
         # An external gnuconfig may not not have a prefix.
         if gnuconfig_dir is None:
-            raise spack.build_environment.InstallError(
+            raise spack.error.InstallError(
                 "Spack could not find substitutes for GNU config files because no "
                 "prefix is available for the `gnuconfig` package. Make sure you set a "
                 "prefix path instead of modules for external `gnuconfig`."
@@ -268,7 +269,7 @@ class AutotoolsBuilder(BaseBuilder):
                 msg += (
                     " or the `gnuconfig` package prefix is misconfigured as" " an external package"
                 )
-            raise spack.build_environment.InstallError(msg)
+            raise spack.error.InstallError(msg)
 
         # Filter working substitutes
         candidates = [f for f in candidates if runs_ok(f)]
@@ -293,9 +294,7 @@ To resolve this problem, please try the following:
    and set the prefix to the directory containing the `config.guess` and
    `config.sub` files.
 """
-            raise spack.build_environment.InstallError(
-                msg.format(", ".join(to_be_found), self.name)
-            )
+            raise spack.error.InstallError(msg.format(", ".join(to_be_found), self.name))
 
         # Copy the good files over the bad ones
         for abs_path in to_be_patched:

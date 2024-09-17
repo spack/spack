@@ -6,6 +6,8 @@ import pathlib
 
 import pytest
 
+import spack.modules.lmod
+import spack.modules.tcl
 import spack.spec
 
 

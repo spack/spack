@@ -9,6 +9,8 @@ In a normal Spack installation, this is invoked from the bin/spack script
 after the system path is set up.
 """
 import argparse
+
+# import spack.modules.common
 import inspect
 import io
 import operator
@@ -36,6 +38,7 @@ import spack
 import spack.cmd
 import spack.config
 import spack.environment as ev
+import spack.error
 import spack.modules
 import spack.paths
 import spack.platforms
@@ -44,6 +47,7 @@ import spack.spec
 import spack.store
 import spack.util.debug
 import spack.util.environment
+import spack.util.lock
 from spack.error import SpackError
 
 #: names of profile statistics
@@ -763,6 +767,8 @@ def print_setup_info(*info):
     This is in ``main.py`` to make it fast; the setup scripts need to
     invoke spack in login scripts, and it needs to be quick.
     """
+    import spack.modules.common
+
     shell = "csh" if "csh" in info else "sh"
 
     def shell_set(var, value):

@@ -9,6 +9,12 @@ import pytest
 
 import spack.directives
 import spack.error
+import spack.parser
+import spack.paths
+import spack.solver.asp
+import spack.spec
+import spack.store
+import spack.variant
 from spack.error import SpecError, UnsatisfiableSpecError
 from spack.spec import (
     ArchSpec,

@@ -25,6 +25,7 @@ import spack.cmd.modules
 import spack.config
 import spack.environment as ev
 import spack.environment.depfile as depfile
+import spack.environment.environment
 import spack.environment.shell
 import spack.tengine
 from spack.cmd.common import arguments

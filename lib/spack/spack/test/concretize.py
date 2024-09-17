@@ -22,10 +22,13 @@ import spack.deptypes as dt
 import spack.detection
 import spack.error
 import spack.hash_types as ht
+import spack.paths
 import spack.platforms
+import spack.platforms.test
 import spack.repo
 import spack.solver.asp
 import spack.solver.version_order
+import spack.spec
 import spack.store
 import spack.util.file_cache
 import spack.variant as vt

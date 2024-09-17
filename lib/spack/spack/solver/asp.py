@@ -27,7 +27,9 @@ from llnl.util.lang import elide_list
 
 import spack
 import spack.binary_distribution
+import spack.bootstrap.core
 import spack.compilers
+import spack.concretize
 import spack.config
 import spack.config as sc
 import spack.deptypes as dt
@@ -2166,7 +2168,7 @@ class SpackSolverSetup:
                     matches = [x for x in self.possible_versions[pkg_name] if x.satisfies(v)]
                     matches.sort(reverse=True)
                     if not matches:
-                        raise spack.config.ConfigError(
+                        raise spack.error.ConfigError(
                             f"Preference for version {v} does not match any known "
                             f"version of {pkg_name} (in its package.py or any external)"
                         )
@@ -2796,7 +2798,7 @@ class SpackSolverSetup:
                     # not throw an error, which is just so that users know they need to change
                     # their config, instead of getting a hard to decipher concretization error.
                     if not any(x for x in self.possible_versions[name] if x.satisfies(versions)):
-                        raise spack.config.ConfigError(
+                        raise spack.error.ConfigError(
                             f"Version requirement {versions} on {pkg_name} for {name} "
                             f"cannot match any known version from package.py or externals"
                         )

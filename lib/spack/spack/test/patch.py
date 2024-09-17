@@ -14,9 +14,12 @@ import pytest
 from llnl.util.filesystem import mkdirp, touch, working_dir
 
 import spack.error
+import spack.fetch_strategy
 import spack.patch
 import spack.paths
 import spack.repo
+import spack.spec
+import spack.stage
 import spack.util.url as url_util
 from spack.spec import Spec
 from spack.stage import Stage

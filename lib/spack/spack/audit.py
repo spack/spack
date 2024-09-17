@@ -51,7 +51,9 @@ from urllib.request import urlopen
 
 import llnl.util.lang
 
+import spack.builder
 import spack.config
+import spack.fetch_strategy
 import spack.patch
 import spack.repo
 import spack.spec

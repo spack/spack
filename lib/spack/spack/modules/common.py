@@ -46,6 +46,7 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment
 import spack.error
+import spack.modules
 import spack.paths
 import spack.projections as proj
 import spack.repo

@@ -53,6 +53,7 @@ from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
 
+import spack.build_systems._checks
 import spack.build_systems.cmake
 import spack.build_systems.meson
 import spack.build_systems.python
@@ -62,6 +63,7 @@ import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.main
+import spack.multimethod
 import spack.package_base
 import spack.paths
 import spack.platforms
@@ -73,9 +75,8 @@ import spack.subprocess_context
 import spack.util.executable
 from spack import traverse
 from spack.context import Context
-from spack.error import NoHeadersError, NoLibrariesError
+from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
-from spack.installer import InstallError
 from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
@@ -1135,7 +1136,7 @@ def _setup_pkg_and_run(
         return_value = function(pkg, kwargs)
         write_pipe.send(return_value)
 
-    except StopPhase as e:
+    except spack.error.StopPhase as e:
         # Do not create a full ChildError from this, it's not an error
         # it's a control statement.
         write_pipe.send(e)
@@ -1296,7 +1297,7 @@ def start_build_process(pkg, function, kwargs):
     p.join()
 
     # If returns a StopPhase, raise it
-    if isinstance(child_result, StopPhase):
+    if isinstance(child_result, spack.error.StopPhase):
         # do not print
         raise child_result
 
@@ -1503,17 +1504,6 @@ class ChildError(InstallError):
 def _make_child_error(msg, module, name, traceback, log, log_type, context):
     """Used by __reduce__ in ChildError to reconstruct pickled errors."""
     return ChildError(msg, module, name, traceback, log, log_type, context)
-
-
-class StopPhase(spack.error.SpackError):
-    """Pickle-able exception to control stopped builds."""
-
-    def __reduce__(self):
-        return _make_stop_phase, (self.message, self.long_message)
-
-
-def _make_stop_phase(msg, long_msg):
-    return StopPhase(msg, long_msg)
 
 
 def write_log_summary(out, log_type, log, last=None):
