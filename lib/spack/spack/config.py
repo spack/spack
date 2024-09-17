@@ -58,12 +58,10 @@ import spack.schema.packages
 import spack.schema.repos
 import spack.schema.upstreams
 import spack.schema.view
-import spack.spec
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
-from spack.error import SpecSyntaxError
 from spack.util.cpus import cpus_available
 
 #: Dict from section names -> schema for that section
@@ -1708,27 +1706,6 @@ def get_mark_from_yaml_data(obj):
             mark = getattr(first_member, "_start_mark", None)
 
     return mark
-
-
-def parse_spec_from_yaml_string(string: str) -> "spack.spec.Spec":
-    """Parse a spec from YAML and add file/line info to errors, if it's available.
-
-    Parse a ``Spec`` from the supplied string, but also intercept any syntax errors and
-    add file/line information for debugging using file/line annotations from the string.
-
-    Arguments:
-        string: a string representing a ``Spec`` from config YAML.
-
-    """
-    try:
-        spec = spack.spec.Spec(string)
-        return spec
-    except SpecSyntaxError as e:
-        mark = get_mark_from_yaml_data(string)
-        if mark:
-            msg = f"{mark.name}:{mark.line + 1}: {str(e)}"
-            raise SpecSyntaxError(msg) from e
-        raise e
 
 
 def determine_number_of_jobs(

@@ -31,7 +31,6 @@ import spack.bootstrap.core
 import spack.compilers
 import spack.concretize
 import spack.config
-import spack.config as sc
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
@@ -49,6 +48,8 @@ import spack.variant
 import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
+from spack.config import get_mark_from_yaml_data
+from spack.error import SpecSyntaxError
 
 from .core import (
     AspFunction,
@@ -2923,6 +2924,26 @@ class ProblemInstanceBuilder:
         return "".join(self.asp_problem)
 
 
+def parse_spec_from_yaml_string(string: str) -> "spack.spec.Spec":
+    """Parse a spec from YAML and add file/line info to errors, if it's available.
+
+    Parse a ``Spec`` from the supplied string, but also intercept any syntax errors and
+    add file/line information for debugging using file/line annotations from the string.
+
+    Arguments:
+        string: a string representing a ``Spec`` from config YAML.
+
+    """
+    try:
+        return spack.spec.Spec(string)
+    except SpecSyntaxError as e:
+        mark = get_mark_from_yaml_data(string)
+        if mark:
+            msg = f"{mark.name}:{mark.line + 1}: {str(e)}"
+            raise SpecSyntaxError(msg) from e
+        raise e
+
+
 class RequirementParser:
     """Parses requirements from package.py files and configuration, and returns rules."""
 
@@ -3008,11 +3029,11 @@ class RequirementParser:
     def _parse_prefer_conflict_item(self, item):
         # The item is either a string or an object with at least a "spec" attribute
         if isinstance(item, str):
-            spec = sc.parse_spec_from_yaml_string(item)
+            spec = parse_spec_from_yaml_string(item)
             condition = spack.spec.Spec()
             message = None
         else:
-            spec = sc.parse_spec_from_yaml_string(item["spec"])
+            spec = parse_spec_from_yaml_string(item["spec"])
             condition = spack.spec.Spec(item.get("when"))
             message = item.get("message")
         return spec, condition, message
@@ -3053,10 +3074,10 @@ class RequirementParser:
 
                 # validate specs from YAML first, and fail with line numbers if parsing fails.
                 constraints = [
-                    sc.parse_spec_from_yaml_string(constraint) for constraint in constraints
+                    parse_spec_from_yaml_string(constraint) for constraint in constraints
                 ]
                 when_str = requirement.get("when")
-                when = sc.parse_spec_from_yaml_string(when_str) if when_str else spack.spec.Spec()
+                when = parse_spec_from_yaml_string(when_str) if when_str else spack.spec.Spec()
 
                 constraints = [
                     x
