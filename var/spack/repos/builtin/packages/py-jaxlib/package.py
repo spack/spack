@@ -41,13 +41,13 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
     version(
         "0.4.30-rocm-enhanced",
         sha256="8716dc1d39507aa4408c53a554aa78f50a44f8358cdec67dbae6613df43482b2",
-        url="https://github.com/ROCm/jax/archive/refs/tags/rocm-jaxlib-v0.4.30.tar.gz"
+        url="https://github.com/ROCm/jax/archive/refs/tags/rocm-jaxlib-v0.4.30.tar.gz",
     )
     version("0.4.30", sha256="0ef9635c734d9bbb44fcc87df4f1c3ccce1cfcfd243572c80d36fcdf826fe1e6")
     version(
         "0.4.29-rocm-enhanced",
         sha256="470c8c719c91c2a54d82d98dc8638249faf668ae8eda248371e494013a31b1d1",
-        url="https://github.com/ROCm/jax/archive/refs/tags/rocm-jaxlib-v0.4.29.tar.gz"
+        url="https://github.com/ROCm/jax/archive/refs/tags/rocm-jaxlib-v0.4.29.tar.gz",
     )
     version("0.4.29", sha256="3a8005f4f62d35a5aad7e3dbd596890b47c81cc6e34fcfe3dcb93b3ca7cb1246")
     version("0.4.28", sha256="4dd11577d4ba5a095fbc35258ddd4e4c020829ed6e6afd498c9e38ccbcdfe20b")
