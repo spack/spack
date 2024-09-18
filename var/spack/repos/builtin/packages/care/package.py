@@ -163,7 +163,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
-
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
         return sys_type
@@ -186,33 +185,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         compiler = self.compiler
         entries = super().initconfig_compiler_entries()
-
-        #### BEGIN: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
-        flags = spec.compiler_flags
-
-        # use global spack compiler flags
-        cppflags = " ".join(flags["cppflags"])
-
-        if cppflags:
-            # avoid always ending up with " " with no flags defined
-            cppflags += " "
-
-        cflags = cppflags + " ".join(flags["cflags"])
-
-        if cflags:
-            entries.append(cmake_cache_string("CMAKE_C_FLAGS", cflags))
-
-        cxxflags = cppflags + " ".join(flags["cxxflags"])
-
-        if cxxflags:
-            entries.append(cmake_cache_string("CMAKE_CXX_FLAGS", cxxflags))
-
-        fflags = " ".join(flags["fflags"])
-
-        if fflags:
-            entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
-
-        #### END: Override CachedCMakePackage CMAKE_C_FLAGS and CMAKE_CXX_FLAGS
 
         llnl_link_helpers(entries, spec, compiler)
 
@@ -304,6 +276,5 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         return entries
 
-    def cmake_args(self):
-        options = []
-        return options
+    def make_args(self):
+        return []
