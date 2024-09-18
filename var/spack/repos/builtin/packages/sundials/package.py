@@ -201,7 +201,6 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     # External libraries incompatible with 64-bit indices
     conflicts("+lapack", when="@3.0.0: +int64")
-    conflicts("+hypre", when="+hypre@:2.6.1a +int64")
 
     # External libraries incompatible with single precision
     conflicts("+klu", when="precision=single")

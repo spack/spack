@@ -13,6 +13,7 @@ import archspec.cpu
 
 import llnl.util.lang
 
+import spack.binary_distribution
 import spack.compiler
 import spack.compilers
 import spack.concretize
@@ -21,12 +22,15 @@ import spack.deptypes as dt
 import spack.detection
 import spack.error
 import spack.hash_types as ht
+import spack.paths
 import spack.platforms
+import spack.platforms.test
 import spack.repo
 import spack.solver.asp
+import spack.solver.version_order
+import spack.spec
 import spack.store
 import spack.util.file_cache
-import spack.util.libc
 import spack.variant as vt
 from spack.concretize import find_spec
 from spack.spec import CompilerSpec, Spec
@@ -49,7 +53,7 @@ def check_spec(abstract, concrete):
             cflag = concrete.compiler_flags[flag]
             assert set(aflag) <= set(cflag)
 
-    for name in spack.repo.PATH.get_pkg_class(abstract.name).variants:
+    for name in spack.repo.PATH.get_pkg_class(abstract.name).variant_names():
         assert name in concrete.variants
 
     for flag in concrete.compiler_flags.valid_compiler_flags():
@@ -400,14 +404,6 @@ class TestConcretize:
                 s.compiler_flags[x] == ["-O0", "-g"] for x in ("cflags", "cxxflags", "fflags")
             )
 
-    @pytest.mark.xfail(reason="Broken, needs to be fixed")
-    def test_compiler_flags_from_compiler_and_dependent(self):
-        client = Spec("cmake-client %clang@12.2.0 platform=test os=fe target=fe cflags==-g")
-        client.concretize()
-        cmake = client["cmake"]
-        for spec in [client, cmake]:
-            assert spec.compiler_flags["cflags"] == ["-O3", "-g"]
-
     def test_compiler_flags_differ_identical_compilers(self, mutable_config, clang12_with_flags):
         mutable_config.set("compilers", [clang12_with_flags])
         # Correct arch to use test compiler that has flags
@@ -438,6 +434,13 @@ class TestConcretize:
             # Setting a flag overrides propagation
             (
                 "hypre cflags=='-g' ^openblas cflags='-O3'",
+                ["hypre cflags='-g'", "^openblas cflags='-O3'"],
+                ["^openblas cflags='-g'"],
+            ),
+            # Setting propagation on parent and dependency -> the
+            # dependency propagation flags override
+            (
+                "hypre cflags=='-g' ^openblas cflags=='-O3'",
                 ["hypre cflags='-g'", "^openblas cflags='-O3'"],
                 ["^openblas cflags='-g'"],
             ),
@@ -647,20 +650,6 @@ class TestConcretize:
         )
         assert "externalprereq" not in spec
         assert spec["externaltool"].compiler.satisfies("gcc")
-
-    def test_external_package_module(self):
-        # No tcl modules on darwin/linux machines
-        # and Windows does not (currently) allow for bash calls
-        # TODO: improved way to check for this.
-        platform = spack.platforms.real_host().name
-        if platform == "darwin" or platform == "linux" or platform == "windows":
-            return
-
-        spec = Spec("externalmodule")
-        spec.concretize()
-        assert spec["externalmodule"].external_modules == ["external-module"]
-        assert "externalprereq" not in spec
-        assert spec["externalmodule"].compiler.satisfies("gcc")
 
     def test_nobuild_package(self):
         """Test that a non-buildable package raise an error if no specs
@@ -942,7 +931,9 @@ class TestConcretize:
         ],
     )
     def test_conditional_variants_fail(self, bad_spec):
-        with pytest.raises((spack.error.UnsatisfiableSpecError, vt.InvalidVariantForSpecError)):
+        with pytest.raises(
+            (spack.error.UnsatisfiableSpecError, spack.spec.InvalidVariantForSpecError)
+        ):
             _ = Spec("conditional-variant-pkg" + bad_spec).concretized()
 
     @pytest.mark.parametrize(
@@ -1301,7 +1292,7 @@ class TestConcretize:
             return [first_spec]
 
         if mock_db:
-            temporary_store.db.add(first_spec, None)
+            temporary_store.db.add(first_spec)
         else:
             monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", mock_fn)
 
@@ -1366,7 +1357,7 @@ class TestConcretize:
     def test_reuse_with_flags(self, mutable_database, mutable_config):
         spack.config.set("concretizer:reuse", True)
         spec = Spec("pkg-a cflags=-g cxxflags=-g").concretized()
-        spack.store.STORE.db.add(spec, None)
+        spec.package.do_install(fake=True)
 
         testspec = Spec("pkg-a cflags=-g")
         testspec.concretize()
@@ -1385,7 +1376,7 @@ class TestConcretize:
     )
     def test_error_message_for_inconsistent_variants(self, spec_str):
         s = Spec(spec_str)
-        with pytest.raises(RuntimeError, match="not found in package"):
+        with pytest.raises(vt.UnknownVariantError):
             s.concretize()
 
     @pytest.mark.regression("22533")
@@ -2389,26 +2380,6 @@ class TestConcretize:
         s = Spec("mpich").concretized()
         assert s.external
 
-    @pytest.mark.regression("43875")
-    def test_concretize_missing_compiler(self, mutable_config, monkeypatch):
-        """Tests that Spack can concretize a spec with a missing compiler when the
-        option is active.
-        """
-
-        def _default_libc(self):
-            if self.cc is None:
-                return None
-            return Spec("glibc@=2.28")
-
-        monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
-        monkeypatch.setattr(spack.compiler.Compiler, "default_libc", property(_default_libc))
-        monkeypatch.setattr(
-            spack.util.libc, "libc_from_current_python_process", lambda: Spec("glibc@=2.28")
-        )
-        mutable_config.set("config:install_missing_compilers", True)
-        s = Spec("pkg-a %gcc@=13.2.0").concretized()
-        assert s.satisfies("%gcc@13.2.0")
-
     @pytest.mark.regression("43267")
     def test_spec_with_build_dep_from_json(self, tmp_path):
         """Tests that we can correctly concretize a spec, when we express its dependency as a
@@ -2962,7 +2933,7 @@ def test_concretization_version_order():
     result = [
         v
         for v, _ in sorted(
-            versions, key=spack.solver.asp.concretization_version_order, reverse=True
+            versions, key=spack.solver.version_order.concretization_version_order, reverse=True
         )
     ]
     assert result == [

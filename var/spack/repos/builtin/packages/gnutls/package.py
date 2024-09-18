@@ -66,7 +66,7 @@ class Gnutls(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         spec = self.spec
-        if "+guile" in spec:
+        if spec.satisfies("+guile"):
             env.set("GUILE", spec["guile"].prefix.bin.guile)
 
     def configure_args(self):
@@ -79,12 +79,12 @@ class Gnutls(AutotoolsPackage):
             args.append("--with-included-unistring")
             args.append("--without-p11-kit")  # p11-kit@0.23.1: ...
 
-        if "+zlib" in spec:
+        if spec.satisfies("+zlib"):
             args.append("--with-zlib")
         else:
             args.append("--without-zlib")
 
-        if "+guile" in spec:
+        if spec.satisfies("+guile"):
             args.append("--enable-guile")
         else:
             args.append("--disable-guile")

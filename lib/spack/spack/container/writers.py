@@ -6,6 +6,7 @@
 convenience functions.
 """
 import copy
+import shlex
 from collections import namedtuple
 from typing import Optional
 
@@ -15,7 +16,7 @@ import spack.schema.env
 import spack.tengine as tengine
 import spack.util.spack_yaml as syaml
 
-from ..images import (
+from .images import (
     bootstrap_template_for,
     build_info,
     checkout_command,
@@ -308,8 +309,54 @@ class PathContext(tengine.Context):
         return t.render(**self.to_dict())
 
 
-import spack.container.writers.docker  # noqa: E402
+@writer("docker")
+class DockerContext(PathContext):
+    """Context used to instantiate a Dockerfile"""
 
-# Import after function definition all the modules in this package,
-# so that registration of writers will happen automatically
-import spack.container.writers.singularity  # noqa: E402
+    #: Name of the template used for Dockerfiles
+    template_name = "container/Dockerfile"
+
+    @tengine.context_property
+    def manifest(self):
+        manifest_str = super().manifest
+        # Docker doesn't support HEREDOC, so we need to resort to
+        # a horrible echo trick to have the manifest in the Dockerfile
+        echoed_lines = []
+        for idx, line in enumerate(manifest_str.split("\n")):
+            quoted_line = shlex.quote(line)
+            if idx == 0:
+                echoed_lines.append("&&  (echo " + quoted_line + " \\")
+                continue
+            echoed_lines.append("&&   echo " + quoted_line + " \\")
+
+        echoed_lines[-1] = echoed_lines[-1].replace(" \\", ")")
+
+        return "\n".join(echoed_lines)
+
+
+@writer("singularity")
+class SingularityContext(PathContext):
+    """Context used to instantiate a Singularity definition file"""
+
+    #: Name of the template used for Singularity definition files
+    template_name = "container/singularity.def"
+
+    @property
+    def singularity_config(self):
+        return self.container_config.get("singularity", {})
+
+    @tengine.context_property
+    def runscript(self):
+        return self.singularity_config.get("runscript", "")
+
+    @tengine.context_property
+    def startscript(self):
+        return self.singularity_config.get("startscript", "")
+
+    @tengine.context_property
+    def test(self):
+        return self.singularity_config.get("test", "")
+
+    @tengine.context_property
+    def help(self):
+        return self.singularity_config.get("help", "")

@@ -593,7 +593,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         if self.spec.external:
             return self.spec.extra_attributes["compilers"].get("c", None)
         result = None
-        if "languages=c" in self.spec:
+        if self.spec.satisfies("languages=c"):
             result = str(self.spec.prefix.bin.gcc)
         return result
 
@@ -604,7 +604,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         if self.spec.external:
             return self.spec.extra_attributes["compilers"].get("cxx", None)
         result = None
-        if "languages=c++" in self.spec:
+        if self.spec.satisfies("languages=c++"):
             result = os.path.join(self.spec.prefix.bin, "g++")
         return result
 
@@ -615,7 +615,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         if self.spec.external:
             return self.spec.extra_attributes["compilers"].get("fortran", None)
         result = None
-        if "languages=fortran" in self.spec:
+        if self.spec.satisfies("languages=fortran"):
             result = str(self.spec.prefix.bin.gfortran)
         return result
 
@@ -711,7 +711,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         if "+bootstrap %gcc" in self.spec and self.spec.target.family != "aarch64":
             flags += " " + self.get_common_target_flags(self.spec)
 
-        if "+bootstrap" in self.spec:
+        if self.spec.satisfies("+bootstrap"):
             variables = ["BOOT_CFLAGS", "CFLAGS_FOR_TARGET", "CXXFLAGS_FOR_TARGET"]
         else:
             variables = ["CFLAGS", "CXXFLAGS"]
@@ -752,12 +752,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         if self.version >= Version("6"):
             options.append("--with-system-zlib")
 
-        if "zstd" in spec:
+        if spec.satisfies("^zstd"):
             options.append("--with-zstd-include={0}".format(spec["zstd"].headers.directories[0]))
             options.append("--with-zstd-lib={0}".format(spec["zstd"].libs.directories[0]))
 
         # Enabling language "jit" requires --enable-host-shared.
-        if "languages=jit" in spec:
+        if spec.satisfies("languages=jit"):
             options.append("--enable-host-shared")
 
         # Binutils
@@ -832,7 +832,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         options.append("--with-boot-ldflags=" + boot_ldflags)
         options.append("--with-build-config=spack")
 
-        if "languages=d" in spec:
+        if spec.satisfies("languages=d"):
             # Phobos is the standard library for the D Programming Language. The documentation says
             # that on some targets, 'libphobos' is not enabled by default, but compiles and works
             # if '--enable-libphobos' is used. Specifics are documented for affected targets.
@@ -919,13 +919,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     @property
     def build_targets(self):
-        if "+profiled" in self.spec:
+        if self.spec.satisfies("+profiled"):
             return ["profiledbootstrap"]
         return []
 
     @property
     def install_targets(self):
-        if "+strip" in self.spec:
+        if self.spec.satisfies("+strip"):
             return ["install-strip"]
         return ["install"]
 

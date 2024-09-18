@@ -18,10 +18,9 @@ class Unixodbc(AutotoolsPackage):
 
     version("2.3.4", sha256="2e1509a96bb18d248bf08ead0d74804957304ff7c6f8b2e5965309c632421e39")
 
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")
 
     depends_on("iconv")
-    depends_on("libtool")
 
     @property
     def libs(self):

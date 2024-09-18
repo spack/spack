@@ -181,6 +181,7 @@ default:
     - cat /proc/loadavg || true
     - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
     - . "./share/spack/setup-env.sh"
+    - spack arch
   after_script:
     - cat /proc/loadavg || true
     - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
@@ -218,7 +219,7 @@ default:
     - $ErrorActionPreference=$ErrorActionOld
 
   tags: ["spack", "public", "medium", "x86_64-win"]
-  image: "ghcr.io/johnwparent/windows-server21h2:sha-c749cf3"
+  image: "ghcr.io/johnwparent/windows-server21h2:sha-1c12b61"
 
 .generate-deprecated:
   extends: [ ".base-job" ]
@@ -376,7 +377,7 @@ e4s-neoverse_v1-build:
 
 e4s-rocm-external-generate:
   extends: [ ".e4s-rocm-external", ".generate-x86_64"]
-  image: ecpe4s/ubuntu22.04-runner-amd64-gcc-11.4-rocm6.1.2:2024.07.22
+  image: ecpe4s/ubuntu22.04-runner-amd64-gcc-11.4-rocm6.2.0:2024.09.11
 
 e4s-rocm-external-build:
   extends: [ ".e4s-rocm-external", ".build" ]
@@ -422,7 +423,7 @@ e4s-rocm-external-build:
 
 e4s-oneapi-generate:
   extends: [ ".e4s-oneapi", ".generate-x86_64"]
-  image:  ecpe4s/ubuntu22.04-runner-amd64-oneapi-2024.2:2024.06.21
+  image: ecpe4s/ubuntu22.04-runner-amd64-oneapi-2024.2:2024.09.06
 
 e4s-oneapi-build:
   extends: [ ".e4s-oneapi", ".build" ]

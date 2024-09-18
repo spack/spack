@@ -112,10 +112,10 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: ['macos-13', 'macos-14', "ubuntu-latest"]
+        runner: ['macos-13', 'macos-14', "ubuntu-latest", "windows-latest"]
     steps:
       - name: Setup macOS
-        if: ${{ matrix.runner != 'ubuntu-latest' }}
+        if: ${{ matrix.runner != 'ubuntu-latest' && matrix.runner != 'windows-latest'}}
         run: |
           brew install tree
           # Remove GnuPG since we want to bootstrap it
@@ -124,6 +124,11 @@ jobs:
         if: ${{ matrix.runner == 'ubuntu-latest' }}
         run: |
           sudo rm -rf $(which gpg) $(which gpg2) $(which patchelf)
+      - name: Setup Windows
+        if: ${{ matrix.runner == 'windows-latest' }}
+        run: |
+          Remove-Item -Path (Get-Command gpg).Path
+          Remove-Item -Path (Get-Command file).Path
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
@@ -137,11 +142,20 @@ jobs:
             3.11
             3.12
       - name: Set bootstrap sources
+        env:
+          SETUP_SCRIPT_EXT: ${{ matrix.runner == 'windows-latest' && 'ps1' || 'sh' }}
+          SETUP_SCRIPT_SOURCE: ${{ matrix.runner == 'windows-latest' && './' || 'source ' }}
+        run: |
+          ${{ env.SETUP_SCRIPT_SOURCE }}share/spack/setup-env.${{ env.SETUP_SCRIPT_EXT }}
+          spack bootstrap disable github-actions-v0.4
+      - name: Disable from source bootstrap
+        if: ${{ matrix.runner != 'windows-latest' }}
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap disable github-actions-v0.4
           spack bootstrap disable spack-install
       - name: Bootstrap clingo
+        # No binary clingo on Windows yet
+        if: ${{ matrix.runner != 'windows-latest' }}
         run: |
           set -e
           for ver in '3.8' '3.9' '3.10' '3.11' '3.12' ; do
@@ -164,7 +178,24 @@ jobs:
             fi
           done
       - name: Bootstrap GnuPG
+        env:
+          SETUP_SCRIPT_EXT: ${{ matrix.runner == 'windows-latest' && 'ps1' || 'sh' }}
+          SETUP_SCRIPT_SOURCE: ${{ matrix.runner == 'windows-latest' && './' || 'source ' }}
+          USER_SCOPE_PARENT_DIR: ${{ matrix.runner == 'windows-latest' && '$env:userprofile' || '$HOME' }}
+          VALIDATE_LAST_EXIT: ${{ matrix.runner == 'windows-latest' && './share/spack/qa/validate_last_exit.ps1' || '' }}
         run: |
-          source share/spack/setup-env.sh
+          ${{ env.SETUP_SCRIPT_SOURCE }}share/spack/setup-env.${{ env.SETUP_SCRIPT_EXT }}
           spack -d gpg list
-          tree ~/.spack/bootstrap/store/
+          ${{ env.VALIDATE_LAST_EXIT }}
+          tree ${{ env.USER_SCOPE_PARENT_DIR }}/.spack/bootstrap/store/
+      - name: Bootstrap File
+        env:
+          SETUP_SCRIPT_EXT: ${{ matrix.runner == 'windows-latest' && 'ps1' || 'sh' }}
+          SETUP_SCRIPT_SOURCE: ${{ matrix.runner == 'windows-latest' && './' || 'source ' }}
+          USER_SCOPE_PARENT_DIR: ${{ matrix.runner == 'windows-latest' && '$env:userprofile' || '$HOME' }}
+          VALIDATE_LAST_EXIT: ${{ matrix.runner == 'windows-latest' && './share/spack/qa/validate_last_exit.ps1' || '' }}
+        run: |
+          ${{ env.SETUP_SCRIPT_SOURCE }}share/spack/setup-env.${{ env.SETUP_SCRIPT_EXT }}
+          spack -d python share/spack/qa/bootstrap-file.py
+          ${{ env.VALIDATE_LAST_EXIT }}
+          tree ${{ env.USER_SCOPE_PARENT_DIR }}/.spack/bootstrap/store/

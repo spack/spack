@@ -212,6 +212,14 @@ exclude_lines = [
 ]
 ignore_errors = true
 
+[tool.coverage.paths]
+source = [
+    ".",
+    "/Users/runner/work/spack/spack",
+    "/System/Volumes/Data/home/runner/work/spack/spack",
+    "D:\\a\\spack\\spack",
+]
+
 [tool.coverage.html]
 directory = "htmlcov"
 

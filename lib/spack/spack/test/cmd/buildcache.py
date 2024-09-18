@@ -13,7 +13,6 @@ import pytest
 
 import spack.binary_distribution
 import spack.cmd.buildcache
-import spack.deptypes
 import spack.environment as ev
 import spack.error
 import spack.main
@@ -379,9 +378,8 @@ def test_buildcache_create_install(
 def test_correct_specs_are_pushed(
     things_to_install, expected, tmpdir, monkeypatch, default_mock_concretization, temporary_store
 ):
-    # Concretize dttop and add it to the temporary database (without prefixes)
     spec = default_mock_concretization("dttop")
-    temporary_store.db.add(spec, directory_layout=None)
+    spec.package.do_install(fake=True)
     slash_hash = f"/{spec.dag_hash()}"
 
     class DontUpload(spack.binary_distribution.Uploader):

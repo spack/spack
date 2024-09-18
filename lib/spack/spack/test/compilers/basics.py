@@ -12,8 +12,8 @@ import llnl.util.filesystem as fs
 
 import spack.compiler
 import spack.compilers
+import spack.config
 import spack.spec
-import spack.util.environment
 import spack.util.module_cmd
 from spack.compiler import Compiler
 from spack.util.executable import Executable, ProcessError

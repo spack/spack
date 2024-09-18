@@ -41,6 +41,7 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("36.3.0", commit="3b875cebabdd10462e224279558429f49ed75945", submodules=True)
     version("36.2.0", commit="e2fb53da911dc481969e56d635898a46b8d78df9", submodules=True)
     version("36.1.0", commit="3f19d1a0eec1d11937d66d0ef603f0b25b9b4e96", submodules=True)
     version("36.0.0", commit="6eca77c45b136861272694edbb61bb77200948a5", submodules=True)
@@ -400,11 +401,9 @@ class Acts(CMakePackage, CudaPackage):
     # ACTS imposes requirements on the C++ standard values used by ROOT
     for _cxxstd in _cxxstd_values:
         for _v in _cxxstd:
-            depends_on(f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +geant4")
-            depends_on(
-                f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +fatras_geant4"
-            )
-            depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} +tgeo")
+            depends_on(f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} +geant4")
+            depends_on(f"geant4 cxxstd={_v.value}", when=f"cxxstd={_v.value} +fatras_geant4")
+            depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} +tgeo")
 
     # When the traccc plugin is enabled, detray should match the Acts scalars
     with when("+traccc"):
@@ -415,6 +414,8 @@ class Acts(CMakePackage, CudaPackage):
     conflicts("%gcc@:7", when="@0.23:")
     # When using C++20, disable gcc 9 and lower.
     conflicts("%gcc@:9", when="cxxstd=20")
+    # See https://github.com/acts-project/acts/pull/3512
+    conflicts("^boost@1.85.0")
 
     def cmake_args(self):
         spec = self.spec

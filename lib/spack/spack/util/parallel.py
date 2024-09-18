@@ -9,7 +9,7 @@ import sys
 import traceback
 from typing import Optional
 
-from spack.util.cpus import determine_number_of_jobs
+from spack.config import determine_number_of_jobs
 
 
 class ErrorFromWorker:

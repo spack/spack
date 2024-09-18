@@ -34,8 +34,6 @@ class Imagemagick(AutotoolsPackage):
     variant("rsvg", default=False, description="Enable RSVG support")
 
     depends_on("pkgconfig@0.20:", type="build")
-    depends_on("libtool", when="@:7.1.0-60", type="build")
-    depends_on("libtool", when="@7.0.8:7.1.0-60", type=("build", "link"))
 
     depends_on("fontconfig@2.1:")
     depends_on("freetype@2.8:")
@@ -48,7 +46,6 @@ class Imagemagick(AutotoolsPackage):
     depends_on("ghostscript-fonts", when="+ghostscript")
 
     depends_on("libsm", when="@:7.1.0-60 platform=linux")
-    depends_on("libtool", when="platform=linux")
 
     def configure_args(self):
         args = []
