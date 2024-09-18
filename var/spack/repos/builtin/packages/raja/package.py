@@ -204,7 +204,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("blt", type="build")
     depends_on("blt@0.6.2:", type="build", when="@2024.02.1:")
-    depends_on("blt@0.6.1:", type="build", when="@2024.02.0:")
+    depends_on("blt@0.6.1", type="build", when="@2024.02.0")
     depends_on("blt@0.5.3", type="build", when="@2023.06.0:2023.06.1")
     depends_on("blt@0.5.2:0.5.3", type="build", when="@2022.10.5")
     depends_on("blt@0.5.0:0.5.3", type="build", when="@0.14.1:2022.10.4")
@@ -218,8 +218,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("camp+omptarget", when="+omptarget")
     depends_on("camp+sycl", when="+sycl")
     depends_on("camp@2024.07.0:", when="@2024.02.2:")
-    depends_on("camp@2024.02.1:", when="@2024.02.1:")
-    depends_on("camp@2024.02.0:", when="@2024.02.0:")
+    depends_on("camp@2024.02.1", when="@2024.02.1")
+    depends_on("camp@2024.02.0", when="@2024.02.0")
     depends_on("camp@2023.06.0", when="@2023.06.0:2023.06.1")
     depends_on("camp@2022.10.1:2023.06.0", when="@2022.10.3:2022.10.5")
     depends_on("camp@2022.10.0:2023.06.0", when="@2022.10.0:2022.10.2")
@@ -227,10 +227,11 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("camp@0.2.2:0.2.3", when="@0.14.0")
     depends_on("camp@0.1.0", when="@0.10.0:0.13.0")
 
-    depends_on("cmake@3.23:", when="@2022.10.0:+rocm", type="build")
-    depends_on("cmake@3.20:", when="@2022.10.0:", type="build")
-    depends_on("cmake@3.14:", when="@2022.03.0:", type="build")
-    depends_on("cmake@:3.20", when="@:2022.03+rocm", type="build")
+    depends_on("cmake@3.23:", when="@2024.07.0:", type="build")
+    depends_on("cmake@3.23:", when="@2022.10.0:2024.02.2+rocm", type="build")
+    depends_on("cmake@3.20:", when="@2022.10.0:2024.02.2", type="build")
+    depends_on("cmake@3.20:", when="@:2022.03+rocm", type="build")
+    depends_on("cmake@3.14:", when="@:2022.03", type="build")
 
     depends_on("llvm-openmp", when="+openmp %apple-clang")
 

@@ -185,8 +185,6 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries = super().initconfig_mpi_entries()
 
         entries.append(cmake_cache_option("WITH_MPI", spec.satisfies("+mpi")))
-        if spec.satisfies("+mpi"):
-            mpi_for_radiuss_projects(entries, spec, env)
 
         return entries
 
