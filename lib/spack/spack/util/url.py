@@ -73,17 +73,16 @@ def join(base, url, *, resolve_href: bool = False, **kwargs):
     http:// URLs. If resolve_href=True, the behavior is the same as a browser: e.g.
     https://example.com/a/b + c/d = https://example.com/a/c/d. If resolve_href=False, the
     behavior is like joining paths: https://example.com/a/b + c/d = https://example.com/a/b/c/d."""
-    uses_netloc = urllib.parse.uses_netloc
-    uses_relative = urllib.parse.uses_relative
-    urllib.parse.uses_netloc = [*uses_netloc, "s3", "gs"]
-    urllib.parse.uses_relative = [*uses_relative, "s3", "gs"]
-
     # Join relative to the last component by adding a trailing slash if necessary
     if not resolve_href:
         parsed = urllib.parse.urlparse(base)
         if not parsed.path.endswith("/"):
             base = parsed._replace(path=f"{parsed.path}/").geturl()
+    uses_netloc = urllib.parse.uses_netloc
+    uses_relative = urllib.parse.uses_relative
     try:
+        urllib.parse.uses_netloc = [*uses_netloc, "s3", "gs"]
+        urllib.parse.uses_relative = [*uses_relative, "s3", "gs"]
         return urllib.parse.urljoin(base, url, **kwargs)
     finally:
         urllib.parse.uses_netloc = uses_netloc
