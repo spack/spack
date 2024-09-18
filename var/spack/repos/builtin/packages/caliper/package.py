@@ -142,7 +142,6 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_compiler_entries(self):
         spec = self.spec
-        compiler = self.compiler
         entries = super().initconfig_compiler_entries()
 
         if spec.satisfies("+rocm"):
@@ -159,7 +158,6 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        compiler = self.compiler
         entries = super().initconfig_hardware_entries()
 
         if spec.satisfies("+cuda"):
@@ -214,7 +212,6 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_path("ITT_PREFIX", itt_dir))
         if spec.satisfies("+libunwind"):
             entries.append(cmake_cache_path("LIBUNWIND_PREFIX", spec["unwind"].prefix))
-
 
         # Build options
         entries.append("#------------------{0}".format("-" * 60))
