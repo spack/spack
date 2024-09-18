@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import socket
 
 from spack.package import *
@@ -199,8 +198,10 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
             # Shared handling of cuda.
 
-            # Custom options. We place everything in CMAKE_CUDA_FLAGS_(RELEASE|RELWITHDEBINFO|DEBUG) which are not set by cuda_for_radiuss_projects
-            if "xl" in self.compiler.cxx:
+            # Custom options.
+            # We place everything in CMAKE_CUDA_FLAGS_(RELEASE|RELWITHDEBINFO|DEBUG)
+            # which are not set by cuda_for_radiuss_projects
+            if "xl" in compiler.cxx:
                 all_targets_flags = (
                     "-Xcompiler -qstrict -Xcompiler -qxlcompatmacros -Xcompiler -qalias=noansi"
                     + "-Xcompiler -qsmp=omp -Xcompiler -qhot -Xcompiler -qnoeh"
@@ -211,7 +212,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
                 cuda_reldebinf_flags = "-O3 -g -Xcompiler -O2 " + all_targets_flags
                 cuda_debug_flags = "-O0 -g -Xcompiler -O2 " + all_targets_flags
 
-            elif "gcc" in self.compiler.cxx:
+            elif "gcc" in compiler.cxx:
                 all_targets_flags = "-Xcompiler -finline-functions -Xcompiler -finline-limit=20000"
 
                 cuda_release_flags = "-O3 -Xcompiler -Ofast " + all_targets_flags
@@ -278,7 +279,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = []
 
-        option_prefix = "RAJA_" if spec.satisfies("@0.14.0:") else ""
+        # option_prefix = "RAJA_" if spec.satisfies("@0.14.0:") else ""
 
         # TPL locations
         entries.append("#------------------{0}".format("-" * 60))
@@ -313,7 +314,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_option("ENABLE_BENCHMARKS", "tests=benchmarks" in spec))
         entries.append(
-            cmake_cache_option("ENABLE_TESTS", not "tests=none" in spec or self.run_tests)
+            cmake_cache_option("ENABLE_TESTS", "tests=none" not in spec or self.run_tests)
         )
 
         entries.append(cmake_cache_option("RAJA_PERFSUITE_USE_CALIPER", "+caliper" in spec))
