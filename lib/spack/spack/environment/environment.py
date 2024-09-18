@@ -1648,7 +1648,7 @@ class Environment:
 
         # Solve the environment in parallel on Linux
         start = time.time()
-        num_procs = min(len(args), spack.util.cpus.determine_number_of_jobs(parallel=True))
+        num_procs = min(len(args), spack.config.determine_number_of_jobs(parallel=True))
 
         # TODO: support parallel concretization on macOS and Windows
         msg = "Starting concretization"

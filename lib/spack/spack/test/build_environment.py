@@ -23,7 +23,6 @@ from spack.build_environment import UseMode, _static_to_shared_library, dso_suff
 from spack.context import Context
 from spack.installer import PackageInstaller
 from spack.paths import build_env_path
-from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
@@ -484,7 +483,7 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
     assert s["pkg-a"].package.module.make_jobs == 1
 
     spack.build_environment.set_package_py_globals(s["pkg-b"].package, context=Context.BUILD)
-    assert s["pkg-b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
+    assert s["pkg-b"].package.module.make_jobs == spack.config.determine_number_of_jobs(
         parallel=s["pkg-b"].package.parallel
     )
 
@@ -517,7 +516,7 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
 
 def test_build_jobs_sequential_is_sequential():
     assert (
-        determine_number_of_jobs(
+        spack.config.determine_number_of_jobs(
             parallel=False,
             max_cpus=8,
             config=spack.config.Configuration(
@@ -531,7 +530,7 @@ def test_build_jobs_sequential_is_sequential():
 
 def test_build_jobs_command_line_overrides():
     assert (
-        determine_number_of_jobs(
+        spack.config.determine_number_of_jobs(
             parallel=True,
             max_cpus=1,
             config=spack.config.Configuration(
@@ -542,7 +541,7 @@ def test_build_jobs_command_line_overrides():
         == 10
     )
     assert (
-        determine_number_of_jobs(
+        spack.config.determine_number_of_jobs(
             parallel=True,
             max_cpus=100,
             config=spack.config.Configuration(
@@ -556,7 +555,7 @@ def test_build_jobs_command_line_overrides():
 
 def test_build_jobs_defaults():
     assert (
-        determine_number_of_jobs(
+        spack.config.determine_number_of_jobs(
             parallel=True,
             max_cpus=10,
             config=spack.config.Configuration(
@@ -566,7 +565,7 @@ def test_build_jobs_defaults():
         == 1
     )
     assert (
-        determine_number_of_jobs(
+        spack.config.determine_number_of_jobs(
             parallel=True,
             max_cpus=10,
             config=spack.config.Configuration(
