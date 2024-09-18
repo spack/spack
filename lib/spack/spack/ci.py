@@ -621,6 +621,9 @@ class SpackCI:
                 ignored = sorted(set(ignored))
                 required = sorted(set(required))
 
+                # Make sure required things are not also ignored
+                assert not any([ikey in required for ikey in ignored])
+
                 def job_query(job):
                     job_vars = job["attributes"]["variables"]
                     query = (
@@ -657,7 +660,8 @@ class SpackCI:
                     # Strip ignore keys
                     if ignored:
                         for key in ignored:
-                            config.pop(key)
+                            if key in config:
+                                config.pop(key)
 
                     # Only keep allowed keys
                     clean_config = {}
