@@ -268,8 +268,6 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries = super().initconfig_mpi_entries()
 
         entries.append(cmake_cache_option("ENABLE_MPI", "+mpi" in spec))
-        if "+mpi" in spec:
-            mpi_for_radiuss_projects(entries, spec, env)
 
         return entries
 
