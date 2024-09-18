@@ -229,7 +229,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Expose a way to disable CudaMallocAsync that can cause problems
     # with some MPI such as cray-mpich
-    variant("alloc_async", default=True, description="Use CudaMallocAsync", when="@4.2: +cuda")
+    variant("alloc_async", default=False, description="Use CudaMallocAsync", when="@4.2: +cuda")
 
     # SYCL and OpenMPTarget require C++17 or higher
     for cxxstdver in cxxstds[: cxxstds.index("17")]:
