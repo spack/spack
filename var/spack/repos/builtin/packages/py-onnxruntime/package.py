@@ -45,6 +45,9 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
 
     license("MIT")
 
+    version("1.18.2", tag="v1.18.2", commit="9691af1a2a17b12af04652f4d8d2a18ce9507025")
+    version("1.18.1", tag="v1.18.1", commit="387127404e6c1d84b3468c387d864877ed1c67fe")
+    version("1.18.0", tag="v1.18.0", commit="45737400a2f3015c11f005ed7603611eaed306a6")
     version("1.17.3", tag="v1.17.3", commit="56b660f36940a919295e6f1e18ad3a9a93a10bf7")
     version("1.17.1", tag="v1.17.1", commit="8f5c79cb63f09ef1302e85081093a3fe4da1bc7d")
     version("1.10.0", tag="v1.10.0", commit="0d9030e79888d1d5828730b254fedc53c7b640c1")
@@ -74,6 +77,7 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     depends_on("py-coloredlogs", when="@1.17:", type=("build", "run"))
     depends_on("py-flatbuffers", type=("build", "run"))
     depends_on("py-numpy@1.16.6:", type=("build", "run"))
+    depends_on("py-numpy@1.21.6:1", when="@1.18", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-protobuf", type=("build", "run"))
     depends_on("py-sympy@1.1:", type=("build", "run"))
@@ -84,6 +88,7 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     depends_on("py-cerberus", type=("build", "run"))
     depends_on("py-onnx", type=("build", "run"))
     depends_on("py-onnx@:1.15.0", type=("build", "run"), when="@:1.17")
+    depends_on("py-onnx@:1.16", type=("build", "run"), when="@:1.18")
     depends_on("zlib-api")
     depends_on("libpng")
     depends_on("cuda", when="+cuda")
@@ -130,14 +135,14 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     build_directory = "."
 
     def patch(self):
-        if self.spec.satisfies("@1.7: + rocm"):
+        if self.spec.satisfies("@1.17 + rocm"):
             filter_file(
                 r"${onnxruntime_ROCM_HOME}/.info/version-dev",
                 "{0}/.info/version".format(self.spec["rocm-core"].prefix),
                 "cmake/CMakeLists.txt",
                 string=True,
             )
-        if self.spec.satisfies("@1.8: + rocm"):
+        if self.spec.satisfies("@1.18: + rocm"):
             filter_file(
                 r"${onnxruntime_ROCM_HOME}/.info/version",
                 "{0}/.info/version".format(self.spec["rocm-core"].prefix),
