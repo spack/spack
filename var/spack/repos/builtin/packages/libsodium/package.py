@@ -24,6 +24,7 @@ class Libsodium(AutotoolsPackage):
     version("stable", branch="stable")
     version("next", branch="next")
 
+    version("1.0.20", sha256="ebb65ef6ca439333c2bb41a0c1990587288da07f6c7fd07cb3a18cc18d30ce19")
     version("1.0.19", sha256="018d79fe0a045cca07331d37bd0cb57b2e838c51bc48fd837a1472e50068bbea")
     version("1.0.18", sha256="6f504490b342a4f8a4c4a02fc9b866cbef8622d5df4e5452b46be121e46636c1")
     version("1.0.17", sha256="0cc3dae33e642cc187b5ceb467e0ad0e1b51dcba577de1190e9ffa17766ac2b1")
