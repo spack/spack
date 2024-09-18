@@ -30,13 +30,16 @@ import spack.compilers
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
+import spack.environment
 import spack.error
 import spack.filesystem_view as fsv
 import spack.hash_types as ht
 import spack.paths
 import spack.repo
 import spack.schema.env
+import spack.schema.merged
 import spack.spec
+import spack.spec_list
 import spack.store
 import spack.user_environment as uenv
 import spack.util.cpus
@@ -1645,7 +1648,7 @@ class Environment:
 
         # Solve the environment in parallel on Linux
         start = time.time()
-        num_procs = min(len(args), spack.util.cpus.determine_number_of_jobs(parallel=True))
+        num_procs = min(len(args), spack.config.determine_number_of_jobs(parallel=True))
 
         # TODO: support parallel concretization on macOS and Windows
         msg = "Starting concretization"

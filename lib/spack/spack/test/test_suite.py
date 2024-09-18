@@ -10,8 +10,10 @@ import pytest
 
 from llnl.util.filesystem import join_path, mkdirp, touch
 
+import spack.config
 import spack.install_test
 import spack.spec
+import spack.util.executable
 from spack.install_test import TestStatus
 from spack.util.executable import which
 

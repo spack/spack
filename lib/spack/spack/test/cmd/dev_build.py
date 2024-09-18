@@ -11,6 +11,7 @@ import llnl.util.filesystem as fs
 
 import spack.environment as ev
 import spack.error
+import spack.repo
 import spack.spec
 import spack.store
 from spack.main import SpackCommand

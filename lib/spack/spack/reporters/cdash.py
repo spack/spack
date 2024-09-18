@@ -22,6 +22,8 @@ from llnl.util.filesystem import working_dir
 import spack
 import spack.paths
 import spack.platforms
+import spack.spec
+import spack.tengine
 import spack.util.git
 from spack.error import SpackError
 from spack.util.crypto import checksum

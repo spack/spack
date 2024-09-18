@@ -11,6 +11,7 @@ import llnl.util.filesystem
 import llnl.util.tty as tty
 
 import spack.caches
+import spack.cmd
 import spack.config
 import spack.stage
 import spack.store

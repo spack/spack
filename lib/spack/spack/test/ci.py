@@ -13,6 +13,7 @@ import spack.ci as ci
 import spack.environment as ev
 import spack.error
 import spack.paths as spack_paths
+import spack.spec
 import spack.util.git
 
 

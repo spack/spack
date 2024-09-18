@@ -7,6 +7,8 @@ import pytest
 
 import spack.cmd.diff
 import spack.main
+import spack.repo
+import spack.spec
 import spack.util.spack_json as sjson
 from spack.test.conftest import create_test_repo
 

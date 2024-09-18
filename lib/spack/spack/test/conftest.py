@@ -38,17 +38,21 @@ import spack.caches
 import spack.compiler
 import spack.compilers
 import spack.config
+import spack.directives
 import spack.environment as ev
 import spack.error
+import spack.modules.common
 import spack.package_base
 import spack.paths
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.spec
 import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.util.executable
+import spack.util.file_cache
 import spack.util.git
 import spack.util.gpg
 import spack.util.parallel

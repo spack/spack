@@ -9,8 +9,11 @@ import sys
 
 import pytest
 
+import spack.binary_distribution
 import spack.cmd
+import spack.parser
 import spack.platforms.test
+import spack.repo
 import spack.spec
 from spack.parser import (
     UNIX_FILENAME,

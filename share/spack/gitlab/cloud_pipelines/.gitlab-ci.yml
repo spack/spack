@@ -181,6 +181,7 @@ default:
     - cat /proc/loadavg || true
     - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
     - . "./share/spack/setup-env.sh"
+    - spack arch
   after_script:
     - cat /proc/loadavg || true
     - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
@@ -905,7 +906,6 @@ e4s-cray-rhel-build:
     SPACK_CI_STACK_NAME: e4s-cray-sles
 
 e4s-cray-sles-generate:
-  allow_failure: true  # no machines available
   extends: [ ".generate-cray-sles", ".e4s-cray-sles" ]
 
 e4s-cray-sles-build:
