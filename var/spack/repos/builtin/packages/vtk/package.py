@@ -236,6 +236,12 @@ class Vtk(CMakePackage):
         when="@9.1:9.2 %gcc@13:",
     )
 
+    def flag_handler(self, name, flags):
+        if name == "ldflags":
+            if self.spec.satisfies("%apple-clang@15:"):
+                flags.append("-Wl,-ld_classic")
+        return (flags, None, None)
+
     @when("@9.2:")
     def patch(self):
         # provide definition for Ioss::Init::Initializer::Initializer(),
