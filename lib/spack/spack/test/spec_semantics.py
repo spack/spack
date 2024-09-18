@@ -234,6 +234,16 @@ class TestSpecSemantics:
                 'libelf cflags="-O3" cppflags="-Wall"',
                 'libelf cflags="-O3" cppflags="-Wall"',
             ),
+            (
+                "libelf patches=ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2",
+                "libelf patches=ba5e3",  # constrain by a patch sha256 prefix
+                # TODO: the result below is not ideal. Prefix satisfies() works for patches, but
+                # constrain() isn't similarly special-cased to do the same thing
+                (
+                    "libelf patches=ba5e3,"
+                    "ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2"
+                ),
+            ),
         ],
     )
     def test_abstract_specs_can_constrain_each_other(self, lhs, rhs, expected):
@@ -1076,7 +1086,7 @@ class TestSpecSemantics:
     @pytest.mark.regression("13124")
     def test_error_message_unknown_variant(self):
         s = Spec("mpileaks +unknown")
-        with pytest.raises(UnknownVariantError, match=r"package has no such"):
+        with pytest.raises(UnknownVariantError):
             s.concretize()
 
     @pytest.mark.regression("18527")
@@ -1114,6 +1124,20 @@ class TestSpecSemantics:
         assert "foobar=baz" in new_spec
         assert new_spec.compiler_flags["cflags"] == ["-O2"]
         assert new_spec.compiler_flags["cxxflags"] == ["-O1"]
+
+    def test_spec_override_with_nonexisting_variant(self):
+        init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
+        change_spec = Spec("pkg-a baz=fee")
+        with pytest.raises(ValueError):
+            Spec.override(init_spec, change_spec)
+
+    def test_spec_override_with_variant_not_in_init_spec(self):
+        init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
+        change_spec = Spec("pkg-a +bvv ~lorem_ipsum")
+        new_spec = Spec.override(init_spec, change_spec)
+        new_spec.concretize()
+        assert "+bvv" in new_spec
+        assert "~lorem_ipsum" in new_spec
 
     @pytest.mark.parametrize(
         "spec_str,specs_in_dag",

@@ -146,6 +146,7 @@ def generator(*names: str, default: Optional[str] = None):
         default=default,
         values=_values,
         description="the build system generator to use",
+        when="build_system=cmake",
     )
     for x in not_used:
         conflicts(f"generator={x}")
@@ -505,7 +506,7 @@ class CMakeBuilder(BaseBuilder):
         if variant is None:
             variant = cmake_var.lower()
 
-        if variant not in self.pkg.variants:
+        if not self.pkg.has_variant(variant):
             raise KeyError('"{0}" is not a variant of "{1}"'.format(variant, self.pkg.name))
 
         if variant not in self.pkg.spec.variants:

@@ -58,12 +58,10 @@ import spack.schema.packages
 import spack.schema.repos
 import spack.schema.upstreams
 import spack.schema.view
-import spack.spec
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
-from spack.error import SpecSyntaxError
 from spack.util.cpus import cpus_available
 
 #: Dict from section names -> schema for that section
@@ -1710,25 +1708,37 @@ def get_mark_from_yaml_data(obj):
     return mark
 
 
-def parse_spec_from_yaml_string(string: str) -> "spack.spec.Spec":
-    """Parse a spec from YAML and add file/line info to errors, if it's available.
-
-    Parse a ``Spec`` from the supplied string, but also intercept any syntax errors and
-    add file/line information for debugging using file/line annotations from the string.
-
-    Arguments:
-        string: a string representing a ``Spec`` from config YAML.
-
+def determine_number_of_jobs(
+    *,
+    parallel: bool = False,
+    max_cpus: int = cpus_available(),
+    config: Optional[Configuration] = None,
+) -> int:
     """
+    Packages that require sequential builds need 1 job. Otherwise we use the
+    number of jobs set on the command line. If not set, then we use the config
+    defaults (which is usually set through the builtin config scope), but we
+    cap to the number of CPUs available to avoid oversubscription.
+
+    Parameters:
+        parallel: true when package supports parallel builds
+        max_cpus: maximum number of CPUs to use (defaults to cpus_available())
+        config: configuration object (defaults to global config)
+    """
+    if not parallel:
+        return 1
+
+    cfg = config or CONFIG
+
+    # Command line overrides all
     try:
-        spec = spack.spec.Spec(string)
-        return spec
-    except SpecSyntaxError as e:
-        mark = get_mark_from_yaml_data(string)
-        if mark:
-            msg = f"{mark.name}:{mark.line + 1}: {str(e)}"
-            raise SpecSyntaxError(msg) from e
-        raise e
+        command_line = cfg.get("config:build_jobs", default=None, scope="command_line")
+        if command_line is not None:
+            return command_line
+    except ValueError:
+        pass
+
+    return min(max_cpus, cfg.get("config:build_jobs", 16))
 
 
 class ConfigSectionError(spack.error.ConfigError):
