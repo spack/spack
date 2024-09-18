@@ -92,9 +92,6 @@ class LlvmOpenmp(CMakePackage):
         if os.path.isdir(cmake_mod_dir):
             os.rename(cmake_mod_dir, os.path.join(self.stage.path, "cmake"))
 
-    variant('multicompat', default=False,
-            description="Support gomp and the Intel openMP runtime library.")
-
     def cmake_args(self):
 
         # Disable LIBOMP_INSTALL_ALIASES, otherwise the library is installed as
