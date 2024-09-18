@@ -16,6 +16,7 @@ class PyHatchCython(PythonPackage):
 
     version("0.5.1", sha256="d01135e092544069c3e61f6dc36748ee369beacb893a5c43b9593a533f839703")
 
+    depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-hatchling", type=("build", "run"))
     depends_on("py-cython", type=("build", "run"))

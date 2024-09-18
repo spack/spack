@@ -20,14 +20,15 @@ class PyBiotite(PythonPackage):
 
     version("1.0.1", sha256="7012158431fd488c26d78d33032550eea1d7af7afd01b48549a7fd239f63dab5")
 
-    depends_on("py-python-dotenv", type="build")
-    depends_on("py-hatch-vcs", type="build")
+    depends_on("python@3.10:", type=("build", "run"))
+
+    depends_on("py-hatch-vcs@0.3.0:", type="build")
     depends_on("py-hatchling", type="build")
     depends_on("py-hatch", type="build")
-    depends_on("py-hatch-cython", type="build")
+    depends_on("py-hatch-cython@0.5", type="build")
 
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-msgpack", type=("build", "run"))
-    depends_on("py-biotraj", type=("build", "run"))
-    depends_on("py-requests", type=("build", "run"))
-    depends_on("py-networkx", type=("build", "run"))
+    depends_on("py-numpy@1.25:", type=("build", "run"))
+    depends_on("py-msgpack@0.5.6:", type=("build", "run"))
+    depends_on("py-biotraj@1.0:2.0", type=("build", "run"))
+    depends_on("py-requests@2.12:", type=("build", "run"))
+    depends_on("py-networkx@2.0:", type=("build", "run"))
