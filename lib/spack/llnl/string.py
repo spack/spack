@@ -42,16 +42,16 @@ def comma_and(sequence: List[str]) -> str:
 
 
 def ordinal(number: int) -> str:
-    """Return the ordinal number representation of the provided number.
+    """Return the ordinal representation (1st, 2nd, 3rd, etc.) for the provided number.
 
     Args:
-        number: value to convert to ordinal number
+        number: int to convert to ordinal number
 
-    Returns: ordinal number (representation) of the number
+    Returns: number's corresponding ordinal
     """
-    suffixes = {"1": "st", "2": "nd", "3": "rd"}
-    d = str(number)[-1]
-    suffix = suffixes[d] if d in suffixes and number % 100 not in [11, 12, 13] else "th"
+    idx = (number % 10) << 1
+    tens = number % 100 // 10
+    suffix = "th" if tens == 1 else "thstndrdththththththth"[idx : idx + 2]
     return f"{number}{suffix}"
 
 
