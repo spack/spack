@@ -5,8 +5,13 @@
 
 from spack.package import *
 
+
 class PyBiotite(PythonPackage):
-    """Biotite is your Swiss army knife for bioinformatics. Whether you want to identify homologous sequence regions in a protein family or you would like to find disulfide bonds in a protein structure: Biotite has the right tool for you. This package bundles popular tasks in computational molecular biology into a uniform Python library."""
+    """Biotite is your Swiss army knife for bioinformatics. \
+    Whether you want to identify homologous sequence regions in a protein family or you would \
+    like to find disulfide bonds in a protein structure: Biotite has the right tool for you. \
+    This package bundles popular tasks in computational molecular biology into a uniform Python \
+    library."""
 
     homepage = "https://www.biotite-python.org/latest/"
     pypi = "biotite/biotite-1.0.1.tar.gz"

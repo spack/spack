@@ -26,4 +26,3 @@ class PyFairEsm(PythonPackage):
     depends_on("py-ml-collections", type=("build", "run"))
     depends_on("py-einops", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
-

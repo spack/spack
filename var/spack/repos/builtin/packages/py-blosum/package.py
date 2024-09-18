@@ -7,9 +7,8 @@ from spack.package import *
 
 
 class PyBlosum(PythonPackage):
-    """The BLOcks SUbstitution Matrices (BLOSUM) are used to score alignments between protein sequences and are therefore mainly used in bioinformatics.
-Reading such matrices is not particularly difficult, yet most off the shelf packages are overloaded with strange dependencies. And why do we need to implement the same reader again if there is a simple module for that.
-blosum offers a robust and easy-to-expand implementation without relying on third-party libraries."""
+    """The BLOcks SUbstitution Matrices (BLOSUM) are used to score alignments between protein \
+    sequences and are therefore mainly used in bioinformatics."""
 
     homepage = "https://github.com/not-a-feature/blosum"
     pypi = "blosum/blosum-2.0.3.tar.gz"

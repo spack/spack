@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class PyHatchCython(PythonPackage):
     """cython hooks for hatch"""
 

@@ -19,4 +19,3 @@ class PyHatch(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-hatchling", type="build")
     depends_on("py-hatch-vcs", type="build")
-
