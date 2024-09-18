@@ -304,6 +304,12 @@ class Seacas(CMakePackage):
         when="@:2023-10-24",
     )
 
+    def flag_handler(self, name, flags):
+        if name == "ldflags":
+            if self.spec.satisfies("%apple-clang@15:"):
+                flags.append("-Wl,-ld_classic")
+        return (flags, None, None)
+
     def setup_run_environment(self, env):
         env.prepend_path("PYTHONPATH", self.prefix.lib)
 
