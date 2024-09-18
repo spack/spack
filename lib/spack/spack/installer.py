@@ -908,7 +908,7 @@ class BuildTask:
 
         # The initial build task cannot have status "removed".
         if attempts == 0 and status == BuildStatus.REMOVED:
-            raise InstallError(
+            raise spack.error.InstallError(
                 f"Cannot create a build task for {self.pkg_id} with status '{status}'", pkg=pkg
             )
         self.status = status
