@@ -145,6 +145,8 @@ class PyScipy(PythonPackage):
         msg="SciPy requires at least vc142 (default with Visual Studio 2019) "
         "when building with MSVC",
     )
+    # https://github.com/spack/spack/issues/45718
+    conflicts("%aocc", msg="SciPy doesn't compile with AOCC yet")
 
     # https://github.com/scipy/scipy/issues/19831
     conflicts("^openblas@0.3.26:", when="@:1.12")
