@@ -31,7 +31,7 @@ class Feelpp(CMakePackage):
     variant("python", default=True, description="Enable Python wrappers")
     variant("quickstart", default=True, description="Enable the quickstart examples")
     variant("tests", default=False, description="Enable the tests")
-    
+
     # Add variants for C++ standards
     variant(
         "cxxstd", default="20", description="C++ standard", values=["17", "20", "23"], multi=False
@@ -39,7 +39,7 @@ class Feelpp(CMakePackage):
 
     # Specify dependencies with required versions
     depends_on("c", type="build")
-    depends_on("cxx", type="build") 
+    depends_on("cxx", type="build")
     depends_on("fortran", type="build")
     depends_on("cmake@3.21:", type="build")
     depends_on("llvm@14.0.0:")
