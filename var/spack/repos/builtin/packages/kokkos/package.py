@@ -227,8 +227,13 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda", when="cxxstd=17 ^cuda@:10")
     conflicts("+cuda", when="cxxstd=20 ^cuda@:11")
 
-    variant("async_malloc", default=True, description="Use CudaMallocAsync or HipMallocAsync", when="@4.2:")
-    conflicts("+async_malloc", when="~cuda ~rocm")
+    variant(
+        "alloc_async",
+        default=True,
+        description="Use CudaMallocAsync or HipMallocAsync",
+        when="@4.2:",
+    )
+    conflicts("+alloc_async", when="~cuda ~rocm")
 
     # SYCL and OpenMPTarget require C++17 or higher
     for cxxstdver in cxxstds[: cxxstds.index("17")]:
@@ -375,7 +380,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             options.append(self.define("CMAKE_CXX_FLAGS", "-fp-model=precise"))
 
         if "+cuda" in self.spec:
-            options.append(self.define_from_variant(Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC, "async_malloc"))
+            options.append(
+                self.define_from_variant(Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC, "alloc_async")
+            )
 
         # Remove duplicate options
         return lang.dedupe(options)
