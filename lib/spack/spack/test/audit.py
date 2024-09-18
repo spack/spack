@@ -29,6 +29,9 @@ import spack.config
         (["invalid-selfhosted-gitlab-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has a stand-alone test method in build-time callbacks
         (["fail-test-audit"], ["PKG-PROPERTIES"]),
+        # This package implements and uses several deprecated stand-alone
+        # test methods
+        (["fail-test-audit-deprecated"], ["PKG-DEPRECATED-ATTRIBUTES"]),
         # This package has stand-alone test methods without non-trivial docstrings
         (["fail-test-audit-docstring"], ["PKG-PROPERTIES"]),
         # This package has a stand-alone test method without an implementation
@@ -45,7 +48,7 @@ def test_package_audits(packages, expected_errors, mock_packages):
 
     # Check that errors were reported only for the expected failure
     actual_errors = [check for check, errors in reports if errors]
-    msg = [str(e) for _, errors in reports for e in errors]
+    msg = "\n".join([str(e) for _, errors in reports for e in errors])
     if expected_errors:
         assert expected_errors == actual_errors, msg
     else:

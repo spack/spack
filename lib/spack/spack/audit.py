@@ -51,6 +51,7 @@ from typing import Iterable, List, Set, Tuple
 from urllib.request import urlopen
 
 import llnl.util.lang
+from llnl.string import plural
 
 import spack.builder
 import spack.config
@@ -387,6 +388,14 @@ package_attributes = AuditClass(
 )
 
 
+package_deprecated_attributes = AuditClass(
+    group="packages",
+    tag="PKG-DEPRECATED-ATTRIBUTES",
+    description="Sanity checks to preclude use of deprecated package attributes",
+    kwargs=("pkgs",),
+)
+
+
 package_properties = AuditClass(
     group="packages",
     tag="PKG-PROPERTIES",
@@ -419,9 +428,9 @@ def _check_build_test_callbacks(pkgs, error_cls):
 
         has_test_method = test_callbacks and any([m.startswith("test_") for m in test_callbacks])
         if has_test_method:
-            msg = f"{pkg_name} includes stand-alone test methods in build-time checks."
+            msg = f"Package {pkg_name} includes stand-alone test methods in build-time checks."
             callbacks = ", ".join(test_callbacks)
-            instr = f"Remove the following from build_time_test_callbacks: {callbacks}"
+            instr = f"Remove the following from 'build_time_test_callbacks': {callbacks}"
             errors.append(error_cls(msg.format(pkg_name), [instr]))
 
     return errors
@@ -515,6 +524,46 @@ def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
                 "defined in '{}'".format(x[0].__module__) for x in name_definitions[name]
             ]
             errors.append(error_cls(error_msg.format(pkg_name, name), definitions))
+
+    return errors
+
+
+@package_deprecated_attributes
+def _search_for_deprecated_package_methods(pkgs, error_cls):
+    """Ensure the package doesn't define or use deprecated methods"""
+    DEPRECATED_METHOD = (("test", "a name starting with 'test_'"),)
+    DEPRECATED_USE = (
+        ("self.cache_extra_test_sources(", "cache_extra_test_sources(self, ..)"),
+        ("self.install_test_root(", "install_test_root(self, ..)"),
+        ("self.run_test(", "test_part(self, ..)"),
+    )
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        methods = inspect.getmembers(pkg_cls, predicate=lambda x: inspect.isfunction(x))
+        method_errors = collections.defaultdict(list)
+        for name, function in methods:
+            for deprecated_name, alternate in DEPRECATED_METHOD:
+                if name == deprecated_name:
+                    msg = f"Rename '{deprecated_name}' method to {alternate} instead."
+                    method_errors[name].append(msg)
+
+            source = inspect.getsource(function)
+            for deprecated_name, alternate in DEPRECATED_USE:
+                if deprecated_name in source:
+                    msg = f"'{name}' method needs to use '{alternate}' instead of '{deprecated_name}'"
+                    method_errors[name].append(msg)
+
+        num_methods = len(method_errors)
+        if num_methods > 0:
+            methods = plural(num_methods, "method", show_n=False)
+            error_msg = (
+                f"Package '{pkg_name}' implements or uses unsupported deprecated {methods}."
+            )
+            instr = [f"Make changes to '{pkg_cls.__module__}':"]
+            for name in sorted(method_errors):
+                instr.extend([f"    {msg}" for msg in method_errors[name]])
+            errors.append(error_cls(error_msg, instr))
 
     return errors
 
@@ -786,6 +835,7 @@ def _ensure_test_docstring(pkgs, error_cls):
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         methods = inspect.getmembers(pkg_cls, predicate=lambda x: inspect.isfunction(x))
+        method_names = []
         for name, test_fn in methods:
             if not name.startswith("test_"):
                 continue
@@ -794,12 +844,19 @@ def _ensure_test_docstring(pkgs, error_cls):
             source = inspect.getsource(test_fn)
             match = re.search(doc_regex, source)
             if match is None or len(match.group(0).replace('"', "").strip()) == 0:
-                msg = f"{pkg_name} {name}'s has empty or missing docstring."
-                instr = (
-                    "The docstring is used as the description of the test in test outputs."
-                    "\n    Add a concise summary of the test to the docstring."
-                )
-                errors.append(error_cls(msg, [instr]))
+                method_names.append(name)
+
+        num_methods = len(method_names)
+        if num_methods > 0:
+            methods = plural(num_methods, "method", show_n=False)
+            docstrings = plural(num_methods, "docstring", show_n=False)
+            msg = f"Package {pkg_name} has test {methods} with empty or missing {docstrings}."
+            names = ", ".join(method_names)
+            instr = [
+                "Docstrings are used as descriptions in test outputs.",
+                f"Add a concise summary to the following {methods} in '{pkg_cls.__module__}': {names}",
+            ]
+            errors.append(error_cls(msg, instr))
 
     return errors
 
@@ -821,20 +878,28 @@ def _ensure_test_implemented(pkgs, error_cls):
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         methods = inspect.getmembers(pkg_cls, predicate=lambda x: inspect.isfunction(x))
+        method_names = []
         for name, test_fn in methods:
             if not name.startswith("test_"):
                 continue
 
             source = inspect.getsource(test_fn)
-            print(f"source={source}")
 
             # Attempt to ensure the test method is implemented.
             impl = re.sub(doc_regex, r"", source).splitlines()[1:]
             lines = [ln.strip() for ln in impl if not skip(ln)]
             if not lines:
-                msg = f"{pkg_name}'s {name} appears to be empty."
-                instr = "Implement the test functionality or remove the method."
-                errors.append(error_cls(msg, [instr]))
+                method_names.append(name)
+
+        num_methods = len(method_names)
+        if num_methods > 0:
+            methods = plural(num_methods, "method", show_n=False)
+            msg = f"Package {pkg_name} has empty or missing test {methods}."
+            names = ", ".join(method_names)
+            instr = [
+                f"Implement or remove the following {methods} from '{pkg_cls.__module__}': {names}"
+            ]
+            errors.append(error_cls(msg, instr))
 
     return errors
 
