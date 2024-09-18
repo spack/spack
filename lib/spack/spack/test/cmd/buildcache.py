@@ -259,25 +259,25 @@ def test_buildcache_sync(
                 {
                     "src": spack.util.url.join(
                         src_mirror_url,
-                        spack.binary_distribution.build_cache_relative_path(),
-                        spack.binary_distribution.tarball_name(spec, ".spec.json"),
+                        f"{spack.binary_distribution.build_cache_relative_path()}"
+                        f"/{spack.binary_distribution.tarball_name(spec, '.spec.json')}",
                     ),
                     "dest": spack.util.url.join(
                         dest_url,
-                        spack.binary_distribution.build_cache_relative_path(),
-                        spack.binary_distribution.tarball_name(spec, ".spec.json"),
+                        f"{spack.binary_distribution.build_cache_relative_path()}"
+                        f"/{spack.binary_distribution.tarball_name(spec, '.spec.json')}",
                     ),
                 },
                 {
                     "src": spack.util.url.join(
                         src_mirror_url,
-                        spack.binary_distribution.build_cache_relative_path(),
-                        spack.binary_distribution.tarball_path_name(spec, ".spack"),
+                        f"{spack.binary_distribution.build_cache_relative_path()}"
+                        f"/{spack.binary_distribution.tarball_path_name(spec, '.spack')}",
                     ),
                     "dest": spack.util.url.join(
                         dest_url,
-                        spack.binary_distribution.build_cache_relative_path(),
-                        spack.binary_distribution.tarball_path_name(spec, ".spack"),
+                        f"{spack.binary_distribution.build_cache_relative_path()}"
+                        f"/{spack.binary_distribution.tarball_path_name(spec, '.spack')}",
                     ),
                 },
             ]

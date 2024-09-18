@@ -767,7 +767,8 @@ def update_index(mirror: spack.mirror.Mirror, update_keys=False):
 
     if update_keys:
         keys_url = url_util.join(
-            url, bindist.build_cache_relative_path(), bindist.build_cache_keys_relative_path()
+            url,
+            f"{bindist.build_cache_relative_path()}/{bindist.build_cache_keys_relative_path()}",
         )
 
         try:
