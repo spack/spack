@@ -38,17 +38,7 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
     maintainers("adamjstewart", "jonas-eschle")
 
     version("0.4.31", sha256="022ea1347f9b21cbea31410b3d650d976ea4452a48ea7317a5f91c238031bf94")
-    version(
-        "0.4.30-rocm-enhanced",
-        sha256="8716dc1d39507aa4408c53a554aa78f50a44f8358cdec67dbae6613df43482b2",
-        url="https://github.com/ROCm/jax/archive/refs/tags/rocm-jaxlib-v0.4.30.tar.gz",
-    )
     version("0.4.30", sha256="0ef9635c734d9bbb44fcc87df4f1c3ccce1cfcfd243572c80d36fcdf826fe1e6")
-    version(
-        "0.4.29-rocm-enhanced",
-        sha256="470c8c719c91c2a54d82d98dc8638249faf668ae8eda248371e494013a31b1d1",
-        url="https://github.com/ROCm/jax/archive/refs/tags/rocm-jaxlib-v0.4.29.tar.gz",
-    )
     version("0.4.29", sha256="3a8005f4f62d35a5aad7e3dbd596890b47c81cc6e34fcfe3dcb93b3ca7cb1246")
     version("0.4.28", sha256="4dd11577d4ba5a095fbc35258ddd4e4c020829ed6e6afd498c9e38ccbcdfe20b")
     version("0.4.27", sha256="c2c82cd9ad3b395d5cbc0affa26a2938e52677a69ca8f0b9ef9922a52cac4f0c")
@@ -141,7 +131,6 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
 
     # https://github.com/google/jax/issues/19992
     conflicts("@0.4.4:", when="target=ppc64le:")
-    conflicts("~rocm", when="@0.4.29-rocm-enhanced,0.4.30-rocm-enhanced")
 
     def patch(self):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
