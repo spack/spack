@@ -16,6 +16,7 @@ class PyCffi(PythonPackage):
 
     license("MIT")
 
+    version("1.17.1", sha256="1c39c6016c32bc48dd54561950ebd6836e1670f2ae46128f67cf49e789c52824")
     version("1.16.0", sha256="bcb3ef43e58665bbda2fb198698fcae6776483e0c4a631aa5647806c25e02cc0")
     version("1.15.1", sha256="d400bfb9a37b1351253cb402671cea7e89bdecc294e8016a707f6d1d8ac934f9")
     version("1.15.0", sha256="920f0d66a896c2d99f0adbb391f990a84091179542c205fa53ce5787aff87954")
@@ -32,11 +33,22 @@ class PyCffi(PythonPackage):
     # ./spack-src/cffi/ffiplatform.py has _hack_at_distutils which imports
     # setuptools before distutils, but only on Windows. This could be made
     # unconditional to support Python 3.12
-    depends_on("python@:3.11", type=("build", "run"))
+    depends_on("python@:3.11", type=("build", "run"), when="@:1.15")
+    depends_on("python@:3.12", type=("build", "run"), when="@1.16:")
     depends_on("pkgconfig", type="build")
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@66.1:", type="build", when="@1.16:")
     depends_on("py-pycparser", type=("build", "run"))
     depends_on("libffi")
+
+    # This patch enables allocate write+execute memory for ffi.callback() on macos
+    # The patch is taken from the cffi-feedstock
+    # https://github.com/conda-forge/cffi-feedstock/pull/47/files
+    patch(
+        "0003-apple-api.patch",
+        when="@1.16: platform=darwin",
+        sha256="db836e67e2973ba7d3f4185b385fda49e2398281fc10362e5e413b75fdf93bf0",
+    )
 
     def flag_handler(self, name, flags):
         if self.spec.satisfies("%clang@13:"):
