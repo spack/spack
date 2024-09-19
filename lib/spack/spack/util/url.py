@@ -84,6 +84,8 @@ def join(base: str, *components: str, resolve_href: bool = False, **kwargs) -> s
     uses_netloc = urllib.parse.uses_netloc
     uses_relative = urllib.parse.uses_relative
     try:
+        # NOTE: we temporarily modify urllib internals so s3 and gs schemes are treated like http.
+        # This is non-portable, and may be forward incompatible with future cpython versions.
         urllib.parse.uses_netloc = [*uses_netloc, "s3", "gs"]
         urllib.parse.uses_relative = [*uses_relative, "s3", "gs"]
         return urllib.parse.urljoin(base, "/".join(components), **kwargs)
