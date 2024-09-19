@@ -97,7 +97,7 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
         else:
             args.append("--without-openmp")
 
-        args.append(f"--with-atlab-libs={spec['bigdft-atlab'].prefix.lib}")
+        args.append(f"--with-atlab-libs={spec['bigdft-atlab'].libs.ld_flags}")
 
         if spec.satisfies("+cuda"):
             args.append("--enable-cuda-gpu")
