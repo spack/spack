@@ -445,11 +445,11 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     with when("@2:2.1 +rocm"):
         depends_on("hsa-rocr-dev@4:5.4")
         depends_on("hip@4:5.4")
-        depends_on("llvm-amdgpu@4:5.4")
     with when("@2.2: +rocm"):
         depends_on("hsa-rocr-dev@4:5.4,6.0:6.2")
         depends_on("hip@4:5.4,6.0:6.2")
-        depends_on("llvm-amdgpu@4:5.4,6.0:6.2")
+    depends_on("llvm-amdgpu@4:5.4", when="+rocm llvm=spack")
+    requires("llvm=bundled", when="+rocm ^hip@6.0:6.2", msg="ROCm 6 support requires llvm=bundled")
 
     conflicts(
         "comm_substrate=unset",
@@ -572,12 +572,14 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     def setup_chpl_compilers(self, env):
         env.set("CHPL_HOST_COMPILER", self.compiler_map[self.spec.compiler.name])
-        env.set("CHPL_TARGET_COMPILER", self.compiler_map[self.spec.compiler.name])
+        if self.spec.satisfies("+rocm") or self.spec.satisfies("+cuda") or self.spec.satisfies("llvm=spack"):
+            env.set("CHPL_TARGET_COMPILER", "llvm")
+        else:
+            env.set("CHPL_TARGET_COMPILER", self.compiler_map[self.spec.compiler.name])
 
         # Undo spack compiler wrappers:
         # the C/C++ compilers must work post-install
-        if self.spec.satisfies("+rocm"):
-            env.set("CHPL_TARGET_COMPILER", "llvm")
+        if self.spec.satisfies("+rocm llvm=spack"):
             env.set(
                 "CHPL_LLVM_CONFIG",
                 join_path(self.spec["llvm-amdgpu"].prefix, "bin", "llvm-config"),
@@ -591,15 +593,16 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.set("CHPL_HOST_CXX", real_cxx)
 
         elif self.spec.satisfies("llvm=spack"):
-            env.set("CHPL_TARGET_COMPILER", "llvm")
             env.set("CHPL_LLVM_CONFIG", join_path(self.spec["llvm"].prefix, "bin", "llvm-config"))
             real_cc = join_path(self.spec["llvm"].prefix, "bin", "clang")
             real_cxx = join_path(self.spec["llvm"].prefix, "bin", "clang++")
         else:
             real_cc = self.compiler.cc
             real_cxx = self.compiler.cxx
-        env.set("CHPL_TARGET_CC", real_cc)
-        env.set("CHPL_TARGET_CXX", real_cxx)
+
+        if self.spec.satisfies("llvm=spack") or self.spec.satisfies("llvm=none"):
+            env.set("CHPL_TARGET_CC", real_cc)
+            env.set("CHPL_TARGET_CXX", real_cxx)
 
     def setup_chpl_comm(self, env, spec):
         env.set("CHPL_COMM", spec.variants["comm"].value)
