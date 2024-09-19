@@ -75,8 +75,8 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         description="Enable implicit" "conversions to/from raw pointers",
     )
     variant("tests", default=False, description="Build tests")
-    variant("benchmarks", default=True, description="Build benchmarks.")
-    variant("examples", default=True, description="Build examples.")
+    variant("benchmarks", default=False, description="Build benchmarks.")
+    variant("examples", default=False, description="Build examples.")
     variant("docs", default=False, description="Build documentation")
     variant("loop_fuser", default=False, description="Enable loop fusion capability")
 
@@ -122,6 +122,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+openmp", when="+rocm")
     conflicts("+openmp", when="+cuda")
+    conflicts("~tests", when="+benchmarks")
 
     with when("+openmp"):
         depends_on("umpire+openmp")
