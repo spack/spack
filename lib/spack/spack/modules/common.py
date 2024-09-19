@@ -46,7 +46,7 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment
 import spack.error
-import spack.modules.common
+import spack.modules
 import spack.paths
 import spack.projections as proj
 import spack.repo
@@ -352,7 +352,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
     except spack.repo.UnknownPackageError:
         upstream, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
     if upstream:
-        module = spack.modules.common.upstream_module_index.upstream_module(spec, module_type)
+        module = upstream_module_index.upstream_module(spec, module_type)
         if not module:
             return None
 

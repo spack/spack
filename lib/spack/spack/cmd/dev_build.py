@@ -8,7 +8,9 @@ import sys
 
 import llnl.util.tty as tty
 
+import spack.build_environment
 import spack.cmd
+import spack.cmd.common.arguments
 import spack.config
 import spack.repo
 from spack.cmd.common import arguments

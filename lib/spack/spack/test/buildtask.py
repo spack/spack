@@ -5,6 +5,7 @@
 
 import pytest
 
+import spack.error
 import spack.installer as inst
 import spack.repo
 import spack.spec
@@ -25,7 +26,7 @@ def test_build_task_errors(install_mockery):
         inst.BuildTask(spec.package, None, False, 0, 0, 0, set())
 
     request = inst.BuildRequest(spec.package, {})
-    with pytest.raises(inst.InstallError, match="Cannot create a build task"):
+    with pytest.raises(spack.error.InstallError, match="Cannot create a build task"):
         inst.BuildTask(spec.package, request, False, 0, 0, inst.STATUS_REMOVED, set())
 
 

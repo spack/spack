@@ -78,6 +78,7 @@ class Geant4(CMakePackage):
     variant("x11", default=False, description="Optional X11 support")
     variant("motif", default=False, description="Optional motif support")
     variant("qt", default=False, description="Enable Qt support")
+    variant("hdf5", default=False, description="Enable HDF5 support", when="@10.4:")
     variant("python", default=False, description="Enable Python bindings", when="@10.6.2:11.0")
     variant("tbb", default=False, description="Use TBB as a tasking backend", when="@11:")
     variant("timemory", default=False, description="Use TiMemory for profiling", when="@9.5:")
@@ -139,6 +140,9 @@ class Geant4(CMakePackage):
         depends_on("vecgeom@1.1.5", when="@10.6.0:10.6")
         depends_on("vecgeom@1.1.0", when="@10.5.0:10.5")
         depends_on("vecgeom@0.5.2", when="@10.4.0:10.4")
+
+    with when("+hdf5"):
+        depends_on("hdf5 +threadsafe")
 
     def std_when(values):
         for v in values:
@@ -282,7 +286,7 @@ class Geant4(CMakePackage):
         options.append(self.define_from_variant("GEANT4_BUILD_MULTITHREADED", "threads"))
         options.append(self.define_from_variant("GEANT4_USE_TBB", "tbb"))
 
-        if "+threads" in spec:
+        if spec.satisfies("+threads"):
             # Locked at global-dynamic to allow use cases that load the
             # geant4 libs at application runtime
             options.append(self.define("GEANT4_BUILD_TLS_MODEL", "global-dynamic"))
@@ -297,24 +301,26 @@ class Geant4(CMakePackage):
         options.append(self.define("GEANT4_INSTALL_DATADIR", self.datadir))
 
         # Vecgeom
-        if "+vecgeom" in spec:
+        if spec.satisfies("+vecgeom"):
             options.append(self.define("GEANT4_USE_USOLIDS", True))
             options.append(self.define("USolids_DIR", spec["vecgeom"].prefix.lib.CMake.USolids))
 
         # Visualization options
         if "platform=darwin" not in spec:
-            if "+x11 +opengl" in spec:
+            if spec.satisfies("+x11 +opengl"):
                 options.append(self.define("GEANT4_USE_OPENGL_X11", True))
-            if "+motif +opengl" in spec:
+            if spec.satisfies("+motif +opengl"):
                 options.append(self.define("GEANT4_USE_XM", True))
-            if "+x11" in spec:
+            if spec.satisfies("+x11"):
                 options.append(self.define("GEANT4_USE_RAYTRACER_X11", True))
 
-        if "+qt" in spec:
+        if spec.satisfies("+qt"):
             options.append(self.define("GEANT4_USE_QT", True))
-            if "^[virtuals=qmake] qt-base" in spec:
+            if spec.satisfies("^[virtuals=qmake] qt-base"):
                 options.append(self.define("GEANT4_USE_QT_QT6", True))
             options.append(self.define("QT_QMAKE_EXECUTABLE", spec["qmake"].prefix.bin.qmake))
+
+        options.append(self.define_from_variant("GEANT4_USE_HDF5", "hdf5"))
 
         options.append(self.define_from_variant("GEANT4_USE_VTK", "vtk"))
 

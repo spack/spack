@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Gaudi(CMakePackage):
@@ -57,11 +56,6 @@ class Gaudi(CMakePackage):
     variant("vtune", default=False, description="Build with Intel VTune profiler support")
     variant("xercesc", default=False, description="Build with Xerces-C XML support")
 
-    # only build subdirectory GaudiExamples when +examples
-    patch("build_testing.patch", when="@:34")
-    # fixes for the cmake config which could not find newer boost versions
-    patch("link_target_fixes.patch", when="@33.0:34")
-    patch("link_target_fixes32.patch", when="@:32.2")
     patch("fmt_fix.patch", when="@36.6:36.12 ^fmt@10:")
     # fix issues with catch2 3.1 and above
     patch(
@@ -78,18 +72,28 @@ class Gaudi(CMakePackage):
 
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
-    depends_on("boost@1.67.0: +python")
+    # The boost components that are required for Gaudi
+    boost_libs = "+".join(
+        [
+            "system",
+            "filesystem",
+            "regex",
+            "thread",
+            "python",
+            "test",
+            "program_options",
+            "log",
+            "graph",
+        ]
+    )
+    depends_on(f"boost@1.70: +{boost_libs}", when="@35:")
+    depends_on(f"boost@1.70: +{boost_libs}+fiber", when="@39:")
 
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
     depends_on("clhep")
     depends_on("cmake", type="build")
     depends_on("cppgsl")
-    depends_on("fmt")
     depends_on("fmt@:8", when="@:36.9")
-    depends_on("fmt@:10", when="@:39.0")
+    depends_on("fmt@:10")
     depends_on("intel-tbb@:2020.3", when="@:37.0")
     depends_on("tbb", when="@37.1:")
     depends_on("uuid")
@@ -109,7 +113,6 @@ class Gaudi(CMakePackage):
         depends_on(pv[0], when=pv[1] + " +examples")
 
     # Adding these dependencies triggers the build of most optional components
-    depends_on("cppgsl", when="+cppunit")
     depends_on("cppunit", when="+cppunit")
     depends_on("doxygen +graphviz", when="+docs")
     depends_on("gperftools", when="+gperftools")
