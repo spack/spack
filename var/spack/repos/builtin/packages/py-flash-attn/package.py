@@ -34,18 +34,17 @@ class PyFlashAttn(PythonPackage):
     depends_on("cxx", type="build")  # generated
 
     with default_args(type="build"):
-        depends_on("py-ninja")
         depends_on("py-packaging")
         depends_on("py-psutil")
         depends_on("py-setuptools")
+        depends_on("ninja")
 
     with default_args(type=("build", "run")):
         depends_on("py-torch+cuda")
-        depends_on("ninja")
         depends_on("py-einops")
-        depends_on("py-packaging")
 
     with default_args(type=("build", "link", "run")):
         depends_on("py-pybind11")
 
-    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@:2.5")
+    depends_on("python@3.8:", type=("build", "run"), when="@2.6:")
