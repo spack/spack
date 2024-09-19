@@ -15,6 +15,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "http://software.llnl.gov/RAJAPerf/"
     git = "https://github.com/LLNL/RAJAPerf.git"
+    tags = ["radiuss"]
 
     maintainers("davidbeckingsale", "adrienbernede")
 
@@ -137,9 +138,10 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         for sm_ in CudaPackage.cuda_arch_values:
             depends_on("caliper +cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
 
-    conflicts("~openmp", when="+openmp_target", msg="OpenMP target requires OpenMP")
+    conflicts("~openmp", when="+omptarget", msg="OpenMP target requires OpenMP")
+    conflicts("+omptarget +rocm")
     conflicts(
-        "+cuda", when="+openmp_target", msg="Cuda may not be activated when openmp_target is ON"
+        "+cuda", when="+omptarget", msg="Cuda may not be activated when omptarget is ON"
     )
 
     def _get_sys_type(self, spec):
@@ -240,8 +242,8 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 
-        entries.append(cmake_cache_option("ENABLE_OPENMP_TARGET", "+openmp_target" in spec))
-        if "+openmp_target" in spec:
+        entries.append(cmake_cache_option("ENABLE_OPENMP_TARGET", "+omptarget" in spec))
+        if "+omptarget" in spec:
             if "%xl" in spec:
                 entries.append(
                     cmake_cache_string(
