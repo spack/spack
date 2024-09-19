@@ -333,8 +333,10 @@ class QuantumEspresso(CMakePackage, Package):
     patch_checksum = "72564c168231dd4a1279a74e76919af701d47cee9a851db6e205753004fe9bb5"
     patch(patch_url, sha256=patch_checksum, when="@6.7+qmcpack")
 
-    # 6.7
-    patch("configure.patch", when="@6.6:")
+    # 6.6
+    patch_url = "https://gitlab.com/QEF/q-e/-/commit/081409ea90cba0ddc07bea5ac29e3cd422c67d3d.diff"
+    patch_checksum = "f43b7411e535629d9ef564a2e1695359df2651ecbdbca563f7265412afc2228a"
+    patch(patch_url, sha256=patch_checksum, when="@6.6:7.3.1")
 
     # 6.4.1
     patch_url = "https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff"
