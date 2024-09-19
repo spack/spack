@@ -377,7 +377,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+cuda" in self.spec:
             options.append(
-                self.define_from_variant(Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC, "alloc_async")
+                self.define_from_variant("Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC", "alloc_async")
             )
 
         # Remove duplicate options
