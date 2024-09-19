@@ -116,6 +116,8 @@ class NetlibScalapack(ScalapackBase):
     git = "https://github.com/Reference-ScaLAPACK/scalapack"
     tags = ["e4s"]
 
+    maintainers("etiennemlb")
+
     license("BSD-3-Clause-Open-MPI")
 
     version("2.2.0", sha256="40b9406c20735a9a3009d863318cb8d3e496fb073d201c5463df810e01ab2a57")
