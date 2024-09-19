@@ -16,7 +16,7 @@ def bash_completion_path(root: str) -> Path:
         root (str): The prefix root under which to generate the path.
 
     Returns:
-        Path: Standard path for bash completion scripts under root.
+        (Path): Standard path for bash completion scripts under root.
     """
     return Path(root + "/share/bash-completion/completions")
 
@@ -29,7 +29,7 @@ def zsh_completion_path(root: str) -> Path:
         root (str): The prefix root under which to generate the path.
 
     Returns:
-        Path: Standard path for zsh completion scripts under root.
+        (Path): Standard path for zsh completion scripts under root.
     """
     return Path(root + "/share/zsh/site-functions")
 
@@ -42,6 +42,6 @@ def fish_completion_path(root: str) -> Path:
         root (str): The prefix root under which to generate the path.
 
     Returns:
-        Path: Standard path for fish completion scripts under root.
+        (Path): Standard path for fish completion scripts under root.
     """
     return Path(root + "/share/fish/vendor_completions.d")
