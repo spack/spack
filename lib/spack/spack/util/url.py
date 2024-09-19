@@ -68,12 +68,15 @@ def format(parsed_url):
     return parsed_url.geturl()
 
 
-def join(base, url, *, resolve_href: bool = False, **kwargs):
-    """Wrapper around ``urllib.parse.urljoin`` that makes s3:// and gs:// URLs behave like
-    http:// URLs. If resolve_href=True, the behavior is the same as a browser: e.g.
-    https://example.com/a/b + c/d = https://example.com/a/c/d. If resolve_href=False, the
-    behavior is like joining paths: https://example.com/a/b + c/d = https://example.com/a/b/c/d."""
-    # Join relative to the last component by adding a trailing slash if necessary
+def join(base: str, *components: str, resolve_href: bool = False, **kwargs) -> str:
+    """Convenience wrapper around ``urllib.parse.urljoin``, with a few differences:
+    1. By default resolve_href=False, which makes the function like os.path.join: for example
+       https://example.com/a/b + c/d = https://example.com/a/b/c/d. If resolve_href=True, the
+       behavior is how a browser would resolve the URL: https://example.com/a/c/d.
+    2. s3:// and gs:// URLs are joined like http:// URLs.
+    3. It accepts multiple components for convenience, which are joined with a single slash."""
+    # Ensure a trailing slash in the path component of the base URL to get os.path.join-like
+    # behavior instead of web browser behavior.
     if not resolve_href:
         parsed = urllib.parse.urlparse(base)
         if not parsed.path.endswith("/"):
@@ -83,7 +86,7 @@ def join(base, url, *, resolve_href: bool = False, **kwargs):
     try:
         urllib.parse.uses_netloc = [*uses_netloc, "s3", "gs"]
         urllib.parse.uses_relative = [*uses_relative, "s3", "gs"]
-        return urllib.parse.urljoin(base, url, **kwargs)
+        return urllib.parse.urljoin(base, "/".join(components), **kwargs)
     finally:
         urllib.parse.uses_netloc = uses_netloc
         urllib.parse.uses_relative = uses_relative
