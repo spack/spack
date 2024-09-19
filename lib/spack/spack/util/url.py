@@ -79,7 +79,7 @@ def join(base: str, *components: str, resolve_href: bool = False, **kwargs) -> s
     1. By default resolve_href=False, which makes the function like os.path.join: for example
     https://example.com/a/b + c/d = https://example.com/a/b/c/d. If resolve_href=True, the
     behavior is how a browser would resolve the URL: https://example.com/a/c/d.
-    2. s3:// and gs:// URLs are joined like http:// URLs.
+    2. s3://, gs://, oci:// URLs are joined like http:// URLs.
     3. It accepts multiple components for convenience. Note that components[1:] are treated as
     literal path components and appended to components[0] separated by slashes."""
     # Ensure a trailing slash in the path component of the base URL to get os.path.join-like
@@ -93,8 +93,8 @@ def join(base: str, *components: str, resolve_href: bool = False, **kwargs) -> s
     try:
         # NOTE: we temporarily modify urllib internals so s3 and gs schemes are treated like http.
         # This is non-portable, and may be forward incompatible with future cpython versions.
-        urllib.parse.uses_netloc = [*uses_netloc, "s3", "gs"]
-        urllib.parse.uses_relative = [*uses_relative, "s3", "gs"]
+        urllib.parse.uses_netloc = [*uses_netloc, "s3", "gs", "oci"]
+        urllib.parse.uses_relative = [*uses_relative, "s3", "gs", "oci"]
         return urllib.parse.urljoin(base, "/".join(components), **kwargs)
     finally:
         urllib.parse.uses_netloc = uses_netloc
