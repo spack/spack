@@ -103,7 +103,7 @@ def make_concurrent_executor(
 ) -> concurrent.futures.Executor:
     """Create a concurrent executor. If require_fork is True, then the executor is sequential
     if the platform does not enable forking as the default start method. Effectively
-    require_fork=True makes the executor squential in the current process on Windows, macOS, and
+    require_fork=True makes the executor sequential in the current process on Windows, macOS, and
     Linux from Python 3.14+ (which changes defaults)"""
     if require_fork and multiprocessing.get_start_method() != "fork":
         return SequentialExecutor()
