@@ -17,14 +17,23 @@ from typing import Callable, List, Optional, Tuple, Type, TypeVar, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import llnl.util.tty.log
 from llnl.string import plural
 from llnl.util.lang import nullcontext
 from llnl.util.tty.color import colorize
 
+import spack.build_environment
+import spack.builder
+import spack.config
 import spack.error
+import spack.package_base
 import spack.paths
+import spack.repo
+import spack.spec
+import spack.util.executable
+import spack.util.path
 import spack.util.spack_json as sjson
-from spack.installer import InstallError
+from spack.error import InstallError
 from spack.spec import Spec
 from spack.util.prefix import Prefix
 
@@ -42,7 +51,7 @@ spack_install_test_log = "install-time-test-log.txt"
 
 
 ListOrStringType = Union[str, List[str]]
-LogType = Union["tty.log.nixlog", "tty.log.winlog"]
+LogType = Union[llnl.util.tty.log.nixlog, llnl.util.tty.log.winlog]
 
 Pb = TypeVar("Pb", bound="spack.package_base.PackageBase")
 PackageObjectOrClass = Union[Pb, Type[Pb]]
@@ -110,7 +119,7 @@ def cache_extra_test_sources(pkg: Pb, srcs: ListOrStringType):
             location(s) under the install testing directory.
 
     Raises:
-        spack.installer.InstallError: if any of the source paths are absolute
+        spack.error.InstallError: if any of the source paths are absolute
             or do not exist
             under the build stage
     """
@@ -280,7 +289,7 @@ class PackageTest:
     def logger(self) -> Optional[LogType]:
         """The current logger or, if none, sets to one."""
         if not self._logger:
-            self._logger = tty.log.log_output(self.test_log_file)
+            self._logger = llnl.util.tty.log.log_output(self.test_log_file)
 
         return self._logger
 
@@ -297,7 +306,7 @@ class PackageTest:
         fs.touch(self.test_log_file)  # Otherwise log_parse complains
         fs.set_install_permissions(self.test_log_file)
 
-        with tty.log.log_output(self.test_log_file, verbose) as self._logger:
+        with llnl.util.tty.log.log_output(self.test_log_file, verbose) as self._logger:
             with self.logger.force_echo():  # type: ignore[union-attr]
                 tty.msg("Testing package " + colorize(r"@*g{" + self.pkg_id + r"}"))
 

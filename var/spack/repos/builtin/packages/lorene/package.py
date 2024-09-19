@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import inspect
 import os
 
 from spack.package import *
@@ -80,9 +79,7 @@ class Lorene(MakefilePackage):
             ("@LIB_LAPACK@", lapack_libs + " " + blas_libs),
             ("@LIB_PGPLOT@", pgplot_libdirs + " " + pgplot_libs),
         ]
-        local_settings_template = join_path(
-            os.path.dirname(inspect.getmodule(self).__file__), "local_settings.template"
-        )
+        local_settings_template = join_path(os.path.dirname(__file__), "local_settings.template")
         local_settings = join_path(self.stage.source_path, "local_settings")
         copy(local_settings_template, local_settings)
         for key, value in substitutions:

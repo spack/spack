@@ -94,7 +94,7 @@ class Dakota(CMakePackage):
             self.define_from_variant("DAKOTA_PYTHON", "python"),
         ]
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             args.extend(
                 [
                     "-DDAKOTA_HAVE_MPI:BOOL=ON",
