@@ -199,12 +199,7 @@ class Gptune(CMakePackage):
     def setup_run_environment(self, env):
         env.set("GPTUNE_INSTALL_PATH", python_platlib)
 
-    cmd = {
-        "bash": which("bash"),
-        "cp": which("cp"),
-        "git": which("git"),
-        "rm": which("rm"),
-    }
+    cmd = {"bash": which("bash"), "cp": which("cp"), "git": which("git"), "rm": which("rm")}
 
     def test_hypre(self):
         """set up and run hypre example"""
