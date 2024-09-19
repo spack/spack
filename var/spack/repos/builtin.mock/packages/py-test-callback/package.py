@@ -3,12 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.filesystem as fs
-
 import spack.pkg.builtin.mock.python as mp
-from spack.package import *
-
 from spack.build_systems._checks import BaseBuilder, execute_install_time_tests
+from spack.package import *
 
 
 class PyTestCallback(mp.Python):

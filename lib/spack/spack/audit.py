@@ -551,7 +551,7 @@ def _search_for_deprecated_package_methods(pkgs, error_cls):
             source = inspect.getsource(function)
             for deprecated_name, alternate in DEPRECATED_USE:
                 if deprecated_name in source:
-                    msg = f"'{name}' method needs to use '{alternate}' instead of '{deprecated_name}'"
+                    msg = f"Change '{deprecated_name}' to '{alternate}' in '{name}' method."
                     method_errors[name].append(msg)
 
         num_methods = len(method_errors)
@@ -854,7 +854,8 @@ def _ensure_test_docstring(pkgs, error_cls):
             names = ", ".join(method_names)
             instr = [
                 "Docstrings are used as descriptions in test outputs.",
-                f"Add a concise summary to the following {methods} in '{pkg_cls.__module__}': {names}",
+                f"Add a concise summary to the following {methods} in '{pkg_cls.__module__}':",
+                f"{names}",
             ]
             errors.append(error_cls(msg, instr))
 
