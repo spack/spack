@@ -1008,25 +1008,25 @@ def generate_gitlab_ci_yaml(
                     {
                         "src": url_util.join(
                             buildcache_copy_src_prefix,
-                            f"{bindist.build_cache_relative_path()}"
-                            f"/{bindist.tarball_name(release_spec, '.spec.json.sig')}",
+                            bindist.build_cache_relative_path(),
+                            bindist.tarball_name(release_spec, ".spec.json.sig"),
                         ),
                         "dest": url_util.join(
                             buildcache_copy_dest_prefix,
-                            f"{bindist.build_cache_relative_path()}"
-                            f"/{bindist.tarball_name(release_spec, '.spec.json.sig')}",
+                            bindist.build_cache_relative_path(),
+                            bindist.tarball_name(release_spec, ".spec.json.sig"),
                         ),
                     },
                     {
                         "src": url_util.join(
                             buildcache_copy_src_prefix,
-                            f"{bindist.build_cache_relative_path()}"
-                            f"/{bindist.tarball_path_name(release_spec, '.spack')}",
+                            bindist.build_cache_relative_path(),
+                            bindist.tarball_path_name(release_spec, ".spack"),
                         ),
                         "dest": url_util.join(
                             buildcache_copy_dest_prefix,
-                            f"{bindist.build_cache_relative_path()}"
-                            f"/{bindist.tarball_path_name(release_spec, '.spack')}",
+                            bindist.build_cache_relative_path(),
+                            bindist.tarball_path_name(release_spec, ".spack"),
                         ),
                     },
                 ]
