@@ -74,19 +74,3 @@ jobs:
       # job outputs: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
       # setting environment variables from earlier steps: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
       #
-  bootstrap:
-    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.bootstrap == 'true' }}
-    needs: [ prechecks, changes ]
-    uses: ./.github/workflows/bootstrap.yml
-    secrets: inherit
-  unit-tests:
-    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
-    needs: [ prechecks, changes ]
-    uses: ./.github/workflows/unit_tests.yaml
-    secrets: inherit
-  all:
-    needs: [ unit-tests, bootstrap ]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Success
-      run: "true"
