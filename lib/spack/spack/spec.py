@@ -2947,6 +2947,7 @@ class Spec:
 
         for name, variant in spec.variants.items():
             if variant.propagate:
+                # variant must be in pkg or pkg's dependencies
                 propagate.append(name)
 
         not_existing = set(spec.variants) - (
@@ -3349,20 +3350,9 @@ class Spec:
         elif other.compiler and not self.compiler:
             return False
 
-        satisfies, var = self.variants.satisfies(other.variants)
-        if not satisfies:
-            # if var is None: return False
-            # else:  # check dependencies for the variant
+        var_satisfies, var = self.variants.satisfies(other.variants)
+        if not var_satisfies:
             return False
-
-        print(f"\n\nself,variants: {self.variants}")
-        print(f"other.variants: {other.variants}")
-        print(f"type(self.variants): {type(self.variants)}")
-        print(f"type(other.variants): {type(other.variants)}")
-
-        # Rikki: Check the deps has variant if propagating
-        # if variant is propagating
-        # check that any of the dependencies contain that variant
 
         if self.architecture and other.architecture:
             if not self.architecture.satisfies(other.architecture):

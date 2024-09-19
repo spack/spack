@@ -536,36 +536,19 @@ class TestConcretize:
     @pytest.mark.parametrize(
         "spec_str,expected_propagation",
         [
-            ("hypre~~shared ^openblas+shared", [("hypre", "~shared"), ("openblas", "+shared")]),
             # Propagates past a node that doesn't have the variant
             ("hypre~~shared ^openblas", [("hypre", "~shared"), ("openblas", "~shared")]),
+            # Propagates from root node to all nodes
             (
                 "ascent~~shared +adios2",
                 [("ascent", "~shared"), ("adios2", "~shared"), ("bzip2", "~shared")],
-            ),
-            # Propagates below a node that uses the other value explicitly
-            (
-                "ascent~~shared +adios2 ^adios2+shared",
-                [("ascent", "~shared"), ("adios2", "+shared"), ("bzip2", "~shared")],
-            ),
-            (
-                "ascent++shared +adios2 ^adios2~shared",
-                [("ascent", "+shared"), ("adios2", "~shared"), ("bzip2", "+shared")],
-            ),
-            (
-                "ascent++shared +adios2 ^bzip2~shared",
-                [("ascent", "+shared"), ("adios2", "+shared"), ("bzip2", "~shared")],
             ),
             # Propagate from a node that is not the root node
             (
                 "ascent +adios2 ^adios2~~shared",
                 [("ascent", "+shared"), ("adios2", "~shared"), ("bzip2", "~shared")],
             ),
-            # Propagate, but lower nodes use the other value explicitly
-            (
-                "ascent~~shared +adios2 ^adios2+shared ^bzip2+shared",
-                [("ascent", "~shared"), ("adios2", "+shared"), ("bzip2", "+shared")],
-            ),
+            # Propagate through 1st level node that doesn't have the variant (ex a++foo ^b ^c++foo)
         ],
     )
     def test_concretize_propagate_disabled_variant(self, spec_str, expected_propagation):
@@ -577,18 +560,25 @@ class TestConcretize:
     def test_concretize_propagate_variant_not_dependencies(self):
         """Test that when propagating a variant it is not propagated to dependencies that
         do not have that variant"""
-
         spec = Spec("quantum-espresso~~invino")
         spec.concretize()
 
         for dep in spec.traverse(root=False):
             assert "invino" not in dep.variants.keys()
 
+    # Test: fail propagating variant that when it is excluded from a dependency
+    def test_concretize_propagate_variant_exclude_dependency_fail(self):
+        """This test does a thing"""  # TODO: Rikki write the docstring
+        spec = Spec("hypre ~~shared ^openblas +shared")
+        with pytest.raises(spack.error.UnsatisfiableSpecError):
+            spec.concretize()
+
     def test_concretize_propagate_same_variant_multiple_sources_fail(self):
-        """Test that when propagating a variant if the source package is excluded from the
-        propagation an error is raised"""
-        with pytest.raises(spack.parser.SpecParsingError):
-            Spec("ascent +adios2 ^adios2 ~~shared +shared")
+        """Test that when propagating a variant if the source package and the same variant
+        is propagated from another package it raises an error"""
+        spec = Spec("ascent +adios2 ++shared ^adios2 ~~shared")
+        with pytest.raises(spack.error.UnsatisfiableSpecError):
+            spec.concretize()
 
     def test_concretize_propagate_specified_variant(self):
         """Test that only the specified variant is propagated to the dependencies"""
@@ -605,6 +595,8 @@ class TestConcretize:
 
         assert spec.satisfies("~foo") and not spec.satisfies("^dependency-foo-bar~foo")
         assert spec.satisfies("+bar") and spec.satisfies("^dependency-foo-bar+bar")
+
+    # Propagate multiple bool variants
 
     def test_concretize_propagate_multivalue_variant(self):
         """Test that multivalue variants are propagating the specified value(s)
