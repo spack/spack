@@ -18,6 +18,7 @@ import spack.package_base
 import spack.package_prefs
 import spack.repo
 import spack.spec
+from spack.installer import PackageInstaller
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
 
@@ -180,7 +181,7 @@ module_index:
 def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeypatch):
     """Test that installed packages that have been removed are still loadable"""
     spec = Spec("trivial-install-test-package").concretized()
-    spec.package.do_install()
+    PackageInstaller([spec.package], explicit=True).install()
     spack.modules.module_types["tcl"](spec, "default", True).write()
 
     def find_nothing(*args):

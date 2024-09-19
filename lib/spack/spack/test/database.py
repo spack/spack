@@ -34,6 +34,7 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.version as vn
+from spack.installer import PackageInstaller
 from spack.schema.database_index import schema
 from spack.util.executable import Executable
 
@@ -385,7 +386,7 @@ def _check_remove_and_add_package(database: spack.database.Database, spec):
 
 def _mock_install(spec: str):
     s = spack.spec.Spec(spec).concretized()
-    s.package.do_install(fake=True)
+    PackageInstaller([s.package], fake=True, explicit=True).install()
 
 
 def _mock_remove(spec):
@@ -713,7 +714,7 @@ def test_external_entries_in_db(mutable_database):
     assert not rec.spec.external_modules
     assert rec.explicit is False
 
-    rec.spec.package.do_install(fake=True, explicit=True)
+    PackageInstaller([rec.spec.package], fake=True, explicit=True).install()
     rec = mutable_database.get_record("externaltool")
     assert rec.spec.external_path == os.path.sep + os.path.join("path", "to", "external_tool")
     assert not rec.spec.external_modules
@@ -731,7 +732,7 @@ def test_regression_issue_8036(mutable_database, usr_folder_exists):
     assert not s.installed
 
     # Now install the external package and check again the `installed` property
-    s.package.do_install(fake=True)
+    PackageInstaller([s.package], fake=True, explicit=True).install()
     assert s.installed
 
 
@@ -774,7 +775,7 @@ def test_query_unused_specs(mutable_database):
     # This spec installs a fake cmake as a build only dependency
     s = spack.spec.Spec("simple-inheritance")
     s.concretize()
-    s.package.do_install(fake=True, explicit=True)
+    PackageInstaller([s.package], fake=True, explicit=True).install()
 
     si = s.dag_hash()
     ml_mpich = spack.store.STORE.db.query_one("mpileaks ^mpich").dag_hash()
@@ -817,7 +818,7 @@ def test_query_spec_with_conditional_dependency(mutable_database):
     # conditional on a Boolean variant
     s = spack.spec.Spec("hdf5~mpi")
     s.concretize()
-    s.package.do_install(fake=True, explicit=True)
+    PackageInstaller([s.package], fake=True, explicit=True).install()
 
     results = spack.store.STORE.db.query_local("hdf5 ^mpich")
     assert not results
@@ -1144,7 +1145,7 @@ def test_reindex_with_upstreams(tmp_path, monkeypatch, mock_packages, config):
         {"config": {"install_tree": {"root": str(tmp_path / "upstream")}}}
     )
     monkeypatch.setattr(spack.store, "STORE", upstream_store)
-    callpath.package.do_install(fake=True)
+    PackageInstaller([callpath.package], fake=True, explicit=True).install()
 
     local_store = spack.store.create(
         {
@@ -1153,7 +1154,7 @@ def test_reindex_with_upstreams(tmp_path, monkeypatch, mock_packages, config):
         }
     )
     monkeypatch.setattr(spack.store, "STORE", local_store)
-    mpileaks.package.do_install(fake=True)
+    PackageInstaller([mpileaks.package], fake=True, explicit=True).install()
 
     # Sanity check that callpath is from upstream.
     assert not local_store.db.query_local("callpath")
@@ -1163,7 +1164,7 @@ def test_reindex_with_upstreams(tmp_path, monkeypatch, mock_packages, config):
     # checks local installs before upstream databases, even when the local database is being
     # reindexed.
     monkeypatch.setattr(spack.store, "STORE", upstream_store)
-    mpileaks.package.do_install(fake=True)
+    PackageInstaller([mpileaks.package], fake=True, explicit=True).install()
 
     # Delete the local database
     shutil.rmtree(local_store.db.database_directory)

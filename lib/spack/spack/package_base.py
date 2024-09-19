@@ -19,7 +19,6 @@ import importlib
 import io
 import os
 import re
-import shutil
 import sys
 import textwrap
 import time
@@ -40,7 +39,6 @@ import spack.config
 import spack.dependency
 import spack.deptypes as dt
 import spack.directives
-import spack.environment
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
@@ -65,7 +63,6 @@ from spack.install_test import (
     cache_extra_test_sources,
     install_test_root,
 )
-from spack.installer import PackageInstaller
 from spack.solver.version_order import concretization_version_order
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
@@ -452,10 +449,11 @@ def _by_name(
             else:
                 all_by_name.setdefault(name, []).append(value)
 
+    # this needs to preserve the insertion order of whens
     return dict(sorted(all_by_name.items()))
 
 
-def _names(when_indexed_dictionary):
+def _names(when_indexed_dictionary: WhenDict) -> List[str]:
     """Get sorted names from dicts keyed by when/name."""
     all_names = set()
     for when, by_name in when_indexed_dictionary.items():
@@ -463,6 +461,45 @@ def _names(when_indexed_dictionary):
             all_names.add(name)
 
     return sorted(all_names)
+
+
+WhenVariantList = List[Tuple["spack.spec.Spec", "spack.variant.Variant"]]
+
+
+def _remove_overridden_vdefs(variant_defs: WhenVariantList) -> None:
+    """Remove variant defs from the list if their when specs are satisfied by later ones.
+
+    Any such variant definitions are *always* overridden by their successor, as it will
+    match everything the predecessor matches, and the solver will prefer it because of
+    its higher precedence.
+
+    We can just remove these defs from variant definitions and avoid putting them in the
+    solver. This is also useful for, e.g., `spack info`, where we don't want to show a
+    variant from a superclass if it is always overridden by a variant defined in a
+    subclass.
+
+    Example::
+
+        class ROCmPackage:
+            variant("amdgpu_target", ..., when="+rocm")
+
+        class Hipblas:
+            variant("amdgpu_target", ...)
+
+    The subclass definition *always* overrides the superclass definition here, but they
+    have different when specs and the subclass def won't just replace the one in the
+    superclass. In this situation, the subclass should *probably* also have
+    ``when="+rocm"``, but we can't guarantee that will always happen when a vdef is
+    overridden. So we use this method to remove any overrides we can know statically.
+
+    """
+    i = 0
+    while i < len(variant_defs):
+        when, vdef = variant_defs[i]
+        if any(when.satisfies(successor) for successor, _ in variant_defs[i + 1 :]):
+            del variant_defs[i]
+        else:
+            i += 1
 
 
 class RedistributionMixin:
@@ -517,19 +554,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
 
     There are two main parts of a Spack package:
 
-      1. **The package class**.  Classes contain ``directives``, which are
-         special functions, that add metadata (versions, patches,
-         dependencies, and other information) to packages (see
-         ``directives.py``). Directives provide the constraints that are
-         used as input to the concretizer.
+      1. **The package class**.  Classes contain ``directives``, which are special functions, that
+         add metadata (versions, patches, dependencies, and other information) to packages (see
+         ``directives.py``). Directives provide the constraints that are used as input to the
+         concretizer.
 
-      2. **Package instances**. Once instantiated, a package is
-         essentially a software installer.  Spack calls methods like
-         ``do_install()`` on the ``Package`` object, and it uses those to
-         drive user-implemented methods like ``patch()``, ``install()``, and
-         other build steps.  To install software, an instantiated package
-         needs a *concrete* spec, which guides the behavior of the various
-         install methods.
+      2. **Package instances**. Once instantiated, a package can be passed to the PackageInstaller.
+         It calls methods like ``do_stage()`` on the ``Package`` object, and it uses those to drive
+         user-implemented methods like ``patch()``, ``install()``, and other build steps. To
+         install software, an instantiated package needs a *concrete* spec, which guides the
+         behavior of the various install methods.
 
     Packages are imported from repos (see ``repo.py``).
 
@@ -551,7 +585,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
        p.do_fetch()              # downloads tarball from a URL (or VCS)
        p.do_stage()              # expands tarball in a temp directory
        p.do_patch()              # applies patches to expanded source
-       p.do_install()            # calls package's install() function
        p.do_uninstall()          # removes install directory
 
     although packages that do not have code have nothing to fetch so omit
@@ -597,7 +630,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     provided: Dict["spack.spec.Spec", Set["spack.spec.Spec"]]
     provided_together: Dict["spack.spec.Spec", List[Set[str]]]
     patches: Dict["spack.spec.Spec", List["spack.patch.Patch"]]
-    variants: Dict[str, Tuple["spack.variant.Variant", "spack.spec.Spec"]]
+    variants: Dict["spack.spec.Spec", Dict[str, "spack.variant.Variant"]]
     languages: Dict["spack.spec.Spec", Set[str]]
 
     #: By default, packages are not virtual
@@ -750,6 +783,72 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     @classmethod
     def dependencies_by_name(cls, when: bool = False):
         return _by_name(cls.dependencies, when=when)
+
+    # Accessors for variants
+    # External code workingw with Variants should go through the methods below
+
+    @classmethod
+    def variant_names(cls) -> List[str]:
+        return _names(cls.variants)
+
+    @classmethod
+    def has_variant(cls, name) -> bool:
+        return any(name in dictionary for dictionary in cls.variants.values())
+
+    @classmethod
+    def num_variant_definitions(cls) -> int:
+        """Total number of variant definitions in this class so far."""
+        return sum(len(variants_by_name) for variants_by_name in cls.variants.values())
+
+    @classmethod
+    def variant_definitions(cls, name: str) -> WhenVariantList:
+        """Iterator over (when_spec, Variant) for all variant definitions for a particular name."""
+        # construct a list of defs sorted by precedence
+        defs: WhenVariantList = []
+        for when, variants_by_name in cls.variants.items():
+            variant_def = variants_by_name.get(name)
+            if variant_def:
+                defs.append((when, variant_def))
+
+        # With multiple definitions, ensure precedence order and simplify overrides
+        if len(defs) > 1:
+            defs.sort(key=lambda v: v[1].precedence)
+            _remove_overridden_vdefs(defs)
+
+        return defs
+
+    @classmethod
+    def variant_items(
+        cls,
+    ) -> Iterable[Tuple["spack.spec.Spec", Dict[str, "spack.variant.Variant"]]]:
+        """Iterate over ``cls.variants.items()`` with overridden definitions removed."""
+        # Note: This is quadratic in the average number of variant definitions per name.
+        # That is likely close to linear in practice, as there are few variants with
+        # multiple definitions (but it matters when they are there).
+        exclude = {
+            name: [id(vdef) for _, vdef in cls.variant_definitions(name)]
+            for name in cls.variant_names()
+        }
+
+        for when, variants_by_name in cls.variants.items():
+            filtered_variants_by_name = {
+                name: vdef for name, vdef in variants_by_name.items() if id(vdef) in exclude[name]
+            }
+
+            if filtered_variants_by_name:
+                yield when, filtered_variants_by_name
+
+    def get_variant(self, name: str) -> "spack.variant.Variant":
+        """Get the highest precedence variant definition matching this package's spec.
+
+        Arguments:
+            name: name of the variant definition to get
+        """
+        try:
+            highest_to_lowest = reversed(self.variant_definitions(name))
+            return next(vdef for when, vdef in highest_to_lowest if self.spec.satisfies(when))
+        except StopIteration:
+            raise ValueError(f"No variant '{name}' on spec: {self.spec}")
 
     @classmethod
     def possible_dependencies(
@@ -1700,8 +1799,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
                 # should this attempt to download the source and set one? This
                 # probably only happens for source repositories which are
                 # referenced by branch name rather than tag or commit ID.
-                env = spack.environment.active_environment()
-                from_local_sources = env and env.is_develop(self.spec)
+                from_local_sources = "dev_path" in self.spec.variants
                 if self.has_code and not self.spec.external and not from_local_sources:
                     message = "Missing a source id for {s.name}@{s.version}"
                     tty.debug(message.format(s=self))
@@ -1851,48 +1949,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         pieces = ["resource", resource.name, self.spec.dag_hash()]
         resource_stage_folder = "-".join(pieces)
         return resource_stage_folder
-
-    def do_install(self, **kwargs):
-        """Called by commands to install a package and or its dependencies.
-
-        Package implementations should override install() to describe
-        their build process.
-
-        Args:
-            cache_only (bool): Fail if binary package unavailable.
-            dirty (bool): Don't clean the build environment before installing.
-            explicit (bool): True if package was explicitly installed, False
-                if package was implicitly installed (as a dependency).
-            fail_fast (bool): Fail if any dependency fails to install;
-                otherwise, the default is to install as many dependencies as
-                possible (i.e., best effort installation).
-            fake (bool): Don't really build; install fake stub files instead.
-            force (bool): Install again, even if already installed.
-            install_deps (bool): Install dependencies before installing this
-                package
-            install_source (bool): By default, source is not installed, but
-                for debugging it might be useful to keep it around.
-            keep_prefix (bool): Keep install prefix on failure. By default,
-                destroys it.
-            keep_stage (bool): By default, stage is destroyed only if there
-                are no exceptions during build. Set to True to keep the stage
-                even with exceptions.
-            restage (bool): Force spack to restage the package source.
-            skip_patch (bool): Skip patch stage of build if True.
-            stop_before (str): stop execution before this
-                installation phase (or None)
-            stop_at (str): last installation phase to be executed
-                (or None)
-            tests (bool or list or set): False to run no tests, True to test
-                all packages, or a list of package names to run tests for some
-            use_cache (bool): Install from binary package, if available.
-            verbose (bool): Display verbose build output (by default,
-                suppresses it)
-        """
-        explicit = kwargs.get("explicit", True)
-        if isinstance(explicit, bool):
-            kwargs["explicit"] = {self.spec.dag_hash()} if explicit else set()
-        PackageInstaller([self], kwargs).install()
 
     # TODO (post-34236): Update tests and all packages that use this as a
     # TODO (post-34236): package method to the routine made available to
@@ -2349,35 +2405,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         """Uninstall this package by spec."""
         # delegate to instance-less method.
         PackageBase.uninstall_by_spec(self.spec, force)
-
-    def do_deprecate(self, deprecator, link_fn):
-        """Deprecate this package in favor of deprecator spec"""
-        spec = self.spec
-
-        # Install deprecator if it isn't installed already
-        if not spack.store.STORE.db.query(deprecator):
-            deprecator.package.do_install()
-
-        old_deprecator = spack.store.STORE.db.deprecator(spec)
-        if old_deprecator:
-            # Find this specs yaml file from its old deprecation
-            self_yaml = spack.store.STORE.layout.deprecated_file_path(spec, old_deprecator)
-        else:
-            self_yaml = spack.store.STORE.layout.spec_file_path(spec)
-
-        # copy spec metadata to "deprecated" dir of deprecator
-        depr_yaml = spack.store.STORE.layout.deprecated_file_path(spec, deprecator)
-        fsys.mkdirp(os.path.dirname(depr_yaml))
-        shutil.copy2(self_yaml, depr_yaml)
-
-        # Any specs deprecated in favor of this spec are re-deprecated in
-        # favor of its new deprecator
-        for deprecated in spack.store.STORE.db.specs_deprecated_by(spec):
-            deprecated.package.do_deprecate(deprecator, link_fn)
-
-        # Now that we've handled metadata, uninstall and replace with link
-        PackageBase.uninstall_by_spec(spec, force=True, deprecator=deprecator)
-        link_fn(deprecator.prefix, spec.prefix)
 
     def view(self):
         """Create a view with the prefix of this package as the root.
