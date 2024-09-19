@@ -52,38 +52,39 @@ def test_relative_path_to_file_url(tmpdir):
 def test_url_join_absolute(scheme, resolve_href):
     """Test that joining a URL with an absolute path works the same for schemes we care about, and
     whether we work in web browser mode or not."""
-    a1 = url_util.join(f"{scheme}://example.com/a/b/c", "/d/e/f", resolve_href=resolve_href)
-    a2 = url_util.join(f"{scheme}://example.com/a/b/c", "/d", "e", "f", resolve_href=resolve_href)
-    assert a1 == a2 == f"{scheme}://example.com/d/e/f"
+    netloc = "" if scheme == "file" else "example.com"
+    a1 = url_util.join(f"{scheme}://{netloc}/a/b/c", "/d/e/f", resolve_href=resolve_href)
+    a2 = url_util.join(f"{scheme}://{netloc}/a/b/c", "/d", "e", "f", resolve_href=resolve_href)
+    assert a1 == a2 == f"{scheme}://{netloc}/d/e/f"
 
-    b1 = url_util.join(f"{scheme}://a.com/a", "https://b.com/b", resolve_href=resolve_href)
-    b2 = url_util.join(f"{scheme}://a.com/a", "https://b.com", "b", resolve_href=resolve_href)
+    b1 = url_util.join(f"{scheme}://{netloc}/a", "https://b.com/b", resolve_href=resolve_href)
+    b2 = url_util.join(f"{scheme}://{netloc}/a", "https://b.com", "b", resolve_href=resolve_href)
     assert b1 == b2 == "https://b.com/b"
 
 
-@pytest.mark.parametrize("scheme", ["http", "s3", "gs", "file"])
+@pytest.mark.parametrize("scheme", ["http", "s3", "gs"])
 def test_url_join_up(scheme):
     """Test that the netloc component is preserved when going .. up in the path."""
-    a1 = url_util.join(f"{scheme}://example/a/b.html", "c", resolve_href=True)
-    assert a1 == f"{scheme}://example/a/c"
-    b1 = url_util.join(f"{scheme}://example/a/b.html", "../c", resolve_href=True)
-    b2 = url_util.join(f"{scheme}://example/a/b.html", "..", "c", resolve_href=True)
-    assert b1 == b2 == f"{scheme}://example/c"
-    c1 = url_util.join(f"{scheme}://example/a/b.html", "../../c", resolve_href=True)
-    c2 = url_util.join(f"{scheme}://example/a/b.html", "..", "..", "c", resolve_href=True)
-    assert c1 == c2 == f"{scheme}://example/c"
+    a1 = url_util.join(f"{scheme}://netloc/a/b.html", "c", resolve_href=True)
+    assert a1 == f"{scheme}://netloc/a/c"
+    b1 = url_util.join(f"{scheme}://netloc/a/b.html", "../c", resolve_href=True)
+    b2 = url_util.join(f"{scheme}://netloc/a/b.html", "..", "c", resolve_href=True)
+    assert b1 == b2 == f"{scheme}://netloc/c"
+    c1 = url_util.join(f"{scheme}://netloc/a/b.html", "../../c", resolve_href=True)
+    c2 = url_util.join(f"{scheme}://netloc/a/b.html", "..", "..", "c", resolve_href=True)
+    assert c1 == c2 == f"{scheme}://netloc/c"
 
-    d1 = url_util.join(f"{scheme}://example/a/b", "c", resolve_href=False)
-    assert d1 == f"{scheme}://example/a/b/c"
-    d2 = url_util.join(f"{scheme}://example/a/b", "../c", resolve_href=False)
-    d3 = url_util.join(f"{scheme}://example/a/b", "..", "c", resolve_href=False)
-    assert d2 == d3 == f"{scheme}://example/a/c"
-    e1 = url_util.join(f"{scheme}://example/a/b", "../../c", resolve_href=False)
-    e2 = url_util.join(f"{scheme}://example/a/b", "..", "..", "c", resolve_href=False)
-    assert e1 == e2 == f"{scheme}://example/c"
-    f1 = url_util.join(f"{scheme}://example/a/b", "../../../c", resolve_href=False)
-    f2 = url_util.join(f"{scheme}://example/a/b", "..", "..", "..", "c", resolve_href=False)
-    assert f1 == f2 == f"{scheme}://example/c"
+    d1 = url_util.join(f"{scheme}://netloc/a/b", "c", resolve_href=False)
+    assert d1 == f"{scheme}://netloc/a/b/c"
+    d2 = url_util.join(f"{scheme}://netloc/a/b", "../c", resolve_href=False)
+    d3 = url_util.join(f"{scheme}://netloc/a/b", "..", "c", resolve_href=False)
+    assert d2 == d3 == f"{scheme}://netloc/a/c"
+    e1 = url_util.join(f"{scheme}://netloc/a/b", "../../c", resolve_href=False)
+    e2 = url_util.join(f"{scheme}://netloc/a/b", "..", "..", "c", resolve_href=False)
+    assert e1 == e2 == f"{scheme}://netloc/c"
+    f1 = url_util.join(f"{scheme}://netloc/a/b", "../../../c", resolve_href=False)
+    f2 = url_util.join(f"{scheme}://netloc/a/b", "..", "..", "..", "c", resolve_href=False)
+    assert f1 == f2 == f"{scheme}://netloc/c"
 
 
 @pytest.mark.parametrize("scheme", ["http", "https", "ftp", "s3", "gs", "file"])
@@ -91,18 +92,18 @@ def test_url_join_resolve_href(scheme):
     """test that `resolve_href=True` behaves like a web browser at the base page, and
     `resolve_href=False` behaves like joining paths in a file system at the base directory."""
     # these are equivalent because of the trailing /
-    a1 = url_util.join(f"{scheme}://netloc/my/path/", "other/path", resolve_href=True)
-    a2 = url_util.join(f"{scheme}://netloc/my/path/", "other", "path", resolve_href=True)
-    assert a1 == a2 == f"{scheme}://netloc/my/path/other/path"
-
-    b1 = url_util.join(f"{scheme}://netloc/my/path", "other/path", resolve_href=False)
-    b2 = url_util.join(f"{scheme}://netloc/my/path", "other", "path", resolve_href=False)
-    assert b1 == b2 == f"{scheme}://netloc/my/path/other/path"
+    netloc = "" if scheme == "file" else "netloc"
+    a1 = url_util.join(f"{scheme}://{netloc}/my/path/", "other/path", resolve_href=True)
+    a2 = url_util.join(f"{scheme}://{netloc}/my/path/", "other", "path", resolve_href=True)
+    assert a1 == a2 == f"{scheme}://{netloc}/my/path/other/path"
+    b1 = url_util.join(f"{scheme}://{netloc}/my/path", "other/path", resolve_href=False)
+    b2 = url_util.join(f"{scheme}://{netloc}/my/path", "other", "path", resolve_href=False)
+    assert b1 == b2 == f"{scheme}://{netloc}/my/path/other/path"
 
     # this is like a web browser: relative to /my.
-    c1 = url_util.join(f"{scheme}://netloc/my/path", "other/path", resolve_href=True)
-    c2 = url_util.join(f"{scheme}://netloc/my/path", "other", "path", resolve_href=True)
-    assert c1 == c2 == f"{scheme}://netloc/my/other/path"
+    c1 = url_util.join(f"{scheme}://{netloc}/my/path", "other/path", resolve_href=True)
+    c2 = url_util.join(f"{scheme}://{netloc}/my/path", "other", "path", resolve_href=True)
+    assert c1 == c2 == f"{scheme}://{netloc}/my/other/path"
 
 
 def test_default_download_name():
