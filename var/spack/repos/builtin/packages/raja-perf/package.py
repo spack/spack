@@ -102,8 +102,8 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("blt")
     depends_on("blt@0.6.2:", type="build", when="@2024.07.0:")
-    depends_on("blt@0.5.3:", type="build", when="@2023.06.0")
-    depends_on("blt@0.5.2:", type="build", when="@2022.10.0")
+    depends_on("blt@0.5.3", type="build", when="@2023.06")
+    depends_on("blt@0.5.2:0.5.3", type="build", when="@2022.10")
     depends_on("blt@0.5.0:", type="build", when="@0.12.0:")
     depends_on("blt@0.4.1:", type="build", when="@0.11.0:")
     depends_on("blt@0.4.0:", type="build", when="@0.8.0:")
@@ -140,9 +140,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("~openmp", when="+omptarget", msg="OpenMP target requires OpenMP")
     conflicts("+omptarget +rocm")
-    conflicts(
-        "+cuda", when="+omptarget", msg="Cuda may not be activated when omptarget is ON"
-    )
+    conflicts("+cuda", when="+omptarget", msg="Cuda may not be activated when omptarget is ON")
 
     def _get_sys_type(self, spec):
         sys_type = str(spec.architecture)
