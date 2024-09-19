@@ -48,7 +48,7 @@ def test_relative_path_to_file_url(tmpdir):
 
 
 @pytest.mark.parametrize("resolve_href", [True, False])
-@pytest.mark.parametrize("scheme", ["http", "s3", "gs", "file"])
+@pytest.mark.parametrize("scheme", ["http", "s3", "gs", "file", "oci"])
 def test_url_join_absolute(scheme, resolve_href):
     """Test that joining a URL with an absolute path works the same for schemes we care about, and
     whether we work in web browser mode or not."""

@@ -2140,6 +2140,9 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
 
     for mirror in mirror_collection.values():
         fetch_url = mirror.fetch_url
+        # TODO: oci:// does not support signing.
+        if fetch_url.startswith("oci://"):
+            continue
         keys_url = url_util.join(
             fetch_url, BUILD_CACHE_RELATIVE_PATH, BUILD_CACHE_KEYS_RELATIVE_PATH
         )
