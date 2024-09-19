@@ -13,7 +13,7 @@ from .blt import llnl_link_helpers
 class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
     """RAJA Performance Suite."""
 
-    homepage = "http://software.llnl.gov/RAJAPerf/"
+    homepage = "https://github.com/LLNL/RAJAPerf"
     git = "https://github.com/LLNL/RAJAPerf.git"
     tags = ["radiuss"]
 
