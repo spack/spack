@@ -2221,7 +2221,7 @@ class BuildProcessInstaller:
                 f"{self.pre} Building {self.pkg_id} [{self.pkg.build_system_class}]"  # type: ignore[attr-defined] # noqa: E501
             )
 
-            # get verbosity from do_install() parameter or saved value
+            # get verbosity from install parameter or saved value
             self.echo = self.verbose
             if spack.package_base.PackageBase._verbose is not None:
                 self.echo = spack.package_base.PackageBase._verbose
