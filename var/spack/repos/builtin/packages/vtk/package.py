@@ -142,6 +142,10 @@ class Vtk(CMakePackage):
     # a patch with the same name is also applied to paraview
     # the two patches are the same but for the path to the files they patch
     patch("vtk_alias_hdf5.patch", when="@9:")
+    # VTK 9.0 on Windows uses dll instead of lib for hdf5-hl target, which fails linking. Can't
+    # be fixed by bumping CMake lower bound, because VTK vendors FindHDF5.cmake. Various other
+    # patches to FindHDF5.cmake are missing, so add conflict instead of a series of patches.
+    conflicts("@9.0 platform=windows")
     depends_on("libxt", when="^[virtuals=gl] glx platform=linux")
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that

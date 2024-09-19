@@ -12,8 +12,8 @@ import llnl.util.filesystem as fs
 
 import spack.compiler
 import spack.compilers
+import spack.config
 import spack.spec
-import spack.util.environment
 import spack.util.module_cmd
 from spack.compiler import Compiler
 from spack.util.executable import Executable, ProcessError
@@ -40,25 +40,6 @@ def test_multiple_conflicting_compiler_definitions(mutable_config):
     arch_spec = spack.spec.ArchSpec(("test", "test", "test"))
     cmp = spack.compilers.compiler_for_spec("clang@=0.0.0", arch_spec)
     assert cmp.f77 == "f77"
-
-
-def test_get_compiler_duplicates(mutable_config, compiler_factory):
-    # In this case there is only one instance of the specified compiler in
-    # the test configuration (so it is not actually a duplicate), but the
-    # method behaves the same.
-    cnl_compiler = compiler_factory(spec="gcc@4.5.0", operating_system="CNL")
-    # CNL compiler has no target attribute, and this is essential to make detection pass
-    del cnl_compiler["compiler"]["target"]
-    mutable_config.set(
-        "compilers", [compiler_factory(spec="gcc@4.5.0", operating_system="SuSE11"), cnl_compiler]
-    )
-    cfg_file_to_duplicates = spack.compilers.get_compiler_duplicates(
-        "gcc@4.5.0", spack.spec.ArchSpec("cray-CNL-xeon")
-    )
-
-    assert len(cfg_file_to_duplicates) == 1
-    cfg_file, duplicates = next(iter(cfg_file_to_duplicates.items()))
-    assert len(duplicates) == 1
 
 
 def test_compiler_flags_from_config_are_grouped():

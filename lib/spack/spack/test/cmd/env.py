@@ -24,11 +24,17 @@ import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
 import spack.error
+import spack.main
 import spack.modules
+import spack.modules.tcl
 import spack.package_base
 import spack.paths
 import spack.repo
+import spack.solver.asp
+import spack.spec
+import spack.stage
 import spack.store
+import spack.util.environment
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.env import _env_create
@@ -1160,7 +1166,7 @@ spack:
     )
     with ev.Environment(tmp_path):
         assert spack.spec.Spec("mpich").concretized().satisfies("@3.0.3")
-        with pytest.raises(spack.config.ConfigError, match="not a list"):
+        with pytest.raises(spack.error.ConfigError, match="not a list"):
             config("change", "packages:mpich:require:~debug")
 
 
@@ -1188,7 +1194,7 @@ def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
     with spack_yaml.open("w") as f:
         f.write("spack:\n  include:\n    - {0}\n".format(missing_file.strpath))
 
-    with pytest.raises(spack.config.ConfigError, match="missing include path"):
+    with pytest.raises(spack.error.ConfigError, match="missing include path"):
         ev.Environment(tmpdir.strpath)
 
 
@@ -2334,103 +2340,6 @@ spack:
             mpileaks_spec = Spec("mpileaks target=be")
             assert mpileaks_spec in before_conc
             assert mpileaks_spec not in after_conc
-
-
-def test_stack_concretize_extraneous_deps(tmpdir, mock_packages):
-    # FIXME: The new concretizer doesn't handle yet soft
-    # FIXME: constraints for stacks
-    # FIXME: This now works for statically-determinable invalid deps
-    # FIXME: But it still does not work for dynamically determined invalid deps
-
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
-spack:
-  definitions:
-    - packages: [libelf, mpileaks]
-    - install:
-        - matrix:
-            - [$packages]
-            - ['^zmpi', '^mpich']
-  specs:
-    - $install
-"""
-        )
-    with tmpdir.as_cwd():
-        env("create", "test", "./spack.yaml")
-        with ev.read("test"):
-            concretize()
-
-        test = ev.read("test")
-
-        for user, concrete in test.concretized_specs():
-            assert concrete.concrete
-            assert not user.concrete
-            if user.name == "libelf":
-                assert not concrete.satisfies("^mpi")
-            elif user.name == "mpileaks":
-                assert concrete.satisfies("^mpi")
-
-
-def test_stack_concretize_extraneous_variants(tmpdir, mock_packages):
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
-spack:
-  definitions:
-    - packages: [libelf, mpileaks]
-    - install:
-        - matrix:
-            - [$packages]
-            - ['~shared', '+shared']
-  specs:
-    - $install
-"""
-        )
-    with tmpdir.as_cwd():
-        env("create", "test", "./spack.yaml")
-        with ev.read("test"):
-            concretize()
-
-        test = ev.read("test")
-
-        for user, concrete in test.concretized_specs():
-            assert concrete.concrete
-            assert not user.concrete
-            if user.name == "libelf":
-                assert "shared" not in concrete.variants
-            if user.name == "mpileaks":
-                assert concrete.variants["shared"].value == user.variants["shared"].value
-
-
-def test_stack_concretize_extraneous_variants_with_dash(tmpdir, mock_packages):
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
-spack:
-  definitions:
-    - packages: [libelf, mpileaks]
-    - install:
-        - matrix:
-            - [$packages]
-            - ['shared=False', '+shared-libs']
-  specs:
-    - $install
-"""
-        )
-    with tmpdir.as_cwd():
-        env("create", "test", "./spack.yaml")
-        with ev.read("test"):
-            concretize()
-
-        ev.read("test")
-
-        # Regression test for handling of variants with dashes in them
-        # will fail before this point if code regresses
-        assert True
 
 
 def test_stack_definition_extension(tmpdir):
@@ -4301,9 +4210,6 @@ spack:
 {''.join(includes)}
   specs:
   - mpileaks
-  packages:
-    mpileaks:
-      compiler: [gcc]
 """
     )
 

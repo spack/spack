@@ -863,7 +863,7 @@ named list ``compilers`` is ``['%gcc', '%clang', '%intel']`` on
    spack:
      definitions:
        - compilers: ['%gcc', '%clang']
-       - when: arch.satisfies('x86_64:')
+       - when: arch.satisfies('target=x86_64:')
          compilers: ['%intel']
 
 .. note::
@@ -893,8 +893,9 @@ The valid variables for a ``when`` clause are:
 
 #. ``env``. The user environment (usually ``os.environ`` in Python).
 
-#. ``hostname``. The hostname of the system (if ``hostname`` is an
-   executable in the user's PATH).
+#. ``hostname``. The hostname of the system.
+
+#. ``full_hostname``. The fully qualified hostname of the system.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 SpecLists as Constraints

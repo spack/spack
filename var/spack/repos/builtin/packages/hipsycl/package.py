@@ -77,8 +77,8 @@ class Hipsycl(CMakePackage, ROCmPackage):
         spec = self.spec
         args = [
             "-DWITH_CPU_BACKEND:Bool=TRUE",
-            "-DWITH_ROCM_BACKEND:Bool={0}".format("TRUE" if "+rocm" in spec else "FALSE"),
-            "-DWITH_CUDA_BACKEND:Bool={0}".format("TRUE" if "+cuda" in spec else "FALSE"),
+            "-DWITH_ROCM_BACKEND:Bool={0}".format("TRUE" if spec.satisfies("+rocm") else "FALSE"),
+            "-DWITH_CUDA_BACKEND:Bool={0}".format("TRUE" if spec.satisfies("+cuda") else "FALSE"),
             # prevent hipSYCL's cmake to look for other LLVM installations
             # if the specified one isn't compatible
             "-DDISABLE_LLVM_VERSION_CHECK:Bool=TRUE",
@@ -116,9 +116,9 @@ class Hipsycl(CMakePackage, ROCmPackage):
             )
         args.append("-DCLANG_EXECUTABLE_PATH:String={0}".format(llvm_clang_bin))
         # explicit CUDA toolkit
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             args.append("-DCUDA_TOOLKIT_ROOT_DIR:String={0}".format(spec["cuda"].prefix))
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             args.append("-DWITH_ACCELERATED_CPU:STRING=OFF")
             args.append("-DROCM_PATH:STRING={0}".format(os.environ.get("ROCM_PATH")))
             if self.spec.satisfies("@24.02.0:"):
@@ -161,7 +161,7 @@ class Hipsycl(CMakePackage, ROCmPackage):
             #    the libc++.so and libc++abi.so dyn linked to the sycl
             #    ptx backend
             rpaths = set()
-            if "~rocm" in spec:
+            if spec.satisfies("~rocm"):
                 so_paths = filesystem.find_libraries(
                     "libc++", self.spec["llvm"].prefix, shared=True, recursive=True
                 )
