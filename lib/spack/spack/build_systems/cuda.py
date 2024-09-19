@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+from typing import Iterable, List
+
 import spack.variant
 from spack.directives import conflicts, depends_on, variant
 from spack.multimethod import when
@@ -44,6 +47,7 @@ class CudaPackage(PackageBase):
         "87",
         "89",
         "90",
+        "90a",
     )
 
     # FIXME: keep cuda and cuda_arch separate to make usage easier until
@@ -69,6 +73,27 @@ class CudaPackage(PackageBase):
             ).format(s)
             for s in arch_list
         ]
+
+    @staticmethod
+    def compute_capabilities(arch_list: Iterable[str]) -> List[str]:
+        """Adds a decimal place to each CUDA arch.
+
+        >>> compute_capabilities(['90', '90a'])
+        ['9.0', '9.0a']
+
+        Args:
+            arch_list: A list of integer strings, optionally followed by a suffix.
+
+        Returns:
+            A list of float strings, optionally followed by a suffix
+        """
+        pattern = re.compile(r"(\d+)")
+        capabilities = []
+        for arch in arch_list:
+            _, number, letter = re.split(pattern, arch)
+            number = "{0:.1f}".format(float(number) / 10.0)
+            capabilities.append(number + letter)
+        return capabilities
 
     depends_on("cuda", when="+cuda")
 
@@ -145,7 +170,8 @@ class CudaPackage(PackageBase):
         conflicts("%clang@15:", when="+cuda ^cuda@:12.0")
         conflicts("%clang@16:", when="+cuda ^cuda@:12.1")
         conflicts("%clang@17:", when="+cuda ^cuda@:12.3")
-        conflicts("%clang@18:", when="+cuda ^cuda@:12.6")
+        conflicts("%clang@18:", when="+cuda ^cuda@:12.5")
+        conflicts("%clang@19:", when="+cuda ^cuda@:12.6")
 
         # https://gist.github.com/ax3l/9489132#gistcomment-3860114
         conflicts("%gcc@10", when="+cuda ^cuda@:11.4.0")

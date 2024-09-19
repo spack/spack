@@ -17,13 +17,16 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.compilers
+import spack.config
 import spack.deptypes as dt
+import spack.error
 import spack.install_test
 import spack.package_base
 import spack.repo
 import spack.spec
 from spack.build_systems.generic import Package
-from spack.installer import InstallError
+from spack.error import InstallError
 
 
 @pytest.fixture(scope="module")
@@ -286,6 +289,7 @@ def test_package_test_no_compilers(mock_packages, monkeypatch, capfd):
 
 
 # TODO (post-34236): Remove when remove deprecated run_test(), etc.
+@pytest.mark.not_on_windows("echo not available on Windows")
 @pytest.mark.parametrize(
     "msg,installed,purpose,expected",
     [

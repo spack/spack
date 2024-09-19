@@ -21,11 +21,12 @@ from llnl.util.symlink import readlink, symlink
 
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
+import spack.config
 import spack.error
 import spack.fetch_strategy
+import spack.mirror
 import spack.package_base
-import spack.repo
-import spack.store
+import spack.stage
 import spack.util.gpg
 import spack.util.url as url_util
 from spack.fetch_strategy import URLFetchStrategy

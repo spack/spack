@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import concurrent.futures
 import errno
 import getpass
 import glob
@@ -36,12 +35,11 @@ import spack.config
 import spack.error
 import spack.fetch_strategy as fs
 import spack.mirror
-import spack.paths
 import spack.resource
 import spack.spec
-import spack.stage
 import spack.util.crypto
 import spack.util.lock
+import spack.util.parallel
 import spack.util.path as sup
 import spack.util.pattern as pattern
 import spack.util.url as url_util
@@ -981,8 +979,8 @@ def interactive_version_filter(
             data = buffer.getvalue().encode("utf-8")
 
             short_hash = hashlib.sha1(data).hexdigest()[:7]
-            filename = f"{spack.stage.stage_prefix}versions-{short_hash}.txt"
-            filepath = os.path.join(spack.stage.get_stage_root(), filename)
+            filename = f"{stage_prefix}versions-{short_hash}.txt"
+            filepath = os.path.join(get_stage_root(), filename)
 
             # Write contents
             with open(filepath, "wb") as f:
@@ -1134,7 +1132,7 @@ def get_checksums_for_versions(
         if checksum is not None:
             version_hashes[version] = checksum
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=concurrency) as executor:
+    with spack.util.parallel.make_concurrent_executor(concurrency, require_fork=False) as executor:
         results = []
         for url, version in search_arguments:
             future = executor.submit(_fetch_and_checksum, url, fetch_options, keep_stage)

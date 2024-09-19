@@ -68,6 +68,7 @@ import llnl.util.lang as lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
 
+import spack
 import spack.compiler
 import spack.compilers
 import spack.config
@@ -75,7 +76,6 @@ import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
 import spack.parser
-import spack.patch
 import spack.paths
 import spack.platforms
 import spack.provider_index
@@ -84,7 +84,6 @@ import spack.solver
 import spack.store
 import spack.target
 import spack.traverse as traverse
-import spack.util.crypto
 import spack.util.executable
 import spack.util.hash
 import spack.util.module_cmd as md
@@ -781,15 +780,47 @@ class CompilerFlag(str):
         propagate (bool): if ``True`` the flag value will
             be passed to the package's dependencies. If
             ``False`` it will not
+        flag_group (str): if this flag was introduced along
+            with several flags via a single source, then
+            this will store all such flags
+        source (str): identifies the type of constraint that
+            introduced this flag (e.g. if a package has
+            ``depends_on(... cflags=-g)``, then the ``source``
+            for "-g" would indicate ``depends_on``.
     """
 
     def __new__(cls, value, **kwargs):
         obj = str.__new__(cls, value)
         obj.propagate = kwargs.pop("propagate", False)
+        obj.flag_group = kwargs.pop("flag_group", value)
+        obj.source = kwargs.pop("source", None)
         return obj
 
 
 _valid_compiler_flags = ["cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags"]
+
+
+def _shared_subset_pair_iterate(container1, container2):
+    """
+    [0, a, c, d, f]
+    [a, d, e, f]
+
+    yields [(a, a), (d, d), (f, f)]
+
+    no repeated elements
+    """
+    a_idx, b_idx = 0, 0
+    max_a, max_b = len(container1), len(container2)
+    while a_idx < max_a and b_idx < max_b:
+        if container1[a_idx] == container2[b_idx]:
+            yield (container1[a_idx], container2[b_idx])
+            a_idx += 1
+            b_idx += 1
+        else:
+            while container1[a_idx] < container2[b_idx]:
+                a_idx += 1
+            while container1[a_idx] > container2[b_idx]:
+                b_idx += 1
 
 
 class FlagMap(lang.HashableMap):
@@ -800,23 +831,9 @@ class FlagMap(lang.HashableMap):
         self.spec = spec
 
     def satisfies(self, other):
-        return all(f in self and self[f] == other[f] for f in other)
+        return all(f in self and set(self[f]) >= set(other[f]) for f in other)
 
     def intersects(self, other):
-        common_types = set(self) & set(other)
-        for flag_type in common_types:
-            if not self[flag_type] or not other[flag_type]:
-                # At least one of the two is empty
-                continue
-
-            if self[flag_type] != other[flag_type]:
-                return False
-
-            if not all(
-                f1.propagate == f2.propagate for f1, f2 in zip(self[flag_type], other[flag_type])
-            ):
-                # At least one propagation flag didn't match
-                return False
         return True
 
     def constrain(self, other):
@@ -824,28 +841,28 @@ class FlagMap(lang.HashableMap):
 
         Return whether the spec changed.
         """
-        if other.spec and other.spec._concrete:
-            for k in self:
-                if k not in other:
-                    raise UnsatisfiableCompilerFlagSpecError(self[k], "<absent>")
-
         changed = False
-        for k in other:
-            if k in self and not set(self[k]) <= set(other[k]):
-                raise UnsatisfiableCompilerFlagSpecError(
-                    " ".join(f for f in self[k]), " ".join(f for f in other[k])
-                )
-            elif k not in self:
-                self[k] = other[k]
+        for flag_type in other:
+            if flag_type not in self:
+                self[flag_type] = other[flag_type]
                 changed = True
+            else:
+                extra_other = set(other[flag_type]) - set(self[flag_type])
+                if extra_other:
+                    self[flag_type] = list(self[flag_type]) + list(
+                        x for x in other[flag_type] if x in extra_other
+                    )
+                    changed = True
 
-            # Check that the propagation values match
-            if self[k] == other[k]:
-                for i in range(len(other[k])):
-                    if self[k][i].propagate != other[k][i].propagate:
-                        raise UnsatisfiableCompilerFlagSpecError(
-                            self[k][i].propagate, other[k][i].propagate
-                        )
+                # Next, if any flags in other propagate, we force them to propagate in our case
+                shared = list(sorted(set(other[flag_type]) - extra_other))
+                for x, y in _shared_subset_pair_iterate(shared, sorted(self[flag_type])):
+                    if x.propagate:
+                        y.propagate = True
+
+        # TODO: what happens if flag groups with a partial (but not complete)
+        # intersection specify different behaviors for flag propagation?
+
         return changed
 
     @staticmethod
@@ -858,7 +875,7 @@ class FlagMap(lang.HashableMap):
             clone[name] = compiler_flag
         return clone
 
-    def add_flag(self, flag_type, value, propagation):
+    def add_flag(self, flag_type, value, propagation, flag_group=None, source=None):
         """Stores the flag's value in CompilerFlag and adds it
         to the FlagMap
 
@@ -869,7 +886,8 @@ class FlagMap(lang.HashableMap):
             propagation (bool): if ``True`` the flag value will be passed to
                 the packages' dependencies. If``False`` it will not be passed
         """
-        flag = CompilerFlag(value, propagate=propagation)
+        flag_group = flag_group or value
+        flag = CompilerFlag(value, propagate=propagation, flag_group=flag_group, source=source)
 
         if flag_type not in self:
             self[flag_type] = [flag]
@@ -1288,7 +1306,7 @@ class SpecBuildInterface(lang.ObjectWrapper):
 
 
 def tree(
-    specs: List["spack.spec.Spec"],
+    specs: List["Spec"],
     *,
     color: Optional[bool] = None,
     depth: bool = False,
@@ -1552,7 +1570,9 @@ class Spec:
             raise spack.error.SpecError(err_msg.format(name, len(deps)))
         return deps[0]
 
-    def edges_from_dependents(self, name=None, depflag: dt.DepFlag = dt.ALL):
+    def edges_from_dependents(
+        self, name=None, depflag: dt.DepFlag = dt.ALL
+    ) -> List[DependencySpec]:
         """Return a list of edges connecting this node in the DAG
         to parents.
 
@@ -1562,7 +1582,9 @@ class Spec:
         """
         return [d for d in self._dependents.select(parent=name, depflag=depflag)]
 
-    def edges_to_dependencies(self, name=None, depflag: dt.DepFlag = dt.ALL):
+    def edges_to_dependencies(
+        self, name=None, depflag: dt.DepFlag = dt.ALL
+    ) -> List[DependencySpec]:
         """Return a list of edges connecting this node in the DAG
         to children.
 
@@ -1661,8 +1683,9 @@ class Spec:
         elif name in valid_flags:
             assert self.compiler_flags is not None
             flags_and_propagation = spack.compiler.tokenize_flags(value, propagate)
+            flag_group = " ".join(x for (x, y) in flags_and_propagation)
             for flag, propagation in flags_and_propagation:
-                self.compiler_flags.add_flag(name, flag, propagation)
+                self.compiler_flags.add_flag(name, flag, propagation, flag_group)
         else:
             # FIXME:
             # All other flags represent variants. 'foo=true' and 'foo=false'
@@ -1993,6 +2016,7 @@ class Spec:
     def _lookup_hash(self):
         """Lookup just one spec with an abstract hash, returning a spec from the the environment,
         store, or finally, binary caches."""
+        import spack.binary_distribution
         import spack.environment
 
         active_env = spack.environment.active_environment()
@@ -2008,7 +2032,7 @@ class Spec:
             raise InvalidHashError(self, self.abstract_hash)
 
         if len(matches) != 1:
-            raise spack.spec.AmbiguousHashError(
+            raise AmbiguousHashError(
                 f"Multiple packages specify hash beginning '{self.abstract_hash}'.", *matches
             )
 
@@ -2343,14 +2367,16 @@ class Spec:
         package_cls = spack.repo.PATH.get_pkg_class(new_spec.name)
         if change_spec.versions and not change_spec.versions == vn.any_version:
             new_spec.versions = change_spec.versions
-        for variant, value in change_spec.variants.items():
-            if variant in package_cls.variants:
-                if variant in new_spec.variants:
+
+        for vname, value in change_spec.variants.items():
+            if vname in package_cls.variant_names():
+                if vname in new_spec.variants:
                     new_spec.variants.substitute(value)
                 else:
-                    new_spec.variants[variant] = value
+                    new_spec.variants[vname] = value
             else:
-                raise ValueError("{0} is not a variant of {1}".format(variant, new_spec.name))
+                raise ValueError("{0} is not a variant of {1}".format(vname, new_spec.name))
+
         if change_spec.compiler:
             new_spec.compiler = change_spec.compiler
         if change_spec.compiler_flags:
@@ -2938,48 +2964,14 @@ class Spec:
             return
 
         pkg_cls = spec.package_class
-        pkg_variants = pkg_cls.variants
+        pkg_variants = pkg_cls.variant_names()
         # reserved names are variants that may be set on any package
         # but are not necessarily recorded by the package's class
         not_existing = set(spec.variants) - (set(pkg_variants) | set(vt.reserved_names))
         if not_existing:
-            raise vt.UnknownVariantError(spec, not_existing)
-
-    def update_variant_validate(self, variant_name, values):
-        """If it is not already there, adds the variant named
-        `variant_name` to the spec `spec` based on the definition
-        contained in the package metadata. Validates the variant and
-        values before returning.
-
-        Used to add values to a variant without being sensitive to the
-        variant being single or multi-valued. If the variant already
-        exists on the spec it is assumed to be multi-valued and the
-        values are appended.
-
-        Args:
-           variant_name: the name of the variant to add or append to
-           values: the value or values (as a tuple) to add/append
-                   to the variant
-        """
-        if not isinstance(values, tuple):
-            values = (values,)
-
-        pkg_variant, _ = self.package_class.variants[variant_name]
-
-        for value in values:
-            if self.variants.get(variant_name):
-                msg = (
-                    f"cannot append the new value '{value}' to the single-valued "
-                    f"variant '{self.variants[variant_name]}'"
-                )
-                assert pkg_variant.multi, msg
-                self.variants[variant_name].append(value)
-            else:
-                variant = pkg_variant.make_variant(value)
-                self.variants[variant_name] = variant
-
-        pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
-        pkg_variant.validate_or_raise(self.variants[variant_name], pkg_cls)
+            raise vt.UnknownVariantError(
+                f"No such variant {not_existing} for spec: '{spec}'", list(not_existing)
+            )
 
     def constrain(self, other, deps=True):
         """Intersect self with other in-place. Return True if self changed, False otherwise.
@@ -3440,7 +3432,7 @@ class Spec:
                     pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
                     try:
                         patch = index.patch_for_package(sha256, pkg_cls)
-                    except spack.patch.PatchLookupError as e:
+                    except spack.error.PatchLookupError as e:
                         raise spack.error.SpecError(
                             f"{e}. This usually means the patch was modified or removed. "
                             "To fix this, either reconcretize or use the original package "
@@ -3887,42 +3879,42 @@ class Spec:
             for idx, part in enumerate(parts):
                 if not part:
                     raise SpecFormatStringError("Format string attributes must be non-empty")
-                if part.startswith("_"):
+                elif part.startswith("_"):
                     raise SpecFormatStringError("Attempted to format private attribute")
-                else:
-                    if part == "variants" and isinstance(current, VariantMap):
-                        # subscript instead of getattr for variant names
+                elif isinstance(current, VariantMap):
+                    # subscript instead of getattr for variant names
+                    try:
                         current = current[part]
-                    else:
-                        # aliases
-                        if part == "arch":
-                            part = "architecture"
-                        elif part == "version":
-                            # version (singular) requires a concrete versions list. Avoid
-                            # pedantic errors by using versions (plural) when not concrete.
-                            # These two are not entirely equivalent for pkg@=1.2.3:
-                            # - version prints '1.2.3'
-                            # - versions prints '=1.2.3'
-                            if not current.versions.concrete:
-                                part = "versions"
-                        try:
-                            current = getattr(current, part)
-                        except AttributeError:
-                            parent = ".".join(parts[:idx])
-                            m = "Attempted to format attribute %s." % attribute
-                            m += "Spec %s has no attribute %s" % (parent, part)
-                            raise SpecFormatStringError(m)
-                        if isinstance(current, vn.VersionList):
-                            if current == vn.any_version:
-                                # don't print empty version lists
-                                return ""
-
-                    if callable(current):
-                        raise SpecFormatStringError("Attempted to format callable object")
-
-                    if current is None:
-                        # not printing anything
+                    except KeyError:
+                        raise SpecFormatStringError(f"Variant '{part}' does not exist")
+                else:
+                    # aliases
+                    if part == "arch":
+                        part = "architecture"
+                    elif part == "version" and not current.versions.concrete:
+                        # version (singular) requires a concrete versions list. Avoid
+                        # pedantic errors by using versions (plural) when not concrete.
+                        # These two are not entirely equivalent for pkg@=1.2.3:
+                        # - version prints '1.2.3'
+                        # - versions prints '=1.2.3'
+                        part = "versions"
+                    try:
+                        current = getattr(current, part)
+                    except AttributeError:
+                        raise SpecFormatStringError(
+                            f"Attempted to format attribute {attribute}. "
+                            f"Spec {'.'.join(parts[:idx])} has no attribute {part}"
+                        )
+                    if isinstance(current, vn.VersionList) and current == vn.any_version:
+                        # don't print empty version lists
                         return ""
+
+                if callable(current):
+                    raise SpecFormatStringError("Attempted to format callable object")
+
+                if current is None:
+                    # not printing anything
+                    return ""
 
             # Set color codes for various attributes
             color = None
@@ -4423,7 +4415,9 @@ class VariantMap(lang.HashableMap):
         Returns:
             bool: True or False
         """
-        return self.spec._concrete or all(v in self for v in self.spec.package_class.variants)
+        return self.spec._concrete or all(
+            v in self for v in self.spec.package_class.variant_names()
+        )
 
     def copy(self) -> "VariantMap":
         clone = VariantMap(self.spec)
@@ -4461,7 +4455,7 @@ class VariantMap(lang.HashableMap):
 
 def substitute_abstract_variants(spec: Spec):
     """Uses the information in `spec.package` to turn any variant that needs
-    it into a SingleValuedVariant.
+    it into a SingleValuedVariant or BoolValuedVariant.
 
     This method is best effort. All variants that can be substituted will be
     substituted before any error is raised.
@@ -4469,26 +4463,45 @@ def substitute_abstract_variants(spec: Spec):
     Args:
         spec: spec on which to operate the substitution
     """
-    # This method needs to be best effort so that it works in matrix exlusion
+    # This method needs to be best effort so that it works in matrix exclusion
     # in $spack/lib/spack/spack/spec_list.py
-    failed = []
+    unknown = []
     for name, v in spec.variants.items():
         if name == "dev_path":
             spec.variants.substitute(vt.SingleValuedVariant(name, v._original_value))
             continue
         elif name in vt.reserved_names:
             continue
-        elif name not in spec.package_class.variants:
-            failed.append(name)
+
+        variant_defs = spec.package_class.variant_definitions(name)
+        valid_defs = []
+        for when, vdef in variant_defs:
+            if when.intersects(spec):
+                valid_defs.append(vdef)
+
+        if not valid_defs:
+            if name not in spec.package_class.variant_names():
+                unknown.append(name)
+            else:
+                whens = [str(when) for when, _ in variant_defs]
+                raise InvalidVariantForSpecError(v.name, f"({', '.join(whens)})", spec)
             continue
-        pkg_variant, _ = spec.package_class.variants[name]
+
+        pkg_variant, *rest = valid_defs
+        if rest:
+            continue
+
         new_variant = pkg_variant.make_variant(v._original_value)
-        pkg_variant.validate_or_raise(new_variant, spec.package_class)
+        pkg_variant.validate_or_raise(new_variant, spec.name)
         spec.variants.substitute(new_variant)
 
-    # Raise all errors at once
-    if failed:
-        raise vt.UnknownVariantError(spec, failed)
+    if unknown:
+        variants = llnl.string.plural(len(unknown), "variant")
+        raise vt.UnknownVariantError(
+            f"Tried to set {variants} {llnl.string.comma_and(unknown)}. "
+            f"{spec.name} has no such {variants}",
+            unknown_variants=unknown,
+        )
 
 
 def parse_with_version_concrete(spec_like: Union[str, Spec], compiler: bool = False):
@@ -4511,7 +4524,7 @@ def merge_abstract_anonymous_specs(*abstract_specs: Spec):
     Args:
         *abstract_specs: abstract specs to be merged
     """
-    merged_spec = spack.spec.Spec()
+    merged_spec = Spec()
     for current_spec_constraint in abstract_specs:
         merged_spec.constrain(current_spec_constraint, deps=False)
 
@@ -4681,6 +4694,10 @@ class SpecfileReaderBase:
                 node_spec._build_spec = hash_dict[bhash]["node_spec"]
 
         return hash_dict[root_spec_hash]["node_spec"]
+
+    @classmethod
+    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name):
+        raise NotImplementedError("Subclasses must implement this method.")
 
 
 class SpecfileV1(SpecfileReaderBase):
@@ -4862,7 +4879,6 @@ def get_host_environment_metadata() -> Dict[str, str]:
     """Get the host environment, reduce to a subset that we can store in
     the install directory, and add the spack version.
     """
-    import spack.main
 
     environ = get_host_environment()
     return {
@@ -4870,7 +4886,7 @@ def get_host_environment_metadata() -> Dict[str, str]:
         "platform": environ["platform"],
         "host_target": environ["target"],
         "hostname": environ["hostname"],
-        "spack_version": spack.main.get_version(),
+        "spack_version": spack.get_version(),
         "kernel_version": platform.version(),
     }
 
@@ -4892,7 +4908,6 @@ def get_host_environment() -> Dict[str, Any]:
         "architecture": arch_spec,
         "arch_str": str(arch_spec),
         "hostname": socket.gethostname(),
-        "full_hostname": socket.getfqdn(),
     }
 
 
@@ -4913,6 +4928,15 @@ class SpecParseError(spack.error.SpecError):
                 "    %s^" % (" " * self.pos),
             ]
         )
+
+
+class InvalidVariantForSpecError(spack.error.SpecError):
+    """Raised when an invalid conditional variant is specified."""
+
+    def __init__(self, variant, when, spec):
+        msg = f"Invalid variant {variant} for spec {spec}.\n"
+        msg += f"{variant} is only available for {spec.name} when satisfying one of {when}."
+        super().__init__(msg)
 
 
 class UnsupportedPropagationError(spack.error.SpecError):

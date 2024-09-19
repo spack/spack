@@ -15,6 +15,7 @@ from llnl.util.tty import color
 
 import spack.cmd
 import spack.config
+import spack.error
 import spack.modules
 import spack.modules.common
 import spack.repo
@@ -124,13 +125,13 @@ def check_module_set_name(name):
     names = [k for k in modules if k != "prefix_inspections"]
 
     if not names:
-        raise spack.config.ConfigError(
+        raise spack.error.ConfigError(
             f"Module set configuration is missing. Cannot use module set '{name}'"
         )
 
     pretty_names = "', '".join(names)
 
-    raise spack.config.ConfigError(
+    raise spack.error.ConfigError(
         f"Cannot use invalid module set '{name}'.",
         f"Valid module set names are: '{pretty_names}'.",
     )

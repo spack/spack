@@ -25,7 +25,6 @@ import spack.paths
 import spack.platforms
 import spack.repo
 import spack.spec
-import spack.version
 from spack.operating_systems import windows_os
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
@@ -273,24 +272,24 @@ def find_compilers(
 
     valid_compilers = {}
     for name, detected in detected_packages.items():
-        compilers = [x for x in detected if CompilerConfigFactory.from_external_spec(x.spec)]
+        compilers = [x for x in detected if CompilerConfigFactory.from_external_spec(x)]
         if not compilers:
             continue
         valid_compilers[name] = compilers
 
     def _has_fortran_compilers(x):
-        if "compilers" not in x.spec.extra_attributes:
+        if "compilers" not in x.extra_attributes:
             return False
 
-        return "fortran" in x.spec.extra_attributes["compilers"]
+        return "fortran" in x.extra_attributes["compilers"]
 
     if mixed_toolchain:
         gccs = [x for x in valid_compilers.get("gcc", []) if _has_fortran_compilers(x)]
         if gccs:
             best_gcc = sorted(
-                gccs, key=lambda x: spack.spec.parse_with_version_concrete(x.spec).version
+                gccs, key=lambda x: spack.spec.parse_with_version_concrete(x).version
             )[-1]
-            gfortran = best_gcc.spec.extra_attributes["compilers"]["fortran"]
+            gfortran = best_gcc.extra_attributes["compilers"]["fortran"]
             for name in ("llvm", "apple-clang"):
                 if name not in valid_compilers:
                     continue
@@ -298,11 +297,11 @@ def find_compilers(
                 for candidate in candidates:
                     if _has_fortran_compilers(candidate):
                         continue
-                    candidate.spec.extra_attributes["compilers"]["fortran"] = gfortran
+                    candidate.extra_attributes["compilers"]["fortran"] = gfortran
 
     new_compilers = []
     for name, detected in valid_compilers.items():
-        for config in CompilerConfigFactory.from_specs([x.spec for x in detected]):
+        for config in CompilerConfigFactory.from_specs(detected):
             c = _compiler_from_config_entry(config["compiler"])
             if c in known_compilers:
                 continue
@@ -597,24 +596,6 @@ def compiler_for_spec(compiler_spec, arch_spec):
         msg += "for architecture %s:\n %s" % (arch_spec, compilers)
         tty.debug(msg)
     return compilers[0]
-
-
-@_auto_compiler_spec
-def get_compiler_duplicates(compiler_spec, arch_spec):
-    config = spack.config.CONFIG
-
-    scope_to_compilers = {}
-    for scope in config.scopes:
-        compilers = compilers_for_spec(compiler_spec, arch_spec=arch_spec, scope=scope)
-        if compilers:
-            scope_to_compilers[scope] = compilers
-
-    cfg_file_to_duplicates = {}
-    for scope, compilers in scope_to_compilers.items():
-        config_file = config.get_config_filename(scope, "compilers")
-        cfg_file_to_duplicates[config_file] = compilers
-
-    return cfg_file_to_duplicates
 
 
 @llnl.util.lang.memoized

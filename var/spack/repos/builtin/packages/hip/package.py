@@ -27,6 +27,7 @@ class Hip(CMakePackage):
     license("MIT")
 
     version("master", branch="master")
+    version("6.2.0", sha256="7ca261eba79793427674bf2372c92ac5483cc0fac5278f8ad611de396fad8bee")
     version("6.1.2", sha256="9ba5f70a553b48b2cea25c7e16b97ad49320750c0152763b173b63b9f151e783")
     version("6.1.1", sha256="09e8013b8071fca2cf914758001bbd1dccaa237e798e945970e4356cb9b90050")
     version("6.1.0", sha256="6fd57910a16d0b54df822807e67b6207146233a2de5a46c6a05b940a21e2c4d7")
@@ -84,6 +85,7 @@ class Hip(CMakePackage):
             "6.1.0",
             "6.1.1",
             "6.1.2",
+            "6.2.0",
         ]:
             depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
             depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
@@ -106,6 +108,7 @@ class Hip(CMakePackage):
             "6.1.0",
             "6.1.1",
             "6.1.2",
+            "6.2.0",
         ]:
             depends_on(f"hipify-clang@{ver}", when=f"@{ver}")
 
@@ -121,13 +124,16 @@ class Hip(CMakePackage):
             "6.1.0",
             "6.1.1",
             "6.1.2",
+            "6.2.0",
         ]:
             depends_on(f"rocm-core@{ver}", when=f"@{ver}")
+
+        depends_on("rocprofiler-register@6.2.0", when="@6.2.0")
         # hipcc likes to add `-lnuma` by default :(
         # ref https://github.com/ROCm/HIP/pull/2202
         depends_on("numactl", when="@3.7.0:")
 
-    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2"]:
+    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2", "6.2.0"]:
         depends_on(f"hipcc@{ver}", when=f"@{ver}")
 
     # roc-obj-ls requirements
@@ -189,6 +195,7 @@ class Hip(CMakePackage):
         )
     # Add hip-clr sources thru the below
     for d_version, d_shasum in [
+        ("6.2.0", "620e4c6a7f05651cc7a170bc4700fef8cae002420307a667c638b981d00b25e8"),
         ("6.1.2", "1a1e21640035d957991559723cd093f0c7e202874423667d2ba0c7662b01fea4"),
         ("6.1.1", "2db02f335c9d6fa69befcf7c56278e5cecfe3db0b457eaaa41206c2585ef8256"),
         ("6.1.0", "49b23eef621f4e8e528bb4de8478a17436f42053a2f7fde21ff221aa683205c7"),
@@ -242,6 +249,7 @@ class Hip(CMakePackage):
         )
     # Add hipother sources thru the below
     for d_version, d_shasum in [
+        ("6.2.0", "1f854b0c07d71b10450080e3bbffe47adaf10a9745a9212797d991756a100174"),
         ("6.1.2", "2740d1e3dcf1f2d07d2a8db6acf4c972941ae392172b83fd8ddcfe8706a40d0b"),
         ("6.1.1", "8b975623c8ed1db53feea2cfd5d29f2a615e890aee1157d0d17adeb97200643f"),
         ("6.1.0", "43a48ccc82f705a15852392ee7419e648d913716bfc04063a53d2d17979b1b46"),
@@ -260,6 +268,7 @@ class Hip(CMakePackage):
 
     # Add hiptests sources thru the below
     for d_version, d_shasum in [
+        ("6.2.0", "314837dbac78be71844ceb959476470c484fdcd4fb622ff8de9277783e0fcf1c"),
         ("6.1.2", "5b14e4a30d8d8fb56c43e262009646ba9188eac1c8ff882d9a606a4bec69b56b"),
         ("6.1.1", "10c96ee72adf4580056292ab17cfd858a2fd7bc07abeb41c6780bd147b47f7af"),
         ("6.1.0", "cf3a6a7c43116032d933cc3bc88bfc4b17a4ee1513c978e751755ca11a5ed381"),
@@ -568,19 +577,19 @@ class Hip(CMakePackage):
 
         args.append(self.define("HIP_COMMON_DIR", self.stage.source_path))
         args.append(self.define("HIP_CATCH_TEST", "OFF"))
-        if "@:5.5" in self.spec:
+        if self.spec.satisfies("@:5.5"):
             args.append(self.define("ROCCLR_PATH", self.stage.source_path + "rocclr"))
             args.append(self.define("AMD_OPENCL_PATH", self.stage.source_path + "opencl"))
-        if "@5.3.0:" in self.spec:
+        if self.spec.satisfies("@5.3.0:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
-        if "@5.6.0:" in self.spec:
+        if self.spec.satisfies("@5.6.0:"):
             args.append(self.define("ROCCLR_PATH", self.stage.source_path + "/clr/rocclr"))
             args.append(self.define("AMD_OPENCL_PATH", self.stage.source_path + "/clr/opencl"))
             args.append(self.define("CLR_BUILD_HIP", True)),
             args.append(self.define("CLR_BUILD_OCL", False)),
-        if "@5.6:5.7" in self.spec:
+        if self.spec.satisfies("@5.6:5.7"):
             args.append(self.define("HIPCC_BIN_DIR", self.stage.source_path + "/hipcc/bin")),
-        if "@6.0:" in self.spec:
+        if self.spec.satisfies("@6.0:"):
             args.append(self.define("HIPCC_BIN_DIR", self.spec["hipcc"].prefix.bin)),
         return args
 

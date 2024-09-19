@@ -16,7 +16,6 @@ import functools
 import glob
 import hashlib
 import importlib
-import inspect
 import io
 import os
 import re
@@ -34,28 +33,28 @@ import llnl.util.tty as tty
 from llnl.util.lang import classproperty, memoized
 from llnl.util.link_tree import LinkTree
 
+import spack.build_environment
+import spack.builder
 import spack.compilers
 import spack.config
 import spack.dependency
 import spack.deptypes as dt
 import spack.directives
-import spack.directory_layout
-import spack.environment
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
 import spack.mirror
-import spack.mixins
 import spack.multimethod
 import spack.patch
-import spack.paths
 import spack.repo
 import spack.spec
 import spack.store
 import spack.url
 import spack.util.environment
+import spack.util.executable
 import spack.util.path
 import spack.util.web
+from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import (
     PackageTest,
@@ -65,7 +64,8 @@ from spack.install_test import (
     cache_extra_test_sources,
     install_test_root,
 )
-from spack.installer import InstallError, PackageInstaller
+from spack.installer import PackageInstaller
+from spack.solver.version_order import concretization_version_order
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
@@ -117,11 +117,9 @@ def preferred_version(pkg: "PackageBase"):
     Arguments:
         pkg: The package whose versions are to be assessed.
     """
-    # Here we sort first on the fact that a version is marked
-    # as preferred in the package, then on the fact that the
-    # version is not develop, then lexicographically
-    key_fn = lambda v: (pkg.versions[v].get("preferred", False), not v.isdevelop(), v)
-    return max(pkg.versions, key=key_fn)
+
+    version, _ = max(pkg.versions.items(), key=concretization_version_order)
+    return version
 
 
 class WindowsRPath:
@@ -453,10 +451,11 @@ def _by_name(
             else:
                 all_by_name.setdefault(name, []).append(value)
 
+    # this needs to preserve the insertion order of whens
     return dict(sorted(all_by_name.items()))
 
 
-def _names(when_indexed_dictionary):
+def _names(when_indexed_dictionary: WhenDict) -> List[str]:
     """Get sorted names from dicts keyed by when/name."""
     all_names = set()
     for when, by_name in when_indexed_dictionary.items():
@@ -464,6 +463,45 @@ def _names(when_indexed_dictionary):
             all_names.add(name)
 
     return sorted(all_names)
+
+
+WhenVariantList = List[Tuple["spack.spec.Spec", "spack.variant.Variant"]]
+
+
+def _remove_overridden_vdefs(variant_defs: WhenVariantList) -> None:
+    """Remove variant defs from the list if their when specs are satisfied by later ones.
+
+    Any such variant definitions are *always* overridden by their successor, as it will
+    match everything the predecessor matches, and the solver will prefer it because of
+    its higher precedence.
+
+    We can just remove these defs from variant definitions and avoid putting them in the
+    solver. This is also useful for, e.g., `spack info`, where we don't want to show a
+    variant from a superclass if it is always overridden by a variant defined in a
+    subclass.
+
+    Example::
+
+        class ROCmPackage:
+            variant("amdgpu_target", ..., when="+rocm")
+
+        class Hipblas:
+            variant("amdgpu_target", ...)
+
+    The subclass definition *always* overrides the superclass definition here, but they
+    have different when specs and the subclass def won't just replace the one in the
+    superclass. In this situation, the subclass should *probably* also have
+    ``when="+rocm"``, but we can't guarantee that will always happen when a vdef is
+    overridden. So we use this method to remove any overrides we can know statically.
+
+    """
+    i = 0
+    while i < len(variant_defs):
+        when, vdef = variant_defs[i]
+        if any(when.satisfies(successor) for successor, _ in variant_defs[i + 1 :]):
+            del variant_defs[i]
+        else:
+            i += 1
 
 
 class RedistributionMixin:
@@ -598,7 +636,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     provided: Dict["spack.spec.Spec", Set["spack.spec.Spec"]]
     provided_together: Dict["spack.spec.Spec", List[Set[str]]]
     patches: Dict["spack.spec.Spec", List["spack.patch.Patch"]]
-    variants: Dict[str, Tuple["spack.variant.Variant", "spack.spec.Spec"]]
+    variants: Dict["spack.spec.Spec", Dict[str, "spack.variant.Variant"]]
     languages: Dict["spack.spec.Spec", Set[str]]
 
     #: By default, packages are not virtual
@@ -751,6 +789,72 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     @classmethod
     def dependencies_by_name(cls, when: bool = False):
         return _by_name(cls.dependencies, when=when)
+
+    # Accessors for variants
+    # External code workingw with Variants should go through the methods below
+
+    @classmethod
+    def variant_names(cls) -> List[str]:
+        return _names(cls.variants)
+
+    @classmethod
+    def has_variant(cls, name) -> bool:
+        return any(name in dictionary for dictionary in cls.variants.values())
+
+    @classmethod
+    def num_variant_definitions(cls) -> int:
+        """Total number of variant definitions in this class so far."""
+        return sum(len(variants_by_name) for variants_by_name in cls.variants.values())
+
+    @classmethod
+    def variant_definitions(cls, name: str) -> WhenVariantList:
+        """Iterator over (when_spec, Variant) for all variant definitions for a particular name."""
+        # construct a list of defs sorted by precedence
+        defs: WhenVariantList = []
+        for when, variants_by_name in cls.variants.items():
+            variant_def = variants_by_name.get(name)
+            if variant_def:
+                defs.append((when, variant_def))
+
+        # With multiple definitions, ensure precedence order and simplify overrides
+        if len(defs) > 1:
+            defs.sort(key=lambda v: v[1].precedence)
+            _remove_overridden_vdefs(defs)
+
+        return defs
+
+    @classmethod
+    def variant_items(
+        cls,
+    ) -> Iterable[Tuple["spack.spec.Spec", Dict[str, "spack.variant.Variant"]]]:
+        """Iterate over ``cls.variants.items()`` with overridden definitions removed."""
+        # Note: This is quadratic in the average number of variant definitions per name.
+        # That is likely close to linear in practice, as there are few variants with
+        # multiple definitions (but it matters when they are there).
+        exclude = {
+            name: [id(vdef) for _, vdef in cls.variant_definitions(name)]
+            for name in cls.variant_names()
+        }
+
+        for when, variants_by_name in cls.variants.items():
+            filtered_variants_by_name = {
+                name: vdef for name, vdef in variants_by_name.items() if id(vdef) in exclude[name]
+            }
+
+            if filtered_variants_by_name:
+                yield when, filtered_variants_by_name
+
+    def get_variant(self, name: str) -> "spack.variant.Variant":
+        """Get the highest precedence variant definition matching this package's spec.
+
+        Arguments:
+            name: name of the variant definition to get
+        """
+        try:
+            highest_to_lowest = reversed(self.variant_definitions(name))
+            return next(vdef for when, vdef in highest_to_lowest if self.spec.satisfies(when))
+        except StopIteration:
+            raise ValueError(f"No variant '{name}' on spec: {self.spec}")
 
     @classmethod
     def possible_dependencies(
@@ -1701,8 +1805,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
                 # should this attempt to download the source and set one? This
                 # probably only happens for source repositories which are
                 # referenced by branch name rather than tag or commit ID.
-                env = spack.environment.active_environment()
-                from_local_sources = env and env.is_develop(self.spec)
+                from_local_sources = "dev_path" in self.spec.variants
                 if self.has_code and not self.spec.external and not from_local_sources:
                     message = "Missing a source id for {s.name}@{s.version}"
                     tty.debug(message.format(s=self))
@@ -1744,7 +1847,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
             bool: True if 'target' is found, else False
         """
         # Prevent altering LC_ALL for 'make' outside this function
-        make = copy.deepcopy(inspect.getmodule(self).make)
+        make = copy.deepcopy(self.module.make)
 
         # Use English locale for missing target message comparison
         make.add_default_env("LC_ALL", "C")
@@ -1794,7 +1897,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         """
         if self._has_make_target(target):
             # Execute target
-            inspect.getmodule(self).make(target, *args, **kwargs)
+            self.module.make(target, *args, **kwargs)
 
     def _has_ninja_target(self, target):
         """Checks to see if 'target' is a valid target in a Ninja build script.
@@ -1805,7 +1908,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         Returns:
             bool: True if 'target' is found, else False
         """
-        ninja = inspect.getmodule(self).ninja
+        ninja = self.module.ninja
 
         # Check if we have a Ninja build script
         if not os.path.exists("build.ninja"):
@@ -1834,7 +1937,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         """
         if self._has_ninja_target(target):
             # Execute target
-            inspect.getmodule(self).ninja(target, *args, **kwargs)
+            self.module.ninja(target, *args, **kwargs)
 
     def _get_needed_resources(self):
         # We use intersects here cause it would also work if self.spec is abstract
@@ -2584,20 +2687,6 @@ class PackageStillNeededError(InstallError):
         )
         self.spec = spec
         self.dependents = dependents
-
-
-class PackageError(spack.error.SpackError):
-    """Raised when something is wrong with a package definition."""
-
-    def __init__(self, message, long_msg=None):
-        super().__init__(message, long_msg)
-
-
-class NoURLError(PackageError):
-    """Raised when someone tries to build a URL for a package with no URLs."""
-
-    def __init__(self, cls):
-        super().__init__("Package %s has no version with a URL." % cls.__name__)
 
 
 class InvalidPackageOpError(PackageError):

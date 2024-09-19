@@ -1023,8 +1023,13 @@ print(json.dumps(config))
             win_root_dir,
         ]
 
-        # The Python shipped with Xcode command line tools isn't in any of these locations
-        for subdir in ["lib", "lib64"]:
+        if self.spec.satisfies("platform=windows"):
+            lib_dirs = ["libs"]
+        else:
+            # The Python shipped with Xcode command line tools isn't in any of these locations
+            lib_dirs = ["lib", "lib64"]
+
+        for subdir in lib_dirs:
             directories.append(os.path.join(self.config_vars["base"], subdir))
 
         directories = dedupe(directories)
@@ -1067,14 +1072,16 @@ print(json.dumps(config))
         # The +shared variant isn't reliable, as `spack external find` currently can't
         # detect it. If +shared, prefer the shared libraries, but check for static if
         # those aren't found. Vice versa for ~shared.
-        if "+shared" in self.spec:
+        if self.spec.satisfies("platform=windows"):
+            # Since we are searching for link libraries, on Windows search only for
+            # ".Lib" extensions by default as those represent import libraries for implict links.
+            candidates = static_libs
+        elif self.spec.satisfies("+shared"):
             candidates = shared_libs + static_libs
         else:
             candidates = static_libs + shared_libs
 
-        candidates = dedupe(candidates)
-
-        for candidate in candidates:
+        for candidate in dedupe(candidates):
             lib = self.find_library(candidate)
             if lib:
                 return lib

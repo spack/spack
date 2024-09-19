@@ -93,7 +93,7 @@ class Ipopt(AutotoolsPackage):
         else:
             args.extend(["--with-lapack-lflags={0} {1}".format(lapack_lib, blas_lib)])
 
-        if "+mumps" in spec:
+        if spec.satisfies("+mumps"):
             mumps_dir = spec["mumps"].prefix
             mumps_flags = "-ldmumps -lmumps_common -lpord -lmpiseq"
             mumps_libcmd = "-L%s " % mumps_dir.lib + mumps_flags
@@ -113,7 +113,7 @@ class Ipopt(AutotoolsPackage):
                     ]
                 )
 
-        if "coinhsl" in spec:
+        if spec.satisfies("^coinhsl"):
             hsl_ld_flags = "-ldl {0}".format(spec["coinhsl"].libs.ld_flags)
 
             if spec.satisfies("^coinhsl+blas"):
@@ -135,7 +135,7 @@ class Ipopt(AutotoolsPackage):
                     ]
                 )
 
-        if "metis" in spec:
+        if spec.satisfies("^metis"):
             if spec.satisfies("@:3.12.13"):
                 args.extend(
                     [
@@ -147,7 +147,7 @@ class Ipopt(AutotoolsPackage):
         # The IPOPT configure file states that '--enable-debug' implies
         # '--disable-shared', but adding '--enable-shared' overrides
         # '--disable-shared' and builds a shared library with debug symbols
-        if "+debug" in spec:
+        if spec.satisfies("+debug"):
             args.append("--enable-debug")
         else:
             args.append("--disable-debug")
