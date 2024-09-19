@@ -16,12 +16,23 @@ class MsrSafe(MakefilePackage):
     homepage = "https://github.com/LLNL/msr-safe"
     url = "https://github.com/LLNL/msr-safe/archive/refs/tags/v1.7.0.tar.gz"
 
-    maintainers("fleshling", "rountree")
+    maintainers("kyotsukete", "rountree")
 
-    license("GPL-2.0-only", checked_by="fleshling")
+    license("GPL-2.0-only", checked_by="kyotsukete")
 
+    variant(
+        "test_linux699",
+        default=False,
+        description="This variant is for testing against Linux kernel 6.9.9",
+    )
+
+    requires("@0.0.0_linux6.9.9", when="+test_linux699")
+    conflicts("@0.0.0_linux6.9.9", when="~test_linux699")
+
+    # Version 0.0.0_linux6.9.9 is based on msr-safe@1.7.0 and solves for conflicts between 1.7.0
+    # and the Linux kernel version 6.9.9.
     version(
-        "linux-6.9.9-cleanup",
+        "0.0.0_linux6.9.9",
         sha256="2b68670eda4467eaa9ddd7340522ab2000cf9d16d083607f9c481650ea1a2fc9",
         url="https://github.com/rountree/msr-safe/archive/refs/heads/linux-6.9.9-cleanup.zip",
     )
