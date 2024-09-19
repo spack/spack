@@ -20,6 +20,7 @@ class PyFlashAttn(PythonPackage):
     license("BSD")
 
     version("main", branch="main")
+    version("2.6.3", sha256="5bfae9500ad8e7d2937ebccb4906f3bc464d1bf66eedd0e4adabd520811c7b52")
     version(
         "2.5.9.post1", sha256="a92db1683a5b141a0f4371d251ae9f73e9aef629b3a58a50d0ef430266c68782"
     )
