@@ -21,7 +21,7 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/LLNL/Caliper/archive/v2.11.0.tar.gz"
     tags = ["e4s", "radiuss"]
 
-    maintainers("daboehme")
+    maintainers("daboehme", "adrienbernede")
 
     test_requires_compiler = True
 
