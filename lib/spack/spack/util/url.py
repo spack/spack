@@ -74,7 +74,8 @@ def join(base: str, *components: str, resolve_href: bool = False, **kwargs) -> s
        https://example.com/a/b + c/d = https://example.com/a/b/c/d. If resolve_href=True, the
        behavior is how a browser would resolve the URL: https://example.com/a/c/d.
     2. s3:// and gs:// URLs are joined like http:// URLs.
-    3. It accepts multiple components for convenience, which are joined with a single slash."""
+    3. It accepts multiple components for convenience. Note that components[1:] are treated as
+       literal path components and appended to components[0] separated by slashes."""
     # Ensure a trailing slash in the path component of the base URL to get os.path.join-like
     # behavior instead of web browser behavior.
     if not resolve_href:
