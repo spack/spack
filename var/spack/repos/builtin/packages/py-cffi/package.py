@@ -42,10 +42,9 @@ class PyCffi(PythonPackage):
     depends_on("libffi")
 
     # This patch enables allocate write+execute memory for ffi.callback() on macos
-    # The patch is taken from the cffi-feedstock
     # https://github.com/conda-forge/cffi-feedstock/pull/47/files
     patch(
-        "0003-apple-api.patch",
+        "https://raw.githubusercontent.com/conda-forge/cffi-feedstock/refs/heads/main/recipe/0003-apple-api.patch",
         when="@1.16: platform=darwin",
         sha256="db836e67e2973ba7d3f4185b385fda49e2398281fc10362e5e413b75fdf93bf0",
     )
