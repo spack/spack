@@ -21,15 +21,12 @@ from llnl.util.tty.color import cescape, colorize
 import spack.cmd
 import spack.cmd.common
 import spack.cmd.common.arguments
-import spack.cmd.install
 import spack.cmd.modules
-import spack.cmd.uninstall
 import spack.config
 import spack.environment as ev
 import spack.environment.depfile as depfile
+import spack.environment.environment
 import spack.environment.shell
-import spack.schema.env
-import spack.spec
 import spack.tengine
 from spack.cmd.common import arguments
 from spack.util.environment import EnvironmentModifications

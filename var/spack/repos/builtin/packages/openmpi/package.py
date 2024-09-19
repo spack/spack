@@ -569,10 +569,12 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant("internal-pmix", default=False, description="Use internal pmix")
     variant("internal-libevent", default=False, description="Use internal libevent")
     variant("openshmem", default=False, description="Enable building OpenSHMEM")
+    variant("debug", default=False, description="Make debug build", when="build_system=autotools")
 
-    provides("mpi")
-    provides("mpi@:2.2", when="@1.6.5")
-    provides("mpi@:3.0", when="@1.7.5:")
+    provides("mpi@:2.0", when="@:1.2")
+    provides("mpi@:2.1", when="@1.3:1.7.2")
+    provides("mpi@:2.2", when="@1.7.3:1.7.4")
+    provides("mpi@:3.0", when="@1.7.5:1.10.7")
     provides("mpi@:3.1", when="@2.0.0:")
 
     if sys.platform != "darwin":
@@ -666,11 +668,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # knem support was added in 1.5
     conflicts("fabrics=knem", when="@:1.4")
 
-    conflicts(
-        "schedulers=slurm ~pmi",
-        when="@1.5.4",
-        msg="+pmi is required for openmpi to work with Slurm.",
-    )
     conflicts(
         "schedulers=loadleveler",
         when="@3:",
@@ -1216,6 +1213,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         # environment variables.
         if spec.satisfies("%intel@2021.7.0:"):
             config_args.append("CPPFLAGS=-diag-disable=10441")
+
+        config_args += self.enable_or_disable("debug")
 
         return config_args
 

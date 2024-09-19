@@ -630,10 +630,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             # Please note that each additional compute capability significantly
             # increases your build time and binary size, and that TensorFlow
             # only supports compute capabilities >= 3.5
-            capabilities = ",".join(
-                "{0:.1f}".format(float(i) / 10.0) for i in spec.variants["cuda_arch"].value
-            )
-            env.set("TF_CUDA_COMPUTE_CAPABILITIES", capabilities)
+            capabilities = CudaPackage.compute_capabilities(spec.variants["cuda_arch"].value)
+            env.set("TF_CUDA_COMPUTE_CAPABILITIES", ",".join(capabilities))
         else:
             env.set("TF_NEED_CUDA", "0")
 

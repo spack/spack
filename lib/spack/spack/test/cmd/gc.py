@@ -16,8 +16,6 @@ gc = spack.main.SpackCommand("gc")
 add = spack.main.SpackCommand("add")
 install = spack.main.SpackCommand("install")
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
-
 
 @pytest.mark.db
 def test_gc_without_build_dependency(mutable_database):
