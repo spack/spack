@@ -33,6 +33,7 @@ from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_t
 from llnl.util.symlink import readlink
 
 import spack.caches
+import spack.cmd
 import spack.config as config
 import spack.database as spack_db
 import spack.error
@@ -43,9 +44,9 @@ import spack.mirror
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
-import spack.paths
 import spack.platforms
 import spack.relocate as relocate
+import spack.repo
 import spack.spec
 import spack.stage
 import spack.store
@@ -1446,9 +1447,7 @@ def _oci_push_pkg_blob(
     filename = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
 
     # Create an oci.image.layer aka tarball of the package
-    compressed_tarfile_checksum, tarfile_checksum = _do_create_tarball(
-        filename, spec.prefix, get_buildinfo_dict(spec)
-    )
+    compressed_tarfile_checksum, tarfile_checksum = spack.oci.oci.create_tarball(spec, filename)
 
     blob = spack.oci.oci.Blob(
         Digest.from_sha256(compressed_tarfile_checksum),
@@ -2698,9 +2697,6 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
 
     for mirror in mirror_collection.values():
         fetch_url = mirror.fetch_url
-        # TODO: oci:// does not support signing.
-        if fetch_url.startswith("oci://"):
-            continue
         keys_url = url_util.join(
             fetch_url, BUILD_CACHE_RELATIVE_PATH, BUILD_CACHE_KEYS_RELATIVE_PATH
         )

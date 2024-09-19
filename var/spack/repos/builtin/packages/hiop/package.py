@@ -178,7 +178,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         args = []
         spec = self.spec
 
-        use_gpu = spec.satisfies("+cuda") or spec.satisfies("+rocm")
+        use_gpu = "+cuda" in spec or "+rocm" in spec
 
         if use_gpu:
             args.extend(
@@ -218,7 +218,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         # args.append(
         #     self.define('HIOP_CTEST_LAUNCH_COMMAND', 'srun -t 10:00'))
 
-        if spec.satisfies("+mpi"):
+        if "+mpi" in spec:
             args.extend(
                 [
                     self.define("MPI_HOME", spec["mpi"].prefix),
@@ -237,7 +237,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             #     self.define('MPI_Fortran_LINK_FLAGS',
             #         '-L/path/to/libfabric/lib64/ -lfabric'))
 
-        if spec.satisfies("+cuda"):
+        if "+cuda" in spec:
             cuda_arch_list = spec.variants["cuda_arch"].value
             if cuda_arch_list[0] != "none":
                 args.append(self.define("CMAKE_CUDA_ARCHITECTURES", cuda_arch_list))
@@ -250,7 +250,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         # args.append(
         #     self.define('HIP_CLANG_INCLUDE_PATH',
         #         '/opt/rocm-X.Y.Z/llvm/lib/clang/14.0.0/include/'))
-        if spec.satisfies("+rocm"):
+        if "+rocm" in spec:
             args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
             rocm_arch_list = spec.variants["amdgpu_target"].value
@@ -258,7 +258,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
                 args.append(self.define("GPU_TARGETS", rocm_arch_list))
                 args.append(self.define("AMDGPU_TARGETS", rocm_arch_list))
 
-        if spec.satisfies("+kron"):
+        if "+kron" in spec:
             args.append(self.define("HIOP_UMFPACK_DIR", spec["suite-sparse"].prefix))
 
         # Unconditionally disable strumpack, even when +sparse. This may be
@@ -266,7 +266,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         # fully supported in spack at the moment.
         args.append(self.define("HIOP_USE_STRUMPACK", False))
 
-        if spec.satisfies("+sparse"):
+        if "+sparse" in spec:
             args.append(self.define("HIOP_COINHSL_DIR", spec["coinhsl"].prefix))
 
         return args

@@ -6,7 +6,6 @@ import argparse
 
 import llnl.util.tty as tty
 
-import spack.cmd
 import spack.environment as ev
 import spack.store
 import spack.verify

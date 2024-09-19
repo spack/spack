@@ -7,7 +7,6 @@ import os.path
 import pytest
 
 import spack.container
-import spack.container.images
 
 
 @pytest.mark.parametrize(

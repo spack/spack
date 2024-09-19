@@ -51,7 +51,7 @@ class Igraph(CMakePackage, AutotoolsPackage):
             "-DBLA_VENDOR=OpenBLAS",
         ]
 
-        if self.spec.satisfies("+shared"):
+        if "+shared" in self.spec:
             args.append("-DBUILD_SHARED_LIBS=ON")
         else:
             args.append("-DBUILD_SHARED_LIBS=OFF")

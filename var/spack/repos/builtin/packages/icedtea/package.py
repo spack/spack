@@ -158,9 +158,9 @@ class Icedtea(AutotoolsPackage):
         os.environ["POTENTIAL_CC"] = os.environ["CC"]
         os.environ["WGET"] = self.spec["wget"].command.path
         args = []
-        if self.spec.satisfies("~X"):
+        if "~X" in self.spec:
             args.append("--enable-headless")
-        if self.spec.satisfies("+shenandoah"):
+        if "+shenandoah" in self.spec:
             args.append("--with-hotspot-build=shenandoah")
             args.append("--with-hotspot-src-zip=" + self.stage[9].archive_file)
             args.append("--with-hotspot-checksum=no")

@@ -13,7 +13,6 @@ import llnl.util.tty as tty
 
 import spack.build_environment
 import spack.builder
-import spack.error
 import spack.package_base
 from spack.directives import build_system, conflicts, depends_on
 from spack.multimethod import when
@@ -249,7 +248,7 @@ class AutotoolsBuilder(BaseBuilder):
 
         # An external gnuconfig may not not have a prefix.
         if gnuconfig_dir is None:
-            raise spack.error.InstallError(
+            raise spack.build_environment.InstallError(
                 "Spack could not find substitutes for GNU config files because no "
                 "prefix is available for the `gnuconfig` package. Make sure you set a "
                 "prefix path instead of modules for external `gnuconfig`."
@@ -269,7 +268,7 @@ class AutotoolsBuilder(BaseBuilder):
                 msg += (
                     " or the `gnuconfig` package prefix is misconfigured as" " an external package"
                 )
-            raise spack.error.InstallError(msg)
+            raise spack.build_environment.InstallError(msg)
 
         # Filter working substitutes
         candidates = [f for f in candidates if runs_ok(f)]
@@ -294,7 +293,9 @@ To resolve this problem, please try the following:
    and set the prefix to the directory containing the `config.guess` and
    `config.sub` files.
 """
-            raise spack.error.InstallError(msg.format(", ".join(to_be_found), self.name))
+            raise spack.build_environment.InstallError(
+                msg.format(", ".join(to_be_found), self.name)
+            )
 
         # Copy the good files over the bad ones
         for abs_path in to_be_patched:
@@ -687,8 +688,9 @@ To resolve this problem, please try the following:
 
         variant = variant or name
 
-        # Defensively look that the name passed as argument is among variants
-        if not self.pkg.has_variant(variant):
+        # Defensively look that the name passed as argument is among
+        # variants
+        if variant not in self.pkg.variants:
             msg = '"{0}" is not a variant of "{1}"'
             raise KeyError(msg.format(variant, self.pkg.name))
 
@@ -697,19 +699,27 @@ To resolve this problem, please try the following:
 
         # Create a list of pairs. Each pair includes a configuration
         # option and whether or not that option is activated
-        vdef = self.pkg.get_variant(variant)
-        if set(vdef.values) == set((True, False)):
+        variant_desc, _ = self.pkg.variants[variant]
+        if set(variant_desc.values) == set((True, False)):
             # BoolValuedVariant carry information about a single option.
             # Nonetheless, for uniformity of treatment we'll package them
             # in an iterable of one element.
-            options = [(name, f"+{variant}" in spec)]
+            condition = "+{name}".format(name=variant)
+            options = [(name, condition in spec)]
         else:
+            condition = "{variant}={value}"
             # "feature_values" is used to track values which correspond to
             # features which can be enabled or disabled as understood by the
             # package's build system. It excludes values which have special
             # meanings and do not correspond to features (e.g. "none")
-            feature_values = getattr(vdef.values, "feature_values", None) or vdef.values
-            options = [(value, f"{variant}={value}" in spec) for value in feature_values]
+            feature_values = (
+                getattr(variant_desc.values, "feature_values", None) or variant_desc.values
+            )
+
+            options = [
+                (value, condition.format(variant=variant, value=value) in spec)
+                for value in feature_values
+            ]
 
         # For each allowed value in the list of values
         for option_value, activated in options:

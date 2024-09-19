@@ -24,17 +24,11 @@ import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
 import spack.error
-import spack.main
 import spack.modules
-import spack.modules.tcl
 import spack.package_base
 import spack.paths
 import spack.repo
-import spack.solver.asp
-import spack.spec
-import spack.stage
 import spack.store
-import spack.util.environment
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.env import _env_create
@@ -1166,7 +1160,7 @@ spack:
     )
     with ev.Environment(tmp_path):
         assert spack.spec.Spec("mpich").concretized().satisfies("@3.0.3")
-        with pytest.raises(spack.error.ConfigError, match="not a list"):
+        with pytest.raises(spack.config.ConfigError, match="not a list"):
             config("change", "packages:mpich:require:~debug")
 
 
@@ -1194,7 +1188,7 @@ def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
     with spack_yaml.open("w") as f:
         f.write("spack:\n  include:\n    - {0}\n".format(missing_file.strpath))
 
-    with pytest.raises(spack.error.ConfigError, match="missing include path"):
+    with pytest.raises(spack.config.ConfigError, match="missing include path"):
         ev.Environment(tmpdir.strpath)
 
 

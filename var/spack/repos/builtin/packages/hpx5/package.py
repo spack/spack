@@ -84,24 +84,24 @@ class Hpx5(AutotoolsPackage):
             # '--with-papi=papi',   # currently disabled in HPX
         ]
 
-        if spec.satisfies("+cxx11"):
+        if "+cxx11" in spec:
             args += ["--enable-hpx++"]
 
-        if spec.satisfies("+debug"):
+        if "+debug" in spec:
             args += ["--enable-debug"]
 
-        if spec.satisfies("+instrumentation"):
+        if "+instrumentation" in spec:
             args += ["--enable-instrumentation"]
 
-        if spec.satisfies("+mpi") or spec.satisfies("+photon"):
+        if "+mpi" in spec or "+photon" in spec:
             # photon requires mpi
             args += ["--enable-mpi"]
             # Choose pkg-config name for MPI library
-            if spec.satisfies("^openmpi"):
+            if "^openmpi" in spec:
                 args += ["--with-mpi=ompi-cxx"]
-            elif spec.satisfies("^mpich"):
+            elif "^mpich" in spec:
                 args += ["--with-mpi=mpich"]
-            elif spec.satisfies("^mvapich2"):
+            elif "^mvapich2" in spec:
                 args += ["--with-mpi=mvapich2-cxx"]
             else:
                 args += ["--with-mpi=system"]
@@ -110,17 +110,17 @@ class Hpx5(AutotoolsPackage):
         # if '+metis' in spec:
         #     args += ['--with-metis=???']
 
-        if spec.satisfies("+opencl"):
+        if "+opencl" in spec:
             args += ["--enable-opencl"]
-            if spec.satisfies("^pocl"):
+            if "^pocl" in spec:
                 args += ["--with-opencl=pocl"]
             else:
                 args += ["--with-opencl=system"]
 
-        if spec.satisfies("+photon"):
+        if "+photon" in spec:
             args += ["--enable-photon"]
 
-        if spec.satisfies("+pic"):
+        if "+pic" in spec:
             args += ["--with-pic"]
 
         return args

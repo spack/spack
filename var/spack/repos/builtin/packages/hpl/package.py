@@ -50,7 +50,7 @@ class Hpl(AutotoolsPackage):
         config = []
 
         # OpenMP support
-        if spec.satisfies("+openmp"):
+        if "+openmp" in spec:
             config.append("OMP_DEFS     = {0}".format(self.compiler.openmp_flag))
 
         config.extend(
@@ -106,7 +106,7 @@ class Hpl(AutotoolsPackage):
         filter_file(r"^libs10=.*", "libs10=%s" % self.spec["blas"].libs.ld_flags, "configure")
 
         cflags, ldflags = ["-O3"], []
-        if self.spec.satisfies("+openmp"):
+        if "+openmp" in self.spec:
             cflags.append(self.compiler.openmp_flag)
 
         if (
@@ -116,10 +116,10 @@ class Hpl(AutotoolsPackage):
         ):
             ldflags.append(self.spec["blas"].libs.ld_flags)
 
-        if self.spec.satisfies("%aocc"):
-            if self.spec.satisfies("%aocc@3:"):
+        if "%aocc" in self.spec:
+            if "%aocc@3:" in self.spec:
                 ldflags.extend(["-lamdlibm", "-lm"])
-            if self.spec.satisfies("%aocc@4:"):
+            if "%aocc@4:" in self.spec:
                 ldflags.append("-lamdalloc")
 
         if self.spec["blas"].name == "fujitsu-ssl2" and (

@@ -10,7 +10,7 @@ import pytest
 
 from llnl.util.filesystem import getuid, group_ids
 
-import spack.error
+import spack.config
 import spack.util.lock as lk
 
 

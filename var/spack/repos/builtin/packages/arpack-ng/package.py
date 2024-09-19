@@ -93,15 +93,16 @@ class ArpackNg(CMakePackage, AutotoolsPackage):
 
     def flag_handler(self, name, flags):
         spec = self.spec
+        iflags = []
         if name == "cflags":
             if spec.satisfies("%oneapi"):
-                flags.append("-Wno-error=implicit-function-declaration")
+                iflags.append("-Wno-error=implicit-function-declaration")
 
         if name == "fflags":
             if self.spec.satisfies("%cce"):
-                flags.append("-hnopattern")
+                iflags.append("-hnopattern")
 
-        return (flags, None, None)
+        return (iflags, None, None)
 
     @property
     def libs(self):

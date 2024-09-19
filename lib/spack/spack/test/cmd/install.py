@@ -17,18 +17,17 @@ import pytest
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-import spack.build_environment
 import spack.cmd.common.arguments
 import spack.cmd.install
 import spack.config
 import spack.environment as ev
-import spack.error
 import spack.hash_types as ht
-import spack.installer
 import spack.package_base
 import spack.store
-from spack.error import SpackError, SpecSyntaxError
+import spack.util.executable
+from spack.error import SpackError
 from spack.main import SpackCommand
+from spack.parser import SpecSyntaxError
 from spack.spec import Spec
 
 install = SpackCommand("install")
@@ -422,7 +421,7 @@ def test_junit_output_with_failures(tmpdir, exc_typename, msg):
 @pytest.mark.parametrize(
     "exc_typename,expected_exc,msg",
     [
-        ("RuntimeError", spack.error.InstallError, "something weird happened"),
+        ("RuntimeError", spack.installer.InstallError, "something weird happened"),
         ("KeyboardInterrupt", KeyboardInterrupt, "Ctrl-C strikes again"),
     ],
 )
@@ -706,7 +705,7 @@ def test_install_only_package(tmpdir, mock_fetch, install_mockery, capfd):
     with capfd.disabled():
         try:
             install("--only", "package", "dependent-install")
-        except spack.error.InstallError as e:
+        except spack.installer.InstallError as e:
             msg = str(e)
 
     assert "Cannot proceed with dependent-install" in msg

@@ -47,17 +47,17 @@ class H5utils(AutotoolsPackage):
         spec = self.spec
         args = []
 
-        if spec.satisfies("+vis5d"):
+        if "+vis5d" in spec:
             args.append(f"--with-v5d={spec['vis5d'].prefix}")
         else:
             args.append("--without-v5d")
 
-        if spec.satisfies("+octave"):
+        if "+octave" in spec:
             args.append("--with-octave")
         else:
             args.append("--without-octave")
 
-        if spec.satisfies("+hdf"):
+        if "+hdf" in spec:
             args.append("--with-hdf4")
         else:
             args.append("--without-hdf4")

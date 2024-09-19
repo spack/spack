@@ -48,6 +48,7 @@ from llnl.util.tty.log import log_output
 
 import spack.binary_distribution as binary_distribution
 import spack.build_environment
+import spack.compilers
 import spack.config
 import spack.database
 import spack.deptypes as dt
@@ -889,7 +890,7 @@ class BuildTask:
         # ensure priority queue invariants when tasks are "removed" from the
         # queue.
         if status == STATUS_REMOVED:
-            raise spack.error.InstallError(
+            raise InstallError(
                 f"Cannot create a build task for {self.pkg_id} with status '{status}'", pkg=pkg
             )
 
@@ -1160,7 +1161,7 @@ class PackageInstaller:
             if spack.store.STORE.failure_tracker.has_failed(dep):
                 action = "'spack install' the dependency"
                 msg = f"{dep_id} is marked as an install failure: {action}"
-                raise spack.error.InstallError(err.format(request.pkg_id, msg), pkg=dep_pkg)
+                raise InstallError(err.format(request.pkg_id, msg), pkg=dep_pkg)
 
             # Attempt to get a read lock to ensure another process does not
             # uninstall the dependency while the requested spec is being
@@ -1168,7 +1169,7 @@ class PackageInstaller:
             ltype, lock = self._ensure_locked("read", dep_pkg)
             if lock is None:
                 msg = f"{dep_id} is write locked by another process"
-                raise spack.error.InstallError(err.format(request.pkg_id, msg), pkg=request.pkg)
+                raise InstallError(err.format(request.pkg_id, msg), pkg=request.pkg)
 
             # Flag external and upstream packages as being installed
             if dep_pkg.spec.external or dep_pkg.spec.installed_upstream:
@@ -1220,7 +1221,7 @@ class PackageInstaller:
         if not installed_in_db:
             # Ensure there is no other installed spec with the same prefix dir
             if spack.store.STORE.db.is_occupied_install_prefix(task.pkg.spec.prefix):
-                raise spack.error.InstallError(
+                raise InstallError(
                     f"Install prefix collision for {task.pkg_id}",
                     long_msg=f"Prefix directory {task.pkg.spec.prefix} already "
                     "used by another installed spec.",
@@ -1488,9 +1489,7 @@ class PackageInstaller:
                 self._update_installed(task)
                 return
             elif cache_only:
-                raise spack.error.InstallError(
-                    "No binary found when cache-only was specified", pkg=pkg
-                )
+                raise InstallError("No binary found when cache-only was specified", pkg=pkg)
             else:
                 tty.msg(f"No binary for {pkg_id} found: installing from source")
 
@@ -1517,7 +1516,7 @@ class PackageInstaller:
             # the database, so that we don't need to re-read from file.
             spack.store.STORE.db.add(pkg.spec, explicit=explicit)
 
-        except spack.error.StopPhase as e:
+        except spack.build_environment.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
             pid = f"{self.pid}: " if tty.show_pid() else ""
@@ -1850,7 +1849,7 @@ class PackageInstaller:
                     tty.warn(f"{pkg_id} does NOT actually have any uninstalled deps left")
                 dep_str = "dependencies" if task.priority > 1 else "dependency"
 
-                raise spack.error.InstallError(
+                raise InstallError(
                     f"Cannot proceed with {pkg_id}: {task.priority} uninstalled "
                     f"{dep_str}: {','.join(task.uninstalled_deps)}",
                     pkg=pkg,
@@ -1872,7 +1871,7 @@ class PackageInstaller:
                 self._update_failed(task)
 
                 if self.fail_fast:
-                    raise spack.error.InstallError(fail_fast_err, pkg=pkg)
+                    raise InstallError(fail_fast_err, pkg=pkg)
 
                 continue
 
@@ -2001,7 +2000,7 @@ class PackageInstaller:
                     )
                 # Terminate if requested to do so on the first failure.
                 if self.fail_fast:
-                    raise spack.error.InstallError(f"{fail_fast_err}: {str(exc)}", pkg=pkg)
+                    raise InstallError(f"{fail_fast_err}: {str(exc)}", pkg=pkg)
 
                 # Terminate when a single build request has failed, or summarize errors later.
                 if task.is_build_request:
@@ -2053,7 +2052,7 @@ class PackageInstaller:
                     f"missing package ({ids[0]}) from {', '.join(ids)}"
                 )
 
-            raise spack.error.InstallError(
+            raise InstallError(
                 "Installation request failed.  Refer to reported errors for failing package(s).",
                 pkg=pkg,
             )
@@ -2319,21 +2318,33 @@ class OverwriteInstall:
             raise e.inner_exception
 
 
-class BadInstallPhase(spack.error.InstallError):
+class InstallError(spack.error.SpackError):
+    """Raised when something goes wrong during install or uninstall.
+
+    The error can be annotated with a ``pkg`` attribute to allow the
+    caller to get the package for which the exception was raised.
+    """
+
+    def __init__(self, message, long_msg=None, pkg=None):
+        super().__init__(message, long_msg)
+        self.pkg = pkg
+
+
+class BadInstallPhase(InstallError):
     """Raised for an install phase option is not allowed for a package."""
 
     def __init__(self, pkg_name, phase):
         super().__init__(f"'{phase}' is not a valid phase for package {pkg_name}")
 
 
-class ExternalPackageError(spack.error.InstallError):
+class ExternalPackageError(InstallError):
     """Raised by install() when a package is only for external use."""
 
 
-class InstallLockError(spack.error.InstallError):
+class InstallLockError(InstallError):
     """Raised during install when something goes wrong with package locking."""
 
 
-class UpstreamPackageError(spack.error.InstallError):
+class UpstreamPackageError(InstallError):
     """Raised during install when something goes wrong with an upstream
     package."""

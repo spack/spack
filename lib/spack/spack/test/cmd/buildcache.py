@@ -13,6 +13,7 @@ import pytest
 
 import spack.binary_distribution
 import spack.cmd.buildcache
+import spack.deptypes
 import spack.environment as ev
 import spack.error
 import spack.main

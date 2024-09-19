@@ -4,9 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 
-import spack.config
 import spack.detection
-import spack.detection.common
 import spack.spec
 
 

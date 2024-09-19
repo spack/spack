@@ -5,6 +5,7 @@
 import io
 
 import spack.graph
+import spack.repo
 import spack.spec
 
 

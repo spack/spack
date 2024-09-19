@@ -81,7 +81,7 @@ class HpxKokkos(CMakePackage, CudaPackage, ROCmPackage):
             self.define("HPX_KOKKOS_ENABLE_BENCHMARKS", self.run_tests),
         ]
 
-        if self.spec.satisfies("+rocm"):
+        if "+rocm" in self.spec:
             args += [self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc)]
 
         return args

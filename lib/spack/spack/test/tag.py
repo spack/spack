@@ -7,7 +7,7 @@ import io
 
 import pytest
 
-import spack.repo
+import spack.cmd.install
 import spack.tag
 from spack.main import SpackCommand
 

@@ -13,6 +13,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.repo
 import spack.stage
+import spack.util.web
 from spack.spec import Spec
 from spack.url import (
     UndetectableNameError,

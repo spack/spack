@@ -14,7 +14,6 @@ from llnl.util.lang import classproperty
 
 import spack.compiler
 import spack.package_base
-import spack.util.executable
 
 # Local "type" for type hints
 Path = Union[str, pathlib.Path]

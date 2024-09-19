@@ -12,7 +12,6 @@ from llnl.util.filesystem import mkdirp, working_dir
 
 import spack.cmd.pkg
 import spack.main
-import spack.paths
 import spack.repo
 import spack.util.file_cache
 

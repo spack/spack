@@ -83,7 +83,6 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         "6.1.1",
         "6.1.2",
         "6.2.0",
-        "master",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"rocfft@{ver}", when=f"+rocm @{ver}")

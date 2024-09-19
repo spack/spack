@@ -11,8 +11,6 @@ import pytest
 import spack.config
 import spack.main
 import spack.modules
-import spack.modules.lmod
-import spack.repo
 import spack.spec
 import spack.store
 

@@ -51,6 +51,7 @@ class _PickleableCallable:
 def use_platform(new_platform):
     global host
 
+    import spack.compilers
     import spack.config
 
     msg = '"{0}" must be an instance of Platform'
@@ -60,9 +61,16 @@ def use_platform(new_platform):
 
     try:
         host = _PickleableCallable(new_platform)
+
+        # Clear configuration and compiler caches
         spack.config.CONFIG.clear_caches()
+        spack.compilers._cache_config_files = []
+
         yield new_platform
 
     finally:
         host = original_host_fn
+
+        # Clear configuration and compiler caches
         spack.config.CONFIG.clear_caches()
+        spack.compilers._cache_config_files = []

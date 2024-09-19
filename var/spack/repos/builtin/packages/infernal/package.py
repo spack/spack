@@ -30,7 +30,7 @@ class Infernal(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        if self.spec.satisfies("+mpi"):
+        if "+mpi" in self.spec:
             args.append("--enable-mpi")
         else:
             args.append("--disable-mpi")

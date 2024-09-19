@@ -14,7 +14,6 @@ import spack.cmd.clean
 import spack.environment as ev
 import spack.main
 import spack.package_base
-import spack.spec
 import spack.stage
 import spack.store
 

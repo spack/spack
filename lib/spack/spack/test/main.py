@@ -8,11 +8,10 @@ import pytest
 
 import llnl.util.filesystem as fs
 
-import spack
 import spack.paths
 import spack.util.executable as exe
 import spack.util.git
-from spack.main import main
+from spack.main import get_version, main
 
 pytestmark = pytest.mark.not_on_windows(
     "Test functionality supported but tests are failing on Win"
@@ -30,7 +29,7 @@ echo --|not a hash|----
     fs.set_executable(git)
 
     monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(git))
-    assert spack.spack_version == spack.get_version()
+    assert spack.spack_version == get_version()
 
 
 def test_version_git_fails(tmpdir, working_env, monkeypatch):
@@ -45,7 +44,7 @@ exit 1
     fs.set_executable(git)
 
     monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(git))
-    assert spack.spack_version == spack.get_version()
+    assert spack.spack_version == get_version()
 
 
 def test_git_sha_output(tmpdir, working_env, monkeypatch):
@@ -63,17 +62,17 @@ echo {0}
 
     monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(git))
     expected = "{0} ({1})".format(spack.spack_version, sha)
-    assert expected == spack.get_version()
+    assert expected == get_version()
 
 
 def test_get_version_no_repo(tmpdir, monkeypatch):
     monkeypatch.setattr(spack.paths, "prefix", str(tmpdir))
-    assert spack.spack_version == spack.get_version()
+    assert spack.spack_version == get_version()
 
 
 def test_get_version_no_git(tmpdir, working_env, monkeypatch):
     monkeypatch.setattr(spack.util.git, "git", lambda: None)
-    assert spack.spack_version == spack.get_version()
+    assert spack.spack_version == get_version()
 
 
 def test_main_calls_get_version(tmpdir, capsys, working_env, monkeypatch):
@@ -97,4 +96,4 @@ exit 1
     fs.set_executable(bad_git)
 
     monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(bad_git))
-    assert spack.spack_version == spack.get_version()
+    assert spack.spack_version == get_version()

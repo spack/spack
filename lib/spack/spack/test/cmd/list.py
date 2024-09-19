@@ -7,7 +7,6 @@ import os.path
 import sys
 from textwrap import dedent
 
-import spack.paths
 import spack.repo
 from spack.main import SpackCommand
 

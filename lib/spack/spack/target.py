@@ -11,7 +11,6 @@ import llnl.util.tty as tty
 import spack.compiler
 import spack.compilers
 import spack.spec
-import spack.util.executable
 import spack.util.spack_yaml as syaml
 
 

@@ -9,6 +9,7 @@ import pytest
 
 from llnl.util.filesystem import working_dir
 
+import spack.cmd
 import spack.paths
 import spack.util.spack_json as sjson
 from spack.main import SpackCommand

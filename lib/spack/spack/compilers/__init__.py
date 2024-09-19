@@ -25,6 +25,7 @@ import spack.paths
 import spack.platforms
 import spack.repo
 import spack.spec
+import spack.version
 from spack.operating_systems import windows_os
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class

@@ -10,6 +10,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.reporters.extract
+import spack.spec
 from spack.install_test import TestStatus
 from spack.reporters import CDash, CDashConfiguration
 

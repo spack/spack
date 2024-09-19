@@ -15,6 +15,7 @@ from typing import Any, Callable, Dict, List, Type
 import llnl.util.lang
 
 import spack.build_environment
+import spack.fetch_strategy
 import spack.install_test
 import spack.installer
 import spack.package_base

@@ -10,8 +10,6 @@ import os.path
 import re
 import sys
 
-import spack.extensions
-
 try:
     import pytest
 except ImportError:

@@ -157,15 +157,15 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     @property
     def env_script_args(self):
-        if self.spec.satisfies("+external-libfabric"):
+        if "+external-libfabric" in self.spec:
             return ("-i_mpi_ofi_internal=0",)
         else:
             return ()
 
     def wrapper_names(self):
-        if self.spec.satisfies("+generic-names"):
+        if "+generic-names" in self.spec:
             return ["mpicc", "mpicxx", "mpif77", "mpif90", "mpifc"]
-        elif self.spec.satisfies("+classic-names"):
+        elif "+classic-names" in self.spec:
             return ["mpiicc", "mpiicpc", "mpiifort", "mpiifort", "mpiifort"]
         else:
             return ["mpiicx", "mpiicpx", "mpiifx", "mpiifx", "mpiifx"]
@@ -202,14 +202,14 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     @property
     def libs(self):
         libs = []
-        if self.spec.satisfies("+ilp64"):
+        if "+ilp64" in self.spec:
             libs += find_libraries("libmpi_ilp64", self.component_prefix.lib.release)
         libs += find_libraries(["libmpicxx", "libmpifort"], self.component_prefix.lib)
         libs += find_libraries("libmpi", self.component_prefix.lib.release)
         libs += find_system_libraries(["libdl", "librt", "libpthread"])
 
         # Find libfabric for libmpi.so
-        if self.spec.satisfies("+external-libfabric"):
+        if "+external-libfabric" in self.spec:
             libs += self.spec["libfabric"].libs
         else:
             libs += find_libraries(["libfabric"], self.component_prefix.libfabric.lib)

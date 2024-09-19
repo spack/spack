@@ -13,9 +13,6 @@ from io import BytesIO, TextIOWrapper
 import pytest
 
 import spack
-import spack.cmd.logs
-import spack.main
-import spack.spec
 from spack.main import SpackCommand
 
 logs = SpackCommand("logs")

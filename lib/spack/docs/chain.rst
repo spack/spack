@@ -5,9 +5,9 @@
 
 .. chain:
 
-=============================================
-Chaining Spack Installations (upstreams.yaml)
-=============================================
+============================
+Chaining Spack Installations
+============================
 
 You can point your Spack installation to another installation to use any
 packages that are installed there. To register the other Spack instance,

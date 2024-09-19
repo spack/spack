@@ -5,7 +5,6 @@
 
 import pytest
 
-import spack.spec
 import spack.store
 from spack.database import InstallStatuses
 from spack.main import SpackCommand

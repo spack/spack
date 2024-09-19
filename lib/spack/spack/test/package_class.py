@@ -17,16 +17,13 @@ import pytest
 
 import llnl.util.filesystem as fs
 
-import spack.compilers
-import spack.config
 import spack.deptypes as dt
-import spack.error
 import spack.install_test
 import spack.package_base
 import spack.repo
 import spack.spec
 from spack.build_systems.generic import Package
-from spack.error import InstallError
+from spack.installer import InstallError
 
 
 @pytest.fixture(scope="module")

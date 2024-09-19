@@ -11,7 +11,6 @@
 from typing import Any, Dict
 
 import spack.schema
-import spack.schema.projections
 
 projections_scheme = spack.schema.projections.properties["projections"]
 

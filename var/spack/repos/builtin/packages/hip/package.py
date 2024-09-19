@@ -577,19 +577,19 @@ class Hip(CMakePackage):
 
         args.append(self.define("HIP_COMMON_DIR", self.stage.source_path))
         args.append(self.define("HIP_CATCH_TEST", "OFF"))
-        if self.spec.satisfies("@:5.5"):
+        if "@:5.5" in self.spec:
             args.append(self.define("ROCCLR_PATH", self.stage.source_path + "rocclr"))
             args.append(self.define("AMD_OPENCL_PATH", self.stage.source_path + "opencl"))
-        if self.spec.satisfies("@5.3.0:"):
+        if "@5.3.0:" in self.spec:
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
-        if self.spec.satisfies("@5.6.0:"):
+        if "@5.6.0:" in self.spec:
             args.append(self.define("ROCCLR_PATH", self.stage.source_path + "/clr/rocclr"))
             args.append(self.define("AMD_OPENCL_PATH", self.stage.source_path + "/clr/opencl"))
             args.append(self.define("CLR_BUILD_HIP", True)),
             args.append(self.define("CLR_BUILD_OCL", False)),
-        if self.spec.satisfies("@5.6:5.7"):
+        if "@5.6:5.7" in self.spec:
             args.append(self.define("HIPCC_BIN_DIR", self.stage.source_path + "/hipcc/bin")),
-        if self.spec.satisfies("@6.0:"):
+        if "@6.0:" in self.spec:
             args.append(self.define("HIPCC_BIN_DIR", self.spec["hipcc"].prefix.bin)),
         return args
 

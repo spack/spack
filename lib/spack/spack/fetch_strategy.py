@@ -46,6 +46,7 @@ from llnl.util.symlink import symlink
 import spack.config
 import spack.error
 import spack.oci.opener
+import spack.url
 import spack.util.archive
 import spack.util.crypto as crypto
 import spack.util.git
@@ -1541,7 +1542,7 @@ def _extrapolate(pkg, version):
     """Create a fetcher from an extrapolated URL for this version."""
     try:
         return URLFetchStrategy(url=pkg.url_for_version(version), fetch_options=pkg.fetch_options)
-    except spack.error.NoURLError:
+    except spack.package_base.NoURLError:
         raise ExtrapolationError(
             f"Can't extrapolate a URL for version {version} because "
             f"package {pkg.name} defines no URLs"

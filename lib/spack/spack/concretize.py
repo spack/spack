@@ -8,8 +8,16 @@
 from contextlib import contextmanager
 from itertools import chain
 
+import spack.compilers
 import spack.config
+import spack.environment
 import spack.error
+import spack.platforms
+import spack.repo
+import spack.spec
+import spack.target
+import spack.tengine
+import spack.util.path
 
 CHECK_COMPILER_EXISTENCE = True
 

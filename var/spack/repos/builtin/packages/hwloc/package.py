@@ -178,7 +178,7 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
         if "+rocm" not in self.spec:
             args.append("--disable-rsmi")
 
-        if self.spec.satisfies("+rocm"):
+        if "+rocm" in self.spec:
             args.append("--with-rocm={0}".format(self.spec["hip"].prefix))
             args.append("--with-rocm-version={0}".format(self.spec["hip"].version))
 
@@ -192,11 +192,11 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
         args.extend(self.enable_or_disable("pci"))
         args.extend(self.enable_or_disable("libs"))
 
-        if self.spec.satisfies("+cuda"):
+        if "+cuda" in self.spec:
             args.append("--with-cuda={0}".format(self.spec["cuda"].prefix))
             args.append("--with-cuda-version={0}".format(self.spec["cuda"].version))
 
-        if self.spec.satisfies("+oneapi-level-zero"):
+        if "+oneapi-level-zero" in self.spec:
             args.append("--enable-levelzero")
 
         return args

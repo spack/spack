@@ -34,7 +34,7 @@ class Igv(Package):
         mkdirp(prefix.bin)
         install("igv.args", prefix)
         files = ["igv.sh", "igv_hidpi.sh"]
-        if spec.satisfies("+igvtools"):
+        if "+igvtools" in spec:
             files.extend(["igvtools", "igvtools_gui", "igvtools_gui_hidpi"])
         for f in files:
             filter_file("^prefix=.*$", "prefix=" + prefix, f)

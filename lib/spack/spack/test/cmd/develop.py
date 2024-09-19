@@ -11,11 +11,7 @@ import llnl.util.filesystem as fs
 
 import spack.config
 import spack.environment as ev
-import spack.package_base
 import spack.spec
-import spack.stage
-import spack.util.git
-import spack.util.path
 from spack.main import SpackCommand
 
 add = SpackCommand("add")

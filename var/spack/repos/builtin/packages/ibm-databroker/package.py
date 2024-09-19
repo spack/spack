@@ -47,6 +47,6 @@ class IbmDatabroker(CMakePackage, PythonExtension):
     def cmake_args(self):
         args = []
         args.append("-DDEFAULT_BE=redis")
-        if self.spec.satisfies("+python"):
+        if "+python" in self.spec:
             args.append("-DPYDBR=1")
         return args

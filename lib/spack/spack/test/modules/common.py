@@ -12,11 +12,9 @@ from llnl.util.symlink import readlink
 import spack.cmd.modules
 import spack.config
 import spack.error
-import spack.modules.common
 import spack.modules.tcl
 import spack.package_base
-import spack.package_prefs
-import spack.repo
+import spack.schema.modules
 import spack.spec
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
@@ -218,8 +216,8 @@ def test_check_module_set_name(mutable_config):
 
     # Invalid module set names
     msg = "Valid module set names are"
-    with pytest.raises(spack.error.ConfigError, match=msg):
+    with pytest.raises(spack.config.ConfigError, match=msg):
         spack.cmd.modules.check_module_set_name("prefix_inspections")
 
-    with pytest.raises(spack.error.ConfigError, match=msg):
+    with pytest.raises(spack.config.ConfigError, match=msg):
         spack.cmd.modules.check_module_set_name("third")

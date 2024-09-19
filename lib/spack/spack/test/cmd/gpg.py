@@ -9,6 +9,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.bootstrap
 import spack.util.executable
 import spack.util.gpg
 from spack.main import SpackCommand

@@ -68,7 +68,6 @@ import llnl.util.lang as lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
 
-import spack
 import spack.compiler
 import spack.compilers
 import spack.config
@@ -76,6 +75,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
 import spack.parser
+import spack.patch
 import spack.paths
 import spack.platforms
 import spack.provider_index
@@ -84,6 +84,7 @@ import spack.solver
 import spack.store
 import spack.target
 import spack.traverse as traverse
+import spack.util.crypto
 import spack.util.executable
 import spack.util.hash
 import spack.util.module_cmd as md
@@ -1306,7 +1307,7 @@ class SpecBuildInterface(lang.ObjectWrapper):
 
 
 def tree(
-    specs: List["Spec"],
+    specs: List["spack.spec.Spec"],
     *,
     color: Optional[bool] = None,
     depth: bool = False,
@@ -2016,7 +2017,6 @@ class Spec:
     def _lookup_hash(self):
         """Lookup just one spec with an abstract hash, returning a spec from the the environment,
         store, or finally, binary caches."""
-        import spack.binary_distribution
         import spack.environment
 
         active_env = spack.environment.active_environment()
@@ -2032,7 +2032,7 @@ class Spec:
             raise InvalidHashError(self, self.abstract_hash)
 
         if len(matches) != 1:
-            raise AmbiguousHashError(
+            raise spack.spec.AmbiguousHashError(
                 f"Multiple packages specify hash beginning '{self.abstract_hash}'.", *matches
             )
 
@@ -2367,16 +2367,14 @@ class Spec:
         package_cls = spack.repo.PATH.get_pkg_class(new_spec.name)
         if change_spec.versions and not change_spec.versions == vn.any_version:
             new_spec.versions = change_spec.versions
-
-        for vname, value in change_spec.variants.items():
-            if vname in package_cls.variant_names():
-                if vname in new_spec.variants:
+        for variant, value in change_spec.variants.items():
+            if variant in package_cls.variants:
+                if variant in new_spec.variants:
                     new_spec.variants.substitute(value)
                 else:
-                    new_spec.variants[vname] = value
+                    new_spec.variants[variant] = value
             else:
-                raise ValueError("{0} is not a variant of {1}".format(vname, new_spec.name))
-
+                raise ValueError("{0} is not a variant of {1}".format(variant, new_spec.name))
         if change_spec.compiler:
             new_spec.compiler = change_spec.compiler
         if change_spec.compiler_flags:
@@ -2964,14 +2962,48 @@ class Spec:
             return
 
         pkg_cls = spec.package_class
-        pkg_variants = pkg_cls.variant_names()
+        pkg_variants = pkg_cls.variants
         # reserved names are variants that may be set on any package
         # but are not necessarily recorded by the package's class
         not_existing = set(spec.variants) - (set(pkg_variants) | set(vt.reserved_names))
         if not_existing:
-            raise vt.UnknownVariantError(
-                f"No such variant {not_existing} for spec: '{spec}'", list(not_existing)
-            )
+            raise vt.UnknownVariantError(spec, not_existing)
+
+    def update_variant_validate(self, variant_name, values):
+        """If it is not already there, adds the variant named
+        `variant_name` to the spec `spec` based on the definition
+        contained in the package metadata. Validates the variant and
+        values before returning.
+
+        Used to add values to a variant without being sensitive to the
+        variant being single or multi-valued. If the variant already
+        exists on the spec it is assumed to be multi-valued and the
+        values are appended.
+
+        Args:
+           variant_name: the name of the variant to add or append to
+           values: the value or values (as a tuple) to add/append
+                   to the variant
+        """
+        if not isinstance(values, tuple):
+            values = (values,)
+
+        pkg_variant, _ = self.package_class.variants[variant_name]
+
+        for value in values:
+            if self.variants.get(variant_name):
+                msg = (
+                    f"cannot append the new value '{value}' to the single-valued "
+                    f"variant '{self.variants[variant_name]}'"
+                )
+                assert pkg_variant.multi, msg
+                self.variants[variant_name].append(value)
+            else:
+                variant = pkg_variant.make_variant(value)
+                self.variants[variant_name] = variant
+
+        pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
+        pkg_variant.validate_or_raise(self.variants[variant_name], pkg_cls)
 
     def constrain(self, other, deps=True):
         """Intersect self with other in-place. Return True if self changed, False otherwise.
@@ -3432,7 +3464,7 @@ class Spec:
                     pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
                     try:
                         patch = index.patch_for_package(sha256, pkg_cls)
-                    except spack.error.PatchLookupError as e:
+                    except spack.patch.PatchLookupError as e:
                         raise spack.error.SpecError(
                             f"{e}. This usually means the patch was modified or removed. "
                             "To fix this, either reconcretize or use the original package "
@@ -4415,9 +4447,7 @@ class VariantMap(lang.HashableMap):
         Returns:
             bool: True or False
         """
-        return self.spec._concrete or all(
-            v in self for v in self.spec.package_class.variant_names()
-        )
+        return self.spec._concrete or all(v in self for v in self.spec.package_class.variants)
 
     def copy(self) -> "VariantMap":
         clone = VariantMap(self.spec)
@@ -4455,7 +4485,7 @@ class VariantMap(lang.HashableMap):
 
 def substitute_abstract_variants(spec: Spec):
     """Uses the information in `spec.package` to turn any variant that needs
-    it into a SingleValuedVariant or BoolValuedVariant.
+    it into a SingleValuedVariant.
 
     This method is best effort. All variants that can be substituted will be
     substituted before any error is raised.
@@ -4463,45 +4493,26 @@ def substitute_abstract_variants(spec: Spec):
     Args:
         spec: spec on which to operate the substitution
     """
-    # This method needs to be best effort so that it works in matrix exclusion
+    # This method needs to be best effort so that it works in matrix exlusion
     # in $spack/lib/spack/spack/spec_list.py
-    unknown = []
+    failed = []
     for name, v in spec.variants.items():
         if name == "dev_path":
             spec.variants.substitute(vt.SingleValuedVariant(name, v._original_value))
             continue
         elif name in vt.reserved_names:
             continue
-
-        variant_defs = spec.package_class.variant_definitions(name)
-        valid_defs = []
-        for when, vdef in variant_defs:
-            if when.intersects(spec):
-                valid_defs.append(vdef)
-
-        if not valid_defs:
-            if name not in spec.package_class.variant_names():
-                unknown.append(name)
-            else:
-                whens = [str(when) for when, _ in variant_defs]
-                raise InvalidVariantForSpecError(v.name, f"({', '.join(whens)})", spec)
+        elif name not in spec.package_class.variants:
+            failed.append(name)
             continue
-
-        pkg_variant, *rest = valid_defs
-        if rest:
-            continue
-
+        pkg_variant, _ = spec.package_class.variants[name]
         new_variant = pkg_variant.make_variant(v._original_value)
-        pkg_variant.validate_or_raise(new_variant, spec.name)
+        pkg_variant.validate_or_raise(new_variant, spec.package_class)
         spec.variants.substitute(new_variant)
 
-    if unknown:
-        variants = llnl.string.plural(len(unknown), "variant")
-        raise vt.UnknownVariantError(
-            f"Tried to set {variants} {llnl.string.comma_and(unknown)}. "
-            f"{spec.name} has no such {variants}",
-            unknown_variants=unknown,
-        )
+    # Raise all errors at once
+    if failed:
+        raise vt.UnknownVariantError(spec, failed)
 
 
 def parse_with_version_concrete(spec_like: Union[str, Spec], compiler: bool = False):
@@ -4524,7 +4535,7 @@ def merge_abstract_anonymous_specs(*abstract_specs: Spec):
     Args:
         *abstract_specs: abstract specs to be merged
     """
-    merged_spec = Spec()
+    merged_spec = spack.spec.Spec()
     for current_spec_constraint in abstract_specs:
         merged_spec.constrain(current_spec_constraint, deps=False)
 
@@ -4879,6 +4890,7 @@ def get_host_environment_metadata() -> Dict[str, str]:
     """Get the host environment, reduce to a subset that we can store in
     the install directory, and add the spack version.
     """
+    import spack.main
 
     environ = get_host_environment()
     return {
@@ -4886,7 +4898,7 @@ def get_host_environment_metadata() -> Dict[str, str]:
         "platform": environ["platform"],
         "host_target": environ["target"],
         "hostname": environ["hostname"],
-        "spack_version": spack.get_version(),
+        "spack_version": spack.main.get_version(),
         "kernel_version": platform.version(),
     }
 
@@ -4908,6 +4920,7 @@ def get_host_environment() -> Dict[str, Any]:
         "architecture": arch_spec,
         "arch_str": str(arch_spec),
         "hostname": socket.gethostname(),
+        "full_hostname": socket.getfqdn(),
     }
 
 
@@ -4928,15 +4941,6 @@ class SpecParseError(spack.error.SpecError):
                 "    %s^" % (" " * self.pos),
             ]
         )
-
-
-class InvalidVariantForSpecError(spack.error.SpecError):
-    """Raised when an invalid conditional variant is specified."""
-
-    def __init__(self, variant, when, spec):
-        msg = f"Invalid variant {variant} for spec {spec}.\n"
-        msg += f"{variant} is only available for {spec.name} when satisfying one of {when}."
-        super().__init__(msg)
 
 
 class UnsupportedPropagationError(spack.error.SpecError):

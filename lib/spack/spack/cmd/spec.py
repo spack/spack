@@ -14,7 +14,6 @@ import spack.environment as ev
 import spack.hash_types as ht
 import spack.spec
 import spack.store
-import spack.traverse
 from spack.cmd.common import arguments
 
 description = "show what would be installed, given a spec"

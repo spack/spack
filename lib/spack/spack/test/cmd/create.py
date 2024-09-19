@@ -9,7 +9,7 @@ import tarfile
 import pytest
 
 import spack.cmd.create
-import spack.url
+import spack.util.editor
 from spack.main import SpackCommand
 from spack.url import UndetectableNameError
 from spack.util.executable import which

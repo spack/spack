@@ -44,7 +44,8 @@ class Sed(AutotoolsPackage, GNUMirrorPackage):
         return match.group(1) if match else None
 
     def flag_handler(self, name, flags):
+        iflags = []
         if name == "cflags":
             if self.spec.satisfies("%oneapi@2023.0.0:"):
-                flags.append("-Wno-error=incompatible-function-pointer-types")
-        return (flags, None, None)
+                iflags.append("-Wno-error=incompatible-function-pointer-types")
+        return (iflags, None, None)

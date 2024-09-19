@@ -8,6 +8,7 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.config
 import spack.environment as ev
+import spack.repo
 import spack.traverse
 from spack.cmd.common import arguments
 

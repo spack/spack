@@ -263,7 +263,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
         env.prepend_path("MANPATH", spec.prefix.share.man)
         env.prepend_path("CPATH", spec.prefix.include)
         env.prepend_path("LD_LIBRARY_PATH", spec.prefix.lib.hpctoolkit)
-        if spec.satisfies("+viewer"):
+        if "+viewer" in spec:
             env.prepend_path("PATH", spec["hpcviewer"].prefix.bin)
             env.prepend_path("MANPATH", spec["hpcviewer"].prefix.share.man)
 
@@ -329,18 +329,18 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         if spec.satisfies("@2022.10:"):
             args.append("--with-yaml-cpp=%s" % spec["yaml-cpp"].prefix)
 
-        if spec.satisfies("+cuda"):
+        if "+cuda" in spec:
             args.append("--with-cuda=%s" % spec["cuda"].prefix)
 
-        if spec.satisfies("+level_zero"):
+        if "+level_zero" in spec:
             args.append("--with-level0=%s" % spec["oneapi-level-zero"].prefix)
 
             # gtpin requires level_zero
-            if spec.satisfies("+gtpin"):
+            if "+gtpin" in spec:
                 args.append("--with-gtpin=%s" % spec["intel-gtpin"].prefix)
                 args.append("--with-igc=%s" % spec["oneapi-igc"].prefix)
 
-        if spec.satisfies("+opencl"):
+        if "+opencl" in spec:
             args.append("--with-opencl=%s" % spec["opencl-c-headers"].prefix)
 
         if spec.satisfies("+rocm"):
@@ -399,17 +399,17 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         spec = self.spec
 
         args = [
-            "-Dhpcprof_mpi=" + ("enabled" if spec.satisfies("+mpi") else "disabled"),
-            "-Dpython=" + ("enabled" if spec.satisfies("+python") else "disabled"),
-            "-Dpapi=" + ("enabled" if spec.satisfies("+papi") else "disabled"),
-            "-Dopencl=" + ("enabled" if spec.satisfies("+opencl") else "disabled"),
-            "-Dcuda=" + ("enabled" if spec.satisfies("+cuda") else "disabled"),
-            "-Drocm=" + ("enabled" if spec.satisfies("+rocm") else "disabled"),
-            "-Dlevel0=" + ("enabled" if spec.satisfies("+level_zero") else "disabled"),
-            "-Dgtpin=" + ("enabled" if spec.satisfies("+gtpin") else "disabled"),
+            "-Dhpcprof_mpi=" + ("enabled" if "+mpi" in spec else "disabled"),
+            "-Dpython=" + ("enabled" if "+python" in spec else "disabled"),
+            "-Dpapi=" + ("enabled" if "+papi" in spec else "disabled"),
+            "-Dopencl=" + ("enabled" if "+opencl" in spec else "disabled"),
+            "-Dcuda=" + ("enabled" if "+cuda" in spec else "disabled"),
+            "-Drocm=" + ("enabled" if "+rocm" in spec else "disabled"),
+            "-Dlevel0=" + ("enabled" if "+level_zero" in spec else "disabled"),
+            "-Dgtpin=" + ("enabled" if "+gtpin" in spec else "disabled"),
         ]
 
-        if spec.satisfies("@:2024.01"):
+        if "@:2024.01" in spec:
             args.append(f"--native-file={self.gen_prefix_file()}")
 
         return args
@@ -444,29 +444,29 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
 
         cfg["properties"]["prefix_yaml_cpp"] = f"'''{spec['yaml-cpp'].prefix}'''"
 
-        if spec.satisfies("+cuda"):
+        if "+cuda" in spec:
             cfg["properties"]["prefix_cuda"] = f"'''{spec['cuda'].prefix}'''"
 
-        if spec.satisfies("+level_zero"):
+        if "+level_zero" in spec:
             cfg["properties"]["prefix_level0"] = f"'''{spec['oneapi-level-zero'].prefix}'''"
 
-        if spec.satisfies("+gtpin"):
+        if "+gtpin" in spec:
             cfg["properties"]["prefix_gtpin"] = f"'''{spec['intel-gtpin'].prefix}'''"
             cfg["properties"]["prefix_igc"] = f"'''{spec['oneapi-igc'].prefix}'''"
 
-        if spec.satisfies("+opencl"):
+        if "+opencl" in spec:
             cfg["properties"]["prefix_opencl"] = f"'''{spec['opencl-c-headers'].prefix}'''"
 
-        if spec.satisfies("+rocm"):
+        if "+rocm" in spec:
             cfg["properties"]["prefix_rocm_hip"] = f"'''{spec['hip'].prefix}'''"
             cfg["properties"]["prefix_rocm_hsa"] = f"'''{spec['hsa-rocr-dev'].prefix}'''"
             cfg["properties"]["prefix_rocm_tracer"] = f"'''{spec['roctracer-dev'].prefix}'''"
             cfg["properties"]["prefix_rocm_profiler"] = f"'''{spec['rocprofiler-dev'].prefix}'''"
 
-        if spec.satisfies("+python"):
+        if "+python" in spec:
             cfg["binaries"]["python"] = f"'''{spec['python'].command}'''"
 
-        if spec.satisfies("+mpi"):
+        if "+mpi" in spec:
             cfg["binaries"]["mpicxx"] = f"'''{spec['mpi'].mpicxx}'''"
 
         native_fd, native_path = tempfile.mkstemp(

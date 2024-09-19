@@ -7,11 +7,8 @@ import os
 
 import pytest
 
-import spack.build_environment
 import spack.directives
-import spack.error
 import spack.fetch_strategy
-import spack.package_base
 import spack.repo
 from spack.paths import mock_packages_path
 from spack.spec import Spec
@@ -130,10 +127,10 @@ def test_urls_for_versions(mock_packages, config):
 def test_url_for_version_with_no_urls(mock_packages, config):
     spec = Spec("git-test")
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
-    with pytest.raises(spack.error.NoURLError):
+    with pytest.raises(spack.package_base.NoURLError):
         pkg_cls(spec).url_for_version("1.0")
 
-    with pytest.raises(spack.error.NoURLError):
+    with pytest.raises(spack.package_base.NoURLError):
         pkg_cls(spec).url_for_version("1.1")
 
 

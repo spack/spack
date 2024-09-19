@@ -14,7 +14,6 @@ import pytest
 import spack.cmd as cmd
 import spack.cmd.find
 import spack.environment as ev
-import spack.store
 import spack.user_environment as uenv
 from spack.main import SpackCommand
 from spack.spec import Spec

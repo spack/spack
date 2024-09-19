@@ -22,6 +22,7 @@ import llnl.util.lang
 import spack.config
 import spack.mirror
 import spack.parser
+import spack.repo
 import spack.util.web
 
 from .image import ImageReference

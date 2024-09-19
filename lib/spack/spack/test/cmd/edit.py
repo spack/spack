@@ -5,6 +5,7 @@
 
 import os
 
+import spack.paths
 import spack.repo
 import spack.util.editor
 from spack.build_systems import autotools, cmake

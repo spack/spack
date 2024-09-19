@@ -89,7 +89,7 @@ class CachedCMakeBuilder(CMakeBuilder):
         if variant is None:
             variant = cmake_var.lower()
 
-        if not self.pkg.has_variant(variant):
+        if variant not in self.pkg.variants:
             raise KeyError('"{0}" is not a variant of "{1}"'.format(variant, self.pkg.name))
 
         if variant not in self.pkg.spec.variants:

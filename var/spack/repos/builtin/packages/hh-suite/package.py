@@ -37,7 +37,7 @@ class HhSuite(CMakePackage):
 
     def build_args(self, spec, prefix):
         args = []
-        if self.spec.satisfies("+mpi"):
+        if "+mpi" in self.spec:
             args.append("-DCHECK_MPI=1")
         else:
             args.append("-DCHECK_MPI=0")

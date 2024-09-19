@@ -71,14 +71,14 @@ class HoomdBlue(CMakePackage):
         cmake_args = ["-DCMAKE_INSTALL_PREFIX={0}".format(python_platlib)]
 
         # MPI support
-        if spec.satisfies("+mpi"):
+        if "+mpi" in spec:
             os.environ["MPI_HOME"] = spec["mpi"].prefix
             cmake_args.append("-DENABLE_MPI=ON")
         else:
             cmake_args.append("-DENABLE_MPI=OFF")
 
         # CUDA support
-        if spec.satisfies("+cuda"):
+        if "+cuda" in spec:
             cmake_args.append("-DENABLE_CUDA=ON")
         else:
             cmake_args.append("-DENABLE_CUDA=OFF")
@@ -95,7 +95,7 @@ class HoomdBlue(CMakePackage):
         cmake_args.append("-DENABLE_MPI_CUDA=OFF")
 
         # Documentation
-        if spec.satisfies("+doc"):
+        if "+doc" in spec:
             cmake_args.append("-DENABLE_DOXYGEN=ON")
         else:
             cmake_args.append("-DENABLE_DOXYGEN=OFF")

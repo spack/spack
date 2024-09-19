@@ -11,6 +11,8 @@ import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.package_base
+import spack.repo
+import spack.stage
 import spack.traverse
 from spack.cmd.common import arguments
 

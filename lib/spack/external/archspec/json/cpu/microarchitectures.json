@@ -2844,7 +2844,8 @@
           "asimdrdm",
           "lrcpc",
           "dcpop",
-          "asimddp"
+          "asimddp",
+          "ssbs"
       ],
       "compilers" : {
           "gcc": [
@@ -2941,6 +2942,7 @@
           "uscat",
           "ilrcpc",
           "flagm",
+          "ssbs",
           "dcpodp",
           "svei8mm",
           "svebf16",
@@ -3008,7 +3010,7 @@
               },
               {
                   "versions": "11:",
-                  "flags" : "-march=armv8.4-a+sve+fp16+bf16+crypto+i8mm+rng"
+                  "flags" : "-march=armv8.4-a+sve+ssbs+fp16+bf16+crypto+i8mm+rng"
               },
               {
                   "versions": "12:",
@@ -3064,6 +3066,7 @@
 	  "uscat",
 	  "ilrcpc",
 	  "flagm",
+	  "ssbs",
 	  "sb",
 	  "dcpodp",
 	  "sve2",
@@ -3176,6 +3179,7 @@
 	  "uscat",
 	  "ilrcpc",
 	  "flagm",
+	  "ssbs",
 	  "sb",
 	  "dcpodp",
 	  "sve2",

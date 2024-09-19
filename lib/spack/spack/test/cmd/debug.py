@@ -9,10 +9,9 @@ import platform
 
 import pytest
 
-import spack
+import spack.config
 import spack.platforms
-import spack.spec
-from spack.main import SpackCommand
+from spack.main import SpackCommand, get_version
 from spack.util.executable import which
 
 debug = SpackCommand("debug")
@@ -56,6 +55,6 @@ def test_report():
     host_target = host_platform.target("frontend")
     architecture = spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
 
-    assert spack.get_version() in out
+    assert get_version() in out
     assert platform.python_version() in out
     assert str(architecture) in out

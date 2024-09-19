@@ -41,10 +41,10 @@ class Hmmer(Package):
     def install(self, spec, prefix):
         configure_args = ["--prefix={0}".format(prefix)]
 
-        if self.spec.satisfies("+gsl"):
+        if "+gsl" in self.spec:
             configure_args.extend(["--with-gsl", "LIBS=-lgsl -lgslcblas"])
 
-        if self.spec.satisfies("+mpi"):
+        if "+mpi" in self.spec:
             configure_args.append("--enable-mpi")
 
         configure(*configure_args)

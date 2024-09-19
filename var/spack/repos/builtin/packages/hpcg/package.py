@@ -76,7 +76,7 @@ class Hpcg(AutotoolsPackage):
             CXXFLAGS += " -Rpass=loop-vectorize"
             CXXFLAGS += " -Rpass-missed=loop-vectorize"
             CXXFLAGS += " -Rpass-analysis=loop-vectorize "
-        if self.spec.satisfies("+openmp"):
+        if "+openmp" in self.spec:
             CXXFLAGS += self.compiler.openmp_flag
         config = [
             # Shell

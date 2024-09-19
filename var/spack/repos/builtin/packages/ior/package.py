@@ -66,18 +66,18 @@ class Ior(AutotoolsPackage):
 
         env["CC"] = spec["mpi"].mpicc
 
-        if spec.satisfies("+hdf5"):
+        if "+hdf5" in spec:
             config_args.append("--with-hdf5")
             config_args.append("CFLAGS=-D H5_USE_16_API")
         else:
             config_args.append("--without-hdf5")
 
-        if spec.satisfies("+ncmpi"):
+        if "+ncmpi" in spec:
             config_args.append("--with-ncmpi")
         else:
             config_args.append("--without-ncmpi")
 
-        if spec.satisfies("+lustre"):
+        if "+lustre" in spec:
             config_args.append("--with-lustre")
         else:
             config_args.append("--without-lustre")

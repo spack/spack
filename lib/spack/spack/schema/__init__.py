@@ -8,8 +8,6 @@ import warnings
 
 import llnl.util.lang
 
-from spack.error import SpecSyntaxError
-
 
 class DeprecationMessage(typing.NamedTuple):
     message: str
@@ -33,7 +31,7 @@ def _make_validator():
         for spec_str in instance:
             try:
                 spack.parser.parse(spec_str)
-            except SpecSyntaxError as e:
+            except spack.parser.SpecSyntaxError as e:
                 yield jsonschema.ValidationError(str(e))
 
     def _deprecated_properties(validator, deprecated, instance, schema):

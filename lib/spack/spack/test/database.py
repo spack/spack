@@ -13,8 +13,6 @@ import sys
 
 import pytest
 
-import spack.subprocess_context
-
 try:
     import uuid
 
