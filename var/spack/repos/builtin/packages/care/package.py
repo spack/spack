@@ -210,6 +210,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         if spec.satisfies("+rocm"):
             entries.append(cmake_cache_option("ENABLE_HIP", True))
+            archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ",".join(archs)
                 entries.append(
