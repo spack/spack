@@ -442,10 +442,14 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         "+rocm", when="@:1", msg="ROCm support in spack requires Chapel 2.0.0 or later"
     )
     # Chapel restricts the allowable ROCm versions
-    with when("+rocm"):
+    with when("@2:2.1 +rocm"):
         depends_on("hsa-rocr-dev@4:5.4")
         depends_on("hip@4:5.4")
         depends_on("llvm-amdgpu@4:5.4")
+    with when("@2.2: +rocm"):
+        depends_on("hsa-rocr-dev@4:5.4,6.0:6.2")
+        depends_on("hip@4:5.4,6.0:6.2")
+        depends_on("llvm-amdgpu@4:5.4,6.0:6.2")
 
     conflicts(
         "comm_substrate=unset",
