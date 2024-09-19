@@ -52,31 +52,38 @@ def test_relative_path_to_file_url(tmpdir):
 def test_url_join_absolute(scheme, resolve_href):
     """Test that joining a URL with an absolute path works the same for schemes we care about, and
     whether we work in web browser mode or not."""
-    fst = url_util.join(f"{scheme}://example.com/a/b/c", "/d/e/f", resolve_href=resolve_href)
-    assert fst == f"{scheme}://example.com/d/e/f"
+    a1 = url_util.join(f"{scheme}://example.com/a/b/c", "/d/e/f", resolve_href=resolve_href)
+    a2 = url_util.join(f"{scheme}://example.com/a/b/c", "/d", "e", "f", resolve_href=resolve_href)
+    assert a1 == a2 == f"{scheme}://example.com/d/e/f"
 
-    snd = url_util.join(f"{scheme}://a.com/a", "https://b.com/b", resolve_href=resolve_href)
-    assert snd == "https://b.com/b"
+    b1 = url_util.join(f"{scheme}://a.com/a", "https://b.com/b", resolve_href=resolve_href)
+    b2 = url_util.join(f"{scheme}://a.com/a", "https://b.com", "b", resolve_href=resolve_href)
+    assert b1 == b2 == "https://b.com/b"
 
 
 @pytest.mark.parametrize("scheme", ["http", "s3", "gs", "file"])
 def test_url_join_up(scheme):
     """Test that the netloc component is preserved when going .. up in the path."""
-    t1 = url_util.join(f"{scheme}://example/a/b.html", "c", resolve_href=True)
-    assert t1 == f"{scheme}://example/a/c"
-    t2 = url_util.join(f"{scheme}://example/a/b.html", "../c", resolve_href=True)
-    assert t2 == f"{scheme}://example/c"
-    t3 = url_util.join(f"{scheme}://example/a/b.html", "../../c", resolve_href=True)
-    assert t3 == f"{scheme}://example/c"
+    a1 = url_util.join(f"{scheme}://example/a/b.html", "c", resolve_href=True)
+    assert a1 == f"{scheme}://example/a/c"
+    b1 = url_util.join(f"{scheme}://example/a/b.html", "../c", resolve_href=True)
+    b2 = url_util.join(f"{scheme}://example/a/b.html", "..", "c", resolve_href=True)
+    assert b1 == b2 == f"{scheme}://example/c"
+    c1 = url_util.join(f"{scheme}://example/a/b.html", "../../c", resolve_href=True)
+    c2 = url_util.join(f"{scheme}://example/a/b.html", "..", "..", "c", resolve_href=True)
+    assert c1 == c2 == f"{scheme}://example/c"
 
-    t4 = url_util.join(f"{scheme}://example/a/b", "c", resolve_href=False)
-    assert t4 == f"{scheme}://example/a/b/c"
-    t5 = url_util.join(f"{scheme}://example/a/b", "../c", resolve_href=False)
-    assert t5 == f"{scheme}://example/a/c"
-    t6 = url_util.join(f"{scheme}://example/a/b", "../../c", resolve_href=False)
-    assert t6 == f"{scheme}://example/c"
-    t7 = url_util.join(f"{scheme}://example/a/b", "../../../c", resolve_href=False)
-    assert t7 == f"{scheme}://example/c"
+    d1 = url_util.join(f"{scheme}://example/a/b", "c", resolve_href=False)
+    assert d1 == f"{scheme}://example/a/b/c"
+    d2 = url_util.join(f"{scheme}://example/a/b", "../c", resolve_href=False)
+    d3 = url_util.join(f"{scheme}://example/a/b", "..", "c", resolve_href=False)
+    assert d2 == d3 == f"{scheme}://example/a/c"
+    e1 = url_util.join(f"{scheme}://example/a/b", "../../c", resolve_href=False)
+    e2 = url_util.join(f"{scheme}://example/a/b", "..", "..", "c", resolve_href=False)
+    assert e1 == e2 == f"{scheme}://example/c"
+    f1 = url_util.join(f"{scheme}://example/a/b", "../../../c", resolve_href=False)
+    f2 = url_util.join(f"{scheme}://example/a/b", "..", "..", "..", "c", resolve_href=False)
+    assert f1 == f2 == f"{scheme}://example/c"
 
 
 @pytest.mark.parametrize("scheme", ["http", "https", "ftp", "s3", "gs", "file"])
@@ -84,15 +91,18 @@ def test_url_join_resolve_href(scheme):
     """test that `resolve_href=True` behaves like a web browser at the base page, and
     `resolve_href=False` behaves like joining paths in a file system at the base directory."""
     # these are equivalent because of the trailing /
-    t1 = url_util.join(f"{scheme}://netloc/my/path/", "other/path", resolve_href=True)
-    assert t1 == f"{scheme}://netloc/my/path/other/path"
+    a1 = url_util.join(f"{scheme}://netloc/my/path/", "other/path", resolve_href=True)
+    a2 = url_util.join(f"{scheme}://netloc/my/path/", "other", "path", resolve_href=True)
+    assert a1 == a2 == f"{scheme}://netloc/my/path/other/path"
 
-    t2 = url_util.join(f"{scheme}://netloc/my/path", "other/path", resolve_href=False)
-    assert t2 == f"{scheme}://netloc/my/path/other/path"
+    b1 = url_util.join(f"{scheme}://netloc/my/path", "other/path", resolve_href=False)
+    b2 = url_util.join(f"{scheme}://netloc/my/path", "other", "path", resolve_href=False)
+    assert b1 == b2 == f"{scheme}://netloc/my/path/other/path"
 
     # this is like a web browser: relative to /my.
-    t3 = url_util.join(f"{scheme}://netloc/my/path", "other/path", resolve_href=True)
-    assert t3 == f"{scheme}://netloc/my/other/path"
+    c1 = url_util.join(f"{scheme}://netloc/my/path", "other/path", resolve_href=True)
+    c2 = url_util.join(f"{scheme}://netloc/my/path", "other", "path", resolve_href=True)
+    assert c1 == c2 == f"{scheme}://netloc/my/other/path"
 
 
 def test_default_download_name():
