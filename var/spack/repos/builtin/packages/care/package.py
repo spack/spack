@@ -21,7 +21,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     license("BSD-3-Clause")
 
-    maintainers("adayton1")
+    maintainers("adayton1", "adrienbernede")
 
     version("develop", branch="develop", submodules=False)
     version("master", branch="main", submodules=False)
