@@ -31,14 +31,14 @@ class Ripgrep(CargoPackage):
     def install_completions(self):
         rg = Executable(self.prefix.bin.rg)
 
-        mkdirp(bash_completion_path(self))
-        with open(join_path(bash_completion_path(self), "rg"), "w") as file:
+        mkdirp(bash_completion_path(self.prefix))
+        with open(bash_completion_path(self.prefix) / "rg", "w") as file:
             rg("--generate", "complete-bash", output=file)
 
-        mkdirp(fish_completion_path(self))
-        with open(join_path(fish_completion_path(self), "rg.fish"), "w") as file:
+        mkdirp(fish_completion_path(self.prefix))
+        with open(fish_completion_path(self.prefix) / "rg.fish", "w") as file:
             rg("--generate", "complete-fish", output=file)
 
-        mkdirp(zsh_completion_path(self))
-        with open(join_path(zsh_completion_path(self), "_rg"), "w") as file:
+        mkdirp(zsh_completion_path(self.prefix))
+        with open(zsh_completion_path(self.prefix) / "_rg", "w") as file:
             rg("--generate", "complete-zsh", output=file)

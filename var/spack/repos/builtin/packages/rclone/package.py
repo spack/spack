@@ -62,10 +62,10 @@ class Rclone(Package):
     def install_completions(self):
         rclone = Executable(self.prefix.bin.rclone)
 
-        mkdirp(bash_completion_path(self))
-        mkdirp(fish_completion_path(self))
-        mkdirp(zsh_completion_path(self))
+        mkdirp(bash_completion_path(self.prefix))
+        mkdirp(fish_completion_path(self.prefix))
+        mkdirp(zsh_completion_path(self.prefix))
 
-        rclone("genautocomplete", "bash", join_path(bash_completion_path(self), "rclone"))
-        rclone("genautocomplete", "fish", join_path(fish_completion_path(self), "rclone.fish"))
-        rclone("genautocomplete", "zsh", join_path(zsh_completion_path(self), "_rclone"))
+        rclone("genautocomplete", "bash", bash_completion_path(self.prefix) / "rclone")
+        rclone("genautocomplete", "fish", fish_completion_path(self.prefix) / "rclone.fish")
+        rclone("genautocomplete", "zsh", zsh_completion_path(self.prefix) / "_rclone")
