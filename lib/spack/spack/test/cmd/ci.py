@@ -4,15 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import filecmp
 import json
-import jsonschema
 import os
 import pathlib
-import pytest
 import shutil
+from io import BytesIO
 from typing import NamedTuple
 
-from io import BytesIO
-from urllib.parse import urlparse
+import jsonschema
+import pytest
 
 from llnl.util.filesystem import mkdirp, working_dir
 

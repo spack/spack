@@ -628,8 +628,9 @@ class SpackCI:
                     job_vars = job["attributes"]["variables"]
                     query = (
                         "{SPACK_JOB_SPEC_PKG_NAME}@{SPACK_JOB_SPEC_PKG_VERSION}"
-                        # The preceding space is required (ref. https://github.com/spack/spack-gantry/blob/develop/docs/api.md#allocation)
+                        # The preceding spaces are required (ref. https://github.com/spack/spack-gantry/blob/develop/docs/api.md#allocation)
                         " {SPACK_JOB_SPEC_VARIANTS}"
+                        " arch={SPACK_JOB_SPEC_ARCH}"
                         "%{SPACK_JOB_SPEC_COMPILER_NAME}@{SPACK_JOB_SPEC_COMPILER_VERSION}"
                     ).format_map(job_vars)
                     return f"spec={quote(query)}"
