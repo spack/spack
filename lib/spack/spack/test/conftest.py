@@ -61,6 +61,7 @@ import spack.util.url as url_util
 import spack.util.web
 import spack.version
 from spack.fetch_strategy import URLFetchStrategy
+from spack.installer import PackageInstaller
 from spack.util.pattern import Bunch
 
 
@@ -852,7 +853,7 @@ def _populate(mock_db):
 
     def _install(spec):
         s = spack.spec.Spec(spec).concretized()
-        s.package.do_install(fake=True, explicit=True)
+        PackageInstaller([s.package], fake=True, explicit=True).install()
 
     _install("mpileaks ^mpich")
     _install("mpileaks ^mpich2")
