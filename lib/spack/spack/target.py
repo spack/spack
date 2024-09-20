@@ -6,12 +6,6 @@ import functools
 
 import archspec.cpu
 
-import llnl.util.tty as tty
-
-import spack.compiler
-import spack.compilers
-import spack.spec
-import spack.util.executable
 import spack.util.spack_yaml as syaml
 
 
@@ -118,44 +112,3 @@ class Target:
 
     def __contains__(self, cpu_flag):
         return cpu_flag in self.microarchitecture
-
-    def optimization_flags(self, compiler):
-        """Returns the flags needed to optimize for this target using
-        the compiler passed as argument.
-
-        Args:
-            compiler (spack.spec.CompilerSpec or spack.compiler.Compiler): object that
-                contains both the name and the version of the compiler we want to use
-        """
-        # Mixed toolchains are not supported yet
-        if isinstance(compiler, spack.compiler.Compiler):
-            if spack.compilers.is_mixed_toolchain(compiler):
-                msg = (
-                    "microarchitecture specific optimizations are not "
-                    "supported yet on mixed compiler toolchains [check"
-                    " {0.name}@{0.version} for further details]"
-                )
-                tty.debug(msg.format(compiler))
-                return ""
-
-        # Try to check if the current compiler comes with a version number or
-        # has an unexpected suffix. If so, treat it as a compiler with a
-        # custom spec.
-        compiler_version = compiler.version
-        version_number, suffix = archspec.cpu.version_components(compiler.version)
-        if not version_number or suffix:
-            # Try to deduce the underlying version of the compiler, regardless
-            # of its name in compilers.yaml. Depending on where this function
-            # is called we might get either a CompilerSpec or a fully fledged
-            # compiler object.
-            if isinstance(compiler, spack.spec.CompilerSpec):
-                compiler = spack.compilers.compilers_for_spec(compiler).pop()
-            try:
-                compiler_version = compiler.real_version
-            except spack.util.executable.ProcessError as e:
-                # log this and just return compiler.version instead
-                tty.debug(str(e))
-
-        return self.microarchitecture.optimization_flags(
-            compiler.name, compiler_version.dotted_numeric_string
-        )

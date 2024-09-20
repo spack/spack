@@ -45,6 +45,8 @@ from enum import Flag, auto
 from itertools import chain
 from typing import Dict, List, Set, Tuple
 
+import archspec.cpu
+
 import llnl.util.tty as tty
 from llnl.string import plural
 from llnl.util.filesystem import join_path
@@ -358,7 +360,7 @@ def set_compiler_environment_variables(pkg, env):
     _add_werror_handling(keep_werror, env)
 
     # Set the target parameters that the compiler will add
-    isa_arg = spec.architecture.target.optimization_flags(compiler)
+    isa_arg = optimization_flags(compiler, spec.target)
     env.set("SPACK_TARGET_ARGS", isa_arg)
 
     # Trap spack-tracked compiler flags as appropriate.
@@ -401,6 +403,36 @@ def set_compiler_environment_variables(pkg, env):
     compiler.setup_custom_environment(pkg, env)
 
     return env
+
+
+def optimization_flags(compiler, target):
+    if spack.compilers.is_mixed_toolchain(compiler):
+        msg = (
+            "microarchitecture specific optimizations are not "
+            "supported yet on mixed compiler toolchains [check"
+            f" {compiler.name}@{compiler.version} for further details]"
+        )
+        tty.debug(msg)
+        return ""
+
+    # Try to check if the current compiler comes with a version number or
+    # has an unexpected suffix. If so, treat it as a compiler with a
+    # custom spec.
+    compiler_version = compiler.version
+    version_number, suffix = archspec.cpu.version_components(compiler.version)
+    if not version_number or suffix:
+        try:
+            compiler_version = compiler.real_version
+        except spack.util.executable.ProcessError as e:
+            # log this and just return compiler.version instead
+            tty.debug(str(e))
+
+    try:
+        result = target.optimization_flags(compiler.name, compiler_version.dotted_numeric_string)
+    except (ValueError, archspec.cpu.UnsupportedMicroarchitecture):
+        result = ""
+
+    return result
 
 
 def set_wrapper_variables(pkg, env):
