@@ -707,7 +707,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.set("CHPL_GPU", "amd")
             env.set("CHPL_GPU_ARCH", self.spec.variants["amdgpu_target"].value[0])
             self.prepend_cpath_include(env, self.spec["hip"].prefix)
-            env.set("CHPL_ROCM_PATH", self.spec["llvm-amdgpu"].prefix)
+            env.set("CHPL_ROCM_PATH", self.spec["hip"].prefix)
             self.update_lib_path(env, self.spec["hip"].prefix)
             self.update_lib_path(env, self.spec["hsa-rocr-dev"].prefix)
         self.setup_chpl_comm(env, self.spec)
