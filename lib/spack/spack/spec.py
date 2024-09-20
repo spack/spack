@@ -551,12 +551,18 @@ class ArchSpec:
         )
 
     def to_dict(self):
+        # Generic targets represent either an architecture family (like x86_64)
+        # or a custom micro-architecture
+        if self.target.microarchitecture.vendor == "generic":
+            target_data = str(self.target)
+        else:
+            # Get rid of compiler flag information before turning the uarch into a dict
+            uarch_dict = self.target.microarchitecture.to_dict()
+            uarch_dict.pop("compilers", None)
+            target_data = syaml.syaml_dict(uarch_dict.items())
+
         d = syaml.syaml_dict(
-            [
-                ("platform", self.platform),
-                ("platform_os", self.os),
-                ("target", self.target.to_dict_or_value()),
-            ]
+            [("platform", self.platform), ("platform_os", self.os), ("target", target_data)]
         )
         return syaml.syaml_dict([("arch", d)])
 
@@ -564,7 +570,10 @@ class ArchSpec:
     def from_dict(d):
         """Import an ArchSpec from raw YAML/JSON data"""
         arch = d["arch"]
-        target = spack.target.Target.from_dict_or_value(arch["target"])
+        target_name = arch["target"]
+        if not isinstance(target_name, str):
+            target_name = target_name["name"]
+        target = spack.target.Target(target_name)
         return ArchSpec((arch["platform"], arch["platform_os"], target))
 
     def __str__(self):

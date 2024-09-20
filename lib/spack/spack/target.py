@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import archspec.cpu
 
-import spack.util.spack_yaml as syaml
-
 
 class Target:
     def __init__(self, name):
@@ -33,37 +31,6 @@ class Target:
 
     def __hash__(self):
         return hash(self.name)
-
-    @staticmethod
-    def from_dict_or_value(dict_or_value):
-        # A string here represents a generic target (like x86_64 or ppc64) or
-        # a custom micro-architecture
-        if isinstance(dict_or_value, str):
-            return Target(dict_or_value)
-
-        # TODO: From a dict we actually retrieve much more information than
-        # TODO: just the name. We can use that information to reconstruct an
-        # TODO: "old" micro-architecture or check the current definition.
-        target_info = dict_or_value
-        return Target(target_info["name"])
-
-    def to_dict_or_value(self):
-        """Returns a dict or a value representing the current target.
-
-        String values are used to keep backward compatibility with generic
-        targets, like e.g. x86_64 or ppc64. More specific micro-architectures
-        will return a dictionary which contains information on the name,
-        features, vendor, generation and parents of the current target.
-        """
-        # Generic targets represent either an architecture
-        # family (like x86_64) or a custom micro-architecture
-        if self.microarchitecture.vendor == "generic":
-            return str(self)
-
-        # Get rid of compiler flag information before turning the uarch into a dict
-        uarch_dict = self.microarchitecture.to_dict()
-        uarch_dict.pop("compilers", None)
-        return syaml.syaml_dict(uarch_dict.items())
 
     def __repr__(self):
         cls_name = self.__class__.__name__
