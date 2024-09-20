@@ -61,6 +61,8 @@ import socket
 import warnings
 from typing import Any, Callable, Dict, List, Match, Optional, Set, Tuple, Union
 
+import archspec.cpu
+
 import llnl.path
 import llnl.string
 import llnl.util.filesystem as fs
@@ -82,7 +84,6 @@ import spack.provider_index
 import spack.repo
 import spack.solver
 import spack.store
-import spack.target
 import spack.traverse as traverse
 import spack.util.executable
 import spack.util.hash
@@ -211,6 +212,12 @@ def ensure_modern_format_string(fmt: str) -> None:
             f"Format string `{fmt}` contains old syntax `{result.group(0)}`. "
             "This is no longer supported."
         )
+
+
+def _make_microarchitecture(name: str) -> archspec.cpu.Microarchitecture:
+    if isinstance(name, archspec.cpu.Microarchitecture):
+        return name
+    return archspec.cpu.TARGETS.get(name, archspec.cpu.generic_microarchitecture(name))
 
 
 @lang.lazy_lexicographic_ordering
@@ -363,10 +370,10 @@ class ArchSpec:
         # will assumed to be the host machine's platform.
 
         def target_or_none(t):
-            if isinstance(t, spack.target.Target):
+            if isinstance(t, archspec.cpu.Microarchitecture):
                 return t
             if t and t != "None":
-                return spack.target.Target(t)
+                return _make_microarchitecture(t)
             return None
 
         value = target_or_none(value)
@@ -455,10 +462,11 @@ class ArchSpec:
         results = self._target_intersection(other)
         attribute_str = ",".join(results)
 
-        if self.target == attribute_str:
+        intersection_target = _make_microarchitecture(attribute_str)
+        if self.target == intersection_target:
             return False
 
-        self.target = attribute_str
+        self.target = intersection_target
         return True
 
     def _target_intersection(self, other):
@@ -476,7 +484,7 @@ class ArchSpec:
                     # s_target_range is a concrete target
                     # get a microarchitecture reference for at least one side
                     # of each comparison so we can use archspec comparators
-                    s_comp = spack.target.Target(s_min).microarchitecture
+                    s_comp = _make_microarchitecture(s_min)
                     if not o_sep:
                         if s_min == o_min:
                             results.append(s_min)
@@ -484,21 +492,21 @@ class ArchSpec:
                         results.append(s_min)
                 elif not o_sep:
                     # "cast" to microarchitecture
-                    o_comp = spack.target.Target(o_min).microarchitecture
+                    o_comp = _make_microarchitecture(o_min)
                     if (not s_min or o_comp >= s_min) and (not s_max or o_comp <= s_max):
                         results.append(o_min)
                 else:
                     # Take intersection of two ranges
                     # Lots of comparisons needed
-                    _s_min = spack.target.Target(s_min).microarchitecture
-                    _s_max = spack.target.Target(s_max).microarchitecture
-                    _o_min = spack.target.Target(o_min).microarchitecture
-                    _o_max = spack.target.Target(o_max).microarchitecture
+                    _s_min = _make_microarchitecture(s_min)
+                    _s_max = _make_microarchitecture(s_max)
+                    _o_min = _make_microarchitecture(o_min)
+                    _o_max = _make_microarchitecture(o_max)
 
                     n_min = s_min if _s_min >= _o_min else o_min
                     n_max = s_max if _s_max <= _o_max else o_max
-                    _n_min = spack.target.Target(n_min).microarchitecture
-                    _n_max = spack.target.Target(n_max).microarchitecture
+                    _n_min = _make_microarchitecture(n_min)
+                    _n_max = _make_microarchitecture(n_max)
                     if _n_min == _n_max:
                         results.append(n_min)
                     elif not n_min or not n_max or _n_min < _n_max:
@@ -553,11 +561,11 @@ class ArchSpec:
     def to_dict(self):
         # Generic targets represent either an architecture family (like x86_64)
         # or a custom micro-architecture
-        if self.target.microarchitecture.vendor == "generic":
+        if self.target.vendor == "generic":
             target_data = str(self.target)
         else:
             # Get rid of compiler flag information before turning the uarch into a dict
-            uarch_dict = self.target.microarchitecture.to_dict()
+            uarch_dict = self.target.to_dict()
             uarch_dict.pop("compilers", None)
             target_data = syaml.syaml_dict(uarch_dict.items())
 
@@ -573,7 +581,7 @@ class ArchSpec:
         target_name = arch["target"]
         if not isinstance(target_name, str):
             target_name = target_name["name"]
-        target = spack.target.Target(target_name)
+        target = _make_microarchitecture(target_name)
         return ArchSpec((arch["platform"], arch["platform_os"], target))
 
     def __str__(self):
@@ -4132,9 +4140,7 @@ class Spec:
 
     @property
     def target(self):
-        # This property returns the underlying microarchitecture object
-        # to give to the attribute the appropriate comparison semantic
-        return self.architecture.target.microarchitecture
+        return self.architecture.target
 
     @property
     def build_spec(self):

@@ -12,7 +12,6 @@ import spack.compilers
 import spack.concretize
 import spack.operating_systems
 import spack.platforms
-import spack.target
 from spack.spec import ArchSpec, Spec
 
 
@@ -81,25 +80,6 @@ def test_default_os_and_target(default_mock_concretization):
 def test_operating_system_conversion_to_dict():
     operating_system = spack.operating_systems.OperatingSystem("os", "1.0")
     assert operating_system.to_dict() == {"name": "os", "version": "1.0"}
-
-
-@pytest.mark.parametrize(
-    "cpu_flag,target_name",
-    [
-        # Test that specific flags can be used in queries
-        ("ssse3", "haswell"),
-        ("popcnt", "nehalem"),
-        ("avx512f", "skylake_avx512"),
-        ("avx512ifma", "icelake"),
-        # Test that proxy flags can be used in queries too
-        ("sse3", "nehalem"),
-        ("avx512", "skylake_avx512"),
-        ("avx512", "icelake"),
-    ],
-)
-def test_target_container_semantic(cpu_flag, target_name):
-    target = spack.target.Target(target_name)
-    assert cpu_flag in target
 
 
 @pytest.mark.parametrize(

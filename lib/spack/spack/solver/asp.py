@@ -3237,7 +3237,7 @@ class CompilerParser:
         candidate = KnownCompiler(
             spec=spec.compiler,
             os=str(spec.architecture.os),
-            target=str(spec.architecture.target.microarchitecture.family),
+            target=str(spec.architecture.target.family),
             available=False,
             compiler_obj=None,
         )
