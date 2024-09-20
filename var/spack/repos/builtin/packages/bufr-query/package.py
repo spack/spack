@@ -40,7 +40,11 @@ class BufrQuery(CMakePackage, PythonExtension):
         depends_on("py-pybind11", type="build")
 
     # Patches
-    patch("site-packages.patch", when="+python @:0.0.2")
+    patch(
+        "https://github.com/NOAA-EMC/bufr-query/pull/20.patch?full_index=1",
+        sha256="3acf11082c9e76e64dbbda4f62ac0cbc234dca7e60c85a275e778417cfd65001",
+        when="+python @:0.0.2",
+    )
 
     # CMake configuration
     def cmake_args(self):
