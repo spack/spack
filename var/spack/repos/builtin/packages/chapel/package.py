@@ -618,7 +618,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         symlink(self.spec["gasnet"].prefix.src, dst)
 
     def setup_if_not_unset(self, env, var, value):
-        if value != "unset":
+        if value != "unset" and var in self.chpl_env_vars:
             if value == "spack":
                 value = "system"
             env.set(var, value)
