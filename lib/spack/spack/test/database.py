@@ -725,8 +725,8 @@ def test_external_entries_in_db(mutable_database):
 def test_regression_issue_8036(mutable_database, usr_folder_exists):
     # The test ensures that the external package prefix is treated as
     # existing. Even when the package prefix exists, the package should
-    # not be considered installed until it is added to the database with
-    # do_install.
+    # not be considered installed until it is added to the database by
+    # the installer with install().
     s = spack.spec.Spec("externaltool@0.9")
     s.concretize()
     assert not s.installed
