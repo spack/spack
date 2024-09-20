@@ -117,6 +117,7 @@ class Hdf5(CMakePackage):
     variant(
         "subfiling", when="@1.14: +mpi", default=False, description="Enable Subfiling VFD support"
     )
+    variant("ros3", default=False, description="Enable read-only S3 VFD")
     variant("fortran", default=False, description="Enable Fortran support")
     variant("java", when="@1.10:", default=False, description="Enable Java support")
     variant("threadsafe", default=False, description="Enable thread-safe capabilities")
@@ -152,6 +153,9 @@ class Hdf5(CMakePackage):
         "zlib-ng~new_strategies",
         when="@:1.14.3,develop-1.8:develop-1.12 ^[virtuals=zlib-api] zlib-ng",
     )
+    with when("+ros3"):
+        depends_on("openssl")
+        depends_on("curl")
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
     # Skip this on Windows since pkgconfig is autotools
@@ -537,6 +541,7 @@ class Hdf5(CMakePackage):
                 spec.satisfies("@1.8.22+shared+tools"),
             ),
             self.define_from_variant("HDF5_ENABLE_SUBFILING_VFD", "subfiling"),
+            self.define_from_variant("HDF5_ENABLE_ROS3_VFD", "ros3"),
             self.define_from_variant("HDF5_ENABLE_MAP_API", "map"),
             self.define("HDF5_ENABLE_Z_LIB_SUPPORT", True),
             self.define_from_variant("HDF5_ENABLE_SZIP_SUPPORT", "szip"),
