@@ -37,7 +37,7 @@ class BufrQuery(CMakePackage, PythonExtension):
 
     with when("+python"):
         extends("python")
-        depends_on("py-pybind11")
+        depends_on("py-pybind11", type="build")
 
     # Patches
     patch("site-packages.patch", when="+python @:0.0.2")
