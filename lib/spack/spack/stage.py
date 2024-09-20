@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import concurrent.futures
 import errno
 import getpass
 import glob
@@ -40,6 +39,7 @@ import spack.resource
 import spack.spec
 import spack.util.crypto
 import spack.util.lock
+import spack.util.parallel
 import spack.util.path as sup
 import spack.util.pattern as pattern
 import spack.util.url as url_util
@@ -1132,7 +1132,7 @@ def get_checksums_for_versions(
         if checksum is not None:
             version_hashes[version] = checksum
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=concurrency) as executor:
+    with spack.util.parallel.make_concurrent_executor(concurrency, require_fork=False) as executor:
         results = []
         for url, version in search_arguments:
             future = executor.submit(_fetch_and_checksum, url, fetch_options, keep_stage)

@@ -21,6 +21,7 @@ import spack.spec
 import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
 from spack.context import Context
+from spack.installer import PackageInstaller
 from spack.paths import build_env_path
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
@@ -181,7 +182,7 @@ def test_setup_dependent_package_inherited_modules(
 ):
     # This will raise on regression
     s = spack.spec.Spec("cmake-client-inheritor").concretized()
-    s.package.do_install()
+    PackageInstaller([s.package]).install()
 
 
 @pytest.mark.parametrize(
