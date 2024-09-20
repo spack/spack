@@ -53,6 +53,10 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     # requirements.txt
     depends_on("py-coloredlogs", when="@1.17:", type=("build", "run"))
     depends_on("py-flatbuffers", type=("build", "run"))
+    depends_on("py-numpy@1.21.6:", when="@1.19:",
+               type("build", "run"))
+    depends_on("py-numpy@1.21.6:1", when="@1.18.1:1.18.2",
+               type("build", "run"))
     depends_on("py-numpy@1.16.6:", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-protobuf", type=("build", "run"))
@@ -63,6 +67,7 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     depends_on("protobuf@:3.19", when="@:1.11")
     depends_on("py-cerberus", type=("build", "run"))
     depends_on("py-onnx", type=("build", "run"))
+    depends_on("py-onnx@:1.16", type=("build", "run"), when="@:1.18")
     depends_on("py-onnx@:1.15.0", type=("build", "run"), when="@:1.17")
     depends_on("zlib-api")
     depends_on("libpng")
