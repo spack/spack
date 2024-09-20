@@ -28,19 +28,15 @@ def _ensure_other_is_target(method):
 
 
 class Target:
-    def __init__(self, name, module_name=None):
+    def __init__(self, name):
         """Target models microarchitectures and their compatibility.
 
         Args:
             name (str or Microarchitecture): microarchitecture of the target
-            module_name (str): optional module name to get access to the
-                current target. This is typically used on machines
-                like Cray (e.g. craype-compiler)
         """
         if not isinstance(name, archspec.cpu.Microarchitecture):
             name = archspec.cpu.TARGETS.get(name, archspec.cpu.generic_microarchitecture(name))
         self.microarchitecture = name
-        self.module_name = module_name
 
     @property
     def name(self):
@@ -48,10 +44,7 @@ class Target:
 
     @_ensure_other_is_target
     def __eq__(self, other):
-        return (
-            self.microarchitecture == other.microarchitecture
-            and self.module_name == other.module_name
-        )
+        return self.microarchitecture == other.microarchitecture
 
     def __ne__(self, other):
         # This method is necessary as long as we support Python 2. In Python 3
@@ -69,7 +62,7 @@ class Target:
         return self.microarchitecture.name < other.microarchitecture.name
 
     def __hash__(self):
-        return hash((self.name, self.module_name))
+        return hash(self.name)
 
     @staticmethod
     def from_dict_or_value(dict_or_value):
@@ -104,8 +97,8 @@ class Target:
 
     def __repr__(self):
         cls_name = self.__class__.__name__
-        fmt = cls_name + "({0}, {1})"
-        return fmt.format(repr(self.microarchitecture), repr(self.module_name))
+        fmt = cls_name + "({0})"
+        return fmt.format(repr(self.microarchitecture))
 
     def __str__(self):
         return str(self.microarchitecture)

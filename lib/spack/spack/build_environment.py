@@ -815,7 +815,6 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     # Platform specific setup goes before package specific setup. This is for setting
     # defaults like MACOSX_DEPLOYMENT_TARGET on macOS.
     platform = spack.platforms.by_name(pkg.spec.architecture.platform)
-    target = platform.target(pkg.spec.architecture.target)
     platform.setup_platform_environment(pkg, env_mods)
 
     tty.debug("setup_package: grabbing modifications from dependencies")
@@ -839,9 +838,6 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         tty.debug("setup_package: loading compiler modules")
         for mod in pkg.compiler.modules:
             load_module(mod)
-
-    if target and target.module_name:
-        load_module(target.module_name)
 
     load_external_modules(pkg)
 
