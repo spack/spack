@@ -84,8 +84,30 @@ jobs:
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/unit_tests.yaml
     secrets: inherit
+  upload-coverage:
+    needs: [ unit-tests, prechecks ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+      with:
+        fetch-depth: 0
+    - name: Download coverage files
+      uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
+      with:
+        pattern: coverage-*
+        path: coverage
+        merge-multiple: true
+    - run: pip install --upgrade coverage
+    - run: ls -la coverage
+    - run: coverage combine -a coverage/.coverage*
+    - run: coverage xml
+    - name: "Upload coverage"
+      uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
   all:
-    needs: [ unit-tests, bootstrap ]
+    needs: [ upload-coverage, bootstrap ]
     runs-on: ubuntu-latest
     steps:
     - name: Success

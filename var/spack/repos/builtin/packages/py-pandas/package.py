@@ -68,7 +68,7 @@ class PyPandas(PythonPackage):
     version("0.25.3", sha256="52da74df8a9c9a103af0a72c9d5fdc8e0183a90884278db7f386b5692a2220a4")
     version("0.25.2", sha256="ca91a19d1f0a280874a24dca44aadce42da7f3a7edb7e9ab7c7baad8febee2be")
 
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")
 
     variant("performance", default=True, description="Build recommended performance dependencies")
     variant("excel", when="@1.4:", default=False, description="Build with support for Excel")
@@ -82,10 +82,10 @@ class PyPandas(PythonPackage):
     depends_on("python@:3.9", when="@1.1.3:1.3.2", type=("build", "run"))
     depends_on("python@:3.8", when="@0.25.2:1.1.2", type=("build", "run"))
 
-    depends_on("py-meson-python@0.13.1", when="@2.1:", type="build")
-    depends_on("meson@1.2.1", when="@2.1.1:", type="build")
-    depends_on("meson@1.0.1", when="@2.1.0", type="build")
-    depends_on("py-cython@3.0.5", when="@2.2:", type="build")
+    depends_on("py-meson-python@0.13.1:", when="@2.1:", type="build")
+    depends_on("meson@1.2.1:", when="@2.1.1:", type="build")
+    depends_on("meson@1.0.1:", when="@2.1.0", type="build")
+    depends_on("py-cython@3.0.5:", when="@2.2:", type="build")
     depends_on("py-cython@0.29.33:2", when="@2.0:2.1", type="build")
     depends_on("py-cython@0.29.32:2", when="@1.4.4:1", type="build")
     depends_on("py-cython@0.29.30:2", when="@1.4.3", type="build")

@@ -47,7 +47,7 @@ class Pocl(CMakePackage):
     depends_on("cmake @2.8.12:", type="build")
     depends_on("hwloc")
     depends_on("hwloc@:1", when="@:1.1")
-    depends_on("libtool", type=("build", "link", "run"))
+    depends_on("libtool", type="link", when="@:1.3")  # links against libltdl
     depends_on("pkgconfig", type="build")
 
     depends_on("llvm +clang")
