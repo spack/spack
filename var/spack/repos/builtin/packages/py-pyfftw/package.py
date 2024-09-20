@@ -41,5 +41,13 @@ class PyPyfftw(PythonPackage):
 
     depends_on("fftw@3.3:")
 
+    def url_for_version(self, version):
+        url = "https://files.pythonhosted.org/packages/source/p/pyfftw/{0}-{1}.tar.gz"
+        if version >= Version("0.14.0"):
+            name = "pyfftw"
+        else:
+            name = "pyFFTW"
+        return url.format(name, version)
+
     def setup_build_environment(self, env):
         env.append_flags("LDFLAGS", self.spec["fftw"].libs.search_flags)
