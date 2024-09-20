@@ -5,31 +5,8 @@
 
 from spack.package import *
 
-rocm_dependencies = [
-    "hsa-rocr-dev",
-    "hip",
-    "hiprand",
-    "hipsparse",
-    "hipfft",
-    "hipcub",
-    "hipblas",
-    "llvm-amdgpu",
-    "miopen-hip",
-    "migraphx",
-    "rocblas",
-    "rccl",
-    "rocprim",
-    "rocminfo",
-    "rocm-core",
-    "rocm-cmake",
-    "roctracer-dev",
-    "rocthrust",
-    "rocrand",
-    "rocsparse",
-]
 
-
-class PyOnnxruntime(CMakePackage, PythonExtension):
+class PyOnnxruntime(CMakePackage, PythonExtension, ROCmPackage):
     """ONNX Runtime is a performance-focused complete scoring
     engine for Open Neural Network Exchange (ONNX) models, with
     an open extensible architecture to continually address the
@@ -57,7 +34,6 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     depends_on("cxx", type="build")  # generated
 
     variant("cuda", default=False, description="Build with CUDA support")
-    variant("rocm", default=False, description="Build with ROCm support")
 
     # cmake/CMakeLists.txt
     depends_on("cmake@3.26:", when="@1.17:", type="build")
@@ -77,7 +53,8 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     depends_on("py-coloredlogs", when="@1.17:", type=("build", "run"))
     depends_on("py-flatbuffers", type=("build", "run"))
     depends_on("py-numpy@1.16.6:", type=("build", "run"))
-    depends_on("py-numpy@1.21.6:1", when="@1.18", type=("build", "run"))
+    depends_on("py-numpy@1.21.6:", when="@1.18:", type=("build", "run"))
+    depends_on("py-numpy@:1", when="@:1.18", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-protobuf", type=("build", "run"))
     depends_on("py-sympy@1.1:", type=("build", "run"))
@@ -95,6 +72,30 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     depends_on("cudnn", when="+cuda")
     depends_on("iconv", type=("build", "link", "run"))
     depends_on("re2+shared")
+
+    rocm_dependencies = [
+        "hsa-rocr-dev",
+        "hip",
+        "hiprand",
+        "hipsparse",
+        "hipfft",
+        "hipcub",
+        "hipblas",
+        "llvm-amdgpu",
+        "miopen-hip",
+        "migraphx",
+        "rocblas",
+        "rccl",
+        "rocprim",
+        "rocminfo",
+        "rocm-core",
+        "rocm-cmake",
+        "roctracer-dev",
+        "rocthrust",
+        "rocrand",
+        "rocsparse",
+    ]
+
     with when("+rocm"):
         for pkg_dep in rocm_dependencies:
             depends_on(f"{pkg_dep}@5.7:6.1", when="@1.17")
@@ -118,6 +119,9 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
         sha256="537c43b061d31bf97d2778d723a41fbd390160f9ebc304f06726e3bfd8dc4583",
         when="@1.10:1.15",
     )
+
+    # ORT is assuming all ROCm components are installed in a single path,
+    # this patch finds the packages individually
     patch("0001-Find-ROCm-Packages-Individually.patch", when="@1.17: +rocm")
 
     dynamic_cpu_arch_values = ("NOAVX", "AVX", "AVX2", "AVX512")
@@ -135,14 +139,14 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
     build_directory = "."
 
     def patch(self):
-        if self.spec.satisfies("@1.17 + rocm"):
+        if self.spec.satisfies("@1.17 +rocm"):
             filter_file(
                 r"${onnxruntime_ROCM_HOME}/.info/version-dev",
                 "{0}/.info/version".format(self.spec["rocm-core"].prefix),
                 "cmake/CMakeLists.txt",
                 string=True,
             )
-        if self.spec.satisfies("@1.18: + rocm"):
+        if self.spec.satisfies("@1.18: +rocm"):
             filter_file(
                 r"${onnxruntime_ROCM_HOME}/.info/version",
                 "{0}/.info/version".format(self.spec["rocm-core"].prefix),
