@@ -301,7 +301,10 @@ class ArchSpec:
     def _cmp_iter(self):
         yield self.platform
         yield self.os
-        yield self.target
+        if self.target is None:
+            yield self.target
+        else:
+            yield self.target.name
 
     @property
     def platform(self):

@@ -2,29 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import functools
-
 import archspec.cpu
 
 import spack.util.spack_yaml as syaml
-
-
-def _ensure_other_is_target(method):
-    """In a single argument method, ensure that the argument is an
-    instance of ``Target``.
-    """
-
-    @functools.wraps(method)
-    def _impl(self, other):
-        if isinstance(other, str):
-            other = Target(other)
-
-        if not isinstance(other, Target):
-            return NotImplemented
-
-        return method(self, other)
-
-    return _impl
 
 
 class Target:
@@ -42,24 +22,14 @@ class Target:
     def name(self):
         return self.microarchitecture.name
 
-    @_ensure_other_is_target
     def __eq__(self, other):
+        if isinstance(other, str):
+            other = Target(other)
+
+        if not isinstance(other, Target):
+            return NotImplemented
+
         return self.microarchitecture == other.microarchitecture
-
-    def __ne__(self, other):
-        # This method is necessary as long as we support Python 2. In Python 3
-        # __ne__ defaults to the implementation below
-        return not self == other
-
-    @_ensure_other_is_target
-    def __lt__(self, other):
-        # TODO: In the future it would be convenient to say
-        # TODO: `spec.architecture.target < other.architecture.target`
-        # TODO: and change the semantic of the comparison operators
-
-        # This is needed to sort deterministically specs in a list.
-        # It doesn't implement a total ordering semantic.
-        return self.microarchitecture.name < other.microarchitecture.name
 
     def __hash__(self):
         return hash(self.name)
