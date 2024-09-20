@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
-import itertools
 import os
 import sys
 
@@ -979,33 +978,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         tty.info(f"Wrote new spec file to {specs_file}")
 
     def setup_run_environment(self, env):
-        # Search prefix directory for possibly modified compiler names
-        from spack.compilers.gcc import Gcc as Compiler
+        if self.spec.satisfies("languages=c"):
+            env.set("CC", self.cc)
 
-        # Get the contents of the installed binary directory
-        bin_path = self.spec.prefix.bin
+        if self.spec.satisfies("languages=cxx"):
+            env.set("CXX", self.cxx)
 
-        if not os.path.isdir(bin_path):
-            return
-
-        bin_contents = os.listdir(bin_path)
-
-        # Find the first non-symlink compiler binary present for each language
-        for lang in ["cc", "cxx", "fc", "f77"]:
-            for filename, regexp in itertools.product(bin_contents, Compiler.search_regexps(lang)):
-                if not regexp.match(filename):
-                    continue
-
-                abspath = os.path.join(bin_path, filename)
-
-                # Skip broken symlinks (https://github.com/spack/spack/issues/41327)
-                if not os.path.exists(abspath):
-                    continue
-
-                # Set the proper environment variable
-                env.set(lang.upper(), abspath)
-                # Stop searching filename/regex combos for this language
-                break
+        if self.spec.satisfies("languages=fortran"):
+            env.set("FC", self.fortran)
+            env.set("F77", self.fortran)
 
     def detect_gdc(self):
         """Detect and return the path to GDC that belongs to the same instance of GCC that is used
