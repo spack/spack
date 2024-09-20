@@ -514,7 +514,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     # with an error about missing plugin-api.h
     depends_on("binutils+gold+ld+plugins+headers", when="llvm=bundled")
 
-    depends_on("m4")
+    depends_on("m4", when="gmp=bundled")
 
     # Runtime dependencies:
     # Note here "run" is run of the Chapel compiler built by this package,
