@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.pkg.builtin.py_fluidsim_core import PyFluidsimCore
 
 
 class PyFluidsim(PythonPackage):
@@ -19,6 +20,8 @@ class PyFluidsim(PythonPackage):
     version("0.8.1", sha256="44c70f388c429856f5df24705cddb2e024d7d1376d2153e113ef111af90b857b")
     version("0.8.0", sha256="01f6d489ce44fe4dc47357506ba227ae0e87b346758d8f067c13f319d0a9a881")
 
+    variant("native", default=False, description="Compile with -march=native and -Ofast.")
+
     with default_args(type=("build", "run")):
         extends("python@3.9:")
         depends_on("py-transonic@0.6.4:")
@@ -28,7 +31,8 @@ class PyFluidsim(PythonPackage):
         depends_on("py-pythran@0.9.7:")
 
     with default_args(type="run"):
-        depends_on("py-fluidsim-core")
+        for _v in PyFluidsimCore.versions:
+            depends_on(f"py-fluidsim-core@{_v}", when=f"@{_v}")
         depends_on("py-fluidfft@0.4.0:")
         depends_on("py-xarray")
         depends_on("py-rich")
