@@ -8,6 +8,7 @@ import os
 import sys
 import tempfile
 
+from spack.build_environment import optimization_flags
 from spack.package import *
 
 rocm_dependencies = [
@@ -656,7 +657,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
         # Please specify optimization flags to use during compilation when
         # bazel option '--config=opt' is specified
-        env.set("CC_OPT_FLAGS", spec.architecture.target.optimization_flags(spec.compiler))
+        env.set("CC_OPT_FLAGS", optimization_flags(spec.compiler, spec.target))
 
         # Would you like to interactively configure ./WORKSPACE for
         # Android builds?
