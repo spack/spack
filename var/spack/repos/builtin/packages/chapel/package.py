@@ -437,6 +437,10 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     conflicts("platform=windows")  # Support for windows is through WSL only
 
+    # Ensure GPU support is Sticky: never allow the concretizer to choose this
+    variant("rocm", default=False, sticky=True, description="Enable AMD ROCm GPU support")
+    variant("cuda", default=False, sticky=True, description="Enable Nvidia CUDA GPU support")
+
     conflicts("+rocm", when="+cuda", msg="Chapel must be built with either CUDA or ROCm, not both")
     conflicts(
         "+rocm", when="@:1", msg="ROCm support in spack requires Chapel 2.0.0 or later"
