@@ -178,7 +178,5 @@ class Ngspice(AutotoolsPackage):
         return (None, None, flags)
 
     def setup_run_environment(self, env):
-        if "build=bin" in self.spec:
-            env.prepend_path("PATH", self.prefix.bin)
-        else:
+        if "build=lib" in self.spec:
             env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
