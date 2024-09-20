@@ -43,9 +43,7 @@ class AppleLibunwind(Package):
 
     @property
     def headers(self):
-        return HeaderList(
-            join_path(self.prefix, "usr/include")
-        )
+        return HeaderList(join_path(self.prefix, "usr/include"))
 
     @property
     def libs(self):
