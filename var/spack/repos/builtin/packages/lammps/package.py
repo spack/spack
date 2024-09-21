@@ -899,7 +899,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             args.append(self.define("CMAKE_CXX_FLAGS_RELWITHDEBINFO", cxx_flags))
 
         # Overwrite generic cpu tune option
-        cmake_tune_flags = optimization_flags(spec.compiler, spec.target)
+        cmake_tune_flags = optimization_flags(self.compiler, spec.target)
         args.append(self.define("CMAKE_TUNE_FLAGS", cmake_tune_flags))
 
         args.append(self.define_from_variant("LAMMPS_SIZES", "lammps_sizes"))

@@ -162,7 +162,7 @@ class Hpcc(MakefilePackage):
         if spec.satisfies("%intel"):
             # with intel-parallel-studio+mpi the '-march' arguments
             # are not passed to icc
-            arch_opt = optimization_flags(spec.compiler, spec.target)
+            arch_opt = optimization_flags(self.compiler, spec.target)
             self.config["@CCFLAGS@"] = f"-O3 -restrict -ansi-alias -ip {arch_opt}"
             self.config["@CCNOOPT@"] = "-restrict"
         self._write_make_arch(spec, prefix)

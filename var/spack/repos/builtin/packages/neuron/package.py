@@ -150,7 +150,7 @@ class Neuron(CMakePackage):
 
         # add cpu arch specific optimisation flags to CMake so that they are passed
         # to embedded Makefile that neuron has for compiling MOD files
-        compilation_flags = optimization_flags(self.spec.compiler, self.spec.target)
+        compilation_flags = optimization_flags(self.compiler, self.spec.target)
         args.append(self.define("CMAKE_CXX_FLAGS", compilation_flags))
 
         return args

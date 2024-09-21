@@ -214,7 +214,7 @@ class Amdfftw(FftwBase):
         # variable to set AMD_ARCH configure option.
         # Spack user can not directly use AMD_ARCH for this purpose but should
         # use target variable to set appropriate -march option in AMD_ARCH.
-        options.append(f"AMD_ARCH={optimization_flags(spec.compiler, spec.target)}")
+        options.append(f"AMD_ARCH={optimization_flags(self.compiler, spec.target)}")
 
         # Specific SIMD support.
         # float and double precisions are supported
