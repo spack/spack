@@ -5,6 +5,7 @@
 
 import os.path
 
+from spack.hooks.sbang import filter_shebang
 from spack.package import *
 
 
@@ -25,14 +26,28 @@ class Grackle(Package):
 
     variant("float", default=False, description="Build with float")
 
-    depends_on("libtool", when="@2.2")
+    depends_on("libtool", when="@2.2:")
 
     depends_on("c", type="build")
     depends_on("fortran", type="build")
+    depends_on("tcsh", type="build")
     depends_on("mpi")
     depends_on("hdf5+mpi")
 
     parallel = False
+
+    @run_before("install")
+    def filter_sbang(self):
+        """Run before install so that the standard Spack sbang install hook
+        can fix up the path to the tcsh binary.
+        """
+        tcsh = self.spec["tcsh"].command
+        with working_dir(self.stage.source_path):
+            match = "^#!/bin/csh.*"
+            substitute = f"#!{tcsh}"
+            filter_file(match, substitute, "configure")
+            # Since scripts are run during installation, we need to add sbang
+            filter_shebang("configure")
 
     def install(self, spec, prefix):
         template_name = "{0.architecture}-{0.compiler.name}"
@@ -61,7 +76,7 @@ class Grackle(Package):
             filter_file(key, value, makefile)
 
         configure()
-        with working_dir("src/clib"):
+        with working_dir(join_path(self.stage.source_path, "src", "clib")):
             make("clean")
             make("machine-{0}".format(grackle_architecture))
             make("opt-high")
