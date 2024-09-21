@@ -15,18 +15,20 @@ class Grackle(Package):
     simulation code
     """
 
-    homepage = "http://grackle.readthedocs.io/en/grackle-3.1/"
-    url = "https://bitbucket.org/grackle/grackle/get/grackle-3.1.tar.bz2"
+    homepage = "http://grackle.readthedocs.io/en/latest/"
+    url = "https://github.com/grackle-project/grackle/archive/refs/tags/grackle-3.1.tar.gz"
 
-    version("3.1", sha256="504fb080c7f8578c92dcde76cf9e8b851331a38ac76fc4a784df4ecbe1ff2ae8")
-    version("3.0", sha256="9219033332188d615e49135a3b030963f076b3afee098592b0c3e9f8bafdf504")
-    version("2.2", sha256="b1d201313c924df38d1e677015f7c31dce42083ef6a0e0936bb9410ccd8a3655")
-    version("2.0.1", sha256="8f784aaf53d98ddb52b448dc51eb9ec452261a2dbb360170a798693b85165f7d")
+    version("3.1", sha256="5705985a70d65bc2478cc589ca26f631a8de90e3c8f129a6b2af69db17c01079")
+    version("3.0", sha256="41e9ba1fe18043a98db194a6f5b9c76a7f0296a95a457d2b7d73311195b7d781")
+    version("2.2", sha256="5855cb0f93736fd8dd47efeb0abdf36af9339ede86de7f895f527513566c0fae")
+    version("2.0.1", sha256="bcdf6b3ff7b7515ae5e9f1f3369b2690ed8b3c450040e92a03e40582f57a0864")
 
     variant("float", default=False, description="Build with float")
 
     depends_on("libtool", when="@2.2")
 
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
     depends_on("mpi")
     depends_on("hdf5+mpi")
 
