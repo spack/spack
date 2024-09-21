@@ -22,7 +22,7 @@ class Codec2(CMakePackage):
     version("0.9.2", sha256="19181a446f4df3e6d616b50cabdac4485abb9cd3242cf312a0785f892ed4c76c")
 
     depends_on("c", type="build")
-    
+
     def url_for_version(self, version):
         # Release 1.2.0 started with shallow git clone "to reduce repo size"
         if version < Version("1.2.0"):
