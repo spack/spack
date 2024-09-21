@@ -13,6 +13,10 @@ class Testdfsio(MavenPackage):
     homepage = "https://github.com/asotirov0/testdfsio"
     url = "https://github.com/asotirov0/testdfsio/archive/0.0.1.tar.gz"
 
-    version("0.0.1", sha256="fe8cc47260ffb3e3ac90e0796ebfe73eb4dac64964ab77671e5d32435339dd09", deprecated=True)
+    version(
+        "0.0.1",
+        sha256="fe8cc47260ffb3e3ac90e0796ebfe73eb4dac64964ab77671e5d32435339dd09",
+        deprecated=True,
+    )
 
     depends_on("hadoop@3.2.1:", type="run")
