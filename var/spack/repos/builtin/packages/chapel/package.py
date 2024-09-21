@@ -442,9 +442,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("cuda", default=False, sticky=True, description="Enable Nvidia CUDA GPU support")
 
     conflicts("+rocm", when="+cuda", msg="Chapel must be built with either CUDA or ROCm, not both")
-    conflicts(
-        "+rocm", when="@:1", msg="ROCm support in spack requires Chapel 2.0.0 or later"
-    )
+    conflicts("+rocm", when="@:1", msg="ROCm support in spack requires Chapel 2.0.0 or later")
     # Chapel restricts the allowable ROCm versions
     with when("@2:2.1 +rocm"):
         depends_on("hsa-rocr-dev@4:5.4")
@@ -576,7 +574,11 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     def setup_chpl_compilers(self, env):
         env.set("CHPL_HOST_COMPILER", self.compiler_map[self.spec.compiler.name])
-        if self.spec.satisfies("+rocm") or self.spec.satisfies("+cuda") or self.spec.satisfies("llvm=spack"):
+        if (
+            self.spec.satisfies("+rocm")
+            or self.spec.satisfies("+cuda")
+            or self.spec.satisfies("llvm=spack")
+        ):
             env.set("CHPL_TARGET_COMPILER", "llvm")
         else:
             env.set("CHPL_TARGET_COMPILER", self.compiler_map[self.spec.compiler.name])
