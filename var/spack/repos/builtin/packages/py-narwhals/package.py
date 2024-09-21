@@ -12,6 +12,7 @@ class PyNarwhals(PythonPackage):
     homepage = "https://github.com/narwhals-dev/narwhals"
     pypi = "narwhals/narwhals-1.8.1.tar.gz"
 
+    version("1.8.1", sha256="97527778e11f39a1e5e2113b8fbb9ead788be41c0337f21852e684e378f583e8")
+
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-hatchling", type=("build"))
-    version("1.8.1", sha256="97527778e11f39a1e5e2113b8fbb9ead788be41c0337f21852e684e378f583e8")

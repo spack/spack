@@ -24,12 +24,10 @@ class PyAltair(PythonPackage):
     version("4.2.1", sha256="4939fd9119c57476bf305af9ca0bd1aa7779b2450b874d3623660e879d0fcad1")
     version("4.2.0", sha256="d87d9372e63b48cd96b2a6415f0cf9457f50162ab79dc7a31cd7e024dd840026")
 
-    variant(
-        "pandas", default=False, description="Enable pandas support"
-    )
+    variant("pandas", default=True, description="Enable pandas support")
 
     conflicts("~pandas", when="@:5.3.0")
-    
+
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools@40.6:", type="build", when="@:4")
     depends_on("py-entrypoints", type=("build", "run"), when="@2.0.0:4")
@@ -37,7 +35,9 @@ class PyAltair(PythonPackage):
     depends_on("py-hatchling", type=("build"), when="@5.0.0:")
 
     depends_on("py-importlib-metadata", type=("build", "run"), when="@5.0.0:5.0")
-    depends_on("py-typing-extensions@4.0.1:", type=("build", "run"), when="@5.0.0:5.3.0 ^python@:3.10")
+    depends_on(
+        "py-typing-extensions@4.0.1:", type=("build", "run"), when="@5.0.0:5.3.0 ^python@:3.10"
+    )
     depends_on("py-typing-extensions@4.1.0:", type=("build", "run"), when="^python@:3.13")
     depends_on("py-jinja2", type=("build", "run"))
     depends_on("py-jsonschema@3.0.0:", type=("build", "run"))
