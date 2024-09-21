@@ -71,7 +71,7 @@ class Gaudi(CMakePackage):
     )
 
     # add a few missing includes (c++20?)
-    patch("gcc14-includes.patch", when="@37:38")
+    patch("includes.patch", when="@37:38")
 
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
@@ -129,8 +129,6 @@ class Gaudi(CMakePackage):
 
     # The Intel VTune dependency is taken aside because it requires a license
     depends_on("intel-parallel-studio -mpi +vtune", when="+vtune")
-
-    conflicts("%gcc@14:", when="@:36")
 
     def cmake_args(self):
         args = [
