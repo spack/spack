@@ -29,7 +29,4 @@ class Libwebsockets(CMakePackage):
     depends_on("openssl")
 
     def cmake_args(self):
-        args = []
-        if self.spec.platform == "darwin":
-            args = ["-DLWS_WITHOUT_TESTAPPS=ON"]
-        return args
+        return ["-DLWS_WITHOUT_TESTAPPS=ON"]
