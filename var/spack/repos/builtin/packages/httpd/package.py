@@ -19,12 +19,12 @@ class Httpd(AutotoolsPackage):
 
     # https://nvd.nist.gov/vuln/detail/CVE-2024-38477
     version(
-        "2.4.59", 
+        "2.4.59",
         sha256="ec51501ec480284ff52f637258135d333230a7d229c3afa6f6c2f9040e321323",
         deprecated=True,
     )
     version(
-        "2.4.55", 
+        "2.4.55",
         sha256="11d6ba19e36c0b93ca62e47e6ffc2d2f2884942694bce0f23f39c71bdc5f69ac",
         deprecated=True,
     )
