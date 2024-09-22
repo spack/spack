@@ -349,6 +349,12 @@ def load():
         description="Streams, stream buffers, and i/o filters",
     )
     variants.add(
+        "wave",
+        when="@1.33.0:",
+        buildable="@1.33.0:",
+        description="Highly configurable implementation of the mandatory C99/C++ preprocessor",
+    )
+    variants.add(
         "mpi",
         default=False,
         sticky=False,
