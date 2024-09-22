@@ -162,6 +162,21 @@ class TestDevelop:
             # Check modifications actually worked
             assert spack.spec.Spec("mpich@1.0").concretized().satisfies("dev_path=%s" % abspath)
 
+    def test_develop_always_rebuild_with_spec(self):
+        env("create", "test")
+        with ev.read("test") as e:
+            develop("--always-rebuild", "mpich@1.0")
+            self.check_develop(e, spack.spec.Spec("mpich@=1.0"))
+            scope = e.scope_name
+            assert spack.config.get("config:dev_specs_always_rebuild", scope)
+
+    def test_develop_always_rebuild_no_spec(self):
+        env("create", "test")
+        with ev.read("test") as e:
+            develop("--always-rebuild")
+            scope = e.scope_name
+            assert spack.config.get("config:dev_specs_always_rebuild", scope)
+
 
 def _git_commit_list(git_repo_dir):
     git = spack.util.git.git()

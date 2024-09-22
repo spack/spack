@@ -542,7 +542,7 @@ def _eval_conditional(string):
     return eval(string, valid_variables)
 
 
-def _is_dev_spec_and_has_changed(spec):
+def _is_dev_spec_and_has_changed(spec, skip_mod_time_check=False):
     """Check if the passed spec is a dev build and whether it has changed since the
     last installation"""
     # First check if this is a dev build and in the process already try to get
@@ -556,9 +556,12 @@ def _is_dev_spec_and_has_changed(spec):
         # Not installed -> nothing to compare against
         return False
 
-    _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
-    mtime = fs.last_modification_time_recursive(dev_path_var.value)
-    return mtime > record.installation_time
+    if skip_mod_time_check:
+        return True
+    else:
+        _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+        mtime = fs.last_modification_time_recursive(dev_path_var.value)
+        return mtime > record.installation_time
 
 
 def _error_on_nonempty_view_dir(new_root):
@@ -926,6 +929,7 @@ class Environment:
         #: Previously active environment
         self._previous_active = None
         self._dev_specs = None
+        self._dev_specs_always_build = spack.config.get("config:dev_specs_always_rebuild")
 
         # Load the manifest file contents into memory
         self._load_manifest_file()
@@ -1892,7 +1896,7 @@ class Environment:
             for s in traverse.traverse_nodes(
                 self.concrete_roots(), order="breadth", key=traverse.by_dag_hash
             )
-            if _is_dev_spec_and_has_changed(s)
+            if _is_dev_spec_and_has_changed(s, self._dev_specs_always_build)
         ]
 
         # Collect their hashes, and the hashes of their installed parents.
