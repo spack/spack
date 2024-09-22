@@ -556,9 +556,17 @@ def _is_dev_spec_and_has_changed(spec):
         # Not installed -> nothing to compare against
         return False
 
-    _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
-    mtime = fs.last_modification_time_recursive(dev_path_var.value)
-    return mtime > record.installation_time
+    # hook so packages can use to write their own method for checking the dev_path
+    # use package so attributes about concretization such as variant state can be
+    # utilized
+    custom_check = getattr(spec.package, "detect_dev_src_change", None)
+
+    if custom_check:
+        return custom_check()
+    else:
+        _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+        mtime = fs.last_modification_time_recursive(dev_path_var.value)
+        return mtime > record.installation_time
 
 
 def _error_on_nonempty_view_dir(new_root):
