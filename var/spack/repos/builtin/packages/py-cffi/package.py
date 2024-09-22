@@ -33,8 +33,16 @@ class PyCffi(PythonPackage):
     # ./spack-src/cffi/ffiplatform.py has _hack_at_distutils which imports
     # setuptools before distutils, but only on Windows. This could be made
     # unconditional to support Python 3.12
-    depends_on("python@:3.11", type=("build", "run"), when="@:1.15")
-    depends_on("python@:3.12", type=("build", "run"), when="@1.16:")
+    depends_on("python@:3.11", type=("build", "run"))
+
+    # python 3.12 support was released in @1.16:, however the removal
+    # in python3.12 of distutils has resulted in an imperfect fix for prefix-based
+    # tools like spack, see:
+    # https://github.com/spack/spack/pull/46224
+    # https://github.com/cython/cython/pull/5754#issuecomment-1752102480
+    # until this is correctly fixed, do not enable 3.12 support
+    # depends_on("python@:3.12", type=("build", "run"), when="@1.16:")
+
     depends_on("pkgconfig", type="build")
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@66.1:", type="build", when="@1.16:")
