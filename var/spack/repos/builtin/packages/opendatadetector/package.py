@@ -36,6 +36,6 @@ class Opendatadetector(CMakePackage):
         return args
 
     def setup_run_environment(self, env):
-        env.set("OPENDATADETECTOR", self.prefix.share + "/OpenDataDetector")
+        env.set("OPENDATADETECTOR_DATA", join_path(self.prefix.share, "OpenDataDetector"))
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
