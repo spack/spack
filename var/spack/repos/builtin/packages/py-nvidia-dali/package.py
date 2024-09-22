@@ -26,7 +26,6 @@ class PyNvidiaDali(PythonPackage):
         version(
             "1.41.0-cuda120",
             sha256="240b4135e7c71c5f669d2f2970fa350f7ad1a0a4aab588a3ced578f9b6d7abd9",
-            preferred=True,
             url="https://developer.download.nvidia.com/compute/redist/nvidia-dali-cuda120/nvidia_dali_cuda120-1.41.0-17427117-py3-none-manylinux2014_x86_64.whl",
             expand=False,
         )
