@@ -198,5 +198,7 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if self.spec.satisfies("+oneapi-level-zero"):
             args.append("--enable-levelzero")
+        else:
+            args.append("--disable-levelzero")
 
         return args
