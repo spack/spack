@@ -277,6 +277,8 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     conflicts("+z3", when="~clang")
     conflicts("+lua", when="@:10")
     conflicts("+lua", when="~lldb")
+    # Python distutils were removed with 3.12 and are required to build LLVM <= 14
+    conflicts("^python@3.12:", when="@:14")
 
     variant(
         "zstd",
