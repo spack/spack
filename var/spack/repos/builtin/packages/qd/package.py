@@ -20,6 +20,7 @@ class Qd(AutotoolsPackage):
     license("BSD-3-Clause-LBNL")
     version("2.3.24", sha256="a47b6c73f86e6421e86a883568dd08e299b20e36c11a99bdfbe50e01bde60e38")
     version("2.3.23", sha256="b3eaf41ce413ec08f348ee73e606bd3ff9203e411c377c3c0467f89acf69ee26")
+    # The sha256 for 2.3.23 and 2.3.13 are identical as they are the same content
     version("2.3.13", sha256="b3eaf41ce413ec08f348ee73e606bd3ff9203e411c377c3c0467f89acf69ee26")
 
     depends_on("c", type="build")  # generated
