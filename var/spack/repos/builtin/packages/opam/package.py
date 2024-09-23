@@ -41,11 +41,11 @@ class Opam(AutotoolsPackage):
     depends_on("ocaml@:4.09.0", type="build", when="@:1.2.2")
     depends_on("ocaml", type="build", when="@2.0.0:")
 
-    # TODO: Is this really the correct constraint? I can't find any issues with
-    # building newer opams in parallel, and the constraint was added in the
-    # package's first commit with no message.
-    with when("@:2.0.0"):
-        parallel = False
+    # While this package is a makefile package, 'make' is really only used to
+    # call the locally built copy of dune, which is itself parallel, so there's
+    # no sense in calling make with >1 job.
+    # See: ocaml/opam#3585 spack/spack#46535
+    parallel = False
 
     sanity_check_is_file = ["bin/opam"]
 
