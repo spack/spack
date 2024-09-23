@@ -7,15 +7,6 @@
 % Heuristic to speed-up solves
 %=============================================================================
 
-% Since:
-%
-% - Most models have a lot of information on "possible" dependencies, or configurations,
-%   that are very unlikely to happen in practice.
-% - The optimization strategy we use benefits from finding a first model as fast as possible
-%
-% the heuristic below aims at finding by default a minimal model, and lets the optimization
-% process steer the wrong values.
-
 #heuristic attr("node", PackageNode). [300, init]
 #heuristic attr("node", PackageNode). [  2, factor]
 #heuristic attr("node", PackageNode). [ -1, sign]
