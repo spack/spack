@@ -649,6 +649,7 @@ register_flag_optional(TARGET_PROCESSOR
         # ===================================
         # kokkos implementation is versatile and it could use cuda or omp architectures as backend
 
+
         # The usage should be spack install babelstream +kokkos backend=[cuda or omp or none]
         if "+kokkos" in self.spec:
             args.append("-DCMAKE_C_COMPILER=" + spack_cc)
@@ -676,6 +677,7 @@ register_flag_optional(TARGET_PROCESSOR
                     args.append("-DKokkos_ARCH_AMPERE80=ON")
             if "omp" in self.spec.variants["kokkos_backend"].value:
                 args.append("-DKokkos_ENABLE_OPENMP=ON")
+
 
         # not in ["kokkos", "raja", "acc", "hip"] then compiler forced true
         if set(model_list).intersection(["kokkos", "raja", "acc", "hip"]) is True:

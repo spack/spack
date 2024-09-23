@@ -24,25 +24,23 @@ import llnl.util.tty.color as clr
 from llnl.util.link_tree import ConflictingSpecsError
 from llnl.util.symlink import readlink, symlink
 
+import spack
 import spack.caches
-import spack.cmd
 import spack.compilers
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
+import spack.environment
 import spack.error
-import spack.fetch_strategy
 import spack.filesystem_view as fsv
 import spack.hash_types as ht
-import spack.hooks
-import spack.main
 import spack.paths
 import spack.repo
 import spack.schema.env
+import spack.schema.merged
 import spack.spec
-import spack.stage
+import spack.spec_list
 import spack.store
-import spack.subprocess_context
 import spack.user_environment as uenv
 import spack.util.cpus
 import spack.util.environment
@@ -53,14 +51,12 @@ import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url
-import spack.version
 from spack import traverse
 from spack.installer import PackageInstaller
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
-from spack.spec_list import InvalidSpecConstraintError, SpecList
+from spack.spec_list import SpecList
 from spack.util.path import substitute_path_variables
-from spack.variant import UnknownVariantError
 
 #: environment variable used to indicate the active environment
 spack_env_var = "SPACK_ENV"
@@ -1214,7 +1210,6 @@ class Environment:
     def include_concrete_envs(self):
         """Copy and save the included envs' specs internally"""
 
-        lockfile_meta = None
         root_hash_seen = set()
         concrete_hash_seen = set()
         self.included_concrete_spec_data = {}
@@ -1225,37 +1220,26 @@ class Environment:
                 raise SpackEnvironmentError(f"Unable to find env at {env_path}")
 
             env = Environment(env_path)
-
-            with open(env.lock_path) as f:
-                lockfile_as_dict = env._read_lockfile(f)
-
-            # Lockfile_meta must match each env and use at least format version 5
-            if lockfile_meta is None:
-                lockfile_meta = lockfile_as_dict["_meta"]
-            elif lockfile_meta != lockfile_as_dict["_meta"]:
-                raise SpackEnvironmentError("All lockfile _meta values must match")
-            elif lockfile_meta["lockfile-version"] < 5:
-                raise SpackEnvironmentError("The lockfile format must be at version 5 or higher")
+            self.included_concrete_spec_data[env_path] = {"roots": [], "concrete_specs": {}}
 
             # Copy unique root specs from env
-            self.included_concrete_spec_data[env_path] = {"roots": []}
-            for root_dict in lockfile_as_dict["roots"]:
+            for root_dict in env._concrete_roots_dict():
                 if root_dict["hash"] not in root_hash_seen:
                     self.included_concrete_spec_data[env_path]["roots"].append(root_dict)
                     root_hash_seen.add(root_dict["hash"])
 
             # Copy unique concrete specs from env
-            for concrete_spec in lockfile_as_dict["concrete_specs"]:
-                if concrete_spec not in concrete_hash_seen:
-                    self.included_concrete_spec_data[env_path].update(
-                        {"concrete_specs": lockfile_as_dict["concrete_specs"]}
+            for dag_hash, spec_details in env._concrete_specs_dict().items():
+                if dag_hash not in concrete_hash_seen:
+                    self.included_concrete_spec_data[env_path]["concrete_specs"].update(
+                        {dag_hash: spec_details}
                     )
-                    concrete_hash_seen.add(concrete_spec)
+                    concrete_hash_seen.add(dag_hash)
 
-            if "include_concrete" in lockfile_as_dict.keys():
-                self.included_concrete_spec_data[env_path]["include_concrete"] = lockfile_as_dict[
-                    "include_concrete"
-                ]
+            # Copy transitive include data
+            transitive = env.included_concrete_spec_data
+            if transitive:
+                self.included_concrete_spec_data[env_path]["include_concrete"] = transitive
 
         self._read_lockfile_dict(self._to_lockfile_dict())
         self.write()
@@ -1637,16 +1621,15 @@ class Environment:
 
         # Concretize any new user specs that we haven't concretized yet
         args, root_specs, i = [], [], 0
-        for uspec, uspec_constraints in zip(self.user_specs, self.user_specs.specs_as_constraints):
+        for uspec in self.user_specs:
             if uspec not in old_concretized_user_specs:
                 root_specs.append(uspec)
-                args.append((i, [str(x) for x in uspec_constraints], tests))
+                args.append((i, str(uspec), tests))
                 i += 1
 
         # Ensure we don't try to bootstrap clingo in parallel
-        if spack.config.get("config:concretizer", "clingo") == "clingo":
-            with spack.bootstrap.ensure_bootstrap_configuration():
-                spack.bootstrap.ensure_clingo_importable_or_raise()
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            spack.bootstrap.ensure_clingo_importable_or_raise()
 
         # Ensure all the indexes have been built or updated, since
         # otherwise the processes in the pool may timeout on waiting
@@ -1657,7 +1640,7 @@ class Environment:
 
         # Ensure we have compilers in compilers.yaml to avoid that
         # processes try to write the config file in parallel
-        _ = spack.compilers.get_compiler_config(spack.config.CONFIG, init_config=True)
+        _ = spack.compilers.all_compilers_config(spack.config.CONFIG)
 
         # Early return if there is nothing to do
         if len(args) == 0:
@@ -1665,7 +1648,7 @@ class Environment:
 
         # Solve the environment in parallel on Linux
         start = time.time()
-        num_procs = min(len(args), spack.util.cpus.determine_number_of_jobs(parallel=True))
+        num_procs = min(len(args), spack.config.determine_number_of_jobs(parallel=True))
 
         # TODO: support parallel concretization on macOS and Windows
         msg = "Starting concretization"
@@ -1984,7 +1967,7 @@ class Environment:
         )
         install_args["explicit"] = explicit
 
-        PackageInstaller([spec.package for spec in specs], install_args).install()
+        PackageInstaller([spec.package for spec in specs], **install_args).install()
 
     def all_specs_generator(self) -> Iterable[Spec]:
         """Returns a generator for all concrete specs"""
@@ -2174,19 +2157,26 @@ class Environment:
 
         return specs
 
-    def _to_lockfile_dict(self):
-        """Create a dictionary to store a lockfile for this environment."""
+    def _concrete_specs_dict(self):
         concrete_specs = {}
         for s in traverse.traverse_nodes(self.specs_by_hash.values(), key=traverse.by_dag_hash):
             spec_dict = s.node_dict_with_hashes(hash=ht.dag_hash)
             # Assumes no legacy formats, since this was just created.
             spec_dict[ht.dag_hash.name] = s.dag_hash()
             concrete_specs[s.dag_hash()] = spec_dict
+        return concrete_specs
 
+    def _concrete_roots_dict(self):
         hash_spec_list = zip(self.concretized_order, self.concretized_user_specs)
+        return [{"hash": h, "spec": str(s)} for h, s in hash_spec_list]
+
+    def _to_lockfile_dict(self):
+        """Create a dictionary to store a lockfile for this environment."""
+        concrete_specs = self._concrete_specs_dict()
+        root_specs = self._concrete_roots_dict()
 
         spack_dict = {"version": spack.spack_version}
-        spack_commit = spack.main.get_spack_commit()
+        spack_commit = spack.get_spack_commit()
         if spack_commit:
             spack_dict["type"] = "git"
             spack_dict["commit"] = spack_commit
@@ -2204,7 +2194,7 @@ class Environment:
             # spack version information
             "spack": spack_dict,
             # users specs + hashes are the 'roots' of the environment
-            "roots": [{"hash": h, "spec": str(s)} for h, s in hash_spec_list],
+            "roots": root_specs,
             # Concrete specs by hash, including dependencies
             "concrete_specs": concrete_specs,
         }
@@ -2514,52 +2504,11 @@ def display_specs(specs):
     print(tree_string)
 
 
-def _concretize_from_constraints(spec_constraints, tests=False):
-    # Accept only valid constraints from list and concretize spec
-    # Get the named spec even if out of order
-    root_spec = [s for s in spec_constraints if s.name]
-    if len(root_spec) != 1:
-        m = "The constraints %s are not a valid spec " % spec_constraints
-        m += "concretization target. all specs must have a single name "
-        m += "constraint for concretization."
-        raise InvalidSpecConstraintError(m)
-    spec_constraints.remove(root_spec[0])
-
-    invalid_constraints = []
-    while True:
-        # Attach all anonymous constraints to one named spec
-        s = root_spec[0].copy()
-        for c in spec_constraints:
-            if c not in invalid_constraints:
-                s.constrain(c)
-        try:
-            return s.concretized(tests=tests)
-        except spack.spec.InvalidDependencyError as e:
-            invalid_deps_string = ["^" + d for d in e.invalid_deps]
-            invalid_deps = [
-                c
-                for c in spec_constraints
-                if any(c.satisfies(invd) for invd in invalid_deps_string)
-            ]
-            if len(invalid_deps) != len(invalid_deps_string):
-                raise e
-            invalid_constraints.extend(invalid_deps)
-        except UnknownVariantError as e:
-            invalid_variants = e.unknown_variants
-            inv_variant_constraints = [
-                c for c in spec_constraints if any(name in c.variants for name in invalid_variants)
-            ]
-            if len(inv_variant_constraints) != len(invalid_variants):
-                raise e
-            invalid_constraints.extend(inv_variant_constraints)
-
-
 def _concretize_task(packed_arguments) -> Tuple[int, Spec, float]:
-    index, spec_constraints, tests = packed_arguments
-    spec_constraints = [Spec(x) for x in spec_constraints]
+    index, spec_str, tests = packed_arguments
     with tty.SuppressOutput(msg_enabled=False):
         start = time.time()
-        spec = _concretize_from_constraints(spec_constraints, tests)
+        spec = Spec(spec_str).concretized(tests=tests)
         return index, spec, time.time() - start
 
 

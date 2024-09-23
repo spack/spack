@@ -649,7 +649,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(["examples", join_path("test", "mpi")])
+        cache_extra_test_sources(self, ["examples", join_path("test", "mpi")])
 
     def mpi_launcher(self):
         """Determine the appropriate launcher."""

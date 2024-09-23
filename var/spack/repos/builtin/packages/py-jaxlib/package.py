@@ -99,6 +99,12 @@ class PyJaxlib(PythonPackage, CudaPackage):
         depends_on("py-numpy@:1", when="@:0.4.25")
         depends_on("py-ml-dtypes@0.4:", when="@0.4.29")
 
+    patch(
+        "https://github.com/google/jax/pull/20101.patch?full_index=1",
+        sha256="4dfb9f32d4eeb0a0fb3a6f4124c4170e3fe49511f1b768cd634c78d489962275",
+        when="@:0.4.25",
+    )
+
     conflicts(
         "cuda_arch=none",
         when="+cuda",
@@ -149,10 +155,8 @@ build --local_cpu_resources={make_jobs}
             args.append("--enable_cuda")
             args.append("--cuda_path={0}".format(self.spec["cuda"].prefix))
             args.append("--cudnn_path={0}".format(self.spec["cudnn"].prefix))
-            capabilities = ",".join(
-                "{0:.1f}".format(float(i) / 10.0) for i in spec.variants["cuda_arch"].value
-            )
-            args.append("--cuda_compute_capabilities={0}".format(capabilities))
+            capabilities = CudaPackage.compute_capabilities(spec.variants["cuda_arch"].value)
+            args.append("--cuda_compute_capabilities={0}".format(",".join(capabilities)))
         args.append(
             "--bazel_startup_options="
             "--output_user_root={0}".format(self.wrapped_package_object.buildtmp)

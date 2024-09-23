@@ -3,11 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
-import itertools
 import os
 import sys
 
-from archspec.cpu import UnsupportedMicroarchitecture
+import archspec.cpu
 
 import llnl.util.tty as tty
 from llnl.util.symlink import readlink
@@ -34,7 +33,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
+    provides("c")
     provides("cxx")
+    provides("fortran")
 
     version("master", branch="master")
 
@@ -533,45 +534,26 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     fortran_names = ["gfortran"]
     d_names = ["gdc"]
     go_names = ["gccgo"]
-    compiler_prefixes = [r"\w+-\w+-\w+-"]
     compiler_suffixes = [r"-mp-\d+(?:\.\d+)?", r"-\d+(?:\.\d+)?", r"\d\d"]
-    compiler_version_regex = r"(?<!clang version)\s?([0-9.]+)"
+    compiler_version_regex = r"([0-9.]+)"
     compiler_version_argument = ("-dumpfullversion", "-dumpversion")
 
     @classmethod
-    def determine_version(cls, exe):
-        try:
-            output = spack.compiler.get_compiler_version_output(exe, "--version")
-        except Exception:
-            output = ""
-        # Apple's gcc is actually apple clang, so skip it.
-        if "Apple" in output:
-            return None
-
-        return super().determine_version(exe)
-
-    @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
-        result = []
-        for exe in exes_in_prefix:
-            # On systems like Ubuntu we might get multiple executables
-            # with the string "gcc" in them. See:
-            # https://helpmanual.io/packages/apt/gcc/
-            basename = os.path.basename(exe)
-            substring_to_be_filtered = [
-                "c99-gcc",
-                "c89-gcc",
-                "-nm",
-                "-ar",
-                "ranlib",
-                "clang",  # clang++ matches g++ -> clan[g++]
-            ]
-            if any(x in basename for x in substring_to_be_filtered):
-                continue
+        # Apple's gcc is actually apple clang, so skip it.
+        if str(spack.platforms.host()) == "darwin":
+            not_apple_clang = []
+            for exe in exes_in_prefix:
+                try:
+                    output = spack.compiler.get_compiler_version_output(exe, "--version")
+                except Exception:
+                    output = ""
+                if "clang version" in output:
+                    continue
+                not_apple_clang.append(exe)
+            return not_apple_clang
 
-            result.append(exe)
-
-        return result
+        return exes_in_prefix
 
     @classmethod
     def determine_variants(cls, exes, version_str):
@@ -610,7 +592,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         if self.spec.external:
             return self.spec.extra_attributes["compilers"].get("c", None)
         result = None
-        if "languages=c" in self.spec:
+        if self.spec.satisfies("languages=c"):
             result = str(self.spec.prefix.bin.gcc)
         return result
 
@@ -621,7 +603,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         if self.spec.external:
             return self.spec.extra_attributes["compilers"].get("cxx", None)
         result = None
-        if "languages=c++" in self.spec:
+        if self.spec.satisfies("languages=c++"):
             result = os.path.join(self.spec.prefix.bin, "g++")
         return result
 
@@ -632,7 +614,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         if self.spec.external:
             return self.spec.extra_attributes["compilers"].get("fortran", None)
         result = None
-        if "languages=fortran" in self.spec:
+        if self.spec.satisfies("languages=fortran"):
             result = str(self.spec.prefix.bin.gfortran)
         return result
 
@@ -700,7 +682,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         for uarch in microarchitectures:
             try:
                 return uarch.optimization_flags("gcc", str(spec.version))
-            except UnsupportedMicroarchitecture:
+            except archspec.cpu.UnsupportedMicroarchitecture:
                 pass
         # no arch specific flags in common, unlikely to happen.
         return ""
@@ -728,7 +710,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         if "+bootstrap %gcc" in self.spec and self.spec.target.family != "aarch64":
             flags += " " + self.get_common_target_flags(self.spec)
 
-        if "+bootstrap" in self.spec:
+        if self.spec.satisfies("+bootstrap"):
             variables = ["BOOT_CFLAGS", "CFLAGS_FOR_TARGET", "CXXFLAGS_FOR_TARGET"]
         else:
             variables = ["CFLAGS", "CXXFLAGS"]
@@ -769,12 +751,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         if self.version >= Version("6"):
             options.append("--with-system-zlib")
 
-        if "zstd" in spec:
+        if spec.satisfies("^zstd"):
             options.append("--with-zstd-include={0}".format(spec["zstd"].headers.directories[0]))
             options.append("--with-zstd-lib={0}".format(spec["zstd"].libs.directories[0]))
 
         # Enabling language "jit" requires --enable-host-shared.
-        if "languages=jit" in spec:
+        if spec.satisfies("languages=jit"):
             options.append("--enable-host-shared")
 
         # Binutils
@@ -849,7 +831,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         options.append("--with-boot-ldflags=" + boot_ldflags)
         options.append("--with-build-config=spack")
 
-        if "languages=d" in spec:
+        if spec.satisfies("languages=d"):
             # Phobos is the standard library for the D Programming Language. The documentation says
             # that on some targets, 'libphobos' is not enabled by default, but compiles and works
             # if '--enable-libphobos' is used. Specifics are documented for affected targets.
@@ -936,13 +918,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     @property
     def build_targets(self):
-        if "+profiled" in self.spec:
+        if self.spec.satisfies("+profiled"):
             return ["profiledbootstrap"]
         return []
 
     @property
     def install_targets(self):
-        if "+strip" in self.spec:
+        if self.spec.satisfies("+strip"):
             return ["install-strip"]
         return ["install"]
 
@@ -996,33 +978,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         tty.info(f"Wrote new spec file to {specs_file}")
 
     def setup_run_environment(self, env):
-        # Search prefix directory for possibly modified compiler names
-        from spack.compilers.gcc import Gcc as Compiler
+        if self.spec.satisfies("languages=c"):
+            env.set("CC", self.cc)
 
-        # Get the contents of the installed binary directory
-        bin_path = self.spec.prefix.bin
+        if self.spec.satisfies("languages=cxx"):
+            env.set("CXX", self.cxx)
 
-        if not os.path.isdir(bin_path):
-            return
-
-        bin_contents = os.listdir(bin_path)
-
-        # Find the first non-symlink compiler binary present for each language
-        for lang in ["cc", "cxx", "fc", "f77"]:
-            for filename, regexp in itertools.product(bin_contents, Compiler.search_regexps(lang)):
-                if not regexp.match(filename):
-                    continue
-
-                abspath = os.path.join(bin_path, filename)
-
-                # Skip broken symlinks (https://github.com/spack/spack/issues/41327)
-                if not os.path.exists(abspath):
-                    continue
-
-                # Set the proper environment variable
-                env.set(lang.upper(), abspath)
-                # Stop searching filename/regex combos for this language
-                break
+        if self.spec.satisfies("languages=fortran"):
+            env.set("FC", self.fortran)
+            env.set("F77", self.fortran)
 
     def detect_gdc(self):
         """Detect and return the path to GDC that belongs to the same instance of GCC that is used

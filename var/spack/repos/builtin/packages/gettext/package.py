@@ -125,12 +125,12 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
         else:
             config_args.append("--without-libiconv-prefix")
 
-        if "+curses" in spec:
+        if spec.satisfies("+curses"):
             config_args.append("--with-ncurses-prefix={0}".format(spec["ncurses"].prefix))
         else:
             config_args.append("--disable-curses")
 
-        if "+libxml2" in spec:
+        if spec.satisfies("+libxml2"):
             config_args.append("--with-libxml2-prefix={0}".format(spec["libxml2"].prefix))
         else:
             config_args.append("--with-included-libxml")
@@ -141,7 +141,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
         if "+xz" not in spec:
             config_args.append("--without-xz")
 
-        if "+libunistring" in spec:
+        if spec.satisfies("+libunistring"):
             config_args.append(
                 "--with-libunistring-prefix={0}".format(spec["libunistring"].prefix)
             )
