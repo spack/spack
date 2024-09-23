@@ -52,10 +52,11 @@ class Edm4hep(CMakePackage):
 
     depends_on("cxx", type="build")  # generated
 
+    _cxxstd_values = (conditional("17", when="@:0.99.0"), conditional("20"))
     variant(
         "cxxstd",
         default="20",
-        values=("20", conditional("17", when="@:0.99")),
+        values=_cxxstd_values,
         multi=False,
         description="Use the specified C++ standard when building.",
     )
@@ -68,8 +69,10 @@ class Edm4hep(CMakePackage):
     depends_on("nlohmann-json@3.10.5:")
     depends_on("podio@1:", when="@0.99:")
     depends_on("podio@0.15:", when="@:0.10.5")
-    for _std in ("17", "20"):
-        depends_on("podio cxxstd=" + _std, when="cxxstd=" + _std)
+    for _std in _cxxstd_values:
+        assert len(_std) == 1
+        for _v in _std:
+            depends_on(f"podio cxxstd={_v.value}", when=f"cxxstd={_v.value}")
 
     depends_on("py-jinja2", type="build")
     depends_on("py-pyyaml", type="build")
