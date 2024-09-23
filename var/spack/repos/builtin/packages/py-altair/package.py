@@ -46,4 +46,4 @@ class PyAltair(PythonPackage):
     depends_on("py-pandas@0.25:", type=("build", "run"), when="@5.1.0:+pandas")
     depends_on("py-toolz", type=("build", "run"), when="@:5.3.0")
     depends_on("py-packaging", type=("build", "run"), when="@5.1.0:")
-    depends_on("py-narwhals@1.5.2:", type=("build", "run"), when="@5.4.1:")
+    depends_on("py-narwhals@1.5.2:", type=("build", "run"), when="@5.4.0:")
