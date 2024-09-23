@@ -1040,6 +1040,18 @@ variant_is_propagated(PackageNode, Variant) :-
    attr("variant_value", PackageNode, Variant, Value),
    not propagate(PackageNode, variant_value(Variant, Value)).
 
+% Cannot propagate the same flag from two distinct sources
+%error(100, "{0} and {1} cannot both propagate variant '{2}'", SourceNode1, SourceNode2, Variant) :-
+%  propagate(SourceNode1, variant_value(Variant, _)),
+%  propagate(SourceNode2, variant_value(Variant, _)),
+%  SourceNode1 < SourceNode2.
+
+% Cannot propagate a variant if a different value was set for it in a dependency
+error(100, "No propagating {0} from the package: {1} because package: {2} is set to exclude it", Variant, SourceNode, PackageNode) :- % TODO: Rikki Write a better msg later
+  variant_is_propagated(SourceNode, Variant),
+  attr("variant_set", PackageNode, Variant, _).
+
+
 %----
 % Flags
 %----
