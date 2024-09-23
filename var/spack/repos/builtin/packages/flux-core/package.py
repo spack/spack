@@ -127,7 +127,8 @@ class FluxCore(AutotoolsPackage):
 
     def patch(self):
         with when("^python@3.12:"):
-            filter_file("import sys", r"import sys\n import setuptools", "config/am_check_pymod.m4"
+            filter_file(
+                "import sys", r"import sys\n import setuptools", "config/am_check_pymod.m4"
             )
 
     def url_for_version(self, version):
