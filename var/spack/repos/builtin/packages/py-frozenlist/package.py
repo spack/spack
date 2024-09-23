@@ -24,10 +24,7 @@ class PyFrozenlist(PythonPackage):
 
     # 1.4.0 is the first version to support python 3.12
     # https://github.com/aio-libs/frozenlist/issues/433#issuecomment-1633197557
-    conflicts(
-        "^python@3.12:",
-        when="@:1.4.0",
-    )
+    conflicts("^python@3.12:", when="@:1.4.0")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("python@3.7:", when="@1.3.1:", type=("build", "run"))
