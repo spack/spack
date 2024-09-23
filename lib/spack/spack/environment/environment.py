@@ -559,7 +559,7 @@ def _is_dev_spec_and_has_changed(spec):
     # hook so packages can use to write their own method for checking the dev_path
     # use package so attributes about concretization such as variant state can be
     # utilized
-    if hasattr(spec.package, "detect_dev_src_change", None):
+    if hasattr(spec.package, "detect_dev_src_change"):
         return spec.package.detect_dev_src_change()
     else:
         _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
