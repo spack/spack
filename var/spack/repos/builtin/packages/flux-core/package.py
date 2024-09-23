@@ -126,11 +126,8 @@ class FluxCore(AutotoolsPackage):
     patch("0001-build-fix-build-errors-with-side-installed-0MQ.patch", when="@0.27.0:0.30.0")
 
     def patch(self):
-        with when("^python@3.12"):
-            filter_file(
-                "import sys",
-                r"import sys\n import setuptools",
-                "config/am_check_pymod.m4",
+        with when("^python@3.12:"):
+            filter_file("import sys", r"import sys\n import setuptools", "config/am_check_pymod.m4"
             )
 
     def url_for_version(self, version):
