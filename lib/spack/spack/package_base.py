@@ -19,7 +19,6 @@ import importlib
 import io
 import os
 import re
-import shutil
 import sys
 import textwrap
 import time
@@ -64,7 +63,6 @@ from spack.install_test import (
     cache_extra_test_sources,
     install_test_root,
 )
-from spack.installer import PackageInstaller
 from spack.solver.version_order import concretization_version_order
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
@@ -556,19 +554,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
 
     There are two main parts of a Spack package:
 
-      1. **The package class**.  Classes contain ``directives``, which are
-         special functions, that add metadata (versions, patches,
-         dependencies, and other information) to packages (see
-         ``directives.py``). Directives provide the constraints that are
-         used as input to the concretizer.
+      1. **The package class**.  Classes contain ``directives``, which are special functions, that
+         add metadata (versions, patches, dependencies, and other information) to packages (see
+         ``directives.py``). Directives provide the constraints that are used as input to the
+         concretizer.
 
-      2. **Package instances**. Once instantiated, a package is
-         essentially a software installer.  Spack calls methods like
-         ``do_install()`` on the ``Package`` object, and it uses those to
-         drive user-implemented methods like ``patch()``, ``install()``, and
-         other build steps.  To install software, an instantiated package
-         needs a *concrete* spec, which guides the behavior of the various
-         install methods.
+      2. **Package instances**. Once instantiated, a package can be passed to the PackageInstaller.
+         It calls methods like ``do_stage()`` on the ``Package`` object, and it uses those to drive
+         user-implemented methods like ``patch()``, ``install()``, and other build steps. To
+         install software, an instantiated package needs a *concrete* spec, which guides the
+         behavior of the various install methods.
 
     Packages are imported from repos (see ``repo.py``).
 
@@ -590,7 +585,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
        p.do_fetch()              # downloads tarball from a URL (or VCS)
        p.do_stage()              # expands tarball in a temp directory
        p.do_patch()              # applies patches to expanded source
-       p.do_install()            # calls package's install() function
        p.do_uninstall()          # removes install directory
 
     although packages that do not have code have nothing to fetch so omit
@@ -1956,48 +1950,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         resource_stage_folder = "-".join(pieces)
         return resource_stage_folder
 
-    def do_install(self, **kwargs):
-        """Called by commands to install a package and or its dependencies.
-
-        Package implementations should override install() to describe
-        their build process.
-
-        Args:
-            cache_only (bool): Fail if binary package unavailable.
-            dirty (bool): Don't clean the build environment before installing.
-            explicit (bool): True if package was explicitly installed, False
-                if package was implicitly installed (as a dependency).
-            fail_fast (bool): Fail if any dependency fails to install;
-                otherwise, the default is to install as many dependencies as
-                possible (i.e., best effort installation).
-            fake (bool): Don't really build; install fake stub files instead.
-            force (bool): Install again, even if already installed.
-            install_deps (bool): Install dependencies before installing this
-                package
-            install_source (bool): By default, source is not installed, but
-                for debugging it might be useful to keep it around.
-            keep_prefix (bool): Keep install prefix on failure. By default,
-                destroys it.
-            keep_stage (bool): By default, stage is destroyed only if there
-                are no exceptions during build. Set to True to keep the stage
-                even with exceptions.
-            restage (bool): Force spack to restage the package source.
-            skip_patch (bool): Skip patch stage of build if True.
-            stop_before (str): stop execution before this
-                installation phase (or None)
-            stop_at (str): last installation phase to be executed
-                (or None)
-            tests (bool or list or set): False to run no tests, True to test
-                all packages, or a list of package names to run tests for some
-            use_cache (bool): Install from binary package, if available.
-            verbose (bool): Display verbose build output (by default,
-                suppresses it)
-        """
-        explicit = kwargs.get("explicit", True)
-        if isinstance(explicit, bool):
-            kwargs["explicit"] = {self.spec.dag_hash()} if explicit else set()
-        PackageInstaller([self], kwargs).install()
-
     # TODO (post-34236): Update tests and all packages that use this as a
     # TODO (post-34236): package method to the routine made available to
     # TODO (post-34236): packages. Once done, remove this method.
@@ -2453,35 +2405,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         """Uninstall this package by spec."""
         # delegate to instance-less method.
         PackageBase.uninstall_by_spec(self.spec, force)
-
-    def do_deprecate(self, deprecator, link_fn):
-        """Deprecate this package in favor of deprecator spec"""
-        spec = self.spec
-
-        # Install deprecator if it isn't installed already
-        if not spack.store.STORE.db.query(deprecator):
-            deprecator.package.do_install()
-
-        old_deprecator = spack.store.STORE.db.deprecator(spec)
-        if old_deprecator:
-            # Find this specs yaml file from its old deprecation
-            self_yaml = spack.store.STORE.layout.deprecated_file_path(spec, old_deprecator)
-        else:
-            self_yaml = spack.store.STORE.layout.spec_file_path(spec)
-
-        # copy spec metadata to "deprecated" dir of deprecator
-        depr_yaml = spack.store.STORE.layout.deprecated_file_path(spec, deprecator)
-        fsys.mkdirp(os.path.dirname(depr_yaml))
-        shutil.copy2(self_yaml, depr_yaml)
-
-        # Any specs deprecated in favor of this spec are re-deprecated in
-        # favor of its new deprecator
-        for deprecated in spack.store.STORE.db.specs_deprecated_by(spec):
-            deprecated.package.do_deprecate(deprecator, link_fn)
-
-        # Now that we've handled metadata, uninstall and replace with link
-        PackageBase.uninstall_by_spec(spec, force=True, deprecator=deprecator)
-        link_fn(deprecator.prefix, spec.prefix)
 
     def view(self):
         """Create a view with the prefix of this package as the root.
