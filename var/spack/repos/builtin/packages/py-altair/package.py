@@ -38,7 +38,7 @@ class PyAltair(PythonPackage):
     depends_on(
         "py-typing-extensions@4.0.1:", type=("build", "run"), when="@5.0.0:5.3.0 ^python@:3.10"
     )
-    depends_on("py-typing-extensions@4.1.0:", type=("build", "run"), when="^python@:3.13")
+    depends_on("py-typing-extensions@4.10.0:", type=("build", "run"), when="@5.4.0: ^python@:3.13")
     depends_on("py-jinja2", type=("build", "run"))
     depends_on("py-jsonschema@3.0.0:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"), when="+pandas")
