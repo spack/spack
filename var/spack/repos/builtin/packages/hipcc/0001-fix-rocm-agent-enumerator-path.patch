@@ -1,0 +1,25 @@
+From 9478adea1d98175c1b2d75a73bd1616e2f0ce845 Mon Sep 17 00:00:00 2001
+From: Afzal Patel <Afzal.Patel@amd.com>
+Date: Mon, 23 Sep 2024 11:25:43 +0000
+Subject: [PATCH] fix rocm-agent-numerator path
+
+---
+ amd/hipcc/src/hipBin_amd.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/amd/hipcc/src/hipBin_amd.h b/amd/hipcc/src/hipBin_amd.h
+index 57d009804..d53d08123 100644
+--- a/amd/hipcc/src/hipBin_amd.h
++++ b/amd/hipcc/src/hipBin_amd.h
+@@ -752,7 +752,7 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
+     } else if (os != windows) {
+       // Else try using rocm_agent_enumerator
+       string ROCM_AGENT_ENUM;
+-      ROCM_AGENT_ENUM = roccmPath + "/bin/rocm_agent_enumerator";
++      ROCM_AGENT_ENUM = string(getenv("ROCMINFO_PATH")) + "/bin/rocm_agent_enumerator";
+       targetsStr = ROCM_AGENT_ENUM +" -t GPU";
+       SystemCmdOut sysOut = hipBinUtilPtr_->exec(targetsStr.c_str());
+       regex toReplace("\n+");
+--
+2.27.0
+

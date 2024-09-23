@@ -41,6 +41,9 @@ class Hipcc(CMakePackage):
 
     patch("0014-remove-compiler-rt-linkage-for-host.6.0.patch", when="@6.0")
     patch("0014-remove-compiler-rt-linkage-for-host.6.1.patch", when="@6.1:")
+    # hipcc is assuming rocm-agent-numerator is in ROCM_PATH.
+    # This patch fixes the path by using ROCMINFO_PATH
+    patch("0001-fix-rocm-agent-enumerator-path.patch", when="@6.2:")
 
     @property
     def root_cmakelists_dir(self):
