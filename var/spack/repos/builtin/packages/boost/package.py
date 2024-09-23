@@ -113,49 +113,8 @@ class Boost(Package):
         ]
     )
 
-    all_libs = [
-        #        "atomic",
-        #        "charconv",
-        #        "chrono",
-        #        "cobalt",
-        #        "container",
-        #        "context",
-        #        "contract",
-        #        "coroutine",
-        #        "date_time",
-        #        "exception",
-        #        "fiber",
-        #        "filesystem",
-        #        "graph",
-        #        "graph_parallel",
-        #        "iostreams",
-        #        "json",
-        #        "locale",
-        #        "log",
-        #        "math",
-        #        "mpi",
-        #        "nowide",
-        #        "program_options",
-        #        "python",
-        #        "random",
-        #        "regex",
-        #        "serialization",
-        #        "signals",
-        #        "stacktrace",
-        #        "system",
-        #        "test",
-        #        "thread",
-        #        "timer",
-        #        "type_erasure",
-        #        "url",
-        #        "wave"
-    ]
-
     _buildable_libraries = boostvariants.load()
     boostpatches.load()
-
-    for lib in all_libs:
-        variant(lib, default=False, description="Compile with {0} library".format(lib))
 
     def _libraries_to_build(self):
         """
@@ -425,7 +384,7 @@ class Boost(Package):
                 options.append("runtime-link=shared")
             else:
                 options.append("runtime-link=static")
-            for lib in self.all_libs:
+            for lib in self._buildable_libraries:
                 if f"+{lib}" not in spec:
                     options.append(f"--without-{lib}")
 
