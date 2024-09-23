@@ -589,6 +589,7 @@ def test_xl_r_flags():
     "compiler_spec,expected_result",
     [("gcc@4.7.2", False), ("clang@3.3", False), ("clang@8.0.0", True)],
 )
+@pytest.mark.not_on_windows("GCC and LLVM currently not supported on the platform")
 def test_detecting_mixed_toolchains(
     compiler_spec, expected_result, mutable_config, compiler_factory
 ):
