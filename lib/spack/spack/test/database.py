@@ -7,10 +7,13 @@ import datetime
 import functools
 import json
 import os
+import re
 import shutil
 import sys
 
 import pytest
+
+import spack.subprocess_context
 
 try:
     import uuid
@@ -31,6 +34,7 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.version as vn
+from spack.installer import PackageInstaller
 from spack.schema.database_index import schema
 from spack.util.executable import Executable
 
@@ -382,7 +386,7 @@ def _check_remove_and_add_package(database: spack.database.Database, spec):
 
 def _mock_install(spec: str):
     s = spack.spec.Spec(spec).concretized()
-    s.package.do_install(fake=True)
+    PackageInstaller([s.package], fake=True, explicit=True).install()
 
 
 def _mock_remove(spec):
@@ -710,7 +714,7 @@ def test_external_entries_in_db(mutable_database):
     assert not rec.spec.external_modules
     assert rec.explicit is False
 
-    rec.spec.package.do_install(fake=True, explicit=True)
+    PackageInstaller([rec.spec.package], fake=True, explicit=True).install()
     rec = mutable_database.get_record("externaltool")
     assert rec.spec.external_path == os.path.sep + os.path.join("path", "to", "external_tool")
     assert not rec.spec.external_modules
@@ -721,14 +725,14 @@ def test_external_entries_in_db(mutable_database):
 def test_regression_issue_8036(mutable_database, usr_folder_exists):
     # The test ensures that the external package prefix is treated as
     # existing. Even when the package prefix exists, the package should
-    # not be considered installed until it is added to the database with
-    # do_install.
+    # not be considered installed until it is added to the database by
+    # the installer with install().
     s = spack.spec.Spec("externaltool@0.9")
     s.concretize()
     assert not s.installed
 
     # Now install the external package and check again the `installed` property
-    s.package.do_install(fake=True)
+    PackageInstaller([s.package], fake=True, explicit=True).install()
     assert s.installed
 
 
@@ -771,7 +775,7 @@ def test_query_unused_specs(mutable_database):
     # This spec installs a fake cmake as a build only dependency
     s = spack.spec.Spec("simple-inheritance")
     s.concretize()
-    s.package.do_install(fake=True, explicit=True)
+    PackageInstaller([s.package], fake=True, explicit=True).install()
 
     si = s.dag_hash()
     ml_mpich = spack.store.STORE.db.query_one("mpileaks ^mpich").dag_hash()
@@ -814,7 +818,7 @@ def test_query_spec_with_conditional_dependency(mutable_database):
     # conditional on a Boolean variant
     s = spack.spec.Spec("hdf5~mpi")
     s.concretize()
-    s.package.do_install(fake=True, explicit=True)
+    PackageInstaller([s.package], fake=True, explicit=True).install()
 
     results = spack.store.STORE.db.query_local("hdf5 ^mpich")
     assert not results
@@ -982,9 +986,12 @@ def test_reindex_removed_prefix_is_not_installed(mutable_database, mock_store, c
     # Reindex should pick up libelf as a dependency of libdwarf
     spack.store.STORE.reindex()
 
-    # Reindexing should warn about libelf not being found on the filesystem
-    err = capfd.readouterr()[1]
-    assert "this directory does not contain an installation of the spec" in err
+    # Reindexing should warn about libelf not found on the filesystem
+    assert re.search(
+        "libelf@0.8.13.+ was marked installed in the database "
+        "but was not found on the file system",
+        capfd.readouterr().err,
+    )
 
     # And we should still have libelf in the database, but not installed.
     assert not mutable_database.query_one("libelf", installed=True)
@@ -1124,3 +1131,53 @@ def test_database_errors_with_just_a_version_key(tmp_path):
 
     with pytest.raises(spack.database.InvalidDatabaseVersionError):
         spack.database.Database(root).query_local()
+
+
+def test_reindex_with_upstreams(tmp_path, monkeypatch, mock_packages, config):
+    # Reindexing should not put install records of upstream entries into the local database. Here
+    # we install `mpileaks` locally with dependencies in the upstream. And we even install
+    # `mpileaks` with the same hash in the upstream. After reindexing, `mpileaks` should still be
+    # in the local db, and `callpath` should not.
+    mpileaks = spack.spec.Spec("mpileaks").concretized()
+    callpath = mpileaks.dependencies("callpath")[0]
+
+    upstream_store = spack.store.create(
+        {"config": {"install_tree": {"root": str(tmp_path / "upstream")}}}
+    )
+    monkeypatch.setattr(spack.store, "STORE", upstream_store)
+    PackageInstaller([callpath.package], fake=True, explicit=True).install()
+
+    local_store = spack.store.create(
+        {
+            "config": {"install_tree": {"root": str(tmp_path / "local")}},
+            "upstreams": {"my-upstream": {"install_tree": str(tmp_path / "upstream")}},
+        }
+    )
+    monkeypatch.setattr(spack.store, "STORE", local_store)
+    PackageInstaller([mpileaks.package], fake=True, explicit=True).install()
+
+    # Sanity check that callpath is from upstream.
+    assert not local_store.db.query_local("callpath")
+    assert local_store.db.query("callpath")
+
+    # Install mpileaks also upstream with the same hash to ensure that determining upstreamness
+    # checks local installs before upstream databases, even when the local database is being
+    # reindexed.
+    monkeypatch.setattr(spack.store, "STORE", upstream_store)
+    PackageInstaller([mpileaks.package], fake=True, explicit=True).install()
+
+    # Delete the local database
+    shutil.rmtree(local_store.db.database_directory)
+
+    # Create a new instance s.t. we don't have cached specs in memory
+    reindexed_local_store = spack.store.create(
+        {
+            "config": {"install_tree": {"root": str(tmp_path / "local")}},
+            "upstreams": {"my-upstream": {"install_tree": str(tmp_path / "upstream")}},
+        }
+    )
+    reindexed_local_store.db.reindex()
+
+    assert not reindexed_local_store.db.query_local("callpath")
+    assert reindexed_local_store.db.query("callpath") == [callpath]
+    assert reindexed_local_store.db.query_local("mpileaks") == [mpileaks]

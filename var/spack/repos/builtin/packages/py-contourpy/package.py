@@ -23,8 +23,9 @@ class PyContourpy(PythonPackage):
     with default_args(type="build"):
         depends_on("meson@1.2:")
         depends_on("py-meson-python@0.13.1:")
-        depends_on("py-pybind11@2.13.1:", when="@1.3:")
-        depends_on("py-pybind11@2.6:")
+        with default_args(type=("build", "link")):
+            depends_on("py-pybind11@2.13.1:", when="@1.3:")
+            depends_on("py-pybind11@2.6:")
 
         # Historical dependencies
         depends_on("py-setuptools@42:", when="@:1.0")

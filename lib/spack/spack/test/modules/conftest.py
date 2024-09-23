@@ -6,11 +6,9 @@ import pathlib
 
 import pytest
 
-import spack.config
-import spack.modules.common
-import spack.paths
+import spack.modules.lmod
+import spack.modules.tcl
 import spack.spec
-import spack.util.path
 
 
 @pytest.fixture()

@@ -76,14 +76,15 @@ jobs:
           SPACK_PYTHON: python
           SPACK_TEST_PARALLEL: 2
           COVERAGE: true
+          COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
           UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11' }}
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673
+    - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874
       with:
-        flags: unittests,linux,${{ matrix.concretizer }}
-        token: ${{ secrets.CODECOV_TOKEN }}
-        verbose: true
+        name: coverage-${{ matrix.os }}-python${{ matrix.python-version }}
+        path: coverage
+        include-hidden-files: true
   # Test shell integration
   shell:
     runs-on: ubuntu-latest
@@ -112,11 +113,11 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673
+    - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874
       with:
-        flags: shelltests,linux
-        token: ${{ secrets.CODECOV_TOKEN }}
-        verbose: true
+        name: coverage-shell
+        path: coverage
+        include-hidden-files: true
 
   # Test RHEL8 UBI with platform Python. This job is run
   # only on PRs modifying core Spack
@@ -170,13 +171,14 @@ jobs:
     - name: Run unit tests (full suite with coverage)
       env:
           COVERAGE: true
+          COVERAGE_FILE: coverage/.coverage-clingo-cffi
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673
+    - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874
       with:
-        flags: unittests,linux,clingo
-        token: ${{ secrets.CODECOV_TOKEN }}
-        verbose: true
+        name: coverage-clingo-cffi
+        path: coverage
+        include-hidden-files: true
   # Run unit tests on MacOS
   macos:
     runs-on: ${{ matrix.os }}
@@ -201,6 +203,7 @@ jobs:
     - name: Run unit tests
       env:
         SPACK_TEST_PARALLEL: 4
+        COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
       run: |
         git --version
         . .github/workflows/bin/setup_git.sh
@@ -209,11 +212,11 @@ jobs:
         $(which spack) solve zlib
         common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
         $(which spack) unit-test --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
-    - uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673
+    - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874
       with:
-        flags: unittests,macos
-        token: ${{ secrets.CODECOV_TOKEN }}
-        verbose: true
+        name: coverage-${{ matrix.os }}-python${{ matrix.python-version }}
+        path: coverage
+        include-hidden-files: true
   # Run unit tests on Windows
   windows:
     defaults:
@@ -235,13 +238,13 @@ jobs:
       run: |
         ./.github/workflows/bin/setup_git.ps1
     - name: Unit Test
+      env:
+        COVERAGE_FILE: coverage/.coverage-windows
       run: |
         spack unit-test -x --verbose --cov --cov-config=pyproject.toml
         ./share/spack/qa/validate_last_exit.ps1
-        coverage combine -a
-        coverage xml
-    - uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673
+    - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874
       with:
-        flags: unittests,windows
-        token: ${{ secrets.CODECOV_TOKEN }}
-        verbose: true
+        name: coverage-windows
+        path: coverage
+        include-hidden-files: true

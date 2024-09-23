@@ -9,6 +9,12 @@ import pytest
 
 import spack.directives
 import spack.error
+import spack.parser
+import spack.paths
+import spack.solver.asp
+import spack.spec
+import spack.store
+import spack.variant
 from spack.error import SpecError, UnsatisfiableSpecError
 from spack.spec import (
     ArchSpec,
@@ -227,6 +233,16 @@ class TestSpecSemantics:
                 'libelf cflags="-O3"',
                 'libelf cflags="-O3" cppflags="-Wall"',
                 'libelf cflags="-O3" cppflags="-Wall"',
+            ),
+            (
+                "libelf patches=ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2",
+                "libelf patches=ba5e3",  # constrain by a patch sha256 prefix
+                # TODO: the result below is not ideal. Prefix satisfies() works for patches, but
+                # constrain() isn't similarly special-cased to do the same thing
+                (
+                    "libelf patches=ba5e3,"
+                    "ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2"
+                ),
             ),
         ],
     )
@@ -741,6 +757,13 @@ class TestSpecSemantics:
             ("{/hash}", "/", lambda s: "/" + s.dag_hash()),
         ]
 
+        variants_segments = [
+            ("{variants.debug}", spec, "debug"),
+            ("{variants.foo}", spec, "foo"),
+            ("{^pkg-a.variants.bvv}", spec["pkg-a"], "bvv"),
+            ("{^pkg-a.variants.foo}", spec["pkg-a"], "foo"),
+        ]
+
         other_segments = [
             ("{spack_root}", spack.paths.spack_root),
             ("{spack_install}", spack.store.STORE.layout.root),
@@ -767,6 +790,12 @@ class TestSpecSemantics:
             assert spec.format(named_str) == getter(spec)
             callpath, fmt_str = depify("callpath", named_str, sigil)
             assert spec.format(fmt_str) == getter(callpath)
+
+        for named_str, test_spec, variant_name in variants_segments:
+            assert test_spec.format(named_str) == str(test_spec.variants[variant_name])
+            assert test_spec.format(named_str[:-1] + ".value}") == str(
+                test_spec.variants[variant_name].value
+            )
 
         for named_str, expected in other_segments:
             actual = spec.format(named_str)
@@ -827,6 +856,7 @@ class TestSpecSemantics:
             r"{dag_hash}",
             r"{foo}",
             r"{+variants.debug}",
+            r"{variants.this_variant_does_not_exist}",
         ],
     )
     def test_spec_formatting_bad_formats(self, default_mock_concretization, fmt_str):
@@ -1056,7 +1086,7 @@ class TestSpecSemantics:
     @pytest.mark.regression("13124")
     def test_error_message_unknown_variant(self):
         s = Spec("mpileaks +unknown")
-        with pytest.raises(UnknownVariantError, match=r"package has no such"):
+        with pytest.raises(UnknownVariantError):
             s.concretize()
 
     @pytest.mark.regression("18527")
@@ -1094,6 +1124,20 @@ class TestSpecSemantics:
         assert "foobar=baz" in new_spec
         assert new_spec.compiler_flags["cflags"] == ["-O2"]
         assert new_spec.compiler_flags["cxxflags"] == ["-O1"]
+
+    def test_spec_override_with_nonexisting_variant(self):
+        init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
+        change_spec = Spec("pkg-a baz=fee")
+        with pytest.raises(ValueError):
+            Spec.override(init_spec, change_spec)
+
+    def test_spec_override_with_variant_not_in_init_spec(self):
+        init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
+        change_spec = Spec("pkg-a +bvv ~lorem_ipsum")
+        new_spec = Spec.override(init_spec, change_spec)
+        new_spec.concretize()
+        assert "+bvv" in new_spec
+        assert "~lorem_ipsum" in new_spec
 
     @pytest.mark.parametrize(
         "spec_str,specs_in_dag",

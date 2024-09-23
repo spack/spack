@@ -130,6 +130,7 @@ def test_arch_spec_container_semantic(item, architecture_str):
     ],
 )
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
+@pytest.mark.not_on_windows("Windows doesn't support the compiler wrapper")
 def test_optimization_flags(compiler_spec, target_name, expected_flags, compiler_factory):
     target = spack.target.Target(target_name)
     compiler_dict = compiler_factory(spec=compiler_spec, operating_system="")["compiler"]

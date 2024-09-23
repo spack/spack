@@ -230,12 +230,12 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("pthreadpool@2020-10-05", when="@1.8")
     depends_on("pthreadpool@2020-06-15", when="@1.6:1.7")
     with default_args(type=("build", "link", "run")):
-        depends_on("py-pybind11@2.12.0", when="@2.3:")
-        depends_on("py-pybind11@2.11.0", when="@2.1:2.2")
-        depends_on("py-pybind11@2.10.1", when="@2.0")
-        depends_on("py-pybind11@2.10.0", when="@1.13:1")
-        depends_on("py-pybind11@2.6.2", when="@1.8:1.12")
-        depends_on("py-pybind11@2.3.0", when="@:1.7")
+        depends_on("py-pybind11@2.12.0:", when="@2.3:")
+        depends_on("py-pybind11@2.11.0:", when="@2.1:2.2")
+        depends_on("py-pybind11@2.10.1:", when="@2.0")
+        depends_on("py-pybind11@2.10.0:", when="@1.13:1")
+        depends_on("py-pybind11@2.6.2:", when="@1.8:1.12")
+        depends_on("py-pybind11@2.3.0:", when="@:1.7")
     depends_on("sleef@3.6.0_2024-03-20", when="@2.4:")
     depends_on("sleef@3.5.1_2020-12-22", when="@1.8:2.3")
     depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
@@ -481,10 +481,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     def torch_cuda_arch_list(self, env):
         if "+cuda" in self.spec:
-            torch_cuda_arch = ";".join(
-                "{0:.1f}".format(float(i) / 10.0) for i in self.spec.variants["cuda_arch"].value
+            torch_cuda_arch = CudaPackage.compute_capabilities(
+                self.spec.variants["cuda_arch"].value
             )
-            env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch)
+            env.set("TORCH_CUDA_ARCH_LIST", ";".join(torch_cuda_arch))
 
     def setup_build_environment(self, env):
         """Set environment variables used to control the build.
@@ -526,6 +526,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
         enable_or_disable("cuda")
         if "+cuda" in self.spec:
+            env.set("CUDA_TOOLKIT_ROOT_DIR", self.spec["cuda"].prefix)  # Linux/macOS
             env.set("CUDA_HOME", self.spec["cuda"].prefix)  # Linux/macOS
             env.set("CUDA_PATH", self.spec["cuda"].prefix)  # Windows
             self.torch_cuda_arch_list(env)

@@ -383,9 +383,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # Fix: https://github.com/xiaoyeli/superlu_dist/commit/09cb1430f7be288fd4d75b8ed461aa0b7e68fefe
     # is not tagged yet. See discussion here https://github.com/trilinos/Trilinos/issues/11839
     conflicts("+cuda +stokhos +superlu-dist")
-    # Cuda UVM must be enabled prior to 13.2
-    # See https://github.com/spack/spack/issues/28869
-    conflicts("~uvm", when="@:13.1 +cuda")
 
     # stokhos fails on xl/xl_r
     conflicts("+stokhos", when="%xl")
@@ -406,7 +403,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # ###################### Dependencies ##########################
 
     # External Kokkos
-    depends_on("kokkos@4.4.00", when="@master: +kokkos")
+    depends_on("kokkos@4.4.01", when="@master: +kokkos")
     depends_on("kokkos@4.3.01", when="@16.0.0 +kokkos")
     depends_on("kokkos@4.2.01", when="@15.1.0:15.1.1 +kokkos")
     depends_on("kokkos@4.1.00", when="@14.4.0:15.0.0 +kokkos")

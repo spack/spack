@@ -16,8 +16,9 @@ class PyVector(PythonPackage):
 
     tags = ["hep"]
 
-    license("BSD-3-Clause")
+    license("BSD-3-Clause", checked_by="wdconinc")
 
+    version("1.5.1", sha256="41ec731fb67ea35af2075eb3a4d6c83ef93b580dade63010821cbc00f1b98961")
     version("1.5.0", sha256="77e48bd40b7e7d30a17bf79bb6ed0f2d6985d915fcb9bf0879836276a619a0a9")
     version("1.4.2", sha256="3805848eb9e53e9c60aa24dd5be88c842a6cd3d241e22984bfe12629b08536a9")
     version("1.4.1", sha256="15aef8911560db1ea3ffa9dbd5414d0ec575a504a2c3f23ea45170a18994466e")
@@ -43,7 +44,7 @@ class PyVector(PythonPackage):
         depends_on("py-setuptools@42:", type="build")
         depends_on("py-setuptools-scm@3.4: +toml", type="build")
         depends_on("py-wheel", type="build")
-    depends_on("py-numpy@1.13.3:2.0", type=("build", "run"))
+    depends_on("py-numpy@1.13.3:", type=("build", "run"))
     depends_on("py-packaging@19.0:", type=("build", "run"))
     depends_on("py-importlib-metadata@0.22:", type=("build", "run"), when="@:1.0 ^python@:3.7")
     depends_on("py-typing-extensions", type=("build", "run"), when="@:1.0 ^python@:3.7")
@@ -51,3 +52,6 @@ class PyVector(PythonPackage):
     with when("+awkward"):
         depends_on("py-awkward@1.2:", type=("build", "run"))
         depends_on("py-awkward@2:", type=("build", "run"), when="@1.5:")
+
+    # Historical dependencies
+    depends_on("py-numpy@:2.0", type=("build", "run"), when="@:1.5.0")

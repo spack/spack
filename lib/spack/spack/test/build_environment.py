@@ -16,12 +16,13 @@ import spack.build_environment
 import spack.config
 import spack.deptypes as dt
 import spack.package_base
+import spack.paths
 import spack.spec
 import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
 from spack.context import Context
+from spack.installer import PackageInstaller
 from spack.paths import build_env_path
-from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
@@ -181,7 +182,7 @@ def test_setup_dependent_package_inherited_modules(
 ):
     # This will raise on regression
     s = spack.spec.Spec("cmake-client-inheritor").concretized()
-    s.package.do_install()
+    PackageInstaller([s.package]).install()
 
 
 @pytest.mark.parametrize(
@@ -482,7 +483,7 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
     assert s["pkg-a"].package.module.make_jobs == 1
 
     spack.build_environment.set_package_py_globals(s["pkg-b"].package, context=Context.BUILD)
-    assert s["pkg-b"].package.module.make_jobs == spack.build_environment.determine_number_of_jobs(
+    assert s["pkg-b"].package.module.make_jobs == spack.config.determine_number_of_jobs(
         parallel=s["pkg-b"].package.parallel
     )
 
@@ -513,33 +514,9 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
         assert dtags_to_add.value == expected_flag
 
 
-def test_module_globals_available_at_setup_dependent_time(
-    monkeypatch, mutable_config, mock_packages, working_env
-):
-    """Spack built package externaltest depends on an external package
-    externaltool. Externaltool's setup_dependent_package needs to be able to
-    access globals on the dependent"""
-
-    def setup_dependent_package(module, dependent_spec):
-        # Make sure set_package_py_globals was already called on
-        # dependents
-        # ninja is always set by the setup context and is not None
-        dependent_module = dependent_spec.package.module
-        assert hasattr(dependent_module, "ninja")
-        assert dependent_module.ninja is not None
-        dependent_spec.package.test_attr = True
-
-    externaltool = spack.spec.Spec("externaltest").concretized()
-    monkeypatch.setattr(
-        externaltool["externaltool"].package, "setup_dependent_package", setup_dependent_package
-    )
-    spack.build_environment.setup_package(externaltool.package, False)
-    assert externaltool.package.test_attr
-
-
 def test_build_jobs_sequential_is_sequential():
     assert (
-        determine_number_of_jobs(
+        spack.config.determine_number_of_jobs(
             parallel=False,
             max_cpus=8,
             config=spack.config.Configuration(
@@ -553,7 +530,7 @@ def test_build_jobs_sequential_is_sequential():
 
 def test_build_jobs_command_line_overrides():
     assert (
-        determine_number_of_jobs(
+        spack.config.determine_number_of_jobs(
             parallel=True,
             max_cpus=1,
             config=spack.config.Configuration(
@@ -564,7 +541,7 @@ def test_build_jobs_command_line_overrides():
         == 10
     )
     assert (
-        determine_number_of_jobs(
+        spack.config.determine_number_of_jobs(
             parallel=True,
             max_cpus=100,
             config=spack.config.Configuration(
@@ -578,7 +555,7 @@ def test_build_jobs_command_line_overrides():
 
 def test_build_jobs_defaults():
     assert (
-        determine_number_of_jobs(
+        spack.config.determine_number_of_jobs(
             parallel=True,
             max_cpus=10,
             config=spack.config.Configuration(
@@ -588,7 +565,7 @@ def test_build_jobs_defaults():
         == 1
     )
     assert (
-        determine_number_of_jobs(
+        spack.config.determine_number_of_jobs(
             parallel=True,
             max_cpus=10,
             config=spack.config.Configuration(

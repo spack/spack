@@ -973,6 +973,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "^rocthrust" in spec and not spec["hip"].external:
                 # petsc+rocm needs the rocthrust header path
                 hip_headers += spec["rocthrust"].headers
+            if "^rocprim" in spec and not spec["hip"].external:
+                # rocthrust [via petsc+rocm] has a dependency on rocprim
+                hip_headers += spec["rocprim"].headers
             if "^hipblas" in spec and not spec["hip"].external:
                 # superlu-dist+rocm needs the hipblas header path
                 hip_headers += spec["hipblas"].headers

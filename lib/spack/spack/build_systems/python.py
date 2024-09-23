@@ -24,6 +24,8 @@ import spack.deptypes as dt
 import spack.detection
 import spack.multimethod
 import spack.package_base
+import spack.platforms
+import spack.repo
 import spack.spec
 import spack.store
 from spack.directives import build_system, depends_on, extends
