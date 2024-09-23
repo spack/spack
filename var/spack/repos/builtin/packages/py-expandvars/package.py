@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class PyExpandvars(PythonPackage):
     """Expand system variables Unix style"""
 
@@ -18,4 +19,3 @@ class PyExpandvars(PythonPackage):
     version("0.12.0", sha256="7d1adfa55728cf4b5d812ece3d087703faea953e0c0a1a78415de9df5024d844")
 
     depends_on("py-hatchling")
-
