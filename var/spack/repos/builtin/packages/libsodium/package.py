@@ -22,7 +22,7 @@ class Libsodium(AutotoolsPackage):
 
     version("master", branch="master")
     version("stable", branch="stable")
-    version("next", branch="next")
+    version("next", branch="next", deprecated=True)
 
     version("1.0.20", sha256="ebb65ef6ca439333c2bb41a0c1990587288da07f6c7fd07cb3a18cc18d30ce19")
     version("1.0.19", sha256="018d79fe0a045cca07331d37bd0cb57b2e838c51bc48fd837a1472e50068bbea")
@@ -37,7 +37,10 @@ class Libsodium(AutotoolsPackage):
     version("1.0.0", sha256="ced1fe3d2066953fea94f307a92f8ae41bf0643739a44309cbe43aa881dbc9a5")
     version("0.7.1", sha256="ef46bbb5bac263ef6d3fc00ccc11d4690aea83643412919fe15369b9870280a7")
 
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")
+
+    # https://github.com/jedisct1/libsodium/issues/1372
+    conflicts("target=aarch64:", when="@1.0.19")
 
     def patch(self):
         # Necessary on ppc64le / aarch64, because Spack tries to execute these scripts
