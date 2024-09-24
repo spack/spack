@@ -6,23 +6,30 @@
 from spack.package import *
 
 
-class GlobusCommon(AutotoolsPackage):
+class GlobusXio(AutotoolsPackage):
     """The Grid Community Toolkit (GCT) is an open source software
     toolkit used for building grid systems and applications. It is a fork
     of the Globus Toolkit originally created by the Globus Alliance.
     It is supported by the Grid Community Forum (GridCF) that provides
     community-based support for core software packages in grid computing.
 
-    This package contains the Common Library Programs.
+    This package contains the Globus XIO Framework.
     """
 
-    homepage = "https://github.com/gridcf/gct/tree/master/common/source"
-    url = "https://repo.gridcf.org/gct6/sources/globus_common-18.14.tar.gz"
+    homepage = "https://github.com/gridcf/gct/blob/master/xio/src"
+    url = "https://repo.gridcf.org/gct6/sources/globus_xio-6.6.tar.gz"
 
     maintainers("wdconinc")
 
     license("Apache-2.0", checked_by="wdconinc")
 
-    version("18.14", sha256="22368942a78e608d8fe6d9f7379abc628e2bd7af54a98c7d2bddc265d6f0ba45")
+    version("6.6", sha256="2ea379df7c2f918a05902bf3e9347667bb172c4893e819913f7975e9e89205fc")
 
     depends_on("c", type="build")
+
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
+
+    depends_on("globus-common@14:")
