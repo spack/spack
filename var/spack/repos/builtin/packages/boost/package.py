@@ -92,7 +92,6 @@ class Boost(Package):
     with_default_variants = "boost" + "".join(
         [
             "+system",
-            "+test",
             "+thread",
             "+timer",
             "+wave",
@@ -106,7 +105,6 @@ class Boost(Package):
     # fmt: off
     all_libs = [
         "system",
-        "test",
         "thread",
         "timer",
         "type_erasure",

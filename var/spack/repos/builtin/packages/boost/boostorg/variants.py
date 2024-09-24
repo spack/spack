@@ -248,6 +248,18 @@ def load():
         description="C++ wrapper for interacting with Python.",
     )
     variants.add(
+        "test",
+        when="@1.21.0:",
+        buildable="@1.21.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.test requires cxxstd >= 11"},
+            {"when": "cxxstd=03", "msg": "Boost.test requires cxxstd >= 11"},
+        ],
+        description=(
+            "Simple program testing, full unit testing, and program execution monitoring"
+        ),
+    )
+    variants.add(
         "math",
         when="@1.23.0:",
         buildable="@1.23.0:",
