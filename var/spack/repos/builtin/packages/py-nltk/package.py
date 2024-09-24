@@ -62,10 +62,19 @@ class PyNltk(PythonPackage):
     resource(
         name="punkt",
         url="https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/tokenizers/punkt.zip",
-        when="+data",
+        when="+data@:3.8.1",
         sha256="51c3078994aeaf650bfc8e028be4fb42b4a0d177d41c012b6a983979653660ec",
         destination="nltk_data/tokenizers",
         placement="punkt",
+    )
+
+    resource(
+        name="punkt_tab",
+        url="https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/tokenizers/punkt_tab.zip",
+        when="+data@3.8.2:",
+        sha256="c2b16c23d738effbdc5789d7aa601397c13ba2819bf922fb904687f3f16657ed",
+        destination="nltk_data/tokenizers",
+        placement="punkt_tab",
     )
 
     resource(
