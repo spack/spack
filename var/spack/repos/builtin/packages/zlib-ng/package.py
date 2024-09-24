@@ -37,7 +37,7 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     conflicts("+shared~pic")
 
     variant("new_strategies", default=True, description="Enable new deflate strategies")
-
+    variant("this-is-not-a-functional-variant", default=True, description="slug variant for testing, remove me")
     provides("zlib-api", when="+compat")
 
     # Default to autotools, since cmake would result in circular dependencies if it's not
