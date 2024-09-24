@@ -28,6 +28,6 @@ class PyOptEinsum(PythonPackage):
     # https://github.com/dgasmith/opt_einsum/pull/208
     patch(
         "https://github.com/dgasmith/opt_einsum/commit/0beacf96923bbb2dd1939a9c59398a38ce7a11b1.patch?full_index=1",
-        sha256="8e27da491ab363d7413671b16c48d06481a50c014fe0fcf28f7ef01c8368400c",
+        sha256="3ecf03ec60b3fc8ab256596320fa72d2ded4b7f00a437133ea4266c31ac32894",
         when="^python@3.12:",
     )
