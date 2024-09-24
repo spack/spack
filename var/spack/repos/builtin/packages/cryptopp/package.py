@@ -37,8 +37,7 @@ class Cryptopp(MakefilePackage):
     depends_on("gmake", type="build")
 
     def url_for_version(self, version):
-        url = "{0}/{1}{2}.zip"
-        return url.format(self.homepage, self.name, version.joined)
+        return f"https://github.com/weidai11/cryptopp/releases/download/CRYPTOPP_{version.underscored}/cryptopp{version.joined}.zip"
 
     def build(self, spec, prefix):
         cxx_flags = []
