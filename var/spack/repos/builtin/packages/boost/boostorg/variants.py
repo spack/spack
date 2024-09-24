@@ -349,6 +349,17 @@ def load():
         ),
     )
     variants.add(
+        "system",
+        when="@1.35.0:",
+        buildable="@1.35.0:",
+        conflicts=[
+            # gcc on Darwin incorrectly detects 'mutex'
+            # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878889166
+            {"when": "platform=darwin %gcc @:1.76", "msg": "Boost.System bug"}
+        ],
+        description="Extensible error reporting",
+    )
+    variants.add(
         "exception",
         when="@1.36.0:",
         buildable="@1.47.0:",

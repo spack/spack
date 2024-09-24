@@ -91,7 +91,6 @@ class Boost(Package):
     # fmt: off
     with_default_variants = "boost" + "".join(
         [
-            "+system",
             "+thread",
             "+timer",
             "+wave",
@@ -104,7 +103,6 @@ class Boost(Package):
     # possible (and it would be difficult to choose sensible defaults)
     # fmt: off
     all_libs = [
-        "system",
         "thread",
         "timer",
         "type_erasure",
@@ -152,14 +150,6 @@ class Boost(Package):
 
     with when("+mpi"):
         depends_on("mpi")
-
-    # Boost.System till 1.76 (included) was relying on mutex, which was not
-    # detected correctly on Darwin platform when using GCC
-    #
-    # More details here:
-    # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878889166
-    # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878913339
-    conflicts("%gcc", when="@:1.76 +system platform=darwin")
 
     # Boost 1.80 does not build with the Intel oneapi compiler
     # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
