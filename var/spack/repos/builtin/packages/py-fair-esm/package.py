@@ -16,13 +16,13 @@ class PyFairEsm(PythonPackage):
 
     version("2.0.0", sha256="4ed34d4598ec75ed6550a4e581d023bf8d4a8375317ecba6269bb68135f80c85")
 
-    depends_on("py-setuptools", type=("build"))
+    depends_on("py-setuptools@59.5.0:", type=("build"))
 
-    depends_on("py-biopython", type=("build", "run"))
-    depends_on("py-deepspeed", type=("build", "run"))
-    depends_on("py-dm-tree", type=("build", "run"))
-    depends_on("py-pytorch-lightning", type=("build", "run"))
+    depends_on("py-biopython@1.79:", type=("build", "run"))
+    depends_on("py-deepspeed@0.5.9:", type=("build", "run"))
+    depends_on("py-dm-tree@0.1.6:", type=("build", "run"))
+    depends_on("py-pytorch-lightning@1.5.10:", type=("build", "run"))
     depends_on("py-omegaconf", type=("build", "run"))
-    depends_on("py-ml-collections", type=("build", "run"))
+    depends_on("py-ml-collections@0.1.0:", type=("build", "run"))
     depends_on("py-einops", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
+    depends_on("py-scipy@1.7.1:", type=("build", "run"))
