@@ -36,6 +36,11 @@ class PyDmTree(PythonPackage):
 
     depends_on("cxx", type="build")
 
+    # Based on PyPI wheel availability
+    depends_on("python@:3.12", when="@0.1.8:", type=("build", "run"))
+    depends_on("python@:3.10", when="@0.1.6:0.1.7", type=("build", "run"))
+    depends_on("python@:3.8", when="@0.1.5", type=("build", "run"))
+
     depends_on("py-setuptools", type="build")
     depends_on("cmake@3.12:", when="@0.1.7:", type="build")
     depends_on("py-pybind11@2.10.1:", when="@0.1.8:")

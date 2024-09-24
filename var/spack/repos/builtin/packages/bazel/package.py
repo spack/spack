@@ -150,6 +150,11 @@ class Bazel(Package):
         "sha256": "f1c8360c01fcf276778d3519394805dc2a71a64274a3a0908bc9edff7b5aebc8",
         "when": "@4:6",
     }
+    resource_dictionary["com_google_absl"] = {
+        "url": "https://github.com/abseil/abseil-cpp/archive/refs/tags/20230802.0.tar.gz",
+        "sha256": "59d2976af9d6ecf001a81a35749a6e551a335b949d34918cfade07737b9d93c5",
+        "when": "@6.0:6.4",
+    }
     resource_dictionary["zulu_11_56_19"] = {
         "url": "https://mirror.bazel.build/cdn.azul.com/zulu/bin/zulu11.56.19-ca-jdk11.0.15-linux_x64.tar.gz",
         "sha256": "e064b61d93304012351242bf0823c6a2e41d9e28add7ea7f05378b7243d34247",
