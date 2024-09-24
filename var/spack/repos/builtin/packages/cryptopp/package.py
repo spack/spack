@@ -14,7 +14,10 @@ class Cryptopp(MakefilePackage):
     algorithms (MD5, Panama)."""
 
     homepage = "https://github.com/weidai11/cryptopp"
-    url = "https://github.com/weidai11/cryptopp/releases/download/CRYPTOPP_8_9_0/cryptopp890.zip"
+    urls = [
+        "https://github.com/weidai11/cryptopp/releases/download/CRYPTOPP_8_9_0/cryptopp890.zip",
+        "https://www.cryptopp.com/cryptopp700.zip",
+    ]
 
     license("BSL-1.0")
 
