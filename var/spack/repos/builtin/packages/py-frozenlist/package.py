@@ -28,7 +28,7 @@ class PyFrozenlist(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("python@3.7:", when="@1.3.1:", type=("build", "run"))
-    depends_on("py-cython@3.0.4:", when="^python@3.12:")
+    depends_on("py-cython@3.0.4:", when="@1.4.1:")
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@46.4.0:", when="@1.3.1:", type="build")
     depends_on("py-setuptools@47:", when="@1.4.1:", type="build")
