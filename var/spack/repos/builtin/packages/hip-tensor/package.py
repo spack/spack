@@ -30,8 +30,18 @@ class HipTensor(CMakePackage, ROCmPackage):
     depends_on("cxx", type="build")  # generated
 
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
-
-    for ver in ["5.7.0", "5.7.1", "6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2", "6.2.0", "6.2.1", "master"]:
+    for ver in [
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.2.0",
+        "6.2.1",
+        "master",
+    ]:
         depends_on(f"composable-kernel@{ver}", when=f"@{ver}")
         depends_on(f"rocm-cmake@{ver}", when=f"@{ver}")
 
