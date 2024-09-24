@@ -38,6 +38,7 @@ class Mapl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("2.48.0", sha256="60a0fc4fd82b1a05050666ae478da7d79d86305aff1643a57bc09cb5347323b7")
     version("2.47.2", sha256="d4ca384bf249b755454cd486a26bae76944a7cae3a706b9a7c9298825077cac0")
     version("2.47.1", sha256="ca3e94c0caa78a91591fe63603d1836196f5294d4baad7cf1d83b229b3a85916")
     version("2.47.0", sha256="66c862d2ab8bcd6969e9728091dbca54f1f420e97e41424c4ba93ef606088459")
@@ -149,8 +150,14 @@ class Mapl(CMakePackage):
     resource(
         name="esma_cmake",
         git="https://github.com/GEOS-ESM/ESMA_cmake.git",
+        tag="v3.51.0",
+        when="@2.48:",
+    )
+    resource(
+        name="esma_cmake",
+        git="https://github.com/GEOS-ESM/ESMA_cmake.git",
         tag="v3.46.0",
-        when="@2.47:",
+        when="@2.47",
     )
     resource(
         name="esma_cmake",
@@ -257,14 +264,16 @@ class Mapl(CMakePackage):
     depends_on("esmf~debug", when="~debug")
     depends_on("esmf+debug", when="+debug")
 
-    depends_on("gftl@1.13.0:", when="@2.45:")
+    depends_on("gftl@1.14.0:", when="@2.48:")
+    depends_on("gftl@1.13.0:", when="@2.45:2.47")
     depends_on("gftl@1.11.0:", when="@2.44")
     depends_on("gftl@1.10.0:", when="@2.40:2.43")
     depends_on("gftl@1.5.5:1.9", when="@:2.39")
 
     # There was an interface change in gftl-shared, so we need to control versions
     # MAPL 2.39 and older can use up to 1.6.0 but MAPL 2.40+ needs 1.6.1 or higher
-    depends_on("gftl-shared@1.8.0:", when="@2.45:")
+    depends_on("gftl-shared@1.8.0:", when="@2.48:")
+    depends_on("gftl-shared@1.8.0:", when="@2.45:2.47")
     depends_on("gftl-shared@1.7.0:", when="@2.44")
     depends_on("gftl-shared@1.6.1:", when="@2.40:2.43")
     depends_on("gftl-shared@1.3.1:1.6.0", when="@:2.39")
@@ -282,16 +291,19 @@ class Mapl(CMakePackage):
     depends_on("pflogger@1.9.1: +mpi", when="@2.23:2.39+pflogger")
     depends_on("pflogger@1.9.5: +mpi", when="@2.40:2.43+pflogger")
     depends_on("pflogger@1.11.0: +mpi", when="@2.44+pflogger")
-    depends_on("pflogger@1.14.0: +mpi", when="@2.45:+pflogger")
+    depends_on("pflogger@1.14.0: +mpi", when="@2.45:2.47+pflogger")
+    depends_on("pflogger@1.15.0: +mpi", when="@2.48:+pflogger")
 
     # fArgParse v1.4.1 is the first usable version with MAPL
     # we now require 1.5.0 with MAPL 2.40+
-    depends_on("fargparse@1.7.0:", when="@2.45:+fargparse")
+    depends_on("fargparse@1.8.0:", when="@2.48:+fargparse")
+    depends_on("fargparse@1.7.0:", when="@2.45:2.47+fargparse")
     depends_on("fargparse@1.6.0:", when="@2.44+fargparse")
     depends_on("fargparse@1.5.0:", when="@2.40:43+fargparse")
     depends_on("fargparse@1.4.1:1.4", when="@:2.39+fargparse")
 
-    depends_on("pfunit@4.9: +mpi +fhamcrest", when="@2.45:+pfunit")
+    depends_on("pfunit@4.10: +mpi +fhamcrest", when="@2.48:+pfunit")
+    depends_on("pfunit@4.9: +mpi +fhamcrest", when="@2.45:2.47+pfunit")
     depends_on("pfunit@4.8: +mpi +fhamcrest", when="@2.44+pfunit")
     depends_on("pfunit@4.7.3: +mpi +fhamcrest", when="@2.40:+pfunit")
     depends_on("pfunit@4.6.1: +mpi +fhamcrest", when="@2.32:+pfunit")
