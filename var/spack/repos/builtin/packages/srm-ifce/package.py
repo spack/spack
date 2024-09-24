@@ -34,5 +34,6 @@ class SrmIfce(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("UNIT_TESTS", self.run_tests),
+            self.define("CGSI_GSOAP_LOCATION", self.spec["cgsi-gsoap"].prefix.lib64),
         ]
         return args
