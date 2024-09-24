@@ -115,6 +115,9 @@ class Microarchitecture:
             and self.cpu_part == other.cpu_part
         )
 
+    def __hash__(self):
+        return hash(self.name)
+
     @coerce_target_names
     def __ne__(self, other):
         return not self == other
