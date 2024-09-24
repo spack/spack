@@ -17,7 +17,7 @@ class GlobusIo(AutotoolsPackage):
     datagram style communications.
     """
 
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/gridcf/gct/tree/master/io/compat"
     url = "https://repo.gridcf.org/gct6/sources/globus_io-12.4.tar.gz"
 
     maintainers("wdconinc")
