@@ -345,7 +345,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
         depends_on("libedit")
         depends_on("libxml2")
         depends_on("lua@5.3", when="+lua")  # purposefully not a range
-        depends_on("ncurses~termlib", when="@19:")
+        depends_on("ncurses")
         depends_on("ncurses", when="@:19")
         depends_on("py-six", when="+python")
         depends_on("swig", when="+lua")
@@ -427,6 +427,12 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     # CMake bug: https://gitlab.kitware.com/cmake/cmake/-/issues/21469
     # Fixed in upstream versions of both
     conflicts("^cmake@3.19.0", when="@6:11.0.0")
+
+    # llvm-19.0.1
+    patch(
+        "llvm-19.0.1-ncurses-termlib.patch",
+        when="@19: ^ncurses+termlib"
+    )
 
     # Fix lld templates: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=230463
     patch(

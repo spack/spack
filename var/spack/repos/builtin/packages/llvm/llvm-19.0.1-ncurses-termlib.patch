@@ -1,0 +1,52 @@
+commit 5053d62162ad01d78da42a405f683aaf53c5724e
+Author: Satish Balay <balay@mcs.anl.gov>
+Date:   Tue Sep 24 15:18:47 2024 -0500
+
+    llvm: patch to work when ncurses is built with --with-termlib [i.e. ncurses~termlib]
+
+diff --git a/lldb/cmake/modules/FindCursesAndPanel.cmake b/lldb/cmake/modules/FindCursesAndPanel.cmake
+index aaadf214b..98242cdf5 100644
+--- a/lldb/cmake/modules/FindCursesAndPanel.cmake
++++ b/lldb/cmake/modules/FindCursesAndPanel.cmake
+@@ -2,12 +2,13 @@
+ # FindCursesAndPanel
+ # -----------
+ #
+-# Find the curses and panel library as a whole.
++# Find the curses tinfo and panel library as a whole.
+ 
+-if(CURSES_INCLUDE_DIRS AND CURSES_LIBRARIES AND PANEL_LIBRARIES)
++if(CURSES_INCLUDE_DIRS AND CURSES_LIBRARIES AND TINFO_LIBRARIES AND PANEL_LIBRARIES)
+   set(CURSESANDPANEL_FOUND TRUE)
+ else()
+   find_package(Curses QUIET)
++  find_library(TINFO_LIBRARIES NAMES tinfo DOC "The curses tinfo library" QUIET)
+   find_library(PANEL_LIBRARIES NAMES panel DOC "The curses panel library" QUIET)
+   include(FindPackageHandleStandardArgs)
+   find_package_handle_standard_args(CursesAndPanel
+@@ -16,9 +17,10 @@ else()
+                                     REQUIRED_VARS
+                                       CURSES_INCLUDE_DIRS
+                                       CURSES_LIBRARIES
++                                      TINFO_LIBRARIES
+                                       PANEL_LIBRARIES)
+-  if(CURSES_FOUND AND PANEL_LIBRARIES)
+-    mark_as_advanced(CURSES_INCLUDE_DIRS CURSES_LIBRARIES PANEL_LIBRARIES)
++  if(CURSES_FOUND AND TINFO_LIBRARIES AND PANEL_LIBRARIES)
++    mark_as_advanced(CURSES_INCLUDE_DIRS CURSES_LIBRARIES TINFO_LIBRARIES PANEL_LIBRARIES)
+   endif()
+ endif()
+ 
+diff --git a/lldb/source/Core/CMakeLists.txt b/lldb/source/Core/CMakeLists.txt
+index dbc620b91..83003818d 100644
+--- a/lldb/source/Core/CMakeLists.txt
++++ b/lldb/source/Core/CMakeLists.txt
+@@ -10,7 +10,7 @@ set(LLDB_CURSES_LIBS)
+ set(LLDB_LIBEDIT_LIBS)
+ 
+ if (LLDB_ENABLE_CURSES)
+-  list(APPEND LLDB_CURSES_LIBS ${PANEL_LIBRARIES} ${CURSES_LIBRARIES})
++  list(APPEND LLDB_CURSES_LIBS ${PANEL_LIBRARIES} ${CURSES_LIBRARIES} ${TINFO_LIBRARIES})
+   if (LLVM_BUILD_STATIC)
+     list(APPEND LLDB_CURSES_LIBS gpm)
+   endif()
