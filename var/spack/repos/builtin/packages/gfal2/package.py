@@ -67,5 +67,6 @@ class Gfal2(CMakePackage):
             self.define_from_variant("PLUGIN_HTTP", "http"),
             self.define_from_variant("PLUGIN_SFTP", "sftp"),
             self.define_from_variant("PLUGIN_SRM", "srm"),
+            self.define_from_variant("PLUGIN_XROOTD", "xrootd"),
         ]
         return args
