@@ -23,6 +23,8 @@ class Fds(MakefilePackage):
 
     version("6.8.0", commit="886e0096535519b7358a3c4393c91da3caee5072")
 
+    depends_on("fortran", type="build")  # generated
+
     depends_on("mpi")
     depends_on("mkl")
 

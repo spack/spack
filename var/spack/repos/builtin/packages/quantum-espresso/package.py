@@ -48,6 +48,10 @@ class QuantumEspresso(CMakePackage, Package):
     version("5.4", sha256="e3993fccae9cea04a5c6492e8b961a053a63727051cb5c4eb6008f62cda8f335")
     version("5.3", sha256="3b26038efb9e3f8ac7a2b950c31d8c29169a3556c0b68c299eb88a4be8dc9048")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     resource(
         name="environ",
         git="https://github.com/environ-developers/Environ.git",
@@ -328,6 +332,11 @@ class QuantumEspresso(CMakePackage, Package):
     patch_url = "https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.7.0.diff"
     patch_checksum = "72564c168231dd4a1279a74e76919af701d47cee9a851db6e205753004fe9bb5"
     patch(patch_url, sha256=patch_checksum, when="@6.7+qmcpack")
+
+    # 6.6
+    patch_url = "https://gitlab.com/QEF/q-e/-/commit/081409ea90cba0ddc07bea5ac29e3cd422c67d3d.diff"
+    patch_checksum = "f43b7411e535629d9ef564a2e1695359df2651ecbdbca563f7265412afc2228a"
+    patch(patch_url, sha256=patch_checksum, when="@6.6:7.3.1")
 
     # 6.4.1
     patch_url = "https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff"

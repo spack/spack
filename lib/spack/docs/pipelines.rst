@@ -253,17 +253,6 @@ can easily happen if it is not updated frequently, this behavior ensures that
 spack has a way to know for certain about the status of any concrete spec on
 the remote mirror, but can slow down pipeline generation significantly.
 
-The ``--optimize`` argument is experimental and runs the generated pipeline
-document through a series of optimization passes designed to reduce the size
-of the generated file.
-
-The ``--dependencies`` is also experimental and disables what in Gitlab is
-referred to as DAG scheduling, internally using the ``dependencies`` keyword
-rather than ``needs`` to list dependency jobs.  The drawback of using this option
-is that before any job can begin, all jobs in previous stages must first
-complete.  The benefit is that Gitlab allows more dependencies to be listed
-when using ``dependencies`` instead of ``needs``.
-
 The optional ``--output-file`` argument should be an absolute path (including
 file name) to the generated pipeline, and if not given, the default is
 ``./.gitlab-ci.yml``.
@@ -674,11 +663,7 @@ build the package.
 
 When including a bootstrapping phase as in the example above, the result is that
 the bootstrapped compiler packages will be pushed to the binary mirror (and the
-local artifacts mirror) before the actual release specs are built. In this case,
-the jobs corresponding to subsequent release specs are configured to
-``install_missing_compilers``, so that if spack is asked to install a package
-with a compiler it doesn't know about, it can be quickly installed from the
-binary mirror first.
+local artifacts mirror) before the actual release specs are built.
 
 Since bootstrapping compilers is optional, those items can be left out of the
 environment/stack file, and in that case no bootstrapping will be done (only the

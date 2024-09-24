@@ -71,7 +71,7 @@ def replacements():
         "operating_system": lambda: arch.os,
         "os": lambda: arch.os,
         "target": lambda: arch.target,
-        "target_family": lambda: arch.target.microarchitecture.family,
+        "target_family": lambda: arch.target.family,
         "date": lambda: date.today().strftime("%Y-%m-%d"),
         "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
     }

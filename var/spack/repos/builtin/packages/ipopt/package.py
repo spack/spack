@@ -43,6 +43,10 @@ class Ipopt(AutotoolsPackage):
     version("3.12.1", sha256="bde8c415136bb38d5a3c5935757399760c6cabf67e9362702e59ab6027f030ec")
     version("3.12.0", sha256="b42f44eb53540205ede4584cced5d88a7b3ec2f1fac6e173a105496307e273a0")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("coinhsl", default=False, description="Build with Coin Harwell Subroutine Libraries")
     variant("metis", default=False, description="Build with METIS partitioning support")
     variant("debug", default=False, description="Build debug instead of optimized version")
@@ -89,7 +93,7 @@ class Ipopt(AutotoolsPackage):
         else:
             args.extend(["--with-lapack-lflags={0} {1}".format(lapack_lib, blas_lib)])
 
-        if "+mumps" in spec:
+        if spec.satisfies("+mumps"):
             mumps_dir = spec["mumps"].prefix
             mumps_flags = "-ldmumps -lmumps_common -lpord -lmpiseq"
             mumps_libcmd = "-L%s " % mumps_dir.lib + mumps_flags
@@ -109,7 +113,7 @@ class Ipopt(AutotoolsPackage):
                     ]
                 )
 
-        if "coinhsl" in spec:
+        if spec.satisfies("^coinhsl"):
             hsl_ld_flags = "-ldl {0}".format(spec["coinhsl"].libs.ld_flags)
 
             if spec.satisfies("^coinhsl+blas"):
@@ -131,7 +135,7 @@ class Ipopt(AutotoolsPackage):
                     ]
                 )
 
-        if "metis" in spec:
+        if spec.satisfies("^metis"):
             if spec.satisfies("@:3.12.13"):
                 args.extend(
                     [
@@ -143,7 +147,7 @@ class Ipopt(AutotoolsPackage):
         # The IPOPT configure file states that '--enable-debug' implies
         # '--disable-shared', but adding '--enable-shared' overrides
         # '--disable-shared' and builds a shared library with debug symbols
-        if "+debug" in spec:
+        if spec.satisfies("+debug"):
             args.append("--enable-debug")
         else:
             args.append("--disable-debug")

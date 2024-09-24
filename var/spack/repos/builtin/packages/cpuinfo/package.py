@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack.package import *
 
 
@@ -28,16 +30,23 @@ class Cpuinfo(CMakePackage):
     version("2018-05-13", commit="1e6c8c99d27f2b5eb9d2e6231055c6a4115b85e5")  # py-torch@0.4.1
     version("2018-04-04", commit="831dc28341b5f20d13e840caf87eaba644d82643")  # py-torch@:0.4.0
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     generator("ninja")
     depends_on("cmake@3.5:", type="build")
 
     def cmake_args(self):
+        # cpuinfo cannot produce a shared build with MSVC because it does not export
+        # any symbols
+        # cpuinfo CI builds "default" on Windows platform
+        build_type = "default" if sys.platform == "win32" else "shared"
         # https://salsa.debian.org/deeplearning-team/cpuinfo/-/blob/master/debian/rules
         return [
             self.define("CPUINFO_BUILD_UNIT_TESTS", False),
             self.define("CPUINFO_BUILD_MOCK_TESTS", False),
             self.define("CPUINFO_BUILD_BENCHMARKS", False),
-            self.define("CPUINFO_LIBRARY_TYPE", "shared"),
+            self.define("CPUINFO_LIBRARY_TYPE", build_type),
             self.define("CPUINFO_LOG_LEVEL", "error"),
             self.define("CMAKE_SKIP_RPATH", True),
         ]

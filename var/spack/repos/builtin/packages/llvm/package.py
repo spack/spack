@@ -13,9 +13,29 @@ from llnl.util.lang import classproperty
 import spack.build_environment
 import spack.util.executable
 from spack.package import *
+from spack.package_base import PackageBase
 
 
-class Llvm(CMakePackage, CudaPackage, CompilerPackage):
+class LlvmDetection(PackageBase):
+    """Base class to detect LLVM based compilers"""
+
+    compiler_version_argument = "--version"
+    c_names = ["clang"]
+    cxx_names = ["clang++"]
+
+    @classmethod
+    def filter_detected_exes(cls, prefix, exes_in_prefix):
+        # Executables like lldb-vscode-X are daemon listening on some port and would hang Spack
+        # during detection. clang-cl, clang-cpp, etc. are dev tools that we don't need to test
+        reject = re.compile(
+            r"-(vscode|cpp|cl|gpu|tidy|rename|scan-deps|format|refactor|offload|"
+            r"check|query|doc|move|extdef|apply|reorder|change-namespace|"
+            r"include-fixer|import-test|dap|server)"
+        )
+        return [x for x in exes_in_prefix if not reject.search(x)]
+
+
+class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     """The LLVM Project is a collection of modular and reusable compiler and
     toolchain technologies. Despite its name, LLVM has little to do
     with traditional virtual machines, though it does provide helpful
@@ -94,6 +114,9 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
     version("5.0.1", sha256="84ca454abf262579814a2a2b846569f6e0cb3e16dc33ca3642b4f1dff6fbafd3")
     version("5.0.0", sha256="1f1843315657a4371d8ca37f01265fa9aae17dbcf46d2d0a95c1fdb3c6a4bab6")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     variant(
         "clang", default=True, description="Build the LLVM C/C++/Objective-C compiler frontend"
     )
@@ -142,8 +165,12 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
         "or as a project (with the compiler in use)",
     )
 
+    variant("offload", default=True, when="@19:", description="Build the Offload subproject")
+    conflicts("+offload", when="~clang")
+
     variant("libomptarget", default=True, description="Build the OpenMP offloading library")
     conflicts("+libomptarget", when="~clang")
+    conflicts("+libomptarget", when="~offload @19:")
     for _p in ["darwin", "windows"]:
         conflicts("+libomptarget", when="platform={0}".format(_p))
     del _p
@@ -612,10 +639,6 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
         # LLD
         r"LLD ([^ )\n]+) \(compatible with GNU linkers\)"
     )
-    compiler_version_argument = "--version"
-    compiler_languages = ["c", "cxx", "fortran"]
-    c_names = ["clang"]
-    cxx_names = ["clang++"]
     fortran_names = ["flang"]
 
     @property
@@ -629,20 +652,7 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
 
     @classproperty
     def executables(cls):
-        return super().executables + ["ld.lld", "lldb"]
-
-    @classmethod
-    def filter_detected_exes(cls, prefix, exes_in_prefix):
-        result = []
-        for exe in exes_in_prefix:
-            # Executables like lldb-vscode-X are daemon listening
-            # on some port and would hang Spack during detection.
-            # clang-cl and clang-cpp are dev tools that we don't
-            # need to test
-            if any(x in exe for x in ("vscode", "cpp", "-cl", "-gpu")):
-                continue
-            result.append(exe)
-        return result
+        return super().executables + [r"^ld\.lld(-\d+)?$", r"^lldb(-\d+)?$"]
 
     @classmethod
     def determine_version(cls, exe):
@@ -669,21 +679,19 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
         # because LLVM has kindly named compilers
         variants, compilers = ["+clang"], {}
         lld_found, lldb_found = False, False
-        for exe in exes:
+        for exe in sorted(exes, key=len):
             name = os.path.basename(exe)
             if "clang++" in name:
-                compilers["cxx"] = exe
+                compilers.setdefault("cxx", exe)
             elif "clang" in name:
-                compilers["c"] = exe
+                compilers.setdefault("c", exe)
             elif "flang" in name:
                 variants.append("+flang")
-                compilers["fortran"] = exe
+                compilers.setdefault("fortran", exe)
             elif "ld.lld" in name:
                 lld_found = True
-                compilers["ld"] = exe
             elif "lldb" in name:
                 lldb_found = True
-                compilers["lldb"] = exe
 
         variants.append("+lld" if lld_found else "~lld")
         variants.append("+lldb" if lldb_found else "~lldb")
@@ -907,6 +915,9 @@ class Llvm(CMakePackage, CudaPackage, CompilerPackage):
                 runtimes.append("openmp")
             elif "openmp=project" in spec:
                 projects.append("openmp")
+
+            if "+offload" in spec:
+                runtimes.append("offload")
 
             if "+libomptarget" in spec:
                 cmake_args.append(define("OPENMP_ENABLE_LIBOMPTARGET", True))

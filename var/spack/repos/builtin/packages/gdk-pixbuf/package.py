@@ -46,6 +46,8 @@ class GdkPixbuf(Package):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     variant("x11", default=False, description="Enable X11 support", when="@:2.41")
     variant("tiff", default=False, description="Enable TIFF support(partially broken)")
     # Man page creation was getting docbook errors, see issue #18853
@@ -98,7 +100,7 @@ class GdkPixbuf(Package):
                 meson_args += ["-Dtests={0}".format(self.run_tests)]
             # Based on suggestion by luigi-calori and the fixup shown by lee218llnl:
             # https://github.com/spack/spack/pull/27254#issuecomment-974464174
-            if "+x11" in spec:
+            if spec.satisfies("+x11"):
                 if self.version >= Version("2.42"):
                     raise InstallError("+x11 is not valid for {0}".format(self.version))
                 meson_args += ["-Dx11=true"]

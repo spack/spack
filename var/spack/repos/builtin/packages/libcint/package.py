@@ -33,6 +33,9 @@ class Libcint(CMakePackage):
     version("3.0.5", sha256="7bde241ce83c00b89c80459e3af5734d40925d8fd9fcaaa7245f61b08192c722")
     version("3.0.4", sha256="0f25ef7ad282dd7a20e4decf283558e4f949243a5423ff4c0cd875276c310c47")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     #
     # Variants
     #

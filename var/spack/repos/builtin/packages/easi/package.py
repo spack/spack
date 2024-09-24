@@ -25,6 +25,9 @@ class Easi(CMakePackage):
     version("1.2.0", tag="v1.2.0", commit="305a119338116a0ceac6b68b36841a50250d05b1")
     version("1.1.2", tag="v1.1.2", commit="4c87ef3b3dca9415d116ef102cb8de750ef7e1a0")
 
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("python", default=True, description="Install python bindings")
     extends("python", when="+python")
 
@@ -60,22 +63,22 @@ class Easi(CMakePackage):
         args.append(self.define_from_variant("PYTHON_BINDINGS", "python"))
         self.define("PYBIND11_USE_FETCHCONTENT", False)
         spec = self.spec
-        if "jit=impalajit" in spec or "jit=impalajit-llvm" in spec:
+        if spec.satisfies("jit=impalajit") or spec.satisfies("jit=impalajit-llvm"):
             args.append(self.define("IMPALAJIT", True))
             backend_type = "llvm" if "jit=impalajit-llvm" in spec else "original"
             args.append(self.define("IMPALAJIT_BACKEND", backend_type))
         else:
             args.append(self.define("IMPALAJIT", False))
 
-        if "jit=lua" in spec:
+        if spec.satisfies("jit=lua"):
             args.append(self.define("LUA", True))
 
-        if "+python" in spec:
+        if spec.satisfies("+python"):
             args += [self.define("easi_INSTALL_PYTHONDIR", python_platlib)]
 
         return args
 
     def setup_run_environment(self, env):
-        if "+python" in self.spec:
+        if self.spec.satisfies("+python"):
             full_path = os.path.join(python_platlib, "easilib/cmake/easi/python_wrapper")
             env.prepend_path("PYTHONPATH", full_path)

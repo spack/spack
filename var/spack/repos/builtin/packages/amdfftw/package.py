@@ -7,6 +7,7 @@ import os
 
 from llnl.util import tty
 
+from spack.build_environment import optimization_flags
 from spack.package import *
 from spack.pkg.builtin.fftw import FftwBase
 
@@ -53,6 +54,9 @@ class Amdfftw(FftwBase):
     version("3.0.1", sha256="87030c6bbb9c710f0a64f4f306ba6aa91dc4b182bb804c9022b35aef274d1a4c")
     version("3.0", sha256="a69deaf45478a59a69f77c4f7e9872967f1cfe996592dd12beb6318f18ea0bcd")
     version("2.2", sha256="de9d777236fb290c335860b458131678f75aa0799c641490c644c843f0e246f8")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("shared", default=True, description="Builds a shared version of the library")
     variant("openmp", default=True, description="Enable OpenMP support")
@@ -162,11 +166,11 @@ class Amdfftw(FftwBase):
         # Dynamic dispatcher builds a single portable optimized library
         # that can execute on different x86 CPU architectures.
         # It is supported for GCC compiler and Linux based systems only.
-        if "+amd-dynamic-dispatcher" in spec:
+        if spec.satisfies("+amd-dynamic-dispatcher"):
             options.append("--enable-dynamic-dispatcher")
 
         # Check if compiler is AOCC
-        if "%aocc" in spec:
+        if spec.satisfies("%aocc"):
             options.append("CC={0}".format(os.path.basename(spack_cc)))
             options.append("FC={0}".format(os.path.basename(spack_fc)))
             options.append("F77={0}".format(os.path.basename(spack_fc)))
@@ -183,10 +187,10 @@ class Amdfftw(FftwBase):
                 "https://www.amd.com/content/dam/amd/en/documents/developer/version-4-2-documents/aocl/aocl-4-2-user-guide.pdf"
             )
 
-        if "+debug" in spec:
+        if spec.satisfies("+debug"):
             options.append("--enable-debug")
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             options.append("--enable-mpi")
             options.append("--enable-amd-mpifft")
         else:
@@ -210,17 +214,14 @@ class Amdfftw(FftwBase):
         # variable to set AMD_ARCH configure option.
         # Spack user can not directly use AMD_ARCH for this purpose but should
         # use target variable to set appropriate -march option in AMD_ARCH.
-        arch = spec.architecture
-        options.append(
-            "AMD_ARCH={0}".format(arch.target.optimization_flags(spec.compiler).split("=")[-1])
-        )
+        options.append(f"AMD_ARCH={optimization_flags(self.compiler, spec.target)}")
 
         # Specific SIMD support.
         # float and double precisions are supported
         simd_features = ["sse2", "avx", "avx2", "avx512"]
 
         # "avx512" is supported from amdfftw 4.0 version onwards
-        if "@2.2:3.2" in self.spec:
+        if self.spec.satisfies("@2.2:3.2"):
             simd_features.remove("avx512")
 
         simd_options = []

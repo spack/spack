@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import os
 import sys
 
 from spack.operating_systems.mac_os import macos_version
@@ -22,9 +23,7 @@ class Root(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers(
-        "drbenmorgan", "gartung", "greenc-FNAL", "HadrienG2", "marcmengel", "vitodb", "vvolkl"
-    )
+    maintainers("drbenmorgan", "gartung", "greenc-FNAL", "marcmengel", "vitodb", "vvolkl")
 
     # ###################### Versions ##########################
 
@@ -35,6 +34,7 @@ class Root(CMakePackage):
     version("develop", branch="master")
 
     # Production version
+    version("6.32.04", sha256="132f126aae7d30efbccd7dcd991b7ada1890ae57980ef300c16421f9d4d07ea8")
     version("6.32.02", sha256="3d0f76bf05857e1807ccfb2c9e014f525bcb625f94a2370b455f4b164961602d")
     version("6.32.00", sha256="12f203681a59041c474ce9523761e6f0e8861b3bee78df5f799a8db55189e5d2")
     version("6.30.08", sha256="8bb8594867b9ded20a65e59f2cb6da965aa30851b8960f8cbf76293aec046b69")
@@ -88,6 +88,10 @@ class Root(CMakePackage):
     version("6.06.04", sha256="ab86dcc80cbd8e704099af0789e23f49469932ac4936d2291602301a7aa8795b")
     version("6.06.02", sha256="18a4ce42ee19e1a810d5351f74ec9550e6e422b13b5c58e0c3db740cdbc569d1")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # ###################### Patches ##########################
 
     # Widely used patch (CMS, FNAL) to increase the size of static
@@ -104,6 +108,12 @@ class Root(CMakePackage):
     # 6.16.00 fails to handle particular build option combinations, _cf_
     # https://github.com/root-project/ROOT/commit/e0ae0483985d90a71a6cabd10d3622dfd1c15611.
     patch("root7-webgui.patch", level=1, when="@6.16.00")
+    # Missing includes in libcpp_string_view.h
+    patch(
+        "https://github.com/root-project/root/pull/8289.patch?full_index=1",
+        sha256="5d91d78bcecd4fdbce9c829554a563234a9cb99eaf91dbc14fb85c3de33bac34",
+        when="@6.22:6.22.08",
+    )
     # 6.26.00:6.26.06 can fail with empty string COMPILE_DEFINITIONS, which this patch
     # protects against
     patch(
@@ -136,6 +146,13 @@ class Root(CMakePackage):
         when="@6.30:6.30.04",
     )
 
+    # Fix TUri to be PCRE2 compatible
+    patch(
+        "https://github.com/root-project/root/pull/15988.patch?full_index=1",
+        sha256="9de4aa66f791dc3a1b9521995552b2d28b57be88a96a2e9e369977e32da26eb0",
+        when="@6.32.0:6.32.02",
+    )
+
     if sys.platform == "darwin":
         # Resolve non-standard use of uint, _cf_
         # https://sft.its.cern.ch/jira/browse/ROOT-7886.
@@ -154,6 +171,12 @@ class Root(CMakePackage):
             "https://github.com/root-project/root/pull/15044.patch?full_index=1",
             sha256="e68be5fe7b1ec873da134bd39c5c72730c4ca06d51b52eb436ae44fe81cd472d",
             when="@:6.30.04 +x",
+        )
+        # Fix rpath for loading cppyy
+        patch(
+            "https://github.com/root-project/root/pull/15925.diff?full_index=1",
+            sha256="1937290a4d54cd2e3e8a8d23d93b8dedaca9ed8dcfdcfa2f0d16629ff53fb3b7",
+            when="@6.28: +python",
         )
 
     # ###################### Variants ##########################
@@ -319,6 +342,7 @@ class Root(CMakePackage):
     depends_on("gl2ps", when="+opengl")
     depends_on("gl", when="+opengl")
     depends_on("glu", when="+opengl")
+    depends_on("libglx", when="+opengl+x")
 
     # Qt4
     depends_on("qt@:4", when="+qt4")
@@ -377,7 +401,8 @@ class Root(CMakePackage):
     depends_on("vc@1.3.0:", when="@6.09.02: +vc")
     depends_on("vc@1.4.4:", when="@6.29.02: +vc")
     depends_on("vdt", when="+vdt")
-    depends_on("veccore", when="+veccore")
+    depends_on("veccore@0.4.0:", when="@6.09.04: +veccore")
+    depends_on("veccore@0.4.2:", when="@6.11.02: +veccore")
     depends_on("libxml2", when="+xml")
     depends_on("xrootd", when="+xrootd")
     depends_on("xrootd@:4", when="@:6.22.03 +xrootd")
@@ -401,7 +426,9 @@ class Root(CMakePackage):
     conflicts("target=ppc64le:", when="@:6.24")
 
     # Incompatible variants
-    if sys.platform != "darwin":
+    if sys.platform == "darwin":
+        conflicts("+opengl", when="~x ~aqua", msg="root+opengl requires X or Aqua")
+    else:
         conflicts("+opengl", when="~x", msg="root+opengl requires X")
     conflicts("+math", when="~gsl", msg="root+math requires GSL")
     conflicts("+tmva", when="~gsl", msg="root+tmva requires GSL")
@@ -411,7 +438,7 @@ class Root(CMakePackage):
     conflicts("+tmva-gpu", when="~cuda", msg="root+tmva-gpu requires CUDA")
     conflicts("+tmva-pymva", when="~tmva", msg="root+tmva-pymva requires TMVA")
     conflicts("+tmva-sofie", when="~tmva", msg="root+tmva-sofie requires TMVA")
-    conflicts("~http", when="@6.29.00: +webgui", msg="root+webgui requires HTTP")
+    conflicts("~http", when="+webgui", msg="root+webgui requires HTTP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
     conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root requires at least C++14")
     conflicts("cxxstd=14", when="@6.30.00:", msg="This version of root requires at least C++17")
@@ -421,6 +448,10 @@ class Root(CMakePackage):
 
     # See https://github.com/root-project/root/issues/11128
     conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in root 6.26.08")
+
+    # See https://github.com/spack/spack/pull/44826
+    if sys.platform == "darwin" and macos_version() == Version("12"):
+        conflicts("@:6.27", when="+python", msg="macOS 12 python support for 6.28: only")
 
     # See https://github.com/root-project/root/issues/11714
     if sys.platform == "darwin" and macos_version() >= Version("13"):
@@ -589,7 +620,7 @@ class Root(CMakePackage):
             define("builtin_freetype", False),
             define("builtin_ftgl", False),
             define("builtin_gl2ps", False),
-            define("builtin_glew", False),
+            define("builtin_glew", self.spec.satisfies("platform=darwin")),
             define("builtin_gsl", False),
             define("builtin_llvm", True),
             define("builtin_lz4", self.spec.satisfies("@6.12.02:6.12")),
@@ -767,12 +798,21 @@ class Root(CMakePackage):
             add_include_path("xproto")
         if "+opengl" in spec and "platform=darwin" not in spec:
             add_include_path("glew")
-            add_include_path("mesa-glu")
+            add_include_path("glu")
         if "platform=darwin" in spec:
             # Newer deployment targets cause fatal errors in rootcling, so
             # override with an empty value even though it may lead to link
             # warnings when building against ROOT
             env.unset("MACOSX_DEPLOYMENT_TARGET")
+
+    @property
+    def root_library_path(self):
+        # Where possible, we do not use LD_LIBRARY_PATH as that is non-portable
+        # and pollutes the standard library-loading mechanisms on Linux systems.
+        # The ROOT_LIBRARY_PATH environment variable was added to ROOT 6.26.
+        if self.spec.satisfies("@:6.25"):
+            return "LD_LIBRARY_PATH"
+        return "ROOT_LIBRARY_PATH"
 
     def setup_run_environment(self, env):
         env.set("ROOTSYS", self.prefix)
@@ -781,6 +821,8 @@ class Root(CMakePackage):
         # the following vars are copied from thisroot.sh; silence a cppyy warning
         env.set("CLING_STANDARD_PCH", "none")
         env.set("CPPYY_API_PATH", "none")
+        if "+rpath" not in self.spec:
+            env.prepend_path(self.root_library_path, self.prefix.lib.root)
 
     def setup_dependent_build_environment(
         self, env: spack.util.environment.EnvironmentModifications, dependent_spec
@@ -792,7 +834,7 @@ class Root(CMakePackage):
         env.append_path("CMAKE_MODULE_PATH", self.prefix.cmake)
         env.prepend_path("ROOT_INCLUDE_PATH", dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
-            env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib.root)
+            env.prepend_path(self.root_library_path, self.prefix.lib.root)
         if "platform=darwin" in self.spec:
             # Newer deployment targets cause fatal errors in rootcling
             env.unset("MACOSX_DEPLOYMENT_TARGET")
@@ -800,10 +842,12 @@ class Root(CMakePackage):
     def setup_dependent_run_environment(
         self, env: spack.util.environment.EnvironmentModifications, dependent_spec
     ):
-        env.set("ROOTSYS", self.prefix)
-        env.set("ROOT_VERSION", "v{0}".format(self.version.up_to(1)))
-        env.prepend_path("PYTHONPATH", self.prefix.lib.root)
-        env.prepend_path("PATH", self.prefix.bin)
         env.prepend_path("ROOT_INCLUDE_PATH", dependent_spec.prefix.include)
-        if "+rpath" not in self.spec:
-            env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib.root)
+        # For dependents that build dictionaries, ROOT needs to know where the
+        # dictionaries have been installed.  This can be facilitated by
+        # automatically prepending dependent package library paths to
+        # ROOT_LIBRARY_PATH (for @6.26:) or LD_LIBRARY_PATH (for older
+        # versions).
+        for lib_path in (dependent_spec.prefix.lib, dependent_spec.prefix.lib64):
+            if os.path.exists(lib_path):
+                env.prepend_path(self.root_library_path, lib_path)

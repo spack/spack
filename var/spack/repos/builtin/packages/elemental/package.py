@@ -23,6 +23,9 @@ class Elemental(CMakePackage):
     version("0.87.7", sha256="7becfdbc223e9c72e65ae876d842c48d2037d13f83e9f41cea285e21b840d7d9")
     version("0.87.6", sha256="b597987c99ddd3462e0619524c5b7f711177ae8ae541b1b961e11d96e15afc64")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("hybrid", default=True, description="Make use of OpenMP within MPI packing/unpacking")
     variant(
@@ -99,7 +102,7 @@ class Elemental(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        if "@:0.87.7" in spec and "%intel@:17.0.2" in spec:
+        if spec.satisfies("@:0.87.7") and spec.satisfies("%intel@:17.0.2"):
             raise UnsupportedCompilerError(
                 "Elemental {0} has a known bug with compiler: {1} {2}".format(
                     spec.version, spec.compiler.name, spec.compiler.version
@@ -147,7 +150,7 @@ class Elemental(CMakePackage):
 
         # If using 64bit int BLAS libraries, elemental has to build
         # them internally
-        if "+int64_blas" in spec:
+        if spec.satisfies("+int64_blas"):
             args.extend(
                 [
                     "-DEL_BLAS_SUFFIX:STRING={0}".format(
@@ -156,7 +159,7 @@ class Elemental(CMakePackage):
                     "-DCUSTOM_BLAS_SUFFIX:BOOL=TRUE",
                 ]
             ),
-            if "+scalapack" in spec:
+            if spec.satisfies("+scalapack"):
                 args.extend(
                     [
                         "-DEL_LAPACK_SUFFIX:STRING={0}".format(
@@ -168,7 +171,7 @@ class Elemental(CMakePackage):
         else:
             math_libs = spec["lapack"].libs + spec["blas"].libs
 
-            if "+scalapack" in spec:
+            if spec.satisfies("+scalapack"):
                 math_libs = spec["scalapack"].libs + math_libs
 
             args.extend(["-DMATH_LIBS:STRING={0}".format(math_libs.ld_flags)])
