@@ -255,6 +255,8 @@ class Mapl(CMakePackage):
     depends_on("hdf5")
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
+
+    # ESMF dependency
     depends_on("esmf@8.6.1:", when="@2.45:")
     depends_on("esmf@8.6.0", when="@2.44")
     depends_on("esmf@8.5:", when="@2.40:2.43")
@@ -264,46 +266,46 @@ class Mapl(CMakePackage):
     depends_on("esmf~debug", when="~debug")
     depends_on("esmf+debug", when="+debug")
 
+    # udunits dependency from MAPL 2.48 onwards
     depends_on("udunits", when="@2.48:")
 
+    # gFTL dependency
     depends_on("gftl@1.14.0:", when="@2.48:")
     depends_on("gftl@1.13.0:", when="@2.45:2.47")
     depends_on("gftl@1.11.0:", when="@2.44")
     depends_on("gftl@1.10.0:", when="@2.40:2.43")
     depends_on("gftl@1.5.5:1.9", when="@:2.39")
 
-    # There was an interface change in gftl-shared, so we need to control versions
-    # MAPL 2.39 and older can use up to 1.6.0 but MAPL 2.40+ needs 1.6.1 or higher
-    depends_on("gftl-shared@1.8.0:", when="@2.48:")
+    # gFTL-Shared dependency
+    depends_on("gftl-shared@1.9.0:", when="@2.48:")
     depends_on("gftl-shared@1.8.0:", when="@2.45:2.47")
     depends_on("gftl-shared@1.7.0:", when="@2.44")
     depends_on("gftl-shared@1.6.1:", when="@2.40:2.43")
     depends_on("gftl-shared@1.3.1:1.6.0", when="@:2.39")
 
-    # There was an interface change in yaFyaml, so we need to control versions
-    # MAPL 2.22 and older uses older version, MAPL 2.23+ and higher uses newer
-    # Note that MAPL 2.40+ no longer require yafyaml as we get yaml support
-    # via esmf 8.5.0
-    depends_on("yafyaml@1.0-beta5", when="@:2.22+extdata2g")
+    # yafyaml dependency
+    # Note that MAPL 2.40+ no longer directly requires yafyaml as
+    # extdata2g gets yaml support via esmf 8.5.0, but pflogger will
+    # bring in yafyaml as a dependency.
     depends_on("yafyaml@1.0.4:", when="@2.23:2.39+extdata2g")
+    depends_on("yafyaml@1.0-beta5", when="@:2.22+extdata2g")
 
-    # pFlogger depends on yaFyaml in the same way. MAPL 2.22 and below uses old
-    # yaFyaml so we need to use old pFlogger, but MAPL 2.23+ uses new yaFyaml
-    depends_on("pflogger@:1.6 +mpi", when="@:2.22+pflogger")
-    depends_on("pflogger@1.9.1: +mpi", when="@2.23:2.39+pflogger")
-    depends_on("pflogger@1.9.5: +mpi", when="@2.40:2.43+pflogger")
-    depends_on("pflogger@1.11.0: +mpi", when="@2.44+pflogger")
-    depends_on("pflogger@1.14.0: +mpi", when="@2.45:2.47+pflogger")
+    # pflogger dependency
     depends_on("pflogger@1.15.0: +mpi", when="@2.48:+pflogger")
+    depends_on("pflogger@1.14.0: +mpi", when="@2.45:2.47+pflogger")
+    depends_on("pflogger@1.11.0: +mpi", when="@2.44+pflogger")
+    depends_on("pflogger@1.9.5: +mpi", when="@2.40:2.43+pflogger")
+    depends_on("pflogger@1.9.1: +mpi", when="@2.23:2.39+pflogger")
+    depends_on("pflogger@:1.6 +mpi", when="@:2.22+pflogger")
 
-    # fArgParse v1.4.1 is the first usable version with MAPL
-    # we now require 1.5.0 with MAPL 2.40+
+    # fargparse dependency
     depends_on("fargparse@1.8.0:", when="@2.48:+fargparse")
     depends_on("fargparse@1.7.0:", when="@2.45:2.47+fargparse")
     depends_on("fargparse@1.6.0:", when="@2.44+fargparse")
     depends_on("fargparse@1.5.0:", when="@2.40:43+fargparse")
     depends_on("fargparse@1.4.1:1.4", when="@:2.39+fargparse")
 
+    # pfunit dependency
     depends_on("pfunit@4.10: +mpi +fhamcrest", when="@2.48:+pfunit")
     depends_on("pfunit@4.9: +mpi +fhamcrest", when="@2.45:2.47+pfunit")
     depends_on("pfunit@4.8: +mpi +fhamcrest", when="@2.44+pfunit")
@@ -311,6 +313,7 @@ class Mapl(CMakePackage):
     depends_on("pfunit@4.6.1: +mpi +fhamcrest", when="@2.32:+pfunit")
     depends_on("pfunit@4.4.1: +mpi +fhamcrest", when="@2.26:+pfunit")
     depends_on("pfunit@4.2: +mpi +fhamcrest", when="@:2.25+pfunit")
+
     depends_on("flap", when="+flap")
 
     depends_on("ecbuild", type="build")
