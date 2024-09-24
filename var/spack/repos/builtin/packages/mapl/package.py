@@ -264,6 +264,8 @@ class Mapl(CMakePackage):
     depends_on("esmf~debug", when="~debug")
     depends_on("esmf+debug", when="+debug")
 
+    depends_on("udunits", when="@2.48:")
+
     depends_on("gftl@1.14.0:", when="@2.48:")
     depends_on("gftl@1.13.0:", when="@2.45:2.47")
     depends_on("gftl@1.11.0:", when="@2.44")
@@ -400,3 +402,14 @@ class Mapl(CMakePackage):
         # name is common and used all over the place,
         # and if it is set it breaks the mapl build.
         env.unset("BASEDIR")
+
+    # We can run some tests to make sure the build is working
+    # but we can only do it if the pfunit variant is enabled
+    @when("+pfunit")
+    @run_after("build")
+    @on_package_attributes(run_tests=True)
+    def check(self):
+        with working_dir(self.builder.build_directory):
+            # The test suite contains a lot of tests. We select only those
+            # that are cheap. Note this requires MPI and 6 processes
+            ctest("--output-on-failure", "-L", "ESSENTIAL")
