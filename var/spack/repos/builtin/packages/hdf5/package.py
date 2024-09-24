@@ -99,7 +99,7 @@ class Hdf5(CMakePackage):
     variant(
         "subfiling", when="@1.14: +mpi", default=False, description="Enable Subfiling VFD support"
     )
-    variant("ros3", default=False, description="Enable read-only S3 VFD")
+    variant("ros3", when="@1.10:", default=False, description="Enable read-only S3 VFD")
     variant("fortran", default=False, description="Enable Fortran support")
     variant("java", when="@1.10:", default=False, description="Enable Java support")
     variant("threadsafe", default=False, description="Enable thread-safe capabilities")
