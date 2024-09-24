@@ -305,6 +305,13 @@ class QuantumEspresso(CMakePackage, Package):
         when="build_system=generic %oneapi",
         msg="Support for ifx has been added to configure in release 7.3.1",
     )
+    # TODO: When adding the next version make sure https://github.com/libmbd/libmbd/pull/60 is
+    # merged into the libmbd version used. Otherwise extend the conflict to the new version.
+    conflicts(
+        "@7.3.1 %oneapi@2024.1:",
+        when="build_system=cmake",
+        msg="ifx added intrinsic module ISO_C_BINDING in version 2024.1 which conflicts with the libmbd provided one.",
+    )
 
     # 7.3 - a compile-time problem fixed in 7.3.1
     patch_url = "https://gitlab.com/QEF/q-e/-/commit/b98ff7539e5731728d2d49ac01021a57f2594027.diff"
