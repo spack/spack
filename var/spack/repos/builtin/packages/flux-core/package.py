@@ -94,6 +94,7 @@ class FluxCore(AutotoolsPackage):
     # Use of distutils in configure script dropped in v0.55
     depends_on("python@:3.11", when="@:0.54", type=("build", "link", "run"))
     depends_on("py-cffi@1.1:", type=("build", "run"))
+    depends_on("py-cffi@1.16:", type=("build", "run"), when="^python@3.12:")
     depends_on("py-pyyaml@3.10:", type=("build", "run"))
     depends_on("py-jsonschema@2.3:", type=("build", "run"), when="@:0.58.0")
     depends_on("py-ply", type=("build", "run"), when="@0.46.1:")
@@ -117,6 +118,8 @@ class FluxCore(AutotoolsPackage):
     depends_on("automake", type="build", when="@master")
     depends_on("libtool", type="build", when="@master")
 
+    depends_on("py-setuptools", type="build", when="^python@3.12:")
+
     # Testing Dependencies
     depends_on("mpich pmi=pmi", type="test")
     depends_on("valgrind", type="test")
@@ -127,9 +130,7 @@ class FluxCore(AutotoolsPackage):
 
     def patch(self):
         with when("^python@3.12:"):
-            filter_file(
-                "import sys", r"import sys\n import setuptools", "config/am_check_pymod.m4"
-            )
+            filter_file("^import sys", "import sys;import setuptools", "configure")
 
     def url_for_version(self, version):
         """
