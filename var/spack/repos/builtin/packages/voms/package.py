@@ -36,9 +36,7 @@ class Voms(AutotoolsPackage):
 
     def patch(self):
         filter_file(
-            r"/usr/bin/soapcpp2",
-            f"{self.spec['gsoap'].prefix.bin.soapcpp2}",
-            "m4/wsdl2h.m4"
+            r"/usr/bin/soapcpp2", f"{self.spec['gsoap'].prefix.bin.soapcpp2}", "m4/wsdl2h.m4"
         )
 
     def setup_build_environment(self, env):
@@ -52,7 +50,5 @@ class Voms(AutotoolsPackage):
         autogen()
 
     def configure_args(self):
-        args = [
-            f"--with-gsoap-wsdl2h={self.spec['gsoap'].prefix.bin.wsdl2h}"
-        ]
+        args = [f"--with-gsoap-wsdl2h={self.spec['gsoap'].prefix.bin.wsdl2h}"]
         return args
