@@ -286,6 +286,20 @@ def load():
         sha256="4849671f9df4b8f3c962130d7f6d44eba3b20d113e84f9faade75e6469e90310",
     )
 
+    with sp.when("@1.78.0"):
+        # https://github.com/bfgroup/b2/pull/113
+        sp.patch(
+            "patches/build_1780_PR113.patch",
+            sha256="0e1b19e91e0fef2906b3e1bed1ba06b277ff84942bb8ac9e645dd93ad3532b4e",
+        )
+
+        # UWP support for atomic
+        sp.patch(
+            "patches/atomic_1780_PR54.patch",
+            when="+atomic",
+            sha256="1be9f01f238d54ce311c2a8a5ddbdd3f97268c0c011460e41033443d70280a18",
+        )
+
     # https://github.com/boostorg/json/issues/692
     sp.patch(
         "patches/json_PR695.patch",
