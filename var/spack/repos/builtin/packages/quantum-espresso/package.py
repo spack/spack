@@ -300,7 +300,11 @@ class QuantumEspresso(CMakePackage, Package):
 
     conflicts("@6.5:", when="+environ", msg="6.4.x is the latest QE series supported by Environ")
 
-    conflicts("@:7.3.0", when="%oneapi", msg="Support for ifx has been added in release 7.3.1")
+    conflicts(
+        "@:7.3.0",
+        when="build_system=generic %oneapi",
+        msg="Support for ifx has been added to configure in release 7.3.1",
+    )
 
     # 7.3 - a compile-time problem fixed in 7.3.1
     patch_url = "https://gitlab.com/QEF/q-e/-/commit/b98ff7539e5731728d2d49ac01021a57f2594027.diff"
