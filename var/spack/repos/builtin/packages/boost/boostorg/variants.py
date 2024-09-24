@@ -220,6 +220,17 @@ def load():
         description="Type traits and math functions for integral values",
     )
     variants.add(
+        "operators",
+        when="@1.9.0:",
+        conflicts=[
+            {"when": "cxxstd=2a", "msg": "Boost.Operators requires cxxstd <= 17"},
+            {"when": "cxxstd=20", "msg": "Boost.Operators requires cxxstd <= 17"},
+            {"when": "cxxstd=23", "msg": "Boost.Operators requires cxxstd <= 17"},
+            {"when": "cxxstd=26", "msg": "Boost.Operators requires cxxstd <= 17"},
+        ],
+        description="CRTP helpers to define arithmetic operators for a class",
+    )
+    variants.add(
         "timer",
         when="@1.9.0:",
         buildable="@1.48.0:",
@@ -267,10 +278,6 @@ def load():
     variants.add(
         "conversion",
         when="@1.20.0:",
-        conflicts=[
-            {"when": "cxxstd=98", "msg": "Boost.conversion requires cxxstd >= 11"},
-            {"when": "cxxstd=03", "msg": "Boost.conversion requires cxxstd >= 11"},
-        ],
         description="Extensions to standard casting operators",
     )
     variants.add(
@@ -357,7 +364,8 @@ def load():
         "preprocessor",
         when="@1.26.0:",
         conflicts=[
-            {"when": "cxxstd=98", "msg": "Boost.preprocessor requires cxxstd >= 03"},
+            {"when": "@1.75.0: cxxstd=98", "msg": "Boost.Preprocessor requires cxxstd >= 11"},
+            {"when": "@1.75.0: cxxstd=03", "msg": "Boost.Preprocessor requires cxxstd >= 11"},
         ],
         description="Preprocessor metaprogramming tools including repetition and recursion",
     )
