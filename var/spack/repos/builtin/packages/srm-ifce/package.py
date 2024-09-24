@@ -23,12 +23,12 @@ class SrmIfce(CMakePackage):
     depends_on("glib")
     depends_on("gsoap")
     depends_on("cgsi-gsoap")
-    depends_on("globus-cmmon")
+    depends_on("globus-common")
     depends_on("globus-gsi-cert-utils")
     depends_on("globus-gsi-credential")
     depends_on("globus-gss-assist")
     depends_on("globus-gssapi-gsi")
-    depends_on("globus-openssl")
+    depends_on("globus-openssl-module")
     depends_on("openssl")
 
     def cmake_args(self):
