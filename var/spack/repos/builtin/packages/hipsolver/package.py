@@ -65,7 +65,6 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
         sticky=True,
     )
     variant("rocm", default=True, description="Enable ROCm support")
-    variant("build_fortran_bindings", default=True, description="build fortran bindings")
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
 
@@ -140,13 +139,13 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         args = [
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
+            self.define("BUILD_FORTRAN_BINDINGS", "OFF"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),
             self.define("SUITE_SPARSE_PATH", self.spec["suite-sparse"].prefix),
             self.define("ROCBLAS_PATH", self.spec["rocblas"].prefix),
         ]
 
         args.append(self.define_from_variant("USE_CUDA", "cuda"))
-        args.append(self.define_from_variant("BUILD_FORTRAN_BINDINGS", "build_fortran_bindings"))
 
         # FindHIP.cmake is still used for +cuda
         if self.spec.satisfies("+cuda"):
