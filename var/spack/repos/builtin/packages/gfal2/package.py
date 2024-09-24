@@ -16,7 +16,7 @@ class Gfal2(CMakePackage):
 
     license("Apache-2.0", checked_by="wdconinc")
 
-    version("2.16.4", sha256="977c808b3d6bdd60bd996909ea8d63af8b1e26a13f4fa0c1d935dd851dab136f")
+    version("2.23.0", sha256="e3fc9c2ccb2f54b1d0d460545e1b6c581470d2a2968928a8973045089892e509")
 
     variant("dcap", default=False, description="Enable dcap plugin")
     variant("file", default=False, description="Enable file plugin")
