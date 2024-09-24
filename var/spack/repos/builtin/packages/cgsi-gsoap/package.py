@@ -29,4 +29,4 @@ class CgsiGsoap(CMakePackage):
     depends_on("globus-gss-assist")
     depends_on("globus-gsi-cert-utils")
     depends_on("globus-gsi-credential")
-    depends_on("globus-openssl")
+    depends_on("globus-openssl-module")
