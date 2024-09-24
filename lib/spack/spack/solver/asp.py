@@ -2611,6 +2611,13 @@ class SpackSolverSetup:
                 )
                 for name, info in env.dev_specs.items()
             )
+            unused_dev_specs = [ds for ds in dev_specs if ds.name not in self.pkgs]
+            if unused_dev_specs:
+                raise spack.error.SpackError(
+                    "Environment has develop packages that are not part of the dependency tree: "
+                    f"{[ds.name for ds in unused_dev_specs]}"
+                )
+
         specs = tuple(specs)  # ensure compatible types to add
 
         self.gen.h1("Reusable concrete specs")
