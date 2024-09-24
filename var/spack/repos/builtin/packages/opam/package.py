@@ -78,7 +78,8 @@ class Opam(AutotoolsPackage):
         return configure(*args)
 
     def build(self, spec, prefix):
-        if spec.satisfies("@:2.0.0"):
+        # https://github.com/dbuenzli/cmdliner/issues/34#issuecomment-145236209
+        if spec.satisfies("@:2.1"):
             make("lib-ext")
 
         make()
