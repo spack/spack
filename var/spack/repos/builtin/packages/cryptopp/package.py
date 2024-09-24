@@ -13,8 +13,8 @@ class Cryptopp(MakefilePackage):
     public-key encryption (RSA, DSA), and a few obsolete/historical encryption
     algorithms (MD5, Panama)."""
 
-    homepage = "https://www.cryptopp.com"
-    url = "https://www.cryptopp.com/cryptopp700.zip"
+    homepage = "https://github.com/weidai11/cryptopp"
+    url = "https://github.com/weidai11/cryptopp/releases/download/CRYPTOPP_8_9_0/cryptopp890.zip"
 
     license("BSL-1.0")
 
