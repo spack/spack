@@ -26,7 +26,7 @@ class Cxx(Package):
             with test_part(self, f"test_cxx_{test}", f"build and run {exe_name}"):
                 # standard options
                 # Hack to get compiler attributes
-                # TODO: remove this when compilers are dependencies
+                # FIXME (compiler as nodes): remove this when compilers are dependencies
                 c_name = clang if self.spec.satisfies("llvm+clang") else self.name
                 c_spec = spack.spec.CompilerSpec(c_name, self.spec.version)
                 c_cls = spack.compilers.class_for_compiler_name(c_name)
