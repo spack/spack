@@ -36,7 +36,7 @@ class Gfal2(CMakePackage):
 
     depends_on("dcap", when="+dcap")
     depends_on("zlib", when="+file")
-    depends_on("davix", when="+http")
+    depends_on("davix +thirdparty", when="+http")
     depends_on("cryptopp", when="+http")
     depends_on("libssh2", when="+sftp")
     depends_on("xrootd", when="+xrootd")
