@@ -505,7 +505,7 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
 
     env = EnvironmentModifications()
     with spack.config.override("config:shared_linking", {"type": config_setting, "bind": False}):
-        spack.build_environment.set_compiler_environment_variables(pkg, env)
+        spack.build_environment.set_wrapper_environment_variables_for_flags(pkg, env)
         modifications = env.group_by_name()
         assert "SPACK_DTAGS_TO_STRIP" in modifications
         assert "SPACK_DTAGS_TO_ADD" in modifications
