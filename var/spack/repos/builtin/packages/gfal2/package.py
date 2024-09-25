@@ -57,6 +57,21 @@ class Gfal2(CMakePackage):
 
     depends_on("googletest", type="test")
 
+    def patch(self):
+        # FindCryptopp.cmake looks in user-specified ${CRYPTOPP_LOCATION}
+        # for both library and headers
+        filter_file(
+            r"find_library\(CRYPTOPP_LIBRARIES",
+            "find_library(CRYPTOPP_LIBRARIES PATH_SUFFIXES lib lib64",
+            "cmake/modules/FindCryptopp.cmake"
+        )
+        filter_file(
+            r"find_path\(CRYPTOPP_INCLUDE_DIRS",
+            "find_path(CRYPTOPP_INCLUDE_DIRS PATH_SUFFIXES include/cryptopp",
+            "cmake/modules/FindCryptopp.cmake"
+        )
+
+
     def cmake_args(self):
         args = [
             self.define("MAIN_CORE", True),
@@ -70,4 +85,8 @@ class Gfal2(CMakePackage):
             self.define_from_variant("PLUGIN_SRM", "srm"),
             self.define_from_variant("PLUGIN_XROOTD", "xrootd"),
         ]
+        if self.spec.satisfies("+http"):
+            args.append(self.define("CRYPTOPP_LOCATION", self.spec["cryptopp"].prefix))
+        if self.spec.satisfies("+xrootd"):
+            args.append(self.define("XROOTD_LOCATION", self.spec["xrootd"].prefix))
         return args
