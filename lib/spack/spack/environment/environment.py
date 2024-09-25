@@ -42,7 +42,6 @@ import spack.spec
 import spack.spec_list
 import spack.store
 import spack.user_environment as uenv
-import spack.util.cpus
 import spack.util.environment
 import spack.util.hash
 import spack.util.lock as lk
