@@ -5,7 +5,7 @@
 from spack.package import *
 
 
-class Ucc(AutotoolsPackage, CudaPackage):
+class Ucc(AutotoolsPackage, CudaPackage, ROCmPackage):
     """UCC is a collective communication operations API and library that is
     flexible, complete, and feature-rich for current and emerging programming
     models and runtimes."""
@@ -23,8 +23,8 @@ class Ucc(AutotoolsPackage, CudaPackage):
 
     variant("cuda", default=False, description="Enable CUDA TL")
     variant("nccl", default=False, description="Enable NCCL TL", when="+cuda")
-    # RCCL build not tested
-    # variant("rccl", default=False, description="Enable RCCL TL")
+    variant("rocm", default=False, description="Enable ROCm")
+    variant("rccl", default=False, description="Enable RCCL TL", when="+rocm")
 
     # https://github.com/openucx/ucc/pull/847
     patch(
@@ -40,13 +40,18 @@ class Ucc(AutotoolsPackage, CudaPackage):
     depends_on("ucx")
 
     depends_on("nccl", when="+nccl")
-    # depends_on("rccl", when="+rccl")
+    depends_on("rccl", when="+rccl")
+    depends_on("hip", when="+rocm")
+    depends_on("hsa-rocr-dev", when="+rocm")
 
     with when("+nccl"):
         for arch in CudaPackage.cuda_arch_values:
             depends_on(
                 "nccl +cuda cuda_arch={0}".format(arch), when="+cuda cuda_arch={0}".format(arch)
             )
+    # The hip path is not properly set when the ROCM_PARSE_FLAGS function is used.
+    # This patch adds the option of a hip_path flag that will set it
+    patch("0001-set_hip_path.patch")
 
     def autoreconf(self, spec, prefix):
         Executable("./autogen.sh")()
@@ -55,5 +60,20 @@ class Ucc(AutotoolsPackage, CudaPackage):
         args = []
         args.extend(self.with_or_without("cuda", activation_value="prefix"))
         args.extend(self.with_or_without("nccl", activation_value="prefix"))
-        # args.extend(self.with_or_without("rccl", activation_value="prefix"))
+        if self.spec.satisfies("+rocm"):
+            rocm_flags = " ".join(
+                [
+                    "-I" + self.spec["hip"].prefix.include,
+                    "-I" + self.spec["hip"].prefix.include.hip,
+                    "-I" + self.spec["hsa-rocr-dev"].prefix.include.hsa,
+                    "-L" + self.spec["hip"].prefix.lib,
+                    "-L" + self.spec["hsa-rocr-dev"].prefix.lib,
+                    "hip_path=" + self.spec["hip"].prefix,
+                ]
+            )
+            args.append("--with-rocm=" + rocm_flags)
+            args.append("--with-ucx=" + self.spec["ucx"].prefix)
+        else:
+            args.append("--without-rocm")
+        args.extend(self.with_or_without("rccl", activation_value="prefix"))
         return args
