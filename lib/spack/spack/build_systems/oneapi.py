@@ -72,7 +72,10 @@ class IntelOneApiPackage(Package):
     def component_prefix(self):
         """Path to component <prefix>/<component>/<version>."""
         v = self.spec.version.up_to(2) if self.v2_layout else self.spec.version
-        return self.prefix.join(self.component_dir).join(str(v))
+        base_dir = self.prefix
+        if self.component_dir not in str(self.prefix):
+            base_dir = base_dir.join(self.component_dir).join(str(v))
+        return base_dir
 
     @property
     def env_script_args(self):
@@ -140,7 +143,7 @@ class IntelOneApiPackage(Package):
            $ source {prefix}/{component}/{version}/env/vars.sh
         """
         # Only if environment modifications are desired (default is +envmods)
-        if "~envmods" not in self.spec:
+        if "+envmods" in self.spec:
             env.extend(
                 EnvironmentModifications.from_sourcing_file(
                     self.component_prefix.env.join("vars.sh"), *self.env_script_args
