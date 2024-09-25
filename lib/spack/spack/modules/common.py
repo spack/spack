@@ -48,7 +48,6 @@ import spack.environment
 import spack.error
 import spack.paths
 import spack.projections as proj
-import spack.repo
 import spack.schema.environment
 import spack.spec
 import spack.store
