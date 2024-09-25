@@ -16,3 +16,5 @@ class DtDiamond(Package):
 
     depends_on("dt-diamond-left")
     depends_on("dt-diamond-right")
+
+    depends_on("c", type="build")
