@@ -41,10 +41,6 @@ SPACK_ENV_PATH
 SPACK_DEBUG_LOG_DIR
 SPACK_DEBUG_LOG_ID
 SPACK_COMPILER_SPEC
-SPACK_CC_RPATH_ARG
-SPACK_CXX_RPATH_ARG
-SPACK_F77_RPATH_ARG
-SPACK_FC_RPATH_ARG
 SPACK_LINKER_ARG
 SPACK_SHORT_SPEC
 SPACK_SYSTEM_DIRS
@@ -224,6 +220,7 @@ for param in $params; do
     if eval "test -z \"\${${param}:-}\""; then
         die "Spack compiler must be run from Spack! Input '$param' is missing."
     fi
+    # FIXME (compiler as nodes) add checks on whether `SPACK_XX_RPATH` is set if `SPACK_XX` is set
 done
 
 # eval this because SPACK_MANAGED_DIRS and SPACK_SYSTEM_DIRS are inputs we don't wanna loop over.
