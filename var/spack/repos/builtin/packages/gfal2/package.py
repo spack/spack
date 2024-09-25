@@ -10,7 +10,7 @@ class Gfal2(CMakePackage):
     """Multi-protocol data management library."""
 
     homepage = "https://dmc-docs.web.cern.ch/dmc-docs/"
-    url = "https://github.com/cern-fts/gfal2/archive/refs/tags/v2.16.4.tar.gz"
+    url = "https://github.com/cern-fts/gfal2/archive/refs/tags/v2.23.0.tar.gz"
 
     maintainers("wdconinc")
 
