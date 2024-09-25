@@ -8,7 +8,6 @@ import pytest
 
 import archspec.cpu
 
-import spack.compilers
 import spack.concretize
 import spack.operating_systems
 import spack.platforms
