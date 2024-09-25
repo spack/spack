@@ -5,8 +5,8 @@
 
 import platform
 
-from spack.util.environment import set_env
 from spack.package import *
+from spack.util.environment import set_env
 
 
 class SbclBootstrap(Package):
