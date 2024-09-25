@@ -2020,7 +2020,7 @@ class SpackSolverSetup:
                         self.pkg_class(spec.name), variant, spec
                     )
 
-                pkg_cls = self.pkg_class(spec.name)
+                    pkg_cls = self.pkg_class(spec.name)
                     # Record that that this is a valid possible value. Accounts for
                     # int/str/etc., where valid values can't be listed in the package
                     for variant_def in variant_defs:

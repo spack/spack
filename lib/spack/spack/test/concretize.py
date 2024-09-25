@@ -600,6 +600,14 @@ class TestConcretize:
         assert spec.satisfies("~foo") and not spec.satisfies("^dependency-foo-bar~foo")
         assert spec.satisfies("+bar") and spec.satisfies("^dependency-foo-bar+bar")
 
+    def test_concretize_propagate_through_first_level_deps(self):
+        """Test does a thing"""
+        spec = Spec("prarent-foo-bar-fee ++fee")
+        spec.concretize()
+
+        assert spec.satisfies("+fee") and not spec.satisifies("dependency-foo-bar+fee")
+        assert spec.satisfies("^second-dependency-foo-bar-fee+fee")
+
     # Propagate multiple bool variants
 
     def test_concretize_propagate_multivalue_variant(self):
