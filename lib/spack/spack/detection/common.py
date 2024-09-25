@@ -168,7 +168,8 @@ def executable_prefix(executable_dir: str) -> str:
     if "bin" not in lowered_components:
         return executable_dir
     idx = lowered_components.index("bin")
-    return os.sep.join(components[:idx])
+    # Do not return an empty string if "bin" is found in the root directory
+    return os.sep.join(components[:idx]) if idx >1 else os.path.abspath(os.sep)
 
 
 def library_prefix(library_dir: str) -> str:
@@ -188,13 +189,14 @@ def library_prefix(library_dir: str) -> str:
     lowered_components = library_dir.lower().split(os.sep)
     if "lib64" in lowered_components:
         idx = lowered_components.index("lib64")
-        return os.sep.join(components[:idx])
+        # Do not return an empty string if "lib64" is found in the root directory
+        return os.sep.join(components[:idx]) if idx >1 else os.path.abspath(os.sep)
     elif "lib" in lowered_components:
         idx = lowered_components.index("lib")
-        return os.sep.join(components[:idx])
+        return os.sep.join(components[:idx]) if idx >1 else os.path.abspath(os.sep)
     elif sys.platform == "win32" and "bin" in lowered_components:
         idx = lowered_components.index("bin")
-        return os.sep.join(components[:idx])
+        return os.sep.join(components[:idx]) if idx >1 else os.path.abspath(os.sep)
     else:
         return library_dir
 
