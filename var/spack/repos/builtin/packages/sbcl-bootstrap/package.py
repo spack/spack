@@ -5,6 +5,7 @@
 
 import platform
 
+from spack.util.environment import set_env
 from spack.package import *
 
 
@@ -17,6 +18,8 @@ class SbclBootstrap(Package):
     """
 
     homepage = "https://www.sbcl.org/"
+
+    maintainers("ashermancinelli")
 
     # NOTE: The sbcl homepage lists
     # while the sourceforge repo lists "Public Domain, MIT License", the
@@ -80,9 +83,7 @@ class SbclBootstrap(Package):
         sbcl_url = "https://sourceforge.net/projects/sbcl/files/sbcl/{version}/sbcl-{version}-{target}-linux-binary.tar.bz2"
         return sbcl_url.format(version=version, target=sbcl_targets[target])
 
-    def setup_build_environment(self, env):
-        env.set("INSTALL_ROOT", self.spec.prefix)
-
     def install(self, spec, prefix):
         sh = which("sh")
-        sh("install.sh")
+        with set_env(INSTALL_ROOT=self.spec.prefix):
+            sh("install.sh")
