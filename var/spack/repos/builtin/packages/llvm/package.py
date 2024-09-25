@@ -895,17 +895,20 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
                     define("LLDB_ENABLE_LZMA", True),
                 ]
             )
-            if spec["ncurses"].satisfies("+termlib"):
-                cmake_args.append(define("LLVM_ENABLE_TERMINFO", True))
+            if spec.satisfies("@19:"):
+                cmake_args.append(define("LLDB_CURSES_LIBS", spec["ncurses"].libs))
             else:
-                cmake_args.append(define("LLVM_ENABLE_TERMINFO", False))
+                if spec["ncurses"].satisfies("+termlib"):
+                    cmake_args.append(define("LLVM_ENABLE_TERMINFO", True))
+                else:
+                    cmake_args.append(define("LLVM_ENABLE_TERMINFO", False))
             if spec.version >= Version("10"):
                 cmake_args.append(from_variant("LLDB_ENABLE_PYTHON", "python"))
             else:
                 cmake_args.append(define("LLDB_DISABLE_PYTHON", "~python" in spec))
             if spec.satisfies("@5.0.0: +python"):
                 cmake_args.append(define("LLDB_USE_SYSTEM_SIX", True))
-        else:
+        elif spec.satisfies("@:19"):
             cmake_args.append(define("LLVM_ENABLE_TERMINFO", False))
 
         if "+gold" in spec:
