@@ -61,9 +61,11 @@ class Genie(Package):
     # GENIE Makefile's think that the spack compiler is invalid.
     # Disables this check.
     patch("genie_disable_gopt_with_compiler_check.patch", level=0, when="@2.11:")
-    patch("https://patch-diff.githubusercontent.com/raw/GENIE-MC/Generator/pull/376.patch?full_index=1",
-          sha256="7eca9bf44251cd99edd962483ca24c5072f8e2eee688f1e95b076425f2dc59f6",
-          when="@3.4.2")
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/GENIE-MC/Generator/pull/376.patch?full_index=1",
+        sha256="7eca9bf44251cd99edd962483ca24c5072f8e2eee688f1e95b076425f2dc59f6",
+        when="@3.4.2",
+    )
     # Flags for GENIE"s optional but disabled by default features
     variant(
         "atmo", default=False, description="Enable GENIE Atmospheric neutrino event generation app"
