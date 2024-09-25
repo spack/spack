@@ -277,6 +277,8 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     conflicts("+z3", when="~clang")
     conflicts("+lua", when="@:10")
     conflicts("+lua", when="~lldb")
+    # Python distutils were removed with 3.12 and are required to build LLVM <= 14
+    conflicts("^python@3.12:", when="@:14")
 
     variant(
         "zstd",
@@ -880,6 +882,8 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
             # finding libhsa and enabling the AMDGPU plugin. Since we don't support this yet,
             # disable explicitly. See commit a05a0c3c2f8eefc80d84b7a87a23a4452d4a3087.
             cmake_args.append(define("LIBOMPTARGET_BUILD_AMDGPU_PLUGIN", False))
+            if "python" in spec:  # lit's Python needs to be set with this variable
+                cmake_args.append(define("python_executable", spec["python"].command.path))
 
         if "+lldb" in spec:
             projects.append("lldb")
@@ -961,6 +965,14 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
                 # CMAKE_INSTALL_RPATH to it, which fails. Statically link libc++abi.a
                 # into libc++.so, linking with -lc++ or -stdlib=libc++ is enough.
                 define("LIBCXX_ENABLE_STATIC_ABI_LIBRARY", True),
+                # Make sure that CMake does not pick host-installed tools for the build
+                # Until #45535 is merged, prevent CMake from delivering incompatible
+                # system tools like python3.12 to older LLVM versions like LLVM-14:
+                define("CMAKE_FIND_PACKAGE_PREFER_CONFIG", True),
+                define("CMAKE_FIND_USE_PACKAGE_ROOT_PATH", False),
+                define("CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY", False),
+                define("CMAKE_FIND_USE_PACKAGE_REGISTRY", False),
+                define("CMAKE_FIND_USE_SYSTEM_PATH", False),
             ]
         )
 
