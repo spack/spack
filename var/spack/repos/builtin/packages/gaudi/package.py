@@ -43,6 +43,8 @@ class Gaudi(CMakePackage):
 
     depends_on("cxx", type="build")  # generated
 
+    conflicts("%gcc@:10", when="@39:")
+
     maintainers("drbenmorgan", "vvolkl", "jmcarcell")
 
     variant("aida", default=False, description="Build AIDA interfaces support")
@@ -148,6 +150,10 @@ class Gaudi(CMakePackage):
             # todo:
             self.define("GAUDI_USE_INTELAMPLIFIER", False),
         ]
+        # Release notes for v39.0: https://gitlab.cern.ch/gaudi/Gaudi/-/releases/v39r0
+        # Gaudi@39: needs C++ >= 20, and we need to force CMake to use C++ 20 with old gcc:
+        if self.spec.version >= Version("39.0") and self.compiler.version < Version("13.0.0"):
+            args.append(self.define("GAUDI_CXX_STANDARD", "20"))
         return args
 
     def setup_run_environment(self, env):
