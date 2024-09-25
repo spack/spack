@@ -39,7 +39,8 @@ def rewire(spliced_spec):
     for spec in spliced_spec.traverse(order="post", root=True):
         if not spec.build_spec.installed:
             # TODO: May want to change this at least for the root spec...
-            # spec.build_spec.package.do_install(force=True)
+            # TODO: Also remember to import PackageInstaller
+            # PackageInstaller([spec.build_spec.package]).install()
             raise PackageNotInstalledError(spliced_spec, spec.build_spec, spec)
         if spec.build_spec is not spec and not spec.installed:
             explicit = spec is spliced_spec
