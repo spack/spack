@@ -63,14 +63,13 @@ class Gfal2(CMakePackage):
         filter_file(
             r"find_library\(CRYPTOPP_LIBRARIES",
             "find_library(CRYPTOPP_LIBRARIES PATH_SUFFIXES lib lib64",
-            "cmake/modules/FindCryptopp.cmake"
+            "cmake/modules/FindCryptopp.cmake",
         )
         filter_file(
             r"find_path\(CRYPTOPP_INCLUDE_DIRS",
             "find_path(CRYPTOPP_INCLUDE_DIRS PATH_SUFFIXES include/cryptopp",
-            "cmake/modules/FindCryptopp.cmake"
+            "cmake/modules/FindCryptopp.cmake",
         )
-
 
     def cmake_args(self):
         args = [
