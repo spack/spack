@@ -307,8 +307,8 @@ class QuantumEspresso(CMakePackage, Package):
     )
     # Fixed in https://github.com/libmbd/libmbd/pull/60, which will be part of the next release
     conflicts(
-        "@7.3.1 %oneapi@2024.1:",
-        when="build_system=cmake",
+        "@7.3.1",
+        when="%oneapi@2024.1:",
         msg="ifx added f_c_string in the ISO_C_BINDING module since version 2024.1 which conflicts"
         + "with the libmbd provided one.",
     )
