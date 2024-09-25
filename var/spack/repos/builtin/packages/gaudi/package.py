@@ -105,6 +105,7 @@ class Gaudi(CMakePackage):
     depends_on("range-v3")
     depends_on("root +python +root7 +ssl +tbb +threads")
     depends_on("zlib-api")
+    depends_on("py-pytest-cov", when="@39:")
 
     # Testing dependencies
     # Note: gaudi only builds examples when testing enabled
