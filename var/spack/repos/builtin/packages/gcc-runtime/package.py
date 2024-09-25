@@ -29,8 +29,6 @@ class GccRuntime(Package):
 
     license("GPL-3.0-or-later WITH GCC-exception-3.1")
 
-    requires("%gcc")
-
     LIBRARIES = [
         "asan",
         "atomic",
@@ -55,9 +53,12 @@ class GccRuntime(Package):
 
     depends_on("libc", type="link", when="platform=linux")
 
+    depends_on("gcc", type="build")
+
     def install(self, spec, prefix):
+        gcc_pkg = self.spec["gcc"].package
         if spec.platform in ["linux", "freebsd"]:
-            libraries = get_elf_libraries(compiler=self.compiler, libraries=self.LIBRARIES)
+            libraries = get_elf_libraries(compiler=gcc_pkg, libraries=self.LIBRARIES)
         elif spec.platform == "darwin":
             libraries = self._get_libraries_macho()
         else:
@@ -74,7 +75,7 @@ class GccRuntime(Package):
 
     def _get_libraries_macho(self):
         """Same as _get_libraries_elf but for Mach-O binaries"""
-        cc = Executable(self.compiler.cc)
+        cc = Executable(self.spec["gcc"].package.cc)
         path_and_install_name = []
 
         for name in self.LIBRARIES:

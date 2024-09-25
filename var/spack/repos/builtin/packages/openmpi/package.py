@@ -394,9 +394,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         "1.0", sha256="cf75e56852caebe90231d295806ac3441f37dc6d9ad17b1381791ebb78e21564"
     )  # libmpi.so.0.0.0
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     patch("ad_lustre_rwcontig_open_source.patch", when="@1.6.5")
     patch("llnl-platforms.patch", when="@1.6.5")
@@ -1262,7 +1262,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         # NAG compiler is usually mixed with GCC, which has a different
         # prefix for linker arguments.
-        if self.compiler.name == "nag":
+        if self.spec["fortran"].name == "nag":
             x.filter("-Wl,--enable-new-dtags", "", string=True, backup=False)
 
     # For v4 and lower
