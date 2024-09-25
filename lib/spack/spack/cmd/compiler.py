@@ -12,7 +12,7 @@ from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
-import spack.compilers
+import spack.compilers.config
 import spack.config
 import spack.spec
 from spack.cmd.common import arguments
@@ -88,7 +88,7 @@ def compiler_find(args):
         )
 
     paths = args.add_paths or None
-    new_compilers = spack.compilers.find_compilers(
+    new_compilers = spack.compilers.config.find_compilers(
         path_hints=paths, scope=args.scope, max_workers=args.jobs
     )
     if new_compilers:
@@ -101,11 +101,11 @@ def compiler_find(args):
     else:
         tty.msg("Found no new compilers")
     tty.msg("Compilers are defined in the following files:")
-    colify(spack.compilers.compiler_config_files(), indent=4)
+    colify(spack.compilers.config.compiler_config_files(), indent=4)
 
 
 def compiler_remove(args):
-    remover = spack.compilers.CompilerRemover(spack.config.CONFIG)
+    remover = spack.compilers.config.CompilerRemover(spack.config.CONFIG)
     candidates = remover.mark_compilers(match=args.compiler_spec, scope=args.scope)
     if not candidates:
         tty.die(f"No compiler matches '{args.compiler_spec}'")
@@ -133,7 +133,7 @@ def compiler_remove(args):
 def compiler_info(args):
     """Print info about all compilers matching a spec."""
     query = spack.spec.Spec(args.compiler_spec)
-    all_compilers = spack.compilers.all_compilers(scope=args.scope, init_config=False)
+    all_compilers = spack.compilers.config.all_compilers(scope=args.scope, init_config=False)
 
     compilers = [x for x in all_compilers if x.satisfies(query)]
 
@@ -171,7 +171,7 @@ def compiler_info(args):
 
 
 def compiler_list(args):
-    compilers = spack.compilers.all_compilers(scope=args.scope, init_config=False)
+    compilers = spack.compilers.config.all_compilers(scope=args.scope, init_config=False)
 
     # If there are no compilers in any scope, and we're outputting to a tty, give a
     # hint to the user.
@@ -184,7 +184,7 @@ def compiler_list(args):
         tty.msg(msg)
         return
 
-    index = index_by(compilers, spack.compilers.name_os_target)
+    index = index_by(compilers, spack.compilers.config.name_os_target)
 
     tty.msg("Available compilers")
 

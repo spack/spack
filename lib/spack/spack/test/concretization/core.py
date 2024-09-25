@@ -13,8 +13,7 @@ import archspec.cpu
 import llnl.util.lang
 
 import spack.binary_distribution
-import spack.compiler
-import spack.compilers
+import spack.compilers.config
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
@@ -404,10 +403,10 @@ class TestConcretize:
     #     spec = Spec("pkg-a %clang@12.2.0 platform=test os=fe target=fe")
     #
     #     # Get the compiler that matches the spec (
-    #     compiler = spack.compilers.compiler_for_spec("clang@=12.2.0", spec.architecture)
+    #     compiler = spack.compilers.config.compiler_for_spec("clang@=12.2.0", spec.architecture)
     #
     #     # Configure spack to have two identical compilers with different flags
-    #     default_dict = spack.compilers._to_dict(compiler)
+    #     default_dict = spack.compilers.config._to_dict(compiler)
     #     different_dict = copy.deepcopy(default_dict)
     #     different_dict["compiler"]["flags"] = {"cflags": "-O2"}
     #
@@ -2244,7 +2243,7 @@ class TestConcretize:
         mpileaks = [s for s in mutable_database.query_local() if s.name == "mpileaks"]
 
         # Remove gcc@10.2.1
-        remover = spack.compilers.CompilerRemover(mutable_config)
+        remover = spack.compilers.config.CompilerRemover(mutable_config)
         remover.mark_compilers(match="gcc@=10.2.1")
         remover.flush()
         mutable_config.set("concretizer:reuse", True)

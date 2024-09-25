@@ -15,6 +15,7 @@ import archspec.cpu
 import llnl.util.tty as tty
 from llnl.util.lang import classproperty, memoized
 
+import spack.compilers.libraries
 import spack.package_base
 import spack.paths
 import spack.util.executable
@@ -217,6 +218,11 @@ class CompilerPackage(spack.package_base.PackageBase):
         env.set("SPACK_F77_RPATH_ARG", self.rpath_arg)
         env.set("SPACK_FC_RPATH_ARG", self.rpath_arg)
         env.set("SPACK_LINKER_ARG", self.linker_arg)
+
+        detector = spack.compilers.libraries.CompilerPropertyDetector(self.spec)
+        paths = detector.implicit_rpaths()
+        if paths:
+            env.set("SPACK_COMPILER_IMPLICIT_RPATHS", ":".join(paths))
 
         # Check whether we want to force RPATH or RUNPATH
         if spack.config.CONFIG.get("config:shared_linking:type") == "rpath":

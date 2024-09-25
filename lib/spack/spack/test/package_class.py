@@ -17,7 +17,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
-import spack.compilers
+import spack.compilers.config
 import spack.config
 import spack.deptypes as dt
 import spack.error
@@ -277,7 +277,7 @@ def test_package_test_no_compilers(mock_packages, monkeypatch, capfd):
     def compilers(compiler, arch_spec):
         return None
 
-    monkeypatch.setattr(spack.compilers, "compilers_for_spec", compilers)
+    monkeypatch.setattr(spack.compilers.config, "compilers_for_spec", compilers)
 
     s = spack.spec.Spec("pkg-a")
     pkg = BaseTestPackage(s)

@@ -26,7 +26,7 @@ from llnl.util.symlink import readlink, symlink
 
 import spack
 import spack.caches
-import spack.compilers
+import spack.compilers.config
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
@@ -1641,7 +1641,7 @@ class Environment:
 
         # Ensure we have compilers in compilers.yaml to avoid that
         # processes try to write the config file in parallel
-        _ = spack.compilers.all_compilers_from(spack.config.CONFIG)
+        _ = spack.compilers.config.all_compilers_from(spack.config.CONFIG)
 
         # Early return if there is nothing to do
         if len(args) == 0:
