@@ -1107,7 +1107,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         """
         dev_path_var = self.spec.variants.get("dev_path", None)
         _, record = spack.store.STORE.db.query_by_spec_hash(self.spec.dag_hash())
-        mtime = fs.last_modification_time_recursive(dev_path_var.value)
+        mtime = fsys.last_modification_time_recursive(dev_path_var.value)
         return mtime > record.installation_time
 
     def all_urls_for_version(self, version: StandardVersion) -> List[str]:
