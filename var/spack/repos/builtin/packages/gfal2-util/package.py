@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Gfal2Util(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """CLI for gfal2."""
 
     homepage = "https://dmc-docs.web.cern.ch/dmc-docs/gfal2-util.html"
     url = "https://github.com/cern-fts/gfal2-util/archive/refs/tags/v1.9.0.tar.gz"
