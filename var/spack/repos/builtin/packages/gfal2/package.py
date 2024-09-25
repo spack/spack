@@ -32,6 +32,7 @@ class Gfal2(CMakePackage):
 
     depends_on("glib")
     depends_on("json-c")
+    depends_on("openldap")
 
     depends_on("dcap", when="+dcap")
     depends_on("zlib", when="+file")
