@@ -1101,6 +1101,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         """
         pass
 
+    def detect_dev_src_change(self):
+        """
+        Method for checking for source code changes to trigger rebuild/reinstall
+        """
+        _, record = spack.store.STORE.db.query_by_spec_hash(self.spec.dag_hash())
+        mtime = fs.last_modification_time_recursive(dev_path_var.value)
+        return mtime > record.installation_time
+
     def all_urls_for_version(self, version: StandardVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and
         list_url (if it contains a version) in a package in that order.
