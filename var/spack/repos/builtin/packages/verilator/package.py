@@ -87,6 +87,8 @@ class Verilator(AutotoolsPackage):
 
     conflicts("%gcc@:6", msg="C++14 support required")
 
+    patch("fix_compile_gch.patch", level=1, when="@5.0.18:")
+
     # we need to fix the CXX and LINK paths, as they point to the spack
     # wrapper scripts which aren't usable without spack
     filter_compiler_wrappers("verilated.mk", relative_root="include")
