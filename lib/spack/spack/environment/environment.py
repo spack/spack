@@ -547,8 +547,7 @@ def _is_dev_spec_and_has_changed(spec):
     last installation"""
     # First check if this is a dev build and in the process already try to get
     # the dev_path
-    dev_path_var = spec.variants.get("dev_path", None)
-    if not dev_path_var:
+    if not spec.variants.get("dev_path", None):
         return False
 
     # Now we can check whether the code changed since the last installation

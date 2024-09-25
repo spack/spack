@@ -1105,6 +1105,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         """
         Method for checking for source code changes to trigger rebuild/reinstall
         """
+        dev_path_var = self.spec.variants.get("dev_path", None)
         _, record = spack.store.STORE.db.query_by_spec_hash(self.spec.dag_hash())
         mtime = fs.last_modification_time_recursive(dev_path_var.value)
         return mtime > record.installation_time
