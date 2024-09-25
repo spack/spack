@@ -35,25 +35,24 @@ from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, 
 import spack.binary_distribution
 import spack.bootstrap.core
 import spack.caches
-import spack.cmd.buildcache
 import spack.compiler
 import spack.compilers
 import spack.config
-import spack.database
-import spack.directory_layout
+import spack.directives
 import spack.environment as ev
 import spack.error
+import spack.modules.common
 import spack.package_base
-import spack.package_prefs
 import spack.paths
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.spec
 import spack.stage
 import spack.store
 import spack.subprocess_context
-import spack.test.cray_manifest
 import spack.util.executable
+import spack.util.file_cache
 import spack.util.git
 import spack.util.gpg
 import spack.util.parallel
@@ -62,6 +61,7 @@ import spack.util.url as url_util
 import spack.util.web
 import spack.version
 from spack.fetch_strategy import URLFetchStrategy
+from spack.installer import PackageInstaller
 from spack.util.pattern import Bunch
 
 
@@ -853,7 +853,7 @@ def _populate(mock_db):
 
     def _install(spec):
         s = spack.spec.Spec(spec).concretized()
-        s.package.do_install(fake=True, explicit=True)
+        PackageInstaller([s.package], fake=True, explicit=True).install()
 
     _install("mpileaks ^mpich")
     _install("mpileaks ^mpich2")
@@ -1981,12 +1981,14 @@ def pytest_runtest_setup(item):
         pytest.skip(*not_on_windows_marker.args)
 
 
+def _sequential_executor(*args, **kwargs):
+    return spack.util.parallel.SequentialExecutor()
+
+
 @pytest.fixture(autouse=True)
 def disable_parallel_buildcache_push(monkeypatch):
     """Disable process pools in tests."""
-    monkeypatch.setattr(
-        spack.util.parallel, "make_concurrent_executor", spack.util.parallel.SequentialExecutor
-    )
+    monkeypatch.setattr(spack.util.parallel, "make_concurrent_executor", _sequential_executor)
 
 
 def _root_path(x, y, *, path):

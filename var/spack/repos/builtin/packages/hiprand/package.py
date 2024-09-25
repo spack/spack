@@ -24,6 +24,7 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.2.0", sha256="daaf32506eaaf3c3b715ed631387c27992cfe0d938353a88ad6acedc735eb54b")
     version("6.1.2", sha256="f0f129811c144dd711e967305c7af283cefb94bfdbcd2a11296b92a9e966be2c")
     version("6.1.1", sha256="dde1526fb6cde17b18bc9ee6daa719056fc468dfbda5801b9a61260daf2b4498")
     version("6.1.0", sha256="f9d71af23092f8faa888d2c14713ee4d4d350454818ca9331d422c81c2587c1f")
@@ -93,6 +94,7 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
+        "6.2.0",
         "master",
         "develop",
     ]:

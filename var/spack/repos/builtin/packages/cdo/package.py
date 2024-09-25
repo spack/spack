@@ -170,6 +170,20 @@ class Cdo(AutotoolsPackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
+    # patches
+    # see https://code.mpimet.mpg.de/boards/1/topics/15594
+    patch(
+        "add_algorithm_header.patch",
+        when="@2.4.0:2.4.2 %gcc@14:",
+        sha256="0bc20d2fcb14d8e4010d4222297f259eb7b4220effd97555ed3f027e63cf8b30",
+    )
+    patch(
+        "add_algorithm_header_222.patch",
+        when="@2.2.2:2.3.0 %gcc@14:",
+        sha256="db0d9bd32bbee01d914c1dbebd751403e9c918fafd540fd6ecc6a2f27e0900cf",
+    )
+    conflicts("%gcc@14:", when="@:2.2.0", msg="Compilation with gcc@14: requires cdo@2.2.2:")
+
     variant("netcdf", default=True, description="Enable NetCDF support")
     variant(
         "grib2",

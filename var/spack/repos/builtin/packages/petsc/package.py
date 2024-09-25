@@ -183,6 +183,16 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             when="@3.20.0",
             sha256="ba327f8b2a0fa45209dfb7a4278f3e9a323965b5a668be204c1c77c17a963a7f",
         )
+        patch(
+            "https://gitlab.com/petsc/petsc/-/commit/20d5ecbf88175ced320006c488dcefa2efb1e67f.diff",
+            when="@3.21 ^hip@6:",
+            sha256="2904ea20c71e2f21b8475513c3e5de7465e328e2485ae706b003aa79314e3e7c",
+        )
+        patch(
+            "https://gitlab.com/petsc/petsc/-/commit/bdb83d9f3e3c55b3bd4c8732bfe2066c23f10f61.diff",
+            when="@3.21 ^hip@6:",
+            sha256="89cf2c9a01d4a3233c889dd98496a29bf43db1bc69195892f9e5405c537b87e3",
+        )
         patch("hip-5.6.0-for-3.18.diff", when="@3.18:3.19 ^hipsparse@5.6.0")
         patch("hip-5.7-plus-for-3.18.diff", when="@3.18:3.19 ^hipsparse@5.7:")
         patch(
@@ -253,6 +263,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("hip", when="+rocm")
 
     with when("+rocm"):
+        depends_on("rocm-core")
         depends_on("hipblas")
         depends_on("hipsparse")
         depends_on("hipsolver")
@@ -602,7 +613,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 hip_arch = spec.variants["amdgpu_target"].value
                 options.append("--with-hip-arch={0}".format(hip_arch[0]))
             hip_pkgs = ["hipsparse", "hipblas", "hipsolver", "rocsparse", "rocsolver", "rocblas"]
-            hip_ipkgs = hip_pkgs + ["rocthrust", "rocprim"]
+            hip_ipkgs = hip_pkgs + ["rocthrust", "rocprim", "rocm-core"]
             hip_lpkgs = hip_pkgs
             if spec.satisfies("^rocrand@5.1:"):
                 hip_ipkgs.extend(["rocrand"])
