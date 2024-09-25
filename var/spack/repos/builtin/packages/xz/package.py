@@ -55,6 +55,7 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
         description="Build shared libs, static libs or both",
     )
 
+    variant("I-AM-A-STUB", default=True, description="If you see me, the wrong PR was merged")
     # xz-5.2.7/src/liblzma/common/common.h:56 uses attribute __symver__ instead of
     # __asm__(.symver) for newer GCC releases.
     conflicts("%intel", when="@5.2.7", msg="icc does not support attribute __symver__")
