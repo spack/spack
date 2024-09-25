@@ -48,7 +48,7 @@ class Gaudi(CMakePackage):
     variant("cppunit", default=False, description="Build with CppUnit unit testing")
     variant("docs", default=False, description="Build documentation with Doxygen")
     variant("examples", default=False, description="Build examples")
-    variant("gaudialg", default=False, description="Build GaudiAlg support", when="@37.0:")
+    variant("gaudialg", default=False, description="Build GaudiAlg support", when="@37.0:38")
     variant("gperftools", default=False, description="Build with Google PerfTools support")
     variant("heppdt", default=False, description="Build with HEP Particle Data Table support")
     variant("jemalloc", default=False, description="Build with jemalloc allocator support")
