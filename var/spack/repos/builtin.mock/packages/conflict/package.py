@@ -18,6 +18,8 @@ class Conflict(Package):
 
     conflicts("%clang", when="+foo")
 
+    depends_on("c", type="build")
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()

@@ -21,5 +21,8 @@ class Libdwarf(Package):
 
     depends_on("libelf")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     def install(self, spec, prefix):
         touch(prefix.libdwarf)
