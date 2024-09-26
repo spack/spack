@@ -5,6 +5,7 @@
 
 import pytest
 
+import spack.config
 import spack.solver.asp
 import spack.spec
 

@@ -270,11 +270,10 @@ class Openblas(CMakePackage, MakefilePackage):
 
     def flag_handler(self, name, flags):
         spec = self.spec
-        iflags = []
         if name == "cflags":
             if spec.satisfies("@0.3.20: %oneapi") or spec.satisfies("@0.3.20: %arm"):
-                iflags.append("-Wno-error=implicit-function-declaration")
-        return (iflags, None, None)
+                flags.append("-Wno-error=implicit-function-declaration")
+        return (flags, None, None)
 
     @classmethod
     def determine_version(cls, lib):

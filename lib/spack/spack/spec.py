@@ -26,7 +26,7 @@ line is a spec for a particular installation of the mpileaks package.
    version, like "1.2", or it can be a range of versions, e.g. "1.2:1.4".
    If multiple specific versions or multiple ranges are acceptable, they
    can be separated by commas, e.g. if a package will only build with
-   versions 1.0, 1.2-1.4, and 1.6-1.8 of mavpich, you could say:
+   versions 1.0, 1.2-1.4, and 1.6-1.8 of mvapich, you could say:
 
        depends_on("mvapich@1.0,1.2:1.4,1.6:1.8")
 
@@ -61,6 +61,8 @@ import socket
 import warnings
 from typing import Any, Callable, Dict, List, Match, Optional, Set, Tuple, Union
 
+import archspec.cpu
+
 import llnl.path
 import llnl.string
 import llnl.util.filesystem as fs
@@ -68,6 +70,7 @@ import llnl.util.lang as lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
 
+import spack
 import spack.compiler
 import spack.compilers
 import spack.config
@@ -75,16 +78,13 @@ import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
 import spack.parser
-import spack.patch
 import spack.paths
 import spack.platforms
 import spack.provider_index
 import spack.repo
 import spack.solver
 import spack.store
-import spack.target
 import spack.traverse as traverse
-import spack.util.crypto
 import spack.util.executable
 import spack.util.hash
 import spack.util.module_cmd as md
@@ -214,6 +214,12 @@ def ensure_modern_format_string(fmt: str) -> None:
         )
 
 
+def _make_microarchitecture(name: str) -> archspec.cpu.Microarchitecture:
+    if isinstance(name, archspec.cpu.Microarchitecture):
+        return name
+    return archspec.cpu.TARGETS.get(name, archspec.cpu.generic_microarchitecture(name))
+
+
 @lang.lazy_lexicographic_ordering
 class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
@@ -302,7 +308,10 @@ class ArchSpec:
     def _cmp_iter(self):
         yield self.platform
         yield self.os
-        yield self.target
+        if self.target is None:
+            yield self.target
+        else:
+            yield self.target.name
 
     @property
     def platform(self):
@@ -361,10 +370,10 @@ class ArchSpec:
         # will assumed to be the host machine's platform.
 
         def target_or_none(t):
-            if isinstance(t, spack.target.Target):
+            if isinstance(t, archspec.cpu.Microarchitecture):
                 return t
             if t and t != "None":
-                return spack.target.Target(t)
+                return _make_microarchitecture(t)
             return None
 
         value = target_or_none(value)
@@ -453,10 +462,11 @@ class ArchSpec:
         results = self._target_intersection(other)
         attribute_str = ",".join(results)
 
-        if self.target == attribute_str:
+        intersection_target = _make_microarchitecture(attribute_str)
+        if self.target == intersection_target:
             return False
 
-        self.target = attribute_str
+        self.target = intersection_target
         return True
 
     def _target_intersection(self, other):
@@ -474,7 +484,7 @@ class ArchSpec:
                     # s_target_range is a concrete target
                     # get a microarchitecture reference for at least one side
                     # of each comparison so we can use archspec comparators
-                    s_comp = spack.target.Target(s_min).microarchitecture
+                    s_comp = _make_microarchitecture(s_min)
                     if not o_sep:
                         if s_min == o_min:
                             results.append(s_min)
@@ -482,21 +492,21 @@ class ArchSpec:
                         results.append(s_min)
                 elif not o_sep:
                     # "cast" to microarchitecture
-                    o_comp = spack.target.Target(o_min).microarchitecture
+                    o_comp = _make_microarchitecture(o_min)
                     if (not s_min or o_comp >= s_min) and (not s_max or o_comp <= s_max):
                         results.append(o_min)
                 else:
                     # Take intersection of two ranges
                     # Lots of comparisons needed
-                    _s_min = spack.target.Target(s_min).microarchitecture
-                    _s_max = spack.target.Target(s_max).microarchitecture
-                    _o_min = spack.target.Target(o_min).microarchitecture
-                    _o_max = spack.target.Target(o_max).microarchitecture
+                    _s_min = _make_microarchitecture(s_min)
+                    _s_max = _make_microarchitecture(s_max)
+                    _o_min = _make_microarchitecture(o_min)
+                    _o_max = _make_microarchitecture(o_max)
 
                     n_min = s_min if _s_min >= _o_min else o_min
                     n_max = s_max if _s_max <= _o_max else o_max
-                    _n_min = spack.target.Target(n_min).microarchitecture
-                    _n_max = spack.target.Target(n_max).microarchitecture
+                    _n_min = _make_microarchitecture(n_min)
+                    _n_max = _make_microarchitecture(n_max)
                     if _n_min == _n_max:
                         results.append(n_min)
                     elif not n_min or not n_max or _n_min < _n_max:
@@ -549,12 +559,18 @@ class ArchSpec:
         )
 
     def to_dict(self):
+        # Generic targets represent either an architecture family (like x86_64)
+        # or a custom micro-architecture
+        if self.target.vendor == "generic":
+            target_data = str(self.target)
+        else:
+            # Get rid of compiler flag information before turning the uarch into a dict
+            uarch_dict = self.target.to_dict()
+            uarch_dict.pop("compilers", None)
+            target_data = syaml.syaml_dict(uarch_dict.items())
+
         d = syaml.syaml_dict(
-            [
-                ("platform", self.platform),
-                ("platform_os", self.os),
-                ("target", self.target.to_dict_or_value()),
-            ]
+            [("platform", self.platform), ("platform_os", self.os), ("target", target_data)]
         )
         return syaml.syaml_dict([("arch", d)])
 
@@ -562,7 +578,10 @@ class ArchSpec:
     def from_dict(d):
         """Import an ArchSpec from raw YAML/JSON data"""
         arch = d["arch"]
-        target = spack.target.Target.from_dict_or_value(arch["target"])
+        target_name = arch["target"]
+        if not isinstance(target_name, str):
+            target_name = target_name["name"]
+        target = _make_microarchitecture(target_name)
         return ArchSpec((arch["platform"], arch["platform_os"], target))
 
     def __str__(self):
@@ -1136,7 +1155,7 @@ def _libs_default_handler(spec: "Spec"):
 
     for shared in search_shared:
         # Since we are searching for link libraries, on Windows search only for
-        # ".Lib" extensions by default as those represent import libraries for implict links.
+        # ".Lib" extensions by default as those represent import libraries for implicit links.
         libs = fs.find_libraries(name, home, shared=shared, recursive=True, runtime=False)
         if libs:
             return libs
@@ -1307,7 +1326,7 @@ class SpecBuildInterface(lang.ObjectWrapper):
 
 
 def tree(
-    specs: List["spack.spec.Spec"],
+    specs: List["Spec"],
     *,
     color: Optional[bool] = None,
     depth: bool = False,
@@ -2017,6 +2036,7 @@ class Spec:
     def _lookup_hash(self):
         """Lookup just one spec with an abstract hash, returning a spec from the the environment,
         store, or finally, binary caches."""
+        import spack.binary_distribution
         import spack.environment
 
         active_env = spack.environment.active_environment()
@@ -2032,7 +2052,7 @@ class Spec:
             raise InvalidHashError(self, self.abstract_hash)
 
         if len(matches) != 1:
-            raise spack.spec.AmbiguousHashError(
+            raise AmbiguousHashError(
                 f"Multiple packages specify hash beginning '{self.abstract_hash}'.", *matches
             )
 
@@ -2367,14 +2387,16 @@ class Spec:
         package_cls = spack.repo.PATH.get_pkg_class(new_spec.name)
         if change_spec.versions and not change_spec.versions == vn.any_version:
             new_spec.versions = change_spec.versions
-        for variant, value in change_spec.variants.items():
-            if variant in package_cls.variants:
-                if variant in new_spec.variants:
+
+        for vname, value in change_spec.variants.items():
+            if vname in package_cls.variant_names():
+                if vname in new_spec.variants:
                     new_spec.variants.substitute(value)
                 else:
-                    new_spec.variants[variant] = value
+                    new_spec.variants[vname] = value
             else:
-                raise ValueError("{0} is not a variant of {1}".format(variant, new_spec.name))
+                raise ValueError("{0} is not a variant of {1}".format(vname, new_spec.name))
+
         if change_spec.compiler:
             new_spec.compiler = change_spec.compiler
         if change_spec.compiler_flags:
@@ -2475,7 +2497,7 @@ class Spec:
             spec_like, dep_like = next(iter(d.items()))
 
             # If the requirements was for unique nodes (default)
-            # then re-use keys from the local cache. Otherwise build
+            # then reuse keys from the local cache. Otherwise build
             # a new node every time.
             if not isinstance(spec_like, Spec):
                 spec = spec_cache[spec_like] if normal else Spec(spec_like)
@@ -2962,48 +2984,14 @@ class Spec:
             return
 
         pkg_cls = spec.package_class
-        pkg_variants = pkg_cls.variants
+        pkg_variants = pkg_cls.variant_names()
         # reserved names are variants that may be set on any package
         # but are not necessarily recorded by the package's class
         not_existing = set(spec.variants) - (set(pkg_variants) | set(vt.reserved_names))
         if not_existing:
-            raise vt.UnknownVariantError(spec, not_existing)
-
-    def update_variant_validate(self, variant_name, values):
-        """If it is not already there, adds the variant named
-        `variant_name` to the spec `spec` based on the definition
-        contained in the package metadata. Validates the variant and
-        values before returning.
-
-        Used to add values to a variant without being sensitive to the
-        variant being single or multi-valued. If the variant already
-        exists on the spec it is assumed to be multi-valued and the
-        values are appended.
-
-        Args:
-           variant_name: the name of the variant to add or append to
-           values: the value or values (as a tuple) to add/append
-                   to the variant
-        """
-        if not isinstance(values, tuple):
-            values = (values,)
-
-        pkg_variant, _ = self.package_class.variants[variant_name]
-
-        for value in values:
-            if self.variants.get(variant_name):
-                msg = (
-                    f"cannot append the new value '{value}' to the single-valued "
-                    f"variant '{self.variants[variant_name]}'"
-                )
-                assert pkg_variant.multi, msg
-                self.variants[variant_name].append(value)
-            else:
-                variant = pkg_variant.make_variant(value)
-                self.variants[variant_name] = variant
-
-        pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
-        pkg_variant.validate_or_raise(self.variants[variant_name], pkg_cls)
+            raise vt.UnknownVariantError(
+                f"No such variant {not_existing} for spec: '{spec}'", list(not_existing)
+            )
 
     def constrain(self, other, deps=True):
         """Intersect self with other in-place. Return True if self changed, False otherwise.
@@ -3464,7 +3452,7 @@ class Spec:
                     pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
                     try:
                         patch = index.patch_for_package(sha256, pkg_cls)
-                    except spack.patch.PatchLookupError as e:
+                    except spack.error.PatchLookupError as e:
                         raise spack.error.SpecError(
                             f"{e}. This usually means the patch was modified or removed. "
                             "To fix this, either reconcretize or use the original package "
@@ -4152,9 +4140,7 @@ class Spec:
 
     @property
     def target(self):
-        # This property returns the underlying microarchitecture object
-        # to give to the attribute the appropriate comparison semantic
-        return self.architecture.target.microarchitecture
+        return self.architecture.target
 
     @property
     def build_spec(self):
@@ -4447,7 +4433,9 @@ class VariantMap(lang.HashableMap):
         Returns:
             bool: True or False
         """
-        return self.spec._concrete or all(v in self for v in self.spec.package_class.variants)
+        return self.spec._concrete or all(
+            v in self for v in self.spec.package_class.variant_names()
+        )
 
     def copy(self) -> "VariantMap":
         clone = VariantMap(self.spec)
@@ -4485,7 +4473,7 @@ class VariantMap(lang.HashableMap):
 
 def substitute_abstract_variants(spec: Spec):
     """Uses the information in `spec.package` to turn any variant that needs
-    it into a SingleValuedVariant.
+    it into a SingleValuedVariant or BoolValuedVariant.
 
     This method is best effort. All variants that can be substituted will be
     substituted before any error is raised.
@@ -4493,26 +4481,45 @@ def substitute_abstract_variants(spec: Spec):
     Args:
         spec: spec on which to operate the substitution
     """
-    # This method needs to be best effort so that it works in matrix exlusion
+    # This method needs to be best effort so that it works in matrix exclusion
     # in $spack/lib/spack/spack/spec_list.py
-    failed = []
+    unknown = []
     for name, v in spec.variants.items():
         if name == "dev_path":
             spec.variants.substitute(vt.SingleValuedVariant(name, v._original_value))
             continue
         elif name in vt.reserved_names:
             continue
-        elif name not in spec.package_class.variants:
-            failed.append(name)
+
+        variant_defs = spec.package_class.variant_definitions(name)
+        valid_defs = []
+        for when, vdef in variant_defs:
+            if when.intersects(spec):
+                valid_defs.append(vdef)
+
+        if not valid_defs:
+            if name not in spec.package_class.variant_names():
+                unknown.append(name)
+            else:
+                whens = [str(when) for when, _ in variant_defs]
+                raise InvalidVariantForSpecError(v.name, f"({', '.join(whens)})", spec)
             continue
-        pkg_variant, _ = spec.package_class.variants[name]
+
+        pkg_variant, *rest = valid_defs
+        if rest:
+            continue
+
         new_variant = pkg_variant.make_variant(v._original_value)
-        pkg_variant.validate_or_raise(new_variant, spec.package_class)
+        pkg_variant.validate_or_raise(new_variant, spec.name)
         spec.variants.substitute(new_variant)
 
-    # Raise all errors at once
-    if failed:
-        raise vt.UnknownVariantError(spec, failed)
+    if unknown:
+        variants = llnl.string.plural(len(unknown), "variant")
+        raise vt.UnknownVariantError(
+            f"Tried to set {variants} {llnl.string.comma_and(unknown)}. "
+            f"{spec.name} has no such {variants}",
+            unknown_variants=unknown,
+        )
 
 
 def parse_with_version_concrete(spec_like: Union[str, Spec], compiler: bool = False):
@@ -4535,7 +4542,7 @@ def merge_abstract_anonymous_specs(*abstract_specs: Spec):
     Args:
         *abstract_specs: abstract specs to be merged
     """
-    merged_spec = spack.spec.Spec()
+    merged_spec = Spec()
     for current_spec_constraint in abstract_specs:
         merged_spec.constrain(current_spec_constraint, deps=False)
 
@@ -4890,7 +4897,6 @@ def get_host_environment_metadata() -> Dict[str, str]:
     """Get the host environment, reduce to a subset that we can store in
     the install directory, and add the spack version.
     """
-    import spack.main
 
     environ = get_host_environment()
     return {
@@ -4898,7 +4904,7 @@ def get_host_environment_metadata() -> Dict[str, str]:
         "platform": environ["platform"],
         "host_target": environ["target"],
         "hostname": environ["hostname"],
-        "spack_version": spack.main.get_version(),
+        "spack_version": spack.get_version(),
         "kernel_version": platform.version(),
     }
 
@@ -4920,7 +4926,6 @@ def get_host_environment() -> Dict[str, Any]:
         "architecture": arch_spec,
         "arch_str": str(arch_spec),
         "hostname": socket.gethostname(),
-        "full_hostname": socket.getfqdn(),
     }
 
 
@@ -4941,6 +4946,15 @@ class SpecParseError(spack.error.SpecError):
                 "    %s^" % (" " * self.pos),
             ]
         )
+
+
+class InvalidVariantForSpecError(spack.error.SpecError):
+    """Raised when an invalid conditional variant is specified."""
+
+    def __init__(self, variant, when, spec):
+        msg = f"Invalid variant {variant} for spec {spec}.\n"
+        msg += f"{variant} is only available for {spec.name} when satisfying one of {when}."
+        super().__init__(msg)
 
 
 class UnsupportedPropagationError(spack.error.SpecError):
@@ -5025,7 +5039,7 @@ class UnsatisfiableVersionSpecError(spack.error.UnsatisfiableSpecError):
 
 
 class UnsatisfiableCompilerSpecError(spack.error.UnsatisfiableSpecError):
-    """Raised when a spec comiler conflicts with package constraints."""
+    """Raised when a spec compiler conflicts with package constraints."""
 
     def __init__(self, provided, required):
         super().__init__(provided, required, "compiler")

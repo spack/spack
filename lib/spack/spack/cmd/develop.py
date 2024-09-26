@@ -10,7 +10,6 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.config
 import spack.fetch_strategy
-import spack.package_base
 import spack.repo
 import spack.spec
 import spack.stage

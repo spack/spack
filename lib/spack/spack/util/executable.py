@@ -12,6 +12,7 @@ from pathlib import Path, PurePath
 import llnl.util.tty as tty
 
 import spack.error
+from spack.util.environment import EnvironmentModifications
 
 __all__ = ["Executable", "which", "ProcessError"]
 
@@ -27,7 +28,6 @@ class Executable:
         self.exe = [file_path]
 
         self.default_env = {}
-        from spack.util.environment import EnvironmentModifications  # no cycle
 
         self.default_envmod = EnvironmentModifications()
         self.returncode = None
