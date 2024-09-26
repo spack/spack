@@ -13,7 +13,7 @@ class Strace(AutotoolsPackage):
     signal deliveries, and changes of process state."""
 
     homepage = "https://strace.io"
-    url = "https://github.com/strace/strace/releases/download/v5.2/strace-5.2.tar.xz"
+    url = "https://github.com/strace/strace/releases/download/v6.11/strace-6.11.tar.xz"
 
     maintainers("michaelkuhn")
 
