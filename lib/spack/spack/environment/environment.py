@@ -42,7 +42,6 @@ import spack.spec
 import spack.spec_list
 import spack.store
 import spack.user_environment as uenv
-import spack.util.cpus
 import spack.util.environment
 import spack.util.hash
 import spack.util.lock as lk
@@ -1967,7 +1966,7 @@ class Environment:
         )
         install_args["explicit"] = explicit
 
-        PackageInstaller([spec.package for spec in specs], install_args).install()
+        PackageInstaller([spec.package for spec in specs], **install_args).install()
 
     def all_specs_generator(self) -> Iterable[Spec]:
         """Returns a generator for all concrete specs"""

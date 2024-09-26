@@ -19,7 +19,6 @@ import llnl.util.tty.color
 
 import spack.error as error
 import spack.parser
-import spack.repo
 import spack.spec
 
 #: These are variant names used by Spack internally; packages can't use them

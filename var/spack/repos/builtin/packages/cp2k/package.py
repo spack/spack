@@ -362,12 +362,17 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     # These patches backport 2023.x fixes to previous versions
     patch("backport_avoid_null_2022.x.patch", when="@2022.1:2022.2 %aocc@:4.0")
     patch("backport_avoid_null_9.1.patch", when="@9.1 %aocc@:4.0")
+
     patch("cmake-fixes-2023.2.patch", when="@2023.2 build_system=cmake")
 
     # Allow compilation with build_type=RelWithDebInfo and build_type=MinSizeRel
     # after NDEBUG support was dropped in https://github.com/cp2k/cp2k/pull/3172
     # The patch applies https://github.com/cp2k/cp2k/pull/3251 to version 2024.1
     patch("cmake-relwithdebinfo-2024.1.patch", when="@2024.1 build_system=cmake")
+
+    # Bugfix for D4 dispersion correction in CP2K 2024.3
+    # https://github.com/cp2k/cp2k/issues/3688
+    patch("d4-dispersion-bugfix-2024.3.patch", when="@2024.3")
 
     # Patch for an undefined constant due to incompatible changes in ELPA
     @when("@9.1:2022.2 +elpa")
