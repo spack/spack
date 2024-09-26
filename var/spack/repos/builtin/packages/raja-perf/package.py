@@ -89,6 +89,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("mpi", default=False, description="Enable MPI support")
     variant("openmp", default=False, description="Build OpenMP backend")
     variant("omptarget", default=False, description="Build with OpenMP target support")
+    variant("sycl", default=False, description="Build sycl backend")
     variant("shared", default=False, description="Build Shared Libs")
     variant("omptask", default=False, description="Build OpenMP task variants of algorithms")
     variant(
@@ -139,8 +140,17 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
             depends_on("caliper +cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
 
     conflicts("~openmp", when="+omptarget", msg="OpenMP target requires OpenMP")
-    conflicts("+omptarget +rocm")
     conflicts("+cuda", when="+omptarget", msg="Cuda may not be activated when omptarget is ON")
+    conflicts("+omptarget +rocm")
+    conflicts("+sycl +omptarget")
+    conflicts("+sycl +rocm")
+    # Using RAJA version as threshold on purpose (no 2024.02 version of RAJAPerf were released).
+    conflicts(
+        "+sycl",
+        when="@:2024.02.99",
+        msg="Support for SYCL was introduced in RAJA after 2024.02 release, "
+        "please use a newer release.",
+    )
 
     def _get_sys_type(self, spec):
         sys_type = str(spec.architecture)
@@ -311,6 +321,15 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
         entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
         entries.append(cmake_cache_option("RAJA_ENABLE_OPENMP_TASK", "+omptask" in spec))
+        entries.append(cmake_cache_option("RAJA_ENABLE_SYCL", spec.satisfies("+sycl")))
+
+        # C++17
+        if spec.satisfies("@2024.07.0:") and spec.satisfies("+sycl"):
+            entries.append(cmake_cache_string("BLT_CXX_STD", "c++17"))
+        # C++14
+        # Using RAJA version as threshold on purpose (no 0.14 version of RAJAPerf were released).
+        elif spec.satisfies("@0.14.0:"):
+            entries.append(cmake_cache_string("BLT_CXX_STD", "c++14"))
 
         entries.append(cmake_cache_option("ENABLE_BENCHMARKS", "tests=benchmarks" in spec))
         entries.append(
