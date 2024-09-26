@@ -1,4 +1,3 @@
-spack:
-  packages:
-    python:
-      require: '@3.12:'
+packages:
+  python:
+    require: '@3.12:'
