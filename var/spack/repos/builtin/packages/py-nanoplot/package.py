@@ -10,7 +10,7 @@ class PyNanoplot(PythonPackage):
     """Plotting scripts for long read sequencing data"""
 
     homepage = "https://github.com/wdecoster/NanoPlot"
-    pypi = "NanoPlot/NanoPlot-1.42.0.tar.gz"
+    pypi = "NanoPlot/nanoplot-1.43.0.tar.gz"
 
     maintainers("Pandapip1")
 
@@ -25,7 +25,7 @@ class PyNanoplot(PythonPackage):
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-python-dateutil", type=("build", "run"))
     depends_on("py-nanoget@1.19.1:", type=("build", "run"))
-    depends_on("py-nanomath@1.0.0:", type=("build", "run"))
+    depends_on("py-nanomath@1.0.0:", type=("build", "run"), when="@:1.42")
     depends_on("py-plotly@5.4.0:", type=("build", "run"))
     depends_on("py-pyarrow", type=("build", "run"))
     depends_on("py-kaleido", type=("build", "run"))
