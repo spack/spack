@@ -14,6 +14,7 @@ import spack.cmd
 import spack.parser
 import spack.platforms.test
 import spack.repo
+import spack.solver.asp
 import spack.spec
 from spack.parser import (
     UNIX_FILENAME,
@@ -165,7 +166,7 @@ def specfile_for(default_mock_concretization):
                 Token(TokenType.COMPILER_AND_VERSION, value="%bar@1.0"),
                 Token(TokenType.VERSION, value="@2.0"),
             ],
-            "foo@2.0%bar@1.0",
+            "foo@2.0 %bar@1.0",
         ),
         # Single dependency with version
         dependency_with_version("openmpi ^hwloc@1.2e6"),
@@ -187,7 +188,7 @@ def specfile_for(default_mock_concretization):
                 Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(TokenType.VERSION, value="@8.1_1e"),
             ],
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4 ^stackwalker@8.1_1e",
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6+debug~qt_4 %intel@12.1 ^stackwalker@8.1_1e",
         ),
         (
             "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2 ^stackwalker@8.1_1e",
@@ -203,7 +204,7 @@ def specfile_for(default_mock_concretization):
                 Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(TokenType.VERSION, value="@8.1_1e"),
             ],
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2 ^stackwalker@8.1_1e",
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6~qt_4 debug=2 %intel@12.1 ^stackwalker@8.1_1e",
         ),
         (
             "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags=-O3 +debug~qt_4 "
@@ -221,8 +222,8 @@ def specfile_for(default_mock_concretization):
                 Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(TokenType.VERSION, value="@8.1_1e"),
             ],
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags=-O3 +debug~qt_4 "
-            "^stackwalker@8.1_1e",
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6 cppflags=-O3 +debug~qt_4 %intel@12.1"
+            " ^stackwalker@8.1_1e",
         ),
         # Specs containing YAML or JSON in the package name
         (
@@ -235,7 +236,7 @@ def specfile_for(default_mock_concretization):
                 Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="boost"),
                 Token(TokenType.VERSION, value="@3.1.4"),
             ],
-            "yaml-cpp@0.1.8%intel@12.1 ^boost@3.1.4",
+            "yaml-cpp@0.1.8 %intel@12.1 ^boost@3.1.4",
         ),
         (
             r"builtin.yaml-cpp%gcc",
@@ -243,7 +244,7 @@ def specfile_for(default_mock_concretization):
                 Token(TokenType.FULLY_QUALIFIED_PACKAGE_NAME, value="builtin.yaml-cpp"),
                 Token(TokenType.COMPILER, value="%gcc"),
             ],
-            "yaml-cpp%gcc",
+            "yaml-cpp %gcc",
         ),
         (
             r"testrepo.yaml-cpp%gcc",
@@ -251,7 +252,7 @@ def specfile_for(default_mock_concretization):
                 Token(TokenType.FULLY_QUALIFIED_PACKAGE_NAME, value="testrepo.yaml-cpp"),
                 Token(TokenType.COMPILER, value="%gcc"),
             ],
-            "yaml-cpp%gcc",
+            "yaml-cpp %gcc",
         ),
         (
             r"builtin.yaml-cpp@0.1.8%gcc@7.2.0 ^boost@3.1.4",
@@ -263,7 +264,7 @@ def specfile_for(default_mock_concretization):
                 Token(TokenType.UNQUALIFIED_PACKAGE_NAME, value="boost"),
                 Token(TokenType.VERSION, value="@3.1.4"),
             ],
-            "yaml-cpp@0.1.8%gcc@7.2.0 ^boost@3.1.4",
+            "yaml-cpp@0.1.8 %gcc@7.2.0 ^boost@3.1.4",
         ),
         (
             r"builtin.yaml-cpp ^testrepo.boost ^zlib",
@@ -490,7 +491,7 @@ def specfile_for(default_mock_concretization):
                 Token(TokenType.COMPILER_AND_VERSION, value="% intel @ 12.1:12.6"),
                 Token(TokenType.BOOL_VARIANT, value="+ debug"),
             ],
-            "%intel@12.1:12.6+debug",
+            "+debug %intel@12.1:12.6",
         ),
         (
             "@ 12.1:12.6 + debug - qt_4",
@@ -512,7 +513,7 @@ def specfile_for(default_mock_concretization):
         (
             "@:0.4 % nvhpc",
             [Token(TokenType.VERSION, value="@:0.4"), Token(TokenType.COMPILER, value="% nvhpc")],
-            "@:0.4%nvhpc",
+            "@:0.4 %nvhpc",
         ),
         (
             "^[virtuals=mpi] openmpi",
@@ -820,7 +821,6 @@ def test_dep_spec_by_hash(database, config):
     mpileaks_hash_zmpi.replace_hash()
     assert "zmpi" in mpileaks_hash_zmpi
     assert mpileaks_hash_zmpi["zmpi"] == zmpi
-    assert mpileaks_zmpi.compiler.satisfies(mpileaks_hash_zmpi.compiler)
 
     mpileaks_hash_fake_and_zmpi = SpecParser(
         f"mpileaks ^/{fake.dag_hash()[:4]} ^ /{zmpi.dag_hash()[:5]}"
@@ -983,13 +983,6 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("x@1.2%y@1.2@2.3:2.4", "version"),
         # Duplicate dependency
         ("x ^y@1 ^y@2", "Cannot depend on incompatible specs"),
-        # Duplicate compiler
-        ("x%intel%intel", "compiler"),
-        ("x%intel%gcc", "compiler"),
-        ("x%gcc%intel", "compiler"),
-        ("x ^y%intel%intel", "compiler"),
-        ("x ^y%intel%gcc", "compiler"),
-        ("x ^y%gcc%intel", "compiler"),
         # Duplicate Architectures
         ("x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64", "two architectures"),
         ("x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le", "two architectures"),
@@ -1144,7 +1137,7 @@ def test_parse_filename_missing_slash_as_spec(specfile_for, tmpdir, filename):
     )
 
     # make sure that only happens when the spec ends in yaml
-    with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as exc_info:
         SpecParser("builtin.mock.doesnotexist").next_spec().concretize()
     assert not exc_info.value.long_message or (
         "Did you mean to specify a filename with" not in exc_info.value.long_message
