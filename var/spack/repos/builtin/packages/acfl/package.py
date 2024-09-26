@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
 
 from spack.package import *
 
@@ -245,7 +244,6 @@ def get_acfl_prefix(spec):
         return join_path(spec.prefix, f"arm-linux-compiler-{spec.version}_{os}")
 
 
-
 def get_armpl_suffix(spec):
     suffix = ""
     if spec.satisfies("@24:"):
@@ -399,7 +397,6 @@ class Acfl(Package, CompilerPackage):
         env.append_path("LD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
         env.prepend_path("LIBRARY_PATH", join_path(arm_dir, "lib"))
         env.prepend_path("MANPATH", join_path(arm_dir, "share", "man"))
-
 
     @run_after("install")
     def check_install(self):
