@@ -7,14 +7,14 @@ from spack.package import *
 
 
 class PyRequestsKerberos(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """An authentication handler for using Kerberos with Python Requests."""
 
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/requests/requests-kerberos"
     pypi = "requests_kerberos/requests_kerberos-0.15.0.tar.gz"
 
     maintainers("wdconinc")
 
-    license("UNKNOWN", checked_by="github_user1")
+    license("ISC", checked_by="wdconinc")
 
     version("0.15.0", sha256="437512e424413d8113181d696e56694ffa4259eb9a5fc4e803926963864eaf4e")
 
