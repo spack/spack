@@ -4221,27 +4221,27 @@ class Spec:
             if other_dep:
                 edge.parent._add_dependency(replacement, depflag=other_dep, virtuals=edge.virtuals)
 
-    def get_analogues(self, candidates_generator, self_root, other_root):
+    def get_analogs(self, candidates_generator, self_root, other_root):
         """Find all specs in candidate_generator that are splice matches for self
 
         self_root and other_root are passed as arguments to ``self._splie_match``."""
-        analogues = [
+        analogs = [
             dep
             for dep in candidates_generator
             if self._splice_match(dep, self_root=self_root, other_root=other_root)
         ]
-        if not analogues:
+        if not analogs:
             return []
 
-        name_analogues = [a for a in analogues if a.name == self.name]
-        return name_analogues or analogues
+        name_analogs = [a for a in analogs if a.name == self.name]
+        return name_analogs or analogs
 
     def _splice_helper(self, replacement, self_root, other_root):
         """Main loop of a transitive splice.
 
         Topo traversal of self ensures that if a node is unreachable in the end result, we will
         never consider it.
-        For each node, find any analogue in replacement and swap it in.
+        For each node, find any analog in replacement and swap it in.
         We assume only build deps are handled outside of this method
         """
         ids = [id(s) for s in replacement.traverse()]
@@ -4257,20 +4257,20 @@ class Spec:
                 # If this node has already been swapped in, don't consider it again
                 if id(node) in ids:
                     continue
-                analogues = node.get_analogues(
+                analogs = node.get_analogs(
                     replacement.traverse(deptype=dt.ALL & ~dt.BUILD),
                     self_root=self_root,
                     other_root=other_root,
                 )
                 # No match, keep searching
-                if not analogues:
+                if not analogs:
                     continue
-                analogues.sort(key=lambda s: s.version)
-                analogue = analogues[-1]
+                analogs.sort(key=lambda s: s.version)
+                analog = analogs[-1]
                 # No splice needed here, keep checking
-                if analogue == node:
+                if analog == node:
                     continue
-                node._splice_detach_and_add_dependents(analogue, context=self)
+                node._splice_detach_and_add_dependents(analog, context=self)
                 changed = True
                 break
 
