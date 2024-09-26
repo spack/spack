@@ -391,7 +391,7 @@ class SpecNodeParser:
                     build_dependency.name = name_conversion[build_dependency.name]
 
                 initial_spec._add_dependency(
-                    build_dependency, depflag=spack.deptypes.BUILD, virtuals=()
+                    build_dependency, depflag=spack.deptypes.BUILD, virtuals=(), direct=True
                 )
                 last_compiler = self.ctx.current_token.value
 
