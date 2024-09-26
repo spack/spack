@@ -43,7 +43,7 @@ class Gaudi(CMakePackage):
 
     depends_on("cxx", type="build")  # generated
 
-    conflicts("%gcc@:10", when="@39:")
+    conflicts("%gcc@:10", when="@39:", msg="Gaudi needs a c++20 capable compiler for this version")
 
     maintainers("drbenmorgan", "vvolkl", "jmcarcell")
 
