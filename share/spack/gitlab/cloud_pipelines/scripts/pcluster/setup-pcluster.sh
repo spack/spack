@@ -121,6 +121,5 @@ install_compilers() {
 }
 
 set_pcluster_defaults
-setup_spack
 install_compilers
 patch_compilers_yaml
