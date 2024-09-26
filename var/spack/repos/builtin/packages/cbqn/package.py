@@ -53,8 +53,8 @@ class Cbqn(MakefilePackage):
         # The build types map directly to the make target
         make_args.append(spec.variants["build_type"].value)
 
-        if spec.version not in ('develop', 'master'):
-            make_args.append('version={0}'.format(spec.version))
+        if spec.version not in ("develop", "master"):
+            make_args.append("version={0}".format(spec.version))
 
         make(*make_args)
 
