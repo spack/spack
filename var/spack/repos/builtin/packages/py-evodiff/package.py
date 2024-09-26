@@ -17,6 +17,8 @@ class PyEvodiff(PythonPackage):
 
     version("1.1.0", sha256="c1f2d7bd0e46ad244f1c55066caefc5ad9b1bcf4e836be1832311b8cd74e923f")
 
+    depends_on("py-setuptools@61.0", type=("build"))
+
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-lmdb", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))

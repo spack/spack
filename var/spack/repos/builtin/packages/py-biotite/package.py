@@ -26,6 +26,7 @@ class PyBiotite(PythonPackage):
     depends_on("py-hatchling", type="build")
     depends_on("py-hatch", type="build")
     depends_on("py-hatch-cython@0.5", type="build")
+    depends_on("py-cython@3.0", type="build")
 
     depends_on("py-numpy@1.25:", type=("build", "run"))
     depends_on("py-msgpack@0.5.6:", type=("build", "run"))

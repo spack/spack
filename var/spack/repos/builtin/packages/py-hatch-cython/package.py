@@ -20,4 +20,6 @@ class PyHatchCython(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-hatchling", type=("build", "run"))
+    depends_on("py-hatch", type=("build", "run"))
     depends_on("py-cython", type=("build", "run"))
+    depends_on("py-typing-extensions", when="@:3.9", type=("build", "run"))

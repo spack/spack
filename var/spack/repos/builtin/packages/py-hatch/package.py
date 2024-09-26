@@ -18,7 +18,6 @@ class PyHatch(PythonPackage):
 
     depends_on("python@3.8:", type=("build", "run"))
 
-    depends_on("py-setuptools@42:", type="build")
     depends_on("py-hatchling@1.24.2:", type="build")
     depends_on("py-hatch-vcs@0.3.0:", type="build")
     depends_on("py-pyproject-hooks", type=("build"))
@@ -28,12 +27,13 @@ class PyHatch(PythonPackage):
     depends_on("py-hyperlink@21.0.0:", type=("build", "run"))
     depends_on("py-keyring@23.5.0:", type=("build", "run"))
     depends_on("py-packaging@23.2:", type=("build", "run"))
-    depends_on("py-pexpect@4.8:", type=("build", "run"))
+    depends_on("py-pexpect@4.8:4.8", type=("build", "run"))
     depends_on("py-platformdirs@2.5.0:", type=("build", "run"))
+    depends_on("py-rich@11.2.0:", type=("build", "run"))
     depends_on("py-shellingham@1.4.0:", type=("build", "run"))
     depends_on("py-tomli-w@1.0:", type=("build", "run"))
     depends_on("py-tomlkit@0.11.1:", type=("build", "run"))
-    depends_on("py-userpath@1.7:", type=("build", "run"))
+    depends_on("py-userpath@1.7:1.7", type=("build", "run"))
     depends_on("py-uv@0.1.35:", type=("build", "run"))
     depends_on("py-virtualenv@20.26.1:", type=("build", "run"))
     depends_on("py-zstandard@:1", type=("build", "run"))

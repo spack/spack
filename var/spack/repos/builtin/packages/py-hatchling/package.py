@@ -28,6 +28,7 @@ class PyHatchling(PythonPackage):
 
     depends_on("py-editables@0.3:", type=("build", "run"))
     depends_on("py-packaging@21.3:", type=("build", "run"))
+    depends_on("py-packaging@23.2:", when="1.24.2:", type=("build", "run"))
     depends_on("py-pathspec@0.10.1:", when="@1.9:", type=("build", "run"))
     depends_on("py-pathspec@0.9:", type=("build", "run"))
     depends_on("py-pluggy@1:", type=("build", "run"))

@@ -14,8 +14,6 @@ class PyPackaging(PythonPackage):
 
     license("BSD-2-Clause")
     version("24.1", sha256="026ed72c8ed3fcce5bf8950572258698927fd1dbda10a5e981cdf0ac37f4f002")
-    version("24.0", sha256="eb82c5e3e56209074766e6885bb04b8c38a0c015d0a30036ebe7ece34c9989e9")
-    version("23.2", sha256="048fb0e9405036518eaaf48a55953c750c11e1a1b68e0dd1a9d62ed0c092cfc5")
     version("23.1", sha256="a392980d2b6cffa644431898be54b0045151319d1e7ec34f0cfed48767dd334f")
     version("23.0", sha256="b6ad297f8907de0fa2fe1ccbd26fdaf387f5f47c7275fedf8cce89f99446cf97")
     version("21.3", sha256="dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb")
@@ -31,6 +29,7 @@ class PyPackaging(PythonPackage):
 
     # Needed to bootstrap Spack correctly on Python 3.6 (rhel8 platform-python)
     depends_on("python@3.7:", when="@22:", type=("build", "run"))
+    depends_on("python@3.8:", when="@24.1", type=("build", "run"))
 
     # Historical dependencies
     depends_on("py-setuptools@40.8.0:", when="@20.8:21", type="build")

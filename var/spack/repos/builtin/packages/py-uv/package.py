@@ -19,6 +19,6 @@ class PyUv(PythonPackage):
 
     depends_on("rust@1.81:", type=("build", "run"))
     depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-maturin@1.0:2.0", type=("build"))
+    depends_on("py-maturin@1:1", type=("build"))
 
     executables = ["^uv$"]
