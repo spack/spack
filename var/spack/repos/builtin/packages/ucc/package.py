@@ -23,7 +23,6 @@ class Ucc(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     variant("cuda", default=False, description="Enable CUDA TL")
     variant("nccl", default=False, description="Enable NCCL TL", when="+cuda")
-    variant("rocm", default=False, description="Enable ROCm")
     variant("rccl", default=False, description="Enable RCCL TL", when="+rocm")
 
     # https://github.com/openucx/ucc/pull/847
@@ -41,8 +40,6 @@ class Ucc(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     depends_on("nccl", when="+nccl")
     depends_on("rccl", when="+rccl")
-    depends_on("hip", when="+rocm")
-    depends_on("hsa-rocr-dev", when="+rocm")
 
     with when("+nccl"):
         for arch in CudaPackage.cuda_arch_values:
