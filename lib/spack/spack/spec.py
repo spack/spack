@@ -4265,8 +4265,11 @@ class Spec:
                 # No match, keep searching
                 if not analogs:
                     continue
-                analogs.sort(key=lambda s: s.version)
-                analog = analogs[-1]
+
+                # If there are multiple analogs, this package must satisfy the constraint
+                # that a newer version can always replace a lesser version.
+                analog = max(analogs, key=lambda s: s.version)
+
                 # No splice needed here, keep checking
                 if analog == node:
                     continue
