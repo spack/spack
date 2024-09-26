@@ -68,13 +68,13 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
     with when("+cuda"):
         for tgt in CudaPackage.cuda_arch_values:
             depends_on(
-                f"petsc@3.21.5: +int64 +mumps +scalapack memalign=32 +cuda cuda_arch={tgt}",
+                f"petsc@main +int64 +mumps +scalapack memalign=32 +cuda cuda_arch={tgt}",
                 when=f"+cuda cuda_arch={tgt}",
             )
     with when("+rocm"):
         for tgt in ROCmPackage.amdgpu_targets:
             depends_on(
-                f"petsc@3.21.5: +int64 +mumps +scalapack memalign=32 +rocm amdgpu_target={tgt}",
+                f"petsc@main +int64 +mumps +scalapack memalign=32 +rocm amdgpu_target={tgt}",
                 when=f"+rocm amdgpu_target={tgt}",
             )
 
