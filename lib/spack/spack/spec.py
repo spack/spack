@@ -629,15 +629,22 @@ class DependencySpec:
         virtuals: virtual packages provided from child to parent node.
     """
 
-    __slots__ = "parent", "spec", "depflag", "virtuals"
+    __slots__ = "parent", "spec", "depflag", "virtuals", "direct"
 
     def __init__(
-        self, parent: "Spec", spec: "Spec", *, depflag: dt.DepFlag, virtuals: Tuple[str, ...]
+        self,
+        parent: "Spec",
+        spec: "Spec",
+        *,
+        depflag: dt.DepFlag,
+        virtuals: Tuple[str, ...],
+        direct: bool = False,
     ):
         self.parent = parent
         self.spec = spec
         self.depflag = depflag
         self.virtuals = tuple(sorted(set(virtuals)))
+        self.direct = direct
 
     def update_deptypes(self, depflag: dt.DepFlag) -> bool:
         """Update the current dependency types"""
@@ -1639,10 +1646,18 @@ class Spec:
                 else:
                     setattr(self.architecture, new_attr, new_value)
 
-    def _add_dependency(self, spec: "Spec", *, depflag: dt.DepFlag, virtuals: Tuple[str, ...]):
-        """Called by the parser to add another spec as a dependency."""
+    def _add_dependency(
+        self, spec: "Spec", *, depflag: dt.DepFlag, virtuals: Tuple[str, ...], direct: bool = False
+    ):
+        """Called by the parser to add another spec as a dependency.
+
+        Args:
+            depflag: dependency type for this edge
+            virtuals: virtuals on this edge
+            direct: if True denotes a direct dependency (associated with the % sigil)
+        """
         if spec.name not in self._dependencies or not spec.name:
-            self.add_dependency_edge(spec, depflag=depflag, virtuals=virtuals)
+            self.add_dependency_edge(spec, depflag=depflag, virtuals=virtuals, direct=direct)
             return
 
         # Keep the intersection of constraints when a dependency is added multiple times with
@@ -1677,7 +1692,12 @@ class Spec:
             )
 
     def add_dependency_edge(
-        self, dependency_spec: "Spec", *, depflag: dt.DepFlag, virtuals: Tuple[str, ...]
+        self,
+        dependency_spec: "Spec",
+        *,
+        depflag: dt.DepFlag,
+        virtuals: Tuple[str, ...],
+        direct: bool = False,
     ):
         """Add a dependency edge to this spec.
 
@@ -1685,6 +1705,7 @@ class Spec:
             dependency_spec: spec of the dependency
             deptypes: dependency types for this edge
             virtuals: virtuals provided by this edge
+            direct: if True denotes a direct dependency
         """
         # Check if we need to update edges that are already present
         selected = self._dependencies.select(child=dependency_spec.name)
@@ -1723,7 +1744,9 @@ class Spec:
                 edge.update_virtuals(virtuals=virtuals)
                 return
 
-        edge = DependencySpec(self, dependency_spec, depflag=depflag, virtuals=virtuals)
+        edge = DependencySpec(
+            self, dependency_spec, depflag=depflag, virtuals=virtuals, direct=direct
+        )
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
 
@@ -3696,9 +3719,6 @@ class Spec:
 
             name
             version
-            compiler
-            compiler.name
-            compiler.version
             compiler_flags
             variants
             architecture
@@ -3941,15 +3961,28 @@ class Spec:
         if not self._dependencies:
             return self.format()
 
-        root_str = [self.format()]
-        sorted_dependencies = sorted(
-            self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
+        name_conversion = {
+            "llvm": "clang",
+            "intel-oneapi-compilers": "oneapi",
+            "llvm-amdgpu": "rocmcc",
+            "intel-oneapi-compiler-classic": "intel",
+            "acfl": "arm",
+        }
+        parts = [self.format()]
+        direct, transitive = lang.stable_partition(
+            self.edges_to_dependencies(), predicate_fn=lambda x: x.direct
         )
-        sorted_dependencies = [
-            d.format("{edge_attributes} " + DEFAULT_FORMAT) for d in sorted_dependencies
-        ]
-        spec_str = " ^".join(root_str + sorted_dependencies)
-        return spec_str.strip()
+        for item in sorted(direct, key=lambda x: x.spec.name):
+            current_name = item.spec.name
+            new_name = name_conversion.get(current_name, current_name)
+            parts.append(f"%{item.spec.format()}".replace(current_name, new_name))
+        for item in sorted(transitive, key=lambda x: x.spec.name):
+            # Recurse to attach build deps in order
+            edge_attributes = ""
+            if item.virtuals or item.depflag:
+                edge_attributes = item.spec.format("{edge_attributes}") + " "
+            parts.append(f"^{edge_attributes}{str(item.spec)}")
+        return " ".join(parts).strip()
 
     @property
     def colored_str(self):
