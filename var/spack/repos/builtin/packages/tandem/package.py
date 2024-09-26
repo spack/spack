@@ -67,11 +67,16 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
 
     with when("+cuda"):
         for tgt in CudaPackage.cuda_arch_values:
-            depends_on(f"petsc@3.21.5: +int64 +mumps +scalapack memalign=32 +cuda cuda_arch={tgt}", when=f"+cuda cuda_arch={tgt}")
+            depends_on(
+                f"petsc@3.21.5: +int64 +mumps +scalapack memalign=32 +cuda cuda_arch={tgt}",
+                when=f"+cuda cuda_arch={tgt}",
+            )
     with when("+rocm"):
         for tgt in ROCmPackage.amdgpu_targets:
-            depends_on(f"petsc@3.21.5: +int64 +mumps +scalapack memalign=32 +rocm amdgpu_target={tgt}", when=f"+rocm amdgpu_target={tgt}")
-
+            depends_on(
+                f"petsc@3.21.5: +int64 +mumps +scalapack memalign=32 +rocm amdgpu_target={tgt}",
+                when=f"+rocm amdgpu_target={tgt}",
+            )
 
     depends_on("python@3", type="build", when="+python")
     depends_on("py-numpy", type="build", when="+python")
@@ -91,7 +96,6 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
         when="+rocm",
         msg="A value for amdgpu_arch must be specified. Add amdgpu_arch=XX",
     )
-
 
     def cmake_args(self):
         args = [
