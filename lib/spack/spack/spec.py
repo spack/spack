@@ -4239,10 +4239,22 @@ class Spec:
     def _splice_helper(self, replacement, self_root, other_root):
         """Main loop of a transitive splice.
 
-        Topo traversal of self ensures that if a node is unreachable in the end result, we will
-        never consider it.
-        For each node, find any analog in replacement and swap it in.
-        We assume only build deps are handled outside of this method
+        The while loop around a traversal of self ensures that changes to self from previous
+        iterations are reflected in the traversal. This avoids evaluating irrelevant nodes
+        using topological traversal (all incoming edges traversed before any outgoing edge).
+        If any node will not be in the end result, its parent will be spliced and it will not
+        ever be considered.
+        For each node in self, find any analogous node in replacement and swap it in.
+        We assume all build deps are handled outside of this method
+
+        Arguments:
+            replacement: The node that will replace any equivalent node in self
+            self_root: The root of the spec that self comes from. This provides the context for
+                evaluating whether ``replacement`` is a match for each node of ``self``. See
+                ``Spec._splice_match`` and ``Spec._virtuals_provided`` for details.
+            other_root: The root of the spec that replacement comes from. This provides the context
+                for evaluating whether ``replacement`` is a match for each node of ``self``. See
+                ``Spec._splice_match`` and ``Spec._virtuals_provided`` for details.
         """
         ids = set(id(s) for s in replacement.traverse())
 
