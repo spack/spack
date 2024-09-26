@@ -300,6 +300,19 @@ class QuantumEspresso(CMakePackage, Package):
 
     conflicts("@6.5:", when="+environ", msg="6.4.x is the latest QE series supported by Environ")
 
+    conflicts(
+        "@:7.3.0",
+        when="build_system=generic %oneapi",
+        msg="Support for ifx has been added to configure in release 7.3.1",
+    )
+    # Fixed in https://github.com/libmbd/libmbd/pull/60, which will be part of the next release
+    conflicts(
+        "@7.3.1",
+        when="%oneapi@2024.1:",
+        msg="ifx added f_c_string in the ISO_C_BINDING module since version 2024.1 which conflicts"
+        + "with the libmbd provided one.",
+    )
+
     # 7.3 - a compile-time problem fixed in 7.3.1
     patch_url = "https://gitlab.com/QEF/q-e/-/commit/b98ff7539e5731728d2d49ac01021a57f2594027.diff"
     patch_checksum = "04c125d249d1f076abe04bc4de39bd3b44a41a78d6233b638a17bd96f91443d5"
