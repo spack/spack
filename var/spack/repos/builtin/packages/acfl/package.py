@@ -245,10 +245,6 @@ def get_acfl_prefix(spec):
         return join_path(spec.prefix, f"arm-linux-compiler-{spec.version}_{os}")
 
 
-def get_gcc_prefix(spec):
-    dirlist = next(os.walk(spec.prefix))[1]
-    return join_path(spec.prefix, next(dir for dir in dirlist if dir.startswith("gcc")))
-
 
 def get_armpl_suffix(spec):
     suffix = ""
@@ -393,7 +389,6 @@ class Acfl(Package, CompilerPackage):
     def setup_run_environment(self, env):
         arm_dir = get_acfl_prefix(self.spec)
         armpl_dir = get_armpl_prefix(self.spec)
-        gcc_dir = get_gcc_prefix(self.spec)
 
         env.set("ARM_LINUX_COMPILER_DIR", arm_dir)
         env.set("ARM_LINUX_COMPILER_INCLUDES", join_path(arm_dir, "includes"))
@@ -405,25 +400,12 @@ class Acfl(Package, CompilerPackage):
         env.prepend_path("LIBRARY_PATH", join_path(arm_dir, "lib"))
         env.prepend_path("MANPATH", join_path(arm_dir, "share", "man"))
 
-        env.set("GCC_DIR", gcc_dir)
-        env.set("GCC_INCLUDES", join_path(gcc_dir, "include"))
-        env.append_path("GCC_LIBRARIES", join_path(gcc_dir, "lib"))
-        env.append_path("GCC_LIBRARIES", join_path(gcc_dir, "lib64"))
-        env.set("COMPILER_PATH", gcc_dir)
-        env.prepend_path("PATH", join_path(gcc_dir, "binutils_bin"))
-        env.prepend_path("CPATH", join_path(gcc_dir, "include"))
-        env.prepend_path("LD_LIBRARY_PATH", join_path(gcc_dir, "lib"))
-        env.prepend_path("LD_LIBRARY_PATH", join_path(gcc_dir, "lib64"))
-        env.prepend_path("LIBRARY_PATH", join_path(gcc_dir, "lib"))
-        env.prepend_path("LIBRARY_PATH", join_path(gcc_dir, "lib64"))
-        env.prepend_path("MANPATH", join_path(gcc_dir, "share", "man"))
 
     @run_after("install")
     def check_install(self):
         arm_dir = get_acfl_prefix(self.spec)
         armpl_dir = get_armpl_prefix(self.spec)
         suffix = get_armpl_suffix(self.spec)
-        gcc_dir = get_gcc_prefix(self.spec)
         armpl_example_dir = join_path(armpl_dir, f"examples{suffix}")
         # run example makefile
         make(
@@ -432,7 +414,6 @@ class Acfl(Package, CompilerPackage):
             "CC=" + self.cc,
             "F90=" + self.fortran,
             "CPATH=" + join_path(arm_dir, "include"),
-            "COMPILER_PATH=" + gcc_dir,
             "ARMPL_DIR=" + armpl_dir,
         )
         # clean up
