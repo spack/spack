@@ -4165,7 +4165,16 @@ class Spec:
         return set().union(*[edge.virtuals for edge in in_edges])
 
     def _splice_match(self, other, self_root, other_root):
-        """Return True if other is a match for self in a splice of other_root into self_root"""
+        """Return True if other is a match for self in a splice of other_root into self_root
+
+        Other is a splice match for self if it shares a name, or if self is a virtual provider
+        and other provides a superset of the virtuals provided by self. Virtuals provided are
+        evaluated in the context of a root spec (self_root for self, other_root for other).
+
+        This is a slight oversimplification. Other could be a match for self in the context of
+        one edge in self_root and not in the context of another edge. This method could be
+        expanded in the future to account for these cases.
+        """
         if other.name == self.name:
             return True
 
