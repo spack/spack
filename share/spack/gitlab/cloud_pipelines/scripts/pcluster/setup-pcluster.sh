@@ -14,9 +14,13 @@ spack_intel_compiler_commit="develop-2023-08-06"
 
 set_pcluster_defaults() {
     # Set versions of pre-installed software in packages.yaml
-    [ -z "${SLURM_VERSION}" ] && SLURM_VERSION=$(strings /opt/slurm/lib/libslurm.so | grep  -e '^VERSION'  | awk '{print $2}'  | sed -e 's?"??g')
+    [ -z "${SLURM_ROOT}" ] && ls /etc/systemd/system/slurm* &>/dev/null && \
+        SLURM_ROOT=$(dirname $(dirname "$(awk '/ExecStart=/ {print $1}' /etc/systemd/system/slurm* | sed -e 's?^.*=??1' | head -n1)"))
+    # Fallback to default location if SLURM not in systemd
+    [ -z "${SLURM_ROOT}" ] && [ -d "/opt/slurm" ] && SLURM_ROOT=/opt/slurm
+    [ -z "${SLURM_VERSION}" ] && SLURM_VERSION=$(strings "${SLURM_ROOT}"/lib/libslurm.so | grep -e '^VERSION' | awk '{print $2}' | sed -e 's?"??g')
     [ -z "${LIBFABRIC_VERSION}" ] && LIBFABRIC_VERSION=$(awk '/Version:/{print $2}' "$(find /opt/amazon/efa/ -name libfabric.pc | head -n1)" | sed -e 's?~??g' -e 's?amzn.*??g')
-    export SLURM_VERSION LIBFABRIC_VERSION
+    export SLURM_ROOT SLURM_VERSION LIBFABRIC_VERSION
 
     envsubst < "${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}/packages.yaml" > "${SPACK_ROOT}"/etc/spack/packages.yaml
 }
