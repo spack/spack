@@ -94,6 +94,7 @@ class Gaudi(CMakePackage):
 
     depends_on("clhep")
     depends_on("cmake", type="build")
+    depends_on("cmake@3.19:", type="build", when="@39:")
     depends_on("cppgsl")
     depends_on("fmt@:8", when="@:36.9")
     depends_on("fmt@:10")
