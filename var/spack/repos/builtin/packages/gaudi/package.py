@@ -153,7 +153,7 @@ class Gaudi(CMakePackage):
         ]
         # Release notes for v39.0: https://gitlab.cern.ch/gaudi/Gaudi/-/releases/v39r0
         # Gaudi@39: needs C++ >= 20, and we need to force CMake to use C++ 20 with old gcc:
-        if self.spec.version >= Version("39.0") and self.compiler.version < Version("13.0.0"):
+        if self.spec.satisfies("@39: %gcc@:13"):
             args.append(self.define("GAUDI_CXX_STANDARD", "20"))
         return args
 
