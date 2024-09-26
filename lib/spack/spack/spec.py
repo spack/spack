@@ -4244,7 +4244,7 @@ class Spec:
         For each node, find any analog in replacement and swap it in.
         We assume only build deps are handled outside of this method
         """
-        ids = [id(s) for s in replacement.traverse()]
+        ids = set(id(s) for s in replacement.traverse())
 
         changed = True
         while changed:
