@@ -4162,10 +4162,7 @@ class Spec:
         in_edges = set(
             [edge for edge in self.edges_from_dependents() if edge.parent.dag_hash() in hashes]
         )
-        for edge in in_edges:
-            virtuals |= set(edge.virtuals)
-
-        return virtuals
+        return set().union(*[edge.virtuals for edge in in_edges])
 
     def _splice_match(self, other, self_root, other_root):
         """Return True if other is a match for self in a splice of other_root into self_root"""
