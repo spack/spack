@@ -17,7 +17,7 @@ class PyRucioClients(PythonPackage):
     license("Apache-2.0", checked_by="wdconinc")
 
     version("35.4.0", sha256="f8771ee39d0d496109586ddbb4000ce006a193fd33cdac8a654661ae0b7346c0")
-    
+
     variant("ssh", default=False, description="Enable SSH2 protocol library")
     variant("kerberos", default=False, description="Enable kerberos authentication")
     variant("swift", default=False, description="Enable support for swift service")
