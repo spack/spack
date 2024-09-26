@@ -26,7 +26,7 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
     """
 
     homepage = "https://www.open-mpi.org/projects/hwloc/"
-    url = "https://download.open-mpi.org/release/hwloc/v2.0/hwloc-2.0.2.tar.gz"
+    url = "https://download.open-mpi.org/release/hwloc/v2.11/hwloc-2.11.1.tar.bz2"
     git = "https://github.com/open-mpi/hwloc.git"
 
     maintainers("bgoglin")
