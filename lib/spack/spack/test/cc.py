@@ -794,7 +794,6 @@ def test_ld_deps_partial(wrapper_environment):
             + test_library_paths
             + ["-Lxlib"]
             + ["--disable-new-dtags"]
-            + test_rpaths
             + ["-r"]
             + test_args_without_paths,
         )
