@@ -79,16 +79,16 @@ class Hermes(CMakePackage):
     depends_on("cxx", type="build")  # generated
     depends_on("libelf")
 
-    depends_on("hermes_shm@master+boost+cereal+mochi")
+    depends_on("hermes-shm@master+boost+cereal+mochi")
 
-    depends_on("hermes_shm+adios", when="+adios")
-    depends_on("hermes_shm+ares", when="+ares")
-    depends_on("hermes_shm+compress", when="+compress")
-    depends_on("hermes_shm+debug", when="+debug")
-    depends_on("hermes_shm+encrypt", when="+encrypt")
-    depends_on("hermes_shm+mpiio", when="+mpiio")
-    depends_on("hermes_shm+vfd", when="+vfd")
-    depends_on("hermes_shm+zmq", when="+zmq")
+    depends_on("hermes-shm+adios", when="+adios")
+    depends_on("hermes-shm+ares", when="+ares")
+    depends_on("hermes-shm+compress", when="+compress")
+    depends_on("hermes-shm+debug", when="+debug")
+    depends_on("hermes-shm+encrypt", when="+encrypt")
+    depends_on("hermes-shm+mpiio", when="+mpiio")
+    depends_on("hermes-shm+vfd", when="+vfd")
+    depends_on("hermes-shm+zmq", when="+zmq")
 
     def cmake_args(self):
         args = []
