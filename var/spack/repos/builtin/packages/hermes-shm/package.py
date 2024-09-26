@@ -6,6 +6,10 @@ from spack.package import *
 
 
 class HermesShm(CMakePackage):
+    """Hermes Shared Memory contains a variety of data structures
+    and synchronization primitives which are compatible with shared memory.
+    """
+
     homepage = "https://github.com/lukemartinlogan/hermes_shm/wiki"
     git = "https://github.com/lukemartinlogan/hermes_shm.git"
 
