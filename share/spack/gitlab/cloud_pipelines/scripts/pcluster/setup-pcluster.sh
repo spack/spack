@@ -6,11 +6,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 set -e
 
-# Intel compiler needs to be installed from a specific spack git commit.
-# The best solution would be to have the compilers hash (or packages contents) be part of the
-# individual packages hashes. I don't see this at the moment.
-# Set to the latest tag including a recent oneapi compiler.
-spack_intel_compiler_commit="develop-2023-08-06"
+# Use the same spack version as used in the build cache container to make sure the compiler version is available and installs without issues.
+version_tag="v0.22.0"
 
 set_pcluster_defaults() {
     # Set versions of pre-installed software in packages.yaml
@@ -23,13 +20,6 @@ set_pcluster_defaults() {
     export SLURM_ROOT SLURM_VERSION LIBFABRIC_VERSION
 
     envsubst < "${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}/packages.yaml" > "${SPACK_ROOT}"/etc/spack/packages.yaml
-}
-
-setup_spack() {
-    spack compiler add --scope site
-    # Do not add  autotools/buildtools packages. These versions need to be managed by spack or it will
-    # eventually end up in a version mismatch (e.g. when compiling gmp).
-    spack external find --scope site --tag core-packages
 }
 
 patch_compilers_yaml() {
@@ -79,61 +69,54 @@ EOF
 }
 
 install_compilers() {
-    # We need to treat compilers as essentially external, i.e. their installation location
-    # (including hash) must not change when any changes are pushed to spack. The reason is that
-    # changes in the compilers are not reflected in the package hashes built in the CI. Hence, those
-    # packages will reference a wrong compiler path once the path changes.
-
-    # `gcc@12.3.0%gcc@7.3.1` is created as part of building the pipeline containers.
-    # `ghcr.io/spack/pcluster-amazonlinux-2:pr-52@sha256:27a2e9cc8ddbe25504caeac3d78ef556d913a2ff1bab0a7e713e98e35578bc36` produced the following hashes.
-    if [ "x86_64" == "$(arch)" ]; then
-        gcc_hash="vxlibl3ubl5ptwzb3zydgksfa5osdea6"
-    else
-        gcc_hash="bikooik6f3fyrkroarulsadbii43ggz5"
-    fi
-
-    spack install /${gcc_hash}
-    (
-        spack load gcc
-        spack compiler add --scope site
-    )
-
     # Install Intel compilers through a static spack version such that the compiler's hash does not change.
     # The compilers needs to be in the same install tree as the rest of the software such that the path
     # relocation works correctly. This holds the danger that this part will fail when the current spack gets
     # incompatible with the one in $spack_intel_compiler_commit. Therefore, we make intel installations optional
     # in packages.yaml files and add a fallback `%gcc` version for each application.
-    if [ "x86_64" == "$(arch)" ]; then
-        # If we are inside a gitlab CI container
-        (
-            if [ -f "/bootstrap-compilers/spack/share/spack/setup-env.sh" ]; then
+    if [ -f "/bootstrap-compilers/spack/etc/spack/compilers.yaml" ]; then
+        # Running inside a gitlab CI container
+        # Intel and gcc@12 compiler are pre-installed and their location is known in 
+        cp /bootstrap-compilers/spack/etc/spack/compilers.yaml "${SPACK_ROOT}"/etc/spack/
+    else
+        spack compiler add --scope site
+        # We need to treat compilers as essentially external, i.e. their installation location
+        # (including hash) must not change when any changes are pushed to spack. The reason is that
+        # changes in the compilers are not reflected in the package hashes built in the CI. Hence, those
+        # packages will reference a wrong compiler path once the path changes.
 
-                . /bootstrap-compilers/spack/share/spack/setup-env.sh \
-                  spack install intel-oneapi-compilers-classic
-            else
+        # `gcc@12.3.0%gcc@7.3.1` is created as part of building the pipeline containers.
+        # `ghcr.io/spack/pcluster-amazonlinux-2:pr-52@sha256:27a2e9cc8ddbe25504caeac3d78ef556d913a2ff1bab0a7e713e98e35578bc36` produced the following hashes.
+        if [ "x86_64" == "$(arch)" ]; then
+            gcc_hash="vxlibl3ubl5ptwzb3zydgksfa5osdea6"
+        else
+            gcc_hash="bikooik6f3fyrkroarulsadbii43ggz5"
+        fi
+
+        spack install /${gcc_hash}
+        (
+            spack load gcc
+            spack compiler add --scope site
+        )
+
+        if [ "x86_64" == "$(arch)" ]; then
+            (
+                # Running on a system consuming the binary cache
                 CURRENT_SPACK_ROOT=${SPACK_ROOT}
                 DIR="$(mktemp -d)"
                 cd "${DIR}"
-                # This needs to include commit 361a185ddb such that `ifx` picks up the correct toolchain. Otherwise
-                # this leads to libstdc++.so errors during linking (e.g. slepc).
-
-                # TODO: oneapi@2024.1.0 is the last compiler which works with AL2 glibc!
-                git clone --depth=1 -b ${spack_intel_compiler_commit} https://github.com/spack/spack.git \
+                # oneapi@2024.1.0 is the last compiler which works with AL2 glibc
+                git clone --depth=1 -b ${version_tag} https://github.com/spack/spack.git \
                     && cd spack \
-                    && curl -sL https://github.com/spack/spack/pull/40557.patch | patch -p1 \
-                    && curl -sL https://github.com/spack/spack/pull/40561.patch | patch -p1 \
-                    && cp "${CURRENT_SPACK_ROOT}/etc/spack/config.yaml" etc/spack/ \
-                    && cp "${CURRENT_SPACK_ROOT}/etc/spack/compilers.yaml" etc/spack/ \
-                    && cp "${CURRENT_SPACK_ROOT}/etc/spack/packages.yaml" etc/spack/ \
+                    && cp "${CURRENT_SPACK_ROOT}/etc/spack/{config,compilers,packages}.yaml" etc/spack/ \
                     && . share/spack/setup-env.sh \
                     && spack install intel-oneapi-compilers@2024.1.0
-
                 rm -rf "${DIR}"
-            fi
-        )
-        bash -c ". \"$(spack location -i intel-oneapi-compilers)\"/setvars.sh; spack compiler add --scope site" \
-            || true
-        spack clean -m
+            )
+            bash -c ". \"$(spack location -i intel-oneapi-compilers)\"/setvars.sh; spack compiler add --scope site" \
+                || true
+            spack clean -m
+        fi
     fi
 }
 
