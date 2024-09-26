@@ -6,9 +6,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 set -e
 
-# Use the same spack version as used in the build cache container to make sure the compiler version is available and installs without issues.
-version_tag="v0.22.0"
-
 set_pcluster_defaults() {
     # Set versions of pre-installed software in packages.yaml
     [ -z "${SLURM_ROOT}" ] && ls /etc/systemd/system/slurm* &>/dev/null && \
@@ -100,22 +97,12 @@ install_compilers() {
         )
 
         if [ "x86_64" == "$(arch)" ]; then
+            # 2024.1.0 is the last oneapi compiler that works on AL2 and is the one used to compile packages in the build cache.
+            spack install intel-oneapi-compilers@2024.1.0
             (
-                # Running on a system consuming the binary cache
-                CURRENT_SPACK_ROOT=${SPACK_ROOT}
-                DIR="$(mktemp -d)"
-                cd "${DIR}"
-                # oneapi@2024.1.0 is the last compiler which works with AL2 glibc
-                git clone --depth=1 -b ${version_tag} https://github.com/spack/spack.git \
-                    && cd spack \
-                    && cp "${CURRENT_SPACK_ROOT}/etc/spack/{config,compilers,packages}.yaml" etc/spack/ \
-                    && . share/spack/setup-env.sh \
-                    && spack install intel-oneapi-compilers@2024.1.0
-                rm -rf "${DIR}"
+                . "$(spack location -i intel-oneapi-compilers)"/setvars.sh; spack compiler add --scope site \
+                    || true
             )
-            bash -c ". \"$(spack location -i intel-oneapi-compilers)\"/setvars.sh; spack compiler add --scope site" \
-                || true
-            spack clean -m
         fi
     fi
 }
