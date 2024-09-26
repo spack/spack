@@ -17,32 +17,42 @@ class Madgraph5amc(MakefilePackage):
     event manipulation and analysis."""
 
     homepage = "https://launchpad.net/mg5amcnlo"
-    url = "https://launchpad.net/mg5amcnlo/2.0/2.7.x/+download/MG5_aMC_v2.7.3.tar.gz"
+    url = "https://launchpad.net/mg5amcnlo/lts/2.9.x/+download/MG5_aMC_v2.9.20.tar.gz"
 
     tags = ["hep"]
 
-    version("3.5.5", sha256="3b4262024cefb8a06082faa9a7ba43484b27a3f2b940a06fbe49c640c5b7ebd7")
-    version("2.9.20", sha256="09a70e2e8b52e504bcaaa6527d3cec9641b043f5f853f2d11fa3c9970b7efae9")
-    version(
-        "2.9.19",
-        sha256="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        deprecated=True,
-    )
-    version(
-        "2.9.17",
-        sha256="24026a534344c77a05b23a681437f825c41dc70c5bae5b7f79bb99e149d966b8",
-        deprecated=True,
-    )
-    version(
-        "2.8.1",
-        sha256="acda34414beba201e529b8c03f87f4893fb3f99ed2956a131d60a387e76c5b8c",
-        deprecated=True,
-    )
-    version(
-        "2.7.3.py3",
-        sha256="400c26f9b15b07baaad9bd62091ceea785c2d3a59618fdc27cad213816bc7225",
-        deprecated=True,
-    )
+    # Launchpad can sometimes be slow to respond
+    timeout = {"timeout": 60}
+
+    with default_args(fetch_options=timeout):
+        version("3.5.5", sha256="3b4262024cefb8a06082faa9a7ba43484b27a3f2b940a06fbe49c640c5b7ebd7")
+        version(
+            "2.9.20",
+            sha256="09a70e2e8b52e504bcaaa6527d3cec9641b043f5f853f2d11fa3c9970b7efae9",
+            url="https://launchpad.net/mg5amcnlo/lts/2.9.x/+download/MG5_aMC_v2.9.20.tar.gz",
+        )
+        with default_args(deprecated=True):
+            version(
+                "2.9.19",
+                sha256="ec95d40ec8845e57682400ef24a3b769a4d0542e3a849b7c5e10105d0a0f8e61",
+                url="https://launchpad.net/mg5amcnlo/lts/2.9.x/+download/MG5_aMC_v2.9.19.tar.gz",
+            )
+            version(
+                "2.9.17",
+                sha256="6781c515ccc2005a953c35dcf9238632b761a937f1832bdfaa5514510b8c5a17",
+                url="https://launchpad.net/mg5amcnlo/lts/2.9.x/+download/MG5_aMC_v2.9.17.tar.gz",
+            )
+            # Older versions have been removed, only the latest LTS versions are available:
+            version(
+                "2.8.3.2",
+                sha256="4077eee75f9255fe627755fe0ac5da5d72f5d5c4f70b6e06e4e564e9c512b215",
+                url="https://launchpad.net/mg5amcnlo/lts/2.8.x/+download/MG5_aMC_v2.8.3.2.tar.gz",
+            )
+            version(
+                "2.7.3.py3",
+                sha256="400c26f9b15b07baaad9bd62091ceea785c2d3a59618fdc27cad213816bc7225",
+                url="https://launchpad.net/mg5amcnlo/lts/2.7.x/+download/MG5_aMC_v2.7.3.py3.tar.gz",
+            )
 
     variant(
         "atlas",
@@ -66,7 +76,8 @@ class Madgraph5amc(MakefilePackage):
     depends_on("libtirpc")
     depends_on("pythia8", when="+pythia8")
 
-    patch("array-bounds.patch", when="@:2.9")
+    patch("gcc14.patch", when="@:3.5.5%gcc@14:")
+    patch("array-bounds.patch", when="@:2.8.1")
     patch("madgraph5amc.patch", level=0, when="@:2.9")
     patch("madgraph5amc-2.7.3.atlas.patch", level=0, when="@2.7.3.py3+atlas")
     patch("madgraph5amc-2.8.0.atlas.patch", level=0, when="@2.8.0+atlas")
