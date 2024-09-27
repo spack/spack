@@ -2208,27 +2208,21 @@ def relocate_package(spec):
     # spack store root can be mapped uniformly to the new spack store root.
     relocation_specs = deps_to_relocate(spec)
     relocation_hashes = [s.dag_hash() for s in relocation_specs]
+    build_spec_ids = [id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD)]
     for s in relocation_specs:
-        try:
-            lookup_dag_hash = spec.build_spec[s.name].dag_hash()
-        except KeyError:
-            # This must be a virtual provider
-            # For every virtual it provides in the context of this spec
-            # create relocation data for that virtual
-            virtuals = set()
-            for edge in s.edges_from_dependents():
-                # ignore dependents in other specs
-                if edge.spec.dag_hash() in relocation_hashes:
-                    virtuals.update(edge.virtuals)
+        analog = s
+        if id(s) not in build_spec_ids:
+            analogs = [
+                d
+                for d in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD)
+                if s._splice_match(d, self_root=spec, other_root=spec.build_spec)
+            ]
+            if analogs:
+                # Prefer same-name analogs and prefer higher versions
+                # This matches the preferences in Spec.splice, so we will find same node
+                analog = max(analogs, key=lambda a: (a.name == d.name, a.version))
 
-            for virtual in virtuals:
-                try:
-                    lookup_dag_hash = spec.build_spec[virtual].dag_hash()
-                    break
-                except KeyError:
-                    # This is a new dependency
-                    tty.debug(f"{spec} does not have relocation for {s.name}")
-
+        lookup_dag_hash = analog.dag_hash()
         if lookup_dag_hash in hash_to_old_prefix:
             old_dep_prefix = hash_to_old_prefix[lookup_dag_hash]
             prefix_to_prefix_bin[old_dep_prefix] = str(s.prefix)
