@@ -92,7 +92,7 @@ class Rust(Package):
     depends_on("rust-bootstrap@1.73:1.74", type="build", when="@1.74")
     depends_on("rust-bootstrap@1.74:1.75", type="build", when="@1.75")
     depends_on("rust-bootstrap@1.77:1.78", type="build", when="@1.78")
-    depends_on("rust-bootstrap@1.80:1.81", type="build", when="@1.80")
+    depends_on("rust-bootstrap@1.80:1.81", type="build", when="@1.81")
 
     # src/llvm-project/llvm/cmake/modules/CheckCompilerVersion.cmake
     conflicts("%gcc@:7.3", when="@1.73:", msg="Host GCC version must be at least 7.4")
