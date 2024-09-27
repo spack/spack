@@ -28,7 +28,6 @@ class HermesShm(CMakePackage):
     )
 
     # Main variants
-    variant("debug", default=False, description="Build shared libraries")
     variant("mochi", default=True, description="Build with mochi-thallium support")
     variant("cereal", default=True, description="Build with cereal support")
     variant("boost", default=True, description="Build with boost support")
@@ -62,35 +61,29 @@ class HermesShm(CMakePackage):
 
     # Compress variant
     variant("compress", default=False, description="Build with compression support")
-    depends_on("lzo", when="+compress")
-    depends_on("bzip2", when="+compress")
-    depends_on("zstd", when="+compress")
-    depends_on("lz4", when="+compress")
-    depends_on("zlib", when="+compress")
-    depends_on("xz", when="+compress")
-    depends_on("brotli", when="+compress")
-    depends_on("snappy", when="+compress")
-    depends_on("c-blosc2", when="+compress")
+    with when("compress"):
+        depends_on("lzo")
+        depends_on("bzip2")
+        depends_on("zstd")
+        depends_on("lz4")
+        depends_on("zlib")
+        depends_on("xz")
+        depends_on("brotli")
+        depends_on("snappy")
+        depends_on("c-blosc2")
 
     # Encryption variant
     variant("encrypt", default=False, description="Build with encryption support")
     depends_on("openssl", when="+encrypt")
 
     def cmake_args(self):
-        args = []
-        if "+debug" in self.spec:
-            args.append("-DCMAKE_BUILD_TYPE=Debug")
-        if "+vfd" in self.spec:
-            args.append(self.define("HERMES_ENABLE_VFD", "ON"))
-        if "+compress" in self.spec:
-            args.append(self.define("HERMES_ENABLE_COMPRESSION", "ON"))
-        if "+encrypt" in self.spec:
-            args.append(self.define("HERMES_ENABLE_ENCRYPTION", "ON"))
-        if "+mochi" in self.spec:
-            args.append(self.define("HERMES_RPC_THALLIUM", "ON"))
-        if "+zmq" in self.spec:
-            args.append(self.define("HERMES_ENABLE_ZMQ_TESTS", "ON"))
-        return args
+        return [
+            self.define_from_variant("HERMES_ENABLE_VFD", "vfd"),
+            self.define_from_variant("HERMES_ENABLE_COMPRESSION", "compress"),
+            self.define_from_variant("HERMES_ENABLE_ENCRYPTION", "encrypt"),
+            self.define_from_variant("HERMES_RPC_THALLIUM", "mochi"),
+            self.define_from_variant("HERMES_ENABLE_ZMQ_TESTS", "zmq"),
+        ]
 
     def set_include(self, env, path):
         env.append_flags("CFLAGS", "-I{}".format(path))
