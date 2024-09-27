@@ -65,6 +65,11 @@ Getting Spack is easy.  You can clone it from the `github repository
 
 This will create a directory called ``spack``.
 
+.. note::
+   `-c feature.manyFiles=true` improves git's performance on repositories with 1,000+ files.
+
+   `--depth=2` prunes the git history to reduce the size of the Spack installation.
+
 .. _shell-support:
 
 ^^^^^^^^^^^^^

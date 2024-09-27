@@ -43,6 +43,11 @@ package:
    $ cd spack/bin
    $ ./spack install libelf
 
+.. note::
+   `-c feature.manyFiles=true` improves git's performance on repositories with 1,000+ files.
+
+   `--depth=2` prunes the git history to reduce the size of the Spack installation.
+
 If you're new to spack and want to start using it, see :doc:`getting_started`,
 or refer to the full manual below.
 
