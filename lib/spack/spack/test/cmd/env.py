@@ -38,6 +38,7 @@ import spack.util.environment
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.env import _env_create
+from spack.installer import PackageInstaller
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix
@@ -808,7 +809,7 @@ def test_lockfile_spliced_specs(environment_from_manifest, install_mockery):
     # Create a local install for zmpi to splice in
     # Default concretization is not using zmpi
     zmpi = spack.spec.Spec("zmpi").concretized()
-    zmpi.package.do_install(fake=True)
+    PackageInstaller([zmpi.package], fake=True).install()
 
     e1 = environment_from_manifest(
         f"""

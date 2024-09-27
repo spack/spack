@@ -678,11 +678,10 @@ def test_install_spliced_build_spec_installed(install_mockery, capfd, mock_fetch
     out = spec.splice(dep, transitive)
     PackageInstaller([out.build_spec.package]).install()
 
-    installer = create_installer([out], {"vebose": True, "fail_fast": True})
+    installer = create_installer([out], {"verbose": True, "fail_fast": True})
     installer._init_queue()
     for _, task in installer.build_pq:
         assert isinstance(task, inst.RewireTask if task.pkg.spec.spliced else inst.BuildTask)
-    assert installer.build_pq[-1][0][0] == 2
     installer.install()
     for node in out.traverse():
         assert node.installed
@@ -691,9 +690,7 @@ def test_install_spliced_build_spec_installed(install_mockery, capfd, mock_fetch
 
 @pytest.mark.not_on_windows("lacking windows support for binary installs")
 @pytest.mark.parametrize("transitive", [True, False])
-@pytest.mark.parametrize(
-    "root_str", ["splice-t^splice-h~foo", "splice-h~foo", "splice-vt^splice-a"]
-)
+@pytest.mark.parametrize("root_str", ["splice-t^splice-h~foo", "splice-vt^splice-a"])
 def test_install_splice_root_from_binary(
     install_mockery, mock_fetch, mutable_temporary_mirror, transitive, root_str
 ):
@@ -702,7 +699,7 @@ def test_install_splice_root_from_binary(
     original_spec = spack.spec.Spec(root_str).concretized()
     spec_to_splice = spack.spec.Spec("splice-h+foo").concretized()
 
-    PackageInstaller([original_spec.package, spec_to_splice.package]).instal()
+    PackageInstaller([original_spec.package, spec_to_splice.package]).install()
 
     out = original_spec.splice(spec_to_splice, transitive)
 

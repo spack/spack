@@ -4183,7 +4183,7 @@ class Spec:
         """Return set of virtuals provided by self in the context of root"""
         if root is self:
             # Could be using any virtual the package can provide
-            return set(self.package.virtuals_provided)
+            return set(v.name for v in self.package.virtuals_provided)
 
         hashes = [s.dag_hash() for s in root.traverse()]
         in_edges = set(
@@ -4206,7 +4206,7 @@ class Spec:
             return True
 
         return bool(
-            self._virtuals_provided(self_root)
+            bool(self._virtuals_provided(self_root))
             and self._virtuals_provided(self_root) <= other._virtuals_provided(other_root)
         )
 
@@ -4248,7 +4248,7 @@ class Spec:
             if other_dep:
                 edge.parent._add_dependency(replacement, depflag=other_dep, virtuals=edge.virtuals)
 
-    def _splice_helper(self, replacement, self_root, other_root):
+    def _splice_helper(self, replacement):
         """Main loop of a transitive splice.
 
         The while loop around a traversal of self ensures that changes to self from previous
@@ -4276,8 +4276,7 @@ class Spec:
             replacements_by_name[node.name].append(node)
             virtuals = node._virtuals_provided(root=replacement)
             for virtual in virtuals:
-                # Virtual may be spec or str, get name or return str
-                replacements_by_name[getattr(virtual, "name", virtual)].append(node)
+                replacements_by_name[virtual].append(node)
 
         changed = True
         while changed:
@@ -4298,8 +4297,8 @@ class Spec:
                     for virtual in node._virtuals_provided(root=self):
                         analogs += [
                             r
-                            for r in replacements_by_name[getattr(virtual, "name", virtual)]
-                            if r._splice_match(node, self_root=self_root, other_root=other_root)
+                            for r in replacements_by_name[virtual]
+                            if node._splice_match(r, self_root=self, other_root=replacement)
                         ]
 
                     # No match, keep iterating over self
@@ -4313,6 +4312,7 @@ class Spec:
                 # No splice needed here, keep checking
                 if analog == node:
                     continue
+
                 node._splice_detach_and_add_dependents(analog, context=self)
                 changed = True
                 break
@@ -4397,12 +4397,12 @@ class Spec:
 
             # Transitively splice any relevant nodes from new into base
             # This handles all shared dependencies between self and other
-            spec._splice_helper(replacement, self_root=self, other_root=other)
+            spec._splice_helper(replacement)
         else:
             # Do the same thing as the transitive splice, but reversed
             node_pairs = make_node_pairs(other, replacement)
             mask_build_deps(replacement)
-            replacement._splice_helper(spec, self_root=other, other_root=self)
+            replacement._splice_helper(spec)
 
             # Intransitively splice replacement into spec
             # This is very simple now that all shared dependencies have been handled

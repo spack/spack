@@ -29,7 +29,9 @@ def check_spliced_spec_prefixes(spliced_spec):
         text_file_path = os.path.join(node.prefix, node.name)
         with open(text_file_path, "r") as f:
             text = f.read()
+            print(text)
             for modded_spec in node.traverse(root=True, deptype=dt.ALL & ~dt.BUILD):
+                print(modded_spec)
                 assert modded_spec.prefix in text
 
 
@@ -164,10 +166,9 @@ def test_rewire_virtual(mock_fetch, install_mockery):
     alt_dep = "splice-h"
 
     spec = Spec(f"splice-vt^{dep}").concretized()
-    spec.package.do_install()
-
     alt_spec = Spec(alt_dep).concretized()
-    alt_spec.package.do_install()
+
+    PackageInstaller([spec.package, alt_spec.package]).install()
 
     spliced_spec = spec.splice(alt_spec, True)
     spack.rewiring.rewire(spliced_spec)

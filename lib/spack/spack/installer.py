@@ -1704,36 +1704,7 @@ class PackageInstaller:
     def _requeue_with_build_spec_tasks(self, task):
         """Requeue the task and its missing build spec dependencies"""
         # Full install of the build_spec is necessary because it didn't already exist somewhere
-        install_compilers = spack.config.get("config:install_missing_compilers", False)
-
         spec = task.pkg.spec
-
-        if install_compilers:
-            packages_per_compiler = {}
-
-            # Queue all dependencies of the build spec.
-            for dep in spec.build_spec.traverse(root=True):
-                pkg = dep.package
-                compiler = pkg.spec.compiler
-                arch = pkg.spec.architecture
-                if compiler not in packages_per_compiler:
-                    packages_per_compiler[compiler] = {}
-
-                if arch not in packages_per_compiler[compiler]:
-                    packages_per_compiler[compiler][arch] = []
-
-                packages_per_compiler[compiler][arch].append(pkg)
-                pkg_id = package_id(pkg.spec)
-                if pkg_id not in self.build_tasks:
-                    spack.store.STORE.failure_tracker.clear(dep, force=False)
-                    self._add_init_task(dep.package, task.request, False, self.all_dependencies)
-
-            for compiler, archs in packages_per_compiler.items():
-                for arch, packages in archs.items():
-                    self._add_bootstrap_compilers(
-                        compiler, arch, packages, task.request, self.all_dependencies
-                    )
-
         for dep in spec.build_spec.traverse():
             dep_pkg = dep.package
 

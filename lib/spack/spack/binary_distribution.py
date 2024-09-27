@@ -35,6 +35,7 @@ from llnl.util.symlink import readlink
 import spack.caches
 import spack.config as config
 import spack.database as spack_db
+import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
 import spack.hooks
@@ -2207,7 +2208,6 @@ def relocate_package(spec):
     # of some dependency is in an upstream, so we cannot assume the original
     # spack store root can be mapped uniformly to the new spack store root.
     relocation_specs = deps_to_relocate(spec)
-    relocation_hashes = [s.dag_hash() for s in relocation_specs]
     build_spec_ids = [id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD)]
     for s in relocation_specs:
         analog = s
@@ -2220,7 +2220,7 @@ def relocate_package(spec):
             if analogs:
                 # Prefer same-name analogs and prefer higher versions
                 # This matches the preferences in Spec.splice, so we will find same node
-                analog = max(analogs, key=lambda a: (a.name == d.name, a.version))
+                analog = max(analogs, key=lambda a: (a.name == s.name, a.version))
 
         lookup_dag_hash = analog.dag_hash()
         if lookup_dag_hash in hash_to_old_prefix:

@@ -2296,9 +2296,9 @@ class TestConcretize:
         spec = spack.spec.Spec("hdf5 ^zmpi").concretized()
 
         assert spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
-        assert spec.build_spec.satisfies("^zmpi")
+        assert spec.build_spec.dependencies(name="zmpi", deptype="link")
         assert not spec.build_spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
-        assert not spec.satisfies("^zmpi")
+        assert not spec.dependencies(name="zmpi", deptype="link")
 
     @pytest.mark.db
     @pytest.mark.parametrize(

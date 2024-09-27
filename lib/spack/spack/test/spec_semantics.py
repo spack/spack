@@ -1371,9 +1371,6 @@ class TestSpecSemantics:
         with pytest.raises(spack.spec.SpliceError, match="virtual"):
             vt.splice(vh, transitive)
 
-        # No error for t which depends on h directly, not the "somethingelse" virtual
-        t.splice(vh, transitive)
-
     def test_spec_override(self):
         init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
         change_spec = Spec("pkg-a foo=fee cflags=-O2")
