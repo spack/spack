@@ -17,7 +17,6 @@ import spack.install_test
 import spack.repo
 import spack.spec
 import spack.variant
-import spack.version
 from spack.cmd.common import arguments
 from spack.package_base import preferred_version
 

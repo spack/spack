@@ -36,7 +36,7 @@ jobs:
       core: ${{ steps.filter.outputs.core }}
       packages: ${{ steps.filter.outputs.packages }}
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
         if: ${{ github.event_name == 'push' }}
         with:
           fetch-depth: 0
@@ -88,7 +88,7 @@ jobs:
     needs: [ unit-tests, prechecks ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+    - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
       with:
         fetch-depth: 0
     - name: Download coverage files
