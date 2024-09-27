@@ -2020,14 +2020,12 @@ class SpackSolverSetup:
                         self.pkg_class(spec.name), variant, spec
                     )
 
-                    pkg_cls = self.pkg_class(spec.name)
                     # Record that that this is a valid possible value. Accounts for
                     # int/str/etc., where valid values can't be listed in the package
                     for variant_def in variant_defs:
                         self.variant_values_from_specs.add((spec.name, id(variant_def), value))
 
-                if vname in pkg_cls.variants:
-                    clauses.append(f.variant_value(spec.name, vname, value))
+                clauses.append(f.variant_value(spec.name, vname, value))
                 if variant.propagate:
                     clauses.append(f.propagate(spec.name, fn.variant_value(vname, value)))
 
