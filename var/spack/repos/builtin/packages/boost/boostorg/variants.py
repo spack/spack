@@ -157,11 +157,6 @@ def load():
     )
     _boost_variant(
         "lexical_cast",
-        when="@1.20.0:",
-        conflicts=[
-            {"when": "cxxstd=98", "msg": "Boost.LexicalCast requires cxxstd >= 11"},
-            {"when": "cxxstd=03", "msg": "Boost.LexicalCast requires cxxstd >= 11"},
-        ],
         requires=[
             {"spec": "+math", "when": "@:1.76.0", "msg": "Boost.LexicalCast requires Boost.Math"}
         ],
@@ -408,16 +403,14 @@ def load():
         when="@1.46.0:",
         description="Interval sets and maps and aggregation of associated values.",
     )
+    # fmt: off
     _boost_variant(
         "chrono",
         when="@1.47.0:",
         buildable="@1.47.0:",
-        conflicts=[
-            {"when": "cxxstd=98", "msg": "Boost.Context requires cxxstd >= 11"},
-            {"when": "cxxstd=03", "msg": "Boost.Context requires cxxstd >= 11"},
-        ],
         description="Time utilities.",
     )
+    # fmt: on
     _boost_variant(
         "geometry",
         when="@1.47.0:",
@@ -437,10 +430,6 @@ def load():
     _boost_variant(
         "ratio",
         when="@1.47.0:",
-        conflicts=[
-            {"when": "cxxstd=98", "msg": "Boost.Ratio requires cxxstd >= 11"},
-            {"when": "cxxstd=03", "msg": "Boost.Ratio requires cxxstd >= 11"},
-        ],
         description="Compile-time rational arithmetic.",
     )
     # fmt: on
@@ -571,6 +560,9 @@ def load():
         "log",
         when="@1.54.0:",
         buildable="@1.54.0:",
+        requires=[
+            {"spec": "+regex", "when": "@1.84.0:", "msg": "Boost.Log requires Boost.Regex"},
+        ],
         description="Logging library.",
     )
     _boost_variant(
@@ -1015,6 +1007,22 @@ def load():
             {"when": "cxxstd=03", "msg": "Boost.compat requires cxxstd >= 11"},
         ],
         description="C++11 implementations of standard components added in later C++ standards.",
+    )
+    _boost_variant(
+        "redis",
+        when="@1.84.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.Redis requires cxxstd >= 17"},
+            {"when": "cxxstd=03", "msg": "Boost.Redis requires cxxstd >= 17"},
+            {"when": "cxxstd=11", "msg": "Boost.Redis requires cxxstd >= 17"},
+            {"when": "cxxstd=14", "msg": "Boost.Redis requires cxxstd >= 17"},
+        ],
+        # fmt: off
+        requires=[
+            {"spec": "+asio", "msg": "Boost.Redis requires Boost.Asio"},
+        ],
+        # fmt: on
+        description="Redis async client library built on top of Boost.Asio.",
     )
     _boost_variant(
         "cobalt",
