@@ -424,6 +424,19 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     # cuda_arch value must be specified
     conflicts("cuda_arch=none", when="+cuda", msg="A value for cuda_arch must be specified.")
 
+    # clang/test/Misc/target-invalid-cpu-note.c
+    conflicts("cuda_arch=10")
+    conflicts("cuda_arch=11")
+    conflicts("cuda_arch=12")
+    conflicts("cuda_arch=13")
+    conflicts("cuda_arch=75", when="@:13")
+    conflicts("cuda_arch=80", when="@:13")
+    conflicts("cuda_arch=86", when="@:13")
+    conflicts("cuda_arch=87", when="@:15")
+    conflicts("cuda_arch=89", when="@:15")
+    conflicts("cuda_arch=90", when="@:15")
+    conflicts("cuda_arch=90a", when="@:17")
+
     # LLVM bug https://bugs.llvm.org/show_bug.cgi?id=48234
     # CMake bug: https://gitlab.kitware.com/cmake/cmake/-/issues/21469
     # Fixed in upstream versions of both
