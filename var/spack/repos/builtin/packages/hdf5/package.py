@@ -512,6 +512,7 @@ class Hdf5(CMakePackage):
             self.define_from_variant("HDF5_ENABLE_SUBFILING_VFD", "subfiling"),
             self.define_from_variant("HDF5_ENABLE_MAP_API", "map"),
             self.define("HDF5_ENABLE_Z_LIB_SUPPORT", True),
+            self.define("ZLIB_USE_EXTERNAL", True),
             self.define_from_variant("HDF5_ENABLE_SZIP_SUPPORT", "szip"),
             self.define_from_variant("HDF5_ENABLE_SZIP_ENCODING", "szip"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
