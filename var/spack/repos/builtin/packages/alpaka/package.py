@@ -51,15 +51,7 @@ class Alpaka(CMakePackage, CudaPackage):
     depends_on("cmake@3.22:")
 
     # make sure no other backend is enabled if using cuda_only or hip_only
-    for v in (
-        "serial",
-        "threads",
-        "tbb",
-        "omp2_gridblock",
-        "omp2_blockthread",
-        "cuda",
-        "hip",
-    ):
+    for v in ("serial", "threads", "tbb", "omp2_gridblock", "omp2_blockthread", "cuda", "hip"):
         conflicts("backend=cuda_only,%s" % v)
         conflicts("backend=hip_only,%s" % v)
     conflicts("backend=cuda_only,hip_only")
