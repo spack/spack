@@ -37,9 +37,7 @@ class SbclBootstrap(Package):
     # found the latest reference to glibc for each version.
     sbcl_releases = {
         "2.4.0": {
-            "darwin": {
-                "arm64": "1d01fac2d9748f769c9246a0a11a2c011d7843337f8f06ca144f5a500e10c117"
-            }
+            "darwin": {"arm64": "1d01fac2d9748f769c9246a0a11a2c011d7843337f8f06ca144f5a500e10c117"}
         },
         "2.3.11": {
             "linux": {
