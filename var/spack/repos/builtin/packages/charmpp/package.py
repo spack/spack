@@ -378,7 +378,7 @@ class Charmpp(Package):
         # https://github.com/charmplusplus/charm/issues/3645
         # Fix was suggested in https://github.com/charmplusplus/charm/pull/3646 and the same has
         # been implemented in v8.0.0
-        if "@8.0.0: %aocc" in self.spec:
+        if self.spec.satisfies("@8.0.0: %aocc"):
             options.append("--disable-fortran")
 
         # Call "make" via the build script
