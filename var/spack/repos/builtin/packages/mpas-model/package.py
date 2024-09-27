@@ -69,8 +69,7 @@ class MpasModel(MakefilePackage):
     depends_on("mpi")
     depends_on("parallelio")
 
-    # `ifx` internal compiler error triggered by maps-model fixed in oneapi@2024.2
-    conflicts("%oneapi@:2024.1")
+    conflicts("%oneapi@:2024.1", msg="ifx internal compiler error triggered by maps-model fixed in oneapi@2024.2")
 
     patch("makefile.patch", when="@7.0")
 
