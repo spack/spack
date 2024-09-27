@@ -1719,14 +1719,18 @@ class Spec:
             self.add_dependency_edge(spec, depflag=depflag, virtuals=virtuals)
             return
 
-        # Keep the intersection of constraints when a dependency is added multiple times.
-        # The only restriction, currently, is keeping the same dependency type
+        # Keep the intersection of constraints when a dependency is added multiple times with
+        # the same deptype. Add a new dependency if it is added with a compatible deptype
+        # (for example, a build-only dependency is compatible with a link-only dependenyc).
+        # The only restrictions, currently, are that we cannot add edges with overlapping
+        # dependency types and we cannot add multiple edges that have link/run dependency types.
+        # See ``spack.deptypes.compatible``.
         orig = self._dependencies[spec.name]
         try:
             dspec = next(dspec for dspec in orig if depflag == dspec.depflag)
         except StopIteration:
-            # Error if we have overlapping deptypes
-            if any(dspec.depflag & depflag for dspec in orig):
+            # Error if we have overlapping or incompatible deptypes
+            if any(not dt.compatible(dspec.depflag, depflag) for dspec in orig):
                 edge_attrs = f"deptypes={dt.flag_to_chars(depflag).strip()}"
                 required_dep_str = f"^[{edge_attrs}] {str(spec)}"
 
@@ -1761,7 +1765,7 @@ class Spec:
         for edge in selected:
             has_errors, details = False, []
             msg = f"cannot update the edge from {edge.parent.name} to {edge.spec.name}"
-            if edge.depflag & depflag:
+            if not dt.compatible(edge.depflag, depflag):
                 has_errors = True
                 details.append(
                     (
@@ -1770,14 +1774,13 @@ class Spec:
                     )
                 )
 
-            if any(v in edge.virtuals and edge.depflag & depflag for v in virtuals):
-                has_errors = True
-                details.append(
-                    (
-                        f"{edge.parent.name} has already an edge matching any"
-                        f" of these virtuals {virtuals}"
+                if any(v in edge.virtuals for v in virtuals):
+                    details.append(
+                        (
+                            f"{edge.parent.name} has already an edge matching any"
+                            f" of these virtuals {virtuals}"
+                        )
                     )
-                )
 
             if has_errors:
                 raise spack.error.SpecError(msg, "\n".join(details))
