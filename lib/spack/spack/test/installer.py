@@ -28,6 +28,7 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
+from spack.installer import PackageInstaller
 
 
 def _mock_repo(root, namespace):
@@ -82,7 +83,7 @@ def create_installer(
     concretized."""
     _specs = [spack.spec.Spec(s).concretized() if isinstance(s, str) else s for s in specs]
     _install_args = {} if install_args is None else install_args
-    return inst.PackageInstaller([spec.package for spec in _specs], _install_args)
+    return inst.PackageInstaller([spec.package for spec in _specs], **_install_args)
 
 
 @pytest.mark.parametrize(
@@ -140,7 +141,9 @@ def test_install_from_cache_errors(install_mockery):
     with pytest.raises(
         spack.error.InstallError, match="No binary found when cache-only was specified"
     ):
-        spec.package.do_install(package_cache_only=True, dependencies_cache_only=True)
+        PackageInstaller(
+            [spec.package], package_cache_only=True, dependencies_cache_only=True
+        ).install()
     assert not spec.package.installed_from_binary_cache
 
     # Check when don't expect to install only from binary cache

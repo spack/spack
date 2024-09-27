@@ -202,18 +202,6 @@ class Compiler:
     support for specific compilers, their possible names, arguments,
     and how to identify the particular type of compiler."""
 
-    # Subclasses use possible names of C compiler
-    cc_names: List[str] = []
-
-    # Subclasses use possible names of C++ compiler
-    cxx_names: List[str] = []
-
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names: List[str] = []
-
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names: List[str] = []
-
     # Optional prefix regexes for searching for this type of compiler.
     # Prefixes are sometimes used for toolchains
     prefixes: List[str] = []
@@ -618,18 +606,6 @@ class Compiler:
     @classmethod
     def cc_version(cls, cc):
         return cls.default_version(cc)
-
-    @classmethod
-    def cxx_version(cls, cxx):
-        return cls.default_version(cxx)
-
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.default_version(f77)
-
-    @classmethod
-    def fc_version(cls, fc):
-        return cls.default_version(fc)
 
     @classmethod
     def search_regexps(cls, language):

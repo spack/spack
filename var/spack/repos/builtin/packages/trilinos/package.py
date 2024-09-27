@@ -80,6 +80,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Build options
     variant("complex", default=False, description="Enable complex numbers in Trilinos")
+    variant(
+        "cuda_constexpr",
+        default=False,
+        description="Enable relaxed constexpr functions for CUDA build",
+    )
     variant("cuda_rdc", default=False, description="Turn on RDC for CUDA build")
     variant("rocm_rdc", default=False, description="Turn on RDC for ROCm build")
     variant(
@@ -1006,6 +1011,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                     [
                         define_kok_enable("CUDA_UVM", use_uvm),
                         define_kok_enable("CUDA_LAMBDA", True),
+                        define_kok_enable("CUDA_CONSTEXPR", "cuda_constexpr"),
                         define_kok_enable("CUDA_RELOCATABLE_DEVICE_CODE", "cuda_rdc"),
                     ]
                 )

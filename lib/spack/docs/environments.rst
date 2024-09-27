@@ -414,7 +414,13 @@ default, it will also clone the package to a subdirectory in the
 environment. This package will have a special variant ``dev_path``
 set, and Spack will ensure the package and its dependents are rebuilt
 any time the environment is installed if the package's local source
-code has been modified. Spack ensures that all instances of a
+code has been modified. Spack's native implementation to check for modifications
+is to check if ``mtime`` is newer than the installation.
+A custom check can be created by overriding the ``detect_dev_src_change`` method 
+in your package class. This is particularly useful for projects using custom spack repo's 
+to drive development and want to optimize performance. 
+
+Spack ensures that all instances of a
 developed package in the environment are concretized to match the
 version (and other constraints) passed as the spec argument to the
 ``spack develop`` command.
@@ -893,9 +899,8 @@ The valid variables for a ``when`` clause are:
 
 #. ``env``. The user environment (usually ``os.environ`` in Python).
 
-#. ``hostname``. The hostname of the system.
-
-#. ``full_hostname``. The fully qualified hostname of the system.
+#. ``hostname``. The hostname of the system (if ``hostname`` is an
+   executable in the user's PATH).
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 SpecLists as Constraints

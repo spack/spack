@@ -8,7 +8,7 @@ import re
 import subprocess
 import sys
 import tempfile
-from typing import Dict, List
+from typing import Dict
 
 import archspec.cpu
 
@@ -117,18 +117,6 @@ def get_valid_fortran_pth():
 
 
 class Msvc(Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names: List[str] = ["cl"]
-
-    # Subclasses use possible names of C++ compiler
-    cxx_names: List[str] = ["cl"]
-
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names: List[str] = ["ifx"]
-
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names: List[str] = ["ifx"]
-
     # Named wrapper links within build_env_path
     # Due to the challenges of supporting compiler wrappers
     # in Windows, we leave these blank, and dynamically compute
@@ -393,7 +381,3 @@ class Msvc(Compiler):
             )
         clp = spack.util.executable.which_string("cl", path=sps)
         return cls.default_version(clp) if clp else fc_ver
-
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.fc_version(f77)

@@ -199,7 +199,7 @@ def check_args(cc, args, expected):
     """
     with set_env(SPACK_TEST_COMMAND="dump-args"):
         cc_modified_args = cc(*args, output=str).strip().split("\n")
-        assert expected == cc_modified_args
+        assert cc_modified_args == expected
 
 
 def check_args_contents(cc, args, must_contain, must_not_contain):
@@ -349,6 +349,39 @@ def test_fc_flags(wrapper_environment, wrapper_flags):
         + test_args_without_paths
         + spack_fflags
         + spack_cppflags
+        + ["-Wl,--gc-sections"]
+        + spack_ldlibs,
+    )
+
+
+def test_ld_flags_with_redundant_rpaths(wrapper_environment, wrapper_flags):
+    check_args(
+        ld,
+        test_args + test_rpaths,  # ensure thesee are made unique
+        ["ld"]
+        + test_include_paths
+        + test_library_paths
+        + ["--disable-new-dtags"]
+        + test_rpaths
+        + test_args_without_paths
+        + spack_ldlibs,
+    )
+
+
+def test_cc_flags_with_redundant_rpaths(wrapper_environment, wrapper_flags):
+    check_args(
+        cc,
+        test_args + test_wl_rpaths + test_wl_rpaths,  # ensure thesee are made unique
+        [real_cc]
+        + target_args
+        + test_include_paths
+        + ["-Lfoo"]
+        + test_library_paths
+        + ["-Wl,--disable-new-dtags"]
+        + test_wl_rpaths
+        + test_args_without_paths
+        + spack_cppflags
+        + spack_cflags
         + ["-Wl,--gc-sections"]
         + spack_ldlibs,
     )

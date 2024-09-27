@@ -156,9 +156,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             args.append(define("HDF5_IS_PARALLEL", spec.satisfies("+mpi")))
 
         if spec.satisfies("+cuda"):
-            amrex_arch = CudaPackage.compute_capabilities(spec.variants["cuda_arch"].value)
-            if amrex_arch:
-                args.append(define("AMReX_CUDA_ARCH", amrex_arch))
+            args.append(define("CMAKE_CUDA_ARCHITECTURES", spec.variants["cuda_arch"].value))
 
         if spec.satisfies("+rocm"):
             args.append(define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))

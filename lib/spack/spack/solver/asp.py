@@ -2479,7 +2479,7 @@ class SpackSolverSetup:
             return allowed_targets
 
         cache = {}
-        for target_constraint in sorted(self.target_constraints):
+        for target_constraint in sorted(self.target_constraints, key=lambda x: x.name):
             # Construct the list of allowed targets for this constraint
             allowed_targets = []
             for single_constraint in str(target_constraint).split(","):
@@ -3237,7 +3237,7 @@ class CompilerParser:
         candidate = KnownCompiler(
             spec=spec.compiler,
             os=str(spec.architecture.os),
-            target=str(spec.architecture.target.microarchitecture.family),
+            target=str(spec.architecture.target.family),
             available=False,
             compiler_obj=None,
         )

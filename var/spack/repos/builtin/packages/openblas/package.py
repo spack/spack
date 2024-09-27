@@ -264,6 +264,8 @@ class Openblas(CMakePackage, MakefilePackage):
         msg="Visual Studio does not support OpenBLAS dynamic dispatch features",
     )
 
+    conflicts("target=x86_64_v4:", when="%intel@2021")
+
     depends_on("perl", type="build")
 
     build_system("makefile", "cmake", default="makefile")
@@ -541,6 +543,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         if self.spec.satisfies("+bignuma"):
             make_defs.append("BIGNUMA=1")
+
+        if not self.spec.satisfies("target=x86_64_v4:"):
+            make_defs.append("NO_AVX512=1")
 
         # Avoid that NUM_THREADS gets initialized with the host's number of CPUs.
         if self.spec.satisfies("threads=openmp") or self.spec.satisfies("threads=pthreads"):
