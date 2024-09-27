@@ -163,6 +163,20 @@ def test_env_add_existing_env_fails():
         env("add", "--name", "add_test", ev.environment_dir_from_name("add_test"))
 
 
+def test_env_add_valid(tmp_path):
+    with fs.working_dir(str(tmp_path)):
+        # create an independent environment
+        env("create", "-d", ".")
+
+        # test adding environment into known store
+        env("add", "--name", "test1", ".")
+
+        # test removing environment to ensure independent isn't deleted
+        env("rm", "-y", "test1")
+
+        assert os.path.isfile("spack.yaml")
+
+
 def test_env_add_virtual():
     env("create", "test")
 
