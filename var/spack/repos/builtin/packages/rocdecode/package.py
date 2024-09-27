@@ -36,6 +36,14 @@ class Rocdecode(CMakePackage):
     for ver in ["6.1.0", "6.1.1", "6.1.2", "6.2.0"]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
 
+    def patch(self):
+        filter_file(
+            r"${ROCM_PATH}/llvm/bin/clang++",
+            "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
+            "CMakeLists.txt",
+            string=True,
+        )
+
     def cmake_args(self):
         args = []
         if "auto" not in self.spec.variants["amdgpu_target"]:
