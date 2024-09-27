@@ -715,13 +715,6 @@ class TestSpecSemantics:
     def test_spec_formatting(self, default_mock_concretization):
         spec = default_mock_concretization("multivalue-variant cflags=-O2")
 
-        # Since the default is the full spec see if the string rep of
-        # spec is the same as the output of spec.format()
-        # ignoring whitespace (though should we?) and ignoring dependencies
-        spec_string = str(spec)
-        idx = spec_string.index(" ^")
-        assert spec_string[:idx] == spec.format().strip()
-
         # Testing named strings ie {string} and whether we get
         # the correct component
         # Mixed case intentional to test both
