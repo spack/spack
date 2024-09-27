@@ -384,6 +384,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # https://www.tensorflow.org/install/source#tested_build_configurations
     # https://github.com/tensorflow/tensorflow/issues/70199
     # (-mavx512fp16 exists in gcc@12:)
+    conflicts("%gcc@13:", when="@:2.14")
     conflicts("%gcc@:11", when="@2.17:")
     conflicts("%gcc@:9.3.0", when="@2.9:")
     conflicts("%gcc@:7.3.0")
@@ -450,6 +451,22 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         when="@2.16.1-rocm-enhanced +rocm",
     )
     phases = ["configure", "build", "install"]
+
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        # ubuntu gcc has this workaround turned on by default in aarch64
+        # and it causes issues with symbol relocation during link
+        # note, archspec doesn't currently ever report cortex_a53!
+        if (
+            name == "ldflags"
+            and spec.target.family == "aarch64"
+            and "ubuntu" in spec.os
+            and spec.compiler.name == "gcc"
+            and "cortex_a53" not in spec.target.name
+        ):
+            flags.append("-mno-fix-cortex-a53-843419")
+
+        return (flags, None, None)
 
     # https://www.tensorflow.org/install/source
     def setup_build_environment(self, env):

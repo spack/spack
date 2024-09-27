@@ -26,7 +26,7 @@ line is a spec for a particular installation of the mpileaks package.
    version, like "1.2", or it can be a range of versions, e.g. "1.2:1.4".
    If multiple specific versions or multiple ranges are acceptable, they
    can be separated by commas, e.g. if a package will only build with
-   versions 1.0, 1.2-1.4, and 1.6-1.8 of mavpich, you could say:
+   versions 1.0, 1.2-1.4, and 1.6-1.8 of mvapich, you could say:
 
        depends_on("mvapich@1.0,1.2:1.4,1.6:1.8")
 
@@ -1155,7 +1155,7 @@ def _libs_default_handler(spec: "Spec"):
 
     for shared in search_shared:
         # Since we are searching for link libraries, on Windows search only for
-        # ".Lib" extensions by default as those represent import libraries for implict links.
+        # ".Lib" extensions by default as those represent import libraries for implicit links.
         libs = fs.find_libraries(name, home, shared=shared, recursive=True, runtime=False)
         if libs:
             return libs
@@ -2497,7 +2497,7 @@ class Spec:
             spec_like, dep_like = next(iter(d.items()))
 
             # If the requirements was for unique nodes (default)
-            # then re-use keys from the local cache. Otherwise build
+            # then reuse keys from the local cache. Otherwise build
             # a new node every time.
             if not isinstance(spec_like, Spec):
                 spec = spec_cache[spec_like] if normal else Spec(spec_like)
@@ -5039,7 +5039,7 @@ class UnsatisfiableVersionSpecError(spack.error.UnsatisfiableSpecError):
 
 
 class UnsatisfiableCompilerSpecError(spack.error.UnsatisfiableSpecError):
-    """Raised when a spec comiler conflicts with package constraints."""
+    """Raised when a spec compiler conflicts with package constraints."""
 
     def __init__(self, provided, required):
         super().__init__(provided, required, "compiler")
