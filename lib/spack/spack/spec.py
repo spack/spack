@@ -4331,36 +4331,34 @@ class Spec:
         spec = self.copy(deps=dt.ALL & ~dt.BUILD)
         replacement = other.copy(deps=dt.ALL & ~dt.BUILD)
 
-        if transitive:
-            # These pairs will allow us to reattach all direct build deps
-            # We need the list of pairs while the two specs still match
-            node_pairs = list(
+        def make_node_pairs(orig_spec, copied_spec):
+            return list(
                 zip(
-                    self.traverse(deptype=dt.ALL & ~dt.BUILD),
-                    spec.traverse(deptype=dt.ALL & ~dt.BUILD),
+                    orig_spec.traverse(deptype=dt.ALL & ~dt.BUILD),
+                    copied_spec.traverse(deptype=dt.ALL & ~dt.BUILD),
                 )
             )
 
+        def mask_build_deps(in_spec):
+            for edge in in_spec.traverse_edges(cover="edges"):
+                edge.depflag &= ~dt.BUILD
+
+        if transitive:
+            # These pairs will allow us to reattach all direct build deps
+            # We need the list of pairs while the two specs still match
+            node_pairs = make_node_pairs(self, spec)
+
             # Ignore build deps in the modified spec while doing the splice
             # They will be added back in at the end
-            for edge in spec.traverse_edges(cover="edges"):
-                edge.depflag &= ~dt.BUILD
+            mask_build_deps(spec)
 
             # Transitively splice any relevant nodes from new into base
             # This handles all shared dependencies between self and other
             spec._splice_helper(replacement, self_root=self, other_root=other)
         else:
             # Do the same thing as the transitive splice, but reversed
-            node_pairs = list(
-                zip(
-                    other.traverse(deptype=dt.ALL & ~dt.BUILD),
-                    replacement.traverse(deptype=dt.ALL & ~dt.BUILD),
-                )
-            )
-
-            for edge in replacement.traverse_edges(cover="edges"):
-                edge.depflag &= ~dt.BUILD
-
+            node_pairs = make_node_pairs(other, replacement)
+            mask_build_deps(replacement)
             replacement._splice_helper(spec, self_root=other, other_root=self)
 
             # Intransitively splice replacement into spec
