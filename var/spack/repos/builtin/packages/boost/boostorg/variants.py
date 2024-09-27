@@ -1197,6 +1197,15 @@ def load():
         description="MySQL client library built on top of Boost.Asio.",
     )
     variants.add(
+        "compat",
+        when="@1.83.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.compat requires cxxstd >= 11"},
+            {"when": "cxxstd=03", "msg": "Boost.compat requires cxxstd >= 11"},
+        ],
+        description="C++11 implementations of standard components added in later C++ standards",
+    )
+    variants.add(
         "cobalt",
         default=False,
         when="@1.84.0:",

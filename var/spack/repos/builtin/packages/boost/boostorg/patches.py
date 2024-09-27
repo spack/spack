@@ -338,14 +338,6 @@ def load():
                     sha256="db93780fdcf95275f90094ea8fb7901bb790a030055d6e9354357a130c5bd8cb",
                 )
 
-    # https://github.com/boostorg/phoenix/issues/111
-    sp.patch(
-        "patches/phoenix_PR111.patch",
-        when="@1.81.0:1.83.0 +phoenix",
-        level=2,
-        sha256="a7c807fcd855aa70ba839c0bdfcf5877dc9a37f8026211ccda9c676b42431b17",
-    )
-
     with sp.when("@1.82.0"):
         with sp.when("+filesystem"):
             # OpenBSD has broken support for -Wl,--no-undefined for shared libraries
@@ -360,3 +352,26 @@ def load():
                 when="platform=windows",
                 sha256="738ba8e0d7b5cdcf5fae4998f9450b51577bbde1bb0d220a0721551609714ca4",
             )
+
+    with sp.when("@1.83.0"):
+        # Compilation on Windows ARM platforms may fail for missing intrinsics
+        sp.patch(
+            "patches/json_PR926.patch",
+            when="+json platform=windows",
+            sha256="af68f8be3fedcbc2eca8fff625c7bd3cfeb0f0611e1579ba9901bd5282da5909",
+        )
+
+        # https://github.com/boostorg/phoenix/issues/111
+        sp.patch(
+            "patches/phoenix_PR111.patch",
+            when="@1.81.0:1.83.0 +phoenix",
+            level=2,
+            sha256="a7c807fcd855aa70ba839c0bdfcf5877dc9a37f8026211ccda9c676b42431b17",
+        )
+
+        # Fix erroneous copy assigment operator that would destroy non-existent elements
+        sp.patch(
+            "patches/unordered_PR205.patch",
+            when="+unordered",
+            sha256="565aeaf171459b79680009d9f702b4dfd599efc40eec8a96ca35ef936b1be294",
+        )
