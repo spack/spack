@@ -957,6 +957,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
 
     def setup_run_environment(self, env):
         env.set("LAMMPS_POTENTIALS", self.prefix.share.lammps.potentials)
+        if "+rocm" in self.spec:
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["llvm-amdgpu"].prefix.llvm.lib)
         if "+python" in self.spec:
             if self.spec.platform == "darwin":
                 env.prepend_path("DYLD_FALLBACK_LIBRARY_PATH", self.prefix.lib)
