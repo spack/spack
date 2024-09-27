@@ -260,6 +260,9 @@ def load():
         "graph",
         when="@1.18.0:",
         buildable="@1.18.0:",
+        conflicts=[
+            {"when": "@1.85.0: cxxstd=11", "msg": "Boost.Graph requires at least c++14"},
+        ],
         description=(
             "Generic components for mathematical graphs (collections of nodes and edges)."
         ),
@@ -1124,6 +1127,7 @@ def load():
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.JSON requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.JSON requires cxxstd >= 11"},
+            {"when": "@1.85.0: ~endian", "msg": "Boost.JSON requires Boost.Endian"},
         ],
         description="JSON parsing, serialization, and DOM in C++11",
     )
@@ -1204,6 +1208,7 @@ def load():
             {"when": "~pfr", "msg": "Boost.mysql requires Boost.pfr"},
             {"when": "~variant2", "msg": "Boost.mysql requires Boost.variant2"},
             {"when": "~asio", "msg": "Boost.mysql requires Boost.Asio"},
+            {"when": "@1.85.0: ~charconv", "msg": "Boost.mysql requires Boost.Charconv"},
         ],
         description="MySQL client library built on top of Boost.Asio.",
     )
@@ -1248,6 +1253,11 @@ def load():
         when="@1.85.0:",
         buildable="@1.85.0:",
         description="An implementation of C++20's <charconv> in C++11",
+    )
+    variants.add(
+        "scope",
+        when="@1.85.0:",
+        description="Scope guards and a unique_resource wrapper",
     )
 
     return variants

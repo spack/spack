@@ -375,3 +375,12 @@ def load():
             when="+unordered",
             sha256="565aeaf171459b79680009d9f702b4dfd599efc40eec8a96ca35ef936b1be294",
         )
+
+    with sp.when("@1.85.0"):
+        # flat_map/multimap containers can crash due to UB
+        sp.patch(
+            "patches/container_PR273.patch",
+            when="+container",
+            level=0,
+            sha256="28118307582c3ce716d010fc89c3cd749066b333f3859c6b533613f59394df81",
+        )
