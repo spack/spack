@@ -14,7 +14,7 @@ def bash_completion_path(root: Union[str, Path]) -> Path:
     Return standard path for bash completion scripts under root.
 
     Args:
-        root (Union[str, Path]): The prefix root under which to generate the path.
+        root: The prefix root under which to generate the path.
 
     Returns:
         Standard path for bash completion scripts under root.
@@ -27,7 +27,7 @@ def zsh_completion_path(root: Union[str, Path]) -> Path:
     Return standard path for zsh completion scripts under root.
 
     Args:
-        root (Union[str, Path]): The prefix root under which to generate the path.
+        root: The prefix root under which to generate the path.
 
     Returns:
         Standard path for zsh completion scripts under root.
@@ -40,7 +40,7 @@ def fish_completion_path(root: Union[str, Path]) -> Path:
     Return standard path for fish completion scripts under root.
 
     Args:
-        root (Union[str, Path]): The prefix root under which to generate the path.
+        root: The prefix root under which to generate the path.
 
     Returns:
         Standard path for fish completion scripts under root.
