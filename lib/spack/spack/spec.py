@@ -4160,7 +4160,6 @@ class Spec:
             # Could be using any virtual the package can provide
             return set(self.package.virtuals_provided)
 
-        virtuals = set()
         hashes = [s.dag_hash() for s in root.traverse()]
         in_edges = set(
             [edge for edge in self.edges_from_dependents() if edge.parent.dag_hash() in hashes]
@@ -4274,7 +4273,7 @@ class Spec:
                     for virtual in node._virtuals_provided(root=self):
                         analogs += [
                             r
-                            for r in replacements_by_name[getattr(virtual, name, virtual)]
+                            for r in replacements_by_name[getattr(virtual, "name", virtual)]
                             if r._splice_match(node, self_root=self_root, other_root=other_root)
                         ]
 
