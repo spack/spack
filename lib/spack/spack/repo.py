@@ -14,6 +14,7 @@ import importlib.machinery
 import importlib.util
 import inspect
 import itertools
+import math
 import os
 import os.path
 import random
@@ -437,7 +438,7 @@ class FastPackageChecker(collections.abc.Mapping):
                     # No package.py file here.
                     continue
                 elif e.errno == errno.EACCES:
-                    tty.warn("Can't read package file %s." % pkg_file)
+                    tty.warn(f"Can't read package file {pkg_file}.")
                     continue
                 raise e
 
@@ -572,32 +573,31 @@ class PatchIndexer(Indexer):
         self.index.update_package(pkg_fullname)
 
 
-class RepoIndex:
-    """Container class that manages a set of Indexers for a Repo.
+class Index:
+    """Base class for repository indexes."""
 
-    This class is responsible for checking packages in a repository for
-    updates (using ``FastPackageChecker``) and for regenerating indexes
-    when they're needed.
+    def all_package_names(self) -> List[str]:
+        """Returns the list of all package names in the repository"""
+        raise NotImplementedError("must be implemented by derived classes")
 
-    ``Indexers`` should be added to the ``RepoIndex`` using
-    ``add_indexer(name, indexer)``, and they should support the interface
-    defined by ``Indexer``, so that the ``RepoIndex`` can read, generate,
-    and update stored indices.
+    def exists(self, pkg_name: str) -> bool:
+        raise NotImplementedError("must be implemented by derived classes")
 
-    Generated indexes are accessed by name via ``__getitem__()``."""
+    def last_repo_mtime(self) -> float:
+        raise NotImplementedError("must be implemented by derived classes")
 
-    def __init__(
-        self,
-        package_checker: FastPackageChecker,
-        namespace: str,
-        cache: "spack.caches.FileCacheType",
-    ):
-        self.checker = package_checker
-        self.packages_path = self.checker.packages_path
+    def __getitem__(self, name):
+        raise NotImplementedError("must be implemented by derived classes")
+
+
+class CacheBasedIndex(Index):
+    """Base class for indexes based on a file cache"""
+
+    def __init__(self, packages_path: str, namespace: str, cache: "spack.caches.FileCacheType"):
+        self.packages_path = packages_path
         if sys.platform == "win32":
             self.packages_path = llnl.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
-
         self.indexers: Dict[str, Indexer] = {}
         self.indexes: Dict[str, Any] = {}
         self.cache = cache
@@ -606,15 +606,16 @@ class RepoIndex:
         """Add an indexer to the repo index.
 
         Arguments:
-            name: name of this indexer
-            indexer: object implementing the ``Indexer`` interface"""
+            name: name for the index being generated
+            indexer: object implementing the ``Indexer`` interface
+        """
         self.indexers[name] = indexer
 
     def __getitem__(self, name):
         """Get the index with the specified name, reindexing if needed."""
         indexer = self.indexers.get(name)
         if not indexer:
-            raise KeyError("no such index: %s" % name)
+            raise KeyError(f"no such index: {name}")
 
         if name not in self.indexes:
             self._build_all_indexes()
@@ -628,34 +629,64 @@ class RepoIndex:
         because the main bottleneck here is loading all the packages.  It
         can take tens of seconds to regenerate sequentially, and we'd
         rather only pay that cost once rather than on several
-        invocations."""
-        for name, indexer in self.indexers.items():
-            self.indexes[name] = self._build_index(name, indexer)
+        invocations.
+        """
+        for name in self.indexers:
+            self.indexes[name] = self._build_index(name)
 
-    def _build_index(self, name: str, indexer: Indexer):
+    def cache_key(self, name: str) -> str:
+        """Relative path in the cache for the given index"""
+        return f"{name}/{self.namespace}-index.json"
+
+    def _build_index(self, name: str):
+        """Determine which packages need an update, and update indexes."""
+        raise NotImplementedError("must be implemented by derived classes")
+
+
+class RepoIndex(CacheBasedIndex):
+    """Container class that manages a set of Indexers for a Repo.
+
+    This class is responsible for checking packages in a repository for
+    updates (using ``FastPackageChecker``) and for regenerating indexes
+    when they're needed.
+
+    ``Indexers`` should be added to the ``RepoIndex`` using
+    ``add_indexer(name, indexer)``, and they should support the interface
+    defined by ``Indexer``, so that the ``RepoIndex`` can read, generate,
+    and update stored indices.
+
+    Generated indexes are accessed by name via ``__getitem__()``.
+    """
+
+    def __init__(self, packages_path: str, namespace: str, cache: "spack.caches.FileCacheType"):
+        super().__init__(packages_path, namespace, cache)
+        self.checker = FastPackageChecker(self.packages_path)
+
+    def _build_index(self, name: str):
         """Determine which packages need an update, and update indexes."""
 
         # Filename of the provider index cache (we assume they're all json)
-        cache_filename = f"{name}/{self.namespace}-index.json"
+        filename = self.cache_key(name)
+        indexer = self.indexers[name]
 
         # Compute which packages needs to be updated in the cache
-        index_mtime = self.cache.mtime(cache_filename)
+        index_mtime = self.cache.mtime(filename)
         needs_update = self.checker.modified_since(index_mtime)
 
-        index_existed = self.cache.init_entry(cache_filename)
+        index_existed = self.cache.init_entry(filename)
         if index_existed and not needs_update:
             # If the index exists and doesn't need an update, read it
-            with self.cache.read_transaction(cache_filename) as f:
+            with self.cache.read_transaction(filename) as f:
                 indexer.read(f)
 
         else:
             # Otherwise update it and rewrite the cache file
-            with self.cache.write_transaction(cache_filename) as (old, new):
+            with self.cache.write_transaction(filename) as (old, new):
                 indexer.read(old) if old else indexer.create()
 
                 # Compute which packages needs to be updated **again** in case someone updated them
                 # while we waited for the lock
-                new_index_mtime = self.cache.mtime(cache_filename)
+                new_index_mtime = self.cache.mtime(filename)
                 if new_index_mtime != index_mtime:
                     needs_update = self.checker.modified_since(new_index_mtime)
 
@@ -666,6 +697,92 @@ class RepoIndex:
 
         return indexer.index
 
+    def all_package_names(self) -> List[str]:
+        """Returns the list of all package names in the repository"""
+        return sorted(self.checker.keys())
+
+    def exists(self, pkg_name: str) -> bool:
+        return pkg_name in self.checker
+
+    def last_repo_mtime(self) -> float:
+        return self.checker.last_mtime()
+
+
+class FrozenCacheIndex(CacheBasedIndex):
+    """This index assumes the cache files for a repository are available, and up to date.
+
+    By doing so it avoids a lot of stat calls, and is faster than RepoIndex, but can produce
+    wrong results if caches are not in sync with the repositories.
+    """
+
+    def __init__(self, packages_path: str, namespace: str, cache: "spack.caches.FileCacheType"):
+        super().__init__(packages_path, namespace, cache)
+        self._package_names = None
+
+    @property
+    def package_names(self):
+        if self._package_names is None:
+            result = set()
+            for entry in os.scandir(self.packages_path):
+                pkg_name = entry.name
+                if not nm.valid_module_name(pkg_name):
+                    continue
+
+                result.add(pkg_name)
+            self._package_names = result
+        return self._package_names
+
+    def _build_index(self, name: str):
+        key = self.cache_key(name)
+        filename = self.cache.cache_path(key)
+        if not os.path.exists(filename):
+            raise RepoError(f"repository cache {filename} does not exist")
+
+        indexer = self.indexers[name]
+        with self.cache.read_transaction(filename) as f:
+            indexer.read(f)
+        return indexer.index
+
+    def all_package_names(self) -> List[str]:
+        """Returns the list of all package names in the repository"""
+        return sorted(self.package_names)
+
+    def exists(self, pkg_name: str) -> bool:
+        return pkg_name in self.package_names
+
+    def last_repo_mtime(self) -> float:
+        return -math.inf
+
+
+class IndexFactory:
+    """Creates an index for faster lookup of repos."""
+
+    def __init__(self, cache: "spack.caches.FileCacheType") -> None:
+        self.cache = cache
+
+    def get(self, *, repository: "Repo") -> "Index":
+        result: CacheBasedIndex
+        if os.environ.get("SPACK_UPDATE_CACHE", "1") == "0":
+            result = FrozenCacheIndex(
+                repository.packages_path, repository.namespace, cache=self.cache
+            )
+        else:
+            result = RepoIndex(repository.packages_path, repository.namespace, cache=self.cache)
+        result.add_indexer("providers", ProviderIndexer(repository))
+        result.add_indexer("tags", TagIndexer(repository))
+        result.add_indexer("patches", PatchIndexer(repository))
+        return result
+
+    @staticmethod
+    def unmarshal(cache: "spack.caches.FileCacheType") -> "IndexFactory":
+        return IndexFactory(cache)
+
+    def __reduce__(self):
+        cache = self.cache
+        if isinstance(cache, llnl.util.lang.Singleton):
+            cache = cache.instance
+        return IndexFactory.unmarshal, (cache,)
+
 
 class RepoPath:
     """A RepoPath is a list of repos that function as one.
@@ -673,19 +790,21 @@ class RepoPath:
     It functions exactly like a Repo, but it operates on the combined
     results of the Repos in its list instead of on a single package
     repository.
-
-    Args:
-        repos: list Repo objects or paths to put in this RepoPath
-        cache: file cache associated with this repository
-        overrides: dict mapping package name to class attribute overrides for that package
     """
 
     def __init__(
         self,
         *repos: Union[str, "Repo"],
-        cache: Optional["spack.caches.FileCacheType"],
+        index_factory: Optional[IndexFactory],
         overrides: Optional[Dict[str, Any]] = None,
     ) -> None:
+        """Instantiates a RepoPath from a list of repos, or a list of paths and an index_factory.
+
+        Args:
+            repos: list Repo objects or paths to put in this RepoPath
+            index_factory: a factory to create a repository index
+            overrides: dict mapping package name to class attribute overrides for that package
+        """
         self.repos: List[Repo] = []
         self.by_namespace = nm.NamespaceTrie()
         self._provider_index: Optional[spack.provider_index.ProviderIndex] = None
@@ -696,8 +815,10 @@ class RepoPath:
         for repo in repos:
             try:
                 if isinstance(repo, str):
-                    assert cache is not None, "cache must hold a value, when repo is a string"
-                    repo = Repo(repo, cache=cache, overrides=overrides)
+                    assert (
+                        index_factory is not None
+                    ), "cache must hold a value, when repo is a string"
+                    repo = Repo(repo, index_factory=index_factory, overrides=overrides)
                 repo.finder(self)
                 self.put_last(repo)
             except RepoError as e:
@@ -903,6 +1024,13 @@ class RepoPath:
         """
         return any(repo.exists(pkg_name) for repo in self.repos)
 
+    def exists_safe(self, pkg_name: str) -> bool:
+        """Whether package with the give name exists in the path's repos.
+
+        Note that virtual packages do not "exist".
+        """
+        return any(repo.exists_safe(pkg_name) for repo in self.repos)
+
     def _have_name(self, pkg_name: str) -> bool:
         have_name = pkg_name is not None
         if have_name and not isinstance(pkg_name, str):
@@ -930,7 +1058,9 @@ class RepoPath:
             pkg_name (str): name of the package we want to check
         """
         have_name = self._have_name(pkg_name)
-        return have_name and (not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual)
+        return have_name and (
+            not self.exists_safe(pkg_name) or self.get_pkg_class(pkg_name).virtual
+        )
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
@@ -940,7 +1070,7 @@ class RepoPath:
 
     @staticmethod
     def unmarshal(repos):
-        return RepoPath(*repos, cache=None)
+        return RepoPath(*repos, index_factory=None)
 
     def __reduce__(self):
         return RepoPath.unmarshal, self.marshal()
@@ -949,8 +1079,7 @@ class RepoPath:
 class Repo:
     """Class representing a package repository in the filesystem.
 
-    Each package repository must have a top-level configuration file
-    called `repo.yaml`.
+    Each package repository must have a top-level configuration file called `repo.yaml`.
 
     Currently, `repo.yaml` must define:
 
@@ -962,17 +1091,13 @@ class Repo:
     """
 
     def __init__(
-        self,
-        root: str,
-        *,
-        cache: "spack.caches.FileCacheType",
-        overrides: Optional[Dict[str, Any]] = None,
+        self, root: str, *, index_factory: IndexFactory, overrides: Optional[Dict[str, Any]] = None
     ) -> None:
         """Instantiate a package repository from a filesystem path.
 
         Args:
             root: the root directory of the repository
-            cache: file cache associated with this repository
+            index_factory: a factory to create a repository index
             overrides: dict mapping package name to class attribute overrides for that package
         """
         # Root directory, containing _repo.yaml and package dirs
@@ -1016,16 +1141,13 @@ class Repo:
 
         # Class attribute overrides by package name
         self.overrides = overrides or {}
+        self.index_factory = index_factory
 
         # Optional reference to a RepoPath to influence module import from spack.pkg
         self._finder: Optional[RepoPath] = None
 
-        # Maps that goes from package name to corresponding file stat
-        self._fast_package_checker: Optional[FastPackageChecker] = None
-
         # Indexes for this repository, computed lazily
-        self._repo_index: Optional[RepoIndex] = None
-        self._cache = cache
+        self._repo_index: Optional[Index] = None
 
     def finder(self, value: RepoPath) -> None:
         self._finder = value
@@ -1139,13 +1261,10 @@ class Repo:
         fs.install(self.filename_for_package_name(spec.name), path)
 
     @property
-    def index(self) -> RepoIndex:
+    def index(self) -> Index:
         """Construct the index for this repo lazily."""
         if self._repo_index is None:
-            self._repo_index = RepoIndex(self._pkg_checker, self.namespace, cache=self._cache)
-            self._repo_index.add_indexer("providers", ProviderIndexer(self))
-            self._repo_index.add_indexer("tags", TagIndexer(self))
-            self._repo_index.add_indexer("patches", PatchIndexer(self))
+            self._repo_index = self.index_factory.get(repository=self)
         return self._repo_index
 
     @property
@@ -1194,15 +1313,9 @@ class Repo:
         pkg_dir = self.dirname_for_package_name(pkg_name)
         return os.path.join(pkg_dir, package_file_name)
 
-    @property
-    def _pkg_checker(self) -> FastPackageChecker:
-        if self._fast_package_checker is None:
-            self._fast_package_checker = FastPackageChecker(self.packages_path)
-        return self._fast_package_checker
-
     def all_package_names(self, include_virtuals: bool = False) -> List[str]:
         """Returns a sorted list of all package names in the Repo."""
-        names = sorted(self._pkg_checker.keys())
+        names = self.index.all_package_names()
         if include_virtuals:
             return names
         return [x for x in names if not self.is_virtual(x)]
@@ -1229,21 +1342,20 @@ class Repo:
             yield self.get_pkg_class(name)
 
     def exists(self, pkg_name: str) -> bool:
-        """Whether a package with the supplied name exists."""
-        if pkg_name is None:
-            return False
+        """Check if the package passed as argument exists."""
+        # If the index is already constructed, use it.
+        if self._repo_index:
+            return self.index.exists(pkg_name)
+        return self.exists_safe(pkg_name)
 
-        # if the FastPackageChecker is already constructed, use it
-        if self._fast_package_checker:
-            return pkg_name in self._pkg_checker
-
-        # if not, check for the package.py file
+    def exists_safe(self, pkg_name: str) -> bool:
+        """Same as 'exists', but ensure to never use the index."""
         path = self.filename_for_package_name(pkg_name)
         return os.path.exists(path)
 
-    def last_mtime(self):
+    def last_mtime(self) -> float:
         """Time a package file in this repo was last updated."""
-        return self._pkg_checker.last_mtime()
+        return self.index.last_repo_mtime()
 
     def is_virtual(self, pkg_name: str) -> bool:
         """Return True if the package with this name is virtual, False otherwise.
@@ -1258,7 +1370,7 @@ class Repo:
 
         This function doesn't use the provider index.
         """
-        return not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual
+        return not self.exists_safe(pkg_name) or self.get_pkg_class(pkg_name).virtual
 
     def get_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
         """Get the class for the package out of its module.
@@ -1335,15 +1447,12 @@ class Repo:
         return self.exists(pkg_name)
 
     @staticmethod
-    def unmarshal(root, cache, overrides):
+    def unmarshal(root, factory, overrides):
         """Helper method to unmarshal keyword arguments"""
-        return Repo(root, cache=cache, overrides=overrides)
+        return Repo(root, index_factory=factory, overrides=overrides)
 
     def marshal(self):
-        cache = self._cache
-        if isinstance(cache, llnl.util.lang.Singleton):
-            cache = cache.instance
-        return self.root, cache, self.overrides
+        return self.root, self.index_factory, self.overrides
 
     def __reduce__(self):
         return Repo.unmarshal, self.marshal()
@@ -1423,7 +1532,7 @@ def create_repo(root, namespace=None, subdir=packages_dir_name):
 
 def from_path(path: str) -> "Repo":
     """Returns a repository from the path passed as input. Injects the global misc cache."""
-    return Repo(path, cache=spack.caches.MISC_CACHE)
+    return Repo(path, index_factory=IndexFactory(cache=spack.caches.MISC_CACHE))
 
 
 def create_or_construct(path, namespace=None):
@@ -1461,7 +1570,8 @@ def create(
             continue
         overrides[pkg_name] = value
 
-    return RepoPath(*repo_dirs, cache=spack.caches.MISC_CACHE, overrides=overrides)
+    factory = IndexFactory(cache=spack.caches.MISC_CACHE)
+    return RepoPath(*repo_dirs, index_factory=factory, overrides=overrides)
 
 
 #: Singleton repo path instance
