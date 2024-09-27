@@ -10,8 +10,8 @@ class HermesShm(CMakePackage):
     and synchronization primitives which are compatible with shared memory.
     """
 
-    homepage = "https://github.com/lukemartinlogan/hermes_shm/wiki"
-    git = "https://github.com/lukemartinlogan/hermes_shm.git"
+    homepage = "https://github.com/grc-iit/hermes-shm/wiki"
+    git = "https://github.com/grc-iit/hermes-shm.git"
 
     maintainers("lukemartinlogan", "hyoklee")
 
