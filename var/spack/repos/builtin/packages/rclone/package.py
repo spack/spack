@@ -66,6 +66,6 @@ class Rclone(Package):
         mkdirp(fish_completion_path(self.prefix))
         mkdirp(zsh_completion_path(self.prefix))
 
-        rclone("genautocomplete", "bash", bash_completion_path(self.prefix) / "rclone")
-        rclone("genautocomplete", "fish", fish_completion_path(self.prefix) / "rclone.fish")
-        rclone("genautocomplete", "zsh", zsh_completion_path(self.prefix) / "_rclone")
+        rclone("genautocomplete", "bash", str(bash_completion_path(self.prefix) / "rclone"))
+        rclone("genautocomplete", "fish", str(fish_completion_path(self.prefix) / "rclone.fish"))
+        rclone("genautocomplete", "zsh", str(zsh_completion_path(self.prefix) / "_rclone"))
