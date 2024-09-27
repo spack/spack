@@ -413,10 +413,7 @@ class PyNumpy(PythonPackage):
 
     @when("@1.26:")
     def setup_build_environment(self, env):
-        if self.spec.satisfies("%apple-clang@15:"):
-            # https://github.com/scipy/scipy/issues/19357
-            env.append_flags("LDFLAGS", "-Wl,-ld_classic")
-        elif self.spec.satisfies("%msvc"):
+        if self.spec.satisfies("%msvc"):
             # For meson build system, compiler paths must be in quotes
             # to prevent paths from being split by spaces.
             env.set("CC", f'"{self.compiler.cc}"')
