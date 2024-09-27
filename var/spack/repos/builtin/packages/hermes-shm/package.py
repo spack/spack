@@ -84,4 +84,3 @@ class HermesShm(CMakePackage):
             self.define_from_variant("HERMES_RPC_THALLIUM", "mochi"),
             self.define_from_variant("HERMES_ENABLE_ZMQ_TESTS", "zmq"),
         ]
-
