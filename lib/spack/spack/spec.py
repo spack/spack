@@ -4016,8 +4016,12 @@ class Spec:
         return str(path_ctor(*output_path_components))
 
     def __str__(self):
+        if self._concrete:
+            return self.format("{name}{@version}{/hash:7}")
+
         if not self._dependencies:
             return self.format()
+
         root_str = [self.format()]
         sorted_dependencies = sorted(
             self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
