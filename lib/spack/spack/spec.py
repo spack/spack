@@ -4224,21 +4224,6 @@ class Spec:
             if other_dep:
                 edge.parent._add_dependency(replacement, depflag=other_dep, virtuals=edge.virtuals)
 
-    def get_analogs(self, candidates_generator, self_root, other_root):
-        """Find all specs in candidate_generator that are splice matches for self
-
-        self_root and other_root are passed as arguments to ``self._splie_match``."""
-        analogs = [
-            dep
-            for dep in candidates_generator
-            if self._splice_match(dep, self_root=self_root, other_root=other_root)
-        ]
-        if not analogs:
-            return []
-
-        name_analogs = [a for a in analogs if a.name == self.name]
-        return name_analogs or analogs
-
     def _splice_helper(self, replacement, self_root, other_root):
         """Main loop of a transitive splice.
 
@@ -4261,6 +4246,15 @@ class Spec:
         """
         ids = set(id(s) for s in replacement.traverse())
 
+        # Sort all possible replacements by name and virtual for easy access later
+        replacements_by_name = collections.defaultdict(list)
+        for node in replacement.traverse():
+            replacements_by_name[node.name].append(node)
+            virtuals = node._virtuals_provided(root=replacement)
+            for virtual in virtuals:
+                # Virtual may be spec or str, get name or return str
+                replacements_by_name[getattr(virtual, "name", virtual)].append(node)
+
         changed = True
         while changed:
             changed = False
@@ -4272,14 +4266,21 @@ class Spec:
                 # If this node has already been swapped in, don't consider it again
                 if id(node) in ids:
                     continue
-                analogs = node.get_analogs(
-                    replacement.traverse(deptype=dt.ALL & ~dt.BUILD),
-                    self_root=self_root,
-                    other_root=other_root,
-                )
-                # No match, keep searching
+
+                analogs = replacements_by_name[node.name]
                 if not analogs:
-                    continue
+                    # If we have to check for matching virtuals, then we need to check that it
+                    # matches all virtuals. Use `_splice_match` to validate possible matches
+                    for virtual in node._virtuals_provided(root=self):
+                        analogs += [
+                            r
+                            for r in replacements_by_name[getattr(virtual, name, virtual)]
+                            if r._splice_match(node, self_root=self_root, other_root=other_root)
+                        ]
+
+                    # No match, keep iterating over self
+                    if not analogs:
+                        continue
 
                 # If there are multiple analogs, this package must satisfy the constraint
                 # that a newer version can always replace a lesser version.

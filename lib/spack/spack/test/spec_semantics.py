@@ -66,7 +66,11 @@ def setup_complex_splice(monkeypatch):
     def splice_match(self, other, self_root, other_root):
         return self.name == other.name
 
+    def virtuals_provided(self, root):
+        return []
+
     monkeypatch.setattr(Spec, "_splice_match", splice_match)
+    monkeypatch.setattr(Spec, "_virtuals_provided", virtuals_provided)
 
     g1_red = Spec("g color=red")
     g1_red.versions = vn.VersionList([vn.Version("1")])
