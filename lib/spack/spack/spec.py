@@ -1765,7 +1765,10 @@ class Spec:
         for edge in selected:
             has_errors, details = False, []
             msg = f"cannot update the edge from {edge.parent.name} to {edge.spec.name}"
-            if not dt.compatible(edge.depflag, depflag):
+
+            # If the dependency is to an existing spec, we can update dependency
+            # types. If it is to a new object, check deptype compatibility.
+            if id(edge.spec) != id(dependency_spec) and not dt.compatible(edge.depflag, depflag):
                 has_errors = True
                 details.append(
                     (
