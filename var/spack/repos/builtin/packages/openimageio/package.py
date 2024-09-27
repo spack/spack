@@ -16,18 +16,15 @@ class Openimageio(CMakePackage):
 
     license("Apache-2.0")
 
-    version("2.5.14.0", sha256="0e74372c658f083820872311d126867f10d59b526a856672746de7b2c772034d")
-    version("2.2.7.0", sha256="6126fb8b1a8be0106c78056652a249791e43b8741d6db3e9921a29ad823c1590")
-    version("1.8.15", sha256="5cf57027597aeb3934c10739d3eeca9fb10a38606ad722da579772bab0e9cc5e")
+    version("2.5.15.0", sha256="7779ef2c3d03c5ed95e13ff292de85c3f8cee301cd46baad0d2dc83c93bfe85c")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("cxx", type="build")
 
     # Core dependencies
     depends_on("cmake@3.2.2:", type="build")
-    depends_on("boost+atomic+filesystem+thread@1.53:")
+    depends_on("boost+atomic+filesystem+thread+chrono@1.53:")
     depends_on("libtiff@4.0:")
-    depends_on("openexr@2.3:2", when="@1")
-    depends_on("openexr@3.1:", when="@2")
+    depends_on("openexr@3.1:")
     depends_on("libpng@1.6:")
 
     # Optional dependencies
@@ -44,8 +41,6 @@ class Openimageio(CMakePackage):
 
     variant("qt", default=False, description="Build qt viewer")
     depends_on("qt@5.6.0:+opengl", when="+qt")
-
-    conflicts("target=aarch64:", when="@:1.8.15")
 
     def url_for_version(self, version):
         if version >= Version("2"):
