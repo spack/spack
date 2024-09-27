@@ -87,7 +87,7 @@ class Hermes(CMakePackage):
     depends_on("hermes-shm+mpiio", when="+mpiio")
     depends_on("hermes-shm+vfd", when="+vfd")
     depends_on("hermes-shm+zmq", when="+zmq")
-    
+
     depends_on("py-jarvis-util", type="test")
 
     def cmake_args(self):
