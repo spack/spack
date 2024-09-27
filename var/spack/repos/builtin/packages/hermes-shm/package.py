@@ -61,7 +61,7 @@ class HermesShm(CMakePackage):
 
     # Compress variant
     variant("compress", default=False, description="Build with compression support")
-    with when("compress"):
+    with when("+compress"):
         depends_on("lzo")
         depends_on("bzip2")
         depends_on("zstd")
