@@ -63,18 +63,18 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("zlib-api")
     depends_on("petsc@3.14.6: +int64 +mumps +scalapack memalign=32")
-    depends_on("petsc@3.14.6: +int64 +mumps +scalapack +knl", when="target=skylake:")
+    depends_on("petsc +knl", when="target=skylake:")
 
     with when("+cuda"):
         for tgt in CudaPackage.cuda_arch_values:
             depends_on(
-                f"petsc@main +int64 +mumps +scalapack memalign=32 +cuda cuda_arch={tgt}",
+                f"petsc +cuda cuda_arch={tgt}",
                 when=f"+cuda cuda_arch={tgt}",
             )
     with when("+rocm"):
         for tgt in ROCmPackage.amdgpu_targets:
             depends_on(
-                f"petsc@main +int64 +mumps +scalapack memalign=32 +rocm amdgpu_target={tgt}",
+                f"petsc +rocm amdgpu_target={tgt}",
                 when=f"+rocm amdgpu_target={tgt}",
             )
 
