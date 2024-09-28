@@ -43,6 +43,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("16.0.0", sha256="46bfc40419ed2aa2db38c144fb8e61d4aa8170eaa654a88d833ba6b92903f309")
     version("15.1.1", sha256="2108d633d2208ed261d09b2d6b2fbae7a9cdc455dd963c9c94412d38d8aaefe4")
     version("15.0.0", sha256="5651f1f967217a807f2c418a73b7e649532824dbf2742fa517951d6cc11518fb")
     version("14.4.0", sha256="8e7d881cf6677aa062f7bfea8baa1e52e8956aa575d6a4f90f2b6f032632d4c6")
@@ -79,6 +80,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Build options
     variant("complex", default=False, description="Enable complex numbers in Trilinos")
+    variant(
+        "cuda_constexpr",
+        default=False,
+        description="Enable relaxed constexpr functions for CUDA build",
+    )
     variant("cuda_rdc", default=False, description="Turn on RDC for CUDA build")
     variant("rocm_rdc", default=False, description="Turn on RDC for ROCm build")
     variant(
@@ -382,9 +388,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # Fix: https://github.com/xiaoyeli/superlu_dist/commit/09cb1430f7be288fd4d75b8ed461aa0b7e68fefe
     # is not tagged yet. See discussion here https://github.com/trilinos/Trilinos/issues/11839
     conflicts("+cuda +stokhos +superlu-dist")
-    # Cuda UVM must be enabled prior to 13.2
-    # See https://github.com/spack/spack/issues/28869
-    conflicts("~uvm", when="@:13.1 +cuda")
 
     # stokhos fails on xl/xl_r
     conflicts("+stokhos", when="%xl")
@@ -405,7 +408,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # ###################### Dependencies ##########################
 
     # External Kokkos
-    depends_on("kokkos@4.3.01", when="@master: +kokkos")
+    depends_on("kokkos@4.4.01", when="@master: +kokkos")
+    depends_on("kokkos@4.3.01", when="@16.0.0 +kokkos")
     depends_on("kokkos@4.2.01", when="@15.1.0:15.1.1 +kokkos")
     depends_on("kokkos@4.1.00", when="@14.4.0:15.0.0 +kokkos")
 
@@ -512,6 +516,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         "0001-use-the-gcnArchName-inplace-of-gcnArch-as-gcnArch-is.patch",
         when="@15.0.0 ^hip@6.0 +rocm",
     )
+    patch("cstdint_gcc13.patch", when="@13.4.0:13.4.1 %gcc@13.0.0:")
 
     # Allow building with +teko gotype=long
     patch(
@@ -1007,6 +1012,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                     [
                         define_kok_enable("CUDA_UVM", use_uvm),
                         define_kok_enable("CUDA_LAMBDA", True),
+                        define_kok_enable("CUDA_CONSTEXPR", "cuda_constexpr"),
                         define_kok_enable("CUDA_RELOCATABLE_DEVICE_CODE", "cuda_rdc"),
                     ]
                 )
