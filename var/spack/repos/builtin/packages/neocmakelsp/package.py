@@ -24,20 +24,12 @@ from spack.package import *
 
 
 class Neocmakelsp(CargoPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Another cmake lsp"""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://neocmakelsp.github.io/"
     url = "https://github.com/neocmakelsp/neocmakelsp/archive/refs/tags/v0.8.6.tar.gz"
 
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers("github_user1", "github_user2")
-
-    # FIXME: Add the SPDX identifier of the project's license below.
-    # See https://spdx.org/licenses/ for a list. Upon manually verifying
-    # the license, set checked_by to your Github username.
-    license("UNKNOWN", checked_by="github_user1")
+    license("MIT", checked_by="pranav-sivaraman")
 
     version("0.8.6", sha256="4ed270190eb08f5571da036fb0f91d53c1c3e09bf4631f77f2133d56fd8e2437")
     version("0.8.5", sha256="3f3cb8736468bd0a9e9199b6913ae8b6f323d6ecdab932ba1da16a091a8b0de1")
@@ -49,8 +41,3 @@ class Neocmakelsp(CargoPackage):
     version("0.7.9", sha256="d1b6219e19f1ab630fbcb6d3179fcac5dc8dca1b7af355bb7516bc4345ce461b")
     version("0.7.8", sha256="1026ab9f7c60b2c9f880df12830f2927b28b50a06bb5732d5047aefe22fa9b2f")
     version("0.7.7", sha256="9c761a54ae8a6b298eabc9b7cb215fceafd27e9193eb61e1d69cd7a5dc6dd1c1")
-
-    # FIXME: Add dependencies if required.
-    # depends_on("foo")
-
-
