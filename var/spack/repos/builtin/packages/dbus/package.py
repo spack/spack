@@ -25,7 +25,7 @@ class Dbus(AutotoolsPackage, MesonPackage):
     build_system(
         conditional("autotools", when="@:1.15.8"),
         conditional("meson", when="@1.15:"),
-        default="meson"
+        default="meson",
     )
 
     # Note: odd minor versions are unstable, keep last stable version preferred
