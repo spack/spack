@@ -21,6 +21,9 @@ class SbclBootstrap(Package):
 
     maintainers("ashermancinelli")
 
+    # sbcl-bootstrap is not available on Windows, but is depended on by sbcl:
+    skip_version_audit = ["platform=windows"]
+
     # NOTE: The sbcl homepage lists
     # while the sourceforge repo lists "Public Domain, MIT License", the
     # COPYING file distributed with the source code contains this message:
