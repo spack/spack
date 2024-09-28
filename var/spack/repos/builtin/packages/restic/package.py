@@ -16,6 +16,7 @@ class Restic(Package):
 
     license("BSD-2-Clause")
 
+    version("0.17.1", sha256="cba3a5759690d11dae4b5620c44f56be17a5688e32c9856776db8a9a93d6d59a")
     version("0.16.4", sha256="d736a57972bb7ee3398cf6b45f30e5455d51266f5305987534b45a4ef505f965")
     version("0.16.3", sha256="a94d6c1feb0034fcff3e8b4f2d65c0678f906fc21a1cf2d435341f69e7e7af52")
     version("0.16.2", sha256="88165b5b89b6064df37a9964d660f40ac62db51d6536e459db9aaea6f2b2fc11")
@@ -43,3 +44,19 @@ class Restic(Package):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("restic", prefix.bin)
+
+    @run_after("install")
+    def install_completions(self):
+        restic = Executable(self.prefix.bin.restic)
+
+        mkdirp(bash_completion_path(self.prefix))
+        mkdirp(fish_completion_path(self.prefix))
+        mkdirp(zsh_completion_path(self.prefix))
+
+        restic("generate", "--bash-completion", "restic.bash")
+        restic("generate", "--fish-completion", "restic.fish")
+        restic("generate", "--zsh-completion", "_restic")
+
+        install("restic.bash", bash_completion_path(self.prefix))
+        install("restic.fish", fish_completion_path(self.prefix))
+        install("_restic", zsh_completion_path(self.prefix))

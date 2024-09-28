@@ -52,6 +52,7 @@ class Gloo(CMakePackage, CudaPackage):
     depends_on("pkgconfig", type="build")
     depends_on("libuv@1.26:", when="+libuv")
     depends_on("cmake@2.8.12:", type="build")
+    depends_on("libuv", when="platform=windows")
 
     def cmake_args(self):
         return [

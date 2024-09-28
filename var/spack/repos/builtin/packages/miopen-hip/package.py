@@ -21,6 +21,7 @@ class MiopenHip(CMakePackage):
     libraries = ["libMIOpen"]
 
     license("MIT")
+    version("6.2.0", sha256="f4473f724362732019d505a0e01c17b060b542350859cb1e4bd4e3898b609276")
     version("6.1.2", sha256="c8ff4af72264b2049bfe2685d581ea0f3e43319db7bd00dc347159bcf2731614")
     version("6.1.1", sha256="cf568ea16dd23b32fe89e250bb33ed4722fea8aa7f407cc66ff37c37aab037ce")
     version("6.1.0", sha256="3b373117eaeaf618aab9b39bb22e9950fd49bd0e264c8587b0c51fa348afe0d1")
@@ -37,6 +38,12 @@ class MiopenHip(CMakePackage):
         version("5.4.0", sha256="b4153791f9eeee4cbc5534bc6ad8b32c0947bcd38e08b77ebe144065a4fa5456")
         version("5.3.3", sha256="7efc98215d23a2caaf212378c37e9a6484f54a4ed3e9660719286e4f287d3715")
         version("5.3.0", sha256="c5819f593d71beeda2eb24b89182912240cc40f83b2b8f9de695a8e230aa4ea6")
+
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
 
     depends_on("cxx", type="build")  # generated
 
@@ -78,11 +85,30 @@ class MiopenHip(CMakePackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
+        "6.2.0",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
-        depends_on(f"rocm-clang-ocl@{ver}", when=f"@{ver}")
         depends_on(f"rocblas@{ver}", when=f"@{ver}")
+
+    for ver in [
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+    ]:
+        depends_on(f"rocm-clang-ocl@{ver}", when=f"@{ver}")
 
     for ver in ["5.3.0", "5.3.3"]:
         depends_on(f"mlirmiopen@{ver}", when=f"@{ver}")
@@ -98,20 +124,30 @@ class MiopenHip(CMakePackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
+        "6.2.0",
     ]:
         depends_on("nlohmann-json", type="link")
         depends_on(f"composable-kernel@{ver}", when=f"@{ver}")
     for ver in ["5.4.0", "5.4.3", "5.5.0"]:
         depends_on("nlohmann-json", type="link")
         depends_on(f"rocmlir@{ver}", when=f"@{ver}")
-    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2"]:
+    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2", "6.2.0"]:
         depends_on("roctracer-dev@" + ver, when="@" + ver)
     for ver in ["6.1.0", "6.1.1", "6.1.2"]:
         depends_on("googletest")
 
+    depends_on("rocrand@6.2.0", when="@6.2.0")
+
     def setup_build_environment(self, env):
         lib_dir = self.spec["zlib-api"].libs.directories[0]
         env.prepend_path("LIBRARY_PATH", lib_dir)
+        if self.spec.satisfies("+asan"):
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
         if self.spec.satisfies("%gcc@8.0:8.9") and self.spec.satisfies("@6.1:"):
             env.append_flags("LDFLAGS", "-lstdc++fs")
 
@@ -147,7 +183,7 @@ class MiopenHip(CMakePackage):
         if self.spec.satisfies("@5.1.0:5.3"):
             mlir_inc = spec["mlirmiopen"].prefix.include
             args.append(self.define("CMAKE_CXX_FLAGS", "-I{0}".format(mlir_inc)))
-        if self.spec.satisfies("@5.4.0:"):
+        if self.spec.satisfies("@5.4.0:6.1"):
             args.append(
                 "-DNLOHMANN_JSON_INCLUDE={0}".format(self.spec["nlohmann-json"].prefix.include)
             )
@@ -161,14 +197,21 @@ class MiopenHip(CMakePackage):
             args.append(self.define("MIOPEN_USE_MLIR", "OFF"))
         if self.spec.satisfies("@5.7.0:"):
             args.append(self.define("MIOPEN_ENABLE_AI_IMMED_MODE_FALLBACK", "OFF"))
-        args.append(
-            "-DNLOHMANN_JSON_INCLUDE={0}".format(self.spec["nlohmann-json"].prefix.include)
-        )
-        if self.spec.satisfies("@6.0.0:"):
+        if self.spec.satisfies("@6:6.1"):
             args.append(
                 "-DROCTRACER_INCLUDE_DIR={0}".format(self.spec["roctracer-dev"].prefix.include)
             )
             args.append("-DROCTRACER_LIB_DIR={0}".format(self.spec["roctracer-dev"].prefix.lib))
-        if self.spec.satisfies("@6.1:"):
+        if self.spec.satisfies("@6.1"):
             args.append("-DSQLITE_INCLUDE_DIR={0}".format(self.spec["sqlite"].prefix.include))
+        if self.spec.satisfies("@6.2:"):
+            args.append(
+                self.define(
+                    "CMAKE_CXX_FLAGS",
+                    f"-I{self.spec['roctracer-dev'].prefix.include} "
+                    f"-L{self.spec['roctracer-dev'].prefix.lib} "
+                    f"-I{self.spec['nlohmann-json'].prefix.include} "
+                    f"-I{self.spec['sqlite'].prefix.include} ",
+                )
+            )
         return args
