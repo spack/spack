@@ -45,6 +45,8 @@ from enum import Flag, auto
 from itertools import chain
 from typing import Dict, List, Set, Tuple
 
+import archspec.cpu
+
 import llnl.util.tty as tty
 from llnl.string import plural
 from llnl.util.filesystem import join_path
@@ -53,6 +55,7 @@ from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
 
+import spack.build_systems._checks
 import spack.build_systems.cmake
 import spack.build_systems.meson
 import spack.build_systems.python
@@ -61,26 +64,20 @@ import spack.compilers
 import spack.config
 import spack.deptypes as dt
 import spack.error
-import spack.main
+import spack.multimethod
 import spack.package_base
 import spack.paths
 import spack.platforms
-import spack.repo
 import spack.schema.environment
 import spack.spec
 import spack.stage
 import spack.store
 import spack.subprocess_context
-import spack.user_environment
 import spack.util.executable
-import spack.util.path
-import spack.util.pattern
 from spack import traverse
 from spack.context import Context
-from spack.error import NoHeadersError, NoLibrariesError
+from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
-from spack.installer import InstallError
-from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
@@ -363,7 +360,7 @@ def set_compiler_environment_variables(pkg, env):
     _add_werror_handling(keep_werror, env)
 
     # Set the target parameters that the compiler will add
-    isa_arg = spec.architecture.target.optimization_flags(compiler)
+    isa_arg = optimization_flags(compiler, spec.target)
     env.set("SPACK_TARGET_ARGS", isa_arg)
 
     # Trap spack-tracked compiler flags as appropriate.
@@ -406,6 +403,36 @@ def set_compiler_environment_variables(pkg, env):
     compiler.setup_custom_environment(pkg, env)
 
     return env
+
+
+def optimization_flags(compiler, target):
+    if spack.compilers.is_mixed_toolchain(compiler):
+        msg = (
+            "microarchitecture specific optimizations are not "
+            "supported yet on mixed compiler toolchains [check"
+            f" {compiler.name}@{compiler.version} for further details]"
+        )
+        tty.debug(msg)
+        return ""
+
+    # Try to check if the current compiler comes with a version number or
+    # has an unexpected suffix. If so, treat it as a compiler with a
+    # custom spec.
+    compiler_version = compiler.version
+    version_number, suffix = archspec.cpu.version_components(compiler.version)
+    if not version_number or suffix:
+        try:
+            compiler_version = compiler.real_version
+        except spack.util.executable.ProcessError as e:
+            # log this and just return compiler.version instead
+            tty.debug(str(e))
+
+    try:
+        result = target.optimization_flags(compiler.name, compiler_version.dotted_numeric_string)
+    except (ValueError, archspec.cpu.UnsupportedMicroarchitecture):
+        result = ""
+
+    return result
 
 
 def set_wrapper_variables(pkg, env):
@@ -455,11 +482,14 @@ def set_wrapper_variables(pkg, env):
         env.set(SPACK_DEBUG, "TRUE")
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
     env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format("{name}-{hash:7}"))
-    env.set(SPACK_DEBUG_LOG_DIR, spack.main.spack_working_dir)
+    env.set(SPACK_DEBUG_LOG_DIR, spack.paths.spack_working_dir)
 
-    # Find ccache binary and hand it to build environment
     if spack.config.get("config:ccache"):
+        # Enable ccache in the compiler wrapper
         env.set(SPACK_CCACHE_BINARY, spack.util.executable.which_string("ccache", required=True))
+    else:
+        # Avoid cache pollution if a build system forces `ccache <compiler wrapper invocation>`.
+        env.set("CCACHE_DISABLE", "1")
 
     # Gather information about various types of dependencies
     link_deps = set(pkg.spec.traverse(root=False, deptype=("link")))
@@ -559,7 +589,7 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
         module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
         module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
-    jobs = determine_number_of_jobs(parallel=pkg.parallel)
+    jobs = spack.config.determine_number_of_jobs(parallel=pkg.parallel)
     module.make_jobs = jobs
 
     # TODO: make these build deps that can be installed if not found.
@@ -785,7 +815,6 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     # Platform specific setup goes before package specific setup. This is for setting
     # defaults like MACOSX_DEPLOYMENT_TARGET on macOS.
     platform = spack.platforms.by_name(pkg.spec.architecture.platform)
-    target = platform.target(pkg.spec.architecture.target)
     platform.setup_platform_environment(pkg, env_mods)
 
     tty.debug("setup_package: grabbing modifications from dependencies")
@@ -809,9 +838,6 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         tty.debug("setup_package: loading compiler modules")
         for mod in pkg.compiler.modules:
             load_module(mod)
-
-    if target and target.module_name:
-        load_module(target.module_name)
 
     load_external_modules(pkg)
 
@@ -1136,7 +1162,7 @@ def _setup_pkg_and_run(
         return_value = function(pkg, kwargs)
         write_pipe.send(return_value)
 
-    except StopPhase as e:
+    except spack.error.StopPhase as e:
         # Do not create a full ChildError from this, it's not an error
         # it's a control statement.
         write_pipe.send(e)
@@ -1297,7 +1323,7 @@ def start_build_process(pkg, function, kwargs):
     p.join()
 
     # If returns a StopPhase, raise it
-    if isinstance(child_result, StopPhase):
+    if isinstance(child_result, spack.error.StopPhase):
         # do not print
         raise child_result
 
@@ -1506,17 +1532,6 @@ def _make_child_error(msg, module, name, traceback, log, log_type, context):
     return ChildError(msg, module, name, traceback, log, log_type, context)
 
 
-class StopPhase(spack.error.SpackError):
-    """Pickle-able exception to control stopped builds."""
-
-    def __reduce__(self):
-        return _make_stop_phase, (self.message, self.long_message)
-
-
-def _make_stop_phase(msg, long_msg):
-    return StopPhase(msg, long_msg)
-
-
 def write_log_summary(out, log_type, log, last=None):
     errors, warnings = parse_log_events(log)
     nerr = len(errors)
@@ -1550,20 +1565,20 @@ class ModuleChangePropagator:
 
     _PROTECTED_NAMES = ("package", "current_module", "modules_in_mro", "_set_attributes")
 
-    def __init__(self, package):
+    def __init__(self, package: spack.package_base.PackageBase) -> None:
         self._set_self_attributes("package", package)
         self._set_self_attributes("current_module", package.module)
 
         #: Modules for the classes in the MRO up to PackageBase
         modules_in_mro = []
-        for cls in inspect.getmro(type(package)):
-            module = cls.module
+        for cls in package.__class__.__mro__:
+            module = getattr(cls, "module", None)
 
-            if module == self.current_module:
-                continue
-
-            if module == spack.package_base:
+            if module is None or module is spack.package_base:
                 break
+
+            if module is self.current_module:
+                continue
 
             modules_in_mro.append(module)
         self._set_self_attributes("modules_in_mro", modules_in_mro)

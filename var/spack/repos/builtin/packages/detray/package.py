@@ -20,6 +20,9 @@ class Detray(CMakePackage):
 
     license("MPL-2.0", checked_by="stephenswat")
 
+    version("0.75.2", sha256="249066c138eac4114032e8d558f3a05885140a809332a347c7667978dbff54ee")
+    version("0.74.2", sha256="9fd14cf1ec30477d33c530670e9fed86b07db083912fe51dac64bf2453b321e8")
+    version("0.73.0", sha256="f574016bc7515a34a675b577e93316e18cf753f1ab7581dcf1c8271a28cb7406")
     version("0.72.1", sha256="6cc8d34bc0d801338e9ab142c4a9884d19d9c02555dbb56972fab86b98d0f75b")
     version("0.71.0", sha256="2be2b3dac6f77aa8cea033eba841378dc3703ff93c99e4d05ea03df685e6d508")
     version("0.70.0", sha256="14fa1d478d44d5d987caea6f4b365bce870aa8e140c21b802c527afa3a5db869")
@@ -28,13 +31,18 @@ class Detray(CMakePackage):
     version("0.67.0", sha256="87b1b29f333c955ea6160f9dda89628490d85a9e5186c2f35f57b322bbe27e18")
 
     variant("csv", default=True, description="Enable the CSV IO plugin")
-    variant(
-        "cxxstd",
-        default="17",
-        values=("17", "20", "23"),
-        multi=False,
-        description="C++ standard used",
+    _cxxstd_values = (
+        conditional("17", when="@:0.72.1"),
+        conditional("20", when="@0.67.0:"),
+        conditional("23", when="@0.67.0:"),
     )
+    _cxxstd_common = {
+        "values": _cxxstd_values,
+        "multi": False,
+        "description": "C++ standard used.",
+    }
+    variant("cxxstd", default="17", when="@:0.72.1", **_cxxstd_common)
+    variant("cxxstd", default="20", when="@0.73.0:", **_cxxstd_common)
     variant("json", default=True, description="Enable the JSON IO plugin")
     variant(
         "scalar",
@@ -57,10 +65,14 @@ class Detray(CMakePackage):
     depends_on("acts-algebra-plugins +eigen", when="+eigen")
     depends_on("acts-algebra-plugins +smatrix", when="+smatrix")
 
+    # Detray imposes requirements on the C++ standard values used by Algebra
+    # Plugins.
     with when("+smatrix"):
-        depends_on("acts-algebra-plugins cxxstd=17", when="cxxstd=17")
-        depends_on("acts-algebra-plugins cxxstd=20", when="cxxstd=20")
-        depends_on("acts-algebra-plugins cxxstd=23", when="cxxstd=23")
+        for _cxxstd in _cxxstd_values:
+            for _v in _cxxstd:
+                depends_on(
+                    f"acts-algebra-plugins cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when}"
+                )
 
     depends_on("actsvg +meta")
 
@@ -81,6 +93,7 @@ class Detray(CMakePackage):
             self.define("DETRAY_SETUP_GOOGLETEST", False),
             self.define("DETRAY_SETUP_BENCHMARK", False),
             self.define("DETRAY_BUILD_TUTORIALS", False),
+            self.define("DETRAY_BUILD_TEST_UTILS", True),
         ]
 
         return args
