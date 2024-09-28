@@ -17,16 +17,19 @@ import pytest
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.build_environment
 import spack.cmd.common.arguments
 import spack.cmd.install
 import spack.config
 import spack.environment as ev
+import spack.error
 import spack.hash_types as ht
+import spack.installer
 import spack.package_base
 import spack.store
-from spack.error import SpackError
+from spack.error import SpackError, SpecSyntaxError
+from spack.installer import PackageInstaller
 from spack.main import SpackCommand
-from spack.parser import SpecSyntaxError
 from spack.spec import Spec
 
 install = SpackCommand("install")
@@ -134,7 +137,7 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     # when nested AND in pytest
     spec = Spec("printing-package").concretized()
     pkg = spec.package
-    pkg.do_install(verbose=True)
+    PackageInstaller([pkg], explicit=True, verbose=True).install()
 
     with gzip.open(pkg.install_log_path, "rt") as f:
         out = f.read()
@@ -259,7 +262,7 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
 
     # Use the earliest commit in the respository
     spec = Spec(f"git-test-commit@{commits[-1]}").concretized()
-    spec.package.do_install()
+    PackageInstaller([spec.package], explicit=True).install()
 
     # Ensure first commit file contents were written
     installed = os.listdir(spec.prefix.bin)
@@ -420,7 +423,7 @@ def test_junit_output_with_failures(tmpdir, exc_typename, msg):
 @pytest.mark.parametrize(
     "exc_typename,expected_exc,msg",
     [
-        ("RuntimeError", spack.installer.InstallError, "something weird happened"),
+        ("RuntimeError", spack.error.InstallError, "something weird happened"),
         ("KeyboardInterrupt", KeyboardInterrupt, "Ctrl-C strikes again"),
     ],
 )
@@ -704,7 +707,7 @@ def test_install_only_package(tmpdir, mock_fetch, install_mockery, capfd):
     with capfd.disabled():
         try:
             install("--only", "package", "dependent-install")
-        except spack.installer.InstallError as e:
+        except spack.error.InstallError as e:
             msg = str(e)
 
     assert "Cannot proceed with dependent-install" in msg

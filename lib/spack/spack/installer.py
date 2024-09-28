@@ -37,7 +37,7 @@ import sys
 import time
 from collections import defaultdict
 from gzip import GzipFile
-from typing import Dict, Iterator, List, Optional, Set, Tuple
+from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
@@ -889,7 +889,7 @@ class BuildTask:
         # ensure priority queue invariants when tasks are "removed" from the
         # queue.
         if status == STATUS_REMOVED:
-            raise InstallError(
+            raise spack.error.InstallError(
                 f"Cannot create a build task for {self.pkg_id} with status '{status}'", pkg=pkg
             )
 
@@ -1053,8 +1053,87 @@ class PackageInstaller:
     """
 
     def __init__(
-        self, packages: List["spack.package_base.PackageBase"], install_args: dict
+        self,
+        packages: List["spack.package_base.PackageBase"],
+        *,
+        cache_only: bool = False,
+        dependencies_cache_only: bool = False,
+        dependencies_use_cache: bool = True,
+        dirty: bool = False,
+        explicit: Union[Set[str], bool] = False,
+        overwrite: Optional[Union[List[str], Set[str]]] = None,
+        fail_fast: bool = False,
+        fake: bool = False,
+        include_build_deps: bool = False,
+        install_deps: bool = True,
+        install_package: bool = True,
+        install_source: bool = False,
+        keep_prefix: bool = False,
+        keep_stage: bool = False,
+        package_cache_only: bool = False,
+        package_use_cache: bool = True,
+        restage: bool = False,
+        skip_patch: bool = False,
+        stop_at: Optional[str] = None,
+        stop_before: Optional[str] = None,
+        tests: Union[bool, List[str], Set[str]] = False,
+        unsigned: Optional[bool] = None,
+        use_cache: bool = False,
+        verbose: bool = False,
     ) -> None:
+        """
+        Arguments:
+            explicit: Set of package hashes to be marked as installed explicitly in the db. If
+                True, the specs from ``packages`` are marked explicit, while their dependencies are
+                not.
+            fail_fast: Fail if any dependency fails to install; otherwise, the default is to
+                install as many dependencies as possible (i.e., best effort installation).
+            fake: Don't really build; install fake stub files instead.
+            install_deps: Install dependencies before installing this package
+            install_source: By default, source is not installed, but for debugging it might be
+                useful to keep it around.
+            keep_prefix: Keep install prefix on failure. By default, destroys it.
+            keep_stage: By default, stage is destroyed only if there are no exceptions during
+                build. Set to True to keep the stage even with exceptions.
+            restage: Force spack to restage the package source.
+            skip_patch: Skip patch stage of build if True.
+            stop_before: stop execution before this installation phase (or None)
+            stop_at: last installation phase to be executed (or None)
+            tests: False to run no tests, True to test all packages, or a list of package names to
+                run tests for some
+            use_cache: Install from binary package, if available.
+            verbose: Display verbose build output (by default, suppresses it)
+        """
+        if isinstance(explicit, bool):
+            explicit = {pkg.spec.dag_hash() for pkg in packages} if explicit else set()
+
+        install_args = {
+            "cache_only": cache_only,
+            "dependencies_cache_only": dependencies_cache_only,
+            "dependencies_use_cache": dependencies_use_cache,
+            "dirty": dirty,
+            "explicit": explicit,
+            "fail_fast": fail_fast,
+            "fake": fake,
+            "include_build_deps": include_build_deps,
+            "install_deps": install_deps,
+            "install_package": install_package,
+            "install_source": install_source,
+            "keep_prefix": keep_prefix,
+            "keep_stage": keep_stage,
+            "overwrite": overwrite or [],
+            "package_cache_only": package_cache_only,
+            "package_use_cache": package_use_cache,
+            "restage": restage,
+            "skip_patch": skip_patch,
+            "stop_at": stop_at,
+            "stop_before": stop_before,
+            "tests": tests,
+            "unsigned": unsigned,
+            "use_cache": use_cache,
+            "verbose": verbose,
+        }
+
         # List of build requests
         self.build_requests = [BuildRequest(pkg, install_args) for pkg in packages]
 
@@ -1160,7 +1239,7 @@ class PackageInstaller:
             if spack.store.STORE.failure_tracker.has_failed(dep):
                 action = "'spack install' the dependency"
                 msg = f"{dep_id} is marked as an install failure: {action}"
-                raise InstallError(err.format(request.pkg_id, msg), pkg=dep_pkg)
+                raise spack.error.InstallError(err.format(request.pkg_id, msg), pkg=dep_pkg)
 
             # Attempt to get a read lock to ensure another process does not
             # uninstall the dependency while the requested spec is being
@@ -1168,7 +1247,7 @@ class PackageInstaller:
             ltype, lock = self._ensure_locked("read", dep_pkg)
             if lock is None:
                 msg = f"{dep_id} is write locked by another process"
-                raise InstallError(err.format(request.pkg_id, msg), pkg=request.pkg)
+                raise spack.error.InstallError(err.format(request.pkg_id, msg), pkg=request.pkg)
 
             # Flag external and upstream packages as being installed
             if dep_pkg.spec.external or dep_pkg.spec.installed_upstream:
@@ -1220,7 +1299,7 @@ class PackageInstaller:
         if not installed_in_db:
             # Ensure there is no other installed spec with the same prefix dir
             if spack.store.STORE.db.is_occupied_install_prefix(task.pkg.spec.prefix):
-                raise InstallError(
+                raise spack.error.InstallError(
                     f"Install prefix collision for {task.pkg_id}",
                     long_msg=f"Prefix directory {task.pkg.spec.prefix} already "
                     "used by another installed spec.",
@@ -1488,7 +1567,9 @@ class PackageInstaller:
                 self._update_installed(task)
                 return
             elif cache_only:
-                raise InstallError("No binary found when cache-only was specified", pkg=pkg)
+                raise spack.error.InstallError(
+                    "No binary found when cache-only was specified", pkg=pkg
+                )
             else:
                 tty.msg(f"No binary for {pkg_id} found: installing from source")
 
@@ -1515,9 +1596,9 @@ class PackageInstaller:
             # the database, so that we don't need to re-read from file.
             spack.store.STORE.db.add(pkg.spec, explicit=explicit)
 
-        except spack.build_environment.StopPhase as e:
-            # A StopPhase exception means that do_install was asked to
-            # stop early from clients, and is not an error at this point
+        except spack.error.StopPhase as e:
+            # A StopPhase exception means that the installer was asked to stop early from clients,
+            # and is not an error at this point
             pid = f"{self.pid}: " if tty.show_pid() else ""
             tty.debug(f"{pid}{str(e)}")
             tty.debug(f"Package stage directory: {pkg.stage.source_path}")
@@ -1848,7 +1929,7 @@ class PackageInstaller:
                     tty.warn(f"{pkg_id} does NOT actually have any uninstalled deps left")
                 dep_str = "dependencies" if task.priority > 1 else "dependency"
 
-                raise InstallError(
+                raise spack.error.InstallError(
                     f"Cannot proceed with {pkg_id}: {task.priority} uninstalled "
                     f"{dep_str}: {','.join(task.uninstalled_deps)}",
                     pkg=pkg,
@@ -1870,7 +1951,7 @@ class PackageInstaller:
                 self._update_failed(task)
 
                 if self.fail_fast:
-                    raise InstallError(fail_fast_err, pkg=pkg)
+                    raise spack.error.InstallError(fail_fast_err, pkg=pkg)
 
                 continue
 
@@ -1999,7 +2080,7 @@ class PackageInstaller:
                     )
                 # Terminate if requested to do so on the first failure.
                 if self.fail_fast:
-                    raise InstallError(f"{fail_fast_err}: {str(exc)}", pkg=pkg)
+                    raise spack.error.InstallError(f"{fail_fast_err}: {str(exc)}", pkg=pkg)
 
                 # Terminate when a single build request has failed, or summarize errors later.
                 if task.is_build_request:
@@ -2051,7 +2132,7 @@ class PackageInstaller:
                     f"missing package ({ids[0]}) from {', '.join(ids)}"
                 )
 
-            raise InstallError(
+            raise spack.error.InstallError(
                 "Installation request failed.  Refer to reported errors for failing package(s).",
                 pkg=pkg,
             )
@@ -2068,7 +2149,7 @@ class BuildProcessInstaller:
 
         Arguments:
             pkg: the package being installed.
-            install_args: arguments to do_install() from parent process.
+            install_args: arguments to the installer from parent process.
 
         """
         self.pkg = pkg
@@ -2140,7 +2221,7 @@ class BuildProcessInstaller:
                 f"{self.pre} Building {self.pkg_id} [{self.pkg.build_system_class}]"  # type: ignore[attr-defined] # noqa: E501
             )
 
-            # get verbosity from do_install() parameter or saved value
+            # get verbosity from install parameter or saved value
             self.echo = self.verbose
             if spack.package_base.PackageBase._verbose is not None:
                 self.echo = spack.package_base.PackageBase._verbose
@@ -2272,7 +2353,7 @@ def build_process(pkg: "spack.package_base.PackageBase", install_args: dict) -> 
 
     Arguments:
         pkg: the package being installed.
-        install_args: arguments to do_install() from parent process.
+        install_args: arguments to installer from parent process.
 
     """
     installer = BuildProcessInstaller(pkg, install_args)
@@ -2280,6 +2361,33 @@ def build_process(pkg: "spack.package_base.PackageBase", install_args: dict) -> 
     # don't print long padded paths in executable debug output.
     with spack.util.path.filter_padding():
         return installer.run()
+
+
+def deprecate(spec: "spack.spec.Spec", deprecator: "spack.spec.Spec", link_fn) -> None:
+    """Deprecate this package in favor of deprecator spec"""
+    # Install deprecator if it isn't installed already
+    if not spack.store.STORE.db.query(deprecator):
+        PackageInstaller([deprecator.package], explicit=True).install()
+
+    old_deprecator = spack.store.STORE.db.deprecator(spec)
+    if old_deprecator:
+        # Find this spec file from its old deprecation
+        specfile = spack.store.STORE.layout.deprecated_file_path(spec, old_deprecator)
+    else:
+        specfile = spack.store.STORE.layout.spec_file_path(spec)
+
+    # copy spec metadata to "deprecated" dir of deprecator
+    depr_specfile = spack.store.STORE.layout.deprecated_file_path(spec, deprecator)
+    fs.mkdirp(os.path.dirname(depr_specfile))
+    shutil.copy2(specfile, depr_specfile)
+
+    # Any specs deprecated in favor of this spec are re-deprecated in favor of its new deprecator
+    for deprecated in spack.store.STORE.db.specs_deprecated_by(spec):
+        deprecate(deprecated, deprecator, link_fn)
+
+    # Now that we've handled metadata, uninstall and replace with link
+    spack.package_base.PackageBase.uninstall_by_spec(spec, force=True, deprecator=deprecator)
+    link_fn(deprecator.prefix, spec.prefix)
 
 
 class OverwriteInstall:
@@ -2317,33 +2425,21 @@ class OverwriteInstall:
             raise e.inner_exception
 
 
-class InstallError(spack.error.SpackError):
-    """Raised when something goes wrong during install or uninstall.
-
-    The error can be annotated with a ``pkg`` attribute to allow the
-    caller to get the package for which the exception was raised.
-    """
-
-    def __init__(self, message, long_msg=None, pkg=None):
-        super().__init__(message, long_msg)
-        self.pkg = pkg
-
-
-class BadInstallPhase(InstallError):
+class BadInstallPhase(spack.error.InstallError):
     """Raised for an install phase option is not allowed for a package."""
 
     def __init__(self, pkg_name, phase):
         super().__init__(f"'{phase}' is not a valid phase for package {pkg_name}")
 
 
-class ExternalPackageError(InstallError):
+class ExternalPackageError(spack.error.InstallError):
     """Raised by install() when a package is only for external use."""
 
 
-class InstallLockError(InstallError):
+class InstallLockError(spack.error.InstallError):
     """Raised during install when something goes wrong with package locking."""
 
 
-class UpstreamPackageError(InstallError):
+class UpstreamPackageError(spack.error.InstallError):
     """Raised during install when something goes wrong with an upstream
     package."""

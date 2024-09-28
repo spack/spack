@@ -18,10 +18,12 @@ import llnl.util.filesystem
 import llnl.util.lang
 import llnl.util.tty
 
+import spack.spec
 import spack.util.elf as elf_utils
 import spack.util.environment
 import spack.util.environment as environment
 import spack.util.ld_so_conf
+import spack.util.parallel
 
 from .common import (
     WindowsCompilerExternalPaths,
@@ -406,7 +408,7 @@ def by_path(
 
     result = collections.defaultdict(list)
     repository = spack.repo.PATH.ensure_unwrapped()
-    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+    with spack.util.parallel.make_concurrent_executor(max_workers, require_fork=False) as executor:
         for pkg in packages_to_search:
             executable_future = executor.submit(
                 executables_finder.find,

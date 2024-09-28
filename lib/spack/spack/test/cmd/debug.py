@@ -11,6 +11,7 @@ import pytest
 
 import spack
 import spack.platforms
+import spack.spec
 from spack.main import SpackCommand
 from spack.util.executable import which
 
