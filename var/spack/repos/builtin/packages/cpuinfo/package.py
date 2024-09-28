@@ -30,6 +30,9 @@ class Cpuinfo(CMakePackage):
     version("2018-05-13", commit="1e6c8c99d27f2b5eb9d2e6231055c6a4115b85e5")  # py-torch@0.4.1
     version("2018-04-04", commit="831dc28341b5f20d13e840caf87eaba644d82643")  # py-torch@:0.4.0
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     generator("ninja")
     depends_on("cmake@3.5:", type="build")
 

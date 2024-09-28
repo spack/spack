@@ -54,6 +54,10 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         "2020.10.00", sha256="ff58840cdbae2991d100dfbaf3ef2f133fc2f43fc05f207dc5e38a41137882ab"
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     patch("omp.patch", when="@2023.11.05")
 
     variant(
@@ -66,7 +70,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     # The runtime dependency on cmake is needed by the stand-alone tests (spack test).
     depends_on("cmake", type="run")
 
-    depends_on("mpi", when="+mpi")
+    depends_on("mpi")
     depends_on("intel-oneapi-mkl threads=openmp", when="+sycl")
     depends_on("blas")
     depends_on("blaspp ~cuda", when="~cuda")
@@ -101,6 +105,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocsolver", when="+rocm")
 
     requires("%oneapi", when="+sycl", msg="slate+sycl must be compiled with %oneapi")
+    requires("+mpi", msg="MPI is required (use of the 'mpi' variant is deprecated)")
+    requires("+openmp", msg="OpenMP is required (use of the 'openmp' variant is deprecated)")
 
     cpp_17_msg = "Requires C++17 compiler support"
     conflicts("%gcc@:5", msg=cpp_17_msg)
@@ -132,10 +138,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
 
         config = [
             "-Dbuild_tests=%s" % self.run_tests,
-            "-Duse_openmp=%s" % ("+openmp" in spec),
             "-DBUILD_SHARED_LIBS=%s" % ("+shared" in spec),
             backend_config,
-            "-Duse_mpi=%s" % ("+mpi" in spec),
         ]
         if "+cuda" in spec:
             archs = ";".join(spec.variants["cuda_arch"].value)
@@ -154,7 +158,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             return
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(["examples"])
+        cache_extra_test_sources(self, ["examples"])
 
     def mpi_launcher(self):
         searchpath = [self.spec["mpi"].prefix.bin]

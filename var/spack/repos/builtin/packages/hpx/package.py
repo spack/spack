@@ -41,6 +41,8 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     version("1.2.0", sha256="20942314bd90064d9775f63b0e58a8ea146af5260a4c84d0854f9f968077c170")
     version("1.1.0", sha256="1f28bbe58d8f0da600d60c3a74a644d75ac777b20a018a5c1c6030a470e8a1c9")
 
+    depends_on("cxx", type="build")
+
     generator("ninja")
 
     map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
@@ -239,8 +241,8 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("HPX_WITH_ASYNC_CUDA", "async_cuda"),
             self.define("HPX_WITH_TESTS", self.run_tests),
             self.define("HPX_WITH_NETWORKING", "networking=none" not in spec),
-            self.define("HPX_WITH_PARCELPORT_TCP", "networking=tcp" in spec),
-            self.define("HPX_WITH_PARCELPORT_MPI", "networking=mpi" in spec),
+            self.define("HPX_WITH_PARCELPORT_TCP", spec.satisfies("networking=tcp")),
+            self.define("HPX_WITH_PARCELPORT_MPI", spec.satisfies("networking=mpi")),
             self.define(
                 "HPX_WITH_MAX_CPU_COUNT",
                 format_max_cpu_count(spec.variants["max_cpu_count"].value),
@@ -258,7 +260,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
             args += [self.define("HPX_WITH_UNITY_BUILD", True)]
 
         # HIP support requires compiling with hipcc
-        if "+rocm" in self.spec:
+        if self.spec.satisfies("+rocm"):
             args += [self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc)]
             if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
                 args += [self.define("__skip_rocmclang", True)]
@@ -266,13 +268,13 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
         # Instrumentation
         args += self.instrumentation_args()
 
-        if "instrumentation=thread_debug" in spec:
+        if spec.satisfies("instrumentation=thread_debug"):
             args += [
                 self.define("HPX_WITH_THREAD_DEBUG_INFO", True),
                 self.define("HPX_WITH_LOGGING", True),
             ]
 
-        if "instrumentation=apex" in spec:
+        if spec.satisfies("instrumentation=apex"):
             args += [
                 self.define("APEX_WITH_OTF2", True),
                 self.define("OTF2_ROOT", spec["otf2"].prefix),

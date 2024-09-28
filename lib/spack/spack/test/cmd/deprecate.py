@@ -5,6 +5,7 @@
 
 import pytest
 
+import spack.spec
 import spack.store
 from spack.database import InstallStatuses
 from spack.main import SpackCommand
@@ -13,8 +14,6 @@ install = SpackCommand("install")
 uninstall = SpackCommand("uninstall")
 deprecate = SpackCommand("deprecate")
 find = SpackCommand("find")
-
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_deprecate(mock_packages, mock_archive, mock_fetch, install_mockery):

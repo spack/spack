@@ -36,6 +36,7 @@ class Rust(Package):
     version("nightly")
 
     # Stable versions.
+    version("1.81.0", sha256="872448febdff32e50c3c90a7e15f9bb2db131d13c588fe9071b0ed88837ccfa7")
     version("1.78.0", sha256="ff544823a5cb27f2738128577f1e7e00ee8f4c83f2a348781ae4fc355e91d5a9")
     version("1.76.0", sha256="9e5cff033a7f0d2266818982ad90e4d3e4ef8f8ee1715776c6e25073a136c021")
     version("1.75.0", sha256="5b739f45bc9d341e2d1c570d65d2375591e22c2d23ef5b8a37711a0386abc088")
@@ -44,6 +45,9 @@ class Rust(Package):
     version("1.70.0", sha256="b2bfae000b7a5040e4ec4bbc50a09f21548190cb7570b0ed77358368413bd27c")
     version("1.65.0", sha256="5828bb67f677eabf8c384020582b0ce7af884e1c84389484f7f8d00dd82c0038")
     version("1.60.0", sha256="20ca826d1cf674daf8e22c4f8c4b9743af07973211c839b85839742314c838b7")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     variant(
         "dev",
@@ -88,6 +92,7 @@ class Rust(Package):
     depends_on("rust-bootstrap@1.73:1.74", type="build", when="@1.74")
     depends_on("rust-bootstrap@1.74:1.75", type="build", when="@1.75")
     depends_on("rust-bootstrap@1.77:1.78", type="build", when="@1.78")
+    depends_on("rust-bootstrap@1.80:1.81", type="build", when="@1.81")
 
     # src/llvm-project/llvm/cmake/modules/CheckCompilerVersion.cmake
     conflicts("%gcc@:7.3", when="@1.73:", msg="Host GCC version must be at least 7.4")
@@ -100,10 +105,17 @@ class Rust(Package):
     phases = ["configure", "build", "install"]
 
     @classmethod
-    def determine_version(csl, exe):
-        output = Executable(exe)("--version", output=str, error=str)
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        rustc_candidates = [x for x in exes_in_prefix if os.path.basename(x) == "rustc"]
+        cargo_candidates = [x for x in exes_in_prefix if os.path.basename(x) == "cargo"]
+        # Both rustc and cargo must be present
+        if not (rustc_candidates and cargo_candidates):
+            return
+        output = Executable(rustc_candidates[0])("--version", output=str, error=str)
         match = re.match(r"rustc (\S+)", output)
-        return match.group(1) if match else None
+        if match:
+            version_str = match.group(1)
+            return Spec.from_detection(f"rust@{version_str}", external_path=prefix)
 
     def setup_dependent_package(self, module, dependent_spec):
         module.cargo = Executable(os.path.join(self.spec.prefix.bin, "cargo"))

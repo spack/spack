@@ -38,6 +38,9 @@ class Wgrib2(MakefilePackage):
         extension="tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("netcdf3", default=True, description="Link in netcdf3 library to write netcdf3 files")
     variant(
         "netcdf4", default=False, description="Link in netcdf4 library to write netcdf3/4 files"

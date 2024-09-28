@@ -107,6 +107,9 @@ class Wrf(Package):
         url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "build_type",
         default="dmpar",
@@ -398,6 +401,12 @@ class Wrf(Package):
 
         if self.spec.satisfies("@:4.0.3 %intel@2018:"):
             config.filter(r"-openmp", "-qopenmp")
+
+        if self.spec.satisfies("%gcc@14:"):
+            config.filter(
+                "^CFLAGS_LOCAL(.*?)=([^#\n\r]*)(.*)$", r"CFLAGS_LOCAL\1= \2 -fpermissive \3"
+            )
+            config.filter("^CC_TOOLS(.*?)=([^#\n\r]*)(.*)$", r"CC_TOOLS\1=\2 -fpermissive \3")
 
     @run_before("configure")
     def fortran_check(self):
