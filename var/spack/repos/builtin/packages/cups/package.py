@@ -14,7 +14,9 @@ class Cups(AutotoolsPackage):
     install."""
 
     homepage = "https://www.cups.org/"
-    url = "https://github.com/OpenPrinting/cups/releases/download/v2.4.10/cups-2.4.10-source.tar.gz"
+    url = (
+        "https://github.com/OpenPrinting/cups/releases/download/v2.4.10/cups-2.4.10-source.tar.gz"
+    )
 
     license("Apache-2.0", checked_by="wdconinc")
 
