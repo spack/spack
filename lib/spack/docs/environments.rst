@@ -414,7 +414,13 @@ default, it will also clone the package to a subdirectory in the
 environment. This package will have a special variant ``dev_path``
 set, and Spack will ensure the package and its dependents are rebuilt
 any time the environment is installed if the package's local source
-code has been modified. Spack ensures that all instances of a
+code has been modified. Spack's native implementation to check for modifications
+is to check if ``mtime`` is newer than the installation.
+A custom check can be created by overriding the ``detect_dev_src_change`` method 
+in your package class. This is particularly useful for projects using custom spack repo's 
+to drive development and want to optimize performance. 
+
+Spack ensures that all instances of a
 developed package in the environment are concretized to match the
 version (and other constraints) passed as the spec argument to the
 ``spack develop`` command.
@@ -863,7 +869,7 @@ named list ``compilers`` is ``['%gcc', '%clang', '%intel']`` on
    spack:
      definitions:
        - compilers: ['%gcc', '%clang']
-       - when: arch.satisfies('x86_64:')
+       - when: arch.satisfies('target=x86_64:')
          compilers: ['%intel']
 
 .. note::

@@ -22,6 +22,8 @@ packages:
       bigreqsproto: [xorgproto, bigreqsproto]
       blas: [openblas, amdblis]
       compositeproto: [xorgproto, compositeproto]
+      c: [gcc]
+      cxx: [gcc]
       D: [ldc]
       daal: [intel-oneapi-daal]
       damageproto: [xorgproto, damageproto]
@@ -34,6 +36,7 @@ packages:
       flame: [libflame, amdlibflame]
       fixesproto: [xorgproto, fixesproto]
       fontcacheproto: [xorgproto, fontcacheproto]
+      fortran: [gcc]
       fortran-rt: [gcc-runtime, intel-oneapi-runtime]
       fuse: [libfuse]
       gl: [glx, osmesa]
@@ -89,3 +92,13 @@ packages:
     permissions:
       read: world
       write: user
+  cray-mpich:
+    buildable: false
+  cray-mvapich2:
+    buildable: false
+  fujitsu-mpi:
+    buildable: false
+  hpcx-mpi:
+    buildable: false
+  spectrum-mpi:
+    buildable: false

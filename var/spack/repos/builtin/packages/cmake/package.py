@@ -29,6 +29,7 @@ class Cmake(Package):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("3.30.2", sha256="46074c781eccebc433e98f0bbfa265ca3fd4381f245ca3b140e7711531d60db2")
     version("3.30.1", sha256="df9b3c53e3ce84c3c1b7c253e5ceff7d8d1f084ff0673d048f260e04ccb346e1")
     version("3.30.0", sha256="157e5be6055c154c34f580795fe5832f260246506d32954a971300ed7899f579")
     version("3.29.6", sha256="1391313003b83d48e2ab115a8b525a557f78d8c1544618b48d1d90184a10f0af")
@@ -297,7 +298,7 @@ class Cmake(Package):
             if jobs is not None:
                 args.append("--parallel={0}".format(jobs))
 
-            if "+ownlibs" in spec:
+            if spec.satisfies("+ownlibs"):
                 # Build and link to the CMake-provided third-party libraries
                 args.append("--no-system-libs")
             else:
@@ -312,7 +313,7 @@ class Cmake(Package):
             args.append("--system-curl")
             args.append("--no-qt-gui")
 
-            if "+doc" in spec:
+            if spec.satisfies("+doc"):
                 args.append("--sphinx-html")
                 args.append("--sphinx-man")
 
