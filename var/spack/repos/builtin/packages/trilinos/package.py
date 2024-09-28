@@ -516,6 +516,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         "0001-use-the-gcnArchName-inplace-of-gcnArch-as-gcnArch-is.patch",
         when="@15.0.0 ^hip@6.0 +rocm",
     )
+    patch("cstdint_gcc13.patch", when="@13.4.0:13.4.1 %gcc@13.0.0:")
 
     # Allow building with +teko gotype=long
     patch(
