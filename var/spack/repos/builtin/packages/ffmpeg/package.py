@@ -16,7 +16,8 @@ class Ffmpeg(AutotoolsPackage):
 
     maintainers("xjrc")
 
-    license("GPL-2.0-or-later AND LGPL-2.1-or-later", checked_by="wdconinc")
+    license("LGPL-2.1-or-later", when="~gpl", checked_by="wdconinc")
+    license("LGPL-2.1-or-later AND GPL-2.0-or-later", when="+gpl", checked_by="wdconinc")
 
     version("master", branch="master")
     version("7.0.2", sha256="1ed250407ea8f955cca2f1139da3229fbc13032a0802e4b744be195865ff1541")
@@ -48,7 +49,7 @@ class Ffmpeg(AutotoolsPackage):
     variant(
         "gpl",
         default=True,
-        description="allow use of GPL code, the resulting libs " "and binaries will be under GPL",
+        description="allow use of GPL code, the resulting libs and binaries will be under GPL",
     )
     variant("version3", default=True, description="upgrade (L)GPL to version 3")
     variant(
