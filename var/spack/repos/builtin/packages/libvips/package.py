@@ -52,7 +52,7 @@ class Libvips(AutotoolsPackage):
     depends_on("libjpeg", when="+jpeg")
     depends_on("libtiff", when="+tiff")
     depends_on("libpng", when="+png")
-    depends_on("poppler", when="+poppler")
+    depends_on("poppler +glib", when="+poppler")
 
     def url_for_version(self, version):
         ext = "xz" if version >= Version("8.14") else "gz"
