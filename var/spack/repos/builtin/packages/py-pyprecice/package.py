@@ -17,6 +17,8 @@ class PyPyprecice(PythonPackage):
     url = "https://github.com/precice/python-bindings/archive/v3.1.1.tar.gz"
     maintainers("ajaust", "BenjaminRodenberg", "IshaanDesai")
 
+    license("LGPL-3.0")
+
     # Always prefer final version of release candidate
     version("develop", branch="develop")
     version("3.1.1", sha256="112fccfbb223eb8df341221531f89943a14f75ee1e44dfb3276ebb38f21047de")
