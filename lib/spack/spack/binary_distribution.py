@@ -2208,7 +2208,7 @@ def relocate_package(spec):
     # of some dependency is in an upstream, so we cannot assume the original
     # spack store root can be mapped uniformly to the new spack store root.
     relocation_specs = deps_to_relocate(spec)
-    build_spec_ids = [id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD)]
+    build_spec_ids = set(id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD))
     for s in relocation_specs:
         analog = s
         if id(s) not in build_spec_ids:

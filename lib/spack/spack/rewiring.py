@@ -61,7 +61,7 @@ def rewire_node(spec, explicit):
     # compute prefix-to-prefix for every node from the build spec to the spliced
     # spec
     prefix_to_prefix = OrderedDict({spec.build_spec.prefix: spec.prefix})
-    build_spec_ids = [id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD)]
+    build_spec_ids = set(id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD))
     for s in bindist.deps_to_relocate(spec):
         analog = s
         if id(s) not in build_spec_ids:
