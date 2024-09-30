@@ -226,7 +226,7 @@ class Lua(LuaImplPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    variant("pcfile", default=False, description="Add patch for lua.pc generation", when="5.2:")
+    variant("pcfile", default=False, description="Add patch for lua.pc generation", when="@5.2:")
     variant("shared", default=True, description="Builds a shared version of the library")
 
     provides("lua-lang@5.1", when="@5.1:5.1.99")
