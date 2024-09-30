@@ -121,7 +121,6 @@ class Ipopt(AutotoolsPackage):
                 if "^mumps+mpi" in spec:
                     args.extend(["--disable-mpiinit"])
 
-
         if spec.satisfies("+coinhsl"):
             hsl_ld_flags = "-ldl {0}".format(spec["coinhsl"].libs.ld_flags)
 
@@ -158,9 +157,9 @@ class Ipopt(AutotoolsPackage):
                 )
 
         if spec.satisfies("+java"):
-            args.extend([ "--enable-java"])
+            args.extend(["--enable-java"])
         else:
-            args.extend([ "--disable-java"])
+            args.extend(["--disable-java"])
 
         # The IPOPT configure file states that '--enable-debug' implies
         # '--disable-shared', but adding '--enable-shared' overrides
