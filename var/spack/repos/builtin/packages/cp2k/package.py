@@ -517,12 +517,11 @@ class MakefileBuilder(makefile.MakefileBuilder):
                 # (short-int vs int) which otherwise causes segfaults at
                 # runtime due to wrong offsets into the shared library
                 # symbols.
-                libs.extend(
-                    [
-                        join_path(spec["libint"].libs.directories[0], "libderiv.a"),
-                        join_path(spec["libint"].libs.directories[0], "libint.a"),
-                    ]
-                )
+                libs += [
+                    join_path(spec["libint"].libs.directories[0], "libderiv.a"),
+                    join_path(spec["libint"].libs.directories[0], "libint.a"),
+                ]
+
             else:
                 fcflags += pkgconf("--cflags", "libint2", output=str).split()
                 libs += pkgconf("--libs", "libint2", output=str).split()
@@ -545,18 +544,14 @@ class MakefileBuilder(makefile.MakefileBuilder):
         if spec.satisfies("+pexsi"):
             cppflags.append("-D__LIBPEXSI")
             fcflags.append("-I" + join_path(spec["pexsi"].prefix, "fortran"))
-            libs.extend(
-                [
-                    join_path(spec["pexsi"].libs.directories[0], "libpexsi.a"),
-                    join_path(spec["superlu-dist"].libs.directories[0], "libsuperlu_dist.a"),
-                    join_path(
-                        spec["parmetis"].libs.directories[0], "libparmetis.{0}".format(dso_suffix)
-                    ),
-                    join_path(
-                        spec["metis"].libs.directories[0], "libmetis.{0}".format(dso_suffix)
-                    ),
-                ]
-            )
+            libs += [
+                join_path(spec["pexsi"].libs.directories[0], "libpexsi.a"),
+                join_path(spec["superlu-dist"].libs.directories[0], "libsuperlu_dist.a"),
+                join_path(
+                    spec["parmetis"].libs.directories[0], "libparmetis.{0}".format(dso_suffix)
+                ),
+                join_path(spec["metis"].libs.directories[0], "libmetis.{0}".format(dso_suffix)),
+            ]
 
         if spec.satisfies("+elpa"):
             elpa = spec["elpa"]
@@ -600,7 +595,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
         if spec.satisfies("+plumed"):
             dflags.extend(["-D__PLUMED2"])
             cppflags.extend(["-D__PLUMED2"])
-            libs.extend([join_path(spec["plumed"].prefix.lib, "libplumed.{0}".format(dso_suffix))])
+            libs += [join_path(spec["plumed"].prefix.lib, "libplumed.{0}".format(dso_suffix))]
 
         if spec.satisfies("+libvori"):
             cppflags += ["-D__LIBVORI"]
@@ -628,7 +623,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
         lapack = spec["lapack"].libs
         blas = spec["blas"].libs
         ldflags.append((lapack + blas).search_flags)
-        libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
+        libs += [str(x) for x in (fftw.libs, lapack, blas)]
 
         if spec.satisfies("platform=darwin"):
             cppflags.extend(["-D__NO_STATM_ACCESS"])
@@ -642,7 +637,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
             # add before ScaLAPACK to override the p?gemm symbols
             cosma = spec["cosma"].libs
             ldflags.append(cosma.search_flags)
-            libs.extend(cosma)
+            libs += cosma
 
         # MPI
         if spec.satisfies("+mpi"):
@@ -670,9 +665,9 @@ class MakefileBuilder(makefile.MakefileBuilder):
                 scalapack = spec["scalapack"].libs
                 ldflags.append(scalapack.search_flags)
 
-            libs.extend(scalapack)
-            libs.extend(mpi)
-            libs.extend(pkg.compiler.stdcxx_libs)
+            libs += scalapack
+            libs += mpi
+            libs += pkg.compiler.stdcxx_libs
 
             if spec.satisfies("+mpi_f08"):
                 cppflags.append("-D__MPI_F08")
