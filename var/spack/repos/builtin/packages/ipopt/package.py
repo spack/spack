@@ -12,7 +12,7 @@ class Ipopt(AutotoolsPackage):
 
     homepage = "https://github.com/coin-or/Ipopt"
     url = "https://github.com/coin-or/Ipopt/archive/refs/tags/releases/3.13.2.tar.gz"
-    maintainers("chapman39", "tepperly, goxberry")
+    maintainers("chapman39", "tepperly")
 
     license("EPL-2.0")
 
