@@ -97,7 +97,7 @@ class Ipopt(AutotoolsPackage):
         else:
             args.extend(["--with-lapack-lflags={0} {1}".format(lapack_lib, blas_lib)])
 
-        if "+mumps" in spec:
+        if spec.satisfies("+mumps"):
             mumps_dir = spec["mumps"].prefix
             mumps_flags = "-ldmumps -lmumps_common -lpord"
             if "^mumps~mpi" in spec:
