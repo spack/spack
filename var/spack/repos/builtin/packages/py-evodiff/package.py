@@ -33,3 +33,4 @@ class PyEvodiff(PythonPackage):
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-mdanalysis", type=("build", "run"))
     depends_on("py-pdb-tools", type=("build", "run"))
+    depends_on("py-mlflow", type=("build", "run"))
