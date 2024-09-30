@@ -12,7 +12,6 @@ from llnl.util.filesystem import mkdirp
 
 import spack.builder
 import spack.deptypes as dt
-
 from spack.dependency import Dependency
 from spack.directives import extends
 from spack.error import SpackError
