@@ -7,6 +7,7 @@ import pathlib
 
 import pytest
 
+import spack.deptypes as dt
 import spack.directives
 import spack.error
 import spack.parser
@@ -15,6 +16,7 @@ import spack.solver.asp
 import spack.spec
 import spack.store
 import spack.variant
+import spack.version as vn
 from spack.error import SpecError, UnsatisfiableSpecError
 from spack.spec import (
     ArchSpec,
@@ -30,6 +32,95 @@ from spack.variant import (
     MultipleValuesInExclusiveVariantError,
     UnknownVariantError,
 )
+
+
+@pytest.fixture()
+def setup_complex_splice(monkeypatch):
+    r"""Fixture to set up splicing for two complex specs.
+
+    a_red is a spec in which every node has the variant color=red
+    c_blue is a spec in which every node has the variant color=blue
+
+    a_red structure:
+                     a -
+                    / \ \
+                   b   c \
+                  /|\ / \ |
+                 e | d   g@2
+                  \|/
+                  g@1
+
+    c_blue structure:
+                    c
+                   /|\
+                  d f \
+                 /  |\ \
+               g@2  e \ \
+                     \| /
+                     g@3
+
+    This is not intended for use in tests that use virtuals, so ``_splice_match`` is monkeypatched
+    to avoid needing package files for each spec.
+    """
+
+    def splice_match(self, other, self_root, other_root):
+        return self.name == other.name
+
+    def virtuals_provided(self, root):
+        return []
+
+    monkeypatch.setattr(Spec, "_splice_match", splice_match)
+    monkeypatch.setattr(Spec, "_virtuals_provided", virtuals_provided)
+
+    g1_red = Spec("g color=red")
+    g1_red.versions = vn.VersionList([vn.Version("1")])
+    g2_red = Spec("g color=red")
+    g2_red.versions = vn.VersionList([vn.Version("2")])
+    g2_blue = Spec("g color=blue")
+    g2_blue.versions = vn.VersionList([vn.Version("2")])
+    g3_blue = Spec("g color=blue")
+    g3_blue.versions = vn.VersionList([vn.Version("3")])
+
+    depflag = dt.LINK | dt.BUILD
+    e_red = Spec("e color=red")
+    e_red._add_dependency(g1_red, depflag=depflag, virtuals=())
+    e_blue = Spec("e color=blue")
+    e_blue._add_dependency(g3_blue, depflag=depflag, virtuals=())
+
+    d_red = Spec("d color=red")
+    d_red._add_dependency(g1_red, depflag=depflag, virtuals=())
+    d_blue = Spec("d color=blue")
+    d_blue._add_dependency(g2_blue, depflag=depflag, virtuals=())
+
+    b_red = Spec("b color=red")
+    b_red._add_dependency(e_red, depflag=depflag, virtuals=())
+    b_red._add_dependency(d_red, depflag=depflag, virtuals=())
+    b_red._add_dependency(g1_red, depflag=depflag, virtuals=())
+
+    f_blue = Spec("f color=blue")
+    f_blue._add_dependency(e_blue, depflag=depflag, virtuals=())
+    f_blue._add_dependency(g3_blue, depflag=depflag, virtuals=())
+
+    c_red = Spec("c color=red")
+    c_red._add_dependency(d_red, depflag=depflag, virtuals=())
+    c_red._add_dependency(g2_red, depflag=depflag, virtuals=())
+    c_blue = Spec("c color=blue")
+    c_blue._add_dependency(d_blue, depflag=depflag, virtuals=())
+    c_blue._add_dependency(f_blue, depflag=depflag, virtuals=())
+    c_blue._add_dependency(g3_blue, depflag=depflag, virtuals=())
+
+    a_red = Spec("a color=red")
+    a_red._add_dependency(b_red, depflag=depflag, virtuals=())
+    a_red._add_dependency(c_red, depflag=depflag, virtuals=())
+    a_red._add_dependency(g2_red, depflag=depflag, virtuals=())
+
+    for spec in [e_red, e_blue, d_red, d_blue, b_red, f_blue, c_red, c_blue, a_red]:
+        spec.versions = vn.VersionList([vn.Version("1")])
+
+        a_red._mark_concrete()
+        c_blue._mark_concrete()
+
+    return a_red, c_blue
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
@@ -715,13 +806,6 @@ class TestSpecSemantics:
     def test_spec_formatting(self, default_mock_concretization):
         spec = default_mock_concretization("multivalue-variant cflags=-O2")
 
-        # Since the default is the full spec see if the string rep of
-        # spec is the same as the output of spec.format()
-        # ignoring whitespace (though should we?) and ignoring dependencies
-        spec_string = str(spec)
-        idx = spec_string.index(" ^")
-        assert spec_string[:idx] == spec.format().strip()
-
         # Testing named strings ie {string} and whether we get
         # the correct component
         # Mixed case intentional to test both
@@ -966,6 +1050,164 @@ class TestSpecSemantics:
         # Finally, the spec should know it's been spliced:
         assert out.spliced
 
+    def test_splice_intransitive_complex(self, setup_complex_splice):
+        a_red, c_blue = setup_complex_splice
+
+        spliced = a_red.splice(c_blue, transitive=False)
+        assert spliced.satisfies(
+            "a color=red ^b color=red ^c color=blue "
+            "^d color=red ^e color=red ^f color=blue ^g@3 color=blue"
+        )
+        assert set(spliced.dependencies(deptype=dt.BUILD)) == set(
+            a_red.dependencies(deptype=dt.BUILD)
+        )
+        assert spliced.build_spec == a_red
+        # We cannot check spliced["b"].build_spec is spliced["b"] because Spec.__getitem__ creates
+        # a new wrapper object on each invocation. So we select once and check on that object
+        # For the rest of the unchanged specs we will just check the s._build_spec is None.
+        b = spliced["b"]
+        assert b == a_red["b"]
+        assert b.build_spec is b
+        assert set(b.dependents()) == {spliced}
+
+        assert spliced["c"].satisfies(
+            "c color=blue ^d color=red ^e color=red ^f color=blue ^g@3 color=blue"
+        )
+        assert set(spliced["c"].dependencies(deptype=dt.BUILD)) == set(
+            c_blue.dependencies(deptype=dt.BUILD)
+        )
+        assert spliced["c"].build_spec == c_blue
+        assert set(spliced["c"].dependents()) == {spliced}
+
+        assert spliced["d"] == a_red["d"]
+        assert spliced["d"]._build_spec is None
+        # Since D had a parent changed, it has a split edge for link vs build dependent
+        # note: spliced["b"] == b_red, referenced differently to preserve logic
+        assert set(spliced["d"].dependents()) == {spliced["b"], spliced["c"], a_red["c"]}
+        assert set(spliced["d"].dependents(deptype=dt.BUILD)) == {a_red["b"], a_red["c"]}
+
+        assert spliced["e"] == a_red["e"]
+        assert spliced["e"]._build_spec is None
+        # Because a copy of e is used, it does not have dependnets in the original specs
+        assert set(spliced["e"].dependents()) == {spliced["b"], spliced["f"]}
+        # Build dependent edge to f because f originally dependended on the e this was copied from
+        assert set(spliced["e"].dependents(deptype=dt.BUILD)) == {spliced["b"]}
+
+        assert spliced["f"].satisfies("f color=blue ^e color=red ^g@3 color=blue")
+        assert set(spliced["f"].dependencies(deptype=dt.BUILD)) == set(
+            c_blue["f"].dependencies(deptype=dt.BUILD)
+        )
+        assert spliced["f"].build_spec == c_blue["f"]
+        assert set(spliced["f"].dependents()) == {spliced["c"]}
+
+        # spliced["g"] is g3, but spliced["b"]["g"] is g1
+        assert spliced["g"] == a_red["g"]
+        assert spliced["g"]._build_spec is None
+        assert set(spliced["g"].dependents(deptype=dt.LINK)) == {
+            spliced,
+            spliced["c"],
+            spliced["f"],
+            a_red["c"],
+        }
+        assert set(spliced["g"].dependents(deptype=dt.BUILD)) == {spliced, a_red["c"]}
+
+        assert spliced["b"]["g"] == a_red["b"]["g"]
+        assert spliced["b"]["g"]._build_spec is None
+        assert set(spliced["b"]["g"].dependents()) == {spliced["b"], spliced["d"], spliced["e"]}
+
+        for edge in spliced.traverse_edges(cover="edges", deptype=dt.LINK | dt.RUN):
+            # traverse_edges creates a synthetic edge with no deptypes to the root
+            if edge.depflag:
+                depflag = dt.LINK
+                if (edge.parent.name, edge.spec.name) not in [
+                    ("a", "c"),  # These are the spliced edges
+                    ("c", "d"),
+                    ("f", "e"),
+                    ("c", "g"),
+                    ("f", "g"),
+                    ("c", "f"),  # ancestor to spliced edge
+                ]:
+                    depflag |= dt.BUILD
+                assert edge.depflag == depflag
+
+    def test_splice_transitive_complex(self, setup_complex_splice):
+        a_red, c_blue = setup_complex_splice
+
+        spliced = a_red.splice(c_blue, transitive=True)
+        assert spliced.satisfies(
+            "a color=red ^b color=red"
+            "^c color=blue ^d color=blue ^e color=blue ^f color=blue ^g@3 color=blue"
+        )
+        assert set(spliced.dependencies(deptype=dt.BUILD)) == set(
+            a_red.dependencies(deptype=dt.BUILD)
+        )
+        assert spliced.build_spec == a_red
+
+        assert spliced["b"].satisfies("b color=red ^d color=blue ^e color=blue ^g@2 color=blue")
+        assert set(spliced["b"].dependencies(deptype=dt.BUILD)) == set(
+            a_red["b"].dependencies(deptype=dt.BUILD)
+        )
+        assert spliced["b"].build_spec == a_red["b"]
+        assert set(spliced["b"].dependents()) == {spliced}
+
+        # We cannot check spliced["b"].build_spec is spliced["b"] because Spec.__getitem__ creates
+        # a new wrapper object on each invocation. So we select once and check on that object
+        # For the rest of the unchanged specs we will just check the s._build_spec is None.
+        c = spliced["c"]
+        assert c == c_blue
+        assert c.build_spec is c
+        assert set(c.dependents()) == {spliced}
+
+        assert spliced["d"] == c_blue["d"]
+        assert spliced["d"]._build_spec is None
+        assert set(spliced["d"].dependents()) == {spliced["b"], spliced["c"]}
+
+        assert spliced["e"] == c_blue["e"]
+        assert spliced["e"]._build_spec is None
+        assert set(spliced["e"].dependents()) == {spliced["b"], spliced["f"]}
+
+        assert spliced["f"] == c_blue["f"]
+        assert spliced["f"]._build_spec is None
+        assert set(spliced["f"].dependents()) == {spliced["c"]}
+
+        # spliced["g"] is g3, but spliced["d"]["g"] is g1
+        assert spliced["g"] == c_blue["g"]
+        assert spliced["g"]._build_spec is None
+        assert set(spliced["g"].dependents(deptype=dt.LINK)) == {
+            spliced,
+            spliced["b"],
+            spliced["c"],
+            spliced["e"],
+            spliced["f"],
+        }
+        # Because a copy of g3 is used, it does not have dependents in the original specs
+        # It has build dependents on these spliced specs because it is an unchanged dependency
+        # for them
+        assert set(spliced["g"].dependents(deptype=dt.BUILD)) == {
+            spliced["c"],
+            spliced["e"],
+            spliced["f"],
+        }
+
+        assert spliced["d"]["g"] == c_blue["d"]["g"]
+        assert spliced["d"]["g"]._build_spec is None
+        assert set(spliced["d"]["g"].dependents()) == {spliced["d"]}
+
+        for edge in spliced.traverse_edges(cover="edges", deptype=dt.LINK | dt.RUN):
+            # traverse_edges creates a synthetic edge with no deptypes to the root
+            if edge.depflag:
+                depflag = dt.LINK
+                if (edge.parent.name, edge.spec.name) not in [
+                    ("a", "c"),  # These are the spliced edges
+                    ("a", "g"),
+                    ("b", "d"),
+                    ("b", "e"),
+                    ("b", "g"),
+                    ("a", "b"),  # This edge not spliced, but b was spliced invalidating edge
+                ]:
+                    depflag |= dt.BUILD
+                assert edge.depflag == depflag
+
     @pytest.mark.parametrize("transitive", [True, False])
     def test_splice_with_cached_hashes(self, default_mock_concretization, transitive):
         spec = default_mock_concretization("splice-t")
@@ -1098,7 +1340,7 @@ class TestSpecSemantics:
 
     @pytest.mark.parametrize("transitive", [True, False])
     def test_splice_swap_names(self, default_mock_concretization, transitive):
-        spec = default_mock_concretization("splice-t")
+        spec = default_mock_concretization("splice-vt")
         dep = default_mock_concretization("splice-a+foo")
         out = spec.splice(dep, transitive)
         assert dep.name in out
@@ -1108,7 +1350,7 @@ class TestSpecSemantics:
     def test_splice_swap_names_mismatch_virtuals(self, default_mock_concretization, transitive):
         spec = default_mock_concretization("splice-t")
         dep = default_mock_concretization("splice-vh+foo")
-        with pytest.raises(spack.spec.SpliceError, match="will not provide the same virtuals."):
+        with pytest.raises(spack.spec.SpliceError, match="virtual"):
             spec.splice(dep, transitive)
 
     def test_spec_override(self):

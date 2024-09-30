@@ -415,14 +415,19 @@ class Compiler:
         return list(paths_containing_libs(link_dirs, all_required_libs))
 
     @property
-    def default_libc(self) -> Optional["spack.spec.Spec"]:
-        """Determine libc targeted by the compiler from link line"""
+    def default_dynamic_linker(self) -> Optional[str]:
+        """Determine default dynamic linker from compiler link line"""
         output = self.compiler_verbose_output
 
         if not output:
             return None
 
-        dynamic_linker = spack.util.libc.parse_dynamic_linker(output)
+        return spack.util.libc.parse_dynamic_linker(output)
+
+    @property
+    def default_libc(self) -> Optional["spack.spec.Spec"]:
+        """Determine libc targeted by the compiler from link line"""
+        dynamic_linker = self.default_dynamic_linker
 
         if not dynamic_linker:
             return None

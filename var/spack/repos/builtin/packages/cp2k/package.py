@@ -374,15 +374,31 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/cp2k/cp2k/issues/3688
     patch("d4-dispersion-bugfix-2024.3.patch", when="@2024.3")
 
-    # Patch for an undefined constant due to incompatible changes in ELPA
-    @when("@9.1:2022.2 +elpa")
     def patch(self):
-        if self.spec["elpa"].satisfies("@2022.05.001:"):
-            filter_file(
-                r"ELPA_2STAGE_REAL_INTEL_GPU",
-                "ELPA_2STAGE_REAL_INTEL_GPU_SYCL",
-                "src/fm/cp_fm_elpa.F",
-            )
+        # Patch for an undefined constant due to incompatible changes in ELPA
+        if self.spec.satisfies("@9.1:2022.2 +elpa"):
+            if self.spec["elpa"].satisfies("@2022.05.001:"):
+                filter_file(
+                    r"ELPA_2STAGE_REAL_INTEL_GPU",
+                    "ELPA_2STAGE_REAL_INTEL_GPU_SYCL",
+                    "src/fm/cp_fm_elpa.F",
+                )
+
+        # Patch for resolving .mod file conflicts in ROCm by implementing 'USE, INTRINSIC'
+        if self.spec.satisfies("+rocm"):
+            for directory, subdirectory, files in os.walk(os.getcwd()):
+                for i in files:
+                    file_path = os.path.join(directory, i)
+                    filter_file("USE ISO_C_BINDING", "USE,INTRINSIC :: ISO_C_BINDING", file_path)
+                    filter_file(
+                        "USE ISO_FORTRAN_ENV", "USE,INTRINSIC :: ISO_FORTRAN_ENV", file_path
+                    )
+                    filter_file("USE omp_lib", "USE,INTRINSIC :: omp_lib", file_path)
+                    filter_file("USE OMP_LIB", "USE,INTRINSIC :: OMP_LIB", file_path)
+                    filter_file("USE iso_c_binding", "USE,INTRINSIC :: iso_c_binding", file_path)
+                    filter_file(
+                        "USE iso_fortran_env", "USE,INTRINSIC :: iso_fortran_env", file_path
+                    )
 
     def url_for_version(self, version):
         url = "https://github.com/cp2k/cp2k/releases/download/v{0}/cp2k-{0}.tar.bz2"
@@ -410,6 +426,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
             "cce": ["-O2"],
             "xl": ["-O3"],
             "aocc": ["-O2"],
+            "rocmcc": ["-O1"],
         }
 
         dflags = ["-DNDEBUG"] if spec.satisfies("@:2023.2") else []
@@ -451,7 +468,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
                 "-ffree-line-length-none",
                 "-ggdb",  # make sure we get proper Fortran backtraces
             ]
-        elif spec.satisfies("%aocc"):
+        elif spec.satisfies("%aocc") or spec.satisfies("%rocmcc"):
             fcflags += ["-ffree-form", "-Mbackslash"]
         elif spec.satisfies("%pgi") or spec.satisfies("%nvhpc"):
             fcflags += ["-Mfreeform", "-Mextend"]
@@ -500,12 +517,11 @@ class MakefileBuilder(makefile.MakefileBuilder):
                 # (short-int vs int) which otherwise causes segfaults at
                 # runtime due to wrong offsets into the shared library
                 # symbols.
-                libs.extend(
-                    [
-                        join_path(spec["libint"].libs.directories[0], "libderiv.a"),
-                        join_path(spec["libint"].libs.directories[0], "libint.a"),
-                    ]
-                )
+                libs += [
+                    join_path(spec["libint"].libs.directories[0], "libderiv.a"),
+                    join_path(spec["libint"].libs.directories[0], "libint.a"),
+                ]
+
             else:
                 fcflags += pkgconf("--cflags", "libint2", output=str).split()
                 libs += pkgconf("--libs", "libint2", output=str).split()
@@ -528,18 +544,14 @@ class MakefileBuilder(makefile.MakefileBuilder):
         if spec.satisfies("+pexsi"):
             cppflags.append("-D__LIBPEXSI")
             fcflags.append("-I" + join_path(spec["pexsi"].prefix, "fortran"))
-            libs.extend(
-                [
-                    join_path(spec["pexsi"].libs.directories[0], "libpexsi.a"),
-                    join_path(spec["superlu-dist"].libs.directories[0], "libsuperlu_dist.a"),
-                    join_path(
-                        spec["parmetis"].libs.directories[0], "libparmetis.{0}".format(dso_suffix)
-                    ),
-                    join_path(
-                        spec["metis"].libs.directories[0], "libmetis.{0}".format(dso_suffix)
-                    ),
-                ]
-            )
+            libs += [
+                join_path(spec["pexsi"].libs.directories[0], "libpexsi.a"),
+                join_path(spec["superlu-dist"].libs.directories[0], "libsuperlu_dist.a"),
+                join_path(
+                    spec["parmetis"].libs.directories[0], "libparmetis.{0}".format(dso_suffix)
+                ),
+                join_path(spec["metis"].libs.directories[0], "libmetis.{0}".format(dso_suffix)),
+            ]
 
         if spec.satisfies("+elpa"):
             elpa = spec["elpa"]
@@ -556,16 +568,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
                     )
                 )
             else:
-                libs.append(
-                    join_path(
-                        elpa.libs.directories[0],
-                        (
-                            "libelpa{elpa_suffix}.{dso_suffix}".format(
-                                elpa_suffix=elpa_suffix, dso_suffix=dso_suffix
-                            )
-                        ),
-                    )
-                )
+                libs.append(elpa.libs.ld_flags)
 
             if spec.satisfies("@:4"):
                 if elpa.satisfies("@:2014.5"):
@@ -592,20 +595,20 @@ class MakefileBuilder(makefile.MakefileBuilder):
         if spec.satisfies("+plumed"):
             dflags.extend(["-D__PLUMED2"])
             cppflags.extend(["-D__PLUMED2"])
-            libs.extend([join_path(spec["plumed"].prefix.lib, "libplumed.{0}".format(dso_suffix))])
+            libs += [join_path(spec["plumed"].prefix.lib, "libplumed.{0}".format(dso_suffix))]
 
         if spec.satisfies("+libvori"):
             cppflags += ["-D__LIBVORI"]
             libvori = spec["libvori"].libs
             ldflags += [libvori.search_flags]
-            libs += libvori
+            libs.append(libvori.ld_flags)
             libs += ["-lstdc++"]
 
         if spec.satisfies("+spglib"):
             cppflags += ["-D__SPGLIB"]
             spglib = spec["spglib"].libs
             ldflags += [spglib.search_flags]
-            libs += spglib
+            libs.append(spglib.ld_flags)
 
         cc = spack_cc if "~mpi" in spec else spec["mpi"].mpicc
         cxx = spack_cxx if "~mpi" in spec else spec["mpi"].mpicxx
@@ -620,7 +623,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
         lapack = spec["lapack"].libs
         blas = spec["blas"].libs
         ldflags.append((lapack + blas).search_flags)
-        libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
+        libs += [str(x) for x in (fftw.libs, lapack, blas)]
 
         if spec.satisfies("platform=darwin"):
             cppflags.extend(["-D__NO_STATM_ACCESS"])
@@ -634,7 +637,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
             # add before ScaLAPACK to override the p?gemm symbols
             cosma = spec["cosma"].libs
             ldflags.append(cosma.search_flags)
-            libs.extend(cosma)
+            libs += cosma
 
         # MPI
         if spec.satisfies("+mpi"):
@@ -662,9 +665,9 @@ class MakefileBuilder(makefile.MakefileBuilder):
                 scalapack = spec["scalapack"].libs
                 ldflags.append(scalapack.search_flags)
 
-            libs.extend(scalapack)
-            libs.extend(mpi)
-            libs.extend(pkg.compiler.stdcxx_libs)
+            libs += scalapack
+            libs += mpi
+            libs += pkg.compiler.stdcxx_libs
 
             if spec.satisfies("+mpi_f08"):
                 cppflags.append("-D__MPI_F08")
@@ -723,18 +726,20 @@ class MakefileBuilder(makefile.MakefileBuilder):
 
         if spec.satisfies("@2022: +rocm"):
             libs += [
-                "-L{}".format(spec["rocm"].libs.directories[0]),
-                "-L{}/stubs".format(spec["rocm"].libs.directories[0]),
+                "-L{}".format(spec["hip"].prefix.lib),
+                "-lamdhip64",
                 "-lhipblas",
                 "-lhipfft",
                 "-lstdc++",
             ]
 
-            cppflags += ["-D__OFFLOAD_HIP"]
             acc_compiler_var = "hipcc"
             acc_flags_var = "NVFLAGS"
             cppflags += ["-D__ACC"]
             cppflags += ["-D__DBCSR_ACC"]
+            cppflags += ["-D__HIP_PLATFORM_AMD__"]
+            cppflags += ["-D__GRID_HIP"]
+
             gpuver = GPU_MAP[spec.variants["amdgpu_target"].value[0]]
 
         if spec.satisfies("smm=libsmm"):
@@ -812,6 +817,9 @@ class MakefileBuilder(makefile.MakefileBuilder):
             mkf.write(fflags("CXXFLAGS", cxxflags))
             if spec.satisfies("+cuda"):
                 mkf.write(fflags(acc_flags_var, nvflags))
+            if "+rocm" in spec:
+                mkf.write("OFFLOAD_TARGET = hip\n")
+
             mkf.write(fflags("FCFLAGS", fcflags))
             mkf.write(fflags("LDFLAGS", ldflags))
             mkf.write(fflags("LIBS", libs))
@@ -918,7 +926,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
             content += " " + self.spec["fftw-api"].libs.ld_flags
 
             fftw = self.spec["fftw-api"]
-            if fftw.name in ["fftw", "amdfftw"] and fftw.satisfies("+openmp"):
+            if fftw.name in ["fftw", "amdfftw", "cray-fftw"] and fftw.satisfies("+openmp"):
                 content += " -lfftw3_omp"
 
             content += "\n"

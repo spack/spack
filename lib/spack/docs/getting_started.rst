@@ -61,9 +61,14 @@ Getting Spack is easy.  You can clone it from the `github repository
 
 .. code-block:: console
 
-   $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
+   $ git clone -c feature.manyFiles=true --depth=2 https://github.com/spack/spack.git
 
 This will create a directory called ``spack``.
+
+.. note::
+   ``-c feature.manyFiles=true`` improves git's performance on repositories with 1,000+ files.
+
+   ``--depth=2`` prunes the git history to reduce the size of the Spack installation.
 
 .. _shell-support:
 
@@ -1576,4 +1581,3 @@ The intent is to provide a Windows installer that will automatically set up
 Python, Git, and Spack, instead of requiring the user to do so manually.
 Instructions for creating the installer are at
 https://github.com/spack/spack/blob/develop/lib/spack/spack/cmd/installer/README.md
-
