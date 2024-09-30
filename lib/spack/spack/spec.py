@@ -2095,9 +2095,6 @@ class Spec:
         if self.architecture:
             d.update(self.architecture.to_dict())
 
-        if self.compiler:
-            d.update(self.compiler.to_dict())
-
         if self.namespace:
             d["namespace"] = self.namespace
 
@@ -2337,8 +2334,6 @@ class Spec:
             else:
                 raise ValueError("{0} is not a variant of {1}".format(vname, new_spec.name))
 
-        if change_spec.compiler:
-            new_spec.compiler = change_spec.compiler
         if change_spec.compiler_flags:
             for flagname, flagvals in change_spec.compiler_flags.items():
                 new_spec.compiler_flags[flagname] = flagvals
@@ -2955,6 +2950,10 @@ class Spec:
                 raise spack.error.UnsatisfiableSpecError(self, other, "constrain a concrete spec")
 
         other = self._autospec(other)
+        if other.concrete and other.satisfies(self):
+            self._dup(other)
+            return True
+
         if other.abstract_hash:
             if not self.abstract_hash or other.abstract_hash.startswith(self.abstract_hash):
                 self.abstract_hash = other.abstract_hash
@@ -3001,12 +3000,6 @@ class Spec:
             self.namespace = other.namespace
             changed = True
 
-        if self.compiler is not None and other.compiler is not None:
-            changed |= self.compiler.constrain(other.compiler)
-        elif self.compiler is None and other.compiler is not None:
-            changed |= self.compiler != other.compiler
-            self.compiler = other.compiler
-
         changed |= self.versions.intersect(other.versions)
         changed |= self.variants.constrain(other.variants)
 
@@ -3033,10 +3026,8 @@ class Spec:
 
         return changed
 
-    def _constrain_dependencies(self, other):
+    def _constrain_dependencies(self, other: "Spec") -> bool:
         """Apply constraints of other spec's dependencies to this spec."""
-        other = self._autospec(other)
-
         if not other._dependencies:
             return False
 
@@ -3052,7 +3043,7 @@ class Spec:
         # Handle common first-order constraints directly
         changed = False
         for name in self.common_dependencies(other):
-            changed |= self[name].constrain(other[name], deps=False)
+            changed |= self[name].constrain(other[name], deps=True)
             if name in self._dependencies:
                 # WARNING: This function is an implementation detail of the
                 # WARNING: original concretizer. Since with that greedy
@@ -3181,10 +3172,6 @@ class Spec:
             if not self.versions.intersects(other.versions):
                 return False
 
-        if self.compiler and other.compiler:
-            if not self.compiler.intersects(other.compiler):
-                return False
-
         if not self.variants.intersects(other.variants):
             return False
 
@@ -3283,12 +3270,6 @@ class Spec:
             return False
 
         if not self.versions.satisfies(other.versions):
-            return False
-
-        if self.compiler and other.compiler:
-            if not self.compiler.satisfies(other.compiler):
-                return False
-        elif other.compiler and not self.compiler:
             return False
 
         if not self.variants.satisfies(other.variants):
@@ -3431,7 +3412,6 @@ class Spec:
                 self.name != other.name
                 and self.versions != other.versions
                 and self.architecture != other.architecture
-                and self.compiler != other.compiler
                 and self.variants != other.variants
                 and self._normal != other._normal
                 and self.concrete != other.concrete
@@ -3447,8 +3427,6 @@ class Spec:
         self.name = other.name
         self.versions = other.versions.copy()
         self.architecture = other.architecture.copy() if other.architecture else None
-        # FIXME (compiler as nodes): removing compiler attribute
-        # self.compiler = other.compiler.copy() if other.compiler else None
         if cleardeps:
             self._dependents = _EdgeMap(store_by=EdgeDirection.parent)
             self._dependencies = _EdgeMap(store_by=EdgeDirection.child)
@@ -3665,7 +3643,6 @@ class Spec:
         yield self.namespace
         yield self.versions
         yield self.variants
-        yield self.compiler
         yield self.compiler_flags
         yield self.architecture
         yield self.abstract_hash
