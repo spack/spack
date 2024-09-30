@@ -22,7 +22,7 @@ class Libexif(AutotoolsPackage, SourceforgePackage):
     depends_on("glib")
 
     def url_for_version(self, version):
-        if version <= Version("0.6.21"):
+        if self.spec.satisfies("@:0.6.21"):
             return f"https://downloads.sourceforge.net/project/libexif/libexif/{version}/libexif-{version}.tar.bz2"
         else:
             return f"https://github.com/libexif/libexif/releases/download/v{version}/libexif-{version}.tar.bz2"
