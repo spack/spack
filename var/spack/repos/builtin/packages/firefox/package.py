@@ -13,11 +13,13 @@ class Firefox(Package):
     url = (
         "https://archive.mozilla.org/pub/firefox/releases/127.0/source/firefox-127.0.source.tar.xz"
     )
-
+    list_url = "https://archive.mozilla.org/pub/firefox/releases/"
+    
     maintainers("teaguesterling")
 
     license("MPL", checked_by="teaguesterling")
 
+    version("130.0.1", sha256="027225a1e9b074f0072e22c7264cf27b0d2364c675c3ca811aa6c25fb01b9f70")
     version("127.0", sha256="ea6b089ff046ca503978fdaf11ea123c64f66bbcdc4a968bed8f7c93e9994321")
 
     phases = ["configure", "build", "install"]
@@ -95,6 +97,9 @@ class Firefox(Package):
     patch("gcc14-implicit-include-fix.patch", when="@127%gcc@14:")
     patch("gcc14-implicit-pointer-cast-fix.patch", when="@127%gcc@14:")
 
+    def url_for_version(self, version):
+        return f"{self.list_url}/{version}/source/firefox-{version}.source.tar.xz"
+
     def mach(self, command, *args):
         mach = which("./mach")
         print(f"Running {mach} {command} {args}")
@@ -110,6 +115,7 @@ class Firefox(Package):
 
     def setup_build_enviroment(self, env):
         # Adapted from: https://www.talospace.com/2021/12/firefox-95-on-power.html
+        print("BUILD ENV SETUP")
         env.set("MOZBUILD_STATE_PATH", self.build_cache_dir)
         env.set("MOZCONFIG", self.build_config)
         env.set("GN", self.spec["generate-ninja"].home.bin.gn)
