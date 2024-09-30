@@ -884,7 +884,6 @@ class Task:
         Args:
             pkg: the package to be built and installed
             request: the associated install request
-            compiler: whether task is for a bootstrap compiler
             start: the initial start time for the package, in seconds
             attempts: the number of attempts to install the package, which
                 should be 0 when the task is initially instantiated
@@ -967,31 +966,6 @@ class Task:
         # Ensure key sequence-related properties are updated accordingly.
         self.attempts = attempts
         self._update()
-
-        # Does this task install a compiler
-        # TODO: remove when we remove install_missing_compilers config option
-        self.compiler = compiler
-
-        # Handle bootstrapped compiler
-        #
-        # The bootstrapped compiler is not a dependency in the spec, but it is
-        # a dependency of the build task. Here we add it to self.dependencies
-        if compiler:
-            compiler_spec = self.pkg.spec.compiler
-            arch_spec = self.pkg.spec.architecture
-            strict = spack.concretize.Concretizer().check_for_compiler_existence
-            if (
-                not spack.compilers.compilers_for_spec(compiler_spec, arch_spec=arch_spec)
-                and not strict
-            ):
-                # The compiler is in the queue, identify it as dependency
-                dep = spack.compilers.pkg_spec_for_compiler(compiler_spec)
-                dep.constrain(f"platform={str(arch_spec.platform)}")
-                dep.constrain(f"os={str(arch_spec.os)}")
-                dep.constrain(f"target={arch_spec.target.microarchitecture.family.name}:")
-                dep.concretize()
-                dep_id = package_id(dep.package.spec)
-                self.dependencies.add(dep_id)
 
     def execute(self, install_status: InstallStatus) -> ExecuteResult:
         """Execute the work of this task.
@@ -1393,7 +1367,6 @@ class PackageInstaller:
         self,
         pkg: "spack.package_base.PackageBase",
         request: BuildRequest,
-        is_compiler: bool,
         all_deps: Dict[str, Set[str]],
     ) -> None:
         """
@@ -1402,17 +1375,10 @@ class PackageInstaller:
         Args:
             pkg: the package to be built and installed
             request: the associated install request
-            is_compiler: whether task is for a bootstrap compiler
             all_deps: dictionary of all dependencies and associated dependents
         """
         cls = RewireTask if pkg.spec.spliced else BuildTask
-        task = cls(
-            pkg,
-            request=request,
-            compiler=is_compiler,
-            status=BuildStatus.QUEUED,
-            installed=self.installed,
-        )
+        task = cls(pkg, request=request, status=BuildStatus.QUEUED, installed=self.installed)
         for dep_id in task.dependencies:
             all_deps[dep_id].add(package_id(pkg.spec))
 
@@ -1710,7 +1676,7 @@ class PackageInstaller:
 
             dep_id = package_id(dep)
             if dep_id not in self.build_tasks:
-                self._add_init_task(dep_pkg, task.request, False, self.all_dependencies)
+                self._add_init_task(dep_pkg, task.request, self.all_dependencies)
 
             # Clear any persistent failure markings _unless_ they are
             # associated with another process in this parallel build
@@ -1757,7 +1723,7 @@ class PackageInstaller:
 
                 dep_id = package_id(dep)
                 if dep_id not in self.build_tasks:
-                    self._add_init_task(dep_pkg, request, is_compiler=False, all_deps=all_deps)
+                    self._add_init_task(dep_pkg, request, all_deps=all_deps)
 
                 # Clear any persistent failure markings _unless_ they are
                 # associated with another process in this parallel build
@@ -1775,7 +1741,7 @@ class PackageInstaller:
                 self._check_deps_status(request)
 
             # Now add the package itself, if appropriate
-            self._add_init_task(request.pkg, request, is_compiler=False, all_deps=all_deps)
+            self._add_init_task(request.pkg, request, all_deps=all_deps)
 
         # Ensure if one request is to fail fast then all requests will.
         fail_fast = bool(request.install_args.get("fail_fast"))
