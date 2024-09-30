@@ -164,6 +164,9 @@ class Hdf5(CMakePackage):
         "+fortran", when="@1.13.3:^cmake@:3.22", msg="cmake_minimum_required is not set correctly."
     )
 
+    # HDF5 on Fedora/Linux uses /usr/lib64/cmake/ZLIB/ZLIB.cmake and errors out.
+    patch("hdf5_1_14_3_zlib.patch", when="@1.14.3")
+
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
     #    it works.
