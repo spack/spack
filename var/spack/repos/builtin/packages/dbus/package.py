@@ -80,8 +80,8 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
 
 class MesonBuilder(spack.build_systems.meson.MesonBuilder):
     def meson_args(self):
-        args = ["-Dsystemd=false", "-Dlaunchd=false"]
-        args += [f"-Dxml_docs={'true' if self.spec.satisfies('+xml_docs') else 'false'}"]
+        args = ["-Dsystemd=disabled", "-Dlaunchd=disabled"]
+        args += [f"-Dxml_docs={'enabled' if self.spec.satisfies('+xml_docs') else 'disabled'}"]
         socket = self.spec.variants["system-socket"].value
         if socket != "default":
             args += [f"-Dsystem_socket={socket}"]
