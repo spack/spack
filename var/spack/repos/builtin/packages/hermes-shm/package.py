@@ -39,7 +39,7 @@ class HermesShm(CMakePackage):
     # Required deps
     depends_on("catch2@3.0.1")
     depends_on("yaml-cpp")
-    depends_on("doxygen@1.9.3")
+    depends_on("doxygen@1.9.3", type="build")
     depends_on("libelf")
 
     # Machine variants
