@@ -3042,7 +3042,9 @@ class Spec:
 
         # Handle common first-order constraints directly
         changed = False
-        for name in self.common_dependencies(other):
+        common_dependencies = {x.name for x in self.dependencies()}
+        common_dependencies &= {x.name for x in other.dependencies()}
+        for name in common_dependencies:
             changed |= self[name].constrain(other[name], deps=True)
             if name in self._dependencies:
                 # WARNING: This function is an implementation detail of the
@@ -3072,7 +3074,7 @@ class Spec:
         return changed
 
     def common_dependencies(self, other):
-        """Return names of dependencies that self an other have in common."""
+        """Return names of dependencies that self and other have in common."""
         common = set(s.name for s in self.traverse(root=False))
         common.intersection_update(s.name for s in other.traverse(root=False))
         return common
@@ -3194,8 +3196,10 @@ class Spec:
             return True
 
         # Handle first-order constraints directly
-        for name in self.common_dependencies(other):
-            if not self[name].intersects(other[name], deps=False):
+        common_dependencies = {x.name for x in self.dependencies()}
+        common_dependencies &= {x.name for x in other.dependencies()}
+        for name in common_dependencies:
+            if not self[name].intersects(other[name], deps=True):
                 return False
 
         # For virtual dependencies, we need to dig a little deeper.
@@ -3554,9 +3558,8 @@ class Spec:
             query_parameters = re.split(r"\s*,\s*", csv)
 
         order = lambda: itertools.chain(
-            self.traverse_edges(deptype=dt.LINK, order="breadth", cover="edges"),
-            self.edges_to_dependencies(depflag=dt.BUILD | dt.RUN | dt.TEST),
-            self.traverse_edges(deptype=dt.ALL, order="breadth", cover="edges"),
+            self.traverse_edges(deptype=dt.LINK | dt.RUN, order="breadth", cover="edges"),
+            self.edges_to_dependencies(depflag=dt.BUILD | dt.TEST),
         )
 
         # Consider runtime dependencies and direct build/test deps before transitive dependencies,
