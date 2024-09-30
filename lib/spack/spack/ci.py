@@ -1269,8 +1269,8 @@ def generate_gitlab_ci_yaml(
             with open(copy_specs_file, "w") as fd:
                 fd.write(json.dumps(buildcache_copies))
 
-            # Ensure the child pipeline always runs
-            output_object["workflow"] = {"rules": [{"when": "always"}]}
+        # Ensure the child pipeline always runs
+        output_object["workflow"] = {"rules": [{"when": "always"}]}
 
     else:
         # No jobs were generated
@@ -1287,7 +1287,7 @@ def generate_gitlab_ci_yaml(
             tty.debug("No specs to rebuild, generating no-op job")
             output_object = {"no-specs-to-rebuild": noop_job}
 
-        # Ensure the child pipeline always runs
+        # Ensure the child pipeline never runs
         output_object["workflow"] = {"rules": [{"when": "never"}]}
 
     sorted_output = {}
