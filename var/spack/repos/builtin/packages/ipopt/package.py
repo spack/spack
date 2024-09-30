@@ -72,7 +72,7 @@ class Ipopt(AutotoolsPackage):
     build_directory = "spack-build"
 
     # IPOPT does not build correctly in parallel on OS X
-    parallel = False    def configure_args(self):
+    parallel = False
 
     def configure_args(self):
         spec = self.spec
