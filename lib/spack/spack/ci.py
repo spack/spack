@@ -472,10 +472,12 @@ class SpackCI:
                     ]
                 }
             },
-            {"noop-job": {
-                "script": ['echo "All specs already up to date, nothing to rebuild."'],
-                "when:": "manual",
-                }},
+            {
+                "noop-job": {
+                    "script": ['echo "All specs already up to date, nothing to rebuild."'],
+                    "when:": "manual",
+                }
+            },
         ]
 
         # Job overrides
