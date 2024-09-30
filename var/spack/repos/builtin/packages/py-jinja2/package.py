@@ -47,3 +47,11 @@ class PyJinja2(PythonPackage):
 
     # https://github.com/pallets/jinja/issues/1585
     conflicts("^py-markupsafe@2.1:", when="@:2")
+
+    def url_for_version(self, version):
+        url = "https://files.pythonhosted.org/packages/source/j/jinja2/"
+        if self.spec.satisfies("@:3.1.3"):
+            url += "Jinja2-{0}.tar.gz"
+        else:
+            url += "jinja2-{0}.tar.gz"
+        return url.format(version)
