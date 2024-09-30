@@ -54,12 +54,17 @@ class Msmpi(Package):
         self.spec.mpicxx = dependent_module.spack_cxx
         self.spec.mpifc = dependent_module.spack_fc
         self.spec.mpif77 = dependent_module.spack_f77
+        dependent_module.std_cmake_args.extend(["-DMPI_SKIP_COMPILER_WRAPPER=ON", "-DMPI_ASSUME_NO_BUILTIN_MPI=ON"])
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set("MPIEXEC_EXECUTABLE", self.pkg.spec.prefix.bin)
 
 
 class GenericBuilder(GenericBuilder):
     def setup_build_environment(self, env):
         ifort_root = os.path.join(*self.pkg.compiler.fc.split(os.path.sep)[:-2])
         env.set("SPACK_IFORT", ifort_root)
+
 
     def is_64bit(self):
         return "64" in str(self.pkg.spec.target.family)
