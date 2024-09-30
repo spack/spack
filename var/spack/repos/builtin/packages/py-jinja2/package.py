@@ -39,7 +39,7 @@ class PyJinja2(PythonPackage):
     depends_on("python@3.6:", when="@3:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
     depends_on("py-setuptools", when="@:3.1.3", type="build")
-    depends_on("py-flit-core@:4", when="@3.1.4:", type="build")
+    depends_on("py-flit-core@:3", when="@3.1.4:", type="build")
     depends_on("py-markupsafe@2.0:", when="@3:", type=("build", "run"))
     depends_on("py-markupsafe@0.23:", type=("build", "run"))
     depends_on("py-babel@2.7:", when="@3:+i18n", type=("build", "run"))
