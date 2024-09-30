@@ -441,7 +441,7 @@ class FilterDefaultDynamicLinkerSearchPaths:
     """Remove rpaths to directories that are default search paths of the dynamic linker."""
 
     def __init__(self, dynamic_linker: Optional[str]) -> None:
-        # Idenitify directories by (inode, device) tuple, which handles symlinks too.
+        # Identify directories by (inode, device) tuple, which handles symlinks too.
         self.default_path_identifiers: Set[Tuple[int, int]] = set()
         if not dynamic_linker:
             return
