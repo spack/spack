@@ -27,11 +27,13 @@ def test_build_task_errors(install_mockery):
     # Using a concretized package now means the request argument is checked.
     spec.concretize()
     assert spec.concrete
+
     with pytest.raises(TypeError, match="is not a valid build request"):
         inst.BuildTask(spec.package, None)
 
     # Using a valid package and spec, the next check is the status argument.
     request = inst.BuildRequest(spec.package, {})
+
     with pytest.raises(TypeError, match="is not a valid build status"):
         inst.BuildTask(spec.package, request, status="queued")
 
