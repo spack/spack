@@ -18,7 +18,9 @@ class PyFairEsm(PythonPackage):
 
     depends_on("py-setuptools@59.5.0:", type=("build"))
 
-    depends_on("py-biopython@1.79:", type=("build", "run"))
+    variant("esmfold", default=True, description="Enable dependencies for OpenFold")
+    depends_on("py-biopython@1.79:", when="+esmfold", type=("build", "run"))
+
     depends_on("py-deepspeed@0.5.9:", type=("build", "run"))
     depends_on("py-dm-tree@0.1.6:", type=("build", "run"))
     depends_on("py-pytorch-lightning@1.5.10:", type=("build", "run"))
