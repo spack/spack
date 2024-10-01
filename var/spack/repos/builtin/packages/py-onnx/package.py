@@ -83,3 +83,18 @@ class PyOnnx(PythonPackage):
         sha256="be12f589bc4113982e4162efcdbd95835a6c161a9a7e10cd1dde026cadedf8aa",
         when="@1.15.0 ^abseil-cpp cxxstd=20",
     )
+
+    # By default, ONNX always uses .setuptools-cmake-build/ under the source path,
+    # so we allow overriding with a build environment variable
+    def patch(self):
+        filter_file(
+            r"^CMAKE_BUILD_DIR = (.*)$",
+            r"CMAKE_BUILD_DIR = os.getenv('CMAKE_BUILD_DIR', default=\1)",
+            "setup.py",
+        )
+
+    def setup_build_environment(self, env):
+        # Build in a similar directory as the CMake packages
+        env.set(
+            "CMAKE_BUILD_DIR", join_path(self.stage.path, f"spack-build-{self.spec.dag_hash(7)}")
+        )
