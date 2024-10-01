@@ -207,6 +207,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("python@3", type="build", when="+python")
     depends_on("py-numpy", type="build", when="+python")
     depends_on("py-scipy", type="build", when="+python")
+    depends_on("py-matplotlib", type="build", when="+python")
     depends_on("py-setuptools", type="build", when="+python")
 
     depends_on("py-pspamm", when="gemm_tools_list=PSpaMM", type="build")
