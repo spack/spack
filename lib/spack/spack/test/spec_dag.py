@@ -9,6 +9,7 @@ import pytest
 
 import spack.deptypes as dt
 import spack.error
+import spack.installer
 import spack.repo
 import spack.util.hash as hashutil
 import spack.version
@@ -80,8 +81,7 @@ def test_test_deptype(tmpdir):
         assert "z" not in spec
 
 
-@pytest.mark.usefixtures("config")
-def test_installed_deps(monkeypatch, mock_packages):
+def test_installed_deps(monkeypatch, install_mockery):
     """Ensure that concrete specs and their build deps don't constrain solves.
 
     Preinstall a package ``c`` that has a constrained build dependency on ``d``, then
@@ -101,28 +101,21 @@ def test_installed_deps(monkeypatch, mock_packages):
     #   |/ \|   c --> d build
     #   d   e   c --> e build/link
     #
-    a, b, c, d, e = ["installed-deps-%s" % s for s in "abcde"]
+    a, b, c, d, e = [f"installed-deps-{s}" for s in "abcde"]
 
     # install C, which will force d's version to be 2
     # BUT d is only a build dependency of C, so it won't constrain
     # link/run dependents of C when C is depended on as an existing
     # (concrete) installation.
-    c_spec = Spec(c)
-    c_spec.concretize()
+    c_spec = Spec(c).concretized()
     assert c_spec[d].version == spack.version.Version("2")
 
-    installed_names = [s.name for s in c_spec.traverse()]
-
-    def _mock_installed(self):
-        return self.name in installed_names
-
-    monkeypatch.setattr(Spec, "installed", _mock_installed)
+    spack.installer.PackageInstaller([c_spec.package], fake=True, explicit=True).install()
 
     # install A, which depends on B, C, D, and E, and force A to
     # use the installed C.  It should *not* force A to use the installed D
     # *if* we're doing a fresh installation.
-    a_spec = Spec(a)
-    a_spec._add_dependency(c_spec, depflag=dt.BUILD | dt.LINK, virtuals=())
+    a_spec = Spec(f"{a} ^/{c_spec.dag_hash()}")
     a_spec.concretize()
     assert spack.version.Version("2") == a_spec[c][d].version
     assert spack.version.Version("2") == a_spec[e].version
@@ -184,119 +177,230 @@ class TestSpecDag:
         with pytest.raises(spack.error.UnsatisfiableSpecError):
             spec.concretize()
 
-    def test_preorder_node_traversal(self):
-        dag = Spec("mpileaks ^zmpi").concretized()
+    @pytest.mark.parametrize(
+        "pairs,traverse_kwargs",
+        [
+            # Preorder node traversal
+            (
+                [
+                    (0, "mpileaks"),
+                    (1, "callpath"),
+                    (2, "dyninst"),
+                    (3, "gcc"),
+                    (3, "gcc-runtime"),
+                    (3, "libdwarf"),
+                    (4, "libelf"),
+                    (2, "zmpi"),
+                    (3, "fake"),
+                ],
+                {},
+            ),
+            # Preorder edge traversal
+            (
+                [
+                    (0, "mpileaks"),
+                    (1, "callpath"),
+                    (2, "dyninst"),
+                    (3, "gcc"),
+                    (3, "gcc-runtime"),
+                    (4, "gcc"),
+                    (3, "libdwarf"),
+                    (4, "gcc"),
+                    (4, "gcc-runtime"),
+                    (4, "libelf"),
+                    (5, "gcc"),
+                    (5, "gcc-runtime"),
+                    (3, "libelf"),
+                    (2, "gcc"),
+                    (2, "gcc-runtime"),
+                    (2, "zmpi"),
+                    (3, "fake"),
+                    (3, "gcc"),
+                    (3, "gcc-runtime"),
+                    (1, "gcc"),
+                    (1, "gcc-runtime"),
+                    (1, "zmpi"),
+                ],
+                {"cover": "edges"},
+            ),
+            # Preorder path traversal
+            (
+                [
+                    (0, "mpileaks"),
+                    (1, "callpath"),
+                    (2, "dyninst"),
+                    (3, "gcc"),
+                    (3, "gcc-runtime"),
+                    (4, "gcc"),
+                    (3, "libdwarf"),
+                    (4, "gcc"),
+                    (4, "gcc-runtime"),
+                    (5, "gcc"),
+                    (4, "libelf"),
+                    (5, "gcc"),
+                    (5, "gcc-runtime"),
+                    (6, "gcc"),
+                    (3, "libelf"),
+                    (4, "gcc"),
+                    (4, "gcc-runtime"),
+                    (5, "gcc"),
+                    (2, "gcc"),
+                    (2, "gcc-runtime"),
+                    (3, "gcc"),
+                    (2, "zmpi"),
+                    (3, "fake"),
+                    (3, "gcc"),
+                    (3, "gcc-runtime"),
+                    (4, "gcc"),
+                    (1, "gcc"),
+                    (1, "gcc-runtime"),
+                    (2, "gcc"),
+                    (1, "zmpi"),
+                    (2, "fake"),
+                    (2, "gcc"),
+                    (2, "gcc-runtime"),
+                    (3, "gcc"),
+                ],
+                {"cover": "paths"},
+            ),
+            # Postorder node traversal
+            (
+                [
+                    (3, "gcc"),
+                    (3, "gcc-runtime"),
+                    (4, "libelf"),
+                    (3, "libdwarf"),
+                    (2, "dyninst"),
+                    (3, "fake"),
+                    (2, "zmpi"),
+                    (1, "callpath"),
+                    (0, "mpileaks"),
+                ],
+                {"order": "post"},
+            ),
+            # Postorder edge traversal
+            (
+                [
+                    (3, "gcc"),
+                    (4, "gcc"),
+                    (3, "gcc-runtime"),
+                    (4, "gcc"),
+                    (4, "gcc-runtime"),
+                    (5, "gcc"),
+                    (5, "gcc-runtime"),
+                    (4, "libelf"),
+                    (3, "libdwarf"),
+                    (3, "libelf"),
+                    (2, "dyninst"),
+                    (2, "gcc"),
+                    (2, "gcc-runtime"),
+                    (3, "fake"),
+                    (3, "gcc"),
+                    (3, "gcc-runtime"),
+                    (2, "zmpi"),
+                    (1, "callpath"),
+                    (1, "gcc"),
+                    (1, "gcc-runtime"),
+                    (1, "zmpi"),
+                    (0, "mpileaks"),
+                ],
+                {"cover": "edges", "order": "post"},
+            ),
+            # Postorder path traversal
+            (
+                [
+                    (3, "gcc"),
+                    (4, "gcc"),
+                    (3, "gcc-runtime"),
+                    (4, "gcc"),
+                    (5, "gcc"),
+                    (4, "gcc-runtime"),
+                    (5, "gcc"),
+                    (6, "gcc"),
+                    (5, "gcc-runtime"),
+                    (4, "libelf"),
+                    (3, "libdwarf"),
+                    (4, "gcc"),
+                    (5, "gcc"),
+                    (4, "gcc-runtime"),
+                    (3, "libelf"),
+                    (2, "dyninst"),
+                    (2, "gcc"),
+                    (3, "gcc"),
+                    (2, "gcc-runtime"),
+                    (3, "fake"),
+                    (3, "gcc"),
+                    (4, "gcc"),
+                    (3, "gcc-runtime"),
+                    (2, "zmpi"),
+                    (1, "callpath"),
+                    (1, "gcc"),
+                    (2, "gcc"),
+                    (1, "gcc-runtime"),
+                    (2, "fake"),
+                    (2, "gcc"),
+                    (3, "gcc"),
+                    (2, "gcc-runtime"),
+                    (1, "zmpi"),
+                    (0, "mpileaks"),
+                ],
+                {"cover": "paths", "order": "post"},
+            ),
+        ],
+    )
+    def test_traversal(self, pairs, traverse_kwargs, default_mock_concretization):
+        r"""Tests different traversals of the following graph
 
-        names = ["mpileaks", "callpath", "dyninst", "libdwarf", "libelf", "zmpi", "fake"]
-        pairs = list(zip([0, 1, 2, 3, 4, 2, 3], names))
+        o mpileaks
+        |\
+        | |\
+        | | |\
+        | | | |\
+        | | | | o callpath
+        | |_|_|/|
+        |/| |_|/|
+        | |/| |/|
+        | | |/|/|
+        o | | | | zmpi
+        |\| | | |
+        |\ \ \ \ \
+        | |_|/ / /
+        |/| | | |
+        | |\ \ \ \
+        | | |_|/ /
+        | |/| | |
+        | | o | | fake
+        | |  / /
+        | | | o dyninst
+        | |_|/|
+        |/| |/|
+        | |/|/|
+        | | | |\
+        | | | | o libdwarf
+        | |_|_|/|
+        |/| |_|/|
+        | |/| |/|
+        | | |/|/
+        | | | o libel
+        | |_|/|
+        |/| |/|
+        | |/|/
+        o | | gcc-runtime
+        |\| |
+        | |/
+        |/|
+        o | glibc
+         /
+        o gcc
+        """
+        dag = default_mock_concretization("mpileaks ^zmpi")
+        names = [x for _, x in pairs]
 
-        traversal = dag.traverse()
-        assert [x.name for x in traversal] == names
-
-        traversal = dag.traverse(depth=True)
+        traversal = dag.traverse(**traverse_kwargs, depth=True)
         assert [(x, y.name) for x, y in traversal] == pairs
 
-    def test_preorder_edge_traversal(self):
-        dag = Spec("mpileaks ^zmpi").concretized()
-
-        names = [
-            "mpileaks",
-            "callpath",
-            "dyninst",
-            "libdwarf",
-            "libelf",
-            "libelf",
-            "zmpi",
-            "fake",
-            "zmpi",
-        ]
-        pairs = list(zip([0, 1, 2, 3, 4, 3, 2, 3, 1], names))
-
-        traversal = dag.traverse(cover="edges")
+        traversal = dag.traverse(**traverse_kwargs)
         assert [x.name for x in traversal] == names
-
-        traversal = dag.traverse(cover="edges", depth=True)
-        assert [(x, y.name) for x, y in traversal] == pairs
-
-    def test_preorder_path_traversal(self):
-        dag = Spec("mpileaks ^zmpi").concretized()
-
-        names = [
-            "mpileaks",
-            "callpath",
-            "dyninst",
-            "libdwarf",
-            "libelf",
-            "libelf",
-            "zmpi",
-            "fake",
-            "zmpi",
-            "fake",
-        ]
-        pairs = list(zip([0, 1, 2, 3, 4, 3, 2, 3, 1, 2], names))
-
-        traversal = dag.traverse(cover="paths")
-        assert [x.name for x in traversal] == names
-
-        traversal = dag.traverse(cover="paths", depth=True)
-        assert [(x, y.name) for x, y in traversal] == pairs
-
-    def test_postorder_node_traversal(self):
-        dag = Spec("mpileaks ^zmpi").concretized()
-
-        names = ["libelf", "libdwarf", "dyninst", "fake", "zmpi", "callpath", "mpileaks"]
-        pairs = list(zip([4, 3, 2, 3, 2, 1, 0], names))
-
-        traversal = dag.traverse(order="post")
-        assert [x.name for x in traversal] == names
-
-        traversal = dag.traverse(depth=True, order="post")
-        assert [(x, y.name) for x, y in traversal] == pairs
-
-    def test_postorder_edge_traversal(self):
-        dag = Spec("mpileaks ^zmpi").concretized()
-
-        names = [
-            "libelf",
-            "libdwarf",
-            "libelf",
-            "dyninst",
-            "fake",
-            "zmpi",
-            "callpath",
-            "zmpi",
-            "mpileaks",
-        ]
-        pairs = list(zip([4, 3, 3, 2, 3, 2, 1, 1, 0], names))
-
-        traversal = dag.traverse(cover="edges", order="post")
-        assert [x.name for x in traversal] == names
-
-        traversal = dag.traverse(cover="edges", depth=True, order="post")
-        assert [(x, y.name) for x, y in traversal] == pairs
-
-    def test_postorder_path_traversal(self):
-        dag = Spec("mpileaks ^zmpi").concretized()
-
-        names = [
-            "libelf",
-            "libdwarf",
-            "libelf",
-            "dyninst",
-            "fake",
-            "zmpi",
-            "callpath",
-            "fake",
-            "zmpi",
-            "mpileaks",
-        ]
-        pairs = list(zip([4, 3, 3, 2, 3, 2, 1, 2, 1, 0], names))
-
-        traversal = dag.traverse(cover="paths", order="post")
-        assert [x.name for x in traversal] == names
-
-        traversal = dag.traverse(cover="paths", depth=True, order="post")
-        assert [(x, y.name) for x, y in traversal] == pairs
 
     def test_dependents_and_dependencies_are_correct(self):
         spec = Spec.from_literal(
@@ -593,7 +697,9 @@ class TestSpecDag:
         assert s["d"].edges_to_dependencies(name="e")[0].depflag == dt.BUILD | dt.LINK
         assert s["e"].edges_to_dependencies(name="f")[0].depflag == dt.RUN
 
-        assert s["c"].edges_from_dependents(name="b")[0].depflag == dt.BUILD
+        # The subscript follows link/run transitive deps or direct build deps, therefore
+        # we need an extra step to get to "c"
+        assert s["b"]["c"].edges_from_dependents(name="b")[0].depflag == dt.BUILD
         assert s["e"].edges_from_dependents(name="d")[0].depflag == dt.BUILD | dt.LINK
         assert s["f"].edges_from_dependents(name="e")[0].depflag == dt.RUN
 
@@ -801,8 +907,8 @@ def test_synthetic_construction_of_split_dependencies_from_same_package(mock_pac
     root.add_dependency_edge(build_spec, depflag=dt.BUILD, virtuals=())
 
     # Check dependencies from the perspective of root
-    assert len(root.dependencies()) == 2
-    assert all(x.name == "pkg-c" for x in root.dependencies())
+    assert len(root.dependencies()) == 4
+    assert len([x for x in root.dependencies() if x.name == "pkg-c"]) == 2
 
     assert "@2.0" in root.dependencies(name="pkg-c", deptype=dt.BUILD)[0]
     assert "@1.0" in root.dependencies(name="pkg-c", deptype=dt.LINK | dt.RUN)[0]
@@ -826,8 +932,7 @@ def test_synthetic_construction_bootstrapping(mock_packages, config):
 
     root.add_dependency_edge(bootstrap, depflag=dt.BUILD, virtuals=())
 
-    assert len(root.dependencies()) == 1
-    assert root.dependencies()[0].name == "pkg-b"
+    assert len([x for x in root.dependencies() if x.name == "pkg-b"]) == 1
     assert root.name == "pkg-b"
 
 
@@ -846,8 +951,8 @@ def test_addition_of_different_deptypes_in_multiple_calls(mock_packages, config)
         root.add_dependency_edge(bootstrap, depflag=current_depflag, virtuals=())
 
         # Check edges in dependencies
-        assert len(root.edges_to_dependencies()) == 1
-        forward_edge = root.edges_to_dependencies(depflag=current_depflag)[0]
+        assert len(root.edges_to_dependencies(name="pkg-b")) == 1
+        forward_edge = root.edges_to_dependencies(depflag=current_depflag, name="pkg-b")[0]
         assert current_depflag & forward_edge.depflag
         assert id(forward_edge.parent) == id(root)
         assert id(forward_edge.spec) == id(bootstrap)
@@ -878,8 +983,9 @@ def test_adding_same_deptype_with_the_same_name_raises(
 
 @pytest.mark.regression("33499")
 def test_indexing_prefers_direct_or_transitive_link_deps():
-    # Test whether spec indexing prefers direct/transitive link type deps over deps of
-    # build/run/test deps, and whether it does fall back to a full dag search.
+    """Tests whether spec indexing prefers direct/transitive link/run type deps over deps of
+    build/test deps.
+    """
     root = Spec("root")
 
     # Use a and z to since we typically traverse by edges sorted alphabetically.
@@ -892,7 +998,7 @@ def test_indexing_prefers_direct_or_transitive_link_deps():
     z3_flavor_1 = Spec("z3 +through_a1")
     z3_flavor_2 = Spec("z3 +through_z1")
 
-    root.add_dependency_edge(a1, depflag=dt.BUILD | dt.RUN | dt.TEST, virtuals=())
+    root.add_dependency_edge(a1, depflag=dt.BUILD | dt.TEST, virtuals=())
 
     # unique package as a dep of a build/run/test type dep.
     a1.add_dependency_edge(a2, depflag=dt.ALL, virtuals=())
@@ -906,9 +1012,6 @@ def test_indexing_prefers_direct_or_transitive_link_deps():
     # Indexing should prefer the link-type dep.
     assert "through_z1" in root["z3"].variants
     assert "through_a1" in a1["z3"].variants
-
-    # Ensure that the full DAG is still searched
-    assert root["a2"]
 
 
 def test_getitem_sticks_to_subdag():
