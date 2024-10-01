@@ -64,6 +64,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     depends_on(
         "boost+exception+filesystem+system+serialization+graph+container+regex@1.53.0,1.59.0: "
     )
+    depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-pyyaml@3.10:", type=("build", "run"))
     depends_on("py-jsonschema@2.3:", type=("build", "run"))
     depends_on("libedit")
@@ -191,6 +192,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
         env.prepend_path("FLUX_MODULE_PATH", self.prefix.lib64.flux.modules.sched)
         env.prepend_path("FLUX_EXEC_PATH", self.prefix.libexec.flux.cmd)
         env.prepend_path("FLUX_RC_EXTRA", self.prefix.etc.flux)
+        env.prepend_path("PYTHON", os.path.join(self.spec["python"].prefix.bin, "python3"))
 
 
 class CMakeBuilder(CMakeBuilder):
