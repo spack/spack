@@ -167,7 +167,7 @@ class Hdf5(CMakePackage):
     # HDF5 searches for zlib CMake config files before it falls back to
     # FindZLIB.cmake. We don't build zlib with CMake by default, so have to
     # delete the first search, otherwise it may find a system zlib. See
-    # https://github.com/HDFGroup/hdf5/issues/4614
+    # https://github.com/HDFGroup/hdf5/issues/4904
     patch("find_package_zlib.patch", when="@1.8.16:")
 
     # There are several officially unsupported combinations of the features:
