@@ -1869,9 +1869,8 @@ def try_fetch(url_to_fetch):
 def report_tarball_fetch_verify_exceptions():
     except_to_raise = []
     for exc in _tarball_fetch_and_verify_exceptions:
-        exc[0].add_note(f"component failure: {exc[1]}")
         except_to_raise.append(exc[0])
-        print(exc[0])
+        print(f"failed component: {exc[1]} as {exc[0]} ")
 
 
 def _delete_staged_downloads(download_result):
