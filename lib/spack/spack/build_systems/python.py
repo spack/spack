@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import functools
-import inspect
 import operator
 import os
 import re
@@ -25,6 +24,8 @@ import spack.deptypes as dt
 import spack.detection
 import spack.multimethod
 import spack.package_base
+import spack.platforms
+import spack.repo
 import spack.spec
 import spack.store
 from spack.directives import build_system, depends_on, extends
@@ -228,7 +229,7 @@ class PythonExtension(spack.package_base.PackageBase):
 
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
-        python = inspect.getmodule(self).python  # type: ignore[union-attr]
+        python = self.module.python
         for module in self.import_modules:
             with test_part(
                 self,

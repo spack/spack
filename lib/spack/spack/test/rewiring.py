@@ -11,6 +11,7 @@ import pytest
 
 import spack.rewiring
 import spack.store
+from spack.installer import PackageInstaller
 from spack.spec import Spec
 from spack.test.relocate import text_in_bin
 
@@ -27,8 +28,7 @@ def test_rewire_db(mock_fetch, install_mockery, transitive):
     """Tests basic rewiring without binary executables."""
     spec = Spec("splice-t^splice-h~foo").concretized()
     dep = Spec("splice-h+foo").concretized()
-    spec.package.do_install()
-    dep.package.do_install()
+    PackageInstaller([spec.package, dep.package], explicit=True).install()
     spliced_spec = spec.splice(dep, transitive=transitive)
     assert spec.dag_hash() != spliced_spec.dag_hash()
 
@@ -47,7 +47,7 @@ def test_rewire_db(mock_fetch, install_mockery, transitive):
         text_file_path = os.path.join(node.prefix, node.name)
         with open(text_file_path, "r") as f:
             text = f.read()
-            for modded_spec in node.traverse(root=True):
+            for modded_spec in node.traverse(root=True, deptype=("link", "run")):
                 assert modded_spec.prefix in text
 
 
@@ -57,9 +57,9 @@ def test_rewire_bin(mock_fetch, install_mockery, transitive):
     """Tests basic rewiring with binary executables."""
     spec = Spec("quux").concretized()
     dep = Spec("garply cflags=-g").concretized()
-    spec.package.do_install()
-    dep.package.do_install()
+    PackageInstaller([spec.package, dep.package], explicit=True).install()
     spliced_spec = spec.splice(dep, transitive=transitive)
+
     assert spec.dag_hash() != spliced_spec.dag_hash()
 
     spack.rewiring.rewire(spliced_spec)
@@ -86,8 +86,7 @@ def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
     Accuracy of metadata is left to other tests."""
     spec = Spec("quux").concretized()
     dep = Spec("garply cflags=-g").concretized()
-    spec.package.do_install()
-    dep.package.do_install()
+    PackageInstaller([spec.package, dep.package], explicit=True).install()
     spliced_spec = spec.splice(dep, transitive=True)
     spack.rewiring.rewire(spliced_spec)
 
@@ -101,6 +100,8 @@ def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
         )
         assert os.path.exists(manifest_file_path)
         orig_node = spec[node.name]
+        if node == orig_node:
+            continue
         orig_manifest_file_path = os.path.join(
             orig_node.prefix,
             spack.store.STORE.layout.metadata_dir,
@@ -129,8 +130,7 @@ def test_uninstall_rewired_spec(mock_fetch, install_mockery, transitive):
     """Test that rewired packages can be uninstalled as normal."""
     spec = Spec("quux").concretized()
     dep = Spec("garply cflags=-g").concretized()
-    spec.package.do_install()
-    dep.package.do_install()
+    PackageInstaller([spec.package, dep.package], explicit=True).install()
     spliced_spec = spec.splice(dep, transitive=transitive)
     spack.rewiring.rewire(spliced_spec)
     spliced_spec.package.do_uninstall()

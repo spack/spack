@@ -27,12 +27,15 @@ from llnl.util.symlink import readlink
 
 import spack.binary_distribution as bindist
 import spack.caches
+import spack.compilers
 import spack.config
 import spack.fetch_strategy
 import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirror
-import spack.repo
+import spack.paths
+import spack.spec
+import spack.stage
 import spack.store
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
@@ -673,11 +676,13 @@ def test_build_manifest_visitor(tmpdir):
         assert all(os.path.islink(f) for f in visitor.symlinks)
 
 
-def test_text_relocate_if_needed(install_mockery, mock_fetch, monkeypatch, capfd):
-    spec = Spec("needs-text-relocation").concretized()
-    install_cmd(str(spec))
+def test_text_relocate_if_needed(install_mockery, temporary_store, mock_fetch, monkeypatch, capfd):
+    install_cmd("needs-text-relocation")
 
-    manifest = get_buildfile_manifest(spec)
+    specs = temporary_store.db.query("needs-text-relocation")
+    assert len(specs) == 1
+    manifest = get_buildfile_manifest(specs[0])
+
     assert join_path("bin", "exe") in manifest["text_to_relocate"]
     assert join_path("bin", "otherexe") not in manifest["text_to_relocate"]
     assert join_path("bin", "secretexe") not in manifest["text_to_relocate"]

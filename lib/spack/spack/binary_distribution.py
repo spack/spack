@@ -33,7 +33,6 @@ from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_t
 from llnl.util.symlink import readlink
 
 import spack.caches
-import spack.cmd
 import spack.config as config
 import spack.database as spack_db
 import spack.error
@@ -44,9 +43,9 @@ import spack.mirror
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
+import spack.paths
 import spack.platforms
 import spack.relocate as relocate
-import spack.repo
 import spack.spec
 import spack.stage
 import spack.store
@@ -54,6 +53,7 @@ import spack.user_environment
 import spack.util.archive
 import spack.util.crypto
 import spack.util.file_cache as file_cache
+import spack.util.filesystem as ssys
 import spack.util.gpg
 import spack.util.parallel
 import spack.util.path
@@ -105,7 +105,7 @@ class BuildCacheDatabase(spack_db.Database):
     record_fields = ("spec", "ref_count", "in_buildcache")
 
     def __init__(self, root):
-        super().__init__(root, lock_cfg=spack_db.NO_LOCK)
+        super().__init__(root, lock_cfg=spack_db.NO_LOCK, layout=None)
         self._write_transaction_impl = llnl.util.lang.nullcontext
         self._read_transaction_impl = llnl.util.lang.nullcontext
 
@@ -687,7 +687,7 @@ def get_buildfile_manifest(spec):
     # Non-symlinks.
     for rel_path in visitor.files:
         abs_path = os.path.join(root, rel_path)
-        m_type, m_subtype = fsys.mime_type(abs_path)
+        m_type, m_subtype = ssys.mime_type(abs_path)
 
         if relocate.needs_binary_relocation(m_type, m_subtype):
             # Why is this branch not part of needs_binary_relocation? :(
@@ -788,7 +788,9 @@ def sign_specfile(key: str, specfile_path: str) -> str:
     return signed_specfile_path
 
 
-def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_dir, concurrency):
+def _read_specs_and_push_index(
+    file_list, read_method, cache_prefix, db: BuildCacheDatabase, temp_dir, concurrency
+):
     """Read all the specs listed in the provided list, using thread given thread parallelism,
         generate the index, and push it to the mirror.
 
@@ -812,7 +814,7 @@ def _read_specs_and_push_index(file_list, read_method, cache_prefix, db, temp_di
         else:
             continue
 
-        db.add(fetched_spec, None)
+        db.add(fetched_spec)
         db.mark(fetched_spec, "in_buildcache", True)
 
     # Now generate the index, compute its hash, and push the two files to
@@ -1444,7 +1446,9 @@ def _oci_push_pkg_blob(
     filename = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
 
     # Create an oci.image.layer aka tarball of the package
-    compressed_tarfile_checksum, tarfile_checksum = spack.oci.oci.create_tarball(spec, filename)
+    compressed_tarfile_checksum, tarfile_checksum = _do_create_tarball(
+        filename, spec.prefix, get_buildinfo_dict(spec)
+    )
 
     blob = spack.oci.oci.Blob(
         Digest.from_sha256(compressed_tarfile_checksum),
@@ -1765,7 +1769,7 @@ def _oci_update_index(
 
     for spec_dict in spec_dicts:
         spec = Spec.from_dict(spec_dict)
-        db.add(spec, directory_layout=None)
+        db.add(spec)
         db.mark(spec, "in_buildcache", True)
 
     # Create the index.json file
@@ -2562,7 +2566,7 @@ def install_root_node(spec, unsigned=False, force=False, sha256=None):
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, force)
         spack.hooks.post_install(spec, False)
-        spack.store.STORE.db.add(spec, spack.store.STORE.layout)
+        spack.store.STORE.db.add(spec)
 
 
 def install_single_spec(spec, unsigned=False, force=False):
@@ -2694,6 +2698,9 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
 
     for mirror in mirror_collection.values():
         fetch_url = mirror.fetch_url
+        # TODO: oci:// does not support signing.
+        if fetch_url.startswith("oci://"):
+            continue
         keys_url = url_util.join(
             fetch_url, BUILD_CACHE_RELATIVE_PATH, BUILD_CACHE_KEYS_RELATIVE_PATH
         )

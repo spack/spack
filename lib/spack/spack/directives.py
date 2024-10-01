@@ -40,10 +40,8 @@ import llnl.util.lang
 import llnl.util.tty.color
 
 import spack.deptypes as dt
-import spack.error
 import spack.patch
 import spack.spec
-import spack.url
 import spack.util.crypto
 import spack.variant
 from spack.dependency import Dependency
@@ -79,7 +77,6 @@ __all__ = [
     "requires",
     "redistribute",
 ]
-
 
 _patch_order_index = 0
 
@@ -676,22 +673,25 @@ def variant(
 
     def _execute_variant(pkg):
         when_spec = _make_when_spec(when)
-        when_specs = [when_spec]
 
         if not re.match(spack.spec.IDENTIFIER_RE, name):
             directive = "variant"
             msg = "Invalid variant name in {0}: '{1}'"
             raise DirectiveError(directive, msg.format(pkg.name, name))
 
-        if name in pkg.variants:
-            # We accumulate when specs, but replace the rest of the variant
-            # with the newer values
-            _, orig_when = pkg.variants[name]
-            when_specs += orig_when
-
-        pkg.variants[name] = (
-            spack.variant.Variant(name, default, description, values, multi, validator, sticky),
-            when_specs,
+        # variants are stored by condition then by name (so only the last variant of a
+        # given name takes precedence *per condition*).
+        # NOTE: variant defaults and values can conflict if when conditions overlap.
+        variants_by_name = pkg.variants.setdefault(when_spec, {})
+        variants_by_name[name] = spack.variant.Variant(
+            name=name,
+            default=default,
+            description=description,
+            values=values,
+            multi=multi,
+            validator=validator,
+            sticky=sticky,
+            precedence=pkg.num_variant_definitions(),
         )
 
     return _execute_variant
