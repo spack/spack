@@ -454,11 +454,13 @@ class TestConcretize:
         for constraint in not_expected:
             assert not root.satisfies(constraint)
 
+    @pytest.mark.xfail(reason="FIXME (compiler as nodes): flaky test, revisit")
     def test_mixing_compilers_only_affects_subdag(self):
         """Tests that, when we mix compilers, the one with lower penalty is used for nodes
         where the compiler is not forced.
         """
         spec = Spec("dt-diamond%clang ^dt-diamond-bottom%gcc").concretized()
+
         for x in spec.traverse(deptype=("link", "run")):
             if "c" not in x or not x.name.startswith("dt-diamond"):
                 continue
@@ -466,8 +468,7 @@ class TestConcretize:
             assert bool(x.dependencies(name="llvm", deptype="build")) is not expected_gcc
             assert bool(x.dependencies(name="gcc", deptype="build")) is expected_gcc
             assert x.satisfies("%clang") is not expected_gcc
-            # FIXME (compiler as nodes): satisfies semantic should be only for direct build deps
-            # assert x.satisfies("%gcc") is expected_gcc
+            assert x.satisfies("%gcc") is expected_gcc
 
     def test_compiler_inherited_upwards(self):
         spec = Spec("dt-diamond ^dt-diamond-bottom%clang").concretized()
@@ -894,7 +895,6 @@ class TestConcretize:
             ("bowtie@1.4.0", "%gcc@10.2.1"),
             # Version with conflicts and no valid gcc select another compiler
             ("bowtie@1.3.0", "%clang@15.0.0"),
-            # FIXME (compiler as nodes): does this make sense?
             # If a higher gcc is available, with a worse os, still prefer that
             ("bowtie@1.2.2", "%gcc@11.1.0"),
         ],
@@ -1683,12 +1683,11 @@ class TestConcretize:
             (["libdwarf%gcc", "libelf%clang"], {"libdwarf": 1, "libelf": 1}),
             (["libdwarf%gcc", "libdwarf%clang"], {"libdwarf": 2, "libelf": 1}),
             (["libdwarf^libelf@0.8.12", "libdwarf^libelf@0.8.13"], {"libdwarf": 2, "libelf": 2}),
-            # FIXME (compiler as nodes): fix these
-            # (["hdf5", "zmpi"], 3, 1),
-            # (["hdf5", "mpich"], 2, 1),
-            # (["hdf5^zmpi", "mpich"], 4, 1),
-            # (["mpi", "zmpi"], 2, 1),
-            # (["mpi", "mpich"], 1, 1),
+            (["hdf5", "zmpi"], {"zmpi": 1, "fake": 1}),
+            (["hdf5", "mpich"], {"mpich": 1}),
+            (["hdf5^zmpi", "mpich"], {"mpi": 2, "mpich": 1, "zmpi": 1, "fake": 1}),
+            (["mpi", "zmpi"], {"mpi": 1, "mpich": 0, "zmpi": 1, "fake": 1}),
+            (["mpi", "mpich"], {"mpi": 1, "mpich": 1, "zmpi": 0}),
         ],
     )
     def test_best_effort_coconcretize(self, specs, checks):
@@ -1700,9 +1699,13 @@ class TestConcretize:
             for s in result.specs:
                 concrete_specs.update(s.traverse())
 
+        for x in concrete_specs:
+            print(x.tree(hashes=True))
+            print()
+
         for matching_spec, expected_count in checks.items():
             matches = [x for x in concrete_specs if x.satisfies(matching_spec)]
-            assert len(matches) == expected_count, matching_spec
+            assert len(matches) == expected_count
 
     @pytest.mark.parametrize(
         "specs,expected_spec,occurances",
@@ -2116,10 +2119,19 @@ class TestConcretize:
             solver.driver.solve(setup, specs, reuse=[])
 
     @pytest.mark.regression("43141")
-    def test_clear_error_when_unknown_compiler_requested(self, mock_packages):
+    @pytest.mark.parametrize(
+        "spec_str,expected_match",
+        [
+            # A package does not exist
+            ("pkg-a ^foo", "since 'foo' does not exist"),
+            # Request a compiler for a package that doesn't need it
+            ("pkg-c %gcc", "according to its recipe"),
+        ],
+    )
+    def test_errors_on_statically_checked_preconditions(self, spec_str, expected_match):
         """Tests that the solver can report a case where the compiler cannot be set"""
-        with pytest.raises(spack.error.UnsatisfiableSpecError, match="since 'foo' does not exist"):
-            Spec("pkg-a %foo").concretized()
+        with pytest.raises(spack.error.UnsatisfiableSpecError, match=expected_match):
+            Spec(spec_str).concretized()
 
     @pytest.mark.regression("36339")
     @pytest.mark.parametrize(

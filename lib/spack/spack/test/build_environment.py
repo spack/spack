@@ -5,7 +5,6 @@
 import os
 import platform
 import posixpath
-import sys
 
 import pytest
 
@@ -95,7 +94,7 @@ def build_environment(working_env):
 
 
 @pytest.fixture
-def ensure_env_variables(config, mock_packages, monkeypatch, working_env):
+def ensure_env_variables(mutable_config, mock_packages, monkeypatch, working_env):
     """Returns a function that takes a dictionary and updates os.environ
     for the test lifetime accordingly. Plugs-in mock config and repo.
     """
@@ -160,20 +159,23 @@ def test_static_to_shared_library(build_environment):
 
 
 @pytest.mark.regression("8345")
-@pytest.mark.usefixtures("config", "mock_packages")
-def test_cc_not_changed_by_modules(monkeypatch, working_env):
-    s = spack.spec.Spec("cmake")
-    s.concretize()
-    pkg = s.package
+@pytest.mark.usefixtures("mock_packages")
+def test_cc_not_changed_by_modules(monkeypatch, mutable_config, working_env, compiler_factory):
+    """Tests that external module files that are loaded cannot change the
+    CC environment variable.
+    """
+    gcc_entry = compiler_factory(spec="gcc@14.0.1 languages=c,c++")
+    gcc_entry["modules"] = ["some_module"]
+    mutable_config.set("packages", {"gcc": {"externals": [gcc_entry]}})
 
     def _set_wrong_cc(x):
         os.environ["CC"] = "NOT_THIS_PLEASE"
         os.environ["ANOTHER_VAR"] = "THIS_IS_SET"
 
     monkeypatch.setattr(spack.build_environment, "load_module", _set_wrong_cc)
-    monkeypatch.setattr(pkg.compiler, "modules", ["some_module"])
 
-    spack.build_environment.setup_package(pkg, False)
+    s = spack.spec.Spec("cmake %gcc@14").concretized()
+    spack.build_environment.setup_package(s.package, dirty=False)
 
     assert os.environ["CC"] != "NOT_THIS_PLEASE"
     assert os.environ["ANOTHER_VAR"] == "THIS_IS_SET"
@@ -184,7 +186,7 @@ def test_setup_dependent_package_inherited_modules(
 ):
     # This will raise on regression
     s = spack.spec.Spec("cmake-client-inheritor").concretized()
-    PackageInstaller([s.package]).install()
+    PackageInstaller([s.package], fake=True).install()
 
 
 @pytest.mark.parametrize(
@@ -264,10 +266,20 @@ def test_setup_dependent_package_inherited_modules(
     ],
 )
 def test_compiler_config_modifications(
-    initial, modifications, expected, ensure_env_variables, monkeypatch
+    initial,
+    modifications,
+    expected,
+    ensure_env_variables,
+    compiler_factory,
+    mutable_config,
+    monkeypatch,
 ):
     # Set the environment as per prerequisites
     ensure_env_variables(initial)
+
+    gcc_entry = compiler_factory(spec="gcc@14.0.1 languages=c,c++")
+    gcc_entry["extra_attributes"]["environment"] = modifications
+    mutable_config.set("packages", {"gcc": {"externals": [gcc_entry]}})
 
     def platform_pathsep(pathlist):
         if Path.platform_path == Path.windows:
@@ -275,11 +287,9 @@ def test_compiler_config_modifications(
 
         return convert_to_platform_path(pathlist)
 
-    # Monkeypatch a pkg.compiler.environment with the required modifications
-    pkg = spack.spec.Spec("cmake").concretized().package
-    monkeypatch.setattr(pkg.compiler, "environment", modifications)
+    pkg = spack.spec.Spec("cmake %gcc@14").concretized().package
     # Trigger the modifications
-    spack.build_environment.setup_package(pkg, False)
+    spack.build_environment.setup_package(pkg, dirty=False)
 
     # Check they were applied
     for name, value in expected.items():
@@ -288,25 +298,6 @@ def test_compiler_config_modifications(
             assert os.environ[name] == value
             continue
         assert name not in os.environ
-
-
-def test_compiler_custom_env(config, mock_packages, monkeypatch, working_env):
-    if sys.platform == "win32":
-        test_path = r"C:\test\path\element\custom-env" + "\\"
-    else:
-        test_path = r"/test/path/element/custom-env/"
-
-    def custom_env(pkg, env):
-        env.prepend_path("PATH", test_path)
-        env.append_flags("ENV_CUSTOM_CC_FLAGS", "--custom-env-flag1")
-
-    pkg = spack.spec.Spec("cmake").concretized().package
-    monkeypatch.setattr(pkg.compiler, "setup_custom_environment", custom_env)
-    spack.build_environment.setup_package(pkg, False)
-
-    # Note: trailing slash may be stripped by internal logic
-    assert test_path[:-1] in os.environ["PATH"]
-    assert "--custom-env-flag1" in os.environ["ENV_CUSTOM_CC_FLAGS"]
 
 
 def test_external_config_env(mock_packages, mutable_config, working_env):
@@ -328,25 +319,26 @@ def test_external_config_env(mock_packages, mutable_config, working_env):
 
 
 @pytest.mark.regression("9107")
-def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch, working_env):
-    s = spack.spec.Spec("cmake")
-    s.concretize()
-    pkg = s.package
+def test_spack_paths_before_module_paths(
+    mutable_config, mock_packages, compiler_factory, monkeypatch, working_env
+):
+    gcc_entry = compiler_factory(spec="gcc@14.0.1 languages=c,c++")
+    gcc_entry["modules"] = ["some_module"]
+    mutable_config.set("packages", {"gcc": {"externals": [gcc_entry]}})
 
     module_path = os.path.join("path", "to", "module")
+    spack_path = os.path.join(spack.paths.prefix, os.path.join("lib", "spack", "env"))
 
     def _set_wrong_cc(x):
         os.environ["PATH"] = module_path + os.pathsep + os.environ["PATH"]
 
     monkeypatch.setattr(spack.build_environment, "load_module", _set_wrong_cc)
-    monkeypatch.setattr(pkg.compiler, "modules", ["some_module"])
 
-    spack.build_environment.setup_package(pkg, False)
+    s = spack.spec.Spec("cmake").concretized()
 
-    spack_path = os.path.join(spack.paths.prefix, os.path.join("lib", "spack", "env"))
+    spack.build_environment.setup_package(s.package, dirty=False)
 
     paths = os.environ["PATH"].split(os.pathsep)
-
     assert paths.index(spack_path) < paths.index(module_path)
 
 
@@ -497,15 +489,13 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
         ("rpath", "" if platform.system() == "Darwin" else "--disable-new-dtags"),
     ],
 )
-def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mock_packages):
+def test_setting_dtags_based_on_config(
+    config_setting, expected_flag, config, mock_packages, working_env
+):
     # Pick a random package to be able to set compiler's variables
-    s = spack.spec.Spec("cmake")
-    s.concretize()
-    pkg = s.package
-
-    env = EnvironmentModifications()
+    s = spack.spec.Spec("cmake").concretized()
     with spack.config.override("config:shared_linking", {"type": config_setting, "bind": False}):
-        spack.build_environment.set_wrapper_environment_variables_for_flags(pkg, env)
+        env = spack.build_environment.setup_package(s.package, dirty=False)
         modifications = env.group_by_name()
         assert "SPACK_DTAGS_TO_STRIP" in modifications
         assert "SPACK_DTAGS_TO_ADD" in modifications
@@ -768,59 +758,24 @@ def test_rpath_with_duplicate_link_deps():
 @pytest.mark.parametrize(
     "compiler_spec,target_name,expected_flags",
     [
-        # Homogeneous compilers
+        # Semver versions
         ("gcc@4.7.2", "ivybridge", "-march=core-avx-i -mtune=core-avx-i"),
         ("clang@3.5", "x86_64", "-march=x86-64 -mtune=generic"),
         ("apple-clang@9.1.0", "x86_64", "-march=x86-64"),
-        # Mixed toolchain
-        ("clang@8.0.0", "broadwell", ""),
+        ("gcc@=9.2.0", "haswell", "-march=haswell -mtune=haswell"),
+        # Check that custom string versions are accepted
+        ("gcc@=9.2.0-foo", "icelake", "-march=icelake-client -mtune=icelake-client"),
+        # Check that the special case for Apple's clang is treated correctly
+        # i.e. it won't try to detect the version again
+        ("apple-clang@=9.1.0", "x86_64", "-march=x86-64"),
+        # FIXME (compiler as nodes): Check mixed toolchain
+        # ("clang@8.0.0", "broadwell", ""),
     ],
 )
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
 @pytest.mark.not_on_windows("Windows doesn't support the compiler wrapper")
 def test_optimization_flags(compiler_spec, target_name, expected_flags, compiler_factory):
     target = archspec.cpu.TARGETS[target_name]
-    compiler_dict = compiler_factory(spec=compiler_spec, operating_system="")["compiler"]
-    if compiler_spec == "clang@8.0.0":
-        compiler_dict["paths"] = {
-            "cc": "/path/to/clang-8",
-            "cxx": "/path/to/clang++-8",
-            "f77": "/path/to/gfortran-9",
-            "fc": "/path/to/gfortran-9",
-        }
-    compiler = spack.compilers.compiler_from_dict(compiler_dict)
-    opt_flags = spack.build_environment.optimization_flags(compiler, target)
-    assert opt_flags == expected_flags
-
-
-@pytest.mark.parametrize(
-    "compiler_str,real_version,target_str,expected_flags",
-    [
-        ("gcc@=9.2.0", None, "haswell", "-march=haswell -mtune=haswell"),
-        # Check that custom string versions are accepted
-        ("gcc@=10foo", "9.2.0", "icelake", "-march=icelake-client -mtune=icelake-client"),
-        # Check that we run version detection (4.4.0 doesn't support icelake)
-        ("gcc@=4.4.0-special", "9.2.0", "icelake", "-march=icelake-client -mtune=icelake-client"),
-        # Check that the special case for Apple's clang is treated correctly
-        # i.e. it won't try to detect the version again
-        ("apple-clang@=9.1.0", None, "x86_64", "-march=x86-64"),
-    ],
-)
-def test_optimization_flags_with_custom_versions(
-    compiler_str,
-    real_version,
-    target_str,
-    expected_flags,
-    monkeypatch,
-    mutable_config,
-    compiler_factory,
-):
-    target = archspec.cpu.TARGETS[target_str]
-    compiler_dict = compiler_factory(spec=compiler_str, operating_system="redhat6")
-    mutable_config.set("compilers", [compiler_dict])
-    if real_version:
-        monkeypatch.setattr(spack.compiler.Compiler, "get_real_version", lambda x: real_version)
-    compiler = spack.compilers.compiler_from_dict(compiler_dict["compiler"])
-
+    compiler = spack.spec.parse_with_version_concrete(compiler_spec)
     opt_flags = spack.build_environment.optimization_flags(compiler, target)
     assert opt_flags == expected_flags

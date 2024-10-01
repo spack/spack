@@ -47,31 +47,35 @@ def test_ascii_graph_mpileaks(config, mock_packages, monkeypatch):
     graph_str = stream.getvalue()
     graph_str = "\n".join([line.rstrip() for line in graph_str.split("\n")])
 
+    print(graph_str)
+
     assert (
         graph_str
         == r"""o mpileaks
 |\
-| o callpath
-|/|
-o | mpich
- /
-o dyninst
-|\
-| o libdwarf
+| |\
+| | |\
+| | | o callpath
+| |_|/|
+|/| |/|
+| |/|/|
+o | | | mpich
+|\| | |
+| |/ /
+|/| |
+| | o dyninst
+| |/|
+|/|/|
+| | |\
+| | | o libdwarf
+| |_|/|
+|/| |/|
+| |/|/
+| | o libelf
+| |/|
+|/|/
+| o gcc-runtime
 |/
-o libelf
-"""
-        or graph_str
-        == r"""o mpileaks
-|\
-o | callpath
-|\|
-| o mpich
-|
-o dyninst
-|\
-o | libdwarf
-|/
-o libelf
+o gcc
 """
     )
