@@ -18,6 +18,7 @@ class PyUserpath(PythonPackage):
     version("1.7.0", sha256="dcd66c5fa9b1a3c12362f309bbb5bc7992bac8af86d17b4e6b1a4b166a11c43f")
 
     depends_on("python@3.7:", type=("build", "run"))
+    depends_on("py-setuptools", type=("build", "run"))
 
     depends_on("py-hatchling", type="build")
 

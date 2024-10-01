@@ -30,6 +30,6 @@ class PyBiotite(PythonPackage):
 
     depends_on("py-numpy@1.25:", type=("build", "run"))
     depends_on("py-msgpack@0.5.6:", type=("build", "run"))
-    depends_on("py-biotraj@1.0:2.0", type=("build", "run"))
+    depends_on("py-biotraj@1:1", type=("build", "run"))
     depends_on("py-requests@2.12:", type=("build", "run"))
     depends_on("py-networkx@2.0:", type=("build", "run"))
