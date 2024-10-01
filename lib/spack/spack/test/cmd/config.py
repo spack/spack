@@ -336,7 +336,7 @@ def test_config_add_override_leaf_from_file(mutable_empty_config, tmpdir):
 
 
 def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
-    config("add", "packages:all:compiler:[gcc]")
+    config("add", "packages:all:require:['%gcc']")
 
     # contents to add to file
     contents = """spack:
@@ -358,7 +358,7 @@ def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
     expected = """packages:
   all:
     target: [x86_64]
-    compiler: [gcc]
+    require: ['%gcc']
 """
 
     assert expected == output
@@ -608,7 +608,6 @@ def test_config_prefer_upstream(
     packages = syaml.load(open(cfg_file))["packages"]
 
     # Make sure only the non-default variants are set.
-    assert packages["all"] == {"compiler": ["gcc@=10.2.1"]}
     assert packages["boost"] == {"variants": "+debug +graph", "version": ["1.63.0"]}
     assert packages["dependency-install"] == {"version": ["2.0"]}
     # Ensure that neither variant gets listed for hdf5, since they conflict
