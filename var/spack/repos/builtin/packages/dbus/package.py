@@ -70,7 +70,7 @@ class Dbus(AutotoolsPackage, MesonPackage):
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
-        args = ["--disable-systemd", "--disable-launchd"]
+        args = ["--disable-systemd", "--disable-launchd", "--disable-qt-help"]
         args += self.enable_or_disable("xml-docs", variant="xml_docs")
         socket = self.spec.variants["system-socket"].value
         if socket != "default":
@@ -80,7 +80,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
 
 class MesonBuilder(spack.build_systems.meson.MesonBuilder):
     def meson_args(self):
-        args = ["-Dsystemd=disabled", "-Dlaunchd=disabled"]
+        args = ["-Dsystemd=disabled", "-Dlaunchd=disabled", "-Dqt_help=disabled"]
         args += [f"-Dxml_docs={'enabled' if self.spec.satisfies('+xml_docs') else 'disabled'}"]
         socket = self.spec.variants["system-socket"].value
         if socket != "default":
