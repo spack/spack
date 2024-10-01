@@ -9,6 +9,7 @@ import re
 import sys
 
 import spack.build_environment
+from spack.build_systems.cmake import get_cmake_prefix_path
 from spack.package import *
 
 
@@ -331,7 +332,7 @@ class Cmake(Package):
             args.append("-DCMAKE_INSTALL_PREFIX=%s" % self.prefix)
 
         # Make CMake find its own dependencies.
-        prefixes = spack.build_environment.get_cmake_prefix_path(self)
+        prefixes = get_cmake_prefix_path(self)
         rpaths = [
             pathlib.Path(self.prefix, "lib").as_posix(),
             pathlib.Path(self.prefix, "lib64").as_posix(),

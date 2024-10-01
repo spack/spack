@@ -1126,32 +1126,6 @@ class SetupContext:
                 env.prepend_path("PATH", bin_dir)
 
 
-def get_cmake_prefix_path(pkg):
-    # Note that unlike modifications_from_dependencies, this does not include
-    # any edits to CMAKE_PREFIX_PATH defined in custom
-    # setup_dependent_build_environment implementations of dependency packages
-    build_deps = set(pkg.spec.dependencies(deptype=("build", "test")))
-    link_deps = set(pkg.spec.traverse(root=False, deptype=("link")))
-    build_link_deps = build_deps | link_deps
-    spack_built = []
-    externals = []
-    # modifications_from_dependencies updates CMAKE_PREFIX_PATH by first
-    # prepending all externals and then all non-externals
-    for dspec in pkg.spec.traverse(root=False, order="post"):
-        if dspec in build_link_deps:
-            if dspec.external:
-                externals.insert(0, dspec)
-            else:
-                spack_built.insert(0, dspec)
-
-    ordered_build_link_deps = spack_built + externals
-    cmake_prefix_path_entries = []
-    for spec in ordered_build_link_deps:
-        cmake_prefix_path_entries.extend(spec.package.cmake_prefix_paths)
-
-    return filter_system_paths(cmake_prefix_path_entries)
-
-
 def _setup_pkg_and_run(
     serialized_pkg: "spack.subprocess_context.PackageInstallContext",
     function: Callable,

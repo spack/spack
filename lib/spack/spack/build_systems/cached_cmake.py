@@ -10,7 +10,6 @@ from typing import Tuple
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-import spack.build_environment
 import spack.builder
 
 from .cmake import CMakeBuilder, CMakePackage
