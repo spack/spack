@@ -1819,6 +1819,9 @@ def _oci_update_index(
     upload_manifest_with_retry(image_ref.with_tag(default_index_tag), oci_manifest)
 
 
+_tarball_fetch_and_verify_exceptions = []
+
+
 def try_verify(specfile_path):
     """Utility function to attempt to verify a local file.  Assumes the
     file is a clearsigned signature file.
@@ -1833,7 +1836,8 @@ def try_verify(specfile_path):
 
     try:
         spack.util.gpg.verify(specfile_path, suppress_warnings=suppress)
-    except Exception:
+    except Exception as e:
+        _tarball_fetch_and_verify_exceptions.append((e, specfile_path))
         return False
 
     return True
@@ -1854,11 +1858,21 @@ def try_fetch(url_to_fetch):
 
     try:
         stage.fetch()
-    except spack.error.FetchError:
+    except spack.error.FetchError as e:
+        _tarball_fetch_and_verify_exceptions.append((e, url_to_fetch))
         stage.destroy()
         return None
 
     return stage
+
+
+def report_tarball_fetch_verify_exceptions():
+    except_to_raise = []
+    for exc in _tarball_fetch_and_verify_exceptions:
+        exc[0].add_note(f"component failure: {exc[1]}")
+        except_to_raise.append(exc[0])
+
+    print(ExceptionGroup("Spack buildcache fetch & verify exceptions", except_to_raise))
 
 
 def _delete_staged_downloads(download_result):
@@ -2105,7 +2119,8 @@ def download_tarball(spec, unsigned: Optional[bool] = False, mirrors_for_spec=No
     # Falling through the nested loops meeans we exhaustively searched
     # for all known kinds of spec files on all mirrors and did not find
     # an acceptable one for which we could download a tarball.
-
+    if _tarball_fetch_and_verify_exceptions:
+        report_tarball_fetch_verify_exceptions()
     if tried_to_verify_sigs:
         raise NoVerifyException(
             (

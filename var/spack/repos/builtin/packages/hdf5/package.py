@@ -113,6 +113,7 @@ class Hdf5(CMakePackage):
         values=("default", "v116", "v114", "v112", "v110", "v18", "v16"),
         multi=False,
     )
+    variant("fake", default=True, description="DELETE ME")
 
     depends_on("cmake@3.12:", type="build")
     depends_on("cmake@3.18:", type="build", when="@1.13:")
