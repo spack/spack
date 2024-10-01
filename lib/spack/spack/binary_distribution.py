@@ -1871,8 +1871,7 @@ def report_tarball_fetch_verify_exceptions():
     for exc in _tarball_fetch_and_verify_exceptions:
         exc[0].add_note(f"component failure: {exc[1]}")
         except_to_raise.append(exc[0])
-
-    print(ExceptionGroup("Spack buildcache fetch & verify exceptions", except_to_raise))
+        print(exc[0])
 
 
 def _delete_staged_downloads(download_result):
