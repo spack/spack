@@ -9,7 +9,7 @@ class PerlBioEnsemblVariation(Package):
     """The Ensembl Variation Perl API and SQL schema."""
 
     homepage = "http://www.ensembl.org/info/docs/api/variation/"
-    url = "https://github.com/Ensembl/ensembl-variation/archive/release/111.zip"
+    url = "https://github.com/Ensembl/ensembl-variation/archive/release/112.zip"
 
     maintainers("teaguesterling")
 
@@ -23,6 +23,7 @@ class PerlBioEnsemblVariation(Package):
         version(vers, sha256=sha)
         depends_on(f"perl-bio-ensembl@{vers}", when=f"@{vers}")
         depends_on(f"perl-bio-ensembl-io@{vers}", when=f"@{vers}+tools", type="run")
+        depends_on(f"perl-bio-ensembl-funcgen@{vers}", when=f"@{vers}", type="run")
 
     extends("perl")
 
@@ -36,8 +37,6 @@ class PerlBioEnsemblVariation(Package):
     depends_on("perl-bioperl@1.6.924")
     depends_on("perl-bio-bigfile")
     depends_on("perl-bio-db-hts")
-    depends_on("perl-bio-ensembl")
-    depends_on("perl-bio-ensembl-io", type="run")
     depends_on("perl-sereal")
     depends_on("perl-json")
     depends_on("perl-set-intervaltree")
