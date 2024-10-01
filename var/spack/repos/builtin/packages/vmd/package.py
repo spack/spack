@@ -60,3 +60,5 @@ class Vmd(Package):
 
     def setup_run_environment(self, env):
         env.set("PLUGINDIR", self.spec.prefix.lib64.plugins)
+        env.prepend_path('LD_LIBRARY_PATH', '/lib64')
+        env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib64)
