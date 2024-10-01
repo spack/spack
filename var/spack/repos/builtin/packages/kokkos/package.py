@@ -416,8 +416,20 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             raise SkipTest(f"{cmake_path} is missing")
 
         cmake = self.spec["cmake"].command
-        cmake(cmake_path, "-DEXECUTABLE_OUTPUT_PATH=" + cmake_path)
+        cmake_args = ["-DEXECUTABLE_OUTPUT_PATH=" + cmake_path]
+        if self.spec.satisfies("+rocm"):
+            rocm_prefixes = ";".join(
+                [
+                    self.spec["rocprim"].prefix,
+                    self.spec["hip"].prefix,
+                    self.spec["llvm-amdgpu"].prefix,
+                    self.spec["comgr"].prefix,
+                    self.spec["hsa-rocr-dev"].prefix,
+                ]
+            )
+            cmake_args.append("-DCMAKE_PREFIX_PATH=" + rocm_prefixes)
 
+        cmake(cmake_path, *cmake_args)
         make = which("make")
         make()
         make(cmake_path, "test")
