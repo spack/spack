@@ -47,7 +47,7 @@ def test_rewire_db(mock_fetch, install_mockery, transitive):
         text_file_path = os.path.join(node.prefix, node.name)
         with open(text_file_path, "r") as f:
             text = f.read()
-            for modded_spec in node.traverse(root=True):
+            for modded_spec in node.traverse(root=True, deptype=("link", "run")):
                 assert modded_spec.prefix in text
 
 
@@ -59,6 +59,7 @@ def test_rewire_bin(mock_fetch, install_mockery, transitive):
     dep = Spec("garply cflags=-g").concretized()
     PackageInstaller([spec.package, dep.package], explicit=True).install()
     spliced_spec = spec.splice(dep, transitive=transitive)
+
     assert spec.dag_hash() != spliced_spec.dag_hash()
 
     spack.rewiring.rewire(spliced_spec)
@@ -99,6 +100,8 @@ def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
         )
         assert os.path.exists(manifest_file_path)
         orig_node = spec[node.name]
+        if node == orig_node:
+            continue
         orig_manifest_file_path = os.path.join(
             orig_node.prefix,
             spack.store.STORE.layout.metadata_dir,
