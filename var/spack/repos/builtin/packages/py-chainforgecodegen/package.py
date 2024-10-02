@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class PyChainforgeCodeGen(PythonPackage):
+class PyChainforgecodegen(PythonPackage):
     """A code generator that fuses subsequent batched matrix multiplications (GEMMs)
     into a single GPU kernel, holding intermediate results in shared memory as long as necessary.
     """
