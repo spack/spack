@@ -34,5 +34,5 @@ class PyEvodiff(PythonPackage):
     depends_on("py-mdanalysis", type=("build", "run"))
     depends_on("py-pdb-tools", type=("build", "run"))
 
-    ## listed in the file setup.py but is not used anywhere in the source code
+    # listed in the file setup.py but is not used anywhere in the source code
     # depends_on("py-mlflow", type=("build", "run"))
