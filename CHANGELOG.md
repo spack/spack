@@ -1,3 +1,13 @@
+# v0.21.3 (2024-10-02)
+
+## Bugfixes
+- Forward compatibility with Spack 0.23 packages with language dependencies (#45205, #45191)
+- Forward compatibility with `urllib` from Python 3.12.6+ (#46453, #46483)
+- Bump `archspec` to 0.2.5-dev for better aarch64 and Windows support (#42854, #44005,
+  #45721, #46445)
+- Support macOS Sequoia (#45018, #45127, #43862)
+- CI and test maintenance (#42909, #42728, #46711, #41943, #43363)
+
 # v0.21.2 (2024-03-01)
 
 ## Bugfixes
