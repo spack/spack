@@ -171,6 +171,9 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     def lua_lib_dir(self):
         return os.path.join("lib", "lua", str(self.lua_version))
 
+    def setup_build_environment(self, env):
+        env.prepend_path("PYTHON", os.path.join(self.spec["python"].prefix.bin, "python3"))
+
     def setup_run_environment(self, env):
         # If this package is external, we expect the external provider to set
         # things like LUA paths. So, we early return. If the package is not
@@ -192,7 +195,6 @@ class FluxSched(CMakePackage, AutotoolsPackage):
         env.prepend_path("FLUX_MODULE_PATH", self.prefix.lib64.flux.modules.sched)
         env.prepend_path("FLUX_EXEC_PATH", self.prefix.libexec.flux.cmd)
         env.prepend_path("FLUX_RC_EXTRA", self.prefix.etc.flux)
-        env.prepend_path("PYTHON", os.path.join(self.spec["python"].prefix.bin, "python3"))
 
 
 class CMakeBuilder(CMakeBuilder):
