@@ -52,7 +52,7 @@ def test_build_task_basics(install_mockery):
 
     # Ensure key properties match expectations
     request = inst.BuildRequest(spec.package, {})
-    task = inst.BuildTask(spec.package, request=request, status=inst.BuildStatus.ADDED)
+    task = inst.BuildTask(spec.package, request=request, status=inst.BuildStatus.QUEUED)
     assert not task.explicit
     assert task.priority == len(task.uninstalled_deps)
     assert task.key == (task.priority, task.sequence)
@@ -74,16 +74,16 @@ def test_build_task_strings(install_mockery):
 
     # Ensure key properties match expectations
     request = inst.BuildRequest(spec.package, {})
-    task = inst.BuildTask(spec.package, request=request, status=inst.BuildStatus.ADDED)
+    task = inst.BuildTask(spec.package, request=request, status=inst.BuildStatus.QUEUED)
 
     # Cover __repr__
     irep = task.__repr__()
     assert irep.startswith(task.__class__.__name__)
-    assert "BuildStatus.ADDED" in irep
+    assert "BuildStatus.QUEUED" in irep
     assert "sequence=" in irep
 
     # Cover __str__
     istr = str(task)
-    assert "status=queued" in istr  # == BuildStatus.ADDED
+    assert "status=queued" in istr  # == BuildStatus.QUEUED
     assert "#dependencies=1" in istr
     assert "priority=" in istr

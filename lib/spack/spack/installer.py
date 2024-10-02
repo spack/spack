@@ -76,8 +76,8 @@ _counter = itertools.count(0)
 class BuildStatus(enum.Enum):
     """Different build (task) states."""
 
-    #: Build status indicating task has been added.
-    ADDED = enum.auto()
+    #: Build status indicating task has been added/queued.
+    QUEUED = enum.auto()
 
     #: Build status indicating the spec failed to install
     FAILED = enum.auto()
@@ -97,7 +97,7 @@ class BuildStatus(enum.Enum):
     REMOVED = enum.auto()
 
     def __str__(self):
-        return "queued" if self == BuildStatus.ADDED else f"{self.name.lower()}"
+        return f"{self.name.lower()}"
 
 
 def _write_timer_json(pkg, timer, cache):
@@ -860,7 +860,7 @@ class BuildTask:
         compiler: bool = False,
         start: float = 0.0,
         attempts: int = 0,
-        status: BuildStatus = BuildStatus.ADDED,
+        status: BuildStatus = BuildStatus.QUEUED,
         installed: Set[str] = set(),
     ):
         """
@@ -870,7 +870,7 @@ class BuildTask:
             pkg: the package to be built and installed and whose spec is
                 concrete
             request: the associated install request
-            compiler:  whether task is for a bootstrap compiler
+            compiler: whether task is for a bootstrap compiler
             start: the initial start time for the package, in seconds
             attempts: the number of attempts to install the package, which
                 should be 0 when the task is initially instantiated
@@ -1221,7 +1221,7 @@ class PackageInstaller:
             pkg,
             request=request,
             compiler=is_compiler,
-            status=BuildStatus.ADDED,
+            status=BuildStatus.QUEUED,
             installed=self.installed,
         )
         for dep_id in task.dependencies:

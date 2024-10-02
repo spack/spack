@@ -73,7 +73,7 @@ def create_build_task(
     pkg: spack.package_base.PackageBase, install_args: Optional[dict] = None
 ) -> inst.BuildTask:
     request = inst.BuildRequest(pkg, {} if install_args is None else install_args)
-    return inst.BuildTask(pkg, request=request, status=inst.BuildStatus.ADDED)
+    return inst.BuildTask(pkg, request=request, status=inst.BuildStatus.QUEUED)
 
 
 def create_installer(
