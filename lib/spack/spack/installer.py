@@ -920,7 +920,10 @@ class BuildTask:
         self.start = start
 
         if not isinstance(installed, set):
-            raise TypeError(f"BuildTask constructor requires 'installed' be a 'set', not '{installed.__class__.__name__}'.")
+            raise TypeError(
+                f"BuildTask constructor requires 'installed' be a 'set', "
+                f"not '{installed.__class__.__name__}'."
+            )
 
         # Set of dependents, which needs to include the requesting package
         # to support tracking of parallel, multi-spec, environment installs.
