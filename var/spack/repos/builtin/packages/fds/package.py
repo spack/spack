@@ -27,7 +27,7 @@ class Fds(MakefilePackage):
 
     variant("openmp", default=False, description="Enable OpenMP support")
 
-    conflicts('%gcc', when='+openmp', msg="GCC already provides OpenMP supporti")
+    conflicts("%gcc", when="+openmp", msg="GCC already provides OpenMP support")
 
     depends_on("fortran", type="build")  # generated
 
@@ -92,7 +92,7 @@ class Fds(MakefilePackage):
         mpi_prefix = mpi_mapping[spec["mpi"].name]
         compiler_prefix = compiler_mapping[spec.compiler.name]
         platform_prefix = platform_mapping[spec.architecture.platform]
-        openmp_prefix = '_openmp' if '+openmp' in spec else ''
+        openmp_prefix = "_openmp" if "+openmp" in spec else ""
         return [f"{mpi_prefix}_{compiler_prefix}_{platform_prefix}{openmp_prefix}"]
 
     def install(self, spec, prefix):
