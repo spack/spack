@@ -9,15 +9,21 @@ class PerlBioEnsemblVariation(Package):
     """The Ensembl Variation Perl API and SQL schema."""
 
     homepage = "http://www.ensembl.org/info/docs/api/variation/"
-    url = "https://github.com/Ensembl/ensembl-variation/archive/release/111.zip"
+    url = "https://github.com/Ensembl/ensembl-variation/archive/release/112.zip"
 
     maintainers("teaguesterling")
 
     license("APACHE-2.0", checked_by="teaguesterling")
 
-    version("112", sha256="ad75ff0a9efbf2d5c10ab5087d414bac685819664d01fbe4a9765393bd742a7c")
-    version("111", sha256="b2171b3f5f82a2b7e849c0ec8dc254f4bace4b3faba1b3ab75c5eea596e33bef")
-    version("110", sha256="210d627dcb867d9fda3a0d94428da256f394c32e34df5171b9b9e604507e1f05")
+    for vers, sha in [
+        ("112", "ad75ff0a9efbf2d5c10ab5087d414bac685819664d01fbe4a9765393bd742a7c"),
+        ("111", "b2171b3f5f82a2b7e849c0ec8dc254f4bace4b3faba1b3ab75c5eea596e33bef"),
+        ("110", "210d627dcb867d9fda3a0d94428da256f394c32e34df5171b9b9e604507e1f05"),
+    ]:
+        version(vers, sha256=sha)
+        depends_on(f"perl-bio-ensembl@{vers}", when=f"@{vers}")
+        depends_on(f"perl-bio-ensembl-io@{vers}", when=f"@{vers}+tools", type="run")
+        depends_on(f"perl-bio-ensembl-funcgen@{vers}", when=f"@{vers}", type="run")
 
     extends("perl")
 
@@ -28,8 +34,7 @@ class PerlBioEnsemblVariation(Package):
     variant("tools", default=False, description="Install additional tools")
     variant("ld", default=False, description="Compile LD calculation tools")
 
-    depends_on("perl-bioperl")
-    depends_on("perl-bio-ensembl")
+    depends_on("perl-bioperl@1.6.924")
     depends_on("perl-bio-bigfile")
     depends_on("perl-bio-db-hts")
     depends_on("perl-sereal")
@@ -40,7 +45,6 @@ class PerlBioEnsemblVariation(Package):
     depends_on("perl-xml-libxml")
     depends_on("perl-date-manip")
 
-    depends_on("perl-bio-ensembl-io", when="+tools", type="run")
     with when("+ld"):
         depends_on("htslib", type="build")
         depends_on("gmake", type="build")

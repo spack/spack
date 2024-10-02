@@ -265,6 +265,13 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "KokkosConfigCommon.cmake", relative_root=os.path.join("lib64", "cmake", "Kokkos")
     )
 
+    # sanity check
+    sanity_check_is_file = [
+        join_path("include", "KokkosCore_config.h"),
+        join_path("include", "Kokkos_Core.hpp"),
+    ]
+    sanity_check_is_dir = ["bin", "include"]
+
     @classmethod
     def get_microarch(cls, target):
         """Get the Kokkos microarch name for a Spack target (spec.target)."""
