@@ -15,7 +15,8 @@ class PyTfKeras(PythonPackage):
      Keras 3 is being developed at keras-team/keras."""
 
     homepage = "https://github.com/keras-team/tf-keras"
-    pypi = "tf-keras/tf-keras-2.17.0.tar.gz"
+    pypi = "tf-keras/tf_keras-2.17.0.tar.gz"
+
 
     maintainers("jonas-eschle")
 
