@@ -153,6 +153,18 @@ class SuiteSparse(Package):
             "zlarfg_",
             "zlarft_",
             "zlarfb_",
+            "strsv_",
+            "cherk_",
+            "cgemv_",
+            "ssyrk_",
+            "ctrsv_",
+            "cgemm_",
+            "ctrsm_",
+            "cpotrf_",
+            "spotrf_",
+            "sgemm_",
+            "strsm_",
+            "sgemv_",
         )
 
         for symbol in symbols:
