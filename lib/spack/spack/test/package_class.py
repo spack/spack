@@ -5,7 +5,7 @@
 
 """Test class methods on Package objects.
 
-This doesn't include methods on package *instances* (like do_install(),
+This doesn't include methods on package *instances* (like do_patch(),
 etc.).  Only methods like ``possible_dependencies()`` that deal with the
 static DSL metadata for packages.
 """
@@ -17,13 +17,16 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.compilers
+import spack.config
 import spack.deptypes as dt
+import spack.error
 import spack.install_test
 import spack.package_base
 import spack.repo
 import spack.spec
 from spack.build_systems.generic import Package
-from spack.installer import InstallError
+from spack.error import InstallError
 
 
 @pytest.fixture(scope="module")

@@ -56,6 +56,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     license("Apache-2.0")
 
     version("main", branch="main")
+    version("19.1.0", sha256="0a08341036ca99a106786f50f9c5cb3fbe458b3b74cab6089fd368d0edb2edfe")
     version("18.1.8", sha256="09c08693a9afd6236f27a2ebae62cda656eba19021ef3f94d59e931d662d4856")
     version("18.1.7", sha256="b60df7cbe02cef2523f7357120fb0d46cbb443791cde3a5fb36b82c335c0afc9")
     version("18.1.6", sha256="01390edfae5b809e982b530ff9088e674c62b13aa92cb9dc1e067fa2cf501083")
@@ -277,6 +278,8 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     conflicts("+z3", when="~clang")
     conflicts("+lua", when="@:10")
     conflicts("+lua", when="~lldb")
+    # Python distutils were removed with 3.12 and are required to build LLVM <= 14
+    conflicts("^python@3.12:", when="@:14")
 
     variant(
         "zstd",
@@ -285,6 +288,8 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
         description="Enable zstd support for static analyzer / lld",
     )
 
+    provides("libllvm@19", when="@19.0.0:19")
+    provides("libllvm@18", when="@18.0.0:18")
     provides("libllvm@17", when="@17.0.0:17")
     provides("libllvm@16", when="@16.0.0:16")
     provides("libllvm@15", when="@15.0.0:15")
@@ -418,6 +423,19 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
 
     # cuda_arch value must be specified
     conflicts("cuda_arch=none", when="+cuda", msg="A value for cuda_arch must be specified.")
+
+    # clang/test/Misc/target-invalid-cpu-note.c
+    conflicts("cuda_arch=10")
+    conflicts("cuda_arch=11")
+    conflicts("cuda_arch=12")
+    conflicts("cuda_arch=13")
+    conflicts("cuda_arch=75", when="@:13")
+    conflicts("cuda_arch=80", when="@:13")
+    conflicts("cuda_arch=86", when="@:13")
+    conflicts("cuda_arch=87", when="@:15")
+    conflicts("cuda_arch=89", when="@:15")
+    conflicts("cuda_arch=90", when="@:15")
+    conflicts("cuda_arch=90a", when="@:17")
 
     # LLVM bug https://bugs.llvm.org/show_bug.cgi?id=48234
     # CMake bug: https://gitlab.kitware.com/cmake/cmake/-/issues/21469
@@ -880,6 +898,8 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
             # finding libhsa and enabling the AMDGPU plugin. Since we don't support this yet,
             # disable explicitly. See commit a05a0c3c2f8eefc80d84b7a87a23a4452d4a3087.
             cmake_args.append(define("LIBOMPTARGET_BUILD_AMDGPU_PLUGIN", False))
+            if "python" in spec:  # lit's Python needs to be set with this variable
+                cmake_args.append(define("python_executable", spec["python"].command.path))
 
         if "+lldb" in spec:
             projects.append("lldb")
@@ -892,17 +912,20 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
                     define("LLDB_ENABLE_LZMA", True),
                 ]
             )
-            if spec["ncurses"].satisfies("+termlib"):
-                cmake_args.append(define("LLVM_ENABLE_TERMINFO", True))
+            if spec.satisfies("@19:"):
+                cmake_args.append(define("LLDB_CURSES_LIBS", spec["ncurses"].libs))
             else:
-                cmake_args.append(define("LLVM_ENABLE_TERMINFO", False))
+                if spec["ncurses"].satisfies("+termlib"):
+                    cmake_args.append(define("LLVM_ENABLE_TERMINFO", True))
+                else:
+                    cmake_args.append(define("LLVM_ENABLE_TERMINFO", False))
             if spec.version >= Version("10"):
                 cmake_args.append(from_variant("LLDB_ENABLE_PYTHON", "python"))
             else:
                 cmake_args.append(define("LLDB_DISABLE_PYTHON", "~python" in spec))
             if spec.satisfies("@5.0.0: +python"):
                 cmake_args.append(define("LLDB_USE_SYSTEM_SIX", True))
-        else:
+        elif spec.satisfies("@:19"):
             cmake_args.append(define("LLVM_ENABLE_TERMINFO", False))
 
         if "+gold" in spec:
@@ -961,6 +984,14 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
                 # CMAKE_INSTALL_RPATH to it, which fails. Statically link libc++abi.a
                 # into libc++.so, linking with -lc++ or -stdlib=libc++ is enough.
                 define("LIBCXX_ENABLE_STATIC_ABI_LIBRARY", True),
+                # Make sure that CMake does not pick host-installed tools for the build
+                # Until #45535 is merged, prevent CMake from delivering incompatible
+                # system tools like python3.12 to older LLVM versions like LLVM-14:
+                define("CMAKE_FIND_PACKAGE_PREFER_CONFIG", True),
+                define("CMAKE_FIND_USE_PACKAGE_ROOT_PATH", False),
+                define("CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY", False),
+                define("CMAKE_FIND_USE_PACKAGE_REGISTRY", False),
+                define("CMAKE_FIND_USE_SYSTEM_PATH", False),
             ]
         )
 

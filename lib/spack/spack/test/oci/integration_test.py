@@ -17,7 +17,6 @@ from contextlib import contextmanager
 import pytest
 
 import spack.binary_distribution
-import spack.cmd.buildcache
 import spack.database
 import spack.environment as ev
 import spack.error

@@ -24,27 +24,24 @@ import llnl.util.tty.color as clr
 from llnl.util.link_tree import ConflictingSpecsError
 from llnl.util.symlink import readlink, symlink
 
+import spack
 import spack.caches
-import spack.cmd
 import spack.compilers
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
+import spack.environment
 import spack.error
-import spack.fetch_strategy
 import spack.filesystem_view as fsv
 import spack.hash_types as ht
-import spack.hooks
-import spack.main
 import spack.paths
 import spack.repo
 import spack.schema.env
+import spack.schema.merged
 import spack.spec
-import spack.stage
+import spack.spec_list
 import spack.store
-import spack.subprocess_context
 import spack.user_environment as uenv
-import spack.util.cpus
 import spack.util.environment
 import spack.util.hash
 import spack.util.lock as lk
@@ -53,7 +50,6 @@ import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url
-import spack.version
 from spack import traverse
 from spack.installer import PackageInstaller
 from spack.schema.env import TOP_LEVEL_KEY
@@ -550,8 +546,7 @@ def _is_dev_spec_and_has_changed(spec):
     last installation"""
     # First check if this is a dev build and in the process already try to get
     # the dev_path
-    dev_path_var = spec.variants.get("dev_path", None)
-    if not dev_path_var:
+    if not spec.variants.get("dev_path", None):
         return False
 
     # Now we can check whether the code changed since the last installation
@@ -559,9 +554,10 @@ def _is_dev_spec_and_has_changed(spec):
         # Not installed -> nothing to compare against
         return False
 
-    _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
-    mtime = fs.last_modification_time_recursive(dev_path_var.value)
-    return mtime > record.installation_time
+    # hook so packages can use to write their own method for checking the dev_path
+    # use package so attributes about concretization such as variant state can be
+    # utilized
+    return spec.package.detect_dev_src_change()
 
 
 def _error_on_nonempty_view_dir(new_root):
@@ -1651,7 +1647,7 @@ class Environment:
 
         # Solve the environment in parallel on Linux
         start = time.time()
-        num_procs = min(len(args), spack.util.cpus.determine_number_of_jobs(parallel=True))
+        num_procs = min(len(args), spack.config.determine_number_of_jobs(parallel=True))
 
         # TODO: support parallel concretization on macOS and Windows
         msg = "Starting concretization"
@@ -1970,7 +1966,7 @@ class Environment:
         )
         install_args["explicit"] = explicit
 
-        PackageInstaller([spec.package for spec in specs], install_args).install()
+        PackageInstaller([spec.package for spec in specs], **install_args).install()
 
     def all_specs_generator(self) -> Iterable[Spec]:
         """Returns a generator for all concrete specs"""
@@ -2179,7 +2175,7 @@ class Environment:
         root_specs = self._concrete_roots_dict()
 
         spack_dict = {"version": spack.spack_version}
-        spack_commit = spack.main.get_spack_commit()
+        spack_commit = spack.get_spack_commit()
         if spack_commit:
             spack_dict["type"] = "git"
             spack_dict["commit"] = spack_commit

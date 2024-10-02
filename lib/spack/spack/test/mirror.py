@@ -15,7 +15,6 @@ import spack.config
 import spack.fetch_strategy
 import spack.mirror
 import spack.patch
-import spack.repo
 import spack.stage
 import spack.util.executable
 import spack.util.spack_json as sjson
