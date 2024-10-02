@@ -105,7 +105,7 @@ class Postgresql(AutotoolsPackage):
         if spec.satisfies("+xml"):
             args.append("--with-libxml")
 
-        if not spec.satisfies("+icu"):
+        if spec.satisfies("~icu"):
             args.append("--without-icu")
 
         return args
