@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Rclone(Package):
+class Rclone(GoPackage):
     """Rclone is a command line program to sync files and directories
     to and from various cloud storage providers"""
 
@@ -39,24 +39,9 @@ class Rclone(Package):
     version("1.55.1", sha256="25da7fc5c9269b3897f27b0d946919df595c6dda1b127085fda0fe32aa59d29d")
     version("1.55.0", sha256="75accdaedad3b82edc185dc8824a19a59c30dc6392de7074b6cd98d1dc2c9040")
 
-    depends_on("c", type="build")  # generated
-
     depends_on("go@1.14:", type="build")
     depends_on("go@1.17:", type="build", when="@1.58.0:")
     depends_on("go@1.18:", type="build", when="@1.62.0:")
-
-    phases = ["build", "install"]
-
-    def setup_build_environment(self, env):
-        # Point GOPATH at the top of the staging dir for the build step.
-        env.prepend_path("GOPATH", self.stage.path)
-
-    def build(self, spec, prefix):
-        go("build")
-
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        install("rclone", prefix.bin)
 
     @run_after("install")
     def install_completions(self):
