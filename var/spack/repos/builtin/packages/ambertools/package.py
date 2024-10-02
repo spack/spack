@@ -19,10 +19,8 @@ class Ambertools(CMakePackage):
 
     maintainers("d-beltran")
 
-    # Versions
     version("22jlmrcc", sha256="1571d4e0f7d45b2a71dce5999fa875aea8c90ee219eb218d7916bf30ea229121")
 
-    # Dependencies
     depends_on("flex", type="build")
     depends_on("bison", type="build")
     depends_on("tcsh", type="build")
@@ -42,7 +40,8 @@ class Ambertools(CMakePackage):
         type=("build", "run"),
     )
     # Python dependencies
-    depends_on("python@3.8: +tkinter", type=("build", "run"))
+    depends_on("python@3.8:3.10 +tkinter", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
