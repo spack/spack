@@ -67,6 +67,7 @@ class Duckdb(MakefilePackage):
     depends_on("gmake", type="build")
     depends_on("ninja", when="+ninjabuild", type="build")
     depends_on("openssl", when="+httpfs")
+    depends_on("unixodbc", when="+odbc")
     depends_on("icu4c", when="~icu")
 
     # Build Options
