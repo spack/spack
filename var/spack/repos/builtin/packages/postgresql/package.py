@@ -64,7 +64,7 @@ class Postgresql(AutotoolsPackage):
     variant("tcl", default=False, description="Enable Tcl bindings.")
     variant("gssapi", default=False, description="Build with GSSAPI functionality.")
     variant("xml", default=False, description="Build with XML support.")
-    variant("icu", default=True, description="Build with ICU support.")
+    variant("icu", default=True, description="Build with ICU support.", when="@16:")
 
     depends_on("icu4c", when="@16: +icu")
     depends_on("readline", when="lineedit=readline")
