@@ -73,8 +73,12 @@ class Alpaka(CMakePackage, CudaPackage):
 
     variant("examples", default=False, description="Build alpaka examples")
 
-    depends_on("boost@1.74:")
-    depends_on("cmake@3.18:", when="@0.9.0")
+    depends_on("boost@1.65.1:", when="@0.4.0:0.8.0")
+    depends_on("boost@1.74:", when="@0.9.0:")
+
+    depends_on("cmake@3.11.4:", when="@0.4.0")
+    depends_on("cmake@3.15:", when="@0.5.0:0.7.0")
+    depends_on("cmake@3.18:", when="@0.8.0:0.9.0")
     depends_on("cmake@3.22:", when="@1.0.0:")
 
     # make sure no other backend is enabled if using cuda_only or hip_only
@@ -93,7 +97,6 @@ class Alpaka(CMakePackage, CudaPackage):
         conflicts("backend=cuda_only,%s" % v)
         conflicts("backend=hip_only,%s" % v)
     conflicts("backend=cuda_only,hip_only")
-
 
     for v in ("sycl_cpu", "sycl_gpu", "sycl_fpga"):
         conflicts("backend=%s" % v, when="@0.9.0:")
