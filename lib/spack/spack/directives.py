@@ -506,7 +506,9 @@ def provides(*specs: SpecType, when: WhenType = None):
 
 
 @directive("splice_specs")
-def can_splice(spec: SpecType, when: WhenType = None, match_variants: Union[None, str, List[str]] = None):
+def can_splice(
+    spec: SpecType, when: WhenType = None, match_variants: Union[None, str, List[str]] = None
+):
     def _execute_can_splice(pkg: "spack.package_base.PackageBase"):
         when_spec = _make_when_spec(when)
         if not when_spec:

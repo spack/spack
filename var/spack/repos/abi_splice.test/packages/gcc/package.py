@@ -13,5 +13,3 @@ class Gcc(Package):
     url = "http://www.example.com/gcc-1.0.tar.gz"
 
     version("11.4.0")
-
-    

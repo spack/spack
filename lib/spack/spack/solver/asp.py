@@ -3572,9 +3572,9 @@ class RuntimePropertyRecorder:
 # This should be a dataclass, but dataclasses don't work on Python 3.6
 class Splice:
     def __init__(self, splice_node: NodeArgument, child_name: str, child_hash: str):
-            self.splice_node = splice_node
-            self.child_name = child_name
-            self.child_hash = child_hash
+        self.splice_node = splice_node
+        self.child_name = child_name
+        self.child_hash = child_hash
 
 
 class SpecBuilder:
