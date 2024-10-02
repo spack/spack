@@ -42,6 +42,9 @@ if ($?_sp_source_file) then
     set _sp_share_spack = `dirname "$_sp_source_file"`
     set _sp_share = `dirname "$_sp_share_spack"`
     setenv SPACK_ROOT `dirname "$_sp_share"`
+    if ( "$SPACK_ROOT" == "." ) then
+        setenv SPACK_ROOT `$PWD`
+    endif
 endif
 
 if (! $?SPACK_ROOT) then
