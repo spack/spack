@@ -51,7 +51,7 @@ def ordinal(number: int) -> str:
     """
     idx = (number % 10) << 1
     tens = number % 100 // 10
-    suffix = "th" if tens == 1 else "thstndrdththththththth"[idx : idx + 2]
+    suffix = "th" if tens == 1 or idx > 6 else "thstndrd"[idx : idx + 2]
     return f"{number}{suffix}"
 
 
