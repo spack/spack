@@ -27,7 +27,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:pr-52@sha256:c94eaa9159f6e70c13bbef6df97bb4d3b357b87efe8199e0577ae26fae7fedd5", "entrypoint": [""] }
+        image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:pr-52@sha256:f973c2bc138f8abf5723def5542ea42989ab3c863c695d98f6c15790c0f37532", "entrypoint": [""] }
         before_script:
         - - . "./share/spack/setup-env.sh"
           - . /etc/profile.d/modules.sh
