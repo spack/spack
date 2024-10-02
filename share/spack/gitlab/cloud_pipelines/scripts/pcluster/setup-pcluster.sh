@@ -83,7 +83,7 @@ install_compilers() {
         # packages will reference a wrong compiler path once the path changes.
 
         # `gcc@12.4.0%gcc@7.3.1` is created as part of building the pipeline containers.
-        # `ghcr.io/spack/pcluster-amazonlinux-2:pr-52@sha256:f973c2bc138f8abf5723def5542ea42989ab3c863c695d98f6c15790c0f37532` produced the following hashes.
+        # `ghcr.io/spack/pcluster-amazonlinux-2:pr-52@sha256:51cc360e706c4e59f98b912c75c743c3e6cfcd699aacf4d81f840b5caad3ff7b` produced the following hashes.
         if [ "x86_64" == "$(arch)" ]; then
             gcc_hash="pttzchh7o54nhmycj4wgzw5mic6rk2nb"
         else
