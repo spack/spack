@@ -20,3 +20,4 @@ class PyKrb5(PythonPackage):
 
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-cython@0.29.32:3", type=("build", "run"))
+    depends_on("krb5", type=("build", "run"))
