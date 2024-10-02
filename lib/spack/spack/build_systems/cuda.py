@@ -241,6 +241,11 @@ class CudaPackage(PackageBase):
         conflicts("%intel@19.2:", when="+cuda ^cuda@:11.1.0")
         conflicts("%intel@2021:", when="+cuda ^cuda@:11.4.0")
 
+        # ARM
+        # https://github.com/spack/spack/pull/39666#issuecomment-2377609263
+        # Might need to be expanded to other gcc versions
+        conflicts("%gcc@13.2.0", when="+cuda ^cuda@:12.4 target=aarch64:")
+
         # XL is mostly relevant for ppc64le Linux
         conflicts("%xl@:12,14:", when="+cuda ^cuda@:9.1")
         conflicts("%xl@:12,14:15,17:", when="+cuda ^cuda@9.2")
