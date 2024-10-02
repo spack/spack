@@ -482,26 +482,6 @@ if [ "$mode" = vcheck ]; then
     execute
 fi
 
-# Darwin's linker has a -r argument that merges object files together.
-# It doesn't work with -rpath.
-# This variable controls whether they are added.
-add_rpaths=true
-if [ "$mode" = ld ] || [ "$mode" = ccld ]; then
-    if [ "${SPACK_SHORT_SPEC#*darwin}" != "${SPACK_SHORT_SPEC}" ]; then
-        for arg in "$@"; do
-            if [ "$arg" = "-r" ]; then
-                if [ "$mode" = ld ] || [ "$mode" = ccld ]; then
-                    add_rpaths=false
-                    break
-                fi
-            elif [ "$arg" = "-Wl,-r" ] && [ "$mode" = ccld ]; then
-                add_rpaths=false
-                break
-            fi
-        done
-    fi
-fi
-
 # Save original command for debug logging
 input_command="$*"
 
@@ -861,13 +841,11 @@ if [ "$mode" = ld ] || [ "$mode" = ccld ]; then
 fi
 
 if [ "$mode" = ccld ] || [ "$mode" = ld ]; then
-    if [ "$add_rpaths" != "false" ]; then
-        # Append RPATH directories. Note that in the case of the
-        # top-level package these directories may not exist yet. For dependencies
-        # it is assumed that paths have already been confirmed.
-        extend spack_store_rpath_dirs_list SPACK_STORE_RPATH_DIRS
-        extend rpath_dirs_list SPACK_RPATH_DIRS
-    fi
+    # Append RPATH directories. Note that in the case of the
+    # top-level package these directories may not exist yet. For dependencies
+    # it is assumed that paths have already been confirmed.
+    extend spack_store_rpath_dirs_list SPACK_STORE_RPATH_DIRS
+    extend rpath_dirs_list SPACK_RPATH_DIRS
 fi
 
 if [ "$mode" = ccld ] || [ "$mode" = ld ]; then
@@ -882,14 +860,10 @@ case "$mode" in
     ld|ccld)
         # Set extra RPATHs
         extend lib_dirs_list SPACK_COMPILER_EXTRA_RPATHS
-        if [ "$add_rpaths" != "false" ]; then
-            extend rpath_dirs_list SPACK_COMPILER_EXTRA_RPATHS
-        fi
+        extend rpath_dirs_list SPACK_COMPILER_EXTRA_RPATHS
 
         # Set implicit RPATHs
-        if [ "$add_rpaths" != "false" ]; then
-            extend rpath_dirs_list SPACK_COMPILER_IMPLICIT_RPATHS
-        fi
+        extend rpath_dirs_list SPACK_COMPILER_IMPLICIT_RPATHS
 
         # Add SPACK_LDLIBS to args
         for lib in $SPACK_LDLIBS; do
@@ -945,7 +919,8 @@ extend args_list lib_dirs_list "-L"
 extend args_list system_spack_flags_lib_dirs_list "-L"
 extend args_list system_lib_dirs_list "-L"
 
-# RPATHs arguments
+# RPATH arguments
+
 rpath_prefix=""
 case "$mode" in
     ccld)
@@ -962,8 +937,20 @@ case "$mode" in
         ;;
 esac
 
-# if mode is ccld or ld, extend RPATH lists with the prefix determined above
-if [ -n "$rpath_prefix" ]; then
+# Darwin's linker has a -r argument that merges object files together.
+# It doesn't work with -rpath. add_rpaths controls whether RPATHs are added.
+add_rpaths=true
+if [ "$mode" = ld ] || [ "$mode" = ccld ]; then
+    if [ "${SPACK_SHORT_SPEC#*darwin}" != "${SPACK_SHORT_SPEC}" ]; then
+        args="$@"
+        if contains args "-r" || contains args "-Wl,-r"; then
+            add_rpaths=false
+        fi
+    fi
+fi
+
+# if mode is ccld or ld, extend RPATH lists, adding the prefix determined above
+if [ "$add_rpaths" == "true" ] && [ -n "$rpath_prefix" ]; then
     extend_unique args_list spack_store_spack_flags_rpath_dirs_list "$rpath_prefix"
     extend_unique args_list spack_store_rpath_dirs_list "$rpath_prefix"
 
