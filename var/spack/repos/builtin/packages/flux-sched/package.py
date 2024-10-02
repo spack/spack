@@ -19,7 +19,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     git = "https://github.com/flux-framework/flux-sched.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers("grondo")
+    maintainers("trws", "jameshcorbett")
 
     license("LGPL-3.0-only")
 
