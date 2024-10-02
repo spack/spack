@@ -176,7 +176,7 @@ jobs:
     runs-on: ${{ matrix.macos-version }}
     strategy:
       matrix:
-        macos-version: ['macos-11', 'macos-12']
+        macos-version: ['macos-12']
     steps:
       - name: Install dependencies
         run: |
