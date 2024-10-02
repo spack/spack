@@ -214,7 +214,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
     forwarded_variants = ["cuda", "intel_gpu", "rocm"]
     for v in forwarded_variants:
         depends_on("py-gemmforge", when=f"+{v}", type="build")
-        depends_on("py-chainforge", when=f"+{v}", type="build")
+        depends_on("py-chainforgecodegen", when=f"+{v}", type="build")
 
     depends_on(
         "libxsmm@1.17 +generator", when="gemm_tools_list=LIBXSMM target=x86_64:", type="build"
