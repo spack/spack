@@ -919,12 +919,8 @@ class BuildTask:
         # The initial start time for processing the spec
         self.start = start
 
-        # Make sure installed is an expected type
-        if isinstance(installed, (tuple, list)):
-            installed = set(installed)
-
         if not isinstance(installed, set):
-            raise TypeError(f"{installed} is not a valid installed type")
+            raise TypeError(f"BuildTask constructor requires 'installed' be a 'set', not '{installed.__class__.__name__}'.")
 
         # Set of dependents, which needs to include the requesting package
         # to support tracking of parallel, multi-spec, environment installs.

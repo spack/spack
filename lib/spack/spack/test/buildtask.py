@@ -41,7 +41,7 @@ def test_build_task_errors(install_mockery):
         inst.BuildTask(spec.package, request, status=inst.BuildStatus.REMOVED)
 
     # Also make sure to not accept an incompatible installed argument value.
-    with pytest.raises(TypeError, match="not a valid installed"):
+    with pytest.raises(TypeError, match="'installed' be a 'set', not 'str'"):
         inst.BuildTask(spec.package, request, installed="mpileaks")
 
 
