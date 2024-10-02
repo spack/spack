@@ -70,3 +70,31 @@ class PyOnnx(PythonPackage):
 
     # 'python_out' does not recognize dllexport_decl.
     patch("remove_dllexport_decl.patch", when="@:1.6.0")
+
+    # Switch the CMAKE_CXX_STANDARD to 17 if abseil-cpp has been built with
+    # either of those. (abseil-cpp is pulled in via protobuf)
+    patch(
+        "https://github.com/onnx/onnx/commit/1f6e43cb4d7366b2dffa7f70ae88198306e12c6c.patch?full_index=1",
+        sha256="be12f589bc4113982e4162efcdbd95835a6c161a9a7e10cd1dde026cadedf8aa",
+        when="@1.15.0 ^abseil-cpp cxxstd=17",
+    )
+    patch(
+        "https://github.com/onnx/onnx/commit/1f6e43cb4d7366b2dffa7f70ae88198306e12c6c.patch?full_index=1",
+        sha256="be12f589bc4113982e4162efcdbd95835a6c161a9a7e10cd1dde026cadedf8aa",
+        when="@1.15.0 ^abseil-cpp cxxstd=20",
+    )
+
+    # By default, ONNX always uses .setuptools-cmake-build/ under the source path,
+    # so we allow overriding with a build environment variable
+    def patch(self):
+        filter_file(
+            r"^CMAKE_BUILD_DIR = (.*)$",
+            r"CMAKE_BUILD_DIR = os.getenv('CMAKE_BUILD_DIR', default=\1)",
+            "setup.py",
+        )
+
+    def setup_build_environment(self, env):
+        # Build in a similar directory as the CMake packages
+        env.set(
+            "CMAKE_BUILD_DIR", join_path(self.stage.path, f"spack-build-{self.spec.dag_hash(7)}")
+        )
