@@ -50,3 +50,19 @@ class GoBuilder(spack.build_systems.go.GoBuilder):
         args = super().build_args
         args.extend(["-trimpath", "./cmd/gh"])
         return args
+
+    @run_after("install")
+    def install_completions(self):
+        gh = Executable(self.prefix.bin.gh)
+
+        mkdirp(bash_completion_path(self.prefix))
+        with open(bash_completion_path(self.prefix) / "gh", "w") as file:
+            gh("completion", "-s", "bash", output=file)
+
+        mkdirp(fish_completion_path(self.prefix))
+        with open(fish_completion_path(self.prefix) / "gh.fish", "w") as file:
+            gh("completion", "-s", "fish", output=file)
+
+        mkdirp(zsh_completion_path(self.prefix))
+        with open(zsh_completion_path(self.prefix) / "_gh", "w") as file:
+            gh("completion", "-s", "zsh", output=file)
