@@ -17,14 +17,17 @@ class Rocal(CMakePackage):
 
     license("MIT")
 
+    version("6.2.1", sha256="77d3e63e02afaee6f1ee1d877d88b48c6ea66a0afca96a1313d0f1c4f8e86b2a")
     version("6.2.0", sha256="c7c265375a40d4478a628258378726c252caac424f974456d488fce43890e157")
 
-    depends_on("mivisionx@6.2.0", when="@6.2.0")
-    depends_on("llvm-amdgpu@6.2.0", when="@6.2.0")
-    depends_on("rpp@6.2.0", when="@6.2.0")
     depends_on("libjpeg-turbo@2.0.6+partial_decoder")
     depends_on("rapidjson")
     depends_on("ffmpeg@4.4:")
+
+    for ver in ["6.2.0", "6.2.1"]:
+        depends_on(f"mivisionx@{ver}", when=f"@{ver}")
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
+        depends_on(f"rpp@{ver}", when=f"@{ver}")
 
     def patch(self):
         filter_file(

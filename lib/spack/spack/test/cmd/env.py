@@ -278,7 +278,7 @@ def test_env_rename_managed(capfd):
     assert "baz" in out
 
 
-def test_env_rename_anonymous(capfd, tmpdir):
+def test_env_rename_independent(capfd, tmpdir):
     # Need real environment
     with pytest.raises(spack.main.SpackCommandError):
         env("rename", "-d", "./non-existing", "./also-non-existing")
@@ -3547,7 +3547,7 @@ def test_create_and_activate_managed(tmp_path):
         env("deactivate")
 
 
-def test_create_and_activate_anonymous(tmp_path):
+def test_create_and_activate_independent(tmp_path):
     with fs.working_dir(str(tmp_path)):
         env_dir = os.path.join(str(tmp_path), "foo")
         shell = env("activate", "--without-view", "--create", "--sh", env_dir)
