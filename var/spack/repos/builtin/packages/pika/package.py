@@ -106,7 +106,6 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     # Build dependencies
-    depends_on("git", type="build")
     depends_on("cmake@3.18:", type="build")
     depends_on("cmake@3.22:", when="@0.8:", type="build")
 
