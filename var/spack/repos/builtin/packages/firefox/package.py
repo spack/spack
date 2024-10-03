@@ -25,6 +25,7 @@ class Firefox(Package):
     phases = ["configure", "build", "install"]
 
     # From Arch build notes
+    depends_on("atk")  # to provide atk_document_get_text_selections
     depends_on("dbus-glib")
     depends_on("ffmpeg")
     depends_on("gtkplus@3")
@@ -95,8 +96,10 @@ class Firefox(Package):
 
     conflicts("py-pyrsistent@0.17.0:0.17.2", msg="Noted in mach requirements file")
 
-    patch("gcc14-implicit-include-fix.patch", when="@127%gcc@14:")
-    patch("gcc14-implicit-pointer-cast-fix.patch", when="@127%gcc@14:")
+    # Until full GCC 14 support has been patched (check each new release)
+    with when("@12:127%gcc@14:"):
+        patch("gcc14-implicit-include-fix.patch")
+        patch("gcc14-implicit-pointer-cast-fix.patch")
 
     def url_for_version(self, version):
         return f"{self.list_url}/{version}/source/firefox-{version}.source.tar.xz"
