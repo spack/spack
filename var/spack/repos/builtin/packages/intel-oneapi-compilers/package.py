@@ -29,9 +29,6 @@ versions = [
             "sha256": "fbeb64f959f907cbf3469f4e154b2af6d8ff46fe4fc667c811e04f3872a13823",
         },
     },
-
-
-    
     {
         "version": "2024.2.0",
         "cpp": {
