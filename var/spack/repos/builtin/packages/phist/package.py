@@ -325,6 +325,7 @@ class Phist(CMakePackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def test_install(self):
+        """run 'make test_install'"""
         # The build script of test_install expects the sources to be copied here:
         install_tree(
             join_path(self.stage.source_path, "exampleProjects"),
