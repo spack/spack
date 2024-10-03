@@ -14,7 +14,7 @@ class Firefox(Package):
         "https://archive.mozilla.org/pub/firefox/releases/127.0/source/firefox-127.0.source.tar.xz"
     )
     list_url = "https://archive.mozilla.org/pub/firefox/releases/"
-    
+
     maintainers("teaguesterling")
 
     license("MPL", checked_by="teaguesterling")
