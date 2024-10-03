@@ -91,6 +91,7 @@ class Firefox(Package):
             depends_on("py-attrs@17.4.0")
             depends_on("py-glean-sdk@60.0.1")
             depends_on("py-glean-parser@14.0")
+            depends_on("rust@:1.79")
 
     conflicts("py-pyrsistent@0.17.0:0.17.2", msg="Noted in mach requirements file")
 
