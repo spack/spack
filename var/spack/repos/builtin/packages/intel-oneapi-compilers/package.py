@@ -24,7 +24,14 @@ versions = [
             "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2024.2.1&filters[]=12.0&filters[]=linux",
             "sha256": "2c377027c650291ccd8267cbf75bd3d00c7b11998cc59d5668a02a0cbc2c015f",
         },
+        "amd-plugin": {
+            "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=amd&version=2024.2.1&filters[]=6.1.0&filters[]=linux",
+            "sha256": "fbeb64f959f907cbf3469f4e154b2af6d8ff46fe4fc667c811e04f3872a13823",
+        },
     },
+
+
+    
     {
         "version": "2024.2.0",
         "cpp": {
@@ -38,6 +45,10 @@ versions = [
         "nvidia-plugin": {
             "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2024.2.0&filters[]=12.0&filters[]=linux",
             "sha256": "0622df0054364b01e91e7ed72a33cb3281e281db5b0e86579f516b1cc5336b0f",
+        },
+        "amd-plugin": {
+            "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=amd&version=2024.2.0&filters[]=6.1.0&filters[]=linux",
+            "sha256": "d1e9d30fa92f3ef606f054d8cbd7c338b3e46f6a9f8472736e29e8ccd9e50688",
         },
     },
     {
@@ -275,6 +286,9 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
     # Add the nvidia variant
     variant("nvidia", default=False, description="Install NVIDIA plugin for OneAPI")
     conflicts("@:2022.2.1", when="+nvidia", msg="Codeplay NVIDIA plugin requires newer release")
+    # Add the amd variant
+    variant("amd", default=False, description="Install AMD plugin for OneAPI")
+    conflicts("@:2022.2.1", when="+amd", msg="Codeplay AMD plugin requires newer release")
     # TODO: effectively gcc is a direct dependency of intel-oneapi-compilers, but we
     # cannot express that properly. For now, add conflicts for non-gcc compilers
     # instead.
@@ -297,6 +311,14 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
                 when="@{0}".format(v["version"]),
                 expand=False,
                 **v["nvidia-plugin"],
+            )
+        if "amd-plugin" in v:
+            resource(
+                name="amd-plugin-installer",
+                placement="amd-plugin-installer",
+                when="@{0}".format(v["version"]),
+                expand=False,
+                **v["amd-plugin"],
             )
 
     @property
@@ -369,6 +391,17 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
                     bash.add_default_env("XDG_RUNTIME_DIR", join_path(self.stage.path, "runtime"))
                     # For NVIDIA plugin installer
                     bash(nvidia_script[0], "-y", "--install-dir", self.prefix)
+        if self.spec.satisfies("+amd"):
+            amd_script = find("amd-plugin-installer", "*")
+            if amd_script:
+                if platform.system() == "Linux":
+                    bash = Executable("bash")
+                    # Installer writes files in ~/intel set HOME so it goes to prefix
+                    bash.add_default_env("HOME", prefix)
+                    # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
+                    bash.add_default_env("XDG_RUNTIME_DIR", join_path(self.stage.path, "runtime"))
+                    # For AMD plugin installer
+                    bash(amd_script[0], "-y", "--install-dir", self.prefix)
 
     @run_after("install")
     def inject_rpaths(self):
