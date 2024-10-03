@@ -31,6 +31,7 @@ from llnl.util.tty.color import cescape, colorize
 
 import spack
 import spack.binary_distribution as bindist
+import spack.concretize
 import spack.config as cfg
 import spack.environment as ev
 import spack.main
@@ -38,7 +39,6 @@ import spack.mirror
 import spack.paths
 import spack.repo
 import spack.spec
-import spack.stage
 import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
@@ -1219,8 +1219,8 @@ def generate_gitlab_ci_yaml(
         # Capture the version of Spack used to generate the pipeline, that can be
         # passed to `git checkout` for version consistency. If we aren't in a Git
         # repository, presume we are a Spack release and use the Git tag instead.
-        spack_version = spack.main.get_version()
-        version_to_clone = spack.main.get_spack_commit() or f"v{spack.spack_version}"
+        spack_version = spack.get_version()
+        version_to_clone = spack.get_spack_commit() or f"v{spack.spack_version}"
 
         output_object["variables"] = {
             "SPACK_ARTIFACTS_ROOT": rel_artifacts_root,
@@ -1272,7 +1272,9 @@ def generate_gitlab_ci_yaml(
     else:
         # No jobs were generated
         noop_job = spack_ci_ir["jobs"]["noop"]["attributes"]
-        noop_job["retry"] = service_job_retries
+        # If this job fails ignore the status and carry on
+        noop_job["retry"] = 0
+        noop_job["allow_failure"] = True
 
         if copy_only_pipeline and config_deprecated:
             tty.debug("Generating no-op job as copy-only is unsupported here.")

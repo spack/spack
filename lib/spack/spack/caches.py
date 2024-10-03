@@ -11,9 +11,7 @@ import llnl.util.lang
 from llnl.util.filesystem import mkdirp
 
 import spack.config
-import spack.error
 import spack.fetch_strategy
-import spack.mirror
 import spack.paths
 import spack.util.file_cache
 import spack.util.path

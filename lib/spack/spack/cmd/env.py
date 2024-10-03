@@ -21,15 +21,12 @@ from llnl.util.tty.color import cescape, colorize
 import spack.cmd
 import spack.cmd.common
 import spack.cmd.common.arguments
-import spack.cmd.install
 import spack.cmd.modules
-import spack.cmd.uninstall
 import spack.config
 import spack.environment as ev
 import spack.environment.depfile as depfile
+import spack.environment.environment
 import spack.environment.shell
-import spack.schema.env
-import spack.spec
 import spack.tengine
 from spack.cmd.common import arguments
 from spack.util.environment import EnvironmentModifications
@@ -273,7 +270,7 @@ def env_activate_setup_parser(subparser):
         nargs="?",
         default=None,
         help=(
-            "name of managed environment or directory of the anonymous env"
+            "name of managed environment or directory of the independent env"
             " (when using --dir/-d) to activate"
         ),
     )
@@ -543,7 +540,7 @@ def env_rename_setup_parser(subparser):
 def env_rename(args):
     """Rename an environment.
 
-    This renames a managed environment or moves an anonymous environment.
+    This renames a managed environment or moves an independent environment.
     """
 
     # Directory option has been specified

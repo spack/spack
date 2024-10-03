@@ -2,18 +2,15 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import pathlib
+
 import pytest
 
-import spack.build_systems.generic
 import spack.config
 import spack.environment as ev
-import spack.error
-import spack.package_base
 import spack.repo
 import spack.util.spack_yaml as syaml
-import spack.version
 from spack.spec import Spec
-from spack.test.conftest import create_test_repo
 
 """
 These tests include the following package DAGs:
@@ -44,90 +41,11 @@ u x
 y
 """
 
-_pkgx = (
-    "x",
-    """\
-class X(Package):
-    version("1.1")
-    version("1.0")
-
-    variant("activatemultiflag", default=False)
-    depends_on('y cflags="-d1"', when="~activatemultiflag")
-    depends_on('y cflags="-d1 -d2"', when="+activatemultiflag")
-""",
-)
-
-
-_pkgy = (
-    "y",
-    """\
-class Y(Package):
-    version("2.1")
-    version("2.0")
-""",
-)
-
-
-_pkgw = (
-    "w",
-    """\
-class W(Package):
-    version("3.1")
-    version("3.0")
-
-    variant("moveflaglater", default=False)
-
-    depends_on('x +activatemultiflag')
-    depends_on('y cflags="-d0"', when="~moveflaglater")
-    depends_on('y cflags="-d3"', when="+moveflaglater")
-""",
-)
-
-
-_pkgv = (
-    "v",
-    """\
-class V(Package):
-    version("4.1")
-    version("4.0")
-
-    depends_on("y")
-""",
-)
-
-
-_pkgt = (
-    "t",
-    """\
-class T(Package):
-    version("5.0")
-
-    depends_on("u")
-    depends_on("x+activatemultiflag")
-    depends_on("y cflags='-c1 -c2'")
-""",
-)
-
-
-_pkgu = (
-    "u",
-    """\
-class U(Package):
-    version("6.0")
-
-    depends_on("y cflags='-e1 -e2'")
-""",
-)
-
 
 @pytest.fixture
-def _create_test_repo(tmpdir, mutable_config):
-    yield create_test_repo(tmpdir, [_pkgt, _pkgu, _pkgv, _pkgw, _pkgx, _pkgy])
-
-
-@pytest.fixture
-def test_repo(_create_test_repo, monkeypatch, mock_stage):
-    with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
+def test_repo(mutable_config, monkeypatch, mock_stage):
+    repo_dir = pathlib.Path(spack.paths.repos_path) / "flags.test"
+    with spack.repo.use_repositories(str(repo_dir)) as mock_repo_path:
         yield mock_repo_path
 
 
