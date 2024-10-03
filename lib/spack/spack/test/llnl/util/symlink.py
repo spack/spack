@@ -5,7 +5,6 @@
 
 """Tests for ``llnl/util/symlink.py``"""
 import os
-import sys
 import tempfile
 
 import pytest
