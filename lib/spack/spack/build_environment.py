@@ -523,63 +523,52 @@ def set_wrapper_variables(pkg, env):
         env.set("CCACHE_DISABLE", "1")
 
     # Gather information about various types of dependencies
-    link_deps = set(pkg.spec.traverse(root=False, deptype=("link")))
-    rpath_deps = get_rpath_deps(pkg)
+    rpath_hashes = set(s.dag_hash() for s in get_rpath_deps(pkg))
+    link_deps = pkg.spec.traverse(root=False, order="topo", deptype=dt.LINK)
+    external_link_deps, nonexternal_link_deps = stable_partition(link_deps, lambda d: d.external)
 
     link_dirs = []
     include_dirs = []
     rpath_dirs = []
 
-    def _prepend_all(list_to_modify, items_to_add):
-        # Update the original list (creating a new list would be faster but
-        # may not be convenient)
-        for item in reversed(list(items_to_add)):
-            list_to_modify.insert(0, item)
+    for dep in chain(external_link_deps, nonexternal_link_deps):
+        # TODO: is_system_path is wrong, but even if we knew default -L, -I flags from the compiler
+        # and default search dirs from the dynamic linker, it's not obvious how to avoid a possibly
+        # expensive search in `query.libs.directories` and `query.headers.directories`, which is
+        # what this branch is trying to avoid.
+        if is_system_path(dep.prefix):
+            continue
+        # TODO: as of Spack 0.22, multiple instances of the same package may occur among the link
+        # deps, so keying by name is wrong. In practice it is not problematic: we obtain the same
+        # gcc-runtime / glibc here, and repeatedly add the same dirs that are later deduped.
+        query = pkg.spec[dep.name]
+        dep_link_dirs = []
+        try:
+            # Locating libraries can be time consuming, so log start and finish.
+            tty.debug(f"Collecting libraries for {dep.name}")
+            dep_link_dirs.extend(query.libs.directories)
+            tty.debug(f"Libraries for {dep.name} have been collected.")
+        except NoLibrariesError:
+            tty.debug(f"No libraries found for {dep.name}")
 
-    def update_compiler_args_for_dep(dep):
-        if dep in link_deps and (not is_system_path(dep.prefix)):
-            query = pkg.spec[dep.name]
-            dep_link_dirs = []
-            try:
-                # In some circumstances (particularly for externals) finding
-                # libraries packages can be time consuming, so indicate that
-                # we are performing this operation (and also report when it
-                # finishes).
-                tty.debug(f"Collecting libraries for {dep.name}")
-                dep_link_dirs.extend(query.libs.directories)
-                tty.debug(f"Libraries for {dep.name} have been collected.")
-            except NoLibrariesError:
-                tty.debug(f"No libraries found for {dep.name}")
+        for default_lib_dir in ("lib", "lib64"):
+            default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
+            if os.path.isdir(default_lib_prefix):
+                dep_link_dirs.append(default_lib_prefix)
 
-            for default_lib_dir in ["lib", "lib64"]:
-                default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
-                if os.path.isdir(default_lib_prefix):
-                    dep_link_dirs.append(default_lib_prefix)
+        link_dirs[:0] = dep_link_dirs
+        if dep.dag_hash() in rpath_hashes:
+            rpath_dirs[:0] = dep_link_dirs
 
-            _prepend_all(link_dirs, dep_link_dirs)
-            if dep in rpath_deps:
-                _prepend_all(rpath_dirs, dep_link_dirs)
+        try:
+            tty.debug(f"Collecting headers for {dep.name}")
+            include_dirs[:0] = query.headers.directories
+            tty.debug(f"Headers for {dep.name} have been collected.")
+        except NoHeadersError:
+            tty.debug(f"No headers found for {dep.name}")
 
-            try:
-                _prepend_all(include_dirs, query.headers.directories)
-            except NoHeadersError:
-                tty.debug(f"No headers found for {dep.name}")
-
-    for dspec in pkg.spec.traverse(root=False, order="post"):
-        if dspec.external:
-            update_compiler_args_for_dep(dspec)
-
-    # Just above, we prepended entries for -L/-rpath for externals. We
-    # now do this for non-external packages so that Spack-built packages
-    # are searched first for libraries etc.
-    for dspec in pkg.spec.traverse(root=False, order="post"):
-        if not dspec.external:
-            update_compiler_args_for_dep(dspec)
-
-    # The top-level package is always RPATHed. It hasn't been installed yet
-    # so the RPATHs are added unconditionally (e.g. even though lib64/ may
-    # not be created for the install).
-    for libdir in ["lib64", "lib"]:
+    # The top-level package is heuristically rpath'ed.
+    for libdir in ("lib64", "lib"):
         lib_path = os.path.join(pkg.prefix, libdir)
         rpath_dirs.insert(0, lib_path)
 
@@ -587,11 +576,15 @@ def set_wrapper_variables(pkg, env):
         pkg.compiler.default_dynamic_linker
     )
 
+    # TODO: filter_system_paths is again wrong (and probably unnecessary due to the is_system_path
+    # branch above). link_dirs should be filtered with entries from _parse_link_paths.
     link_dirs = list(dedupe(filter_system_paths(link_dirs)))
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
     rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
     rpath_dirs = filter_default_dynamic_linker_search_paths(rpath_dirs)
 
+    # TODO: implicit_rpaths is prefiltered by is_system_path, that should be removed in favor of
+    # just this filter.
     implicit_rpaths = filter_default_dynamic_linker_search_paths(pkg.compiler.implicit_rpaths())
     if implicit_rpaths:
         env.set("SPACK_COMPILER_IMPLICIT_RPATHS", ":".join(implicit_rpaths))
