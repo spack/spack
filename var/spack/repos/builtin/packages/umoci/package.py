@@ -14,7 +14,7 @@ class Umoci(MakefilePackage):
     homepage = "https://umo.ci/"
     url = "https://github.com/opencontainers/umoci/archive/v0.4.4.tar.gz"
 
-    license("Apache-2.0", checked_by="wdconinck")
+    license("Apache-2.0", checked_by="wdconinc")
 
     version("0.4.7", sha256="c01b36de6fdc513eb65add57bc882d72f94fc3b4b65a8f9ef59826fb754af93e")
     version("0.4.4", sha256="bc5c53812e0076d026aa275b197b878857cf7ba7a4f048fd13433de6107b9aed")
