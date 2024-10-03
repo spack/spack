@@ -19,6 +19,9 @@ class Dmd(MakefilePackage):
     version("2.081.1", sha256="14f3aafe1c93c86646aaeb3ed7361a5fc5a24374cf25c8848c81942bfd9fae1a")
     version("2.081.0", sha256="29b9882ed424b744df83ac73182d4ae952251029ebd16117d18f9cc1e83542e2")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("openssl")
     depends_on("curl")
 
@@ -46,9 +49,6 @@ class Dmd(MakefilePackage):
         env.prepend_path("PATH", self.prefix.linux.bin64)
         env.prepend_path("LIBRARY_PATH", self.prefix.linux.lib64)
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.linux.lib64)
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
 
     def edit(self, spec, prefix):
         # Move contents to dmd/

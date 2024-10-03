@@ -30,6 +30,7 @@ spec expression syntax:
       @c{@min:max}                      version range (inclusive)
       @c{@min:}                         version <min> or higher
       @c{@:max}                         up to version <max> (inclusive)
+      @c{@=version}                     exact version
 
     compilers:
       @g{%compiler}                     build with <compiler>
@@ -49,7 +50,7 @@ spec expression syntax:
       @B{++}, @r{--}, @r{~~}, @B{==}                propagate variants to package dependencies
 
     architecture variants:
-      @m{platform=platform}             linux, darwin, cray, etc.
+      @m{platform=platform}             linux, darwin, freebsd, windows
       @m{os=operating_system}           specific <operating_system>
       @m{target=target}                 specific <target> processor
       @m{arch=platform-os-target}       shortcut for all three above

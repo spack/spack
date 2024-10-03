@@ -8,7 +8,11 @@ import shutil
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.config
+import spack.fetch_strategy
+import spack.repo
 import spack.spec
+import spack.stage
 import spack.util.path
 import spack.version
 from spack.cmd.common import arguments
@@ -21,6 +25,7 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument("-p", "--path", help="source location of package")
+    subparser.add_argument("-b", "--build-directory", help="build directory for the package")
 
     clone_group = subparser.add_mutually_exclusive_group()
     clone_group.add_argument(
@@ -58,7 +63,7 @@ def _update_config(spec, path):
     spack.config.change_or_add("develop", find_fn, change_fn)
 
 
-def _retrieve_develop_source(spec, abspath):
+def _retrieve_develop_source(spec: spack.spec.Spec, abspath: str) -> None:
     # "steal" the source code via staging API. We ask for a stage
     # to be created, then copy it afterwards somewhere else. It would be
     # better if we can create the `source_path` directly into its final
@@ -67,13 +72,15 @@ def _retrieve_develop_source(spec, abspath):
     # We construct a package class ourselves, rather than asking for
     # Spec.package, since Spec only allows this when it is concrete
     package = pkg_cls(spec)
-    if isinstance(package.stage[0].fetcher, spack.fetch_strategy.GitFetchStrategy):
-        package.stage[0].fetcher.get_full_repo = True
+    source_stage: spack.stage.Stage = package.stage[0]
+    if isinstance(source_stage.fetcher, spack.fetch_strategy.GitFetchStrategy):
+        source_stage.fetcher.get_full_repo = True
         # If we retrieved this version before and cached it, we may have
         # done so without cloning the full git repo; likewise, any
         # mirror might store an instance with truncated history.
-        package.stage[0].disable_mirrors()
+        source_stage.default_fetcher_only = True
 
+    source_stage.fetcher.set_package(package)
     package.stage.steal_source(abspath)
 
 
@@ -151,4 +158,11 @@ def develop(parser, args):
     env = spack.cmd.require_active_env(cmd_name="develop")
     tty.debug("Updating develop config for {0} transactionally".format(env.name))
     with env.write_transaction():
+        if args.build_directory is not None:
+            spack.config.add(
+                "packages:{}:package_attributes:build_directory:{}".format(
+                    spec.name, args.build_directory
+                ),
+                env.scope_name,
+            )
         _update_config(spec, path)

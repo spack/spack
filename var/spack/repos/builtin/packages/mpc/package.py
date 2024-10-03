@@ -23,6 +23,8 @@ class Mpc(AutotoolsPackage, GNUMirrorPackage):
     version("1.0.3", sha256="617decc6ea09889fb08ede330917a00b16809b8db88c29c31bfbb49cbf88ecc3")
     version("1.0.2", sha256="b561f54d8a479cee3bc891ee52735f18ff86712ba30f036f8b8537bae380c488")
 
+    depends_on("c", type="build")  # generated
+
     variant(
         "libs",
         default="shared,static",

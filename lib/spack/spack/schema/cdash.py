@@ -2,16 +2,15 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Schema for cdash.yaml configuration file.
 
 .. literalinclude:: ../spack/schema/cdash.py
    :lines: 13-
 """
-
+from typing import Any, Dict
 
 #: Properties for inclusion in other schemas
-properties = {
+properties: Dict[str, Any] = {
     "cdash": {
         "type": "object",
         "additionalProperties": False,

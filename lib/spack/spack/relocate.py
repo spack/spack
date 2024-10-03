@@ -6,29 +6,25 @@ import collections
 import itertools
 import os
 import re
+import sys
 from collections import OrderedDict
 from typing import List, Optional
 
 import macholib.mach_o
 import macholib.MachO
 
-import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
-from llnl.util.symlink import symlink
+from llnl.util.symlink import readlink, symlink
 
-import spack.paths
-import spack.platforms
-import spack.repo
-import spack.spec
+import spack.error
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
+import spack.util.filesystem as ssys
 
 from .relocate_text import BinaryFilePrefixReplacer, TextFilePrefixReplacer
-
-is_macos = str(spack.platforms.real_host()) == "darwin"
 
 
 class InstallRootStringError(spack.error.SpackError):
@@ -52,7 +48,7 @@ def _patchelf() -> Optional[executable.Executable]:
     """Return the full path to the patchelf binary, if available, else None."""
     import spack.bootstrap
 
-    if is_macos:
+    if sys.platform == "darwin":
         return None
 
     with spack.bootstrap.ensure_bootstrap_configuration():
@@ -419,7 +415,7 @@ def relocate_macho_binaries(
             # normalized paths
             rel_to_orig = macho_make_paths_normal(orig_path_name, rpaths, deps, idpath)
             # replace the relativized paths with normalized paths
-            if is_macos:
+            if sys.platform == "darwin":
                 modify_macho_object(path_name, rpaths, deps, idpath, rel_to_orig)
             else:
                 modify_object_macholib(path_name, rel_to_orig)
@@ -430,7 +426,7 @@ def relocate_macho_binaries(
                 rpaths, deps, idpath, old_layout_root, prefix_to_prefix
             )
             # replace the old paths with new paths
-            if is_macos:
+            if sys.platform == "darwin":
                 modify_macho_object(path_name, rpaths, deps, idpath, paths_to_paths)
             else:
                 modify_object_macholib(path_name, paths_to_paths)
@@ -441,7 +437,7 @@ def relocate_macho_binaries(
                 path_name, new_layout_root, rpaths, deps, idpath
             )
             # replace the new paths with relativized paths in the new prefix
-            if is_macos:
+            if sys.platform == "darwin":
                 modify_macho_object(path_name, rpaths, deps, idpath, paths_to_paths)
             else:
                 modify_object_macholib(path_name, paths_to_paths)
@@ -453,7 +449,7 @@ def relocate_macho_binaries(
                 rpaths, deps, idpath, old_layout_root, prefix_to_prefix
             )
             # replace the old paths with new paths
-            if is_macos:
+            if sys.platform == "darwin":
                 modify_macho_object(path_name, rpaths, deps, idpath, paths_to_paths)
             else:
                 modify_object_macholib(path_name, paths_to_paths)
@@ -565,7 +561,7 @@ def make_link_relative(new_links, orig_links):
         orig_links (list): original links
     """
     for new_link, orig_link in zip(new_links, orig_links):
-        target = os.readlink(orig_link)
+        target = readlink(orig_link)
         relative_target = os.path.relpath(target, os.path.dirname(orig_link))
         os.unlink(new_link)
         symlink(relative_target, new_link)
@@ -575,7 +571,7 @@ def make_macho_binaries_relative(cur_path_names, orig_path_names, old_layout_roo
     """
     Replace old RPATHs with paths relative to old_dir in binary files
     """
-    if not is_macos:
+    if not sys.platform == "darwin":
         return
 
     for cur_path, orig_path in zip(cur_path_names, orig_path_names):
@@ -613,7 +609,7 @@ def relocate_links(links, prefix_to_prefix):
     """Relocate links to a new install prefix."""
     regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
     for link in links:
-        old_target = os.readlink(link)
+        old_target = readlink(link)
         match = regex.match(old_target)
 
         # No match.
@@ -663,7 +659,7 @@ def is_binary(filename):
     Returns:
         True or False
     """
-    m_type, _ = fs.mime_type(filename)
+    m_type, _ = ssys.mime_type(filename)
 
     msg = "[{0}] -> ".format(filename)
     if m_type == "application":
@@ -691,7 +687,7 @@ def fixup_macos_rpath(root, filename):
         True if fixups were applied, else False
     """
     abspath = os.path.join(root, filename)
-    if fs.mime_type(abspath) != ("application", "x-mach-binary"):
+    if ssys.mime_type(abspath) != ("application", "x-mach-binary"):
         return False
 
     # Get Mach-O header commands

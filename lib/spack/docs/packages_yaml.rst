@@ -647,6 +647,8 @@ manually placed files within the install prefix are owned by the
 assigned group. If no group is assigned, Spack will allow the OS
 default behavior to go as expected.
 
+.. _assigning-package-attributes:
+
 ----------------------------
 Assigning Package Attributes
 ----------------------------
@@ -657,10 +659,11 @@ You can assign class-level attributes in the configuration:
 
   packages:
     mpileaks:
-      # Override existing attributes
-      url: http://www.somewhereelse.com/mpileaks-1.0.tar.gz
-      # ... or add new ones
-      x: 1
+      package_attributes:
+        # Override existing attributes
+        url: http://www.somewhereelse.com/mpileaks-1.0.tar.gz
+        # ... or add new ones
+        x: 1
 
 Attributes set this way will be accessible to any method executed
 in the package.py file (e.g. the ``install()`` method). Values for these

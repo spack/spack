@@ -31,6 +31,9 @@ class Libunwind(AutotoolsPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("docs", default=True, description="Build man page")
     variant(
         "libs",

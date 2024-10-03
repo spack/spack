@@ -13,12 +13,13 @@ class EnvironmentModules(Package):
     """
 
     homepage = "https://cea-hpc.github.io/modules/"
-    url = "https://github.com/cea-hpc/modules/releases/download/v5.3.1/modules-5.3.1.tar.gz"
+    url = "https://github.com/cea-hpc/modules/releases/download/v5.4.0/modules-5.4.0.tar.gz"
     git = "https://github.com/cea-hpc/modules.git"
 
     maintainers("xdelaruelle")
 
     version("main", branch="main")
+    version("5.4.0", sha256="586245cbf9420866078d8c28fce8ef4f192530c69a0f368f51e848340dcf3b90")
     version("5.3.1", sha256="d02f9ce4f8baf6c99edceb7c73bfdd1e97d77bcc4725810b86efed9f58dda962")
     version("5.3.0", sha256="21b8daa0181044ef65097a1e3517af1f24e7c7343cc5bdaf70be11e3cb0edb51")
     version("5.2.0", sha256="48f9f10864303df628a48cab17074820a6251ad8cd7d66dd62aa7798af479254")
@@ -57,6 +58,8 @@ class EnvironmentModules(Package):
         url="http://prdownloads.sourceforge.net/modules/modules-3.2.10.tar.gz",
     )
 
+    depends_on("c", type="build")  # generated
+
     variant("X", default=True, description="Build with X functionality")
 
     depends_on("less", type=("build", "run"), when="@4.1:")
@@ -89,10 +92,10 @@ class EnvironmentModules(Package):
         if not spec.satisfies("@4.5.2"):
             config_args.extend(["--disable-dependency-tracking", "--disable-silent-rules"])
 
-        if "~X" in spec:
+        if spec.satisfies("~X"):
             config_args = ["--without-x"] + config_args
 
-        if "@4.4.0:4.8" in self.spec:
+        if self.spec.satisfies("@4.4.0:4.8"):
             config_args.extend(
                 [
                     "--with-icase=search",
@@ -101,13 +104,13 @@ class EnvironmentModules(Package):
                 ]
             )
 
-        if "@4.3.0:4.8" in self.spec:
+        if self.spec.satisfies("@4.3.0:4.8"):
             config_args.extend(["--enable-color"])
 
-        if "@4.2.0:4.8" in self.spec:
+        if self.spec.satisfies("@4.2.0:4.8"):
             config_args.extend(["--enable-auto-handling"])
 
-        if "@4.1.0:" in self.spec:
+        if self.spec.satisfies("@4.1.0:"):
             config_args.extend(
                 [
                     # Variables in quarantine are empty during module command
@@ -117,17 +120,17 @@ class EnvironmentModules(Package):
                 ]
             )
 
-        if "@4.0.0:4.8" in self.spec:
+        if self.spec.satisfies("@4.0.0:4.8"):
             config_args.extend(["--disable-compat-version"])
 
-        if "@4.0.0:" in self.spec:
+        if self.spec.satisfies("@4.0.0:"):
             config_args.extend(["--with-tclsh={0}".format(tcl.prefix.bin.tclsh)])
 
-        if "@3.2.10" in self.spec:
+        if self.spec.satisfies("@3.2.10"):
             # See: https://sourceforge.net/p/modules/bugs/62/
             config_args.extend(["--disable-debug", "CPPFLAGS=-DUSE_INTERP_ERRORLINE"])
 
-        if "@:3.2" in self.spec:
+        if self.spec.satisfies("@:3.2"):
             config_args.extend(
                 [
                     "--without-tclx",
