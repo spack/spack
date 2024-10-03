@@ -620,7 +620,7 @@ class Hip(CMakePackage):
             cache_extra_test_sources(self, [self.test_src_dir])
 
     def test_samples(self):
-        # configure, build and run all hip samples
+        """build and run all hip samples"""
         if self.spec.satisfies("@5.1:5.5"):
             test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir_old)
         elif self.spec.satisfies("@5.6:"):
