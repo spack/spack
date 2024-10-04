@@ -316,7 +316,9 @@ def find(parser, args):
             env_specs = env.all_specs()
 
         spec_hashes = set(x.dag_hash() for x in env_specs)
-        installed_specs_meeting_q_args = set(spack.store.STORE.db.query(hashes=spec_hashes, **q_args))
+        installed_specs_meeting_q_args = set(
+            spack.store.STORE.db.query(hashes=spec_hashes, **q_args)
+        )
 
         results = list()
         concretized_but_not_installed = list()
@@ -381,13 +383,9 @@ def find(parser, args):
                     concretized_suffix += " (show with `spack find -c`)"
 
             pkg_type = "loaded" if args.loaded else "installed"
-            spack.cmd.print_how_many_pkgs(
-                results, pkg_type, suffix=installed_suffix
-            )
+            spack.cmd.print_how_many_pkgs(results, pkg_type, suffix=installed_suffix)
 
             if env:
                 spack.cmd.print_how_many_pkgs(
-                    concretized_but_not_installed,
-                    "concretized",
-                    suffix=concretized_suffix,
+                    concretized_but_not_installed, "concretized", suffix=concretized_suffix
                 )
