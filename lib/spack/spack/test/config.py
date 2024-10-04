@@ -1476,6 +1476,15 @@ def test_config_fetch_remote_configs_skip(
         check_contents(result_filename, expected)
 
 
+def test_parse_install_tree(mutable_config):
+    # create an includes.yaml
+    # load that in
+    # loading that in should include a bunch of other scopes
+    # activating an env is the natural point to check through and load include scopes
+    # config isn't necessarily loaded automatically, so I also need to shim into whichever ones are...
+    pass
+
+
 def test_config_file_dir_failure(tmpdir, mutable_empty_config):
     with pytest.raises(spack.config.ConfigFileError, match="not a file"):
         spack.config.read_config_file(tmpdir.strpath)

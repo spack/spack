@@ -763,6 +763,35 @@ def _add_platform_scope(
     )
     cfg.push_scope(scope)
 
+import re
+import collections
+
+def update_config_with_includes():
+    includes= read_includes()
+    when_idx = collections.defaultdict(int)
+    to_add = list()
+    for entry in includes:
+        include_file = entry["file"]
+        when_str = entry.get("when", "True")
+        when_id = re.sub(r'[^\w]', '-', when_str)
+        when_idx[when_id] += 1
+        include_id = f"{when_id}-{when_idx[when_id]}"
+
+        activate = spack.environment.environment._eval_conditional(when_str)
+        if activate:
+            to_add.append((include_id, include_file))
+
+    for include_id, basedir in to_add:
+        scope = DirectoryConfigScope(
+            include_id, basedir, writable=False
+        )
+        cfg.push_scope(scope)
+
+def read_includes():
+    return _read_includes(CONFIG)
+
+def _read_includes(Configuration):
+    return Configuration.get("config:includes")
 
 def config_paths_from_entry_points() -> List[Tuple[str, str]]:
     """Load configuration paths from entry points
