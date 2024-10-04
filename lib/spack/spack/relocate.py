@@ -205,23 +205,33 @@ def macho_find_paths(orig_rpaths, deps, idpath, old_layout_root, prefix_to_prefi
     paths_to_paths dictionary which maps all of the old paths to new paths
     """
     paths_to_paths = dict()
+    # Sort from longest path to shortest, to ensure we try /foo/bar/baz before /foo/bar
+    prefix_iteration_order = sorted(prefix_to_prefix, key=len, reverse=True)
     for orig_rpath in orig_rpaths:
         if orig_rpath.startswith(old_layout_root):
-            for old_prefix, new_prefix in prefix_to_prefix.items():
+            for old_prefix in prefix_iteration_order:
+                new_prefix = prefix_to_prefix[old_prefix]
                 if orig_rpath.startswith(old_prefix):
                     new_rpath = re.sub(re.escape(old_prefix), new_prefix, orig_rpath)
                     paths_to_paths[orig_rpath] = new_rpath
+                    break
         else:
             paths_to_paths[orig_rpath] = orig_rpath
 
     if idpath:
-        for old_prefix, new_prefix in prefix_to_prefix.items():
+        for old_prefix in prefix_iteration_order:
+            new_prefix = prefix_to_prefix[old_prefix]
             if idpath.startswith(old_prefix):
                 paths_to_paths[idpath] = re.sub(re.escape(old_prefix), new_prefix, idpath)
+                break
+
     for dep in deps:
-        for old_prefix, new_prefix in prefix_to_prefix.items():
+        for old_prefix in prefix_iteration_order:
+            new_prefix = prefix_to_prefix[old_prefix]
             if dep.startswith(old_prefix):
                 paths_to_paths[dep] = re.sub(re.escape(old_prefix), new_prefix, dep)
+                break
+
         if dep.startswith("@"):
             paths_to_paths[dep] = dep
 
