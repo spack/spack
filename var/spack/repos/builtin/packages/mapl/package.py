@@ -238,7 +238,12 @@ class Mapl(CMakePackage):
     variant("extdata2g", default=True, description="Use ExtData2G")
     variant("pfunit", default=False, description="Build with pFUnit support")
     variant("f2py", default=False, description="Build with f2py support")
-
+    variant(
+        "skip_tests",
+        default="none",
+        multi=True,
+        description="List of unit test case numbers to skip",
+    )
     variant(
         "build_type",
         default="Release",
@@ -415,4 +420,8 @@ class Mapl(CMakePackage):
         with working_dir(self.builder.build_directory):
             # The test suite contains a lot of tests. We select only those
             # that are cheap. Note this requires MPI and 6 processes
-            ctest("--output-on-failure", "-L", "ESSENTIAL")
+            args = ["--output-on-failure", "--label-regex", "ESSENTIAL"]
+            if not self.spec.satisfies("skip_tests=none"):
+                skip_list = "|".join(self.spec.variants["skip_tests"].value)
+                args.extend(["--exclude-regex", "_case(%s)$" % skip_list])
+            ctest(*args)
