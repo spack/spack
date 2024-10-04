@@ -1476,13 +1476,36 @@ def test_config_fetch_remote_configs_skip(
         check_contents(result_filename, expected)
 
 
-def test_parse_install_tree(mutable_config):
-    # create an includes.yaml
-    # load that in
-    # loading that in should include a bunch of other scopes
-    # activating an env is the natural point to check through and load include scopes
-    # config isn't necessarily loaded automatically, so I also need to shim into whichever ones are...
-    pass
+def test_include_cfg(mock_low_high_config, write_config_file, tmpdir):
+    cfg1_path = str(tmpdir.join("include1.yaml"))
+    with open(cfg1_path, "w") as f:
+        f.write(
+            """\
+config:
+  verify_ssl: False
+  dirty: True
+packages:
+  python:
+    require: "@3.11:"
+"""
+        )
+
+    include_cfg = {
+        "config": {
+            "includes": [
+                {"path": f"{cfg1_path}",
+                 "when": "True"},
+            ]
+        }
+    }
+    write_config_file("config", include_cfg, "low")
+
+    assert not spack.config.get("config:dirty")
+
+    spack.config.update_config_with_includes()
+
+    assert spack.config.get("config:dirty")
+    assert spack.config.get("packages")["python"]["require"] == "@3.11:"
 
 
 def test_config_file_dir_failure(tmpdir, mutable_empty_config):

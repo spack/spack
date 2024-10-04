@@ -767,24 +767,23 @@ import re
 import collections
 
 def update_config_with_includes():
-    includes= read_includes()
-    when_idx = collections.defaultdict(int)
+    includes = read_includes()
     to_add = list()
     for entry in includes:
-        include_file = entry["file"]
+        include_path = entry["path"]
         when_str = entry.get("when", "True")
-        when_id = re.sub(r'[^\w]', '-', when_str)
-        when_idx[when_id] += 1
-        include_id = f"{when_id}-{when_idx[when_id]}"
-
         activate = spack.environment.environment._eval_conditional(when_str)
         if activate:
-            to_add.append((include_id, include_file))
+            to_add.append(include_path)
 
-    for include_id, basedir in to_add:
-        scope = DirectoryConfigScope(
-            include_id, basedir, writable=False
-        )
+    def resolve_relative(cfg_path):
+        raise ValueError(f"config:include got relative path {cfg_path}")
+
+    scopes = spack.environment.environment.scopes_from_paths(
+        to_add, "include", config_stage_dir=None, resolve_relative=resolve_relative
+    )
+
+    for scope in scopes:
         CONFIG.push_scope(scope)
 
 def read_includes():
