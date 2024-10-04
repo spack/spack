@@ -33,7 +33,7 @@ class Purify(CMakePackage):
     variant("casa", default=False, description="Enable Casacore")
     variant("onnxrt", default=False, description="Build with Tensorflow support using onnx")
 
-    depends_on("cmake@3.30")
+    depends_on("cmake@3")
     depends_on("eigen@3.4")
     depends_on("libtiff@4.5")
     depends_on("fftw-api")
