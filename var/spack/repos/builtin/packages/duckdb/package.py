@@ -54,6 +54,8 @@ class Duckdb(MakefilePackage):
         depends_on("ninja", when="+ninjabuild")
         depends_on("py-pip", when="+python")
         depends_on("py-setuptools-scm", when="+python")
+        depends_on("pkgconfig", when="+static_openssl")
+        depends_on("zlib-api", when="+static_openssl")
     depends_on("openssl", when="+httpfs")
     depends_on("icu4c", when="~icu")
 
