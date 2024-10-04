@@ -1486,11 +1486,41 @@ config:
   dirty: True
 packages:
   python:
-    require: "@3.11:"
+    require:
+    - spec: "@3.11:"
 """
         )
 
-    include_cfg = {"config": {"includes": [{"path": f"{cfg1_path}", "when": "True"}]}}
+    # This config will not be included
+    cfg2_path = str(tmpdir.join("include2.yaml"))
+    with open(cfg2_path, "w") as f:
+        f.write(
+            """\
+packages:
+  python:
+    require:
+    - spec: +shared
+"""
+        )
+
+    cfg3_path = str(tmpdir.join("include3.yaml"))
+    with open(cfg3_path, "w") as f:
+        f.write(
+            """\
+packages:
+  python:
+    require:
+    - spec: +ssl
+"""
+        )
+
+    this_os = spack.platforms.host().default_os
+    include_entries = [
+        {"path": f"{cfg1_path}", "when": "True"},
+        {"path": f"{cfg2_path}", "when": "False"},
+        {"path": f"{cfg3_path}", "when": f'os == "{this_os}"'},
+    ]
+    include_cfg = {"config": {"includes": include_entries}}
     write_config_file("config", include_cfg, "low")
 
     assert not spack.config.get("config:dirty")
@@ -1498,7 +1528,9 @@ packages:
     spack.config.update_config_with_includes()
 
     assert spack.config.get("config:dirty")
-    assert spack.config.get("packages")["python"]["require"] == "@3.11:"
+    python_reqs = spack.config.get("packages")["python"]["require"]
+    req_specs = set(x["spec"] for x in python_reqs)
+    assert req_specs == set(["@3.11:", "+ssl"])
 
 
 def test_config_file_dir_failure(tmpdir, mutable_empty_config):
