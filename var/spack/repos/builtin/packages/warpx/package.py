@@ -393,6 +393,7 @@ class Warpx(CMakePackage, PythonExtension):
             # variants
             self.define_from_variant("WarpX_APP", "app"),
             self.define_from_variant("WarpX_ASCENT", "ascent"),
+            self.define_from_variant("WarpX_CATALYST", "catalyst"),
             self.define_from_variant("WarpX_SENSEI", "sensei"),
             "-DWarpX_COMPUTE={0}".format(spec.variants["compute"].value.upper()),
             "-DWarpX_DIMS={0}".format(";".join(spec.variants["dims"].value).upper()),
