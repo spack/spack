@@ -33,10 +33,10 @@ class Re2c(AutotoolsPackage, CMakePackage):
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
+    depends_on("python@3.7:", when="@3.1", type="build")
 
     with when("build_system=cmake"):
         depends_on("cmake@3.12:", type="build")
-        depends_on("python@3.7:", when="@3.1", type="build")
 
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder):
