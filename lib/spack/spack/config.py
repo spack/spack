@@ -785,7 +785,7 @@ def update_config_with_includes():
         scope = DirectoryConfigScope(
             include_id, basedir, writable=False
         )
-        cfg.push_scope(scope)
+        CONFIG.push_scope(scope)
 
 def read_includes():
     return _read_includes(CONFIG)
