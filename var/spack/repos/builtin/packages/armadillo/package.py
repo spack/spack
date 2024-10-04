@@ -13,7 +13,7 @@ class Armadillo(CMakePackage):
 
     homepage = "https://arma.sourceforge.net/"
     url = "http://sourceforge.net/projects/arma/files/armadillo-8.100.1.tar.xz"
-    git = "https://gitlab.com/conradsnicta/armadillo-code"
+    git = "https://gitlab.com/conradsnicta/armadillo-code.git"
 
     license("Apache-2.0")
 
