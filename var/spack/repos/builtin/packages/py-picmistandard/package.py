@@ -51,6 +51,6 @@ class PyPicmistandard(PythonPackage):
     )
 
     depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-numpy@1.15:", type=("build", "run"))
-    depends_on("py-scipy@1.5:", type=("build", "run"))
+    depends_on("py-numpy@1.15:1", type=("build", "run"))
+    depends_on("py-scipy@1.5:1", type=("build", "run"))
     depends_on("py-setuptools", type="build")
