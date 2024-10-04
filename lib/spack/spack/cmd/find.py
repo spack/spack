@@ -307,14 +307,24 @@ def find(parser, args):
     if not env and args.show_concretized:
         tty.die("-c / --show-concretized requires an active environment")
 
+    q_args = query_arguments(args)
     if env:
         if args.constraint:
             init_specs = spack.cmd.parse_specs(args.constraint)
-            results = env.all_matching_specs(*init_specs)
+            env_specs = env.all_matching_specs(*init_specs)
         else:
-            results = env.all_specs()
+            env_specs = env.all_specs()
+
+        results = list()
+        for spec in env_specs:
+            _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+            #if "python" not in str(spec):
+            #    import pdb; pdb.set_trace()
+            if not record or not record.installed:
+                results.append(spec)
+            elif spack.database.record_matches(record, **q_args):
+                results.append(spec)
     else:
-        q_args = query_arguments(args)
         results = args.specs(**q_args)
 
     decorator = make_env_decorator(env) if env else lambda s, f: f

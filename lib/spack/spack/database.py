@@ -1568,25 +1568,10 @@ class Database:
             if hashes is not None and rec.spec.dag_hash() not in hashes:
                 continue
 
-            if origin and not (origin == rec.origin):
+            if not record_matches(rec, known=known, installed=installed, explicit=explicit,
+                    start_date=start_date, end_date=end_date, in_buildcache=in_buildcache,
+                    origin=origin):
                 continue
-
-            if not rec.install_type_matches(installed):
-                continue
-
-            if in_buildcache is not any and rec.in_buildcache != in_buildcache:
-                continue
-
-            if explicit is not any and rec.explicit != explicit:
-                continue
-
-            if known is not any and known(rec.spec.name):
-                continue
-
-            if start_date or end_date:
-                inst_date = datetime.datetime.fromtimestamp(rec.installation_time)
-                if not (start_date < inst_date < end_date):
-                    continue
 
             if query_spec is any:
                 results.append(rec.spec)
@@ -1736,6 +1721,38 @@ class Database:
                 status = "explicit" if explicit else "implicit"
                 tty.debug(message.format(status, s=spec))
                 rec.explicit = explicit
+
+
+def record_matches(record,
+        known=any,
+        installed=True,
+        explicit=any,
+        start_date=None,
+        end_date=None,
+        in_buildcache=any,
+        origin=None,
+    ):
+    if origin and not (origin == rec.origin):
+        return False
+
+    if not rec.install_type_matches(installed):
+        return False
+
+    if in_buildcache is not any and rec.in_buildcache != in_buildcache:
+        return False
+
+    if explicit is not any and rec.explicit != explicit:
+        return False
+
+    if known is not any and known(rec.spec.name):
+        return False
+
+    if start_date or end_date:
+        inst_date = datetime.datetime.fromtimestamp(rec.installation_time)
+        if not (start_date < inst_date < end_date):
+            return False
+
+    return True
 
 
 class NoUpstreamVisitor:
