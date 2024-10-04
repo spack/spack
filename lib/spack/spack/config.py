@@ -770,6 +770,9 @@ def update_config_with_includes():
     (i.e. if an included config defines an "includes:" section).
     """
     includes = CONFIG.get("config:includes")
+    if not includes:
+        return
+
     to_add = list()
     for entry in includes:
         include_path = entry["path"]
