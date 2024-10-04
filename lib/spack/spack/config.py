@@ -765,7 +765,11 @@ def _add_platform_scope(
 
 
 def update_config_with_includes():
-    includes = read_includes()
+    """The "config:" section of a Configuration can specify other
+    configurations to include. This does not handle recursive includes
+    (i.e. if an included config defines an "includes:" section).
+    """
+    includes = CONFIG.get("config:includes")
     to_add = list()
     for entry in includes:
         include_path = entry["path"]
@@ -783,14 +787,6 @@ def update_config_with_includes():
 
     for scope in scopes:
         CONFIG.push_scope(scope)
-
-
-def read_includes():
-    return _read_includes(CONFIG)
-
-
-def _read_includes(Configuration):
-    return Configuration.get("config:includes")
 
 
 def config_paths_from_entry_points() -> List[Tuple[str, str]]:
