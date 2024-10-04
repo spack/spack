@@ -101,7 +101,7 @@ properties: Dict[str, Any] = {
                     "type": "object",
                     "properties": {"when": {"type": "string"}, "file": {"type": "string"}},
                 },
-            }
+            },
         },
         "deprecatedProperties": [
             {

@@ -1490,14 +1490,7 @@ packages:
 """
         )
 
-    include_cfg = {
-        "config": {
-            "includes": [
-                {"path": f"{cfg1_path}",
-                 "when": "True"},
-            ]
-        }
-    }
+    include_cfg = {"config": {"includes": [{"path": f"{cfg1_path}", "when": "True"}]}}
     write_config_file("config", include_cfg, "low")
 
     assert not spack.config.get("config:dirty")

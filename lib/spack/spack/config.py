@@ -763,8 +763,6 @@ def _add_platform_scope(
     )
     cfg.push_scope(scope)
 
-import re
-import collections
 
 def update_config_with_includes():
     includes = read_includes()
@@ -786,11 +784,14 @@ def update_config_with_includes():
     for scope in scopes:
         CONFIG.push_scope(scope)
 
+
 def read_includes():
     return _read_includes(CONFIG)
 
+
 def _read_includes(Configuration):
     return Configuration.get("config:includes")
+
 
 def config_paths_from_entry_points() -> List[Tuple[str, str]]:
     """Load configuration paths from entry points

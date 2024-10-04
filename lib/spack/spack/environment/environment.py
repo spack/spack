@@ -2991,7 +2991,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             cfg_path = os.path.join(self.manifest_dir, cfg_path)
             return os.path.normpath(os.path.realpath(cfg_path))
 
-        return scopes_from_paths(includes, f"env:{self.name}", self.config_stage_dir, resolve_relative)
+        return scopes_from_paths(
+            includes, f"env:{self.name}", self.config_stage_dir, resolve_relative
+        )
 
     @property
     def env_config_scopes(self) -> List[spack.config.ConfigScope]:
@@ -3051,9 +3053,7 @@ def scopes_from_paths(includes, name_prefix, config_stage_dir, resolve_relative)
             elif include_url.scheme in ("http", "https", "ftp"):
                 # Stage any remote configuration file(s)
                 staged_configs = (
-                    os.listdir(config_stage_dir)
-                    if os.path.exists(config_stage_dir)
-                    else []
+                    os.listdir(config_stage_dir) if os.path.exists(config_stage_dir) else []
                 )
                 remote_path = urllib.request.url2pathname(include_url.path)
                 basename = os.path.basename(remote_path)
@@ -3103,9 +3103,7 @@ def scopes_from_paths(includes, name_prefix, config_stage_dir, resolve_relative)
             config_name = f"{name_prefix}:{config_path}"
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
             scopes.append(
-                spack.config.SingleFileScope(
-                    config_name, config_path, spack.schema.merged.schema
-                )
+                spack.config.SingleFileScope(config_name, config_path, spack.schema.merged.schema)
             )
         else:
             missing.append(config_path)
