@@ -103,7 +103,8 @@ class DarshanRuntime(AutotoolsPackage):
         default="none",
         description="Path to centralized, formatted Darshan log directory",
     )
-    variant("group_readable_logs", default=False, description="Build with group readable logs option")
+    variant("mmap_logs", default=False, description="Use mmap to store Darshan log data")
+    variant("group_readable_logs", default=False, description="Write group-readable logs")
 
     @property
     def configure_directory(self):
@@ -142,6 +143,8 @@ class DarshanRuntime(AutotoolsPackage):
             extra_args.append("--enable-apxc-mod")
         if spec.satisfies("+group_readable_logs"):
             extra_args.append("--enable-group-readable-logs")
+        if spec.satisfies("+mmap_logs"):
+            extra_args.append("--enable-mmap-logs")
         log_path = self.spec.variants["log_path"].value
         if log_path != "none":
             extra_args.append("--with-log-path=" + log_path)
