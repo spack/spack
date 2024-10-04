@@ -307,14 +307,25 @@ def find(parser, args):
     if not env and args.show_concretized:
         tty.die("-c / --show-concretized requires an active environment")
 
+    q_args = query_arguments(args)
     if env:
         if args.constraint:
             init_specs = spack.cmd.parse_specs(args.constraint)
-            results = env.all_matching_specs(*init_specs)
+            env_specs = env.all_matching_specs(*init_specs)
         else:
-            results = env.all_specs()
+            env_specs = env.all_specs()
+
+        spec_hashes = set(x.dag_hash() for x in env_specs)
+        installed_specs_meeting_q_args = set(spack.store.STORE.db.query(hashes=spec_hashes, **q_args))
+
+        results = list()
+        concretized_but_not_installed = list()
+        for spec in env_specs:
+            if not spec.installed:
+                concretized_but_not_installed.append(spec)
+            elif spec in installed_specs_meeting_q_args:
+                results.append(spec)
     else:
-        q_args = query_arguments(args)
         results = args.specs(**q_args)
 
     decorator = make_env_decorator(env) if env else lambda s, f: f
@@ -350,9 +361,9 @@ def find(parser, args):
                 display_env(env, args, decorator, results)
 
         if not args.only_roots:
-            display_results = results
-            if not args.show_concretized:
-                display_results = list(x for x in results if x.installed)
+            display_results = list(results)
+            if args.show_concretized:
+                display_results += concretized_but_not_installed
             cmd.display_specs(
                 display_results, args, decorator=decorator, all_headers=True, status_fn=status_fn
             )
@@ -371,12 +382,12 @@ def find(parser, args):
 
             pkg_type = "loaded" if args.loaded else "installed"
             spack.cmd.print_how_many_pkgs(
-                list(x for x in results if x.installed), pkg_type, suffix=installed_suffix
+                results, pkg_type, suffix=installed_suffix
             )
 
             if env:
                 spack.cmd.print_how_many_pkgs(
-                    list(x for x in results if not x.installed),
+                    concretized_but_not_installed,
                     "concretized",
                     suffix=concretized_suffix,
                 )
