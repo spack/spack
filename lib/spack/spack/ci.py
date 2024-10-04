@@ -380,7 +380,7 @@ class SpackCI:
         """
 
         self.ci_config = ci_config
-        self.named_jobs = ["any", "build", "copy", "cleanup", "noop", "reindex", "signing"]
+        self.named_jobs = ["any", "build", "copy", "cleanup", "check", "noop", "reindex", "signing"]
 
         self.ir = {
             "jobs": {},
@@ -402,7 +402,7 @@ class SpackCI:
 
         for name in self.named_jobs:
             # Skip the special named jobs
-            if name not in ["any", "build"]:
+            if name not in ["any", "build", "check"]:
                 jobs[name] = self.__init_job("")
 
     def __init_job(self, spec):

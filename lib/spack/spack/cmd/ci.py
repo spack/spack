@@ -296,6 +296,8 @@ def ci_rebuild(args):
     # out as variables, or else provided by GitLab itself.
     pipeline_artifacts_dir = os.environ.get("SPACK_ARTIFACTS_ROOT")
     job_log_dir = os.environ.get("SPACK_JOB_LOG_DIR")
+    # TBD/TLD: Is this appropriate when we want to run stand-alone tests
+    # TBD/TLD: in a separate job?
     job_test_dir = os.environ.get("SPACK_JOB_TEST_DIR")
     repro_dir = os.environ.get("SPACK_JOB_REPRO_DIR")
     # TODO: Remove this in Spack 0.23
@@ -331,6 +333,8 @@ def ci_rebuild(args):
     ci_project_dir = os.environ.get("CI_PROJECT_DIR")
     pipeline_artifacts_dir = os.path.join(ci_project_dir, pipeline_artifacts_dir)
     job_log_dir = os.path.join(ci_project_dir, job_log_dir)
+    # TBD/TLD: Is this appropriate when we want to run stand-alone tests
+    # TBD/TLD: in a separate job?
     job_test_dir = os.path.join(ci_project_dir, job_test_dir)
     repro_dir = os.path.join(ci_project_dir, repro_dir)
     local_mirror_dir = os.path.join(ci_project_dir, local_mirror_dir)
@@ -437,6 +441,8 @@ def ci_rebuild(args):
     if os.path.exists(job_log_dir):
         shutil.rmtree(job_log_dir)
 
+    # TBD/TLD: Is this appropriate when we want to run stand-alone tests
+    # TBD/TLD: in a separate job?
     if os.path.exists(job_test_dir):
         shutil.rmtree(job_test_dir)
 
@@ -447,6 +453,8 @@ def ci_rebuild(args):
     # need for storing artifacts.  The cdash_report directory will be
     # created internally if needed.
     os.makedirs(job_log_dir)
+    # TBD/TLD: Is this appropriate when we want to run stand-alone tests
+    # TBD/TLD: in a separate job?
     os.makedirs(job_test_dir)
     os.makedirs(repro_dir)
 
@@ -630,6 +638,8 @@ def ci_rebuild(args):
         and job_spec.name in ci_config["broken-tests-packages"]
     )
     reports_dir = fs.join_path(os.getcwd(), "cdash_report")
+    # TBD/TLD: Is this appropriate when we want to run stand-alone tests
+    # TBD/TLD: in a separate job?
     if args.tests and broken_tests:
         tty.warn("Unable to run stand-alone tests since listed in ci's 'broken-tests-packages'")
         if cdash_handler:
