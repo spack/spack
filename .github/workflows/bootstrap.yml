@@ -190,16 +190,16 @@ jobs:
           spack external find --not-buildable cmake bison
           spack -d solve zlib
           ./share/spack/qa/validate_last_exit.ps1
-          tree '$env:userprofile'/.spack/bootstrap/store/
+          tree $env:userprofile/.spack/bootstrap/store/
       - name: Bootstrap GnuPG
         run: |
           ./share/spack/setup-env.ps1
           spack -d gpg list
           ./share/spack/qa/validate_last_exit.ps1
-          tree '$env:userprofile'/.spack/bootstrap/store/
+          tree $env:userprofile/.spack/bootstrap/store/
       - name: Bootstrap File
         run: |
           ./share/spack/setup-env.ps1
           spack -d python share/spack/qa/bootstrap-file.py
           ./share/spack/qa/validate_last_exit.ps1
-          tree '$env:userprofile'/.spack/bootstrap/store/
+          tree $env:userprofile/.spack/bootstrap/store/
