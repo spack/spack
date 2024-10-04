@@ -256,7 +256,6 @@ class Mapl(CMakePackage):
     depends_on("mpi")
     depends_on("hdf5")
     depends_on("netcdf-c")
-    depends_on("zstd", when="+zstd")
     depends_on("netcdf-c +zstd", when="+zstd")
     depends_on("netcdf-fortran")
 
