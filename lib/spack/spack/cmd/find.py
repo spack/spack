@@ -222,11 +222,9 @@ def make_env_decorator(env):
 def display_env(env, args, decorator, results):
     """Display extra find output when running in an environment.
 
-    Find in an environment outputs 2 or 3 sections:
-
-    1. Root specs
-    2. Concretized roots (if asked for with -c)
-    3. Installed specs
+    In an environment, `spack find` outputs a preliminary section
+    showing the root specs of the environment (this is in addition
+    to the section listing out specs matching the query parameters).
 
     """
     tty.msg("In environment %s" % env.name)
