@@ -153,7 +153,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("ascent")
         depends_on("ascent +cuda", when="+cuda")
         depends_on("ascent +mpi", when="+mpi")
-    with when("+catalyst"):
+    with when("+conduit"):
         depends_on("conduit")
         depends_on("conduit +mpi", when="+mpi")
     with when("+catalyst"):
