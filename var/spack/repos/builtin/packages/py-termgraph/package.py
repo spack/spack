@@ -13,6 +13,8 @@ class PyTermgraph(PythonPackage):
     homepage = "https://github.com/mkaz/termgraph"
     pypi = "termgraph/termgraph-0.5.3.tar.gz"
 
+    maintainers("TomMelt")
+
     license("MIT", checked_by="tommelt")
 
     version("0.5.3", sha256="36ff2098e41eeab1e7cdda7366dc3e5b514ea799fa3e77537564492a7edefdd5")
