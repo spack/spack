@@ -315,13 +315,9 @@ class Hdf5(CMakePackage):
                 cmake_flags.append(self.compiler.cc_pic_flag)
             if spec.satisfies("@1.8.21 %oneapi@2023.0.0"):
                 cmake_flags.append("-Wno-error=int-conversion")
-            if spec.satisfies("%apple-clang@15:"):
-                cmake_flags.append("-Wl,-ld_classic")
         elif name == "cxxflags":
             if spec.satisfies("@:1.8.12+cxx~shared"):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
-            if spec.satisfies("%apple-clang@15:"):
-                cmake_flags.append("-Wl,-ld_classic")
         elif name == "fflags":
             if spec.satisfies("%cce+fortran"):
                 # Cray compiler generates module files with uppercase names by
