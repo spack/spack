@@ -13,6 +13,8 @@ class PySphinxClick(PythonPackage):
     homepage = "https://sphinx-click.readthedocs.io/en/latest"
     pypi = "sphinx_click/sphinx_click-6.0.0.tar.gz"
 
+    maintainers("TomMelt")
+
     license("MIT", checked_by="tommelt")
 
     version("6.0.0", sha256="f5d664321dc0c6622ff019f1e1c84e58ce0cecfddeb510e004cf60c2a3ab465b")
