@@ -199,7 +199,7 @@ jobs:
           pip install --upgrade pytest coverage[toml] pytest-xdist pytest-cov
     - name: Setup Homebrew packages
       run: |
-        brew install dash fish gcc gnupg2 kcov
+        brew install dash fish gcc gnupg kcov
     - name: Run unit tests
       env:
         SPACK_TEST_PARALLEL: 4
