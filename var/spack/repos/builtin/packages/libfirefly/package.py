@@ -27,7 +27,7 @@ class Libfirefly(CMakePackage):
         "double-precision",
         description="Enables double type instead of float when enabled",
         default=True,
-        when="@2.1.0"
+        when="@2.1.0",
     )
 
     def cmake_args(self):
