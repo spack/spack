@@ -9,7 +9,12 @@ from spack.package import *
 class PyPexpect(PythonPackage):
     """Pexpect allows easy control of interactive console applications."""
 
+    homepage = "https://pexpect.readthedocs.io/en/stable/"
     pypi = "pexpect/pexpect-4.2.1.tar.gz"
+
+    maintainers("TomMelt")
+
+    license("ISC", checked_by="tommelt")
 
     version("4.9.0", sha256="ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f")
     version("4.8.0", sha256="fc65a43959d153d0114afe13997d439c22823a27cefceb5ff35c2178c6784c0c")
