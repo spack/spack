@@ -45,10 +45,10 @@ class Adept(AutotoolsPackage):
 
         if self.spec.satisfies("+blas"):
             blas_prefix = self.spec["openblas"].prefix
-            args.append("--with-blas={blas_prefix}")
+            args.append(f"--with-blas={blas_prefix}")
 
         if self.spec.satisfies("+lapack"):
             lapack_prefix = self.spec["netlib-lapack"].prefix
-            args.append("--with-lapack={lapack_prefix}")
+            args.append(f"--with-lapack={lapack_prefix}")
 
         return args
