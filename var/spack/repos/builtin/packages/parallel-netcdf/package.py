@@ -36,6 +36,7 @@ class ParallelNetcdf(AutotoolsPackage):
         return url
 
     version("master", branch="master")
+    version("1.13.0", sha256="aba0f1c77a51990ba359d0f6388569ff77e530ee574e40592a1e206ed9b2c491")
     version("1.12.3", sha256="439e359d09bb93d0e58a6e3f928f39c2eae965b6c97f64e67cd42220d6034f77")
     version("1.12.2", sha256="3ef1411875b07955f519a5b03278c31e566976357ddfc74c2493a1076e7d7c74")
     version("1.12.1", sha256="56f5afaa0ddc256791c405719b6436a83b92dcd5be37fe860dea103aee8250a2")
@@ -84,6 +85,9 @@ class ParallelNetcdf(AutotoolsPackage):
     # override the verbose output flag for Fortran compiler on the command line
     # (see below).
     conflicts("+shared", when="@:1.9%nag+fortran")
+
+    # https://github.com/Parallel-NetCDF/PnetCDF/issues/155
+    conflicts("%apple-clang@16:")
 
     @property
     def libs(self):
