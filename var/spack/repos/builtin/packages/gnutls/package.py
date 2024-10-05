@@ -38,7 +38,9 @@ class Gnutls(AutotoolsPackage):
 
     variant("zlib", default=True, description="Enable zlib compression support")
     variant("guile", default=False, description="Enable Guile bindings")
-    variant("brotli", default=True, description="Enable brotli compression support", when="@3.7.4:")
+    variant(
+        "brotli", default=True, description="Enable brotli compression support", when="@3.7.4:"
+    )
 
     # gnutls+guile is currently broken on MacOS.  See Issue #11668
     conflicts("+guile", when="platform=darwin")
