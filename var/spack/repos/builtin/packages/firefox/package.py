@@ -45,8 +45,8 @@ class Firefox(Package):
     depends_on("libxkbcommon")
 
     # Needed for build to succeed after configuration
+    depends_on("at-spi2-core@2")
     depends_on("libnotify")
-    depends_on("at-spi2-core@2:2.38")  # Version 2.58 fails, 2.38 confirmed
 
     with default_args(type="build"):
         depends_on("binutils")
@@ -74,25 +74,35 @@ class Firefox(Package):
         depends_on("generate-ninja")  # Maybe this should be a buid_system option
 
         # Python requirements for mach
-        with when("@127.0"):  # These may apply more generally backwards/forwards
-            depends_on("py-semver@2.13.0:")
-            depends_on("py-appdirs@1.4:")
-            depends_on("py-click@7:")
-            depends_on("py-diskcache@4:")
-            depends_on("py-jinja2@2.10.1:")
-            depends_on("py-jsonschema@3.0.2:")
-            depends_on("py-pyyaml@5.3.1:")
-            depends_on("py-markupsafe@2.0:")
-            depends_on("py-pyrsistent@0.15.0:")  # This states 0.14.0 but we need it a bit higher
-            depends_on("py-six")
+        depends_on("py-appdirs@1.4:")
+        depends_on("py-attrs@17.4.0:")
+        depends_on("py-click@7:")
+        depends_on("py-diskcache@4:")
+        depends_on("py-jinja2@2.10.1:")
+        depends_on("py-jsonschema@3.0.2:")
+        depends_on("py-markupsafe@2.0:")
+        depends_on("py-pyrsistent@0.16.0:")  # This states 0.14.0 but we need it a bit higher
+        depends_on("py-pyyaml@5.3.1:")
+        depends_on("py-semver@2.13.0:")
+        depends_on("py-six")
+ 
+        # These are strictly limited or bounded in the pyproject.toml
+        depends_on("py-psutil@5.4.2:5.9.4")
+        depends_on("py-zstandard@0.11.1:0.22.0")
 
-            # These are strictly limited or bounded in the pyproject.toml
-            depends_on("py-psutil@5.4.2:5.9.4")
-            depends_on("py-zstandard@0.11.1:0.22.0")
+        # Version specific build/api dependency requirements
+        with when("@127"):
+            depends_on("rust@:1.79")  # API changes after 1.80 break
+            depends_on("at-spi2-core@2:2.38")  # Version 2.58 fails, 2.38 confirmed
             depends_on("py-attrs@17.4.0")
             depends_on("py-glean-sdk@60.0.1")
             depends_on("py-glean-parser@14.0")
-            depends_on("rust@:1.79")
+        with when("@130.0"):  # These may apply more generally backwards/forwards
+            depends_on("rust@1.81")
+            depends_on("at-spi2-core@2:2.58")  # Version 2.58 fails, 2.38 confirmed
+            depends_on("py-attrs@23.1")
+            depends_on("py-glean-sdk@60.4.0")
+            depends_on("py-glean-parser@14.3")
 
     conflicts("py-pyrsistent@0.17.0:0.17.2", msg="Noted in mach requirements file")
 
