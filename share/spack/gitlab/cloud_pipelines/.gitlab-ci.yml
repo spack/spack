@@ -1,4 +1,4 @@
-stages: [ "generate", "build", "publish" ]
+stages: [ "generate", "build" ]
 
 variables:
   SPACK_DISABLE_LOCAL_CONFIG: "1"
@@ -181,13 +181,14 @@ default:
     - cat /proc/loadavg || true
     - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
     - . "./share/spack/setup-env.sh"
+    - spack arch
   after_script:
     - cat /proc/loadavg || true
     - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
 
 .generate-x86_64:
   extends: [ ".generate-base" ]
-  tags: ["spack", "public", "medium", "x86_64"]
+  tags: ["spack", "public", "medium", "x86_64_v3"]
 
 .generate-aarch64:
   extends: [ ".generate-base" ]
@@ -218,7 +219,7 @@ default:
     - $ErrorActionPreference=$ErrorActionOld
 
   tags: ["spack", "public", "medium", "x86_64-win"]
-  image: "ghcr.io/johnwparent/windows-server21h2:sha-c749cf3"
+  image: "ghcr.io/johnwparent/windows-server21h2:sha-1c12b61"
 
 .generate-deprecated:
   extends: [ ".base-job" ]
@@ -258,36 +259,6 @@ default:
 .build:
   extends: [ ".base-job" ]
   stage: build
-
-protected-publish:
-  # Copy binaries from stack-specific mirrors to a root mirror
-  stage: publish
-  only:
-  - /^develop$/
-  - /^releases\/v.*/
-  - /^v.*/
-  - /^develop-[\d]{4}-[\d]{2}-[\d]{2}$/
-  image: "ghcr.io/spack/python-aws-bash:0.0.1"
-  tags: ["spack", "public", "medium", "aws", "x86_64"]
-  retry:
-    max: 2
-    when: ["runner_system_failure", "stuck_or_timeout_failure"]
-  variables:
-    SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
-    SPACK_PIPELINE_TYPE: "spack_protected_branch"
-    KUBERNETES_CPU_REQUEST: 4000m
-    KUBERNETES_MEMORY_REQUEST: 16G
-  script:
-    - . "./share/spack/setup-env.sh"
-    - spack --version
-    - export COPY_SPECS_DIR=${CI_PROJECT_DIR}/jobs_scratch_dir/specs_to_copy
-    - spack buildcache sync --manifest-glob "${COPY_SPECS_DIR}/*.json"
-    - curl -fLsS https://spack.github.io/keys/spack-public-binary-key.pub -o /tmp/spack-public-binary-key.pub
-    - aws s3 cp /tmp/spack-public-binary-key.pub "${SPACK_COPY_BUILDCACHE}/build_cache/_pgp/spack-public-binary-key.pub"
-    - spack buildcache update-index --keys "${SPACK_COPY_BUILDCACHE}"
-  id_tokens:
-    GITLAB_OIDC_TOKEN:
-      aud: "protected_binary_mirror"
 
 ########################################
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
@@ -406,7 +377,7 @@ e4s-neoverse_v1-build:
 
 e4s-rocm-external-generate:
   extends: [ ".e4s-rocm-external", ".generate-x86_64"]
-  image: ecpe4s/ubuntu22.04-runner-amd64-gcc-11.4-rocm5.7.1:2024.03.01
+  image: ecpe4s/ubuntu22.04-runner-amd64-gcc-11.4-rocm6.2.0:2024.09.11
 
 e4s-rocm-external-build:
   extends: [ ".e4s-rocm-external", ".build" ]
@@ -452,7 +423,7 @@ e4s-rocm-external-build:
 
 e4s-oneapi-generate:
   extends: [ ".e4s-oneapi", ".generate-x86_64"]
-  image:  ghcr.io/spack/ubuntu22.04-runner-amd64-oneapi-2024.0.0:2024.01.16b
+  image: ecpe4s/ubuntu22.04-runner-amd64-oneapi-2024.2:2024.09.06
 
 e4s-oneapi-build:
   extends: [ ".e4s-oneapi", ".build" ]
@@ -512,28 +483,6 @@ build_systems-build:
   needs:
     - artifacts: True
       job: build_systems-generate
-
-###########################################
-# Build tests for different developer tools
-###########################################
-.developer-tools:
-  extends: [ ".linux_x86_64_v3" ]
-  variables:
-    SPACK_CI_STACK_NAME: developer-tools
-
-developer-tools-generate:
-  extends: [ ".developer-tools", ".generate-x86_64"]
-
-developer-tools-build:
-  extends: [ ".developer-tools", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: developer-tools-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: developer-tools-generate
 
 ###########################################
 # Build tests for different developer tools
@@ -742,7 +691,7 @@ tutorial-build:
 
 ml-linux-x86_64-cpu-generate:
   extends: [ ".generate-x86_64", .ml-linux-x86_64-cpu, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/ubuntu-22.04:v2024-05-07
+  image: ghcr.io/spack/ubuntu-24.04:v2024-09-05-v2
 
 ml-linux-x86_64-cpu-build:
   extends: [ ".build", ".ml-linux-x86_64-cpu" ]
@@ -765,7 +714,7 @@ ml-linux-x86_64-cpu-build:
 
 ml-linux-x86_64-cuda-generate:
   extends: [ ".generate-x86_64", .ml-linux-x86_64-cuda, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/ubuntu-22.04:v2024-05-07
+  image: ghcr.io/spack/ubuntu-24.04:v2024-09-05-v2
 
 ml-linux-x86_64-cuda-build:
   extends: [ ".build", ".ml-linux-x86_64-cuda"  ]
@@ -777,6 +726,29 @@ ml-linux-x86_64-cuda-build:
   needs:
     - artifacts: True
       job: ml-linux-x86_64-cuda-generate
+
+########################################
+# Machine Learning - Linux x86_64 (ROCm)
+########################################
+.ml-linux-x86_64-rocm:
+  extends: [ ".linux_x86_64_v3" ]
+  variables:
+    SPACK_CI_STACK_NAME: ml-linux-x86_64-rocm
+
+ml-linux-x86_64-rocm-generate:
+  extends: [ ".generate-x86_64", .ml-linux-x86_64-rocm, ".tags-x86_64_v4" ]
+  image: ghcr.io/spack/ubuntu-24.04:v2024-09-05-v2
+
+ml-linux-x86_64-rocm-build:
+  extends: [ ".build", ".ml-linux-x86_64-rocm" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-x86_64-rocm-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-x86_64-rocm-generate
 
 #########################################
 # Machine Learning - Darwin aarch64 (MPS)
@@ -914,6 +886,7 @@ e4s-cray-rhel-generate:
   extends: [ ".generate-cray-rhel", ".e4s-cray-rhel" ]
 
 e4s-cray-rhel-build:
+  allow_failure: true  # libsci_cray.so broken, misses DT_NEEDED for libdl.so
   extends: [ ".build", ".e4s-cray-rhel" ]
   trigger:
     include:
@@ -936,6 +909,7 @@ e4s-cray-sles-generate:
   extends: [ ".generate-cray-sles", ".e4s-cray-sles" ]
 
 e4s-cray-sles-build:
+  allow_failure: true  # libsci_cray.so broken, misses DT_NEEDED for libdl.so
   extends: [ ".build", ".e4s-cray-sles" ]
   trigger:
     include:

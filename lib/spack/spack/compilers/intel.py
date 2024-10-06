@@ -11,18 +11,6 @@ from spack.version import Version
 
 
 class Intel(Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ["icc"]
-
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ["icpc"]
-
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["ifort"]
-
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["ifort"]
-
     # Named wrapper links within build_env_path
     link_paths = {
         "cc": os.path.join("intel", "icc"),
@@ -30,9 +18,6 @@ class Intel(Compiler):
         "f77": os.path.join("intel", "ifort"),
         "fc": os.path.join("intel", "ifort"),
     }
-
-    PrgEnv = "PrgEnv-intel"
-    PrgEnv_compiler = "intel"
 
     if sys.platform == "win32":
         version_argument = "/QV"
@@ -126,3 +111,14 @@ class Intel(Compiler):
     @property
     def stdcxx_libs(self):
         return ("-cxxlib",)
+
+    def setup_custom_environment(self, pkg, env):
+        # Edge cases for Intel's oneAPI compilers when using the legacy classic compilers:
+        # Always pass flags to disable deprecation warnings, since these warnings can
+        # confuse tools that parse the output of compiler commands (e.g. version checks).
+        if self.cc and self.cc.endswith("icc") and self.real_version >= Version("2021"):
+            env.append_flags("SPACK_ALWAYS_CFLAGS", "-diag-disable=10441")
+        if self.cxx and self.cxx.endswith("icpc") and self.real_version >= Version("2021"):
+            env.append_flags("SPACK_ALWAYS_CXXFLAGS", "-diag-disable=10441")
+        if self.fc and self.fc.endswith("ifort") and self.real_version >= Version("2021"):
+            env.append_flags("SPACK_ALWAYS_FFLAGS", "-diag-disable=10448")

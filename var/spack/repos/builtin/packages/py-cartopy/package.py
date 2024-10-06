@@ -32,6 +32,8 @@ class PyCartopy(PythonPackage):
     version("0.17.0", sha256="424bd9e9ddef6e48cbdee694ce589ec431be8591f15b6cb93cb2b333a29b2c61")
     version("0.16.0", sha256="f23dffa101f43dd91e866a49ebb5f5048be2a24ab8a921a5c07edabde746d9a4")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("epsg", default=False, when="@:0.19", description="Add support for epsg.io")
     variant(
         "ows",
@@ -62,12 +64,13 @@ class PyCartopy(PythonPackage):
         depends_on("py-setuptools-scm", when="@0.19:")
 
     with default_args(type=("build", "link", "run")):
-        depends_on("py-numpy@1.21:", when="@0.23:")
-        depends_on("py-numpy@1.21:1", when="@0.22")
-        depends_on("py-numpy@1.18:1", when="@0.20:21")
-        depends_on("py-numpy@1.13.3:1", when="@0.19")
-        depends_on("py-numpy@1.10:1", when="@0.17:0.18")
-        depends_on("py-numpy@1.6:1", when="@0.16")
+        depends_on("py-numpy@1.21:", when="@0.22:")
+        depends_on("py-numpy@1.18:", when="@0.20:21")
+        depends_on("py-numpy@1.13.3:", when="@0.19")
+        depends_on("py-numpy@1.10:", when="@0.17:0.18")
+        depends_on("py-numpy@1.6:", when="@0.16")
+        # https://github.com/SciTools/cartopy/issues/2339
+        depends_on("py-numpy@:1", when="@:0.22")
 
     with default_args(type=("build", "run")):
         depends_on("py-matplotlib@3.5:", when="@0.23:")

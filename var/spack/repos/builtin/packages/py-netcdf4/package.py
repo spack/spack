@@ -35,6 +35,8 @@ class PyNetcdf4(PythonPackage):
     depends_on("py-numpy", when="@1.6.5:", type=("build", "link", "run"))
     depends_on("py-numpy@1.9:", when="@1.5.4:1.6.2", type=("build", "link", "run"))
     depends_on("py-numpy@1.7:", type=("build", "link", "run"))
+    # https://github.com/Unidata/netcdf4-python/pull/1317
+    depends_on("py-numpy@:1", when="@:1.6", type=("build", "link", "run"))
     depends_on("py-mpi4py", when="+mpi", type=("build", "run"))
     depends_on("netcdf-c", when="-mpi")
     depends_on("netcdf-c+mpi", when="+mpi")
@@ -48,9 +50,16 @@ class PyNetcdf4(PythonPackage):
     # following patch disables the usage of pkg-config at all.
     patch("disable_pkgconf.patch")
 
+    # https://github.com/Unidata/netcdf4-python/pull/1322
+    patch(
+        "https://github.com/Unidata/netcdf4-python/commit/49dcd0b5bd25824c254770c0d41445133fc13a46.patch?full_index=1",
+        sha256="71eefe1d3065ad050fb72eb61d916ae1374a3fafd96ddaee6499cda952d992c4",
+        when="@1.6: %gcc@14:",
+    )
+
     def flag_handler(self, name, flags):
         if name == "cflags":
-            if self.spec.satisfies("%oneapi"):
+            if self.spec.satisfies("%oneapi") or self.spec.satisfies("%apple-clang@15:"):
                 flags.append("-Wno-error=int-conversion")
 
         return flags, None, None

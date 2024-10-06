@@ -128,6 +128,10 @@ class Eospac(Package):
         url="http://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.3.1_r20161202150449.tgz",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # This patch allows the use of spack's compile wrapper 'flang'
     patch("flang.patch", when="@:6.4.0beta.2%clang")
     patch("frt.patch", when="%fj")
@@ -155,11 +159,11 @@ class Eospac(Package):
             # This looks goofy because eospac does not actually respect the
             # value of DO_OFFLOAD and instead only attempts to check for its
             # existence; a quirk of eospac.
-            if "+offload" in spec:
+            if spec.satisfies("+offload"):
                 compilerArgs.append("DO_OFFLOAD=1")
             # Eospac depends on fcommon behavior
             #   but gcc@10 flipped to default fno-common
-            if "%gcc@10:" in spec:
+            if spec.satisfies("%gcc@10:"):
                 compilerArgs.append("CFLAGS=-fcommon")
             if self.run_tests:
                 make("check", *compilerArgs)

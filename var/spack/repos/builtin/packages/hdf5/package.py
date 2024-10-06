@@ -87,6 +87,10 @@ class Hdf5(CMakePackage):
     version("1.8.12", sha256="b5cccea850096962b5fd9e96f22c4f47d2379224bb41130d9bc038bb6c37dfcb")
     version("1.8.10", sha256="4813b79c5fb8701a625b9924b8203bc7154a77f9b826ad4e034144b4056a160a")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("shared", default=True, description="Builds a shared version of the library")
 
     variant("hl", default=False, description="Enable the high-level library")
@@ -159,6 +163,12 @@ class Hdf5(CMakePackage):
     conflicts(
         "+fortran", when="@1.13.3:^cmake@:3.22", msg="cmake_minimum_required is not set correctly."
     )
+
+    # HDF5 searches for zlib CMake config files before it falls back to
+    # FindZLIB.cmake. We don't build zlib with CMake by default, so have to
+    # delete the first search, otherwise it may find a system zlib. See
+    # https://github.com/HDFGroup/hdf5/issues/4904
+    patch("find_package_zlib.patch", when="@1.8.16:")
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
@@ -305,13 +315,9 @@ class Hdf5(CMakePackage):
                 cmake_flags.append(self.compiler.cc_pic_flag)
             if spec.satisfies("@1.8.21 %oneapi@2023.0.0"):
                 cmake_flags.append("-Wno-error=int-conversion")
-            if spec.satisfies("%apple-clang@15:"):
-                cmake_flags.append("-Wl,-ld_classic")
         elif name == "cxxflags":
             if spec.satisfies("@:1.8.12+cxx~shared"):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
-            if spec.satisfies("%apple-clang@15:"):
-                cmake_flags.append("-Wl,-ld_classic")
         elif name == "fflags":
             if spec.satisfies("%cce+fortran"):
                 # Cray compiler generates module files with uppercase names by
@@ -322,7 +328,7 @@ class Hdf5(CMakePackage):
             if spec.satisfies("@:1.8.12+fortran~shared"):
                 cmake_flags.append(self.compiler.fc_pic_flag)
         elif name == "ldlibs":
-            if "+fortran %fj" in spec:
+            if spec.satisfies("+fortran %fj"):
                 cmake_flags.extend(["-lfj90i", "-lfj90f", "-lfjsrcinfo", "-lelf"])
 
         return flags, None, (cmake_flags or None)
@@ -340,7 +346,7 @@ class Hdf5(CMakePackage):
         """
         query_parameters = self.spec.last_query.extra_parameters
 
-        shared = "+shared" in self.spec
+        shared = self.spec.satisfies("+shared")
 
         # This map contains a translation from query_parameters
         # to the libraries needed
@@ -481,7 +487,7 @@ class Hdf5(CMakePackage):
 
     @run_before("cmake")
     def fortran_check(self):
-        if "+fortran" in self.spec and not self.compiler.fc:
+        if self.spec.satisfies("+fortran") and not self.compiler.fc:
             msg = "cannot build a Fortran variant without a Fortran compiler"
             raise RuntimeError(msg)
 
@@ -528,7 +534,7 @@ class Hdf5(CMakePackage):
         # MSMPI does not provide compiler wrappers
         # and pointing these variables at the MSVC compilers
         # breaks CMake's mpi detection for MSMPI.
-        if "+mpi" in spec and "msmpi" not in spec:
+        if spec.satisfies("+mpi") and "msmpi" not in spec:
             args.extend(
                 [
                     "-DMPI_CXX_COMPILER:PATH=%s" % spec["mpi"].mpicxx,
@@ -536,7 +542,7 @@ class Hdf5(CMakePackage):
                 ]
             )
 
-            if "+fortran" in spec:
+            if spec.satisfies("+fortran"):
                 args.extend(["-DMPI_Fortran_COMPILER:PATH=%s" % spec["mpi"].mpifc])
 
         # work-around for https://github.com/HDFGroup/hdf5/issues/1320
@@ -614,12 +620,24 @@ class Hdf5(CMakePackage):
     def link_debug_libs(self):
         # When build_type is Debug, the hdf5 build appends _debug to all library names.
         # Dependents of hdf5 (netcdf-c etc.) can't handle those, thus make symlinks.
-        if "build_type=Debug" in self.spec:
+        if self.spec.satisfies("build_type=Debug"):
             libs = find(self.prefix.lib, "libhdf5*_debug.*", recursive=False)
             with working_dir(self.prefix.lib):
                 for lib in libs:
                     libname = os.path.split(lib)[1]
                     os.symlink(libname, libname.replace("_debug", ""))
+
+    @run_after("install")
+    def symlink_to_h5hl_wrappers(self):
+        if self.spec.satisfies("+hl"):
+            with working_dir(self.prefix.bin):
+                # CMake's FindHDF5 relies only on h5cc so it doesn't find the HL
+                # component unless it uses h5hlcc so we symlink h5cc to h5hlcc etc
+                symlink_files = {"h5cc": "h5hlcc", "h5c++": "h5hlc++"}
+                for old, new in symlink_files.items():
+                    if os.path.isfile(old):
+                        os.remove(old)
+                        symlink(new, old)
 
     @property
     @llnl.util.lang.memoized

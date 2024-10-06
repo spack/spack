@@ -11,7 +11,7 @@ class XorgSgmlDoctools(AutotoolsPackage, XorgPackage):
     sheets used in building/formatting the documentation provided in other
     X.Org packages."""
 
-    homepage = "https://cgit.freedesktop.org/xorg/doc/xorg-sgml-doctools"
+    homepage = "https://gitlab.freedesktop.org/xorg/doc/xorg-sgml-doctools"
     xorg_mirror_path = "doc/xorg-sgml-doctools-1.11.tar.gz"
 
     maintainers("wdconinc")

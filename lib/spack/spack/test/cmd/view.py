@@ -8,6 +8,7 @@ import os.path
 import pytest
 
 import spack.util.spack_yaml as s_yaml
+from spack.installer import PackageInstaller
 from spack.main import SpackCommand
 from spack.spec import Spec
 
@@ -28,9 +29,7 @@ def create_projection_file(tmpdir, projection):
 
 
 @pytest.mark.parametrize("cmd", ["hardlink", "symlink", "hard", "add", "copy", "relocate"])
-def test_view_link_type(
-    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery, cmd
-):
+def test_view_link_type(tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery, cmd):
     install("libdwarf")
     viewpath = str(tmpdir.mkdir("view_{0}".format(cmd)))
     view(cmd, viewpath, "libdwarf")
@@ -44,7 +43,7 @@ def test_view_link_type(
 
 @pytest.mark.parametrize("add_cmd", ["hardlink", "symlink", "hard", "add", "copy", "relocate"])
 def test_view_link_type_remove(
-    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery, add_cmd
+    tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery, add_cmd
 ):
     install("needs-relocation")
     viewpath = str(tmpdir.mkdir("view_{0}".format(add_cmd)))
@@ -57,9 +56,7 @@ def test_view_link_type_remove(
 
 
 @pytest.mark.parametrize("cmd", ["hardlink", "symlink", "hard", "add", "copy", "relocate"])
-def test_view_projections(
-    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery, cmd
-):
+def test_view_projections(tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery, cmd):
     install("libdwarf@20130207")
 
     viewpath = str(tmpdir.mkdir("view_{0}".format(cmd)))
@@ -76,7 +73,7 @@ def test_view_projections(
 
 
 def test_view_multiple_projections(
-    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
+    tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery
 ):
     install("libdwarf@20130207")
     install("extendee@1.0%gcc")
@@ -96,7 +93,7 @@ def test_view_multiple_projections(
 
 
 def test_view_multiple_projections_all_first(
-    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
+    tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery
 ):
     install("libdwarf@20130207")
     install("extendee@1.0%gcc")
@@ -115,14 +112,14 @@ def test_view_multiple_projections_all_first(
     assert os.path.exists(extendee_prefix)
 
 
-def test_view_external(tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery):
+def test_view_external(tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery):
     install("externaltool")
     viewpath = str(tmpdir.mkdir("view"))
     output = view("symlink", viewpath, "externaltool")
     assert "Skipping external package: externaltool" in output
 
 
-def test_view_extension(tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery):
+def test_view_extension(tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery):
     install("extendee")
     install("extension1@1.0")
     install("extension1@2.0")
@@ -136,9 +133,7 @@ def test_view_extension(tmpdir, mock_packages, mock_archive, mock_fetch, config,
     assert os.path.exists(os.path.join(viewpath, "bin", "extension1"))
 
 
-def test_view_extension_remove(
-    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
-):
+def test_view_extension_remove(tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery):
     install("extendee")
     install("extension1@1.0")
     viewpath = str(tmpdir.mkdir("view"))
@@ -149,9 +144,7 @@ def test_view_extension_remove(
     assert not os.path.exists(os.path.join(viewpath, "bin", "extension1"))
 
 
-def test_view_extension_conflict(
-    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
-):
+def test_view_extension_conflict(tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery):
     install("extendee")
     install("extension1@1.0")
     install("extension1@2.0")
@@ -162,7 +155,7 @@ def test_view_extension_conflict(
 
 
 def test_view_extension_conflict_ignored(
-    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
+    tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery
 ):
     install("extendee")
     install("extension1@1.0")
@@ -184,11 +177,11 @@ def test_view_fails_with_missing_projections_file(tmpdir):
 @pytest.mark.parametrize("with_projection", [False, True])
 @pytest.mark.parametrize("cmd", ["symlink", "copy"])
 def test_view_files_not_ignored(
-    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery, cmd, with_projection
+    tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery, cmd, with_projection
 ):
     spec = Spec("view-not-ignored").concretized()
     pkg = spec.package
-    pkg.do_install()
+    PackageInstaller([pkg], explicit=True).install()
     pkg.assert_installed(spec.prefix)
 
     install("view-file")  # Arbitrary package to add noise

@@ -18,6 +18,8 @@ class Libcanberra(AutotoolsPackage):
 
     version("0.30", sha256="c2b671e67e0c288a69fc33dc1b6f1b534d07882c2aceed37004bf48c601afa72")
 
+    depends_on("c", type="build")  # generated
+
     # TODO: Add variants and dependencies for the following audio support:
     # ALSA, OSS, PulseAudio, udev, GStreamer, null, GTK3+ , tdb
 
@@ -37,7 +39,7 @@ class Libcanberra(AutotoolsPackage):
     depends_on("gtkplus", when="+gtk")
 
     depends_on("libvorbis")
-    depends_on("libtool", type="build")
+    depends_on("libtool", type="link")  # libltdl
 
     depends_on("pkgconfig", type="build")
 

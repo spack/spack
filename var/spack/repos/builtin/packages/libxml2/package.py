@@ -16,7 +16,7 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     project (but usable outside of the Gnome platform), it is free
     software available under the MIT License."""
 
-    homepage = "http://xmlsoft.org"
+    homepage = "https://gitlab.gnome.org/GNOME/libxml2/-/wikis"
     url = "https://download.gnome.org/sources/libxml2/2.9/libxml2-2.9.13.tar.xz"
     list_url = "https://gitlab.gnome.org/GNOME/libxml2/-/releases"
 
@@ -43,6 +43,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     version("2.9.4", sha256="ffb911191e509b966deb55de705387f14156e1a56b21824357cdf0053233633c")
     version("2.9.2", sha256="5178c30b151d044aefb1b08bf54c3003a0ac55c59c866763997529d60770d5bc")
     version("2.7.8", sha256="cda23bc9ebd26474ca8f3d67e7d1c4a1f1e7106364b690d822e009fdc3c417ec")
+
+    depends_on("c", type="build")  # generated
 
     variant("python", default=False, description="Enable Python support")
     variant("shared", default=True, description="Build shared library")

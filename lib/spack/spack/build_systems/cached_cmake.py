@@ -89,7 +89,7 @@ class CachedCMakeBuilder(CMakeBuilder):
         if variant is None:
             variant = cmake_var.lower()
 
-        if variant not in self.pkg.variants:
+        if not self.pkg.has_variant(variant):
             raise KeyError('"{0}" is not a variant of "{1}"'.format(variant, self.pkg.name))
 
         if variant not in self.pkg.spec.variants:
@@ -162,7 +162,9 @@ class CachedCMakeBuilder(CMakeBuilder):
             ld_flags = " ".join(flags["ldflags"])
             ld_format_string = "CMAKE_{0}_LINKER_FLAGS"
             # CMake has separate linker arguments for types of builds.
-            for ld_type in ["EXE", "MODULE", "SHARED", "STATIC"]:
+            # 'ldflags' should not be used with CMAKE_STATIC_LINKER_FLAGS which
+            # is used by the archiver, so don't include "STATIC" in this loop:
+            for ld_type in ["EXE", "MODULE", "SHARED"]:
                 ld_string = ld_format_string.format(ld_type)
                 entries.append(cmake_cache_string(ld_string, ld_flags))
 
