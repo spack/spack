@@ -18,9 +18,15 @@ class PyTwisted(PythonPackage):
     version("22.10.0", sha256="32acbd40a94f5f46e7b42c109bfae2b302250945561783a8b7a059048f2d4d31")
     with default_args(deprecated=True):
         # https://nvd.nist.gov/vuln/detail/CVE-2022-24801
-        version("21.7.0", sha256="2cd652542463277378b0d349f47c62f20d9306e57d1247baabd6d1d38a109006")
-        version("15.4.0", sha256="78862662fa9ae29654bc2b9d349c3f1d887e6b2ed978512c4442d53ea861f05c")
-        version("15.3.0", sha256="025729751cf898842262375a40f70ae1d246daea88369eab9f6bb96e528bf285")
+        version(
+            "21.7.0", sha256="2cd652542463277378b0d349f47c62f20d9306e57d1247baabd6d1d38a109006"
+        )
+        version(
+            "15.4.0", sha256="78862662fa9ae29654bc2b9d349c3f1d887e6b2ed978512c4442d53ea861f05c"
+        )
+        version(
+            "15.3.0", sha256="025729751cf898842262375a40f70ae1d246daea88369eab9f6bb96e528bf285"
+        )
 
     depends_on("python@3.6.7:", type=("build", "run"), when="@21.7.0:")
     depends_on("python@3.7.1:", type=("build", "run"), when="@22.8.0:")
