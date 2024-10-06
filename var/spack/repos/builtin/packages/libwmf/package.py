@@ -19,7 +19,7 @@ class Libwmf(AutotoolsPackage):
 
     license("LGPL-2.0-or-later")
 
-    version("0.2.13", sha256="18ba69febd2f515d98a2352de284a8051896062ac9728d2ead07bc39ea75a068") 
+    version("0.2.13", sha256="18ba69febd2f515d98a2352de284a8051896062ac9728d2ead07bc39ea75a068")
     version("0.2.12", sha256="464ff63605d7eaf61a4a12dbd420f7a41a4d854675d8caf37729f5bc744820e2")
     version("0.2.11", sha256="e2a2664afd5abc71a42be7ad3c200f64de2b8889bf088eac1d32e205ce843803")
 
