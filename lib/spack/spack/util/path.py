@@ -191,6 +191,16 @@ def substitute_path_variables(path):
     path = substitute_config_variables(path)
     path = os.path.expandvars(path)
     path = os.path.expanduser(path)
+    
+    # Check for unexpanded vars which may be the result of a cleaned environment.
+    # Ignore $SSL_CERT_FILE since that's often not set but is in the config files
+    # by default.
+    if "$" in path.replace("$SSL_CERT_FILE", ""):
+        tty.warn((f"Path '{path}' appears to contain unexpanded environment variables. "
+                 "This sometimes occurs if your config file uses variable names that are "
+                 "cleaned before package installation, or if an expected environment "
+                 "variable is not set."))
+
     return path
 
 
