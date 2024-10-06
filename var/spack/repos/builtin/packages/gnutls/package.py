@@ -83,20 +83,9 @@ class Gnutls(AutotoolsPackage):
             args.append("--with-included-unistring")
             args.append("--without-p11-kit")  # p11-kit@0.23.1: ...
 
-        if spec.satisfies("+zlib"):
-            args.append("--with-zlib")
-        else:
-            args.append("--without-zlib")
-
-        if spec.satisfies("+brotli"):
-            args.append("--with-brotli")
-        else:
-            args.append("--without-brotli")
-
-        if spec.satisfies("+guile"):
-            args.append("--enable-guile")
-        else:
-            args.append("--disable-guile")
+        args += self.with_or_without("zlib")
+        args += self.with_or_without("brotli")
+        args += self.enable_or_disable("guile")
 
         if self.run_tests:
             args.extend(["--enable-tests", "--enable-valgrind-tests", "--enable-full-test-suite"])
