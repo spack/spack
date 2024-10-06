@@ -4,8 +4,33 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-
 from spack.package import *
+
+
+def _vep_cache_filename(major_version, species, assembly):
+    return f"{species}_vep_{major_version}_{assembly}.tar.gz"
+
+
+def _get_vep_cache_resource_args(version, species, assembly, indexed, dest=""):
+    filename = _get_vep_cache_filename(version, species, assembly)
+    dir_name = "indexed_vep_cache" if indexed else "vep"
+    root = f"https://ftp.ensembl.org/pub/release-{version}/variation/{dir_name}"
+    url = f"{root}/{filename}"
+    when = [
+        f"@{version}",
+        "~installer",  # Only need these resources when we don't use the installer
+        "+indexed" if indexed else "~indexed",  # Only need the appropriate indexed version
+        f"species={species}",  # Only need the requested species
+        # We only need to match the specified assembly for human assemblies
+        f"assembly={assembly}" if species == "homo_sapiens" else "",
+    ]
+    return {
+        "name": filename,
+        "url": url,
+        "when": " ".join(when),
+        "destination": dest,
+        "expand": False,  # We'll expand this where it needs to go later
+    }
 
 
 class VepCache(Package):
@@ -20,57 +45,6 @@ class VepCache(Package):
     # The cache *should* be pinned to the VEP version, but there are reasons
     # that one may want to avoid that
     vep_versions = ["110", "111", "112"]
-    for major in vep_versions:
-        version(major)
-
-    depends_on("vep+installer", type="build")
-    depends_on("vep", type="run")
-
-    variant("installer", default=True, description="Use built-in VEP installer to download")
-    variant("env", default=True, description="Setup VEP environment variables for this cache")
-
-    # Cache configuration options
-    variant("fasta", default=True, description="Add FASTA files to the cache")
-    variant("indexed", default=True, description="Use indexed cache")
-
-    @staticmethod
-    def get_resource_filename(major_version, species, assembly):
-        return f"{species}_vep_{major_version}_{assembly}.tar.gz"
-
-    @classmethod
-    def vep_cache_resource(cls, version, species, assembly, indexed, dest=""):
-        filename = cls.get_resource_filename(version, species, assembly)
-        dir_name = "indexed_vep_cache" if indexed else "vep"
-        root = f"https://ftp.ensembl.org/pub/release-{version}/variation/{dir_name}"
-        url = f"{root}/{filename}"
-
-        when = [
-            f"@{version}",
-            "~installer",  # Only need these resources when we don't use the installer
-            "+indexed" if indexed else "~indexed",  # Only need the appropriate indexed version
-            f"species={species}",  # Only need the requested species
-            # We only need to match the specified assembly for human assemblies
-            f"assembly={assembly}" if species == "homo_sapiens" else "",
-        ]
-
-        return resource(
-            name=filename,
-            url=url,
-            when=" ".join(when),
-            destination=dest,
-            expand=False,  # We'll expand this where it needs to go later
-        )
-
-    for major in vep_versions:
-        version(major)
-        for species, assembly, indexed in [
-            (species, assembly, indexed)
-            for species, assemblies in vep_species
-            for assembly in assemblies
-            for indexed in [True, False]
-        ]:
-            vep_cache_resource(version=major, species=species, assembly=assembly, indexed=indexed)
-
     vep_species = [
         ("bos_taurus", ["UMD3.1"]),
         ("danio_rerio", ["GRCz11"]),
@@ -85,6 +59,27 @@ class VepCache(Package):
         for assembly in assemblies
         if species == "homo_sapiens"
     ]
+    
+    for major, species, assembly, indexed in [
+        (major, species, assembly, indexed)
+        for major in vep_versions
+        for species, assemblies in vep_species
+        for assembly in assemblies
+        for indexed in [True, False]
+    ]:
+        version(major)
+        resource(**_vep_cache_resource_args(version=major, species=species, assembly=assembly, indexed=indexed))
+
+    depends_on("vep+installer", type="build")
+    depends_on("vep", type="run")
+
+    variant("installer", default=True, description="Use built-in VEP installer to download")
+    variant("env", default=True, description="Setup VEP environment variables for this cache")
+
+    # Cache configuration options
+    variant("fasta", default=True, description="Add FASTA files to the cache")
+    variant("indexed", default=True, description="Use indexed cache")
+
     variant(
         "type",
         values=["ensembl", "refseq", "merged"],
