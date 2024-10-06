@@ -25,7 +25,6 @@ class Firefox(Package):
     phases = ["configure", "build", "install"]
 
     # From Arch build notes
-    depends_on("atk")  # to provide atk_document_get_text_selections
     depends_on("dbus-glib")
     depends_on("ffmpeg")
     depends_on("gtkplus@3")
@@ -47,6 +46,7 @@ class Firefox(Package):
 
     # Needed for build to succeed after configuration
     depends_on("libnotify")
+    depends_on("at-spi2-core@2:2.38")  # Version 2.58 fails, 2.38 confirmed
 
     with default_args(type="build"):
         depends_on("binutils")
@@ -159,7 +159,7 @@ class Firefox(Package):
         self.mach("build", *self.build_args())
 
     def install(self, spec, prefix):
-        arch = spec.architecture.target.microarchitecture.family.name
+        arch = spec.architecture.target.family.name
         platform = spec.architecture.platform
         found = find(".", f"obj-{arch}-*-{platform}-*")
         package_dir = found[0]
