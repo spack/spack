@@ -8,8 +8,8 @@ import os
 from typing import Union
 
 import llnl.util.lang
-from llnl.util.filesystem import mkdirp
 import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.fetch_strategy
