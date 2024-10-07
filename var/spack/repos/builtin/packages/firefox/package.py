@@ -85,7 +85,7 @@ class Firefox(Package):
         depends_on("py-pyyaml@5.3.1:")
         depends_on("py-semver@2.13.0:")
         depends_on("py-six")
- 
+
         # These are strictly limited or bounded in the pyproject.toml
         depends_on("py-psutil@5.4.2:5.9.4")
         depends_on("py-zstandard@0.11.1:0.22.0")
