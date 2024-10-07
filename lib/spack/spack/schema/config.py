@@ -103,6 +103,7 @@ properties: Dict[str, Any] = {
                         {
                             "type": "object",
                             "properties": {"when": {"type": "string"}, "path": {"type": "string"}},
+                            "required": ["when", "path"],
                             "additionalProperties": False,
                         },
                         {"type": "string"},
