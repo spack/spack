@@ -38,6 +38,9 @@ class Su2(MesonPackage):
     version("7.0.0", sha256="6207dcca15eaebc11ce12b2866c937b4ad9b93274edf6f23d0487948ac3963b8")
     version("6.2.0", sha256="ffc953326e8432a1a6534556a5f6cf086046d3149cfcec6b4e7390eebe30ce2e")
 
+    # @:7 is missing few <cstdint> includes, causing a few files to fail with %gcc@13:
+    conflicts("%gcc@13:", when="@:7")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
@@ -126,9 +129,10 @@ class Su2(MesonPackage):
             "-Denable-pywrapper={}".format("+pywrapper" in self.spec),
             "-Denable-mkl={}".format("+mkl" in self.spec),
             "-Denable-openblas={}".format("+openblas" in self.spec),
-            "-Denable-mpp={}".format("+mpp" in self.spec),
             "-Denable-mixedprec={}".format("+midexprec" in self.spec),
         ]
+        if self.spec.version >= Version("7.1.0"):
+            args.append("-Denable-mpp={}".format("+mpp" in self.spec))
 
         if "+mkl" in self.spec:
             args.append("-Dmkl_root=" + self.spec["intel-oneapi-mkl"].prefix)
