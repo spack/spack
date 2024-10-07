@@ -33,12 +33,12 @@ class Sopt(CMakePackage):
 
     depends_on("cmake@3")
     depends_on("eigen@3.4")
-    depends_on("libtiff@4.5")
+    depends_on("libtiff@4")
     depends_on("mpi", when="+mpi")
-    depends_on("catch2@3.4", when="+tests")
-    depends_on("benchmark@1.8", when="+benchmarks")
-    depends_on("onnx@1.16", when="+onnxrt")
-    depends_on("doxygen@1.9", when="+docs")
+    depends_on("catch2@3.4:3", when="+tests")
+    depends_on("benchmark@1.8~performance_counters", when="+benchmarks")
+    depends_on("onnx@1.16:", when="+onnxrt")
+    depends_on("doxygen@1.8:1.12+graphviz", when="+docs")
 
     patch(
         "https://github.com/astro-informatics/sopt/commit/836171f32d39a3fbc1147d6c302a08a61f842fee.patch",
