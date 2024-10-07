@@ -270,8 +270,6 @@ def modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths):
         install_name_tool = executable.Executable("install_name_tool")
         install_name_tool(*args)
 
-    return
-
 
 def macholib_get_paths(cur_path):
     """Get rpaths, dependent libraries, and library id of mach-o objects."""
