@@ -97,7 +97,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     variant("openmp", default=False, description="Use OpenMP multithreading")
     variant("root", default=False, description="Use ROOT I/O")
     variant("shared", default=True, description="Build shared libraries")
-    variant("swig", default=False, when='@:0.4', description="Generate SWIG Python bindings")
+    variant("swig", default=False, when="@:0.4", description="Generate SWIG Python bindings")
     variant("vecgeom", default=True, description="Use VecGeom geometry")
 
     depends_on("cmake@3.13:", type="build")
