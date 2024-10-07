@@ -18,7 +18,6 @@ class Adept(AutotoolsPackage):
 
     version("2.1.1", sha256="0cef334e82df4526d3761bdd8319a63e7582c96b2f1cc88391729018b4825c47")
 
-    variant("debug", default=False, description="Enable debugging information")
     variant("blas", default=False, description="Enable Adept's native arrays using Openblas")
     variant("lapack", default=False, description="Enable Adept's native arrays using Lapack")
 
@@ -37,11 +36,6 @@ class Adept(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-
-        if self.spec.satisfies("+debug"):
-            args.append("CXXFLAGS=-g -O3")
-        else:
-            args.append("CXXFLAGS=-O3")
 
         if self.spec.satisfies("+blas"):
             blas_prefix = self.spec["openblas"].prefix
