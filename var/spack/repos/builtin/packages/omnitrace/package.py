@@ -12,12 +12,15 @@ class Omnitrace(CMakePackage):
     """Application Profiling, Tracing, and Analysis"""
 
     homepage = "https://amdresearch.github.io/omnitrace"
-    git = "https://github.com/AMDResearch/omnitrace.git"
-    maintainers("jrmadsen")
+    git = "https://github.com/ROCm/omnitrace.git"
+    url = "https://github.com/ROCm/omnitrace/archive/refs/tags/rocm-6.2.0.tar.gz"
+    maintainers("jrmadsen", "afzpatel", "srekolam", "renjithravindrankannath")
 
     license("MIT")
 
     version("main", branch="main", submodules=True)
+    version("6.2.1", tag="rocm-6.2.1", commit="df91a342370401c93b5278bf082e520d6a0e22e9", submodules=True)
+    version("6.2.0", tag="rocm-6.2.0", commit="f0bd9126a5456eb9e511d13261af262d17d9b61b", submodules=True)
     version("1.7.4", commit="12001d9633328f9f56210c7ebffce065bff06310", submodules=True)
     version("1.7.3", commit="2ebfe3fc30f977559142509edc4ea190c975992a", submodules=True)
     version("1.7.2", commit="a41a5c155e0d3780de4c83a76f28d7c8ffa6414f", submodules=True)
@@ -89,11 +92,22 @@ class Omnitrace(CMakePackage):
     depends_on("rocm-smi-lib", when="+rocm")
     depends_on("roctracer-dev", when="+rocm")
     depends_on("rocprofiler-dev", when="@1.3.0: +rocm")
+    for ver in ["6.2.0", "6.2.1"]:
+        depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver} +rocm")
+        depends_on(f"hip@{ver}", when=f"@{ver} +rocm")
+        depends_on(f"roctracer-dev@{ver}", when=f"@{ver} +rocm")
+        depends_on(f"rocprofiler-dev@{ver}", when=f"@{ver} +rocm")
+
     depends_on("papi+shared", when="+papi")
     depends_on("mpi", when="+mpi")
     depends_on("tau", when="+tau")
     depends_on("caliper", when="+caliper")
     depends_on("python@3:", when="+python", type=("build", "run"))
+
+    depends_on("dyninst@12", when="@6.2:")
+    depends_on("m4", when="@6.2:")
+    depends_on("texinfo", when="@6.2:")
+    depends_on("libunwind", when="@6.2:")
 
     def cmake_args(self):
         spec = self.spec
@@ -134,7 +148,18 @@ class Omnitrace(CMakePackage):
             args.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))
             args.append(self.define("MPI_CXX_COMPILER", spec["mpi"].mpicxx))
 
+        if spec.satisfies("@6.2:"):
+            args.append(self.define("dl_LIBRARY", "dl"))
+            args.append(
+                self.define("libunwind_INCLUDE_DIR", self.spec["libunwind"].prefix.include)
+            )
         return args
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies("@6.2:"):
+            if name == "ldflags":
+                flags.append("-lintl")
+        return (flags, None, None)
 
     def setup_build_environment(self, env):
         if "+tau" in self.spec:
