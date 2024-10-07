@@ -775,8 +775,12 @@ def update_config_with_includes():
 
     to_add = list()
     for entry in includes:
-        include_path = entry["path"]
-        when_str = entry.get("when", "True")
+        if isinstance(entry, str):
+            include_path = entry
+            when_str = "True"
+        else:
+            include_path = entry["path"]
+            when_str = entry.get("when", "True")
         activate = spack.environment.environment._eval_conditional(when_str)
         if activate:
             to_add.append(include_path)
