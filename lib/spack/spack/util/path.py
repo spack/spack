@@ -284,10 +284,10 @@ def canonicalize_path(
 
         return os.path.normpath(path)
 
-    try:
+    if env:
         with env:
             return _canonicalize_path(path, default_wd)
-    except TypeError:
+    else:
         return _canonicalize_path(path, default_wd)
 
 
