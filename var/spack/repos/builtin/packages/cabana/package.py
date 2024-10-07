@@ -36,6 +36,7 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("shared", default=True, description="Build shared libraries")
     variant("mpi", default=True, description="Build with mpi support")
+    variant("all", default=False, description="Build with ALL support")
     variant("arborx", default=False, description="Build with ArborX support")
     variant("heffte", default=False, description="Build with heFFTe support")
     variant("hypre", default=False, description="Build with HYPRE support")
@@ -87,6 +88,7 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos+cuda_lambda", when="+cuda")
 
     # Dependencies for subpackages
+    depends_on("all", when="@0.5.0:+all")
     depends_on("arborx", when="@0.3.0:+arborx")
     depends_on("hypre-cmake@2.22.0:", when="@0.4.0:+hypre")
     depends_on("hypre-cmake@2.22.1:", when="@0.5.0:+hypre")
