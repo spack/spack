@@ -418,16 +418,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         cmake = self.spec["cmake"].command
         cmake_args = ["-DEXECUTABLE_OUTPUT_PATH=" + cmake_path]
         if self.spec.satisfies("+rocm"):
-            rocm_prefixes = ";".join(
-                [
-                    self.spec["rocprim"].prefix,
-                    self.spec["hip"].prefix,
-                    self.spec["llvm-amdgpu"].prefix,
-                    self.spec["comgr"].prefix,
-                    self.spec["hsa-rocr-dev"].prefix,
-                ]
-            )
-            cmake_args.append("-DCMAKE_PREFIX_PATH=" + rocm_prefixes)
+            prefix_paths = ";".join(spack.build_environment.get_cmake_prefix_path(self))
+            cmake_args.append("-DCMAKE_PREFIX_PATH={0}".format(prefix_paths))
 
         cmake(cmake_path, *cmake_args)
         make = which("make")
