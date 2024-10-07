@@ -33,12 +33,10 @@ class Madgraph5amc(MakefilePackage):
         )
         with default_args(deprecated=True):
             version(
-                "2.9.19",
-                sha256="ec95d40ec8845e57682400ef24a3b769a4d0542e3a849b7c5e10105d0a0f8e61",
+                "2.9.19", sha256="ec95d40ec8845e57682400ef24a3b769a4d0542e3a849b7c5e10105d0a0f8e61"
             )
             version(
-                "2.9.17",
-                sha256="6781c515ccc2005a953c35dcf9238632b761a937f1832bdfaa5514510b8c5a17",
+                "2.9.17", sha256="6781c515ccc2005a953c35dcf9238632b761a937f1832bdfaa5514510b8c5a17"
             )
             # Older versions have been removed, only the latest LTS versions are available:
             version(
