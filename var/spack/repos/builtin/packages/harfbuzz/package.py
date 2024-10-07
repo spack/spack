@@ -2,9 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
+
 import spack.build_systems.autotools
 import spack.build_systems.meson
 from spack.package import *
+
+IS_WINDOWS = sys.platform == "win32"
 
 
 class Harfbuzz(MesonPackage, AutotoolsPackage):
@@ -84,12 +88,15 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
         description="Enable CoreText shaper backend on macOS",
     )
 
-    depends_on("pkgconfig", type="build")
-    depends_on("glib")
-    depends_on("gobject-introspection")
+    for plat in ["linux", "darwin", "freebsd"]:
+        with when(f"platform={plat}"):
+            depends_on("pkgconfig", type="build")
+            depends_on("glib")
+            depends_on("gobject-introspection")
+            depends_on("cairo+pdf+ft")
+
     depends_on("icu4c")
     depends_on("freetype")
-    depends_on("cairo+pdf+ft")
     depends_on("zlib-api")
     depends_on("graphite2", when="+graphite2")
 
@@ -137,13 +144,16 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder, SetupEnvironment):
     def meson_args(self):
         graphite2 = "enabled" if self.pkg.spec.satisfies("+graphite2") else "disabled"
         coretext = "enabled" if self.pkg.spec.satisfies("+coretext") else "disabled"
-        return [
+        config_args = [
             # disable building of gtk-doc files following #9885 and #9771
             "-Ddocs=disabled",
             "-Dfreetype=enabled",
             f"-Dgraphite2={graphite2}",
             f"-Dcoretext={coretext}",
         ]
+        if IS_WINDOWS:
+            config_args.extend(["-Dcairo=disabled", "-Dglib=disabled"])
+        return config_args
 
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder, SetupEnvironment):
