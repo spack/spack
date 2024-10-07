@@ -5,6 +5,7 @@
 
 
 import sys
+
 from spack.package import *
 
 
@@ -55,4 +56,4 @@ class Zlib(Package):
             make()
             if self.run_tests:
                 make("check")
-            make("install")   
+            make("install")

@@ -8,8 +8,8 @@ import io
 import os
 import pathlib
 import shutil
-from argparse import Namespace
 import sys
+from argparse import Namespace
 
 import pytest
 
@@ -1229,7 +1229,9 @@ def test_env_with_included_config_var_path(tmpdir, packages_file):
     """Test inclusion of a package configuration file with path variables
     "staged" in the environment's configuration stage directory."""
     included_file = packages_file.strpath
-    env_path = pathlib.WindowsPath(tmpdir) if sys.platform == "win32" else pathlib.PosixPath(tmpdir)
+    env_path = (
+        pathlib.WindowsPath(tmpdir) if sys.platform == "win32" else pathlib.PosixPath(tmpdir)
+    )
     config_var_path = os.path.join("$tempdir", "included-packages.yaml")
 
     spack_yaml = env_path / ev.manifest_name
@@ -1675,9 +1677,7 @@ def test_env_view_fails_dir_file(tmpdir, mock_packages, mock_stage, mock_fetch, 
     with ev.read("test"):
         add("view-file")
         add("view-dir")
-        with pytest.raises(
-            llnl.util.link_tree.MergeConflictSummary, match="bin"
-        ):
+        with pytest.raises(llnl.util.link_tree.MergeConflictSummary, match="bin"):
             install()
 
 
@@ -2776,6 +2776,7 @@ spack:
         "dtbuild3",
     ):
         assert not os.path.exists(os.path.join(viewdir, pkg))
+
 
 @pytest.mark.not_on_windows("file not available on Windows")
 @pytest.mark.parametrize("link_type", ["hardlink", "copy", "symlink"])
