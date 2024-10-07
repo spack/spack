@@ -77,11 +77,7 @@ class DarshanRuntime(AutotoolsPackage):
         description="Compile with Parallel NetCDF module",
         when="@3.4.1:",
     )
-    variant(
-        "lustre",
-        default=False,
-        description="Compile with Lustre module",
-        when="@3.1:")
+    variant("lustre", default=False, description="Compile with Lustre module", when="@3.1:")
     variant("apmpi", default=False, description="Compile with AutoPerf MPI module", when="@3.3:")
     variant(
         "apmpi_sync",
