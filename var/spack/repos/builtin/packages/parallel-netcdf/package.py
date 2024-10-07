@@ -87,7 +87,7 @@ class ParallelNetcdf(AutotoolsPackage):
     conflicts("+shared", when="@:1.9%nag+fortran")
 
     # https://github.com/Parallel-NetCDF/PnetCDF/issues/155
-    conflicts("%apple-clang@16:")
+    conflicts("%apple-clang@15:")
 
     @property
     def libs(self):
