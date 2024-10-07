@@ -28,7 +28,7 @@ class Sopt(CMakePackage):
     variant("openmp", default=False, description="Enable multithreading with OpenMP")
     variant("mpi", default=False, description="Enable parallelisation with MPI")
     variant("docs", default=False, description="Enable multithreading with OpenMP")
-    variant("coverage", default=False, description="")
+    variant("coverage", default=False, description="Enable code coverage")
     variant("onnxrt", default=False, description="Build with Tensorflow support using onnx")
 
     depends_on("cmake@3")
