@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class Sopt(CMakePackage):
     """SOPT is an open-source C++ package available under the license below. It performs
     Sparse OPTimisation using state-of-the-art convex optimisation algorithms. It solves a
@@ -51,7 +52,6 @@ class Sopt(CMakePackage):
             self.define_from_variant("onnxrt", "onnxrt"),
         ]
         return args
-
 
     def setup_run_environment(self, env):
         if "+tests" in self.spec:
