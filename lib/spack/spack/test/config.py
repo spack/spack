@@ -1502,21 +1502,15 @@ packages:
     # This config will not be included
     cfg2_path = str(tmpdir.join("include2.yaml"))
     with open(cfg2_path, "w") as f:
-        f.write(
-            python_cfg("+shared")
-        )
+        f.write(python_cfg("+shared"))
 
     cfg3_path = str(tmpdir.join("include3.yaml"))
     with open(cfg3_path, "w") as f:
-        f.write(
-            python_cfg("+ssl")
-        )
+        f.write(python_cfg("+ssl"))
 
     cfg4_path = str(tmpdir.join("include4.yaml"))
     with open(cfg4_path, "w") as f:
-        f.write(
-            python_cfg("+tk")
-        )
+        f.write(python_cfg("+tk"))
 
     this_os = spack.platforms.host().default_os
     include_entries = [
