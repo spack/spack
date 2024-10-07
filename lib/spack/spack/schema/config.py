@@ -73,6 +73,7 @@ properties: Dict[str, Any] = {
             "misc_cache": {"type": "string"},
             "environments_root": {"type": "string"},
             "connect_timeout": {"type": "integer", "minimum": 0},
+            "fail_fast": {"type": "boolean"},
             "verify_ssl": {"type": "boolean"},
             "ssl_certs": {"type": "string"},
             "suppress_gpg_warnings": {"type": "boolean"},
