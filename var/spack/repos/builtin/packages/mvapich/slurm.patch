@@ -1,0 +1,16 @@
+--- a/src/pm/hydra/tools/bootstrap/external/slurm_query_node_list.c
++++ b/src/pm/hydra/tools/bootstrap/external/slurm_query_node_list.c
+@@ -23,7 +23,12 @@ static struct HYD_node *global_node_list = NULL;
+ #if defined(HAVE_LIBSLURM)
+ static HYD_status list_to_nodes(char *str)
+ {
+-    hostlist_t hostlist;
++    #if SLURM_VERSION_NUMBER > SLURM_VERSION_NUM(23,2,5)
++    // https://github.com/SchedMD/slurm/commit/ba44a526021e3590f53aa65851915a04f7df3c1d
++    hostlist_t *hostlist;
++#else
++    hostlist_t hostlist;
++#endif
+     char *host;
+     int k = 0;
+     HYD_status status = HYD_SUCCESS;

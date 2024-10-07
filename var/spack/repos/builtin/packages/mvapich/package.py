@@ -121,6 +121,8 @@ class Mvapich(AutotoolsPackage):
     with when("process_managers=auto"):
         conflicts("pmi_version=pmi2")
 
+    patch("slurm.patch")
+
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
 
     @classmethod
