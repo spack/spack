@@ -5,10 +5,11 @@
 
 from spack.package import *
 
+
 class Purify(CMakePackage):
-    """PURIFY is an open-source collection of routines written in C++ available under the 
-    license below. It implements different tools and high-level to perform radio interferometric 
-    imaging, i.e. to recover images from the Fourier measurements taken by radio interferometric 
+    """PURIFY is an open-source collection of routines written in C++ available under the
+    license below. It implements different tools and high-level to perform radio interferometric
+    imaging, i.e. to recover images from the Fourier measurements taken by radio interferometric
     telescopes.
     """
 
@@ -63,7 +64,7 @@ class Purify(CMakePackage):
             self.define_from_variant("coverage", "coverage"),
             self.define_from_variant("doaf", "af"),
             self.define_from_variant("docasa", "casa"),
-            self.define_from_variant("docimg", "cimg")
+            self.define_from_variant("docimg", "cimg"),
         ]
         return args
 
@@ -74,7 +75,7 @@ class Purify(CMakePackage):
             env.prepend_path("PATH", join_path(self.spec.prefix, "examples"))
         if "+benchmarks" in self.spec:
             env.prepend_path("PATH", join_path(self.spec.prefix, "benchmarks"))
-    
+
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             make("install")
