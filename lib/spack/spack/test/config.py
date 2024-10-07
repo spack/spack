@@ -1499,18 +1499,18 @@ packages:
     - spec: {_spec}
 """
 
+    def write_python_cfg(_spec, _cfg_name):
+        cfg_path = str(tmpdir.join(_cfg_name))
+        with open(cfg_path, "w") as f:
+            f.write(python_cfg(_spec))
+        return cfg_path
+
     # This config will not be included
-    cfg2_path = str(tmpdir.join("include2.yaml"))
-    with open(cfg2_path, "w") as f:
-        f.write(python_cfg("+shared"))
+    cfg2_path = write_python_cfg("+shared", "include2.yaml")
 
-    cfg3_path = str(tmpdir.join("include3.yaml"))
-    with open(cfg3_path, "w") as f:
-        f.write(python_cfg("+ssl"))
+    cfg3_path = write_python_cfg("+ssl", "include3.yaml")
 
-    cfg4_path = str(tmpdir.join("include4.yaml"))
-    with open(cfg4_path, "w") as f:
-        f.write(python_cfg("+tk"))
+    cfg4_path = write_python_cfg("+tk", "include4.yaml")
 
     this_os = spack.platforms.host().default_os
     include_entries = [
