@@ -99,7 +99,7 @@ class Firefox(Package):
             depends_on("py-glean-parser@14.0")
         with when("@130.0"):  # These may apply more generally backwards/forwards
             depends_on("rust@1.81")
-            depends_on("at-spi2-core@2:2.58")  # Version 2.58 fails, 2.38 confirmed
+            depends_on("at-spi2-core@2:2.38")  # Version 2.58 fails, 2.38 confirmed
             depends_on("py-attrs@23.1")
             depends_on("py-glean-sdk@60.4.0")
             depends_on("py-glean-parser@14.3")
