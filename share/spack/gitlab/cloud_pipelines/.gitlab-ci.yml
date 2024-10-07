@@ -799,7 +799,7 @@ deprecated-ci-build:
 ########################################
 
 .aws-pcluster-generate:
-  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:pr-52@sha256:51cc360e706c4e59f98b912c75c743c3e6cfcd699aacf4d81f840b5caad3ff7b", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2024-10-07", "entrypoint": [""] }
   before_script:
     # Use gcc from pre-installed spack store
     - - . "./share/spack/setup-env.sh"
