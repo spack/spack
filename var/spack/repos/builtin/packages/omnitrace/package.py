@@ -19,8 +19,18 @@ class Omnitrace(CMakePackage):
     license("MIT")
 
     version("main", branch="main", submodules=True)
-    version("6.2.1", tag="rocm-6.2.1", commit="df91a342370401c93b5278bf082e520d6a0e22e9", submodules=True)
-    version("6.2.0", tag="rocm-6.2.0", commit="f0bd9126a5456eb9e511d13261af262d17d9b61b", submodules=True)
+    version(
+        "6.2.1",
+        tag="rocm-6.2.1",
+        commit="df91a342370401c93b5278bf082e520d6a0e22e9",
+        submodules=True,
+    )
+    version(
+        "6.2.0",
+        tag="rocm-6.2.0",
+        commit="f0bd9126a5456eb9e511d13261af262d17d9b61b",
+        submodules=True,
+    )
     version("1.7.4", commit="12001d9633328f9f56210c7ebffce065bff06310", submodules=True)
     version("1.7.3", commit="2ebfe3fc30f977559142509edc4ea190c975992a", submodules=True)
     version("1.7.2", commit="a41a5c155e0d3780de4c83a76f28d7c8ffa6414f", submodules=True)
