@@ -769,7 +769,7 @@ def update_config_with_includes():
     configurations to include. This does not handle recursive includes
     (i.e. if an included config defines an "includes:" section).
     """
-    includes = CONFIG.get("config:includes")
+    includes = CONFIG.get("config:include")
     if not includes:
         return
 

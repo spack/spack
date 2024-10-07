@@ -18,6 +18,7 @@ properties: Dict[str, Any] = {
     "config": {
         "type": "object",
         "default": {},
+        "additionalProperties": False,
         "properties": {
             "flags": {
                 "type": "object",
@@ -94,12 +95,13 @@ properties: Dict[str, Any] = {
             "additional_external_search_paths": {"type": "array", "items": {"type": "string"}},
             "binary_index_ttl": {"type": "integer", "minimum": 0},
             "aliases": {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}},
-            "includes": {
+            "include": {
                 "type": "array",
                 "default": [],
                 "items": {
                     "type": "object",
-                    "properties": {"when": {"type": "string"}, "file": {"type": "string"}},
+                    "properties": {"when": {"type": "string"}, "path": {"type": "string"}},
+                    "additionalProperties": False,
                 },
             },
         },

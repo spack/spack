@@ -1520,7 +1520,7 @@ packages:
         {"path": f"{cfg2_path}", "when": "False"},
         {"path": f"{cfg3_path}", "when": f'os == "{this_os}"'},
     ]
-    include_cfg = {"config": {"includes": include_entries}}
+    include_cfg = {"config": {"include": include_entries}}
     write_config_file("config", include_cfg, "low")
 
     assert not spack.config.get("config:dirty")
