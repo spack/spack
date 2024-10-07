@@ -72,6 +72,8 @@ class PyOnnxruntime(CMakePackage, PythonExtension, ROCmPackage):
     depends_on("cudnn", when="+cuda")
     depends_on("iconv", type=("build", "link", "run"))
     depends_on("re2+shared")
+    # For old systems with and old version of git
+    depends_on("git")
 
     rocm_dependencies = [
         "hsa-rocr-dev",
