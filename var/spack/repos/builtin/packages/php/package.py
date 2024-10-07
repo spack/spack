@@ -91,5 +91,5 @@ class Php(AutotoolsPackage):
 
     @when("@8:")
     def configure_args(self):
-        args = [f"--with-libiconv={self.spec['libiconv'].prefix}"]
+        args = [f"--with-iconv={self.spec['libiconv'].prefix}"]
         return args
