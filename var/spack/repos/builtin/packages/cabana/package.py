@@ -146,12 +146,10 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
                 cbn_option = "Cabana_{0}_{1}".format(cname, var)
                 options.append(self.define_from_variant(cbn_option, var.lower()))
 
-        # Only enable user-requested options.
+        # Attempt to disable find_package() calls for disabled options(if option supports it):
         for var in require:
-            enabled_var = "+{0}".format(var.lower())
-            if enabled_var not in self.spec:
-                cbn_disable = "CMAKE_DISABLE_FIND_PACKAGE_{0}".format(var)
-                options.append(self.define(cbn_disable, "ON"))
+            if not self.spec.satisfies("+" + var.lower()):
+                options.append(self.define("CMAKE_DISABLE_FIND_PACKAGE_" + var, "ON"))
 
         # Use hipcc for HIP.
         if self.spec.satisfies("+rocm"):
