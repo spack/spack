@@ -116,6 +116,11 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+silo", when="@:0.3.0")
     conflicts("+hdf5", when="@:0.5.0")
 
+    @when("+mpi")
+    def patch(self):
+        # CMakeLists.txt tries to enable C when MPI is requsted, but too late:
+        filter_file("LANGUAGES CXX", "LANGUAGES C CXX", "CMakeLists.txt")
+
     def cmake_args(self):
         options = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
