@@ -24,6 +24,12 @@ class Elasticsearch(Package):
 
     depends_on("java", type="run")
 
+    def url_for_version(self, version):
+        if self.spec.satisfies("@:6"):
+            return f"https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{version}.tar.gz"
+        else:
+            return f"https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{version}-linux-x86_64.tar.gz"
+
     def install(self, spec, prefix):
         dirs = ["bin", "config", "lib", "modules", "plugins"]
 
