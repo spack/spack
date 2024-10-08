@@ -323,7 +323,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         truncated_model_list = find_model_flag(
             spec_string_truncate
         )  # Prints out ['cuda', 'thrust']
-=        # Filter out elements from truncated_model_list list that are not in model_list list
+        # Filter out elements from truncated_model_list list that are not in model_list list
         filtered_model_list = [item for item in truncated_model_list if item in model_list]
         # for +acc and +thrust the CudaPackage appends +cuda variant too so we need
         # to filter cuda from list e.g. we choose 'thrust'
