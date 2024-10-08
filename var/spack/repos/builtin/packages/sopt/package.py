@@ -42,7 +42,7 @@ class Sopt(CMakePackage):
 
     patch(
         "https://github.com/astro-informatics/sopt/commit/836171f32d39a3fbc1147d6c302a08a61f842fee.patch?full_index=1",
-        sha256="92727f67f67bc1dbf8fc7a893e5b099fc46526149d2cbcb6f9b10265bc8a5723",
+        sha256="00729db4695712c3fb38aeb9e23a17107a7c8504c3a8249d9d4ddd2782d29661",
         when="@4.2.0",
     )
 
