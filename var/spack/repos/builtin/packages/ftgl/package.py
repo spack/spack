@@ -34,6 +34,11 @@ class Ftgl(CMakePackage):
 
     # Fix oversight in CMakeLists
     patch("remove-ftlibrary-from-sources.diff", when="@:2.4.0")
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/frankheckenbach/ftgl/pull/20.patch?full_index=1",
+        sha256="e2a0810fbf68403931bef4fbfda22e010e01421c92eeaa45f62e4e47f2381ebd",
+        when="@2.4.0"
+    )
 
     def cmake_args(self):
         spec = self.spec
