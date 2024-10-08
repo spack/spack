@@ -23,6 +23,7 @@ class All(CMakePackage):
     version("0.9.2", sha256="2b4ef52c604c3c0c467712d0912a33c82177610b67edc14df1e034779c6ddb71")
 
     variant("fortran", default=False, description="Build with fortran support")
+    variant("shared", default=True, description="Build shared libraries")
     variant("vtk", default=False, description="Build with vtk support")
 
     depends_on("c", type="build")
@@ -34,7 +35,7 @@ class All(CMakePackage):
 
     def cmake_args(self):
         args = [
-            "-DBUILD_SHARED_LIBS=ON",
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("CM_ALL_FORTRAN", "fortran"),
             self.define_from_variant("CM_ALL_USE_F08", "fortran"),
             self.define_from_variant("CM_ALL_VTK_OUTPUT", "vtk"),
