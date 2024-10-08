@@ -108,6 +108,13 @@ class OpenpmdApi(CMakePackage):
         when="@0.15.1",
     )
 
+    # fix superbuild control in 0.16.0
+    patch(
+        "https://github.com/openPMD/openPMD-api/pull/1678.patch?full_index=1",
+        sha256="e49fe79691bbb5aae2224d218f29801630d33f3a923c518f6bfb39ec22fd6a72",
+        when="@0.16.0",
+    )
+
     extends("python", when="+python")
 
     def cmake_args(self):
