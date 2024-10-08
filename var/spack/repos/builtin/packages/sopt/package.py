@@ -41,7 +41,7 @@ class Sopt(CMakePackage):
     depends_on("doxygen@1.8:1.12+graphviz", when="+docs")
 
     patch(
-        "https://github.com/astro-informatics/sopt/commit/836171f32d39a3fbc1147d6c302a08a61f842fee.patch",
+        "https://github.com/astro-informatics/sopt/commit/836171f32d39a3fbc1147d6c302a08a61f842fee.patch?full_index=1",
         sha256="92727f67f67bc1dbf8fc7a893e5b099fc46526149d2cbcb6f9b10265bc8a5723",
         when="@4.2.0",
     )
