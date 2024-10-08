@@ -14,6 +14,7 @@ class Arbor(CMakePackage, CudaPackage):
     git = "https://github.com/arbor-sim/arbor.git"
     url = "https://github.com/arbor-sim/arbor/releases/download/v0.8.1/arbor-v0.10.0-full.tar.gz"
     maintainers = ("thorstenhater", "boeschf")
+    license("BSD-3-Clause")
 
     version("master", branch="master")
     version("develop")
