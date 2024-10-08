@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Gtkplus(MesonPackage):
+class Gtkplus(AutotoolsPackage, MesonPackage):
     """The GTK+ package contains libraries used for creating graphical user
     interfaces for applications."""
 
@@ -14,6 +14,12 @@ class Gtkplus(MesonPackage):
     url = "https://download.gnome.org/sources/gtk+/3.24/gtk+-3.24.26.tar.xz"
 
     license("LGPL-2.0-or-later")
+
+    build_system(
+        condational("autotools", when="@:3.24.35"),
+        conditional("meson", when="@3.24.9:"),
+        default="autotools",
+    )
 
     version("3.24.41", sha256="47da61487af3087a94bc49296fd025ca0bc02f96ef06c556e7c8988bd651b6fa")
     version("3.24.29", sha256="f57ec4ade8f15cab0c23a80dcaee85b876e70a8823d9105f067ce335a8268caa")
@@ -45,8 +51,8 @@ class Gtkplus(MesonPackage):
     variant("cups", default=False, description="enable cups support")
 
     # See meson.build for version requirements
-    depends_on("meson@0.48.0:", when="@3.24:", type="build")
-    depends_on("ninja", when="@3.24:", type="build")
+    depends_on("meson@0.48.0:", when="build_system=meson", type="build")
+    depends_on("ninja", when="build_system=meson", type="build")
     # Needed to build man pages:
     # depends_on('docbook-xml', when='@3.24:', type='build')
     # depends_on('docbook-xsl', when='@3.24:', type='build')
@@ -100,6 +106,9 @@ class Gtkplus(MesonPackage):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
+
+class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+
     def meson_args(self):
         args = []
 
@@ -113,6 +122,13 @@ class Gtkplus(MesonPackage):
         args.append("-Dprint_backends=file,lpr{0}".format(",cups" if "+cups" in self.spec else ""))
 
         return args
+
+    def check(self):
+        """All build time checks open windows in the X server, don't do that"""
+        pass
+
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
 
     def configure_args(self):
         true = which("true")
@@ -129,18 +145,7 @@ class Gtkplus(MesonPackage):
             args.append("--disable-cups")
         return args
 
-    @when("@:3.20.10")
-    def meson(self, spec, prefix):
-        configure(*self.configure_args())
-
-    @when("@:3.20.10")
-    def build(self, spec, prefix):
-        make()
-
-    @when("@:3.20.10")
-    def install(self, spec, prefix):
-        make("install")
-
     def check(self):
         """All build time checks open windows in the X server, don't do that"""
         pass
+
