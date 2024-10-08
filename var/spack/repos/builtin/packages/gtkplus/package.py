@@ -16,7 +16,7 @@ class Gtkplus(AutotoolsPackage, MesonPackage):
     license("LGPL-2.0-or-later")
 
     build_system(
-        condational("autotools", when="@:3.24.35"),
+        conditional("autotools", when="@:3.24.35"),
         conditional("meson", when="@3.24.9:"),
         default="autotools",
     )
@@ -148,4 +148,3 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def check(self):
         """All build time checks open windows in the X server, don't do that"""
         pass
-
