@@ -110,6 +110,9 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cajita ~mpi")
     conflicts("+grid ~mpi")
 
+    # The +grid does not support gcc>=13 (missing iostream/cstdint includes):
+    conflicts("+grid", when="@:0.6 %gcc@13:")
+
     # Conflict variants only available in newer versions of cabana
     conflicts("+rocm", when="@:0.2.0")
     conflicts("+sycl", when="@:0.3.0")
