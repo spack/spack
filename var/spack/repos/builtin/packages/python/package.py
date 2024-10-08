@@ -873,7 +873,9 @@ class Python(Package):
                 if os.path.exists(path):
                     return Executable(path)
 
-        raise RuntimeError(f"Unable to locate {self.name} command in {self.prefix.bin}")
+        raise RuntimeError(
+            f"cannot to locate the '{self.name}' command in {root} or its subdirectories"
+        )
 
     @property
     def config_vars(self):
