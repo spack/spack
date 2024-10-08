@@ -544,7 +544,7 @@ class CMakeBuilder(BaseBuilder):
 
         # skip cmake phase if it is an incremental develop build
         if spec.is_develop and os.path.isfile(
-            os.path.join(spec.build_directory, "CMakeCache.txt")
+            os.path.join(self.build_directory, "CMakeCache.txt")
         ):
             return
 
