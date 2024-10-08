@@ -543,7 +543,7 @@ class CMakeBuilder(BaseBuilder):
         """Runs ``cmake`` in the build directory"""
 
         # skip cmake phase if it is an incremental develop build
-        if spec.is_develop and os.path.isfile(os.path.join(spec.build_directory, "CMakeCache.txt"):
+        if spec.is_develop and os.path.isfile(os.path.join(spec.build_directory, "CMakeCache.txt")):
             return
             
         options = self.std_cmake_args
