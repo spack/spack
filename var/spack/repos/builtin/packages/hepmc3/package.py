@@ -62,7 +62,7 @@ class Hepmc3(CMakePackage):
         spec = self.spec
         from_variant = self.define_from_variant
         args = [
-            from_variant("HEPMC3_ENABLE_PROTOBUF", "protobuf"),
+            from_variant("HEPMC3_ENABLE_PROTOBUFIO", "protobuf"),
             from_variant("HEPMC3_ENABLE_PYTHON", "python"),
             from_variant("HEPMC3_ENABLE_ROOTIO", "rootio"),
             from_variant("HEPMC3_INSTALL_INTERFACES", "interfaces"),
