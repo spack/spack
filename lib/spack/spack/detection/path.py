@@ -17,11 +17,6 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
 import llnl.util.filesystem
 import llnl.util.lang
 import llnl.util.tty
-from llnl.util.filesystem import (
-    WindowsCompilerExternalPaths,
-    WindowsKitExternalPaths,
-    find_win32_additional_install_paths,
-)
 
 import spack.spec
 import spack.util.elf as elf_utils
@@ -29,6 +24,11 @@ import spack.util.environment
 import spack.util.environment as environment
 import spack.util.ld_so_conf
 import spack.util.parallel
+from spack.util.filesystem import (
+    WindowsCompilerExternalPaths,
+    WindowsKitExternalPaths,
+    find_win32_additional_install_paths,
+)
 
 from .common import (
     _convert_to_iterable,
