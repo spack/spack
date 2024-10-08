@@ -12,13 +12,15 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/ECP-copa/Cabana"
     git = "https://github.com/ECP-copa/Cabana.git"
-    url = "https://github.com/ECP-copa/Cabana/archive/0.6.0.tar.gz"
+    url = "https://github.com/ECP-copa/Cabana/archive/0.7.0.tar.gz"
 
     maintainers("junghans", "streeve", "sslattery")
 
     tags = ["e4s", "ecp"]
 
     version("master", branch="master")
+    version("0.7.0", sha256="3d46532144ea9a3f36429a65cccb7562d1244f1389dd8aff0d253708d1ec9838")
+    version("0.6.1", sha256="fea381069fe707921831756550a665280da59032ea7914f7ce2a01ed467198bc")
     version("0.6.0", sha256="a88a3f80215998169cdbd37661c0c0af57e344af74306dcd2b61983d7c69e6e5")
     version("0.5.0", sha256="b7579d44e106d764d82b0539285385d28f7bbb911a572efd05c711b28b85d8b1")
     version("0.4.0", sha256="c347d23dc4a5204f9cc5906ccf3454f0b0b1612351bbe0d1c58b14cddde81e85")
