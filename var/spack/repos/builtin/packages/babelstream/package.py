@@ -258,7 +258,8 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     depends_on("intel-oneapi-compilers", when="+ocl ocl_backend=intel")
     depends_on("pocl@1.5", when="+ocl ocl_backend=pocl")
 
-    variant("flags", values=str, default="none", description="Additional CXX flags to be provided")
+    variant("cuda_extra_flags", values=str, default="none", description="Additional CUDA Compiler flags to be provided")
+    variant("fortran_flags", values=str, default="none", description="Additional Fortran flags to be provided")
 
     # CMake specific dependency
     with when("build_system=cmake"):
@@ -317,13 +318,12 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         ]
         # convert spec to string to work on it
         spec_string = str(self.spec)
-
         # take only the first portion of the spec until space
         spec_string_truncate = spec_string.split(" ", 1)[0]
         truncated_model_list = find_model_flag(
             spec_string_truncate
         )  # Prints out ['cuda', 'thrust']
-        # Filter out elements from truncated_model_list list that are not in model_list list
+=        # Filter out elements from truncated_model_list list that are not in model_list list
         filtered_model_list = [item for item in truncated_model_list if item in model_list]
         # for +acc and +thrust the CudaPackage appends +cuda variant too so we need
         # to filter cuda from list e.g. we choose 'thrust'
@@ -456,8 +456,8 @@ register_flag_optional(TARGET_PROCESSOR
             cuda_comp = cuda_dir + "/bin/nvcc"
             args.append("-DCMAKE_CUDA_COMPILER=" + cuda_comp)
             args.append("-DMEM=" + self.spec.variants["cuda_memory_mode"].value.upper())
-            if self.spec.variants["flags"].value != "none":
-                args.append("-DCUDA_EXTRA_FLAGS=" + self.spec.variants["flags"].value)
+            if self.spec.variants["cuda_extra_flags"].value != "none":
+                args.append("-DCUDA_EXTRA_FLAGS=" + self.spec.variants["cuda_extra_flags"].value)
 
         # ===================================
         #             OMP
@@ -616,8 +616,8 @@ register_flag_optional(TARGET_PROCESSOR
 
                 args.append("-DENABLE_CUDA=ON")
                 args.append("-DCUDA_TOOLKIT_ROOT_DIR=" + self.spec["cuda"].prefix)
-                if self.spec.variants["flags"].value != "none":
-                    args.append("-DCMAKE_CUDA_FLAGS=" + self.spec.variants["flags"].value)
+                if self.spec.variants["cuda_extra_flags"].value != "none":
+                    args.append("-DCMAKE_CUDA_FLAGS=" + self.spec.variants["cuda_extra_flags"].value)
 
         # ===================================
         #             THRUST
@@ -637,8 +637,8 @@ register_flag_optional(TARGET_PROCESSOR
                 # args.append("-DCMAKE_CUDA_COMPILER=" + spack_cxx)
                 # args.append("-DCMAKE_CUDA_FLAGS=-ccbin " + spack_cc)
                 args.append("-DBACKEND=" + self.spec.variants["thrust_backend"].value.upper())
-                if self.spec.variants["flags"].value != "none":
-                    args.append("-DCUDA_EXTRA_FLAGS=" + self.spec.variants["flags"].value)
+                if self.spec.variants["cuda_extra_flags"].value != "none":
+                    args.append("-DCUDA_EXTRA_FLAGS=" + self.spec.variants["cuda_extra_flags"].value)
             if "rocm" in self.spec.variants["thrust_submodel"].value:
                 args.append("-DCMAKE_CXX_COMPILER=" + self.spec["hip"].hipcc)
                 args.append("-DTHRUST_IMPL=" + self.spec.variants["thrust_submodel"].value.upper())
@@ -729,9 +729,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         #               ARM
         # ===================================
         if spec.compiler.name == "arm":
-            flags = "-std=f2018 " + pkg.compiler.opt_flags[4] + " -Wall -Wno-unused-variable"
-            flags += "-march=" + str(spec.target)
-
+            fortran_flags = "-std=f2018 " + pkg.compiler.opt_flags[4] + " -Wall -Wno-unused-variable"
+            fortran_flags += "-march=" + str(spec.target)
+            config["FCFLAGS"] = fortran_flags
             config["DOCONCURRENT_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
             config["ARRAY_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
             config["OPENMP_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
@@ -741,8 +741,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         #               AMD
         # ===================================
         if spec.compiler.name == "aocc":
-            flags = "-std=f2018 " + pkg.compiler.opt_flags[3] + " -Wall -Wno-unused-variable"
-
+            fortran_flags = "-std=f2018 " + pkg.compiler.opt_flags[3] + " -Wall -Wno-unused-variable"
+            config["FCFLAGS"] = fortran_flags
             config["DOCONCURRENT_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
             config["ARRAY_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
             config["OPENMP_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
@@ -752,8 +752,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         #               CRAY
         # ===================================
         if spec.compiler.name == "cce":
-            flags = "-e F -O3"
-
+            fortran_flags = "-e F -O3"
+            config["FCFLAGS"] = fortran_flags
             config["DOCONCURRENT_FLAG"] = "-h thread_do_concurrent -DCRAY_THREAD_DOCONCURRENT"
             config["ARRAY_FLAG"] = "-h autothread"
             config[
@@ -765,12 +765,12 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         #               GCC
         # ===================================
         if spec.compiler.name == "gcc":
-            flags = "-std=f2018 -O3 "
-            flags += "-Wall -Wno-unused-dummy-argument -Wno-unused-variable "
+            fortran_flags = "-std=f2018 -O3 "
+            fortran_flags += "-Wall -Wno-unused-dummy-argument -Wno-unused-variable "
             spec_target = "znver3" if str(spec.target) == "zen3" else str(spec.target)
-            flags += "-march=" + spec_target
+            fortran_flags += "-march=" + spec_target
 
-            config["FCFLAGS"] = flags
+            config["FCFLAGS"] = fortran_flags
             config["DOCONCURRENT_FLAG"] = "-ftree-parallelize-loops=4"
             config["OPENMP_FLAG"] = pkg.compiler.openmp_flag
             config["OPENACC_FLAG"] = "-fopenacc"
@@ -779,9 +779,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         #               NVHPC
         # ===================================
         if spec.compiler.name == "nvhpc":
-            flags = pkg.compiler.opt_flags[4]  # for -O3
+            fortran_flags = pkg.compiler.opt_flags[4]  # for -O3
             # FCFLAGS	:= -O3 -Minform=inform -Minfo=all
-            flags += " -Minform=warn "
+            fortran_flags += " -Minform=warn "
             TARGET = "gpu"  # target = "multicore"
             config["TARGET"] = TARGET
             if "cuda_arch" in self.spec.variants:
@@ -790,7 +790,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 cuda_arch = "cc" + cuda_arch_list[0]
             # config['MARCH'] = "neoverse-v1,neoverse-n1,icelake-server,znver3,cortex-a78ae"
             GPUFLAG = " -gpu=" + cuda_arch
-            flags += "-tp=" + str(spec.target)
+            fortran_flags += "-tp=" + str(spec.target)
             # this is to allow apples-to-apples comparison with DC in non-DC GPU impls
             # set exactly one of these pairs!
             # MANAGED = "-DUSE_MANAGED -gpu=managed"
@@ -798,7 +798,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             # ------------
             DEVICE = "-DUSE_DEVICE -cuda -gpu=nomanaged"
             MANAGED = ""
-            config["FCFLAGS"] = flags
+            config["FCFLAGS"] = fortran_flags
             config["DOCONCURRENT_FLAG"] = GPUFLAG + " -stdpar=" + TARGET + " " + DEVICE
             config["ARRAY_FLAG"] = GPUFLAG + " -stdpar=" + TARGET + " " + MANAGED
             config["OPENMP_FLAG"] = GPUFLAG + " -mp=" + TARGET + " " + MANAGED
@@ -809,9 +809,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         #               ONEAPI
         # ===================================
         if spec.compiler.name == "oneapi":
-            flags = "-std18 -Ofast -xHOST -qopt-zmm-usage=low"
+            fortran_flags = "-std18 -Ofast -xHOST -qopt-zmm-usage=low"
             if config["FC"] == "ifort":
-                flags += "-qopt-streaming-stores=always"
+                fortran_flags += "-qopt-streaming-stores=always"
 
             config["DOCONCURRENT_FLAG"] = "-qopenmp" + (
                 "-parallel" if config["FC"] == "ifort" else ""
@@ -820,21 +820,24 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             config["OPENMP_FLAG"] = "-qopenmp" + (
                 "-fopenmp-targets=spir64 -DUSE_FLOAT=1" if config["FC"] == "ifx" else ""
             )
+            config["FCFLAGS"] = fortran_flags
 
         # ===================================
         #               FJ
         # ===================================
         if spec.compiler.name == "fj":
-            flags = "-X08 -Kfast -KA64FX -KSVE -KARMV8_3_A -Kzfill=100 "
-            flags += "-Kprefetch_sequential=soft "
-            flags += "-Kprefetch_line=8 -Kprefetch_line_L2=16 -Koptmsg=2 "
+            fortran_flags = "-X08 -Kfast -KA64FX -KSVE -KARMV8_3_A -Kzfill=100 "
+            fortran_flags += "-Kprefetch_sequential=soft "
+            fortran_flags += "-Kprefetch_line=8 -Kprefetch_line_L2=16 -Koptmsg=2 "
             # FJ Fortran system_clock is low resolution
-            flags += "-Keval -DUSE_OMP_GET_WTIME=1 "
-
+            fortran_flags += "-Keval -DUSE_OMP_GET_WTIME=1 "
+            
+            config["FCFLAGS"] = fortran_flags
             config["DOCONCURRENT_FLAG"] = "-Kparallel,reduction -DNOTSHARED"
             config["ARRAY_FLAG"] = "-Kparallel,reduction"
             config["OPENMP_FLAG"] = pkg.compiler.openmp_flag
 
+        
         with open(self.build_directory + "/make.inc." + spec.compiler.name, "w+") as inc:
             for key in config:
                 inc.write("{0} = {1}\n".format(key, config[key]))
