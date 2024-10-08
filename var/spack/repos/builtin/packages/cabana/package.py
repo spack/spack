@@ -86,7 +86,9 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda", when="cuda_arch=none")
     conflicts("+rocm", when="amdgpu_target=none")
 
-    depends_on("kokkos+cuda_lambda", when="+cuda")
+    # https://github.com/ECP-copa/Cabana/releases/tag/0.7.0
+    depends_on("kokkos+cuda_lambda@3.7:", when="+cuda")
+    depends_on("kokkos+cuda_lambda@4.1:", when="+cuda@0.7:")
 
     # Dependencies for subpackages
     depends_on("all", when="@0.5.0:+all")
