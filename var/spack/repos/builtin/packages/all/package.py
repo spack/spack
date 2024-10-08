@@ -39,7 +39,7 @@ class All(CMakePackage):
             self.define_from_variant("CM_ALL_USE_F08", "fortran"),
             self.define_from_variant("CM_ALL_VTK_OUTPUT", "vtk"),
         ]
-        
+
         if self.run_tests:
             args.append("-DCM_ALL_TESTS=ON")
             args.append("-DCM_ALL_TESTS_INTEGRATION=ON")
