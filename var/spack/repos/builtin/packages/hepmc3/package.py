@@ -16,7 +16,7 @@ class Hepmc3(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers("vvolkl")
+    maintainers("vvolkl", "luketpickering")
 
     license("LGPL-3.0-or-later")
 
