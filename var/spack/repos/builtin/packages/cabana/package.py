@@ -99,9 +99,11 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hdf5", when="@0.6.0:+hdf5")
     depends_on("mpi", when="+mpi")
 
-    # Cabana automatically builds HDF5 support with newer cmake versions
-    # in version 0.6.0. This is fixed post-0.6
-    conflicts("~hdf5", when="@0.6.0 ^cmake@:3.26")
+    # CMakeLists.txt of Cabana>=0.6 always enables HDF5 with CMake >= 3.26 (not changed post-0.6):
+    conflicts("~hdf5", when="@0.6.0: ^cmake@3.26:")
+
+    # Cabana HDF5 support requires MPI.
+    conflicts("+hdf5 ~mpi")
 
     # Cajita support requires MPI
     conflicts("+cajita ~mpi")
