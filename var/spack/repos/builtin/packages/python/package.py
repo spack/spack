@@ -858,14 +858,14 @@ class Python(Package):
         # * python
         #
         # in that order if using python@3.11.0, for example.
-        version = self.spec.version
-        for ver in [version.up_to(2), version.up_to(1), ""]:
-            if sys.platform != "win32":
-                path = os.path.join(self.prefix.bin, "python{0}".format(ver))
-            else:
-                path = os.path.join(self.prefix, "python{0}.exe".format(ver))
-            if os.path.exists(path):
-                return Executable(path)
+        suffixes = [self.spec.version.up_to(2), self.spec.version.up_to(1), ""]
+        file_extension = "" if sys.platform != "win32" else ".exe"
+        patterns = [f"python{ver}{file_extension}" for ver in suffixes]
+        root = self.prefix.bin if sys.platform != "win32" else self.prefix
+        path = find_first(root, files=patterns)
+
+        if path is not None:
+            return Executable(path)
 
         else:
             # Give a last try at rhel8 platform python
@@ -874,8 +874,9 @@ class Python(Package):
                 if os.path.exists(path):
                     return Executable(path)
 
-            msg = "Unable to locate {0} command in {1}"
-            raise RuntimeError(msg.format(self.name, self.prefix.bin))
+        raise RuntimeError(
+            f"cannot to locate the '{self.name}' command in {root} or its subdirectories"
+        )
 
     @property
     def config_vars(self):
