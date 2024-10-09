@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class MultiAgentAlePy(PythonPackage):
+class PyMultiAgentAlePy(PythonPackage):
     """The Multi-Agent Arcade Learning Environment"""
 
     homepage = "https://github.com/Farama-Foundation/Multi-Agent-ALE"
