@@ -610,6 +610,28 @@ def test_remove_command():
         assert "mpileaks@" not in find("--show-concretized")
 
 
+def test_remove_command_all():
+    # Need separate ev.read calls for each command to ensure we test round-trip to disk
+    env("create", "test")
+    test_pkgs = ("mpileaks", "zlib")
+
+    with ev.read("test") as e:
+        for name in test_pkgs:
+            add(name)
+
+    with ev.read("test") as e:
+        for name in test_pkgs:
+            assert name in find()
+            assert f"{name}@" not in find()
+
+    with ev.read("test"):
+        remove("-a")
+
+    with ev.read("test"):
+        for name in test_pkgs:
+            assert name not in find()
+
+
 def test_bad_remove_included_env():
     env("create", "test")
     test = ev.read("test")
