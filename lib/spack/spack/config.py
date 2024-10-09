@@ -776,13 +776,24 @@ def update_config_with_includes():
     to_add = list()
     for entry in includes:
         always_activate = False
+        optional = False
         if isinstance(entry, str):
             include_path = entry
             always_activate = True
         else:
-            include_path, when_str = entry["path"], entry["when"]
+            include_path = entry["path"]
+            if "when" in entry:
+                when_str = entry["when"]
+            else:
+                always_activate = True
+            optional |= entry.get("optional", False)
+
+        include_path = spack.util.path.canonicalize_path(include_path)
+        if not os.path.exists(include_path) and not optional:
+            raise ValueError(f"Specified include path does not exist and is not optional: {include_path}")
+
         activate = always_activate or spack.environment.environment._eval_conditional(when_str)
-        if activate:
+        if activate and os.path.exists(include_path):
             to_add.append(include_path)
 
     def resolve_relative(cfg_path):

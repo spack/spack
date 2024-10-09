@@ -1508,16 +1508,20 @@ packages:
     # This config will not be included
     cfg2_path = write_python_cfg("+shared", "include2.yaml")
 
-    cfg3_path = write_python_cfg("+ssl", "include3.yaml")
+    this_os = spack.platforms.host().default_os
+    tmpdir.join(f"{this_os}").ensure(dir=True)
+    cfg3_path = write_python_cfg("+ssl", os.path.join(f"{this_os}", "include3.yaml"))
 
     cfg4_path = write_python_cfg("+tk", "include4.yaml")
 
-    this_os = spack.platforms.host().default_os
+    cfg5_path = os.path.join(str(tmpdir), "non-existent.yaml")
+
     include_entries = [
-        {"path": f"{cfg1_path}", "when": "True"},
+        {"path": f"{cfg1_path}", "when": f'os == "{this_os}"'},
         {"path": f"{cfg2_path}", "when": "False"},
-        {"path": f"{cfg3_path}", "when": f'os == "{this_os}"'},
+        {"path": f"{cfg3_path}"},
         cfg4_path,
+        {"path": cfg5_path, "optional": True},
     ]
     include_cfg = {"config": {"include": include_entries}}
     write_config_file("config", include_cfg, "low")

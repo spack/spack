@@ -103,8 +103,8 @@ properties: Dict[str, Any] = {
                     "anyOf": [
                         {
                             "type": "object",
-                            "properties": {"when": {"type": "string"}, "path": {"type": "string"}},
-                            "required": ["when", "path"],
+                            "properties": {"when": {"type": "string"}, "path": {"type": "string"}, "optional": {"type": "boolean"}},
+                            "required": ["path"],
                             "additionalProperties": False,
                         },
                         {"type": "string"},
