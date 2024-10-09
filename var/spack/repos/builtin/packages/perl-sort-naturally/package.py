@@ -20,10 +20,4 @@ class PerlSortNaturally(PerlPackage):
 
     depends_on("perl@5.0.0:", type=("build", "link", "run", "test"))
 
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use Sort::Naturally; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out
+    use_modules = ['Sort::Naturally']
