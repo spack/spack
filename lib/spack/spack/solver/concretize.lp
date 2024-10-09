@@ -7,6 +7,7 @@
 % This logic program implements Spack's concretizer
 %=============================================================================
 
+
 % ID of the nodes in the "root" link-run sub-DAG
 #const min_dupe_id = 0.
 
@@ -57,6 +58,12 @@
    internal_error("provider with no virtual node").
 :- provider(PackageNode, _), not attr("node", PackageNode),
    internal_error("provider with no real node").
+:- node_has_variant(PackageNode, _, _), not attr("node", PackageNode),
+   internal_error("node has variant").
+:- attr("variant_set", PackageNode, _, _), not attr("node", PackageNode),
+   internal_error("variant_set").
+:- variant_is_propagated(PackageNode, _), not attr("node", PackageNode),
+   internal_error("variant_is_propagated").
 
 :- attr("root", node(ID, PackageNode)), ID > min_dupe_id,
    internal_error("root with a non-minimal duplicate ID").
@@ -1084,9 +1091,9 @@ variant_is_propagated(PackageNode, Variant) :-
 %  SourceNode1 < SourceNode2.
 
 % Cannot propagate a variant if a different value was set for it in a dependency
-error(100, "No propagating {0} from the package: {1} because package: {2} is set to exclude it", Variant, SourceNode, PackageNode) :- % TODO: Rikki Write a better msg later
-  variant_is_propagated(SourceNode, Variant),
-  attr("variant_set", PackageNode, Variant, _).
+%error(100, "No propagating {0} from the package: {1} because package: {2} is set to exclude it", Variant, SourceNode, PackageNode) :- % TODO: Rikki Write a better msg later
+%  variant_is_propagated(SourceNode, Variant),
+%  attr("variant_set", PackageNode, Variant, _).
 
 
 %----
