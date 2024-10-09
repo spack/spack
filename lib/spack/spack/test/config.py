@@ -13,7 +13,7 @@ from datetime import date
 import pytest
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path, touch, touchp
+from llnl.util.filesystem import join_path, mkdirp, touch, touchp
 
 import spack.config
 import spack.directory_layout
@@ -1508,18 +1508,27 @@ packages:
     # This config will not be included
     cfg2_path = write_python_cfg("+shared", "include2.yaml")
 
+    # The config will point to this using substitutable variables,
+    # namely $os; we expect that Spack resolves these variables
+    # into the actual path of the config
     this_os = spack.platforms.host().default_os
-    tmpdir.join(f"{this_os}").ensure(dir=True)
-    cfg3_path = write_python_cfg("+ssl", os.path.join(f"{this_os}", "include3.yaml"))
+    cfg3_expanded_path = os.path.join(str(tmpdir), f"{this_os}", "include3.yaml")
+    mkdirp(os.path.dirname(cfg3_expanded_path))
+    with open(cfg3_expanded_path, "w") as f:
+        f.write(python_cfg("+ssl"))
+    cfg3_abstract_path = os.path.join(str(tmpdir), "$os", "include3.yaml")
 
+    # This will be included unconditionally
     cfg4_path = write_python_cfg("+tk", "include4.yaml")
 
+    # This config will not exist, and the config will explicitly
+    # allow this
     cfg5_path = os.path.join(str(tmpdir), "non-existent.yaml")
 
     include_entries = [
         {"path": f"{cfg1_path}", "when": f'os == "{this_os}"'},
         {"path": f"{cfg2_path}", "when": "False"},
-        {"path": f"{cfg3_path}"},
+        {"path": cfg3_abstract_path},
         cfg4_path,
         {"path": cfg5_path, "optional": True},
     ]
