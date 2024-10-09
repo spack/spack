@@ -2025,6 +2025,7 @@ class SpackSolverSetup:
                     for variant_def in variant_defs:
                         self.variant_values_from_specs.add((spec.name, id(variant_def), value))
 
+                # TODO RB: This needs to be conditional on the spec having the variant
                 clauses.append(f.variant_value(spec.name, vname, value))
                 if variant.propagate:
                     clauses.append(f.propagate(spec.name, fn.variant_value(vname, value)))
