@@ -43,15 +43,23 @@ class Redis(MakefilePackage):
         version("6.2.2", sha256="7a260bb74860f1b88c3d5942bf8ba60ca59f121c6dce42d3017bed6add0b9535")
         version("6.2.1", sha256="cd222505012cce20b25682fca931ec93bd21ae92cb4abfe742cf7b76aa907520")
         version("6.2.0", sha256="67d624c25d962bd68aff8812a135df85bad07556b8825f3bcd5b522a9932dbca")
-        version("6.0.15", sha256="4bc295264a95bc94423c162a9eee66135a24a51eefe5f53f18fc9bde5c3a9f74")
+        version(
+            "6.0.15", sha256="4bc295264a95bc94423c162a9eee66135a24a51eefe5f53f18fc9bde5c3a9f74"
+        )
         version("6.0.5", sha256="42cf86a114d2a451b898fcda96acd4d01062a7dbaaad2801d9164a36f898f596")
         version("5.0.3", sha256="e290b4ddf817b26254a74d5d564095b11f9cd20d8f165459efa53eb63cd93e02")
         version("5.0.2", sha256="937dde6164001c083e87316aa20dad2f8542af089dfcb1cbb64f9c8300cd00ed")
         version("5.0.1", sha256="82a67c0eec97f9ad379384c30ec391b269e17a3e4596393c808f02db7595abcb")
         version("5.0.0", sha256="70c98b2d0640b2b73c9d8adb4df63bcb62bad34b788fe46d1634b6cf87dc99a4")
-        version("4.0.13", sha256="17d955227966dcd68590be6139e5fe7f2d19fc4fb7334248a904ea9cdd30c1d4")
-        version("4.0.12", sha256="6447259d2eed426a949c9c13f8fdb2d91fb66d9dc915dd50db13b87f46d93162")
-        version("4.0.11", sha256="fc53e73ae7586bcdacb4b63875d1ff04f68c5474c1ddeda78f00e5ae2eed1bbb")
+        version(
+            "4.0.13", sha256="17d955227966dcd68590be6139e5fe7f2d19fc4fb7334248a904ea9cdd30c1d4"
+        )
+        version(
+            "4.0.12", sha256="6447259d2eed426a949c9c13f8fdb2d91fb66d9dc915dd50db13b87f46d93162"
+        )
+        version(
+            "4.0.11", sha256="fc53e73ae7586bcdacb4b63875d1ff04f68c5474c1ddeda78f00e5ae2eed1bbb"
+        )
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
