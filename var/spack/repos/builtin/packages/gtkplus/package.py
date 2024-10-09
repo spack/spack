@@ -102,12 +102,15 @@ class Gtkplus(AutotoolsPackage, MesonPackage):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
+
+class BuildEnvironment:
+
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
 
-class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(BuildEnvironment, spack.build_systems.meson.MesonBuilder):
 
     def meson_args(self):
         args = []
@@ -128,7 +131,7 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         pass
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(BuildEnvironment, spack.build_systems.autotools.AutotoolsBuilder):
 
     def configure_args(self):
         true = which("true")
