@@ -20,7 +20,7 @@ class Redis(MakefilePackage):
     homepage = "https://redis.io"
     urls = [
         "https://download.redis.io/releases/redis-7.4.0.tar.gz",
-        "https://github.com/redis/redis/archive/refs/tags/7.4.0.tar.gz"
+        "https://github.com/redis/redis/archive/refs/tags/7.4.0.tar.gz",
     ]
     git = "https://github.com/redis/redis.git"
 
