@@ -574,36 +574,48 @@ def test_remove_command():
 
     with ev.read("test"):
         add("mpileaks")
+
+    with ev.read("test"):
         assert "mpileaks" in find()
         assert "mpileaks@" not in find()
         assert "mpileaks@" not in find("--show-concretized")
 
     with ev.read("test"):
         remove("mpileaks")
+
+    with ev.read("test"):
         assert "mpileaks" not in find()
         assert "mpileaks@" not in find()
         assert "mpileaks@" not in find("--show-concretized")
 
     with ev.read("test"):
         add("mpileaks")
+
+    with ev.read("test"):
         assert "mpileaks" in find()
         assert "mpileaks@" not in find()
         assert "mpileaks@" not in find("--show-concretized")
 
     with ev.read("test"):
         concretize()
+
+    with ev.read("test"):
         assert "mpileaks" in find()
         assert "mpileaks@" not in find()
         assert "mpileaks@" in find("--show-concretized")
 
     with ev.read("test"):
         remove("mpileaks")
+
+    with ev.read("test"):
         assert "mpileaks" not in find()
         # removed but still in last concretized specs
         assert "mpileaks@" in find("--show-concretized")
 
     with ev.read("test"):
         concretize()
+
+    with ev.read("test"):
         assert "mpileaks" not in find()
         assert "mpileaks@" not in find()
         # now the lockfile is regenerated and it's gone.
