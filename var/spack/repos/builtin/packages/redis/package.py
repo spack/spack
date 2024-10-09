@@ -25,7 +25,7 @@ class Redis(MakefilePackage):
 
     license("BSD-3-Clause")
 
-    version("7.4.0", sha256="74effebe3d0e3ac582f5248492c13e7ca4918949b58b45873d37fc870a4b1fc6")
+    version("7.4.0", sha256="57b47c2c6682636d697dbf5d66d8d495b4e653afc9cd32b7adf9da3e433b8aaf")
     with default_args(deprecated=True):
         # https://nvd.nist.gov/vuln/detail/CVE-2023-36824
         version("7.0.5", sha256="67054cc37b58c125df93bd78000261ec0ef4436a26b40f38262c780e56315cc3")
