@@ -4226,27 +4226,22 @@ class Spec:
             # Only set it if it hasn't been spliced before
             ancestor._build_spec = ancestor._build_spec or ancestor.copy()
             ancestor.clear_cached_hashes(ignore=(ht.package_hash.attr,))
+            for edge in ancestor.edges_to_dependencies(depflag=dt.BUILD):
+                if edge.depflag & ~dt.BUILD:
+                    edge.depflag &= ~dt.BUILD
+                else:
+                    ancestor._dependencies[edge.spec.name].remove(edge)
+                    edge.spec._dependents[ancestor.name].remove(edge)
 
         # For each direct dependent in the link/run graph, replace the dependency on
         # node with one on replacement
-        # For each build dependent, restrict the edge to build-only
         for edge in self.edges_from_dependents():
             if edge.parent not in ancestors_in_context:
                 continue
-            build_dep = edge.depflag & dt.BUILD
-            other_dep = edge.depflag & ~dt.BUILD
-            if build_dep:
-                parent_edge = [e for e in edge.parent._dependencies[self.name] if e.spec is self]
-                assert len(parent_edge) == 1
 
-                edge.depflag = dt.BUILD
-                parent_edge[0].depflag = dt.BUILD
-            else:
-                edge.parent._dependencies.edges[self.name].remove(edge)
-                self._dependents.edges[edge.parent.name].remove(edge)
-
-            if other_dep:
-                edge.parent._add_dependency(replacement, depflag=other_dep, virtuals=edge.virtuals)
+            edge.parent._dependencies.edges[self.name].remove(edge)
+            self._dependents.edges[edge.parent.name].remove(edge)
+            edge.parent._add_dependency(replacement, depflag=edge.depflag, virtuals=edge.virtuals)
 
     def _splice_helper(self, replacement):
         """Main loop of a transitive splice.
@@ -4410,13 +4405,14 @@ class Spec:
                 if node._splice_match(other, self_root=spec, other_root=other):
                     node._splice_detach_and_add_dependents(replacement, context=spec)
 
-        # Set up build dependencies for modified nodes
-        # Also modify build_spec because the existing ones had build deps removed
+        # For nodes that were spliced, modify the build spec to ensure build deps are preserved
+        # For nodes that were not spliced, replace the build deps on the spec itself
         for orig, copy in node_pairs:
-            for edge in orig.edges_to_dependencies(depflag=dt.BUILD):
-                copy._add_dependency(edge.spec, depflag=dt.BUILD, virtuals=edge.virtuals)
             if copy._build_spec:
                 copy._build_spec = orig.build_spec.copy()
+            else:
+                for edge in orig.edges_to_dependencies(depflag=dt.BUILD):
+                    copy._add_dependency(edge.spec, depflag=dt.BUILD, virtuals=edge.virtuals)
 
         return spec
 
