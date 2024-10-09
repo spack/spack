@@ -23,8 +23,6 @@ class Hdf5(CMakePackage):
     homepage = "https://support.hdfgroup.org"
     url = "https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_5/downloads/hdf5-1.14.5.tar.gz"
 
-#    list_url = "https://support.hdfgroup.org/releases/hdf5"
-#    list_depth = 4
     git = "https://github.com/HDFGroup/hdf5.git"
     maintainers("lrknox", "brtnfld", "byrnHDF", "gheber", "hyoklee", "lkurz")
 
@@ -63,7 +61,7 @@ class Hdf5(CMakePackage):
     version(
         "1.14.3",
         sha256="09cdb287aa7a89148c1638dd20891fdbae08102cf433ef128fd345338aa237c7",
-        url = "https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_3/downloads/hdf5-1.14.3.tar.gz",
+        url="https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_3/downloads/hdf5-1.14.3.tar.gz",
     )
     version(
         "1.14.2",
