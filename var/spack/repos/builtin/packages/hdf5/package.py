@@ -20,10 +20,11 @@ class Hdf5(CMakePackage):
     flexible and efficient I/O and for high volume and complex data.
     """
 
-    homepage = "https://portal.hdfgroup.org"
-    url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.14/hdf5-1.14.3/src/hdf5-1.14.3.tar.gz"
-    list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
-    list_depth = 3
+    homepage = "https://support.hdfgroup.org"
+    url = "https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_5/downloads/hdf5-1.14.5.tar.gz"
+
+#    list_url = "https://support.hdfgroup.org/releases/hdf5"
+#    list_depth = 4
     git = "https://github.com/HDFGroup/hdf5.git"
     maintainers("lrknox", "brtnfld", "byrnHDF", "gheber", "hyoklee", "lkurz")
 
@@ -39,7 +40,8 @@ class Hdf5(CMakePackage):
 
     # The 'develop' version is renamed so that we could uninstall (or patch) it
     # without affecting other develop version.
-    version("develop-1.15", branch="develop")
+    version("develop-1.17", branch="develop")
+    version("develop-1.16", branch="hdf5_1_16")
     version("develop-1.14", branch="hdf5_1_14")
     version("develop-1.12", branch="hdf5_1_12")
     version("develop-1.10", branch="hdf5_1_10")
@@ -48,13 +50,36 @@ class Hdf5(CMakePackage):
     # Odd versions are considered experimental releases
     # Even versions are maintenance versions
     version(
-        "1.14.3",
-        sha256="09cdb287aa7a89148c1638dd20891fdbae08102cf433ef128fd345338aa237c7",
+        "1.14.5",
+        sha256="ec2e13c52e60f9a01491bb3158cb3778c985697131fc6a342262d32a26e58e44",
+        url="https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_5/downloads/hdf5-1.14.5.tar.gz",
         preferred=True,
     )
-    version("1.14.2", sha256="1c342e634008284a8c2794c8e7608e2eaf26d01d445fb3dfd7f33cb2fb51ac53")
-    version("1.14.1-2", sha256="cbe93f275d5231df28ced9549253793e40cd2b555e3d288df09d7b89a9967b07")
-    version("1.14.0", sha256="a571cc83efda62e1a51a0a912dd916d01895801c5025af91669484a1575a6ef4")
+    version(
+        "1.14.4-3",
+        sha256="019ac451d9e1cf89c0482ba2a06f07a46166caf23f60fea5ef3c37724a318e03",
+        url="https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_4/downloads/hdf5-1.14.4-3.tar.gz",
+    )
+    version(
+        "1.14.3",
+        sha256="09cdb287aa7a89148c1638dd20891fdbae08102cf433ef128fd345338aa237c7",
+        url = "https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_3/downloads/hdf5-1.14.3.tar.gz",
+    )
+    version(
+        "1.14.2",
+        sha256="1c342e634008284a8c2794c8e7608e2eaf26d01d445fb3dfd7f33cb2fb51ac53",
+        url="https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_2/downloads/hdf5-1.14.2.tar.gz",
+    )
+    version(
+        "1.14.1-2",
+        sha256="cbe93f275d5231df28ced9549253793e40cd2b555e3d288df09d7b89a9967b07",
+        url="https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_1/downloads/hdf5-1.14.1-2.tar.gz",
+    )
+    version(
+        "1.14.0",
+        sha256="a571cc83efda62e1a51a0a912dd916d01895801c5025af91669484a1575a6ef4",
+        url="https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_0/downloads/hdf5-1.14.0.tar.gz",
+    )
     version("1.12.3", sha256="c15adf34647918dd48150ea1bd9dffd3b32a3aec5298991d56048cc3d39b4f6f")
     version("1.12.2", sha256="2a89af03d56ce7502dcae18232c241281ad1773561ec00c0f0e8ee2463910f14")
     version("1.12.1", sha256="79c66ff67e666665369396e9c90b32e238e501f345afd2234186bfb8331081ca")
@@ -168,7 +193,7 @@ class Hdf5(CMakePackage):
     # FindZLIB.cmake. We don't build zlib with CMake by default, so have to
     # delete the first search, otherwise it may find a system zlib. See
     # https://github.com/HDFGroup/hdf5/issues/4904
-    patch("find_package_zlib.patch", when="@1.8.16:")
+    patch("find_package_zlib.patch", when="@1.8.16:1.14.4")
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
@@ -295,7 +320,7 @@ class Hdf5(CMakePackage):
 
     def url_for_version(self, version):
         url = (
-            "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
+            "https://support.hdfgroup.org/archive/support/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
         )
         return url.format(version.up_to(2), version)
 
