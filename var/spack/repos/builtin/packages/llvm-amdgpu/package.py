@@ -20,7 +20,7 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     executables = [r"amdclang", r"amdclang\+\+", r"amdflang", r"clang.*", r"flang.*", "llvm-.*"]
     generator("ninja")
 
-    maintainers("srekolam", "renjithravindrankannath", "haampie")
+    maintainers("srekolam", "renjithravindrankannath", "haampie", "afzpatel")
 
     license("Apache-2.0")
 
@@ -311,6 +311,5 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     def setup_dependent_build_environment(self, env, dependent_spec):
         for root, _, files in os.walk(self.spec["llvm-amdgpu"].prefix):
             if "libclang_rt.asan-x86_64.so" in files:
-                asan_lib_path = root
-        env.prepend_path("LD_LIBRARY_PATH", asan_lib_path)
+                env.prepend_path("LD_LIBRARY_PATH", root)
         env.prune_duplicate_paths("LD_LIBRARY_PATH")

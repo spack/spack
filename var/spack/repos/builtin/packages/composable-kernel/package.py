@@ -78,6 +78,9 @@ class ComposableKernel(CMakePackage):
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("rocm-cmake@" + ver, when="@" + ver, type="build")
 
+    # Build is breaking on warning, -Werror, -Wunused-parameter
+    patch("0001-Disable-Compiler-Warnings.patch", when="@6.2:")
+
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
 
@@ -101,6 +104,8 @@ class ComposableKernel(CMakePackage):
             args.append(self.define("CMAKE_POSITION_INDEPENDENT_CODE", "ON"))
         if self.spec.satisfies("@:5.7"):
             args.append(self.define("CMAKE_CXX_FLAGS", "-O3"))
+        if self.spec.satisfies("@6.2:"):
+            args.append(self.define("BUILD_DEV", "OFF"))
         return args
 
     def build(self, spec, prefix):

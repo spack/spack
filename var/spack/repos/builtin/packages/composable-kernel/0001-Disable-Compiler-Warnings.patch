@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6a2c25d..7f04890 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -289,7 +289,7 @@ else()
+ endif()
+
+ ## tidy
+-include(EnableCompilerWarnings)
++# include(EnableCompilerWarnings)
+ set(CK_TIDY_ERRORS ERRORS * -readability-inconsistent-declaration-parameter-name)
+ if(CMAKE_CXX_COMPILER MATCHES ".*hcc" OR CMAKE_CXX_COMPILER MATCHES ".*clang\\+\\+")
+     set(CK_TIDY_CHECKS -modernize-use-override -readability-non-const-parameter)
