@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import shutil
+from copy import copy
 
 import llnl.util.tty as tty
 
@@ -47,6 +48,13 @@ def setup_parser(subparser):
         "-f", "--force", help="remove any files or directories that block cloning source code"
     )
 
+    subparser.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+        help="traverse edges of the graph to mark everything up to the root as a develop spec",
+    )
+
     arguments.add_common_arguments(subparser, ["spec"])
 
 
@@ -85,8 +93,8 @@ def _retrieve_develop_source(spec: spack.spec.Spec, abspath: str) -> None:
 
 
 def develop(parser, args):
+    env = spack.cmd.require_active_env(cmd_name="develop")
     if not args.spec:
-        env = spack.cmd.require_active_env(cmd_name="develop")
         if args.clone is False:
             raise SpackError("No spec provided to spack develop command")
 
@@ -116,9 +124,30 @@ def develop(parser, args):
         raise SpackError("spack develop requires at most one named spec")
 
     spec = specs[0]
+    if args.recursive:
+        concrete_specs = env.all_matching_specs(spec)
+        if not concrete_specs:
+            tty.msg(
+                "No matching specs found in the environment. "
+                "Recursive develop requires a concretized environment"
+            )
+        else:
+            for cspec in concrete_specs:
+                for parent in cspec.traverse_edges(direction="parents", root=True):
+                    parent_args = copy(args)
+                    parent_args.spec = parent.spec.format("{name}@{version}")
+                    parent_args.recursive = False
+                    tty.debug(f"Recursive develop for {parent_args.spec}")
+                    develop(parser, parent_args)
+
     version = spec.versions.concrete_range_as_version
     if not version:
-        raise SpackError("Packages to develop must have a concrete version")
+        # look up the maximum version so infintiy versions are preferred for develop
+        version = max(spec.package_class.versions.keys())
+        tty.warn(
+            f"{spec.name} was not given a version to develop with. "
+            f"Defaulting to the maximal version: {spec.name}@{version}"
+        )
     spec.versions = spack.version.VersionList([version])
 
     # If user does not specify --path, we choose to create a directory in the
