@@ -84,8 +84,7 @@ class Hepmc3(CMakePackage):
                 args.append(
                     self.define("HEPMC3_CXX_STANDARD", spec["root"].variants["cxxstd"].value)
                 )
-
-        if spec.satisfies("+protobuf"):
+        elif spec.satisfies("+protobuf"):
             args.append(self.define("HEPMC3_CXX_STANDARD", "14"))
 
         return args
