@@ -14,10 +14,12 @@ class Omnitrace(CMakePackage):
     homepage = "https://amdresearch.github.io/omnitrace"
     git = "https://github.com/ROCm/omnitrace.git"
     url = "https://github.com/ROCm/omnitrace/archive/refs/tags/rocm-6.2.0.tar.gz"
-    maintainers("jrmadsen", "afzpatel", "srekolam", "renjithravindrankannath")
+    maintainers("dgaliffiAMD", "afzpatel", "srekolam", "renjithravindrankannath", "jrmadsen")
 
     license("MIT")
 
+    version("amd-mainline", branch="amd-mainline", submodules=True)
+    version("amd-staging", branch="amd-staging", submodules=True)
     version("main", branch="main", submodules=True)
     version(
         "6.2.1",
