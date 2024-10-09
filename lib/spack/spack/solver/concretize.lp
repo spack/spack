@@ -582,7 +582,8 @@ attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
 % or used somewhere
 :- attr("virtual_node", node(_, Virtual)),
    not attr("virtual_on_incoming_edges", _, Virtual),
-   not attr("virtual_root", node(_, Virtual)).
+   not attr("virtual_root", node(_, Virtual)),
+   internal_error("virtual node does not match incoming edge").
 
 attr("virtual_on_incoming_edges", ProviderNode, Virtual)
   :- attr("virtual_on_edge", _, ProviderNode, Virtual).
@@ -636,7 +637,8 @@ do_not_impose(EffectID, node(X, Package))
    virtual_condition_holds(_, PossibleProvider, Virtual),
    PossibleProvider != ProviderNode,
    explicitly_requested_root(PossibleProvider),
-   not explicitly_requested_root(ProviderNode).
+   not explicitly_requested_root(ProviderNode),
+   internal_error("If a root can provide a virtual, it must be the provider").
 
 % A package cannot be the actual provider for a virtual if it does not
 % fulfill the conditions to provide that virtual
@@ -779,7 +781,8 @@ required_provider(Provider, Virtual)
      pkg_fact(Virtual, condition_effect(ConditionID, EffectID)),
      imposed_constraint(EffectID, "node", Provider).
 
-:- provider(node(Y, Package), node(X, Virtual)), required_provider(Provider, Virtual), Package != Provider.
+:- provider(node(Y, Package), node(X, Virtual)), required_provider(Provider, Virtual), Package != Provider,
+   internal_error("If a provider is required the concretizer must use it").
 
 % TODO: the following choice rule allows the solver to add compiler
 % flags if their only source is from a requirement. This is overly-specific
@@ -859,7 +862,8 @@ variant_defined(PackageNode, Name) :- variant_definition(PackageNode, Name, _).
 % for two or more variant definitions, this prefers the last one defined.
 :- node_has_variant(node(NodeID, Package), Name, SelectedVariantID),
    variant_definition(node(NodeID, Package), Name, VariantID),
-   VariantID > SelectedVariantID.
+   VariantID > SelectedVariantID,
+   internal_error("If the solver picks a variant descriptor it must use that variant descriptor").
 
 % B: Associating applicable package rules with nodes
 
@@ -975,7 +979,8 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
      build(node(ID, Package)).
 
 :- attr("variant_set", node(ID, Package), Variant, Value),
-   not attr("variant_value", node(ID, Package), Variant, Value).
+   not attr("variant_value", node(ID, Package), Variant, Value),
+   internal_error("If a variant is set to a value it must have that value").
 
 % The rules below allow us to prefer default values for variants
 % whenever possible. If a variant is set in a spec, or if it is
