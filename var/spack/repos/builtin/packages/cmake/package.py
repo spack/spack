@@ -114,6 +114,23 @@ class Cmake(Package):
         values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
     )
 
+    # We default ownlibs to true because it greatly speeds up the CMake
+    # build, and CMake is built frequently. Also, CMake is almost always
+    # a build dependency, and its libs will not interfere with others in
+    # the build.
+    variant("ownlibs", default=True, description="Use CMake-provided third-party libraries")
+    variant(
+        "doc",
+        default=False,
+        description="Enables the generation of html and man page documentation",
+    )
+    variant(
+        "ncurses",
+        default=sys.platform != "win32",
+        description="Enables the build of the ncurses gui",
+    )
+    variant("qtgui", default=False, description="Enables the build of the Qt GUI")
+
     # Revert the change that introduced a regression when parsing mpi link
     # flags, see: https://gitlab.kitware.com/cmake/cmake/issues/19516
     patch("cmake-revert-findmpi-link-flag-list.patch", when="@3.15.0")
@@ -139,21 +156,7 @@ class Cmake(Package):
     depends_on("gmake", when="platform=darwin")
     depends_on("gmake", when="platform=freebsd")
 
-    # We default ownlibs to true because it greatly speeds up the CMake
-    # build, and CMake is built frequently. Also, CMake is almost always
-    # a build dependency, and its libs will not interfere with others in
-    # the build.
-    variant("ownlibs", default=True, description="Use CMake-provided third-party libraries")
-    variant(
-        "doc",
-        default=False,
-        description="Enables the generation of html and man page documentation",
-    )
-    variant(
-        "ncurses",
-        default=sys.platform != "win32",
-        description="Enables the build of the ncurses gui",
-    )
+    depends_on("qt", when="+qtgui")
 
     # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
     conflicts(
@@ -183,7 +186,7 @@ class Cmake(Package):
     with when("~ownlibs"):
         depends_on("expat")
         # expat/zlib are used in CMake/CTest, so why not require them in libarchive.
-        for plat in ["darwin", "linux"]:
+        for plat in ["darwin", "linux", "freebsd"]:
             with when("platform=%s" % plat):
                 depends_on("libarchive@3.1.0: xar=expat compression=zlib")
                 depends_on("libarchive@3.3.3:", when="@3.15.0:")
@@ -311,11 +314,15 @@ class Cmake(Package):
 
             # Whatever +/~ownlibs, use system curl.
             args.append("--system-curl")
-            args.append("--no-qt-gui")
 
             if spec.satisfies("+doc"):
                 args.append("--sphinx-html")
                 args.append("--sphinx-man")
+
+            if spec.satisfies("+qtgui"):
+                args.append("--qt-gui")
+            else:
+                args.append("--no-qt-gui")
 
             # Now for CMake arguments to pass after the initial bootstrap
             args.append("--")
@@ -329,6 +336,7 @@ class Cmake(Package):
                 # inside a ctest environment
                 "-DCMake_TEST_INSTALL=OFF",
                 f"-DBUILD_CursesDialog={'ON' if '+ncurses' in spec else 'OFF'}",
+                f"-DBUILD_QtDialog={'ON' if spec.satisfies('+qtgui') else 'OFF'}",
             ]
         )
 

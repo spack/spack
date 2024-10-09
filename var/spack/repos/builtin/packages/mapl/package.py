@@ -38,6 +38,7 @@ class Mapl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("2.49.0", sha256="fdf4d48bd38abd1059180b123c5d9fdc2781992c783244ddc51ab0f2ef63dd67")
     version("2.48.0", sha256="60a0fc4fd82b1a05050666ae478da7d79d86305aff1643a57bc09cb5347323b7")
     version("2.47.2", sha256="d4ca384bf249b755454cd486a26bae76944a7cae3a706b9a7c9298825077cac0")
     version("2.47.1", sha256="ca3e94c0caa78a91591fe63603d1836196f5294d4baad7cf1d83b229b3a85916")
@@ -238,6 +239,7 @@ class Mapl(CMakePackage):
     variant("extdata2g", default=True, description="Use ExtData2G")
     variant("pfunit", default=False, description="Build with pFUnit support")
     variant("f2py", default=False, description="Build with f2py support")
+    variant("zstd", default=True, description="Build with ZSTD support", when="@2.49:")
 
     variant(
         "build_type",
@@ -254,6 +256,7 @@ class Mapl(CMakePackage):
     depends_on("mpi")
     depends_on("hdf5")
     depends_on("netcdf-c")
+    depends_on("netcdf-c +zstd", when="+zstd")
     depends_on("netcdf-fortran")
 
     # ESMF dependency
