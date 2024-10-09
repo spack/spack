@@ -73,7 +73,6 @@ class PyNanobind(PythonPackage):
     depends_on("py-scikit-build-core+pyproject@0.9:", when="@2.1", type="build")
     depends_on("py-scikit-build-core+pyproject@0.10:", when="@2.2:", type="build")
 
-
     @property
     def cmake_prefix_paths(self):
         paths = [join_path(python_platlib, "nanobind", "cmake")]
