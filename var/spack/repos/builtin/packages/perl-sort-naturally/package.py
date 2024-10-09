@@ -20,4 +20,4 @@ class PerlSortNaturally(PerlPackage):
 
     depends_on("perl@5.0.0:", type=("build", "link", "run", "test"))
 
-    use_modules = ['Sort::Naturally']
+    use_modules = ["Sort::Naturally"]
