@@ -317,9 +317,7 @@ class Hdf5(CMakePackage):
         )
 
     def url_for_version(self, version):
-        url = (
-            "https://support.hdfgroup.org/archive/support/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
-        )
+        url = "https://support.hdfgroup.org/archive/support/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
     def flag_handler(self, name, flags):
