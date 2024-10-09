@@ -790,7 +790,9 @@ def update_config_with_includes():
 
         include_path = spack.util.path.canonicalize_path(include_path)
         if not os.path.exists(include_path) and not optional:
-            raise ValueError(f"Specified include path does not exist and is not optional: {include_path}")
+            raise ValueError(
+                f"Specified include path does not exist and is not optional: {include_path}"
+            )
 
         activate = always_activate or spack.environment.environment._eval_conditional(when_str)
         if activate and os.path.exists(include_path):
