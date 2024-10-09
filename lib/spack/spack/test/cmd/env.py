@@ -627,11 +627,11 @@ def test_remove_command_all():
     env("create", "test")
     test_pkgs = ("mpileaks", "zlib")
 
-    with ev.read("test") as e:
+    with ev.read("test"):
         for name in test_pkgs:
             add(name)
 
-    with ev.read("test") as e:
+    with ev.read("test"):
         for name in test_pkgs:
             assert name in find()
             assert f"{name}@" not in find()
