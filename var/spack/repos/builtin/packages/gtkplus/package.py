@@ -70,6 +70,7 @@ class Gtkplus(MesonPackage):
     depends_on("fixesproto", when="@3:")
     depends_on("gettext", when="@3:")
     depends_on("cups", when="+cups")
+    depends_on("libxfixes", when="@:2")
 
     patch("no-demos.patch", when="@2.0:2")
 

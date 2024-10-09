@@ -22,6 +22,7 @@ class PyRasterio(PythonPackage):
 
     version("main", branch="main")
     version("master", branch="master", deprecated=True)
+    version("1.4.1", sha256="d750362bb792d2311f94803ff309baec48486ecba75c9b905ea9b1f5eb06ef9f")
     version("1.4.0", sha256="e0d2ff540a4e06016cca2fb46691a10afe71343ea998c50ad8247bb125542133")
     version("1.3.11", sha256="47aa70b4718ebc80d825bb7db3127577d74e31c53048ce215145c0baf530ece9")
     version("1.3.10", sha256="ce182c735b4f9e8735d90600607ecab15ef895eb8aa660bf665751529477e326")

@@ -679,10 +679,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         else:
             env.set("BUILD_CUSTOM_PROTOBUF", "OFF")
 
-        # https://github.com/pytorch/pytorch/issues/111086
-        if self.spec.satisfies("%apple-clang@15:"):
-            env.append_flags("LDFLAGS", "-Wl,-ld_classic")
-
     def setup_run_environment(self, env):
         self.torch_cuda_arch_list(env)
 
