@@ -508,6 +508,30 @@ developer-tools-manylinux2014-build:
     - artifacts: True
       job: developer-tools-manylinux2014-generate
 
+###########################################
+# Build tests for different developer tools
+# darwin
+###########################################
+.developer-tools-darwin:
+  extends: [ ".darwin_aarch64" ]
+  variables:
+    SPACK_CI_STACK_NAME: developer-tools-darwin
+
+developer-tools-darwin-generate:
+  tags: [ "macos-ventura", "apple-clang-15", "aarch64-macos" ]
+  extends: [ ".developer-tools-darwin", ".generate-base"]
+
+developer-tools-darwin-build:
+  extends: [ ".developer-tools-darwin", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: developer-tools-darwin-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: developer-tools-darwin-generate
+
 #########################################
 # RADIUSS
 #########################################
