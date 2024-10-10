@@ -27,6 +27,7 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     license("LGPL-3.0-or-later")
 
     version("develop", branch="develop")
+    version("3.8.0", sha256="6aa57fa4391301af80a5ac641aea1af3f05a614c8ff55f0feb98dc9daf5f2e28")
     version("3.6.1", sha256="ef460417a153216b53e2c45f0bb559cd80ba311ad1b9df3aea6ac7cc30d5f458")
     version("3.6.0", sha256="9efdfe91922e37526745df2ea3fa455ff062d3ad10092459faaeb038197bc710")
     version("3.5.4", sha256="ab7cbdd07a951da116cc4fe4dfa23e7ac41dda9f35c35d16c267920f267f4722")
