@@ -328,7 +328,7 @@ class Mirror:
 
     def get_access_pair(self, direction: str) -> Optional[Tuple[str, str]]:
         pair = self._get_value("access_pair", direction)
-        if isinstance(pair, list):
+        if type(pair) in (tuple, list):
             return tuple(map(self._extract_credential_value, pair))
         elif isinstance(pair, dict):
             id_ = os.environ.get(pair["id_variable"]) if "id_variable" in pair else pair["id"]
