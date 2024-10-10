@@ -1159,6 +1159,8 @@ class Environment:
             # things that cannot be recreated from file
             self.new_specs = []  # write packages for these on write()
 
+        self.manifest.clear()
+
     @property
     def active(self):
         """True if this environment is currently active."""
@@ -2787,6 +2789,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         except ValueError as e:
             msg = f"cannot remove {user_spec} from {self}, no such spec exists"
             raise SpackEnvironmentError(msg) from e
+        self.changed = True
+
+    def clear(self) -> None:
+        """Clear all user specs from the list of root specs"""
+        self.configuration["specs"] = []
         self.changed = True
 
     def override_user_spec(self, user_spec: str, idx: int) -> None:
