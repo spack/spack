@@ -156,6 +156,12 @@ class Mirror:
         return self.get_url("push")
 
     def _update_connection_dict(self, current_data: dict, new_data: dict, top_level: bool):
+        # Only allow one to exist in the config
+        if "access_token" in current_data and "access_token_variable" in new_data:
+            current_data.pop("access_token")
+        elif "access_token_variable" in current_data and "access_token" in new_data:
+            current_data.pop("access_token_variable")
+
         keys = [
             "url",
             "access_pair",

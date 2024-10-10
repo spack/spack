@@ -429,7 +429,6 @@ def test_update_connection_params(direction, tmpdir, monkeypatch):
             "url": "http://example.org",
             "access_pair": {"id": "username", "secret_variable": "_SPACK_TEST_PAIR_PASSWORD"},
             "access_token_variable": "_SPACK_TEST_TOKEN",
-            "access_token": "token",
             "profile": "profile",
             "endpoint_url": "https://example.com",
         },
