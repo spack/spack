@@ -723,6 +723,7 @@ def deps_to_relocate(spec):
     than they were at build time.
 
     This traversal covers transitive link dependencies and direct run dependencies because:
+
     1. Spack adds RPATHs for transitive link dependencies so that packages can find needed
        dependency libraries.
     2. Packages may call any of their *direct* run dependencies (and may bake their paths into

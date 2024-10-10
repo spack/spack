@@ -189,7 +189,7 @@ non-spliced spec is itself.
 
 The figure below shows examples of transitive and intransitive splices:
 
-.. figure:: images/splices.svg
+.. figure:: images/splices.png
    :align: center
 
 The concretizer can be configured to explicitly splice particular
