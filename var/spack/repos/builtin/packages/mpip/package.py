@@ -7,7 +7,6 @@ from spack.package import *
 
 
 class Mpip(AutotoolsPackage):
-
     """mpiP: Lightweight, Scalable MPI Profiling"""
 
     homepage = "https://software.llnl.gov/mpiP/"
@@ -19,6 +18,10 @@ class Mpip(AutotoolsPackage):
 
     version("master", branch="master")
     version("3.5", sha256="e366843d53fa016fb03903e51c8aac901aa5155edabe64698a8d6fa618a03bbd")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("demangling", default=True, description="Build with demangling support")
 

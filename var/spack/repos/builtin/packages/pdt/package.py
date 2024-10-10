@@ -38,6 +38,8 @@ class Pdt(AutotoolsPackage):
     version("3.19", sha256="d57234077e2e999f2acf9860ea84369a4694b50cc17fa6728e5255dc5f4a2160")
     version("3.18.1", sha256="d06c2d1793fadebf169752511e5046d7e02cf3fead6135a35c34b1fee6d6d3b2")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("pic", default=False, description="Builds with pic")
 
     patch("cray_configure.patch", when="%cce")
@@ -62,7 +64,7 @@ class Pdt(AutotoolsPackage):
             options.append("-pgCC")
         elif self.compiler.name == "gcc":
             options.append("-GNU")
-        elif self.compiler.name == "clang" or self.compiler.name == "apple-clang":
+        elif self.compiler.name in ["clang", "apple-clang", "aocc"]:
             options.append("-clang")
         elif self.compiler.name == "cce":
             options.append("-CC")

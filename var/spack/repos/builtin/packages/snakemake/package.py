@@ -7,14 +7,16 @@ from spack.package import *
 
 
 class Snakemake(PythonPackage):
-    """Snakemake is an MIT-licensed workflow management system."""
+    """Workflow management system to create reproducible and scalable data analyses."""
 
-    homepage = "https://snakemake.readthedocs.io/en/stable/"
-    pypi = "snakemake/snakemake-7.32.4.tar.gz"
-    maintainers("marcusboden")
+    homepage = "https://snakemake.readthedocs.io/en"
+    pypi = "snakemake/snakemake-8.18.2.tar.gz"
+    maintainers("marcusboden", "w8jcik")
 
     license("MIT")
 
+    version("8.18.2", sha256="7dc8cdc3c836444c2bc3d67a4a7f4d703557c1bf96a90da18f312f4df9daefc4")
+    version("8.5.2", sha256="cc94876263182277e4a429e5d371c867400eeddc791c114dfd090d1bb3158975")
     version("7.32.4", sha256="fdc3f15dd7b06fabb7da30d460e0a3b1fba08e4ea91f9c32c47a83705cdc7b6e")
     version("7.31.1", sha256="6fadcc9a051737aa187dccf437879b3b83ddc917fff9bd7d400e056cf17a1788")
     version("7.30.2", sha256="0cb86cf9b43b9f2f45d5685cd932595131031c7087690f64c5bc7eaec88df029")
@@ -43,6 +45,7 @@ class Snakemake(PythonPackage):
     depends_on("py-tomli", type=("build"), when="@7.20.0: ^python@:3.10")
 
     depends_on("py-appdirs", type=("build", "run"))
+    depends_on("py-immutables", type=("build", "run"), when="@8:")
     depends_on("py-configargparse", type=("build", "run"))
     depends_on("py-connectionpool@0.0.3:", type=("build", "run"))
     depends_on("py-datrie", type=("build", "run"))
@@ -54,30 +57,68 @@ class Snakemake(PythonPackage):
     depends_on("py-nbformat", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"), when="@7.29.0:")
     depends_on("py-psutil", type=("build", "run"))
-    depends_on("py-pulp@2:", type=("build", "run"))
+    depends_on("py-pulp@2.3.1:2.8", type=("build", "run"), when="@8.1.2:")
+    depends_on("py-pulp@2:", type=("build", "run"), when="@:8.1.1")
     depends_on("py-pyyaml", type=("build", "run"))
+
+    depends_on("py-requests@2.8.1:2", type=("build", "run"), when="@8.4.12")
     depends_on("py-requests", type=("build", "run"))
+
     depends_on("py-reretry", type=("build", "run"), when="@7:")
+
+    depends_on("py-smart-open@4:7", type=("build", "run"), when="@8.11:")
+    depends_on("py-smart-open@3:7", type=("build", "run"), when="@8.8:8.10")
+    depends_on("py-smart-open@3:6", type=("build", "run"), when="@8.4.12:8.7")
     depends_on("py-smart-open@3:", type=("build", "run"))
+
+    depends_on(
+        "py-snakemake-interface-executor-plugins@9.2:9", type=("build", "run"), when="@8.15.0:"
+    )
+    depends_on(
+        "py-snakemake-interface-executor-plugins@9.1:9", type=("build", "run"), when="@8.10.1:"
+    )
+    depends_on(
+        "py-snakemake-interface-executor-plugins@9.0.2:9", type=("build", "run"), when="@8.10:"
+    )
+    depends_on("py-snakemake-interface-executor-plugins@9", type=("build", "run"), when="@8.6:")
+    depends_on(
+        "py-snakemake-interface-executor-plugins@8.1.3:8", type=("build", "run"), when="@8:8.5"
+    )
+
+    depends_on("py-snakemake-interface-common@1.17:1", type=("build", "run"), when="@8.4.10:")
+    depends_on("py-snakemake-interface-common@1.15:1", type=("build", "run"), when="@8:")
+
+    depends_on(
+        "py-snakemake-interface-storage-plugins@3.2.3:3", type=("build", "run"), when="@8.15.1:"
+    )
+    depends_on(
+        "py-snakemake-interface-storage-plugins@3.1:3", type=("build", "run"), when="@8.4.10:"
+    )
+    depends_on("py-snakemake-interface-storage-plugins@3", type=("build", "run"), when="@8:")
+
+    depends_on("py-snakemake-interface-report-plugins@1", type=("build", "run"), when="@8.5:")
     depends_on("py-stopit", type=("build", "run"))
     depends_on("py-tabulate", type=("build", "run"))
     depends_on("py-throttler", type=("build", "run"), when="@7:")
+    depends_on("py-toposort@1.10:1", type=("build", "run"), when="@8.4.12:")
     depends_on("py-toposort@1.10:", type=("build", "run"), when="@7.24.0:")
     depends_on("py-toposort", type=("build", "run"), when="@:7.23")
     depends_on("py-wrapt", type=("build", "run"))
     depends_on("py-yte@1.5.1:1", type=("build", "run"), when="@7.28.1:")
     depends_on("py-yte@1", type=("build", "run"), when="@7:7.28.0")
+    depends_on("py-dpath@2.1.6:2", type=("build", "run"), when="@8.3:")
+    depends_on("py-conda-inject@1.3.1:1", type=("build", "run"), when="@8:")
 
     variant("reports", default=False, description="Generate self-contained HTML reports")
 
     with when("+reports"):
         depends_on("py-pygments", type=("build", "run"))
-        # Historical dependencies
+
         depends_on("py-jinja2", type=("build", "run"), when="@:7.19.1")
         depends_on("py-networkx", type=("build", "run"), when="@:7.1.1")
         depends_on("py-pygraphviz", type=("build", "run"), when="@:7.1.1")
 
-    variant("google-cloud", default=False, description="Enable Google Cloud execution")
+    variant("google-cloud", default=False, description="Enable Google Cloud execution", when="@:7")
 
     with when("+google-cloud"):
         depends_on("py-google-api-python-client", type=("build", "run"))
@@ -85,7 +126,7 @@ class Snakemake(PythonPackage):
         depends_on("py-google-crc32c", type=("build", "run"))
         depends_on("py-oauth2client", type=("build", "run"))
 
-    variant("azure", default=False, description="Enable Azure execution", when="@7.28.0:")
+    variant("azure", default=False, description="Enable Azure execution", when="@7.28.0:7")
 
     with when("+azure"):
         depends_on("py-azure-storage-blob", type=("build", "run"))
@@ -94,23 +135,24 @@ class Snakemake(PythonPackage):
         depends_on("py-azure-identity", type=("build", "run"))
         depends_on("py-azure-mgmt-batch", type=("build", "run"))
 
-    # Historical dependencies
     depends_on("py-msrest", type=("build", "run"), when="@7.28.0")
     depends_on("py-filelock", type=("build", "run"), when="@:6")
     depends_on("py-ratelimiter", type=("build", "run"), when="@:6")
 
-    # These variants are not in PyPI/pip, but they are undocumented dependencies
-    # needed to make certain parts of Snakemake work.
-
-    variant("ftp", default=False, description="Enable snakemake.remote.FTP")
+    variant("ftp", default=False, description="Handling input and output via FTP", when="@:7")
     depends_on("py-ftputil", when="+ftp", type=("build", "run"))
 
-    variant("s3", default=False, description="Enable snakemake.remote.S3")
+    variant(
+        "s3", default=False, description="Amazon S3 API storage (AWS S3, MinIO, etc.)", when="@:7"
+    )
     depends_on("py-boto3", when="+s3", type=("build", "run"))
     depends_on("py-botocore", when="+s3", type=("build", "run"))
 
-    variant("http", default=False, description="Enable snakemake.remote.HTTP")
+    variant(
+        "http", default=False, description="Downloading of input files from HTTP(s)", when="@:7"
+    )
     depends_on("py-requests", when="+http", type=("build", "run"))
 
-    def test(self):
-        Executable("snakemake")("--version")
+    def test_run(self):
+        """Test if snakemake runs with the version option"""
+        Executable(self.prefix.bin.snakemake)("--version")

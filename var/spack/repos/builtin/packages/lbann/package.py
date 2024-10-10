@@ -35,6 +35,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "build_type",
         default="Release",
@@ -224,7 +226,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("python@3: +shared", type=("build", "run"), when="+pfe")
     extends("python", when="+pfe")
     depends_on("py-setuptools", type="build", when="+pfe")
-    depends_on("py-protobuf+cpp@3.10.0:4.21.12", type=("build", "run"), when="+pfe")
+    depends_on("py-protobuf@3.10.0:4.21.12", type=("build", "run"), when="+pfe")
 
     depends_on("protobuf@3.10.0:3.21.12")
     depends_on("zlib-api", when="^protobuf@3.11.0:")
@@ -357,10 +359,6 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
                     cmake_cache_string("CMAKE_CUDA_FLAGS", "-allow-unsupported-compiler")
                 )
 
-        if "+rocm" in spec:
-            if "platform=cray" in spec:
-                entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
-
         return entries
 
     def initconfig_package_entries(self):
@@ -402,12 +400,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         )
         entries.append(cmake_cache_option("protobuf_MODULE_COMPATIBLE", True))
 
-        if spec.satisfies("^python") and "+pfe" in spec:
-            entries.append(
-                cmake_cache_path(
-                    "LBANN_PFE_PYTHON_EXECUTABLE", "{0}/python3".format(spec["python"].prefix.bin)
-                )
-            )
+        if spec.satisfies("+pfe ^python"):
+            entries.append(cmake_cache_path("LBANN_PFE_PYTHON_EXECUTABLE", python.path))
             entries.append(
                 cmake_cache_string("LBANN_PFE_PYTHONPATH", env["PYTHONPATH"])
             )  # do NOT need to sub ; for : because

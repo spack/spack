@@ -27,7 +27,7 @@ class Libxsmm(MakefilePackage):
     # after 2.0 release.
     version("main-2023-11", commit="0d9be905527ba575c14ca5d3b4c9673916c868b2")
     version("main", branch="main")
-
+    version("1.17-cp2k", commit="6f883620f58afdeebab28039fc9cf580e76a5ec6")
     version("1.17", sha256="8b642127880e92e8a75400125307724635ecdf4020ca4481e5efe7640451bb92")
     version("1.16.3", sha256="e491ccadebc5cdcd1fc08b5b4509a0aba4e2c096f53d7880062a66b82a0baf84")
     version("1.16.2", sha256="bdc7554b56b9e0a380fc9c7b4f4394b41be863344858bc633bc9c25835c4c64e")
@@ -62,6 +62,10 @@ class Libxsmm(MakefilePackage):
     version("1.4.2", sha256="9c89391635be96759486a245365793bc4593859e6d7957b37c39a29f9b4f95eb")
     version("1.4.1", sha256="c19be118694c9b4e9a61ef4205b1e1a7e0c400c07f9bce65ae430d2dc2be5fe1")
     version("1.4", sha256="cf483a370d802bd8800c06a12d14d2b4406a745c8a0b2c8722ccc992d0cd72dd")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("shared", default=False, description="With shared libraries (and static libraries).")
     variant("debug", default=False, description="With call-trace (LIBXSMM_TRACE); unoptimized.")
@@ -109,8 +113,11 @@ class Libxsmm(MakefilePackage):
             "CXX={0}".format(spack_cxx),
             "FC={0}".format(spack_fc),
             "PREFIX=%s" % prefix,
-            "SYM=1",
         ]
+        if spec.target.family == "aarch64":
+            make_args += ["PLATFORM=1"]
+        else:
+            make_args += ["SYM=1"]
 
         # JIT (AVX and later) makes MNK, M, N, or K spec. superfluous
         # make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']

@@ -6,8 +6,10 @@
 """Schema for configuration merged into one file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/merged.py
-   :lines: 39-
+   :lines: 32-
 """
+from typing import Any, Dict
+
 from llnl.util.lang import union_dicts
 
 import spack.schema.bootstrap
@@ -24,9 +26,10 @@ import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
 import spack.schema.upstreams
+import spack.schema.view
 
 #: Properties for inclusion in other schemas
-properties = union_dicts(
+properties: Dict[str, Any] = union_dicts(
     spack.schema.bootstrap.properties,
     spack.schema.cdash.properties,
     spack.schema.compilers.properties,
@@ -41,6 +44,7 @@ properties = union_dicts(
     spack.schema.packages.properties,
     spack.schema.repos.properties,
     spack.schema.upstreams.properties,
+    spack.schema.view.properties,
 )
 
 

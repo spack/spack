@@ -17,6 +17,9 @@ class Clfft(CMakePackage):
 
     version("2.12.2", sha256="e7348c146ad48c6a3e6997b7702202ad3ee3b5df99edf7ef00bbacc21e897b12")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("client", default=True, description="build client and callback client")
 
     depends_on("opencl@1.2:")
@@ -34,6 +37,12 @@ class Clfft(CMakePackage):
     )
 
     root_cmakelists_dir = "src"
+
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            # https://github.com/clMathLibraries/clFFT/issues/237
+            flags.append("-fpermissive")
+        return (flags, None, None)
 
     def cmake_args(self):
         args = [

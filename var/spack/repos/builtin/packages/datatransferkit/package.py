@@ -26,6 +26,10 @@ class Datatransferkit(CMakePackage):
     version("3.1-rc3", commit="691d5a1540f7cd42141a3b3d2a7c8370cbc3560a", submodules=True)
     version("3.1-rc2", commit="1abc1a43b33dffc7a16d7497b4185d09d865e36a", submodules=True)
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant(
         "external-arborx",
         default=False,
@@ -35,6 +39,7 @@ class Datatransferkit(CMakePackage):
     variant("serial", default=True, description="enable Serial backend (default)")
     variant("shared", default=True, description="enable the build of shared lib")
 
+    depends_on("mpi")
     depends_on("arborx@1.0:", when="+external-arborx")
     depends_on("boost")
     depends_on("cmake", type="build")
@@ -42,7 +47,7 @@ class Datatransferkit(CMakePackage):
     depends_on("trilinos+openmp", when="+openmp")
     depends_on("trilinos+stratimikos+belos", when="@master")
     depends_on("trilinos@13:13.4.1", when="@3.1-rc2:3.1-rc3")
-    depends_on("trilinos@14:", when="@3.1.0:")
+    depends_on("trilinos@14.2:", when="@3.1.0:")
 
     def cmake_args(self):
         spec = self.spec
@@ -56,9 +61,13 @@ class Datatransferkit(CMakePackage):
             "-DDataTransferKit_ENABLE_EXAMPLES=OFF",
             "-DCMAKE_CXX_EXTENSIONS=OFF",
             "-DCMAKE_CXX_STANDARD=14",
+            "-DCMAKE_C_COMPILER=" + spec["mpi"].mpicc,
+            "-DCMAKE_CXX_COMPILER=" + spec["mpi"].mpicxx,
+            "-DCMAKE_Fortran_COMPILER=" + spec["mpi"].mpifc,
+            "-DMPI_BASE_DIR=" + spec["mpi"].prefix,
         ]
 
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             options.append("-DDataTransferKit_ENABLE_OpenMP=ON")
 
         return options

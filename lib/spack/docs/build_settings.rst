@@ -21,23 +21,86 @@ is the following:
 Reuse already installed packages
 --------------------------------
 
-The ``reuse`` attribute controls whether Spack will prefer to use installed packages (``true``), or
-whether it will do a "fresh" installation and prefer the latest settings from
-``package.py`` files and ``packages.yaml`` (``false``).
-You can use:
+The ``reuse`` attribute controls how aggressively Spack reuses binary packages during concretization. The
+attribute can either be a single value, or an object for more complex configurations.
+
+In the former case ("single value") it allows Spack to:
+
+1. Reuse installed packages and buildcaches for all the specs to be concretized, when ``true``
+2. Reuse installed packages and buildcaches only for the dependencies of the root specs, when ``dependencies``
+3. Disregard reusing installed packages and buildcaches, when ``false``
+
+In case a finer control over which specs are reused is needed, then the value of this attribute can be
+an object, with the following keys:
+
+1. ``roots``: if ``true`` root specs are reused, if ``false`` only dependencies of root specs are reused
+2. ``from``: list of sources from which reused specs are taken
+
+Each source in ``from`` is itself an object:
+
+.. list-table:: Attributes for a source or reusable specs
+   :header-rows: 1
+
+   * - Attribute name
+     - Description
+   * - type (mandatory, string)
+     - Can be ``local``, ``buildcache``, or ``external``
+   * - include (optional, list of specs)
+     - If present, reusable specs must match at least one of the constraint in the list
+   * - exclude (optional, list of specs)
+     - If present, reusable specs must not match any of the constraint in the list.
+
+For instance, the following configuration:
+
+.. code-block:: yaml
+
+   concretizer:
+     reuse:
+       roots: true
+       from:
+       - type: local
+         include:
+         - "%gcc"
+         - "%clang"
+
+tells the concretizer to reuse all specs compiled with either ``gcc`` or ``clang``, that are installed
+in the local store. Any spec from remote buildcaches is disregarded.
+
+To reduce the boilerplate in configuration files, default values for the ``include`` and
+``exclude`` options can be pushed up one level:
+
+.. code-block:: yaml
+
+   concretizer:
+     reuse:
+       roots: true
+       include:
+       - "%gcc"
+       from:
+       - type: local
+       - type: buildcache
+       - type: local
+         include:
+         - "foo %oneapi"
+
+In the example above we reuse all specs compiled with ``gcc`` from the local store
+and remote buildcaches, and we also reuse ``foo %oneapi``. Note that the last source of
+specs override the default ``include`` attribute.
+
+For one-off concretizations, the are command line arguments for each of the simple "single value"
+configurations. This means a user can:
 
 .. code-block:: console
 
    % spack install --reuse <spec>
 
-to enable reuse for a single installation, and you can use:
+to enable reuse for a single installation, or:
 
 .. code-block:: console
 
    spack install --fresh <spec>
 
 to do a fresh install if ``reuse`` is enabled by default.
-``reuse: dependencies`` is the default.
 
 .. seealso::
 

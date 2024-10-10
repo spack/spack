@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.util.environment import is_system_path
 
 
 class Libarchive(AutotoolsPackage):
@@ -18,6 +17,9 @@ class Libarchive(AutotoolsPackage):
 
     license("BSD-2-Clause AND BSD-3-Clause AND Public-Domain")
 
+    version("3.7.4", sha256="7875d49596286055b52439ed42f044bd8ad426aa4cc5aabd96bfe7abb971d5e8")
+    version("3.7.3", sha256="f27a97bc22ceb996e72502df47dc19f99f9a0f09181ae909f09f3c9eb17b67e2")
+    version("3.7.2", sha256="df404eb7222cf30b4f8f93828677890a2986b66ff8bf39dac32a804e96ddf104")
     version("3.7.1", sha256="5d24e40819768f74daf846b99837fc53a3a9dcdf3ce1c2003fe0596db850f0f0")
     version("3.7.0", sha256="d937886a14b48c4287c4d343644feb294a14b31b7926ba9a4f1777123ce7c2cc")
     version("3.6.2", sha256="ba6d02f15ba04aba9c23fd5f236bb234eab9d5209e95d1c4df85c44d5f19b9b3")
@@ -64,6 +66,9 @@ class Libarchive(AutotoolsPackage):
         sha256="64b15dfa623b323da8fc9c238b5bca962ec3b38dcdfd2ed86f5f509e578a3524",
         deprecated=True,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant(
         "libs",
@@ -132,10 +137,10 @@ class Libarchive(AutotoolsPackage):
         args += self.enable_or_disable("programs")
 
         if "+iconv" in spec:
-            if spec["iconv"].name == "libc":
+            if spec["iconv"].name == "libiconv":
+                args.append(f"--with-libiconv-prefix={spec['iconv'].prefix}")
+            else:
                 args.append("--without-libiconv-prefix")
-            elif not is_system_path(spec["iconv"].prefix):
-                args.append("--with-libiconv-prefix={p}".format(p=spec["iconv"].prefix))
         else:
             args.append("--without-iconv")
 

@@ -29,5 +29,11 @@ class PyGreenlet(PythonPackage):
     version("0.4.17", sha256="41d8835c69a78de718e466dd0e6bfd4b46125f21a67c3ff6d76d8d8059868d6b")
     version("0.4.13", sha256="0fef83d43bf87a5196c91e73cb9772f945a4caaff91242766c5916d1dd1381e4")
 
-    depends_on("python", type=("build", "link", "run"))
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
+    with default_args(type=("build", "link", "run")):
+        depends_on("python")
+        depends_on("python@:3.11", when="@:2")
+
     depends_on("py-setuptools", type="build")

@@ -6,12 +6,14 @@
 """Schema for repos.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/repos.py
-   :lines: 13-
+   :lines: 14-
 """
-
+from typing import Any, Dict
 
 #: Properties for inclusion in other schemas
-properties = {"repos": {"type": "array", "default": [], "items": {"type": "string"}}}
+properties: Dict[str, Any] = {
+    "repos": {"type": "array", "default": [], "items": {"type": "string"}}
+}
 
 
 #: Full schema with metadata
