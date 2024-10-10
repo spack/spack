@@ -524,6 +524,11 @@ class Result:
             candidate = answer.get(node)
 
             if candidate and candidate.build_spec.satisfies(input_spec):
+                if not candidate.satisfies(input_spec):
+                    tty.warn(
+                        "explicit splice configuration has caused the concretized spec"
+                        f" {candidate} not to satisfy the input spec {input_spec}"
+                    )
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
             else:

@@ -2283,7 +2283,7 @@ class TestConcretize:
 
     @pytest.mark.parametrize("transitive", [True, False])
     def test_explicit_splices(
-        self, mutable_config, database_mutable_config, mock_packages, transitive
+        self, mutable_config, database_mutable_config, mock_packages, transitive, capfd
     ):
         mpich_spec = database_mutable_config.query("mpich")[0]
         splice_info = {
@@ -2299,6 +2299,11 @@ class TestConcretize:
         assert spec.build_spec.dependencies(name="zmpi", deptype="link")
         assert not spec.build_spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
         assert not spec.dependencies(name="zmpi", deptype="link")
+
+        captured = capfd.readouterr()
+        assert "Warning: explicit splice configuration has caused" in captured.err
+        assert "hdf5 ^zmpi" in captured.err
+        assert str(spec) in captured.err
 
     @pytest.mark.db
     @pytest.mark.parametrize(
