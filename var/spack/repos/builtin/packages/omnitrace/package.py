@@ -20,54 +20,24 @@ class Omnitrace(CMakePackage):
 
     version("amd-mainline", branch="amd-mainline", submodules=True)
     version("amd-staging", branch="amd-staging", submodules=True)
-    version(
-        "1.12.0",
-        tag="v1.12.0",
-        commit="abff23ac4238da6d7891d9ac9f36a919e30bf759",
-        submodules=True,
-    )
+    version("1.12.0", tag="v1.12.0", commit="abff23ac4238da6d7891d9ac9f36a919e30bf759", submodules=True)
     version(
         "rocm-6.2.1",
         tag="rocm-6.2.1",
         commit="df91a342370401c93b5278bf082e520d6a0e22e9",
         submodules=True,
     )
-    version(
-        "1.11.4",
-        tag="v1.11.4",
-        commit="6b0627f5b7d4b05c3b7b1da581e474d48ebe36cf",
-        submodules=True,
-    )
+    version("1.11.4", tag="v1.11.4", commit="6b0627f5b7d4b05c3b7b1da581e474d48ebe36cf", submodules=True)
     version(
         "rocm-6.2.0",
         tag="rocm-6.2.0",
         commit="f0bd9126a5456eb9e511d13261af262d17d9b61b",
         submodules=True,
     )
-    version(
-        "1.11.0",
-        tag="v1.11.0",
-        commit="77d52814e9050004cfb11d7917e155b00ab861b1",
-        submodules=True,
-    )
-    version(
-        "1.10.0",
-        tag="v1.10.0",
-        commit="9de3a6b0b4243bf8ec10164babdd99f64dbc65f2",
-        submodules=True,
-    )
-    version(
-        "1.9.0",
-        tag="v1.9.0",
-        commit="9eafb2360296277103d2ee706fb5f90b12722668",
-        submodules=True,
-    )
-    version(
-        "1.8.0",
-        tag="v1.8.0",
-        commit="7c73d981258cc3a29477756a95c1f90c5f8897dd",
-        submodules=True,
-    )
+    version("1.11.0", tag="v1.11.0", commit="77d52814e9050004cfb11d7917e155b00ab861b1", submodules=True)
+    version("1.10.0", tag="v1.10.0", commit="9de3a6b0b4243bf8ec10164babdd99f64dbc65f2", submodules=True)
+    version("1.9.0", tag="v1.9.0", commit="9eafb2360296277103d2ee706fb5f90b12722668", submodules=True)
+    version("1.8.0", tag="v1.8.0", commit="7c73d981258cc3a29477756a95c1f90c5f8897dd", submodules=True)
     version("1.7.4", commit="12001d9633328f9f56210c7ebffce065bff06310", submodules=True)
     version("1.7.3", commit="2ebfe3fc30f977559142509edc4ea190c975992a", submodules=True)
     version("1.7.2", commit="a41a5c155e0d3780de4c83a76f28d7c8ffa6414f", submodules=True)
