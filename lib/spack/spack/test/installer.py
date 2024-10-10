@@ -116,19 +116,15 @@ def test_install_msg(monkeypatch):
     install_msg = "Installing {0}".format(name)
 
     monkeypatch.setattr(tty, "_debug", 0)
-    assert inst.install_msg(name, pid, None) == install_msg
-
-    install_status = inst.InstallStatus(1)
-    expected = "{0} [0/1]".format(install_msg)
-    assert inst.install_msg(name, pid, install_status) == expected
+    assert inst.install_msg(name, pid) == install_msg
 
     monkeypatch.setattr(tty, "_debug", 1)
-    assert inst.install_msg(name, pid, None) == install_msg
+    assert inst.install_msg(name, pid) == install_msg
 
     # Expect the PID to be added at debug level 2
     monkeypatch.setattr(tty, "_debug", 2)
     expected = "{0}: {1}".format(pid, install_msg)
-    assert inst.install_msg(name, pid, None) == expected
+    assert inst.install_msg(name, pid) == expected
 
 
 def test_install_from_cache_errors(install_mockery):
