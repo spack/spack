@@ -28,7 +28,6 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
-from spack.installer import PackageInstaller
 from spack.main import SpackCommand
 
 
@@ -142,7 +141,7 @@ def test_install_from_cache_errors(install_mockery):
     with pytest.raises(
         spack.error.InstallError, match="No binary found when cache-only was specified"
     ):
-        PackageInstaller(
+        inst.PackageInstaller(
             [spec.package], package_cache_only=True, dependencies_cache_only=True
         ).install()
     assert not spec.package.installed_from_binary_cache
@@ -676,7 +675,7 @@ def test_install_spliced_build_spec_installed(install_mockery, capfd, mock_fetch
 
     # Do the splice.
     out = spec.splice(dep, transitive)
-    PackageInstaller([out.build_spec.package]).install()
+    inst.PackageInstaller([out.build_spec.package]).install()
 
     installer = create_installer([out], {"verbose": True, "fail_fast": True})
     installer._init_queue()
@@ -701,7 +700,7 @@ def test_install_splice_root_from_binary(
     original_spec = spack.spec.Spec(root_str).concretized()
     spec_to_splice = spack.spec.Spec("splice-h+foo").concretized()
 
-    PackageInstaller([original_spec.package, spec_to_splice.package]).install()
+    inst.PackageInstaller([original_spec.package, spec_to_splice.package]).install()
 
     out = original_spec.splice(spec_to_splice, transitive)
 
@@ -718,7 +717,7 @@ def test_install_splice_root_from_binary(
     uninstall = SpackCommand("uninstall")
     uninstall("-ay")
 
-    PackageInstaller([out.package], unsigned=True).install()
+    inst.PackageInstaller([out.package], unsigned=True).install()
 
     assert len(spack.store.STORE.db.query()) == len(list(out.traverse()))
 
@@ -1317,7 +1316,7 @@ def test_print_install_test_log_skipped(install_mockery, mock_packages, capfd, r
     pkg = s.package
 
     pkg.run_tests = run_tests
-    spack.installer.print_install_test_log(pkg)
+    inst.print_install_test_log(pkg)
     out = capfd.readouterr()[0]
     assert out == ""
 
@@ -1334,12 +1333,12 @@ def test_print_install_test_log_failures(
     pkg.run_tests = True
     pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
     pkg.tester.add_failure(AssertionError("test"), "test-failure")
-    spack.installer.print_install_test_log(pkg)
+    inst.print_install_test_log(pkg)
     err = capfd.readouterr()[1]
     assert "no test log file" in err
 
     # Having test log results in path being output
     fs.touch(pkg.tester.test_log_file)
-    spack.installer.print_install_test_log(pkg)
+    inst.print_install_test_log(pkg)
     out = capfd.readouterr()[0]
     assert "See test results at" in out
