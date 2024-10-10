@@ -4354,6 +4354,9 @@ class Spec:
         assert self.concrete
         assert other.concrete
 
+        if self._splice_match(other, self_root=self, other_root=other):
+            return other.copy()
+
         if not any(
             node._splice_match(other, self_root=self, other_root=other)
             for node in self.traverse(root=False, deptype=dt.LINK | dt.RUN)

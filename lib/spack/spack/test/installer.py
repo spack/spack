@@ -690,7 +690,9 @@ def test_install_spliced_build_spec_installed(install_mockery, capfd, mock_fetch
 
 @pytest.mark.not_on_windows("lacking windows support for binary installs")
 @pytest.mark.parametrize("transitive", [True, False])
-@pytest.mark.parametrize("root_str", ["splice-t^splice-h~foo", "splice-vt^splice-a"])
+@pytest.mark.parametrize(
+    "root_str", ["splice-t^splice-h~foo", "splice-h~foo", "splice-vt^splice-a"]
+)
 def test_install_splice_root_from_binary(
     install_mockery, mock_fetch, mutable_temporary_mirror, transitive, root_str
 ):
