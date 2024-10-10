@@ -14,7 +14,7 @@ class Zookeeper(Package):
 
     homepage = "https://archive.apache.org"
     urls = [
-        "https://archive.apache.org/dist/zookeeper/zookeeper-3.8.4/apache-zookeeper-bin-3.8.4.tar.gz",
+        "https://archive.apache.org/dist/zookeeper/zookeeper-3.8.4/apache-zookeeper-3.8.4-bin.tar.gz",
         "https://archive.apache.org/dist/zookeeper/zookeeper-3.4.11/zookeeper-3.4.11.tar.gz",
     ]
 
