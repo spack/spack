@@ -85,7 +85,7 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-    
+
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=True, description="Enable OpenMP support")
     variant(
@@ -112,6 +112,12 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         when="+tests",
     )
     variant("rocm", default=False, description="(Experimental)Enable rocm support")
+    variant(
+        "pexsi",
+        default=False,
+        description="Add PEXSI support for gamma only LCAO calculations",
+        when="+lcao",
+    )
     # TODO: Add support for
     # LibRI(https://github.com/abacusmodeling/LibRI),
     # LibComm(https://github.com/abacusmodeling/LibComm),
@@ -141,16 +147,12 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     with when("+openmp"):
         depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("elpa+openmp", when="+elpa")
-        depends_on(
-            "openblas threads=openmp",
-            when="^[virtuals=blas] openblas",
-        )
-        depends_on(
-            "openblas threads=openmp",
-            when="^[virtuals=lapack] openblas",
-        )
+        depends_on("openblas threads=openmp", when="^[virtuals=blas] openblas")
+        depends_on("openblas threads=openmp", when="^[virtuals=lapack] openblas")
     with when("~openmp"):
         depends_on("elpa~openmp", when="+elpa")
+    with when("+pexsi"):
+        depends_on("pexsi@2.0.0:", type=("build","link"))
 
     requires("%clang", when="+rocm", msg="build with rocm requires rocm compiler")
 
@@ -263,6 +265,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("BUILD_TESTING", "tests"),
             self.define_from_variant("USE_ROCM", "rocm"),
             self.define_from_variant("USE_CUDA", "cuda"),
+            self.define_from_variant("ENABLE_PEXSI", "pexsi"),
         ]
 
         blas = spec["blas"]
