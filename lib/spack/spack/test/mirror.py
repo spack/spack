@@ -361,14 +361,10 @@ def test_update_connection_params(direction, tmpdir, monkeypatch):
     # Expand environment variables
     assert m.update(
         {
-            "url": "http://example.org",
             "access_pair": [
                 {"variable": "_SPACK_TEST_PAIR_USERNAME"},
                 {"variable": "_SPACK_TEST_PAIR_PASSWORD"},
-            ],
-            "access_token": {"variable": "_SPACK_TEST_TOKEN"},
-            "profile": {"variable": "_SPACK_TEST_PROFILE"},
-            "endpoint_url": "https://example.com",
+            ]
         },
         direction,
     )
@@ -381,8 +377,8 @@ def test_update_connection_params(direction, tmpdir, monkeypatch):
                 {"variable": "_SPACK_TEST_PAIR_USERNAME"},
                 {"variable": "_SPACK_TEST_PAIR_PASSWORD"},
             ],
-            "access_token": {"variable": "_SPACK_TEST_TOKEN"},
-            "profile": {"variable": "_SPACK_TEST_PROFILE"},
+            "access_token": "token",
+            "profile": "profile",
             "endpoint_url": "https://example.com",
         },
     }
@@ -390,8 +386,54 @@ def test_update_connection_params(direction, tmpdir, monkeypatch):
     os.environ["_SPACK_TEST_PAIR_USERNAME"] = "expanded_username"
     os.environ["_SPACK_TEST_PAIR_PASSWORD"] = "expanded_password"
     os.environ["_SPACK_TEST_TOKEN"] = "expanded_token"
-    os.environ["_SPACK_TEST_PROFILE"] = "expanded_profile"
 
     assert m.get_access_pair(direction) == ("expanded_username", "expanded_password")
+
+    assert m.update(
+        {
+            "access_pair": {
+                "id_variable": "_SPACK_TEST_PAIR_USERNAME",
+                "secret_variable": "_SPACK_TEST_PAIR_PASSWORD",
+            }
+        },
+        direction,
+    )
+
+    assert m.to_dict() == {
+        "url": "https://example.com",
+        direction: {
+            "url": "http://example.org",
+            "access_pair": {
+                "id_variable": "_SPACK_TEST_PAIR_USERNAME",
+                "secret_variable": "_SPACK_TEST_PAIR_PASSWORD",
+            },
+            "access_token": "token",
+            "profile": "profile",
+            "endpoint_url": "https://example.com",
+        },
+    }
+
+    assert m.get_access_pair(direction) == ("expanded_username", "expanded_password")
+
+    assert m.update(
+        {
+            "access_pair": {"id": "username", "secret_variable": "_SPACK_TEST_PAIR_PASSWORD"},
+            "access_token_variable": "_SPACK_TEST_TOKEN",
+        },
+        direction,
+    )
+
+    assert m.to_dict() == {
+        "url": "https://example.com",
+        direction: {
+            "url": "http://example.org",
+            "access_pair": {"id": "username", "secret_variable": "_SPACK_TEST_PAIR_PASSWORD"},
+            "access_token_variable": "_SPACK_TEST_TOKEN",
+            "access_token": "token",
+            "profile": "profile",
+            "endpoint_url": "https://example.com",
+        },
+    }
+
+    assert m.get_access_pair(direction) == ("username", "expanded_password")
     assert m.get_access_token(direction) == "expanded_token"
-    assert m.get_profile(direction) == "expanded_profile"

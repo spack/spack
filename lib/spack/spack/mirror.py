@@ -156,7 +156,14 @@ class Mirror:
         return self.get_url("push")
 
     def _update_connection_dict(self, current_data: dict, new_data: dict, top_level: bool):
-        keys = ["url", "access_pair", "access_token", "profile", "endpoint_url"]
+        keys = [
+            "url",
+            "access_pair",
+            "access_token",
+            "access_token_variable",
+            "profile",
+            "endpoint_url",
+        ]
         if top_level:
             keys += ["binary", "source", "signed", "autopush"]
         changed = False
@@ -306,12 +313,11 @@ class Mirror:
         return os.environ.get(tok["variable"]) if isinstance(tok, dict) else tok
 
     def get_access_token(self, direction: str) -> Optional[str]:
-        tok = self._get_value("access_token", direction)
-        if tok:
-            return self._extract_credential_value(tok)
         tok = self._get_value("access_token_variable", direction)
         if tok:
             return os.environ.get(tok)
+        else:
+            return self._get_value("access_token", direction)
         return None
 
     def get_access_pair(self, direction: str) -> Optional[Tuple[str, str]]:
@@ -321,13 +327,12 @@ class Mirror:
         elif isinstance(pair, dict):
             id_ = os.environ.get(pair["id_variable"]) if "id_variable" in pair else pair["id"]
             secret = os.environ.get(pair["secret_variable"])
-            return tuple(id_, secret)
+            return (id_, secret)
         else:
             return None
 
     def get_profile(self, direction: str) -> Optional[str]:
-        profile = self._get_value("profile", direction)
-        return self._extract_credential_value(profile) if profile else None
+        return self._get_value("profile", direction)
 
     def get_endpoint_url(self, direction: str) -> Optional[str]:
         return self._get_value("endpoint_url", direction)
