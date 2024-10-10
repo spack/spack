@@ -28,7 +28,7 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
-from spack.installer import PackageInstaller
+import spack.util.spack_json as sjson
 
 
 def _mock_repo(root, namespace):
@@ -116,19 +116,15 @@ def test_install_msg(monkeypatch):
     install_msg = "Installing {0}".format(name)
 
     monkeypatch.setattr(tty, "_debug", 0)
-    assert inst.install_msg(name, pid, None) == install_msg
-
-    install_status = inst.InstallStatus(1)
-    expected = "{0} [0/1]".format(install_msg)
-    assert inst.install_msg(name, pid, install_status) == expected
+    assert inst.install_msg(name, pid) == install_msg
 
     monkeypatch.setattr(tty, "_debug", 1)
-    assert inst.install_msg(name, pid, None) == install_msg
+    assert inst.install_msg(name, pid) == install_msg
 
     # Expect the PID to be added at debug level 2
     monkeypatch.setattr(tty, "_debug", 2)
     expected = "{0}: {1}".format(pid, install_msg)
-    assert inst.install_msg(name, pid, None) == expected
+    assert inst.install_msg(name, pid) == expected
 
 
 def test_install_from_cache_errors(install_mockery):
@@ -141,7 +137,7 @@ def test_install_from_cache_errors(install_mockery):
     with pytest.raises(
         spack.error.InstallError, match="No binary found when cache-only was specified"
     ):
-        PackageInstaller(
+        inst.PackageInstaller(
             [spec.package], package_cache_only=True, dependencies_cache_only=True
         ).install()
     assert not spec.package.installed_from_binary_cache
@@ -1210,7 +1206,7 @@ def test_print_install_test_log_skipped(install_mockery, mock_packages, capfd, r
     pkg = s.package
 
     pkg.run_tests = run_tests
-    spack.installer.print_install_test_log(pkg)
+    inst.print_install_test_log(pkg)
     out = capfd.readouterr()[0]
     assert out == ""
 
@@ -1227,12 +1223,23 @@ def test_print_install_test_log_failures(
     pkg.run_tests = True
     pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
     pkg.tester.add_failure(AssertionError("test"), "test-failure")
-    spack.installer.print_install_test_log(pkg)
+    inst.print_install_test_log(pkg)
     err = capfd.readouterr()[1]
     assert "no test log file" in err
 
     # Having test log results in path being output
     fs.touch(pkg.tester.test_log_file)
-    spack.installer.print_install_test_log(pkg)
+    inst.print_install_test_log(pkg)
     out = capfd.readouterr()[0]
     assert "See test results at" in out
+
+
+def test_specs_count(install_mockery, mock_packages):
+    """Check SpecCounts DAG visitor total matches expected."""
+    spec = spack.spec.Spec("mpileaks^mpich").concretized()
+    counter = inst.SpecsCount(dt.LINK | dt.RUN)
+    number_specs = counter.total(spec)
+
+    json = sjson.load(spec.to_json())
+    number_spec_nodes = len(json["spec"]["nodes"])
+    assert number_specs == number_spec_nodes

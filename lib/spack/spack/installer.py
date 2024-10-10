@@ -64,6 +64,7 @@ import spack.store
 import spack.util.executable
 import spack.util.path
 import spack.util.timer as timer
+from spack.traverse import traverse_breadth_first_with_visitor, CoverNodesVisitor
 from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
 
@@ -576,7 +577,7 @@ def get_dependent_ids(spec: "spack.spec.Spec") -> List[str]:
     return [package_id(d) for d in spec.dependents()]
 
 
-def install_msg(name: str, pid: int, install_status: InstallStatus) -> str:
+def install_msg(name: str, pid: int) -> str:
     """
     Colorize the name/id of the package being installed
 
@@ -587,12 +588,7 @@ def install_msg(name: str, pid: int, install_status: InstallStatus) -> str:
     Return: Colorized installing message
     """
     pre = f"{pid}: " if tty.show_pid() else ""
-    post = (
-        " @*{%s}" % install_status.get_progress()
-        if install_status and spack.config.get("config:install_status", True)
-        else ""
-    )
-    return pre + colorize("@*{Installing} @*g{%s}%s" % (name, post))
+    return pre + colorize("@*{Installing} @*g{%s}" % (name))
 
 
 def archive_install_logs(pkg: "spack.package_base.PackageBase", phase_log_dir: str) -> None:
@@ -699,6 +695,18 @@ def package_id(spec: "spack.spec.Spec") -> str:
         raise ValueError("Cannot provide a unique, readable id when the spec is not concretized.")
 
     return f"{spec.name}-{spec.version}-{spec.dag_hash()}"
+
+
+class SpecsCount:
+    def __init__(self, depflag: int):
+        self.depflag = depflag
+
+    def total(self, spec: "spack.spec.Spec"):
+        visitor = CoverNodesVisitor(
+            spack.spec.DagCountVisitor(self.depflag), key=lambda s: package_id(s)
+        )
+        traverse_breadth_first_with_visitor([spec], visitor)
+        return visitor.visitor.number
 
 
 class BuildRequest:
@@ -1583,7 +1591,7 @@ class PackageInstaller:
 
         pkg, pkg_id = task.pkg, task.pkg_id
 
-        tty.msg(install_msg(pkg_id, self.pid, install_status))
+        tty.msg(install_msg(pkg_id, self.pid))
         task.start = task.start or time.time()
         task.status = BuildStatus.INSTALLING
 
@@ -1739,10 +1747,7 @@ class PackageInstaller:
             task (BuildTask): the installation build task for a package
         """
         if task.status not in [BuildStatus.INSTALLED, BuildStatus.INSTALLING]:
-            tty.debug(
-                f"{install_msg(task.pkg_id, self.pid, install_status)} "
-                "in progress by another process"
-            )
+            tty.debug(f"{install_msg(task.pkg_id, self.pid)} in progress by another process")
 
         new_task = task.next_attempt(self.installed)
         new_task.status = BuildStatus.INSTALLING
