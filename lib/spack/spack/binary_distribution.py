@@ -716,18 +716,18 @@ def get_buildfile_manifest(spec):
 def deps_to_relocate(spec):
     """Return the transitive link and direct run dependencies of the spec.
 
-    This is a special spec traversal for dependencies we need to consider when relocating a package.
-    
+    This is a special traversal for dependencies we need to consider when relocating a package.
+
     Package binaries, scripts, and other files may refer to the prefixes of  dependencies, so
     we need to rewrite those locations when dependencies are in a different place at install time
     than they were at build time.
-    
+
     This traversal covers transitive link dependencies and direct run dependencies because:
     1. Spack adds RPATHs for transitive link dependencies so that packages can find needed
        dependency libraries.
     2. Packages may call any of their *direct* run dependencies (and may bake their paths into
-       binaries or scripts), so we also need to search for run dependency locations when relocating.
-       
+       binaries or scripts), so we also need to search for run dependency prefixes when relocating.
+
     This returns a deduplicated list of transitive link dependencies and direct run dependencies.
     """
     deps = [
@@ -2217,6 +2217,16 @@ def relocate_package(spec):
     # First match specific prefix paths. Possibly the *local* install prefix
     # of some dependency is in an upstream, so we cannot assume the original
     # spack store root can be mapped uniformly to the new spack store root.
+    #
+    # If the spec is spliced, we need to handle the simultaneous mapping
+    # from the old install_tree to the new install_tree and from the build_spec
+    # to the spliced spec.
+    # Because foo.build_spec is foo for any non-spliced spec, we can simplify
+    # by checking for spliced-in nodes by checking for nodes not in the build_spec
+    # without any explicit check for whether the spec is spliced.
+    # An analog in this algorithm is any spec that shares a name or provides the same virtuals
+    # in the context of the relevant root spec. This ensures that the analog for a spec s
+    # is the spec that s replaced when we spliced.
     relocation_specs = deps_to_relocate(spec)
     build_spec_ids = set(id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD))
     for s in relocation_specs:
