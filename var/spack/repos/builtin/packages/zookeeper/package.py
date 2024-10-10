@@ -24,7 +24,9 @@ class Zookeeper(Package):
     with default_args(deprecated=True):
         # 3.6 is EoL since 30th of December, 2022
         # 3.5 is EoL since 1st of June, 2022
-        version("3.4.11", sha256="f6bd68a1c8f7c13ea4c2c99f13082d0d71ac464ffaf3bf7a365879ab6ad10e84")
+        version(
+            "3.4.11", sha256="f6bd68a1c8f7c13ea4c2c99f13082d0d71ac464ffaf3bf7a365879ab6ad10e84"
+        )
 
     depends_on("java")
 
