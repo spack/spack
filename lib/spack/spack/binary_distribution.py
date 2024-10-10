@@ -716,10 +716,20 @@ def get_buildfile_manifest(spec):
 def deps_to_relocate(spec):
     """Return the transitive link and direct run dependencies of the spec.
 
-    This special case of spec traversal is specific to binary relocation. Package relocation is
-    restricted to link and run dependencies. Package relocation needs transitive link dependencies
-    because transitive rpath information appears in libraries/executables, but packages only retain
-    references to their direct run dependencies."""
+    This is a special spec traversal for dependencies we need to consider when relocating a package.
+    
+    Package binaries, scripts, and other files may refer to the prefixes of  dependencies, so
+    we need to rewrite those locations when dependencies are in a different place at install time
+    than they were at build time.
+    
+    This traversal covers transitive link dependencies and direct run dependencies because:
+    1. Spack adds RPATHs for transitive link dependencies so that packages can find needed
+       dependency libraries.
+    2. Packages may call any of their *direct* run dependencies (and may bake their paths into
+       binaries or scripts), so we also need to search for run dependency locations when relocating.
+       
+    This returns a deduplicated list of transitive link dependencies and direct run dependencies.
+    """
     deps = [
         s
         for s in itertools.chain(
