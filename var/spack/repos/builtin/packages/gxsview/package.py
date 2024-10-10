@@ -25,6 +25,9 @@ class Gxsview(QMakePackage):
     license("LGPL-3.0-only")
 
     version(
+        "2024.03.15", sha256="5a6e6384a79fc2f39370846814f049b6c4c32f418cb00363cfb18bc1b6598d3a"
+    )
+    version(
         "2023.05.29", sha256="1e768fd7afd22198b7f73adeb42f4ccf7e0ff68996a3843b1ea138225c4c1da3"
     )
     version(
