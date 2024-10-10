@@ -28,6 +28,7 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
+import spack.util.spack_json as sjson
 from spack.main import SpackCommand
 
 
@@ -1338,3 +1339,14 @@ def test_print_install_test_log_failures(
     inst.print_install_test_log(pkg)
     out = capfd.readouterr()[0]
     assert "See test results at" in out
+
+
+def test_specs_count(install_mockery, mock_packages):
+    """Check SpecCounts DAG visitor total matches expected."""
+    spec = spack.spec.Spec("mpileaks^mpich").concretized()
+    counter = inst.SpecsCount(dt.LINK | dt.RUN)
+    number_specs = counter.total(spec)
+
+    json = sjson.load(spec.to_json())
+    number_spec_nodes = len(json["spec"]["nodes"])
+    assert number_specs == number_spec_nodes
