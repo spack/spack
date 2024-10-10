@@ -64,6 +64,7 @@ import spack.store
 import spack.util.executable
 import spack.util.path
 import spack.util.timer as timer
+from spack.traverse import traverse_breadth_first_with_visitor, CoverNodesVisitor
 from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
 
@@ -694,6 +695,18 @@ def package_id(spec: "spack.spec.Spec") -> str:
         raise ValueError("Cannot provide a unique, readable id when the spec is not concretized.")
 
     return f"{spec.name}-{spec.version}-{spec.dag_hash()}"
+
+
+class SpecsCount:
+    def __init__(self, depflag: int):
+        self.depflag = depflag
+
+    def total(self, spec: "spack.spec.Spec"):
+        visitor = CoverNodesVisitor(
+            spack.spec.DagCountVisitor(self.depflag), key=lambda s: package_id(s)
+        )
+        traverse_breadth_first_with_visitor([spec], visitor)
+        return visitor.visitor.number
 
 
 class BuildRequest:
