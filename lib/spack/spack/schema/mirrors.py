@@ -10,7 +10,6 @@
 """
 from typing import Any, Dict
 
-
 string_or_variable = {
     "oneOf": [
         {
@@ -116,8 +115,9 @@ schema = {
 
 
 def update(data):
-    import jsonschema
     import warnings
+
+    import jsonschema
 
     errors = []
 
@@ -128,7 +128,8 @@ def update(data):
         access_pair = section.get("access_pair")
         if access_pair and isinstance(access_pair, list):
             warnings.warn(
-                f"{name}: Using access_pair with a list is deprecated, prefer id/secret_variable keys"
+                f"{name}: Using access_pair with a list is "
+                "deprecated, prefer id/secret_variable keys"
             )
             if not isinstance(access_pair[1], dict):
                 warnings.warn(f"{name}: Secret part of access pair should be a variable")

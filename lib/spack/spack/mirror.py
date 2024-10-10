@@ -299,14 +299,14 @@ class Mirror:
                 access_pair  -> tuple(str,str)
                 profile      -> str
         """
-        creddict = {}
+        creddict: Dict[str, Any] = {}
         access_token = self.get_access_token(direction)
         if access_token:
             creddict["access_token"] = access_token
 
         access_pair = self.get_access_pair(direction)
         if access_pair:
-            creddict["access_pair"] = access_pair
+            creddict.update({"access_pair": access_pair})
 
         profile = self.get_profile(direction)
         if profile:
@@ -333,7 +333,7 @@ class Mirror:
         elif isinstance(pair, dict):
             id_ = os.environ.get(pair["id_variable"]) if "id_variable" in pair else pair["id"]
             secret = os.environ.get(pair["secret_variable"])
-            return (id_, secret)
+            return (str(id_), str(secret)) if id_ and secret else None
         else:
             return None
 
