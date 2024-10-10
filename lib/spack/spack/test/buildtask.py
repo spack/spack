@@ -39,7 +39,7 @@ def test_build_task_errors(install_mockery):
 
     # Now we can check that build tasks cannot be create when the status
     # indicates the task is/should've been removed.
-    with pytest.raises(spack.error.InstallError, match="Cannot create a build task"):
+    with pytest.raises(spack.error.InstallError, match="Cannot create a task"):
         inst.BuildTask(spec.package, request, status=inst.BuildStatus.REMOVED)
 
     # Also make sure to not accept an incompatible installed argument value.
