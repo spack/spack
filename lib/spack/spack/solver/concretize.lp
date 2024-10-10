@@ -59,11 +59,11 @@
 :- provider(PackageNode, _), not attr("node", PackageNode),
    internal_error("provider with no real node").
 :- node_has_variant(PackageNode, _, _), not attr("node", PackageNode),
-   internal_error("node has variant").
+   internal_error("node has variant for a non-node").
 :- attr("variant_set", PackageNode, _, _), not attr("node", PackageNode),
-   internal_error("variant_set").
+   internal_error("variant_set for a non-node").
 :- variant_is_propagated(PackageNode, _), not attr("node", PackageNode),
-   internal_error("variant_is_propagated").
+   internal_error("variant_is_propagated for a non-node").
 
 :- attr("root", node(ID, PackageNode)), ID > min_dupe_id,
    internal_error("root with a non-minimal duplicate ID").
@@ -979,7 +979,7 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
      build(node(ID, Package)).
 
 :- attr("variant_set", node(ID, Package), Variant, Value),
-   not attr("variant_value", node(ID, Package), Variant, Value),
+   not attr("variant_value", node(ID, Package), Variant, Value).
    internal_error("If a variant is set to a value it must have that value").
 
 % The rules below allow us to prefer default values for variants
