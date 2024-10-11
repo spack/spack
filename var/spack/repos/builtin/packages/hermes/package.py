@@ -24,41 +24,6 @@ class Hermes(CMakePackage):
         sha256="d60ee5d6856dc1a1f389fb08f61252cc7736d1c38d3049043749640897fe3b6d",
     )
     version(
-        "1.2.0",
-        url="https://github.com/HDFGroup/hermes/archive/refs/tags/v1.2.0.tar.gz",
-        sha256="280379f393695462279c1af11371995d134f33998596812bd960d6f44a86c339",
-    )
-    version(
-        "1.1.0",
-        url="https://github.com/HDFGroup/hermes/archive/refs/tags/v1.1.0.tar.gz",
-        sha256="022df20d9e394754f6126dfcedd845afde879fcb2738d763f53657e59e058c1e",
-    )
-    version(
-        "1.0.5-beta",
-        url="https://github.com/HDFGroup/hermes/archive/refs/tags/v1.0.5-beta.tar.gz",
-        sha256="1f3ba51a8beda4bc1314d6541b800de1525f5e233a6f498fcde6dc43562ddcb7",
-    )
-    version(
-        "1.0.0-beta",
-        url="https://github.com/HDFGroup/hermes/archive/refs/tags/v1.0.0-beta.tar.gz",
-        sha256="301084cced32aa00532ab4bebd638c31b0512c881ffab20bf5da4b7739defac2",
-    )
-    version(
-        "0.9.9-beta",
-        url="https://github.com/HDFGroup/hermes/archive/refs/tags/v0.9.9-beta.tar.gz",
-        sha256="d2e0025a9bd7a3f05d3ab608c727ed15d86ed30cf582549fe996875daf6cb649",
-    )
-    version(
-        "0.9.8-beta",
-        url="https://github.com/HDFGroup/hermes/archive/refs/tags/v0.9.8-beta.tar.gz",
-        sha256="68e9a977c25c53dcab7d7f6ef0df96b2ba4a09a06aa7c4a490c67faa2a78f077",
-    )
-    version(
-        "0.9.5-beta",
-        url="https://github.com/HDFGroup/hermes/archive/refs/tags/v0.9.5-beta.tar.gz",
-        sha256="f48d15591a6596e8e54897362ec2591bc71e5de92933651f4768145e256336ca",
-    )
-    version(
         "0.9.0-beta",
         url="https://github.com/HDFGroup/hermes/archive/refs/tags/v0.9.0-beta.tar.gz",
         sha256="abf258a52fa79729dfeb28559957abf8945f3ad37cadefb3bc685227c5f057a8",
