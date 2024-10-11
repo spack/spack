@@ -19,6 +19,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSL-1.0")
 
+    version("0.29.0", sha256="2c61079f52f3e135a8d0845a993e6e4fb64031fbee9b5cef0ead57efb6175e3c")
     version("0.28.0", sha256="a64ebac04135c0c8d392ddcd8d683fe02e2c0782abfe130754244d58f27ae6cf")
     version("0.27.0", sha256="4a58dc4014edc2074399e4a6ecfa244537c89ce1319b3e14ff3dfe617fb9f9e8")
     version("0.26.1", sha256="d7cc842238754019abdb536e22325e9a57186cd2ac8cc9c7140a5385f9d730f6")
@@ -106,7 +107,6 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     # Build dependencies
-    depends_on("git", type="build")
     depends_on("cmake@3.18:", type="build")
     depends_on("cmake@3.22:", when="@0.8:", type="build")
 
@@ -149,7 +149,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("%gcc@13:", when="+rocm")
     depends_on("hipblas", when="@:0.8 +rocm")
     depends_on("mpi", when="+mpi")
-    depends_on("stdexec", when="+stdexec")
+    with when("+stdexec"):
+        depends_on("stdexec")
+        depends_on("stdexec@24.09:", when="@0.29:")
     depends_on("rocblas", when="+rocm")
     depends_on("rocsolver", when="@0.5: +rocm")
     depends_on("tracy-client", when="+tracy")

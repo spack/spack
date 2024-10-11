@@ -265,6 +265,13 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "KokkosConfigCommon.cmake", relative_root=os.path.join("lib64", "cmake", "Kokkos")
     )
 
+    # sanity check
+    sanity_check_is_file = [
+        join_path("include", "KokkosCore_config.h"),
+        join_path("include", "Kokkos_Core.hpp"),
+    ]
+    sanity_check_is_dir = ["bin", "include"]
+
     @classmethod
     def get_microarch(cls, target):
         """Get the Kokkos microarch name for a Spack target (spec.target)."""
@@ -409,8 +416,12 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             raise SkipTest(f"{cmake_path} is missing")
 
         cmake = self.spec["cmake"].command
-        cmake(cmake_path, "-DEXECUTABLE_OUTPUT_PATH=" + cmake_path)
+        cmake_args = ["-DEXECUTABLE_OUTPUT_PATH=" + cmake_path]
+        if self.spec.satisfies("+rocm"):
+            prefix_paths = ";".join(spack.build_environment.get_cmake_prefix_path(self))
+            cmake_args.append("-DCMAKE_PREFIX_PATH={0}".format(prefix_paths))
 
+        cmake(cmake_path, *cmake_args)
         make = which("make")
         make()
         make(cmake_path, "test")

@@ -270,7 +270,7 @@ def env_activate_setup_parser(subparser):
         nargs="?",
         default=None,
         help=(
-            "name of managed environment or directory of the anonymous env"
+            "name of managed environment or directory of the independent env"
             " (when using --dir/-d) to activate"
         ),
     )
@@ -540,7 +540,7 @@ def env_rename_setup_parser(subparser):
 def env_rename(args):
     """Rename an environment.
 
-    This renames a managed environment or moves an anonymous environment.
+    This renames a managed environment or moves an independent environment.
     """
 
     # Directory option has been specified

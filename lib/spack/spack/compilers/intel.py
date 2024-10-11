@@ -11,18 +11,6 @@ from spack.version import Version
 
 
 class Intel(Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ["icc"]
-
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ["icpc"]
-
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["ifort"]
-
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["ifort"]
-
     # Named wrapper links within build_env_path
     link_paths = {
         "cc": os.path.join("intel", "icc"),
@@ -103,6 +91,14 @@ class Intel(Compiler):
             raise UnsupportedCompilerFlag(self, "the C11 standard", "c11_flag", "< 16")
         else:
             return "-std=c1x"
+
+    @property
+    def c18_flag(self):
+        # c18 supported since oneapi 2022, which is classic version 2021.5.0
+        if self.real_version < Version("21.5.0"):
+            raise UnsupportedCompilerFlag(self, "the C18 standard", "c18_flag", "< 21.5.0")
+        else:
+            return "-std=c18"
 
     @property
     def cc_pic_flag(self):

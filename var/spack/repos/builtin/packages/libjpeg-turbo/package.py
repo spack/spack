@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack.package import *
 
 
@@ -111,7 +113,8 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
     @property
     def libs(self):
         shared = self.spec.satisfies("libs=shared")
-        return find_libraries("libjpeg*", root=self.prefix, shared=shared, recursive=True)
+        name = "jpeg" if sys.platform == "win32" else "libjpeg*"
+        return find_libraries(name, root=self.prefix, shared=shared, recursive=True, runtime=False)
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
