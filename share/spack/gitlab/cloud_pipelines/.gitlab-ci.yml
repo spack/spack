@@ -185,6 +185,7 @@ default:
   after_script:
     - cat /proc/loadavg || true
     - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
+    - dmesg
 
 .generate-x86_64:
   extends: [ ".generate-base" ]
@@ -802,8 +803,6 @@ deprecated-ci-build:
   image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2024-10-07", "entrypoint": [""] }
   before_script:
     # Use gcc from pre-installed spack store
-    - dmesg
-    - cat /var/log/kern.log
     - - . "./share/spack/setup-env.sh"
       - . "/etc/profile.d/modules.sh"
       - diff -q "/bootstrap/cloud_pipelines-config.yaml" "share/spack/gitlab/cloud_pipelines/configs/config.yaml" || echo "WARNING Install tree might have changed. You need to rebuild the pcluster-amazonlinux-2 container in spack/gitlab-runners."
