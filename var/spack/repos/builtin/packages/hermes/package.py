@@ -34,7 +34,8 @@ class Hermes(CMakePackage):
     variant("compress", default=False, description="Enable compression")
     variant("encrypt", default=False, description="Enable encryption")
     variant("mpiio", default=True, description="Enable MPI I/O adapter")
-    variant("python", default=False, description="Build Python Wrapper")
+    # Builds with hermes@master. 1.2.1, we'd need to extract pybind11 source in external/pybind11:
+    variant("python", default=False, description="Build Python Wrapper", when="@master")
     variant("stdio", default=True, description="Enable STDIO adapter")
     variant("vfd", default=False, description="Enable HDF5 VFD")
     variant("zmq", default=False, description="Build ZeroMQ tests")
