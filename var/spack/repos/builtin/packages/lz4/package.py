@@ -25,6 +25,7 @@ class Lz4(CMakePackage, MakefilePackage):
     # liblz4 is BSD-2-clause; programs, manpages, and everything else are GPL2
     license("BSD-2-Clause AND GPL-2.0-only", checked_by="tgamblin")
 
+    version("1.10.0", sha256="537512904744b35e232912055ccf8ec66d768639ff3abe5788d90d792ec5f48b")
     version("1.9.4", sha256="0b0e3aa07c8c063ddf40b082bdf7e37a1562bda40a0ff5272957f3e987e0e54b")
     version("1.9.3", sha256="030644df4611007ff7dc962d981f390361e6c97a34e5cbc393ddfbe019ffe2c1")
     version("1.9.2", sha256="658ba6191fa44c92280d4aa2c271b0f4fbc0e34d249578dd05e50e76d0e5efcc")
