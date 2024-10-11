@@ -91,14 +91,20 @@ class Hermes(CMakePackage):
 
     depends_on("py-jarvis-util", type="test")
 
+    depends_on("mpi", when="+mpiio")
+    conflicts("^[virtuals=mpi] nvhpc", when="+mpiio", msg="+mpio does not support nvhpc MPI")
+
     def cmake_args(self):
         args = []
         if "+mpiio" in self.spec:
             args.append("-DHERMES_ENABLE_MPIIO_ADAPTER=ON")
-            if "openmpi" in self.spec:
+            mpi_name = self.spec["mpi"].name
+            if mpi_name == "openmpi":
                 args.append("-DHERMES_OPENMPI=ON")
-            elif "mpich" in self.spec:
+            elif mpi_name == "mpich":
                 args.append("-DHERMES_MPICH=ON")
+            else:
+                raise InstallError("hermes+mpiio needs openmpi or mpich, got " + mpi_name)
         if "+stdio" in self.spec:
             args.append("-DHERMES_ENABLE_STDIO_ADAPTER=ON")
         if "+vfd" in self.spec:
