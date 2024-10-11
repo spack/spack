@@ -47,7 +47,7 @@ attributes_schema = {
         "tags": {"type": "array", "items": {"type": "string"}},
         "variables": {
             "type": "object",
-            "patternProperties": {r"[\w\d\-_\.]+": {"type": "string"}},
+            "patternProperties": {r"[\w\d\-_\.]+": {"type": ["string", "number"]}},
         },
         "before_script": script_schema,
         "script": script_schema,
