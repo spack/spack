@@ -74,16 +74,6 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         description="Enable optimised diagonalisation routines from ELPA",
         when="+lcao",
     )
-    variant("mathlib", default=False, description="Enable ABACUS's builtin libm")
-    variant(
-        "tests", default=False, description="Build ABACUS unit tests", when="build_system=cmake"
-    )
-    variant(
-        "benchmarks",
-        default=False,
-        description="Enable ABACUS's builtin benchmark tests",
-        when="+tests",
-    )
     variant("rocm", default=False, description="(Experimental)Enable rocm support")
     variant(
         "pexsi",
@@ -113,10 +103,6 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("scalapack", type=("link"))
     with when("+elpa"):
         depends_on("elpa", type=("build", "link"))
-    with when("+tests"):
-        depends_on("googletest", type="test")
-    with when("+benchmarks"):
-        depends_on("benchmark", type="test")
     with when("+openmp"):
         depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("elpa+openmp", when="+elpa")
@@ -234,8 +220,6 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("USE_ABACUS_LIBM", "mathlib"),
             self.define_from_variant("ENABLE_LCAO", "lcao"),
             self.define_from_variant("ENABLE_LIBXC", "libxc"),
-            self.define_from_variant("ENABLE_GOOGLEBENCH", "benchmarks"),
-            self.define_from_variant("BUILD_TESTING", "tests"),
             self.define_from_variant("USE_ROCM", "rocm"),
             self.define_from_variant("USE_CUDA", "cuda"),
             self.define_from_variant("ENABLE_PEXSI", "pexsi"),
