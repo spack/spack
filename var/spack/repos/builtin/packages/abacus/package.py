@@ -111,7 +111,7 @@ class Abacus(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     with when("~openmp"):
         depends_on("elpa~openmp", when="+elpa")
     with when("+pexsi"):
-        depends_on("pexsi@2.0.0:", type=("build","link"))
+        depends_on("pexsi@2.0.0:", type=("build", "link"))
 
     requires("%clang", when="+rocm", msg="build with rocm requires rocm compiler")
 
