@@ -3829,8 +3829,10 @@ class SpecBuilder:
         for splice_set in splice_config:
             target = splice_set["target"]
             replacement = spack.spec.Spec(splice_set["replacement"])
-            assert replacement.abstract_hash
-            replacement.replace_hash()
+
+            if not replacement.abstract_hash:
+                raise ValueError("explicit splice replacement must be specified by hash")
+
             transitive = splice_set.get("transitive", False)
             splice_triples.append((target, replacement, transitive))
 
@@ -3841,6 +3843,10 @@ class SpecBuilder:
                 if target in current_spec:
                     # matches root or non-root
                     # e.g. mvapich2%gcc
+
+                    # The first iteration, we need to replace the abstract hash
+                    if not replacement.concrete:
+                        replacement.replace_hash()
                     current_spec = current_spec.splice(replacement, transitive)
             new_key = NodeArgument(id=key.id, pkg=current_spec.name)
             specs[new_key] = current_spec
