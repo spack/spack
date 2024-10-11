@@ -70,6 +70,7 @@ class Gtkplus(MesonPackage):
     depends_on("fixesproto", when="@3:")
     depends_on("gettext", when="@3:")
     depends_on("cups", when="+cups")
+    depends_on("libxfixes", when="@:2")
 
     patch("no-demos.patch", when="@2.0:2")
 
@@ -124,7 +125,7 @@ class Gtkplus(MesonPackage):
             "GTKDOC_MKPDF={0}".format(true),
             "GTKDOC_REBASE={0}".format(true),
         ]
-        if "~cups" in self.spec:
+        if self.spec.satisfies("~cups"):
             args.append("--disable-cups")
         return args
 
