@@ -38,6 +38,7 @@ import spack.util.environment
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.env import _env_create
+from spack.installer import PackageInstaller
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix
@@ -574,40 +575,74 @@ def test_remove_command():
 
     with ev.read("test"):
         add("mpileaks")
+
+    with ev.read("test"):
         assert "mpileaks" in find()
         assert "mpileaks@" not in find()
         assert "mpileaks@" not in find("--show-concretized")
 
     with ev.read("test"):
         remove("mpileaks")
+
+    with ev.read("test"):
         assert "mpileaks" not in find()
         assert "mpileaks@" not in find()
         assert "mpileaks@" not in find("--show-concretized")
 
     with ev.read("test"):
         add("mpileaks")
+
+    with ev.read("test"):
         assert "mpileaks" in find()
         assert "mpileaks@" not in find()
         assert "mpileaks@" not in find("--show-concretized")
 
     with ev.read("test"):
         concretize()
+
+    with ev.read("test"):
         assert "mpileaks" in find()
         assert "mpileaks@" not in find()
         assert "mpileaks@" in find("--show-concretized")
 
     with ev.read("test"):
         remove("mpileaks")
+
+    with ev.read("test"):
         assert "mpileaks" not in find()
         # removed but still in last concretized specs
         assert "mpileaks@" in find("--show-concretized")
 
     with ev.read("test"):
         concretize()
+
+    with ev.read("test"):
         assert "mpileaks" not in find()
         assert "mpileaks@" not in find()
         # now the lockfile is regenerated and it's gone.
         assert "mpileaks@" not in find("--show-concretized")
+
+
+def test_remove_command_all():
+    # Need separate ev.read calls for each command to ensure we test round-trip to disk
+    env("create", "test")
+    test_pkgs = ("mpileaks", "zlib")
+
+    with ev.read("test"):
+        for name in test_pkgs:
+            add(name)
+
+    with ev.read("test"):
+        for name in test_pkgs:
+            assert name in find()
+            assert f"{name}@" not in find()
+
+    with ev.read("test"):
+        remove("-a")
+
+    with ev.read("test"):
+        for name in test_pkgs:
+            assert name not in find()
 
 
 def test_bad_remove_included_env():
@@ -767,6 +802,38 @@ spack:
     env_specs = read._get_environment_specs()
 
     assert not any(x.name == "hypre" for x in env_specs)
+
+
+def test_lockfile_spliced_specs(environment_from_manifest, install_mockery):
+    """Test that an environment can round-trip a spliced spec."""
+    # Create a local install for zmpi to splice in
+    # Default concretization is not using zmpi
+    zmpi = spack.spec.Spec("zmpi").concretized()
+    PackageInstaller([zmpi.package], fake=True).install()
+
+    e1 = environment_from_manifest(
+        f"""
+spack:
+  specs:
+  - mpileaks
+  concretizer:
+    splice:
+      explicit:
+      - target: mpi
+        replacement: zmpi/{zmpi.dag_hash()}
+"""
+    )
+    with e1:
+        e1.concretize()
+        e1.write()
+
+    # By reading into a second environment, we force a round trip to json
+    e2 = _env_create("test2", init_file=e1.lock_path)
+
+    # The one spec is mpileaks
+    for _, spec in e2.concretized_specs():
+        assert spec.spliced
+        assert spec["mpi"].satisfies(zmpi)
 
 
 def test_init_from_lockfile(environment_from_manifest):
