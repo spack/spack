@@ -32,8 +32,8 @@ class Gimp(AutotoolsPackage):
     version("2.10.26", sha256="5ddbccf1db462a41df9a26197fcb0d24c7152753a36b3c8b8a9506b4136395f7")
     version("2.10.24", sha256="bd1bb762368c0dd3175cf05006812dd676949c3707e21f4e6857435cb435989e")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     variant("doc", default=True, description="Build documentation with gtk-doc")
     variant("ghostscript", default=True, description="Build with ghostscript support")
@@ -56,6 +56,7 @@ class Gimp(AutotoolsPackage):
     # variant("python",      default=False, description="Build with Python bindings")
 
     # ref. https://www.gimp.org/source/
+    depends_on("gettext", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("babl")
     depends_on("fontconfig@2.12.4:")
@@ -71,6 +72,7 @@ class Gimp(AutotoolsPackage):
     depends_on("libexif")
     # depends_on("libheif+libde265", when="+libheif")
     depends_on("libjxl", when="+jpegxl")
+    depends_on("libjxl@:0.7", when="+jpegxl@:2.10.32")
     depends_on("libmng", when="+libmng")
     depends_on("libmypaint@1.4")
     depends_on("libpng")
@@ -93,6 +95,10 @@ class Gimp(AutotoolsPackage):
         # ref: https://download.gimp.org/gimp/v2.10/gimp-2.10.32.tar.bz2"
         url = "https://download.gimp.org/gimp/v{0}/gimp-{1}.tar.bz2"
         return url.format(version.up_to(2), version)
+
+    @when("@:2.10.32")
+    def patch(self):
+        filter_file("babl ", "babl-0.1 ", "configure")
 
     def configure_args(self):
         args = [
