@@ -113,7 +113,6 @@ class LmodConfiguration(BaseConfiguration):
         elif not candidates["c"]:
             self.compiler = None
 
-
     @property
     def core_compilers(self) -> List[spack.spec.Spec]:
         """Returns the list of "Core" compilers
@@ -178,7 +177,10 @@ class LmodConfiguration(BaseConfiguration):
         The 'compiler' key is always present among the requirements.
         """
         # If it's a core_spec, lie and say it requires a core compiler
-        if any(self.spec.satisfies(core_spec) for core_spec in self.core_specs) or self.compiler is None:
+        if (
+            any(self.spec.satisfies(core_spec) for core_spec in self.core_specs)
+            or self.compiler is None
+        ):
             return {"compiler": self.core_compilers[0]}
 
         hierarchy_filter_list = []
@@ -314,9 +316,7 @@ class LmodFileLayout(BaseFileLayout):
 
         # If we are dealing with a core compiler, return 'Core'
         core_compilers = self.conf.core_compilers
-        if name == "compiler" and any(
-            spack.spec.Spec(value).satisfies(c) for c in core_compilers
-        ):
+        if name == "compiler" and any(spack.spec.Spec(value).satisfies(c) for c in core_compilers):
             return "Core"
 
         # Spec does not have a hash, as we are not allowed to
