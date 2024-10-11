@@ -226,7 +226,7 @@ class Lua(LuaImplPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    variant("pcfile", default=False, description="Add patch for lua.pc generation")
+    variant("pcfile", default=False, description="Add patch for lua.pc generation", when="@5.2:")
     variant("shared", default=True, description="Builds a shared version of the library")
 
     provides("lua-lang@5.1", when="@5.1:5.1.99")
@@ -238,9 +238,14 @@ class Lua(LuaImplPackage):
     depends_on("readline")
 
     patch(
-        "http://lua.2524044.n2.nabble.com/attachment/7666421/0/pkg-config.patch",
-        sha256="208316c2564bdd5343fa522f3b230d84bd164058957059838df7df56876cb4ae",
-        when="+pcfile @:5.3.9999",
+        "https://git.savannah.gnu.org/cgit/guix.git/plain/gnu/packages/patches/lua-pkgconfig.patch?id=dcaf70897a0bad38a4638a2905aaa3c46b1f1402",
+        sha256="a481562e8332b9284bf26ccd13ca10ce2ac94123f88f4934761982e16479755a",
+        when="+pcfile @5.2:5.3",
+    )
+    patch(
+        "https://git.savannah.gnu.org/cgit/guix.git/plain/gnu/packages/patches/lua-5.4-pkgconfig.patch?id=2c9902cae9b927726e4a35ada9f079e69e91dabe",
+        sha256="c042fbce1a71626660ecef118472ce9377cba1fad83064f33a5e36a1bfae387b",
+        when="+pcfile @5.4:",
     )
 
     def build(self, spec, prefix):
@@ -291,7 +296,7 @@ class Lua(LuaImplPackage):
     @run_after("install")
     def link_pkg_config(self):
         if "+pcfile" in self.spec:
-            versioned_pc_file_name = "lua{0}.pc".format(self.version.up_to(2))
+            versioned_pc_file_name = "lua-{0}.pc".format(self.version.up_to(2))
             symlink(
                 join_path(self.prefix.lib, "pkgconfig", versioned_pc_file_name),
                 join_path(self.prefix.lib, "pkgconfig", "lua.pc"),
