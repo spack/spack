@@ -32,7 +32,9 @@ class PySphinxcontribApplehelp(PythonPackage):
     depends_on("py-setuptools", when="@:1.0.3", type="build")
 
     def url_for_version(self, version):
-        url = "https://files.pythonhosted.org/packages/source/s/sphinxcontrib-applehelp/{}-{}.tar.gz"
+        url = (
+            "https://files.pythonhosted.org/packages/source/s/sphinxcontrib-applehelp/{}-{}.tar.gz"
+        )
         if version >= Version("1.0.5"):
             name = "sphinxcontrib_applehelp"
         else:
