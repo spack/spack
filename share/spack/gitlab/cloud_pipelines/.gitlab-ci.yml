@@ -187,6 +187,7 @@ default:
     - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
     - dmesg
     - cat /proc/1/cgroup || true
+    - sleep 10
 
 .generate-x86_64:
   extends: [ ".generate-base" ]
