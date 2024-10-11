@@ -218,13 +218,14 @@ class Abinit(AutotoolsPackage):
         if is_using_intel_libraries:
             linalg_flavor = "mkl"
         # Else, if spack's virtual "lapack" provider is openblas, use it:
-        elif spec.satisfies("@9:") and spec["lapack"].name == "openblas":
-            linalg_flavor = "openblas"
-        elif spec.satisfies("@9:") and spec.satisfies("^fujitsu-ssl2"):
+        elif spec.satisfies("@9:") and (
+            spec["lapack"].name == "openblas" or spec.satisfies("^fujitsu-ssl2")
+        ):
             linalg_flavor = "openblas"
         else:
             # If you need to force custom (and not have it as fallback, like now)
-            # you should likely implement a variant to force it.
+            # you should likely implement a variant to force it, but it seems that
+            # newer versions do not have it, so it should likely be a fallback:
             linalg_flavor = "custom"
 
         if spec.satisfies("+scalapack"):
