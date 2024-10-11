@@ -74,8 +74,9 @@ class Hermes(CMakePackage):
     variant("vfd", default=False, description="Enable HDF5 VFD")
     variant("zmq", default=False, description="Build ZeroMQ tests")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("libelf")
 
     depends_on("hermes-shm@master+boost+cereal+mochi")
