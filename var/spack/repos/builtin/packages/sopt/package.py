@@ -33,7 +33,7 @@ class Sopt(CMakePackage):
 
     depends_on("cmake@3")
     depends_on("eigen@3.4")
-    depends_on("libtiff@4")
+    depends_on("libtiff@4.7:")
     depends_on("mpi", when="+mpi")
     depends_on("catch2@3.4:3", when="+tests")
     depends_on("benchmark@1.8~performance_counters", when="+benchmarks")
