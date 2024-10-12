@@ -24,7 +24,7 @@ class Abinit(AutotoolsPackage):
     programs are provided.
     """
 
-    homepage = "https://www.abinit.org/"
+    homepage = "https://abinit.github.io/abinit_web/"
     url = "https://forge.abinit.org/abinit-10.0.9.tar.gz"
     license("Apache-2.0")
 
