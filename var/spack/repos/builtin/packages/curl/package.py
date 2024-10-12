@@ -25,7 +25,7 @@ class Curl(NMakePackage, AutotoolsPackage):
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://curl.haxx.se/download/curl-7.78.0.tar.bz2"
 
-    executables = ["^curl$"]
+    executables = ["^curl-config$"]  # CMake and other build tools require curl-config
     tags = ["build-tools", "windows"]
 
     maintainers("alecbcs")
@@ -146,9 +146,9 @@ class Curl(NMakePackage, AutotoolsPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        curl = Executable(exe)
-        output = curl("--version", output=str, error=str)
-        match = re.match(r"curl ([\d.]+)", output)
+        curl_config = Executable(exe)
+        output = curl_config("--version", output=str, error=str)
+        match = re.match(r"libcurl ([\d.]+)", output)
         return match.group(1) if match else None
 
     @classmethod
@@ -156,21 +156,43 @@ class Curl(NMakePackage, AutotoolsPackage):
         for exe in exes:
             variants = ""
             curl = Executable(exe)
-            output = curl("--version", output=str, error=str)
-            if "nghttp2" in output:
-                variants += "+nghttp2"
-            protocols_match = re.search(r"Protocols: (.*)\n", output)
-            if protocols_match:
-                protocols = protocols_match.group(1).strip().split(" ")
-                if "ldap" in protocols:
-                    variants += "+ldap"
-            features_match = re.search(r"Features: (.*)\n", output)
-            if features_match:
-                features = features_match.group(1).strip().split(" ")
-                if "GSS-API" in features:
-                    variants += "+gssapi"
-            # TODO: Determine TLS backend if needed.
-            # TODO: Determine more variants.
+            output = curl("--features", "--protocols", "--configure", "--ssl-backends", output=str)
+            # Some recipes require these variants. Flag them for use or rejection by concretisation
+            for feature in ("nghttp2", "libssh2"):
+                variants += f"+{feature}" if f"with-{feature}" in output else f"~{feature}"
+
+            variants += "+libidn2" if "IDN" in output else "~libidn2"
+            # No recipe depends on these variants, but kept for now:
+            variants += "+gssapi" if "GSS-API" in output else "~gssapi"
+            variants += "+ldap" if "LDAP" in output else "~ldap"
+
+            # Julia requests a curl with tls=mbedtls
+            tls = (
+                "openssl"
+                if "OpenSSL" in output
+                else (
+                    "mbedtls"
+                    if "mbedTLS" in output
+                    else (
+                        "gnutls"
+                        if "GnuTLS" in output
+                        else (
+                            "nss"
+                            if "NSS" in output
+                            else (
+                                "sspi"
+                                if is_windows
+                                else (
+                                    "secure_transport"
+                                    if sys.platform == "darwin"
+                                    else "detection-failed"  # Fail the detection of external curl
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+            variants += f" tls={tls}"
             return variants
 
     @property
