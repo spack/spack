@@ -11,7 +11,7 @@ class Firefox(Package):
 
     homepage = "https://www.firefox.com"
     url = (
-        "https://archive.mozilla.org/pub/firefox/releases/127.0/source/firefox-127.0.source.tar.xz"
+        "https://archive.mozilla.org/pub/firefox/releases/128.3.1esr/source/firefox-128.3.1esr.source.tar.xz"
     )
     list_url = "https://archive.mozilla.org/pub/firefox/releases/"
 
@@ -19,7 +19,9 @@ class Firefox(Package):
 
     license("MPL", checked_by="teaguesterling")
 
-    version("130.0.1", sha256="027225a1e9b074f0072e22c7264cf27b0d2364c675c3ca811aa6c25fb01b9f70")
+    # ESR releases are enterprise support
+    version("131.0.2esr", sha256="040e834ac94dd5246f9d77a66f7b43c43c62f538d00b5f94597534dc1db77616")
+    version("128.3.1esr", sha256="c1f4052f3a88d96a122551d5025053304007f7649886d5e2fdfd1a11ce3d70a8")
     version("127.0", sha256="ea6b089ff046ca503978fdaf11ea123c64f66bbcdc4a968bed8f7c93e9994321")
 
     phases = ["configure", "build", "install"]
@@ -91,13 +93,13 @@ class Firefox(Package):
         depends_on("py-zstandard@0.11.1:0.22.0")
 
         # Version specific build/api dependency requirements
-        with when("@127"):
+        with when("@127:128"):
             depends_on("rust@:1.79")  # API changes after 1.80 break
             depends_on("at-spi2-core@2:2.38")  # Version 2.58 fails, 2.38 confirmed
             depends_on("py-attrs@17.4.0")
             depends_on("py-glean-sdk@60.0.1")
             depends_on("py-glean-parser@14.0")
-        with when("@130.0"):  # These may apply more generally backwards/forwards
+        with when("@131"):  # These may apply more generally backwards/forwards
             depends_on("rust@1.80:")
             depends_on("at-spi2-core@2:2.38")  # Version 2.58 fails, 2.38 confirmed
             depends_on("py-attrs@23.1")
@@ -107,7 +109,7 @@ class Firefox(Package):
     conflicts("py-pyrsistent@0.17.0:0.17.2", msg="Noted in mach requirements file")
 
     # Until full GCC 14 support has been patched (check each new release)
-    with when("@12:127%gcc@14:"):
+    with when("@127:128%gcc@14:"):
         patch("gcc14-implicit-include-fix.patch")
         patch("gcc14-implicit-pointer-cast-fix.patch")
 
