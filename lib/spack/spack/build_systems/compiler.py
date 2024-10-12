@@ -246,10 +246,6 @@ class CompilerPackage(spack.package_base.PackageBase):
         env.set("SPACK_COMPILER_SPEC", spec.format("{name}{@version}{variants}{/hash:7}"))
 
         if spec.extra_attributes:
-            environment = spec.extra_attributes.get("environment")
-            if environment:
-                env.extend(spack.schema.environment.parse(environment))
-
             extra_rpaths = spec.extra_attributes.get("extra_rpaths")
             if extra_rpaths:
                 extra_rpaths = ":".join(compiler.extra_rpaths)
