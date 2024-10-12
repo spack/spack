@@ -35,3 +35,14 @@ class Dtc(MakefilePackage):
             makefile.filter(
                 r"WARNINGS = -Wall", "WARNINGS = -Wall -Wno-unused-command-line-argument"
             )
+
+        if self.spec.satisfies("platform=darwin"):
+            libfdt_makefile = FileFilter("libfdt/Makefile.libfdt")
+            libfdt_makefile.filter(
+                r"LIBFDT_soname = .*", "LIBFDT_soname = libfdt.1.$(SHAREDLIB_EXT)"
+            )
+
+    @run_after("install")
+    def darwin_fix(self):
+        if self.spec.satisfies("platform=darwin"):
+            fix_darwin_install_name(self.prefix.lib)
