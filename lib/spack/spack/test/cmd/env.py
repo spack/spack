@@ -833,7 +833,8 @@ spack:
     # The one spec is mpileaks
     for _, spec in e2.concretized_specs():
         assert spec.spliced
-        assert spec["mpi"].satisfies(zmpi)
+        assert spec["mpi"].satisfies(f"zmpi@{zmpi.version}")
+        assert spec["mpi"].build_spec.satisfies(zmpi)
 
 
 def test_init_from_lockfile(environment_from_manifest):
