@@ -844,12 +844,12 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             self.define("ENABLE_TESTING", self.run_tests),
             self.define("DOWNLOAD_POTENTIALS", False),
         ]
-        if "~kokkos" in spec:
+        if spec.satisfies("~kokkos"):
             # LAMMPS can be build with the GPU package OR the KOKKOS package
             # Using both in a single build is discouraged.
             # +cuda only implies that one of the two is used
             # by default it will use the GPU package if kokkos wasn't enabled
-            if "+cuda" in spec:
+            if spec.satisfies("+cuda"):
                 args.append(self.define("PKG_GPU", True))
                 args.append(self.define("GPU_API", "cuda"))
                 args.append(self.define_from_variant("GPU_PREC", "gpu_precision"))
@@ -857,13 +857,13 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
                 if cuda_arch != "none":
                     args.append(self.define("GPU_ARCH", "sm_{0}".format(cuda_arch[0])))
                 args.append(self.define_from_variant("CUDA_MPS_SUPPORT", "cuda_mps"))
-            elif "+opencl" in spec:
+            elif spec.satisfies("+opencl"):
                 # LAMMPS downloads and bundles its own OpenCL ICD Loader by default
                 args.append(self.define("USE_STATIC_OPENCL_LOADER", False))
                 args.append(self.define("PKG_GPU", True))
                 args.append(self.define("GPU_API", "opencl"))
                 args.append(self.define_from_variant("GPU_PREC", "gpu_precision"))
-            elif "+rocm" in spec:
+            elif spec.satisfies("+rocm"):
                 args.append(self.define("PKG_GPU", True))
                 args.append(self.define("GPU_API", "hip"))
                 args.append(self.define_from_variant("GPU_PREC", "gpu_precision"))
@@ -926,27 +926,27 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
             # for transposing 3d FFT data.
             args.append(self.define("FFT_SINGLE", spec.satisfies("fftw_precision=single")))
 
-        if "+user-adios" in spec or "+adios" in spec:
+        if spec.satisfies("+user-adios") or spec.satisfies("+adios"):
             args.append(self.define("ADIOS2_DIR", self.spec["adios2"].prefix))
-        if "+user-plumed" in spec or "+plumed" in spec:
+        if spec.satisfies("+user-plumed") or spec.satisfies("+plumed"):
             args.append(self.define("DOWNLOAD_PLUMED", False))
             if "+shared" in self.spec["plumed"]:
                 args.append(self.define("PLUMED_MODE", "shared"))
             else:
                 args.append(self.define("PLUMED_MODE", "static"))
-        if "+user-smd" in spec or "+machdyn" in spec:
+        if spec.satisfies("+user-smd") or spec.satisfies("+machdyn"):
             args.append(self.define("DOWNLOAD_EIGEN3", False))
             args.append(self.define("EIGEN3_INCLUDE_DIR", self.spec["eigen"].prefix.include))
-        if "+user-hdnnp" in spec or "+ml-hdnnp" in spec:
+        if spec.satisfies("+user-hdnnp") or spec.satisfies("+ml-hdnnp"):
             args.append(self.define("DOWNLOAD_N2P2", False))
             args.append(self.define("N2P2_DIR", self.spec["n2p2"].prefix))
 
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
-            if "@:20231121" in spec:
-                if "^hip@:5.4" in spec:
+            if spec.satisfies("@:20231121"):
+                if spec.satisfies("^hip@:5.4"):
                     args.append(self.define("HIP_PATH", f"{spec['hip'].prefix}/hip"))
-                elif "^hip@5.5:" in spec:
+                elif spec.satisfies("^hip@5.5:"):
                     args.append(self.define("HIP_PATH", spec["hip"].prefix))
 
         return args
@@ -957,14 +957,14 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
 
     def setup_run_environment(self, env):
         env.set("LAMMPS_POTENTIALS", self.prefix.share.lammps.potentials)
-        if "+python" in self.spec:
+        if self.spec.satisfies("+python"):
             if self.spec.platform == "darwin":
                 env.prepend_path("DYLD_FALLBACK_LIBRARY_PATH", self.prefix.lib)
                 env.prepend_path("DYLD_FALLBACK_LIBRARY_PATH", self.prefix.lib64)
             else:
                 env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
                 env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
-        if "+plugin" in self.spec:
+        if self.spec.satisfies("+plugin"):
             env.prepend_path("LAMMPS_PLUGIN_PATH", self.prefix.lib.lammps.plugins)
             env.prepend_path("LAMMPS_PLUGIN_PATH", self.prefix.lib64.lammps.plugins)
 
