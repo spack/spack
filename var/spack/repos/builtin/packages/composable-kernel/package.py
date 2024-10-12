@@ -78,8 +78,9 @@ class ComposableKernel(CMakePackage):
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("rocm-cmake@" + ver, when="@" + ver, type="build")
 
-    # Build is breaking on warning, -Werror, -Wunused-parameter
-    patch("0001-Disable-Compiler-Warnings.patch", when="@6.2:")
+    # Build is breaking on warning, -Werror, -Wunused-parameter. The patch is part of:
+    # https://github.com/ROCm/composable_kernel/commit/959073842c0db839d45d565eb260fd018c996ce4
+    patch("0001-mark-kernels-maybe-unused.patch", when="@6.2")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
