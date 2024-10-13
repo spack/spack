@@ -20,7 +20,14 @@ class Libde265(CMakePackage):
     license("LGPL-3.0-or-later")
 
     version("1.0.15", sha256="d4e55706dfc5b2c5c9702940b675ce2d3e7511025c6894eaddcdbaf0b15fd3f3")
-    version("1.0.9", sha256="153554f407718a75f1e0ae197d35b43147ce282118a54f894554dbe27c32163d")
+
+    # Deprecated versions
+    # https://nvd.nist.gov/vuln/detail/CVE-2023-49468
+    version(
+        "1.0.9",
+        sha256="153554f407718a75f1e0ae197d35b43147ce282118a54f894554dbe27c32163d",
+        deprecated=True,
+    )
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
