@@ -21,6 +21,10 @@ class PerlFileListing(PerlPackage):
 
     def url_for_version(self, version):
         if self.spec.satisfies("@6.05:"):
-            return f"https://cpan.metacpan.org/authors/id/P/PL/PLICEASE/File-Listing-{version}.tar.gz"
+            return (
+                f"https://cpan.metacpan.org/authors/id/P/PL/PLICEASE/File-Listing-{version}.tar.gz"
+            )
         else:
-            return f"http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/File-Listing-{version}.tar.gz"
+            return (
+                f"http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/File-Listing-{version}.tar.gz"
+            )

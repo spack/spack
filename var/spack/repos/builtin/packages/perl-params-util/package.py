@@ -19,6 +19,10 @@ class PerlParamsUtil(PerlPackage):
 
     def url_for_version(self, version):
         if self.spec.satisfies("@1.099:"):
-            return f"https://cpan.metacpan.org/authors/id/R/RE/REHSACK/Params-Util-{version}.tar.gz"
+            return (
+                f"https://cpan.metacpan.org/authors/id/R/RE/REHSACK/Params-Util-{version}.tar.gz"
+            )
         else:
-            return f"http://search.cpan.org/CPAN/authors/id/A/AD/ADAMK/Params-Util-{version}.tar.gz"
+            return (
+                f"http://search.cpan.org/CPAN/authors/id/A/AD/ADAMK/Params-Util-{version}.tar.gz"
+            )

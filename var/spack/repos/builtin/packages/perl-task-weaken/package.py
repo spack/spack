@@ -21,4 +21,6 @@ class PerlTaskWeaken(PerlPackage):
         if self.spec.satisfies("@1.05:"):
             return f"https://cpan.metacpan.org/authors/id/E/ET/ETHER/Task-Weaken-{version}.tar.gz"
         else:
-            return f"http://search.cpan.org/CPAN/authors/id/A/AD/ADAMK/Task-Weaken-{version}.tar.gz"
+            return (
+                f"http://search.cpan.org/CPAN/authors/id/A/AD/ADAMK/Task-Weaken-{version}.tar.gz"
+            )

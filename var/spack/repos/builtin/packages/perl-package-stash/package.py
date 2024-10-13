@@ -24,6 +24,10 @@ class PerlPackageStash(PerlPackage):
 
     def url_for_version(self, version):
         if self.spec.satisfies("@0.38:"):
-            return f"https://cpan.metacpan.org/authors/id/E/ET/ETHER/Package-Stash-{version}.tar.gz"
+            return (
+                f"https://cpan.metacpan.org/authors/id/E/ET/ETHER/Package-Stash-{version}.tar.gz"
+            )
         else:
-            return f"http://search.cpan.org/CPAN/authors/id/D/DO/DOY/Package-Stash-{version}.tar.gz"
+            return (
+                f"http://search.cpan.org/CPAN/authors/id/D/DO/DOY/Package-Stash-{version}.tar.gz"
+            )

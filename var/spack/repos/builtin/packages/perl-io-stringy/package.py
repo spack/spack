@@ -28,6 +28,8 @@ class PerlIoStringy(PerlPackage):
 
     def url_for_version(self, version):
         if self.spec.satisfies("@2.112:"):
-            return f"https://cpan.metacpan.org/authors/id/C/CA/CAPOEIRAB/IO-Stringy-{version}.tar.gz"
+            return (
+                f"https://cpan.metacpan.org/authors/id/C/CA/CAPOEIRAB/IO-Stringy-{version}.tar.gz"
+            )
         else:
             return f"https://cpan.metacpan.org/authors/id/D/DS/DSKOLL/IO-stringy-{version}.tar.gz"

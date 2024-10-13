@@ -21,4 +21,6 @@ class PerlLwpMediatypes(PerlPackage):
         if self.spec.satisfies("@6.03:"):
             return f"https://cpan.metacpan.org/authors/id/O/OA/OALDERS/LWP-MediaTypes-{version}.tar.gz"
         else:
-            return f"http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/LWP-MediaTypes-{version}.tar.gz"
+            return (
+                f"http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/LWP-MediaTypes-{version}.tar.gz"
+            )

@@ -24,7 +24,9 @@ class PerlHttpDaemon(PerlPackage):
 
     def url_for_version(self, version):
         if self.spec.satisfies("@6.02:"):
-            return f"https://cpan.metacpan.org/authors/id/O/OA/OALDERS/HTTP-Daemon-{version}.tar.gz"
+            return (
+                f"https://cpan.metacpan.org/authors/id/O/OA/OALDERS/HTTP-Daemon-{version}.tar.gz"
+            )
         elif self.spec.satisfies("@6.05"):
             return f"https://cpan.metacpan.org/authors/id/E/ET/ETHER/HTTP-Daemon-{version}.tar.gz"
         else:
