@@ -25,6 +25,11 @@ class Dosfstools(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
+    depends_on("gettext", when="@4.2:") # for HAVE_ICONV
+
+    @when("@4.2:")
+    def autoreconf(self, spec, prefix):
+        Executable("./autogen.sh")()
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", self.prefix.sbin)
