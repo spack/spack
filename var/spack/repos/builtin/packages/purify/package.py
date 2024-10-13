@@ -45,6 +45,7 @@ class Purify(CMakePackage):
     depends_on("catch2@3.4:3", when="+tests")
     depends_on("mpi", when="+mpi")
     depends_on("benchmark@1.8~performance_counters", when="+benchmarks")
+    depends_on("sopt+onnxrt", when="+onnxrt")
     depends_on("onnx@1.16:", when="+onnxrt")
     depends_on("doxygen@1.9:1.12+graphviz", when="+docs")
 
