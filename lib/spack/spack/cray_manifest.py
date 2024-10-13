@@ -28,7 +28,7 @@ from spack.schema.cray_manifest import schema as manifest_schema
 #: packages here.
 default_path = "/opt/cray/pe/cpe-descriptive-manifest/"
 
-compiler_name_translation = {"nvidia": "nvhpc", "rocm": "rocmcc"}
+compiler_name_translation = {"nvidia": "nvhpc", "rocm": "rocmcc", "clang": "llvm"}
 
 
 def translated_compiler_name(manifest_compiler_name):
@@ -51,17 +51,17 @@ def translated_compiler_name(manifest_compiler_name):
         )
 
 
-def compiler_from_entry(entry: dict, manifest_path: str):
+def compiler_from_entry(entry: dict, *, manifest_path: str) -> "spack.spec.Spec":
     # Note that manifest_path is only passed here to compose a
     # useful warning message when paths appear to be missing.
     compiler_name = translated_compiler_name(entry["name"])
 
+    prefix = None
     if "prefix" in entry:
         prefix = entry["prefix"]
-        paths = dict(
-            (lang, os.path.join(prefix, relpath))
-            for (lang, relpath) in entry["executables"].items()
-        )
+        paths = {
+            lang: os.path.join(prefix, relpath) for lang, relpath in entry["executables"].items()
+        }
     else:
         paths = entry["executables"]
 
@@ -75,25 +75,38 @@ def compiler_from_entry(entry: dict, manifest_path: str):
             missing_paths.append(path)
 
     # to instantiate a compiler class we may need a concrete version:
-    version = "={}".format(entry["version"])
     arch = entry["arch"]
     operating_system = arch["os"]
     target = arch["target"]
+    spec_str = f"{compiler_name}@={entry['version']} os={operating_system} target={target}"
 
-    compiler_cls = spack.compilers.config.class_for_compiler_name(compiler_name)
-    spec = spack.spec.CompilerSpec(compiler_cls.name, version)
-    path_list = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
+    compilers = {}
+    for x in ("cc", "cxx", "fc"):
+        language = {"cc": "c", "fc": "fortran"}
+        if x not in paths:
+            continue
+
+        if prefix is None:
+            prefix = os.path.dirname(paths[x])
+
+        compilers[language.get(x, x)] = paths[x]
 
     if missing_paths:
         warnings.warn(
             "Manifest entry refers to nonexistent paths:\n\t"
             + "\n\t".join(missing_paths)
-            + f"\nfor {str(spec)}"
+            + f"\nfor {spec_str}"
             + f"\nin {manifest_path}"
             + "\nPlease report this issue"
         )
 
-    return compiler_cls(spec, operating_system, target, path_list)
+    assert prefix is not None, "compiler prefix must be set"
+    result = spack.spec.Spec(
+        str(spack.spec.parse_with_version_concrete(spec_str)), external_path=prefix
+    )
+    result.extra_attributes = {"compilers": compilers}
+    result._finalize_concretization()
+    return result
 
 
 def spec_from_entry(entry):
@@ -121,7 +134,7 @@ def spec_from_entry(entry):
             version=entry["compiler"]["version"],
         )
 
-    spec_format = "{name}@={version} {compiler} {arch}"
+    spec_format = "{name}@={version} {arch}"
     spec_str = spec_format.format(
         name=entry["name"], version=entry["version"], compiler=compiler_str, arch=arch_str
     )
@@ -182,6 +195,7 @@ def entries_to_specs(entries):
     for entry in entries:
         try:
             spec = spec_from_entry(entry)
+            assert spec.concrete, f"{spec} is not concrete"
             spec_dict[spec._hash] = spec
         except spack.repo.UnknownPackageError:
             tty.debug("Omitting package {0}: no corresponding repo package".format(entry["name"]))
@@ -222,23 +236,24 @@ def read(path, apply_updates):
     tty.debug("{0}: {1} specs read from manifest".format(path, str(len(specs))))
     compilers = list()
     if "compilers" in json_data:
-        compilers.extend(compiler_from_entry(x, path) for x in json_data["compilers"])
+        compilers.extend(
+            compiler_from_entry(x, manifest_path=path) for x in json_data["compilers"]
+        )
     tty.debug(f"{path}: {str(len(compilers))} compilers read from manifest")
     # Filter out the compilers that already appear in the configuration
     compilers = spack.compilers.config.select_new_compilers(compilers)
     if apply_updates and compilers:
-        for compiler in compilers:
-            try:
-                spack.compilers.config.add_compiler_to_config(compiler)
-            except Exception:
-                warnings.warn(
-                    f"Could not add compiler {str(compiler.spec)}: "
-                    f"\n\tfrom manifest: {path}"
-                    "\nPlease reexecute with 'spack -d' and include the stack trace"
-                )
-                tty.debug(f"Include this\n{traceback.format_exc()}")
+        try:
+            spack.compilers.config.add_compiler_to_config(compilers)
+        except Exception:
+            warnings.warn(
+                f"Could not add compilers from manifest: {path}"
+                "\nPlease reexecute with 'spack -d' and include the stack trace"
+            )
+            tty.debug(f"Include this\n{traceback.format_exc()}")
     if apply_updates:
         for spec in specs.values():
+            assert spec.concrete, f"{spec} is not concrete"
             spack.store.STORE.db.add(spec)
 
 
