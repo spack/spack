@@ -25,7 +25,7 @@ class Dosfstools(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("gettext", when="@4.2:") # for HAVE_ICONV
+    depends_on("gettext", when="@4.2:")  # for HAVE_ICONV
 
     @when("@4.2:")
     def autoreconf(self, spec, prefix):
