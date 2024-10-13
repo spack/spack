@@ -49,6 +49,11 @@ class Purify(CMakePackage):
     depends_on("onnx@1.16:", when="+onnxrt")
     depends_on("doxygen@1.9:1.12+graphviz", when="+docs")
 
+    def patch(self):
+        filter_file(
+            "//! Whether to do openmp", "#cmakedefine PURIFY_ONNXRT", "cpp/purify/config.in.h"
+        )
+
     def cmake_args(self):
         args = [
             self.define_from_variant("docs", "docs"),
