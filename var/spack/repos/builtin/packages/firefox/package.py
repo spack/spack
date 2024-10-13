@@ -10,9 +10,7 @@ class Firefox(Package):
     """The FireFox web browser by Mozilla"""
 
     homepage = "https://www.firefox.com"
-    url = (
-        "https://archive.mozilla.org/pub/firefox/releases/128.3.1esr/source/firefox-128.3.1esr.source.tar.xz"
-    )
+    url = "https://archive.mozilla.org/pub/firefox/releases/128.3.1esr/source/firefox-128.3.1esr.source.tar.xz"
     list_url = "https://archive.mozilla.org/pub/firefox/releases/"
 
     maintainers("teaguesterling")
@@ -20,8 +18,12 @@ class Firefox(Package):
     license("MPL", checked_by="teaguesterling")
 
     # ESR releases are enterprise support
-    version("131.0.2esr", sha256="040e834ac94dd5246f9d77a66f7b43c43c62f538d00b5f94597534dc1db77616")
-    version("128.3.1esr", sha256="c1f4052f3a88d96a122551d5025053304007f7649886d5e2fdfd1a11ce3d70a8")
+    version("130.0.1", sha256="027225a1e9b074f0072e22c7264cf27b0d2364c675c3ca811aa6c25fb01b9f70")
+    version(
+        "128.3.1esr",
+        sha256="c1f4052f3a88d96a122551d5025053304007f7649886d5e2fdfd1a11ce3d70a8",
+        preferred=True,
+    )
     version("127.0", sha256="ea6b089ff046ca503978fdaf11ea123c64f66bbcdc4a968bed8f7c93e9994321")
 
     phases = ["configure", "build", "install"]
