@@ -27,9 +27,7 @@ class Arrayfire(CMakePackage, CudaPackage):
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
-
-    # TODO: Check which is the actual minimum version that still works with 3.9.0
-    depends_on("cmake@3.24:", type="build", when="@3.9:")
+    depends_on("cmake@3.18:", type="build", when="@3.9:")
 
     variant("forge", default=False, description="Enable graphics library")
     variant("opencl", default=False, description="Enable OpenCL backend")
