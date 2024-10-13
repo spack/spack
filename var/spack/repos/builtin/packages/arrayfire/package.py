@@ -44,8 +44,10 @@ class Arrayfire(CMakePackage, CudaPackage):
     depends_on("fftw-api@3:")
     depends_on("blas")
 
-    # TODO: Older versions of arrayfire likely need upper bounds for fmt/spdlog:
+    # arrayfire@3.8.1 fails to build with spdlog and fmt:
+    depends_on("fmt@8.1.1:", when="@3.7")
     depends_on("fmt@8.1.1:", when="@3.9:")
+    depends_on("spdlog@1.9.2:", when="@3.7")
     depends_on("spdlog@1.9.2:", when="@3.9:")
 
     # https://github.com/arrayfire/arrayfire/wiki/Build-Instructions-for-Linux
@@ -96,11 +98,10 @@ class Arrayfire(CMakePackage, CudaPackage):
                 self.define_from_variant("AF_BUILD_FORGE", "forge"),
                 self.define_from_variant("AF_BUILD_OPENCL", "opencl"),
                 self.define("BUILD_TESTING", self.run_tests),
+                self.define("AF_WITH_SPDLOG_HEADER_ONLY", not self.spec.satisfies("@3.8")),
+                self.define("AF_WITH_FMT_HEADER_ONLY", not self.spec.satisfies("@3.8")),
             ]
         )
-        if self.spec.satisfies("@3.9:"):
-            args.append(self.define("AF_WITH_SPDLOG_HEADER_ONLY", True))
-            args.append(self.define("AF_WITH_FMT_HEADER_ONLY", True))
 
         if self.spec.satisfies("+cuda"):
             arch_list = [
