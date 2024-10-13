@@ -25,18 +25,31 @@ class Arrayfire(CMakePackage, CudaPackage):
         version("3.7.2", commit="218dd2c99300e77496239ade76e94b0def65d032", tag="v3.7.2")
         version("3.7.0", commit="fbea2aeb6f7f2d277dcb0ab425a77bb18ed22291", tag="v3.7.0")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
+    # TODO: Check which is the actual minimum version that still works with 3.9.0
+    depends_on("cmake@3.24:", type="build", when="@3.9:")
 
     variant("forge", default=False, description="Enable graphics library")
     variant("opencl", default=False, description="Enable OpenCL backend")
     variant("cuda", default=True, description="Enable CUDA backend")
 
-    depends_on("boost@1.70:")
+    conflicts("~opencl", when="@3.9:")
+
+    conflicts("%gcc@13:", when="@:3.7.3")
+    conflicts("%lang@14:", when="@:3.7.3")
+
+    # TODO: 3.9.0 fails with boost@1.86. Check which version is the max version that works,
+    # and replace this pinned version with two lines: One lower bound for all veersions
+    # and one with an upper for when="@3.9:"
+    depends_on("boost@1.70")
     depends_on("fftw-api@3:")
     depends_on("blas")
-    depends_on("fmt@8.1.1:")
-    depends_on("spdlog@1.9.2:")
+
+    # TODO: Older versions of arrayfire likely need upper bounds for fmt/spdlog:
+    depends_on("fmt@8.1.1:", when="@3.9:")
+    depends_on("spdlog@1.9.2:", when="@3.9:")
 
     depends_on("cuda@7.5:", when="+cuda")
     depends_on("cudnn", when="+cuda")
@@ -85,10 +98,11 @@ class Arrayfire(CMakePackage, CudaPackage):
                 self.define_from_variant("AF_BUILD_FORGE", "forge"),
                 self.define_from_variant("AF_BUILD_OPENCL", "opencl"),
                 self.define("BUILD_TESTING", self.run_tests),
-                self.define("AF_WITH_SPDLOG_HEADER_ONLY", True),
-                self.define("AF_WITH_FMT_HEADER_ONLY", True),
             ]
         )
+        if self.spec.satisfies("@3.9:"):
+            args.append(self.define("AF_WITH_SPDLOG_HEADER_ONLY", True))
+            args.append(self.define("AF_WITH_FMT_HEADER_ONLY", True))
 
         if self.spec.satisfies("+cuda"):
             arch_list = [
