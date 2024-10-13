@@ -51,7 +51,8 @@ class Arrayfire(CMakePackage, CudaPackage):
     depends_on("fmt@8.1.1:", when="@3.9:")
     depends_on("spdlog@1.9.2:", when="@3.9:")
 
-    depends_on("cuda@7.5:", when="+cuda")
+    # https://github.com/arrayfire/arrayfire/wiki/Build-Instructions-for-Linux
+    depends_on("cuda@9.1:", when="+cuda")
     depends_on("cudnn", when="+cuda")
 
     depends_on("opencl", when="+opencl")
