@@ -30,12 +30,11 @@ class PyCfgrib(PythonPackage):
     depends_on("py-eccodes", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
 
-    depends_on("py-xarray@0.15:", when="@0.9.10:+xarray", type=("build", "run"))
-    depends_on("py-xarray@0.12:", when="+xarray", type=("build", "run"))
-
-    # 0.9.14.1 enables support for xarray 2024.09.0
+    # 0.9.14.1 enables support for xarray @2024.09.0:
     # https://github.com/ecmwf/cfgrib/commit/46a79025146b3847e81629748fc3fe16e56097cf
-    depends_on("py-xarray@:2024.08.0", when="+xarray @:0.9.14.0", type=("build", "run"))
+    depends_on("py-xarray@0.15:", when="@0.9.14.1:+xarray", type=("build", "run"))
+    depends_on("py-xarray@0.15:2024.08.0", when="@0.9.10:0.9.14.0+xarray", type=("build", "run"))
+    depends_on("py-xarray@0.12:2024.08.0", when="@:0.9.14.0+xarray", type=("build", "run"))
 
     # Historical dependencies
     depends_on("py-pytest-runner", when="@0.9.8.5", type="build")
