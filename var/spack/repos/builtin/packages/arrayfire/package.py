@@ -37,13 +37,12 @@ class Arrayfire(CMakePackage, CudaPackage):
 
     conflicts("~opencl", when="@3.9:")
 
-    conflicts("%gcc@13:", when="@:3.7.3")
-    conflicts("%lang@14:", when="@:3.7.3")
+    conflicts("%gcc@13:", when="@:3.8.1")
+    conflicts("%lang@14:", when="@:3.8.1")
 
-    # TODO: 3.9.0 fails with boost@1.86. Check which version is the max version that works,
-    # and replace this pinned version with two lines: One lower bound for all veersions
-    # and one with an upper for when="@3.9:"
-    depends_on("boost@1.70")
+    depends_on("boost@1.70:")
+    conflicts("boost@1.86:", when="@3.9", msg="arrayfire@3.9.0 fails to build with boost@1.86:")
+
     depends_on("fftw-api@3:")
     depends_on("blas")
 
