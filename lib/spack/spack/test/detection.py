@@ -7,6 +7,7 @@ import collections
 import spack.config
 import spack.detection
 import spack.detection.common
+import spack.detection.path
 import spack.spec
 
 
@@ -26,3 +27,18 @@ def test_detection_update_config(mutable_config):
     external_gcc = externals[0]
     assert external_gcc["spec"] == "cmake@3.27.5"
     assert external_gcc["prefix"] == "/usr/bin"
+
+
+def test_dedupe_paths(tmp_path):
+    """Test that dedupe_path prefers the directory over the symlink pointing to it, independent
+    of the order"""
+    x = tmp_path / "x"
+    y = tmp_path / "y"
+    z = tmp_path / "z"
+
+    x.mkdir()
+    y.mkdir()
+    z.symlink_to("x", target_is_directory=True)
+
+    assert spack.detection.path.dedupe_paths([str(x), str(y), str(z)]) == [str(x), str(y)]
+    assert spack.detection.path.dedupe_paths([str(z), str(y), str(x)]) == [str(y), str(x)]
