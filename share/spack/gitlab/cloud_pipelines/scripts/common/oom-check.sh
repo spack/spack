@@ -9,11 +9,9 @@ if [ "$CI_JOB_STATUS" != "failed" ]; then
     exit 0
 fi
 
-# TODO if it's a UO runner then we don't want to check for OOM
-echo $CI_RUNNER_DESCRIPTION
-echo $CI_RUNNER_ID
-echo $CI_RUNNER_SHORT_TOKEN
-echo $CI_RUNNER_TAGS
+if ["$CI_RUNNER_TAGS" != *"aws"*]; then
+    exit 0
+fi
 
 proc1_cgroup=$(cat /proc/1/cgroup)
 
@@ -24,3 +22,5 @@ proc1_cgroup=$(cat /proc/1/cgroup)
   dmesg | grep -q "oom-kill.*$(echo "$proc1_cgroup" | tr / '\n' | tail -2 | head -1)" \
     && echo "oom kill pod"
 ) || true
+
+
