@@ -426,7 +426,7 @@ Developing Packages in a Spack Environment
 The ``spack develop`` command allows one to develop Spack packages in
 an environment. It requires a spec containing a concrete version, and
 will configure Spack to install the package from local source. 
-If a version is not provided from teh command line interface then spack 
+If a version is not provided from the command line interface then spack 
 will automatically pick the highest version the package has defined.
 This means any infinity versions (``develop``, ``main``, ``stable``) will be
 preferred in this selection process.
