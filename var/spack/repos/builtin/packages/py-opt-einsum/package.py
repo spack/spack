@@ -22,3 +22,12 @@ class PyOptEinsum(PythonPackage):
     depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.7:", type=("build", "run"))
+
+    # until a new 3.4.0 release https://github.com/dgasmith/opt_einsum/issues/221
+    # requires this patch for python 3.12
+    # https://github.com/dgasmith/opt_einsum/pull/208
+    patch(
+        "https://github.com/dgasmith/opt_einsum/commit/0beacf96923bbb2dd1939a9c59398a38ce7a11b1.patch?full_index=1",
+        sha256="3ecf03ec60b3fc8ab256596320fa72d2ded4b7f00a437133ea4266c31ac32894",
+        when="^python@3.12:",
+    )

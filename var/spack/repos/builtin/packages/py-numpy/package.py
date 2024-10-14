@@ -99,6 +99,7 @@ class PyNumpy(PythonPackage):
 
         # Build dependencies (do not include upper bound unless known issues)
         depends_on("py-cython@3.0.6:", when="@2:")
+        depends_on("py-cython@3.0.4:", when="^python@3.12:")
         depends_on("py-cython@0.29.34:", when="@1.26:")
         depends_on("py-cython@0.29.34:2", when="@1.25")
         depends_on("py-cython@0.29.30:2", when="@1.22.4:1.24")
