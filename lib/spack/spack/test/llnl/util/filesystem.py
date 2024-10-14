@@ -6,6 +6,7 @@
 """Tests for ``llnl/util/filesystem.py``"""
 import filecmp
 import os
+import pathlib
 import shutil
 import stat
 import sys
@@ -1054,4 +1055,5 @@ def test_windows_sfn(tmpdir):
 def test_truncate_path(input_path, input_args, expected, expected_truncated):
     result, truncated = fs.truncate_path(input_path, **input_args)
     assert truncated is expected_truncated
-    assert str(result) == expected
+    # Roundtrip to get the correct path separator on Windows
+    assert str(result) == str(pathlib.Path(expected))
