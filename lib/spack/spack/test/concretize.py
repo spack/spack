@@ -609,7 +609,6 @@ class TestConcretize:
         assert spec.satisfies("+fee") and not spec.satisfies("dependency-foo-bar+fee")
         assert spec.satisfies("^second-dependency-foo-bar-fee+fee")
 
-    # Propagate multiple bool variants
     def test_concretize_propagate_multiple_variants(self):
         """Test that multiple boolean valued variants can be propagated from
         the same source package"""
@@ -619,6 +618,14 @@ class TestConcretize:
         assert spec.satisfies("~foo") and spec.satisfies("+bar")
         assert spec.satisfies("^dependency-foo-bar ~foo +bar")
         assert spec.satisfies("^second-dependency-foo-bar-fee ~foo +bar")
+
+    def test_concretize_propagate_single_valued_variant(self):
+        """Test propagation for single valued variants"""
+        spec = Spec("multivalue-variant libs==static")
+        spec.concretize()
+
+        assert spec.satisfies("lib=static")
+        assert spec.satisfies("^pkg-a libs=static")
 
     def test_concretize_propagate_multivalue_variant(self):
         """Test that multivalue variants are propagating the specified value(s)
