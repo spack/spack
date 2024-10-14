@@ -158,7 +158,7 @@ def components_to_path(components: List[str], idx: int) -> str:
         idx: Integer number of component entries to use.
     """
     assert idx >= 0
-    return os.sep.join(components[:idx]) if idx > 1 else os.path.abspath(os.sep)
+    return os.sep.join(components[:idx]) if idx > 0 else os.path.abspath(os.sep)
 
 
 def executable_prefix(executable_dir: str) -> str:
