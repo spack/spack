@@ -1035,3 +1035,23 @@ def test_windows_sfn(tmpdir):
     assert "d\\LONGER~1" in fs.windows_sfn(d)
     assert "d\\LONGER~2" in fs.windows_sfn(e)
     shutil.rmtree(tmpdir.join("d"))
+
+
+@pytest.mark.parametrize(
+    "input_path,input_args,expected,expected_truncated",
+    [
+        ("/usr/bin", {"subdirs": ["bin"]}, "/usr", True),
+        ("/bin", {"subdirs": ["bin"]}, "/", True),
+        ("/bin", {"subdirs": ["lib"]}, "/bin", False),
+        # Test the case where more subdirs could match. We always pick the first match
+        ("/usr/bin/lib", {"subdirs": ["lib", "bin"]}, "/usr/bin", True),
+        ("/usr/bin/lib", {"subdirs": ["bin", "lib"]}, "/usr", True),
+        # Test case sensitivity
+        ("/usr/bin", {"subdirs": ["BIN"]}, "/usr", True),
+        ("/usr/bin", {"subdirs": ["BIN"], "case_insensitive": False}, "/usr/bin", False),
+    ],
+)
+def test_truncate_path(input_path, input_args, expected, expected_truncated):
+    result, truncated = fs.truncate_path(input_path, **input_args)
+    assert truncated is expected_truncated
+    assert str(result) == expected

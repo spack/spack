@@ -77,6 +77,7 @@ __all__ = [
     "touch",
     "touchp",
     "traverse_tree",
+    "truncate_path",
     "unset_executable_mode",
     "working_dir",
     "keep_modification_time",
@@ -2843,3 +2844,45 @@ class FindFirstFile:
                 if self.match(file):
                     return os.path.join(dirpath, file)
         return None
+
+
+def truncate_path(
+    input_path: Union[str, pathlib.Path], *, subdirs: List[str], case_insensitive: bool = True
+) -> Tuple[pathlib.Path, bool]:
+    """Returns the input path truncated before one of the subdirectories passed as argument.
+
+    If none of the  subdirectories are in the input path, the input is returned as is.
+
+    A bool is also returned to tell whether the input was actually truncated,
+    or returned unmodified.
+
+    Args:
+        input_path: path to be truncated
+        subdirs: subdirectories to be used for truncation, in order
+        case_insensitive: if True, the path and subdirs are lowercased before checking
+
+    Examples:
+        >>> p, truncated = truncate_path("/usr/bin", subdirs=["bin"])
+        >>> assert str(p) == "/usr" and truncated is True
+
+        >>> p, truncated = truncate_path("/bin", subdirs=["bin"])
+        >>> assert str(p) == "/" and truncated is True
+
+        >>> p, truncated = truncate_path("/usr/bin", subdirs=["foo"])
+        >>> assert str(p) == "/usr/bin" and truncated is False
+    """
+    input_path = pathlib.Path(input_path)
+    components = input_path.parts
+    search_components = components
+    if case_insensitive:
+        search_components = pathlib.Path(str(input_path).lower()).parts
+
+    for subdir in subdirs:
+        if case_insensitive:
+            subdir = subdir.lower()
+
+        if subdir in search_components:
+            idx = search_components.index(subdir)
+            return pathlib.Path(*components[:idx]), True
+
+    return input_path, False
