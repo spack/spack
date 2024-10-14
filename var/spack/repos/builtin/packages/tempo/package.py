@@ -19,7 +19,7 @@ class Tempo(AutotoolsPackage):
     #
 
     homepage = "http://tempo.sourceforge.net/"
-    git = "git://git.code.sf.net/p/tempo/tempo.git"
+    git = "https://git.code.sf.net/p/tempo/tempo.git"
 
     version("master", branch="master", preferred=True)
     version("develop")
