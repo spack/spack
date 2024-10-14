@@ -55,7 +55,30 @@ properties: Dict[str, Any] = {
             "unify": {
                 "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["when_possible"]}]
             },
-            "splice": {"type": "boolean"},
+            "splice": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "explicit": {
+                        "type": "array",
+                        "default": [],
+                        "items": {
+                            "type": "object",
+                            "required": ["target", "replacement"],
+                            "additionalProperties": False,
+                            "properties": {
+                                "target": {"type": "string"},
+                                "replacement": {"type": "string"},
+                                "transitive": {"type": "boolean", "default": False},
+                            },
+                        },
+                    },
+                  "automatic": {
+                    "type": "boolean", 
+                    "default": false
+                  }
+                },
+            },
             "duplicates": {
                 "type": "object",
                 "properties": {

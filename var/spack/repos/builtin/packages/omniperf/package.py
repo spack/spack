@@ -20,6 +20,7 @@ class Omniperf(CMakePackage):
     license("MIT")
 
     version("6.2.1", sha256="c14cb73b9fe17a3cca31489a73e8ea49cb278093f8d64c433b1bac387445074a")
+    version("6.2.0", sha256="b2ad49324a07aef977833d62741509a5d799b92758db56a16b4ab5636b6e231e")
 
     depends_on("python@3.8:")
     depends_on("py-pip", type="run")

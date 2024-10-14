@@ -106,7 +106,12 @@ class PyTorchaudio(PythonPackage):
     depends_on("sox")
 
     # https://github.com/pytorch/audio/pull/3811
-    depends_on("cuda@:12.4", when="^py-torch+cuda")
+    patch(
+        "https://github.com/pytorch/audio/pull/3811.patch?full_index=1",
+        sha256="34dce3403abb03f62827e8a1efcdb2bf7742477a01f155ebb9c7fefe9588b132",
+        when="@2.2:",
+    )
+    conflicts("^cuda@12.5:", when="@:2.1")
 
     def setup_build_environment(self, env):
         # tools/setup_helpers/extension.py
