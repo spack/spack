@@ -143,7 +143,7 @@ class Extrae(AutotoolsPackage):
             make.add_default_arg("CXXFLAGS=%s" % self.compiler.cxx11_flag)
             args.append("CXXFLAGS=%s" % self.compiler.cxx11_flag)
 
-        config_args.extend(self.enable_or_disable("single-mpi-lib"))
+        args.extend(self.enable_or_disable("single-mpi-lib"))
 
         return args
 
