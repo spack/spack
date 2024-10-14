@@ -807,6 +807,13 @@ def env_depfile_setup_parser(subparser):
         "used. can be set to an empty string --make-prefix ''",
     )
     subparser.add_argument(
+        "--make-absolute-path",
+        default=False,
+        action="store_true",
+        dest="absolute_path",
+        help="use an absolute path to the spack executable in the Makefile",
+    )
+    subparser.add_argument(
         "--make-disable-jobserver",
         default=True,
         action="store_false",
@@ -862,6 +869,7 @@ def env_depfile(args):
         dep_buildcache=depfile.UseBuildCache.from_string(args.use_buildcache[1]),
         make_prefix=args.make_prefix,
         jobserver=args.jobserver,
+        absolute_path=args.absolute_path,
     )
 
     # Warn in case we're generating a depfile for an empty environment. We don't automatically
