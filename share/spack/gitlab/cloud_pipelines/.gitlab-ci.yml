@@ -185,9 +185,8 @@ default:
   after_script:
     - cat /proc/loadavg || true
     - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
-    - dmesg
-    - cat /proc/1/cgroup || true
-    - exit 137
+    - . "${SPACK_CI_SCRIPTS_ROOT}/common/oom-check.sh"
+
 
 .generate-x86_64:
   extends: [ ".generate-base" ]
