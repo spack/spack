@@ -150,6 +150,17 @@ def _convert_to_iterable(single_val_or_multiple):
         return [x]
 
 
+def components_to_path(components: List[str], idx: int) -> str:
+    """Given a list of path components return the path using up to `idx` entries of `components`.
+    This functions makes sure to return the file system root instead of empty string if idx==0.
+    Args:
+        components: List of directory components
+        idx: Integer number of component entries to use.
+    """
+    assert idx >= 0
+    return os.sep.join(components[:idx]) if idx > 1 else os.path.abspath(os.sep)
+
+
 def executable_prefix(executable_dir: str) -> str:
     """Given a directory where an executable is found, guess the prefix
     (i.e. the "root" directory of that installation) and return it.
@@ -168,8 +179,7 @@ def executable_prefix(executable_dir: str) -> str:
     if "bin" not in lowered_components:
         return executable_dir
     idx = lowered_components.index("bin")
-    # Do not return an empty string if "bin" is found in the root directory
-    return os.sep.join(components[:idx]) if idx > 1 else os.path.abspath(os.sep)
+    return components_to_path(components, idx)
 
 
 def library_prefix(library_dir: str) -> str:
@@ -190,13 +200,13 @@ def library_prefix(library_dir: str) -> str:
     if "lib64" in lowered_components:
         idx = lowered_components.index("lib64")
         # Do not return an empty string if "lib64" is found in the root directory
-        return os.sep.join(components[:idx]) if idx > 1 else os.path.abspath(os.sep)
+        return components_to_path(components, idx)
     elif "lib" in lowered_components:
         idx = lowered_components.index("lib")
-        return os.sep.join(components[:idx]) if idx > 1 else os.path.abspath(os.sep)
+        return components_to_path(components, idx)
     elif sys.platform == "win32" and "bin" in lowered_components:
         idx = lowered_components.index("bin")
-        return os.sep.join(components[:idx]) if idx > 1 else os.path.abspath(os.sep)
+        return components_to_path(components, idx)
     else:
         return library_dir
 
