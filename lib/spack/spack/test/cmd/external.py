@@ -17,7 +17,6 @@ import spack.cray_manifest
 import spack.detection
 import spack.detection.path
 import spack.repo
-from spack.detection.common import components_to_path
 from spack.main import SpackCommand
 from spack.spec import Spec
 
@@ -71,13 +70,6 @@ def test_find_external_two_instances_same_package(mock_executable):
     assert spec_to_path[Spec("cmake@3.17.2")] == (
         spack.detection.executable_prefix(str(cmake2.parent))
     )
-
-
-def test_components_to_path(mock_executable):
-    components = ["foo", "bar"]
-    assert components_to_path(components, 2) == os.sep.join(["foo", "bar"])
-    assert components_to_path(components, 1) == os.sep.join(["foo"])
-    assert components_to_path(components, 0) == os.path.abspath(os.sep)
 
 
 def test_find_external_update_config(mutable_config):
