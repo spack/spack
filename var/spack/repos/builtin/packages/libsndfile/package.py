@@ -13,14 +13,16 @@ class Libsndfile(AutotoolsPackage):
     format under the Gnu Lesser General Public License."""
 
     homepage = "https://github.com/libsndfile/libsndfile"
-    url = "https://github.com/libsndfile/libsndfile/releases/download/1.2.2/libsndfile-1.2.2.tar.xz"
+    url = (
+        "https://github.com/libsndfile/libsndfile/releases/download/1.2.2/libsndfile-1.2.2.tar.xz"
+    )
 
     license("LGPL-2.1-or-later")
 
     version("1.2.2", sha256="3799ca9924d3125038880367bf1468e53a1b7e3686a934f098b7e1d286cdb80e")
     # https://nvd.nist.gov/vuln/detail/CVE-2022-33064
     version(
-        "1.0.28", 
+        "1.0.28",
         sha256="1ff33929f042fa333aed1e8923aa628c3ee9e1eb85512686c55092d1e5a9dfa9",
         deprecated=True,
     )
