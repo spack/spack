@@ -601,7 +601,8 @@ class TestConcretize:
         assert spec.satisfies("+bar") and spec.satisfies("^dependency-foo-bar+bar")
 
     def test_concretize_propagate_through_first_level_deps(self):
-        """Test does a thing"""
+        """Test that boolean valued variants can be propagated past first level
+        dependecies even if the first level dependency does have the variant"""
         spec = Spec("parent-foo-bar-fee ++fee")
         spec.concretize()
 
@@ -609,6 +610,15 @@ class TestConcretize:
         assert spec.satisfies("^second-dependency-foo-bar-fee+fee")
 
     # Propagate multiple bool variants
+    def test_concretize_propagate_multiple_variants(self):
+        """Test that multiple boolean valued variants can be propagated from
+        the same source package"""
+        spec = Spec("parent-foo-bar-fee ~~foo ++bar")
+        spec.concretize()
+
+        assert spec.satisfies("~foo") and spec.satisfies("+bar")
+        assert spec.satisfies("^dependency-foo-bar ~foo +bar")
+        assert spec.satisfies("^second-dependency-foo-bar-fee ~foo +bar")
 
     def test_concretize_propagate_multivalue_variant(self):
         """Test that multivalue variants are propagating the specified value(s)
