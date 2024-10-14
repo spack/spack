@@ -2,7 +2,7 @@ sphinx==7.4.7
 sphinxcontrib-programoutput==0.17
 sphinx_design==0.6.1
 sphinx-rtd-theme==2.0.0
-python-levenshtein==0.25.1
+python-levenshtein==0.26.0
 docutils==0.20.1
 pygments==2.18.0
 urllib3==2.2.3
