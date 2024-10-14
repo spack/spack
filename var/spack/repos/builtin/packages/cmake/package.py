@@ -4,10 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import re
 import sys
 
 import spack.build_environment
+from spack.build_systems.cmake import get_cmake_prefix_path
 from spack.package import *
 
 
@@ -332,6 +334,13 @@ class Cmake(Package):
         else:
             args.append("-DCMAKE_INSTALL_PREFIX=%s" % self.prefix)
 
+        # Make CMake find its own dependencies.
+        prefixes = get_cmake_prefix_path(self)
+        rpaths = [
+            pathlib.Path(self.prefix, "lib").as_posix(),
+            pathlib.Path(self.prefix, "lib64").as_posix(),
+        ]
+
         args.extend(
             [
                 f"-DCMAKE_BUILD_TYPE={self.spec.variants['build_type'].value}",
@@ -340,17 +349,9 @@ class Cmake(Package):
                 "-DCMake_TEST_INSTALL=OFF",
                 f"-DBUILD_CursesDialog={'ON' if '+ncurses' in spec else 'OFF'}",
                 f"-DBUILD_QtDialog={'ON' if spec.satisfies('+qtgui') else 'OFF'}",
-            ]
-        )
-
-        # Make CMake find its own dependencies.
-        rpaths = spack.build_environment.get_rpaths(self)
-        prefixes = spack.build_environment.get_cmake_prefix_path(self)
-        args.extend(
-            [
                 "-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON",
-                "-DCMAKE_INSTALL_RPATH={0}".format(";".join(str(v) for v in rpaths)),
-                "-DCMAKE_PREFIX_PATH={0}".format(";".join(str(v) for v in prefixes)),
+                f"-DCMAKE_INSTALL_RPATH={';'.join(rpaths)}",
+                f"-DCMAKE_PREFIX_PATH={';'.join(str(v) for v in prefixes)}",
             ]
         )
 
