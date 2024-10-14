@@ -1659,7 +1659,7 @@ class Database:
 
         results = list(local_results) + list(x for x in upstream_results if x not in local_results)
 
-        return sorted(results)
+        return results
 
     if query.__doc__ is None:
         query.__doc__ = ""
