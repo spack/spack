@@ -67,16 +67,16 @@ def file_identifier(path):
 
 
 def dedupe_paths(paths: List[str]) -> List[str]:
-    """Stable deduplication of paths based on inode and device number. In case of a symlinked dir
-    that also is present itself, the directory is returned. The latter is useful for cases like
-    ``/bin -> /usr/bin``: we prefer the prefix ``/usr`` over ``/``."""
+    """Deduplicate paths based on inode and device number. In case the list contains first a
+    symlink and then the directory it points to, the symlink is replaced with the directory path.
+    This ensures that we pick for example ``/usr/bin`` over ``/bin`` if the latter is a symlink to
+    the former`."""
     seen: Dict[Tuple[int, int], str] = {}
     for path in paths:
         identifier = file_identifier(path)
         if identifier not in seen:
             seen[identifier] = path
         elif not os.path.islink(path):
-            del seen[identifier]
             seen[identifier] = path
     return list(seen.values())
 

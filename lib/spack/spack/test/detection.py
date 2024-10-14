@@ -30,8 +30,7 @@ def test_detection_update_config(mutable_config):
 
 
 def test_dedupe_paths(tmp_path):
-    """Test that dedupe_path prefers the directory over the symlink pointing to it, independent
-    of the order"""
+    """Test that ``dedupe_paths`` deals with symlinked directories, retaining the target"""
     x = tmp_path / "x"
     y = tmp_path / "y"
     z = tmp_path / "z"
@@ -40,5 +39,16 @@ def test_dedupe_paths(tmp_path):
     y.mkdir()
     z.symlink_to("x", target_is_directory=True)
 
+    # dedupe repeated dirs, should preserve order
+    assert spack.detection.path.dedupe_paths([str(x), str(y), str(x)]) == [str(x), str(y)]
+    assert spack.detection.path.dedupe_paths([str(y), str(x), str(y)]) == [str(y), str(x)]
+
+    # dedupe repeated symlinks
+    assert spack.detection.path.dedupe_paths([str(z), str(y), str(z)]) == [str(z), str(y)]
+    assert spack.detection.path.dedupe_paths([str(y), str(z), str(y)]) == [str(y), str(z)]
+
+    # when both symlink and target are present, only target is retained, and it comes at the
+    # priority of the first occurrence.
     assert spack.detection.path.dedupe_paths([str(x), str(y), str(z)]) == [str(x), str(y)]
-    assert spack.detection.path.dedupe_paths([str(z), str(y), str(x)]) == [str(y), str(x)]
+    assert spack.detection.path.dedupe_paths([str(z), str(y), str(x)]) == [str(x), str(y)]
+    assert spack.detection.path.dedupe_paths([str(y), str(z), str(x)]) == [str(y), str(x)]
