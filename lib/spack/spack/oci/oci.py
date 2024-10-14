@@ -15,17 +15,10 @@ from urllib.request import Request
 
 import llnl.util.tty as tty
 
-import spack.binary_distribution
-import spack.config
-import spack.error
 import spack.fetch_strategy
 import spack.mirror
 import spack.oci.opener
-import spack.repo
-import spack.spec
 import spack.stage
-import spack.traverse
-import spack.util.crypto
 import spack.util.url
 
 from .image import Digest, ImageReference
@@ -35,11 +28,6 @@ class Blob(NamedTuple):
     compressed_digest: Digest
     uncompressed_digest: Digest
     size: int
-
-
-def create_tarball(spec: spack.spec.Spec, tarfile_path):
-    buildinfo = spack.binary_distribution.get_buildinfo_dict(spec)
-    return spack.binary_distribution._do_create_tarball(tarfile_path, spec.prefix, buildinfo)
 
 
 def with_query_param(url: str, param: str, value: str) -> str:
@@ -390,15 +378,12 @@ def make_stage(
 ) -> spack.stage.Stage:
     _urlopen = _urlopen or spack.oci.opener.urlopen
     fetch_strategy = spack.fetch_strategy.OCIRegistryFetchStrategy(
-        url, checksum=digest.digest, _urlopen=_urlopen
+        url=url, checksum=digest.digest, _urlopen=_urlopen
     )
     # Use blobs/<alg>/<encoded> as the cache path, which follows
     # the OCI Image Layout Specification. What's missing though,
     # is the `oci-layout` and `index.json` files, which are
     # required by the spec.
     return spack.stage.Stage(
-        fetch_strategy,
-        mirror_paths=spack.mirror.OCIImageLayout(digest),
-        name=digest.digest,
-        keep=keep,
+        fetch_strategy, mirror_paths=spack.mirror.OCILayout(digest), name=digest.digest, keep=keep
     )

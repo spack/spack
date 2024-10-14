@@ -14,8 +14,9 @@ class Pcre2(AutotoolsPackage):
     homepage = "https://www.pcre.org"
     url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.39/pcre2-10.39.tar.bz2"
 
-    license("BSD-3-Clause")
+    license("BSD-3-Clause AND PCRE2-exception", when="@10:", checked_by="wdconinc")
 
+    version("10.44", sha256="d34f02e113cf7193a1ebf2770d3ac527088d485d4e047ed10e5d217c6ef5de96")
     version("10.43", sha256="e2a53984ff0b07dfdb5ae4486bbb9b21cca8e7df2434096cc9bf1b728c350bcb")
     version("10.42", sha256="8d36cd8cb6ea2a4c2bb358ff6411b0c788633a2a45dabbf1aeb4b701d1b5e840")
     version("10.41", sha256="0f78cebd3e28e346475fb92e95fe9999945b4cbaad5f3b42aca47b887fb53308")
@@ -26,7 +27,7 @@ class Pcre2(AutotoolsPackage):
     version("10.31", sha256="e07d538704aa65e477b6a392b32ff9fc5edf75ab9a40ddfc876186c4ff4d68ac")
     version("10.20", sha256="332e287101c9e9567d1ed55391b338b32f1f72c5b5ee7cc81ef2274a53ad487a")
 
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")
 
     variant("multibyte", default=True, description="Enable support for 16 and 32 bit characters.")
     variant("jit", default=False, description="enable Just-In-Time compiling support")

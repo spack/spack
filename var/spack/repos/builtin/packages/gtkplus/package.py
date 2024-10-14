@@ -124,7 +124,7 @@ class Gtkplus(MesonPackage):
             "GTKDOC_MKPDF={0}".format(true),
             "GTKDOC_REBASE={0}".format(true),
         ]
-        if "~cups" in self.spec:
+        if self.spec.satisfies("~cups"):
             args.append("--disable-cups")
         return args
 

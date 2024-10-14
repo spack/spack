@@ -39,7 +39,7 @@ class Libcanberra(AutotoolsPackage):
     depends_on("gtkplus", when="+gtk")
 
     depends_on("libvorbis")
-    depends_on("libtool", type="build")
+    depends_on("libtool", type="link")  # libltdl
 
     depends_on("pkgconfig", type="build")
 

@@ -329,7 +329,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             configure_args.append("--with-magma-lib=%s" % spec["magma"].libs)
             configure_args.append("--with-magma")
 
-        if "+gpu-aware-mpi" in spec:
+        if spec.satisfies("+gpu-aware-mpi"):
             configure_args.append("--enable-gpu-aware-mpi")
 
         configure_args.extend(self.enable_or_disable("fortran"))
@@ -348,7 +348,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.set("CUDA_HOME", spec["cuda"].prefix)
             env.set("CUDA_PATH", spec["cuda"].prefix)
             # In CUDA builds hypre currently doesn't handle flags correctly
-            env.append_flags("CXXFLAGS", "-O2" if "~debug" in spec else "-g")
+            env.append_flags("CXXFLAGS", "-O2" if spec.satisfies("~debug") else "-g")
 
         if spec.satisfies("+rocm"):
             # As of 2022/04/05, the following are set by 'llvm-amdgpu' and
@@ -374,8 +374,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             make("install")
             if spec.satisfies("+gptune"):
                 make("test")
-                self.run_test("mkdir", options=["-p", self.prefix.bin])
-                self.run_test("cp", options=["test/ij", self.prefix.bin + "/."])
+                mkdirp(self.prefix.bin)
+                install(join_path("test", "ij"), self.prefix.bin)
 
     extra_install_tests = join_path("src", "examples")
 
@@ -426,6 +426,6 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
         """Export the hypre library.
         Sample usage: spec['hypre'].libs.ld_flags
         """
-        is_shared = "+shared" in self.spec
+        is_shared = self.spec.satisfies("+shared")
         libs = find_libraries("libHYPRE", root=self.prefix, shared=is_shared, recursive=True)
         return libs or None

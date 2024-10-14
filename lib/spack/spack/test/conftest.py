@@ -35,25 +35,24 @@ from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, 
 import spack.binary_distribution
 import spack.bootstrap.core
 import spack.caches
-import spack.cmd.buildcache
 import spack.compiler
 import spack.compilers
 import spack.config
-import spack.database
-import spack.directory_layout
+import spack.directives
 import spack.environment as ev
 import spack.error
+import spack.modules.common
 import spack.package_base
-import spack.package_prefs
 import spack.paths
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.spec
 import spack.stage
 import spack.store
 import spack.subprocess_context
-import spack.test.cray_manifest
 import spack.util.executable
+import spack.util.file_cache
 import spack.util.git
 import spack.util.gpg
 import spack.util.parallel
@@ -62,6 +61,7 @@ import spack.util.url as url_util
 import spack.util.web
 import spack.version
 from spack.fetch_strategy import URLFetchStrategy
+from spack.installer import PackageInstaller
 from spack.util.pattern import Bunch
 
 
@@ -853,7 +853,7 @@ def _populate(mock_db):
 
     def _install(spec):
         s = spack.spec.Spec(spec).concretized()
-        s.package.do_install(fake=True, explicit=True)
+        PackageInstaller([s.package], fake=True, explicit=True).install()
 
     _install("mpileaks ^mpich")
     _install("mpileaks ^mpich2")
@@ -1003,7 +1003,7 @@ def temporary_store(tmpdir, request):
 def mock_fetch(mock_archive, monkeypatch):
     """Fake the URL for a package so it downloads from a file."""
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "fetcher", URLFetchStrategy(mock_archive.url)
+        spack.package_base.PackageBase, "fetcher", URLFetchStrategy(url=mock_archive.url)
     )
 
 
@@ -1418,6 +1418,24 @@ def mock_git_repository(git, tmpdir_factory):
         r1 = rev_hash(branch)
         r1_file = branch_file
 
+        multiple_directories_branch = "many_dirs"
+        num_dirs = 3
+        num_files = 2
+        dir_files = []
+        for i in range(num_dirs):
+            for j in range(num_files):
+                dir_files.append(f"dir{i}/file{j}")
+
+        git("checkout", "-b", multiple_directories_branch)
+        for f in dir_files:
+            repodir.ensure(f, file=True)
+            git("add", f)
+
+        git("-c", "commit.gpgsign=false", "commit", "-m", "many_dirs add files")
+
+        # restore default
+        git("checkout", default_branch)
+
     # Map of version -> bunch. Each bunch includes; all the args
     # that must be specified as part of a version() declaration (used to
     # manufacture a version for the 'git-test' package); the associated
@@ -1436,6 +1454,11 @@ def mock_git_repository(git, tmpdir_factory):
         # would most-commonly assemble a Git fetcher
         "default-no-per-version-git": Bunch(
             revision=default_branch, file=r0_file, args={"branch": default_branch}
+        ),
+        "many-directories": Bunch(
+            revision=multiple_directories_branch,
+            file=dir_files[0],
+            args={"git": url, "branch": multiple_directories_branch},
         ),
     }
 
@@ -1958,12 +1981,14 @@ def pytest_runtest_setup(item):
         pytest.skip(*not_on_windows_marker.args)
 
 
+def _sequential_executor(*args, **kwargs):
+    return spack.util.parallel.SequentialExecutor()
+
+
 @pytest.fixture(autouse=True)
 def disable_parallel_buildcache_push(monkeypatch):
     """Disable process pools in tests."""
-    monkeypatch.setattr(
-        spack.util.parallel, "make_concurrent_executor", spack.util.parallel.SequentialExecutor
-    )
+    monkeypatch.setattr(spack.util.parallel, "make_concurrent_executor", _sequential_executor)
 
 
 def _root_path(x, y, *, path):

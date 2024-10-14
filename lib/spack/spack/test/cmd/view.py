@@ -8,6 +8,7 @@ import os.path
 import pytest
 
 import spack.util.spack_yaml as s_yaml
+from spack.installer import PackageInstaller
 from spack.main import SpackCommand
 from spack.spec import Spec
 
@@ -180,7 +181,7 @@ def test_view_files_not_ignored(
 ):
     spec = Spec("view-not-ignored").concretized()
     pkg = spec.package
-    pkg.do_install()
+    PackageInstaller([pkg], explicit=True).install()
     pkg.assert_installed(spec.prefix)
 
     install("view-file")  # Arbitrary package to add noise

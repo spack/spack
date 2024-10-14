@@ -16,7 +16,7 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     project (but usable outside of the Gnome platform), it is free
     software available under the MIT License."""
 
-    homepage = "http://xmlsoft.org"
+    homepage = "https://gitlab.gnome.org/GNOME/libxml2/-/wikis"
     url = "https://download.gnome.org/sources/libxml2/2.9/libxml2-2.9.13.tar.xz"
     list_url = "https://gitlab.gnome.org/GNOME/libxml2/-/releases"
 

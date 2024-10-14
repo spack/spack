@@ -15,7 +15,7 @@ class Pocl(CMakePackage):
     and devices, both for homogeneous CPU and heterogeneous
     GPUs/accelerators."""
 
-    homepage = "http://portablecl.org"
+    homepage = "https://portablecl.org"
     url = "https://github.com/pocl/pocl/archive/v1.1.tar.gz"
     git = "https://github.com/pocl/pocl.git"
 
@@ -47,7 +47,7 @@ class Pocl(CMakePackage):
     depends_on("cmake @2.8.12:", type="build")
     depends_on("hwloc")
     depends_on("hwloc@:1", when="@:1.1")
-    depends_on("libtool", type=("build", "link", "run"))
+    depends_on("libtool", type="link", when="@:1.3")  # links against libltdl
     depends_on("pkgconfig", type="build")
 
     depends_on("llvm +clang")
@@ -80,7 +80,7 @@ class Pocl(CMakePackage):
         if version >= Version("1.0"):
             url = "https://github.com/pocl/pocl/archive/v{0}.tar.gz"
         else:
-            url = "http://portablecl.org/downloads/pocl-{0}.tar.gz"
+            url = "https://portablecl.org/downloads/pocl-{0}.tar.gz"
 
         return url.format(version.up_to(2))
 

@@ -9,7 +9,7 @@ from spack.package import *
 class Lesstif(AutotoolsPackage):
     """LessTif is the Hungry Programmers' version of OSF/Motif."""
 
-    homepage = "https://sourceforge.net/projects/lesstif"
+    homepage = "https://sourceforge.net/projects/lesstif/"
     url = "https://sourceforge.net/projects/lesstif/files/lesstif/0.95.2/lesstif-0.95.2.tar.bz2/download"
 
     license("LGPL-2.0-only")

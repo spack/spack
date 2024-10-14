@@ -158,7 +158,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             return
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(["examples"])
+        cache_extra_test_sources(self, ["examples"])
 
     def mpi_launcher(self):
         searchpath = [self.spec["mpi"].prefix.bin]

@@ -11,7 +11,9 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.config
 import spack.environment as ev
+import spack.solver.asp
 import spack.spec
 from spack.environment.environment import (
     EnvironmentManifestFile,
@@ -860,3 +862,33 @@ def test_env_view_on_non_empty_dir_errors(tmp_path, config, mock_packages, tempo
     env.install_all(fake=True)
     with pytest.raises(ev.SpackEnvironmentError, match="because it is a non-empty dir"):
         env.regenerate_views()
+
+
+@pytest.mark.parametrize(
+    "matrix_line", [("^zmpi", "^mpich"), ("~shared", "+shared"), ("shared=False", "+shared-libs")]
+)
+@pytest.mark.regression("40791")
+def test_stack_enforcement_is_strict(tmp_path, matrix_line, config, mock_packages):
+    """Ensure that constraints in matrices are applied strictly after expansion, to avoid
+    inconsistencies between abstract user specs and concrete specs.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        f"""\
+spack:
+  definitions:
+    - packages: [libelf, mpileaks]
+    - install:
+        - matrix:
+            - [$packages]
+            - [{", ".join(item for item in matrix_line)}]
+  specs:
+    - $install
+  concretizer:
+    unify: false
+"""
+    )
+    # Here we raise different exceptions depending on whether we solve serially or not
+    with pytest.raises(Exception):
+        with ev.Environment(tmp_path) as e:
+            e.concretize()

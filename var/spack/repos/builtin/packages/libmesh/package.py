@@ -261,6 +261,8 @@ class Libmesh(AutotoolsPackage):
             if "+petsc" in self.spec:
                 options.append("--with-metis=PETSc")
                 options.append("--with-parmetis=PETSc")
+        else:
+            options.append("--disable-metis")
 
         if "+petsc" in self.spec or "+slepc" in self.spec:
             options.append("--enable-petsc=yes")
