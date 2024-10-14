@@ -811,8 +811,8 @@ deprecated-ci-build:
       - /bin/bash "${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/scripts/pcluster/setup-pcluster.sh"
       - rm "etc/spack/config.yaml"
   variables:
-    KUBERNETES_MEMORY_LIMIT: 1.5G
-    KUBERNETES_MEMORY_REQUEST: 800M
+    KUBERNETES_MEMORY_LIMIT: 800M
+    KUBERNETES_MEMORY_REQUEST: 600M
 
 # X86_64_V4 (one pipeline per target)
 .aws-pcluster-x86_64_v4:
