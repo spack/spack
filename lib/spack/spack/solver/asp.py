@@ -34,6 +34,7 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
+import spack.hash_types as ht
 import spack.package_base
 import spack.package_prefs
 import spack.platforms
@@ -524,12 +525,14 @@ class Result:
                 node = SpecBuilder.make_node(pkg=providers[0])
             candidate = answer.get(node)
 
-            if candidate and candidate.build_spec.satisfies(input_spec):
-                if not candidate.satisfies(input_spec):
-                    tty.warn(
-                        "explicit splice configuration has caused the concretized spec"
-                        f" {candidate} not to satisfy the input spec {input_spec}"
-                    )
+            if candidate and candidate.satisfies(input_spec):
+                self._concrete_specs.append(answer[node])
+                self._concrete_specs_by_input[input_spec] = answer[node]
+            elif candidate and candidate.build_spec.satisfies(input_spec):
+                tty.warn(
+                    "explicit splice configuration has caused the concretized spec"
+                    f" {candidate} not to satisfy the input spec {input_spec}"
+                )
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
             else:
@@ -1168,7 +1171,7 @@ class SpackSolverSetup:
         self.libcs: List[spack.spec.Spec] = []
 
         # If true, we have to load the code for synthesizing splices
-        self.enable_splicing: bool = spack.config.CONFIG.get("concretizer:splice")
+        self.enable_splicing: bool = spack.config.CONFIG.get("concretizer:splice:automatic")
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -3866,6 +3869,7 @@ class SpecBuilder:
             resolved[node] = orig_spec
             return orig_spec
         new_spec = orig_spec.copy(deps=False)
+        new_spec.clear_cached_hashes((ht.package_hash.attr,))
         edges_by_dep_name: Dict[str, List[spack.spec.DependencySpec]]
         edges_by_dep_name = {}
         for edge in orig_spec.edges_to_dependencies():
@@ -3891,14 +3895,11 @@ class SpecBuilder:
             for e in edges:
                 if e.spec.dag_hash() == old_dep_spec.dag_hash():
                     new_dep_spec = self._resolve_splices_for_node(dep_node, resolved)
-                    build_dep = e.depflag & dt.BUILD
                     other_deps = e.depflag & ~dt.BUILD
                     if other_deps:
                         new_spec.add_dependency_edge(
                             new_dep_spec, depflag=other_deps, virtuals=e.virtuals
                         )
-                    if build_dep:
-                        new_spec.add_dependency_edge(e.spec, depflag=dt.BUILD, virtuals=e.virtuals)
                     dirty_edges.add(e)
                 else:
                     potential_clean_edges.add(e)
@@ -3908,13 +3909,10 @@ class SpecBuilder:
             for e in edges_by_dep_name[splice.child_name]:
                 if e.spec.dag_hash() == splice.child_hash:
                     potential_clean_edges.discard(e)
-                    build_dep = e.depflag & dt.BUILD
                     other_deps = e.depflag & ~dt.BUILD
                     new_spec.add_dependency_edge(
                         splice_spec, depflag=other_deps, virtuals=e.virtuals
                     )
-                    if build_dep:
-                        new_spec.add_dependency_edge(e.spec, depflag=dt.BUILD, virtuals=e.virtuals)
                 else:
                     if e not in dirty_edges:
                         potential_clean_edges.add(e)
@@ -4019,7 +4017,7 @@ class SpecBuilder:
         for s in self._specs.values():
             _develop_specs_from_env(s, ev.active_environment())
 
-        if spack.config.CONFIG.get("concretizer:splice"):
+        if spack.config.CONFIG.get("concretizer:splice:automatic"):
             resolved_splices = {}
             for node in self._specs:
                 self._resolve_splices_for_node(node, resolved_splices)
@@ -4042,7 +4040,6 @@ class SpecBuilder:
                     )
 
         specs = self.execute_explicit_splices()
-
         return specs
 
     def execute_explicit_splices(self):

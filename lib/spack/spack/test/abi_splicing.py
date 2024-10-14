@@ -201,7 +201,7 @@ def test_splice_installed_hash(abi_splice_database, abi_splice_mock_packages, mo
     goal_spec = Spec("baz@1 ^bar@1.0.2+compat ^foo@1.0.0+compat")
     with pytest.raises(Exception):
         goal_spec.concretized()
-    spack.config.set("concretizer:splice", True)
+    spack.config.set("concretizer:splice:automatic", True)
     goal_spec.concretized()
     old_baz.package.do_uninstall()
     new_bar.package.do_uninstall()
@@ -220,7 +220,7 @@ def test_splice_build_dep(abi_splice_database, abi_splice_mock_packages, monkeyp
     goal_spec = Spec("baz@1 ^bar@1.0.2+compat ^foo@1.0.0+compat")
     with pytest.raises(Exception):
         goal_spec.concretized()
-    spack.config.set("concretizer:splice", True)
+    spack.config.set("concretizer:splice:automatic", True)
     goal_spec.concretized()
     old_baz.package.do_uninstall()
     assert True
@@ -243,7 +243,7 @@ def test_mpi_splices(abi_splice_database, abi_splice_mock_packages, monkeypatch)
         openmpi_goal_spec.concretized()
     with pytest.raises(Exception):
         mpich_goal_spec.concretized()
-    spack.config.set("concretizer:splice", True)
+    spack.config.set("concretizer:splice:automatic", True)
     openmpi_goal_spec.concretized()
     mpich_goal_spec.concretized()
     mpileaks_openmpi.package.do_uninstall()
@@ -273,7 +273,7 @@ def test_double_splice(abi_splice_database, abi_splice_mock_packages, monkeypatc
     goal_spec = Spec("baz@1 ^bar@1.0.2+compat ^foo@1.0.2+compat")
     with pytest.raises(Exception):
         goal_spec.concretized()
-    spack.config.set("concretizer:splice", True)
+    spack.config.set("concretizer:splice:automatic", True)
     goal_spec.concretized()
     for s in cache:
         s.package.do_uninstall()
@@ -303,7 +303,7 @@ def test_manyvariant_star_matching_variant_splice(
     for goal in goal_specs:
         with pytest.raises(Exception):
             goal.concretized()
-    spack.config.set("concretizer:splice", True)
+    spack.config.set("concretizer:splice:automatic", True)
     for goal in goal_specs:
         goal.concretized()
 
@@ -335,7 +335,7 @@ def test_manyvariant_limited_matching(abi_splice_database, abi_splice_mock_packa
     for s in goal_specs:
         with pytest.raises(Exception):
             s.concretized()
-    spack.config.set("concretizer:splice", True)
+    spack.config.set("concretizer:splice:automatic", True)
     for s in goal_specs:
         s.concretized()
     for s in cache:
@@ -359,7 +359,7 @@ def test_external_splice_same_name(abi_splice_database, abi_splice_mock_packages
         PackageInstaller([s.package], fake=True, explicit=True).install()
     spack.config.set("packages", packages_yaml)
     goal_specs = [Spec("bar@1.0.0 ^foo@1.0.2"), Spec("baz@1.0 ^bar@1.0.1 ^foo@1.0.2")]
-    spack.config.set("concretizer:splice", True)
+    spack.config.set("concretizer:splice:automatic", True)
     for s in goal_specs:
         s.concretized()
 
@@ -379,6 +379,6 @@ def test_external_splice_mpi(abi_splice_database, abi_splice_mock_packages, monk
         PackageInstaller([s.package], fake=True, explicit=True).install()
     spack.config.set("packages", packages_yaml)
     goal_specs = [Spec("bar@1.0.0 ^foo@1.0.2"), Spec("baz@1.0 ^bar@1.0.1 ^foo@1.0.2")]
-    spack.config.set("concretizer:splice", True)
+    spack.config.set("concretizer:splice:automatic", True)
     for s in goal_specs:
         s.concretized()

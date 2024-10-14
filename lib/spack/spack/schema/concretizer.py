@@ -73,10 +73,7 @@ properties: Dict[str, Any] = {
                             },
                         },
                     },
-                  "automatic": {
-                    "type": "boolean", 
-                    "default": false
-                  }
+                    "automatic": {"type": "boolean"},
                 },
             },
             "duplicates": {

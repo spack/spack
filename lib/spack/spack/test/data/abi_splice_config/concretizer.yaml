@@ -5,3 +5,6 @@ concretizer:
     host_compatible: false
   duplicates:
     strategy: minimal
+  splice:
+    explicit: []
+    automatic: False

@@ -56,4 +56,6 @@ concretizer:
   # Option to specify whether to support splicing. Splicing allows for
   # the relinking of concrete package dependencies in order to better
   # reuse already built packages with ABI compatible dependencies
-  splice: false
+  splice:
+    explicit: []
+    automatic: false
