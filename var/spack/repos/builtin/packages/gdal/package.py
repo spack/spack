@@ -641,7 +641,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
         if not variant:
             variant = name
 
-        if variant not in self.pkg.variants:
+        if not self.pkg.has_variant(variant):
             msg = '"{}" is not a variant of "{}"'
             raise KeyError(msg.format(variant, self.name))
 
