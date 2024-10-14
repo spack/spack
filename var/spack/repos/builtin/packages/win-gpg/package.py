@@ -5,6 +5,7 @@
 import os
 import re
 import shutil
+import sys
 
 from spack.package import *
 
@@ -23,6 +24,9 @@ class WinGpg(Package):
     executables = ["^gpg$"]
 
     version("2.4.5", sha256="249ab87bd06abea3140054089bad44d9a5d1531413590576da609142db2673ec")
+
+    if sys.platform == "win32":
+        provides("gpg")
 
     @classmethod
     def determine_version(cls, exe):
