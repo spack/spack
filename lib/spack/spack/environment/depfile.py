@@ -9,15 +9,15 @@ depfiles from an environment.
 
 import os
 import re
-from enum import Enum
 import shlex
+from enum import Enum
 from typing import List, Optional
 
 import spack.deptypes as dt
 import spack.environment.environment as ev
+import spack.paths
 import spack.spec
 import spack.traverse as traverse
-import spack.paths
 
 
 class UseBuildCache(Enum):
