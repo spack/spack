@@ -170,6 +170,14 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3259
     patch("mr3259-thrust-is_arithmetic-fix.patch", when="@2.0.0:2.2.0 +cuda ^cuda@12.6:")
 
+    # VTK-m PR#3271
+    # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3271
+    patch("mr3271-contourtree-print-error.patch", when="@2.0:2.2")
+
+    # VTK-m PR#3272
+    # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3272
+    patch("mr3272-bad-mir-table-method.patch", when="@2.0:2.2")
+
     # Disable Thrust patch that is no longer needed in modern Thrust
     patch(
         "https://github.com/Kitware/VTK-m/commit/4a4466e7c8cd44d2be2bd3fe6f359faa8e9547aa.patch?full_index=1",
