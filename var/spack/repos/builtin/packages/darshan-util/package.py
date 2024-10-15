@@ -82,7 +82,6 @@ class DarshanUtil(AutotoolsPackage):
         spec = self.spec
         extra_args = []
 
-        extra_args.append("CC=%s" % self.compiler.cc)
         extra_args.append("--with-zlib=%s" % spec["zlib-api"].prefix)
         if spec.satisfies("+apmpi"):
             if self.version < Version("3.3.2"):

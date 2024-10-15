@@ -66,6 +66,21 @@ def file_identifier(path):
     return s.st_dev, s.st_ino
 
 
+def dedupe_paths(paths: List[str]) -> List[str]:
+    """Deduplicate paths based on inode and device number. In case the list contains first a
+    symlink and then the directory it points to, the symlink is replaced with the directory path.
+    This ensures that we pick for example ``/usr/bin`` over ``/bin`` if the latter is a symlink to
+    the former`."""
+    seen: Dict[Tuple[int, int], str] = {}
+    for path in paths:
+        identifier = file_identifier(path)
+        if identifier not in seen:
+            seen[identifier] = path
+        elif not os.path.islink(path):
+            seen[identifier] = path
+    return list(seen.values())
+
+
 def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
     """Get the paths of all executables available from the current PATH.
 
@@ -82,8 +97,7 @@ def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
     """
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
     # Make use we don't doubly list /usr/lib and /lib etc
-    search_paths = list(llnl.util.lang.dedupe(search_paths, key=file_identifier))
-    return path_to_dict(search_paths)
+    return path_to_dict(dedupe_paths(search_paths))
 
 
 def accept_elf(path, host_compat):
@@ -144,7 +158,7 @@ def libraries_in_ld_and_system_library_path(
         search_paths = list(filter(os.path.isdir, search_paths))
 
     # Make use we don't doubly list /usr/lib and /lib etc
-    search_paths = list(llnl.util.lang.dedupe(search_paths, key=file_identifier))
+    search_paths = dedupe_paths(search_paths)
 
     try:
         host_compat = elf_utils.get_elf_compat(sys.executable)
