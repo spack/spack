@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import spack.build_systems
-import spack.build_systems.cmake
 import spack.build_systems.autotools
+import spack.build_systems.cmake
 from spack.package import *
 
 
