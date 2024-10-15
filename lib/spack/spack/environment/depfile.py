@@ -10,6 +10,7 @@ depfiles from an environment.
 import os
 import re
 from enum import Enum
+import shlex
 from typing import List, Optional
 
 import spack.deptypes as dt
@@ -130,7 +131,6 @@ class MakefileModel:
         adjacency_list: List[DepfileNode],
         make_prefix: Optional[str],
         jobserver: bool,
-        absolute_paths: bool,
     ):
         """
         Args:
@@ -140,7 +140,6 @@ class MakefileModel:
             make_prefix: prefix for makefile targets
             jobserver: when enabled, make will invoke Spack with jobserver support. For
                 dry-run this should be disabled.
-            absolute_paths: when enabled, uses an absolute path for `spack` in the Makefile
         """
         # Currently we can only use depfile with an environment since Spack needs to
         # find the concrete specs somewhere.
@@ -179,8 +178,6 @@ class MakefileModel:
         self.root_install_targets = [self._install_target(s.safe_name()) for s in self.roots]
 
         self.jobserver_support = "+" if jobserver else ""
-
-        self.spack_script = spack.paths.spack_script if absolute_paths else "spack"
 
         # All package identifiers, used to generate the SPACK_PACKAGE_IDS variable
         self.all_pkg_identifiers: List[str] = []
@@ -231,7 +228,7 @@ class MakefileModel:
             "install_deps_target": self._target("install-deps"),
             "any_hash_target": self._target("%"),
             "jobserver_support": self.jobserver_support,
-            "spack_script": self.spack_script,
+            "spack_script": shlex.quote(spack.paths.spack_script),
             "adjacency_list": self.make_adjacency_list,
             "phony_convenience_targets": " ".join(self.phony_convenience_targets),
             "pkg_ids_variable": self.pkg_identifier_variable,
@@ -251,7 +248,6 @@ class MakefileModel:
         dep_buildcache: UseBuildCache = UseBuildCache.AUTO,
         make_prefix: Optional[str] = None,
         jobserver: bool = True,
-        absolute_path: bool = True,
     ) -> "MakefileModel":
         """Produces a MakefileModel from an environment and a list of specs.
 
@@ -264,7 +260,6 @@ class MakefileModel:
             make_prefix: the prefix for the makefile targets
             jobserver: when enabled, make will invoke Spack with jobserver support. For
                 dry-run this should be disabled.
-            absolute_path: when enabled, uses an absolute path for `spack` in the Makefile
         """
         roots = env.all_matching_specs(*filter_specs) if filter_specs else env.concrete_roots()
         visitor = DepfileSpecVisitor(pkg_buildcache, dep_buildcache)
@@ -272,6 +267,4 @@ class MakefileModel:
             roots, traverse.CoverNodesVisitor(visitor, key=lambda s: s.dag_hash())
         )
 
-        return MakefileModel(
-            env, roots, visitor.adjacency_list, make_prefix, jobserver, absolute_path
-        )
+        return MakefileModel(env, roots, visitor.adjacency_list, make_prefix, jobserver)
