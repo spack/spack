@@ -108,6 +108,7 @@ ci:
       tags: ["service"]
       image: busybox:latest
       variables:
+        CI_OIDC_REQUIRED: 0
         GIT_STRATEGY: "none"
         CI_JOB_SIZE: "small"
         KUBERNETES_CPU_REQUEST: "500m"
