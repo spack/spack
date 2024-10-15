@@ -169,7 +169,8 @@ jobs:
           COVERAGE_FILE: coverage/.coverage-clingo-cffi
       run: |
         . share/spack/setup-env.sh
-        $(which spack) bootstrap disable
+        $(which spack) bootstrap disable spack-install
+        $(which spack) bootstrap disable github-actions-v0.4
         $(which spack) bootstrap status
         $(which spack) solve zlib
         common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
