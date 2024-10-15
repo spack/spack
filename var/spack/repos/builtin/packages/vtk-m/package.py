@@ -85,6 +85,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
         description="build openmp support",
     )
     variant("tbb", default=(sys.platform == "darwin"), description="build TBB support")
+    variant("sycl", default=False, description="Build with SYCL backend")
 
     depends_on("cmake@3.12:", type="build")  # CMake >= 3.12
     depends_on("cmake@3.18:", when="+rocm", type="build")  # CMake >= 3.18
@@ -131,6 +132,13 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+cuda")
     conflicts("+rocm", when="~kokkos", msg="VTK-m does not support HIP without Kokkos")
     conflicts("+rocm", when="+virtuals", msg="VTK-m does not support virtual functions with ROCm")
+
+    # VTK-m uses the Kokkos SYCL backend.
+    # If Kokkos provides multiple backends, the SYCL backend may or
+    # may not be used for VTK-m depending on the default selected by Kokkos
+    depends_on("kokkos +sycl", when="+kokkos +sycl")
+
+    conflicts("+sycl", when="~kokkos", msg="VTK-m does not support SYCL without Kokkos")
 
     # Can build +shared+cuda after @1.7:
     conflicts("+shared", when="@:1.6 +cuda_native")
