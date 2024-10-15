@@ -44,7 +44,7 @@ import types
 from collections import defaultdict
 from enum import Flag, auto
 from itertools import chain
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import archspec.cpu
 
@@ -91,7 +91,7 @@ from spack.util.environment import (
 )
 from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
-from spack.util.module_cmd import load_module, path_from_modules
+from spack.util.module_cmd import load_module
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -792,21 +792,6 @@ def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]
     return _get_rpath_deps_from_spec(pkg.spec, pkg.transitive_rpaths)
 
 
-def get_rpaths(pkg):
-    """Get a list of all the rpaths for a package."""
-    rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
-    deps = get_rpath_deps(pkg)
-    rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
-    rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
-    # Second module is our compiler mod name. We use that to get rpaths from
-    # module show output.
-    if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
-        mod_rpath = path_from_modules([pkg.compiler.modules[1]])
-        if mod_rpath:
-            rpaths.append(mod_rpath)
-    return list(dedupe(filter_system_paths(rpaths)))
-
-
 def load_external_modules(pkg):
     """Traverse a package's spec DAG and load any external modules.
 
@@ -1141,35 +1126,52 @@ class SetupContext:
                 env.prepend_path("PATH", bin_dir)
 
 
-def get_cmake_prefix_path(pkg):
-    # Note that unlike modifications_from_dependencies, this does not include
-    # any edits to CMAKE_PREFIX_PATH defined in custom
-    # setup_dependent_build_environment implementations of dependency packages
-    build_deps = set(pkg.spec.dependencies(deptype=("build", "test")))
-    link_deps = set(pkg.spec.traverse(root=False, deptype=("link")))
-    build_link_deps = build_deps | link_deps
-    spack_built = []
-    externals = []
-    # modifications_from_dependencies updates CMAKE_PREFIX_PATH by first
-    # prepending all externals and then all non-externals
-    for dspec in pkg.spec.traverse(root=False, order="post"):
-        if dspec in build_link_deps:
-            if dspec.external:
-                externals.insert(0, dspec)
-            else:
-                spack_built.insert(0, dspec)
-
-    ordered_build_link_deps = spack_built + externals
-    cmake_prefix_path_entries = []
-    for spec in ordered_build_link_deps:
-        cmake_prefix_path_entries.extend(spec.package.cmake_prefix_paths)
-
-    return filter_system_paths(cmake_prefix_path_entries)
-
-
 def _setup_pkg_and_run(
-    serialized_pkg, function, kwargs, write_pipe, input_multiprocess_fd, jsfd1, jsfd2
+    serialized_pkg: "spack.subprocess_context.PackageInstallContext",
+    function: Callable,
+    kwargs: Dict,
+    write_pipe: multiprocessing.connection.Connection,
+    input_multiprocess_fd: Optional[MultiProcessFd],
+    jsfd1: Optional[MultiProcessFd],
+    jsfd2: Optional[MultiProcessFd],
 ):
+    """Main entry point in the child process for Spack builds.
+
+    ``_setup_pkg_and_run`` is called by the child process created in
+    ``start_build_process()``, and its main job is to run ``function()`` on behalf of
+    some Spack installation (see :ref:`spack.installer.PackageInstaller._install_task`).
+
+    The child process is passed a ``write_pipe``, on which it's expected to send one of
+    the following:
+
+    * ``StopPhase``: error raised by a build process indicating it's stopping at a
+      particular build phase.
+
+    * ``BaseException``: any exception raised by a child build process, which will be
+      wrapped in ``ChildError`` (which adds a bunch of debug info and log context) and
+      raised in the parent.
+
+    * The return value of ``function()``, which can be anything (except an exception).
+      This is returned to the caller.
+
+    Note: ``jsfd1`` and ``jsfd2`` are passed solely to ensure that the child process
+    does not close these file descriptors. Some ``multiprocessing`` backends will close
+    them automatically in the child if they are not passed at process creation time.
+
+    Arguments:
+        serialized_pkg: Spack package install context object (serialized form of the
+            package that we'll build in the child process).
+        function: function to call in the child process; serialized_pkg is passed to
+            this as the first argument.
+        kwargs: additional keyword arguments to pass to ``function()``.
+        write_pipe: multiprocessing ``Connection`` to the parent process, to which the
+            child *must* send a result (or an error) back to parent on.
+        input_multiprocess_fd: stdin from the parent (not passed currently on Windows)
+        jsfd1: gmake Jobserver file descriptor 1.
+        jsfd2: gmake Jobserver file descriptor 2.
+
+    """
+
     context: str = kwargs.get("context", "build")
 
     try:
@@ -1195,13 +1197,14 @@ def _setup_pkg_and_run(
         # Do not create a full ChildError from this, it's not an error
         # it's a control statement.
         write_pipe.send(e)
-    except BaseException:
+    except BaseException as e:
         # catch ANYTHING that goes wrong in the child process
-        exc_type, exc, tb = sys.exc_info()
 
         # Need to unwind the traceback in the child because traceback
         # objects can't be sent to the parent.
-        tb_string = traceback.format_exc()
+        exc_type = type(e)
+        tb = e.__traceback__
+        tb_string = traceback.format_exception(exc_type, e, tb)
 
         # build up some context from the offending package so we can
         # show that, too.
@@ -1218,8 +1221,8 @@ def _setup_pkg_and_run(
         elif context == "test":
             logfile = os.path.join(pkg.test_suite.stage, pkg.test_suite.test_log_name(pkg.spec))
 
-        error_msg = str(exc)
-        if isinstance(exc, (spack.multimethod.NoSuchMethodError, AttributeError)):
+        error_msg = str(e)
+        if isinstance(e, (spack.multimethod.NoSuchMethodError, AttributeError)):
             process = "test the installation" if context == "test" else "build from sources"
             error_msg = (
                 "The '{}' package cannot find an attribute while trying to {}. "
@@ -1229,7 +1232,7 @@ def _setup_pkg_and_run(
                 "More information at https://spack.readthedocs.io/en/latest/packaging_guide.html#installation-procedure"
             ).format(pkg.name, process, context)
             error_msg = colorize("@*R{{{}}}".format(error_msg))
-            error_msg = "{}\n\n{}".format(str(exc), error_msg)
+            error_msg = "{}\n\n{}".format(str(e), error_msg)
 
         # make a pickleable exception to send to parent.
         msg = "%s: %s" % (exc_type.__name__, error_msg)

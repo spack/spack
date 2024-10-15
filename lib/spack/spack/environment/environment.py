@@ -1159,6 +1159,8 @@ class Environment:
             # things that cannot be recreated from file
             self.new_specs = []  # write packages for these on write()
 
+        self.manifest.clear()
+
     @property
     def active(self):
         """True if this environment is currently active."""
@@ -2163,6 +2165,13 @@ class Environment:
             # Assumes no legacy formats, since this was just created.
             spec_dict[ht.dag_hash.name] = s.dag_hash()
             concrete_specs[s.dag_hash()] = spec_dict
+
+            if s.build_spec is not s:
+                for d in s.build_spec.traverse():
+                    build_spec_dict = d.node_dict_with_hashes(hash=ht.dag_hash)
+                    build_spec_dict[ht.dag_hash.name] = d.dag_hash()
+                    concrete_specs[d.dag_hash()] = build_spec_dict
+
         return concrete_specs
 
     def _concrete_roots_dict(self):
@@ -2322,13 +2331,17 @@ class Environment:
             specs_by_hash[lockfile_key] = spec
 
         # Second pass: For each spec, get its dependencies from the node dict
-        # and add them to the spec
+        # and add them to the spec, including build specs
         for lockfile_key, node_dict in json_specs_by_hash.items():
             name, data = reader.name_and_data(node_dict)
             for _, dep_hash, deptypes, _, virtuals in reader.dependencies_from_node_dict(data):
                 specs_by_hash[lockfile_key]._add_dependency(
                     specs_by_hash[dep_hash], depflag=dt.canonicalize(deptypes), virtuals=virtuals
                 )
+
+            if "build_spec" in node_dict:
+                _, bhash, _ = reader.extract_build_spec_info_from_node_dict(node_dict)
+                specs_by_hash[lockfile_key]._build_spec = specs_by_hash[bhash]
 
         # Traverse the root specs one at a time in the order they appear.
         # The first time we see each DAG hash, that's the one we want to
@@ -2787,6 +2800,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         except ValueError as e:
             msg = f"cannot remove {user_spec} from {self}, no such spec exists"
             raise SpackEnvironmentError(msg) from e
+        self.changed = True
+
+    def clear(self) -> None:
+        """Clear all user specs from the list of root specs"""
+        self.configuration["specs"] = []
         self.changed = True
 
     def override_user_spec(self, user_spec: str, idx: int) -> None:

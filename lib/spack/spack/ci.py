@@ -1272,7 +1272,9 @@ def generate_gitlab_ci_yaml(
     else:
         # No jobs were generated
         noop_job = spack_ci_ir["jobs"]["noop"]["attributes"]
-        noop_job["retry"] = service_job_retries
+        # If this job fails ignore the status and carry on
+        noop_job["retry"] = 0
+        noop_job["allow_failure"] = True
 
         if copy_only_pipeline and config_deprecated:
             tty.debug("Generating no-op job as copy-only is unsupported here.")

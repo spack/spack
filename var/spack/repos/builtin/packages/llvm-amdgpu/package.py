@@ -110,6 +110,14 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         when="@6.0:",
     )
 
+    # Fix for https://github.com/llvm/llvm-project/issues/78530
+    # Patch from https://github.com/llvm/llvm-project/pull/80071
+    patch(
+        "https://github.com/ROCm/llvm-project/commit/c651b2b0d9d1393fb5191ac3acfe96e5ecc94bbc.patch?full_index=1",
+        sha256="eaf700a5b51d53324a93e5c951bc08b6311ce2053c44c1edfff5119f472d8080",
+        when="@:6.2",
+    )
+
     conflicts("^cmake@3.19.0")
 
     # https://github.com/spack/spack/issues/45746
@@ -221,7 +229,7 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         ]
 
         # Enable rocm-device-libs as a external project
-        if "+rocm-device-libs" in self.spec:
+        if self.spec.satisfies("+rocm-device-libs"):
             if self.spec.satisfies("@:6.0"):
                 dir = os.path.join(self.stage.source_path, "rocm-device-libs")
             elif self.spec.satisfies("@6.1:"):
@@ -234,10 +242,10 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
                 ]
             )
 
-        if "+llvm_dylib" in self.spec:
+        if self.spec.satisfies("+llvm_dylib"):
             args.append(self.define("LLVM_BUILD_LLVM_DYLIB", True))
 
-        if "+link_llvm_dylib" in self.spec:
+        if self.spec.satisfies("+link_llvm_dylib"):
             args.append(self.define("LLVM_LINK_LLVM_DYLIB", True))
             args.append(self.define("CLANG_LINK_CLANG_DYLIB", True))
 

@@ -101,9 +101,10 @@ setsep() {
     esac
 }
 
-# prepend LISTNAME ELEMENT
+# prepend LISTNAME ELEMENT [SEP]
 #
-# Prepend ELEMENT to the list stored in the variable LISTNAME.
+# Prepend ELEMENT to the list stored in the variable LISTNAME,
+# assuming the list is separated by SEP.
 # Handles empty lists and single-element lists.
 prepend() {
     varname="$1"
@@ -118,39 +119,18 @@ prepend() {
     fi
 }
 
-# contains LISTNAME ELEMENT
+# append LISTNAME ELEMENT [SEP]
 #
-# Test whether LISTNAME contains ELEMENT.
-# Set $? to 1 if LISTNAME does not contain ELEMENT.
-# Set $? to 0 if LISTNAME does not contain ELEMENT.
-contains() {
-    varname="$1"
-    elt="$2"
-
-    setsep "$varname"
-
-    # the list may: 1) only contain the element, 2) start with the element,
-    # 3) contain the element in the middle, or 4) end wtih the element.
-    eval "[ \"\${$varname}\" = \"$elt\" ]" \
-        || eval "[ \"\${$varname#${elt}${sep}}\" != \"\${$varname}\" ]" \
-        || eval "[ \"\${$varname#*${sep}${elt}${sep}}\" != \"\${$varname}\" ]" \
-        || eval "[ \"\${$varname%${sep}${elt}}\" != \"\${$varname}\" ]"
-}
-
-# append LISTNAME ELEMENT [unique]
-#
-# Append ELEMENT to the list stored in the variable LISTNAME.
+# Append ELEMENT to the list stored in the variable LISTNAME,
+# assuming the list is separated by SEP.
 # Handles empty lists and single-element lists.
-#
-# If the third argument is provided and if it is the string 'unique',
-# this will not append if ELEMENT is already in the list LISTNAME.
 append() {
     varname="$1"
     elt="$2"
 
     if empty "$varname"; then
         eval "$varname=\"\${elt}\""
-    elif [ "$3" != "unique" ] || ! contains "$varname" "$elt" ; then
+    else
         # Get the appropriate separator for the list we're appending to.
         setsep "$varname"
         eval "$varname=\"\${$varname}${sep}\${elt}\""
@@ -168,19 +148,8 @@ extend() {
     if [ "$sep" != " " ]; then
         IFS="$sep"
     fi
-    eval "for elt in \${$2}; do append $1 \"$3\${elt}\" ${_append_args}; done"
+    eval "for elt in \${$2}; do append $1 \"$3\${elt}\"; done"
     unset IFS
-}
-
-# extend_unique LISTNAME1 LISTNAME2 [PREFIX]
-#
-# Append the elements stored in the variable LISTNAME2 to the list
-# stored in LISTNAME1, if they are not already present.
-# If PREFIX is provided, prepend it to each element.
-extend_unique() {
-    _append_args="unique"
-    extend "$@"
-    unset _append_args
 }
 
 # preextend LISTNAME1 LISTNAME2 [PREFIX]
@@ -268,36 +237,6 @@ case \"\$1\" in
 esac
 }
 "
-
-# path_list functions. Path_lists have 3 parts: spack_store_<list>, <list> and system_<list>,
-# which are used to prioritize paths when assembling the final command line.
-
-# init_path_lists LISTNAME
-# Set <LISTNAME>, spack_store_<LISTNAME>, and system_<LISTNAME> to "".
-init_path_lists() {
-    eval "spack_store_$1=\"\""
-    eval "$1=\"\""
-    eval "system_$1=\"\""
-}
-
-# assign_path_lists LISTNAME1 LISTNAME2
-# Copy contents of LISTNAME2 into LISTNAME1, for each path_list prefix.
-assign_path_lists() {
-    eval "spack_store_$1=\"\${spack_store_$2}\""
-    eval "$1=\"\${$2}\""
-    eval "system_$1=\"\${system_$2}\""
-}
-
-# append_path_lists LISTNAME ELT
-# Append the provided ELT to the appropriate list, based on the result of path_order().
-append_path_lists() {
-    path_order "$2"
-    case $? in
-        0) eval "append spack_store_$1 \"\$2\"" ;;
-        1) eval "append $1 \"\$2\"" ;;
-        2) eval "append system_$1 \"\$2\"" ;;
-    esac
-}
 
 # Check if optional parameters are defined
 # If we aren't asking for debug flags, don't add them
@@ -531,7 +470,12 @@ input_command="$*"
 parse_Wl() {
     while [ $# -ne 0 ]; do
     if [ "$wl_expect_rpath" = yes ]; then
-        append_path_lists return_rpath_dirs_list "$1"
+        path_order "$1"
+        case $? in
+            0) append return_spack_store_rpath_dirs_list "$1" ;;
+            1) append return_rpath_dirs_list "$1" ;;
+            2) append return_system_rpath_dirs_list "$1" ;;
+        esac
         wl_expect_rpath=no
     else
         case "$1" in
@@ -540,14 +484,24 @@ parse_Wl() {
                 if [ -z "$arg" ]; then
                     shift; continue
                 fi
-                append_path_lists return_rpath_dirs_list "$arg"
+                path_order "$arg"
+                case $? in
+                    0) append return_spack_store_rpath_dirs_list "$arg" ;;
+                    1) append return_rpath_dirs_list "$arg" ;;
+                    2) append return_system_rpath_dirs_list "$arg" ;;
+                esac
                 ;;
             --rpath=*)
                 arg="${1#--rpath=}"
                 if [ -z "$arg" ]; then
                     shift; continue
                 fi
-                append_path_lists return_rpath_dirs_list "$arg"
+                path_order "$arg"
+                case $? in
+                    0) append return_spack_store_rpath_dirs_list "$arg" ;;
+                    1) append return_rpath_dirs_list "$arg" ;;
+                    2) append return_system_rpath_dirs_list "$arg" ;;
+                esac
                 ;;
             -rpath|--rpath)
                 wl_expect_rpath=yes
@@ -555,7 +509,8 @@ parse_Wl() {
             "$dtags_to_strip")
                 ;;
             -Wl)
-                # Nested -Wl,-Wl means we're in NAG compiler territory. We don't support it.
+                # Nested -Wl,-Wl means we're in NAG compiler territory, we don't support
+                # it.
                 return 1
                 ;;
             *)
@@ -574,10 +529,21 @@ categorize_arguments() {
     return_other_args_list=""
     return_isystem_was_used=""
 
-    init_path_lists return_isystem_include_dirs_list
-    init_path_lists return_include_dirs_list
-    init_path_lists return_lib_dirs_list
-    init_path_lists return_rpath_dirs_list
+    return_isystem_spack_store_include_dirs_list=""
+    return_isystem_system_include_dirs_list=""
+    return_isystem_include_dirs_list=""
+
+    return_spack_store_include_dirs_list=""
+    return_system_include_dirs_list=""
+    return_include_dirs_list=""
+
+    return_spack_store_lib_dirs_list=""
+    return_system_lib_dirs_list=""
+    return_lib_dirs_list=""
+
+    return_spack_store_rpath_dirs_list=""
+    return_system_rpath_dirs_list=""
+    return_rpath_dirs_list=""
 
     # Global state for keeping track of -Wl,-rpath -Wl,/path
     wl_expect_rpath=no
@@ -643,17 +609,32 @@ categorize_arguments() {
                 arg="${1#-isystem}"
                 return_isystem_was_used=true
                 if [ -z "$arg" ]; then shift; arg="$1"; fi
-                append_path_lists return_isystem_include_dirs_list "$arg"
+                path_order "$arg"
+                case $? in
+                    0) append return_isystem_spack_store_include_dirs_list "$arg" ;;
+                    1) append return_isystem_include_dirs_list "$arg" ;;
+                    2) append return_isystem_system_include_dirs_list "$arg" ;;
+                esac
                 ;;
             -I*)
                 arg="${1#-I}"
                 if [ -z "$arg" ]; then shift; arg="$1"; fi
-                append_path_lists return_include_dirs_list "$arg"
+                path_order "$arg"
+                case $? in
+                    0) append return_spack_store_include_dirs_list "$arg" ;;
+                    1) append return_include_dirs_list "$arg" ;;
+                    2) append return_system_include_dirs_list "$arg" ;;
+                esac
                 ;;
             -L*)
                 arg="${1#-L}"
                 if [ -z "$arg" ]; then shift; arg="$1"; fi
-                append_path_lists return_lib_dirs_list "$arg"
+                path_order "$arg"
+                case $? in
+                    0) append return_spack_store_lib_dirs_list "$arg" ;;
+                    1) append return_lib_dirs_list "$arg" ;;
+                    2) append return_system_lib_dirs_list "$arg" ;;
+                esac
                 ;;
             -l*)
                 # -loopopt=0 is generated erroneously in autoconf <= 2.69,
@@ -686,17 +667,32 @@ categorize_arguments() {
                     break
                 elif [ "$xlinker_expect_rpath" = yes ]; then
                     # Register the path of -Xlinker -rpath <other args> -Xlinker <path>
-                    append_path_lists return_rpath_dirs_list "$1"
+                    path_order "$1"
+                    case $? in
+                        0) append return_spack_store_rpath_dirs_list "$1" ;;
+                        1) append return_rpath_dirs_list "$1" ;;
+                        2) append return_system_rpath_dirs_list "$1" ;;
+                    esac
                     xlinker_expect_rpath=no
                 else
                     case "$1" in
                         -rpath=*)
                             arg="${1#-rpath=}"
-                            append_path_lists return_rpath_dirs_list "$arg"
+                            path_order "$arg"
+                            case $? in
+                                0) append return_spack_store_rpath_dirs_list "$arg" ;;
+                                1) append return_rpath_dirs_list "$arg" ;;
+                                2) append return_system_rpath_dirs_list "$arg" ;;
+                            esac
                             ;;
                         --rpath=*)
                             arg="${1#--rpath=}"
-                            append_path_lists return_rpath_dirs_list "$arg"
+                            path_order "$arg"
+                            case $? in
+                                0) append return_spack_store_rpath_dirs_list "$arg" ;;
+                                1) append return_rpath_dirs_list "$arg" ;;
+                                2) append return_system_rpath_dirs_list "$arg" ;;
+                            esac
                             ;;
                         -rpath|--rpath)
                             xlinker_expect_rpath=yes
@@ -713,32 +709,7 @@ categorize_arguments() {
             "$dtags_to_strip")
                 ;;
             *)
-                # if mode is not ld, we can just add to other args
-                if [ "$mode" != "ld" ]; then
-                    append return_other_args_list "$1"
-                    shift
-                    continue
-                fi
-
-                # if we're in linker mode, we need to parse raw RPATH args
-                case "$1" in
-                    -rpath=*)
-                        arg="${1#-rpath=}"
-                        append_path_lists return_rpath_dirs_list "$arg"
-                        ;;
-                    --rpath=*)
-                        arg="${1#--rpath=}"
-                        append_path_lists return_rpath_dirs_list "$arg"
-                        ;;
-                    -rpath|--rpath)
-                        shift
-                        [ $# -eq 0 ] && break  # ignore -rpath without value
-                        append_path_lists return_rpath_dirs_list "$1"
-                        ;;
-                    *)
-                        append return_other_args_list "$1"
-                        ;;
-                esac
+                append return_other_args_list "$1"
                 ;;
         esac
         shift
@@ -760,10 +731,21 @@ categorize_arguments() {
 
 categorize_arguments "$@"
 
-assign_path_lists isystem_include_dirs_list return_isystem_include_dirs_list
-assign_path_lists include_dirs_list return_include_dirs_list
-assign_path_lists lib_dirs_list return_lib_dirs_list
-assign_path_lists rpath_dirs_list return_rpath_dirs_list
+spack_store_include_dirs_list="$return_spack_store_include_dirs_list"
+system_include_dirs_list="$return_system_include_dirs_list"
+include_dirs_list="$return_include_dirs_list"
+
+spack_store_lib_dirs_list="$return_spack_store_lib_dirs_list"
+system_lib_dirs_list="$return_system_lib_dirs_list"
+lib_dirs_list="$return_lib_dirs_list"
+
+spack_store_rpath_dirs_list="$return_spack_store_rpath_dirs_list"
+system_rpath_dirs_list="$return_system_rpath_dirs_list"
+rpath_dirs_list="$return_rpath_dirs_list"
+
+isystem_spack_store_include_dirs_list="$return_isystem_spack_store_include_dirs_list"
+isystem_system_include_dirs_list="$return_isystem_system_include_dirs_list"
+isystem_include_dirs_list="$return_isystem_include_dirs_list"
 
 isystem_was_used="$return_isystem_was_used"
 other_args_list="$return_other_args_list"
@@ -839,10 +821,21 @@ IFS="$lsep"
     categorize_arguments $spack_flags_list
 unset IFS
 
-assign_path_lists spack_flags_isystem_include_dirs_list return_isystem_include_dirs_list
-assign_path_lists spack_flags_include_dirs_list return_include_dirs_list
-assign_path_lists spack_flags_lib_dirs_list return_lib_dirs_list
-assign_path_lists spack_flags_rpath_dirs_list return_rpath_dirs_list
+spack_flags_isystem_spack_store_include_dirs_list="$return_isystem_spack_store_include_dirs_list"
+spack_flags_isystem_system_include_dirs_list="$return_isystem_system_include_dirs_list"
+spack_flags_isystem_include_dirs_list="$return_isystem_include_dirs_list"
+
+spack_flags_spack_store_include_dirs_list="$return_spack_store_include_dirs_list"
+spack_flags_system_include_dirs_list="$return_system_include_dirs_list"
+spack_flags_include_dirs_list="$return_include_dirs_list"
+
+spack_flags_spack_store_lib_dirs_list="$return_spack_store_lib_dirs_list"
+spack_flags_system_lib_dirs_list="$return_system_lib_dirs_list"
+spack_flags_lib_dirs_list="$return_lib_dirs_list"
+
+spack_flags_spack_store_rpath_dirs_list="$return_spack_store_rpath_dirs_list"
+spack_flags_system_rpath_dirs_list="$return_system_rpath_dirs_list"
+spack_flags_rpath_dirs_list="$return_rpath_dirs_list"
 
 spack_flags_isystem_was_used="$return_isystem_was_used"
 spack_flags_other_args_list="$return_other_args_list"
@@ -901,7 +894,7 @@ esac
 case "$mode" in
     cpp|cc|as|ccld)
         if [ "$spack_flags_isystem_was_used" = "true" ] || [ "$isystem_was_used" = "true" ]; then
-            extend spack_store_isystem_include_dirs_list SPACK_STORE_INCLUDE_DIRS
+            extend isystem_spack_store_include_dirs_list SPACK_STORE_INCLUDE_DIRS
             extend isystem_include_dirs_list SPACK_INCLUDE_DIRS
         else
             extend spack_store_include_dirs_list SPACK_STORE_INCLUDE_DIRS
@@ -917,62 +910,63 @@ args_list="$flags_list"
 
 # Include search paths partitioned by (in store, non-sytem, system)
 # NOTE: adding ${lsep} to the prefix here turns every added element into two
-extend args_list spack_store_spack_flags_include_dirs_list -I
+extend args_list spack_flags_spack_store_include_dirs_list -I
 extend args_list spack_store_include_dirs_list -I
 
 extend args_list spack_flags_include_dirs_list -I
 extend args_list include_dirs_list -I
 
-extend args_list spack_store_spack_flags_isystem_include_dirs_list "-isystem${lsep}"
-extend args_list spack_store_isystem_include_dirs_list "-isystem${lsep}"
+extend args_list spack_flags_isystem_spack_store_include_dirs_list "-isystem${lsep}"
+extend args_list isystem_spack_store_include_dirs_list "-isystem${lsep}"
 
 extend args_list spack_flags_isystem_include_dirs_list "-isystem${lsep}"
 extend args_list isystem_include_dirs_list "-isystem${lsep}"
 
-extend args_list system_spack_flags_include_dirs_list -I
+extend args_list spack_flags_system_include_dirs_list -I
 extend args_list system_include_dirs_list -I
 
-extend args_list system_spack_flags_isystem_include_dirs_list "-isystem${lsep}"
-extend args_list system_isystem_include_dirs_list "-isystem${lsep}"
+extend args_list spack_flags_isystem_system_include_dirs_list "-isystem${lsep}"
+extend args_list isystem_system_include_dirs_list "-isystem${lsep}"
 
 # Library search paths partitioned by (in store, non-sytem, system)
-extend args_list spack_store_spack_flags_lib_dirs_list "-L"
+extend args_list spack_flags_spack_store_lib_dirs_list "-L"
 extend args_list spack_store_lib_dirs_list "-L"
 
 extend args_list spack_flags_lib_dirs_list "-L"
 extend args_list lib_dirs_list "-L"
 
-extend args_list system_spack_flags_lib_dirs_list "-L"
+extend args_list spack_flags_system_lib_dirs_list "-L"
 extend args_list system_lib_dirs_list "-L"
 
 # RPATHs arguments
-rpath_prefix=""
 case "$mode" in
     ccld)
         if [ -n "$dtags_to_add" ] ; then
             append args_list "$linker_arg$dtags_to_add"
         fi
-        rpath_prefix="$rpath"
+        extend args_list spack_flags_spack_store_rpath_dirs_list "$rpath"
+        extend args_list spack_store_rpath_dirs_list "$rpath"
+
+        extend args_list spack_flags_rpath_dirs_list "$rpath"
+        extend args_list rpath_dirs_list "$rpath"
+
+        extend args_list spack_flags_system_rpath_dirs_list "$rpath"
+        extend args_list system_rpath_dirs_list "$rpath"
         ;;
     ld)
         if [ -n "$dtags_to_add" ] ; then
             append args_list "$dtags_to_add"
         fi
-        rpath_prefix="-rpath${lsep}"
+        extend args_list spack_flags_spack_store_rpath_dirs_list "-rpath${lsep}"
+        extend args_list spack_store_rpath_dirs_list "-rpath${lsep}"
+
+        extend args_list spack_flags_rpath_dirs_list "-rpath${lsep}"
+        extend args_list rpath_dirs_list "-rpath${lsep}"
+
+        extend args_list spack_flags_system_rpath_dirs_list "-rpath${lsep}"
+        extend args_list system_rpath_dirs_list "-rpath${lsep}"
         ;;
 esac
-
-# if mode is ccld or ld, extend RPATH lists with the prefix determined above
-if [ -n "$rpath_prefix" ]; then
-    extend_unique args_list spack_store_spack_flags_rpath_dirs_list "$rpath_prefix"
-    extend_unique args_list spack_store_rpath_dirs_list "$rpath_prefix"
-
-    extend_unique args_list spack_flags_rpath_dirs_list "$rpath_prefix"
-    extend_unique args_list rpath_dirs_list "$rpath_prefix"
-
-    extend_unique args_list system_spack_flags_rpath_dirs_list "$rpath_prefix"
-    extend_unique args_list system_rpath_dirs_list "$rpath_prefix"
-fi
 
 # Other arguments from the input command
 extend args_list other_args_list
