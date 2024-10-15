@@ -22,8 +22,7 @@ class Curl(NMakePackage, AutotoolsPackage):
     transferring data with URL syntax"""
 
     homepage = "https://curl.se/"
-    # URL must remain http:// so Spack can bootstrap curl
-    url = "http://curl.haxx.se/download/curl-7.78.0.tar.bz2"
+    url = "https://curl.haxx.se/download/curl-7.78.0.tar.bz2"
 
     executables = ["^curl$"]
     tags = ["build-tools", "windows"]
