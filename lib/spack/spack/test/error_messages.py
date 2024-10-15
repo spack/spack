@@ -226,12 +226,78 @@ class W1(Package):
 )
 
 
+# Like the W* packages, but encodes the config requirements constraints
+# into the packages to see if that improves the error from
+# test_errmsg_requirements_cfg
+_pkgt4 = (
+    "t4",
+    """\
+class T4(Package):
+    version("2.1")
+    version("2.0")
+
+    variant("v1", default=True)
+
+    depends_on("t2")
+    depends_on("t2@:2.0", when="@:2.0")
+
+    depends_on("t3")
+    depends_on("t3~v1", when="@2.0")
+""",
+)
+
+
+_pkgt3 = (
+    "t3",
+    """\
+class T3(Package):
+    version("2.1")
+    version("2.0")
+
+    variant("v1", default=True)
+
+    requires("+v1", when="@2.1")
+
+    depends_on("t1")
+""",
+)
+
+
+_pkgt2 = (
+    "t2",
+    """\
+class T2(Package):
+    version("2.1")
+    version("2.0")
+
+    variant("v1", default=True)
+
+    requires("~v1", when="@:2.0")
+
+    depends_on("t1")
+""",
+)
+
+
+_pkgt1 = (
+    "t1",
+    """\
+class T1(Package):
+    version("2.1")
+    version("2.0")
+
+    variant("v1", default=True)
+""",
+)
+
+
 @pytest.fixture
 def _create_test_repo(tmpdir, mutable_config):
     yield create_test_repo(
         tmpdir,
         [_pkgx1, _pkgx2, _pkgx3, _pkgx4, _pkgy1, _pkgy2, _pkgy3, _pkgy4, _pkgz1, _pkgz2, _pkgz3,
-         _pkgw1, _pkgw2, _pkgw3, _pkgw4],
+         _pkgw1, _pkgw2, _pkgw3, _pkgw4,
+         _pkgt1, _pkgt2, _pkgt3, _pkgt4],
     )
 
 
@@ -273,7 +339,8 @@ def test_null_variant_for_requested_version(concretize_scope, test_repo):
 
 
 # Error message for requirement introduced in the package
-# definition seems OK
+# definition seems OK: requirements generate `condition`s, which
+# should be traceable as condition causes in error_messages.lp
 def test_errmsg_requirements(concretize_scope, test_repo):
     Spec("w4@:2.0 ^w3@2.1").concretized()
 
@@ -298,3 +365,10 @@ packages:
     Spec("w4@2.0").concretized()
 
     Spec("w4@2.0 ^w2+v1").concretized()
+
+
+# Short error message: this reencodes test_errmsg_requirements_cfg
+# in terms of package `requires`, and demonstrates that the message
+# is still lacking in detail
+def test_errmsg_requirements_2(concretize_scope, test_repo):
+    Spec("t4@:2.0 ^t2+v1").concretized()
