@@ -776,7 +776,7 @@ Scheduling work for releases
 
 We schedule work for **major releases** through `milestones
 <https://github.com/spack/spack/milestones>`_ and `GitHub Projects
-<https://github.com/spack/spack/projects>`_ and for **patch releases** we use `labels
+<https://github.com/spack/spack/projects>`_, while **patch releases** use `labels
 <https://github.com/spack/spack/labels>`_.
 
 There is only one milestone open at a time. Its name corresponds to the next major version, for
@@ -784,11 +784,11 @@ example ``v0.23``. Important issues and pull requests should be assigned to this
 core developers, so that they are not forgotten at the time of release. The milestone is closed
 when the release is made, and a new milestone is created for the next major release.
 
-Bug reports from users are GitHub issues labelled ``bug``. When a bug is reported, it is assigned a
-``triage`` label as well. Spack core developers assign one of the labels ``impact-low``,
-``impact-medium`` or ``impact-high``. This will make the issue appear in the `Triaged bugs 
-<https://github.com/orgs/spack/projects/6>`_ project board. Important issues should be assigned
-to the next milestone as well, so they appear at the top of the project board.
+Bug reports in GitHub issues are automatically labelled ``bug`` and ``triage``. Spack developers
+assign one of the labels ``impact-low``, ``impact-medium`` or ``impact-high``. This will make the
+issue appear in the `Triaged bugs <https://github.com/orgs/spack/projects/6>`_ project board.
+Important issues should be assigned to the next milestone as well, so they appear at the top of
+the project board.
 
 Spack's milestones are not firm commitments so we move work between releases frequently. If we
 need to make a release and some tasks are not yet done, we will simply move them to the next major
