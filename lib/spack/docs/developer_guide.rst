@@ -818,9 +818,10 @@ Making major releases
 Assuming all required work from the milestone is completed, the steps to make the major release
 are:
 
-#. Create a new milestone for the next major release.
+#. `Create a new milestone <https://github.com/spack/spack/milestones>`_ for the next major
+   release.
 
-#. Create a new label the next patch release.
+#. `Create a new label <https://github.com/spack/spack/labels>`_ for the next patch release.
 
 #. Move any optional tasks that are not done to the next milestone.
 
@@ -913,7 +914,8 @@ squashed), cherry-pick each associated commit individually. Never force push to 
 When all commits are cherry-picked in the ``backports/vX.Y.Z`` branch, make the patch
 release as follows:
 
-#. Create a new label ``vX.Y.{Z+1}`` for the next patch release.
+#. `Create a new label <https://github.com/spack/spack/labels>`_ ``vX.Y.{Z+1}`` for the next patch
+   release.
 
 #. Replace the label ``vX.Y.Z`` with ``vX.Y.{Z+1}`` for all PRs and issues that are not done.
 
@@ -937,11 +939,7 @@ release as follows:
    is needed to keep track in the release branch of all the commits that were
    cherry-picked.
 
-#. Make sure CI passes on the last commit of the **release branch**, including:
-
-   * Regular unit tests
-   * Build tests
-   * The E4S pipeline at `gitlab.spack.io <https://gitlab.spack.io>`_
+#. Make sure CI passes on the last commit of the **release branch**.
 
 #. In the rare case you need to include additional commits in the patch release after the backports
    PR is merged, it is best to delete the last commit ``Set version to vX.Y.Z`` from the release
