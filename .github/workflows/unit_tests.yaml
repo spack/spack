@@ -170,6 +170,7 @@ jobs:
       run: |
         . share/spack/setup-env.sh
         $(which spack) bootstrap disable
+        $(which spack) bootstrap status
         $(which spack) solve zlib
         common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
         $(which spack) unit-test --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}" lib/spack/spack/test/concretize.py
