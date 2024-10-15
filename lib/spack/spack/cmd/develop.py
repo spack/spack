@@ -127,9 +127,7 @@ def develop(parser, args):
     if not version:
         # look up the maximum version so infintiy versions are preferred for develop
         version = max(spec.package_class.versions.keys())
-        tty.msg(
-            f"Defaulting to highest version: {spec.name}@{version}"
-        )
+        tty.msg(f"Defaulting to highest version: {spec.name}@{version}")
     spec.versions = spack.version.VersionList([version])
 
     # If user does not specify --path, we choose to create a directory in the
