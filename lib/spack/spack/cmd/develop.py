@@ -121,9 +121,8 @@ def develop(parser, args):
     if not version:
         # look up the maximum version so infintiy versions are preferred for develop
         version = max(spec.package_class.versions.keys())
-        tty.warn(
-            f"{spec.name} was not given a version to develop with. "
-            f"Defaulting to the maximal version: {spec.name}@{version}"
+        tty.msg(
+            f"Defaulting to highest version: {spec.name}@{version}"
         )
     spec.versions = spack.version.VersionList([version])
 
