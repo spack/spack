@@ -34,7 +34,7 @@ class PyWebsocketClient(PythonPackage):
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/w/{0}/{0}-{1}.tar.gz"
-        if version >= Version("0.59.0"):
+        if self.spec.satisfies("@0.59.0:1.7"):
             letter = "websocket-client"
         else:
             letter = "websocket_client"
