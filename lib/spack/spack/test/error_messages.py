@@ -270,5 +270,7 @@ def test_null_variant_for_requested_version(concretize_scope, test_repo):
     Spec("z1@1.1").concretized()
 
 
+# Error message for requirement introduced in the package
+# definition seems OK
 def test_errmsg_requirements(concretize_scope, test_repo):
     Spec("w4@:2.0 ^w3@2.1").concretized()
