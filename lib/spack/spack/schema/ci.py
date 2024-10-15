@@ -93,14 +93,9 @@ dynamic_mapping_schema = {
                 "timeout": {"type": "integer", "minimum": 0},
                 "verify_ssl": {"type": "boolean", "default": False},
                 "header": {"type": "object", "additionalProperties": False},
-                "fields": {
-                    "type": "object",
-                    "properties": {
-                        "allow": {"type": "array", "items": {"type": "string"}},
-                        "require": {"type": "array", "items": {"type": "string"}},
-                        "ignore": {"type": "array", "items": {"type": "string"}},
-                    },
-                },
+                "allow": {"type": "array", "items": {"type": "string"}},
+                "require": {"type": "array", "items": {"type": "string"}},
+                "ignore": {"type": "array", "items": {"type": "string"}},
             },
         }
     },

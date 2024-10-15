@@ -607,14 +607,9 @@ class SpackCI:
                 verify_ssl = mapping.get("verify_ssl", spack.config.get("config:verify_ssl", True))
                 timeout = mapping.get("timeout", spack.config.get("config:connect_timeout", 1))
 
-                if "fields" in mapping:
-                    required = mapping["fields"].get("required", [])
-                    allowed = mapping["fields"].get("allow", [])
-                    ignored = mapping["fields"].get("ignore", [])
-                else:
-                    allowed = ["variables"]
-                    ignored = []
-                    required = []
+                required = mapping.get("require", [])
+                allowed = mapping.get("allow", [])
+                ignored = mapping.get("ignore", [])
 
                 # required keys are implicitly allowed
                 allowed = sorted(set(allowed + required))
@@ -675,9 +670,13 @@ class SpackCI:
 
                     # Verify all of the required keys are present
                     if required:
+                        missing_keys = []
                         for key in required:
                             if key not in clean_config.keys():
-                                raise KeyError
+                                missing_keys.append(key)
+
+                        if missing_keys:
+                            tty.warn(f"Response missing required keys: {missing_keys}")
 
                     if clean_config:
                         job["attributes"] = spack.config.merge_yaml(

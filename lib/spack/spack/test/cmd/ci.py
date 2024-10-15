@@ -1848,27 +1848,7 @@ spack:
         assert snd in pipeline_doc["rebuild-index"]["script"][0]
 
 
-@pytest.mark.parametrize(
-    "expected_var,response_buffer", [(None, "{}"), ("hello", '{"variables":{"MY_VAR": "hello"}}')]
-)
-def test_ci_dynamic_mapping(
-    tmpdir,
-    working_env,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    monkeypatch,
-    ci_base_environment,
-    expected_var,
-    response_buffer,
-):
-    # The test will always return an empty dictionary
-    def fake_dyn_mapping_urlopener(*args, **kwargs):
-        return BytesIO(response_buffer.encode())
-
-    monkeypatch.setattr(ci, "_dyn_mapping_urlopener", fake_dyn_mapping_urlopener)
-
-    """Make sure the correct mirror gets used as the buildcache destination"""
+def dynamic_mapping_setup(tmpdir):
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
         f.write(
@@ -1882,12 +1862,63 @@ spack:
     pipeline-gen:
     - dynamic-mapping:
         endpoint: https://fake.spack.io/mapper
+        require: ["variables"]
+        ignore: ["ignored_field"]
+        allow: ["variables", "retry"]
 """
         )
 
     spec_a = Spec("pkg-a")
     spec_a.concretize()
 
+    return ci.get_job_name(spec_a)
+
+
+def test_ci_dynamic_mapping_empty(
+    tmpdir,
+    working_env,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_packages,
+    monkeypatch,
+    ci_base_environment,
+):
+    # The test will always return an empty dictionary
+    def fake_dyn_mapping_urlopener(*args, **kwargs):
+        return BytesIO("{}".encode())
+
+    monkeypatch.setattr(ci, "_dyn_mapping_urlopener", fake_dyn_mapping_urlopener)
+
+    _ = dynamic_mapping_setup(tmpdir)
+    with tmpdir.as_cwd():
+        env_cmd("create", "test", "./spack.yaml")
+        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+
+        with ev.read("test"):
+            output = ci_cmd("generate", "--output-file", outputfile)
+            assert "Response missing required keys: ['variables']" in output
+
+
+def test_ci_dynamic_mapping_full(
+    tmpdir,
+    working_env,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_packages,
+    monkeypatch,
+    ci_base_environment,
+):
+    # The test will always return an empty dictionary
+    def fake_dyn_mapping_urlopener(*args, **kwargs):
+        return BytesIO(
+            json.dumps(
+                {"variables": {"MY_VAR": "hello"}, "ignored_field": 0, "unallowed_field": 0}
+            ).encode()
+        )
+
+    monkeypatch.setattr(ci, "_dyn_mapping_urlopener", fake_dyn_mapping_urlopener)
+
+    label = dynamic_mapping_setup(tmpdir)
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
         outputfile = str(tmpdir.join(".gitlab-ci.yml"))
@@ -1896,15 +1927,10 @@ spack:
             ci_cmd("generate", "--output-file", outputfile)
 
             with open(outputfile) as of:
-                label = ci.get_job_name(spec_a)
-
                 pipeline_doc = syaml.load(of.read())
                 assert label in pipeline_doc
                 job = pipeline_doc[label]
 
-                if expected_var:
-                    assert "MY_VAR" in job["variables"]
-                    my_var = job["variables"]["MY_VAR"]
-                    assert my_var == expected_var
-                else:
-                    assert "MY_VAR" not in job["variables"]
+                assert job.get("variables", {}).get("MY_VAR") == "hello"
+                assert "ignored_field" not in job
+                assert "unallowed_field" not in job

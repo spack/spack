@@ -634,8 +634,8 @@ and prepends a note about the modifications made by the my-dyn-mapping.spack.io 
 
 The ci.yaml configuration section takes the URL endpoint as well as a number of options to configure how responses are handled.
 
-It is possible to specify a list of allowed and ignored configuration attributes under ``attributes:allow`` and ``attributes:ignore``
-respectively. It is also possible to configure required attributes under ``attributes:required`` section.
+It is possible to specify a list of allowed and ignored configuration attributes under ``allow`` and ``ignore``
+respectively. It is also possible to configure required attributes under ``required`` section.
 
 Options to configure the client timeout and SSL verification using the ``timeout`` and ``verify_ssl`` options.
 By default, the ``timeout`` is set to the option in ``config:timeout`` and ``veryify_ssl`` is set the the option in ``config::verify_ssl``.
@@ -656,12 +656,11 @@ Here is an example configuration pointing to ``my-dyn-mapping.spack.io/allocatio
       header:
         PRIVATE_TOKEN: ${MY_PRIVATE_TOKEN}
         MY_CONFIG: "fuzz_allocation:false"
-      attributes:
-        allow:
-        - variables
-        ignore:
-        - script
-        require: []
+      allow:
+      - variables
+      ignore:
+      - script
+      require: []
 
 
 ^^^^^^^^^^^^^
