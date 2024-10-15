@@ -624,7 +624,7 @@ class TestConcretize:
         spec = Spec("multivalue-variant libs==static")
         spec.concretize()
 
-        assert spec.satisfies("lib=static")
+        assert spec.satisfies("libs=static")
         assert spec.satisfies("^pkg-a libs=static")
 
     def test_concretize_propagate_multivalue_variant(self):
