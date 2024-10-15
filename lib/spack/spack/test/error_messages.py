@@ -164,11 +164,72 @@ class Z3(Package):
 )
 
 
+# Cluster of packages that includes requirements - goal is to "chain"
+# the requirements like other constraints.
+_pkgw4 = (
+    "w4",
+    """\
+class W4(Package):
+    version("2.1")
+    version("2.0")
+
+    variant("v1", default=True)
+
+    depends_on("w2")
+    depends_on("w3")
+    depends_on("w3~v1", when="@2.0")
+""",
+)
+
+
+_pkgw3 = (
+    "w3",
+    """\
+class W3(Package):
+    version("2.1")
+    version("2.0")
+
+    variant("v1", default=True)
+
+    requires("+v1", when="@2.1")
+
+    depends_on("w1")
+""",
+)
+
+
+_pkgw2 = (
+    "w2",
+    """\
+class W2(Package):
+    version("2.1")
+    version("2.0")
+
+    variant("v1", default=True)
+
+    depends_on("w1")
+""",
+)
+
+
+_pkgw1 = (
+    "w1",
+    """\
+class W1(Package):
+    version("2.1")
+    version("2.0")
+
+    variant("v1", default=True)
+""",
+)
+
+
 @pytest.fixture
 def _create_test_repo(tmpdir, mutable_config):
     yield create_test_repo(
         tmpdir,
-        [_pkgx1, _pkgx2, _pkgx3, _pkgx4, _pkgy1, _pkgy2, _pkgy3, _pkgy4, _pkgz1, _pkgz2, _pkgz3],
+        [_pkgx1, _pkgx2, _pkgx3, _pkgx4, _pkgy1, _pkgy2, _pkgy3, _pkgy4, _pkgz1, _pkgz2, _pkgz3,
+         _pkgw1, _pkgw2, _pkgw3, _pkgw4],
     )
 
 
@@ -207,3 +268,7 @@ def test_null_variant_for_requested_version(concretize_scope, test_repo):
     #with open("/Users/scheibel1/Desktop/spack/spack/test-null-variant-for-requested-version.txt", "w") as f:
     #    f.write(output)
     Spec("z1@1.1").concretized()
+
+
+def test_errmsg_requirements(concretize_scope, test_repo):
+    Spec("w4@:2.0 ^w3@2.1").concretized()
