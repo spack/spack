@@ -237,25 +237,103 @@ def mirror_add(args):
         args.s3_access_key_id
         or args.s3_access_key_secret
         or args.s3_access_token
+        or args.s3_access_key_id_variable
+        or args.s3_access_key_secret_variable
+        or args.s3_access_token_variable
         or args.s3_profile
         or args.s3_endpoint_url
         or args.type
         or args.oci_username
         or args.oci_password
+        or args.oci_username_variable
+        or args.oci_password_variable
         or args.autopush
         or args.signed is not None
     ):
         connection = {"url": args.url}
-        if args.s3_access_key_id and args.s3_access_key_secret:
-            connection["access_pair"] = [args.s3_access_key_id, args.s3_access_key_secret]
+        # S3 Connection
+        if (args.s3_access_key_id or args.s3_access_key_id_variable) and (
+            args.s3_access_key_secret or args.s3_access_key_secret_variable
+        ):
+            # TODO: Plain text secret (deprecated) requires list layout
+            if args.s3_access_key_secret:
+                connection["access_pair"] = [
+                    (
+                        args.s3_access_key_id
+                        if args.s3_access_key_id
+                        else {"variable": args.s3_access_key_id_variable}
+                    ),
+                    args.s3_access_key_secret,
+                ]
+            else:
+                connection["access_pair"] = dict(
+                    [
+                        (
+                            ("id", args.s3_access_key_id)
+                            if args.s3_access_key_id
+                            else ("id_variable", args.s3_access_key_id_variable)
+                        ),
+                        ("secret_variable", args.s3_access_key_secret_variable),
+                    ]
+                )
+        elif (
+            args.s3_access_key_id
+            or args.s3_access_key_id_variable
+            or args.s3_access_key_secret
+            or args.s3_access_key_secret_variable is not None
+        ):
+            tty.warn(
+                "S3 access pair requires both the Key ID (ie. --s3-access-key-id-variable) "
+                "and the Key Secret (ie. --s3-access-key-secret-variable) be specified"
+            )
+
         if args.s3_access_token:
             connection["access_token"] = args.s3_access_token
+        elif args.s3_access_token_variable:
+            connection["access_token_variable"] = args.s3_access_token_variable
+
         if args.s3_profile:
             connection["profile"] = args.s3_profile
+
         if args.s3_endpoint_url:
             connection["endpoint_url"] = args.s3_endpoint_url
-        if args.oci_username and args.oci_password:
-            connection["access_pair"] = [args.oci_username, args.oci_password]
+
+        # OCI Connection
+        if (args.oci_username or args.oci_username_variable) and (
+            args.oci_password or args.oci_password_variable
+        ):
+            # TODO: Plain text secret (deprecated) requires list layout
+            if args.oci_password:
+                connection["access_pair"] = [
+                    (
+                        args.oci_username
+                        if args.oci_username
+                        else {"variable": args.oci_username_variable}
+                    ),
+                    args.oci_password,
+                ]
+            else:
+                connection["access_pair"] = dict(
+                    [
+                        (
+                            ("id", args.oci_username)
+                            if args.oci_username
+                            else ("id_variable", args.oci_username_variable)
+                        ),
+                        ("secret_variable", args.oci_password_variable),
+                    ]
+                )
+        elif (
+            args.oci_username
+            or args.oci_username_variable
+            or args.oci_password
+            or args.oci_password_variable is not None
+        ):
+            tty.warn(
+                "OCI access pair requires both the Username (ie. --oci-username) "
+                "and the Password (ie. --oci-password-variable) be specified"
+            )
+
         if args.type:
             connection["binary"] = "binary" in args.type
             connection["source"] = "source" in args.type
