@@ -8,11 +8,11 @@ import pytest
 import spack.build_systems.generic
 import spack.config
 import spack.error
-from spack.main import SpackCommand
 import spack.package_base
 import spack.repo
 import spack.util.spack_yaml as syaml
 import spack.version
+from spack.main import SpackCommand
 from spack.spec import Spec
 from spack.test.conftest import create_test_repo
 
@@ -295,9 +295,27 @@ class T1(Package):
 def _create_test_repo(tmpdir, mutable_config):
     yield create_test_repo(
         tmpdir,
-        [_pkgx1, _pkgx2, _pkgx3, _pkgx4, _pkgy1, _pkgy2, _pkgy3, _pkgy4, _pkgz1, _pkgz2, _pkgz3,
-         _pkgw1, _pkgw2, _pkgw3, _pkgw4,
-         _pkgt1, _pkgt2, _pkgt3, _pkgt4],
+        [
+            _pkgx1,
+            _pkgx2,
+            _pkgx3,
+            _pkgx4,
+            _pkgy1,
+            _pkgy2,
+            _pkgy3,
+            _pkgy4,
+            _pkgz1,
+            _pkgz2,
+            _pkgz3,
+            _pkgw1,
+            _pkgw2,
+            _pkgw3,
+            _pkgw4,
+            _pkgt1,
+            _pkgt2,
+            _pkgt3,
+            _pkgt4,
+        ],
     )
 
 
@@ -332,8 +350,8 @@ def test_version_range_null(concretize_scope, test_repo):
 # search
 def test_null_variant_for_requested_version(concretize_scope, test_repo):
     Spec("z1").concretized()
-    #output = solve("--show=asp", "z1@1.1")
-    #with open("/Users/scheibel1/Desktop/spack/spack/test-null-variant-for-requested-version.txt", "w") as f:
+    # output = solve("--show=asp", "z1@1.1")
+    # with open(, "w") as f:
     #    f.write(output)
     Spec("z1@1.1").concretized()
 
@@ -343,11 +361,6 @@ def test_null_variant_for_requested_version(concretize_scope, test_repo):
 # should be traceable as condition causes in error_messages.lp
 def test_errmsg_requirements(concretize_scope, test_repo):
     Spec("w4@:2.0 ^w3@2.1").concretized()
-
-
-def update_packages_config(conf_str):
-    conf = syaml.load_config(conf_str)
-    spack.config.set("packages", conf["packages"], scope="concretize")
 
 
 # This error message is short. Would it be good if I encoded
