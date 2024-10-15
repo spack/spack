@@ -283,6 +283,8 @@ def update_packages_config(conf_str):
     spack.config.set("packages", conf["packages"], scope="concretize")
 
 
+# This error message is short. Would it be good if I encoded
+# it in the package.py?
 def test_errmsg_requirements_cfg(concretize_scope, test_repo):
     conf_str = """\
 packages:
