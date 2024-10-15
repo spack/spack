@@ -23,7 +23,12 @@ class PyMetpy(PythonPackage):
     version("1.6.2", sha256="eb065bac0d7818587fa38fa6c96dfe720d9d15b59af4e4866541894e267476bb")
     version("1.0.1", sha256="16fa9806facc24f31f454b898741ec5639a72ba9d4ff8a19ad0e94629d93cb95")
 
-    variant("extras", default=False, when="@1.6.2:", description="Enable xarray lazy-loading and advanced plotting")
+    variant(
+        "extras",
+        default=False,
+        when="@1.6.2:",
+        description="Enable xarray lazy-loading and advanced plotting",
+    )
 
     with when("@1.6.2"):
         depends_on("python@3.9:", type=("build", "run"))
