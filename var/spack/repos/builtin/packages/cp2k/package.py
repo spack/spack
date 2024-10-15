@@ -192,6 +192,11 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
                 "libint@2.6.0:+fortran tune=cp2k-lmax-{0}".format(lmax),
                 when="@7.0: lmax={0}".format(lmax),
             )
+            # AOCC only works with libint@2.6.0
+            depends_on(
+                "libint@=2.6.0+fortran tune=cp2k-lmax-{0}".format(lmax),
+                when="@7.0: lmax={0} %aocc".format(lmax),
+            )
 
     with when("+libxc"):
         depends_on("pkgconfig", type="build", when="@7.0:")
@@ -304,6 +309,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     with when("@2022: +rocm"):
         depends_on("hipblas")
         depends_on("hipfft")
+    # The CMake build system and AOCC are not compatible as of AOCC 5
+    requires("build_system=makefile", when="%aocc")
 
     # CP2K needs compiler specific compilation flags, e.g. optflags
     conflicts("%apple-clang")
@@ -826,6 +833,12 @@ class MakefileBuilder(makefile.MakefileBuilder):
 
             if spec.satisfies("%intel"):
                 mkf.write(fflags("LDFLAGS_C", ldflags + ["-nofor-main"]))
+
+            if spec.satisfies("%aocc@5:"):
+                # ensure C based applications can be build properly
+                mkf.write(fflags("LDFLAGS_C", ldflags + ["-fno-fortran-main"]))
+                # This flag is required for the correct runtime behaviour of the code with aocc@5.0
+                mkf.write(fflags("FCFLAGS", fcflags + ["-mllvm -enable-newgvn=true"]))
 
             mkf.write("# CP2K-specific flags\n\n")
             mkf.write("GPUVER = {0}\n".format(gpuver))
