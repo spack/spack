@@ -176,6 +176,8 @@ class W4(Package):
     variant("v1", default=True)
 
     depends_on("w2")
+    depends_on("w2@:2.0", when="@:2.0")
+
     depends_on("w3")
     depends_on("w3~v1", when="@2.0")
 """,
@@ -274,3 +276,23 @@ def test_null_variant_for_requested_version(concretize_scope, test_repo):
 # definition seems OK
 def test_errmsg_requirements(concretize_scope, test_repo):
     Spec("w4@:2.0 ^w3@2.1").concretized()
+
+
+def update_packages_config(conf_str):
+    conf = syaml.load_config(conf_str)
+    spack.config.set("packages", conf["packages"], scope="concretize")
+
+
+def test_errmsg_requirements_cfg(concretize_scope, test_repo):
+    conf_str = """\
+packages:
+  w2:
+    require:
+    - spec: "~v1"
+      when: "@2.0"
+"""
+    update_packages_config(conf_str)
+
+    Spec("w4@2.0").concretized()
+
+    Spec("w4@2.0 ^w2+v1").concretized()
