@@ -743,8 +743,8 @@ requests target ``develop``. The ``develop`` branch will report that its
 version is that of the next **major** release with a ``.dev0`` suffix.
 
 Each Spack release series also has a corresponding branch, e.g.
-``releases/v0.22`` has ``0.22.x`` versions of Spack, and
-``releases/v0.21`` has ``0.21.x`` versions. A major release is the first
+``releases/v0.22`` has ``v0.22.x`` versions of Spack, and
+``releases/v0.21`` has ``v0.21.x`` versions. A major release is the first
 tagged version on a release branch. Minor releases are back-ported from
 develop onto release branches. This is typically done by cherry-picking
 bugfix commits off of ``develop``.
@@ -776,8 +776,8 @@ Scheduling work for releases
 
 We schedule work for **major releases** through `milestones
 <https://github.com/spack/spack/milestones>`_ and `GitHub Projects
-<https://github.com/spack/spack/projects>`_. and for **patch releases** we use tags such as
-``v0.22.3``.
+<https://github.com/spack/spack/projects>`_ and for **patch releases** we use `labels
+<https://github.com/spack/spack/labels>`_.
 
 There is only one milestone open at a time. Its name corresponds to the next major version, for
 example ``v0.23``. Important issues and pull requests should be assigned to this milestone by
