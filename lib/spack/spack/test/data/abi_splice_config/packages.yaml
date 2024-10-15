@@ -1,4 +1,0 @@
-packages:
-  mpi:
-    buildable: True
-  
