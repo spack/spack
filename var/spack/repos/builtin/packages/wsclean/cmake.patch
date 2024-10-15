@@ -1,0 +1,39 @@
+--- CMakeLists.txt	2022-04-01 15:01:21.000000000 +0000
++++ CMakeLists.txt	2022-05-04 04:03:56.604643618 +0000
+@@ -169,6 +169,7 @@
+ endif(MPI_FOUND)
+ 
+ find_package(EveryBeam NO_MODULE QUIET)
++
+ if(${EVERYBEAM_FOUND})
+   if(${EVERYBEAM_VERSION} VERSION_LESS "0.3.0" OR ${EVERYBEAM_VERSION}
+                                                   VERSION_GREATER_EQUAL "0.4.0")
+@@ -193,7 +194,7 @@
+ find_package(IDGAPI NO_MODULE QUIET)
+ 
+ if(IDGAPI_FOUND)
+-  if(${IDGAPI_VERSION} VERSION_LESS "0.8.1" OR ${EVERYBEAM_VERSION}
++  if(${IDGAPI_VERSION} VERSION_LESS "0.8.1" OR ${IDGAPI_VERSION}
+                                                VERSION_GREATER_EQUAL "0.9")
+     message(STATUS "IDG version is incompatible")
+     message(
+
+@@ -24,6 +24,7 @@
+ option(DISABLE_CXX17 "Do not use C++17 for compilation" OFF)
+ option(PORTABLE "Generate portable code" OFF)
+ option(BUILD_PACKAGES "Build Debian packages" OFF)
++option(USE_MPI "BUILD MPI enabled code" OFF)
+
+ if(COMPILER_HAS_CXX17 AND NOT DISABLE_CXX17)
+   add_compile_options(-std=c++17)
+@@ -132,7 +133,9 @@
+   message(FATAL_ERROR "GSL not found, but required to build WSClean!")
+ endif()
+
++if (USE_MPI)
+ find_package(MPI)
++endif()
+
+ if(MPI_FOUND)
+   # FindMPI in CMake >= 3.10 provides MPI_CXX_COMPILE_OPTIONS, a list that can
+
