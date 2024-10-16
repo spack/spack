@@ -375,7 +375,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         # which breaks GPU-aware with Cray-MPICH
         # See https://github.com/kokkos/kokkos/pull/6402
         # TODO: disable this once Cray-MPICH is fixed
-        if self.spec.satisfies("@4.2.00:") and self.spec.satisfies("^[virtuals=mpi] cray-mpich"):
+        if self.spec.satisfies("@4.2.00:"):
             options.append(self.define("Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC", False))
 
         # Remove duplicate options
