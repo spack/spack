@@ -74,9 +74,6 @@ class PyPillowBase(PythonPackage):
     depends_on("libimagequant", when="+imagequant")
     depends_on("libxcb", when="+xcb")
 
-    # Conflicting options
-    conflicts("+raqm", when="~freetype")
-
     @when("@10:")
     def config_settings(self, spec, prefix):
         settings = {"parallel": make_jobs}
