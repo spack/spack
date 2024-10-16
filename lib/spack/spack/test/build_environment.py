@@ -287,7 +287,6 @@ def test_compiler_config_modifications(
 
         return convert_to_platform_path(pathlist)
 
-    # Monkeypatch a pkg.compiler.environment with the required modifications
     pkg = spack.spec.Spec("cmake %gcc@14").concretized().package
     # Trigger the modifications
     spack.build_environment.setup_package(pkg, dirty=False)
