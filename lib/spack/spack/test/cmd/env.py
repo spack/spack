@@ -120,6 +120,8 @@ def check_viewdir_removal(viewdir):
 @pytest.fixture()
 def installed_environment(tmp_path, mock_fetch, mock_packages, mock_archive, install_mockery):
     spack_yaml = tmp_path / "spack.yaml"
+    old_value = spack.modules.tcl.configuration_registry
+    spack.modules.tcl.configuration_registry = {}
 
     @contextlib.contextmanager
     def _installed_environment(content):
@@ -132,7 +134,9 @@ def installed_environment(tmp_path, mock_fetch, mock_packages, mock_archive, ins
             test = ev.read("test")
             yield test
 
-    return _installed_environment
+    yield _installed_environment
+
+    spack.modules.tcl.configuration_registry = old_value
 
 
 @pytest.fixture()
@@ -3258,7 +3262,6 @@ spack:
 
 def test_modules_exist_after_env_install(installed_environment, monkeypatch):
     # Some caching issue
-    monkeypatch.setattr(spack.modules.tcl, "configuration_registry", {})
     with installed_environment(
         """
 spack:
