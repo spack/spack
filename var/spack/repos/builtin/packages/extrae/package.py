@@ -92,6 +92,12 @@ class Extrae(AutotoolsPackage):
     depends_on("cuda", when="+cupti")
     conflicts("+cupti", when="~cuda", msg="CUPTI requires CUDA")
 
+    variant(
+        "single-mpi-lib",
+        default=False,
+        description="Enable single MPI instrumentation library that supports both Fortran and C",
+    )
+
     def configure_args(self):
         spec = self.spec
         if spec.satisfies("^[virtuals=mpi] intel-oneapi-mpi"):
@@ -136,6 +142,8 @@ class Extrae(AutotoolsPackage):
         if spec.satisfies("^dyninst@9.3.0:"):
             make.add_default_arg("CXXFLAGS=%s" % self.compiler.cxx11_flag)
             args.append("CXXFLAGS=%s" % self.compiler.cxx11_flag)
+
+        args.extend(self.enable_or_disable("single-mpi-lib"))
 
         return args
 
