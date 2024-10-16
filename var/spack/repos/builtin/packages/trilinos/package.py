@@ -80,6 +80,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Build options
     variant("complex", default=False, description="Enable complex numbers in Trilinos")
+    variant(
+        "cuda_constexpr",
+        default=False,
+        description="Enable relaxed constexpr functions for CUDA build",
+    )
     variant("cuda_rdc", default=False, description="Turn on RDC for CUDA build")
     variant("rocm_rdc", default=False, description="Turn on RDC for ROCm build")
     variant(
@@ -403,7 +408,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # ###################### Dependencies ##########################
 
     # External Kokkos
-    depends_on("kokkos@4.4.00", when="@master: +kokkos")
+    depends_on("kokkos@4.4.01", when="@master: +kokkos")
     depends_on("kokkos@4.3.01", when="@16.0.0 +kokkos")
     depends_on("kokkos@4.2.01", when="@15.1.0:15.1.1 +kokkos")
     depends_on("kokkos@4.1.00", when="@14.4.0:15.0.0 +kokkos")
@@ -511,6 +516,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         "0001-use-the-gcnArchName-inplace-of-gcnArch-as-gcnArch-is.patch",
         when="@15.0.0 ^hip@6.0 +rocm",
     )
+    patch("cstdint_gcc13.patch", when="@13.4.0:13.4.1 %gcc@13.0.0:")
 
     # Allow building with +teko gotype=long
     patch(
@@ -1006,6 +1012,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                     [
                         define_kok_enable("CUDA_UVM", use_uvm),
                         define_kok_enable("CUDA_LAMBDA", True),
+                        define_kok_enable("CUDA_CONSTEXPR", "cuda_constexpr"),
                         define_kok_enable("CUDA_RELOCATABLE_DEVICE_CODE", "cuda_rdc"),
                     ]
                 )

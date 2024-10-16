@@ -933,14 +933,15 @@ spack:
 """
             )
         env_cmd("create", "test", "./spack.yaml")
-        with ev.read("test"):
-            concrete_spec = Spec("patchelf").concretized()
+        with ev.read("test") as current_env:
+            current_env.concretize()
+            install_cmd("--keep-stage")
+
+            concrete_spec = list(current_env.roots())[0]
             spec_json = concrete_spec.to_json(hash=ht.dag_hash)
             json_path = str(tmp_path / "spec.json")
             with open(json_path, "w") as ypfd:
                 ypfd.write(spec_json)
-
-            install_cmd("--add", "--keep-stage", json_path)
 
             for s in concrete_spec.traverse():
                 ci.push_to_build_cache(s, mirror_url, True)

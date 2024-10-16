@@ -139,6 +139,7 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         args = [
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
+            self.define("BUILD_FORTRAN_BINDINGS", "OFF"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),
             self.define("SUITE_SPARSE_PATH", self.spec["suite-sparse"].prefix),
             self.define("ROCBLAS_PATH", self.spec["rocblas"].prefix),

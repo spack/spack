@@ -17,6 +17,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.config
 import spack.hooks.sbang as sbang
 import spack.store
 import spack.util.spack_yaml as syaml

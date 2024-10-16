@@ -33,6 +33,7 @@ import spack.directory_layout
 import spack.error
 import spack.paths
 import spack.spec
+import spack.store
 import spack.util.path
 
 #: default installation root, relative to the Spack install path

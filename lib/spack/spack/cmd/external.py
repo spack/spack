@@ -18,6 +18,7 @@ import spack.config
 import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
+import spack.package_base
 import spack.repo
 import spack.spec
 from spack.cmd.common import arguments

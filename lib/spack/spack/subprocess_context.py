@@ -22,7 +22,7 @@ from types import ModuleType
 
 import spack.config
 import spack.environment
-import spack.main
+import spack.paths
 import spack.platforms
 import spack.repo
 import spack.store
@@ -72,12 +72,12 @@ class PackageInstallContext:
         else:
             self.pkg = pkg
             self.env = spack.environment.active_environment()
-        self.spack_working_dir = spack.main.spack_working_dir
+        self.spack_working_dir = spack.paths.spack_working_dir
         self.test_state = TestState()
 
     def restore(self):
         self.test_state.restore()
-        spack.main.spack_working_dir = self.spack_working_dir
+        spack.paths.spack_working_dir = self.spack_working_dir
         env = pickle.load(self.serialized_env) if _SERIALIZE else self.env
         if env:
             spack.environment.activate(env)

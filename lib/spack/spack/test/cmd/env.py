@@ -24,14 +24,21 @@ import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
 import spack.error
+import spack.main
 import spack.modules
+import spack.modules.tcl
 import spack.package_base
 import spack.paths
 import spack.repo
+import spack.solver.asp
+import spack.spec
+import spack.stage
 import spack.store
+import spack.util.environment
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.env import _env_create
+from spack.installer import PackageInstaller
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix
@@ -272,7 +279,7 @@ def test_env_rename_managed(capfd):
     assert "baz" in out
 
 
-def test_env_rename_anonymous(capfd, tmpdir):
+def test_env_rename_independent(capfd, tmpdir):
     # Need real environment
     with pytest.raises(spack.main.SpackCommandError):
         env("rename", "-d", "./non-existing", "./also-non-existing")
@@ -568,40 +575,74 @@ def test_remove_command():
 
     with ev.read("test"):
         add("mpileaks")
+
+    with ev.read("test"):
         assert "mpileaks" in find()
         assert "mpileaks@" not in find()
         assert "mpileaks@" not in find("--show-concretized")
 
     with ev.read("test"):
         remove("mpileaks")
+
+    with ev.read("test"):
         assert "mpileaks" not in find()
         assert "mpileaks@" not in find()
         assert "mpileaks@" not in find("--show-concretized")
 
     with ev.read("test"):
         add("mpileaks")
+
+    with ev.read("test"):
         assert "mpileaks" in find()
         assert "mpileaks@" not in find()
         assert "mpileaks@" not in find("--show-concretized")
 
     with ev.read("test"):
         concretize()
+
+    with ev.read("test"):
         assert "mpileaks" in find()
         assert "mpileaks@" not in find()
         assert "mpileaks@" in find("--show-concretized")
 
     with ev.read("test"):
         remove("mpileaks")
+
+    with ev.read("test"):
         assert "mpileaks" not in find()
         # removed but still in last concretized specs
         assert "mpileaks@" in find("--show-concretized")
 
     with ev.read("test"):
         concretize()
+
+    with ev.read("test"):
         assert "mpileaks" not in find()
         assert "mpileaks@" not in find()
         # now the lockfile is regenerated and it's gone.
         assert "mpileaks@" not in find("--show-concretized")
+
+
+def test_remove_command_all():
+    # Need separate ev.read calls for each command to ensure we test round-trip to disk
+    env("create", "test")
+    test_pkgs = ("mpileaks", "zlib")
+
+    with ev.read("test"):
+        for name in test_pkgs:
+            add(name)
+
+    with ev.read("test"):
+        for name in test_pkgs:
+            assert name in find()
+            assert f"{name}@" not in find()
+
+    with ev.read("test"):
+        remove("-a")
+
+    with ev.read("test"):
+        for name in test_pkgs:
+            assert name not in find()
 
 
 def test_bad_remove_included_env():
@@ -761,6 +802,39 @@ spack:
     env_specs = read._get_environment_specs()
 
     assert not any(x.name == "hypre" for x in env_specs)
+
+
+def test_lockfile_spliced_specs(environment_from_manifest, install_mockery):
+    """Test that an environment can round-trip a spliced spec."""
+    # Create a local install for zmpi to splice in
+    # Default concretization is not using zmpi
+    zmpi = spack.spec.Spec("zmpi").concretized()
+    PackageInstaller([zmpi.package], fake=True).install()
+
+    e1 = environment_from_manifest(
+        f"""
+spack:
+  specs:
+  - mpileaks
+  concretizer:
+    splice:
+      explicit:
+      - target: mpi
+        replacement: zmpi/{zmpi.dag_hash()}
+"""
+    )
+    with e1:
+        e1.concretize()
+        e1.write()
+
+    # By reading into a second environment, we force a round trip to json
+    e2 = _env_create("test2", init_file=e1.lock_path)
+
+    # The one spec is mpileaks
+    for _, spec in e2.concretized_specs():
+        assert spec.spliced
+        assert spec["mpi"].satisfies(f"zmpi@{zmpi.version}")
+        assert spec["mpi"].build_spec.satisfies(zmpi)
 
 
 def test_init_from_lockfile(environment_from_manifest):
@@ -1160,7 +1234,7 @@ spack:
     )
     with ev.Environment(tmp_path):
         assert spack.spec.Spec("mpich").concretized().satisfies("@3.0.3")
-        with pytest.raises(spack.config.ConfigError, match="not a list"):
+        with pytest.raises(spack.error.ConfigError, match="not a list"):
             config("change", "packages:mpich:require:~debug")
 
 
@@ -1188,7 +1262,7 @@ def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
     with spack_yaml.open("w") as f:
         f.write("spack:\n  include:\n    - {0}\n".format(missing_file.strpath))
 
-    with pytest.raises(spack.config.ConfigError, match="missing include path"):
+    with pytest.raises(spack.error.ConfigError, match="missing include path"):
         ev.Environment(tmpdir.strpath)
 
 
@@ -3541,7 +3615,7 @@ def test_create_and_activate_managed(tmp_path):
         env("deactivate")
 
 
-def test_create_and_activate_anonymous(tmp_path):
+def test_create_and_activate_independent(tmp_path):
     with fs.working_dir(str(tmp_path)):
         env_dir = os.path.join(str(tmp_path), "foo")
         shell = env("activate", "--without-view", "--create", "--sh", env_dir)
@@ -3879,7 +3953,7 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
         )
 
     # Do make dry run.
-    out = make("-n", "-f", makefile, output=str)
+    out = make("-n", "-f", makefile, "SPACK=spack", output=str)
 
     specs_that_make_would_install = _parse_dry_run_package_installs(out)
 
@@ -3917,7 +3991,7 @@ def test_depfile_works_with_gitversions(tmpdir, mock_packages, monkeypatch):
         env("depfile", "-o", makefile, "--make-disable-jobserver", "--make-prefix=prefix")
 
     # Do a dry run on the generated depfile
-    out = make("-n", "-f", makefile, output=str)
+    out = make("-n", "-f", makefile, "SPACK=spack", output=str)
 
     # Check that all specs are there (without duplicates)
     specs_that_make_would_install = _parse_dry_run_package_installs(out)
@@ -3979,7 +4053,12 @@ def test_depfile_phony_convenience_targets(
 
         # Phony install/* target should install picked package and all its deps
         specs_that_make_would_install = _parse_dry_run_package_installs(
-            make("-n", picked_spec.format("install/{name}-{version}-{hash}"), output=str)
+            make(
+                "-n",
+                picked_spec.format("install/{name}-{version}-{hash}"),
+                "SPACK=spack",
+                output=str,
+            )
         )
 
         assert set(specs_that_make_would_install) == set(expected_installs)
@@ -3987,7 +4066,12 @@ def test_depfile_phony_convenience_targets(
 
         # Phony install-deps/* target shouldn't install picked package
         specs_that_make_would_install = _parse_dry_run_package_installs(
-            make("-n", picked_spec.format("install-deps/{name}-{version}-{hash}"), output=str)
+            make(
+                "-n",
+                picked_spec.format("install-deps/{name}-{version}-{hash}"),
+                "SPACK=spack",
+                output=str,
+            )
         )
 
         assert set(specs_that_make_would_install) == set(expected_installs) - {picked_package}
@@ -4047,7 +4131,7 @@ post-install: $(addprefix example/post-install/,$(example/SPACK_PACKAGE_IDS))
     make = Executable("make")
 
     # Do dry run.
-    out = make("-n", "-C", str(tmpdir), output=str)
+    out = make("-n", "-C", str(tmpdir), "SPACK=spack", output=str)
 
     # post-install: <hash> should've been executed
     with ev.read("test") as test:

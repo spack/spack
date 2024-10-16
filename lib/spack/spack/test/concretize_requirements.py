@@ -11,8 +11,10 @@ import spack.config
 import spack.error
 import spack.package_base
 import spack.repo
+import spack.solver.asp
 import spack.util.spack_yaml as syaml
 import spack.version
+from spack.installer import PackageInstaller
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
 from spack.spec import Spec
 from spack.util.url import path_to_file_url
@@ -70,7 +72,7 @@ packages:
     require: "@1.2"
 """
     update_packages_config(conf_str)
-    with pytest.raises(spack.config.ConfigError):
+    with pytest.raises(spack.error.ConfigError):
         Spec("x").concretize()
 
 
@@ -435,7 +437,7 @@ packages:
     store_dir = tmp_path / "store"
     with spack.store.use_store(str(store_dir)):
         s1 = Spec("y@2.5 ~shared").concretized()
-        s1.package.do_install(fake=True, explicit=True)
+        PackageInstaller([s1.package], fake=True, explicit=True).install()
 
         update_packages_config(conf_str)
 

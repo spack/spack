@@ -20,6 +20,7 @@ import spack.mirror
 import spack.spec
 import spack.stage
 import spack.util.path
+import spack.util.spack_yaml
 from spack.cmd.common import arguments
 
 description = "manage bootstrap configuration"

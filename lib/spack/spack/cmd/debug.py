@@ -16,6 +16,8 @@ from llnl.util.filesystem import working_dir
 import spack
 import spack.paths
 import spack.platforms
+import spack.spec
+import spack.store
 import spack.util.git
 from spack.util.executable import which
 

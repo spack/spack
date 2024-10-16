@@ -12,6 +12,7 @@ import pytest
 import spack.platforms
 import spack.relocate
 import spack.relocate_text as relocate_text
+import spack.repo
 import spack.util.executable
 
 pytestmark = pytest.mark.not_on_windows("Tests fail on Windows")
