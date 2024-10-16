@@ -52,6 +52,7 @@ import spack.util.executable
 import spack.util.path
 import spack.util.web
 import spack.variant
+from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.resource import Resource
@@ -587,6 +588,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     specific build systems.
 
     """
+
+    compiler = DeprecatedCompiler()
 
     #
     # These are default values for instance variables.
@@ -1377,14 +1380,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if fsys.is_exe(path):
             return spack.util.executable.Executable(path)
         raise RuntimeError(f"Unable to locate {self.spec.name} command in {self.home.bin}")
-
-    @property  # type: ignore[misc]
-    @memoized
-    def compiler(self):
-        """Get the spack.compiler.Compiler object used to build this package"""
-        if not self.spec.concrete:
-            raise ValueError("Can only get a compiler for a concrete package.")
-        raise NotImplementedError("Wrapper to old API still to be implemented")
 
     def url_version(self, version):
         """
