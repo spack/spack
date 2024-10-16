@@ -629,13 +629,15 @@ class Boost(Package):
             else:
                 options.append("runtime-link=static")
 
-            # Any lib that is in self.all_libs and in the variants dictionary
-            # and is set to False should be added to options in a --without flag
-            all_lib_set = set(self.all_libs) & set(self.spec.variants.dict.keys())
-            all_libs_off = filter(
-                lambda v: v.name in all_lib_set and not v.value, self.spec.variants.dict.values()
-            )
-            options.extend([f"--without-{lib.name}" for lib in all_libs_off])
+            # Any lib that is in self.all_libs AND in the variants dictionary
+            # AND is set to False should be added to options in a --without flag
+            for lib in self.all_libs:
+                if lib not in self.spec.variants.dict:
+                    continue
+                elif self.spec.variants.dict[lib].value:
+                    continue
+                else:
+                    options.append(f"--without-{lib.name}")
 
         if not spec.satisfies("@:1.75 %intel") and not spec.satisfies("platform=windows"):
             # When building any version >= 1.76, the toolset must be specified.
