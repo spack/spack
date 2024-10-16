@@ -89,6 +89,7 @@ class PyAwkward(PythonPackage):
     depends_on("rapidjson")
     depends_on("cmake@3.13:", type="build")
     depends_on("py-wheel@0.36.0:", when="@:1.7.0", type="build")
+    depends_on("py-importlib-metadata@4.13.0", when="@2.6.6:", type="run")
 
     @when("@1.9.0:")
     def setup_build_environment(self, env):
