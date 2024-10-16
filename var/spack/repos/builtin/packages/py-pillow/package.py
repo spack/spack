@@ -119,6 +119,7 @@ class PyPillowBase(PythonPackage):
             )
 
         if self.spec.satisfies("@:9"):
+
             def variant_to_cfg(variant):
                 able = "enable" if "+" + variant in self.spec else "disable"
                 return "{0}_{1}=1\n".format(able, variant)
