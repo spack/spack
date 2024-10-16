@@ -64,9 +64,9 @@ class Dakota(CMakePackage):
     version("6.9", sha256="989b689278964b96496e3058b8ef5c2724d74bcd232f898fe450c51eba7fe0c2")
     version("6.3", sha256="0fbc310105860d77bb5c96de0e8813d75441fca1a5e6dfaf732aa095c4488d52")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Activates MPI support")
@@ -92,8 +92,12 @@ class Dakota(CMakePackage):
     depends_on("cmake@2.8.9:", type="build")
     depends_on("cmake@3.17:", type="build", when="@6.18:")
 
+    # dakota@:6.20 don't compile with gcc@13, and it is currently the latest version:
+    conflicts("%gcc@13:")
     # dakota@:6.12 don't compile with gcc@12:
     conflicts("%gcc@12:", when="@:6.12")
+    # dakota@:6.9 don't compile with gcc@11:
+    conflicts("%gcc@11:", when="@:6.9")
 
     def flag_handler(self, name, flags):
         # from gcc@10, dakota@:6.12 need an extra flag
