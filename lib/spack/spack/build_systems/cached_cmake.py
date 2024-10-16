@@ -11,6 +11,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.builder
+from spack.directives import depends_on
 
 from .cmake import CMakeBuilder, CMakePackage
 
@@ -345,6 +346,10 @@ class CachedCMakePackage(CMakePackage):
     """
 
     CMakeBuilder = CachedCMakeBuilder
+
+    # These dependencies are assumed in the builder
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     def flag_handler(self, name, flags):
         if name in ("cflags", "cxxflags", "cppflags", "fflags"):

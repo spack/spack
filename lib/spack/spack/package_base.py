@@ -53,6 +53,7 @@ import spack.util.environment
 import spack.util.executable
 import spack.util.path
 import spack.util.web
+from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import PackageTest, TestSuite
@@ -66,9 +67,8 @@ FLAG_HANDLER_RETURN_TYPE = Tuple[
 ]
 FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
 
-"""Allowed URL schemes for spack packages."""
+#: Allowed URL schemes for spack packages
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
-
 
 #: Filename for the Spack build/install log.
 _spack_build_logfile = "spack-build-out.txt"
@@ -606,6 +606,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     specific build systems.
 
     """
+
+    compiler = DeprecatedCompiler()
 
     #
     # These are default values for instance variables.
@@ -1498,14 +1500,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     @property
     def home(self):
         return self.prefix
-
-    @property  # type: ignore[misc]
-    @memoized
-    def compiler(self):
-        """Get the spack.compiler.Compiler object used to build this package"""
-        if not self.spec.concrete:
-            raise ValueError("Can only get a compiler for a concrete package.")
-        raise NotImplementedError("Wrapper to old API still to be implemented")
 
     def url_version(self, version):
         """
