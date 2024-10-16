@@ -38,11 +38,7 @@ class Hicup(Package):
     def edit(self, spec, prefix):
         grep = which("grep")
         chmod = which("chmod")
-        perl_files = grep(
-            "-lRr",
-            "#!/usr/bin/perl",
-            ".",
-        ).splitlines()
+        perl_files = grep("-lRr", "#!/usr/bin/perl", ".").splitlines()
         for f in perl_files:
             filter_file("/usr/bin/perl", self.spec["perl"].command.path, f, backup=False)
             filter_file("$Bin", "$RealBin", f, backup=False)
