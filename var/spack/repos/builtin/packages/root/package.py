@@ -539,7 +539,6 @@ class Root(CMakePackage):
         _add_variant(v, f, "http", "+http")
         _add_variant(v, f, ("imt", "tbb"), "+tbb")
         if Version(version_str) <= Version("6.28"):
-            print(version_str)
             _add_variant(v, f, "jemalloc", "+jemalloc")
         if Version(version_str) <= Version("6.17"):
             _add_variant(v, f, "memstat", "+memstat")
