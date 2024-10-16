@@ -103,7 +103,7 @@ spack:
   - hpctoolkit
   - hpx networking=mpi
   - hypre
-  - julia ^llvm ~clang ~gold ~polly targets=amdgpu,bpf,nvptx,webassembly ^curl tls=openssl
+  - julia ^llvm ~clang ~gold ~polly targets=amdgpu,bpf,nvptx,webassembly
   - kokkos +openmp
   - kokkos-kernels +openmp
   - laghos
