@@ -23,8 +23,12 @@ class Zabbix(AutotoolsPackage):
         # https://nvd.nist.gov/vuln/detail/CVE-2023-32724
         version("5.0.3", sha256="d579c5fa4e9065e8041396ace24d7132521ef5054ce30dfd9d151cbb7f0694ec")
         # https://nvd.nist.gov/vuln/detail/CVE-2019-17382
-        version("4.0.24", sha256="c7e4962d745277d67797d90e124555ce27d198822a7e65c55d86aee45d3e93fc")
-        version("4.0.23", sha256="652143614f52411cad47db64e93bf3ba1cd547d6ca9591296223b5f0528b3b61")
+        version(
+            "4.0.24", sha256="c7e4962d745277d67797d90e124555ce27d198822a7e65c55d86aee45d3e93fc"
+        )
+        version(
+            "4.0.23", sha256="652143614f52411cad47db64e93bf3ba1cd547d6ca9591296223b5f0528b3b61"
+        )
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
