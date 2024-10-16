@@ -22,7 +22,7 @@ class Totalview(Package):
     # As the install of Totalview is via multiple tarballs, the base install
     # will be the documentation.  The architecture-specific tarballs are added
     # as resources dependent on the specific architecture used.
-    
+
     version(
         "2024.3-x86-64",
         sha256="fb47c5a5abc6ad0e3e7cff1a346037387fa471c3a5cb46b6cdbe7f8a10aff2a7",
