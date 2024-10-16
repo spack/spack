@@ -23,9 +23,7 @@ spack:
         - lmod@8.7.18
         - environment-modules
         - macsio@1.1+scr ^scr@2.0.0~fortran ^silo~fortran ^hdf5~fortran
-        # julia depends on mbedtls@2, but all non-deprecated curl versions depend on mbedtls@3
-        # Ref: https://github.com/spack/spack/pull/46960
-        #- julia@1.9 ^llvm ~clang ~gold ~lldb ~lua ~polly compiler-rt=none libcxx=none libunwind=none targets=x86 ^openblas threads=openmp
+        - julia@1.9 ^llvm ~clang ~gold ~lldb ~lua ~polly compiler-rt=none libcxx=none libunwind=none targets=x86 ^openblas threads=openmp
         - vim
       - ['%gcc@11']
   - gcc_old_packages:
