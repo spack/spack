@@ -3369,9 +3369,12 @@ class Spec:
         elif other.compiler and not self.compiler:
             return False
 
-        var_satisfies, var = self.variants.satisfies(other.variants)
+        var_satisfies, vars = self.variants.satisfies(other.variants)
         if not var_satisfies:
             return False
+        for var in vars:
+            if not self._variant_exists_in_dependency(var):
+                return False
 
         if self.architecture and other.architecture:
             if not self.architecture.satisfies(other.architecture):
@@ -3482,6 +3485,23 @@ class Spec:
                     self._patches.append(patch)
 
         return self._patches
+
+    def _variant_exists_in_dependency(self, variant):
+        if variant in self.package_class.variant_names():
+            return True
+
+        sorted_dependencies = sorted(
+            self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
+        )
+        sorted_dependencies = [
+            d.cformat("{name}") for d in sorted_dependencies
+        ]
+
+        for dep in sorted_dependencies:
+            if variant in Spec(dep).package_class.variant_names():
+                return True
+
+        return False
 
     def _dup(self, other, deps: Union[bool, dt.DepTypes, dt.DepFlag] = True, cleardeps=True):
         """Copy the spec other into self.  This is an overwriting

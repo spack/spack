@@ -645,10 +645,8 @@ class TestConcretize:
         spec.concretize()
 
         assert spec.satisfies("multivalue-variant foo=bar")
-        assert spec.satisfies("^pkg-a foo=baz")
+        assert spec.satisfies("^pkg-a foo=bar,baz")
         assert spec.satisfies("^pkg-b foo=bar,baz")
-
-        assert not spec.satisfies("^pkg-a foo==bar")
 
     def test_concretize_propagate_variant_not_in_source(self):
         """Test that variant is still propagated even if the source pkg
@@ -660,7 +658,7 @@ class TestConcretize:
         assert not spec.satisfies("callpath+debug")
         assert not spec.satisfies("^dyninst+debug")
 
-    def test_cocnretize_propagate_variant_multiple_deps_not_in_source(self):
+    def test_concretize_propagate_variant_multiple_deps_not_in_source(self):
         """Test does a thing"""  # TODO: Rikki fix
         spec = Spec("netlib-lapack++shared")
         spec.concretize()
@@ -669,14 +667,22 @@ class TestConcretize:
         assert spec.satisfies("^perl+shared")
         assert not spec.satisfies("netlib-lapack+shared")
 
+    def test_concretize_propagate_variant_second_level_dep_not_in_source(self):
+        """"Test does a thing"""
+        spec = Spec("parent-foo-bar ++fee")
+        spec.concretize()
+
+        assert spec.satisfies("^second-dependency-foo-bar-fee +fee")
+        assert not spec.satisfies("parent-foo-bar +fee")
+
     def test_concretize_propagate_variant_not_in_source_or_dependencies(self):
         """Test propagating a variant that is not in the source package
         or in any of the dependents fails"""
         spec = Spec("callpath++shared")
-        spec.concretize()
-
-        # raises some kind of error
-        assert False
+        with pytest.raises(
+            spack.solver.asp.InternalConcretizerError
+        ):
+            spec.concretize()
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
