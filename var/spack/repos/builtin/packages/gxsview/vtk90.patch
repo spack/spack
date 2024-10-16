@@ -1,0 +1,25 @@
+diff --git a/gui/geometryviewer/trajectorypane/trajectorycreatingworker.cpp b/gui/geometryviewer/trajectorypane/trajectorycreatingworker.cpp
+index 92802f2..af731e3 100644
+--- a/gui/geometryviewer/trajectorypane/trajectorycreatingworker.cpp
++++ b/gui/geometryviewer/trajectorypane/trajectorycreatingworker.cpp
+@@ -7,6 +7,7 @@
+ #include "trajectorycreatingworker.hpp"
+ 
+ #include <vtkCellData.h>  // for coloring
++#include <vtkUnsignedCharArray.h>
+ 
+ #include "core/image/color.hpp"
+ 
+diff --git a/gui/geometryviewer/trajectorypane/trajectorypane.cpp b/gui/geometryviewer/trajectorypane/trajectorypane.cpp
+index eeae291..337e0e1 100644
+--- a/gui/geometryviewer/trajectorypane/trajectorypane.cpp
++++ b/gui/geometryviewer/trajectorypane/trajectorypane.cpp
+@@ -35,7 +35,7 @@
+ #include <vtkPolyDataMapper.h>
+ #include <vtkProperty.h>
+ #include <vtkSmartPointer.h>
+-#include <vtkQImageToImageSource.h>
++// #include <vtkQImageToImageSource.h>
+ #include <vtkOggTheoraWriter.h>
+ #include <vtkWindowToImageFilter.h>
+ #if  defined(_WIN32) || defined(__WIN32__) || defined(_WIN64) || defined(__WIN64__) || defined(_MSC_VER)
