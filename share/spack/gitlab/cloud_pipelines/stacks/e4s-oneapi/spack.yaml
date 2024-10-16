@@ -89,6 +89,7 @@ spack:
   - dxt-explorer
   - ecp-data-vis-sdk ~cuda ~rocm +adios2 ~ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp # +ascent: fides: fides/xgc/XGCCommon.cxx:233:10: error: no member named 'iota' in namespace 'std'; +visit: visit_vtk/lightweight/vtkSkewLookupTable.C:32:10: error: cannot initialize return object of type 'unsigned char *' with an rvalue of type 'const unsigned char *'
   - exaworks
+  - fftx
   - flecsi
   - flit
   - flux-core
