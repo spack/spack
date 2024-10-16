@@ -668,7 +668,7 @@ class TestConcretize:
         assert not spec.satisfies("netlib-lapack+shared")
 
     def test_concretize_propagate_variant_second_level_dep_not_in_source(self):
-        """"Test does a thing"""
+        """ "Test does a thing"""
         spec = Spec("parent-foo-bar ++fee")
         spec.concretize()
 
@@ -679,9 +679,7 @@ class TestConcretize:
         """Test propagating a variant that is not in the source package
         or in any of the dependents fails"""
         spec = Spec("callpath++shared")
-        with pytest.raises(
-            spack.solver.asp.InternalConcretizerError
-        ):
+        with pytest.raises(spack.solver.asp.InternalConcretizerError):
             spec.concretize()
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):

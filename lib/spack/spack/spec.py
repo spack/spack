@@ -3493,9 +3493,7 @@ class Spec:
         sorted_dependencies = sorted(
             self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
         )
-        sorted_dependencies = [
-            d.cformat("{name}") for d in sorted_dependencies
-        ]
+        sorted_dependencies = [d.cformat("{name}") for d in sorted_dependencies]
 
         for dep in sorted_dependencies:
             if variant in Spec(dep).package_class.variant_names():
