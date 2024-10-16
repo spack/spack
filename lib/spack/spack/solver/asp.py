@@ -3831,7 +3831,13 @@ class SpecBuilder:
             replacement = spack.spec.Spec(splice_set["replacement"])
 
             if not replacement.abstract_hash:
-                raise ValueError("explicit splice replacement must be specified by hash")
+                location = getattr(
+                    splice_set["replacement"], "_start_mark", " at unknown line number"
+                )
+                msg = f"Explicit splice replacement '{replacement}' does not include a hash.\n"
+                msg += f"{location}\n\n"
+                msg += "    Splice replacements must be specified by hash"
+                raise InvalidSpliceError(msg)
 
             transitive = splice_set.get("transitive", False)
             splice_triples.append((target, replacement, transitive))
@@ -4232,3 +4238,7 @@ class SolverError(InternalConcretizerError):
         # Add attribute expected of the superclass interface
         self.required = None
         self.constraint_type = None
+
+
+class InvalidSpliceError(spack.error.SpackError):
+    """For cases in which the splice configuration is invalid."""

@@ -2316,7 +2316,7 @@ class TestConcretize:
         splice_info = {"target": "mpi", "replacement": "mpich"}
         spack.config.CONFIG.set("concretizer", {"splice": {"explicit": [splice_info]}})
 
-        with pytest.raises(ValueError, match="must be specified by hash"):
+        with pytest.raises(spack.solver.asp.InvalidSpliceError, match="must be specified by hash"):
             _ = spack.spec.Spec("hdf5^zmpi").concretized()
 
     def test_explicit_splice_non_match_nonexistent_succeeds(
