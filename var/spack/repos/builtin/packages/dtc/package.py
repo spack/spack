@@ -24,9 +24,9 @@ class Dtc(MakefilePackage):
     # Build error with flex 2.6.3
     #   (convert-dtsv0-lexer.lex.c:398: error: "yywrap" redefined)
     depends_on("flex@2.6.4:", type="build")
-    depends_on("libyaml", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("python", type="build")
+    depends_on("libyaml", type=("build", "link"))
 
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
