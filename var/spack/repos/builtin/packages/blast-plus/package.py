@@ -80,7 +80,7 @@ class BlastPlus(AutotoolsPackage):
     depends_on("bzip2", when="+bzip2")
     depends_on("lzo", when="+lzo")
     depends_on("pcre", when="+pcre")
-    depends_on("llvm-openmp", when="%apple-clang")
+    depends_on("llvm-openmp", when="+openmp%apple-clang")
 
     depends_on("python", when="+python")
     depends_on("perl", when="+perl")
