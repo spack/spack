@@ -118,6 +118,7 @@ class Curl(NMakePackage, AutotoolsPackage):
         depends_on("mbedtls@:2", when="@:7.78")
         depends_on("mbedtls@:3.5", when="@:8.7")
         depends_on("mbedtls@2:", when="@7.79:")
+        depends_on("mbedtls@3.2:", when="@8.8")  # https://github.com/curl/curl/issues/13748
 
     depends_on("nss", when="tls=nss")
 
