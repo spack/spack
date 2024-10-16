@@ -8,15 +8,14 @@ from spack.package import *
 
 
 class PyHpcBeeflow(PythonPackage):
-    """BEE is a workflow orchestration system designed to build containerized 
-      HPC applications and orchestrate workflows across HPC and cloud systems. 
-      BEE has adopted the Common Workflow Language (CWL) for specifying workflows. 
-      Complex scientific workflows specified by CWL are managed and visualized 
-      through a graph database, giving the user the ability to monitor the state 
-      of each task in the workflow. BEE runs jobs using the workload scheduler 
-      (i.e. Slurm or Flux) on the HPC system that tasks are 
+    """BEE is a workflow orchestration system designed to build containerized
+      HPC applications and orchestrate workflows across HPC and cloud systems.
+      BEE has adopted the Common Workflow Language (CWL) for specifying workflows.
+      Complex scientific workflows specified by CWL are managed and visualized
+      through a graph database, giving the user the ability to monitor the state
+      of each task in the workflow. BEE runs jobs using the workload scheduler
+      (i.e. Slurm or Flux) on the HPC system that tasks are
       specified to run on."""
-
 
     pypi = "hpc-beeflow/hpc_beeflow-0.1.9.tar.gz"
 
