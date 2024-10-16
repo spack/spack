@@ -23,3 +23,15 @@ index eeae291..337e0e1 100644
  #include <vtkOggTheoraWriter.h>
  #include <vtkWindowToImageFilter.h>
  #if  defined(_WIN32) || defined(__WIN32__) || defined(_WIN64) || defined(__WIN64__) || defined(_MSC_VER)
+diff --git a/gui/vtk9.pri b/gui/vtk9.pri
+index 298dedb..82993f2 100644
+--- a/gui/vtk9.pri
++++ b/gui/vtk9.pri
+@@ -58,7 +58,6 @@ LIBS += \
+   -lvtkRenderingGL2PSOpenGL2$$VTK_VER_SUFFIX \
+   -lvtkRenderingSceneGraph$$VTK_VER_SUFFIX \
+   -lvtkRenderingOpenGL2$$VTK_VER_SUFFIX \
+-  -lvtkRenderingQt$$VTK_VER_SUFFIX \
+   -lvtkRenderingUI$$VTK_VER_SUFFIX \
+   -lvtkRenderingVolume$$VTK_VER_SUFFIX \
+   -lvtkRenderingVtkJS$$VTK_VER_SUFFIX \
