@@ -308,7 +308,7 @@ default:
 
 e4s-generate:
   extends: [ ".e4s", ".generate-x86_64"]
-  image: ecpe4s/ubuntu22.04-runner-amd64-gcc-11.4:2024.03.01
+  image: ghcr.io/spack/spack/ubuntu22.04-runner-amd64-gcc-11.4:2024.03.01
 
 e4s-build:
   extends: [ ".e4s", ".build" ]
@@ -331,7 +331,7 @@ e4s-build:
 
 e4s-neoverse-v2-generate:
   extends: [ ".e4s-neoverse-v2", ".generate-neoverse-v2" ]
-  image: ecpe4s/ubuntu22.04-runner-arm64-gcc-11.4:2024.03.01
+  image: ghcr.io/spack/spack/ubuntu22.04-runner-arm64-gcc-11.4:2024.03.01
 
 e4s-neoverse-v2-build:
   extends: [ ".e4s-neoverse-v2", ".build" ]
@@ -354,7 +354,7 @@ e4s-neoverse-v2-build:
 
 e4s-neoverse_v1-generate:
   extends: [ ".e4s-neoverse_v1", ".generate-neoverse_v1" ]
-  image: ecpe4s/ubuntu22.04-runner-arm64-gcc-11.4:2024.03.01
+  image: ghcr.io/spack/spack/ubuntu22.04-runner-arm64-gcc-11.4:2024.03.01
 
 e4s-neoverse_v1-build:
   extends: [ ".e4s-neoverse_v1", ".build" ]
@@ -377,7 +377,7 @@ e4s-neoverse_v1-build:
 
 e4s-rocm-external-generate:
   extends: [ ".e4s-rocm-external", ".generate-x86_64"]
-  image: ecpe4s/ubuntu22.04-runner-amd64-gcc-11.4-rocm6.2.0:2024.09.11
+  image: ghcr.io/spack/spack/ubuntu22.04-runner-amd64-gcc-11.4-rocm6.2.0:2024.09.11
 
 e4s-rocm-external-build:
   extends: [ ".e4s-rocm-external", ".build" ]
@@ -423,7 +423,7 @@ e4s-rocm-external-build:
 
 e4s-oneapi-generate:
   extends: [ ".e4s-oneapi", ".generate-x86_64"]
-  image: ecpe4s/ubuntu22.04-runner-amd64-oneapi-2024.2:2024.09.06
+  image: ghcr.io/spack/spack/ubuntu22.04-runner-amd64-oneapi-2024.2:2024.09.06
 
 e4s-oneapi-build:
   extends: [ ".e4s-oneapi", ".build" ]
@@ -495,7 +495,7 @@ build_systems-build:
 
 developer-tools-manylinux2014-generate:
   extends: [ ".developer-tools-manylinux2014", ".generate-x86_64"]
-  image:  ecpe4s/manylinux2014:2024.03.28
+  image:  ghcr.io/spack/spack/manylinux2014:2024.03.28
 
 developer-tools-manylinux2014-build:
   extends: [ ".developer-tools-manylinux2014", ".build" ]
