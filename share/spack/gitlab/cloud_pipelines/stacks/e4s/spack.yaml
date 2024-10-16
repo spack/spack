@@ -103,9 +103,7 @@ spack:
   - hpctoolkit
   - hpx networking=mpi
   - hypre
-  # julia depends on mbedtls@2, but all non-deprecated curl versions depend on mbedtls@3
-  # Ref: https://github.com/spack/spack/pull/46960
-  # - julia ^llvm ~clang ~gold ~polly targets=amdgpu,bpf,nvptx,webassembly
+  - julia ^llvm ~clang ~gold ~polly targets=amdgpu,bpf,nvptx,webassembly
   - kokkos +openmp
   - kokkos-kernels +openmp
   - laghos
