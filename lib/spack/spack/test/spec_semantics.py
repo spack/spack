@@ -881,7 +881,6 @@ class TestSpecSemantics:
             "{name}",
             "{version}",
             "{@version}",
-            "{%compiler}",
             "{namespace}",
             "{ namespace=namespace}",
             "{ namespace =namespace}",
