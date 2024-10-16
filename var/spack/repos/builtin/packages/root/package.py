@@ -34,6 +34,7 @@ class Root(CMakePackage):
     version("develop", branch="master")
 
     # Production version
+    version("6.32.06", sha256="3fc032d93fe848dea5adb1b47d8f0a86279523293fee0aa2b3cd52a1ffab7247")
     version("6.32.04", sha256="132f126aae7d30efbccd7dcd991b7ada1890ae57980ef300c16421f9d4d07ea8")
     version("6.32.02", sha256="3d0f76bf05857e1807ccfb2c9e014f525bcb625f94a2370b455f4b164961602d")
     version("6.32.00", sha256="12f203681a59041c474ce9523761e6f0e8861b3bee78df5f799a8db55189e5d2")
@@ -456,6 +457,10 @@ class Root(CMakePackage):
     # See https://github.com/root-project/root/issues/11714
     if sys.platform == "darwin" and macos_version() >= Version("13"):
         conflicts("@:6.26.09", msg="macOS 13 support was added in root 6.26.10")
+
+    # See https://github.com/root-project/root/issues/16219
+    if sys.platform == "darwin" and macos_version() >= Version("15"):
+        conflicts("@:6.32.05", msg="macOS 15 support was added in root 6.32.06")
 
     # ROOT <6.14 is incompatible with Python >=3.7, which is the minimum supported by spack
     conflicts("+python", when="@:6.13", msg="Spack wants python >=3.7, too new for ROOT <6.14")

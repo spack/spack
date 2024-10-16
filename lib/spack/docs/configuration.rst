@@ -281,7 +281,7 @@ When spack queries for configuration parameters, it searches in
 higher-precedence scopes first. So, settings in a higher-precedence file
 can override those with the same key in a lower-precedence one. For
 list-valued settings, Spack *prepends* higher-precedence settings to
-lower-precedence settings. Completely ignoring higher-level configuration
+lower-precedence settings. Completely ignoring lower-precedence configuration
 options is supported with the ``::`` notation for keys (see
 :ref:`config-overrides` below).
 

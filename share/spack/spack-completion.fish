@@ -1817,6 +1817,7 @@ complete -c spack -n '__fish_spack_using_command find' -l end-date -r -d 'latest
 
 # spack gc
 set -g __fish_spack_optspecs_spack_gc h/help E/except-any-environment e/except-environment= b/keep-build-dependencies y/yes-to-all
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 gc' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command gc' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command gc' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command gc' -s E -l except-any-environment -f -a except_any_environment
