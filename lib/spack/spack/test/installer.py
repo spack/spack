@@ -144,7 +144,9 @@ def test_install_from_cache_errors(install_mockery):
     assert not spec.package.installed_from_binary_cache
 
     # Check when don't expect to install only from binary cache
-    assert not inst._install_from_cache(spec.package, explicit=True, unsigned=False)
+    assert not inst._install_from_cache(
+        spec.package, inst.InstallStatus([spec.package]), explicit=True, unsigned=False
+    )
     assert not spec.package.installed_from_binary_cache
 
 
@@ -155,7 +157,9 @@ def test_install_from_cache_ok(install_mockery, monkeypatch):
     monkeypatch.setattr(inst, "_try_install_from_binary_cache", _true)
     monkeypatch.setattr(spack.hooks, "post_install", _noop)
 
-    assert inst._install_from_cache(spec.package, explicit=True, unsigned=False)
+    assert inst._install_from_cache(
+        spec.package, inst.InstallStatus([spec.package]), explicit=True, unsigned=False
+    )
 
 
 def test_process_external_package_module(install_mockery, monkeypatch, capfd):
@@ -725,7 +729,7 @@ def test_install_task_use_cache(install_mockery, monkeypatch):
     task = create_build_task(request.pkg)
 
     monkeypatch.setattr(inst, "_install_from_cache", _true)
-    installer._install_task(task, None)
+    installer._install_task(task)
     assert request.pkg_id in installer.installed
 
 
@@ -750,7 +754,7 @@ def test_install_task_requeue_build_specs(install_mockery, monkeypatch, capfd):
         assert inst.package_id(popped_task.pkg.spec) not in installer.build_tasks
 
         monkeypatch.setattr(task, "execute", _missing)
-        installer._install_task(task, None)
+        installer._install_task(task)
 
         # Ensure the dropped task/spec was added back by _install_task
         assert inst.package_id(popped_task.pkg.spec) in installer.build_tasks
@@ -798,7 +802,7 @@ def test_requeue_task(install_mockery, capfd):
     # temporarily set tty debug messages on so we can test output
     current_debug_level = tty.debug_level()
     tty.set_debug(1)
-    installer._requeue_task(task, None)
+    installer._requeue_task(task)
     tty.set_debug(current_debug_level)
 
     ids = list(installer.build_tasks)
@@ -951,11 +955,11 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
     assert "Skipping build of pkg-a" in out
 
 
-def _interrupt(installer, task, install_status, **kwargs):
+def _interrupt(installer, task, **kwargs):
     if task.pkg.name == "pkg-a":
         raise KeyboardInterrupt("mock keyboard interrupt for pkg-a")
     else:
-        return installer._real_install_task(task, None)
+        return installer._real_install_task(task)
         # installer.installed.add(task.pkg.name)
 
 
@@ -981,13 +985,13 @@ class MyBuildException(Exception):
     pass
 
 
-def _install_fail_my_build_exception(installer, task, install_status, **kwargs):
+def _install_fail_my_build_exception(installer, task, **kwargs):
     print(task, task.pkg.name)
     if task.pkg.name == "pkg-a":
         raise MyBuildException("mock internal package build error for pkg-a")
     else:
         # No need for more complex logic here because no splices
-        task.execute(install_status)
+        task.execute(installer.install_status)
         installer._update_installed(task)
 
 
@@ -1070,8 +1074,8 @@ def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
 def test_install_lock_failures(install_mockery, monkeypatch, capfd):
     """Cover basic install lock failure handling in a single pass."""
 
-    def _requeued(installer, task, install_status):
-        tty.msg("requeued {0}".format(task.pkg.spec.name))
+    def _requeued(installer, task):
+        tty.msg(f"requeued {task.pkg.spec.name}")
 
     installer = create_installer(["pkg-b"], {})
 
@@ -1103,7 +1107,7 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
         # also do not allow the package to be locked again
         monkeypatch.setattr(inst.PackageInstaller, "_ensure_locked", _not_locked)
 
-    def _requeued(installer, task, install_status):
+    def _requeued(installer, task):
         tty.msg(f"requeued {inst.package_id(task.pkg.spec)}")
 
     # Flag the package as installed
@@ -1134,8 +1138,8 @@ def test_install_read_locked_requeue(install_mockery, monkeypatch, capfd):
         tty.msg("preparing {0}".format(task.pkg.spec.name))
         assert task.pkg.spec.name not in installer.installed
 
-    def _requeued(installer, task, install_status):
-        tty.msg("requeued {0}".format(task.pkg.spec.name))
+    def _requeued(installer, task):
+        tty.msg(f"requeued {task.pkg.spec.name}")
 
     # Force a read lock
     monkeypatch.setattr(inst.PackageInstaller, "_ensure_locked", _read)
@@ -1191,7 +1195,7 @@ def test_overwrite_install_backup_success(temporary_store, config, mock_packages
     fs.touchp(installed_file)
 
     class InstallerThatWipesThePrefixDir:
-        def _install_task(self, task, install_status):
+        def _install_task(self, task):
             shutil.rmtree(task.pkg.prefix, ignore_errors=True)
             fs.mkdirp(task.pkg.prefix)
             raise Exception("Some fatal install error")
@@ -1225,7 +1229,7 @@ def test_overwrite_install_backup_failure(temporary_store, config, mock_packages
     """
 
     class InstallerThatAccidentallyDeletesTheBackupDir:
-        def _install_task(self, task, install_status):
+        def _install_task(self, task):
             # Remove the backup directory, which is at the same level as the prefix,
             # starting with .backup
             backup_glob = os.path.join(
@@ -1345,7 +1349,7 @@ def test_specs_count(install_mockery, mock_packages):
     """Check SpecCounts DAG visitor total matches expected."""
     spec = spack.spec.Spec("mpileaks^mpich").concretized()
     counter = inst.SpecsCount(dt.LINK | dt.RUN)
-    number_specs = counter.total(spec)
+    number_specs = counter.total([spec])
 
     json = sjson.load(spec.to_json())
     number_spec_nodes = len(json["spec"]["nodes"])
