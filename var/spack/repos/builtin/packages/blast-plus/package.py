@@ -168,7 +168,7 @@ class BlastPlus(AutotoolsPackage):
         else:
             config_args.append("--without-python")
 
-        if spec.satisfies("-openmp"):
+        if spec.satisfies("~openmp"):
             config_args.append("--without-openmp")
 
         return config_args
