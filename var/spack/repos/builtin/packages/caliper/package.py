@@ -122,7 +122,7 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cmake", type="build")
     depends_on("python", type="build")
-    
+
     depends_on("python@3", when="+python", type=("build", "link", "run"))
     depends_on("py-pybind11", when="+python", type=("build", "link", "run"))
 
@@ -243,6 +243,11 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         return []
+
+    def setup_run_environment(self, env):
+        if self.spec.satisfies("+python"):
+            env.prepend_path("PYTHONPATH", self.spec.prefix.join(python_platlib))
+            env.prepend_path("PYTHONPATH", self.spec.prefix.join(python_purelib))
 
     @run_after("install")
     def cache_test_sources(self):
