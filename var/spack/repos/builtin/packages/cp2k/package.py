@@ -188,14 +188,10 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     with when("+libint"):
         depends_on("pkgconfig", type="build", when="@7.0:")
         for lmax in HFX_LMAX_RANGE:
-            depends_on(
-                f"libint@2.6.0:+fortran tune=cp2k-lmax-{lmax}",
-                when=f"@7.0: lmax={lmax}",
-            )
+            depends_on(f"libint@2.6.0:+fortran tune=cp2k-lmax-{lmax}", when=f"@7.0: lmax={lmax}")
             # AOCC only works with libint@2.6.0
             depends_on(
-                f"libint@=2.6.0+fortran tune=cp2k-lmax-{lmax}",
-                when=f"@7.0: lmax={lmax} %aocc",
+                f"libint@=2.6.0+fortran tune=cp2k-lmax-{lmax}", when=f"@7.0: lmax={lmax} %aocc"
             )
 
     with when("+libxc"):
