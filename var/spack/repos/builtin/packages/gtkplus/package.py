@@ -61,8 +61,10 @@ class Gtkplus(AutotoolsPackage, MesonPackage):
     depends_on("glib@2.57.2:")
     depends_on("pango@1.41.0:+X")
     depends_on("fribidi@0.19.7:")
-    depends_on("atk@2.35.1:")
-    depends_on("at-spi2-atk@2.15.1:", when="@3:")
+    # atk was also merged into at-spi2-core, but gtk3 doesn't want to build without it
+    depends_on("atk@2.35.1:", when="@:3")
+    # at-spi2-atk was merged into at-spi2-core, but gtk3 is picky
+    depends_on("at-spi2-core@2.46:2.48", when="@:3")
     depends_on("cairo@1.14.0:+X+pdf+gobject")
     depends_on("gdk-pixbuf@2.30.0:")
     depends_on("gobject-introspection@1.39.0:")
