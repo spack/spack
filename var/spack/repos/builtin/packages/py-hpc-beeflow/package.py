@@ -48,7 +48,6 @@ class PyHpcBeeflow(PythonPackage):
     depends_on("py-cffi@1.15.1:", type=("run"))
     depends_on("py-celery+redis+sqlalchemy@5.3.4:", type=("run"))
     depends_on("py-docutils@0.18.1:", type=("build", "run"))
-    depends_on("py-graphviz@0.20.3:", type=("run"))
     depends_on("graphviz", type=("run"))
     depends_on("py-networkx@3.1", type=("run"))
 
