@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os.path
 
 from spack.package import *
 
@@ -310,6 +311,23 @@ class Acfl(Package, CompilerPackage):
     compiler_version_regex = (
         r"Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) \(build number \d+\) "
     )
+
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast"]
+
+    link_paths = {
+        "c": os.path.join("arm", "armclang"),
+        "cxx": os.path.join("arm", "armclang++"),
+        "fortran": os.path.join("arm", "armflang"),
+    }
+
+    required_libs = ["libclang", "libflang"]
+
+    def _standard_flag(self, *, language, standard):
+        flags = {
+            "cxx": {"11": "-std=c++11", "14": "-std=c++14", "17": "-std=c++1z"},
+            "c": {"99": "-std=c99", "11": "-std=c11"},
+        }
+        return flags[language][standard]
 
     @property
     def cc(self):

@@ -270,6 +270,43 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         r"(?:(?:oneAPI DPC\+\+(?:\/C\+\+)? Compiler)|(?:\(IFORT\))|(?:\(IFX\))) (\S+)"
     )
 
+    debug_flags = ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"]
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"]
+
+    openmp_flag = "-fiopenmp"
+
+    link_paths = {
+        "c": os.path.join("oneapi", "icx"),
+        "cxx": os.path.join("oneapi", "icpx"),
+        "fortran": os.path.join("oneapi", "ifx"),
+    }
+
+    required_libs = [
+        "libirc",
+        "libifcore",
+        "libifcoremt",
+        "libirng",
+        "libsvml",
+        "libintlc",
+        "libimf",
+        "libsycl",
+        "libOpenCL",
+    ]
+
+    stdcxx_libs = ("-cxxlib",)
+
+    def _standard_flag(self, *, language, standard):
+        flags = {
+            "cxx": {
+                "11": "-std=c++11",
+                "14": "-std=c++14",
+                "17": "-std=c++17",
+                "20": "-std=c++20",
+            },
+            "c": {"99": "-std=c99", "11": "-std=c1x"},
+        }
+        return flags[language][standard]
+
     # See https://github.com/spack/spack/issues/39252
     depends_on("patchelf@:0.17", type="build", when="@:2024.1")
     # Add the nvidia variant
