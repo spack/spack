@@ -31,6 +31,6 @@ class OtfCpt(CMakePackage):
 
     patch(
         "https://github.com/RWTH-HPC/OTF-CPT/commit/b58f83588a4c231b71ca48dcddd909e1ab318cc6.diff?full_index=1",
-        sha256="1c8e1c4b5bf4cd1c6e4ed9a9d8c5ef47abe2aad5402ec466db0df4f96cbd3407",
+        sha256="35fadc3e61e5b7aa3a68272f701af3a242e30a435f1ddd679577ba35c7496565",
         when="@0.9",
     )
