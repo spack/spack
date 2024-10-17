@@ -25,7 +25,7 @@ class PyHpcBeeflow(PythonPackage):
     version("0.1.9", sha256="196eb9155a5ca6e35d0cc514e0609cf352fc757088707306653496b83a311ac1")
     version("0.1.8", sha256="7ffc7f2a6e6c4892b9432ba939ee7179d1189cedf82382752a3c268d70fceddd")
 
-    depends_on("py-poetry", type="build")
+    #depends_on("py-poetry@1.2.0", type="build")
 
     # Non-Python dependencies
     depends_on("neo4j@5.17.0:", type=("run"))
