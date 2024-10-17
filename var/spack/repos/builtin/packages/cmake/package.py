@@ -161,7 +161,10 @@ class Cmake(Package):
     depends_on("gmake", when="platform=darwin")
     depends_on("gmake", when="platform=freebsd")
 
-    depends_on("qt ^libmng build_system=autotools", when="+qtgui")
+    depends_on("qt", when="+qtgui platform=windows")
+    for plat in ["linux", "darwin", "freebsd"]:
+        with when(f"+qtgui platform={plat}"):
+            depends_on("qt ^libmng build_system=autotools")
 
     # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
     conflicts(
