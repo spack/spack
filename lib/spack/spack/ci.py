@@ -10,6 +10,7 @@ import json
 import os
 import re
 import shutil
+import ssl
 import stat
 import subprocess
 import sys
@@ -19,14 +20,14 @@ import zipfile
 from collections import defaultdict, namedtuple
 from typing import Dict, List, Optional, Set, Tuple
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
-from urllib.request import HTTPHandler, Request, build_opener
+from urllib.parse import quote, urlencode, urlparse
+from urllib.request import HTTPHandler, HTTPSHandler, Request, build_opener
 
 import ruamel.yaml
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from llnl.util.lang import memoized
+from llnl.util.lang import Singleton, memoized
 from llnl.util.tty.color import cescape, colorize
 
 import spack
@@ -49,6 +50,31 @@ from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
+
+
+def _urlopen():
+    error_handler = web_util.SpackHTTPDefaultErrorHandler()
+
+    # One opener with HTTPS ssl enabled
+    with_ssl = build_opener(
+        HTTPHandler(), HTTPSHandler(context=web_util.ssl_create_default_context()), error_handler
+    )
+
+    # One opener with HTTPS ssl disabled
+    without_ssl = build_opener(
+        HTTPHandler(), HTTPSHandler(context=ssl._create_unverified_context()), error_handler
+    )
+
+    # And dynamically dispatch based on the config:verify_ssl.
+    def dispatch_open(fullurl, data=None, timeout=None, verify_ssl=True):
+        opener = with_ssl if verify_ssl else without_ssl
+        timeout = timeout or spack.config.get("config:connect_timeout", 1)
+        return opener.open(fullurl, data, timeout)
+
+    return dispatch_open
+
+
+_dyn_mapping_urlopener = Singleton(_urlopen)
 
 # See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
 JOB_RETRY_CONDITIONS = [
@@ -405,9 +431,20 @@ class SpackCI:
             if name not in ["any", "build"]:
                 jobs[name] = self.__init_job("")
 
-    def __init_job(self, spec):
+    def __init_job(self, release_spec):
         """Initialize job object"""
-        return {"spec": spec, "attributes": {}}
+        job_object = {"spec": release_spec, "attributes": {}}
+        if release_spec:
+            job_vars = job_object["attributes"].setdefault("variables", {})
+            job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec.dag_hash()
+            job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
+            job_vars["SPACK_JOB_SPEC_PKG_VERSION"] = release_spec.format("{version}")
+            job_vars["SPACK_JOB_SPEC_COMPILER_NAME"] = release_spec.format("{compiler.name}")
+            job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
+            job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
+            job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
+
+        return job_object
 
     def __is_named(self, section):
         """Check if a pipeline-gen configuration section is for a named job,
@@ -500,6 +537,7 @@ class SpackCI:
         for section in reversed(pipeline_gen):
             name = self.__is_named(section)
             has_submapping = "submapping" in section
+            has_dynmapping = "dynamic-mapping" in section
             section = cfg.InternalConfigScope._process_dict_keyname_overrides(section)
 
             if name:
@@ -541,6 +579,108 @@ class SpackCI:
                     if job["spec"]:
                         job["attributes"] = self.__apply_submapping(
                             job["attributes"], job["spec"], section
+                        )
+            elif has_dynmapping:
+                mapping = section["dynamic-mapping"]
+
+                dynmap_name = mapping.get("name")
+
+                # Check if this section should be skipped
+                dynmap_skip = os.environ.get("SPACK_CI_SKIP_DYNAMIC_MAPPING")
+                if dynmap_name and dynmap_skip:
+                    if re.match(dynmap_skip, dynmap_name):
+                        continue
+
+                # Get the endpoint
+                endpoint = mapping["endpoint"]
+                endpoint_url = urlparse(endpoint)
+
+                # Configure the request header
+                header = {"User-Agent": web_util.SPACK_USER_AGENT}
+                header.update(mapping.get("header", {}))
+
+                # Expand header environment variables
+                # ie. if tokens are passed
+                for value in header.values():
+                    value = os.path.expandvars(value)
+
+                verify_ssl = mapping.get("verify_ssl", spack.config.get("config:verify_ssl", True))
+                timeout = mapping.get("timeout", spack.config.get("config:connect_timeout", 1))
+
+                required = mapping.get("require", [])
+                allowed = mapping.get("allow", [])
+                ignored = mapping.get("ignore", [])
+
+                # required keys are implicitly allowed
+                allowed = sorted(set(allowed + required))
+                ignored = sorted(set(ignored))
+                required = sorted(set(required))
+
+                # Make sure required things are not also ignored
+                assert not any([ikey in required for ikey in ignored])
+
+                def job_query(job):
+                    job_vars = job["attributes"]["variables"]
+                    query = (
+                        "{SPACK_JOB_SPEC_PKG_NAME}@{SPACK_JOB_SPEC_PKG_VERSION}"
+                        # The preceding spaces are required (ref. https://github.com/spack/spack-gantry/blob/develop/docs/api.md#allocation)
+                        " {SPACK_JOB_SPEC_VARIANTS}"
+                        " arch={SPACK_JOB_SPEC_ARCH}"
+                        "%{SPACK_JOB_SPEC_COMPILER_NAME}@{SPACK_JOB_SPEC_COMPILER_VERSION}"
+                    ).format_map(job_vars)
+                    return f"spec={quote(query)}"
+
+                for job in jobs.values():
+                    if not job["spec"]:
+                        continue
+
+                    # Create request for this job
+                    query = job_query(job)
+                    request = Request(
+                        endpoint_url._replace(query=query).geturl(), headers=header, method="GET"
+                    )
+                    try:
+                        response = _dyn_mapping_urlopener(
+                            request, verify_ssl=verify_ssl, timeout=timeout
+                        )
+                    except Exception as e:
+                        # For now just ignore any errors from dynamic mapping and continue
+                        # This is still experimental, and failures should not stop CI
+                        # from running normally
+                        tty.warn(f"Failed to fetch dynamic mapping for query:\n\t{query}")
+                        tty.warn(f"{e}")
+                        continue
+
+                    config = json.load(codecs.getreader("utf-8")(response))
+
+                    # Strip ignore keys
+                    if ignored:
+                        for key in ignored:
+                            if key in config:
+                                config.pop(key)
+
+                    # Only keep allowed keys
+                    clean_config = {}
+                    if allowed:
+                        for key in allowed:
+                            if key in config:
+                                clean_config[key] = config[key]
+                    else:
+                        clean_config = config
+
+                    # Verify all of the required keys are present
+                    if required:
+                        missing_keys = []
+                        for key in required:
+                            if key not in clean_config.keys():
+                                missing_keys.append(key)
+
+                        if missing_keys:
+                            tty.warn(f"Response missing required keys: {missing_keys}")
+
+                    if clean_config:
+                        job["attributes"] = spack.config.merge_yaml(
+                            job.get("attributes", {}), clean_config
                         )
 
         for _, job in jobs.items():
@@ -952,15 +1092,6 @@ def generate_gitlab_ci_yaml(
 
             job_name = get_job_name(release_spec, build_group)
 
-            job_vars = job_object.setdefault("variables", {})
-            job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
-            job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
-            job_vars["SPACK_JOB_SPEC_PKG_VERSION"] = release_spec.format("{version}")
-            job_vars["SPACK_JOB_SPEC_COMPILER_NAME"] = release_spec.format("{compiler.name}")
-            job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
-            job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
-            job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
-
             job_object["needs"] = []
             if spec_label in dependencies:
                 if enable_artifacts_buildcache:
@@ -1038,6 +1169,7 @@ def generate_gitlab_ci_yaml(
 
             # Let downstream jobs know whether the spec needed rebuilding, regardless
             # whether DAG pruning was enabled or not.
+            job_vars = job_object["variables"]
             job_vars["SPACK_SPEC_NEEDS_REBUILD"] = str(rebuild_spec)
 
             if cdash_handler:

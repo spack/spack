@@ -592,6 +592,77 @@ the attributes will be merged starting from the bottom match going up to the top
 
 In the case that no match is found in a submapping section, no additional attributes will be applied.
 
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Dynamic Mapping Sections
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+For large scale CI where cost optimization is required, dynamic mapping allows for the use of real-time
+mapping schemes served by a web service. This type of mapping does not support the ``-remove`` type
+behavior, but it does follow the rest of the merge rules for configurations.
+
+The dynamic mapping service needs to implement a single REST API interface for getting
+requests ``GET <URL>[:PORT][/PATH]?spec=<pkg_name@pkg_version +variant1+variant2%compiler@compiler_version>``.
+
+example request.
+
+.. code-block::
+
+  https://my-dyn-mapping.spack.io/allocation?spec=zlib-ng@2.1.6 +compat+opt+shared+pic+new_strategies arch=linux-ubuntu20.04-x86_64_v3%gcc@12.0.0
+
+
+With an example response the updates kubernetes request variables, overrides the max retries for gitlab,
+and prepends a note about the modifications made by the my-dyn-mapping.spack.io service.
+
+.. code-block::
+
+  200 OK
+
+  {
+    "variables":
+    {
+      "KUBERNETES_CPU_REQUEST": "500m",
+      "KUBERNETES_MEMORY_REQUEST": "2G",
+    },
+    "retry": { "max:": "1"}
+    "script+:":
+    [
+      "echo \"Job modified by my-dyn-mapping.spack.io\""
+    ]
+  }
+
+
+The ci.yaml configuration section takes the URL endpoint as well as a number of options to configure how responses are handled.
+
+It is possible to specify a list of allowed and ignored configuration attributes under ``allow`` and ``ignore``
+respectively. It is also possible to configure required attributes under ``required`` section.
+
+Options to configure the client timeout and SSL verification using the ``timeout`` and ``verify_ssl`` options.
+By default, the ``timeout`` is set to the option in ``config:timeout`` and ``veryify_ssl`` is set the the option in ``config::verify_ssl``.
+
+Passing header parameters to the request can be achieved through the ``header`` section. The values of the variables passed to the
+header may be environment variables that are expanded at runtime, such as a private token configured on the runner.
+
+Here is an example configuration pointing to ``my-dyn-mapping.spack.io/allocation``.
+
+
+.. code-block:: yaml
+
+  ci:
+  - dynamic-mapping:
+      endpoint: my-dyn-mapping.spack.io/allocation
+      timeout: 10
+      verify_ssl: True
+      header:
+        PRIVATE_TOKEN: ${MY_PRIVATE_TOKEN}
+        MY_CONFIG: "fuzz_allocation:false"
+      allow:
+      - variables
+      ignore:
+      - script
+      require: []
+
+
 ^^^^^^^^^^^^^
 Bootstrapping
 ^^^^^^^^^^^^^
