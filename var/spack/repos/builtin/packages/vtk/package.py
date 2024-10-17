@@ -41,13 +41,6 @@ class Vtk(CMakePackage):
         sha256="34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb",
     )
     version("8.2.0", sha256="34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb")
-    version("8.1.2", sha256="0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db")
-    version("8.1.1", sha256="71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324")
-    version("8.1.0", sha256="6e269f07b64fb13774f5925161fb4e1f379f4e6a0131c8408c555f6b58ef3cb7")
-    version("8.0.1", sha256="49107352923dea6de05a7b4c3906aaf98ef39c91ad81c383136e768dcf304069")
-    version("7.1.0", sha256="5f3ea001204d4f714be972a810a62c0f2277fbb9d8d2f8df39562988ca37497a")
-    version("7.0.0", sha256="78a990a15ead79cdc752e86b83cfab7dbf5b7ef51ba409db02570dbdd9ec32c3")
-    version("6.3.0", sha256="92a493354c5fa66bea73b5fc014154af5d9f3f6cee8d20a826f4cd5d4b0e8a5e")
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
@@ -317,18 +310,6 @@ class Vtk(CMakePackage):
         # Some variable names have changed
         if spec.satisfies("@8.2.0"):
             cmake_args.append("-DVTK_USE_SYSTEM_PUGIXML:BOOL=OFF")
-        elif spec.satisfies("@:8.1"):
-            # Note: Since #36408 (in January 2024), @:8.1 could not be built because
-            # it replaced depends_on("netcdf-cxx") with "netcdf-cxx4", below is
-            # an attept to make it work again, but really the qestion is that as
-            # since the release of spack-0.22 in May 2024, nobody could build these
-            # versions, could we remove them instead?
-            cmake_args.extend(
-                [
-                    "-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF",
-                    "-DNETCDF_CXX_ROOT={0}".format(spec["netcdf-cxx4"].prefix),
-                ]
-            )
 
         if "+mpi" in spec:
             if spec.satisfies("@:8.2.0"):
