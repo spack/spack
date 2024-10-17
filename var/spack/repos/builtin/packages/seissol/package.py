@@ -151,10 +151,9 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
         multi=True,
     )
 
-    variant("mpi", default=True, description="installs an MPI implementation")
     variant("memkind", default=True, description="Use memkind library for hbw memory support")
 
-    depends_on("mpi", when="+mpi")
+    depends_on("mpi")
 
     with when("+cuda"):
         for var in ["openmpi", "mpich", "mvapich", "mvapich2", "mvapich2-gdr"]:
@@ -171,22 +170,20 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hip", when="+rocm")
 
     # graph partitioning
-    depends_on("parmetis +int64 +shared", when="+mpi graph_partitioning_libs=parmetis")
-    depends_on("metis +int64 +shared", when="+mpi graph_partitioning_libs=parmetis")
+    with when("graph_partitioning_libs=parmetis"):
+        depends_on("parmetis +int64 +shared")
+        depends_on("metis +int64 +shared")
+
     depends_on(
-        "scotch +mpi +mpi_thread +shared +threads +int64",
-        when="+mpi graph_partitioning_libs=ptscotch",
+        "scotch +mpi +mpi_thread +shared +threads +int64", when="graph_partitioning_libs=ptscotch"
     )
-    depends_on("kahip", when="+mpi graph_partitioning_libs=parhip")
+    depends_on("kahip", when="graph_partitioning_libs=parhip")
 
-    depends_on("hdf5@1.10 +shared +threadsafe ~mpi", when="~mpi")
-    depends_on("hdf5@1.10 +shared +threadsafe +mpi", when="+mpi")
+    depends_on("hdf5 +shared +threadsafe +hl +mpi")
 
-    depends_on("netcdf-c@4.6:4.7.4 +shared ~mpi", when="~mpi +netcdf")
-    depends_on("netcdf-c@4.6:4.7.4 +shared +mpi", when="+mpi +netcdf")
+    depends_on("netcdf-c@4.6: +shared +mpi", when="+netcdf")
 
-    depends_on("asagi ~mpi ~mpi3 ~fortran", when="+asagi ~mpi")
-    depends_on("asagi +mpi +mpi3", when="+asagi +mpi")
+    depends_on("asagi +mpi +mpi3", when="+asagi")
 
     depends_on("easi ~asagi jit=impalajit,lua", when="~asagi")
     depends_on("easi +asagi jit=impalajit,lua", when="+asagi")
@@ -222,25 +219,21 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         args = [
+            "-DMPI=ON",
             self.define_from_variant("ASAGI", "asagi"),
             self.define_from_variant("PRECISION", "precision"),
             self.define_from_variant("PLASTICITY_METHOD", "plasticity_method"),
             self.define_from_variant("DR_QUAD_RULE", "dr_quad_rule"),
             self.define_from_variant("ORDER", "convergence_order"),
             self.define_from_variant("EQUATIONS", "equations"),
-            self.define_from_variant("MPI", "mpi"),
             self.define_from_variant("NETCDF", "netcdf"),
         ]
 
         gemm_tools_list = ",".join(self.spec.variants["gemm_tools_list"].value)
         args.append(f"-DGEMM_TOOLS_LIST={gemm_tools_list}")
 
-        if self.spec.satisfies("+mpi"):
-            graph_partitioning_libs = ",".join(self.spec.variants["graph_partitioning_libs"].value)
-            args.append(f"-DGRAPH_PARTITIONING_LIBS={graph_partitioning_libs}")
-        else:
-            # if no MPI, then no graph partitioning is needed
-            args.append("-DGRAPH_PARTITIONING_LIBS=none")
+        graph_partitioning_libs = ",".join(self.spec.variants["graph_partitioning_libs"].value)
+        args.append(f"-DGRAPH_PARTITIONING_LIBS={graph_partitioning_libs}")
 
         if self.spec.variants["equations"].value != "viscoelastic2":
             args.append("-DNUMBER_OF_MECHANISMS=0")
