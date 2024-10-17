@@ -26,7 +26,30 @@ class PyHpcBeeflow(PythonPackage):
     version("0.1.8", sha256="7ffc7f2a6e6c4892b9432ba939ee7179d1189cedf82382752a3c268d70fceddd")
 
     depends_on("py-poetry@1.6.1:", type="build")
+
+    #Non-Python dependencies
     depends_on("neo4j@5.17.0:", type=("run"))
     depends_on("redis@7.4.0:", type=("run"))
+
+    #Python dependencies
+    depends_on("py-flask@2.0.0:", type=("run"))
+    depends_on("py-fastapi@0.109.2", type=("run")) #This version doesn't exist yet in Spack
+    depends_on("py-uvicorn@0.27.1", type("run")) #This version doesn't exist yet in Spack
+    depends_on("py-pyyaml@6.0.1:", type("run"))
+    depends_on("py-flask-restful@0.3.9", type("run"))
+    depends_on("py-cwl-utils@0.16:", type("run"))
+    depends_on("py-apscheduler@3.6.3:", type("run")) #This version doesn't exist yet in Spack
+    depends_on("py-jsonpickle@2.2.0:", type("run"))
+    depends_on("py-requests@:2.28.0", type("run"))
+    depends_on("py-requests-unixsocket@0.3.0:", type("run"))
+    depends_on("py-python-daemon@2.3.1:", type("run"))
+    depends_on("py-gunicorn@20.1.0:23.0.0", type("run"))
+    depends_on("py-typer@0.5.0:", type("run"))
+    depends_on("py-cffi@1.15.1:", type("run"))
+    depends_on("py-celery+redis+sqlalchemy@5.3.4:", type("run"))
+    depends_on("py-docutils@0.18.1:", type("build", "run"))
+    depends_on("py-graphviz@0.20.3:", type("run"))
+    depends_on("graphviz", type("run"))
+    depends_on("py-networkx@3.1", type("run"))
 
     depends_on("python@3.8.3:3.12.2", type=("build", "run"))
