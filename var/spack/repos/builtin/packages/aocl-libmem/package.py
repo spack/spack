@@ -54,6 +54,13 @@ class AoclLibmem(CMakePackage):
         multi=False,
     )
 
+    # validator needs to be built only for AuthenticAMD targets
+    patch(
+        "cmake.patch",
+        sha256="43453a83f322de7c89264439b2e9cbde855e50f550e13ebc884d13d959002092",
+        when="@5.0",
+    )
+
     depends_on("cmake@3.22:", type="build")
 
     @property

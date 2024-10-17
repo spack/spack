@@ -53,6 +53,7 @@ class AoclCrypto(CMakePackage):
     patch(
         "lsb_release.patch",
         sha256="b61d6d2518276c56d37e8c64d18488081af70f29a62f315ecbd23664e0e440b9",
+        when="@5.0",
     )
 
     depends_on("cmake@3.22:", type="build")

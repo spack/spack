@@ -28,7 +28,7 @@ class AoclDa(CMakePackage):
     """
 
     _name = "aocl-da"
-    homepage = "https://www.amd.com/en/developer/aocl/analytics.html"
+    homepage = "https://www.amd.com/en/developer/aocl/data-analytics.html"
     git = "https://github.com/amd/aocl-data-analytics"
     url = "https://github.com/amd/aocl-data-analytics/archive/5.0.tar.gz"
 
@@ -46,6 +46,13 @@ class AoclDa(CMakePackage):
     )
     variant("shared", default=True, description="Build shared libraries")
     variant("python", default=True, description="Build with Python bindings")
+
+    # Fix to enable cmake to be configured with examples off but gtest on
+    patch(
+        "0001-Fix-to-enable-cmake-to-be-configured-with-examples-o.patch",
+        sha256="65be59e99d52816cb77d3e887cd4816870576b46748b53073658caa9ca07d127",
+        when="@5.0",
+    )
 
     depends_on("cmake@3.22:", type="build")
     for vers in ["5.0"]:
