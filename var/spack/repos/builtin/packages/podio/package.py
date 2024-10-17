@@ -87,8 +87,11 @@ class Podio(CMakePackage):
         description="Build the RDataSource for reading podio collections",
         when="@1.0.2:",
     )
-    variant("tools", default=True, description="Add runtime dependencies for"
-            "podio-vis and podio-dump")
+    variant(
+        "tools",
+        default=True,
+        description="Add runtime dependencies for" "podio-vis and podio-dump",
+    )
 
     depends_on("root@6.08.06: cxxstd=17", when="cxxstd=17")
     depends_on("root@6.14:", when="+datasource")
