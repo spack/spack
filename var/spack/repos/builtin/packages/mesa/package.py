@@ -94,7 +94,7 @@ class Mesa(MesonPackage):
 
     # TODO: effectively deal with EGL.  The implications of this have not been
     # worked through yet
-    # variant('egl', default=False, description="Enable the EGL frontend.")
+    variant("egl", default=False, description="Enable the EGL frontend.")
 
     # TODO: Effectively deal with hardware drivers
     # The implication of this is enabling DRI, among other things, and
@@ -106,7 +106,14 @@ class Mesa(MesonPackage):
 
     # Provides
     provides("libglx", when="+glx")
-    # provides('egl@1.5', when='+egl')
+    provides("libegl@1.5", when="+egl")
+
+    with when("+egl"):
+        depends_on("libdrm")
+        depends_on("libxfixes")
+        depends_on("libxshmfence")
+        depends_on("dri2proto")
+        depends_on("libxxf86vm")
 
     # Variant dependencies
     with when("+llvm"):
@@ -222,13 +229,13 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         else:
             osmesa_enable, osmesa_disable = ("true", "false")
 
-        if "+osmesa" in spec:
+        if spec.satisfies("+osmesa"):
             num_frontends += 1
             args.append("-Dosmesa={0}".format(osmesa_enable))
         else:
             args.append("-Dosmesa={0}".format(osmesa_disable))
 
-        if "+glx" in spec:
+        if spec.satisfies("+glx"):
             num_frontends += 1
             if "+egl" in spec:
                 args.append("-Dglx=dri")
@@ -241,10 +248,9 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         else:
             args.append("-Dglx=disabled")
 
-        if "+egl" in spec:
+        if spec.satisfies("+egl"):
             num_frontends += 1
             args.extend(["-Degl=enabled", "-Dgbm=enabled", "-Ddri3=enabled"])
-            args_platforms.append("surfaceless")
         else:
             args.extend(["-Degl=disabled", "-Dgbm=disabled", "-Ddri3=disabled"])
 
@@ -254,7 +260,7 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
 
         args.append(opt_enable(num_frontends > 1, "shared-glapi"))
 
-        if "+llvm" in spec:
+        if spec.satisfies("+llvm"):
             llvm_config = Executable(spec["libllvm"].prefix.bin.join("llvm-config"))
             # Fix builds on hosts where /usr/bin/llvm-config-* is found and provides an
             # incompatible version. Ensure that the llvm-config of spec['libllvm'] is
@@ -278,7 +284,7 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
             args.append("-Dllvm=disabled")
 
         args_swr_arches = []
-        if "swr=auto" in spec:
+        if spec.satisfies("swr=auto"):
             if "avx" in spec.target:
                 args_swr_arches.append("avx")
             if "avx2" in spec.target:
