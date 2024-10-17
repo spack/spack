@@ -3370,13 +3370,14 @@ class Spec:
         elif other.compiler and not self.compiler:
             return False
 
-        var_satisfies = self.variants.satisfies(other.variants)
-        if not var_satisfies:
+        if not self.variants.satisfies(other.variants):
             if not any(other.variants[k].propagate for k in other.variants):
                 return False
 
             for variant in other.variants:
-                if other.variants[variant].propagate and not self.variant_exists_in_dependency(variant):
+                if other.variants[variant].propagate and not self.variant_exists_in_dependency(
+                    variant
+                    ):
                     return False
 
         if self.architecture and other.architecture:
