@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack.package import *
 
 
@@ -59,7 +60,7 @@ class VepCache(Package):
         for assembly in assemblies
         if species == "homo_sapiens"
     ]
-    
+
     for major, species, assembly, indexed in [
         (major, species, assembly, indexed)
         for major in vep_versions
@@ -68,7 +69,11 @@ class VepCache(Package):
         for indexed in [True, False]
     ]:
         version(major)
-        resource(**_vep_cache_resource_args(version=major, species=species, assembly=assembly, indexed=indexed))
+        resource(
+            **_vep_cache_resource_args(
+                version=major, species=species, assembly=assembly, indexed=indexed
+            )
+        )
 
     depends_on("vep+installer", type="build")
     depends_on("vep", type="run")
