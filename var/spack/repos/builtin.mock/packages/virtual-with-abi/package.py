@@ -6,10 +6,11 @@
 from spack.package import *
 
 
-class Gcc(Package):
-    """Simple compiler package."""
+class VirtualWithAbi(Package):
+    """Virtual package for mocking an interface with stable ABI ."""
 
-    homepage = "http://www.example.com"
-    url = "http://www.example.com/gcc-1.0.tar.gz"
+    homepage = "https://www.abi.org/"
+    virtual = True
 
-    version("11.4.0")
+    def test_hello(self):
+        print("Hello there!")

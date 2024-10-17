@@ -7,12 +7,18 @@ from spack.package import *
 
 
 class Manyvariants(Package):
+    """
+    A package with 4 different variants of different arities to test the
+    `match_variants` argument to `can_splice`
+    """
+
     homepage = "https://www.test.com"
     has_code = False
-    version("1.0.0")
-    version("1.0.1")
-    version("2.0.0")
+
     version("2.0.1")
+    version("2.0.0")
+    version("1.0.1")
+    version("1.0.0")
 
     variant("a", default=True)
     variant("b", default=False)

@@ -6,16 +6,20 @@
 from spack.package import *
 
 
-class Foo(Package):
+class VirtualAbi1(Package):
+    """
+    This package provides `virtual-with-abi` and is conditionally ABI
+    compatible with `virtual-abi-multi`
+    """
+
     homepage = "https://www.example.com"
     has_code = False
-    variant("compat", default=True)
-    version("1.0.0")
-    version("1.0.1")
-    can_splice("foo@1.0.0 +compat", when="@1.0.1 +compat")
-    version("1.0.2")
-    can_splice("foo@1.0.0:1.0.1 +compat", when="@1.0.2 +compat")
-    version("2.0.0")
+
+    version("1.0")
+
+    provides("virtual-with-abi")
+
+    can_splice("virtual-abi-multi@1.0 abi=one", when="@1.0")
 
     def install(self, spec, prefix):
         touch(prefix.foo)
