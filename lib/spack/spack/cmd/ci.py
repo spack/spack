@@ -882,9 +882,10 @@ def validate_git_versions(pkg, versions: VersionList) -> bool:
     with tempfile.TemporaryDirectory() as tmpdirpath:
         # Test if repository can be cloned.
         try:
-            git("clone", pkg.git, tmpdirpath, output=str, error=str)
+            _ = git("clone", pkg.git, tmpdirpath, output=str, error=str)
         except ProcessError as exp:
             tty.error(f"Unable to clone git repository for {pkg.name}", exp)
+            return False
 
         valid_commit = True
         for version in versions:
