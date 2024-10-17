@@ -84,7 +84,7 @@ class Draco(CMakePackage):
 
     conflicts("+cuda", when="@:7.6")
     conflicts("+caliper", when="@:7.7")
-    with when("@7.19.0:")
+    with when("@7.19.0:"):
         conflicts("gcc@:9.0")
 
     # Fix python discovery.
