@@ -75,15 +75,7 @@ class ClingoBootstrap(Clingo):
         return self.define("CLINGO_BUILD_PY_SHARED", "OFF")
 
     def cmake_args(self):
-        args = super().cmake_args()
-        args.append(self.define("CLINGO_BUILD_APPS", False))
-        if self.spec.satisfies("platform=darwin target=aarch64:"):
-            # big sur is first to support darwin-aarch64
-            args.append(self.define("CMAKE_OSX_DEPLOYMENT_TARGET", "11"))
-        elif self.spec.satisfies("platform=darwin target=x86_64:"):
-            # for x86_64 use highsierra
-            args.append(self.define("CMAKE_OSX_DEPLOYMENT_TARGET", "10.13"))
-        return args
+        return [*super().cmake_args(), self.define("CLINGO_BUILD_APPS", False)]
 
     @run_before("cmake", when="+optimized")
     def pgo_train(self):
