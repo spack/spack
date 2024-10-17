@@ -87,6 +87,8 @@ class Podio(CMakePackage):
         description="Build the RDataSource for reading podio collections",
         when="@1.0.2:",
     )
+    variant("tools", default=True, description="Add runtime dependencies for"
+            "podio-vis and podio-dump")
 
     depends_on("root@6.08.06: cxxstd=17", when="cxxstd=17")
     depends_on("root@6.14:", when="+datasource")
@@ -102,8 +104,8 @@ class Podio(CMakePackage):
     depends_on("sio", type=("build", "link"), when="+sio")
     depends_on("catch2@3.0.1:", type=("test"), when="@:0.16.5")
     depends_on("catch2@3.1:", type=("test"), when="@0.16.6:")
-    depends_on("py-graphviz", type=("run"))
-    depends_on("py-tabulate", type=("run", "test"), when="@0.16.6:")
+    depends_on("py-graphviz", type=("run"), when="+tools")
+    depends_on("py-tabulate", type=("run", "test"), when="@0.16.6: +tools")
 
     conflicts("+rntuple", when="@:0.16", msg="rntuple support requires at least podio@0.17")
 
