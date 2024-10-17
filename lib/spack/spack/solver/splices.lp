@@ -41,6 +41,7 @@ attr("splice_at_hash", ParentNode, node(SID, SpliceName), ChildName, ChildHash) 
   attr("hash", ParentNode, ParentHash),
   hash_attr(ParentHash, "hash", ChildName, ChildHash),
   abi_splice_conditions_hold(_, node(SID, SpliceName), ChildName, ChildHash),
+  ParentHash != ChildHash,
   not imposed_constraint(ParentHash, "hash", ChildName, ChildHash).
   
 % Names and virtual providers may change when a dependency is spliced in
@@ -48,7 +49,7 @@ imposed_constraint(Hash, "dependency_holds", ParentName, SpliceName, Type) :-
   hash_attr(Hash, "depends_on", ParentName, DepName, Type),
   hash_attr(Hash, "hash", DepName, DepHash),
   attr("splice_at_hash", node(ID, ParentName), node(SID, SpliceName), DepName, DepHash).
-  
+ 
 imposed_constraint(Hash, "virtual_on_edge", ParentName, SpliceName, VirtName) :-
   hash_attr(Hash, "virtual_on_edge", ParentName, DepName, VirtName),
   attr("splice_at_hash", node(ID, ParentName), node(SID, SpliceName), DepName, DepHash).

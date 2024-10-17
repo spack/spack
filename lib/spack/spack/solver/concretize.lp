@@ -1444,7 +1444,7 @@ imposed_constraint(Hash, Attr, PackageName, Arg1, Arg2) :-
 imposed_constraint(Hash, Attr, PackageName, A1, A2, A3) :-
   hash_attr(Hash, Attr, PackageName, A1, A2, A3).
 imposed_constraint(Hash, "hash", PackageName, Hash) :- installed_hash(PackageName, Hash).
-% Without splicing, we simply recover the exact semantics 
+% Without splicing, we simply recover the exact semantics
 imposed_constraint(ParentHash, "hash", ChildName, ChildHash) :- 
   hash_attr(ParentHash, "hash", ChildName, ChildHash),
   ChildHash != ParentHash,
@@ -1459,7 +1459,7 @@ imposed_constraint(Hash, "virtual_on_edge", PackageName, DepName, VirtName) :-
   hash_attr(Hash, "virtual_on_edge", PackageName, DepName, VirtName),
   not attr("splice_at_hash", _, _, DepName,_).
 
-% Rules pertaining to attr("splice_hash") and abi_splice_conditions_hold will
+% Rules pertaining to attr("splice_at_hash") and abi_splice_conditions_hold will
 % be conditionally loaded from splices.lp
 
 impose(Hash, PackageNode) :- attr("hash", PackageNode, Hash), attr("node", PackageNode).
