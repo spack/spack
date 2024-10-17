@@ -24,7 +24,7 @@ class Voropp(CMakePackage):
 
     depends_on("cxx", type="build")  # generated
 
-    patch("voro++-0.4.6_cmake.patch", when="@0.4.6")
+    patch("voro++-0.4.6-cmake.patch", when="@0.4.6")
 
     def cmake_args(self):
         args = [
