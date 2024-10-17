@@ -33,7 +33,7 @@ class PyHpcBeeflow(PythonPackage):
 
     #Python dependencies
     depends_on("py-flask@2.0.0:", type=("run"))
-    depends_on("py-fastapi@0.109.2", type=("run")) #This version doesn't exist yet in Spack
+    depends_on("py-fastapi@0.109.2", type=("run")) #Added new version
     depends_on("py-uvicorn@0.27.1", type=("run")) #This version doesn't exist yet in Spack
     depends_on("py-pyyaml@6.0.1:", type=("run"))
     depends_on("py-flask-restful@0.3.9", type=("run"))
