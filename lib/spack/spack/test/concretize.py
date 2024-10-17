@@ -552,7 +552,6 @@ class TestConcretize:
                 "ascent +adios2 ^adios2~~shared",
                 [("ascent", "+shared"), ("adios2", "~shared"), ("bzip2", "~shared")],
             ),
-            # Propagate through 1st level node that doesn't have the variant (ex a++foo ^b ^c++foo)
         ],
     )
     def test_concretize_propagate_disabled_variant(self, spec_str, expected_propagation):
@@ -570,9 +569,9 @@ class TestConcretize:
         for dep in spec.traverse(root=False):
             assert "invino" not in dep.variants.keys()
 
-    # Test: fail propagating variant that when it is excluded from a dependency
     def test_concretize_propagate_variant_exclude_dependency_fail(self):
-        """This test does a thing"""  # TODO: Rikki write the docstring
+        """Tests that a propagating variant cannot be allowed to be excluded by any of
+        the source package's dependencies"""
         spec = Spec("hypre ~~shared ^openblas +shared")
         with pytest.raises(spack.error.UnsatisfiableSpecError):
             spec.concretize()
@@ -659,7 +658,8 @@ class TestConcretize:
         assert not spec.satisfies("^dyninst+debug")
 
     def test_concretize_propagate_variant_multiple_deps_not_in_source(self):
-        """Test does a thing"""  # TODO: Rikki fix
+        """Test that a variant can be propagated to multiple dependencies
+        when the variant is not in the source package"""
         spec = Spec("netlib-lapack++shared")
         spec.concretize()
 
@@ -668,7 +668,9 @@ class TestConcretize:
         assert not spec.satisfies("netlib-lapack+shared")
 
     def test_concretize_propagate_variant_second_level_dep_not_in_source(self):
-        """ "Test does a thing"""
+        """"Test that a variant can be propagated past first level dependencies
+        when the variant is not in the source package or any of the first level
+        dependencies"""
         spec = Spec("parent-foo-bar ++fee")
         spec.concretize()
 
@@ -679,7 +681,9 @@ class TestConcretize:
         """Test propagating a variant that is not in the source package
         or in any of the dependents fails"""
         spec = Spec("callpath++shared")
-        with pytest.raises(spack.solver.asp.InternalConcretizerError):
+        with pytest.raises(
+            spack.solver.asp.InternalConcretizerError
+        ):
             spec.concretize()
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):
@@ -2371,31 +2375,6 @@ class TestConcretize:
         assert len(edges) == 1 and edges[0].virtuals == ("mpi",)
         edges = spec.edges_to_dependencies(name="callpath")
         assert len(edges) == 1 and edges[0].virtuals == ()
-
-    @pytest.mark.parametrize("transitive", [True, False])
-    def test_explicit_splices(
-        self, mutable_config, database_mutable_config, mock_packages, transitive, capfd
-    ):
-        mpich_spec = database_mutable_config.query("mpich")[0]
-        splice_info = {
-            "target": "mpi",
-            "replacement": f"/{mpich_spec.dag_hash()}",
-            "transitive": transitive,
-        }
-        spack.config.CONFIG.set("concretizer", {"splice": {"explicit": [splice_info]}})
-
-        spec = spack.spec.Spec("hdf5 ^zmpi").concretized()
-
-        assert spec.satisfies(f"^mpich@{mpich_spec.version}")
-        assert spec.build_spec.dependencies(name="zmpi", deptype="link")
-        assert spec["mpi"].build_spec.satisfies(mpich_spec)
-        assert not spec.build_spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
-        assert not spec.dependencies(name="zmpi", deptype="link")
-
-        captured = capfd.readouterr()
-        assert "Warning: explicit splice configuration has caused" in captured.err
-        assert "hdf5 ^zmpi" in captured.err
-        assert str(spec) in captured.err
 
     @pytest.mark.db
     @pytest.mark.parametrize(

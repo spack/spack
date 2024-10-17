@@ -7,7 +7,6 @@
 % This logic program implements Spack's concretizer
 %=============================================================================
 
-
 % ID of the nodes in the "root" link-run sub-DAG
 #const min_dupe_id = 0.
 
@@ -1099,7 +1098,6 @@ error(100, "{0} and {1} cannot both propagate variant '{2}'", SourceNode1, Sourc
 error(100, "Cannot propagate the variant '{0}' from the package: {1} because package: {2} is set to exclude it", Variant, SourceNode, PackageNode) :- % TODO: Rikki Write a better msg later
   variant_is_propagated(SourceNode, Variant),
   attr("variant_set", PackageNode, Variant, _).
-
 
 %----
 % Flags

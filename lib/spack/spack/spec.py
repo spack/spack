@@ -3377,7 +3377,7 @@ class Spec:
             for variant in other.variants:
                 if other.variants[variant].propagate and not self.variant_exists_in_dependency(
                     variant
-                    ):
+                ):
                     return False
 
         if self.architecture and other.architecture:
