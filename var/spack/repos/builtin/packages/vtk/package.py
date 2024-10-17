@@ -41,14 +41,6 @@ class Vtk(CMakePackage):
         sha256="34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb",
     )
     version("8.2.0", sha256="34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb")
-    version("8.1.2", sha256="0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db")
-    version("8.1.1", sha256="71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324")
-    version("8.1.0", sha256="6e269f07b64fb13774f5925161fb4e1f379f4e6a0131c8408c555f6b58ef3cb7")
-    version("8.0.1", sha256="49107352923dea6de05a7b4c3906aaf98ef39c91ad81c383136e768dcf304069")
-    version("7.1.0", sha256="5f3ea001204d4f714be972a810a62c0f2277fbb9d8d2f8df39562988ca37497a")
-    version("7.0.0", sha256="78a990a15ead79cdc752e86b83cfab7dbf5b7ef51ba409db02570dbdd9ec32c3")
-    version("6.3.0", sha256="92a493354c5fa66bea73b5fc014154af5d9f3f6cee8d20a826f4cd5d4b0e8a5e")
-    version("6.1.0", sha256="bd7df10a479606d529a8b71f466c44a2bdd11fd534c62ce0aa44fad91883fa34")
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
@@ -318,18 +310,6 @@ class Vtk(CMakePackage):
         # Some variable names have changed
         if spec.satisfies("@8.2.0"):
             cmake_args.append("-DVTK_USE_SYSTEM_PUGIXML:BOOL=OFF")
-        elif spec.satisfies("@:8.1"):
-            # Note: Since #36408 (in January 2024), @:8.1 could not be built because
-            # it replaced depends_on("netcdf-cxx") with "netcdf-cxx4", below is
-            # an attept to make it work again, but really the qestion is that as
-            # since the release of spack-0.22 in May 2024, nobody could build these
-            # versions, could we remove them instead?
-            cmake_args.extend(
-                [
-                    "-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF",
-                    "-DNETCDF_CXX_ROOT={0}".format(spec["netcdf-cxx4"].prefix),
-                ]
-            )
 
         if "+mpi" in spec:
             if spec.satisfies("@:8.2.0"):
@@ -466,41 +446,6 @@ class Vtk(CMakePackage):
                 cmake_args.extend(["-DVTK_USE_X:BOOL=ON", "-DVTK_USE_COCOA:BOOL=OFF"])
 
         compile_flags = []
-
-        if spec.satisfies("@:6.1.0"):
-            # Note: Since #36408 (in January 2024), @6.1.0 could not be built because
-            # it replaced depends_on("netcdf-cxx") with "netcdf-cxx4", below is
-            # an attept to make it work again, but really the qestion is that as
-            # since the release of spack-0.22 in May 2024, nobody could build this
-            # version, could we remove it instead?
-            compile_flags.append("-DGLX_GLXEXT_LEGACY")
-
-            # VTK 6.1.0 (and possibly earlier) does not use
-            # NETCDF_CXX_ROOT to detect NetCDF C++ bindings, so
-            # NETCDF_CXX_INCLUDE_DIR and NETCDF_CXX_LIBRARY must be
-            # used instead to detect these bindings
-            netcdf_cxx_lib = spec["netcdf-cxx4"].libs.joined()
-            cmake_args.extend(
-                [
-                    "-DNETCDF_CXX_INCLUDE_DIR={0}".format(spec["netcdf-cxx4"].prefix.include),
-                    "-DNETCDF_CXX_LIBRARY={0}".format(netcdf_cxx_lib),
-                ]
-            )
-
-            # Garbage collection is unsupported in Xcode starting with
-            # version 5.1; if the Apple clang version of the compiler
-            # is 5.1.0 or later, unset the required Objective-C flags
-            # to remove the garbage collection flags.  Versions of VTK
-            # after 6.1.0 set VTK_REQUIRED_OBJCXX_FLAGS to the empty
-            # string. This fix was recommended on the VTK mailing list
-            # in March 2014 (see
-            # https://public.kitware.com/pipermail/vtkusers/2014-March/083368.html)
-            if self.spec.satisfies("%apple-clang@5.1.0:"):
-                cmake_args.extend(["-DVTK_REQUIRED_OBJCXX_FLAGS="])
-
-            # A bug in tao pegtl causes build failures with intel compilers
-            if "%intel" in spec and spec.version >= Version("8.2"):
-                cmake_args.append("-DVTK_MODULE_ENABLE_VTK_IOMotionFX:BOOL=OFF")
 
         # -no-ipo prevents an internal compiler error from multi-file
         # optimization (https://github.com/spack/spack/issues/20471)
