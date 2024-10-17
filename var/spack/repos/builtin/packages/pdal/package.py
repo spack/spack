@@ -26,6 +26,8 @@ class Pdal(CMakePackage):
     version("2.4.3", sha256="e1a910d593311e68b51f32d1f4f8fe4327b97ae7a8de209147b6111091b6f75b")
     version("2.3.0", sha256="8ae848e9b3fe5149a9277fe60e10b9858edb9a3cf1a40728f11712498e5da13a")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.13:", type="build")
     depends_on("gdal@3:")
     depends_on("gdal@3.4:", when="@2.6:")
@@ -34,7 +36,7 @@ class Pdal(CMakePackage):
     depends_on("proj@4.9.3:")
 
     # https://github.com/PDAL/PDAL/issues/3826
-    patch("stdcppfs.patch", when="@:2.6.1 %gcc@:8")
+    patch("stdcppfs.patch", when="@:2.4 %gcc@:8")
     msg = "a new stdc++fs patch is needed for version 2.6.2 onwards with gcc@8 or older"
     conflicts("%gcc@:8", when="@2.6.2:", msg=msg)
 

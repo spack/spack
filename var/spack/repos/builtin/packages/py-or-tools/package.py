@@ -19,6 +19,8 @@ class PyOrTools(CMakePackage):
 
     version("7.8", sha256="d93a9502b18af51902abd130ff5f23768fcf47e266e6d1f34b3586387aa2de68")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.14:", type="build")
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")

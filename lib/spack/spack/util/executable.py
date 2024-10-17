@@ -12,6 +12,7 @@ from pathlib import Path, PurePath
 import llnl.util.tty as tty
 
 import spack.error
+from spack.util.environment import EnvironmentModifications
 
 __all__ = ["Executable", "which", "ProcessError"]
 
@@ -27,10 +28,10 @@ class Executable:
         self.exe = [file_path]
 
         self.default_env = {}
-        from spack.util.environment import EnvironmentModifications  # no cycle
 
         self.default_envmod = EnvironmentModifications()
         self.returncode = None
+        self.ignore_quotes = False
 
         if not self.exe:
             raise ProcessError("Cannot construct executable for '%s'" % name)
@@ -38,6 +39,20 @@ class Executable:
     def add_default_arg(self, *args):
         """Add default argument(s) to the command."""
         self.exe.extend(args)
+
+    def with_default_args(self, *args):
+        """Same as add_default_arg, but returns a copy of the executable."""
+        new = self.copy()
+        new.add_default_arg(*args)
+        return new
+
+    def copy(self):
+        """Return a copy of this Executable."""
+        new = Executable(self.exe[0])
+        new.exe[:] = self.exe
+        new.default_env.update(self.default_env)
+        new.default_envmod.extend(self.default_envmod)
+        return new
 
     def add_default_env(self, key, value):
         """Set an environment variable when the command is run.
@@ -174,7 +189,7 @@ class Executable:
 
         fail_on_error = kwargs.pop("fail_on_error", True)
         ignore_errors = kwargs.pop("ignore_errors", ())
-        ignore_quotes = kwargs.pop("ignore_quotes", False)
+        ignore_quotes = kwargs.pop("ignore_quotes", self.ignore_quotes)
         timeout = kwargs.pop("timeout", None)
 
         # If they just want to ignore one error code, make it a tuple.
@@ -260,9 +275,9 @@ class Executable:
             long_msg = cmd_line_string + f"\n{result}"
             if fail_on_error:
                 raise ProcessTimeoutError(
-                    f"\nProcess timed out after {timeout}s"
-                    f"We expected the following command to run quickly but\
-it did not, please report this as an issue: {long_msg}",
+                    f"\nProcess timed out after {timeout}s. "
+                    "We expected the following command to run quickly but it did not, "
+                    f"please report this as an issue: {long_msg}",
                     long_message=long_msg,
                 ) from te
 

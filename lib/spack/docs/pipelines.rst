@@ -253,17 +253,6 @@ can easily happen if it is not updated frequently, this behavior ensures that
 spack has a way to know for certain about the status of any concrete spec on
 the remote mirror, but can slow down pipeline generation significantly.
 
-The ``--optimize`` argument is experimental and runs the generated pipeline
-document through a series of optimization passes designed to reduce the size
-of the generated file.
-
-The ``--dependencies`` is also experimental and disables what in Gitlab is
-referred to as DAG scheduling, internally using the ``dependencies`` keyword
-rather than ``needs`` to list dependency jobs.  The drawback of using this option
-is that before any job can begin, all jobs in previous stages must first
-complete.  The benefit is that Gitlab allows more dependencies to be listed
-when using ``dependencies`` instead of ``needs``.
-
 The optional ``--output-file`` argument should be an absolute path (including
 file name) to the generated pipeline, and if not given, the default is
 ``./.gitlab-ci.yml``.
@@ -603,6 +592,77 @@ the attributes will be merged starting from the bottom match going up to the top
 
 In the case that no match is found in a submapping section, no additional attributes will be applied.
 
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Dynamic Mapping Sections
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+For large scale CI where cost optimization is required, dynamic mapping allows for the use of real-time
+mapping schemes served by a web service. This type of mapping does not support the ``-remove`` type
+behavior, but it does follow the rest of the merge rules for configurations.
+
+The dynamic mapping service needs to implement a single REST API interface for getting
+requests ``GET <URL>[:PORT][/PATH]?spec=<pkg_name@pkg_version +variant1+variant2%compiler@compiler_version>``.
+
+example request.
+
+.. code-block::
+
+  https://my-dyn-mapping.spack.io/allocation?spec=zlib-ng@2.1.6 +compat+opt+shared+pic+new_strategies arch=linux-ubuntu20.04-x86_64_v3%gcc@12.0.0
+
+
+With an example response the updates kubernetes request variables, overrides the max retries for gitlab,
+and prepends a note about the modifications made by the my-dyn-mapping.spack.io service.
+
+.. code-block::
+
+  200 OK
+
+  {
+    "variables":
+    {
+      "KUBERNETES_CPU_REQUEST": "500m",
+      "KUBERNETES_MEMORY_REQUEST": "2G",
+    },
+    "retry": { "max:": "1"}
+    "script+:":
+    [
+      "echo \"Job modified by my-dyn-mapping.spack.io\""
+    ]
+  }
+
+
+The ci.yaml configuration section takes the URL endpoint as well as a number of options to configure how responses are handled.
+
+It is possible to specify a list of allowed and ignored configuration attributes under ``allow`` and ``ignore``
+respectively. It is also possible to configure required attributes under ``required`` section.
+
+Options to configure the client timeout and SSL verification using the ``timeout`` and ``verify_ssl`` options.
+By default, the ``timeout`` is set to the option in ``config:timeout`` and ``veryify_ssl`` is set the the option in ``config::verify_ssl``.
+
+Passing header parameters to the request can be achieved through the ``header`` section. The values of the variables passed to the
+header may be environment variables that are expanded at runtime, such as a private token configured on the runner.
+
+Here is an example configuration pointing to ``my-dyn-mapping.spack.io/allocation``.
+
+
+.. code-block:: yaml
+
+  ci:
+  - dynamic-mapping:
+      endpoint: my-dyn-mapping.spack.io/allocation
+      timeout: 10
+      verify_ssl: True
+      header:
+        PRIVATE_TOKEN: ${MY_PRIVATE_TOKEN}
+        MY_CONFIG: "fuzz_allocation:false"
+      allow:
+      - variables
+      ignore:
+      - script
+      require: []
+
+
 ^^^^^^^^^^^^^
 Bootstrapping
 ^^^^^^^^^^^^^
@@ -674,11 +734,7 @@ build the package.
 
 When including a bootstrapping phase as in the example above, the result is that
 the bootstrapped compiler packages will be pushed to the binary mirror (and the
-local artifacts mirror) before the actual release specs are built. In this case,
-the jobs corresponding to subsequent release specs are configured to
-``install_missing_compilers``, so that if spack is asked to install a package
-with a compiler it doesn't know about, it can be quickly installed from the
-binary mirror first.
+local artifacts mirror) before the actual release specs are built.
 
 Since bootstrapping compilers is optional, those items can be left out of the
 environment/stack file, and in that case no bootstrapping will be done (only the

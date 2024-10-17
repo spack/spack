@@ -6,10 +6,12 @@ import collections
 import collections.abc
 import copy
 import functools
-import inspect
 from typing import List, Optional, Tuple
 
-import spack.build_environment
+from llnl.util import lang
+
+import spack.error
+import spack.multimethod
 
 #: Builder classes, as registered by the "builder" decorator
 BUILDER_CLS = {}
@@ -94,11 +96,10 @@ def _create(pkg):
     Args:
         pkg (spack.package_base.PackageBase): package object for which we need a builder
     """
-    package_module = inspect.getmodule(pkg)
     package_buildsystem = buildsystem_name(pkg)
     default_builder_cls = BUILDER_CLS[package_buildsystem]
     builder_cls_name = default_builder_cls.__name__
-    builder_cls = getattr(package_module, builder_cls_name, None)
+    builder_cls = getattr(pkg.module, builder_cls_name, None)
     if builder_cls:
         return builder_cls(pkg)
 
@@ -231,24 +232,27 @@ class PhaseCallbacksMeta(type):
         for temporary_stage in (_RUN_BEFORE, _RUN_AFTER):
             staged_callbacks = temporary_stage.callbacks
 
-            # We don't have callbacks in this class, move on
-            if not staged_callbacks:
+            # Here we have an adapter from an old-style package. This means there is no
+            # hierarchy of builders, and every callback that had to be combined between
+            # *Package and *Builder has been combined already by _PackageAdapterMeta
+            if name == "Adapter":
                 continue
 
-            # If we are here we have callbacks. To get a complete list, get first what
-            # was attached to parent classes, then prepend what we have registered here.
+            # If we are here we have callbacks. To get a complete list, we accumulate all the
+            # callbacks from base classes, we deduplicate them, then prepend what we have
+            # registered here.
             #
             # The order should be:
             # 1. Callbacks are registered in order within the same class
             # 2. Callbacks defined in derived classes precede those defined in base
             #    classes
+            callbacks_from_base = []
             for base in bases:
-                callbacks_from_base = getattr(base, temporary_stage.attribute_name, None)
-                if callbacks_from_base:
-                    break
-            else:
-                callbacks_from_base = []
-
+                current_callbacks = getattr(base, temporary_stage.attribute_name, None)
+                if not current_callbacks:
+                    continue
+                callbacks_from_base.extend(current_callbacks)
+            callbacks_from_base = list(lang.dedupe(callbacks_from_base))
             # Set the callbacks in this class and flush the temporary stage
             attr_dict[temporary_stage.attribute_name] = staged_callbacks[:] + callbacks_from_base
             del temporary_stage.callbacks[:]
@@ -290,7 +294,11 @@ class PhaseCallbacksMeta(type):
         return _decorator
 
 
-class BuilderMeta(PhaseCallbacksMeta, type(collections.abc.Sequence)):  # type: ignore
+class BuilderMeta(
+    PhaseCallbacksMeta,
+    spack.multimethod.MultiMethodMeta,
+    type(collections.abc.Sequence),  # type: ignore
+):
     pass
 
 
@@ -453,15 +461,13 @@ class InstallationPhase:
         # If a phase has a matching stop_before_phase attribute,
         # stop the installation process raising a StopPhase
         if getattr(instance, "stop_before_phase", None) == self.name:
-            raise spack.build_environment.StopPhase(
-                "Stopping before '{0}' phase".format(self.name)
-            )
+            raise spack.error.StopPhase("Stopping before '{0}' phase".format(self.name))
 
     def _on_phase_exit(self, instance):
         # If a phase has a matching last_phase attribute,
         # stop the installation process raising a StopPhase
         if getattr(instance, "last_phase", None) == self.name:
-            raise spack.build_environment.StopPhase("Stopping at '{0}' phase".format(self.name))
+            raise spack.error.StopPhase("Stopping at '{0}' phase".format(self.name))
 
     def copy(self):
         return copy.deepcopy(self)
@@ -514,10 +520,6 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
     @property
     def prefix(self):
         return self.pkg.prefix
-
-    def test(self):
-        # Defer tests to virtual and concrete packages
-        pass
 
     def setup_build_environment(self, env):
         """Sets up the build environment for a package.

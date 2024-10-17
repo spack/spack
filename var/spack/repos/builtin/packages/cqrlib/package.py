@@ -9,7 +9,7 @@ from spack.package import *
 class Cqrlib(MakefilePackage):
     """CQRlib -- ANSI C API for Quaternion Rotations"""
 
-    homepage = "http://cqrlib.sourceforge.net/"
+    homepage = "https://cqrlib.sourceforge.net/"
     url = (
         "https://downloads.sourceforge.net/project/cqrlib/cqrlib/CQRlib-1.1.2/CQRlib-1.1.2.tar.gz"
     )
@@ -17,6 +17,9 @@ class Cqrlib(MakefilePackage):
     license("LGPL-2.1-or-later")
 
     version("1.1.2", sha256="af3cf2402974579f3c6efc6a6174a5da52786db4bfee9d38d504d93bc42410fd")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("libtool", type="build")
 

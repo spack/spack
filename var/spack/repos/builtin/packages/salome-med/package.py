@@ -25,6 +25,10 @@ class SalomeMed(CMakePackage):
     version("3.3.1", sha256="856e9c4bb75eb0cceac3d5a5c65b1ce52fb3c46b9182920e1c9f34ae69bd2d5f")
     version("3.2.0", sha256="d52e9a1bdd10f31aa154c34a5799b48d4266dc6b4a5ee05a9ceda525f2c6c138")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("mpi", default=False, description="Enable MPI")
     variant("static", default=False, description="Enable static library build")
     variant("fortran", default=False, description="Enable Fortran")

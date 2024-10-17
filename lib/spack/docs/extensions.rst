@@ -111,3 +111,39 @@ The corresponding unit tests can be run giving the appropriate options to ``spac
 
    (5 durations < 0.005s hidden.  Use -vv to show these durations.)
    =========================================== 5 passed in 5.06s ============================================
+
+---------------------------------------
+Registering Extensions via Entry Points
+---------------------------------------
+
+.. note::
+   Python version >= 3.8 is required to register extensions via entry points.
+
+Spack can be made aware of extensions that are installed as part of a python package.  To do so, register a function that returns the extension path, or paths, to the ``"spack.extensions"`` entry point.  Consider the Python package ``my_package`` that includes a Spack extension:
+
+.. code-block:: console
+
+  my-package/
+  ├── src
+  │   ├── my_package
+  │   │   └── __init__.py
+  │   └── spack-scripting/  # the spack extensions
+  └── pyproject.toml
+
+adding the following to ``my_package``'s ``pyproject.toml`` will make the ``spack-scripting`` extension visible to Spack when ``my_package`` is installed:
+
+.. code-block:: toml
+
+   [project.entry_points."spack.extenions"]
+   my_package = "my_package:get_extension_path"
+
+The function ``my_package.get_extension_path`` in ``my_package/__init__.py`` might look like
+
+.. code-block:: python
+
+   import importlib.resources
+
+   def get_extension_path():
+       dirname = importlib.resources.files("my_package").joinpath("spack-scripting")
+       if dirname.exists():
+           return str(dirname)

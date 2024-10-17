@@ -32,13 +32,6 @@ class ClingoBootstrap(Clingo):
         description="Enable a series of Spack-specific optimizations (PGO, LTO, mimalloc)",
     )
 
-    variant(
-        "force_setuptools",
-        default=False,
-        description="Force a dependency on setuptools to help the old concretizer",
-    )
-    depends_on("py-setuptools", type="build", when="+force_setuptools")
-
     # Enable LTO
     conflicts("~ipo", when="+optimized")
 
@@ -65,12 +58,6 @@ class ClingoBootstrap(Clingo):
         when="platform=linux",
         msg="GCC or clang are required to bootstrap clingo on Linux",
     )
-    requires(
-        "%gcc",
-        "%clang",
-        when="platform=cray",
-        msg="GCC or clang are required to bootstrap clingo on Cray",
-    )
     conflicts("%gcc@:5", msg="C++14 support is required to bootstrap clingo")
 
     # On Darwin we bootstrap with Apple Clang
@@ -90,6 +77,12 @@ class ClingoBootstrap(Clingo):
     def cmake_args(self):
         args = super().cmake_args()
         args.append(self.define("CLINGO_BUILD_APPS", False))
+        if self.spec.satisfies("platform=darwin target=aarch64:"):
+            # big sur is first to support darwin-aarch64
+            args.append(self.define("CMAKE_OSX_DEPLOYMENT_TARGET", "11"))
+        elif self.spec.satisfies("platform=darwin target=x86_64:"):
+            # for x86_64 use highsierra
+            args.append(self.define("CMAKE_OSX_DEPLOYMENT_TARGET", "10.13"))
         return args
 
     @run_before("cmake", when="+optimized")
@@ -127,9 +120,7 @@ class ClingoBootstrap(Clingo):
         )
         python_runtime_env.unset("SPACK_ENV")
         python_runtime_env.unset("SPACK_PYTHON")
-        self.spec["python"].command(
-            spack.paths.spack_script, "solve", "--fresh", "hdf5", extra_env=python_runtime_env
-        )
+        python(spack.paths.spack_script, "solve", "--fresh", "hdf5", extra_env=python_runtime_env)
 
         # Clean the build dir.
         rmtree(self.build_directory, ignore_errors=True)
@@ -151,9 +142,5 @@ class ClingoBootstrap(Clingo):
         cmake.add_default_envmod(use_mods)
 
     def setup_build_environment(self, env):
-        if "%apple-clang" in self.spec:
-            env.append_flags("CFLAGS", "-mmacosx-version-min=10.13")
-            env.append_flags("CXXFLAGS", "-mmacosx-version-min=10.13")
-            env.append_flags("LDFLAGS", "-mmacosx-version-min=10.13")
-        elif self.spec.compiler.name in ("gcc", "clang") and "+static_libstdcpp" in self.spec:
+        if self.spec.compiler.name in ("gcc", "clang") and "+static_libstdcpp" in self.spec:
             env.append_flags("LDFLAGS", "-static-libstdc++ -static-libgcc -Wl,--exclude-libs,ALL")

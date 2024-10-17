@@ -15,7 +15,6 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.mirror
-import spack.modules
 import spack.reporters
 import spack.spec
 import spack.store
@@ -563,12 +562,21 @@ def add_concretizer_args(subparser):
         help="reuse installed packages/buildcaches when possible",
     )
     subgroup.add_argument(
+        "--fresh-roots",
         "--reuse-deps",
         action=ConfigSetAction,
         dest="concretizer:reuse",
         const="dependencies",
         default=None,
-        help="reuse installed dependencies only",
+        help="concretize with fresh roots and reused dependencies",
+    )
+    subgroup.add_argument(
+        "--deprecated",
+        action=ConfigSetAction,
+        dest="config:deprecated",
+        const=True,
+        default=None,
+        help="allow concretizer to select deprecated versions",
     )
 
 

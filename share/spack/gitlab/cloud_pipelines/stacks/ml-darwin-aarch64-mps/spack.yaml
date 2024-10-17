@@ -3,8 +3,11 @@ spack:
 
   packages:
     all:
-      require: target=aarch64
-      variants: +mps~cuda~rocm
+      require:
+      - target=aarch64
+      - +mps
+      - ~cuda
+      - ~rocm
     mpi:
       require: openmpi
     openblas:
@@ -30,9 +33,6 @@ spack:
   - py-keras-applications
   - py-keras-preprocessing
   - py-keras2onnx
-
-  # MXNet not supported on darwin aarch64 yet
-  # - mxnet
 
   # PyTorch
   - py-botorch
@@ -81,8 +81,6 @@ spack:
 
   # XGBoost
   - py-xgboost
-  # - r-xgboost
-  - xgboost
 
   ci:
     pipeline-gen:

@@ -14,8 +14,6 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     list_url = "https://mxnet.apache.org/get_started/download"
     git = "https://github.com/apache/mxnet.git"
 
-    maintainers("adamjstewart")
-
     license("Apache-2.0")
 
     version("master", branch="master", submodules=True)
@@ -24,6 +22,9 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     version("1.8.0", sha256="95aff985895aba409c08d5514510ae38b88490cfb6281ab3a5ff0f5826c8db54")
     version("1.7.0", sha256="1d20c9be7d16ccb4e830e9ee3406796efaf96b0d93414d676337b64bc59ced18")
     version("1.6.0", sha256="01eb06069c90f33469c7354946261b0a94824bbaf819fd5d5a7318e8ee596def")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant(
         "build_type",

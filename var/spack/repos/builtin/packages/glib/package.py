@@ -120,6 +120,9 @@ class Glib(MesonPackage, AutotoolsPackage):
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("libmount", default=False, description="Build with libmount support")
     variant(
         "tracing",
@@ -289,20 +292,20 @@ class MesonBuilder(BaseBuilder, spack.build_systems.meson.MesonBuilder):
     def meson_args(self):
         args = []
         if self.spec.satisfies("@2.63.5:"):
-            if "+libmount" in self.spec:
+            if self.spec.satisfies("+libmount"):
                 args.append("-Dlibmount=enabled")
             else:
                 args.append("-Dlibmount=disabled")
         else:
-            if "+libmount" in self.spec:
+            if self.spec.satisfies("+libmount"):
                 args.append("-Dlibmount=true")
             else:
                 args.append("-Dlibmount=false")
-        if "tracing=dtrace" in self.spec:
+        if self.spec.satisfies("tracing=dtrace"):
             args.append("-Ddtrace=true")
         else:
             args.append("-Ddtrace=false")
-        if "tracing=systemtap" in self.spec:
+        if self.spec.satisfies("tracing=systemtap"):
             args.append("-Dsystemtap=true")
         else:
             args.append("-Dsystemtap=false")
@@ -317,20 +320,20 @@ class MesonBuilder(BaseBuilder, spack.build_systems.meson.MesonBuilder):
         if self.spec.satisfies("@:2.72"):
             args.append("-Dgettext=external")
         if self.spec.satisfies("@:2.74"):
-            if self.spec["iconv"].name == "libc":
-                args.append("-Diconv=libc")
-            else:
+            if self.spec["iconv"].name == "libiconv":
                 if self.spec.satisfies("@2.61.0:"):
                     args.append("-Diconv=external")
                 else:
                     args.append("-Diconv=gnu")
+            else:
+                args.append("-Diconv=libc")
         return args
 
 
 class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
-        if "+libmount" in self.spec:
+        if self.spec.satisfies("+libmount"):
             args.append("--enable-libmount")
         else:
             args.append("--disable-libmount")
@@ -338,10 +341,10 @@ class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuild
             args.append(
                 "--with-python={0}".format(os.path.basename(self.spec["python"].command.path))
             )
-        if self.spec["iconv"].name == "libc":
-            args.append("--with-libiconv=maybe")
-        else:
+        if self.spec["iconv"].name == "libiconv":
             args.append("--with-libiconv=gnu")
+        else:
+            args.append("--with-libiconv=maybe")
         if self.spec.satisfies("@2.56:"):
             for value in ("dtrace", "systemtap"):
                 if ("tracing=" + value) in self.spec:
@@ -349,7 +352,7 @@ class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuild
                 else:
                     args.append("--disable-" + value)
         else:
-            if "tracing=dtrace" in self.spec or "tracing=systemtap" in self.spec:
+            if self.spec.satisfies("tracing=dtrace") or self.spec.satisfies("tracing=systemtap"):
                 args.append("--enable-tracing")
             else:
                 args.append("--disable-tracing")

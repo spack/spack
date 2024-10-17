@@ -30,6 +30,8 @@ class Laghos(MakefilePackage):
     version("1.1", sha256="53b9bfe2af263c63eb4544ca1731dd26f40b73a0d2775a9883db51821bf23b7f")
     version("1.0", sha256="af50a126355a41c758fcda335a43fdb0a3cd97e608ba51c485afda3dd84a5b34")
 
+    depends_on("cxx", type="build")  # generated
+
     variant("metis", default=True, description="Enable/disable METIS support")
     variant("ofast", default=False, description="Enable gcc optimization flags")
 
@@ -44,6 +46,13 @@ class Laghos(MakefilePackage):
     # Recommended mfem version for laghos v1.x is: ^mfem@3.3.1-laghos-v1.0
     depends_on("mfem@3.3.1-laghos-v1.0", when="@1.0,1.1")
 
+    # Replace MPI_Session
+    patch(
+        "https://github.com/CEED/Laghos/commit/c800883ab2741c8c3b99486e7d8ddd8e53a7cb95.patch?full_index=1",
+        sha256="e783a71c3cb36886eb539c0f7ac622883ed5caf7ccae597d545d48eaf051d15d",
+        when="@3.1 ^mfem@4.4:",
+    )
+
     @property
     def build_targets(self):
         targets = []
@@ -54,7 +63,7 @@ class Laghos(MakefilePackage):
         targets.append("TEST_MK=%s" % spec["mfem"].package.test_mk)
         if spec.satisfies("@:2.0"):
             targets.append("CXX=%s" % spec["mpi"].mpicxx)
-        if "+ofast %gcc" in self.spec:
+        if self.spec.satisfies("+ofast %gcc"):
             targets.append("CXXFLAGS = -Ofast -finline-functions")
         return targets
 

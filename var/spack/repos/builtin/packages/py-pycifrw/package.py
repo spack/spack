@@ -17,4 +17,6 @@ class PyPycifrw(PythonPackage):
 
     version("4.4.1", sha256="cef7662f475e0eb78a55c2d55774d474e888c96b0539e5f08550afa902cdc4e1")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("py-setuptools", type="build")

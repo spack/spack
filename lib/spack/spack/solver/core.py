@@ -195,7 +195,7 @@ def _bootstrap_clingo() -> ModuleType:
     import spack.bootstrap
 
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_core_dependencies()
+        spack.bootstrap.ensure_clingo_importable_or_raise()
         clingo_mod = importlib.import_module("clingo")
 
     return clingo_mod
@@ -230,6 +230,13 @@ class NodeArgument(NamedTuple):
     pkg: str
 
 
+class NodeFlag(NamedTuple):
+    flag_type: str
+    flag: str
+    flag_group: str
+    source: str
+
+
 def intermediate_repr(sym):
     """Returns an intermediate representation of clingo models for Spack's spec builder.
 
@@ -247,6 +254,13 @@ def intermediate_repr(sym):
         if sym.name == "node":
             return NodeArgument(
                 id=intermediate_repr(sym.arguments[0]), pkg=intermediate_repr(sym.arguments[1])
+            )
+        elif sym.name == "node_flag":
+            return NodeFlag(
+                flag_type=intermediate_repr(sym.arguments[0]),
+                flag=intermediate_repr(sym.arguments[1]),
+                flag_group=intermediate_repr(sym.arguments[2]),
+                source=intermediate_repr(sym.arguments[3]),
             )
     except RuntimeError:
         # This happens when using clingo w/ CFFI and trying to access ".name" for symbols

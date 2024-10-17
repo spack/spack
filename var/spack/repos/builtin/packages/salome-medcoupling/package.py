@@ -26,6 +26,9 @@ class SalomeMedcoupling(CMakePackage):
     version("9.4.0", tag="V9_4_0", commit="984fe46c4076f08f42ef43e290e3cd1aea5a8182")
     version("9.3.0", tag="V9_3_0", commit="32521cd6e5c113de5db7953a80149e5ab492120a")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     variant("static", default=False, description="Enable static library build")
     variant("mpi", default=False, description="Enable MPI")
     variant("in64", default=False, description="Enable 64 bits indexes")
