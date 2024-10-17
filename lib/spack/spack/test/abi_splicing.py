@@ -116,6 +116,7 @@ def test_double_splice(splicing_setup):
         goal_spec.concretized()
 
 
+# The next two tests are mirrors of one another
 def test_virtual_multi_splices_in(splicing_setup):
     cache = [
         "depends-on-virtual-with-abi ^virtual-abi-1",
@@ -136,11 +137,25 @@ def test_virtual_multi_splices_in(splicing_setup):
 
 
 def test_virtual_multi_can_be_spliced(splicing_setup):
-    assert False
+    cache = [
+        "depends-on-virtual-with-abi ^virtual-abi-multi abi=one",
+        "depends-on-virtual-with-abi ^virtual-abi-multi abi=two",
+    ]
+    goal_specs = [
+        "depends-on-virtual-with-abi ^virtual-abi-1",
+        "depends-on-virtual-with-abi ^virtual-abi-2",
+    ]
+    with CacheManager(cache):
+        spack.config.set("packages", _make_specs_non_buildable(["depends-on-virtual-with-abi"]))
+        with pytest.raises(Exception):
+            for gs in goal_specs:
+                Spec(gs).concretized()
+        _enable_splicing()
+        for gs in goal_specs:
+            Spec(gs).concretized()
 
 
-def test_virtual_multi_only_splices_with_correct_variants(splicing_setup):
-    assert False
+
 
 
 def test_manyvariant_star_matching_variant_splice(splicing_setup):
