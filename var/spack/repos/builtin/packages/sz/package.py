@@ -90,7 +90,6 @@ class Sz(CMakePackage, AutotoolsPackage):
     # Windows requires numerous commits that only exist on master at the moment
     conflicts("platform=windows", when="@:2.1.12.5")
 
-
     def flag_handler(self, name, flags):
         if name == "cflags":
             if self.spec.satisfies("%oneapi"):
