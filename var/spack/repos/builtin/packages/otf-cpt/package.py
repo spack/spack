@@ -20,7 +20,7 @@ class OtfCpt(CMakePackage):
 
     version("0.9", tag="v0.9")
 
-    depends_on("cxx")
+    depends_on("cxx", type="build")
     depends_on("mpi")
     conflicts(
         "%gcc",
