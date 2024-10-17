@@ -11,7 +11,7 @@ class PyFastapi(PythonPackage):
     """FastAPI framework, high performance, easy to learn, fast to code, ready for production"""
 
     homepage = "https://github.com/tiangolo/fastapi"
-    pypi = "fastapi/fastapi-0.88.0.tar.gz"
+    pypi = "fastapi/fastapi-0.109.2.tar.gz"
 
     license("MIT")
 

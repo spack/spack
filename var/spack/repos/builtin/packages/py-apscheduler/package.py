@@ -10,7 +10,7 @@ class PyApscheduler(PythonPackage):
     """In-process task scheduler with Cron-like capabilities."""
 
     homepage = "https://github.com/agronholm/apscheduler"
-    pypi = "APScheduler/APScheduler-3.3.1.tar.gz"
+    pypi = "APScheduler/APScheduler-3.6.3.tar.gz"
 
     license("MIT")
 

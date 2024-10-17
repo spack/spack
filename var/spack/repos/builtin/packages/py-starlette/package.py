@@ -11,7 +11,7 @@ class PyStarlette(PythonPackage):
     """The little ASGI library that shines."""
 
     homepage = "https://github.com/encode/starlette"
-    pypi = "starlette/starlette-0.23.1.tar.gz"
+    pypi = "starlette/starlette-0.36.3.tar.gz"
 
     license("BSD-3-Clause")
 

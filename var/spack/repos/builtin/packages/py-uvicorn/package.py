@@ -11,7 +11,7 @@ class PyUvicorn(PythonPackage):
     """The lightning-fast ASGI server."""
 
     homepage = "https://www.uvicorn.org/"
-    pypi = "uvicorn/uvicorn-0.20.0.tar.gz"
+    pypi = "uvicorn/uvicorn-0.27.1.tar.gz"
 
     license("BSD-3-Clause")
 
