@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+
 
 class OtfCpt(CMakePackage):
     """Tool to collect and report model factors (aka. fundamental performance factors)
@@ -16,7 +18,7 @@ class OtfCpt(CMakePackage):
 
     maintainers("jgraciahlrs", "jprotze")
 
-    license("Apache-2.0", checked_by="jgracia")
+    license("Apache-2.0", checked_by="jgraciahlrs")
 
     version("0.9", tag="v0.9")
 
@@ -28,7 +30,7 @@ class OtfCpt(CMakePackage):
     )
 
     patch(
-        "https://github.com/RWTH-HPC/OTF-CPT/commit/b58f83588a4c231b71ca48dcddd909e1ab318cc6.diff",
+        "https://github.com/RWTH-HPC/OTF-CPT/commit/b58f83588a4c231b71ca48dcddd909e1ab318cc6.diff?full_index=1",
         sha256="1c8e1c4b5bf4cd1c6e4ed9a9d8c5ef47abe2aad5402ec466db0df4f96cbd3407",
         when="@0.9",
     )
