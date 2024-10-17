@@ -29,4 +29,4 @@ class PyHpcBeeflow(PythonPackage):
     depends_on("neo4j@5.17.0:", type=("run"))
     depends_on("redis@7.4.0:", type=("run"))
 
-    depends_on("python@3.12.2:", type=("build", "run"))
+    depends_on("python@3.8.3:3.12.2", type=("build", "run"))
