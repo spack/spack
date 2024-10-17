@@ -155,9 +155,6 @@ def test_virtual_multi_can_be_spliced(splicing_setup):
             Spec(gs).concretized()
 
 
-
-
-
 def test_manyvariant_star_matching_variant_splice(splicing_setup):
     cache = [
         # can_splice("manyvariants@1.0.0", when="@1.0.1", match_variants="*")
