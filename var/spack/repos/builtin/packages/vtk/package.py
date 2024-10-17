@@ -319,10 +319,15 @@ class Vtk(CMakePackage):
         if spec.satisfies("@8.2.0"):
             cmake_args.append("-DVTK_USE_SYSTEM_PUGIXML:BOOL=OFF")
         elif spec.satisfies("@:8.1"):
+            # Note: Since #36408 (in January 2024), @:8.1 could not be built because
+            # it replaced depends_on("netcdf-cxx") with "netcdf-cxx4", below is
+            # an attept to make it work again, but really the qestion is that as
+            # since the release of spack-0.22 in May 2024, nobody could build these
+            # versions, could we remove them instead?
             cmake_args.extend(
                 [
                     "-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF",
-                    "-DNETCDF_CXX_ROOT={0}".format(spec["netcdf-cxx"].prefix),
+                    "-DNETCDF_CXX_ROOT={0}".format(spec["netcdf-cxx4"].prefix),
                 ]
             )
 
@@ -463,16 +468,21 @@ class Vtk(CMakePackage):
         compile_flags = []
 
         if spec.satisfies("@:6.1.0"):
+            # Note: Since #36408 (in January 2024), @6.1.0 could not be built because
+            # it replaced depends_on("netcdf-cxx") with "netcdf-cxx4", below is
+            # an attept to make it work again, but really the qestion is that as
+            # since the release of spack-0.22 in May 2024, nobody could build this
+            # version, could we remove it instead?
             compile_flags.append("-DGLX_GLXEXT_LEGACY")
 
             # VTK 6.1.0 (and possibly earlier) does not use
             # NETCDF_CXX_ROOT to detect NetCDF C++ bindings, so
             # NETCDF_CXX_INCLUDE_DIR and NETCDF_CXX_LIBRARY must be
             # used instead to detect these bindings
-            netcdf_cxx_lib = spec["netcdf-cxx"].libs.joined()
+            netcdf_cxx_lib = spec["netcdf-cxx4"].libs.joined()
             cmake_args.extend(
                 [
-                    "-DNETCDF_CXX_INCLUDE_DIR={0}".format(spec["netcdf-cxx"].prefix.include),
+                    "-DNETCDF_CXX_INCLUDE_DIR={0}".format(spec["netcdf-cxx4"].prefix.include),
                     "-DNETCDF_CXX_LIBRARY={0}".format(netcdf_cxx_lib),
                 ]
             )
