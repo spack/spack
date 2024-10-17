@@ -6,7 +6,7 @@ on:
 
 concurrency:
   group: unit_tests-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   # Run unit tests with different configurations on linux
