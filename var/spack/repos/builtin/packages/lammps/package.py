@@ -884,11 +884,16 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
                     "-O3 -fno-math-errno -fno-unroll-loops "
                     "-fveclib=AMDLIBM -muse-unaligned-vector-move"
                 )
-                if spec.satisfies("%aocc@4.1:"):
+                if spec.satisfies("%aocc@4.1:4.2"):
                     cxx_flags += (
                         " -mllvm -force-gather-overhead-cost=50"
                         " -mllvm -enable-masked-gather-sequence=false"
                     )
+                elif spec.satisfies("%aocc@5.0:"):
+                    cxx_flags += " -mllvm -enable-aggressive-gather"
+                    if spec.target >= "zen5":
+                        cxx_flags += " -fenable-restrict-based-lv"
+
                 # add -fopenmp-simd if OpenMP not already turned on
                 if spec.satisfies("~openmp"):
                     cxx_flags += " -fopenmp-simd"
