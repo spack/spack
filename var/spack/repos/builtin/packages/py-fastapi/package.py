@@ -15,6 +15,7 @@ class PyFastapi(PythonPackage):
 
     license("MIT")
 
+    version("0.109.2", sha256="f3817eac96fe4f65a2ebb4baa000f394e55f5fccdaf7f75250804bc58f354f73")
     version("0.98.0", sha256="0d3c18886f652038262b5898fec6b09f4ca92ee23e9d9b1d1d24e429f84bf27b")
     version("0.88.0", sha256="915bf304180a0e7c5605ec81097b7d4cd8826ff87a02bb198e336fb9f3b5ff02")
 
