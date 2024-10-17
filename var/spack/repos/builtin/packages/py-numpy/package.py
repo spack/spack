@@ -224,6 +224,15 @@ class PyNumpy(PythonPackage):
             if gcc_version <= Version("5.1"):
                 flags.append(self.compiler.c99_flag)
 
+        if self.spec.satisfies('%clang@13:'):
+            if name == 'cflags':
+                # avoid "optimization flag '-ffat-lto-objects' is not supported"
+                # warning being turned into an error
+                flags.append('-Wno-error=ignored-optimization-argument')
+            elif name == 'ldflags':
+                # fix "xyz.o: file not recognized: file format not recognized"
+                flags.append('-flto')
+
         return (flags, None, None)
 
     def blas_lapack_pkg_config(self) -> Tuple[str, str]:
