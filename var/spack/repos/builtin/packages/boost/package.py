@@ -632,12 +632,9 @@ class Boost(Package):
             # Any lib that is in self.all_libs AND in the variants dictionary
             # AND is set to False should be added to options in a --without flag
             for lib in self.all_libs:
-                if lib not in self.spec.variants.dict:
+                if lib not in self.spec.variants.dict or self.spec.satisfies(f"+{lib}"):
                     continue
-                elif self.spec.variants.dict[lib].value:
-                    continue
-                else:
-                    options.append(f"--without-{lib.name}")
+                options.append(f"--without-{lib}")
 
         if not spec.satisfies("@:1.75 %intel") and not spec.satisfies("platform=windows"):
             # When building any version >= 1.76, the toolset must be specified.
