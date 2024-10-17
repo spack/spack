@@ -75,10 +75,7 @@ class ClingoBootstrap(Clingo):
         return self.define("CLINGO_BUILD_PY_SHARED", "OFF")
 
     def cmake_args(self):
-        return [
-            *super().cmake_args(),
-            self.define("CLINGO_BUILD_APPS", False)
-        ]
+        return [*super().cmake_args(), self.define("CLINGO_BUILD_APPS", False)]
 
     @run_before("cmake", when="+optimized")
     def pgo_train(self):
