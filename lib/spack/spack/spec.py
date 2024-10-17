@@ -3370,12 +3370,14 @@ class Spec:
         elif other.compiler and not self.compiler:
             return False
 
-        var_satisfies, vars = self.variants.satisfies(other.variants)
+        var_satisfies = self.variants.satisfies(other.variants)
         if not var_satisfies:
-            return False
-        for var in vars:
-            if not self._variant_exists_in_dependency(var):
+            if not any(other.variants[k].propagate for k in other.variants):
                 return False
+
+            for variant in other.variants:
+                if other.variants[variant].propagate and not self.variant_exists_in_dependency(variant):
+                    return False
 
         if self.architecture and other.architecture:
             if not self.architecture.satisfies(other.architecture):
@@ -3487,7 +3489,7 @@ class Spec:
 
         return self._patches
 
-    def _variant_exists_in_dependency(self, variant):
+    def variant_exists_in_dependency(self, variant):
         if variant in self.package_class.variant_names():
             return True
 
@@ -4531,21 +4533,8 @@ class VariantMap(lang.HashableMap):
         # Set the item
         super().__setitem__(vspec.name, vspec)
 
-    def satisfies(self, other):  # Rikki: loosen constrains
-        propagating_variants = []
-        satisfies = True if other is not None else False
-
-        for k in other:
-            if k not in self:
-                if not other[k].propagate:
-                    satisfies = False
-                else:
-                    propagating_variants.append(k)
-                continue
-            if not self[k].satisfies(other[k]):
-                satisfies = False
-
-        return satisfies, propagating_variants
+    def satisfies(self, other):
+        return all(k in self and self[k].satisfies(other[k]) for k in other)
 
     def intersects(self, other):
         return all(self[k].intersects(other[k]) for k in other if k in self)
