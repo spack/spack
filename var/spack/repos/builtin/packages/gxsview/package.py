@@ -52,6 +52,7 @@ class Gxsview(QMakePackage):
     # gcc11 compilation rule for std::numeric_limits,
     # avoid "numeric_limits" is not a member of "std"
     patch("gcc11.patch", when="@2021.07.01 %gcc@11:")
+    # sets fontconfig inc/lib, removes useless stuffs
     patch("vtk90.patch", when="@2024.03.15")
 
     build_directory = "gui"
@@ -64,11 +65,14 @@ class Gxsview(QMakePackage):
         if not os.path.exists(vtk_include_dir):
             vtk_include_dir = join_path(self.spec["vtk"].prefix.include, "vtk")
             args.append("VTK_NO_VER_SUFFIX=ON")
+        fontconfig = self.spec["fontconfig"]
         args.extend(
             [
                 "VTK_LIB_DIR={0}".format(vtk_lib_dir),
                 "VTK_INC_DIR={0}".format(vtk_include_dir),
                 "VTK_MAJOR_VER={0}".format(str(vtk_suffix)),
+                "FONTCONFIG_LIBDIR={0}".format(fontconfig.prefix.lib),
+                "FONTCONFIG_INCDIR={0}".format(fontconfig.prefix.include),
             ]
         )
         # Below to avoid undefined reference to `std::filesystem::__cxx11::path::_M_split_cmpts()'

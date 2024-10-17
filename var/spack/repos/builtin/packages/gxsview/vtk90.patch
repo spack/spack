@@ -23,6 +23,20 @@ index eeae291..337e0e1 100644
  #include <vtkOggTheoraWriter.h>
  #include <vtkWindowToImageFilter.h>
  #if  defined(_WIN32) || defined(__WIN32__) || defined(_WIN64) || defined(__WIN64__) || defined(_MSC_VER)
+diff --git a/gui/gui.pro b/gui/gui.pro
+index cab6c36..81861b7 100644
+--- a/gui/gui.pro
++++ b/gui/gui.pro
+@@ -302,7 +302,8 @@ unix:{
+ 
+ 
+ unix:!macx {
+-    LIBS += -lfontconfig
++    LIBS += -L$$FONTCONFIG_LIBDIR -lfontconfig
++    INCLUDEPATH += $$FONTCONFIG_INCDIR
+ 	# gcc7 requires libstdc++fs
+     linux-g++ {
+         lessThan(QMAKE_GCC_MAJOR_VERSION, 8) {
 diff --git a/gui/vtk9.pri b/gui/vtk9.pri
 index 298dedb..82993f2 100644
 --- a/gui/vtk9.pri
