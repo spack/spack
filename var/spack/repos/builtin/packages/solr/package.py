@@ -19,12 +19,16 @@ class Solr(Package):
 
     license("Apache-2.0", checked_by="wdconinc")
 
-    version("9.7.0", sha256="38548b86fa4e3c87883875952da124bf7d742cb8f7b25d37a1176833588e8552") 
+    version("9.7.0", sha256="38548b86fa4e3c87883875952da124bf7d742cb8f7b25d37a1176833588e8552")
     version("8.11.4", sha256="163fbdf246bbd78910bc36c3257ad50cdf31ccc3329a5ef885c23c9ef69e0ebe")
     with default_args(deprecated=True):
         # https://nvd.nist.gov/vuln/detail/CVE-2024-45216
-        version("8.11.3", sha256="178300ae095094c2060a1060cf475aa935f1202addfb5bacb38e8712ccb56455")
-        version("8.11.2", sha256="54d6ebd392942f0798a60d50a910e26794b2c344ee97c2d9b50e678a7066d3a6")
+        version(
+            "8.11.3", sha256="178300ae095094c2060a1060cf475aa935f1202addfb5bacb38e8712ccb56455"
+        )
+        version(
+            "8.11.2", sha256="54d6ebd392942f0798a60d50a910e26794b2c344ee97c2d9b50e678a7066d3a6"
+        )
         version("8.6.0", sha256="4519ccdb531619df770f1065db6adcedc052c7aa94b42806d541966550956aa5")
         version("8.5.2", sha256="c457d6c7243241cad141e1df34c6f669d58a6c60e537f4217d032616dd066dcf")
         version("8.5.1", sha256="47b68073b37bbcc0517a355ef722f20827c3f1416537ebbccf5239dda8064a0b")
