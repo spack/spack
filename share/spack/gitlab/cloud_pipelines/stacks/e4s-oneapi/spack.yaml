@@ -89,7 +89,6 @@ spack:
   - dxt-explorer
   - ecp-data-vis-sdk ~cuda ~rocm +adios2 ~ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp # +ascent: fides: fides/xgc/XGCCommon.cxx:233:10: error: no member named 'iota' in namespace 'std'; +visit: visit_vtk/lightweight/vtkSkewLookupTable.C:32:10: error: cannot initialize return object of type 'unsigned char *' with an rvalue of type 'const unsigned char *'
   - exaworks
-  - fftx
   - flecsi
   - flit
   - flux-core
@@ -193,6 +192,7 @@ spack:
   # --
   # - chapel ~cuda ~rocm                                    # llvm: closures.c:(.text+0x305e): undefined reference to `_intel_fast_memset'
   # - cp2k +mpi                                             # dbcsr: dbcsr_api.F(973): #error: incomplete macro call DBCSR_ABORT.
+  # - fftx                                                  # fftx: https://github.com/spack/spack/issues/47048
   # - geopm-runtime                                         # libelf: configure: error: installation or configuration problem: C compiler cannot create executables.
   # - hpctoolkit                                            # dyninst@13.0.0%gcc: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'
   # - lbann                                                 # 2024.2 internal compiler error
