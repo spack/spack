@@ -550,6 +550,13 @@ class CMakeBuilder(BaseBuilder):
         """Full-path to the directory to use when building the package."""
         return os.path.join(self.pkg.stage.path, self.build_dirname)
 
+
+    def setup_dependent_cmake_args(self, module, dependent_spec):
+        base_args = dependent_spec.pkg.cmake_args()
+
+
+
+
     def cmake_args(self):
         """List of all the arguments that must be passed to cmake, except:
 
