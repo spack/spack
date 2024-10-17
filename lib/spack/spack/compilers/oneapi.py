@@ -7,7 +7,9 @@ import os
 from os.path import dirname, join
 
 from llnl.util import tty
+from llnl.util.filesystem import ancestor
 
+import spack.util.executable
 from spack.compiler import Compiler
 from spack.version import Version
 
@@ -115,6 +117,24 @@ class Oneapi(Compiler):
     @property
     def stdcxx_libs(self):
         return ("-cxxlib",)
+
+    @property
+    def prefix(self):
+        # OneAPI reports its install prefix when running ``--version``
+        # on the line ``InstalledDir: <prefix>/bin/compiler``.
+        cc = spack.util.executable.Executable(self.cc)
+        with self.compiler_environment():
+            oneapi_output = cc("--version", output=str, error=str)
+
+            for line in oneapi_output.splitlines():
+                if line.startswith("InstalledDir:"):
+                    oneapi_prefix = line.split(":")[1].strip()
+                    # Go from <prefix>/bin/compiler to <prefix>
+                    return ancestor(oneapi_prefix, 2)
+
+            raise RuntimeError(
+                "could not find install prefix of OneAPI from output:\n\t{}".format(oneapi_output)
+            )
 
     def setup_custom_environment(self, pkg, env):
         # workaround bug in icpx driver where it requires sycl-post-link is on the PATH
