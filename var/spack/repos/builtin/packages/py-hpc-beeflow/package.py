@@ -38,7 +38,7 @@ class PyHpcBeeflow(PythonPackage):
     depends_on("py-pyyaml@6.0.1:", type=("run"))
     depends_on("py-flask-restful@0.3.9", type=("run"))
     depends_on("py-cwl-utils@0.16:", type=("run"))
-    depends_on("py-apscheduler@3.6.3:", type=("run")) #This version doesn't exist yet in Spack
+    depends_on("py-apscheduler@3.6.3:", type=("run"))
     depends_on("py-jsonpickle@2.2.0:", type=("run"))
     depends_on("py-requests@:2.28.0", type=("run"))
     depends_on("py-requests-unixsocket@0.3.0:", type=("run"))
