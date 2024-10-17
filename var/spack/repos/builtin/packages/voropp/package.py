@@ -27,8 +27,6 @@ class Voropp(CMakePackage):
     patch("voro++-0.4.6-cmake.patch", when="@0.4.6")
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-        ]
+        args = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
         return args
