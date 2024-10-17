@@ -2533,8 +2533,13 @@ writing a package for a legacy Python module that only works with Python
    depends_on("python@2.4:2.6")
 
 Version ranges in Spack are *inclusive*, so ``2.4:2.6`` means any version
-greater than or equal to ``2.4`` and up to and including any ``2.6.x``. If
-you want to specify that a package works with any version of Python 3 (or
+greater than or equal to ``2.4`` and up to and including any ``2.6.x``.
+
+Note that while Python is versioned with three digits, like ``2.4.0``, we can
+omit the trailing digits if we only care about the initial ones. For example,
+the version ``2.4.0`` will get matched by the spec ``@2.4:2.6``.
+
+If you want to specify that a package works with any version of Python 3 (or
 higher), this would look like:
 
 .. code-block:: python
@@ -2551,6 +2556,17 @@ requires Python 2, you can similarly leave out the lower bound:
 Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
 ``@:3`` means "up to and including any 3.x version".
 
+If we require Python 3 exclusively, we can simply write:
+
+.. code-block:: python
+
+   depends_on('python@3')
+
+since we don't care about the latter digits. You can think of this as a
+short-hand for ``@3:3``. Among equivalent specs, usually the most succinct is
+preferred. Note that there are `special rules <version-comparison_>`_ for
+version parts that are alphabetic (e.g., "rc" or "develop").
+
 You can also simply write
 
 .. code-block:: python
@@ -2561,19 +2577,14 @@ to tell Spack that the package needs Python 2.7.x. This is equivalent to
 ``@2.7:2.7``.
 
 In very rare cases, you may need to specify an exact version, for example
-if you need to distinguish between ``3.2`` and ``3.2.1``:
+if you need to distinguish between ``2.7`` and ``2.7.1``:
 
 .. code-block:: python
 
-   depends_on("pkg@=3.2")
+   depends_on("pkg@=2.7")
 
-But in general, you should try to use version ranges as much as possible,
-so that custom suffixes are included too. The above example can be
-rewritten in terms of ranges as follows:
-
-.. code-block:: python
-
-   depends_on("pkg@3.2:3.2.0")
+But in general, you should try to use version ranges or partial version (e.g.,
+``@2.7``) as much as possible, so that custom suffixes are included too.
 
 A spec can contain a version list of ranges and individual versions
 separated by commas. For example, if you need Boost 1.59.0 or newer,
