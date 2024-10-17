@@ -668,7 +668,7 @@ class TestConcretize:
         assert not spec.satisfies("netlib-lapack+shared")
 
     def test_concretize_propagate_variant_second_level_dep_not_in_source(self):
-        """"Test that a variant can be propagated past first level dependencies
+        """Test that a variant can be propagated past first level dependencies
         when the variant is not in the source package or any of the first level
         dependencies"""
         spec = Spec("parent-foo-bar ++fee")
@@ -681,9 +681,7 @@ class TestConcretize:
         """Test propagating a variant that is not in the source package
         or in any of the dependents fails"""
         spec = Spec("callpath++shared")
-        with pytest.raises(
-            spack.solver.asp.InternalConcretizerError
-        ):
+        with pytest.raises(spack.solver.asp.InternalConcretizerError):
             spec.concretize()
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):
@@ -2280,6 +2278,31 @@ class TestConcretize:
             spack.error.UnsatisfiableSpecError, match="Cannot set the required compiler: pkg-a%foo"
         ):
             Spec("pkg-a %foo").concretized()
+
+    @pytest.mark.parametrize("transitive", [True, False])
+    def test_explicit_splices(
+        self, mutable_config, database_mutable_config, mock_packages, transitive, capfd
+    ):
+        mpich_spec = database_mutable_config.query("mpich")[0]
+        splice_info = {
+            "target": "mpi",
+            "replacement": f"/{mpich_spec.dag_hash()}",
+            "transitive": transitive,
+        }
+        spack.config.CONFIG.set("concretizer", {"splice": {"explicit": [splice_info]}})
+
+        spec = spack.spec.Spec("hdf5 ^zmpi").concretized()
+
+        assert spec.satisfies(f"^mpich@{mpich_spec.version}")
+        assert spec.build_spec.dependencies(name="zmpi", deptype="link")
+        assert spec["mpi"].build_spec.satisfies(mpich_spec)
+        assert not spec.build_spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
+        assert not spec.dependencies(name="zmpi", deptype="link")
+
+        captured = capfd.readouterr()
+        assert "Warning: explicit splice configuration has caused" in captured.err
+        assert "hdf5 ^zmpi" in captured.err
+        assert str(spec) in captured.err
 
     @pytest.mark.regression("36339")
     def test_compiler_match_constraints_when_selected(self):
