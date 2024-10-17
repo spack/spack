@@ -216,6 +216,10 @@ def clean_environment():
     env.unset("R_HOME")
     env.unset("R_ENVIRON")
 
+    # Common Makefile variables
+    env.unset("BUILD_DIR")
+    env.unset("INSTALL_DIR")
+
     env.unset("LUA_PATH")
     env.unset("LUA_CPATH")
 
