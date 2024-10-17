@@ -77,6 +77,12 @@ class ClingoBootstrap(Clingo):
     def cmake_args(self):
         args = super().cmake_args()
         args.append(self.define("CLINGO_BUILD_APPS", False))
+        if self.spec.satisfies("platform=darwin target=aarch64:"):
+            # big sur is first to support darwin-aarch64
+            args.append(self.define("CMAKE_OSX_DEPLOYMENT_TARGET", "11"))
+        elif self.spec.satisfies("platform=darwin target=x86_64:"):
+            # for x86_64 use highsierra
+            args.append(self.define("CMAKE_OSX_DEPLOYMENT_TARGET", "10.13"))
         return args
 
     @run_before("cmake", when="+optimized")
@@ -136,9 +142,5 @@ class ClingoBootstrap(Clingo):
         cmake.add_default_envmod(use_mods)
 
     def setup_build_environment(self, env):
-        if self.spec.satisfies("%apple-clang"):
-            env.append_flags("CFLAGS", "-mmacosx-version-min=10.13")
-            env.append_flags("CXXFLAGS", "-mmacosx-version-min=10.13")
-            env.append_flags("LDFLAGS", "-mmacosx-version-min=10.13")
-        elif self.spec.compiler.name in ("gcc", "clang") and "+static_libstdcpp" in self.spec:
+        if self.spec.compiler.name in ("gcc", "clang") and "+static_libstdcpp" in self.spec:
             env.append_flags("LDFLAGS", "-static-libstdc++ -static-libgcc -Wl,--exclude-libs,ALL")
