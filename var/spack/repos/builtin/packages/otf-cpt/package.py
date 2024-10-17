@@ -26,7 +26,8 @@ class OtfCpt(CMakePackage):
     depends_on("mpi")
     conflicts(
         "%gcc",
-        msg="GCC compilers currently do not support OMPT, please use a clang-like compiler.",
+        # Use a clang compiler with a matching libomp, e.g. 'sudo apt install libomp-14-dev':
+        msg="gcc currently does not support OMPT, please use a clang-like compiler with libomp",
     )
 
     patch(
