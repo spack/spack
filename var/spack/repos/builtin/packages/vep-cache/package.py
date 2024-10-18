@@ -63,7 +63,7 @@ class VepCache(Package):
     ]
 
     for major, (species, assemblies) in itertools.product(vep_versions, vep_species):
-        for assembly, indexed in itertools.product(assemblies, [True, False]): 
+        for assembly, indexed in itertools.product(assemblies, [True, False]):
             version(major)
             resource(
                 **_vep_cache_resource_args(
