@@ -14,7 +14,8 @@ class Eza(CargoPackage):
 
     maintainers("trws")
 
-    license("MIT")
+    license("EUPL-1.2", when="@0.20:", checked_by="pranav-sivaraman")
+    license("MIT", when="@:0.19", checked_by="pranav-sivaraman")
 
     version("0.20.2", sha256="8d5a573906fd362e27c601e8413b2c96b546bbac7cdedcbd1defe1332f42265d")
     version("0.20.1", sha256="e78a84cc5324ebb6481293d32edfdbc7de78511d5190b4808a0896f8ce4d652e")
