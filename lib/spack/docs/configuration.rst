@@ -511,6 +511,7 @@ Spack understands over a dozen special variables. These are:
 * ``$target_family``. The target family for the current host, as
   detected by ArchSpec. E.g. ``x86_64`` or ``aarch64``.
 * ``$date``: the current date in the format YYYY-MM-DD
+* ``$spack_major``, ``$spack_minor``, ``$spack_patch``: Spack version components
 
 
 Note that, as with shell variables, you can write these as ``$varname``
