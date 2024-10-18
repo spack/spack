@@ -139,13 +139,16 @@ def develop(parser, args):
                 "Recursive develop requires a concretized environment"
             )
         else:
-            for cspec in concrete_specs:
-                for parent in cspec.traverse_edges(direction="parents", root=True):
+            for s in concrete_specs:
+                for parent in s.traverse_edges(direction="parents", root=True):
+
                     parent_args = copy(args)
                     parent_args.spec = parent.spec.format("{name}@{version}")
                     parent_args.recursive = False
+
                     tty.debug(f"Recursive develop for {parent_args.spec}")
                     develop(parser, parent_args)
+            return
 
     version = spec.versions.concrete_range_as_version
     if not version:
@@ -179,6 +182,8 @@ def develop(parser, args):
                 msg += " Use `spack develop -f` to overwrite."
                 raise SpackError(msg)
 
+        # cloning can take a while and it's nice to get a message for the longer clones
+        tty.msg(f"Cloning source code for {spec}")
         _retrieve_develop_source(spec, abspath)
 
     tty.debug("Updating develop config for {0} transactionally".format(env.name))
