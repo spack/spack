@@ -75,9 +75,7 @@ class ClingoBootstrap(Clingo):
         return self.define("CLINGO_BUILD_PY_SHARED", "OFF")
 
     def cmake_args(self):
-        args = super().cmake_args()
-        args.append(self.define("CLINGO_BUILD_APPS", False))
-        return args
+        return [*super().cmake_args(), self.define("CLINGO_BUILD_APPS", False)]
 
     @run_before("cmake", when="+optimized")
     def pgo_train(self):
@@ -136,9 +134,5 @@ class ClingoBootstrap(Clingo):
         cmake.add_default_envmod(use_mods)
 
     def setup_build_environment(self, env):
-        if self.spec.satisfies("%apple-clang"):
-            env.append_flags("CFLAGS", "-mmacosx-version-min=10.13")
-            env.append_flags("CXXFLAGS", "-mmacosx-version-min=10.13")
-            env.append_flags("LDFLAGS", "-mmacosx-version-min=10.13")
-        elif self.spec.compiler.name in ("gcc", "clang") and "+static_libstdcpp" in self.spec:
+        if self.spec.compiler.name in ("gcc", "clang") and "+static_libstdcpp" in self.spec:
             env.append_flags("LDFLAGS", "-static-libstdc++ -static-libgcc -Wl,--exclude-libs,ALL")

@@ -1204,7 +1204,6 @@ def _setup_pkg_and_run(
         # objects can't be sent to the parent.
         exc_type = type(e)
         tb = e.__traceback__
-        # See: https://docs.python.org/3/library/traceback.html#traceback.format_exception
         tb_string = "".join(traceback.format_exception(exc_type, e, tb))
 
         # build up some context from the offending package so we can
