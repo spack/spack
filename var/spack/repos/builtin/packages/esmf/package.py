@@ -256,24 +256,14 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         # ESMF_COMPILER must be set to select which Fortran and
         # C++ compilers are being used to build the ESMF library.
 
-        if self.pkg.compiler.name == "gcc":
+        if spec["fortran"].name == "gcc" and spec["c"].name == "gcc":
+            gfortran_major_version = int(spec["fortran"].version[0])
             env.set("ESMF_COMPILER", "gfortran")
-            with self.pkg.compiler.compiler_environment():
-                gfortran_major_version = int(
-                    spack.compiler.get_compiler_version_output(
-                        self.pkg.compiler.fc, "-dumpversion"
-                    ).split(".")[0]
-                )
         elif self.pkg.compiler.name == "intel" or self.pkg.compiler.name == "oneapi":
             env.set("ESMF_COMPILER", "intel")
-        elif self.pkg.compiler.name in ["clang", "apple-clang"]:
+        elif spec["fortran"].name == "gcc" and spec["c"].name in ["clang", "apple-clang"]:
+            gfortran_major_version = int(spec["fortran"].version[0])
             env.set("ESMF_COMPILER", "gfortranclang")
-            with self.pkg.compiler.compiler_environment():
-                gfortran_major_version = int(
-                    spack.compiler.get_compiler_version_output(
-                        self.pkg.compiler.fc, "-dumpversion"
-                    ).split(".")[0]
-                )
         elif self.pkg.compiler.name == "nag":
             env.set("ESMF_COMPILER", "nag")
         elif self.pkg.compiler.name == "pgi":

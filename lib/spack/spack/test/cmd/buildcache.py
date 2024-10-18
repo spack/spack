@@ -149,7 +149,7 @@ def test_update_key_index(
     s = Spec("libdwarf").concretized()
 
     # Install a package
-    install(s.name)
+    install("--fake", s.name)
 
     # Put installed package in the buildcache, which, because we're signing
     # it, should result in the public key getting pushed to the buildcache
@@ -179,7 +179,7 @@ def test_buildcache_autopush(tmp_path, install_mockery, mock_fetch):
     s = Spec("libdwarf").concretized()
 
     # Install and generate build cache index
-    PackageInstaller([s.package], explicit=True).install()
+    PackageInstaller([s.package], fake=True, explicit=True).install()
 
     metadata_file = spack.binary_distribution.tarball_name(s, ".spec.json")
 
@@ -221,7 +221,7 @@ def test_buildcache_sync(
 
     # Install a package and put it in the buildcache
     s = Spec(out_env_pkg).concretized()
-    install(s.name)
+    install("--fake", s.name)
     buildcache("push", "-u", "-f", src_mirror_url, s.name)
 
     env("create", "test")

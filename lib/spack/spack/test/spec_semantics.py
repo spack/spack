@@ -18,15 +18,7 @@ import spack.store
 import spack.variant
 import spack.version as vn
 from spack.error import SpecError, UnsatisfiableSpecError
-from spack.spec import (
-    ArchSpec,
-    CompilerSpec,
-    DependencySpec,
-    Spec,
-    SpecFormatSigilError,
-    SpecFormatStringError,
-    UnsupportedCompilerError,
-)
+from spack.spec import ArchSpec, DependencySpec, Spec, SpecFormatSigilError, SpecFormatStringError
 from spack.variant import (
     InvalidVariantValueError,
     MultipleValuesInExclusiveVariantError,
@@ -456,8 +448,6 @@ class TestSpecSemantics:
             ("foo os=redhat6", "platform=test os=debian6 target=x86_64"),
             ("foo target=x86_64", "platform=test os=redhat6 target=x86"),
             ("foo arch=test-frontend-frontend", "platform=test os=frontend target=backend"),
-            ("foo%intel", "%gcc"),
-            ("foo%intel", "%pgi"),
             ("foo%pgi@4.3", "%pgi@4.4:4.6"),
             ("foo@4.0%pgi", "@1:3%pgi"),
             ("foo@4.0%pgi@4.5", "@1:3%pgi@4.4:4.6"),
@@ -650,12 +640,9 @@ class TestSpecSemantics:
             a.concretize()
 
     def test_copy_satisfies_transitive(self):
-        spec = Spec("dttop")
-        spec.concretize()
+        spec = Spec("dttop").concretized()
         copy = spec.copy()
-        for s in spec.traverse():
-            assert s.satisfies(copy[s.name])
-            assert copy[s.name].satisfies(s)
+        assert {s.dag_hash() for s in spec.traverse()} == {s.dag_hash() for s in copy.traverse()}
 
     def test_intersects_virtual(self):
         assert Spec("mpich").intersects(Spec("mpi"))
@@ -817,18 +804,21 @@ class TestSpecSemantics:
         package_segments = [
             ("{NAME}", "", "name", lambda spec: spec),
             ("{VERSION}", "", "version", lambda spec: spec),
-            ("{compiler}", "", "compiler", lambda spec: spec),
+            # FIXME (compiler as nodes): recover this semantic
+            # ("{compiler}", "", "compiler", lambda spec: spec),
             ("{compiler_flags}", "", "compiler_flags", lambda spec: spec),
             ("{variants}", "", "variants", lambda spec: spec),
             ("{architecture}", "", "architecture", lambda spec: spec),
             ("{@VERSIONS}", "@", "versions", lambda spec: spec),
-            ("{%compiler}", "%", "compiler", lambda spec: spec),
+            # FIXME (compiler as nodes): recover this semantic
+            # ("{%compiler}", "%", "compiler", lambda spec: spec),
             ("{arch=architecture}", "arch=", "architecture", lambda spec: spec),
             ("{namespace=namespace}", "namespace=", "namespace", lambda spec: spec),
-            ("{compiler.name}", "", "name", lambda spec: spec.compiler),
-            ("{compiler.version}", "", "version", lambda spec: spec.compiler),
-            ("{%compiler.name}", "%", "name", lambda spec: spec.compiler),
-            ("{@compiler.version}", "@", "version", lambda spec: spec.compiler),
+            # FIXME (compiler as nodes): recover this semantic
+            # ("{compiler.name}", "", "name", lambda spec: spec.compiler),
+            # ("{compiler.version}", "", "version", lambda spec: spec.compiler),
+            # ("{%compiler.name}", "%", "name", lambda spec: spec.compiler),
+            # ("{@compiler.version}", "@", "version", lambda spec: spec.compiler),
             ("{architecture.platform}", "", "platform", lambda spec: spec.architecture),
             ("{architecture.os}", "", "os", lambda spec: spec.architecture),
             ("{architecture.target}", "", "target", lambda spec: spec.architecture),
@@ -891,7 +881,6 @@ class TestSpecSemantics:
             "{name}",
             "{version}",
             "{@version}",
-            "{%compiler}",
             "{namespace}",
             "{ namespace=namespace}",
             "{ namespace =namespace}",
@@ -1469,16 +1458,17 @@ class TestSpecSemantics:
         ("git-test@git.foo/bar", "{name}-{version}", str(pathlib.Path("git-test-git.foo_bar"))),
         ("git-test@git.foo/bar", "{name}-{version}-{/hash}", None),
         ("git-test@git.foo/bar", "{name}/{version}", str(pathlib.Path("git-test", "git.foo_bar"))),
-        (
-            "git-test@{0}=1.0%gcc".format("a" * 40),
-            "{name}/{version}/{compiler}",
-            str(pathlib.Path("git-test", "{0}_1.0".format("a" * 40), "gcc")),
-        ),
-        (
-            "git-test@git.foo/bar=1.0%gcc",
-            "{name}/{version}/{compiler}",
-            str(pathlib.Path("git-test", "git.foo_bar_1.0", "gcc")),
-        ),
+        # FIXME (compiler as nodes): revisit these tests
+        # (
+        #     "git-test@{0}=1.0%gcc".format("a" * 40),
+        #     "{name}/{version}/{compiler}",
+        #     str(pathlib.Path("git-test", "{0}_1.0".format("a" * 40), "gcc")),
+        # ),
+        # (
+        #     "git-test@git.foo/bar=1.0%gcc",
+        #     "{name}/{version}/{compiler}",
+        #     str(pathlib.Path("git-test", "git.foo_bar_1.0", "gcc")),
+        # ),
     ],
 )
 def test_spec_format_path(spec_str, format_str, expected, mock_git_test_package):
@@ -1661,12 +1651,18 @@ def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, default_mock_concreti
 def test_spec_trim(mock_packages, config):
     top = Spec("dt-diamond").concretized()
     top.trim("dt-diamond-left")
-    remaining = set(x.name for x in top.traverse())
-    assert set(["dt-diamond", "dt-diamond-right", "dt-diamond-bottom"]) == remaining
+    remaining = {x.name for x in top.traverse()}
+    assert {
+        "dt-diamond",
+        "dt-diamond-right",
+        "dt-diamond-bottom",
+        "gcc-runtime",
+        "gcc",
+    } == remaining
 
     top.trim("dt-diamond-right")
-    remaining = set(x.name for x in top.traverse())
-    assert set(["dt-diamond"]) == remaining
+    remaining = {x.name for x in top.traverse()}
+    assert {"dt-diamond", "gcc-runtime", "gcc"} == remaining
 
 
 @pytest.mark.regression("30861")
@@ -1694,11 +1690,6 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
 
     # make sure package hash is NOT recomputed
     assert not getattr(spec["dt-diamond-bottom"], "_package_hash", None)
-
-
-def test_unsupported_compiler():
-    with pytest.raises(UnsupportedCompilerError):
-        Spec("gcc%fake-compiler").validate_or_raise()
 
 
 def test_package_hash_affects_dunder_and_dag_hash(mock_packages, default_mock_concretization):
@@ -1773,10 +1764,10 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (ArchSpec, "None-ubuntu20.04-None", "None-ubuntu20.04-None", (True, True, True)),
         (ArchSpec, "None-ubuntu20.04-None", "None-ubuntu22.04-None", (False, False, False)),
         # Compiler
-        (CompilerSpec, "gcc", "clang", (False, False, False)),
-        (CompilerSpec, "gcc", "gcc@5", (True, False, True)),
-        (CompilerSpec, "gcc@5", "gcc@5.3", (True, False, True)),
-        (CompilerSpec, "gcc@5", "gcc@5-tag", (True, False, True)),
+        (Spec, "gcc", "clang", (False, False, False)),
+        (Spec, "gcc", "gcc@5", (True, False, True)),
+        (Spec, "gcc@5", "gcc@5.3", (True, False, True)),
+        (Spec, "gcc@5", "gcc@5-tag", (True, False, True)),
         # Flags (flags are a map, so for convenience we initialize a full Spec)
         # Note: the semantic is that of sv variants, not mv variants
         (Spec, "cppflags=-foo", "cppflags=-bar", (True, False, False)),
@@ -1832,8 +1823,8 @@ def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
             "None-ubuntu20.04-nocona,haswell",
         ),
         # Compiler
-        (CompilerSpec, "gcc@5", "gcc@5-tag", True, "gcc@5-tag"),
-        (CompilerSpec, "gcc@5", "gcc@5", False, "gcc@5"),
+        (Spec, "foo %gcc@5", "foo %gcc@5-tag", True, "foo %gcc@5-tag"),
+        (Spec, "foo %gcc@5", "foo %gcc@5", False, "foo %gcc@5"),
         # Flags
         (Spec, "cppflags=-foo", "cppflags=-foo", False, "cppflags=-foo"),
         (Spec, "cppflags=-foo", "cflags=-foo", True, "cppflags=-foo cflags=-foo"),

@@ -65,6 +65,25 @@ class Pgi(Package, CompilerPackage):
     compiler_version_argument = "-V"
     compiler_version_regex = r"pg[^ ]* ([0-9.]+)-[0-9]+ (?:LLVM )?[^ ]+ target on "
 
+    debug_flags = ["-g", "-gopt"]
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"]
+
+    pic_flag = "-fpic"
+    openmp_flag = "-mp"
+
+    link_paths = {
+        "c": os.path.join("pgi", "pgcc"),
+        "cxx": os.path.join("pgi", "pgc++"),
+        "fortran": os.path.join("pgi", "pgfortran"),
+    }
+    required_libs = ["libpgc", "libpgf90"]
+
+    stdcxx_libs = ("-pgc++libs",)
+
+    def _standard_flag(self, *, language, standard):
+        flags = {"cxx": {"11": "-std=c++11"}, "c": {"99": "-c99", "11": "-c11"}}
+        return flags[language][standard]
+
     def install(self, spec, prefix):
         # Enable the silent installation feature
         os.environ["PGI_SILENT"] = "true"
