@@ -599,7 +599,7 @@ def env_rename(args):
 # env list
 #
 def env_list_setup_parser(subparser):
-    """list managed environments"""
+    """list all managed environments"""
 
 
 def env_list(args):
@@ -669,7 +669,7 @@ def env_view(args):
 # env status
 #
 def env_status_setup_parser(subparser):
-    """print whether there is an active environment"""
+    """print active environment status"""
 
 
 def env_status(args):
