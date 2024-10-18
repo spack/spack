@@ -22,8 +22,7 @@ class Curl(NMakePackage, AutotoolsPackage):
     transferring data with URL syntax"""
 
     homepage = "https://curl.se/"
-    # URL must remain http:// so Spack can bootstrap curl
-    url = "http://curl.haxx.se/download/curl-7.78.0.tar.bz2"
+    url = "https://curl.haxx.se/download/curl-7.78.0.tar.bz2"
 
     executables = ["^curl$"]
     tags = ["build-tools", "windows"]
@@ -115,9 +114,11 @@ class Curl(NMakePackage, AutotoolsPackage):
     depends_on("gnutls", when="tls=gnutls")
 
     with when("tls=mbedtls"):
-        depends_on("mbedtls@:2 +pic", when="@:7.78")
-        depends_on("mbedtls@2: +pic", when="@7.79:")
-        depends_on("mbedtls@3.6.0: +pic", when="@8.8.0:")
+        depends_on("mbedtls +pic")
+        depends_on("mbedtls@:2", when="@:7.78")
+        depends_on("mbedtls@:3.5", when="@:8.7")
+        depends_on("mbedtls@2:", when="@7.79:")
+        depends_on("mbedtls@3.2:", when="@8.8")  # https://github.com/curl/curl/issues/13748
 
     depends_on("nss", when="tls=nss")
 

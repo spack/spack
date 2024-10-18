@@ -11,6 +11,8 @@ from subprocess import Popen
 
 from spack.package import *
 
+IS_WINDOWS = sys.platform == "win32"
+
 
 class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     """ParaView is an open-source, multi-platform data analysis and
@@ -33,10 +35,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master", submodules=True)
     version(
-        "5.13.0",
-        sha256="886f530bebd6b24c6a7f8a5f4b1afa72c53d4737ccaa4b5fd5946b4e5a758c91",
+        "5.13.1",
+        sha256="a16503ce37b999c2967d84234596e7bf67ac98221851a288bb1399c7e1dc2004",
         preferred=True,
     )
+    version("5.13.0", sha256="886f530bebd6b24c6a7f8a5f4b1afa72c53d4737ccaa4b5fd5946b4e5a758c91")
     version("5.12.1", sha256="927f880c13deb6dde4172f4727d2b66f5576e15237b35778344f5dd1ddec863e")
     version("5.12.0", sha256="d289afe7b48533e2ca4a39a3b48d3874bfe67cf7f37fdd2131271c57e64de20d")
     version("5.11.2", sha256="5c5d2f922f30d91feefc43b4a729015dbb1459f54c938896c123d2ac289c7a1e")
@@ -222,16 +225,23 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("tbb", when="+tbb")
 
     depends_on("mpi", when="+mpi")
-    depends_on("qt+opengl", when="@5.3.0:+qt+opengl2")
-    depends_on("qt~opengl", when="@5.3.0:+qt~opengl2")
+
     depends_on("qt@:4", when="@:5.2.0+qt")
+    depends_on("qt+sql", when="+qt")
+    with when("+qt"):
+        depends_on("qt+opengl", when="@5.3.0:+opengl2")
+        depends_on("qt~opengl", when="@5.3.0:~opengl2")
 
     depends_on("gl@3.2:", when="+opengl2")
     depends_on("gl@1.2:", when="~opengl2")
     depends_on("glew")
     depends_on("libxt", when="platform=linux ^[virtuals=gl] glx")
 
-    requires("^[virtuals=gl] glx", when="+qt", msg="Qt support requires GLX")
+    for plat in ["linux", "darwin", "freebsd"]:
+        with when(f"platform={plat}"):
+            requires(
+                "^[virtuals=gl] glx", when="+qt", msg="Qt support requires GLX on non Windows"
+            )
 
     depends_on("ospray@2.1:2", when="+raytracing")
     depends_on("openimagedenoise", when="+raytracing")
@@ -567,6 +577,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         # so explicitly specify which QT major version is actually being used
         if spec.satisfies("+qt"):
             cmake_args.extend(["-DPARAVIEW_QT_VERSION=%s" % spec["qt"].version[0]])
+            if IS_WINDOWS:
+                # Windows does not currently support Qt Quick
+                cmake_args.append("-DVTK_MODULE_ENABLE_VTK_GUISupportQtQuick:STRING=NO")
 
         if "+fortran" in spec:
             cmake_args.append("-DPARAVIEW_USE_FORTRAN:BOOL=ON")

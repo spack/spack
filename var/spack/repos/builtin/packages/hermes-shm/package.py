@@ -37,9 +37,11 @@ class HermesShm(CMakePackage):
     variant("adios", default=False, description="Build Adios support")
 
     # Required deps
+    depends_on("pkgconfig", type="build")
     depends_on("catch2@3.0.1")
     depends_on("yaml-cpp")
-    depends_on("doxygen@1.9.3", type="build")
+    depends_on("doxygen@1.9.3:", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("libelf")
 
     # Machine variants

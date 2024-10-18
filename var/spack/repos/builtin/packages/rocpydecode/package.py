@@ -15,12 +15,15 @@ class Rocpydecode(CMakePackage):
 
     maintainers("afzpatel", "srekolam", "renjithravindrankannath")
 
+    version("6.2.1", sha256="34c595cfe40ad74fcec2f52e7cc7be3ad8c8334030b0e98eb36305b6f63edc0d")
     version("6.2.0", sha256="e465254cd3e96bbb59208e90293d7c6b7744b0fbcd928ef278ec568c83e63ff3")
 
     depends_on("py-pybind11")
     depends_on("ffmpeg@4.4:5")
-    depends_on("rocdecode@6.2.0", when="@6.2.0")
     depends_on("dlpack")
+
+    for ver in ["6.2.0", "6.2.1"]:
+        depends_on(f"rocdecode@{ver}", when=f"@{ver}")
 
     def patch(self):
         filter_file(
