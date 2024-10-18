@@ -387,7 +387,7 @@ def env_activate(args):
 # env deactivate
 #
 def env_deactivate_setup_parser(subparser):
-    """deactivate any active environment in the shell"""
+    """deactivate the active environment"""
     shells = subparser.add_mutually_exclusive_group()
     shells.add_argument(
         "--sh",
