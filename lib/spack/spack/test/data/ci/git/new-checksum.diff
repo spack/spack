@@ -1,0 +1,12 @@
+diff --git a/var/spack/repos/builtin/packages/gh/package.py b/var/spack/repos/builtin/packages/gh/package.py
+index 90f40c6313..4525e9d4b2 100644
+--- a/var/spack/repos/builtin/packages/gh/package.py
++++ b/var/spack/repos/builtin/packages/gh/package.py
+@@ -16,6 +16,7 @@ class Gh(GoPackage):
+
+     license("MIT")
+
++    version("2.54.0", sha256="eedac958431876cebe243925dc354b0c21915d1bc84c5678a8073f0ec91d6a4c")
+     version("2.50.0", sha256="683d0dee90e1d24a6673d13680e0d41963ddc6dd88580ab5119acec790d1b4d7")
+     version("2.49.2", sha256="e839ea302ad99b70ce3efcb903f938ecbbb919798e49bc2f2034ad506ae0b0f5")
+     version("2.43.1", sha256="1ea3f451fb7002c1fb95a7fab21e9ab16591058492628fe264c5878e79ec7c90")
