@@ -450,23 +450,27 @@ def env_deactivate(args):
 # env remove
 #
 def env_remove_setup_parser(subparser):
-    """remove an existing environment"""
-    subparser.add_argument("rm_env", metavar="env", nargs="+", help="environment(s) to remove")
+    """remove managed environment(s)
+
+    remove existing environment(s) managed by Spack
+
+    directory environments and manifests embedded in repositories must be
+    removed manually
+    """
+    subparser.add_argument(
+        "rm_env", metavar="env", nargs="+", help="name(s) of the environment(s) being removed"
+    )
     arguments.add_common_arguments(subparser, ["yes_to_all"])
     subparser.add_argument(
         "-f",
         "--force",
         action="store_true",
-        help="remove the environment even if it is included in another environment",
+        help="force removal even when included in other environment(s)",
     )
 
 
 def env_remove(args):
-    """Remove a *named* environment.
-
-    This removes an environment managed by Spack. Directory environments
-    and manifests embedded in repositories should be removed manually.
-    """
+    """remove existing environment(s)"""
     remove_envs = []
     valid_envs = []
     bad_envs = []
