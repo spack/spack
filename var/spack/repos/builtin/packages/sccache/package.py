@@ -38,3 +38,20 @@ class Sccache(CargoPackage):
     depends_on("rust@1.65:", when="@0.4.2:")
     depends_on("rust@1.60:", when="@0.3.2:")
     depends_on("rust@1.58:", when="@0.3.1:")
+
+    variant(
+        "dist-server",
+        default=False,
+        description="Enables the sccache-dist binary",
+        when="platform=linux",
+    )
+
+
+class CargoBuilder(spack.build_systems.cargo.CargoBuilder):
+
+    @property
+    def build_args(self):
+        if self.spec.satisfies("+dist-server"):
+            return ["--features=dist-server"]
+
+        return []
