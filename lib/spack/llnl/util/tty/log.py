@@ -8,7 +8,6 @@
 import atexit
 import ctypes
 import errno
-import faulthandler
 import io
 import multiprocessing
 import multiprocessing.connection
@@ -19,7 +18,6 @@ import signal
 import sys
 import threading
 import traceback
-import warnings
 from contextlib import contextmanager
 from threading import Thread
 from types import ModuleType
@@ -362,28 +360,32 @@ class MultiProcessFd:
 
     @property
     def fd(self):
-        """It is assumed this is accessed for the purpose of fdopen-ing
-        it.
-
-        In that case, GC will attempt to close() both the resulting
-        File and the Connection (if this stores its handle in a
-        Connection); to avoid a double-close issue, nullify the
-        Connection object.
-        """
         if self._connection:
-            self._fd = self._connection._handle
-            self._connection._handle = None
-            self._connection = None
-        return self._fd
+            return self._connection._handle
+        else:
+            return self._fd
 
     def close(self):
-        """This only needs to be called if the user has not
-        instantiated a File from the associated handle (`.fd`).
-        """
         if self._connection:
             self._connection.close()
         else:
             os.close(self._fd)
+
+
+def close_connection_and_file(multiprocess_fd, file):
+    # MultiprocessFd is intended to transmit a FD
+    # to a child process, this FD is then opened to a Python File object
+    # (using fdopen). In >= 3.8, MultiprocessFd encapsulates a
+    # multiprocessing.connection.Connection; Connection closes the FD
+    # when it is deleted, and prints a warning about duplicate closure if
+    # it is not explicitly closed. In < 3.8, MultiprocessFd encapsulates a
+    # simple FD; closing the FD here appears to conflict with
+    # closure of the File object (in < 3.8 that is). Therefore this needs
+    # to choose whether to close the File or the Connection.
+    if sys.version_info >= (3, 8):
+        multiprocess_fd.close()
+    else:
+        file.close()
 
 
 @contextmanager
@@ -565,7 +567,7 @@ class nixlog:
 
             with replace_environment(self.env):
                 self.process = multiprocessing.Process(
-                    target=_debug_writer_daemon,
+                    target=_writer_daemon,
                     args=(
                         input_multiprocess_fd,
                         read_multiprocess_fd,
@@ -863,12 +865,6 @@ class winlog:
         yield
 
 
-def _debug_writer_daemon(*args):
-    faulthandler.enable()
-    warnings.simplefilter("error")
-    _writer_daemon(*args)
-
-
 def _writer_daemon(
     stdin_multiprocess_fd,
     read_multiprocess_fd,
@@ -1029,9 +1025,9 @@ def _writer_daemon(
         if isinstance(log_file, io.StringIO):
             control_pipe.send(log_file.getvalue())
         log_file_wrapper.close()
-        in_pipe.close()
-        if stdin:
-            stdin.close()
+        close_connection_and_file(read_multiprocess_fd, in_pipe)
+        if stdin_multiprocess_fd:
+            close_connection_and_file(stdin_multiprocess_fd, stdin)
 
         # send echo value back to the parent so it can be preserved.
         control_pipe.send(echo)
