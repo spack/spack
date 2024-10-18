@@ -57,16 +57,21 @@ subcommands = [
 # env create
 #
 def env_create_setup_parser(subparser):
-    """create a new environment"""
-    subparser.add_argument("env_name", metavar="env", help="name or directory of environment")
+    """create a new environment
+
+    create a new environment or, optionally, copy an existing environment
+
+    a manifest file results in a new abstract environment while a lock file
+    creates a new concrete environment
+    """
+    subparser.add_argument("env_name", metavar="env", help="name or directory of the new environment")
     subparser.add_argument(
         "-d", "--dir", action="store_true", help="create an environment in a specific directory"
     )
     subparser.add_argument(
         "--keep-relative",
         action="store_true",
-        help="copy relative develop paths verbatim into the new environment"
-        " when initializing from envfile",
+        help="copy envfile's relative develop paths verbatim",
     )
     view_opts = subparser.add_mutually_exclusive_group()
     view_opts.add_argument(
@@ -74,18 +79,16 @@ def env_create_setup_parser(subparser):
     )
     view_opts.add_argument(
         "--with-view",
-        help="specify that this environment should maintain a view at the"
-        " specified path (by default the view is maintained in the"
-        " environment directory)",
+        help="maintain view at WITH_VIEW (vs. environment's directory)",
     )
     subparser.add_argument(
         "envfile",
         nargs="?",
         default=None,
-        help="either a lockfile (must end with '.json' or '.lock') or a manifest file",
+        help="manifest or lock file (ends with '.json' or '.lock')",
     )
     subparser.add_argument(
-        "--include-concrete", action="append", help="name of old environment to copy specs from"
+        "--include-concrete", action="append", help="copy concrete specs from INCLUDE_CONCRETE's environment"
     )
 
 
@@ -910,7 +913,7 @@ def setup_parser(subparser):
         setup_parser_cmd_name = "env_%s_setup_parser" % name
         setup_parser_cmd = globals()[setup_parser_cmd_name]
 
-        subsubparser = sp.add_parser(name, aliases=aliases, help=setup_parser_cmd.__doc__)
+        subsubparser = sp.add_parser(name, aliases=aliases, description=setup_parser_cmd.__doc__, help=spack.cmd.first_line(setup_parser_cmd.__doc__))
         setup_parser_cmd(subsubparser)
 
 
