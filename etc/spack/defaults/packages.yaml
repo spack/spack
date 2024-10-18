@@ -40,6 +40,7 @@ packages:
       jpeg: [libjpeg-turbo, libjpeg]
       lapack: [openblas, amdlibflame]
       libc: [glibc, musl]
+      libegl: [egl, mesa]
       libgfortran: [ gcc-runtime ]
       libglx: [mesa+glx]
       libifcore: [ intel-oneapi-runtime ]
