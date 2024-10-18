@@ -8,7 +8,6 @@
 import atexit
 import ctypes
 import errno
-import faulthandler
 import io
 import multiprocessing
 import multiprocessing.connection
@@ -19,7 +18,6 @@ import signal
 import sys
 import threading
 import traceback
-import warnings
 from contextlib import contextmanager
 from threading import Thread
 from types import ModuleType
@@ -565,7 +563,7 @@ class nixlog:
 
             with replace_environment(self.env):
                 self.process = multiprocessing.Process(
-                    target=_debug_writer_daemon,
+                    target=_writer_daemon,
                     args=(
                         input_multiprocess_fd,
                         read_multiprocess_fd,
@@ -861,12 +859,6 @@ class winlog:
         if not self._active:
             raise RuntimeError("Can't call force_echo() outside log_output region!")
         yield
-
-
-def _debug_writer_daemon(*args):
-    faulthandler.enable()
-    warnings.simplefilter("error")
-    _writer_daemon(*args)
 
 
 def _writer_daemon(
