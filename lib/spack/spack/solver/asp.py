@@ -72,9 +72,6 @@ GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVer
 
 TransformFunction = Callable[["spack.spec.Spec", List[AspFunction]], List[AspFunction]]
 
-#: Enable the addition of a runtime node
-WITH_RUNTIME = sys.platform != "win32"
-
 #: Data class that contain configuration on what a
 #: clingo solve should output.
 #:
@@ -2606,9 +2603,8 @@ class SpackSolverSetup:
         self.gen.h1("Variant Values defined in specs")
         self.define_variant_values()
 
-        if WITH_RUNTIME:
-            self.gen.h1("Runtimes")
-            self.define_runtime_constraints()
+        self.gen.h1("Runtimes")
+        self.define_runtime_constraints()
 
         self.gen.h1("Version Constraints")
         self.collect_virtual_constraints()
@@ -2658,13 +2654,16 @@ class SpackSolverSetup:
                 # Inject default flags for compilers
                 recorder("*").default_flags(compiler)
 
+            if not using_libc_compatibility():
+                continue
+
             current_libc = CompilerPropertyDetector(compiler).default_libc()
             # If this is a compiler yet to be built infer libc from the Python process
             # FIXME (compiler as nodes): recover this use case
             # if not current_libc and compiler.compiler_obj.cc is None:
             #    current_libc = spack.util.libc.libc_from_current_python_process()
 
-            if using_libc_compatibility() and current_libc:
+            if current_libc:
                 recorder("*").depends_on(
                     "libc",
                     when=f"%{compiler.name}@{compiler.versions}",
@@ -3782,9 +3781,6 @@ def _is_reusable(spec: spack.spec.Spec, packages, local: bool) -> bool:
 
 
 def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
-    if not WITH_RUNTIME:
-        return True
-
     if "gcc" in spec and "gcc-runtime" not in spec:
         return False
 
