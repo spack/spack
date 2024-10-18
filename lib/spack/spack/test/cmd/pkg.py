@@ -312,17 +312,17 @@ def test_pkg_grep(mock_packages, capfd):
     assert output.strip() == "\n".join(
         spack.repo.PATH.get_pkg_class(name).module.__file__
         for name in [
-                "depends-on-manyvariants",
-                "manyvariants",
-                "splice-a",
-                "splice-h",
-                "splice-t",
-                "splice-vh",
-                "splice-vt",
-                "splice-z",
-                "virtual-abi-1",
-                "virtual-abi-2",
-                "virtual-abi-multi"
+            "depends-on-manyvariants",
+            "manyvariants",
+            "splice-a",
+            "splice-h",
+            "splice-t",
+            "splice-vh",
+            "splice-vt",
+            "splice-z",
+            "virtual-abi-1",
+            "virtual-abi-2",
+            "virtual-abi-multi",
         ]
     )
 
