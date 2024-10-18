@@ -24,8 +24,8 @@ from urllib.request import HTTPHandler, Request, build_opener
 
 import ruamel.yaml
 
-import llnl.util.filesystem as fs
 import llnl.path
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
 from llnl.util.tty.color import cescape, colorize
