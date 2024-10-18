@@ -635,13 +635,14 @@ class ViewAction:
 # env view
 #
 def env_view_setup_parser(subparser):
-    """manage a view associated with the environment"""
+    """manage the environment's view
+
+    provide the path when enabling a view with a non-default path
+    """
     subparser.add_argument(
         "action", choices=ViewAction.actions(), help="action to take for the environment's view"
     )
-    subparser.add_argument(
-        "view_path", nargs="?", help="when enabling a view, optionally set the path manually"
-    )
+    subparser.add_argument("view_path", nargs="?", help="view's non-default path when enabling it")
 
 
 def env_view(args):
@@ -731,9 +732,9 @@ def env_loads(args):
 def env_update_setup_parser(subparser):
     """update the environment manifest to the latest schema format
 
-    update the environment to the latest schema format, which may not be 
+    update the environment to the latest schema format, which may not be
     readable by older versions of spack
-    
+
     a backup copy of the manifest is retained in case there is a need to revert
     this operation
     """
