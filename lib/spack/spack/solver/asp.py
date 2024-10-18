@@ -44,7 +44,6 @@ import spack.util.crypto
 import spack.util.libc
 import spack.util.path
 import spack.util.timer
-import spack.variant
 import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
@@ -2031,7 +2030,7 @@ class SpackSolverSetup:
 
                 if vname in self.pkg_class(spec.name).variant_names():
                     if (
-                        isinstance(spec.variants[vname], spack.variant.AbstractVariant)
+                        isinstance(spec.variants[vname], vt.AbstractVariant)
                         and not spec.variants[vname].propagate
                     ):
                         clauses.append(f.variant_value(spec.name, vname, value))

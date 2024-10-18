@@ -140,7 +140,8 @@ SPEC_FORMAT_RE = re.compile(
     r"(})?"  # finish format string with non-escaped close brace }, or missing if not present
     r"|"
     # OPTION 3: mismatched close brace (option 2 would consume a matched open brace)
-    r"(})" r")",  # brace
+    r"(})"  # brace
+    r")",
     re.IGNORECASE,
 )
 
@@ -3371,14 +3372,12 @@ class Spec:
             return False
 
         if not self.variants.satisfies(other.variants):
-            if not any(other.variants[k].propagate for k in other.variants):
+            if all(not other.variants[k].propagate for k in other.variants):
                 return False
 
-            for variant in other.variants:
-                if other.variants[variant].propagate and not self.variant_exists_in_dependency(
-                    variant
-                ):
-                    return False
+            if any(other.variants[variant].propagate
+                   and not self.variant_exists_in_dependency(variant) for variant in other.variants):
+                return False
 
         if self.architecture and other.architecture:
             if not self.architecture.satisfies(other.architecture):
