@@ -64,7 +64,9 @@ def env_create_setup_parser(subparser):
     a manifest file results in a new abstract environment while a lock file
     creates a new concrete environment
     """
-    subparser.add_argument("env_name", metavar="env", help="name or directory of the new environment")
+    subparser.add_argument(
+        "env_name", metavar="env", help="name or directory of the new environment"
+    )
     subparser.add_argument(
         "-d", "--dir", action="store_true", help="create an environment in a specific directory"
     )
@@ -78,8 +80,7 @@ def env_create_setup_parser(subparser):
         "--without-view", action="store_true", help="do not maintain a view for this environment"
     )
     view_opts.add_argument(
-        "--with-view",
-        help="maintain view at WITH_VIEW (vs. environment's directory)",
+        "--with-view", help="maintain view at WITH_VIEW (vs. environment's directory)"
     )
     subparser.add_argument(
         "envfile",
@@ -88,7 +89,9 @@ def env_create_setup_parser(subparser):
         help="manifest or lock file (ends with '.json' or '.lock')",
     )
     subparser.add_argument(
-        "--include-concrete", action="append", help="copy concrete specs from INCLUDE_CONCRETE's environment"
+        "--include-concrete",
+        action="append",
+        help="copy concrete specs from INCLUDE_CONCRETE's environment",
     )
 
 
@@ -176,7 +179,7 @@ def _env_create(
 # env activate
 #
 def env_activate_setup_parser(subparser):
-    """set the current environment"""
+    """set the currently active environment"""
     shells = subparser.add_mutually_exclusive_group()
     shells.add_argument(
         "--sh",
@@ -216,14 +219,14 @@ def env_activate_setup_parser(subparser):
 
     view_options = subparser.add_mutually_exclusive_group()
     view_options.add_argument(
-        "--with-view",
         "-v",
+        "--with-view",
         metavar="name",
-        help="set runtime environment variables for specific view",
+        help="set runtime environment variables for the named view",
     )
     view_options.add_argument(
-        "--without-view",
         "-V",
+        "--without-view",
         action="store_true",
         help="do not set runtime environment variables for any view",
     )
@@ -233,14 +236,14 @@ def env_activate_setup_parser(subparser):
         "--prompt",
         action="store_true",
         default=False,
-        help="decorate the command line prompt when activating",
+        help="add the active environment to the command line prompt",
     )
 
     subparser.add_argument(
         "--temp",
         action="store_true",
         default=False,
-        help="create and activate an environment in a temporary directory",
+        help="create and activate in a temporary directory",
     )
     subparser.add_argument(
         "--create",
@@ -252,13 +255,12 @@ def env_activate_setup_parser(subparser):
         "--envfile",
         nargs="?",
         default=None,
-        help="either a lockfile (must end with '.json' or '.lock') or a manifest file",
+        help="manifest or lock file (ends with '.json' or '.lock')",
     )
     subparser.add_argument(
         "--keep-relative",
         action="store_true",
-        help="copy relative develop paths verbatim into the new environment"
-        " when initializing from envfile",
+        help="copy envfile's relative develop paths verbatim when create",
     )
     subparser.add_argument(
         "-d",
@@ -272,10 +274,7 @@ def env_activate_setup_parser(subparser):
         dest="env_name",
         nargs="?",
         default=None,
-        help=(
-            "name of managed environment or directory of the independent env"
-            " (when using --dir/-d) to activate"
-        ),
+        help=("name or directory of the environment being activated"),
     )
 
 
@@ -913,7 +912,12 @@ def setup_parser(subparser):
         setup_parser_cmd_name = "env_%s_setup_parser" % name
         setup_parser_cmd = globals()[setup_parser_cmd_name]
 
-        subsubparser = sp.add_parser(name, aliases=aliases, description=setup_parser_cmd.__doc__, help=spack.cmd.first_line(setup_parser_cmd.__doc__))
+        subsubparser = sp.add_parser(
+            name,
+            aliases=aliases,
+            description=setup_parser_cmd.__doc__,
+            help=spack.cmd.first_line(setup_parser_cmd.__doc__),
+        )
         setup_parser_cmd(subsubparser)
 
 
