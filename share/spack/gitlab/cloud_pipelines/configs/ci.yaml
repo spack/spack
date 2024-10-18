@@ -24,7 +24,7 @@ ci:
         - k=$CI_GPG_KEY_ROOT/spack_public_key.gpg; [[ -r $k ]] && spack gpg trust $k
       script::
       - - spack config blame mirrors
-        - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+        - spack --color=always --backtrace ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
       after_script:
       - - cat /proc/loadavg || true
         - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
@@ -39,6 +39,29 @@ ci:
       id_tokens:
         GITLAB_OIDC_TOKEN:
           aud: "${OIDC_TOKEN_AUDIENCE}"
+
+  - test-job:
+      variables:
+        CI_JOB_SIZE: "default"
+        CI_GPG_KEY_ROOT: /mnt/key
+        # SPACK_VERBOSE_SCRIPT: "1"
+      id_tokens:
+        GITLAB_OIDC_TOKEN:
+          aud: "${OIDC_TOKEN_AUDIENCE}"
+      before_script-:
+      - - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
+        - spack compiler list
+        - if [ -n "$SPACK_BUILD_JOBS" ]; then spack config add "config:build_jobs:$SPACK_BUILD_JOBS"; fi
+      - - mkdir -p ${SPACK_ARTIFACTS_ROOT}/tests
+        # AWS runners mount E4S public key (verification), UO runners mount public/private (signing/verification)
+      - - k=$CI_GPG_KEY_ROOT/e4s.gpg; [[ -r $k ]] && spack gpg trust $k
+        # UO runners mount intermediate ci public key (verification), AWS runners mount public/private (signing/verification)
+        - k=$CI_GPG_KEY_ROOT/intermediate_ci_signing_key.gpg; [[ -r $k ]] && spack gpg trust $k
+        - k=$CI_GPG_KEY_ROOT/spack_public_key.gpg; [[ -r $k ]] && spack gpg trust $k
+      script::
+      - - spack config blame mirrors
+        - spack --color=always --backtrace ci test > >(tee ${SPACK_ARTIFACTS_ROOT}/tests/test_pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/tests/test_pipeline_err.txt >&2)
+      after_script:: []
 
   - signing-job:
       image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }

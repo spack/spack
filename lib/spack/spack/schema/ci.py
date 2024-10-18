@@ -97,6 +97,11 @@ named_attributes_schema = {
         {
             "type": "object",
             "additionalProperties": False,
+            "properties": {"test-job": attributes_schema, "test-job-remove": attributes_schema},
+        },
+        {
+            "type": "object",
+            "additionalProperties": False,
             "properties": {
                 "reindex-job": attributes_schema,
                 "reindex-job-remove": attributes_schema,

@@ -380,7 +380,7 @@ class SpackCI:
         """
 
         self.ci_config = ci_config
-        self.named_jobs = ["any", "build", "copy", "cleanup", "check", "noop", "reindex", "signing"]
+        self.named_jobs = ["any", "build", "copy", "cleanup", "test", "noop", "reindex", "signing"]
 
         self.ir = {
             "jobs": {},
@@ -402,7 +402,7 @@ class SpackCI:
 
         for name in self.named_jobs:
             # Skip the special named jobs
-            if name not in ["any", "build", "check"]:
+            if name not in ["any", "build", "test"]:
                 jobs[name] = self.__init_job("")
 
     def __init_job(self, spec):
@@ -436,7 +436,7 @@ class SpackCI:
         return jname
 
     def __apply_submapping(self, dest, spec, section):
-        """Apply submapping setion to the IR dict"""
+        """Apply submapping section to the IR dict"""
         matched = False
         only_first = section.get("match_behavior", "first") == "first"
 
