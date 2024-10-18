@@ -45,6 +45,7 @@ import spack.util.libc
 import spack.util.path
 import spack.util.timer
 import spack.variant as vt
+import spack.variant
 import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
@@ -2028,13 +2029,12 @@ class SpackSolverSetup:
                     for variant_def in variant_defs:
                         self.variant_values_from_specs.add((spec.name, id(variant_def), value))
 
-                if not variant.propagate or vname in self.pkg_class(spec.name).variants:
-                    clauses.append(f.variant_value(spec.name, vname, value))
+                if vname in self.pkg_class(spec.name).variant_names():
+                    if isinstance(spec.variants[vname], spack.variant.AbstractVariant) and not spec.variants[vname].propagate:
+                        clauses.append(f.variant_value(spec.name, vname, value))
 
                 if variant.propagate:
                     clauses.append(f.propagate(spec.name, fn.variant_value(vname, value)))
-                    if vname in self.pkg_class(spec.name).variants:
-                        clauses.append(f.variant_value(spec.name, vname, value))
 
         # compiler and compiler version
         if spec.compiler:

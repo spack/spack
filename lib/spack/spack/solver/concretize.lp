@@ -1097,7 +1097,8 @@ error(100, "{0} and {1} cannot both propagate variant '{2}'", SourceNode1, Sourc
 % Cannot propagate a variant if a different value was set for it in a dependency
 error(100, "Cannot propagate the variant '{0}' from the package: {1} because package: {2} is set to exclude it", Variant, SourceNode, PackageNode) :- % TODO: Rikki Write a better msg later
   variant_is_propagated(SourceNode, Variant),
-  attr("variant_set", PackageNode, Variant, _).
+  attr("variant_set", PackageNode, Variant, _),
+  depends_on(PackageNode, SourceNode).
 
 %----
 % Flags
