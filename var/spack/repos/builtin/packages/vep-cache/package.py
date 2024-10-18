@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 import os
 
 from spack.package import *
@@ -12,8 +13,8 @@ def _vep_cache_filename(major_version, species, assembly):
     return f"{species}_vep_{major_version}_{assembly}.tar.gz"
 
 
-def _get_vep_cache_resource_args(version, species, assembly, indexed, dest=""):
-    filename = _get_vep_cache_filename(version, species, assembly)
+def _vep_cache_resource_args(version, species, assembly, indexed, dest=""):
+    filename = _vep_cache_filename(version, species, assembly)
     dir_name = "indexed_vep_cache" if indexed else "vep"
     root = f"https://ftp.ensembl.org/pub/release-{version}/variation/{dir_name}"
     url = f"{root}/{filename}"
@@ -61,19 +62,14 @@ class VepCache(Package):
         if species == "homo_sapiens"
     ]
 
-    for major, species, assembly, indexed in [
-        (major, species, assembly, indexed)
-        for major in vep_versions
-        for species, assemblies in vep_species
-        for assembly in assemblies
-        for indexed in [True, False]
-    ]:
-        version(major)
-        resource(
-            **_vep_cache_resource_args(
-                version=major, species=species, assembly=assembly, indexed=indexed
+    for major, (species, assemblies) in itertools.product(vep_versions, vep_species):
+        for assembly, indexed in itertools.product(assemblies, [True, False]): 
+            version(major)
+            resource(
+                **_vep_cache_resource_args(
+                    version=major, species=species, assembly=assembly, indexed=indexed
+                )
             )
-        )
 
     depends_on("vep+installer", type="build")
     depends_on("vep", type="run")
