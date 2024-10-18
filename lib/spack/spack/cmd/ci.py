@@ -144,6 +144,7 @@ def setup_parser(subparser):
         description=deindent(ci_rebuild.__doc__),
         help=spack.cmd.first_line(ci_rebuild.__doc__),
     )
+    # TODO/TBD/TLD: BEGIN: Retain args IFF continue to support --tests
     rebuild.add_argument(
         "-t",
         "--tests",
@@ -157,6 +158,7 @@ def setup_parser(subparser):
         default=False,
         help="stop stand-alone tests after the first failure",
     )
+    # TODO/TBD/TLD: END: Retain args IFF continue to support --tests
     rebuild.set_defaults(func=ci_rebuild)
 
     # Facilitate reproduction of a failed CI build job
@@ -191,6 +193,18 @@ def setup_parser(subparser):
     )
 
     reproduce.set_defaults(func=ci_reproduce)
+
+    # Handle steps of ci test
+    test = subparsers.add_parser(
+        "test", description=deindent(ci_test.__doc__), help=spack.cmd.first_line(ci_test.__doc__)
+    )
+    test.add_argument(
+        "--fail-fast",
+        action="store_true",
+        default=False,
+        help="stop stand-alone tests after the first failure",
+    )
+    test.set_defaults(func=ci_test)
 
 
 def ci_generate(args):
@@ -296,8 +310,7 @@ def ci_rebuild(args):
     # out as variables, or else provided by GitLab itself.
     pipeline_artifacts_dir = os.environ.get("SPACK_ARTIFACTS_ROOT")
     job_log_dir = os.environ.get("SPACK_JOB_LOG_DIR")
-    # TBD/TLD: Is this appropriate when we want to run stand-alone tests
-    # TBD/TLD: in a separate job?
+    # TODO/TBD/TLD: Retain job_test_dir IFF continue to support --tests
     job_test_dir = os.environ.get("SPACK_JOB_TEST_DIR")
     repro_dir = os.environ.get("SPACK_JOB_REPRO_DIR")
     # TODO: Remove this in Spack 0.23
@@ -333,8 +346,7 @@ def ci_rebuild(args):
     ci_project_dir = os.environ.get("CI_PROJECT_DIR")
     pipeline_artifacts_dir = os.path.join(ci_project_dir, pipeline_artifacts_dir)
     job_log_dir = os.path.join(ci_project_dir, job_log_dir)
-    # TBD/TLD: Is this appropriate when we want to run stand-alone tests
-    # TBD/TLD: in a separate job?
+    # TODO/TBD/TLD: Retain job_test_dir IFF continue to support --tests
     job_test_dir = os.path.join(ci_project_dir, job_test_dir)
     repro_dir = os.path.join(ci_project_dir, repro_dir)
     local_mirror_dir = os.path.join(ci_project_dir, local_mirror_dir)
@@ -441,8 +453,7 @@ def ci_rebuild(args):
     if os.path.exists(job_log_dir):
         shutil.rmtree(job_log_dir)
 
-    # TBD/TLD: Is this appropriate when we want to run stand-alone tests
-    # TBD/TLD: in a separate job?
+    # TODO/TBD/TLD: Retain job_test_dir IFF continue to support --tests
     if os.path.exists(job_test_dir):
         shutil.rmtree(job_test_dir)
 
@@ -453,8 +464,7 @@ def ci_rebuild(args):
     # need for storing artifacts.  The cdash_report directory will be
     # created internally if needed.
     os.makedirs(job_log_dir)
-    # TBD/TLD: Is this appropriate when we want to run stand-alone tests
-    # TBD/TLD: in a separate job?
+    # TODO/TBD/TLD: Retain job_test_dir IFF continue to support --tests
     os.makedirs(job_test_dir)
     os.makedirs(repro_dir)
 
@@ -630,6 +640,7 @@ def ci_rebuild(args):
     # any logs from the staging directory to artifacts now
     spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
 
+    # TODO/TBD/TLD: BEGIN: Retain testing IFF continue to support --tests
     # If the installation succeeded and we're running stand-alone tests for
     # the package, run them and copy the output. Failures of any kind should
     # *not* terminate the build process or preclude creating the build cache.
@@ -638,8 +649,6 @@ def ci_rebuild(args):
         and job_spec.name in ci_config["broken-tests-packages"]
     )
     reports_dir = fs.join_path(os.getcwd(), "cdash_report")
-    # TBD/TLD: Is this appropriate when we want to run stand-alone tests
-    # TBD/TLD: in a separate job?
     if args.tests and broken_tests:
         tty.warn("Unable to run stand-alone tests since listed in ci's 'broken-tests-packages'")
         if cdash_handler:
@@ -689,7 +698,9 @@ def ci_rebuild(args):
                 msg = "Failed to install the package"
                 cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
                 cdash_handler.copy_test_results(reports_dir, job_test_dir)
+    # TODO/TBD/TLD: END: Retain testing IFF continue to support --tests
 
+    # TODO/TBD/TLD: Do we still want to push to a mirror if the tests fail?
     if install_exit_code == 0:
         # If the install succeeded, push it to one or more mirrors. Failure to push to any mirror
         # will result in a non-zero exit code. Pushing is best-effort.
@@ -823,6 +834,372 @@ def _gitlab_artifacts_url(url: str) -> str:
 
     # Don't allow fragments / queries
     return urlunparse(parsed._replace(path="/".join(parts), fragment="", query=""))
+
+
+def ci_test(args):
+    """run stand-alone tests against a spec"""
+    env = spack.cmd.require_active_env(cmd_name="ci test")
+
+    # Make sure the environment is "gitlab-enabled", or else there's nothing
+    # to do.
+    ci_config = cfg.get("ci")
+    if not ci_config:
+        tty.die("spack ci test requires an env containing ci cfg")
+
+    # Grab the environment variables we need.  These either come from the
+    # pipeline generation step ("spack ci generate"), where they were written
+    # out as variables, or else provided by GitLab itself.
+    pipeline_artifacts_dir = os.environ.get("SPACK_ARTIFACTS_ROOT")
+    job_log_dir = os.environ.get("SPACK_JOB_LOG_DIR")
+    job_test_dir = os.environ.get("SPACK_JOB_TEST_DIR")
+    # TODO/TBD/TLD: repro dir used to write spec for testing .. alternative?
+    repro_dir = os.environ.get("SPACK_JOB_REPRO_DIR")
+    reports_dir = fs.join_path(os.getcwd(), "cdash_report")
+    # TODO: Remove this in Spack 0.23
+    local_mirror_dir = os.environ.get("SPACK_LOCAL_MIRROR_DIR")
+    concrete_env_dir = os.environ.get("SPACK_CONCRETE_ENV_DIR")
+    ci_pipeline_id = os.environ.get("CI_PIPELINE_ID")
+    ci_job_name = os.environ.get("CI_JOB_NAME")
+    signing_key = os.environ.get("SPACK_SIGNING_KEY")
+    job_spec_pkg_name = os.environ.get("SPACK_JOB_SPEC_PKG_NAME")
+    job_spec_dag_hash = os.environ.get("SPACK_JOB_SPEC_DAG_HASH")
+    spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE")
+    # TODO: Remove this in Spack 0.23
+    remote_mirror_override = os.environ.get("SPACK_REMOTE_MIRROR_OVERRIDE")
+    # TODO: Remove this in Spack 0.23
+    remote_mirror_url = os.environ.get("SPACK_REMOTE_MIRROR_URL")
+    spack_ci_stack_name = os.environ.get("SPACK_CI_STACK_NAME")
+    # TODO: Remove this in Spack 0.23
+    shared_pr_mirror_url = os.environ.get("SPACK_CI_SHARED_PR_MIRROR_URL")
+
+    # Construct absolute paths relative to current $CI_PROJECT_DIR
+    ci_project_dir = os.environ.get("CI_PROJECT_DIR")
+    pipeline_artifacts_dir = os.path.join(ci_project_dir, pipeline_artifacts_dir)
+    job_log_dir = os.path.join(ci_project_dir, job_log_dir)
+    job_test_dir = os.path.join(ci_project_dir, job_test_dir)
+    # TODO/TBD/TLD: are we creating a testing alternative?
+    repro_dir = os.path.join(ci_project_dir, repro_dir)
+    local_mirror_dir = os.path.join(ci_project_dir, local_mirror_dir)
+    concrete_env_dir = os.path.join(ci_project_dir, concrete_env_dir)
+
+    # Debug print some of the key environment variables we should have received
+    tty.debug(f"pipeline_artifacts_dir = {pipeline_artifacts_dir}")
+    tty.debug(f"remote_mirror_url = {remote_mirror_url}")
+    tty.debug(f"job_spec_pkg_name = {job_spec_pkg_name}")
+
+    # Query the environment manifest to find out whether we're reporting to a
+    # CDash instance, and if so, gather some information from the manifest to
+    # support that task.
+    cdash_config = cfg.get("cdash")
+    cdash_handler = None
+    if "build-group" in cdash_config:
+        cdash_handler = spack_ci.CDashHandler(cdash_config)
+        tty.debug(f"cdash url = {cdash_handler.url}")
+        tty.debug(f"cdash project = {cdash_handler.project}")
+        tty.debug(f"cdash project_enc = {cdash_handler.project_enc}")
+        tty.debug(f"cdash build_name = {cdash_handler.build_name}")
+        tty.debug(f"cdash build_stamp = {cdash_handler.build_stamp}")
+        tty.debug(f"cdash site = {cdash_handler.site}")
+        tty.debug(f"cdash build_group = {cdash_handler.build_group}")
+
+    # Is this a pipeline run on a spack PR or a merge to develop?  It might
+    # be neither, e.g. a pipeline run on some environment repository.
+    spack_is_pr_pipeline = spack_pipeline_type == "spack_pull_request"
+    spack_is_develop_pipeline = spack_pipeline_type == "spack_protected_branch"
+
+    tty.debug(
+        f"Pipeline type - PR: {spack_is_pr_pipeline}, " f"develop: {spack_is_develop_pipeline}"
+    )
+
+    # Don't expend more resources if the spec is known to have broken tests.
+    broken_tests = (
+        "broken-tests-packages" in ci_config
+        and job_spec.name in ci_config["broken-tests-packages"]
+    )
+    if broken_tests:
+        tty.warn("Unable to run stand-alone tests since listed in ci's 'broken-tests-packages'")
+        if cdash_handler:
+            msg = "Package is listed in ci's broken-tests-packages"
+            cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
+            cdash_handler.copy_test_results(reports_dir, job_test_dir)
+        # TODO/TBD/TLD: what do we do here???
+
+    # Need to install the spec from cache so we can run the stand-alone tests
+    # TODO/TBD/TLD: BEGIN: we aren't pushing binary packages so remove this stuff?
+    pipeline_mirrors = spack.mirror.MirrorCollection(binary=True)
+    deprecated_mirror_config = False
+    buildcache_destination = None
+    if "buildcache-destination" in pipeline_mirrors:
+        buildcache_destination = pipeline_mirrors["buildcache-destination"]
+    else:
+        deprecated_mirror_config = True
+        # TODO: This will be an error in Spack 0.23
+
+    # If no override url exists, then just push binary package to the
+    # normal remote mirror url.
+    # TODO: Remove in Spack 0.23
+    buildcache_mirror_url = remote_mirror_override or remote_mirror_url
+    if buildcache_destination:
+        buildcache_mirror_url = buildcache_destination.push_url
+
+    # Figure out what is our temporary storage mirror: Is it artifacts
+    # buildcache?  Or temporary-storage-url-prefix?  In some cases we need to
+    # force something or pipelines might not have a way to propagate build
+    # artifacts from upstream to downstream jobs.
+    # TODO: Remove this in Spack 0.23
+    pipeline_mirror_url = None
+
+    # TODO: Remove this in Spack 0.23
+    temp_storage_url_prefix = None
+    if "temporary-storage-url-prefix" in ci_config:
+        temp_storage_url_prefix = ci_config["temporary-storage-url-prefix"]
+        pipeline_mirror_url = url_util.join(temp_storage_url_prefix, ci_pipeline_id)
+
+    # TODO: Remove this in Spack 0.23
+    enable_artifacts_mirror = False
+    if "enable-artifacts-buildcache" in ci_config:
+        enable_artifacts_mirror = ci_config["enable-artifacts-buildcache"]
+        if enable_artifacts_mirror or (
+            spack_is_pr_pipeline and not enable_artifacts_mirror and not temp_storage_url_prefix
+        ):
+            # If you explicitly enabled the artifacts buildcache feature, or
+            # if this is a PR pipeline but you did not enable either of the
+            # per-pipeline temporary storage features, we force the use of
+            # artifacts buildcache.  Otherwise jobs will not have binary
+            # dependencies from previous stages available since we do not
+            # allow pushing binaries to the remote mirror during PR pipelines.
+            enable_artifacts_mirror = True
+            pipeline_mirror_url = url_util.path_to_file_url(local_mirror_dir)
+            mirror_msg = f"artifact buildcache enabled, mirror url: {pipeline_mirror_url}"
+            tty.debug(mirror_msg)
+    # TODO/TBD/TLD: END: we aren't pushing binary packages so remove this stuff?
+
+    # Get the concrete spec to be built by this job.
+    try:
+        job_spec = env.get_one_by_hash(job_spec_dag_hash)
+    except AssertionError:
+        tty.die(f"Could not find environment spec with hash {job_spec_dag_hash}")
+
+    job_spec_json_file = f"{job_spec_pkg_name}.json"
+    job_spec_json_path = os.path.join(repro_dir, job_spec_json_file)
+
+    # To provide logs, cdash reports, etc for developer download/perusal,
+    # these things have to be put into artifacts.  This means downstream
+    # jobs that "need" this job will get those artifacts too.  So here we
+    # need to clean out the artifacts we may have got from upstream jobs.
+
+    cdash_report_dir = os.path.join(pipeline_artifacts_dir, "cdash_report")
+    if os.path.exists(cdash_report_dir):
+        shutil.rmtree(cdash_report_dir)
+
+    # TODO/TBD/TLD: If we need to remove this here then configs/ci.yaml can't use
+    if os.path.exists(job_log_dir):
+        shutil.rmtree(job_log_dir)
+
+    # TODO/TBD/TLD: Only remove if we don't keep the test_pipeline_{err|out}.txt?
+    if os.path.exists(job_test_dir):
+        shutil.rmtree(job_test_dir)
+
+    if os.path.exists(repro_dir):
+        shutil.rmtree(repro_dir)
+
+    # Now that we removed them if they existed, create the directories we
+    # need for storing artifacts.  The cdash_report directory will be
+    # created internally if needed.
+    os.makedirs(job_log_dir)
+    # TODO/TBD/TLD: Only need to do this if we removed it above
+    os.makedirs(job_test_dir)
+    os.makedirs(repro_dir)
+
+    # Copy the concrete environment files to the repro directory so we can
+    # expose them as artifacts and not conflict with the concrete environment
+    # files we got as artifacts from the upstream pipeline generation job.
+    # Try to cast a slightly wider net too, and hopefully get the generated
+    # pipeline yaml.  If we miss it, the user will still be able to go to the
+    # pipeline generation job and get it from there.
+    target_dirs = [concrete_env_dir, pipeline_artifacts_dir]
+
+    for dir_to_list in target_dirs:
+        for file_name in os.listdir(dir_to_list):
+            src_file = os.path.join(dir_to_list, file_name)
+            if os.path.isfile(src_file):
+                dst_file = os.path.join(repro_dir, file_name)
+                shutil.copyfile(src_file, dst_file)
+
+    # Write this job's spec json into the reproduction directory, and it will
+    # also be used in the generated "spack install" command to install the spec
+    tty.debug(f"job concrete spec path: {job_spec_json_path}")
+    with open(job_spec_json_path, "w") as fd:
+        fd.write(job_spec.to_json(hash=ht.dag_hash))
+
+    # Write some other details to aid in reproduction into an artifact
+    repro_file = os.path.join(repro_dir, "repro.json")
+    repro_details = {
+        "job_name": ci_job_name,
+        "job_spec_json": job_spec_json_file,
+        "ci_project_dir": ci_project_dir,
+    }
+    with open(repro_file, "w") as fd:
+        fd.write(json.dumps(repro_details))
+
+    # Write information about spack into an artifact in the repro dir
+    spack_info = spack_ci.get_spack_info()
+    spack_info_file = os.path.join(repro_dir, "spack_info.txt")
+    with open(spack_info_file, "wb") as fd:
+        fd.write(b"\n")
+        fd.write(spack_info.encode("utf8"))
+        fd.write(b"\n")
+
+    pipeline_mirrors = []
+
+    # If we decided there should be a temporary storage mechanism, add that
+    # mirror now so it's used when we check for a hash match already
+    # built for this spec.
+    # TODO: Remove this block in Spack 0.23
+    if pipeline_mirror_url:
+        mirror = spack.mirror.Mirror(pipeline_mirror_url, name=spack_ci.TEMP_STORAGE_MIRROR_NAME)
+        spack.mirror.add(mirror, cfg.default_modify_scope())
+        pipeline_mirrors.append(pipeline_mirror_url)
+
+    # Check configured mirrors for a built spec with a matching hash
+    # TODO: Remove this block in Spack 0.23
+    mirrors_to_check = None
+    if remote_mirror_override:
+        if spack_pipeline_type == "spack_protected_branch":
+            # Passing "mirrors_to_check" below means we *only* look in the override
+            # mirror to see if we should skip building, which is what we want.
+            mirrors_to_check = {"override": remote_mirror_override}
+
+            # Adding this mirror to the list of configured mirrors means dependencies
+            # could be installed from either the override mirror or any other configured
+            # mirror (e.g. remote_mirror_url which is defined in the environment or
+            # pipeline_mirror_url), which is also what we want.
+            spack.mirror.add(
+                spack.mirror.Mirror(remote_mirror_override, name="mirror_override"),
+                cfg.default_modify_scope(),
+            )
+        pipeline_mirrors.append(remote_mirror_override)
+
+    # TODO: Remove this in Spack 0.23
+    if deprecated_mirror_config and spack_pipeline_type == "spack_pull_request":
+        if shared_pr_mirror_url != "None":
+            pipeline_mirrors.append(shared_pr_mirror_url)
+
+    matches = bindist.get_mirrors_for_spec(
+        job_spec, mirrors_to_check=mirrors_to_check, index_only=False
+    )
+
+    # TODO/TBD/TLD: require match in order to run tests. Do we need to download?
+    if not matches:
+        # TODO/TBD/TLD: should probably error out since not installed
+        pass
+
+    # Got a hash match on at least one configured mirror.  All
+    # matches represent the fully up-to-date spec, so should all be
+    # equivalent.  If artifacts mirror is enabled, we just pick one
+    # of the matches and download (stage) the buildcache files from there to
+    # the artifacts, so they're available to be used by dependent
+    # jobs in subsequent stages.
+    for match in matches:
+        tty.msg(f"    {match['mirror_url']}")
+
+    # TODO: Remove this block in Spack 0.23
+    if enable_artifacts_mirror:
+        matching_mirror = matches[0]["mirror_url"]
+        build_cache_dir = os.path.join(local_mirror_dir, "build_cache")
+        tty.debug(f"Getting {job_spec_pkg_name} buildcache from {matching_mirror}")
+        tty.debug(f"Downloading to {build_cache_dir}")
+        bindist.download_single_spec(job_spec, build_cache_dir, mirror_url=matching_mirror)
+
+    # Start with spack arguments
+    # TODO/TBD/TLD: Install from buildcache only
+    spack_cmd = [SPACK_COMMAND, "--color=always", "--backtrace", "--verbose", "install"]
+
+    config = cfg.get("config")
+    if not config["verify_ssl"]:
+        spack_cmd.append("-k")
+
+    install_args = [f'--use-buildcache={spack_ci.win_quote("package:only,dependencies:only")}']
+
+    can_verify = spack_ci.can_verify_binaries()
+    verify_binaries = can_verify and spack_is_pr_pipeline is False
+    if not verify_binaries:
+        install_args.append("--no-check-signature")
+
+    slash_hash = spack_ci.win_quote("/" + job_spec.dag_hash())
+
+    # Arguments when installing the root from sources
+    # TODO/TBD/TLD: Is there any reason to keep the stage for cache-only build?
+    root_install_args = install_args + ["--keep-stage", "--only=package"]
+
+    # TODO/TBD/TLD: Is this going to interfere with source build reporting?
+    if cdash_handler:
+        # Add additional arguments to `spack install` for CDash reporting.
+        root_install_args.extend(cdash_handler.args())
+
+    # TODO/TBD/TLD: Install from buildcache only
+    commands = [
+        # apparently there's a race when spack bootstraps? do it up front once
+        [SPACK_COMMAND, "-e", unicode_escape(env.path), "bootstrap", "now"],
+        spack_cmd + root_install_args + [slash_hash],
+    ]
+    tty.debug(f"Installing {job_spec.name} from build cache")
+    install_exit_code = spack_ci.process_command("install", commands, repro_dir)
+
+    # Now we can run the spec's stand-alone tests
+    tty.debug(f"spack install exited {install_exit_code}")
+
+    # If the installation succeeded we can now run the stand-alone tests for
+    # the spec.
+    if install_exit_code != 0:
+        tty.warn(
+            "Unable to run stand-alone tests due to unsuccessful installation of software from buildcach"
+        )
+        if cdash_handler:
+            msg = "Failed to install the package from the buildcache"
+            cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
+            cdash_handler.copy_test_results(reports_dir, job_test_dir)
+        return install_exit_code
+
+    failure = None
+    try:
+        # First ensure we will use a reasonable test stage directory
+        stage_root = os.path.dirname(str(job_spec.package.stage.path))
+        test_stage = fs.join_path(stage_root, "spack-standalone-tests")
+        tty.debug(f"Configuring test_stage to {test_stage}")
+        config_test_path = f"config:test_stage:{test_stage}"
+        cfg.add(config_test_path, scope=cfg.default_modify_scope())
+
+        # Run the tests, resorting to junit results if not using cdash
+        log_file = None if cdash_handler else fs.join_path(test_stage, "ci-test-results.xml")
+        spack_ci.run_standalone_tests(
+            cdash=cdash_handler,
+            job_spec=job_spec,
+            fail_fast=args.fail_fast,
+            log_file=log_file,
+            repro_dir=repro_dir,
+        )
+
+    except Exception as err:
+        # TODO/TBD/TLD: Should this be a warning or an error?
+        msg = f"Error processing stand-alone tests: {str(err)}"
+        tty.error(msg)
+        failure = err
+
+    finally:
+        # Copy the test log/results files
+        spack_ci.copy_test_logs_to_artifacts(test_stage, job_test_dir)
+        if cdash_handler:
+            cdash_handler.copy_test_results(reports_dir, job_test_dir)
+        elif log_file:
+            spack_ci.copy_files_to_artifacts(log_file, job_test_dir)
+        else:
+            tty.warn("No recognized test results reporting option")
+
+    if failure is not None:
+        tty.die("Stand-alone tests failed. Refer to logs for more information.")
+
+    return 0
 
 
 def ci(parser, args):
