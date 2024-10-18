@@ -62,6 +62,9 @@ class VepCache(Package):
         if species == "homo_sapiens"
     ]
 
+    variant("installer", default=True, description="Use built-in VEP installer to download")
+    variant("env", default=True, description="Setup VEP environment variables for this cache")
+
     for major, (species, assemblies) in itertools.product(vep_versions, vep_species):
         for assembly, indexed in itertools.product(assemblies, [True, False]):
             version(major)
@@ -71,11 +74,7 @@ class VepCache(Package):
                 )
             )
 
-    depends_on("vep+installer", type="build")
-    depends_on("vep", type="run")
-
-    variant("installer", default=True, description="Use built-in VEP installer to download")
-    variant("env", default=True, description="Setup VEP environment variables for this cache")
+    depends_on("vep", type=("build", "run"))
 
     # Cache configuration options
     variant("fasta", default=True, description="Add FASTA files to the cache")
