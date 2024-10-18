@@ -10,6 +10,7 @@ parsing environment modules.
 import os
 import re
 import subprocess
+import sys
 from typing import MutableMapping, Optional
 
 import llnl.util.tty as tty
@@ -21,6 +22,8 @@ module_change_commands = ["load", "swap", "unload", "purge", "use", "unuse"]
 # This awk script is a posix alternative to `env -0`
 awk_cmd = r"""awk 'BEGIN{for(name in ENVIRON)""" r"""printf("%s=%s%c", name, ENVIRON[name], 0)}'"""
 
+executable = "C:\\Windows\\System32\\cmd.exe" if sys.platform == "win32" else "/bin/bash"
+
 
 def module(
     *args,
@@ -28,7 +31,8 @@ def module(
     environb: Optional[MutableMapping[bytes, bytes]] = None,
 ):
     module_cmd = module_template or ("module " + " ".join(args))
-    environb = environb or os.environb
+    environ = os.environ if sys.platform == "win32" else os.environb
+    environb = environb or environ
 
     if args[0] in module_change_commands:
         # Suppress module output
@@ -64,7 +68,7 @@ def module(
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             shell=True,
-            executable="/bin/bash",
+            executable=executable,
         )
         # Decode and str to return a string object in both python 2 and 3
         return str(module_p.communicate()[0].decode())
