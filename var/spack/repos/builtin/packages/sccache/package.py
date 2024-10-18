@@ -15,6 +15,10 @@ class Sccache(CargoPackage):
     homepage = "https://github.com/mozilla/sccache"
     url = "https://github.com/mozilla/sccache/archive/refs/tags/v0.8.2.tar.gz"
 
+    tags = ["build-tools"]
+
+    executables = ["^sccache$"]
+
     license("Apache-2.0", checked_by="pranav-sivaraman")
 
     version("0.8.2", sha256="2b3e0ef8902fe7bcdcfccf393e29f4ccaafc0194cbb93681eaac238cdc9b94f8")
