@@ -32,3 +32,16 @@ class Eza(CargoPackage):
     version("0.15.3", sha256="09093e565913104acb7a8eba974f8067c95566b6fbedf31138c9923a8cfde42f")
 
     depends_on("rust@1.70:", when="@0.15.3:")
+
+    @run_after("install")
+    def install_completions(self):
+        package_completions_path = f"{self.stage.source_path}/completions"
+
+        mkdirp(bash_completion_path(self.prefix))
+        copy(f"{package_completions_path}/bash/eza", bash_completion_path(self.prefix))
+
+        mkdirp(zsh_completion_path(self.prefix))
+        copy(f"{package_completions_path}/zsh/_eza", zsh_completion_path(self.prefix))
+
+        mkdirp(fish_completion_path(self.prefix))
+        copy(f"{package_completions_path}/fish/eza.fish", fish_completion_path(self.prefix))
