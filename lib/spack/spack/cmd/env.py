@@ -729,14 +729,22 @@ def env_loads(args):
 
 
 def env_update_setup_parser(subparser):
-    """update environments to the latest format"""
+    """update the environment manifest to the latest schema format
+
+    update the environment to the latest schema format, which may not be 
+    readable by older versions of spack
+    
+    a backup copy of the manifest is retained in case there is a need to revert
+    this operation
+    """
     subparser.add_argument(
-        metavar="env", dest="update_env", help="name or directory of the environment to activate"
+        metavar="env", dest="update_env", help="name or directory of the environment"
     )
     spack.cmd.common.arguments.add_common_arguments(subparser, ["yes_to_all"])
 
 
 def env_update(args):
+    """update the manifest to the latest format"""
     manifest_file = ev.manifest_file(args.update_env)
     backup_file = manifest_file + ".bkp"
 
