@@ -822,15 +822,19 @@ def env_revert(args):
 
 
 def env_depfile_setup_parser(subparser):
-    """generate a depfile from the concrete environment specs"""
+    """generate a depfile to exploit parallel builds across specs
+
+    requires the active environment to be concrete
+    """
     subparser.add_argument(
         "--make-prefix",
         "--make-target-prefix",
         default=None,
         metavar="TARGET",
-        help="prefix Makefile targets (and variables) with <TARGET>/<name>\n\nby default "
-        "the absolute path to the directory makedeps under the environment metadata dir is "
-        "used. can be set to an empty string --make-prefix ''",
+        help="prefix Makefile targets/variables with <TARGET>/<name>,\n"
+        "which can be an empty string (--make-prefix '')\n"
+        "defaults to the absolute path of the environment's makedeps\n"
+        "environment metadata dir\n",
     )
     subparser.add_argument(
         "--make-disable-jobserver",
@@ -845,8 +849,8 @@ def env_depfile_setup_parser(subparser):
         type=arguments.use_buildcache,
         default="package:auto,dependencies:auto",
         metavar="[{auto,only,never},][package:{auto,only,never},][dependencies:{auto,only,never}]",
-        help="when using `only`, redundant build dependencies are pruned from the DAG\n\n"
-        "this flag is passed on to the generated spack install commands",
+        help="use `only` to prune redundant build dependencies\n"
+        "option is also passed to generated spack install commands",
     )
     subparser.add_argument(
         "-o",
@@ -860,14 +864,14 @@ def env_depfile_setup_parser(subparser):
         "--generator",
         default="make",
         choices=("make",),
-        help="specify the depfile type\n\ncurrently only make is supported",
+        help="specify the depfile type (only support `make`)",
     )
     subparser.add_argument(
         metavar="specs",
         dest="specs",
         nargs=argparse.REMAINDER,
         default=None,
-        help="generate a depfile only for matching specs in the environment",
+        help="limit the generated file to matching specs",
     )
 
 
