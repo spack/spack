@@ -28,3 +28,5 @@ class Eza(CargoPackage):
     version("0.18.24", sha256="bdcf83f73f6d5088f6dc17c119d0d288fed4acd122466404772be5ef278887de")
     version("0.18.23", sha256="34b0e8a699ac1a8a308448f417f0c0137a67ea34e261fd6f106e8be9fd5bb54c")
     version("0.15.3", sha256="09093e565913104acb7a8eba974f8067c95566b6fbedf31138c9923a8cfde42f")
+
+    depends_on("rust@1.70:", when="@0.15.3:")
