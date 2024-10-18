@@ -775,14 +775,22 @@ def env_update(args):
 
 
 def env_revert_setup_parser(subparser):
-    """restore environments to their state before update"""
+    """restore the environment manifest to its previous format
+
+    revert the environment's manifest to the schema format from its last
+    'spack env update'
+
+    the current manifest will be overwritten by the backup copy and the backup
+    copy will be removed
+    """
     subparser.add_argument(
-        metavar="env", dest="revert_env", help="name or directory of the environment to activate"
+        metavar="env", dest="revert_env", help="name or directory of the environment"
     )
     spack.cmd.common.arguments.add_common_arguments(subparser, ["yes_to_all"])
 
 
 def env_revert(args):
+    """restore the environment manifest to its previous format"""
     manifest_file = ev.manifest_file(args.revert_env)
     backup_file = manifest_file + ".bkp"
 
