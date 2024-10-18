@@ -525,29 +525,32 @@ def env_remove(args):
 # env rename
 #
 def env_rename_setup_parser(subparser):
-    """rename an existing environment"""
+    """rename an existing environment
+
+    rename a managed environment or move an independent/directory environment
+
+    operation cannot be performed to or from an active environment
+    """
     subparser.add_argument(
-        "mv_from", metavar="from", help="name (or path) of existing environment"
+        "mv_from", metavar="from", help="current name or directory of the environment"
     )
-    subparser.add_argument(
-        "mv_to", metavar="to", help="new name (or path) for existing environment"
-    )
+    subparser.add_argument("mv_to", metavar="to", help="new name or directory for the environment")
     subparser.add_argument(
         "-d",
         "--dir",
         action="store_true",
-        help="the specified arguments correspond to directory paths",
+        help="positional arguments are environment directory paths",
     )
     subparser.add_argument(
-        "-f", "--force", action="store_true", help="allow overwriting of an existing environment"
+        "-f",
+        "--force",
+        action="store_true",
+        help="force renaming even if overwriting an existing environment",
     )
 
 
 def env_rename(args):
-    """Rename an environment.
-
-    This renames a managed environment or moves an independent environment.
-    """
+    """rename or move an existing environment"""
 
     # Directory option has been specified
     if args.dir:
