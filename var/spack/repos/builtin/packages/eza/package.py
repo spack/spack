@@ -17,6 +17,8 @@ class Eza(CargoPackage):
     license("EUPL-1.2", when="@0.20:", checked_by="pranav-sivaraman")
     license("MIT", when="@:0.19", checked_by="pranav-sivaraman")
 
+    version("0.20.4", sha256="5f25e866521c310d9530b9bbabeb288ad8d9cd208adee79582dde79bdd51c470")
+    version("0.20.3", sha256="51a61bba14d1e4043981cabc5cf3d14352bf6a4ca0e308f437d0c8d00f42c2f7")
     version("0.20.2", sha256="8d5a573906fd362e27c601e8413b2c96b546bbac7cdedcbd1defe1332f42265d")
     version("0.20.1", sha256="e78a84cc5324ebb6481293d32edfdbc7de78511d5190b4808a0896f8ce4d652e")
     version("0.20.0", sha256="e6c058b13aecbed9f037c0607f0df19bc0a3532fea14dacd0090878ed4bbfadc")
