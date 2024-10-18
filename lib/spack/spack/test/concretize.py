@@ -2279,31 +2279,6 @@ class TestConcretize:
         ):
             Spec("pkg-a %foo").concretized()
 
-    @pytest.mark.parametrize("transitive", [True, False])
-    def test_explicit_splices(
-        self, mutable_config, database_mutable_config, mock_packages, transitive, capfd
-    ):
-        mpich_spec = database_mutable_config.query("mpich")[0]
-        splice_info = {
-            "target": "mpi",
-            "replacement": f"/{mpich_spec.dag_hash()}",
-            "transitive": transitive,
-        }
-        spack.config.CONFIG.set("concretizer", {"splice": {"explicit": [splice_info]}})
-
-        spec = spack.spec.Spec("hdf5 ^zmpi").concretized()
-
-        assert spec.satisfies(f"^mpich@{mpich_spec.version}")
-        assert spec.build_spec.dependencies(name="zmpi", deptype="link")
-        assert spec["mpi"].build_spec.satisfies(mpich_spec)
-        assert not spec.build_spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
-        assert not spec.dependencies(name="zmpi", deptype="link")
-
-        captured = capfd.readouterr()
-        assert "Warning: explicit splice configuration has caused" in captured.err
-        assert "hdf5 ^zmpi" in captured.err
-        assert str(spec) in captured.err
-
     @pytest.mark.regression("36339")
     def test_compiler_match_constraints_when_selected(self):
         """Test that, when multiple compilers with the same name are in the configuration

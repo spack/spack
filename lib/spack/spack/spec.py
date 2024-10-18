@@ -3375,8 +3375,11 @@ class Spec:
             if all(not other.variants[k].propagate for k in other.variants):
                 return False
 
-            if any(other.variants[variant].propagate
-                   and not self.variant_exists_in_dependency(variant) for variant in other.variants):
+            if any(
+                other.variants[variant].propagate
+                and not self.variant_exists_in_dependency(variant)
+                for variant in other.variants
+            ):
                 return False
 
         if self.architecture and other.architecture:
