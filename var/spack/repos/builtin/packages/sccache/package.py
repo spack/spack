@@ -31,3 +31,6 @@ class Sccache(CargoPackage):
     depends_on("rust@1.75:", when="@0.8.2:")
     depends_on("rust@1.70:", when="@0.7.7:")
     depends_on("rust@1.67.1:", when="@0.6:")
+    depends_on("rust@1.65:", when="@0.4.2:")
+    depends_on("rust@1.60:", when="@0.3.2:")
+    depends_on("rust@1.58:", when="@0.3.1:")
