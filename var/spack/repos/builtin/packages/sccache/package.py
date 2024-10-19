@@ -3,6 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+import os
+
+import spack.build_systems
 from spack.package import *
 
 
@@ -17,7 +21,7 @@ class Sccache(CargoPackage):
 
     tags = ["build-tools"]
 
-    executables = ["^sccache$"]
+    executables = [r"^sccache$", r"^sscache-dist$"]
 
     license("Apache-2.0", checked_by="pranav-sivaraman")
 
