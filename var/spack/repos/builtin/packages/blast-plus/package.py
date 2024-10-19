@@ -68,7 +68,6 @@ class BlastPlus(AutotoolsPackage):
     variant("pcre", default=True, description="Build with pcre support")
     variant("perl", default=True, description="Build with perl support")
     variant("python", default=True, description="Build with python support")
-    variant("openmp", default=True, description="Build with openMP support")
 
     depends_on("jpeg", when="+jpeg")
     depends_on("libpng", when="+png")
