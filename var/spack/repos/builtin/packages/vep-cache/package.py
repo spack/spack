@@ -9,30 +9,35 @@ import os
 from spack.package import *
 
 
-def _vep_cache_filename(major_version, species, assembly):
-    return f"{species}_vep_{major_version}_{assembly}.tar.gz"
+def _vep_cache_filename(version, species, source, assembly):
+    assembly_source = "vep" if source == "ensembl" else f"{source}_vep"
+    return f"{species}_{assembly_source}_{version}_{assembly}.tar.gz"
 
 
-def _vep_cache_resource_args(version, species, assembly, indexed, dest=""):
-    filename = _vep_cache_filename(version, species, assembly)
+def _vep_cache_resource(version, species, source, assembly, indexed, dest=""):
+    filename = _vep_cache_filename(version, species, source, assembly)
     dir_name = "indexed_vep_cache" if indexed else "vep"
     root = f"https://ftp.ensembl.org/pub/release-{version}/variation/{dir_name}"
-    url = f"{root}/{filename}"
+    url = join_path(root, filename)
     when = [
         f"@{version}",
-        "~installer",  # Only need these resources when we don't use the installer
-        "+indexed" if indexed else "~indexed",  # Only need the appropriate indexed version
+        "~use_vep_installer",  # Only need these resources when we don't use the installer
+        "+indexed" if indexed else "~indexed",  # Only need the appropriate indexed versiona
+        f"assembly_source={source}",  # Only reference the assembly source defined here
         f"species={species}",  # Only need the requested species
         # We only need to match the specified assembly for human assemblies
-        f"assembly={assembly}" if species == "homo_sapiens" else "",
+        f"assembly={assembly.lower()}" if species == "homo_sapiens" else "",
     ]
-    return {
+
+    kwargs = {
         "name": filename,
         "url": url,
         "when": " ".join(when),
         "destination": dest,
         "expand": False,  # We'll expand this where it needs to go later
     }
+
+    return resource(**kwargs)
 
 
 class VepCache(Package):
@@ -47,6 +52,8 @@ class VepCache(Package):
     # The cache *should* be pinned to the VEP version, but there are reasons
     # that one may want to avoid that
     vep_versions = ["110", "111", "112"]
+    vep_assembly_sources = ["ensembl", "refseq", "merged"]
+    # This is an incomplete list
     vep_species = [
         ("bos_taurus", ["UMD3.1"]),
         ("danio_rerio", ["GRCz11"]),
@@ -62,29 +69,18 @@ class VepCache(Package):
         if species == "homo_sapiens"
     ]
 
-    variant("installer", default=True, description="Use built-in VEP installer to download")
+    variant("use_vep_installer", default=True, description="Use VEP installer script to download")
     variant("env", default=True, description="Setup VEP environment variables for this cache")
-
-    for major, (species, assemblies) in itertools.product(vep_versions, vep_species):
-        for assembly, indexed in itertools.product(assemblies, [True, False]):
-            version(major)
-            resource(
-                **_vep_cache_resource_args(
-                    version=major, species=species, assembly=assembly, indexed=indexed
-                )
-            )
-
-    depends_on("vep", type=("build", "run"))
 
     # Cache configuration options
     variant("fasta", default=True, description="Add FASTA files to the cache")
     variant("indexed", default=True, description="Use indexed cache")
 
     variant(
-        "type",
-        values=["ensembl", "refseq", "merged"],
+        "assembly_source",
+        values=vep_assembly_sources,
         default="ensembl",
-        description="What reference genome source to retrieve the cache for",
+        description="What reference genome source",
     )
     variant(
         "species",
@@ -100,25 +96,40 @@ class VepCache(Package):
         description="Which assembly of genome to use (only needed for homo sapiens)",
     )
 
+    # Add all species for each VEP version
+    for major, source, indexed, (species, assemblies) in itertools.product(
+        vep_versions,  # All VEP versions
+        vep_assembly_sources,  # The three VEP assembly sources
+        [True, False],  # Indexed or not
+        vep_species,  # All species with caches defined
+    ):
+        # A possibility of more than one assembly, even though most only have one
+        for assembly in assemblies:
+            version(major)
+            _vep_cache_resource(
+                version=major, species=species, source=source, assembly=assembly, indexed=indexed
+            )
+
+    depends_on("vep", type="build", when="~use_vep_installer")
+
     @property
     def vep(self):
         return self.spec["vep"].package
 
-    @property
-    def vep_cache_config(self):
+    def vep_cache_config(self, base):
         spec = self.spec
         satisfies = spec.satisfies
         variants = spec.variants
         cache_version = spec.version.up_to(1)
         vep_version = self.vep.version.up_to(1)
-        user_root = f"{self.home.share.vep}"
+        user_root = join_path(base, "share", "vep")
         root = user_root  # Should this be VEP install dir?
 
         if cache_version == "default":
             cache_version = vep_version
 
         indexed = satisfies("+indexed")
-        cache_type = variants["type"].value
+        cache_type = variants["source"].value
         species_name = variants["species"].value
         assembly_name = variants["assembly"].value
 
@@ -159,7 +170,7 @@ class VepCache(Package):
 
     def setup_run_environment(self, env):
         if self.spec.satisfies("+env"):
-            cache = self.vep_cache_config
+            cache = self.vep_cache_config(self.home)
             env.set("VEP_OFFLINE", "1")
             env.set("VEP_CACHE", "1")
             env.set("VEP_DIR", cache["user_root"])
@@ -175,14 +186,14 @@ class VepCache(Package):
                 pass
 
     def cache_installer_args(self):
-        cache = self.vep_cache_config
+        cache = self.vep_cache_config(self.prefix)
         args = [
             "--CACHEDIR",
-            cache["dir"],
+            cache["full_path"],
             "--CACHE_VERSION",
             cache["version"],
             "--SPECIES",
-            ",".join(cache["cache_species"]),
+            cache["cache_species"],
         ]
         if cache["assembly"] is not None:
             args += ["--ASSEMBLY", cache["assembly"]]
@@ -200,14 +211,13 @@ class VepCache(Package):
         installer(*self.installer_args())
 
     def install(self, spec, prefix):
-        cache = self.vep_cache_config
-        mkdirp(cache["root"])
-        if not os.path.exists(cache["full_path"]):
-            if spec.satisfies("+installer"):
-                self.install_with_installer()
-            else:
-                tarball = self.get_resource_filename(
-                    version=cache["version"], species=cache["species"], assembly=cache["assembly"]
-                )
-                tar = which("tar")
-                tar("xzvf", tarball, "-C", cache["root"])
+        cache = self.vep_cache_config(self.prefix)
+        mkdirp(cache["full_path"])
+        if spec.satisfies("+installer"):
+            self.install_with_installer()
+        else:
+            tarball = _vep_cache_filename(
+                version=cache["version"], species=cache["species"], assembly=cache["assembly"]
+            )
+            tar = which("tar")
+            tar("xzvf", tarball, "-C", cache["root"])
