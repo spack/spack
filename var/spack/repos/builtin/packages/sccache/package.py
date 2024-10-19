@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import re
 import os
+import re
 
 import spack.build_systems
 from spack.package import *
@@ -51,14 +51,14 @@ class Sccache(CargoPackage):
     )
 
     @classmethod
-    def determine_version(cls, exe): 
+    def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str, error=str)
         match = re.match(r"sccache (\S+)", output)
         return match.group(1) if match else None
 
     @classmethod
     def determine_variants(cls, exes, version_str):
-        if any(os.path.basename(path) == 'sccache-dist' for path in exes):
+        if any(os.path.basename(path) == "sccache-dist" for path in exes):
             return "+dist-server"
         else:
             return "~dist-server"
