@@ -46,6 +46,19 @@ class Sccache(CargoPackage):
         when="platform=linux",
     )
 
+    @classmethod
+    def determine_version(cls, exe): 
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.match(r"sccache (\S+)", output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        if any(os.path.basename(path) == 'sccache-dist' for path in exes):
+            return "+dist-server"
+        else:
+            return "~dist-server"
+
 
 class CargoBuilder(spack.build_systems.cargo.CargoBuilder):
 
