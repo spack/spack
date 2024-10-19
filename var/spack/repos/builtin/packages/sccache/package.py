@@ -42,6 +42,7 @@ class Sccache(CargoPackage):
     depends_on("rust@1.65:", when="@0.4.2:")
     depends_on("rust@1.60:", when="@0.3.2:")
     depends_on("rust@1.58:", when="@0.3.1:")
+    depends_on("pkgconfig", type="build", when="platform=linux")
 
     variant(
         "dist-server",
