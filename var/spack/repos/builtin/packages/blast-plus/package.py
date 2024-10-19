@@ -80,7 +80,6 @@ class BlastPlus(AutotoolsPackage):
     depends_on("bzip2", when="+bzip2")
     depends_on("lzo", when="+lzo")
     depends_on("pcre", when="+pcre")
-    depends_on("llvm-openmp", when="+openmp%apple-clang")
 
     depends_on("python", when="+python")
     depends_on("perl", when="+perl")
@@ -168,15 +167,4 @@ class BlastPlus(AutotoolsPackage):
         else:
             config_args.append("--without-python")
 
-        if spec.satisfies("~openmp"):
-            config_args.append("--without-openmp")
-
         return config_args
-
-    def setup_build_environment(self, env):
-
-        if self.spec.satisfies("%apple-clang") and self.spec.satisfies("+openmp"):
-            env.append_flags("CPPFLAGS", self.compiler.openmp_flag)
-            env.append_flags("CFLAGS", self.spec["llvm-openmp"].headers.include_flags)
-            env.append_flags("CXXFLAGS", self.spec["llvm-openmp"].headers.include_flags)
-            env.append_flags("LDFLAGS", self.spec["llvm-openmp"].libs.ld_flags)
