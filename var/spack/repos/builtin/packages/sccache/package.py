@@ -32,7 +32,7 @@ class Sccache(CargoPackage):
     depends_on("rust@1.67.1:")  # for 0.6/0.7.1 and newer, but may work for even older versions.
     depends_on("pkgconfig", type="build", when="platform=linux")
 
-    depends_on("openssl")
+    depends_on("openssl", when="platform=linux")
 
     variant(
         "dist-server",
