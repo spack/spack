@@ -56,10 +56,10 @@ class Quantlib(CMakePackage):
     def cmake_args(self):
         args = []
 
-        if "+benchmark" in self.spec:
-            args += ["-DQL_BUILD_BENCHMARK=ON", "-DQL_INSTALL_BENCHMARK=ON"]
-        else:
-            args += ["-DQL_BUILD_BENCHMARK=OFF", "-DQL_INSTALL_BENCHMARK=OFF"]
+        args = [
+            self.define_from_variant("QL_BUILD_BENCHMARK", "benchmark"),
+            self.define_from_variant("QL_INSTALL_BENCHMARK", "benchmark"),
+        ]
 
         if "+examples" in self.spec:
             args += ["-DQL_BUILD_EXAMPLES=ON", "-DQL_INSTALL_EXAMPLES=ON"]
