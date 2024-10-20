@@ -15,6 +15,7 @@ class Quantlib(CMakePackage):
 
     maintainers("TheQueasle")
 
+    version("1.34", sha256="eb87aa8ced76550361771e167eba26aace018074ec370f7af49a01aa56b2fe50")
     version("1.31.1", sha256="13b5346217153ae3c185e0c640cc523a1a6522c3a721698b2c255fd9a1a15a68")
 
     variant("benchmark", default=True, description="Build benchmark")
