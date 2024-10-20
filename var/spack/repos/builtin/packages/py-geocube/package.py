@@ -15,7 +15,6 @@ class PyGeocube(PythonPackage):
     license("BSD-3-Clause")
     maintainers("adamjstewart")
 
-
     version("0.7.0", sha256="986ff46e78d7dede09a1c93bff1642c24aaa5590acdc774049436f86f0989ca4")
     version("0.3.2", sha256="71ff0228f1ef44e3a649d29a045ff7e2a2094a5cfca30fadab8f88f4ec23a41d")
     version("0.3.1", sha256="5c97131010cd8d556a5fad2a3824452120640ac33a6a45b6ca9ee3c28f2e266f")
