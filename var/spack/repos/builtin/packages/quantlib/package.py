@@ -154,6 +154,5 @@ class Quantlib(CMakePackage):
 
         prefix = self.spec.prefix
         mkdirp(prefix.bin)
-        cp = which("cp")
-        cp("-r", os.path.join(self.build_directory, "quantlib-config"), prefix.bin)
-        filter_file(r"^prefix=.*", "prefix=" + prefix, prefix.bin + "/quantlib-config")
+        filter_file(r"^prefix=.*", f"prefix={prefix}", join_path(self.build_directory, "quantlib-config"))
+        install(join_path(self.build_directory, "quantlib-config"), prefix.bin)
