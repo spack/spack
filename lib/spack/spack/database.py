@@ -313,16 +313,11 @@ _QUERY_DOCSTRING = """
 
             end_date: if set considers only specs installed until the ending date.
 
-            hashes (Container): list or set of hashes that we can use to
-                restrict the search
+            hashes: list of hashes that we can use to restrict the search
 
             in_buildcache: specs that are marked in this database as part of an associated binary
                 cache are ``in_buildcache``. All other specs are not. This field is used for
                 querying mirror indices. By default it does not check this status.
-
-        Returns:
-            list of specs that match the query
-
         """
 
 
@@ -1516,6 +1511,7 @@ class Database:
     def _query(
         self,
         query_spec: Optional["spack.spec.Spec"] = None,
+        *,
         predicate_fn: Optional[SelectType] = None,
         installed: Union[bool, InstallStatus, List[InstallStatus]] = True,
         explicit: Optional[bool] = None,
