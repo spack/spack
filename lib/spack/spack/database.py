@@ -301,14 +301,13 @@ _QUERY_DOCSTRING = """
                 that need some data for selection not provided by the Database itself.
 
             installed: if ``True``, includes only installed specs in the search. If ``False`` only
-                missing specs, and if ``any``, all specs in database. If an InstallStatus or 
-                iterable of InstallStatus, returns specs whose install status matches at least 
+                missing specs, and if ``any``, all specs in database. If an InstallStatus or
+                iterable of InstallStatus, returns specs whose install status matches at least
                 one of the InstallStatus.
 
-            explicit (bool or None): A spec that was installed
-                following a specific user request is marked as explicit. If
-                instead it was pulled-in as a dependency of a user requested
-                spec it's considered implicit.
+            explicit: a spec that was installed following a specific user request is marked as
+                explicit. If instead it was pulled-in as a dependency of a user requested spec
+                it's considered implicit.
 
             start_date (datetime.datetime or None): filters the query
                 discarding specs that have been installed before ``start_date``.
@@ -1522,7 +1521,7 @@ class Database:
         query_spec: Optional["spack.spec.Spec"] = None,
         predicate_fn: Optional[SelectType] = None,
         installed: Union[bool, InstallStatus, List[InstallStatus]] = True,
-        explicit=any,
+        explicit: Optional[bool] = None,
         start_date=None,
         end_date=None,
         hashes=None,
@@ -1571,7 +1570,7 @@ class Database:
             if in_buildcache is not any and rec.in_buildcache != in_buildcache:
                 continue
 
-            if explicit is not any and rec.explicit != explicit:
+            if explicit is not None and rec.explicit != explicit:
                 continue
 
             if predicate_fn is not None and not predicate_fn(rec):
