@@ -7,6 +7,7 @@ import os
 import re
 import sys
 
+from spack.build_systems.cmake import CMakeBuilder
 from spack.build_systems.generic import GenericBuilder
 from spack.package import *
 
@@ -54,17 +55,22 @@ class Msmpi(Package):
         self.spec.mpicxx = dependent_module.spack_cxx
         self.spec.mpifc = dependent_module.spack_fc
         self.spec.mpif77 = dependent_module.spack_f77
-        dependent_module.std_cmake_args.extend(["-DMPI_SKIP_COMPILER_WRAPPER=ON", "-DMPI_ASSUME_NO_BUILTIN_MPI=ON"])
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set("MPIEXEC_EXECUTABLE", self.pkg.spec.prefix.bin)
+        dependent_module.std_cmake_args.extend(
+            ["-DMPI_SKIP_COMPILER_WRAPPER=ON", "-DMPI_ASSUME_NO_BUILTIN_MPI=ON"]
+        )
+        CMakeBuilder.setup_dependent_cmake_project(
+            module,
+            dependent_spec,
+            CMakeBuilder.define("MPI_EXECUTABLE", self.prefix.bin.mpiexec),
+            CMakeBuilder.define("MPI_SKIP_COMPILER_WRAPPER", True),
+            CMakeBuilder.define("MPI_ASSUME_NO_BUILTIN_MPI", True),
+        )
 
 
 class GenericBuilder(GenericBuilder):
     def setup_build_environment(self, env):
         ifort_root = os.path.join(*self.pkg.compiler.fc.split(os.path.sep)[:-2])
         env.set("SPACK_IFORT", ifort_root)
-
 
     def is_64bit(self):
         return "64" in str(self.pkg.spec.target.family)

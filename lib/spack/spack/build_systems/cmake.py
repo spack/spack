@@ -356,6 +356,18 @@ class CMakeBuilder(BaseBuilder):
         return args
 
     @staticmethod
+    def setup_dependent_cmake_package(module, dependent_spec, *propegated_args):
+        """Helper method to propegate required CMake cache definitions to dependent
+        packages"""
+        if CMakeBuilder in type(dependent_spec.package.builder).__mro__:
+            dependent_std_args_stub = type(dependent_spec.package.builder).cmake_args
+
+            def new_cmake_args(self):
+                return propegated_args + dependent_std_args_stub(self)
+
+            type(dependent_spec.package.builder).cmake_args = new_cmake_args
+
+    @staticmethod
     def std_args(pkg, generator=None):
         """Computes the standard cmake arguments for a generic package"""
         default_generator = "Ninja" if sys.platform == "win32" else "Unix Makefiles"
@@ -549,13 +561,6 @@ class CMakeBuilder(BaseBuilder):
     def build_directory(self):
         """Full-path to the directory to use when building the package."""
         return os.path.join(self.pkg.stage.path, self.build_dirname)
-
-
-    def setup_dependent_cmake_args(self, module, dependent_spec):
-        base_args = dependent_spec.pkg.cmake_args()
-
-
-
 
     def cmake_args(self):
         """List of all the arguments that must be passed to cmake, except:
