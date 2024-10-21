@@ -2,16 +2,16 @@ spack:
   view: false
   packages:
     all:
-      require: target=x86_64_v3
+      require:
+      - target=aarch64
   concretizer:
     unify: true
     reuse: false
-  definitions:
-  - default_specs:
+  specs:
       # editors
     - neovim~no_luajit
     - py-pynvim
-    - emacs+json+native+treesitter   # note, pulls in gcc
+    - emacs+json~native+treesitter   # TODO native not supported until gcc builds on darwin
       # - tree-sitter is a dep, should also have cli but no package
     - nano   # just in case
       # tags and scope search helpers
@@ -19,14 +19,13 @@ spack:
     - direnv
       # runtimes and compilers
     - python
-    - llvm+link_llvm_dylib~lld~lldb~polly+python build_type=MinSizeRel   # for clangd, clang-format
+    - llvm+link_llvm_dylib+lld~lldb~polly+python build_type=MinSizeRel   # for clangd, clang-format
     - node-js   # for editor plugins etc., pyright language server
     - npm
     - cmake
     - libtool
     - go   # to build fzf, gh, hub
     - rust+dev   # fd, ripgrep, hyperfine, exa, rust-analyzer
-    - binutils+ld+gold+plugins   # support linking with built gcc
       # styling and lints
     - astyle
     - cppcheck
@@ -54,47 +53,23 @@ spack:
       # ensure we can use a jobserver build and do this fast
     - gmake
     - ninja   # should be @kitware, can't be because of meson requirement
-    - openssl certs=system     # must be this, system external does not work
     - libtree
-    - patchelf
     - sed
     - which
-    - elfutils
-    - fontconfig
-    - font-util
-    - gdb
     - flex
     - graphviz
     - doxygen
     - meson
-
-  - arch:
-    - '%gcc target=x86_64_v3'
-
-  specs:
-  - matrix:
-    - - $default_specs
-    - - $arch
-
-  compilers:
-  - compiler:
-      spec: gcc@=10.2.1
-      paths:
-        cc: /opt/rh/devtoolset-10/root/usr/bin/gcc
-        cxx: /opt/rh/devtoolset-10/root/usr/bin/g++
-        f77: /opt/rh/devtoolset-10/root/usr/bin/gfortran
-        fc: /opt/rh/devtoolset-10/root/usr/bin/gfortran
-      flags: {}
-      operating_system: centos7
-      target: x86_64
-      modules: []
-      environment: {}
-      extra_rpaths: []
+    - lima
 
   ci:
     pipeline-gen:
+    - build-job-remove:
+        tags: [ spack, public ]
     - build-job:
-        image: ghcr.io/spack/spack/manylinux2014:2024.03.28
+        variables:
+          CI_GPG_KEY_ROOT: /etc/protected-runner
+        tags: [ "macos-ventura", "apple-clang-15", "aarch64-macos" ]
 
   cdash:
-    build-group: Developer Tools Manylinux2014
+    build-group: Developer Tools Darwin
