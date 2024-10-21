@@ -609,9 +609,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         else:
             cmake_args.append("-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF")
 
+        cmake_args.append("-DPARAVIEW_USE_MPI:BOOL=%s" % variant_bool("+mpi"),
         if "+mpi" in spec:
             mpi_args = [
-                "-DPARAVIEW_USE_MPI:BOOL=ON",
                 "-DMPIEXEC:FILEPATH=%s/bin/mpiexec" % spec["mpi"].prefix,
             ]
             if not sys.platform == "win32":
