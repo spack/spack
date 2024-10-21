@@ -300,13 +300,10 @@ _QUERY_DOCSTRING = """
                 whether that record is selected for the query. It can be used to craft criteria
                 that need some data for selection not provided by the Database itself.
 
-            installed (bool or InstallStatus or typing.Iterable or None):
-                if ``True``, includes only installed
-                specs in the search; if ``False`` only missing specs, and if
-                ``any``, all specs in database. If an InstallStatus or iterable
-                of InstallStatus, returns specs whose install status
-                (installed, deprecated, or missing) matches (one of) the
-                InstallStatus. (default: True)
+            installed: if ``True``, includes only installed specs in the search. If ``False`` only
+                missing specs, and if ``any``, all specs in database. If an InstallStatus or 
+                iterable of InstallStatus, returns specs whose install status matches at least 
+                one of the InstallStatus.
 
             explicit (bool or None): A spec that was installed
                 following a specific user request is marked as explicit. If
@@ -1524,7 +1521,7 @@ class Database:
         self,
         query_spec: Optional["spack.spec.Spec"] = None,
         predicate_fn: Optional[SelectType] = None,
-        installed=True,
+        installed: Union[bool, InstallStatus, List[InstallStatus]] = True,
         explicit=any,
         start_date=None,
         end_date=None,
