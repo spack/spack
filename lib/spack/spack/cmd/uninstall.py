@@ -116,7 +116,7 @@ def find_matching_specs(
             has_errors = True
 
         # No installed package matches the query
-        if len(matching) == 0 and spec is not any:
+        if len(matching) == 0 and spec is not None:
             if env:
                 pkg_type = "packages in environment '%s'" % env.name
             else:
@@ -301,6 +301,6 @@ def uninstall(parser, args):
             "  Use `spack uninstall --all` to uninstall ALL packages.",
         )
 
-    # [any] here handles the --all case by forcing all specs to be returned
-    specs = spack.cmd.parse_specs(args.specs) if args.specs else [any]
+    # [None] here handles the --all case by forcing all specs to be returned
+    specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
     uninstall_specs(args, specs)
