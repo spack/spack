@@ -601,7 +601,7 @@ class FailureTracker:
         return self.dir / f"{spec.name}-{spec.dag_hash()}"
 
 
-SelectType = Optional[Callable[[InstallRecord], bool]]
+SelectType = Callable[[InstallRecord], bool]
 
 
 class Database:
@@ -1526,7 +1526,7 @@ class Database:
     def _query(
         self,
         query_spec=any,
-        selection_fn: SelectType = None,
+        selection_fn: Optional[SelectType] = None,
         installed=True,
         explicit=any,
         start_date=None,
