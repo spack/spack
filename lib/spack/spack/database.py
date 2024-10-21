@@ -1521,9 +1521,9 @@ class Database:
         explicit: Optional[bool] = None,
         start_date: Optional[datetime.datetime] = None,
         end_date: Optional[datetime.datetime] = None,
-        hashes=None,
+        hashes: Optional[List[str]] = None,
         in_buildcache: Optional[bool] = None,
-        origin=None,
+        origin: Optional[str] = None,
     ) -> List["spack.spec.Spec"]:
 
         if query_spec is not None:
