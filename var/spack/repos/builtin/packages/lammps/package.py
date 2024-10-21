@@ -661,7 +661,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("hipfft", when="+kokkos+kspace+rocm fft_kokkos=hipfft")
     depends_on("fftw-api@3", when="+kokkos+kspace fft_kokkos=fftw3")
     depends_on("mkl", when="+kokkos+kspace fft_kokkos=mkl")
-    depends_on("voropp+pic", when="+voronoi")
+    depends_on("voropp", when="+voronoi")
     depends_on("netcdf-c+mpi", when="+user-netcdf")
     depends_on("netcdf-c+mpi", when="+netcdf")
     depends_on("blas", when="+user-atc")
@@ -884,11 +884,16 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
                     "-O3 -fno-math-errno -fno-unroll-loops "
                     "-fveclib=AMDLIBM -muse-unaligned-vector-move"
                 )
-                if spec.satisfies("%aocc@4.1:"):
+                if spec.satisfies("%aocc@4.1:4.2"):
                     cxx_flags += (
                         " -mllvm -force-gather-overhead-cost=50"
                         " -mllvm -enable-masked-gather-sequence=false"
                     )
+                elif spec.satisfies("%aocc@5.0:"):
+                    cxx_flags += " -mllvm -enable-aggressive-gather"
+                    if spec.target >= "zen5":
+                        cxx_flags += " -fenable-restrict-based-lv"
+
                 # add -fopenmp-simd if OpenMP not already turned on
                 if spec.satisfies("~openmp"):
                     cxx_flags += " -fopenmp-simd"
