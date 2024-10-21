@@ -354,11 +354,13 @@ class MultiProcessFd:
     This object takes control over the associated FD: files opened from this
     using `fdopen` need to use `closefd=False`.
     """
-    # As for why: when a multiprocessing.connection.Connection object stores
-    # an fd, it assumes control over it, and will attempt to close it when
-    # gc'ed during __del__; if you fdopen(multiprocessfd.fd, closefd=True)
-    # then the resulting file will also assume control, and you can see
-    # warnings when there is an attempted double close.
+
+    # As for why you have to fdopen(..., closefd=False): when a
+    # multiprocessing.connection.Connection object stores an fd, it assumes
+    # control over it, and will attempt to close it when gc'ed during __del__;
+    # if you fdopen(multiprocessfd.fd, closefd=True) then the resulting file
+    # will also assume control, and you can see warnings when there is an
+    # attempted double close.
 
     def __init__(self, fd):
         self._connection = None
