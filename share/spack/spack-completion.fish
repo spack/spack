@@ -489,13 +489,17 @@ complete -c spack -n '__fish_spack_using_command add' -s l -l list-name -r -f -a
 complete -c spack -n '__fish_spack_using_command add' -s l -l list-name -r -d 'name of the list to add specs to'
 
 # spack arch
-set -g __fish_spack_optspecs_spack_arch h/help g/generic-target known-targets p/platform o/operating-system t/target f/frontend b/backend
+set -g __fish_spack_optspecs_spack_arch h/help g/generic-target known-targets family generic p/platform o/operating-system t/target f/frontend b/backend
 complete -c spack -n '__fish_spack_using_command arch' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command arch' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command arch' -s g -l generic-target -f -a generic_target
-complete -c spack -n '__fish_spack_using_command arch' -s g -l generic-target -d 'show the best generic target'
+complete -c spack -n '__fish_spack_using_command arch' -s g -l generic-target -d 'show the best generic target (deprecated)'
 complete -c spack -n '__fish_spack_using_command arch' -l known-targets -f -a known_targets
 complete -c spack -n '__fish_spack_using_command arch' -l known-targets -d 'show a list of all known targets and exit'
+complete -c spack -n '__fish_spack_using_command arch' -l family -f -a family
+complete -c spack -n '__fish_spack_using_command arch' -l family -d 'print generic ISA (x86_64, aarch64, ppc64le, ...)'
+complete -c spack -n '__fish_spack_using_command arch' -l generic -f -a generic
+complete -c spack -n '__fish_spack_using_command arch' -l generic -d 'print feature level (x86_64_v3, armv8.4a, ...)'
 complete -c spack -n '__fish_spack_using_command arch' -s p -l platform -f -a platform
 complete -c spack -n '__fish_spack_using_command arch' -s p -l platform -d 'print only the platform'
 complete -c spack -n '__fish_spack_using_command arch' -s o -l operating-system -f -a operating_system
