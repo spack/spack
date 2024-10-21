@@ -9,7 +9,6 @@ spack:
     # - mpas-model %oneapi
     - openfoam %gcc
     - palace %oneapi ^superlu-dist%oneapi # hack: force fortran-rt provider through superlu-dist
-    # Latest version quantum-espresso@7.3.1 does not build with oneapi, see https://github.com/spack/spack/pull/46456#issuecomment-236315951=> WORKS NOW.
     # TODO: Find out how to make +ipo cmake flag work.
     # - quantum-espresso %oneapi
     - openmpi %oneapi
