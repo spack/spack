@@ -62,18 +62,6 @@ jobs:
       # job outputs: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
       # setting environment variables from earlier steps: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
       #
-  bootstrap:
-    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.bootstrap == 'true' }}
-    needs: [ prechecks, changes ]
-    uses: ./.github/workflows/bootstrap.yml
-    secrets: inherit
-
-  unit-tests:
-    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
-    needs: [ prechecks, changes ]
-    uses: ./.github/workflows/unit_tests.yaml
-    secrets: inherit
-
   prechecks:
     needs: [ changes ]
     uses: ./.github/workflows/valid-style.yml
@@ -88,13 +76,30 @@ jobs:
     - name: Success
       run: "true"
 
+  bootstrap:
+    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.bootstrap == 'true' }}
+    needs: [ prechecks, changes ]
+    uses: ./.github/workflows/bootstrap.yml
+    secrets: inherit
+
+  unit-tests:
+    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
+    needs: [ prechecks, changes ]
+    uses: ./.github/workflows/unit_tests.yaml
+    secrets: inherit
+
   coverage:
     needs: [ unit-tests, prechecks ]
     uses: ./.github/workflows/coverage.yml
     secrets: inherit
 
+  validate-checksums:
+    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.packages == 'true' }}
+    needs: [ changes ]
+    uses: ./.github/workflows/valid-checksums.yml
+
   all:
-    needs: [ coverage, bootstrap ]
+    needs: [ unit-tests, bootstrap ]
     runs-on: ubuntu-latest
     steps:
     - name: Success

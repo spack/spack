@@ -1,0 +1,20 @@
+name: checksum
+
+on:
+  workflow_call:
+
+concurrency:
+  group: checksums-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
+
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+      with:
+        fetch-depth: 2
+    - name: Verify Added Checksums
+      run: |
+        bin/spack ci verify-versions HEAD^1 HEAD
