@@ -2580,6 +2580,7 @@ def install_root_node(
         unsigned: if True allows installing unsigned binaries
         force: force installation if the spec is already present in the local store
         sha256: optional sha256 of the binary package, to be checked before installation
+        allow_missing: when true, allows installing a node with missing dependencies
     """
     # Early termination
     if spec.external or spec.virtual:

@@ -68,7 +68,8 @@ def _try_import_from_store(
                 os.path.join(candidate_spec.prefix, python.package.purelib),
                 os.path.join(candidate_spec.prefix, python.package.platlib),
             ]
-        # otherwise search for the site-packages directory (assuming bootstapped from binaries)
+        # otherwise search for the site-packages directory
+        # (clingo from binaries with truncated python-venv runtime)
         else:
             module_paths = glob.glob(
                 os.path.join(candidate_spec.prefix, "lib", "python*", "site-packages")
