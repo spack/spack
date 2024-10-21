@@ -92,7 +92,7 @@ def find_matching_specs(
         origin: origin of the spec
     """
     # List of specs that match expressions given via command line
-    specs_from_cli = []
+    specs_from_cli: List["spack.spec.Spec"] = []
     has_errors = False
 
     predicate_fn = None

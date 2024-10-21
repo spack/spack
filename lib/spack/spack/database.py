@@ -1510,7 +1510,7 @@ class Database:
 
     def _query(
         self,
-        query_spec: Optional["spack.spec.Spec"] = None,
+        query_spec: Optional[Union[str, "spack.spec.Spec"]] = None,
         *,
         predicate_fn: Optional[SelectType] = None,
         installed: Union[bool, InstallStatus, List[InstallStatus]] = True,
@@ -1590,7 +1590,17 @@ class Database:
         _query.__doc__ = ""
     _query.__doc__ += _QUERY_DOCSTRING
 
-    def query_local(self, *args, **kwargs):
+    def query_local(
+        self,
+        query_spec: Optional[Union[str, "spack.spec.Spec"]] = None,
+        *,
+        predicate_fn: Optional[SelectType] = None,
+        installed: Union[bool, InstallStatus, List[InstallStatus]] = True,
+        explicit: Optional[bool] = None,
+        start_date: Optional[datetime.datetime] = None,
+        end_date: Optional[datetime.datetime] = None,
+        in_buildcache: Optional[bool] = None,
+    ) -> List["spack.spec.Spec"]:
         """Query only the local Spack database.
 
         This function doesn't guarantee any sorting of the returned
@@ -1598,7 +1608,15 @@ class Database:
         may be an expensive operation.
         """
         with self.read_transaction():
-            return self._query(*args, **kwargs)
+            return self._query(
+                query_spec,
+                predicate_fn=predicate_fn,
+                installed=installed,
+                explicit=explicit,
+                start_date=start_date,
+                end_date=end_date,
+                in_buildcache=in_buildcache,
+            )
 
     if query_local.__doc__ is None:
         query_local.__doc__ = ""
