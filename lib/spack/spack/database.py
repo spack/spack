@@ -293,11 +293,8 @@ class ForbiddenLock:
 _QUERY_DOCSTRING = """
 
         Args:
-            query_spec: queries iterate through specs in the database and
-                return those that satisfy the supplied ``query_spec``. If
-                query_spec is `any`, This will match all specs in the
-                database.  If it is a spec, we'll evaluate
-                ``spec.satisfies(query_spec)``
+            query_spec:  if query_spec is ``None``, match all specs in the database.
+                If it is a spec, return all specs matching ``spec.satisfies(query_spec)``.
 
             predicate_fn: optional predicate taking an InstallRecord as argument, and returning
                 whether that record is selected for the query. It can be used to craft criteria
@@ -1525,7 +1522,7 @@ class Database:
 
     def _query(
         self,
-        query_spec=any,
+        query_spec: Optional["spack.spec.Spec"] = None,
         predicate_fn: Optional[SelectType] = None,
         installed=True,
         explicit=any,
@@ -1542,7 +1539,7 @@ class Database:
         # TODO: like installed and known that can be queried?  Or are
         # TODO: these really special cases that only belong here?
 
-        if query_spec is not any:
+        if query_spec is not None:
             if not isinstance(query_spec, spack.spec.Spec):
                 query_spec = spack.spec.Spec(query_spec)
 
@@ -1588,7 +1585,7 @@ class Database:
                 if not (start_date < inst_date < end_date):
                     continue
 
-            if query_spec is any:
+            if query_spec is None:
                 results.append(rec.spec)
                 continue
 
@@ -1606,7 +1603,7 @@ class Database:
         # If we did fine something, the query spec can't be virtual b/c we matched an actual
         # package installation, so skip the virtual check entirely. If we *didn't* find anything,
         # check all the deferred specs *if* the query is virtual.
-        if not results and query_spec is not any and deferred and query_spec.virtual:
+        if not results and query_spec is not None and deferred and query_spec.virtual:
             results = [spec for spec in deferred if spec.satisfies(query_spec)]
 
         return results
