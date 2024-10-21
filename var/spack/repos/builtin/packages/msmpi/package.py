@@ -55,9 +55,6 @@ class Msmpi(Package):
         self.spec.mpicxx = dependent_module.spack_cxx
         self.spec.mpifc = dependent_module.spack_fc
         self.spec.mpif77 = dependent_module.spack_f77
-        dependent_module.std_cmake_args.extend(
-            ["-DMPI_SKIP_COMPILER_WRAPPER=ON", "-DMPI_ASSUME_NO_BUILTIN_MPI=ON"]
-        )
         CMakeBuilder.setup_dependent_cmake_project(
             module,
             dependent_spec,
