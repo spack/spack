@@ -348,7 +348,17 @@ class FileWrapper:
 class MultiProcessFd:
     """Return an object which stores a file descriptor and can be passed as an
     argument to a function run with ``multiprocessing.Process``, such that
-    the file descriptor is available in the subprocess."""
+    the file descriptor is available in the subprocess. It provides access via
+    the `fd` property.
+
+    This object takes control over the associated FD: files opened from this
+    using `fdopen` need to use `closefd=False`.
+    """
+    # As for why: when a multiprocessing.connection.Connection object stores
+    # an fd, it assumes control over it, and will attempt to close it when
+    # gc'ed during __del__; if you fdopen(multiprocessfd.fd, closefd=True)
+    # then the resulting file will also assume control, and you can see
+    # warnings when there is an attempted double close.
 
     def __init__(self, fd):
         self._connection = None
@@ -360,22 +370,14 @@ class MultiProcessFd:
 
     @property
     def fd(self):
-        """It is assumed this is accessed for the purpose of fdopen-ing
-        it.
-
-        In that case, GC will attempt to close() both the resulting
-        File and the Connection (if this stores its handle in a
-        Connection); to avoid a double-close issue, nullify the
-        Connection object.
-        """
         if self._connection:
             return self._connection.fileno()
         else:
             return self._fd
 
     def close(self):
-        """This only needs to be called if the user has not
-        instantiated a File from the associated handle (`.fd`).
+        """Rather than `.close()`ing any file opened from the associated
+        `.fd`, the `MultiProcessFd` should be closed with this.
         """
         if self._connection:
             self._connection.close()
