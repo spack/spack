@@ -299,7 +299,7 @@ _QUERY_DOCSTRING = """
                 database.  If it is a spec, we'll evaluate
                 ``spec.satisfies(query_spec)``
 
-            selection_fn: optional predicate taking an InstallRecord as argument, and returning
+            predicate_fn: optional predicate taking an InstallRecord as argument, and returning
                 whether that record is selected for the query. It can be used to craft criteria
                 that need some data for selection not provided by the Database itself.
 
@@ -1526,7 +1526,7 @@ class Database:
     def _query(
         self,
         query_spec=any,
-        selection_fn: Optional[SelectType] = None,
+        predicate_fn: Optional[SelectType] = None,
         installed=True,
         explicit=any,
         start_date=None,
@@ -1580,7 +1580,7 @@ class Database:
             if explicit is not any and rec.explicit != explicit:
                 continue
 
-            if selection_fn is not None and not selection_fn(rec):
+            if predicate_fn is not None and not predicate_fn(rec):
                 continue
 
             if start_date or end_date:
@@ -1665,14 +1665,14 @@ class Database:
         query.__doc__ = ""
     query.__doc__ += _QUERY_DOCSTRING
 
-    def query_one(self, query_spec, selection_fn=None, installed=True):
+    def query_one(self, query_spec, predicate_fn=None, installed=True):
         """Query for exactly one spec that matches the query spec.
 
         Raises an assertion error if more than one spec matches the
         query. Returns None if no installed package matches.
 
         """
-        concrete_specs = self.query(query_spec, selection_fn=selection_fn, installed=installed)
+        concrete_specs = self.query(query_spec, predicate_fn=predicate_fn, installed=installed)
         assert len(concrete_specs) <= 1
         return concrete_specs[0] if concrete_specs else None
 

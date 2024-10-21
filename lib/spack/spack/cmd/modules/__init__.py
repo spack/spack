@@ -380,7 +380,7 @@ def modules_cmd(parser, args, module_type, callbacks=callbacks):
     constraint_qualifiers = {
         "refresh": {
             "installed": True,
-            "selection_fn": lambda x: spack.repo.PATH.exists(x.spec.name),
+            "predicate_fn": lambda x: spack.repo.PATH.exists(x.spec.name),
         }
     }
     query_args = constraint_qualifiers.get(args.subparser_name, {})
