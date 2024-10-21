@@ -1194,7 +1194,7 @@ def _setup_pkg_and_run(
         # that the parent process is not going to read from it till we
         # are done with the child, so we undo Python's precaution.
         if input_multiprocess_fd is not None:
-            sys.stdin = os.fdopen(input_multiprocess_fd.fd)
+            sys.stdin = os.fdopen(input_multiprocess_fd.fd, closefd=False)
 
         pkg = serialized_pkg.restore()
 
