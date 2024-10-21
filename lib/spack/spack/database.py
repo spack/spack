@@ -1517,7 +1517,6 @@ class Database:
         explicit: Optional[bool] = None,
         start_date: Optional[datetime.datetime] = None,
         end_date: Optional[datetime.datetime] = None,
-        hashes: Optional[List[str]] = None,
         in_buildcache: Optional[bool] = None,
     ) -> List["spack.spec.Spec"]:
 
@@ -1527,12 +1526,15 @@ class Database:
 
             # Just look up concrete specs with hashes; no fancy search.
             if query_spec.concrete:
-                # TODO: handling of hashes restriction is not particularly elegant.
                 hash_key = query_spec.dag_hash()
-                if hash_key in self._data and (not hashes or hash_key in hashes):
-                    return [self._data[hash_key].spec]
-                else:
+                if hash_key not in self._data:
                     return []
+
+                candidate = self._data[hash_key]
+                if predicate_fn is None or predicate_fn(candidate):
+                    return [candidate.spec]
+
+                return []
 
         # Abstract specs require more work -- currently we test
         # against everything.
@@ -1544,9 +1546,6 @@ class Database:
         deferred = []
 
         for key, rec in self._data.items():
-            if hashes is not None and rec.spec.dag_hash() not in hashes:
-                continue
-
             if not rec.install_type_matches(installed):
                 continue
 

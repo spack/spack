@@ -74,11 +74,8 @@ class ConstraintAction(argparse.Action):
         # store parsed specs in spec.constraint after a call to specs()
         self.constraint_specs[:] = spack.cmd.parse_specs(self.constraint)
 
-        # If an environment is provided, we'll restrict the search to
-        # only its installed packages.
-        env = ev.active_environment()
-        if env:
-            kwargs["hashes"] = set(env.all_hashes())
+        # If an environment is provided, we'll restrict the search to only its installed packages
+        kwargs["predicate_fn"] = ev.restrict_to_environment_fn(kwargs.get("predicate_fn"))
 
         # return everything for an empty query.
         if not self.constraint_specs:

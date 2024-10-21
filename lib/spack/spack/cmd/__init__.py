@@ -219,10 +219,19 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, fir
             install status argument passed to database query.
             See ``spack.database.Database._query`` for details.
     """
+    predicate_fn = None
+    if hashes is not None:
+        predicate_fn = lambda x: x.spec.dag_hash() in hashes
+
     if local:
-        matching_specs = spack.store.STORE.db.query_local(spec, hashes=hashes, installed=installed)
+        matching_specs = spack.store.STORE.db.query_local(
+            spec, predicate_fn=predicate_fn, installed=installed
+        )
     else:
-        matching_specs = spack.store.STORE.db.query(spec, hashes=hashes, installed=installed)
+        matching_specs = spack.store.STORE.db.query(
+            spec, predicate_fn=predicate_fn, installed=installed
+        )
+
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 

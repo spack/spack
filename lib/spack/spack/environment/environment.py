@@ -29,6 +29,7 @@ import spack.caches
 import spack.compilers
 import spack.concretize
 import spack.config
+import spack.database
 import spack.deptypes as dt
 import spack.environment
 import spack.error
@@ -160,14 +161,36 @@ default_view_link = "all"
 included_concrete_name = "include_concrete"
 
 
+def restrict_to_environment_fn(
+    predicate_fn: Optional["spack.database.SelectType"] = None,
+    *,
+    env: Optional["Environment"] = None,
+) -> Optional["spack.database.SelectType"]:
+    """Returns the input predicate, but restricted to specs in the environment.
+
+    If no environment is active, returns the input as is.
+
+    Args:
+        predicate_fn: input predicate.
+        env: environment to use. If None, the activate environment is used.
+    """
+    env = env or spack.environment.active_environment()
+    if not env:
+        return predicate_fn
+
+    hashes = env.all_hashes()
+    if predicate_fn is None:
+        return lambda x: x.spec.dag_hash() in hashes
+
+    return lambda x: x.spec.dag_hash() in hashes and predicate_fn(x)
+
+
 def installed_specs():
     """
     Returns the specs of packages installed in the active environment or None
     if no packages are installed.
     """
-    env = spack.environment.active_environment()
-    hashes = env.all_hashes() if env else None
-    return spack.store.STORE.db.query(hashes=hashes)
+    return spack.store.STORE.db.query(predicate_fn=restrict_to_environment_fn())
 
 
 def valid_env_name(name):
