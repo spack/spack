@@ -181,6 +181,12 @@ def test_mirror_crud(mutable_config, capsys):
         output = mirror("remove", "mirror")
         assert "Removed mirror" in output
 
+        # Test S3 connection info token as variable
+        mirror("add", "--s3-access-token-variable", "aaaaaazzzzz", "mirror", "s3://spack-public")
+
+        output = mirror("remove", "mirror")
+        assert "Removed mirror" in output
+
         # Test S3 connection info id/key
         mirror(
             "add",
@@ -191,6 +197,27 @@ def test_mirror_crud(mutable_config, capsys):
             "mirror",
             "s3://spack-public",
         )
+
+        output = mirror("remove", "mirror")
+        assert "Removed mirror" in output
+
+        # Test S3 connection info id/key variables
+        mirror(
+            "add",
+            "--s3-access-key-id-variable",
+            "foo",
+            "--s3-access-key-secret-variable",
+            "bar",
+            "mirror",
+            "s3://spack-public",
+        )
+
+        output = mirror("remove", "mirror")
+        assert "Removed mirror" in output
+
+        # Test S3 connection info id/key missing part
+        output = mirror("add", "--s3-access-key-id-variable", "cat", "mirror", "s3://spack-public")
+        assert "Warning: S3 access pair requires both the Key ID" in output
 
         output = mirror("remove", "mirror")
         assert "Removed mirror" in output
@@ -217,6 +244,47 @@ def test_mirror_crud(mutable_config, capsys):
 
         output = mirror("remove", "mirror")
         assert "Removed mirror" in output
+
+        output = mirror("list")
+        assert "No mirrors configured" in output
+
+        # Test OCI connection info user/password
+        mirror(
+            "add",
+            "--oci-username",
+            "foo",
+            "--oci-password",
+            "bar",
+            "mirror",
+            "oci://spack-public.io",
+        )
+
+        output = mirror("remove", "mirror")
+        assert "Removed mirror" in output
+
+        # Test OCI connection info user/password variables
+        mirror(
+            "add",
+            "--oci-username",
+            "foo",
+            "--oci-password-variable",
+            "bar",
+            "mirror",
+            "oci://spack-public.io",
+        )
+
+        output = mirror("remove", "mirror")
+        assert "Removed mirror" in output
+
+        # Test OCI connection info user/password missing part
+        output = mirror("add", "--oci-username", "foo", "mirror", "s3://spack-public")
+        assert "Warning: OCI access pair requires both the Username" in output
+
+        output = mirror("remove", "mirror")
+        assert "Removed mirror" in output
+
+        output = mirror("list")
+        assert "No mirrors configured" in output
 
 
 def test_mirror_nonexisting(mutable_config):
