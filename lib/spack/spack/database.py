@@ -318,10 +318,9 @@ _QUERY_DOCSTRING = """
             hashes (Container): list or set of hashes that we can use to
                 restrict the search
 
-            in_buildcache (bool or None): Specs that are marked in
-                this database as part of an associated binary cache are
-                ``in_buildcache``. All other specs are not. This field is used
-                for querying mirror indices. Default is ``any``.
+            in_buildcache: specs that are marked in this database as part of an associated binary
+                cache are ``in_buildcache``. All other specs are not. This field is used for
+                querying mirror indices. By default it does not check this status.
 
         Returns:
             list of specs that match the query
@@ -1525,7 +1524,7 @@ class Database:
         start_date=None,
         end_date=None,
         hashes=None,
-        in_buildcache=any,
+        in_buildcache: Optional[bool] = None,
         origin=None,
     ) -> List["spack.spec.Spec"]:
         """Run a query on the database."""
@@ -1567,7 +1566,7 @@ class Database:
             if not rec.install_type_matches(installed):
                 continue
 
-            if in_buildcache is not any and rec.in_buildcache != in_buildcache:
+            if in_buildcache is not None and rec.in_buildcache != in_buildcache:
                 continue
 
             if explicit is not None and rec.explicit != explicit:
