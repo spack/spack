@@ -1245,7 +1245,7 @@ class Database:
         self._data[key].explicit = explicit
 
     @_autospec
-    def add(self, spec: "spack.spec.Spec", *, explicit: bool = False) -> None:
+    def add(self, spec: "spack.spec.Spec", *, explicit: bool = False, allow_missing=False) -> None:
         """Add spec at path to database, locking and reading DB to sync.
 
         ``add()`` will lock and read from the DB on disk.
@@ -1254,7 +1254,7 @@ class Database:
         # TODO: ensure that spec is concrete?
         # Entire add is transactional.
         with self.write_transaction():
-            self._add(spec, explicit=explicit)
+            self._add(spec, explicit=explicit, allow_missing=allow_missing)
 
     def _get_matching_spec_key(self, spec: "spack.spec.Spec", **kwargs) -> str:
         """Get the exact spec OR get a single spec that matches."""
