@@ -375,7 +375,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
             options.append(self.define("CMAKE_CXX_FLAGS", "-fp-model=precise"))
 
-        options.append(self.define_from_variant("Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC", "alloc_async"))
+        options.append(
+            self.define_from_variant("Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC", "alloc_async")
+        )
 
         # Remove duplicate options
         return lang.dedupe(options)
