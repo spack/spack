@@ -10,7 +10,7 @@ import shutil
 import sys
 from collections import Counter
 
-from llnl.util import lang, tty
+from llnl.util import tty
 from llnl.util.tty import colify
 
 import spack.cmd
@@ -18,7 +18,6 @@ import spack.config
 import spack.environment as ev
 import spack.install_test
 import spack.repo
-import spack.report
 import spack.store
 from spack.cmd.common import arguments
 
@@ -201,10 +200,8 @@ def test_run(args):
     tty.msg(f"Spack test {test_suite.name}")
 
     # Set up reporter
-    setattr(args, "package", [s.format() for s in test_suite.specs])
-    reporter = create_reporter(args, specs_to_test, test_suite) or lang.nullcontext()
-
-    with reporter:
+    reporter = args.reporter() if args.log_format else None
+    try:
         test_suite(
             remove_directory=not args.keep_stage,
             dirty=args.dirty,
@@ -212,24 +209,14 @@ def test_run(args):
             externals=args.externals,
             timeout=args.timeout,
         )
+    finally:
+        if reporter:
+            report_file = report_filename(args, test_suite)
+            reporter.test_report(report_file, test_suite.reports)
 
 
 def report_filename(args, test_suite):
     return os.path.abspath(args.log_file or "test-{}".format(test_suite.name))
-
-
-def create_reporter(args, specs_to_test, test_suite):
-    if args.log_format is None:
-        return None
-
-    filename = report_filename(args, test_suite)
-    context_manager = spack.report.test_context_manager(
-        reporter=args.reporter(),
-        filename=filename,
-        specs=specs_to_test,
-        raw_logs_dir=test_suite.stage,
-    )
-    return context_manager
 
 
 def test_list(args):
