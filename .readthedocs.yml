@@ -14,3 +14,9 @@ sphinx:
 python:
   install:
     - requirements: lib/spack/docs/requirements.txt
+
+search:
+  ranking:
+    spack.html: -10
+    llnl.html: -10
+    command_index.html: -9
