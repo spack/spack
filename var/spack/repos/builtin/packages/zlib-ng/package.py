@@ -70,7 +70,7 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
     def flag_handler(self, name, flags):
         if name == "cflags" and self.spec.satisfies("+pic build_system=autotools"):
-            flags.append(self.compiler.cc_pic_flag)
+            flags.append(self.spec["c"].package.pic_flag)
         return (flags, None, None)
 
 
@@ -79,7 +79,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def pretend_gcc(self):
         # All nice things (PIC flags, symbol versioning) that happen to the compilers that are
         # recognized as gcc (%gcc, %clang, %intel, %oneapi) we want for some other compilers too:
-        if self.spec.compiler.name in ["nvhpc"]:
+        if self.spec["c"].name == "nvhpc":
             filter_file(r"^gcc=0$", "gcc=1", join_path(self.configure_directory, "configure"))
 
     def configure_args(self):

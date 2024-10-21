@@ -34,7 +34,7 @@ from llnl.util.link_tree import LinkTree
 
 import spack.build_environment
 import spack.builder
-import spack.compilers
+import spack.compilers.config
 import spack.config
 import spack.dependency
 import spack.deptypes as dt
@@ -53,6 +53,7 @@ import spack.util.environment
 import spack.util.executable
 import spack.util.path
 import spack.util.web
+from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import PackageTest, TestSuite
@@ -66,9 +67,8 @@ FLAG_HANDLER_RETURN_TYPE = Tuple[
 ]
 FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
 
-"""Allowed URL schemes for spack packages."""
+#: Allowed URL schemes for spack packages
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
-
 
 #: Filename for the Spack build/install log.
 _spack_build_logfile = "spack-build-out.txt"
@@ -606,6 +606,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     specific build systems.
 
     """
+
+    compiler = DeprecatedCompiler()
 
     #
     # These are default values for instance variables.
@@ -1499,15 +1501,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
     def home(self):
         return self.prefix
 
-    @property  # type: ignore[misc]
-    @memoized
-    def compiler(self):
-        """Get the spack.compiler.Compiler object used to build this package"""
-        if not self.spec.concrete:
-            raise ValueError("Can only get a compiler for a concrete package.")
-
-        return spack.compilers.compiler_for_spec(self.spec.compiler, self.spec.architecture)
-
     def url_version(self, version):
         """
         Given a version, this returns a string that should be substituted
@@ -1619,7 +1612,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
         self.stage.create()
 
         # Fetch/expand any associated code.
-        if self.has_code:
+        if self.has_code and not self.spec.external:
             self.do_fetch(mirror_only)
             self.stage.expand_archive()
         else:
@@ -1950,7 +1943,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, RedistributionMixin, metaclass
 
     def do_test(self, dirty=False, externals=False):
         if self.test_requires_compiler:
-            compilers = spack.compilers.compilers_for_spec(
+            compilers = spack.compilers.config.compilers_for_spec(
                 self.spec.compiler, arch_spec=self.spec.architecture
             )
             if not compilers:
