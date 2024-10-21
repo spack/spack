@@ -369,10 +369,9 @@ class MultiProcessFd:
         Connection object.
         """
         if self._connection:
-            self._fd = self._connection._handle
-            self._connection._handle = None
-            self._connection = None
-        return self._fd
+            return self._connection.fileno()
+        else:
+            return self._fd
 
     def close(self):
         """This only needs to be called if the user has not
@@ -928,10 +927,10 @@ def _writer_daemon(
     # 1. Use line buffering (3rd param = 1) since Python 3 has a bug
     # that prevents unbuffered text I/O.
     # 2. Python 3.x before 3.7 does not open with UTF-8 encoding by default
-    in_pipe = os.fdopen(read_multiprocess_fd.fd, "r", 1, encoding="utf-8")
+    in_pipe = os.fdopen(read_multiprocess_fd.fd, "r", 1, encoding="utf-8", closefd=False)
 
     if stdin_multiprocess_fd:
-        stdin = os.fdopen(stdin_multiprocess_fd.fd)
+        stdin = os.fdopen(stdin_multiprocess_fd.fd, closefd=False)
     else:
         stdin = None
 
@@ -1021,9 +1020,9 @@ def _writer_daemon(
         if isinstance(log_file, io.StringIO):
             control_pipe.send(log_file.getvalue())
         log_file_wrapper.close()
-        in_pipe.close()
-        if stdin:
-            stdin.close()
+        read_multiprocess_fd.close()
+        if stdin_multiprocess_fd:
+            stdin_multiprocess_fd.close()
 
         # send echo value back to the parent so it can be preserved.
         control_pipe.send(echo)
