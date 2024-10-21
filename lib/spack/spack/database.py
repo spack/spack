@@ -309,11 +309,9 @@ _QUERY_DOCSTRING = """
                 explicit. If instead it was pulled-in as a dependency of a user requested spec
                 it's considered implicit.
 
-            start_date (datetime.datetime or None): filters the query
-                discarding specs that have been installed before ``start_date``.
+            start_date: if set considers only specs installed from the starting date.
 
-            end_date (datetime.datetime or None): filters the query discarding
-                specs that have been installed after ``end_date``.
+            end_date: if set considers only specs installed until the ending date.
 
             hashes (Container): list or set of hashes that we can use to
                 restrict the search
@@ -1521,18 +1519,12 @@ class Database:
         predicate_fn: Optional[SelectType] = None,
         installed: Union[bool, InstallStatus, List[InstallStatus]] = True,
         explicit: Optional[bool] = None,
-        start_date=None,
-        end_date=None,
+        start_date: Optional[datetime.datetime] = None,
+        end_date: Optional[datetime.datetime] = None,
         hashes=None,
         in_buildcache: Optional[bool] = None,
         origin=None,
     ) -> List["spack.spec.Spec"]:
-        """Run a query on the database."""
-
-        # TODO: Specs are a lot like queries.  Should there be a
-        # TODO: wildcard spec object, and should specs have attributes
-        # TODO: like installed and known that can be queried?  Or are
-        # TODO: these really special cases that only belong here?
 
         if query_spec is not None:
             if not isinstance(query_spec, spack.spec.Spec):
