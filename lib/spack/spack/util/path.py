@@ -74,6 +74,9 @@ def replacements():
         "target_family": lambda: arch.target.family,
         "date": lambda: date.today().strftime("%Y-%m-%d"),
         "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
+        "spack_major": lambda: str(spack.spack_version_info[0]),
+        "spack_minor": lambda: str(spack.spack_version_info[1]),
+        "spack_patch": lambda: str(spack.spack_version_info[2]),
     }
 
 
@@ -167,6 +170,9 @@ def substitute_config_variables(path):
     - $target            The ISA target detected for the system
     - $target_family     The family of the target detected for the system
     - $date              The current date (YYYY-MM-DD)
+    - $spack_major       The spack first version component
+    - $spack_minor       The spack second version component
+    - $spack_patch       The spack third version component
 
     These are substituted case-insensitively into the path, and users can
     use either ``$var`` or ``${var}`` syntax for the variables. $env is only
