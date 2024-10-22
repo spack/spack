@@ -48,7 +48,7 @@ class PyAsdf(PythonPackage):
         depends_on("py-pyyaml@5.4.1:", type=("build", "run"))
         depends_on("py-semantic-version@2.8:", type=("build", "run"))
 
-    with when('@2.15.0'):
+    with when("@2.15.0"):
         depends_on("py-asdf-unit-schemas@0.1:", type=("build", "run"))
         depends_on("py-importlib-metadata@4.11.4:", type=("build", "run"))
         depends_on("py-importlib-resources@3:", type=("build", "run"), when="^python@:3.8")
