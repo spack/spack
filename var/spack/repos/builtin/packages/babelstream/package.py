@@ -488,7 +488,7 @@ register_flag_optional(TARGET_PROCESSOR
                         offload_args = " -mp=gpu;" + "-gpu=" + cuda_arch + " "
                     if self.spec.satisfies("%clang"):
                         cuda_arch = "sm_" + self.spec.variants["cuda_arch"].value[0]
-                        offload_args = "-march=znver3;-fopenmp;--offload-arch=" + cuda_arch
+                        offload_args = "-fopenmp;--offload-arch=" + cuda_arch
                 elif ("amdgpu_target" in self.spec.variants) and (
                     self.spec.variants["amdgpu_target"].value != "none"
                 ):
