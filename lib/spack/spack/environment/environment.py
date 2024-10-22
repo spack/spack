@@ -16,7 +16,7 @@ import time
 import urllib.parse
 import urllib.request
 import warnings
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -3033,7 +3033,25 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             self.deactivate_config_scope()
 
 
-def scopes_from_paths(includes, name_prefix, config_stage_dir, resolve_relative):
+def scopes_from_paths(
+    includes: List[str],
+    name_prefix: str,
+    config_stage_dir: str,
+    resolve_relative: Callable[[str], str],
+):
+    """Load included config scopes
+
+    Scopes are added in reverse order so that highest-precedence scopes are last.
+
+    Args:
+        includes: list of paths to be included
+        name_prefix: environment's name prefix
+        config_stage_dir: path to directory to be used to stage remote includes
+        resolve_relative: method to use to resolve relative paths
+
+    Raises:
+        ValueError: included path has an unsupported URL scheme
+    """
     scopes: List[spack.config.ConfigScope] = []
 
     missing = []
@@ -3062,9 +3080,9 @@ def scopes_from_paths(includes, name_prefix, config_stage_dir, resolve_relative)
                     # ones with the same name since there is a risk of
                     # losing changes (e.g., from 'spack config update').
                     tty.warn(
-                        "Will not re-stage configuration from {0} to avoid "
-                        "losing changes to the already staged file of the "
-                        "same name.".format(remote_path)
+                        f"Will not re-stage configuration from {remote_path} "
+                        "to avoid losing changes to the already staged file of "
+                        f"the same name."
                     )
 
                     # Recognize the configuration stage directory
@@ -3079,7 +3097,7 @@ def scopes_from_paths(includes, name_prefix, config_stage_dir, resolve_relative)
                     )
                     if not staged_path:
                         raise SpackEnvironmentError(
-                            "Unable to fetch remote configuration {0}".format(config_path)
+                            f"Unable to fetch remote configuration {config_path}"
                         )
                     config_path = staged_path
 
@@ -3110,7 +3128,7 @@ def scopes_from_paths(includes, name_prefix, config_stage_dir, resolve_relative)
             continue
 
     if missing:
-        msg = "Detected {0} missing include path(s):".format(len(missing))
+        msg = f"Detected {len(missing)} missing include path(s):"
         msg += "\n   {0}".format("\n   ".join(missing))
         raise spack.config.ConfigFileError(msg)
 
