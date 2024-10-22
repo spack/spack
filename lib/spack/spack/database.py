@@ -1565,6 +1565,7 @@ class Database:
         explicit: Optional[bool] = None,
         start_date: Optional[datetime.datetime] = None,
         end_date: Optional[datetime.datetime] = None,
+        hashes: Optional[List[str]] = None,
         in_buildcache: Optional[bool] = None,
     ) -> List["spack.spec.Spec"]:
         """Queries the local Spack database.
@@ -1605,6 +1606,7 @@ class Database:
                 explicit=explicit,
                 start_date=start_date,
                 end_date=end_date,
+                hashes=hashes,
                 in_buildcache=in_buildcache,
             )
 
@@ -1618,6 +1620,7 @@ class Database:
         start_date: Optional[datetime.datetime] = None,
         end_date: Optional[datetime.datetime] = None,
         in_buildcache: Optional[bool] = None,
+        hashes: Optional[List[str]] = None,
         install_tree: str = "all",
     ):
         """Queries the Spack database including all upstream databases.
@@ -1672,6 +1675,7 @@ class Database:
                     explicit=explicit,
                     start_date=start_date,
                     end_date=end_date,
+                    hashes=hashes,
                     in_buildcache=in_buildcache,
                 )
                 or []
@@ -1687,6 +1691,7 @@ class Database:
                     explicit=explicit,
                     start_date=start_date,
                     end_date=end_date,
+                    hashes=hashes,
                     in_buildcache=in_buildcache,
                 )
             )
