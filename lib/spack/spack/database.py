@@ -290,37 +290,6 @@ class ForbiddenLock:
         return ForbiddenLock, tuple()
 
 
-_QUERY_DOCSTRING = """
-
-        Args:
-            query_spec:  if query_spec is ``None``, match all specs in the database.
-                If it is a spec, return all specs matching ``spec.satisfies(query_spec)``.
-
-            predicate_fn: optional predicate taking an InstallRecord as argument, and returning
-                whether that record is selected for the query. It can be used to craft criteria
-                that need some data for selection not provided by the Database itself.
-
-            installed: if ``True``, includes only installed specs in the search. If ``False`` only
-                missing specs, and if ``any``, all specs in database. If an InstallStatus or
-                iterable of InstallStatus, returns specs whose install status matches at least
-                one of the InstallStatus.
-
-            explicit: a spec that was installed following a specific user request is marked as
-                explicit. If instead it was pulled-in as a dependency of a user requested spec
-                it's considered implicit.
-
-            start_date: if set considers only specs installed from the starting date.
-
-            end_date: if set considers only specs installed until the ending date.
-
-            hashes: list of hashes that we can use to restrict the search
-
-            in_buildcache: specs that are marked in this database as part of an associated binary
-                cache are ``in_buildcache``. All other specs are not. This field is used for
-                querying mirror indices. By default it does not check this status.
-        """
-
-
 class LockConfiguration(NamedTuple):
     """Data class to configure locks in Database objects
 
