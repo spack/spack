@@ -92,7 +92,7 @@ def display_targets(targets):
 
 def arch(parser, args):
     if args.generic_target:
-        tty.warn("spack arch --generic-target is deprecated in favor of --generic --target")
+        # TODO: add deprecation warning in 0.24
         print(archspec.cpu.host().generic)
         return
 
