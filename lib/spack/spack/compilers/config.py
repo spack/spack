@@ -271,18 +271,13 @@ def compilers_for_spec(compiler_spec, *, arch_spec=None, scope=None, init_config
     raise NotImplementedError("still to be implemented")
 
 
-def compilers_for_arch(arch_spec, scope=None):
-    # FIXME (compiler as nodes): this needs a better implementation
+def compilers_for_arch(
+    arch_spec: "spack.spec.ArchSpec", *, scope: Optional[str] = None
+) -> List["spack.spec.Spec"]:
+    """Returns the compilers that can be used on the input architecture"""
     compilers = all_compilers_from(spack.config.CONFIG, scope=scope)
-    result = []
-    for candidate in compilers:
-        _, operating_system, target = name_os_target(candidate)
-        same_os = operating_system == str(arch_spec.os)
-        same_target = str(archspec.cpu.TARGETS.get(target)) == str(arch_spec.target)
-        if not same_os or not same_target:
-            continue
-        result.append(candidate)
-    return result
+    query = f"platform={arch_spec.platform} target=:{arch_spec.target}"
+    return [x for x in compilers if x.satisfies(query)]
 
 
 def class_for_compiler_name(compiler_name):
