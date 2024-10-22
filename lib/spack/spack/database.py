@@ -1571,6 +1571,7 @@ class Database:
         end_date: Optional[datetime.datetime] = None,
         hashes: Optional[List[str]] = None,
         in_buildcache: Optional[bool] = None,
+        origin: Optional[str] = None,
     ) -> List["spack.spec.Spec"]:
         """Queries the local Spack database.
 
@@ -1600,7 +1601,11 @@ class Database:
 
             in_buildcache: specs that are marked in this database as part of an associated binary
                 cache are ``in_buildcache``. All other specs are not. This field is used for
-                querying mirror indices. By default it does not check this status.
+                querying mirror indices. By default, it does not check this status.
+
+            hashes: list of hashes used to restrict the search
+
+            origin: origin of the spec
         """
         with self.read_transaction():
             return self._query(
@@ -1612,6 +1617,7 @@ class Database:
                 end_date=end_date,
                 hashes=hashes,
                 in_buildcache=in_buildcache,
+                origin=origin,
             )
 
     def query(
@@ -1625,6 +1631,7 @@ class Database:
         end_date: Optional[datetime.datetime] = None,
         in_buildcache: Optional[bool] = None,
         hashes: Optional[List[str]] = None,
+        origin: Optional[str] = None,
         install_tree: str = "all",
     ):
         """Queries the Spack database including all upstream databases.
@@ -1652,9 +1659,13 @@ class Database:
 
             in_buildcache: specs that are marked in this database as part of an associated binary
                 cache are ``in_buildcache``. All other specs are not. This field is used for
-                querying mirror indices. By default it does not check this status.
+                querying mirror indices. By default, it does not check this status.
+
+            hashes: list of hashes used to restrict the search
 
             install_tree: query 'all' (default), 'local', 'upstream', or upstream path
+
+            origin: origin of the spec
         """
         valid_trees = ["all", "upstream", "local", self.root] + [u.root for u in self.upstream_dbs]
         if install_tree not in valid_trees:
@@ -1681,6 +1692,7 @@ class Database:
                     end_date=end_date,
                     hashes=hashes,
                     in_buildcache=in_buildcache,
+                    origin=origin,
                 )
                 or []
             )
@@ -1697,6 +1709,7 @@ class Database:
                     end_date=end_date,
                     hashes=hashes,
                     in_buildcache=in_buildcache,
+                    origin=origin,
                 )
             )
 

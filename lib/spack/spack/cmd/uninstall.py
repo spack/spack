@@ -90,6 +90,7 @@ def find_matching_specs(
         env: optional active environment
         specs: list of specs to be matched against installed packages
         allow_multiple_matches: if True multiple matches are admitted
+        origin: origin of the spec
 
     Return:
         list: list of specs
@@ -213,7 +214,7 @@ def get_uninstall_list(args, specs: List[spack.spec.Spec], env: Optional[ev.Envi
 
     # Gets the list of installed specs that match the ones given via cli
     # args.all takes care of the case where '-a' is given in the cli
-    matching_specs = find_matching_specs(env, specs, args.all)
+    matching_specs = find_matching_specs(env, specs, args.all, origin=args.origin)
     dependent_specs = installed_dependents(matching_specs)
     all_uninstall_specs = matching_specs + dependent_specs if args.dependents else matching_specs
     other_dependent_envs = dependent_environments(all_uninstall_specs, current_env=env)
