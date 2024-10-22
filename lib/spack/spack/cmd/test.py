@@ -171,16 +171,11 @@ def test_run(args):
     # Get specs to test
     env = ev.active_environment()
     hashes = env.all_hashes() if env else None
-    predicate_fn = None
-    if hashes is not None:
-        predicate_fn = lambda x: x.spec.dag_hash() in hashes
 
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
     specs_to_test = []
     for spec in specs:
-        matching = spack.store.STORE.db.query_local(
-            spec, predicate_fn=predicate_fn, explicit=explicit
-        )
+        matching = spack.store.STORE.db.query_local(spec, hashes=hashes, explicit=explicit)
         if spec and not matching:
             tty.warn("No {0}installed packages match spec {1}".format(explicit_str, spec))
             """
@@ -253,7 +248,12 @@ def test_list(args):
         colify.colify(report_packages)
         return
 
-    specs = spack.store.STORE.db.query(predicate_fn=ev.restrict_to_environment_fn())
+    # TODO: This can be extended to have all of the output formatting options
+    # from `spack find`.
+    env = ev.active_environment()
+    hashes = env.all_hashes() if env else None
+
+    specs = spack.store.STORE.db.query(hashes=hashes)
     specs = list(filter(lambda s: has_test_and_tags(s.package_class), specs))
 
     spack.cmd.display_specs(specs, long=True)

@@ -91,6 +91,9 @@ def find_matching_specs(
         allow_multiple_matches: if True multiple matches are admitted
         origin: origin of the spec
     """
+    # constrain uninstall resolution to current environment if one is active
+    hashes = env.all_hashes() if env else None
+
     # List of specs that match expressions given via command line
     specs_from_cli: List["spack.spec.Spec"] = []
     has_errors = False
@@ -99,13 +102,10 @@ def find_matching_specs(
     if origin is not None:
         predicate_fn = lambda x: x.origin == origin
 
-    if env:
-        predicate_fn = spack.environment.restrict_to_environment_fn(predicate_fn, env=env)
-
     for spec in specs:
         install_query = [InstallStatuses.INSTALLED, InstallStatuses.DEPRECATED]
         matching = spack.store.STORE.db.query_local(
-            spec, predicate_fn=predicate_fn, installed=install_query
+            spec, predicate_fn=predicate_fn, hashes=hashes, installed=install_query
         )
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't

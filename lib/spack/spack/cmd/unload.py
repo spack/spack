@@ -79,8 +79,7 @@ def unload(parser, args):
             for spec in spack.cmd.parse_specs(args.specs)
         ]
     else:
-        predicate_fn = lambda x: x.spec.dag_hash() in hashes
-        specs = spack.store.STORE.db.query(predicate_fn=predicate_fn)
+        specs = spack.store.STORE.db.query(hashes=hashes)
 
     if not args.shell:
         specs_str = " ".join(args.specs) or "SPECS"
