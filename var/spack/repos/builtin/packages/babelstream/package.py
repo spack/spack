@@ -10,13 +10,6 @@ import spack.build_systems.makefile
 from spack.package import *
 
 
-def find_model_flag(str):
-    res = re.findall(r"\+(\w+)", str)
-    if not res:
-        return ""
-    return res
-
-
 class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     """Measure memory transfer rates to/from global device memory on GPUs.
     This benchmark is similar in spirit, and based on, the STREAM benchmark for CPUs."""
@@ -316,42 +309,34 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             "std",
             "kokkos",
         ]
-        # convert spec to string to work on it
-        spec_string = str(self.spec)
-        # take only the first portion of the spec until space
-        spec_string_truncate = spec_string.split(" ", 1)[0]
-        truncated_model_list = find_model_flag(
-            spec_string_truncate
-        )  # Prints out ['cuda', 'thrust']
-        # Filter out elements from truncated_model_list list that are not in model_list list
-        filtered_model_list = [item for item in truncated_model_list if item in model_list]
         # for +acc and +thrust the CudaPackage appends +cuda variant too so we need
         # to filter cuda from list e.g. we choose 'thrust'
         # from the list of ['cuda', 'thrust']
-        if len(filtered_model_list) > 1:
-            filtered_model_list = [
-                elem for elem in filtered_model_list if (elem != "cuda" and elem != "rocm")
+        model_names = [name for name in model_list if f"+{name}" in self.spec]
+        print("model names : ",model_names)
+        if len(model_names) > 1:
+            model_names = [
+                elem for elem in model_names if (elem != "cuda" and elem != "rocm")
             ]
-            if "std" in filtered_model_list[0]:
+            if "std" in model_names[0]:
                 args = ["-DMODEL=" + "std-" + self.spec.variants["std_submodel"].value]
-            elif "sycl2020" in filtered_model_list[0]:  # this is for nvidia offload
+            elif "sycl2020" in model_names[0]:  # this is for nvidia offload
                 args = ["-DMODEL=" + "sycl2020-" + self.spec.variants["sycl2020_submodel"].value]
             else:
-                args = ["-DMODEL=" + filtered_model_list[0]]
+                args = ["-DMODEL=" + model_names[0]]
         else:
             # do some alterations here to append sub models too
-            if "std" in filtered_model_list[0]:
+            if "std" in model_names[0]:
                 args = ["-DMODEL=" + "std-" + self.spec.variants["std_submodel"].value]
-            elif "sycl2020" in filtered_model_list[0]:
+            elif "sycl2020" in model_names[0]:
                 args = ["-DMODEL=" + "sycl2020-" + self.spec.variants["sycl2020_submodel"].value]
                 print(args)
-            elif "rocm" in filtered_model_list[0]:
+            elif "rocm" in model_names[0]:
                 args = ["-DMODEL=hip"]
             else:
-                args = ["-DMODEL=" + filtered_model_list[0]]
-        if filtered_model_list[0] != "tbb" and filtered_model_list[0] != "thrust":
+                args = ["-DMODEL=" + model_names[0]]
+        if model_names[0] != "tbb" and model_names[0] != "thrust":
             args.append("-DCMAKE_CXX_COMPILER=" + spack_cxx)
-        print(spec_string)
 
         # ===================================
         #             ACC
