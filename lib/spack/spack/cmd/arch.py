@@ -7,7 +7,6 @@ import collections
 
 import archspec.cpu
 
-import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
 import llnl.util.tty.color as color
 
