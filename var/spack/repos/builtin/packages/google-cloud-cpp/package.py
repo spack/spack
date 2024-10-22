@@ -40,7 +40,7 @@ class GoogleCloudCpp(CMakePackage):
     variant(
         "libraries",
         default="__ga_libraries__",
-        multi=True,
+        multi=False,
         description="Which client libraries to build/install. e.g. libraries=bigtable,storage",
     )
 
