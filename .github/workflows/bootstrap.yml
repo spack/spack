@@ -130,6 +130,7 @@ jobs:
             3.10
             3.11
             3.12
+            3.13
       - name: Set bootstrap sources
         run: |
           source share/spack/setup-env.sh
@@ -138,7 +139,7 @@ jobs:
       - name: Bootstrap clingo
         run: |
           set -e
-          for ver in '3.8' '3.9' '3.10' '3.11' '3.12' ; do
+          for ver in '3.8' '3.9' '3.10' '3.11' '3.12' '3.13'; do
             not_found=1
             ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
             if [[ -d "$ver_dir" ]] ; then
