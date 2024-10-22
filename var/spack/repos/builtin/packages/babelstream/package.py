@@ -549,8 +549,9 @@ register_flag_optional(TARGET_PROCESSOR
                 cuda_arch = "sm_" + self.spec.variants["cuda_arch"].value[0]
                 args.append(
                     "-DCXX_EXTRA_FLAGS="
-                    + "-fsycl; -march=znver3;-fsycl-targets=nvptx64-nvidia-cuda;"
-                    + "--cuda-path="
+                    + "-fsycl;-fsycl-targets=nvptx64-nvidia-cuda;"
+                    +  self.spec.target.optimization_flags(self.spec.compiler.name, str(self.spec.compiler.version))
+                    + " --cuda-path="
                     + cuda_dir
                 )
 
@@ -730,7 +731,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         # ===================================
         if spec.compiler.name == "arm":
             fortran_flags = "-std=f2018 " + pkg.compiler.opt_flags[4] + " -Wall -Wno-unused-variable"
-            fortran_flags += "-march=" + str(spec.target)
+            fortran_flags +=  self.spec.target.optimization_flags(self.spec.compiler.name, str(self.spec.compiler.version))
+            
             config["FCFLAGS"] = fortran_flags
             config["DOCONCURRENT_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
             config["ARRAY_FLAG"] = pkg.compiler.openmp_flag  # libomp.so required
@@ -767,8 +769,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         if spec.compiler.name == "gcc":
             fortran_flags = "-std=f2018 -O3 "
             fortran_flags += "-Wall -Wno-unused-dummy-argument -Wno-unused-variable "
-            spec_target = "znver3" if str(spec.target) == "zen3" else str(spec.target)
-            fortran_flags += "-march=" + spec_target
+            fortran_flags +=  self.spec.target.optimization_flags(self.spec.compiler.name, str(self.spec.compiler.version))
 
             config["FCFLAGS"] = fortran_flags
             config["DOCONCURRENT_FLAG"] = "-ftree-parallelize-loops=4"
@@ -788,7 +789,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 cuda_arch_list = self.spec.variants["cuda_arch"].value
                 # the architecture value is only number so append sm_ to the name
                 cuda_arch = "cc" + cuda_arch_list[0]
-            # config['MARCH'] = "neoverse-v1,neoverse-n1,icelake-server,znver3,cortex-a78ae"
             GPUFLAG = " -gpu=" + cuda_arch
             fortran_flags += "-tp=" + str(spec.target)
             # this is to allow apples-to-apples comparison with DC in non-DC GPU impls
