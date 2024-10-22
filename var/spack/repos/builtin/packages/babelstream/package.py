@@ -28,20 +28,34 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     version("main", branch="main")
     maintainers("tomdeakin", "kaanolgu", "tom91136")
     # Previous maintainers: "robj0nes"
-    depends_on("cxx", type="build")  # generated
-    build_system("cmake", "makefile", default="cmake")
+    depends_on("cxx", type="build")
     # Languages
-    # Also supported variants are cuda and rocm (for HIP)
-    variant("sycl", default=False, description="Enable SYCL support")
-    variant("sycl2020", default=False, description="Enable SYCL support")
-    variant("omp", default=False, description="Enable OpenMP support")
-    variant("ocl", default=False, description="Enable OpenCL support")
-    variant("tbb", default=False, description="Enable TBB support")
-    variant("acc", default=False, description="Enable OpenACC support")
-    variant("hip", default=False, description="Enable HIP support")
-    variant("thrust", default=False, description="Enable THRUST support")
-    variant("raja", default=False, description="Enable RAJA support")
-    variant("std", default=False, description="Enable STD support")
+    # in the future it could be possible to add other languages too
+    variant(
+        "languages",
+        default="cxx",
+        values=("cxx", "fortran"),
+        description="Languages Babelstream Spack Package Support"
+        )
+    # Build System
+    build_system(
+        conditional("cmake", when="languages=cxx"),
+        conditional("makefile", when="languages=fortran"),
+        default="cmake",
+    )
+    with when("languages=cxx"):
+        # Also supported variants are cuda and rocm (for HIP)
+        # not included here because they are supplied via respective packages
+        variant("sycl", default=False, description="Enable SYCL support")
+        variant("sycl2020", default=False, description="Enable SYCL support")
+        variant("omp", default=False, description="Enable OpenMP support")
+        variant("ocl", default=False, description="Enable OpenCL support")
+        variant("tbb", default=False, description="Enable TBB support")
+        variant("acc", default=False, description="Enable OpenACC support")
+        variant("hip", default=False, description="Enable HIP support")
+        variant("thrust", default=False, description="Enable THRUST support")
+        variant("raja", default=False, description="Enable RAJA support")
+        variant("std", default=False, description="Enable STD support")
 
     # Some models need to have the programming model abstraction downloaded -
     # this variant enables a path to be provided.
@@ -252,17 +266,16 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     depends_on("pocl@1.5", when="+ocl ocl_backend=pocl")
 
     variant("cuda_extra_flags", values=str, default="none", description="Additional CUDA Compiler flags to be provided")
-    variant("fortran_flags", values=str, default="none", description="Additional Fortran flags to be provided")
 
     # CMake specific dependency
     with when("build_system=cmake"):
         depends_on("cmake@3.14.0:", type="build")
 
     # This applies to all
-
     depends_on("opencl-c-headers", when="+ocl")
 
-    with when("build_system=makefile"):
+    # Fortran related configurations
+    with when("languages=fortran"):
         implementation_vals = [
             "DoConcurrent",
             "Array",
@@ -285,12 +298,14 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         )
         # The fortran Makefile is inside the src/fortran so we need to address this
         build_directory = "src/fortran"
-        # build_directory = '.'
         build_name = ""
-
         variant(
-            "test", values=str, default="none", description="Test Variant for debugging purposes"
+            "fortran_flags",
+            values=str,
+            default="none",
+            description="Additional Fortran flags to be provided"
         )
+
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
@@ -677,7 +692,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     # Generate Compiler Specific includes
     def edit(self, pkg, spec, prefix):
         config = {
-            "FC": pkg.compiler.fc_names[0],
+            "FC": pkg.compiler.fc,
             "FCFLAGS": "",
             "ARCH": spec.target.family,
             "DOCONCURRENT_FLAG": "",
