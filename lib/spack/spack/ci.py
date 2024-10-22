@@ -34,6 +34,7 @@ import spack
 import spack.binary_distribution as bindist
 import spack.concretize
 import spack.config as cfg
+import spack.error
 import spack.main
 import spack.mirror
 import spack.paths
@@ -713,11 +714,11 @@ def generate_gitlab_ci_yaml(
     ci_config = cfg.get("ci")
 
     if not ci_config:
-        tty.die("Environment does not have `ci` a configuration")
+        raise SpackCIError("Environment does not have `ci` a configuration")
 
     # Default target is gitlab...and only target is gitlab
     if not ci_config.get("target", "gitlab") == "gitlab":
-        tty.die('Spack CI module only generates target "gitlab"')
+        raise SpackCIError('Spack CI module only generates target "gitlab"')
 
     cdash_config = cfg.get("cdash")
     cdash_handler = CDashHandler(cdash_config) if "build-group" in cdash_config else None
@@ -798,7 +799,7 @@ def generate_gitlab_ci_yaml(
     pipeline_mirrors = spack.mirror.MirrorCollection(binary=True)
     buildcache_destination = None
     if "buildcache-destination" not in pipeline_mirrors:
-        tty.die("spack ci generate requires a mirror named 'buildcache-destination'")
+        raise SpackCIError("spack ci generate requires a mirror named 'buildcache-destination'")
 
     buildcache_destination = pipeline_mirrors["buildcache-destination"]
 
@@ -1115,7 +1116,7 @@ def generate_gitlab_ci_yaml(
         sync_job["variables"]["SPACK_COPY_ONLY_DESTINATION"] = buildcache_destination.fetch_url
 
         if "buildcache-source" not in pipeline_mirrors:
-            tty.die("Copy-only pipelines require a mirror named 'buildcache-source'")
+            raise SpackCIError("Copy-only pipelines require a mirror named 'buildcache-source'")
 
         buildcache_source = pipeline_mirrors["buildcache-source"].fetch_url
         sync_job["variables"]["SPACK_BUILDCACHE_SOURCE"] = buildcache_source
@@ -2256,3 +2257,8 @@ hash={spec.dag_hash()} arch={spec.architecture} ({self.build_group})"
         )
         reporter = CDash(configuration=configuration)
         reporter.test_skipped_report(report_dir, spec, reason)
+
+
+class SpackCIError(spack.error.SpackError):
+    def __init__(self, msg):
+        super().__init__(msg)

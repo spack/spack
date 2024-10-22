@@ -146,17 +146,3 @@ schema = {
     "additionalProperties": False,
     "properties": properties,
 }
-
-
-def update(data):
-    """Update the data in place to remove deprecated properties.
-
-    Args:
-        data (dict): dictionary to be updated
-
-    Returns:
-        True if data was changed, False otherwise
-    """
-    # There are not currently any deprecated attributes in this section
-    # that have not been removed
-    return False

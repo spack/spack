@@ -157,10 +157,11 @@ And here's the spack environment built by the pipeline represented as a
 .. note::
    The use of ``reuse: false`` in spack environments used for pipelines is
    almost always what you want, as without it your pipelines will not rebuild
-   packages whenever the hashes change.
+   packages even if package hashes have changed. This is due to the concretizer
+   strongly preferring known hashes when ``reuse: true``.
 
 The ``ci`` section in the above environment file contains the bare minimum
-configuration required for ``spack ci genrate`` to create a working pipeline.
+configuration required for ``spack ci generate`` to create a working pipeline.
 The ``target: gitlab`` tells spack that the desired pipeline output is for
 gitlab.  However, this isn't strictly required, as currently gitlab is the
 only possible output format for pipelines. The ``pipeline-gen`` section
@@ -178,7 +179,7 @@ pipeline, as well as any ``noop`` jobs that might be needed by gitlab when
 no rebuilds are required.
 
 Something to note is that in this simple case, we rely on spack to
-generate a reasonble script for the package build jobs (it just creates
+generate a reasonable script for the package build jobs (it just creates
 a script that invokes ``spack ci rebuild``).
 
 Another thing to note is the use of the ``SPACK_USER_CONFIG_DIR`` environment
@@ -199,9 +200,9 @@ configuration.  This file, ``mirrors.yaml`` looks like this:
 
 Note the name of the mirror is ``buildcache-destination``, which is required
 as of Spack 0.23 (see below for more information).  The mirror url simply
-points to the container registry associated with the project, and the file
-refers to to environment variables containing the access credentials for the
-mirror.
+points to the container registry associated with the project, while
+``id_variable`` and ``secret_variable`` refer to to environment variables
+containing the access credentials for the mirror.
 
 When spack builds packages for this example project, they will be pushed to
 the project container registry, where they will be available for subsequent
