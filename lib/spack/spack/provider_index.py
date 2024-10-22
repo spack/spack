@@ -240,9 +240,10 @@ class ProviderIndex(_IndexBase):
         providers = data["provider_index"]["providers"]
         index.providers = _transform(
             providers,
+            # FIXME (compiler as nodes): avoid to hard-code the Specfile version
             lambda vpkg, plist: (
-                spack.spec.SpecfileV4.from_node_dict(vpkg),
-                set(spack.spec.SpecfileV4.from_node_dict(p) for p in plist),
+                spack.spec.SpecfileV5.from_node_dict(vpkg),
+                set(spack.spec.SpecfileV5.from_node_dict(p) for p in plist),
             ),
         )
         return index
