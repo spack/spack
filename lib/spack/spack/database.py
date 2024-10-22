@@ -1488,6 +1488,7 @@ class Database:
         end_date: Optional[datetime.datetime] = None,
         hashes: Optional[List[str]] = None,
         in_buildcache: Optional[bool] = None,
+        origin: Optional[str] = None,
     ) -> List["spack.spec.Spec"]:
 
         if query_spec is not None:
@@ -1514,6 +1515,9 @@ class Database:
 
         for key, rec in self._data.items():
             if hashes is not None and rec.spec.dag_hash() not in hashes:
+                continue
+
+            if origin and not (origin == rec.origin):
                 continue
 
             if not rec.install_type_matches(installed):
