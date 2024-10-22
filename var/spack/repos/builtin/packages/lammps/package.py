@@ -659,7 +659,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     )
     variant("tools", default=False, description="Build LAMMPS tools (msi2lmp, binary2txt, chain)")
 
-    depends_on("cmake@3.16:", when="@20231121:")
+    depends_on("cmake@3.16:", when="@20231121:", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+mpiio")
     depends_on("fftw-api@3", when="+kspace fft=fftw3")
