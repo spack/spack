@@ -8,6 +8,7 @@ import os
 from typing import Union
 
 import llnl.util.lang
+import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
 import spack.config
@@ -29,6 +30,7 @@ def misc_cache_location():
 
 def _misc_cache():
     path = misc_cache_location()
+    tty.debug(f"Misc cache location: {path}")
     return spack.util.file_cache.FileCache(path)
 
 
@@ -46,15 +48,13 @@ def fetch_cache_location():
     This prevents Spack from repeatedly fetch the same files when
     building the same package different ways or multiple times.
     """
-    path = spack.config.get("config:source_cache")
-    if not path:
-        path = spack.paths.default_fetch_cache_path
-    path = spack.util.path.canonicalize_path(path)
-    return path
+    path = spack.config.get("config:source_cache", spack.paths.default_fetch_cache_path)
+    return spack.util.path.canonicalize_path(path)
 
 
 def _fetch_cache():
     path = fetch_cache_location()
+    tty.debug(f"Source cache location: {path}")
     return spack.fetch_strategy.FsCache(path)
 
 
