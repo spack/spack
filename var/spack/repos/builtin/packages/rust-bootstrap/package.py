@@ -34,6 +34,28 @@ class RustBootstrap(Package):
                 "powerpc64le": "bf98b27de08a2fd5a2202a2b621b02bfde2a6fde397df2a735d018aeffcdc5e2",
             },
         },
+        "1.80.0": {
+            "darwin": {
+                "x86_64": "18352bc5802e117189c029b6ed63bf83bfbcde7141f33eee69f037acd1767676",
+                "aarch64": "26daa0d2e564b1c880ac7ead46b02f462ff27c2397aaa1d84167befe86af91d1",
+            },
+            "linux": {
+                "x86_64": "702d3b60816eb9410c84947895c0188e20f588cb91b3aee8d84cec23ddb63582",
+                "aarch64": "0aa0f0327c8054f3805cc4d83be2c17d1e846d23292aa872ecd6f78d86f84ce5",
+                "powerpc64le": "c4b94d69b24e646f34377fe779bf5cec6fe4688c686118ee94a056726be8e539",
+            }
+        },
+        "1.79.0": {
+            "darwin": {
+                "x86_64": "62f018aad30bafa0ef8bff0ed60d5d45e6cadc799769aad9d945509203e9f921",
+                "aarch64": "e70a9362975b94df7dbc6e2ed5ceab4254dd32f72ba497ff4a70440ace3f729f",
+            },
+            "linux": {
+                "x86_64": "628efa8ef0658a7c4199883ee132281f19931448d3cfee4ecfd768898fe74c18",
+                "aarch64": "f7d3b31581331b54af97cf3162e65b8c26c8aa14d42f71c1ce9adc1078ef54e5",
+                "powerpc64le": "9865eeebb5bb20006367d3148d9116576499ec958d847e22b645f008a1bc4170",
+            },
+        },
         "1.78.0": {
             "darwin": {
                 "x86_64": "6c91ed3bd90253961fcb4a2991b8b22e042e2aaa9aba9f389f1e17008171d898",
@@ -44,6 +66,17 @@ class RustBootstrap(Package):
                 "aarch64": "131eda738cd977fff2c912e5838e8e9b9c260ecddc1247c0fe5473bf09c594af",
                 "powerpc64le": "c5aedb12c552daa18072e386697205fb7b91cef1e8791fe6fb74834723851388",
             },
+        },
+        "1.77.0": {
+            "darwin": {
+                "x86_64": "06a8e3b00248b80bc70c859a0fc652f337d53cff11dab49e7f07db4206d28ae7",
+                "aarch64": "8a0c1b5344acfc91cf12351cc5668b2fc0ff2e96b69aba1510c9dedf86185988",
+            },
+            "linux": {
+                "x86_64": "cbdd1b93046ea4aed974016e328cb09ad0b8ee96893bd5d548fd3e7907607c75",
+                "aarch64": "df4630b250c53227649214fa5d57240217686e86bf502e5de0402d3264cb74d8",
+                "powerpc64le": "8593c41db9f01688ea290286aa2910462c91879ec23a6faece1a682b69436651",
+            }
         },
         "1.75.0": {
             "darwin": {

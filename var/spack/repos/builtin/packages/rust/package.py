@@ -37,6 +37,8 @@ class Rust(Package):
 
     # Stable versions.
     version("1.81.0", sha256="872448febdff32e50c3c90a7e15f9bb2db131d13c588fe9071b0ed88837ccfa7")
+    version("1.80.0", sha256="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+    version("1.79.0", sha256="172ecf3c7d1f9d9fb16cd2a628869782670416ded0129e524a86751f961448c0")
     version("1.78.0", sha256="ff544823a5cb27f2738128577f1e7e00ee8f4c83f2a348781ae4fc355e91d5a9")
     version("1.76.0", sha256="9e5cff033a7f0d2266818982ad90e4d3e4ef8f8ee1715776c6e25073a136c021")
     version("1.75.0", sha256="5b739f45bc9d341e2d1c570d65d2375591e22c2d23ef5b8a37711a0386abc088")
@@ -92,6 +94,8 @@ class Rust(Package):
     depends_on("rust-bootstrap@1.73:1.74", type="build", when="@1.74")
     depends_on("rust-bootstrap@1.74:1.75", type="build", when="@1.75")
     depends_on("rust-bootstrap@1.77:1.78", type="build", when="@1.78")
+    depends_on("rust-bootstrap@1.78:1.79", type="build", when="@1.79")
+    depends_on("rust-bootstrap@1.79:1.80", type="build", when="@1.80")
     depends_on("rust-bootstrap@1.80:1.81", type="build", when="@1.81")
 
     # src/llvm-project/llvm/cmake/modules/CheckCompilerVersion.cmake
