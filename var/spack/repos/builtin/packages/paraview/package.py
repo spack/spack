@@ -229,6 +229,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("tbb", when="+tbb")
 
     depends_on("mpi", when="+mpi")
+    conflicts("mpi", when="~mpi")
 
     depends_on("qt@:4", when="@:5.2.0+qt")
     depends_on("qt+sql", when="+qt")
@@ -609,11 +610,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         else:
             cmake_args.append("-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF")
 
-        cmake_args.append("-DPARAVIEW_USE_MPI:BOOL=%s" % variant_bool("+mpi"),
+        cmake_args.append("-DPARAVIEW_USE_MPI:BOOL=%s" % variant_bool("+mpi"))
         if "+mpi" in spec:
-            mpi_args = [
-                "-DMPIEXEC:FILEPATH=%s/bin/mpiexec" % spec["mpi"].prefix,
-            ]
+            mpi_args = ["-DMPIEXEC:FILEPATH=%s/bin/mpiexec" % spec["mpi"].prefix]
             if not sys.platform == "win32":
                 mpi_args.extend(
                     [
