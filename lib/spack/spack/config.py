@@ -767,7 +767,7 @@ def _add_platform_scope(
 def update_config_with_includes():
     """The "config:" section of a Configuration can specify other
     configurations to include. This does not handle recursive includes
-    (i.e. if an included config defines an "includes:" section).
+    (i.e. if an included config defines an "include:" section).
     """
     includes = CONFIG.get("config:include")
     if not includes:
