@@ -31,4 +31,3 @@ class Sox(AutotoolsPackage):
             if self.spec.satisfies("%apple-clang@15:"):
                 flags.append("-Wno-incompatible-function-pointer-types")
         return (flags, None, None)
-
