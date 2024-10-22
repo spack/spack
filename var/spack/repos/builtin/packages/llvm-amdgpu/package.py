@@ -228,6 +228,11 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
             self.define("CLANG_ENABLE_AMDCLANG", "ON"),
         ]
 
+        if spec.target.family == "aarch64":
+            args.append(self.define("LLVM_TARGETS_TO_BUILD", "AMDGPU;AArch64"))
+        else:
+            args.append(self.define("LLVM_TARGETS_TO_BUILD", "AMDGPU;X86"))
+
         # Enable rocm-device-libs as a external project
         if self.spec.satisfies("+rocm-device-libs"):
             if self.spec.satisfies("@:6.0"):
