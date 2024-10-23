@@ -21,6 +21,7 @@ class Egl(BundlePackage):
     # current bug in when and how ArchSpecs are constructed
     if sys.platform.startswith("linux"):
         provides("gl@4.5")
+        provides("libegl@1.5")
 
     # conflict with GLX
     conflicts("glx")
