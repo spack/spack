@@ -157,6 +157,15 @@ class FilesystemView:
     directory structure.
     """
 
+    layout: "spack.directory_layout.DirectoryLayout"
+    projections: Dict
+    ignore_conflicts: bool
+    verbose: bool
+    link_type: str
+
+    _root: str
+    _link: LinkCallbackType
+
     def __init__(
         self,
         root: str,
@@ -182,7 +191,10 @@ class FilesystemView:
 
         # Setup link function to include view
         self.link_type = link_type
-        self.link = ft.partial(function_for_link_type(link_type), view=self)
+        self._link = function_for_link_type(link_type)
+
+    def link(self, src: str, dst: str, spec: Optional["spack.spec.Spec"] = None) -> None:
+        self._link(src, dst, self, spec)
 
     def add_specs(self, *specs, **kwargs):
         """
