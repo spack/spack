@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import tempfile
 
 from spack.package import *
@@ -28,8 +29,8 @@ rocm_dependencies = [
 class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
     """XLA library for Jax"""
 
-    homepage = "https://github.com/google/jax"
-    url = "https://github.com/google/jax/archive/refs/tags/jaxlib-v0.4.27.tar.gz"
+    homepage = "https://github.com/jax-ml/jax"
+    url = "https://github.com/jax-ml/jax/archive/refs/tags/jax-v0.4.34.tar.gz"
 
     tmp_path = ""
     buildtmp = ""
@@ -37,6 +38,10 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
     license("Apache-2.0")
     maintainers("adamjstewart", "jonas-eschle")
 
+    version("0.4.35", sha256="65e086708ae56670676b7b2340ad82b901d8c9993d1241a839c8990bdb8d6212")
+    version("0.4.34", sha256="d3a75ad667772309ade81350fa70c4a78028a920028800282e46d8383c0ee6bb")
+    version("0.4.33", sha256="122a806e80fc1cd7d8ffaf9620701f2cb8e4fe22271c2cec53a9c60b30bd4c31")
+    version("0.4.32", sha256="3fe36d596e4d640443c0a5c533845c74fbc4341e024d9bb1cd75cb49f5f419c2")
     version("0.4.31", sha256="022ea1347f9b21cbea31410b3d650d976ea4452a48ea7317a5f91c238031bf94")
     version("0.4.30", sha256="0ef9635c734d9bbb44fcc87df4f1c3ccce1cfcfd243572c80d36fcdf826fe1e6")
     version("0.4.29", sha256="3a8005f4f62d35a5aad7e3dbd596890b47c81cc6e34fcfe3dcb93b3ca7cb1246")
@@ -99,7 +104,8 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
 
     with default_args(type=("build", "run")):
         # Based on PyPI wheels
-        depends_on("python@3.10:3.12", when="@0.4.31:")
+        depends_on("python@3.10:3.13", when="@0.4.34:")
+        depends_on("python@3.10:3.12", when="@0.4.31:0.4.33")
         depends_on("python@3.9:3.12", when="@0.4.17:0.4.30")
         depends_on("python@3.9:3.11", when="@0.4.14:0.4.16")
         depends_on("python@3.8:3.11", when="@0.4.6:0.4.13")
@@ -142,6 +148,14 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
     # https://github.com/google/jax/issues/19992
     conflicts("@0.4.4:", when="target=ppc64le:")
 
+    def url_for_version(self, version):
+        url = "https://github.com/jax-ml/jax/archive/refs/tags/{}-v{}.tar.gz"
+        if version >= Version("0.4.33"):
+            name = "jax"
+        else:
+            name = "jaxlib"
+        return url.format(name, version)
+
     def patch(self):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
         self.buildtmp = tempfile.mkdtemp(prefix="spack")
@@ -176,25 +190,40 @@ build --local_cpu_resources={make_jobs}
         )
 
     def install(self, spec, prefix):
-        args = []
-        args.append("build/build.py")
+        # https://jax.readthedocs.io/en/latest/developer.html
+        buildtmp = self.wrapped_package_object.buildtmp
+        args = ["build/build.py", f"--bazel_startup_options=--output_user_root={buildtmp}"]
+
         if "+cuda" in spec:
-            args.append("--enable_cuda")
-            args.append("--cuda_path={0}".format(self.spec["cuda"].prefix))
-            args.append("--cudnn_path={0}".format(self.spec["cudnn"].prefix))
             capabilities = CudaPackage.compute_capabilities(spec.variants["cuda_arch"].value)
-            args.append("--cuda_compute_capabilities={0}".format(",".join(capabilities)))
-        args.append(
-            "--bazel_startup_options="
-            "--output_user_root={0}".format(self.wrapped_package_object.buildtmp)
-        )
+            args.extend(["--enable_cuda", f"--cuda_compute_capabilities={','.join(capabilities)}"])
+            if spec.satisfies("@0.4.32:"):
+                args.extend(
+                    [
+                        f"--bazel_options=--repo_env=LOCAL_CUDA_PATH={spec['cuda'].prefix}",
+                        f"--bazel_options=--repo_env=LOCAL_CUDNN_PATH={spec['cudnn'].prefix}",
+                        "--bazel_options=--action_env=TF_NVCC_CLANG=1",
+                        "--bazel_options=--@local_config_cuda//:cuda_compiler=nvcc",
+                    ]
+                )
+            else:
+                args.extend(
+                    [f"--cuda_path={spec['cuda'].prefix}", f"--cudnn_path={spec['cudnn'].prefix}"]
+                )
+
+        if "+nccl" in spec and spec.satisfies("@0.4.32:"):
+            args.append(f"--bazel_options=--repo_env=LOCAL_NCCL_PATH={spec['nccl'].prefix}")
+
         if "+rocm" in spec:
-            args.append("--enable_rocm")
-            args.append("--rocm_path={0}".format(self.spec["hip"].prefix))
+            args.extend(["--enable_rocm", f"--rocm_path={self.spec['hip'].prefix}"])
+
+        if spec.satisfies("@0.4.32:"):
+            args.append("--nouse_clang")
 
         python(*args)
+        whl = glob.glob(join_path("dist", "*.whl"))[0]
         with working_dir(self.wrapped_package_object.tmp_path):
-            args = std_pip_args + ["--prefix=" + self.prefix, "."]
+            args = std_pip_args + ["--prefix=" + self.prefix, whl]
             pip(*args)
         remove_linked_tree(self.wrapped_package_object.tmp_path)
         remove_linked_tree(self.wrapped_package_object.buildtmp)
