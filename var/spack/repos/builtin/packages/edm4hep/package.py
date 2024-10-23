@@ -65,7 +65,7 @@ class Edm4hep(CMakePackage):
         "json",
         default=True,
         description="Build edm4hep with JSON support and edm4hep2json",
-        when="0.99.2:",
+        when="@0.99.2:",
     )
 
     depends_on("cmake@3.3:", type="build")
