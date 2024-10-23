@@ -19,7 +19,7 @@ class Buildah(MakefilePackage):
     version("1.37.5", commit="5fd40b989860984a00f6fc1539ff53caceca1325")
 
     depends_on("gmake", type="build")
-    depends_on("go", type="build")
+    depends_on("go@1.21:", type="build")
     depends_on("git", type="build")
     depends_on("go-md2man", type="build")
     depends_on("bats")
