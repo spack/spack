@@ -227,7 +227,7 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
             self.define("CLANG_ENABLE_AMDCLANG", "ON"),
         ]
 
-        if spec.target.family == "aarch64":
+        if self.spec.target.family == "aarch64":
             args.append(self.define("LLVM_TARGETS_TO_BUILD", "AMDGPU;AArch64"))
         else:
             args.append(self.define("LLVM_TARGETS_TO_BUILD", "AMDGPU;X86"))
