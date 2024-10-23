@@ -2998,15 +2998,10 @@ class Spec:
         pkg_variants = pkg_cls.variant_names()
         # reserved names are variants that may be set on any package
         # but are not necessarily recorded by the package's class
-        propagate = []
-
-        for name, variant in spec.variants.items():
-            if variant.propagate:
-                # variant must be in pkg or pkg's dependencies
-                propagate.append(name)
+        propagate_variants = [name for name, variant in spec.variants.items() if variant.propagate]
 
         not_existing = set(spec.variants) - (
-            set(pkg_variants) | set(vt.reserved_names) | set(propagate)
+            set(pkg_variants) | set(vt.reserved_names) | set(propagate_variants)
         )
 
         if not_existing:
