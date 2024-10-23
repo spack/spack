@@ -297,17 +297,17 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
         # basic family matching
         hostarch = "noarch"
-        if self.spec.target.family == "aarch64":
+        if str(self.spec.target) == "aarch64":
             hostarch = "neon"
-        if self.spec.target.family == "x86_64":
+        if str(self.spec.target) == "x86_64":
             # pure x86_64v1 doesn't support anything above SSE3
             hostarch = "noarch"
-        if self.spec.target.family == "x86_64_v2":
+        if str(self.spec.target) == "x86_64_v2":
             # AVX is only required for x86_64v3 and upwards
             hostarch = "wsm"
-        if self.spec.target.family == "x86_64_v3":
+        if str(self.spec.target) == "x86_64_v3":
             hostarch = "hsw"
-        if self.spec.target.family == "x86_64_v4":
+        if str(self.spec.target) == "x86_64_v4":
             hostarch = "skx"
 
         # specific architecture matching
