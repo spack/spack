@@ -377,7 +377,7 @@ e4s-neoverse_v1-build:
 
 e4s-rocm-external-generate:
   extends: [ ".e4s-rocm-external", ".generate-x86_64"]
-  image: ghcr.io/spack/spack/ubuntu22.04-runner-amd64-gcc-11.4-rocm6.2.0:2024.09.11
+  image: ghcr.io/spack/spack/ubuntu22.04-runner-amd64-gcc-11.4-rocm6.2.1:2024.10.08
 
 e4s-rocm-external-build:
   extends: [ ".e4s-rocm-external", ".build" ]
@@ -507,6 +507,30 @@ developer-tools-manylinux2014-build:
   needs:
     - artifacts: True
       job: developer-tools-manylinux2014-generate
+
+###########################################
+# Build tests for different developer tools
+# darwin
+###########################################
+.developer-tools-darwin:
+  extends: [ ".darwin_aarch64" ]
+  variables:
+    SPACK_CI_STACK_NAME: developer-tools-darwin
+
+developer-tools-darwin-generate:
+  tags: [ "macos-ventura", "apple-clang-15", "aarch64-macos" ]
+  extends: [ ".developer-tools-darwin", ".generate-base"]
+
+developer-tools-darwin-build:
+  extends: [ ".developer-tools-darwin", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: developer-tools-darwin-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: developer-tools-darwin-generate
 
 #########################################
 # RADIUSS

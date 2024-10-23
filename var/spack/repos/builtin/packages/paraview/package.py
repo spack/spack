@@ -88,6 +88,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("nvindex", default=False, description="Enable the pvNVIDIAIndeX plugin")
     variant("tbb", default=False, description="Enable multi-threaded parallelism with TBB")
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
+    variant("fides", default=False, description="Enable Fides support", when="@5.9:")
     variant("visitbridge", default=False, description="Enable VisItBridge support")
     variant("raytracing", default=False, description="Enable Raytracing support")
     variant("cdi", default=False, description="Enable CDI support")
@@ -130,6 +131,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("~hdf5", when="+visitbridge")
     conflicts("+adios2", when="@:5.10 ~mpi")
+    conflicts("+fides", when="~adios2", msg="Fides needs ADIOS2")
+    conflicts("+fides", when="use_vtkm=off", msg="Fides needs VTK-m")
+    conflicts("+fides", when="use_vtkm=default", msg="Fides needs VTK-m")
     conflicts("+openpmd", when="~adios2 ~hdf5", msg="openPMD needs ADIOS2 and/or HDF5")
     conflicts("~shared", when="+cuda")
     conflicts("+cuda", when="@5.8:5.10")
@@ -572,6 +576,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+adios2" in spec:
             cmake_args.extend(["-DPARAVIEW_ENABLE_ADIOS2:BOOL=ON"])
+
+        if "+fides" in spec:
+            cmake_args.append("-DPARAVIEW_ENABLE_FIDES:BOOL=ON")
 
         # The assumed qt version changed to QT5 (as of paraview 5.2.1),
         # so explicitly specify which QT major version is actually being used

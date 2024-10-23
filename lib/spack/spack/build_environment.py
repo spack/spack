@@ -617,13 +617,11 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
     """
     module = ModuleChangePropagator(pkg)
 
-    if context == Context.BUILD:
-        module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
-        module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
-        module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
-
     jobs = spack.config.determine_number_of_jobs(parallel=pkg.parallel)
     module.make_jobs = jobs
+    if context == Context.BUILD:
+        module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
+        module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
     # TODO: make these build deps that can be installed if not found.
     module.make = MakeExecutable("make", jobs)
@@ -1048,6 +1046,12 @@ class SetupContext:
                     # This includes runtime dependencies, also runtime deps of direct build deps.
                     set_package_py_globals(pkg, context=Context.RUN)
 
+        # Looping over the set of packages a second time
+        # ensures all globals are loaded into the module space prior to
+        # any package setup. This guarantees package setup methods have
+        # access to expected module level definitions such as "spack_cc"
+        for dspec, flag in chain(self.external, self.nonexternal):
+            pkg = dspec.package
             for spec in dspec.dependents():
                 # Note: some specs have dependents that are unreachable from the root, so avoid
                 # setting globals for those.
@@ -1056,6 +1060,15 @@ class SetupContext:
                 dependent_module = ModuleChangePropagator(spec.package)
                 pkg.setup_dependent_package(dependent_module, spec)
                 dependent_module.propagate_changes_to_mro()
+
+        pkg = self.specs[0].package
+        if self.context == Context.BUILD:
+            module = ModuleChangePropagator(pkg)
+            # std_cmake_args is not sufficiently static to be defined
+            # in set_package_py_globals and is deprecated so its handled
+            # here as a special case
+            module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
+            module.propagate_changes_to_mro()
 
     def get_env_modifications(self) -> EnvironmentModifications:
         """Returns the environment variable modifications for the given input specs and context.
@@ -1181,7 +1194,7 @@ def _setup_pkg_and_run(
         # that the parent process is not going to read from it till we
         # are done with the child, so we undo Python's precaution.
         if input_multiprocess_fd is not None:
-            sys.stdin = os.fdopen(input_multiprocess_fd.fd)
+            sys.stdin = os.fdopen(input_multiprocess_fd.fd, closefd=False)
 
         pkg = serialized_pkg.restore()
 
@@ -1204,7 +1217,7 @@ def _setup_pkg_and_run(
         # objects can't be sent to the parent.
         exc_type = type(e)
         tb = e.__traceback__
-        tb_string = traceback.format_exception(exc_type, e, tb)
+        tb_string = "".join(traceback.format_exception(exc_type, e, tb))
 
         # build up some context from the offending package so we can
         # show that, too.
