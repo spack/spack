@@ -206,7 +206,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
     with default_args(type="build"):
         # https://seissol.readthedocs.io/en/latest/installing-dependencies.html
         depends_on("cmake@3.20:")
-        depends_on("python@3.5:")
+        depends_on("python@3.9:")
         depends_on("py-setuptools")
         depends_on("py-numpy@1.12:")
         depends_on("py-scipy")
