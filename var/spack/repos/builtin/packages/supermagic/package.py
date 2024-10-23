@@ -30,7 +30,5 @@ class Supermagic(AutotoolsPackage):
         bash("./autogen")
 
     def configure_args(self):
-        config_args = [
-            "CC={0}".format(self.spec["mpi"].mpicc),
-        ]
+        config_args = ["CC={0}".format(self.spec["mpi"].mpicc)]
         return config_args
