@@ -104,7 +104,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
             description="Use SYCL also for the wave propagation part (default for Intel GPUs)",
             when=f"+{v}",
         )
-    variant("python", default=False, description="installs python, pip, numpy and scipy")
+    variant("use-host-py", default=False, description="reuse numpy and scipy from the host")
 
     requires(
         "-cuda -rocm -intel_gpu",
@@ -188,8 +188,8 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("asagi +mpi +mpi3", when="+asagi")
 
-    depends_on("easi ~asagi jit=impalajit,lua", when="~asagi")
-    depends_on("easi +asagi jit=impalajit,lua", when="+asagi")
+    depends_on("easi ~python ~asagi jit=impalajit,lua", when="~asagi")
+    depends_on("easi ~python +asagi jit=impalajit,lua", when="+asagi")
 
     depends_on("intel-mkl threads=none", when="gemm_tools_list=MKL")
     depends_on("blis threads=none", when="gemm_tools_list=BLIS")
@@ -204,21 +204,23 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("eigen@3.4.0")
 
     # build dependencies (code generation)
-    depends_on("python@3", type="build", when="+python")
-    depends_on("py-numpy", type="build", when="+python")
-    depends_on("py-scipy", type="build", when="+python")
-    depends_on("py-matplotlib", type="build", when="+python")
-    depends_on("py-setuptools", type="build", when="+python")
+    with default_args(type="build"):
+        # https://seissol.readthedocs.io/en/latest/installing-dependencies.html
+        depends_on("cmake@3.20:")
+        with when("~use-host-py"):
+            depends_on("python@3.5:")
+            depends_on("py-setuptools")
+            depends_on("py-numpy@1.12:")
+            depends_on("py-scipy")
+            depends_on("py-matplotlib")
 
-    depends_on("py-pspamm", when="gemm_tools_list=PSpaMM", type="build")
-    forwarded_variants = ["cuda", "intel_gpu", "rocm"]
-    for v in forwarded_variants:
-        depends_on("py-gemmforge", when=f"+{v}", type="build")
-        depends_on("py-chainforgecodegen", when=f"+{v}", type="build")
+        depends_on("py-pspamm", when="gemm_tools_list=PSpaMM")
+        forwarded_variants = ["cuda", "intel_gpu", "rocm"]
+        for v in forwarded_variants:
+            depends_on("py-gemmforge", when=f"+{v}")
+            depends_on("py-chainforgecodegen", when=f"+{v}")
 
-    depends_on(
-        "libxsmm@1.17 +generator", when="gemm_tools_list=LIBXSMM target=x86_64:", type="build"
-    )
+        depends_on("libxsmm@=1.17 +generator", when="gemm_tools_list=LIBXSMM target=x86_64:")
 
     def cmake_args(self):
         args = [
@@ -342,7 +344,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
         args.append(f"-DHOST_ARCH={hostarch}")
 
-        if "+python" in self.spec:
+        if not self.spec.satisfies("+use-host-py"):
             args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
 
         return args
