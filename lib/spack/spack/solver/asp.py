@@ -2616,6 +2616,7 @@ class SpackSolverSetup:
                 )
                 for name, info in env.dev_specs.items()
             )
+
         specs = tuple(specs)  # ensure compatible types to add
 
         self.gen.h1("Reusable concrete specs")
@@ -3966,7 +3967,7 @@ class SpecFilter:
         return [s for s in self.factory() if self.is_selected(s)]
 
     @staticmethod
-    def from_store(configuration, include, exclude) -> "SpecFilter":
+    def from_store(configuration, *, include, exclude) -> "SpecFilter":
         """Constructs a filter that takes the specs from the current store."""
         packages = _external_config_with_implicit_externals(configuration)
         is_reusable = functools.partial(_is_reusable, packages=packages, local=True)
@@ -3974,12 +3975,19 @@ class SpecFilter:
         return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
 
     @staticmethod
-    def from_buildcache(configuration, include, exclude) -> "SpecFilter":
+    def from_buildcache(configuration, *, include, exclude) -> "SpecFilter":
         """Constructs a filter that takes the specs from the configured buildcaches."""
         packages = _external_config_with_implicit_externals(configuration)
         is_reusable = functools.partial(_is_reusable, packages=packages, local=False)
         return SpecFilter(
             factory=_specs_from_mirror, is_usable=is_reusable, include=include, exclude=exclude
+        )
+
+    @staticmethod
+    def from_environment(configuration, *, include, exclude, env) -> "SpecFilter":
+        factory = functools.partial(_specs_from_environment, env=env)
+        return SpecFilter(
+            factory=factory, is_usable=lambda _: True, include=include, exclude=exclude
         )
 
 
@@ -3996,6 +4004,13 @@ def _specs_from_mirror():
         # this is raised when no mirrors had indices.
         # TODO: update mirror configuration so it can indicate that the
         # TODO: source cache (or any mirror really) doesn't have binaries.
+        return []
+
+
+def _specs_from_environment(env):
+    if env:
+        return [concrete for _, concrete in env.concretized_specs()]
+    else:
         return []
 
 
@@ -4028,6 +4043,12 @@ class ReusableSpecsSelector:
                     SpecFilter.from_buildcache(
                         configuration=self.configuration, include=[], exclude=[]
                     ),
+                    SpecFilter.from_environment(
+                        configuration=self.configuration,
+                        include=[],
+                        exclude=[],
+                        env=ev.active_environment(),
+                    ),
                 ]
             )
         else:
@@ -4042,7 +4063,26 @@ class ReusableSpecsSelector:
             for source in reuse_yaml.get("from", default_sources):
                 include = source.get("include", default_include)
                 exclude = source.get("exclude", default_exclude)
-                if source["type"] == "local":
+                if isinstance(source["type"], dict):
+                    env_path = source["type"].get("environment")
+                    self.reuse_sources.append(
+                        SpecFilter.from_environment(
+                            self.configuration,
+                            include=include,
+                            exclude=exclude,
+                            env=ev.environment_from_name_or_dir(env_path),
+                        )
+                    )
+                elif source["type"] == "environment":
+                    self.reuse_sources.append(
+                        SpecFilter.from_environment(
+                            self.configuration,
+                            include=include,
+                            exclude=exclude,
+                            env=ev.active_environment(),
+                        )
+                    )
+                elif source["type"] == "local":
                     self.reuse_sources.append(
                         SpecFilter.from_store(self.configuration, include=include, exclude=exclude)
                     )
