@@ -157,6 +157,21 @@ class InstallStatus:
     def get_progress(self) -> str:
         return f"[{self.pkg_num}/{self.pkg_count}]"
 
+    def print_installed(self, message: str) -> None:
+        """
+        Output a message with a package icon.
+
+        Args:
+            message: message to be output
+        """
+        report_status = spack.config.get("config:install_status", True)
+        post = f"{self.get_progress()}" if report_status else ""
+
+        if tty.msg_enabled():
+            print(
+                colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message) + f" {post}"
+            )
+
 
 class TermStatusLine:
     """
@@ -243,7 +258,7 @@ def _handle_external_and_upstream(
     # consists in module file generation and registration in the DB.
     if pkg.spec.external:
         _process_external_package(pkg, explicit)
-        _print_installed_pkg(f"{pkg.prefix} (external {package_id(pkg.spec)})", install_status)
+        install_status.print_installed(f"{pkg.prefix} (external {package_id(pkg.spec)})")
         return True
 
     if pkg.spec.installed_upstream:
@@ -251,7 +266,7 @@ def _handle_external_and_upstream(
             f"{package_id(pkg.spec)} is installed in an upstream Spack instance at "
             f"{pkg.spec.prefix}"
         )
-        _print_installed_pkg(pkg.prefix, install_status)
+        install_status.print_installed(pkg.prefix)
 
         # This will result in skipping all post-install hooks. In the case
         # of modules this is considered correct because we want to retrieve
@@ -327,21 +342,6 @@ def _log_prefix(pkg_name) -> str:
     return f"{pid}{pkg_name}:"
 
 
-def _print_installed_pkg(message: str, install_status: InstallStatus) -> None:
-    """
-    Output a message with a package icon.
-
-    Args:
-        message: message to be output
-        install_status: installation status tracker
-    """
-    report_status = spack.config.get("config:install_status", True)
-    post = f"{install_status.get_progress()}" if report_status else ""
-
-    if tty.msg_enabled():
-        print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message) + f" {post}")
-
-
 def print_install_test_log(pkg: "spack.package_base.PackageBase") -> None:
     """Output install test log file path but only if have test failures.
 
@@ -392,7 +392,7 @@ def _install_from_cache(
 
     _write_timer_json(pkg, t, True)
     _print_timer(pre=_log_prefix(pkg.name), pkg_id=pkg_id, timer=t)
-    _print_installed_pkg(pkg.spec.prefix, install_status)
+    install_status.print_installed(pkg.spec.prefix)
     spack.hooks.post_install(pkg.spec, explicit)
     return True
 
@@ -1245,14 +1245,14 @@ class RewireTask(Task):
                 install_args = self.request.install_args
                 unsigned = install_args.get("unsigned")
                 _process_binary_cache_tarball(self.pkg, explicit=self.explicit, unsigned=unsigned)
-                _print_installed_pkg(self.pkg.prefix, install_status)
+                install_status.print_installed(self.pkg.prefix)
                 return ExecuteResult.SUCCESS
             except BaseException as e:
                 tty.error(f"Failed to rewire {self.pkg.spec} from binary. {e}")
                 self.status = oldstatus
                 return ExecuteResult.MISSING_BUILD_SPEC
         spack.rewiring.rewire_node(self.pkg.spec, self.explicit)
-        _print_installed_pkg(self.pkg.prefix, install_status)
+        install_status.print_installed(self.pkg.prefix)
         return ExecuteResult.SUCCESS
 
 
@@ -1787,7 +1787,6 @@ class PackageInstaller:
         Args:
             task: the installation task for a package
         """
-        # install_status: the installation status for the package"""
         rc = task.execute(self.install_status)
         if rc == ExecuteResult.MISSING_BUILD_SPEC:
             self._requeue_with_build_spec_tasks(task)
@@ -1903,7 +1902,6 @@ class PackageInstaller:
         Args:
             task (Task): the installation task for a package
         """
-        # install_status: the installation status for the package"""
         if task.status not in [BuildStatus.INSTALLED, BuildStatus.INSTALLING]:
             tty.debug(f"{install_msg(task.pkg_id, self.pid)} in progress by another process")
 
@@ -2152,7 +2150,7 @@ class PackageInstaller:
                 if lock is not None:
                     self._update_installed(task)
                     path = spack.util.path.debug_padded_filter(pkg.prefix)
-                    _print_installed_pkg(path, self.install_status)
+                    self.install_status.print_installed(path)
                 else:
                     # At this point we've failed to get a write or a read
                     # lock, which means another process has taken a write
@@ -2410,7 +2408,7 @@ class BuildProcessInstaller:
 
         print_install_test_log(self.pkg)
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
-        _print_installed_pkg(self.pkg.prefix, install_status)
+        install_status.print_installed(self.pkg.prefix)
 
         # preserve verbosity across runs
         return self.echo
