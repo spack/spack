@@ -17,7 +17,7 @@ class PyTensorflowProbability(Package):
     predictions."""
 
     homepage = "https://www.tensorflow.org/probability"
-    url = "https://github.com/tensorflow/probability/archive/v0.12.1.tar.gz"
+    url = "https://github.com/tensorflow/probability/archive/v0.24.0.tar.gz"
 
     maintainers("aweits", "jonas-eschle")
 
@@ -60,8 +60,8 @@ class PyTensorflowProbability(Package):
 
     variant("tf", default=False, description="Build with TensorFlow support")
     with when("+tf"):
-        depends_on("py-tf-keras@2.16:", when="@0.24:", type=("build", "run"))
-        depends_on("py-tensorflow@2.16", when="@0.24", type=("build", "run"))
+        depends_on("py-tf-keras@2.17:", when="@0.24:", type=("build", "run"))
+        depends_on("py-tensorflow@2.17", when="@0.24", type=("build", "run"))
         depends_on("py-tensorflow@2.15", when="@0.23", type=("build", "run"))
         depends_on("py-tensorflow@2.14:2", when="@0.22", type=("build", "run"))
         depends_on("py-tensorflow@2.13:2", when="@0.21", type=("build", "run"))

@@ -23,7 +23,7 @@ class PyTfKeras(PythonPackage):
     license("Apache-2.0", checked_by="jonas-eschle")
 
     max_minor = 17
-    version("2.17.0", sha256="fda97c18da30da0f72a5a7e80f3eee343b09f4c206dad6c57c944fb2cd18560e")
+    version("2.17.0", sha256="62730cf3af47162216ee0130b363f085716d86ac9e2d448a242f478846c2a7e0")
 
     # Supported Python versions listed in multiple places:
     # * tf-keras/tools/pip_package/setup.py
