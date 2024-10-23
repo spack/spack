@@ -249,17 +249,16 @@ spack:
 
 def test_ci_generate_with_env_missing_section(ci_generate_test, tmp_path, mock_binary_index):
     """Make sure we get a reasonable message if we omit gitlab-ci section"""
-    _, _, output = ci_generate_test(
-        f"""\
+    env_yaml = f"""\
 spack:
   specs:
     - archive-files
   mirrors:
     buildcache-destination: {tmp_path / 'ci-mirror'}
-""",
-        fail_on_error=False,
-    )
-    assert "Environment does not have `ci` a configuration" in output
+"""
+    expect = "Environment does not have a `ci` configuration"
+    with pytest.raises(ci.SpackCIError, match=expect):
+        ci_generate_test(env_yaml)
 
 
 def test_ci_generate_with_cdash_token(ci_generate_test, tmp_path, mock_binary_index, monkeypatch):
@@ -1211,14 +1210,9 @@ spack:
 
         with ev.read("test"):
             # Check the 'generate' subcommand
-            output = ci_cmd(
-                "generate",
-                "--output-file",
-                str(tmp_path / ".gitlab-ci.yml"),
-                output=str,
-                fail_on_error=False,
-            )
-            assert "spack ci generate requires a mirror named 'buildcache-destination'" in output
+            expect = "spack ci generate requires a mirror named 'buildcache-destination'"
+            with pytest.raises(ci.SpackCIError, match=expect):
+                ci_cmd("generate", "--output-file", str(tmp_path / ".gitlab-ci.yml"))
 
             # Also check the 'rebuild-index' subcommand
             output = ci_cmd("rebuild-index", output=str, fail_on_error=False)

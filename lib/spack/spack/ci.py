@@ -714,7 +714,7 @@ def generate_gitlab_ci_yaml(
     ci_config = cfg.get("ci")
 
     if not ci_config:
-        raise SpackCIError("Environment does not have `ci` a configuration")
+        raise SpackCIError("Environment does not have a `ci` configuration")
 
     # Default target is gitlab...and only target is gitlab
     if not ci_config.get("target", "gitlab") == "gitlab":

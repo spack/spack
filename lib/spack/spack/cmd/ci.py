@@ -215,17 +215,14 @@ def ci_generate(args):
             os.makedirs(gen_ci_dir)
 
     # Generate the jobs
-    try:
-        spack_ci.generate_gitlab_ci_yaml(
-            env,
-            True,
-            output_file,
-            prune_dag=prune_dag,
-            check_index_only=index_only,
-            artifacts_root=artifacts_root,
-        )
-    except spack_ci.SpackCIError as ci_err:
-        tty.die(ci_err.message)
+    spack_ci.generate_gitlab_ci_yaml(
+        env,
+        True,
+        output_file,
+        prune_dag=prune_dag,
+        check_index_only=index_only,
+        artifacts_root=artifacts_root,
+    )
 
 
 def ci_reindex(args):
