@@ -32,6 +32,7 @@ from typing import (
     Container,
     Dict,
     Generator,
+    Iterable,
     List,
     NamedTuple,
     Optional,
@@ -1486,37 +1487,33 @@ class Database:
         explicit: Optional[bool] = None,
         start_date: Optional[datetime.datetime] = None,
         end_date: Optional[datetime.datetime] = None,
-        hashes: Optional[List[str]] = None,
+        hashes: Optional[Iterable[str]] = None,
         in_buildcache: Optional[bool] = None,
         origin: Optional[str] = None,
     ) -> List["spack.spec.Spec"]:
 
-        if query_spec is not None:
-            if not isinstance(query_spec, spack.spec.Spec):
-                query_spec = spack.spec.Spec(query_spec)
+        # Restrict the set of records over which we iterate first
+        matching_hashes = self._data
+        if hashes is not None:
+            matching_hashes = {h: self._data[h] for h in hashes if h in self._data}
 
-            # Just look up concrete specs with hashes; no fancy search.
-            if query_spec.concrete:
-                # TODO: handling of hashes restriction is not particularly elegant.
-                hash_key = query_spec.dag_hash()
-                if hash_key in self._data and (not hashes or hash_key in hashes):
-                    return [self._data[hash_key].spec]
-                else:
-                    return []
+        if isinstance(query_spec, str):
+            query_spec = spack.spec.Spec(query_spec)
 
-        # Abstract specs require more work -- currently we test
-        # against everything.
+        if query_spec is not None and query_spec.concrete:
+            hash_key = query_spec.dag_hash()
+            if hash_key not in matching_hashes:
+                return []
+            matching_hashes = {hash_key: matching_hashes[hash_key]}
+
+        # Abstract specs require more work -- currently we test against everything.
         results = []
         start_date = start_date or datetime.datetime.min
         end_date = end_date or datetime.datetime.max
 
         # save specs whose name doesn't match for last, to avoid a virtual check
         deferred = []
-
-        for key, rec in self._data.items():
-            if hashes is not None and rec.spec.dag_hash() not in hashes:
-                continue
-
+        for rec in matching_hashes.values():
             if origin and not (origin == rec.origin):
                 continue
 
@@ -1537,7 +1534,7 @@ class Database:
                 if not (start_date < inst_date < end_date):
                     continue
 
-            if query_spec is None:
+            if query_spec is None or query_spec.concrete:
                 results.append(rec.spec)
                 continue
 
