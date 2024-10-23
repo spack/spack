@@ -1089,17 +1089,17 @@ variant_is_propagated(PackageNode, Variant) :-
    not propagate(PackageNode, variant_value(Variant, Value)).
 
 % Cannot propagate the same flag from two distinct sources
-error(100, "{0} and {1} cannot both propagate variant '{2}'", SourceNode1, SourceNode2, Variant) :-
-  variant_is_propagated(SourceNode1, variant_value(Variant, _)),
-  variant_is_propagated(SourceNode2, variant_value(Variant, _)),
-  SourceNode1 < SourceNode2.
+error(100, "{0} and {1} cannot both propagate variant '{2}'", Source1, Source2, Variant) :-
+  variant_is_propagated(node(X, Source1), variant_value(Variant, _)),
+  variant_is_propagated(node(Y, Source2), variant_value(Variant, _)),
+  Source1 < Source2.
 
 % Cannot propagate a variant if a different value was set for it in a dependency
-error(100, "Cannot propagate the variant '{0}' from the package: {1} because package: {2} is set to exclude it", Variant, SourceNode, PackageNode) :- % TODO: Rikki Write a better msg later
-  variant_is_propagated(SourceNode, Variant),
-  attr("variant_set", PackageNode, Variant, _),
-  depends_on(PackageNode, SourceNode),
-  node_has_variant(PackageNode, Variant, VariantID),
+error(100, "Cannot propagate the variant '{0}' from the package: {1} because package: {2} is set to exclude it", Variant, Source, Dependency) :-
+  variant_is_propagated(node(X, Source), Variant),
+  attr("variant_set", node(Y, Dependency), Variant, _),
+  depends_on(node(Y, Dependency), node(X, Source)),
+  node_has_variant(node(X, Source), Variant, VariantID),
   not variant_type(VariantID, "multi").
 
 %----
