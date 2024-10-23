@@ -161,7 +161,7 @@ class FilesystemView:
     def __init__(
         self,
         root: str,
-        layout: "spack.directory_layout.DirectoryLayout",
+        layout: spack.directory_layout.DirectoryLayout,
         *,
         projections: Optional[Dict] = None,
         ignore_conflicts: bool = False,
@@ -287,7 +287,7 @@ class YamlFilesystemView(FilesystemView):
     def __init__(
         self,
         root: str,
-        layout: "spack.directory_layout.DirectoryLayout",
+        layout: spack.directory_layout.DirectoryLayout,
         *,
         projections: Optional[Dict] = None,
         ignore_conflicts: bool = False,
