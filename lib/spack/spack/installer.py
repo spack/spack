@@ -135,21 +135,17 @@ class InstallStatus:
 
     def __init__(self, packages: List["spack.package_base.PackageBase"]):
         self.counter = SpecsCount(dt.BUILD | dt.LINK | dt.RUN)
-        self.pkg_num: int = 0
         self.pkg_count: int = self.counter.total([pkg.spec for pkg in packages])
         self.pkg_ids: Set[str] = set()
-        # TODO: Still need to better track what has been visited, etc. so
-        # TODO: not duplicating (or appearing to re-assign) package numbers.
+        self.pkg_num: int = 0
 
     def next_pkg(self, pkg: "spack.package_base.PackageBase"):
         pkg_id = package_id(pkg.spec)
 
         if pkg_id not in self.pkg_ids:
-            #self.pkg_num += 1
             self.pkg_ids.add(pkg_id)
-            #visited = max(len(self.pkg_ids), self.counter.total([pkg.spec]))
-            #self.pkg_num = self.pkg_count - visited
-            self.pkg_num = max(len(self.pkg_ids), self.counter.total([pkg.spec]))
+            visited = max(len(self.pkg_ids), self.counter.total([pkg.spec]), self.pkg_num + 1)
+            self.pkg_num = visited
 
     def set_term_title(self, text: str):
         if not sys.stdout.isatty():
@@ -159,9 +155,7 @@ class InstallStatus:
         sys.stdout.flush()
 
     def get_progress(self) -> str:
-        # TODO/TLD: Per discussion, this should be reporting the package's
-        # TODO/TLD: relative location in the DAG, not sequential number
-        return f"{self.pkg_num}/{self.pkg_count}"
+        return f"[{self.pkg_num}/{self.pkg_count}]"
 
 
 class TermStatusLine:
@@ -342,10 +336,10 @@ def _print_installed_pkg(message: str, install_status: InstallStatus) -> None:
         install_status: installation status tracker
     """
     report_status = spack.config.get("config:install_status", True)
-    pre = "[+]" if not report_status else f"[+{install_status.get_progress()}]"
+    post = f"{install_status.get_progress()}" if report_status else ""
 
     if tty.msg_enabled():
-        print(colorize(f"@*g{pre}@.") + spack.util.path.debug_padded_filter(message))
+        print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message) + f" {post}")
 
 
 def print_install_test_log(pkg: "spack.package_base.PackageBase") -> None:
@@ -1902,7 +1896,6 @@ class PackageInstaller:
         else:
             return None
 
-    # def _requeue_task(self, task: Task, install_status: InstallStatus) -> None:
     def _requeue_task(self, task: Task) -> None:
         """
         Requeues a task that appears to be in progress by another process.
