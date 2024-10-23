@@ -892,3 +892,18 @@ spack:
     with pytest.raises(Exception):
         with ev.Environment(tmp_path) as e:
             e.concretize()
+
+
+def test_environment_from_name_or_dir(mock_packages, mutable_mock_env_path, tmp_path):
+    test_env = ev.create("test")
+
+    name_env = ev.environment_from_name_or_dir(test_env.name)
+    assert name_env.name == test_env.name
+    assert name_env.path == test_env.path
+
+    dir_env = ev.environment_from_name_or_dir(test_env.path)
+    assert dir_env.name == test_env.name
+    assert dir_env.path == test_env.path
+
+    with pytest.raises(ev.SpackEnvironmentError, match="no such environment"):
+        _ = ev.environment_from_name_or_dir("fake-env")
