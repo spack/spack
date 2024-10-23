@@ -51,7 +51,7 @@ __all__ = ["FilesystemView", "YamlFilesystemView"]
 _projections_path = ".spack/projections.yaml"
 
 
-LinkCallbackType = Callable[[str, str, "FilesystemView", Optional["spack.spec.Spec"]], None]
+LinkCallbackType = Callable[[str, str, "FilesystemView", Optional[spack.spec.Spec]], None]
 
 
 def view_symlink(src: str, dst: str, *args, **kwargs) -> None:
@@ -63,7 +63,7 @@ def view_hardlink(src: str, dst: str, *args, **kwargs) -> None:
 
 
 def view_copy(
-    src: str, dst: str, view: "FilesystemView", spec: Optional["spack.spec.Spec"] = None
+    src: str, dst: str, view: "FilesystemView", spec: Optional[spack.spec.Spec] = None
 ) -> None:
     """
     Copy a file from src to dst.
@@ -185,7 +185,7 @@ class FilesystemView:
         self.link_type = link_type
         self._link = function_for_link_type(link_type)
 
-    def link(self, src: str, dst: str, spec: Optional["spack.spec.Spec"] = None) -> None:
+    def link(self, src: str, dst: str, spec: Optional[spack.spec.Spec] = None) -> None:
         self._link(src, dst, self, spec)
 
     def add_specs(self, *specs, **kwargs):
