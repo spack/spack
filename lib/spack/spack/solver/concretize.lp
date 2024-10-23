@@ -1098,7 +1098,9 @@ error(100, "{0} and {1} cannot both propagate variant '{2}'", SourceNode1, Sourc
 error(100, "Cannot propagate the variant '{0}' from the package: {1} because package: {2} is set to exclude it", Variant, SourceNode, PackageNode) :- % TODO: Rikki Write a better msg later
   variant_is_propagated(SourceNode, Variant),
   attr("variant_set", PackageNode, Variant, _),
-  depends_on(PackageNode, SourceNode).
+  depends_on(PackageNode, SourceNode),
+  node_has_variant(PackageNode, Variant, VariantID),
+  not variant_type(VariantID, "multi").
 
 %----
 % Flags
