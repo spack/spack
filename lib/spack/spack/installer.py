@@ -138,13 +138,18 @@ class InstallStatus:
         self.pkg_num: int = 0
         self.pkg_count: int = self.counter.total([pkg.spec for pkg in packages])
         self.pkg_ids: Set[str] = set()
+        # TODO: Still need to better track what has been visited, etc. so
+        # TODO: not duplicating (or appearing to re-assign) package numbers.
 
     def next_pkg(self, pkg: "spack.package_base.PackageBase"):
         pkg_id = package_id(pkg.spec)
 
         if pkg_id not in self.pkg_ids:
-            self.pkg_num += 1
+            #self.pkg_num += 1
             self.pkg_ids.add(pkg_id)
+            #visited = max(len(self.pkg_ids), self.counter.total([pkg.spec]))
+            #self.pkg_num = self.pkg_count - visited
+            self.pkg_num = max(len(self.pkg_ids), self.counter.total([pkg.spec]))
 
     def set_term_title(self, text: str):
         if not sys.stdout.isatty():
@@ -156,7 +161,7 @@ class InstallStatus:
     def get_progress(self) -> str:
         # TODO/TLD: Per discussion, this should be reporting the package's
         # TODO/TLD: relative location in the DAG, not sequential number
-        return f"[{self.pkg_num}/{self.pkg_count}]"
+        return f"{self.pkg_num}/{self.pkg_count}"
 
 
 class TermStatusLine:
@@ -337,7 +342,7 @@ def _print_installed_pkg(message: str, install_status: InstallStatus) -> None:
         install_status: installation status tracker
     """
     report_status = spack.config.get("config:install_status", True)
-    pre = "[+]" if not report_status else install_status.get_progress()
+    pre = "[+]" if not report_status else f"[+{install_status.get_progress()}]"
 
     if tty.msg_enabled():
         print(colorize(f"@*g{pre}@.") + spack.util.path.debug_padded_filter(message))
