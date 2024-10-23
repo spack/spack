@@ -2242,7 +2242,7 @@ class PackageInstaller:
         if failed_build_requests or missing:
             for _, pkg_id, err in failed_build_requests:
                 tty.error(f"{pkg_id}: {err}")
-                if spack.error.debug:
+                if spack.error.SHOW_BACKTRACE:
                     # note: in python 3.10+ this can just be print_exception(err)
                     traceback.print_exception(type(err), err, err.__traceback__)
 
