@@ -1506,12 +1506,10 @@ class Database:
                 return []
             matching_hashes = {hash_key: matching_hashes[hash_key]}
 
-        # Abstract specs require more work -- currently we test against everything.
         results = []
         start_date = start_date or datetime.datetime.min
         end_date = end_date or datetime.datetime.max
 
-        # save specs whose name doesn't match for last, to avoid a virtual check
         deferred = []
         for rec in matching_hashes.values():
             if origin and not (origin == rec.origin):
