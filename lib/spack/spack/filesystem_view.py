@@ -33,6 +33,7 @@ from llnl.util.symlink import symlink
 from llnl.util.tty.color import colorize
 
 import spack.config
+import spack.directory_layout
 import spack.paths
 import spack.projections
 import spack.relocate
@@ -156,15 +157,6 @@ class FilesystemView:
     This can be circumvented by loading all needed modules into a common
     directory structure.
     """
-
-    layout: "spack.directory_layout.DirectoryLayout"
-    projections: Dict
-    ignore_conflicts: bool
-    verbose: bool
-    link_type: str
-
-    _root: str
-    _link: LinkCallbackType
 
     def __init__(
         self,
