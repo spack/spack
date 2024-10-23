@@ -175,7 +175,15 @@ class BuildcacheBootstrapper(Bootstrapper):
             query = spack.binary_distribution.BinaryCacheQuery(all_architectures=True)
             for match in spack.store.find([f"/{pkg_hash}"], multiple=False, query_fn=query):
                 spack.binary_distribution.install_root_node(
-                    match, unsigned=True, force=True, sha256=pkg_sha256
+                    # allow_missing is true since when bootstrapping clingo we truncate runtime
+                    # deps such as gcc-runtime, since we link libstdc++ statically, and the other
+                    # further runtime deps are loaded by the Python interpreter. This just silences
+                    # warnings about missing dependencies.
+                    match,
+                    unsigned=True,
+                    force=True,
+                    sha256=pkg_sha256,
+                    allow_missing=True,
                 )
 
     def _install_and_test(
