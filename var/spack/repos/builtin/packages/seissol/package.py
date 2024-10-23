@@ -187,8 +187,8 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("asagi +mpi +mpi3", when="+asagi")
 
-    depends_on("easi ~python ~asagi jit=impalajit,lua", when="~asagi")
-    depends_on("easi ~python +asagi jit=impalajit,lua", when="+asagi")
+    depends_on("easi ~asagi jit=impalajit,lua", when="~asagi")
+    depends_on("easi +asagi jit=impalajit,lua", when="+asagi")
 
     depends_on("intel-mkl threads=none", when="gemm_tools_list=MKL")
     depends_on("blis threads=none", when="gemm_tools_list=BLIS")
