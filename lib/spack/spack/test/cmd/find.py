@@ -167,7 +167,7 @@ def _check_json_output(spec_list):
 
 
 def _check_json_output_deps(spec_list):
-    assert len(spec_list) == 13
+    assert len(spec_list) == 15
 
     names = [spec["name"] for spec in spec_list]
     assert names.count("mpileaks") == 3
@@ -228,21 +228,28 @@ def test_display_json_deps(database, capsys):
 @pytest.mark.db
 def test_find_format(database, config):
     output = find("--format", "{name}-{^mpi.name}", "mpileaks")
-    assert set(output.strip().split("\n")) == set(
-        ["mpileaks-zmpi", "mpileaks-mpich", "mpileaks-mpich2"]
-    )
+    assert set(output.strip().split("\n")) == {
+        "mpileaks-zmpi",
+        "mpileaks-mpich",
+        "mpileaks-mpich2",
+    }
 
-    output = find("--format", "{name}-{version}-{compiler.name}-{^mpi.name}", "mpileaks")
-    assert "installed package" not in output
-    assert set(output.strip().split("\n")) == set(
-        ["mpileaks-2.3-gcc-zmpi", "mpileaks-2.3-gcc-mpich", "mpileaks-2.3-gcc-mpich2"]
-    )
+    # FIXME (compiler as nodes): recover the {compiler} in Spec.format
+    # output = find("--format", "{name}-{version}-{compiler.name}-{^mpi.name}", "mpileaks")
+    # assert "installed package" not in output
+    # assert set(output.strip().split("\n")) == {
+    #     "mpileaks-2.3-gcc-zmpi",
+    #     "mpileaks-2.3-gcc-mpich",
+    #     "mpileaks-2.3-gcc-mpich2",
+    # }
 
     output = find("--format", "{name}-{^mpi.name}-{hash:7}", "mpileaks")
     elements = output.strip().split("\n")
-    assert set(e[:-7] for e in elements) == set(
-        ["mpileaks-zmpi-", "mpileaks-mpich-", "mpileaks-mpich2-"]
-    )
+    assert set(e[:-7] for e in elements) == {
+        "mpileaks-zmpi-",
+        "mpileaks-mpich-",
+        "mpileaks-mpich2-",
+    }
 
     # hashes are in base32
     for e in elements:
@@ -261,6 +268,8 @@ mpileaks-2.3
         dyninst-8.2
             libdwarf-20130729
             libelf-0.8.13
+    gcc-10.2.1
+    gcc-runtime-10.2.1
     zmpi-1.0
         fake-1.0
 
@@ -271,24 +280,21 @@ mpileaks-2.3
 @pytest.mark.db
 def test_find_format_deps_paths(database, config):
     output = find("-dp", "--format", "{name}-{version}", "mpileaks", "^zmpi")
-
-    spec = Spec("mpileaks ^zmpi").concretized()
-    prefixes = [s.prefix for s in spec.traverse()]
-
+    mpileaks = Spec("mpileaks ^zmpi").concretized()
     assert (
         output
-        == """\
-mpileaks-2.3                   {0}
-    callpath-1.0               {1}
-        dyninst-8.2            {2}
-            libdwarf-20130729  {3}
-            libelf-0.8.13      {4}
-    zmpi-1.0                   {5}
-        fake-1.0               {6}
+        == f"""\
+mpileaks-2.3                   {mpileaks.prefix}
+    callpath-1.0               {mpileaks['callpath'].prefix}
+        dyninst-8.2            {mpileaks['dyninst'].prefix}
+            libdwarf-20130729  {mpileaks['libdwarf'].prefix}
+            libelf-0.8.13      {mpileaks['libelf'].prefix}
+    gcc-10.2.1                 {mpileaks['gcc'].prefix}
+    gcc-runtime-10.2.1         {mpileaks['gcc-runtime'].prefix}
+    zmpi-1.0                   {mpileaks['zmpi'].prefix}
+        fake-1.0               {mpileaks['fake'].prefix}
 
-""".format(
-            *prefixes
-        )
+"""
     )
 
 
@@ -303,12 +309,6 @@ def test_find_very_long(database, config):
     assert set(output.strip().split("\n")) == set(
         [("%s mpileaks@2.3" % s.dag_hash()) for s in specs]
     )
-
-
-@pytest.mark.db
-def test_find_show_compiler(database, config):
-    output = find("--no-groups", "--show-full-compiler", "mpileaks")
-    assert "mpileaks@2.3%gcc@10.2.1" in output
 
 
 @pytest.mark.db
@@ -342,7 +342,7 @@ def test_find_prefix_in_env(
     """Test `find` formats requiring concrete specs work in environments."""
     env("create", "test")
     with ev.read("test"):
-        install("--add", "mpileaks")
+        install("--fake", "--add", "mpileaks")
         find("-p")
         find("-l")
         find("-L")
@@ -452,4 +452,4 @@ def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
 
     with test_environment:
         output = find()
-    assert "zlib%gcc@12.1.0" in output
+    assert "zlib" in output

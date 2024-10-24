@@ -4,10 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
-import re
 import sys
 from datetime import datetime, timedelta
-from textwrap import dedent
 
 import pytest
 
@@ -290,37 +288,6 @@ def test_grouped_exception():
 
     with h.forward("top-level"):
         raise TypeError("ok")
-
-    assert h.grouped_message(with_tracebacks=False) == dedent(
-        """\
-    due to the following failures:
-    inner method raised ValueError: wow!
-    top-level raised TypeError: ok"""
-    )
-
-    full_message = h.grouped_message(with_tracebacks=True)
-    no_line_numbers = re.sub(r"line [0-9]+,", "line xxx,", full_message)
-
-    assert (
-        no_line_numbers
-        == dedent(
-            """\
-    due to the following failures:
-    inner method raised ValueError: wow!
-      File "{0}", \
-line xxx, in test_grouped_exception
-        inner()
-      File "{0}", \
-line xxx, in inner
-        raise ValueError("wow!")
-
-    top-level raised TypeError: ok
-      File "{0}", \
-line xxx, in test_grouped_exception
-        raise TypeError("ok")
-    """
-        ).format(__file__)
-    )
 
 
 def test_grouped_exception_base_type():

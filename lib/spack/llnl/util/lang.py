@@ -11,6 +11,7 @@ import os
 import re
 import sys
 import traceback
+import warnings
 from datetime import datetime, timedelta
 from typing import Callable, Iterable, List, Tuple, TypeVar
 
@@ -914,6 +915,21 @@ def ensure_last(lst, *elements):
         lst.append(lst.pop(lst.index(elt)))
 
 
+class Const:
+    """Class level constant, raises when trying to set the attribute"""
+
+    __slots__ = ["value"]
+
+    def __init__(self, value):
+        self.value = value
+
+    def __get__(self, instance, owner):
+        return self.value
+
+    def __set__(self, instance, value):
+        raise TypeError(f"Const value does not support assignment [value={self.value}]")
+
+
 class TypedMutableSequence(collections.abc.MutableSequence):
     """Base class that behaves like a list, just with a different type.
 
@@ -973,11 +989,8 @@ class GroupedExceptionHandler:
     def grouped_message(self, with_tracebacks: bool = True) -> str:
         """Print out an error message coalescing all the forwarded errors."""
         each_exception_message = [
-            "{0} raised {1}: {2}{3}".format(
-                context,
-                exc.__class__.__name__,
-                exc,
-                "\n{0}".format("".join(tb)) if with_tracebacks else "",
+            "\n\t{0} raised {1}: {2}\n{3}".format(
+                context, exc.__class__.__name__, exc, f"\n{''.join(tb)}" if with_tracebacks else ""
             )
             for context, exc, tb in self.exceptions
         ]
@@ -1018,3 +1031,49 @@ class classproperty:
 
     def __get__(self, instance, owner):
         return self.callback(owner)
+
+
+class DeprecatedProperty:
+    """Data descriptor to error or warn when a deprecated property is accessed.
+
+    Derived classes must define a factory method to return an adaptor for the deprecated
+    property, if the descriptor is not set to error.
+    """
+
+    __slots__ = ["name"]
+
+    #: 0 - Nothing
+    #: 1 - Warning
+    #: 2 - Error
+    error_lvl = 0
+
+    #: Whether to add tracebacks to warnings and errors
+    traceback = True
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+
+        if self.error_lvl == 1:
+            msg = f"accessing the '{self.name}' property of '{instance}', which is deprecated"
+            warnings.warn(msg)
+            if self.traceback:
+                traceback.print_stack()
+        elif self.error_lvl == 2:
+            msg = f"cannot access the '{self.name}' attribute of '{instance}'"
+            if self.traceback:
+                traceback.print_stack()
+            raise AttributeError(msg)
+
+        return self.factory(instance, owner)
+
+    def __set__(self, instance, value):
+        raise TypeError(
+            f"the deprecated property '{self.name}' of '{instance}' does not support assignment"
+        )
+
+    def factory(self, instance, owner):
+        raise NotImplementedError("must be implemented by derived classes")

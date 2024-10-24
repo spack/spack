@@ -55,6 +55,7 @@ from llnl.string import plural
 
 import spack.builder
 import spack.config
+import spack.deptypes
 import spack.fetch_strategy
 import spack.patch
 import spack.repo
@@ -1010,7 +1011,14 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                 #     depends_on('foo+bar ^fee+baz')
                 #
                 # but we'd like to have two dependencies listed instead.
-                nested_dependencies = dep.spec.dependencies()
+                nested_dependencies = dep.spec.edges_to_dependencies()
+                # Filter out pure build dependencies, like:
+                #
+                #     depends_on('foo+bar%gcc')
+                #
+                nested_dependencies = [
+                    x for x in nested_dependencies if x.depflag != spack.deptypes.BUILD
+                ]
                 if nested_dependencies:
                     summary = f"{pkg_name}: nested dependency declaration '{dep.spec}'"
                     ndir = len(nested_dependencies) + 1

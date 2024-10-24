@@ -7,17 +7,23 @@ import re
 import shutil
 
 from spack.package import *
+from spack.pkg.builtin.llvm import LlvmDetection
 
 
-class LlvmAmdgpu(CMakePackage, CompilerPackage):
+class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
     """Toolkit for the construction of highly optimized compilers,
     optimizers, and run-time environments."""
 
     homepage = "https://github.com/ROCm/llvm-project"
     git = "https://github.com/ROCm/llvm-project.git"
     url = "https://github.com/ROCm/llvm-project/archive/rocm-6.2.0.tar.gz"
-    tags = ["rocm"]
+    tags = ["rocm", "compiler"]
     executables = [r"amdclang", r"amdclang\+\+", r"amdflang", r"clang.*", r"flang.*", "llvm-.*"]
+
+    link_paths = {"c": "rocmcc/amdclang", "cxx": "rocmcc/amdclang++", "fortran": "rocmcc/amdflang"}
+
+    stdcxx_libs = ("-lstdc++",)
+
     generator("ninja")
 
     maintainers("srekolam", "renjithravindrankannath", "haampie", "afzpatel")
@@ -206,6 +212,15 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         branch="amd-stg-open",
         when="@master",
     )
+
+    stdcxx_libs = ("-lstdc++",)
+
+    def _standard_flag(self, *, language, standard):
+        flags = {
+            "cxx": {"11": "-std=c++11", "14": "-std=c++14", "17": "-std=c++17"},
+            "c": {"99": "-std=c99", "11": "-std=c1x"},
+        }
+        return flags[language][standard]
 
     def cmake_args(self):
         llvm_projects = ["clang", "lld", "clang-tools-extra", "compiler-rt"]

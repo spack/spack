@@ -13,7 +13,7 @@ from spack.main import SpackCommand
 build_env = SpackCommand("build-env")
 
 
-@pytest.mark.parametrize("pkg", [("zlib",), ("zlib", "--")])
+@pytest.mark.parametrize("pkg", [("pkg-c",), ("pkg-c", "--")])
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
 def test_it_just_runs(pkg):
     build_env(*pkg)
@@ -39,7 +39,7 @@ _out_file = "env.out"
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
 def test_dump(shell_as, shell, tmpdir):
     with tmpdir.as_cwd():
-        build_env("--dump", _out_file, "zlib")
+        build_env("--dump", _out_file, "pkg-c")
         with open(_out_file) as f:
             if shell == "pwsh":
                 assert any(line.startswith("$Env:PATH") for line in f.readlines())
@@ -52,7 +52,7 @@ def test_dump(shell_as, shell, tmpdir):
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
 def test_pickle(tmpdir):
     with tmpdir.as_cwd():
-        build_env("--pickle", _out_file, "zlib")
+        build_env("--pickle", _out_file, "pkg-c")
         environment = pickle.load(open(_out_file, "rb"))
         assert isinstance(environment, dict)
         assert "PATH" in environment

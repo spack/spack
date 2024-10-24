@@ -26,7 +26,7 @@ from llnl.util.symlink import readlink, symlink
 
 import spack
 import spack.caches
-import spack.compilers
+import spack.compilers.config
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
@@ -137,7 +137,7 @@ spack:
 valid_environment_name_re = r"^\w[\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
-lockfile_format_version = 5
+lockfile_format_version = 6
 
 
 READER_CLS = {
@@ -146,6 +146,7 @@ READER_CLS = {
     3: spack.spec.SpecfileV2,
     4: spack.spec.SpecfileV3,
     5: spack.spec.SpecfileV4,
+    6: spack.spec.SpecfileV5,
 }
 
 
@@ -1641,7 +1642,7 @@ class Environment:
 
         # Ensure we have compilers in compilers.yaml to avoid that
         # processes try to write the config file in parallel
-        _ = spack.compilers.all_compilers_config(spack.config.CONFIG)
+        _ = spack.compilers.config.all_compilers_from(spack.config.CONFIG)
 
         # Early return if there is nothing to do
         if len(args) == 0:

@@ -55,9 +55,11 @@ packages:
           - "wrf%arm"
           - "wrf%gcc"
   all:
-    compiler: [gcc, arm, nvhpc, clang]
     providers:
       blas: [armpl-gcc, openblas]
+      c: [gcc, arm, nvhpc, llvm]
+      cxx: [gcc, arm, nvhpc, llvm]
+      fortran: [gcc, arm, nvhpc, llvm]
       fftw-api: [armpl-gcc, fftw]
       lapack: [armpl-gcc, openblas]
       mpi: [openmpi, mpich]

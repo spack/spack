@@ -124,14 +124,16 @@ packages:
         when: "%oneapi"
 
   all:
-    compiler: [oneapi, gcc]
     permissions:
       read: world
       write: user
     providers:
       blas: [intel-oneapi-mkl]
+      c: [intel-oneapi-compilers, gcc]
+      cxx: [intel-oneapi-compilers, gcc]
       daal: [intel-oneapi-dal]
       fftw-api: [intel-oneapi-mkl]
+      fortran: [intel-oneapi-compilers, gcc]
       ipp: [intel-oneapi-ipp]
       lapack: [intel-oneapi-mkl]
       mkl: [intel-oneapi-mkl]

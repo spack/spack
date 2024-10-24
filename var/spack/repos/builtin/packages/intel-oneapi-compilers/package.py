@@ -2,9 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
+import os.path
 import platform
+import warnings
 
 from spack.build_environment import dso_suffix
 from spack.package import *
@@ -270,15 +271,51 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         r"(?:(?:oneAPI DPC\+\+(?:\/C\+\+)? Compiler)|(?:\(IFORT\))|(?:\(IFX\))) (\S+)"
     )
 
+    debug_flags = ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"]
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"]
+
+    openmp_flag = "-fiopenmp"
+
+    link_paths = {
+        "c": os.path.join("oneapi", "icx"),
+        "cxx": os.path.join("oneapi", "icpx"),
+        "fortran": os.path.join("oneapi", "ifx"),
+    }
+
+    required_libs = [
+        "libirc",
+        "libifcore",
+        "libifcoremt",
+        "libirng",
+        "libsvml",
+        "libintlc",
+        "libimf",
+        "libsycl",
+        "libOpenCL",
+    ]
+
+    stdcxx_libs = ("-cxxlib",)
+
+    provides("c", "cxx", "fortran")
+
+    def _standard_flag(self, *, language, standard):
+        flags = {
+            "cxx": {
+                "11": "-std=c++11",
+                "14": "-std=c++14",
+                "17": "-std=c++17",
+                "20": "-std=c++20",
+            },
+            "c": {"99": "-std=c99", "11": "-std=c1x"},
+        }
+        return flags[language][standard]
+
     # See https://github.com/spack/spack/issues/39252
     depends_on("patchelf@:0.17", type="build", when="@:2024.1")
     # Add the nvidia variant
     variant("nvidia", default=False, description="Install NVIDIA plugin for OneAPI")
     conflicts("@:2022.2.1", when="+nvidia", msg="Codeplay NVIDIA plugin requires newer release")
-    # TODO: effectively gcc is a direct dependency of intel-oneapi-compilers, but we
-    # cannot express that properly. For now, add conflicts for non-gcc compilers
-    # instead.
-    requires("%gcc", msg="intel-oneapi-compilers must be installed with %gcc")
+    depends_on("gcc", type="run")
 
     for v in versions:
         version(v["version"], expand=False, **v["cpp"])
@@ -340,6 +377,31 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         env.set("CXX", self._llvm_bin.icpx)
         env.set("F77", self._llvm_bin.ifx)
         env.set("FC", self._llvm_bin.ifx)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        super().setup_dependent_build_environment(env, dependent_spec)
+        # workaround bug in icpx driver where it requires sycl-post-link is on the PATH
+        # It is located in the same directory as the driver. Error message:
+        #   clang++: error: unable to execute command:
+        #   Executable "sycl-post-link" doesn't exist!
+        # also ensures that shared objects and libraries required by the compiler,
+        # e.g. libonnx, can be found succesfully
+        # due to a fix, this is no longer required for OneAPI versions >= 2024.2
+        bin_dir = os.path.dirname(self.cxx)
+        lib_dir = os.path.join(os.path.dirname(bin_dir), "lib")
+        if self.cxx and self.spec.satisfies("%oneapi@:2024.1"):
+            env.prepend_path("PATH", bin_dir)
+            env.prepend_path("LD_LIBRARY_PATH", lib_dir)
+
+        # 2024 release bumped the libsycl version because of an ABI
+        # change, 2024 compilers are required.  You will see this
+        # error:
+        #
+        # /usr/bin/ld: warning: libsycl.so.7, needed by ...., not found
+        if self.spec.satisfies("%oneapi@:2023"):
+            for c in ["dnn"]:
+                if self.spec.satisfies(f"^intel-oneapi-{c}@2024:"):
+                    warnings.warn(f"intel-oneapi-{c}@2024 SYCL APIs requires %oneapi@2024:")
 
     def install(self, spec, prefix):
         # Copy instead of install to speed up debugging
@@ -480,7 +542,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         )
         pkg("*").depends_on(
             f"intel-oneapi-runtime@{str(spec.version)}:",
-            when=f"%{str(spec)}",
+            when=f"^[deptypes=build] {spec.name}@{spec.versions}",
             type="link",
             description=f"If any package uses %{str(spec)}, "
             f"it depends on intel-oneapi-runtime@{str(spec.version)}:",
@@ -489,11 +551,43 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         for fortran_virtual in ("fortran-rt", "libifcore@5"):
             pkg("*").depends_on(
                 fortran_virtual,
-                when=f"%{str(spec)}",
-                languages=["fortran"],
+                when=f"^[virtuals=fortran deptypes=build] {spec.name}@{spec.versions}",
                 type="link",
                 description=f"Add a dependency on 'libifcore' for nodes compiled with "
                 f"{str(spec)} and using the 'fortran' language",
             )
         # The version of intel-oneapi-runtime is the same as the %oneapi used to "compile" it
-        pkg("intel-oneapi-runtime").requires(f"@={str(spec.version)}", when=f"%{str(spec)}")
+        pkg("intel-oneapi-runtime").requires(
+            f"@{str(spec.versions)}", when=f"^[deptypes=build] {spec.name}@{spec.versions}"
+        )
+
+        # If a node used %intel-oneapi=runtime@X.Y its dependencies must use @:X.Y
+        # (technically @:X is broader than ... <= @=X but this should work in practice)
+        pkg("*").propagate(
+            f"intel-oneapi-compilers@:{str(spec.version)}",
+            when=f"^[deptypes=build] {spec.name}@{spec.versions}",
+        )
+
+    @property
+    def cc(self):
+        msg = "cannot retrieve C compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes["compilers"].get("c", None)
+        raise NotImplementedError("FIXE (compiler as nodes): missing spack installed package")
+
+    @property
+    def cxx(self):
+        msg = "cannot retrieve C++ compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes["compilers"].get("cxx", None)
+        raise NotImplementedError("FIXE (compiler as nodes): missing spack installed package")
+
+    @property
+    def fortran(self):
+        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes["compilers"].get("fortran", None)
+        raise NotImplementedError("FIXE (compiler as nodes): missing spack installed package")
