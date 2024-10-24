@@ -320,6 +320,8 @@ class CMakeBuilder(BaseBuilder):
     #: Callback names for build-time test
     build_time_test_callbacks = ["check"]
 
+    dependency_args = []
+
     @property
     def archive_files(self):
         """Files to archive for packages based on CMake"""
@@ -359,13 +361,9 @@ class CMakeBuilder(BaseBuilder):
     def setup_dependent_cmake_package(module, dependent_spec, *propegated_args):
         """Helper method to propegate required CMake cache definitions to dependent
         packages"""
-        if CMakeBuilder in type(dependent_spec.package.builder).__mro__:
-            dependent_std_args_stub = type(dependent_spec.package.builder).cmake_args
+        if dependent_spec.satisfies("build_system=cmake"):
+            dependent_spec.package.builder.dependency_args += propegated_args
 
-            def new_cmake_args(self):
-                return propegated_args + dependent_std_args_stub(self)
-
-            type(dependent_spec.package.builder).cmake_args = new_cmake_args
 
     @staticmethod
     def std_args(pkg, generator=None):
@@ -581,7 +579,7 @@ class CMakeBuilder(BaseBuilder):
         ):
             return
 
-        options = self.std_cmake_args
+        options = self.std_cmake_args + self.dependency_args
         options += self.cmake_args()
         options.append(os.path.abspath(self.root_cmakelists_dir))
         with fs.working_dir(self.build_directory, create=True):
