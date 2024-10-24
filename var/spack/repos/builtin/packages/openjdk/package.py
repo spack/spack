@@ -412,8 +412,7 @@ class Openjdk(Package):
         values=("system", "none"),
         multi=False,
         description=(
-            "symlink system certificates if requested, otherwise use"
-            " default package version"
+            "symlink system certs if requested, otherwise use default package version"
         ),
     )
 
