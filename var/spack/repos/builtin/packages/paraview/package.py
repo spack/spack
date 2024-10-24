@@ -229,6 +229,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("tbb", when="+tbb")
 
     depends_on("mpi", when="+mpi")
+    conflicts("mpi", when="~mpi")
 
     depends_on("qt@:4", when="@:5.2.0+qt")
     depends_on("qt+sql", when="+qt")
@@ -308,6 +309,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # and pre-5.9 is unable to handle that.
     depends_on("pugixml@:1.10", when="@:5.8")
     depends_on("pugixml", when="@5.9:")
+    # 5.13 uses 'remove_children': https://github.com/spack/spack/issues/47098
+    depends_on("pugixml@1.11:", when="@5.13:")
 
     # ParaView depends on cli11 due to changes in MR
     # https://gitlab.kitware.com/paraview/paraview/-/merge_requests/4951
@@ -609,11 +612,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         else:
             cmake_args.append("-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF")
 
+        cmake_args.append("-DPARAVIEW_USE_MPI:BOOL=%s" % variant_bool("+mpi"))
         if "+mpi" in spec:
-            mpi_args = [
-                "-DPARAVIEW_USE_MPI:BOOL=ON",
-                "-DMPIEXEC:FILEPATH=%s/bin/mpiexec" % spec["mpi"].prefix,
-            ]
+            mpi_args = ["-DMPIEXEC:FILEPATH=%s/bin/mpiexec" % spec["mpi"].prefix]
             if not sys.platform == "win32":
                 mpi_args.extend(
                     [
