@@ -179,7 +179,7 @@ def _env_create(
 # env activate
 #
 def env_activate_setup_parser(subparser):
-    """set the currently active environment"""
+    """set the active environment"""
     shells = subparser.add_mutually_exclusive_group()
     shells.add_argument(
         "--sh",
@@ -864,7 +864,7 @@ def env_depfile_setup_parser(subparser):
         "--generator",
         default="make",
         choices=("make",),
-        help="specify the depfile type (only support `make`)",
+        help="specify the depfile type (only supports `make`)",
     )
     subparser.add_argument(
         metavar="specs",
