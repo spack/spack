@@ -358,11 +358,11 @@ class CMakeBuilder(BaseBuilder):
         return args
 
     @staticmethod
-    def setup_dependent_cmake_package(module, dependent_spec, *propegated_args):
-        """Helper method to propegate required CMake cache definitions to dependent
+    def setup_dependent_cmake_package(module, dependent_spec, *propagated_args):
+        """Helper method to propagate required CMake cache definitions to dependent
         packages"""
         if dependent_spec.satisfies("build_system=cmake"):
-            dependent_spec.package.builder.dependency_args += propegated_args
+            dependent_spec.package.builder.dependency_args += propagated_args
 
 
     @staticmethod
