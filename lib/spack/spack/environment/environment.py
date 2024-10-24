@@ -22,7 +22,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
 from llnl.util.link_tree import ConflictingSpecsError
-from llnl.util.symlink import readlink, symlink
+from llnl.util.symlink import islink, readlink, symlink
 
 import spack
 import spack.caches
@@ -1247,7 +1247,10 @@ class Environment:
 
     def destroy(self):
         """Remove this environment from Spack entirely."""
-        shutil.rmtree(self.path)
+        if islink(self.path):
+            os.unlink(self.path)
+        else:
+            shutil.rmtree(self.path)
 
     def update_stale_references(self, from_list=None):
         """Iterate over spec lists updating references."""

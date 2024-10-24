@@ -15,6 +15,7 @@ from typing import List, Optional
 import llnl.string as string
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.symlink import SymlinkError, symlink
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import cescape, colorize
 
@@ -50,6 +51,7 @@ subcommands = [
     "update",
     "revert",
     "depfile",
+    "track",
 ]
 
 
@@ -444,6 +446,40 @@ def env_deactivate(args):
     env_mods = spack.environment.shell.deactivate()
     cmds += env_mods.shell_modifications(args.shell)
     sys.stdout.write(cmds)
+
+
+#
+# env track
+#
+def env_track_setup_parser(subparser):
+    """track an environment from a directory in Spack"""
+    subparser.add_argument("-n", "--name", help="custom environment name")
+    subparser.add_argument("dir", help="path to environment")
+    arguments.add_common_arguments(subparser, ["yes_to_all"])
+
+
+def env_track(args):
+    src_path = os.path.abspath(args.dir)
+    if not ev.is_env_dir(src_path):
+        msg = f"cannot track environment {src_path} doesn't contain an environment"
+        raise ev.SpackEnvironmentError(msg)
+
+    if args.name:
+        name = args.name
+    else:
+        name = os.path.basename(src_path)
+
+    dst_path = ev.environment_dir_from_name(name, exists_ok=False)
+
+    try:
+        symlink(src_path, dst_path)
+    except SymlinkError as exc:
+        msg = f"cannot track the environment {src_path} unable to create symlink"
+        raise ev.SpackEnvironmentError(msg) from exc
+
+    tty.msg(f"Tracking environment in {src_path}")
+    tty.msg("You can activate this environment with:")
+    tty.msg(f"    spack env activate {name}")
 
 
 #
