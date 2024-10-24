@@ -46,6 +46,7 @@ class Nwchem(Package):
     depends_on("fortran", type="build")  # generated
 
     variant("openmp", default=False, description="Enables OpenMP support")
+    variant("f90allocatable", default=False, description="Use F90 allocatable instead of MA")
     variant(
         "armci",
         values=("mpi-ts", "mpi-pr", "armcimpi", "mpi3", "openib", "ofi"),
@@ -157,6 +158,9 @@ class Nwchem(Package):
 
         if spec.satisfies("+openmp"):
             args.extend(["USE_OPENMP=y"])
+
+        if spec.satisfies("+f90allocatable"):
+            args.extend(["USE_F90_ALLOCATABLE=1"])
 
         if self.spec.variants["armci"].value == "armcimpi":
             armcimpi = spec["armci"]
