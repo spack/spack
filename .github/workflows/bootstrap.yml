@@ -83,14 +83,12 @@ jobs:
     steps:
       - name: Setup macOS
         if: ${{ matrix.runner != 'ubuntu-latest' }}
+        run: brew install tree gawk
+      - name: Remove system executables
         run: |
-          brew install tree
-          # Remove GnuPG since we want to bootstrap it
-          sudo rm -rf /usr/local/bin/gpg
-      - name: Setup Ubuntu
-        if: ${{ matrix.runner == 'ubuntu-latest' }}
-        run: |
-          sudo rm -rf $(which gpg) $(which gpg2) $(which patchelf)
+          while [ -n "$(command -v gpg gpg2 patchelf)" ]; do
+            sudo rm $(command -v gpg gpg2 patchelf)
+          done
       - name: Checkout
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
         with:
@@ -112,14 +110,12 @@ jobs:
     steps:
       - name: Setup macOS
         if: ${{ matrix.runner != 'ubuntu-latest' }}
+        run: brew install tree
+      - name: Remove system executables
         run: |
-          brew install tree
-          # Remove GnuPG since we want to bootstrap it
-          sudo rm -rf /usr/local/bin/gpg
-      - name: Setup Ubuntu
-        if: ${{ matrix.runner == 'ubuntu-latest' }}
-        run: |
-          sudo rm -rf $(which gpg) $(which gpg2) $(which patchelf)
+          while [ -n "$(command -v gpg gpg2 patchelf)" ]; do
+            sudo rm $(command -v gpg gpg2 patchelf)
+          done
       - name: Checkout
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
         with:
