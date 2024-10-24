@@ -578,7 +578,7 @@ class Hdf5(CMakePackage):
 
         # AOCC does not support _Float16
         if spec.satisfies("@1.14.4: %aocc"):
-            args.append(self.define("HDF5_ENABLE_NONSTANDARD_FEATURE_FLOAT16", "OFF"))
+            args.append(self.define("HDF5_ENABLE_NONSTANDARD_FEATURE_FLOAT16", False))
 
         return args
 
