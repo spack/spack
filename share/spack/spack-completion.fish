@@ -1472,7 +1472,7 @@ complete -c spack -n '__fish_spack_using_command edit' -s N -l namespace -r -d '
 
 # spack env
 set -g __fish_spack_optspecs_spack_env h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a activate -d 'set the currently active environment'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a activate -d 'set the active environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a deactivate -d 'deactivate the active environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a create -d 'create a new environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a remove -d 'remove managed environment(s)'
@@ -1667,7 +1667,7 @@ complete -c spack -n '__fish_spack_using_command env depfile' -l use-buildcache 
 complete -c spack -n '__fish_spack_using_command env depfile' -s o -l output -r -f -a output
 complete -c spack -n '__fish_spack_using_command env depfile' -s o -l output -r -d 'write the depfile to FILE rather than to stdout'
 complete -c spack -n '__fish_spack_using_command env depfile' -s G -l generator -r -f -a make
-complete -c spack -n '__fish_spack_using_command env depfile' -s G -l generator -r -d 'specify the depfile type (only support `make`)'
+complete -c spack -n '__fish_spack_using_command env depfile' -s G -l generator -r -d 'specify the depfile type (only supports `make`)'
 
 # spack extensions
 set -g __fish_spack_optspecs_spack_extensions h/help l/long L/very-long d/deps p/paths s/show=
