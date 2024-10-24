@@ -147,13 +147,6 @@ class InstallStatus:
             visited = max(len(self.pkg_ids), self.counter.total([pkg.spec]), self.pkg_num + 1)
             self.pkg_num = visited
 
-    def set_term_title(self, text: str):
-        if not sys.stdout.isatty():
-            return
-
-        sys.stdout.write(f"\x1b]0;Spack: {text}\x07")
-        sys.stdout.flush()
-
     def get_progress(self) -> str:
         return f"[{self.pkg_num}/{self.pkg_count}]"
 
@@ -1256,6 +1249,15 @@ class RewireTask(Task):
         return ExecuteResult.SUCCESS
 
 
+def set_term_title(text: str):
+    """Output the given text to the terminal title bar."""
+    if not sys.stdout.isatty():
+        return
+
+    sys.stdout.write(f"\x1b]0;Spack: {text}\x07")
+    sys.stdout.flush()
+
+
 class PackageInstaller:
     """
     Class for managing the install process for a Spack instance based on a bottom-up DAG approach.
@@ -2065,7 +2067,7 @@ class PackageInstaller:
 
             pkg, pkg_id, spec = task.pkg, task.pkg_id, task.pkg.spec
             self.install_status.next_pkg(pkg)
-            self.install_status.set_term_title(f"Processing {pkg.name}")
+            set_term_title(f"Processing {pkg.name}")
             tty.debug(f"Processing {pkg_id}: task={task}")
             # Ensure that the current spec has NO uninstalled dependencies,
             # which is assumed to be reflected directly in its priority.
@@ -2115,7 +2117,7 @@ class PackageInstaller:
             # another process is likely (un)installing the spec or has
             # determined the spec has already been installed (though the
             # other process may be hung).
-            self.install_status.set_term_title(f"Acquiring lock for {pkg.name}")
+            set_term_title(f"Acquiring lock for {pkg.name}")
             term_status.add(pkg_id)
             ltype, lock = self._ensure_locked("write", pkg)
             if lock is None:
@@ -2138,7 +2140,7 @@ class PackageInstaller:
                 task.request.overwrite_time = time.time()
 
             # Determine state of installation artifacts and adjust accordingly.
-            self.install_status.set_term_title(f"Preparing {pkg.name}")
+            set_term_title(f"Preparing {pkg.name}")
             self._prepare_for_install(task)
 
             # Flag an already installed package
@@ -2179,7 +2181,7 @@ class PackageInstaller:
 
             # Proceed with the installation since we have an exclusive write
             # lock on the package.
-            self.install_status.set_term_title(f"Installing {pkg.name}")
+            set_term_title(f"Installing {pkg.name}")
             try:
                 action = self._install_action(task)
 
