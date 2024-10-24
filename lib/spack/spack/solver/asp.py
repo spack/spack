@@ -295,12 +295,11 @@ def remove_node(spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunc
 def all_libcs() -> Set[spack.spec.Spec]:
     """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
     libc determined from the current Python process if dynamically linked."""
-
-    libcs = {
-        CompilerPropertyDetector(c).default_libc()
-        for c in spack.compilers.config.all_compilers_from(spack.config.CONFIG)
-    }
-    libcs.discard(None)
+    libcs = set()
+    for c in spack.compilers.config.all_compilers_from(spack.config.CONFIG):
+        candidate = CompilerPropertyDetector(c).default_libc()
+        if candidate is not None:
+            libcs.add(candidate)
 
     if libcs:
         return libcs
@@ -970,9 +969,11 @@ def _external_config_with_implicit_externals(configuration):
     if not using_libc_compatibility():
         return packages_yaml
 
+    seen = set()
     for compiler in spack.compilers.config.all_compilers_from(configuration):
         libc = CompilerPropertyDetector(compiler).default_libc()
-        if libc:
+        if libc and libc not in seen:
+            seen.add(libc)
             entry = {"spec": f"{libc}", "prefix": libc.external_path}
             packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
     return packages_yaml
@@ -2200,8 +2201,6 @@ class SpackSolverSetup:
 
     def external_packages(self):
         """Facts on external packages, from packages.yaml and implicit externals."""
-        packages_yaml = _external_config_with_implicit_externals(spack.config.CONFIG)
-
         self.gen.h1("External packages")
         spec_filters = []
         concretizer_yaml = spack.config.get("concretizer")
@@ -2209,7 +2208,6 @@ class SpackSolverSetup:
         if isinstance(reuse_yaml, typing.Mapping):
             default_include = reuse_yaml.get("include", [])
             default_exclude = reuse_yaml.get("exclude", [])
-            libc_externals = list(all_libcs())
             for source in reuse_yaml.get("from", []):
                 if source["type"] != "external":
                     continue
@@ -2217,7 +2215,7 @@ class SpackSolverSetup:
                 include = source.get("include", default_include)
                 if include:
                     # Since libcs are implicit externals, we need to implicitly include them
-                    include = include + libc_externals
+                    include = include + self.libcs
                 exclude = source.get("exclude", default_exclude)
                 spec_filters.append(
                     SpecFilter(
@@ -2228,6 +2226,7 @@ class SpackSolverSetup:
                     )
                 )
 
+        packages_yaml = _external_config_with_implicit_externals(spack.config.CONFIG)
         for pkg_name, data in packages_yaml.items():
             if pkg_name == "all":
                 continue
@@ -3395,7 +3394,10 @@ def possible_compilers(*, configuration) -> List["spack.spec.Spec"]:
             continue
 
         result.add(c)
-    return sorted(result)
+
+    result = list(result)
+    result.sort()
+    return result
 
 
 class RuntimePropertyRecorder:
