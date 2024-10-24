@@ -151,25 +151,25 @@ def test_change_multiple_matches():
     assert any(x.intersects("%clang") for x in e.user_specs if x.name == "libelf")
 
 
-def test_env_add_nonexistant_path_fails():
+def test_env_track_nonexistant_path_fails():
     with pytest.raises(ev.SpackEnvironmentError, match=r"doesn't contain an environment"):
-        env("add", "path/does/not/exist")
+        env("track", "path/does/not/exist")
 
 
-def test_env_add_existing_env_fails():
-    env("create", "add_test")
+def test_env_track_existing_env_fails():
+    env("create", "track_test")
 
     with pytest.raises(ev.SpackEnvironmentError, match=r"environment already exists"):
-        env("add", "--name", "add_test", ev.environment_dir_from_name("add_test"))
+        env("track", "--name", "track_test", ev.environment_dir_from_name("track_test"))
 
 
-def test_env_add_valid(tmp_path):
+def test_env_track_valid(tmp_path):
     with fs.working_dir(str(tmp_path)):
         # create an independent environment
         env("create", "-d", ".")
 
-        # test adding environment into known store
-        env("add", "--name", "test1", ".")
+        # test tracking an environment in known store
+        env("track", "--name", "test1", ".")
 
         # test removing environment to ensure independent isn't deleted
         env("rm", "-y", "test1")
@@ -4149,7 +4149,7 @@ all: post-install
 include include.mk
 
 example/post-install/%: example/install/%
-	$(info post-install: $(HASH)) # noqa: W191,E101
+        $(info post-install: $(HASH)) # noqa: W191,E101
 
 post-install: $(addprefix example/post-install/,$(example/SPACK_PACKAGE_IDS))
 """
