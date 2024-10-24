@@ -456,8 +456,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # patch needs to be applied (again) AFTER autoreconf ran.
     def patch(self):
         spec = self.spec
-        if "+two_level_namespace" in spec and spec.satisfies("platform=darwin"):
-            print("Applying configure patch for two_level_namespace on MacOS")
+        if spec.satisfies("+two_level_namespace platform=darwin"):
             filter_file(r"-flat_namespace", "-commons,use_dylibs", "configure")
 
     variant(
@@ -1016,8 +1015,7 @@ with '-Wl,-commons,use_dylibs' and without
     def autoreconf(self, spec, prefix):
         perl = which("perl")
         perl("autogen.pl", "--force")
-        if "+two_level_namespace" in spec and spec.satisfies("platform=darwin"):
-            print("Re-applying configure patch for two_level_namespace on MacOS after autoreconf")
+        if spec.satisfies("+two_level_namespace platform=darwin"):
             filter_file(r"-flat_namespace", "-commons,use_dylibs", "configure")
 
     def configure_args(self):
