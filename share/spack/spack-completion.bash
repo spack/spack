@@ -415,7 +415,7 @@ _spack_add() {
 }
 
 _spack_arch() {
-    SPACK_COMPREPLY="-h --help -g --generic-target --known-targets -p --platform -o --operating-system -t --target -f --frontend -b --backend"
+    SPACK_COMPREPLY="-h --help -g --generic-target --known-targets --family --generic -p --platform -o --operating-system -t --target -f --frontend -b --backend"
 }
 
 _spack_audit() {
@@ -693,7 +693,7 @@ _spack_ci() {
 }
 
 _spack_ci_generate() {
-    SPACK_COMPREPLY="-h --help --output-file --copy-to --optimize --dependencies --buildcache-destination --prune-dag --no-prune-dag --check-index-only --artifacts-root"
+    SPACK_COMPREPLY="-h --help --output-file --optimize --dependencies --prune-dag --no-prune-dag --check-index-only --artifacts-root"
 }
 
 _spack_ci_rebuild_index() {

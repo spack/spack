@@ -2295,8 +2295,9 @@ class TestConcretize:
 
         spec = spack.spec.Spec("hdf5 ^zmpi").concretized()
 
-        assert spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
+        assert spec.satisfies(f"^mpich@{mpich_spec.version}")
         assert spec.build_spec.dependencies(name="zmpi", deptype="link")
+        assert spec["mpi"].build_spec.satisfies(mpich_spec)
         assert not spec.build_spec.satisfies(f"^mpich/{mpich_spec.dag_hash()}")
         assert not spec.dependencies(name="zmpi", deptype="link")
 

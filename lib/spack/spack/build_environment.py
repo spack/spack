@@ -91,7 +91,7 @@ from spack.util.environment import (
 )
 from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
-from spack.util.module_cmd import load_module, path_from_modules
+from spack.util.module_cmd import load_module
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -617,13 +617,11 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
     """
     module = ModuleChangePropagator(pkg)
 
-    if context == Context.BUILD:
-        module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
-        module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
-        module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
-
     jobs = spack.config.determine_number_of_jobs(parallel=pkg.parallel)
     module.make_jobs = jobs
+    if context == Context.BUILD:
+        module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
+        module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
     # TODO: make these build deps that can be installed if not found.
     module.make = MakeExecutable("make", jobs)
@@ -790,21 +788,6 @@ def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]
     """Return immediate or transitive dependencies (depending on the package) that need to be
     rpath'ed. If a package occurs multiple times, the newest version is kept."""
     return _get_rpath_deps_from_spec(pkg.spec, pkg.transitive_rpaths)
-
-
-def get_rpaths(pkg):
-    """Get a list of all the rpaths for a package."""
-    rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
-    deps = get_rpath_deps(pkg)
-    rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
-    rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
-    # Second module is our compiler mod name. We use that to get rpaths from
-    # module show output.
-    if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
-        mod_rpath = path_from_modules([pkg.compiler.modules[1]])
-        if mod_rpath:
-            rpaths.append(mod_rpath)
-    return list(dedupe(filter_system_paths(rpaths)))
 
 
 def load_external_modules(pkg):
@@ -1063,6 +1046,12 @@ class SetupContext:
                     # This includes runtime dependencies, also runtime deps of direct build deps.
                     set_package_py_globals(pkg, context=Context.RUN)
 
+        # Looping over the set of packages a second time
+        # ensures all globals are loaded into the module space prior to
+        # any package setup. This guarantees package setup methods have
+        # access to expected module level definitions such as "spack_cc"
+        for dspec, flag in chain(self.external, self.nonexternal):
+            pkg = dspec.package
             for spec in dspec.dependents():
                 # Note: some specs have dependents that are unreachable from the root, so avoid
                 # setting globals for those.
@@ -1071,6 +1060,15 @@ class SetupContext:
                 dependent_module = ModuleChangePropagator(spec.package)
                 pkg.setup_dependent_package(dependent_module, spec)
                 dependent_module.propagate_changes_to_mro()
+
+        if self.context == Context.BUILD:
+            pkg = self.specs[0].package
+            module = ModuleChangePropagator(pkg)
+            # std_cmake_args is not sufficiently static to be defined
+            # in set_package_py_globals and is deprecated so its handled
+            # here as a special case
+            module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
+            module.propagate_changes_to_mro()
 
     def get_env_modifications(self) -> EnvironmentModifications:
         """Returns the environment variable modifications for the given input specs and context.
@@ -1141,32 +1139,6 @@ class SetupContext:
                 env.prepend_path("PATH", bin_dir)
 
 
-def get_cmake_prefix_path(pkg):
-    # Note that unlike modifications_from_dependencies, this does not include
-    # any edits to CMAKE_PREFIX_PATH defined in custom
-    # setup_dependent_build_environment implementations of dependency packages
-    build_deps = set(pkg.spec.dependencies(deptype=("build", "test")))
-    link_deps = set(pkg.spec.traverse(root=False, deptype=("link")))
-    build_link_deps = build_deps | link_deps
-    spack_built = []
-    externals = []
-    # modifications_from_dependencies updates CMAKE_PREFIX_PATH by first
-    # prepending all externals and then all non-externals
-    for dspec in pkg.spec.traverse(root=False, order="post"):
-        if dspec in build_link_deps:
-            if dspec.external:
-                externals.insert(0, dspec)
-            else:
-                spack_built.insert(0, dspec)
-
-    ordered_build_link_deps = spack_built + externals
-    cmake_prefix_path_entries = []
-    for spec in ordered_build_link_deps:
-        cmake_prefix_path_entries.extend(spec.package.cmake_prefix_paths)
-
-    return filter_system_paths(cmake_prefix_path_entries)
-
-
 def _setup_pkg_and_run(
     serialized_pkg: "spack.subprocess_context.PackageInstallContext",
     function: Callable,
@@ -1222,7 +1194,7 @@ def _setup_pkg_and_run(
         # that the parent process is not going to read from it till we
         # are done with the child, so we undo Python's precaution.
         if input_multiprocess_fd is not None:
-            sys.stdin = os.fdopen(input_multiprocess_fd.fd)
+            sys.stdin = os.fdopen(input_multiprocess_fd.fd, closefd=False)
 
         pkg = serialized_pkg.restore()
 
@@ -1245,7 +1217,7 @@ def _setup_pkg_and_run(
         # objects can't be sent to the parent.
         exc_type = type(e)
         tb = e.__traceback__
-        tb_string = traceback.format_exception(exc_type, e, tb)
+        tb_string = "".join(traceback.format_exception(exc_type, e, tb))
 
         # build up some context from the offending package so we can
         # show that, too.
