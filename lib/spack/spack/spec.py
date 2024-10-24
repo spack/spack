@@ -2998,7 +2998,12 @@ class Spec:
         pkg_variants = pkg_cls.variant_names()
         # reserved names are variants that may be set on any package
         # but are not necessarily recorded by the package's class
-        not_existing = set(spec.variants) - (set(pkg_variants) | set(vt.reserved_names))
+        propagate_variants = [name for name, variant in spec.variants.items() if variant.propagate]
+
+        not_existing = set(spec.variants) - (
+            set(pkg_variants) | set(vt.reserved_names) | set(propagate_variants)
+        )
+
         if not_existing:
             raise vt.UnknownVariantError(
                 f"No such variant {not_existing} for spec: '{spec}'", list(not_existing)
@@ -3362,7 +3367,15 @@ class Spec:
             return False
 
         if not self.variants.satisfies(other.variants):
-            return False
+            if all(not other.variants[k].propagate for k in other.variants):
+                return False
+
+            if any(
+                other.variants[variant].propagate
+                and not self.variant_exists_in_dependency(variant)
+                for variant in other.variants
+            ):
+                return False
 
         if self.architecture and other.architecture:
             if not self.architecture.satisfies(other.architecture):
@@ -3473,6 +3486,21 @@ class Spec:
                     self._patches.append(patch)
 
         return self._patches
+
+    def variant_exists_in_dependency(self, variant):
+        if variant in self.package_class.variant_names():
+            return True
+
+        sorted_dependencies = sorted(
+            self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
+        )
+        sorted_dependencies = [d.cformat("{name}") for d in sorted_dependencies]
+
+        for dep in sorted_dependencies:
+            if variant in Spec(dep).package_class.variant_names():
+                return True
+
+        return False
 
     def _dup(self, other, deps: Union[bool, dt.DepTypes, dt.DepFlag] = True, cleardeps=True):
         """Copy the spec other into self.  This is an overwriting
