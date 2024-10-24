@@ -58,13 +58,18 @@ class Miniforge3(Package):
 
     @run_after("install")
     def patch_sbang(self):
-        # Conda replaces the full path to the Python executable with `/usr/bin/env python` if the full path exceeds
-        # 127 characters. This does however break `conda deactivate` because the wrong Python interpreter is used
-        # after activating an environment. The 127 character limit is not relevant in Spack as Spack will automatically
+        # Conda replaces the full path to the Python executable with `/usr/bin/env python`
+        # if the full path exceeds 127 characters. This does however break `conda deactivate`
+        # because the wrong Python interpreter is used after activating an environment.
+        # The 127 character limit is not relevant in Spack as Spack will automatically
         # use the `sbang` script to deal with the overly long sbang line.
-        filter_file(r"#!/usr/bin/env python", rf"#!{self.prefix.bin.python}", self.prefix.bin.conda)
+        filter_file(
+            r"#!/usr/bin/env python", rf"#!{self.prefix.bin.python}", self.prefix.bin.conda
+        )
         if "+mamba" in self.spec:
-            filter_file(r"#!/usr/bin/env python", rf"#!{self.prefix.bin.python}", self.prefix.bin.mamba)
+            filter_file(
+                r"#!/usr/bin/env python", rf"#!{self.prefix.bin.python}", self.prefix.bin.mamba
+            )
 
     def setup_run_environment(self, env):
         filename = self.prefix.etc.join("profile.d").join("conda.sh")
