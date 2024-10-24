@@ -263,11 +263,9 @@ def colorize(
                 f"Incomplete color format: '{match.group(0)}' in '{match.string}'"
             )
 
-        color_number_str = ""
-        color_number = colors.get(color_code)
-        if color_number:
-            color_number_str = f";{color_number}"
-        ansi_code = _escape(f"{styles[style]}{color_number_str}", color, enclose, zsh)
+        color_number = colors.get(color_code, "")
+        semi = ";" if color_number else ""
+        ansi_code = _escape(f"{styles[style]}{semi}{color_number}", color, enclose, zsh)
         if text:
             return f"{ansi_code}{text}{_escape(0, color, enclose, zsh)}"
         else:
