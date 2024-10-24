@@ -449,6 +449,17 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     patch("pmix_getline_pmix_version.patch", when="@5.0.0:5.0.3")
     patch("pmix_getline_pmix_version-prte.patch", when="@5.0.3")
 
+    # Patch to allow two-level namespace on a MacOS platform when building
+    # openmpi. Unfortuntately, the openmpi configure command has flat namespace
+    # hardwired in. In spack, this only works for openmpi up to versions 4,
+    # because for versions 5+ autoreconf is triggered (see below) and this
+    # patch needs to be applied (again) AFTER autoreconf ran.
+    def patch(self):
+        spec = self.spec
+        if "+two_level_namespace" in spec and spec.satisfies("platform=darwin"):
+            print("Applying configure patch for two_level_namespace on MacOS")
+            filter_file(r"-flat_namespace", "-commons,use_dylibs", "configure")
+
     variant(
         "fabrics",
         values=disjoint_sets(
@@ -570,6 +581,15 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant("internal-libevent", default=False, description="Use internal libevent")
     variant("openshmem", default=False, description="Enable building OpenSHMEM")
     variant("debug", default=False, description="Make debug build", when="build_system=autotools")
+
+    variant(
+        "two_level_namespace",
+        default=False,
+        description="""Build shared libraries and programs
+built with the mpicc/mpifort/etc. compiler wrappers
+with '-Wl,-commons,use_dylibs' and without
+'-Wl,-flat_namespace'.""",
+    )
 
     provides("mpi@:2.0", when="@:1.2")
     provides("mpi@:2.1", when="@1.3:1.7.2")
@@ -996,6 +1016,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     def autoreconf(self, spec, prefix):
         perl = which("perl")
         perl("autogen.pl", "--force")
+        if "+two_level_namespace" in spec and spec.satisfies("platform=darwin"):
+            print("Re-applying configure patch for two_level_namespace on MacOS after autoreconf")
+            filter_file(r"-flat_namespace", "-commons,use_dylibs", "configure")
 
     def configure_args(self):
         spec = self.spec
