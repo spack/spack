@@ -411,9 +411,7 @@ class Openjdk(Package):
         default="none",
         values=("system", "none"),
         multi=False,
-        description=(
-            "symlink system certs if requested, otherwise use default package version"
-        ),
+        description=("symlink system certs if requested, otherwise use default package version"),
     )
 
     provides("java@21", when="@21.0:21")
