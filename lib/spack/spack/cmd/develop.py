@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import shutil
+from copy import copy
 
 import llnl.util.tty as tty
 
@@ -45,6 +46,13 @@ def setup_parser(subparser):
 
     subparser.add_argument(
         "-f", "--force", help="remove any files or directories that block cloning source code"
+    )
+
+    subparser.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+        help="traverse edges of the graph to mark everything up to the root as a develop spec",
     )
 
     arguments.add_common_arguments(subparser, ["spec"])
@@ -123,6 +131,25 @@ def develop(parser, args):
 
     spec = specs[0]
 
+    if args.recursive:
+        concrete_specs = env.all_matching_specs(spec)
+        if not concrete_specs:
+            tty.msg(
+                "No matching specs found in the environment. "
+                "Recursive develop requires a concretized environment"
+            )
+        else:
+            for s in concrete_specs:
+                for parent in s.traverse_edges(direction="parents", root=True):
+
+                    parent_args = copy(args)
+                    parent_args.spec = parent.spec.format("{name}@{version}")
+                    parent_args.recursive = False
+
+                    tty.debug(f"Recursive develop for {parent_args.spec}")
+                    develop(parser, parent_args)
+            return
+
     version = spec.versions.concrete_range_as_version
     if not version:
         # look up the maximum version so infintiy versions are preferred for develop
@@ -155,6 +182,8 @@ def develop(parser, args):
                 msg += " Use `spack develop -f` to overwrite."
                 raise SpackError(msg)
 
+        # cloning can take a while and it's nice to get a message for the longer clones
+        tty.msg(f"Cloning source code for {spec}")
         _retrieve_develop_source(spec, abspath)
 
     tty.debug("Updating develop config for {0} transactionally".format(env.name))
