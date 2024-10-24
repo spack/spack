@@ -489,13 +489,17 @@ complete -c spack -n '__fish_spack_using_command add' -s l -l list-name -r -f -a
 complete -c spack -n '__fish_spack_using_command add' -s l -l list-name -r -d 'name of the list to add specs to'
 
 # spack arch
-set -g __fish_spack_optspecs_spack_arch h/help g/generic-target known-targets p/platform o/operating-system t/target f/frontend b/backend
+set -g __fish_spack_optspecs_spack_arch h/help g/generic-target known-targets family generic p/platform o/operating-system t/target f/frontend b/backend
 complete -c spack -n '__fish_spack_using_command arch' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command arch' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command arch' -s g -l generic-target -f -a generic_target
-complete -c spack -n '__fish_spack_using_command arch' -s g -l generic-target -d 'show the best generic target'
+complete -c spack -n '__fish_spack_using_command arch' -s g -l generic-target -d 'show the best generic target (deprecated)'
 complete -c spack -n '__fish_spack_using_command arch' -l known-targets -f -a known_targets
 complete -c spack -n '__fish_spack_using_command arch' -l known-targets -d 'show a list of all known targets and exit'
+complete -c spack -n '__fish_spack_using_command arch' -l family -f -a family
+complete -c spack -n '__fish_spack_using_command arch' -l family -d 'print generic ISA (x86_64, aarch64, ppc64le, ...)'
+complete -c spack -n '__fish_spack_using_command arch' -l generic -f -a generic
+complete -c spack -n '__fish_spack_using_command arch' -l generic -d 'print feature level (x86_64_v3, armv8.4a, ...)'
 complete -c spack -n '__fish_spack_using_command arch' -s p -l platform -f -a platform
 complete -c spack -n '__fish_spack_using_command arch' -s p -l platform -d 'print only the platform'
 complete -c spack -n '__fish_spack_using_command arch' -s o -l operating-system -f -a operating_system
@@ -951,19 +955,15 @@ complete -c spack -n '__fish_spack_using_command ci' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci' -s h -l help -d 'show this help message and exit'
 
 # spack ci generate
-set -g __fish_spack_optspecs_spack_ci_generate h/help output-file= copy-to= optimize dependencies buildcache-destination= prune-dag no-prune-dag check-index-only artifacts-root=
+set -g __fish_spack_optspecs_spack_ci_generate h/help output-file= optimize dependencies prune-dag no-prune-dag check-index-only artifacts-root=
 complete -c spack -n '__fish_spack_using_command ci generate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci generate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command ci generate' -l output-file -r -f -a output_file
 complete -c spack -n '__fish_spack_using_command ci generate' -l output-file -r -d 'pathname for the generated gitlab ci yaml file'
-complete -c spack -n '__fish_spack_using_command ci generate' -l copy-to -r -f -a copy_to
-complete -c spack -n '__fish_spack_using_command ci generate' -l copy-to -r -d 'path to additional directory for job files'
 complete -c spack -n '__fish_spack_using_command ci generate' -l optimize -f -a optimize
 complete -c spack -n '__fish_spack_using_command ci generate' -l optimize -d '(DEPRECATED) optimize the gitlab yaml file for size'
 complete -c spack -n '__fish_spack_using_command ci generate' -l dependencies -f -a dependencies
 complete -c spack -n '__fish_spack_using_command ci generate' -l dependencies -d '(DEPRECATED) disable DAG scheduling (use '"'"'plain'"'"' dependencies)'
-complete -c spack -n '__fish_spack_using_command ci generate' -l buildcache-destination -r -f -a buildcache_destination
-complete -c spack -n '__fish_spack_using_command ci generate' -l buildcache-destination -r -d 'override the mirror configured in the environment'
 complete -c spack -n '__fish_spack_using_command ci generate' -l prune-dag -f -a prune_dag
 complete -c spack -n '__fish_spack_using_command ci generate' -l prune-dag -d 'skip up-to-date specs'
 complete -c spack -n '__fish_spack_using_command ci generate' -l no-prune-dag -f -a prune_dag
