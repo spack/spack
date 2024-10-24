@@ -364,7 +364,6 @@ class CMakeBuilder(BaseBuilder):
         if dependent_spec.satisfies("build_system=cmake"):
             dependent_spec.package.builder.dependency_args += propagated_args
 
-
     @staticmethod
     def std_args(pkg, generator=None):
         """Computes the standard cmake arguments for a generic package"""
