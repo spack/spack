@@ -17,16 +17,16 @@ class Costo(CMakePackage):
     license("LGPL-3.0-or-later")
 
     version(
-        "0.0.4", tag="v0.0.4", commit="f9e3ee774a33cc3af566e338d542d7dd0ff36cea", preferred=True
+        "0.0.5", tag="v0.0.5", commit="6660d69a099fbb874385c0bac1f7e1cfed5111cc", preferred=True
     )
     version("develop", branch="devel")
-    version("master", branch="main", deprecated=True)
+    version("main", branch="main", deprecated=True)
 
     variant("shared", default=True, description="Build shared library")
     variant("tests", default=False, description="Enable testing")
 
     depends_on("mpi", type=all)
-    depends_on("python@3.0:", type=all)
+    depends_on("python@3.10:", type=all)
 
     depends_on("py-non-regression-test-tools", type="build")
     depends_on("py-pyvista", type="run")
