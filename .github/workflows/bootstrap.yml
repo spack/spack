@@ -43,8 +43,8 @@ jobs:
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
+          spack bootstrap disable github-actions-v0.6
           spack bootstrap disable github-actions-v0.5
-          spack bootstrap disable github-actions-v0.4
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -69,8 +69,8 @@ jobs:
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
+          spack bootstrap disable github-actions-v0.6
           spack bootstrap disable github-actions-v0.5
-          spack bootstrap disable github-actions-v0.4
           spack external find --not-buildable cmake bison
           spack -d solve zlib
           tree $HOME/.spack/bootstrap/store/
@@ -97,8 +97,8 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           spack solve zlib
+          spack bootstrap disable github-actions-v0.6
           spack bootstrap disable github-actions-v0.5
-          spack bootstrap disable github-actions-v0.4
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
@@ -130,15 +130,16 @@ jobs:
             3.10
             3.11
             3.12
+            3.13
       - name: Set bootstrap sources
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap disable github-actions-v0.4
+          spack bootstrap disable github-actions-v0.5
           spack bootstrap disable spack-install
       - name: Bootstrap clingo
         run: |
           set -e
-          for ver in '3.8' '3.9' '3.10' '3.11' '3.12' ; do
+          for ver in '3.8' '3.9' '3.10' '3.11' '3.12' '3.13'; do
             not_found=1
             ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
             if [[ -d "$ver_dir" ]] ; then
@@ -185,8 +186,8 @@ jobs:
       - name: Bootstrap clingo
         run: |
           ./share/spack/setup-env.ps1
+          spack bootstrap disable github-actions-v0.6
           spack bootstrap disable github-actions-v0.5
-          spack bootstrap disable github-actions-v0.4
           spack external find --not-buildable cmake bison
           spack -d solve zlib
           ./share/spack/qa/validate_last_exit.ps1

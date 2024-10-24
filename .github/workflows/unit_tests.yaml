@@ -170,8 +170,8 @@ jobs:
       run: |
         . share/spack/setup-env.sh
         spack bootstrap disable spack-install
-        spack bootstrap disable github-actions-v0.4
         spack bootstrap disable github-actions-v0.5
+        spack bootstrap disable github-actions-v0.6
         spack bootstrap status
         spack solve zlib
         spack unit-test --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml lib/spack/spack/test/concretize.py
