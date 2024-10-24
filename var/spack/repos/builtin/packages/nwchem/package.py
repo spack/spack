@@ -57,6 +57,7 @@ class Nwchem(Package):
         default=False,
         description="Enables rarely-used TCE features (CCSDTQ, CCSDTLR, EACCSD, IPCCSD, MRCC)",
     )
+    variant("tcecuda", default=False, description="Enable TCE CCSD(T) CUDA support")
     variant("fftw3", default=False, description="Link against the FFTW library")
     variant("libxc", default=False, description="Support additional functionals via libxc")
     variant(
@@ -86,6 +87,7 @@ class Nwchem(Package):
     depends_on("blas")
     depends_on("lapack")
     depends_on("mpi")
+    depends_on("cuda", when="+tcecuda")
     depends_on("armcimpi", when="armci=armcimpi")
     depends_on("libfabric", when="armci=ofi")
     depends_on("rdma-core", when="armci=openib")
@@ -154,6 +156,12 @@ class Nwchem(Package):
             args.extend(["EACCSD=y"])
             args.extend(["CCSDTLR=y"])
             args.extend(["CCSDTQ=y"])
+
+        if spec.satisfies("+tcecuda"):
+            args.extend(["TCE_CUDA=y"])
+            args.extend(["CUDA_INCLUDE=-I{0}".format(self.spec["cuda"].headers.directories[0])])
+            # args.extend(["CUDA_LIBS={0}".format(self.spec["cuda"].libs)])
+            args.extend(["CUDA_LIBS=-L{0} -lcudart".format(self.spec["cuda"].libs.directories[0])])
 
         if spec.satisfies("+openmp"):
             args.extend(["USE_OPENMP=y"])
