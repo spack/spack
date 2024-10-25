@@ -130,7 +130,7 @@ class InstallAction(enum.Enum):
     OVERWRITE = enum.auto()
 
 
-class InstallStatus:
+class InstallerStatus:
     """Installation status tracker and reporter."""
 
     def __init__(self, packages: List["spack.package_base.PackageBase"]):
@@ -139,9 +139,10 @@ class InstallStatus:
         self.pkg_ids: Set[str] = set()
         self.pkg_num: int = 0
 
-    def print_installed(self, pkg: "spack.package_base.PackageBase", message: str) -> None:
+    def set_installed(self, pkg: "spack.package_base.PackageBase", message: str) -> None:
         """
-        Output a message with the package installed indicator.
+        Flag package as installed and output the installation status if
+        enabled by config:install_status.
 
         Args:
             pkg: installed package
@@ -229,7 +230,7 @@ def _check_last_phase(pkg: "spack.package_base.PackageBase") -> None:
 
 
 def _handle_external_and_upstream(
-    pkg: "spack.package_base.PackageBase", explicit: bool, install_status: InstallStatus
+    pkg: "spack.package_base.PackageBase", explicit: bool, install_status: InstallerStatus
 ) -> bool:
     """
     Determine if the package is external or upstream and register it in the
@@ -247,7 +248,7 @@ def _handle_external_and_upstream(
     # consists in module file generation and registration in the DB.
     if pkg.spec.external:
         _process_external_package(pkg, explicit)
-        install_status.print_installed(pkg, f"{pkg.prefix} (external {package_id(pkg.spec)})")
+        install_status.set_installed(pkg, f"{pkg.prefix} (external {package_id(pkg.spec)})")
         return True
 
     if pkg.spec.installed_upstream:
@@ -255,7 +256,7 @@ def _handle_external_and_upstream(
             f"{package_id(pkg.spec)} is installed in an upstream Spack instance at "
             f"{pkg.spec.prefix}"
         )
-        install_status.print_installed(pkg, pkg.prefix)
+        install_status.set_installed(pkg, pkg.prefix)
 
         # This will result in skipping all post-install hooks. In the case
         # of modules this is considered correct because we want to retrieve
@@ -352,7 +353,7 @@ def _print_timer(pre: str, pkg_id: str, timer: timer.BaseTimer) -> None:
 
 def _install_from_cache(
     pkg: "spack.package_base.PackageBase",
-    install_status: InstallStatus,
+    install_status: InstallerStatus,
     explicit: bool,
     unsigned: Optional[bool] = False,
 ) -> bool:
@@ -381,7 +382,7 @@ def _install_from_cache(
 
     _write_timer_json(pkg, t, True)
     _print_timer(pre=_log_prefix(pkg.name), pkg_id=pkg_id, timer=t)
-    install_status.print_installed(pkg, pkg.spec.prefix)
+    install_status.set_installed(pkg, pkg.spec.prefix)
     spack.hooks.post_install(pkg.spec, explicit)
     return True
 
@@ -975,7 +976,7 @@ class Task:
         self.attempts = attempts
         self._update()
 
-    def execute(self, install_status: InstallStatus) -> ExecuteResult:
+    def execute(self, install_status: InstallerStatus) -> ExecuteResult:
         """Execute the work of this task.
 
         Args:
@@ -1234,14 +1235,14 @@ class RewireTask(Task):
                 install_args = self.request.install_args
                 unsigned = install_args.get("unsigned")
                 _process_binary_cache_tarball(self.pkg, explicit=self.explicit, unsigned=unsigned)
-                install_status.print_installed(self.pkg, self.pkg.prefix)
+                install_status.set_installed(self.pkg, self.pkg.prefix)
                 return ExecuteResult.SUCCESS
             except BaseException as e:
                 tty.error(f"Failed to rewire {self.pkg.spec} from binary. {e}")
                 self.status = oldstatus
                 return ExecuteResult.MISSING_BUILD_SPEC
         spack.rewiring.rewire_node(self.pkg.spec, self.explicit)
-        install_status.print_installed(self.pkg, self.pkg.prefix)
+        install_status.set_installed(self.pkg, self.pkg.prefix)
         return ExecuteResult.SUCCESS
 
 
@@ -1351,7 +1352,7 @@ class PackageInstaller:
         self.build_pq: List[Tuple[Tuple[int, int], Task]] = []
 
         # Installation status tracker
-        self.install_status: InstallStatus = InstallStatus(packages)
+        self.install_status: InstallerStatus = InstallerStatus(packages)
 
         # Mapping of unique package ids to task
         self.build_tasks: Dict[str, Task] = {}
@@ -2147,7 +2148,7 @@ class PackageInstaller:
                 if lock is not None:
                     self._update_installed(task)
                     path = spack.util.path.debug_padded_filter(pkg.prefix)
-                    self.install_status.print_installed(pkg, path)
+                    self.install_status.set_installed(pkg, path)
                 else:
                     # At this point we've failed to get a write or a read
                     # lock, which means another process has taken a write
@@ -2350,7 +2351,7 @@ class BuildProcessInstaller:
         self.pre = _log_prefix(pkg.name)
         self.pkg_id = package_id(pkg.spec)
 
-    def run(self, install_status: InstallStatus) -> bool:
+    def run(self, install_status: InstallerStatus) -> bool:
         """Main entry point from ``build_process`` to kick off install in child.
 
         Args:
@@ -2405,7 +2406,7 @@ class BuildProcessInstaller:
 
         print_install_test_log(self.pkg)
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
-        install_status.print_installed(self.pkg, self.pkg.prefix)
+        install_status.set_installed(self.pkg, self.pkg.prefix)
 
         # preserve verbosity across runs
         return self.echo
@@ -2514,7 +2515,7 @@ def build_process(pkg: "spack.package_base.PackageBase", install_args: dict) -> 
 
     """
     installer = BuildProcessInstaller(pkg, install_args)
-    install_status = install_args.get("install_status", InstallStatus([pkg]))
+    install_status = install_args.get("install_status", InstallerStatus([pkg]))
 
     # don't print long padded paths in executable debug output.
     with spack.util.path.filter_padding():
@@ -2563,7 +2564,7 @@ class OverwriteInstall:
         installer: PackageInstaller,
         database: spack.database.Database,
         task: Task,
-        install_status: InstallStatus,
+        install_status: InstallerStatus,
     ):
         self.installer = installer
         self.database = database
@@ -2579,7 +2580,6 @@ class OverwriteInstall:
         """
         try:
             with fs.replace_directory_transaction(self.task.pkg.prefix):
-                # self.installer._install_task(self.task, self.install_status)
                 self.installer._install_task(self.task)
         except fs.CouldNotRestoreDirectoryBackup as e:
             self.database.remove(self.task.pkg.spec)

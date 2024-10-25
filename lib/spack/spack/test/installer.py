@@ -145,7 +145,7 @@ def test_install_from_cache_errors(install_mockery):
 
     # Check when don't expect to install only from binary cache
     assert not inst._install_from_cache(
-        spec.package, inst.InstallStatus([spec.package]), explicit=True, unsigned=False
+        spec.package, inst.InstallerStatus([spec.package]), explicit=True, unsigned=False
     )
     assert not spec.package.installed_from_binary_cache
 
@@ -158,7 +158,7 @@ def test_install_from_cache_ok(install_mockery, monkeypatch):
     monkeypatch.setattr(spack.hooks, "post_install", _noop)
 
     assert inst._install_from_cache(
-        spec.package, inst.InstallStatus([spec.package]), explicit=True, unsigned=False
+        spec.package, inst.InstallerStatus([spec.package]), explicit=True, unsigned=False
     )
 
 
