@@ -1414,7 +1414,7 @@ def win_quote(quote_str: str) -> str:
     return quote_str
 
 
-def download_and_extract_artifacts(url, work_dir):
+def download_and_extract_artifacts(url, work_dir) -> str:
     """Look for gitlab artifacts.zip at the given url, and attempt to download
         and extract the contents into the given work_dir
 
@@ -1422,6 +1422,10 @@ def download_and_extract_artifacts(url, work_dir):
 
         url (str): Complete url to artifacts.zip file
         work_dir (str): Path to destination where artifacts should be extracted
+
+    Output:
+
+        Artifacts root path relative to the archive root
     """
     tty.msg(f"Fetching artifacts from: {url}\n")
 
@@ -1434,7 +1438,7 @@ def download_and_extract_artifacts(url, work_dir):
     opener = build_opener(HTTPHandler)
 
     request = Request(url, headers=headers)
-    request.get_method = lambda: "GET"
+    request.method = "GET"
 
     response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
     response_code = response.getcode()
@@ -1453,9 +1457,19 @@ def download_and_extract_artifacts(url, work_dir):
 
     zip_file = zipfile.ZipFile(artifacts_zip_path)
     zip_file.extractall(work_dir)
+
+    # Get the artifact root
+    artifact_root = ""
+    for f in zip_file.filelist:
+        if "spack.lock" in f.filename:
+            artifact_root = os.path.dirname(os.path.dirname(f.filename))
+            break
+
     zip_file.close()
 
     os.remove(artifacts_zip_path)
+
+    return artifact_root
 
 
 def get_spack_info():
@@ -1584,7 +1598,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
     """
     work_dir = os.path.realpath(work_dir)
     platform_script_ext = "ps1" if IS_WINDOWS else "sh"
-    download_and_extract_artifacts(url, work_dir)
+    artifact_root = download_and_extract_artifacts(url, work_dir)
 
     gpg_path = None
     if gpg_url:
@@ -1804,8 +1818,8 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
             "-v",
             ":".join(
                 [
-                    os.path.join(work_dir, "jobs_scratch_dir"),
-                    os.path.join(mount_as_dir, "jobs_scratch_dir"),
+                    os.path.join(work_dir, artifact_root),
+                    os.path.join(mount_as_dir, artifact_root),
                     "Z",
                 ]
             ),
@@ -2228,7 +2242,7 @@ hash={spec.dag_hash()} arch={spec.architecture} ({self.build_group})"
         enc_data = json.dumps(data).encode("utf-8")
 
         request = Request(url, data=enc_data, headers=headers)
-        request.get_method = lambda: "PUT"
+        request.method = "PUT"
 
         response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
         response_code = response.getcode()
