@@ -488,9 +488,8 @@ class Openjdk(Package):
         install_tree(top_dir, prefix)
 
     @run_after("install")
+    @when("certs=system")
     def link_system_certs(self):
-        if self.spec.variants["certs"].value != "system":
-            return
 
         system_dirs = [
             # CentOS, Fedora, RHEL
