@@ -2474,7 +2474,7 @@ def find_libraries(
     #   On Windows search for static libs with name suffix _static
 
     # List of libraries we are searching with suffixes
-    libraries.extend(["{0}{1}".format(lib, suffix) for lib in libraries for suffix in suffixes])
+    libraries = (["{0}{1}".format(lib, suffix) for lib in libraries for suffix in suffixes])
     libraries.extend(["{0}.{1}".format(lib, ext) for lib in libraries for ext in extensions])
     libraries.extend(
         [
