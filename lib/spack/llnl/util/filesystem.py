@@ -2462,9 +2462,10 @@ def find_libraries(
     prefixes = []
     if not sys.platform == "win32":
         prefixes.append("lib")
-    suffixes = []
     if sys.platform == "win32" and not shared:
-        suffixes = ["_static"]
+        libraries.extend(
+            ["{0}{1}".format(lib, suffix) for lib in libraries for suffix in ["_static"]]
+        )
 
     # Search heuristics (example find_libraries(z))
     #   Search for literal name provided to find_libraries (i.e. z)
@@ -2474,8 +2475,7 @@ def find_libraries(
     #   On Windows search for static libs with name suffix _static
 
     # List of libraries we are searching with suffixes
-    libraries = (["{0}{1}".format(lib, suffix) for lib in libraries for suffix in suffixes])
-    libraries.extend(["{0}.{1}".format(lib, ext) for lib in libraries for ext in extensions])
+    libraries = ["{0}.{1}".format(lib, ext) for lib in libraries for ext in extensions]
     libraries.extend(
         [
             "{0}{1}".format(prefix, lib)
