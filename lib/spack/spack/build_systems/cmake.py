@@ -17,6 +17,7 @@ from llnl.util.lang import stable_partition
 import spack.builder
 import spack.deptypes as dt
 import spack.error
+import spack.config
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec

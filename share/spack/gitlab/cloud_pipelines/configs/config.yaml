@@ -3,12 +3,12 @@ config:
   shared_linking:
     missing_library_policy: warn
   install_tree:
-    root: /home/software/spack
+    # root: /home/software/spack
     padded_length: 256
     projections:
       all: "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"
-  compiler_launcher:
-    cxx: sccache
-    cc: sccache
-    fortran: sccache
-    rustc: sccache
+  compiler_launcher: ccache
+  # cxx: sccache
+  # cc: sccache
+  # fortran: sccache
+  # rustc: sccache

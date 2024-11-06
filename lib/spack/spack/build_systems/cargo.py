@@ -5,6 +5,7 @@
 import llnl.util.filesystem as fs
 
 import spack.builder
+import spack.config
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec
