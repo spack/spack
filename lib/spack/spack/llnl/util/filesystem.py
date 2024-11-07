@@ -37,6 +37,8 @@ from typing import (
     Union,
 )
 
+from spack.vendor.typing_extensions import Literal
+
 from spack.llnl.path import path_to_os_path, sanitize_win_longpath, system_path_filter
 from spack.llnl.util import lang, tty
 from spack.llnl.util.lang import dedupe, fnmatch_translate_multiple, memoized
@@ -2129,7 +2131,13 @@ class HeaderList(FileList):
         self._macro_definitions.append(macro)
 
 
-def find_headers(headers: Union[str, List[str]], root: str, recursive: bool = False) -> HeaderList:
+def find_headers(
+    headers: Union[str, List[str]],
+    root: str,
+    recursive: Optional[bool] = None,
+    max_depth: Optional[int] = None,
+    strategy: Literal["flat", "heuristic", "recursive"] = "flat",
+) -> HeaderList:
     """Returns an iterable object containing a list of full paths to
     headers if found.
 
@@ -2147,11 +2155,20 @@ def find_headers(headers: Union[str, List[str]], root: str, recursive: bool = Fa
     Parameters:
         headers: Header name(s) to search for
         root: The root directory to start searching from
-        recursive: if :data:`False` search only root folder,
-            if :data:`True` descends top-down from the root. Defaults to :data:`False`.
+        recursive: Use ``strategy`` instead. If set to :data:`True`, equivalent to
+            ``strategy="recursive"``. If :data:`False`, equivalent to  ``strategy="flat"``.
+        max_depth: if set, don't search below this depth. Cannot be set if strategy is
+            ``"flat"``.
+        strategy: Search strategy to use. ``"flat"`` searches only the root directory,
+            ``"recursive"`` searches recursively from root, ``"heuristic"`` uses a
+            non-exhaustive, faster search that restricts to common header locations.
+            Defaults to ``"flat"``.
 
     Returns:
         The headers that have been found
+
+    .. versionchanged:: v2.3
+        The ``strategy`` parameter was added, and ``max_depth`` can now be set.
     """
     if isinstance(headers, str):
         headers = [headers]
@@ -2160,6 +2177,15 @@ def find_headers(headers: Union[str, List[str]], root: str, recursive: bool = Fa
         message += "first argument [got {1} instead]"
         message = message.format(find_headers.__name__, type(headers))
         raise TypeError(message)
+
+    # Handle backward compatibility: if recursive is explicitly set, use it to determine strategy
+    if recursive is True:
+        strategy = "recursive"
+    elif recursive is False:
+        strategy = "flat"
+
+    if strategy == "flat" and max_depth is not None:
+        raise ValueError(f"max_depth ({max_depth}) cannot be set if strategy is 'flat'")
 
     # Construct the right suffix for the headers
     suffixes = [
@@ -2181,7 +2207,23 @@ def find_headers(headers: Union[str, List[str]], root: str, recursive: bool = Fa
     # List of headers we are searching with suffixes
     headers = ["{0}.{1}".format(header, suffix) for header in headers for suffix in suffixes]
 
-    return HeaderList(find(root, headers, recursive))
+    if strategy != "heuristic":
+        return HeaderList(
+            find(root, headers, recursive=strategy == "recursive", max_depth=max_depth)
+        )
+
+    # Heuristic search for headers: restrict search to <root>/include
+    # (if root isn't an include directory itself) and limit search depth so that headers are found
+    # not deeper than <root>/include/<subdir>/<subdir>/*.
+
+    if max_depth is None:
+        max_depth = 3
+
+    if not any(part.lower() == "include" for part in pathlib.Path(root).parts[-3:]):
+        root = os.path.join(root, "include")
+        max_depth -= 1
+
+    return HeaderList(find(root, headers, recursive=True, max_depth=max_depth))
 
 
 @system_path_filter
@@ -2351,9 +2393,10 @@ def find_libraries(
     libraries: Union[str, List[str]],
     root: str,
     shared: bool = True,
-    recursive: bool = False,
+    recursive: Optional[bool] = None,
     runtime: bool = True,
     max_depth: Optional[int] = None,
+    strategy: Literal["flat", "heuristic", "recursive"] = "flat",
 ) -> LibraryList:
     """Returns an iterable of full paths to libraries found in a root dir.
 
@@ -2373,17 +2416,24 @@ def find_libraries(
         root: The root directory to start searching from
         shared: if :data:`True` searches for shared libraries,
             otherwise for static. Defaults to :data:`True`.
-        recursive: if :data:`False` search only root folder,
-            if :data:`True` descends top-down from the root. Defaults to :data:`False`.
+        recursive: Use ``strategy`` instead. If set to :data:`True`, equivalent to
+            ``strategy="recursive"``. If :data:`False`, equivalent to  ``strategy="flat"``.
         max_depth: if set, don't search below this depth. Cannot be set
-            if recursive is :data:`False`
+            if strategy is ``"flat"``.
         runtime: Windows only option, no-op elsewhere. If :data:`True`,
             search for runtime shared libs (``.DLL``), otherwise, search
             for ``.Lib`` files. If ``shared`` is :data:`False`, this has no meaning.
             Defaults to :data:`True`.
+        strategy: Search strategy to use. ``"flat"`` searches only the root directory,
+            ``"recursive"`` searches recursively from root, ``"heuristic"`` uses a
+            non-exhaustive, faster search that tries common library locations first.
+            Defaults to ``"flat"``.
 
     Returns:
         The libraries that have been found
+
+    .. versionchanged:: v2.3
+        The ``strategy`` parameter was added.
     """
 
     if isinstance(libraries, str):
@@ -2393,6 +2443,14 @@ def find_libraries(
         message += "first argument [got {1} instead]"
         message = message.format(find_libraries.__name__, type(libraries))
         raise TypeError(message)
+
+    if recursive is True:
+        strategy = "recursive"
+    elif recursive is False:
+        strategy = "flat"
+
+    if strategy == "flat" and max_depth is not None:
+        raise ValueError(f"max_depth ({max_depth}) cannot be set if strategy is 'flat'")
 
     if sys.platform == "win32":
         static_ext = "lib"
@@ -2417,31 +2475,55 @@ def find_libraries(
     # List of libraries we are searching with suffixes
     libraries = ["{0}.{1}".format(lib, suffix) for lib in libraries for suffix in suffixes]
 
-    if not recursive:
-        if max_depth:
-            raise ValueError(f"max_depth ({max_depth}) cannot be set if recursive is False")
-        # If not recursive, look for the libraries directly in root
-        return LibraryList(find(root, libraries, recursive=False))
+    if strategy != "heuristic":
+        return LibraryList(
+            find(root, libraries, recursive=strategy == "recursive", max_depth=max_depth)
+        )
 
-    # To speedup the search for external packages configured e.g. in /usr,
-    # perform first non-recursive search in root/lib then in root/lib64 and
-    # finally search all of root recursively. The search stops when the first
-    # match is found.
-    common_lib_dirs = ["lib", "lib64"]
+    # Heuristic search: a form of non-exhaustive iterative deepening, in order to return early if
+    # libraries are found in their usual locations.
+
+    if max_depth is None:
+        # this default covers search in <root>/lib/<triplet>/*.
+        max_depth = 2
+
     if sys.platform == "win32":
-        common_lib_dirs.extend(["bin", "Lib"])
-
-    for subdir in common_lib_dirs:
-        dirname = join_path(root, subdir)
-        if not os.path.isdir(dirname):
-            continue
-        found_libs = find(dirname, libraries, False)
-        if found_libs:
-            break
+        common_lib_dirs = ("lib", "lib64", "bin", "Lib")
     else:
-        found_libs = find(root, libraries, recursive=True, max_depth=max_depth)
+        common_lib_dirs = ("lib", "lib64")
 
-    return LibraryList(found_libs)
+    if os.path.basename(root).lower() not in common_lib_dirs:
+        # search root and its direct library subdirectories non-recursively
+        non_recursive = [root, *(os.path.join(root, libdir) for libdir in common_lib_dirs)]
+        # avoid the expensive recursive search of the root directory
+        fallback_recursive = [os.path.join(root, libdir) for libdir in common_lib_dirs]
+        # decrement max_depth, since we start one level deeper than root
+        max_depth -= 1
+    else:
+        # the call site already has a common library dir as root
+        non_recursive = [root]
+        fallback_recursive = [root]
+
+    # First try a non-recursive search in the common library directories
+    found_libs = find(non_recursive, libraries, recursive=False)
+
+    if found_libs:
+        return LibraryList(found_libs)
+
+    # Do one more (manual) step of iterative deepening, to early exit on typical
+    # <root>/lib/<triplet>/ sub-directories before exhaustive, max_depth search. Slightly better
+    # would be to add lib/<triplet> itself to common_lib_dirs, but we are lacking information to
+    # determine the triplet.
+    if max_depth >= 1:
+        found_libs = find(fallback_recursive, libraries, max_depth=1)
+        if found_libs:
+            return LibraryList(found_libs)
+
+    # Finally fall back to exhaustive, recursive search up to max_depth
+    if max_depth >= 2:
+        return LibraryList(find(fallback_recursive, libraries, max_depth=max_depth))
+
+    return LibraryList([])
 
 
 def find_all_shared_libraries(
