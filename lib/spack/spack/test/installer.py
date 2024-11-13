@@ -28,7 +28,7 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
-from spack.installer import PackageInstaller
+import spack.util.spack_json as sjson
 from spack.main import SpackCommand
 
 
@@ -74,14 +74,18 @@ def create_build_task(
     pkg: spack.package_base.PackageBase, install_args: Optional[dict] = None
 ) -> inst.BuildTask:
     request = inst.BuildRequest(pkg, {} if install_args is None else install_args)
-    return inst.BuildTask(pkg, request=request, status=inst.BuildStatus.QUEUED)
+    return inst.BuildTask(
+        pkg, request=request, progress=MockInstallerProgress, status=inst.BuildStatus.QUEUED
+    )
 
 
 def create_install_task(
     pkg: spack.package_base.PackageBase, install_args: Optional[dict] = None
 ) -> inst.InstallTask:
     request = inst.BuildRequest(pkg, {} if install_args is None else install_args)
-    return inst.InstallTask(pkg, request=request, status=inst.BuildStatus.QUEUED)
+    return inst.InstallTask(
+        pkg, request=request, progress=MockInstallerProgress, status=inst.BuildStatus.QUEUED
+    )
 
 
 def create_installer(
@@ -123,19 +127,15 @@ def test_install_msg(monkeypatch):
     install_msg = "Installing {0}".format(name)
 
     monkeypatch.setattr(tty, "_debug", 0)
-    assert inst.install_msg(name, pid, None) == install_msg
-
-    install_status = inst.InstallStatus(1)
-    expected = "{0} [0/1]".format(install_msg)
-    assert inst.install_msg(name, pid, install_status) == expected
+    assert inst.install_msg(name, pid) == install_msg
 
     monkeypatch.setattr(tty, "_debug", 1)
-    assert inst.install_msg(name, pid, None) == install_msg
+    assert inst.install_msg(name, pid) == install_msg
 
     # Expect the PID to be added at debug level 2
     monkeypatch.setattr(tty, "_debug", 2)
     expected = "{0}: {1}".format(pid, install_msg)
-    assert inst.install_msg(name, pid, None) == expected
+    assert inst.install_msg(name, pid) == expected
 
 
 def test_install_from_cache_errors(install_mockery):
@@ -147,13 +147,15 @@ def test_install_from_cache_errors(install_mockery):
     with pytest.raises(
         spack.error.InstallError, match="No binary found when cache-only was specified"
     ):
-        PackageInstaller(
+        inst.PackageInstaller(
             [spec.package], package_cache_only=True, dependencies_cache_only=True
         ).install()
     assert not spec.package.installed_from_binary_cache
 
     # Check when don't expect to install only from binary cache
-    assert not inst._install_from_cache(spec.package, explicit=True, unsigned=False)
+    assert not inst._install_from_cache(
+        spec.package, inst.InstallerProgress([spec.package]), explicit=True, unsigned=False
+    )
     assert not spec.package.installed_from_binary_cache
 
 
@@ -163,7 +165,9 @@ def test_install_from_cache_ok(install_mockery, monkeypatch):
     monkeypatch.setattr(inst, "_try_install_from_binary_cache", _true)
     monkeypatch.setattr(spack.hooks, "post_install", _noop)
 
-    assert inst._install_from_cache(spec.package, explicit=True, unsigned=False)
+    assert inst._install_from_cache(
+        spec.package, inst.InstallerProgress([spec.package]), explicit=True, unsigned=False
+    )
 
 
 def test_process_external_package_module(install_mockery, monkeypatch, capfd):
@@ -627,7 +631,7 @@ def test_install_spliced_build_spec_installed(install_mockery, capfd, mock_fetch
 
     # Do the splice.
     out = spec.splice(dep, transitive)
-    PackageInstaller([out.build_spec.package]).install()
+    inst.PackageInstaller([out.build_spec.package]).install()
 
     installer = create_installer([out], {"verbose": True, "fail_fast": True})
     installer._init_queue()
@@ -659,7 +663,7 @@ def test_install_splice_root_from_binary(
     original_spec = spack.concretize.concretize_one(root_str)
     spec_to_splice = spack.concretize.concretize_one("splice-h+foo")
 
-    PackageInstaller([original_spec.package, spec_to_splice.package]).install()
+    inst.PackageInstaller([original_spec.package, spec_to_splice.package]).install()
 
     out = original_spec.splice(spec_to_splice, transitive)
 
@@ -676,13 +680,13 @@ def test_install_splice_root_from_binary(
     uninstall = SpackCommand("uninstall")
     uninstall("-ay")
 
-    PackageInstaller([out.package], unsigned=True).install()
+    inst.PackageInstaller([out.package], unsigned=True).install()
 
     assert len(spack.store.STORE.db.query()) == len(list(out.traverse()))
 
 
-class MockInstallStatus:
-    def next_pkg(self, *args, **kwargs):
+class MockInstallerProgress:
+    def set_installed(self, *args, **kwargs):
         pass
 
     def set_term_title(self, *args, **kwargs):
@@ -704,12 +708,12 @@ def test_installing_task_use_cache(install_mockery, monkeypatch):
     installer = create_installer(["trivial-install-test-package"], {})
     request = installer.build_requests[0]
     task = create_install_task(request.pkg)
-    install_status = MockInstallStatus()
     term_status = MockTermStatusLine()
 
     monkeypatch.setattr(inst, "_install_from_cache", _true)
-    installer.start_task(task, install_status, term_status)
-    installer.complete_task(task, install_status)
+    installer.progress = MockInstallerProgress
+    installer.start_task(task, term_status)
+    installer.complete_task(task)
     assert request.pkg_id in installer.installed
 
 
@@ -733,7 +737,7 @@ def test_install_task_requeue_build_specs(install_mockery, monkeypatch, capfd):
     assert inst.package_id(popped_task.pkg.spec) not in installer.build_tasks
 
     monkeypatch.setattr(task, "complete", _missing)
-    installer._complete_task(task, None)
+    installer._complete_task(task)
 
     # Ensure the dropped task/spec was added back by _install_task
     assert inst.package_id(popped_task.pkg.spec) in installer.build_tasks
@@ -781,7 +785,7 @@ def test_requeue_task(install_mockery, capfd):
     # temporarily set tty debug messages on so we can test output
     current_debug_level = tty.debug_level()
     tty.set_debug(1)
-    installer._requeue_task(task, None)
+    installer._requeue_task(task)
     tty.set_debug(current_debug_level)
 
     ids = list(installer.build_tasks)
@@ -936,11 +940,11 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
     assert "Skipping build of parallel-package-a" in out
 
 
-def _interrupt(installer, task, install_status, **kwargs):
+def _interrupt(installer, task, **kwargs):
     if task.pkg.name == "pkg-a":
         raise KeyboardInterrupt("mock keyboard interrupt for pkg-a")
     else:
-        return installer._real_install_task(task, None)
+        return installer._real_install_task(task)
         # installer.installed.add(task.pkg.name)
 
 
@@ -969,11 +973,11 @@ class MyBuildException(Exception):
 _old_complete_task = None
 
 
-def _install_fail_my_build_exception(installer, task, install_status, **kwargs):
+def _install_fail_my_build_exception(installer, task, **kwargs):
     if task.pkg.name == "pkg-a":
         raise MyBuildException("mock internal package build error for pkg-a")
     else:
-        _old_complete_task(installer, task, install_status)
+        _old_complete_task(installer, task)
 
 
 def test_install_fail_single(install_mockery, mock_fetch, monkeypatch):
@@ -1070,8 +1074,8 @@ def test_install_lock_failures(install_mockery, monkeypatch, capfd):
     """Cover basic install lock failure handling in a single pass."""
 
     # Note: this test relies on installing a package with no dependencies
-    def _requeued(installer, task, install_status):
-        tty.msg("requeued {0}".format(task.pkg.spec.name))
+    def _requeued(installer, task):
+        tty.msg(f"requeued {task.pkg.spec.name}")
 
     installer = create_installer(["pkg-c"], {})
 
@@ -1104,7 +1108,7 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
         # also do not allow the package to be locked again
         monkeypatch.setattr(inst.PackageInstaller, "_ensure_locked", _not_locked)
 
-    def _requeued(installer, task, install_status):
+    def _requeued(installer, task):
         tty.msg(f"requeued {inst.package_id(task.pkg.spec)}")
 
     # Flag the package as installed
@@ -1126,18 +1130,19 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
 def test_install_read_locked_requeue(install_mockery, monkeypatch, capfd):
     """Cover basic read lock handling for uninstalled package with requeue."""
     # Note: this test relies on installing a package with no dependencies
-    orig_fn = inst.PackageInstaller._ensure_locked
+    orig_ensure = inst.PackageInstaller._ensure_locked
+    orig_prep = inst.PackageInstaller._prepare_for_install
 
     def _read(installer, lock_type, pkg):
         tty.msg("{0}->read locked {1}".format(lock_type, pkg.spec.name))
-        return orig_fn(installer, "read", pkg)
+        return orig_ensure(installer, "read", pkg)
 
     def _prep(installer, task):
         tty.msg("preparing {0}".format(task.pkg.spec.name))
-        assert task.pkg.spec.name not in installer.installed
+        return orig_prep(installer, task)
 
-    def _requeued(installer, task, install_status):
-        tty.msg("requeued {0}".format(task.pkg.spec.name))
+    def _requeued(installer, task):
+        tty.msg(f"requeued {task.pkg.spec.name}")
 
     # Force a read lock
     monkeypatch.setattr(inst.PackageInstaller, "_ensure_locked", _read)
@@ -1200,9 +1205,9 @@ def test_overwrite_install_backup_success(
     # Get a build task. TODO: Refactor this to avoid calling internal methods.
     # This task relies on installing something with no dependencies
     installer = create_installer(["pkg-c"])
+    installer.progress = MockInstallerProgress()
     installer._init_queue()
     task = installer._pop_task()
-    install_status = MockInstallStatus()
     term_status = MockTermStatusLine()
 
     # Make sure the install prefix exists with some trivial file
@@ -1218,9 +1223,9 @@ def test_overwrite_install_backup_success(
 
     # Installation should throw the installation exception, not the backup
     # failure.
-    installer.start_task(task, install_status, term_status)
+    installer.start_task(task, term_status)
     with pytest.raises(Exception, match="Some fatal install error"):
-        installer.complete_task(task, install_status)
+        installer.complete_task(task)
 
     # Check that the original file is back.
     assert os.path.exists(installed_file)
@@ -1245,9 +1250,9 @@ def test_overwrite_install_backup_failure(
     """
     # Get a build task. TODO: refactor this to avoid calling internal methods
     installer = create_installer(["pkg-c"])
+    installer.progress = MockInstallerProgress
     installer._init_queue()
     task = installer._pop_task()
-    install_status = MockInstallStatus()
     term_status = MockTermStatusLine()
 
     # Make sure the install prefix exists
@@ -1261,9 +1266,9 @@ def test_overwrite_install_backup_failure(
     # Make sure that `remove` was called on the database after an unsuccessful
     # attempt to restore the backup.
     # This error is raised while handling the original install error
-    installer.start_task(task, install_status, term_status)
+    installer.start_task(task, term_status)
     with pytest.raises(Exception, match="No such spec in database"):
-        installer.complete_task(task, install_status)
+        installer.complete_task(task)
 
 
 def test_term_status_line():
@@ -1315,7 +1320,7 @@ def test_print_install_test_log_skipped(install_mockery, mock_packages, capfd, r
     pkg = s.package
 
     pkg.run_tests = run_tests
-    spack.installer.print_install_test_log(pkg)
+    inst.print_install_test_log(pkg)
     out = capfd.readouterr()[0]
     assert out == ""
 
@@ -1332,12 +1337,23 @@ def test_print_install_test_log_failures(
     pkg.run_tests = True
     pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
     pkg.tester.add_failure(AssertionError("test"), "test-failure")
-    spack.installer.print_install_test_log(pkg)
+    inst.print_install_test_log(pkg)
     err = capfd.readouterr()[1]
     assert "no test log file" in err
 
     # Having test log results in path being output
     fs.touch(pkg.tester.test_log_file)
-    spack.installer.print_install_test_log(pkg)
+    inst.print_install_test_log(pkg)
     out = capfd.readouterr()[0]
     assert "See test results at" in out
+
+
+def test_specs_count(install_mockery, mock_packages):
+    """Check SpecCounts DAG visitor total matches expected."""
+    spec = spack.concretize.concretize_one("mpileaks^mpich")
+    counter = inst.SpecsCount(dt.LINK | dt.RUN | dt.BUILD)
+    number_specs = counter.total([spec])
+
+    json = sjson.load(spec.to_json())
+    number_spec_nodes = len(json["spec"]["nodes"])
+    assert number_specs == number_spec_nodes
