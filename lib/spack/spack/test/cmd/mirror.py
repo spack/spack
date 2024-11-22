@@ -31,8 +31,6 @@ install = SpackCommand("install")
 buildcache = SpackCommand("buildcache")
 uninstall = SpackCommand("uninstall")
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
-
 
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.regression("8083")
