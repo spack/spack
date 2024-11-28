@@ -7,8 +7,8 @@ import os
 import re
 
 from spack.build_systems.autotools import AutotoolsBuilder
-from spack.build_systems.msbuild import MSBuildBuilder
 from spack.build_systems.cmake import CMakeBuilder
+from spack.build_systems.msbuild import MSBuildBuilder
 from spack.package import *
 
 
@@ -78,8 +78,12 @@ class Xz(MSBuildPackage, AutotoolsPackage, CMakePackage, SourceforgePackage):
         sha256="32228638c462651ec7dedab706d05aa352995f064ace2dee915f31c75cc995c0",
     )
 
-    build_system(conditional("msbuild", when="platform=windows"), "autotools", default="autotools")
-    build_system(conditional("msbuild", when="@:5.4.7 platform=windows"), conditional("cmake", when="@5.4.7:"), "autotools", default="autotools")
+    build_system(
+        conditional("msbuild", when="@:5.4.7 platform=windows"),
+        conditional("cmake", when="@5.4.7:"),
+        "autotools",
+        default="autotools",
+    )
 
     def flag_handler(self, name, flags):
         if name == "cflags" and "+pic" in self.spec:
@@ -116,7 +120,7 @@ class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         build_shared = True if "shared" in self.spec else False
         return [self.define("BUILD_SHARED_LIBS", build_shared)]
-    
+
 
 class MSBuildBuilder(MSBuildBuilder):
     @property
