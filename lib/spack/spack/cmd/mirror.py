@@ -4,6 +4,7 @@
 
 import argparse
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 import spack.caches
 import spack.cmd
@@ -618,6 +619,11 @@ def _specs_and_action(args):
     mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=include_fn)
     return mirror_specs, mirror_fn
 
+def create_mirror_for_one_spec(candidate, mirror_cache, mirror_stats):
+        pkg_cls = spack.repo.PATH.get_pkg_class(candidate.name)
+        pkg_obj = pkg_cls(spack.spec.Spec(candidate))
+        mirror_stats.next_spec(pkg_obj.spec)
+        spack.mirror.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
 
 def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions):
     mirror_cache, mirror_stats = spack.mirrors.utils.mirror_cache_and_stats(
