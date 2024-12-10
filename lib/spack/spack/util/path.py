@@ -191,6 +191,24 @@ def substitute_config_variables(path):
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
 
 
+def abstract_path(*path_strings):
+    """Cast string path or combine parts of a path to a PurePath object"""
+    return PurePath(*path_strings)
+
+
+def concrete_path(*path_strings):
+    """Cast string path or combine parts of a path to a Path object"""
+    return Path(*path_strings)
+
+
+def fs_path(path):
+    """Return underlying path representation of path-like object.
+
+    If parameter is str or byte, it is returned unchanged. If path-like object it
+    returns underlying representation. Otherwise, a TypeError will be raised."""
+    return os.fspath(path)
+
+
 def substitute_path_variables(path):
     """Substitute config vars, expand environment vars, expand user home."""
     path = substitute_config_variables(path)
