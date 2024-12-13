@@ -556,7 +556,7 @@ class Result:
         return msg
 
     def to_dict(self) -> dict:
-        """Produces json representation of Result object
+        """Produces dict representation of Result object
 
         Does not include anything related to unsatisfiability as we
         are only interested in storing satisfiable results
@@ -571,6 +571,7 @@ class Result:
         ret["warnings"] = self.warnings
         ret["nmodels"] = self.nmodels
         ret["abstract_specs"] = [x.to_dict() for x in self.abstract_specs]
+        ret["satisfiable"] = self.satisfiable
         serial_answers = []
         for answer in self.answers:
             serial_answer = answer[:2]
@@ -609,12 +610,16 @@ class Result:
         result.optimal = obj.get("optimal")
         result.warnings = obj.get("warnings")
         result.nmodels = obj.get("nmodels")
+        result.satisfiable = obj.get("satisfiable")
+        result._unsolved_specs = []
         answers = []
         for answer in obj.get("answers", []):
-            answers.append(
-                answer[:2]
-                + ([{_dict_to_node_argument(json.loads(x)): _dict_to_spec(answer[2][x])} for x in answer[2]])
-            )
+            loaded_answer = answer[:2]
+            answer_node_dict = {}
+            for node, spec in answer[2].items():
+                answer_node_dict[_dict_to_node_argument(json.loads(node))] = _dict_to_spec(spec)
+            loaded_answer.append(answer_node_dict)
+            answers.append(tuple(loaded_answer))
         result.answers = answers
         result._concrete_specs_by_input = {}
         result._concrete_specs = []
@@ -640,10 +645,10 @@ class ConcretizationCache:
                 else spack.paths.default_conc_cache_path
             )
         self.root = pathlib.Path(spack.util.path.canonicalize_path(root))
-        self._check_purge()
+        # self._check_purge()
 
-    def _cache_entry_count(self) -> int:
-        return len([x for x in y for y in ])
+    # def _cache_entry_count(self) -> int:
+    #     return len([x for x in y for y in ])
 
     def _results_from_cache(self, cache_path: pathlib.Path) -> Result:
         """Returns a Results object from the concretizer cache
@@ -1025,7 +1030,7 @@ class PyclingoDriver:
         timer.start("setup")
         asp_problem = setup.setup(specs, reuse=reuse, allow_deprecated=allow_deprecated)
         if output.out is not None:
-            output.out.write("\n".join(sorted(asp_problem.split("\n"))))
+            output.out.write(asp_problem)
         if output.setup_only:
             return Result(specs), None, None
         timer.stop("setup")
@@ -1042,9 +1047,8 @@ class PyclingoDriver:
             with open(ctrl_file, "r+") as f:
                 problem_repr += "\n" + f.read()
 
-        result, cache_statistics = spack.caches.CONC_CACHE.fetch(problem_repr)
+        result, concretization_stats = spack.caches.CONC_CACHE.fetch(problem_repr)
         timer.stop("cache-check")
-
         if not result:
             timer.start("load")
             # Add the problem instance
@@ -1142,16 +1146,15 @@ class PyclingoDriver:
                 )
 
             spack.caches.CONC_CACHE.store(problem_repr, result, self.control.statistics)
-        else:
-            self.control.statistics = cache_statistics
+            concretization_stats = self.control.statistics
         if output.timers:
             timer.write_tty()
             print()
 
         if output.stats:
             print("Statistics:")
-            pprint.pprint(self.control.statistics)
-        return result, timer, self.control.statistics
+            pprint.pprint(concretization_stats)
+        return result, timer, concretization_stats
 
 
 class ConcreteSpecsByHash(collections.abc.Mapping):
@@ -1172,7 +1175,7 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
         """Iterate on items that have been added explicitly, and not just as a dependency
         of other nodes.
         """
-        for h, s in sorted(self.items()):
+        for h, s in self.items():
             # We need to make an exception for gcc-runtime, until we can splice it.
             if h in self.explicit or s.name == "gcc-runtime":
                 yield h, s
@@ -1822,13 +1825,13 @@ class SpackSolverSetup:
             self.gen.fact(fn.imposed_constraint(condition_id, *pred.args))
 
     def package_provider_rules(self, pkg):
-        for vpkg_name in sorted(pkg.provided_virtual_names()):
+        for vpkg_name in pkg.provided_virtual_names():
             if vpkg_name not in self.possible_virtuals:
                 continue
             self.gen.fact(fn.pkg_fact(pkg.name, fn.possible_provider(vpkg_name)))
 
-        for when, provided in sorted(pkg.provided.items()):
-            for vpkg in provided:
+        for when, provided in pkg.provided.items():
+            for vpkg in sorted(provided):
                 if vpkg.name not in self.possible_virtuals:
                     continue
 
@@ -1839,12 +1842,12 @@ class SpackSolverSetup:
                 )
             self.gen.newline()
 
-        for when, sets_of_virtuals in sorted(pkg.provided_together.items()):
+        for when, sets_of_virtuals in pkg.provided_together.items():
             condition_id = self.condition(
                 when, required_name=pkg.name, msg="Virtuals are provided together"
             )
             for set_id, virtuals_together in enumerate(sets_of_virtuals):
-                for name in virtuals_together:
+                for name in sorted(virtuals_together):
                     self.gen.fact(
                         fn.pkg_fact(pkg.name, fn.provided_together(condition_id, set_id, name))
                     )
@@ -1992,7 +1995,7 @@ class SpackSolverSetup:
         """Call func(vspec, provider, i) for each of pkg's provider prefs."""
         config = spack.config.get("packages")
         pkg_prefs = config.get(pkg_name, {}).get("providers", {})
-        for vspec, providers in sorted(pkg_prefs.items()):
+        for vspec, providers in pkg_prefs.items():
             if vspec not in self.possible_virtuals:
                 continue
 
@@ -2484,7 +2487,7 @@ class SpackSolverSetup:
     ):
         """Declare any versions in specs not declared in packages."""
         packages_yaml = spack.config.get("packages")
-        for pkg_name in possible_pkgs:
+        for pkg_name in sorted(possible_pkgs):
             pkg_cls = self.pkg_class(pkg_name)
 
             # All the versions from the corresponding package.py file. Since concepts
@@ -2812,7 +2815,7 @@ class SpackSolverSetup:
         """
         # Tell the concretizer about possible values from specs seen in spec_clauses().
         # We might want to order these facts by pkg and name if we are debugging.
-        for pkg_name, variant_def_id, value in self.variant_values_from_specs:
+        for pkg_name, variant_def_id, value in sorted(self.variant_values_from_specs):
             try:
                 vid = self.variant_ids_by_def_id[variant_def_id]
             except KeyError:
@@ -2850,6 +2853,8 @@ class SpackSolverSetup:
             # Declare as possible parts of specs that are not in package.py
             # - Add versions to possible versions
             # - Add OS to possible OS's
+
+            # is traverse deterministic?
             for dep in spec.traverse():
                 self.possible_versions[dep.name].add(dep.version)
                 if isinstance(dep.version, vn.GitVersion):
@@ -2931,7 +2936,7 @@ class SpackSolverSetup:
                     'dev_path="%s"'
                     % spack.util.path.canonicalize_path(info["path"], default_wd=env.path)
                 )
-                for name, info in sorted(env.dev_specs.items())
+                for name, info in env.dev_specs.items()
             )
 
         specs = tuple(specs)  # ensure compatible types to add
@@ -3588,7 +3593,7 @@ class RuntimePropertyRecorder:
             # on the available compilers)
             self._setup.pkg_version_rules(runtime_pkg)
 
-        for imposed_spec, when_spec in self.runtime_conditions:
+        for imposed_spec, when_spec in sorted(self.runtime_conditions):
             msg = f"{when_spec} requires {imposed_spec} at runtime"
             _ = self._setup.condition(when_spec, imposed_spec=imposed_spec, msg=msg)
 
@@ -3986,7 +3991,7 @@ class SpecBuilder:
             splice_triples.append((target, replacement, transitive))
 
         specs = {}
-        for key, spec in sorted(self._specs.items()):
+        for key, spec in self._specs.items():
             current_spec = spec
             for target, replacement, transitive in splice_triples:
                 if target in current_spec:
