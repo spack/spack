@@ -57,6 +57,9 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
+    provides("c", "cxx")
+    provides("fortran")
+
     variant(
         "rocm-device-libs",
         default=True,
@@ -357,26 +360,11 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
                 env.prepend_path("LD_LIBRARY_PATH", root)
         env.prune_duplicate_paths("LD_LIBRARY_PATH")
 
-    @property
-    def cc(self):
-        msg = "cannot retrieve C compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("c", None)
+    def _cc_path(self):
         return os.path.join(self.spec.prefix.bin, "amdclang")
 
-    @property
-    def cxx(self):
-        msg = "cannot retrieve C++ compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("cxx", None)
+    def _cxx_path(self):
         return os.path.join(self.spec.prefix.bin, "amdclang++")
 
-    @property
-    def fc(self):
-        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("fc", None)
+    def _fortran_path(self):
         return os.path.join(self.spec.prefix.bin, "amdflang")
