@@ -37,7 +37,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     create_parser.add_argument(
         "-d", "--directory", default=None, help="directory in which to create mirror"
     )
-
     create_parser.add_argument(
         "-a",
         "--all",
@@ -46,7 +45,15 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         " in the current environment if there is an active environment"
         " (this requires significant time and space)",
     )
-    create_parser.add_argument("--file", help="file with specs of packages to put in mirror")
+    create_parser.add_argument(
+        "-j",
+        "--jobs",
+        type=int,
+        default=16,
+        help="Use a given number of threads to make the mirror"
+        " (used in combination with -a)"
+    )
+    create_parser.add_argument("-f", "--file", help="file with specs of packages to put in mirror")
     create_parser.add_argument(
         "--exclude-file",
         help="specs which Spack should not try to add to a mirror"
@@ -600,11 +607,12 @@ def mirror_create(args):
     path = args.directory or spack.caches.fetch_cache_location()
 
     mirror_specs, mirror_fn = _specs_and_action(args)
-    mirror_fn(mirror_specs, path=path, skip_unstable_versions=args.skip_unstable_versions)
+    mirror_fn(mirror_specs, path=path, skip_unstable_versions=args.skip_unstable_versions, threads=args.parallel)
 
 
 def _specs_and_action(args):
     include_fn = IncludeFilter(args)
+
 
     if args.all and not ev.active_environment():
         mirror_specs = all_specs_with_all_versions()
@@ -625,6 +633,7 @@ def create_mirror_for_one_spec(candidate, mirror_cache, mirror_stats):
         mirror_stats.next_spec(pkg_obj.spec)
         spack.mirror.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
 
+<<<<<<< HEAD
 def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions):
     mirror_cache, mirror_stats = spack.mirrors.utils.mirror_cache_and_stats(
         path, skip_unstable_versions=skip_unstable_versions
@@ -641,6 +650,20 @@ def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_version
     present, mirrored, error = spack.mirrors.utils.create(
         path, mirror_specs, skip_unstable_versions
     )
+=======
+def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, threads):
+    mirror_cache, mirror_stats = spack.mirror.mirror_cache_and_stats(
+        path, skip_unstable_versions=skip_unstable_versions
+    )
+    with ThreadPoolExecutor(max_workers=threads) as executor:
+        # Submit tasks to the thread pool
+        futures = [executor.submit(create_mirror_for_one_spec, candidate, mirror_cache, mirror_stats) for candidate in mirror_specs]
+    process_mirror_stats(*mirror_stats.stats())
+
+
+def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions, threads):
+    present, mirrored, error = spack.mirror.create(path, mirror_specs, skip_unstable_versions)
+>>>>>>> 1bab721151 (Add cmd-line option to select thread count for mirroring)
     tty.msg("Summary for mirror in {}".format(path))
     process_mirror_stats(present, mirrored, error)
 
