@@ -2172,3 +2172,12 @@ def _include_cache_root():
 def mock_include_cache(monkeypatch):
     """Override the include cache directory so tests don't pollute user cache."""
     monkeypatch.setattr(spack.config, "_include_cache_location", _include_cache_root)
+
+
+@pytest.fixture()
+def wrapper_dir(install_mockery):
+    """Installs the compiler wrapper and returns the prefix where the script is installed."""
+    wrapper = spack.spec.Spec("compiler-wrapper").concretized()
+    wrapper_pkg = wrapper.package
+    PackageInstaller([wrapper_pkg], explicit=True).install()
+    return wrapper_pkg.bin_dir()

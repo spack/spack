@@ -33,7 +33,7 @@ def test_mark_all_explicit(mutable_database):
     mark("-e", "-a")
     gc("-y")
     all_specs = spack.store.STORE.layout.all_specs()
-    assert len(all_specs) == 16
+    assert len(all_specs) == 17
 
 
 @pytest.mark.db
@@ -67,4 +67,4 @@ def test_mark_all_implicit_then_explicit(mutable_database):
     mark("-e", "-a")
     gc("-y")
     all_specs = spack.store.STORE.layout.all_specs()
-    assert len(all_specs) == 16
+    assert len(all_specs) == 17
