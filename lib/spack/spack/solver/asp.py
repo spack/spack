@@ -1096,6 +1096,8 @@ class PyclingoDriver:
         if setup.enable_splicing:
             control_files.append("splices.lp")
 
+        control_files.append("spec_prefs.lp")
+
         timer.start("setup")
         problem_builder = setup.setup(
             specs,
@@ -1389,6 +1391,7 @@ class SpackSolverSetup:
         # If true, we have to load the code for synthesizing splices
         self.enable_splicing: bool = spack.config.CONFIG.get("concretizer:splice:automatic")
 
+<<<<<<< HEAD
     def pkg_version_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
         """Declares known versions, their origins, and their weights."""
         version_provenance = self.possible_versions[pkg.name]
@@ -1399,6 +1402,32 @@ class SpackSolverSetup:
         if pkg.name in self.versions_from_yaml:
             ordered_versions = list(
                 spack.llnl.util.lang.dedupe(self.versions_from_yaml[pkg.name] + ordered_versions)
+=======
+        # list of specs whose attributes we should try to match during solve
+        self.spec_prefs: Optional[Sequence[spack.spec.Spec]] = None
+
+    def pkg_version_rules(self, pkg):
+        """Output declared versions of a package.
+
+        This uses self.declared_versions so that we include any versions
+        that arise from a spec.
+        """
+
+        def key_fn(version):
+            # Origins are sorted by "provenance" first, see the Provenance enumeration above
+            return version.origin, version.idx
+
+        if isinstance(pkg, str):
+            pkg = self.pkg_class(pkg)
+
+        declared_versions = self.declared_versions[pkg.name]
+        partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
+
+        most_to_least_preferred = []
+        for _, group in itertools.groupby(partially_sorted_versions, key=key_fn):
+            most_to_least_preferred.extend(
+                list(sorted(group, reverse=True, key=lambda x: vn.ver(x.version)))
+>>>>>>> 78a225802a (concretizer: add `spec_prefs` to try to match lockfile)
             )
 
         # Set the deprecation penalty, according to the package. This should be enough to move the
@@ -2838,6 +2867,7 @@ class SpackSolverSetup:
                 if spec.concrete:
                     self.register_concrete_spec(spec, possible)
 
+<<<<<<< HEAD
     def impossible_dependencies_check(self, specs) -> None:
         for edge in traverse.traverse_edges(specs):
             possible_deps = self.pkgs
@@ -2885,6 +2915,18 @@ class SpackSolverSetup:
                 "No version exists that satisfies these input specs:",
                 "    " + ", ".join(str(spec) for spec in impossible),
             )
+=======
+    def generate_spec_prefs(self):
+        for spec in self.spec_prefs:
+            # skip unreachable preferences
+            if spec.name not in self.pkgs:
+                continue
+
+            for clause in self.spec_clauses(spec, body=True):
+                self.gen.fact(fn.spec_pref(clause))
+
+            self.gen.newline()
+>>>>>>> 78a225802a (concretizer: add `spec_prefs` to try to match lockfile)
 
     def setup(
         self,
@@ -2975,6 +3017,8 @@ class SpackSolverSetup:
         dev_specs: Tuple[spack.spec.Spec, ...] = ()
         env = ev.active_environment()
         if env:
+            # Calculate develop specs they will be used in addition to command line
+            # specs in determining known versions/targets/os
             dev_specs = tuple(
                 spack.spec.Spec(info["spec"]).constrained(
                     'dev_path="%s"'
@@ -2982,6 +3026,14 @@ class SpackSolverSetup:
                 )
                 for name, info in env.dev_specs.items()
             )
+
+            # Add spec preferences from lockfile if there is one. This causes the solver to
+            # try to stick to what the user *already* has in their environment, so as not
+            # to give surprising results on re-concretizations.
+            self.spec_prefs = env.concrete_roots()
+            if self.spec_prefs:
+                self.gen.h1("Spec preferences (based on old lockfile)")
+                self.generate_spec_prefs()
 
         specs = tuple(specs)  # ensure compatible types to add
 
@@ -3982,7 +4034,9 @@ class Solver:
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
+
         setup = SpackSolverSetup(tests=tests)
+
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
 
         result = self.driver.solve(
