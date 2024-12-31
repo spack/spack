@@ -51,6 +51,7 @@ import spack.util.path
 import spack.util.web
 import spack.variant
 import spack.version
+import spack.version_def
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
@@ -61,7 +62,15 @@ from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash
 from spack.util.string import comma_and, quote
 from spack.util.typing import SupportsRichComparison
-from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
+from spack.version import (
+    ConcreteVersion,
+    GitVersion,
+    StandardVersion,
+    Version,
+    VersionError,
+    is_git_version,
+)
+from spack.version_def import VersionDefinition
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
@@ -318,7 +327,7 @@ def on_package_attributes(**attr_dict):
             has_all_attributes = all([hasattr(instance, key) for key in attr_dict])
             if has_all_attributes:
                 has_the_right_values = all(
-                    [getattr(instance, key) == value for key, value in attr_dict.items()]  # NOQA: ignore=E501
+                    [getattr(instance, key) == value for key, value in attr_dict.items()]
                 )
                 if has_the_right_values:
                     func(instance, *args, **kwargs)
@@ -469,6 +478,8 @@ def _remove_overridden_defs(defs: List[Tuple[spack.spec.Spec, Any]]) -> None:
     ``when="+rocm"``, but we can't guarantee that will always happen when a vdef is
     overridden. So we use this method to remove any overrides we can know statically.
 
+    Version dictionaries act similarly.
+
     """
     i = 0
     while i < len(defs):
@@ -496,6 +507,19 @@ def _definitions(
         _remove_overridden_defs(defs)
 
     return defs
+
+
+def _get_def(
+    when_indexed_dictionary: Dict[spack.spec.Spec, Dict[K, V]], spec: spack.spec.Spec, key: K
+) -> Optional[V]:
+    """Get highest precedence definition from a dictionary, given a spec and a subkey."""
+    assert spec.concrete
+
+    try:
+        high_to_low = reversed(_definitions(when_indexed_dictionary, key))
+        return next(definition for when, definition in high_to_low if spec.satisfies(when))
+    except StopIteration:
+        return None
 
 
 #: Store whether a given Spec source/binary should not be redistributed.
@@ -544,8 +568,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     compiler = DeprecatedCompiler()
 
-    #: Class level dictionary populated by :func:`~spack.directives.version` directives
+    #: DEPRECATED Class level dictionary populated by :func:`~spack.directives.version` directives
+    #: This is here for backward compatibility - some packages use it, but we will warn if they do.
+    #: This loses information about conditional versions and has been Superseded by when_versions.
     versions: Dict[StandardVersion, Dict[str, Any]]
+    #: Class level dictionary populated by :func:`~spack.directives.version` directives.
+    #: Added in package API v2.6 to support conditional versions.
+    when_versions: Dict[spack.spec.Spec, Dict[StandardVersion, VersionDefinition]]
     #: Class level dictionary populated by :func:`~spack.directives.resource` directives
     resources: Dict[spack.spec.Spec, List[Resource]]
     #: Class level dictionary populated by :func:`~spack.directives.depends_on` and
@@ -731,6 +760,27 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def dependencies_by_name(cls, when: bool = False):
         return _by_subkey(cls.dependencies, when=when)
 
+    # Accessors for versions
+    # External code working with Versions should go through the methods below
+    @classmethod
+    def all_versions(cls) -> List[ConcreteVersion]:
+        return _subkeys(cls.when_versions)
+
+    @classmethod
+    def has_version(cls, version: ConcreteVersion) -> bool:
+        return _has_subkey(cls.when_versions, version)
+
+    @classmethod
+    def num_version_definitions(cls) -> int:
+        return _num_definitions(cls.when_versions)
+
+    @classmethod
+    def version_definitions(
+        cls, version: ConcreteVersion
+    ) -> List[Tuple[spack.spec.Spec, VersionDefinition]]:
+        """Iterator over (when_spec, VersionDefinition) for all definitions of a version."""
+        return _definitions(cls.when_versions, version)
+
     # Accessors for variants
     # External code working with Variants should go through the methods below
 
@@ -771,17 +821,21 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if filtered_variants_by_name:
                 yield when, filtered_variants_by_name
 
+    @classmethod
+    def version_def_for_spec(cls, spec) -> Optional[spack.version_def.VersionDefinition]:
+        """Get the highest precedence version definition matching this package's spec."""
+        return _get_def(cls.versions, spec, spec.version)
+
     def get_variant(self, name: str) -> spack.variant.Variant:
         """Get the highest precedence variant definition matching this package's spec.
 
         Arguments:
             name: name of the variant definition to get
         """
-        try:
-            highest_to_lowest = reversed(self.variant_definitions(name))
-            return next(vdef for when, vdef in highest_to_lowest if self.spec.satisfies(when))
-        except StopIteration:
+        vdef = _get_def(self.variants, self.spec, name)
+        if not vdef:
             raise ValueError(f"No variant '{name}' on spec: {self.spec}")
+        return vdef
 
     @classmethod
     def validate_variant_names(self, spec: spack.spec.Spec):
@@ -926,16 +980,21 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @classmethod
     @memoized
-    def version_urls(cls) -> Dict[StandardVersion, str]:
+    def version_urls(cls) -> Dict[ConcreteVersion, str]:
         """Dict of explicitly defined URLs for versions of this package.
 
         Return:
-           An dict mapping version to url, ordered by version.
+           A dict mapping version to url, ordered by version.
 
         A version's URL only appears in the result if it has an an explicitly defined ``url``
         argument. So, this list may be empty if a package only defines ``url`` at the top level.
         """
-        return {v: args["url"] for v, args in sorted(cls.versions.items()) if "url" in args}
+        return {
+            v: version_def.kwargs["url"]
+            for v in cls.all_versions()
+            for when, version_def in cls.version_definitions(v)
+            if "url" in version_def.kwargs
+        }
 
     def nearest_url(self, version):
         """Finds the URL with the "closest" version to ``version``.
@@ -1067,7 +1126,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         self._resolve_git_provenance(self.spec)
 
-    def all_urls_for_version(self, version: StandardVersion) -> List[str]:
+    def all_urls_for_version(self, version: ConcreteVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and
         list_url (if it contains a version) in a package in that order.
 
@@ -1081,8 +1140,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def _implement_all_urls_for_version(
         self,
-        version: Union[str, StandardVersion],
-        custom_url_for_version: Optional[Callable[[StandardVersion], Optional[str]]] = None,
+        version: Union[str, ConcreteVersion],
+        custom_url_for_version: Optional[Callable[[ConcreteVersion], Optional[str]]] = None,
     ) -> List[str]:
         version = StandardVersion.from_string(version) if isinstance(version, str) else version
 
@@ -2289,9 +2348,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if hasattr(self, "urls") and self.urls:
             urls.append(self.urls[0])
 
-        for args in self.versions.values():
-            if "url" in args:
-                urls.append(args["url"])
+        for v in self.all_versions():
+            for _, vdef in self.version_definitions(v):
+                if "url" in vdef.kwargs:
+                    urls.append(vdef.kwargs["url"])
         return urls
 
     def fetch_remote_versions(
@@ -2765,11 +2825,11 @@ def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -
         pkg: The package whose version is to be checked.
         version: The version being checked
     """
-    if not isinstance(version, StandardVersion):
-        version = StandardVersion.from_string(version)
+    if not isinstance(version, ConcreteVersion):
+        version = Version(version)
 
-    details = pkg.versions.get(version)
-    return details is not None and details.get("deprecated", False)
+    definitions = pkg.version_definitions(version)
+    return any(vdef.kwargs.get("deprecated", False) for _, vdef in definitions)
 
 
 def preferred_version(
@@ -2784,13 +2844,13 @@ def preferred_version(
         pkg: The package whose versions are to be assessed.
     """
 
-    def _version_order(version_info):
-        version, info = version_info
-        deprecated_key = not info.get("deprecated", False)
-        return (deprecated_key, *concretization_version_order(version_info))
+    def _version_order(vdef):
+        deprecated_key = not vdef.kwargs.get("deprecated", False)
+        return (deprecated_key, *concretization_version_order(vdef))
 
-    version, _ = max(pkg.versions.items(), key=_version_order)
-    return version
+    vdefs = [vdef for v in pkg.all_versions() for _, vdef in pkg.version_definitions(v)]
+    vdef = max(vdefs, key=_version_order)
+    return vdef.version
 
 
 def non_preferred_version(node: spack.spec.Spec) -> spack.enums.PartStyle:
@@ -2836,22 +2896,19 @@ def sort_by_pkg_preference(
     return [v for v, _ in sorted(s, reverse=True, key=concretization_version_order)]
 
 
-def concretization_version_order(
-    version_info: Tuple[Union[GitVersion, StandardVersion], dict],
-) -> Tuple[bool, bool, bool, bool, Union[GitVersion, StandardVersion]]:
+def concretization_version_order(vdef: VersionDefinition):
     """Version order key for concretization, where preferred > not preferred,
     finite > any infinite component; only if all are the same, do we use default version
     ordering.
 
     Version deprecation needs to be accounted for separately.
     """
-    version, info = version_info
     return (
-        info.get("preferred", False),
-        not isinstance(version, GitVersion),
-        not version.isdevelop(),
-        not version.is_prerelease(),
-        version,
+        vdef.kwargs.get("preferred", False),
+        not isinstance(vdef.version, GitVersion),
+        not vdef.version.isdevelop(),
+        not vdef.version.is_prerelease(),
+        vdef.version,
     )
 
 
