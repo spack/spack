@@ -5,7 +5,7 @@
 standard library
 """
 
-from typing import Any, Sequence, List, Optional
+from typing import Any, List, Optional, Sequence
 
 
 def comma_list(sequence: Sequence[Any], article: str = "") -> str:

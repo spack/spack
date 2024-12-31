@@ -51,7 +51,7 @@ import spack.util.path
 import spack.util.web
 import spack.variant
 import spack.version
-import spack.version.git_ref_lookup
+import spack.version_def
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
@@ -62,7 +62,15 @@ from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash
 from spack.util.string import comma_and, quote
 from spack.util.typing import SupportsRichComparison
-from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
+from spack.version import (
+    ConcreteVersion,
+    GitVersion,
+    StandardVersion,
+    Version,
+    VersionError,
+    is_git_version,
+)
+from spack.version_def import VersionDefinition
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
@@ -319,7 +327,7 @@ def on_package_attributes(**attr_dict):
             has_all_attributes = all([hasattr(instance, key) for key in attr_dict])
             if has_all_attributes:
                 has_the_right_values = all(
-                    [getattr(instance, key) == value for key, value in attr_dict.items()]  # NOQA: ignore=E501
+                    [getattr(instance, key) == value for key, value in attr_dict.items()]
                 )
                 if has_the_right_values:
                     func(instance, *args, **kwargs)
@@ -470,6 +478,8 @@ def _remove_overridden_defs(defs: List[Tuple[spack.spec.Spec, Any]]) -> None:
     ``when="+rocm"``, but we can't guarantee that will always happen when a vdef is
     overridden. So we use this method to remove any overrides we can know statically.
 
+    Version dictionaries act similarly.
+
     """
     i = 0
     while i < len(defs):
@@ -497,6 +507,19 @@ def _definitions(
         _remove_overridden_defs(defs)
 
     return defs
+
+
+def _get_def(
+    when_indexed_dictionary: Dict[spack.spec.Spec, Dict[K, V]], spec: spack.spec.Spec, key: K
+) -> Optional[V]:
+    """Get highest precedence definition from a dictionary, given a spec and a subkey."""
+    assert spec.concrete
+
+    try:
+        high_to_low = reversed(_definitions(when_indexed_dictionary, key))
+        return next(definition for when, definition in high_to_low if spec.satisfies(when))
+    except StopIteration:
+        return None
 
 
 #: Store whether a given Spec source/binary should not be redistributed.
@@ -545,8 +568,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     compiler = DeprecatedCompiler()
 
-    #: Class level dictionary populated by :func:`~spack.directives.version` directives
+    #: DEPRECATED Class level dictionary populated by :func:`~spack.directives.version` directives
+    #: This is here for backward compatibility - some packages use it, but we will warn if they do.
+    #: This loses information about conditional versions and has been Superseded by when_versions.
     versions: Dict[StandardVersion, Dict[str, Any]]
+    #: Class level dictionary populated by :func:`~spack.directives.version` directives.
+    #: Added in package API v2.6 to support conditional versions.
+    when_versions: Dict[spack.spec.Spec, Dict[StandardVersion, VersionDefinition]]
     #: Class level dictionary populated by :func:`~spack.directives.resource` directives
     resources: Dict[spack.spec.Spec, List[Resource]]
     #: Class level dictionary populated by :func:`~spack.directives.depends_on` and
@@ -732,6 +760,27 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def dependencies_by_name(cls, when: bool = False):
         return _by_subkey(cls.dependencies, when=when)
 
+    # Accessors for versions
+    # External code working with Versions should go through the methods below
+    @classmethod
+    def all_versions(cls) -> List[ConcreteVersion]:
+        return _subkeys(cls.when_versions)
+
+    @classmethod
+    def has_version(cls, version: ConcreteVersion) -> bool:
+        return _has_subkey(cls.when_versions, version)
+
+    @classmethod
+    def num_version_definitions(cls) -> int:
+        return _num_definitions(cls.when_versions)
+
+    @classmethod
+    def version_definitions(
+        cls, version: ConcreteVersion
+    ) -> List[Tuple[spack.spec.Spec, VersionDefinition]]:
+        """Iterator over (when_spec, VersionDefinition) for all definitions of a version."""
+        return _definitions(cls.when_versions, version)
+
     # Accessors for variants
     # External code working with Variants should go through the methods below
 
@@ -772,17 +821,21 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if filtered_variants_by_name:
                 yield when, filtered_variants_by_name
 
+    @classmethod
+    def version_def_for_spec(cls, spec) -> Optional[spack.version_def.VersionDefinition]:
+        """Get the highest precedence version definition matching this package's spec."""
+        return _get_def(cls.versions, spec, spec.version)
+
     def get_variant(self, name: str) -> spack.variant.Variant:
         """Get the highest precedence variant definition matching this package's spec.
 
         Arguments:
             name: name of the variant definition to get
         """
-        try:
-            highest_to_lowest = reversed(self.variant_definitions(name))
-            return next(vdef for when, vdef in highest_to_lowest if self.spec.satisfies(when))
-        except StopIteration:
+        vdef = _get_def(self.variants, self.spec, name)
+        if not vdef:
             raise ValueError(f"No variant '{name}' on spec: {self.spec}")
+        return vdef
 
     @classmethod
     def validate_variant_names(self, spec: spack.spec.Spec):
@@ -927,16 +980,21 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @classmethod
     @memoized
-    def version_urls(cls) -> Dict[StandardVersion, str]:
+    def version_urls(cls) -> Dict[ConcreteVersion, str]:
         """Dict of explicitly defined URLs for versions of this package.
 
         Return:
-           An dict mapping version to url, ordered by version.
+           A dict mapping version to url, ordered by version.
 
         A version's URL only appears in the result if it has an an explicitly defined ``url``
         argument. So, this list may be empty if a package only defines ``url`` at the top level.
         """
-        return {v: args["url"] for v, args in sorted(cls.versions.items()) if "url" in args}
+        return {
+            v: version_def.kwargs["url"]
+            for v in cls.all_versions()
+            for when, version_def in cls.version_definitions(v)
+            if "url" in version_def.kwargs
+        }
 
     def nearest_url(self, version):
         """Finds the URL with the "closest" version to ``version``.
@@ -1070,7 +1128,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         self._resolve_git_provenance(self.spec)
 
-    def all_urls_for_version(self, version: StandardVersion) -> List[str]:
+    def all_urls_for_version(self, version: ConcreteVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and
         list_url (if it contains a version) in a package in that order.
 
@@ -1084,8 +1142,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def _implement_all_urls_for_version(
         self,
-        version: Union[str, StandardVersion],
-        custom_url_for_version: Optional[Callable[[StandardVersion], Optional[str]]] = None,
+        version: Union[str, ConcreteVersion],
+        custom_url_for_version: Optional[Callable[[ConcreteVersion], Optional[str]]] = None,
     ) -> List[str]:
         version = StandardVersion.from_string(version) if isinstance(version, str) else version
 
@@ -1382,7 +1440,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             raise ValueError("Cannot retrieve fetcher for package without concrete version.")
         if not self._fetcher:
             # assign private member with the public setter api for error checking
-            self.fetcher = for_package_version(self)
+            self.fetcher = fs.for_spec(self.spec)
         return self._fetcher
 
     @fetcher.setter
@@ -1855,7 +1913,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # TODO: resources
         if self.spec.versions.concrete:
             try:
-                source_id = for_package_version(self).source_id()
+                source_id = fs.for_spec(self.spec).source_id()
             except (fs.ExtrapolationError, fs.InvalidArgsError, spack.error.NoURLError):
                 # ExtrapolationError happens if the package has no fetchers defined.
                 # InvalidArgsError happens when there are version directives with args,
@@ -2307,9 +2365,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if hasattr(self, "urls") and self.urls:
             urls.append(self.urls[0])
 
-        for args in self.versions.values():
-            if "url" in args:
-                urls.append(args["url"])
+        for v in self.all_versions():
+            for _, vdef in self.version_definitions(v):
+                if "url" in vdef.kwargs:
+                    urls.append(vdef.kwargs["url"])
         return urls
 
     def fetch_remote_versions(
@@ -2577,220 +2636,18 @@ def make_package_test_rpath(pkg: PackageBase, test_dir: Union[str, pathlib.Path]
     mini_rpath.establish_link()
 
 
-def check_pkg_attributes(pkg):
-    """Find ambiguous top-level fetch attributes in a package.
-
-    Currently this only ensures that two or more VCS fetch strategies are
-    not specified at once.
-    """
-    # a single package cannot have URL attributes for multiple VCS fetch
-    # strategies *unless* they are the same attribute.
-    conflicts = set([s.url_attr for s in fs.all_strategies if hasattr(pkg, s.url_attr)])
-
-    # URL isn't a VCS fetch method. We can use it with a VCS method.
-    conflicts -= set(["url"])
-
-    if len(conflicts) > 1:
-        raise fs.FetcherConflict(
-            "Package %s cannot specify %s together. Pick at most one."
-            % (pkg.name, comma_and(quote(conflicts)))
-        )
-
-
-def _check_version_attributes(fetcher, pkg, version):
-    """Ensure that the fetcher for a version is not ambiguous.
-
-    This assumes that we have already determined the fetcher for the
-    specific version using ``for_package_version()``
-    """
-    all_optionals = {a for s in fs.all_strategies for a in s.optional_attrs}
-
-    args = pkg.versions[version]
-    extra = set(args) - set(fetcher.optional_attrs) - set([fetcher.url_attr, "no_cache"])
-    extra.intersection_update(all_optionals)
-
-    if extra:
-        legal_attrs = [fetcher.url_attr] + list(fetcher.optional_attrs)
-        raise fs.FetcherConflict(
-            "%s version '%s' has extra arguments: %s"
-            % (pkg.name, version, comma_and(quote(extra))),
-            "Valid arguments for a %s fetcher are: \n    %s"
-            % (fetcher.url_attr, comma_and(quote(legal_attrs))),
-        )
-
-
-def _extrapolate(pkg, version):
-    """Create a fetcher from an extrapolated URL for this version."""
-    try:
-        return fs.URLFetchStrategy(
-            url=pkg.url_for_version(version), fetch_options=pkg.fetch_options
-        )
-    except spack.error.NoURLError:
-        raise fs.ExtrapolationError(
-            f"Can't extrapolate a URL for version {version} because "
-            f"package {pkg.name} defines no URLs"
-        )
-
-
-def _from_merged_attrs(fetcher, pkg, version):
-    """Create a fetcher from merged package and version attributes."""
-    if fetcher.url_attr == "url":
-        mirrors = pkg.all_urls_for_version(version)
-        url = mirrors[0]
-        mirrors = mirrors[1:]
-        attrs = {fetcher.url_attr: url, "mirrors": mirrors}
-    else:
-        url = getattr(pkg, fetcher.url_attr)
-        attrs = {fetcher.url_attr: url}
-
-    attrs["fetch_options"] = pkg.fetch_options
-    attrs.update(pkg.versions[version])
-
-    if fetcher.url_attr == "git":
-        pkg_attr_list = ["submodules", "git_sparse_paths"]
-        for pkg_attr in pkg_attr_list:
-            if hasattr(pkg, pkg_attr):
-                attrs.setdefault(pkg_attr, getattr(pkg, pkg_attr))
-
-    return fetcher(**attrs)
-
-
-def for_package_version(pkg, version=None):
-    saved_versions = None
-    if version is not None:
-        saved_versions = pkg.spec.versions
-
-    try:
-        return _for_package_version(pkg, version)
-    finally:
-        if saved_versions is not None:
-            pkg.spec.versions = saved_versions
-
-
-def _for_package_version(pkg, version=None):
-    """Determine a fetch strategy based on the arguments supplied to
-    version() in the package description."""
-
-    # No-code packages have a custom fetch strategy to work around issues
-    # with resource staging.
-    if not pkg.has_code:
-        return fs.BundleFetchStrategy()
-
-    check_pkg_attributes(pkg)
-
-    if version is not None:
-        assert not pkg.spec.concrete, "concrete specs should not pass the 'version=' argument"
-        # Specs are initialized with the universe range, if no version information is given,
-        # so here we make sure we always match the version passed as argument
-        if not isinstance(version, spack.version.StandardVersion):
-            version = spack.version.Version(version)
-
-        version_list = spack.version.VersionList()
-        version_list.add(version)
-        pkg.spec.versions = version_list
-    else:
-        version = pkg.version
-
-    # if it's a commit, we must use a fs.GitFetchStrategy
-    commit_var = pkg.spec.variants.get("commit", None)
-    commit = commit_var.value if commit_var else None
-    tag = None
-    if isinstance(version, spack.version.GitVersion) or commit:
-        git_url = pkg.version_or_package_attr("git", version)
-        if not git_url:
-            raise spack.error.FetchError(
-                f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
-            )
-        if isinstance(version, spack.version.GitVersion):
-            # Populate the version with comparisons to other commits
-            version.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(pkg.name))
-
-            if not commit and version.is_commit:
-                commit = version.ref
-            version_meta_data = pkg.versions.get(version.std_version)
-        else:
-            version_meta_data = pkg.versions.get(version)
-
-        # For GitVersion, we have no way to determine whether a ref is a branch or tag
-        # Fortunately, we handle branches and tags identically, except tags are
-        # handled slightly more conservatively for older versions of git.
-        # We call all non-commit refs tags in this context, at the cost of a slight
-        # performance hit for branches on older versions of git.
-        # Branches cannot be cached, so we tell the fetcher not to cache tags/branches
-
-        # TODO(psakiev) eventually we should  only need to clone based on the commit
-
-        # commit stashed on version
-        if version_meta_data:
-            if not commit:
-                commit = version_meta_data.get("commit")
-            tag = version_meta_data.get("tag") or version_meta_data.get("branch")
-
-        kwargs = {"commit": commit, "tag": tag, "no_cache": bool(not commit)}
-        kwargs["git"] = git_url
-        kwargs["submodules"] = pkg.version_or_package_attr("submodules", version, False)
-        kwargs["git_sparse_paths"] = pkg.version_or_package_attr("git_sparse_paths", version, None)
-        kwargs["get_full_repo"] = pkg.version_or_package_attr("get_full_repo", version, False)
-
-        # if the ref_version is a known version from the package, use that version's
-        # attributes
-        ref_version = getattr(pkg.version, "ref_version", None)
-        if ref_version:
-            kwargs["git"] = pkg.version_or_package_attr("git", ref_version)
-            kwargs["submodules"] = pkg.version_or_package_attr("submodules", ref_version, False)
-
-        fetcher = fs.GitFetchStrategy(**kwargs)
-        return fetcher
-
-    # If it's not a known version, try to extrapolate one by URL
-    if version not in pkg.versions:
-        return _extrapolate(pkg, version)
-
-    # Set package args first so version args can override them
-    args = {"fetch_options": pkg.fetch_options}
-    # Grab a dict of args out of the package version dict
-    args.update(pkg.versions[version])
-
-    # If the version specifies a `url_attr` directly, use that.
-    for fetcher in fs.all_strategies:
-        if fetcher.url_attr in args:
-            _check_version_attributes(fetcher, pkg, version)
-            if fetcher.url_attr == "git" and hasattr(pkg, "submodules"):
-                args.setdefault("submodules", pkg.submodules)
-            return fetcher(**args)
-
-    # if a version's optional attributes imply a particular fetch
-    # strategy, and we have the `url_attr`, then use that strategy.
-    for fetcher in fs.all_strategies:
-        if hasattr(pkg, fetcher.url_attr) or fetcher.url_attr == "url":
-            optionals = fetcher.optional_attrs
-            if optionals and any(a in args for a in optionals):
-                _check_version_attributes(fetcher, pkg, version)
-                return _from_merged_attrs(fetcher, pkg, version)
-
-    # if the optional attributes tell us nothing, then use any `url_attr`
-    # on the package.  This prefers URL vs. VCS, b/c fs.URLFetchStrategy is
-    # defined first in this file.
-    for fetcher in fs.all_strategies:
-        if hasattr(pkg, fetcher.url_attr):
-            _check_version_attributes(fetcher, pkg, version)
-            return _from_merged_attrs(fetcher, pkg, version)
-
-    raise fs.InvalidArgsError(pkg, version, **args)
-
-
-def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -> bool:
+def deprecated_version(pkg: PackageBase, version: Union[str, ConcreteVersion]) -> bool:
     """Return True iff the version is deprecated.
 
     Arguments:
         pkg: The package whose version is to be checked.
         version: The version being checked
     """
-    if not isinstance(version, StandardVersion):
-        version = StandardVersion.from_string(version)
+    if not isinstance(version, ConcreteVersion):
+        version = Version(version)
 
-    details = pkg.versions.get(version)
-    return details is not None and details.get("deprecated", False)
+    definitions = pkg.version_definitions(version)
+    return any(vdef.kwargs.get("deprecated", False) for _, vdef in definitions)
 
 
 def preferred_version(
@@ -2805,13 +2662,13 @@ def preferred_version(
         pkg: The package whose versions are to be assessed.
     """
 
-    def _version_order(version_info):
-        version, info = version_info
-        deprecated_key = not info.get("deprecated", False)
-        return (deprecated_key, *concretization_version_order(version_info))
+    def _version_order(vdef):
+        deprecated_key = not vdef.kwargs.get("deprecated", False)
+        return (deprecated_key, *concretization_version_order(vdef))
 
-    version, _ = max(pkg.versions.items(), key=_version_order)
-    return version
+    vdefs = [vdef for v in pkg.all_versions() for _, vdef in pkg.version_definitions(v)]
+    vdef = max(vdefs, key=_version_order)
+    return vdef.version
 
 
 def non_preferred_version(node: spack.spec.Spec) -> spack.enums.PartStyle:
@@ -2857,22 +2714,19 @@ def sort_by_pkg_preference(
     return [v for v, _ in sorted(s, reverse=True, key=concretization_version_order)]
 
 
-def concretization_version_order(
-    version_info: Tuple[Union[GitVersion, StandardVersion], dict],
-) -> Tuple[bool, bool, bool, bool, Union[GitVersion, StandardVersion]]:
+def concretization_version_order(vdef: VersionDefinition):
     """Version order key for concretization, where preferred > not preferred,
     finite > any infinite component; only if all are the same, do we use default version
     ordering.
 
     Version deprecation needs to be accounted for separately.
     """
-    version, info = version_info
     return (
-        info.get("preferred", False),
-        not isinstance(version, GitVersion),
-        not version.isdevelop(),
-        not version.is_prerelease(),
-        version,
+        vdef.kwargs.get("preferred", False),
+        not isinstance(vdef.version, GitVersion),
+        not vdef.version.isdevelop(),
+        not vdef.version.is_prerelease(),
+        vdef.version,
     )
 
 

@@ -203,6 +203,12 @@ class ConcreteVersion(VersionType):
 
     __slots__ = ()
 
+    def is_develop(self):
+        raise NotImplementedError
+
+    def is_prerelease(self) -> bool:
+        raise NotImplementedError
+
 
 def _stringify_version(versions: VersionTuple, separators: Tuple[str, ...]) -> str:
     """Create a string representation from version components."""
