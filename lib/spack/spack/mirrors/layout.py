@@ -118,27 +118,29 @@ def default_mirror_layout(
     per_package_ref: str,
     spec: Optional["spack.spec.Spec"] = None,
 ) -> MirrorLayout:
-    """Returns a ``MirrorReference`` object which keeps track of the relative
+    """Returns a ``MirrorLayout`` object which keeps track of the relative
     storage path of the resource associated with the specified ``fetcher``."""
-    ext = None
+
     if spec:
         pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
-        versions = pkg_cls.versions.get(spec.version, {})
-        ext = versions.get("extension", None)
-    # If the spec does not explicitly specify an extension (the default case),
-    # then try to determine it automatically. An extension can only be
+        when_versions = pkg_cls.version_definitions(spec.version)
+        version_args = next((v.kwargs for when, v in when_versions if spec.satisfies(when)), {})
+        ext = version_args.get("extension", None)
+
+    # If the version as defined in the package does not explicitly specify
+    # an extension, try to determine one automatically. An extension can only be
     # specified for the primary source of the package (e.g. the source code
     # identified in the 'version' declaration). Resources/patches don't have
     # an option to specify an extension, so it must be inferred for those.
     ext = ext or _determine_extension(fetcher)
 
     if ext:
-        per_package_ref += ".%s" % ext
+        per_package_ref += f".{ext}"
 
     global_ref = fetcher.mirror_id()
     if global_ref:
         global_ref = os.path.join("_source-cache", global_ref)
     if global_ref and ext:
-        global_ref += ".%s" % ext
+        global_ref += f".{ext}"
 
     return DefaultLayout(per_package_ref, global_ref)
