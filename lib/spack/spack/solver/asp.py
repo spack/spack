@@ -905,6 +905,24 @@ class ErrorHandler:
         raise UnsatisfiableSpecError(msg)
 
 
+class SpecPrefHandler:
+    """Handles converting `no_spec_pref` predicates in a model into intelligible errors."""
+
+    def __init__(self, model):
+        self.model = model
+
+    def raise_if_prefs_violated(self):
+        """Raise an error if any spec preferences were violated in the solve."""
+        # extract attr(...) argument from no_spec_pref(Name, Attribute)
+        no_spec_prefs = [sym.arguments[1] for sym in self.model if sym.name == "no_spec_pref"]
+
+        # prepare to build specs
+        attrs = extract_args(no_spec_prefs)
+
+        # TODO: to get the right prefs in the solution we need to get rid of lockfile
+        # specs as inputs and instead use them as preferences.
+
+
 class PyclingoDriver:
     def __init__(self, conc_cache: Optional[ConcretizationCache] = None) -> None:
         """Driver for the Python clingo interface.
@@ -1391,7 +1409,9 @@ class SpackSolverSetup:
         # If true, we have to load the code for synthesizing splices
         self.enable_splicing: bool = spack.config.CONFIG.get("concretizer:splice:automatic")
 
-<<<<<<< HEAD
+        # list of specs whose attributes we should try to match during solve
+        self.spec_prefs: Optional[Sequence[spack.spec.Spec]] = None
+
     def pkg_version_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
         """Declares known versions, their origins, and their weights."""
         version_provenance = self.possible_versions[pkg.name]
@@ -1402,32 +1422,6 @@ class SpackSolverSetup:
         if pkg.name in self.versions_from_yaml:
             ordered_versions = list(
                 spack.llnl.util.lang.dedupe(self.versions_from_yaml[pkg.name] + ordered_versions)
-=======
-        # list of specs whose attributes we should try to match during solve
-        self.spec_prefs: Optional[Sequence[spack.spec.Spec]] = None
-
-    def pkg_version_rules(self, pkg):
-        """Output declared versions of a package.
-
-        This uses self.declared_versions so that we include any versions
-        that arise from a spec.
-        """
-
-        def key_fn(version):
-            # Origins are sorted by "provenance" first, see the Provenance enumeration above
-            return version.origin, version.idx
-
-        if isinstance(pkg, str):
-            pkg = self.pkg_class(pkg)
-
-        declared_versions = self.declared_versions[pkg.name]
-        partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
-
-        most_to_least_preferred = []
-        for _, group in itertools.groupby(partially_sorted_versions, key=key_fn):
-            most_to_least_preferred.extend(
-                list(sorted(group, reverse=True, key=lambda x: vn.ver(x.version)))
->>>>>>> 78a225802a (concretizer: add `spec_prefs` to try to match lockfile)
             )
 
         # Set the deprecation penalty, according to the package. This should be enough to move the
@@ -2867,7 +2861,6 @@ class SpackSolverSetup:
                 if spec.concrete:
                     self.register_concrete_spec(spec, possible)
 
-<<<<<<< HEAD
     def impossible_dependencies_check(self, specs) -> None:
         for edge in traverse.traverse_edges(specs):
             possible_deps = self.pkgs
@@ -2915,7 +2908,7 @@ class SpackSolverSetup:
                 "No version exists that satisfies these input specs:",
                 "    " + ", ".join(str(spec) for spec in impossible),
             )
-=======
+
     def generate_spec_prefs(self):
         for spec in self.spec_prefs:
             # skip unreachable preferences
@@ -2926,7 +2919,6 @@ class SpackSolverSetup:
                 self.gen.fact(fn.spec_pref(clause))
 
             self.gen.newline()
->>>>>>> 78a225802a (concretizer: add `spec_prefs` to try to match lockfile)
 
     def setup(
         self,
