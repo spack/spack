@@ -19,6 +19,7 @@ import spack.mirrors.utils
 import spack.repo
 import spack.spec
 import spack.util.web as web_util
+import spack.util.parallel
 from spack.cmd.common import arguments
 from spack.error import SpackError
 
@@ -631,24 +632,18 @@ def _specs_and_action(args):
     return mirror_specs, mirror_fn
 
 def create_mirror_for_one_spec(candidate, mirror_cache, mirror_stats):
-<<<<<<< HEAD
-        pkg_cls = spack.repo.PATH.get_pkg_class(candidate.name)
-        pkg_obj = pkg_cls(spack.spec.Spec(candidate))
-        mirror_stats.next_spec(pkg_obj.spec)
-        spack.mirror.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
-=======
     pkg_cls = spack.repo.PATH.get_pkg_class(candidate.name)
     pkg_obj = pkg_cls(spack.spec.Spec(candidate))
     mirror_stats.next_spec(pkg_obj.spec)
     spack.mirrors.utils.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
 
->>>>>>> 519e76906f (Fix some styling issues)
 
 <<<<<<< HEAD
 def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions):
     mirror_cache, mirror_stats = spack.mirrors.utils.mirror_cache_and_stats(
         path, skip_unstable_versions=skip_unstable_versions
     )
+<<<<<<< HEAD
     for candidate in mirror_specs:
         pkg_cls = spack.repo.PATH.get_pkg_class(candidate.name)
         pkg_obj = pkg_cls(spack.spec.Spec(candidate))
@@ -667,6 +662,10 @@ def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, thre
         path, skip_unstable_versions=skip_unstable_versions
     )
     with ThreadPoolExecutor(max_workers=threads) as executor:
+=======
+    #with ThreadPoolExecutor(max_workers=threads) as executor:
+    with spack.util.parallel.make_concurrent_executor(jobs=threads) as executor:
+>>>>>>> a0a4b58506 (Use Spack's implementation of a concurrent executor.)
         # Submit tasks to the thread pool
         _ = [
             executor.submit(create_mirror_for_one_spec, candidate, mirror_cache, mirror_stats)
