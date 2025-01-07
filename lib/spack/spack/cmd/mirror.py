@@ -638,12 +638,10 @@ def create_mirror_for_one_spec(candidate, mirror_cache, mirror_stats):
     spack.mirrors.utils.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
 
 
-<<<<<<< HEAD
 def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions):
     mirror_cache, mirror_stats = spack.mirrors.utils.mirror_cache_and_stats(
         path, skip_unstable_versions=skip_unstable_versions
     )
-<<<<<<< HEAD
     for candidate in mirror_specs:
         pkg_cls = spack.repo.PATH.get_pkg_class(candidate.name)
         pkg_obj = pkg_cls(spack.spec.Spec(candidate))
@@ -656,31 +654,12 @@ def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_version
     present, mirrored, error = spack.mirrors.utils.create(
         path, mirror_specs, skip_unstable_versions
     )
-=======
-def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, threads):
-    mirror_cache, mirror_stats = spack.mirror.mirror_cache_and_stats(
-        path, skip_unstable_versions=skip_unstable_versions
-    )
-    with ThreadPoolExecutor(max_workers=threads) as executor:
-=======
-    #with ThreadPoolExecutor(max_workers=threads) as executor:
-    with spack.util.parallel.make_concurrent_executor(jobs=threads) as executor:
->>>>>>> a0a4b58506 (Use Spack's implementation of a concurrent executor.)
         # Submit tasks to the thread pool
         _ = [
             executor.submit(create_mirror_for_one_spec, candidate, mirror_cache, mirror_stats)
             for candidate in mirror_specs
         ]
     process_mirror_stats(*mirror_stats.stats())
-
-
-def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions, threads):
-    present, mirrored, error = spack.mirrors.utils.create(
-        path, mirror_specs, skip_unstable_versions
-    )
-    tty.msg("Summary for mirror in {}".format(path))
-    process_mirror_stats(present, mirrored, error)
-
 
 def mirror_destroy(args):
     """given a url, recursively delete everything under it"""
