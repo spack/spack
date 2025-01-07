@@ -31,6 +31,7 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
+
 import inspect
 import io
 import multiprocessing
@@ -453,6 +454,35 @@ def optimization_flags(compiler, target):
     return result
 
 
+class FilterDefaultDynamicLinkerSearchPaths:
+    """Remove rpaths to directories that are default search paths of the dynamic linker."""
+
+    def __init__(self, dynamic_linker: Optional[str]) -> None:
+        # Identify directories by (inode, device) tuple, which handles symlinks too.
+        self.default_path_identifiers: Set[Tuple[int, int]] = set()
+        if not dynamic_linker:
+            return
+        for path in spack.util.libc.default_search_paths_from_dynamic_linker(dynamic_linker):
+            try:
+                s = os.stat(path)
+                if stat.S_ISDIR(s.st_mode):
+                    self.default_path_identifiers.add((s.st_ino, s.st_dev))
+            except OSError:
+                continue
+
+    def is_dynamic_loader_default_path(self, p: str) -> bool:
+        try:
+            s = os.stat(p)
+            return (s.st_ino, s.st_dev) in self.default_path_identifiers
+        except OSError:
+            return False
+
+    def __call__(self, dirs: List[str]) -> List[str]:
+        if not self.default_path_identifiers:
+            return dirs
+        return [p for p in dirs if not self.is_dynamic_loader_default_path(p)]
+
+
 def set_wrapper_variables(pkg, env):
     """Set environment variables used by the Spack compiler wrapper (which have the prefix
     `SPACK_`) and also add the compiler wrappers to PATH.
@@ -867,6 +897,7 @@ def effective_deptypes(
         root=True,
         all_edges=True,
     )
+    traverse.traverse_depth_first_with_visitor(traverse.with_artificial_edges(specs), visitor)
 
     # Dictionary with "no mode" as default value, so it's easy to write modes[x] |= flag.
     use_modes = defaultdict(lambda: UseMode(0))
@@ -1095,10 +1126,7 @@ def load_external_modules(context: SetupContext) -> None:
 
 
 class ProcessHandle:
-    """
-    This class manages and monitors the state of a child process for a task
-    used for the building and installation of a package.
-    """
+    """Manages and monitors the state of a child process for package installation."""
 
     def __init__(
         self,
@@ -1108,7 +1136,7 @@ class ProcessHandle:
     ):
         """
         Parameters:
-           pkg: The package to be built and installed through the child process.
+           pkg: The package to be built and installed by the child process.
            process: The child process instance being managed/monitored.
            read_pipe: The pipe used for receiving information from the child process.
         """
@@ -1117,12 +1145,12 @@ class ProcessHandle:
         self.read_pipe = read_pipe
 
     def poll(self) -> bool:
-        """Checks if there is data available to receive from the read pipe"""
+        """Check if there is data available to receive from the read pipe."""
         return self.read_pipe.poll()
 
     def complete(self):
-        """Waits (if needed) for the child process to complete
-        and returns its exit status.
+        """Wait (if needed) for child process to complete
+        and return its exit status.
 
         See ``complete_build_process()``.
         """
@@ -1295,13 +1323,13 @@ def start_build_process(
 
     Args:
         pkg: package whose environment we should set up the
-             child process for.
+            child process for.
         function: argless function to run in the child
             process.
         kwargs: additional keyword arguments to pass to ``function()``
         timeout: maximum time allowed to finish the execution of function
 
-    Usage:
+    Usage::
 
         def child_fun():
             # do stuff
@@ -1420,7 +1448,7 @@ def complete_build_process(handle: ProcessHandle):
     return child_result
 
 
-CONTEXT_BASES = (spack.package_base.PackageBase, spack.builder.Builder)
+CONTEXT_BASES = (spack.package_base.PackageBase, spack.build_systems._checks.BaseBuilder)
 
 
 def get_package_context(traceback, context=3):
