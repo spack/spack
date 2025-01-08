@@ -18,8 +18,8 @@ import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.repo
 import spack.spec
-import spack.util.web as web_util
 import spack.util.parallel
+import spack.util.web as web_util
 from spack.cmd.common import arguments
 from spack.error import SpackError
 
@@ -637,7 +637,12 @@ def create_mirror_for_one_spec(candidate, mirror_cache, mirror_stats):
     spack.mirrors.utils.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
     return pkg_obj
 
+<<<<<<< HEAD
 def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions):
+=======
+
+def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, threads):
+>>>>>>> 6ae2f6e1cc (Style fixes)
     mirror_cache, mirror_stats = spack.mirrors.utils.mirror_cache_and_stats(
         path, skip_unstable_versions=skip_unstable_versions
     )
@@ -661,7 +666,7 @@ def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_version
     for mirror_future in futures:
         pkg_obj = mirror_future.result()
         mirror_stats.next_spec(pkg_obj.spec)
-        
+
     process_mirror_stats(*mirror_stats.stats())
 
 def mirror_destroy(args):
