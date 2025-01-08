@@ -2091,10 +2091,7 @@ class Spec:
     def short_spec(self):
         """Returns a version of the spec with the dependencies hashed
         instead of completely enumerated."""
-        return self.format(
-            "{name}{@version}{variants}{ arch=architecture}"
-            "{/hash:7}{%compiler.name}{@compiler.version}"
-        )
+        return self.format("{name}{@version} {variants}{ arch=architecture}{/hash:7}")
 
     @property
     def cshort_spec(self):
