@@ -634,9 +634,8 @@ def _specs_and_action(args):
 def create_mirror_for_one_spec(candidate, mirror_cache, mirror_stats):
     pkg_cls = spack.repo.PATH.get_pkg_class(candidate.name)
     pkg_obj = pkg_cls(spack.spec.Spec(candidate))
-    mirror_stats.next_spec(pkg_obj.spec)
     spack.mirrors.utils.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
-
+    return pkg_obj
 
 def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions):
     mirror_cache, mirror_stats = spack.mirrors.utils.mirror_cache_and_stats(
@@ -655,10 +654,14 @@ def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_version
         path, mirror_specs, skip_unstable_versions
     )
         # Submit tasks to the thread pool
-        _ = [
+        futures = [
             executor.submit(create_mirror_for_one_spec, candidate, mirror_cache, mirror_stats)
             for candidate in mirror_specs
         ]
+    for mirror_future in futures:
+        pkg_obj = mirror_future.result()
+        mirror_stats.next_spec(pkg_obj.spec)
+        
     process_mirror_stats(*mirror_stats.stats())
 
 def mirror_destroy(args):
