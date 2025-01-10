@@ -67,6 +67,7 @@ from typing import (
     List,
     Match,
     Optional,
+    Sequence,
     Set,
     Tuple,
     Union,
@@ -1017,7 +1018,7 @@ class _EdgeMap(collections.abc.Mapping):
         parent: Optional[str] = None,
         child: Optional[str] = None,
         depflag: dt.DepFlag = dt.ALL,
-        virtuals: Optional[List[str]] = None,
+        virtuals: Optional[Sequence[str]] = None,
     ) -> List[DependencySpec]:
         """Selects a list of edges and returns them.
 
@@ -1597,12 +1598,12 @@ class Spec:
         ]
 
     def edges_to_dependencies(
-        self, name=None, depflag: dt.DepFlag = dt.ALL, *, virtuals: Optional[List[str]] = None
+        self, name=None, depflag: dt.DepFlag = dt.ALL, *, virtuals: Optional[Sequence[str]] = None
     ) -> List[DependencySpec]:
         """Returns a list of edges connecting this node in the DAG to children.
 
         Args:
-            name (str): filter dependencies by package name
+            name: filter dependencies by package name
             depflag: allowed dependency types
             virtuals: allowed virtuals
         """
@@ -1635,7 +1636,7 @@ class Spec:
         name=None,
         deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL,
         *,
-        virtuals: Optional[List[str]] = None,
+        virtuals: Optional[Sequence[str]] = None,
     ) -> List["Spec"]:
         """Returns a list of direct dependencies (nodes in the DAG)
 
