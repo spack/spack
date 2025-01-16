@@ -63,6 +63,7 @@ def test_mirror_from_env(mutable_mock_env_path, tmp_path: pathlib.Path, mock_pac
         expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
         assert mirror_res == expected
 
+
 def test_mirror_from_env_parallel(tmp_path, mock_packages, mock_fetch, mutable_mock_env_path):
     mirror_dir = str(tmp_path / "mirror")
     env_name = "test-parallel"
