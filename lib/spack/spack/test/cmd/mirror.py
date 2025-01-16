@@ -63,6 +63,24 @@ def test_mirror_from_env(mutable_mock_env_path, tmp_path: pathlib.Path, mock_pac
         expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
         assert mirror_res == expected
 
+def test_mirror_from_env_parallel(tmp_path, mock_packages, mock_fetch, mutable_mock_env_path):
+    mirror_dir = str(tmp_path / "mirror")
+    env_name = "test-parallel"
+
+    env("create", env_name)
+    with ev.read(env_name):
+        add("trivial-install-test-package")
+        add("git-test")
+        concretize()
+        with spack.config.override("config:checksum", False):
+            mirror("create", "-d", mirror_dir, "--all", "-j", "2")
+
+    e = ev.read(env_name)
+    assert set(os.listdir(mirror_dir)) == set([s.name for s in e.user_specs])
+    for spec in e.specs_by_hash.values():
+        mirror_res = os.listdir(os.path.join(mirror_dir, spec.name))
+        expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
+        assert mirror_res == expected
 
 # Test for command line-specified spec in concretized environment
 def test_mirror_spec_from_env(
