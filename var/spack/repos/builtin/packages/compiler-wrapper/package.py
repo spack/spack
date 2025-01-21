@@ -11,7 +11,6 @@ import archspec.cpu
 from llnl.util import lang
 
 import spack.compilers.libraries
-import spack.config
 import spack.package_base
 from spack.package import *
 
@@ -29,6 +28,7 @@ class CompilerWrapper(Package):
        -I and/or -isystem arguments for dependency /include directories.
        -L                 arguments for dependency /lib directories.
        -Wl,-rpath         arguments for dependency /lib directories.
+    3. It provides a mechanism to inject flags from specs
     """
 
     homepage = "https://github.com/spack/spack"
@@ -52,8 +52,8 @@ class CompilerWrapper(Package):
 
     def bin_dir(self) -> pathlib.Path:
         # This adds an extra "spack" subdir, so that the script and symlinks don't get
-        # their way to the default view /bin directory in environment
-        return pathlib.Path(str(self.prefix)) / "spack" / "bin"
+        # their way to the default view
+        return pathlib.Path(str(self.prefix)) / "libexec" / "spack"
 
     def install(self, spec, prefix):
         if sys.platform == "win32":
@@ -135,6 +135,12 @@ class CompilerWrapper(Package):
             (bin_dir / subdir).mkdir(exist_ok=True)
             (bin_dir / subdir / name).symlink_to(installed_script)
 
+        # Extra symlinks for Cray
+        cray_dir = bin_dir / "cce" / "case-insensitive"
+        cray_dir.mkdir(exist_ok=True)
+        (cray_dir / "crayCC").symlink_to(installed_script)
+        (cray_dir / "CC").symlink_to(installed_script)
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         if sys.platform == "win32":
             return
@@ -213,13 +219,8 @@ class CompilerWrapper(Package):
             implicit_rpaths = lang.dedupe(implicit_rpaths)
             env.set("SPACK_COMPILER_IMPLICIT_RPATHS", ":".join(implicit_rpaths))
 
-        # Check whether we want to force RPATH or RUNPATH
-        if spack.config.CONFIG.get("config:shared_linking:type") == "rpath":
-            env.set("SPACK_DTAGS_TO_STRIP", self.enable_new_dtags)
-            env.set("SPACK_DTAGS_TO_ADD", self.disable_new_dtags)
-        else:
-            env.set("SPACK_DTAGS_TO_STRIP", self.disable_new_dtags)
-            env.set("SPACK_DTAGS_TO_ADD", self.enable_new_dtags)
+        env.set("SPACK_ENABLE_NEW_DTAGS", self.enable_new_dtags)
+        env.set("SPACK_DISABLE_NEW_DTAGS", self.disable_new_dtags)
 
         for item in env_paths:
             env.prepend_path("SPACK_ENV_PATH", item)
