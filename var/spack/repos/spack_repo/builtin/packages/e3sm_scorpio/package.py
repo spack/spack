@@ -32,36 +32,48 @@ class E3smScorpio(CMakePackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
+    variant("timing", default=False, description="Enable GPTL timing")
+    variant("mpi", default=True, description="Enable MPI")
+    variant("internal-timing", default=False,
+            description="Gather and print GPL timing stats")
+    variant("tools", default=False, description="Enable SCORPIO tools")
+    variant("malloc", default=True,
+            description="Use native malloc (instead of bget package)")
+
     depends_on("gptl", when="+timing")
     depends_on("mpi", when="+mpi")
-    depends_on("parallel-netcdf", when="+mpi")
-    depends_on("netcdf-c")
-    depends_on("netcdf-fortran")
+    depends_on("parallel-netcdf", type="link", when="+mpi")
+    depends_on("netcdf-c", type="link")
+    depends_on("netcdf-fortran", type="link")
 
     def cmake_args(self):
-        opts = []
-        opts.append(self.define("NetCDF_C_PATH", self.spec["netcdf-c"].prefix))
-        opts.append(self.define("NetCDF_Fortran_PATH", self.spec["netcdf-fortran"].prefix))
+        define = self.define
+        define_from_variant = self.define_from_variant
+        spec = self.spec
+        args = [
+            define("NetCDF_C_PATH", spec["netcdf-c"].prefix),
+            define("NetCDF_Fortran_PATH", spec["netcdf-fortran"].prefix),
+        ]
 
         if self.spec.satisfies("+timing"):
-            opts.append(self.define("PIO_ENABLE_TIMING", "ON"))
-            opts.append(self.define("GPTL_PATH", self.spec["gptl"].prefix))
-        else:
-            opts.append(self.define("PIO_ENABLE_TIMING", "OFF"))
+            args.append(define("GPTL_PATH", spec["gptl"].prefix))
 
-        if self.spec.satisfies("+mpi"):
-            opts.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
-            opts.append(self.define("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx))
-            opts.append(self.define("CMAKE_Fortran_COMPILER", self.spec["mpi"].mpifc))
-            opts.append(self.define("WITH_PNETCDF", "ON"))
-            opts.append(self.define("PNETCDF_PATH", self.spec["parallel-netcdf"].prefix))
-        else:
-            opts.append(self.define("WITH_PNETCDF", "OFF"))
+        if spec.satisfies("+mpi"):
+            args.append(define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
+            args.append(define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
+            args.append(define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc))
+            args.extend([
+                define("PnetCDF_C_PATH", spec["parallel-netcdf"].prefix),
+                define("PnetCDF_Fortran_PATH", spec["parallel-netcdf"].prefix),
+            ])
 
-        return opts
+        args.extend([
+            define_from_variant("WITH_PNETCDF", "mpi"),
+            define_from_variant("PIO_ENABLE_TIMING", "timing"),
+            define_from_variant("PIO_ENABLE_INTERNAL_TIMING",
+                                "internal-timing"),
+            define_from_variant("PIO_ENABLE_TOOLS", "tools"),
+            define_from_variant("PIO_USE_MALLOC", "malloc"),
+        ])
 
-    def setup_build_environment(self, env: EnvironmentModifications) -> None:
-        env.set("NetCDF_C_PATH", self.spec["netcdf-c"].prefix)
-        env.set("NetCDF_Fortran_PATH", self.spec["netcdf-fortran"].prefix)
-        if self.spec.satisfies("+mpi"):
-            env.set("PNETCDF_PATH", self.spec["parallel-netcdf"].prefix)
+        return args
