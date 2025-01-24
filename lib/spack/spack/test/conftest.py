@@ -342,9 +342,9 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope="function")
-def no_concretization_cache():
-    """Disables the use of the concretization cache"""
-    with spack.config.override("config:enable_concretization_cache", False):
+def use_concretization_cache(mutable_config):
+    """Enables the use of the concretization cache"""
+    with spack.config.override("config:enable_concretization_cache", True):
         yield
 
 
