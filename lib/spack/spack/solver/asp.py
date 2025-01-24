@@ -16,6 +16,7 @@ import os
 import pathlib
 import pprint
 import re
+import shutil
 import sys
 import tempfile
 import types
@@ -799,7 +800,7 @@ class ConcretizationCache:
             with tempfile.NamedTemporaryFile("w+", delete=False) as tf:
                 bytes_out = tf.write(output)
                 tf.close()
-                os.rename(tf.name, cache_path)
+                shutil.move(tf.name, cache_path)
             with lk.WriteTransaction(self._lock):
                 self._update_manifest(cache_path, bytes_out)
             return bytes_out
