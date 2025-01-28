@@ -609,11 +609,11 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         if not self.is_versioned_release():
             install("CMakeLists.txt", join_path(prefix.share, "chapel"))
         install_tree(
-            "doc", join_path(self.prefix.share, "chapel", self._output_version_short, "doc")
+            "doc", join_path(prefix.share, "chapel", self._output_version_short, "doc")
         )
         install_tree(
             "examples",
-            join_path(self.prefix.share, "chapel", self._output_version_short, "examples"),
+            join_path(prefix.share, "chapel", self._output_version_short, "examples"),
         )
 
     def setup_chpl_platform(self, env):
