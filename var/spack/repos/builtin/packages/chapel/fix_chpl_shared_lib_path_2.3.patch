@@ -1,8 +1,8 @@
 diff --git a/tools/chapel-py/setup.py b/tools/chapel-py/setup.py
-index 30c2708724..36e0cc0007 100644
+index 30c2708724..0cf576ab25 100644
 --- a/tools/chapel-py/setup.py
 +++ b/tools/chapel-py/setup.py
-@@ -47,6 +47,19 @@ host_cxx = str(chpl_variables.get("CHPL_HOST_CXX"))
+@@ -47,6 +47,18 @@ host_cxx = str(chpl_variables.get("CHPL_HOST_CXX"))
 
  host_bin_subdir = str(chpl_variables.get("CHPL_HOST_BIN_SUBDIR"))
  chpl_lib_path = os.path.join(chpl_home, "lib", "compiler", host_bin_subdir)
@@ -17,16 +17,15 @@ index 30c2708724..36e0cc0007 100644
 +    )
 +    .decode(sys.stdout.encoding)
 +    .strip()
-+    .splitlines()
 +)
 
  CXXFLAGS = []
  if have_llvm and have_llvm != "none":
-@@ -68,6 +81,12 @@ LDFLAGS += [
+@@ -68,6 +80,12 @@ LDFLAGS += [
      "-lChplFrontendShared",
  ]
 
-+if chpl_install_lib_path is not None:
++if chpl_install_lib_path != "None":
 +    LDFLAGS += [
 +        "-L{}".format(chpl_install_lib_path),
 +        "-Wl,-rpath,{}".format(chpl_install_lib_path),
@@ -35,12 +34,11 @@ index 30c2708724..36e0cc0007 100644
  if str(chpl_variables.get("CHPL_SANITIZE")) == "address":
      if str(chpl_variables.get("CHPL_HOST_PLATFORM")) == "darwin":
          sys.exit(
-
 diff --git a/util/chplenv/chpl_home_utils.py b/util/chplenv/chpl_home_utils.py
-index 5f09ffed15..deca6f8a2d 100644
+index 5f09ffed15..4b93849acd 100644
 --- a/util/chplenv/chpl_home_utils.py
 +++ b/util/chplenv/chpl_home_utils.py
-@@ -54,6 +54,44 @@ install_path_regex = re.compile(
+@@ -54,6 +54,46 @@ install_path_regex = re.compile(
                                                    os.path.sep,
                                                    os.path.sep))
 
@@ -73,7 +71,8 @@ index 5f09ffed15..deca6f8a2d 100644
 +        chpl_prefix = None
 +        with open(os.path.join(chpl_home, "configured-prefix"), "r") as f:
 +            chpl_prefix = f.read().strip()
-+        assert chpl_prefix is not None
++        # Problems with the configured-prefix file - maybe empty
++        assert chpl_prefix != "" and chpl_prefix is not None
 +        return os.path.join(
 +            chpl_prefix,
 +            "lib",
@@ -81,11 +80,12 @@ index 5f09ffed15..deca6f8a2d 100644
 +            chpl_version_string,
 +            "compiler",
 +        )
++    return None
 +
  @memoize
  def get_chpl_version_from_install():
      if get_prefix_install_prefix():
-@@ -189,6 +227,8 @@ def _main():
+@@ -189,6 +229,8 @@ def _main():
      )
      parser.add_option('--using-module', action='store_const',
                        dest='func', const=using_chapel_module)
