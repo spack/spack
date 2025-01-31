@@ -342,10 +342,13 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope="function")
-def use_concretization_cache(mutable_config):
+def use_concretization_cache(mutable_config, tmpdir):
     """Enables the use of the concretization cache"""
-    with spack.config.override("config:concretization_cache:enable", True):
-        yield
+    spack.config.set("config:concretization_cache:enable", True)
+    # ensure we have an isolated concretization cache
+    new_conc_cache_loc = str(tmpdir.mkdir("concretization"))
+    spack.config.set("config:concretization_cache:path", new_conc_cache_loc)
+    yield
 
 
 #
