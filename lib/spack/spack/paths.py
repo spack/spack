@@ -56,6 +56,7 @@ var_path = os.path.join(prefix, "var", "spack")
 
 # read-only things in $spack/var/spack
 repos_path = os.path.join(var_path, "repos")
+# TODO/RepoSplit: Convert to the new package repository path and namespace
 packages_path = os.path.join(repos_path, "builtin")
 mock_packages_path = os.path.join(repos_path, "builtin.mock")
 

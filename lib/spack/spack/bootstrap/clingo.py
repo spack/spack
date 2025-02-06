@@ -164,6 +164,7 @@ class ClingoBootstrapConcretizer:
         return self._external_spec(result)
 
     def _external_spec(self, initial_spec) -> "spack.spec.Spec":
+        # TODO/RepoSplit: Convert to namespace of new or bootstrap pkg repo
         initial_spec.namespace = "builtin"
         initial_spec.architecture = self.host_architecture
         for flag_type in spack.spec.FlagMap.valid_compiler_flags():
