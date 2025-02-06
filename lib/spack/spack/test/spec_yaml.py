@@ -367,7 +367,7 @@ ordered_spec = collections.OrderedDict(
         ),
         ("compiler", collections.OrderedDict([("name", "apple-clang"), ("version", "13.0.0")])),
         ("name", "zlib"),
-        ("namespace", "builtin"),
+        ("namespace", "builtin"),  # TODO/RepoSplit: Rename this if changes
         (
             "parameters",
             collections.OrderedDict(
