@@ -55,6 +55,22 @@ config_merge_dict = {"config": {"aliases": {"ls": "find", "dev": "develop"}}}
 
 config_override_dict = {"config": {"aliases:": {"be": "build-env", "deps": "dependencies"}}}
 
+# TODO/RepoSplit: Is overriding the default with the following sufficient?
+mock_repo_list = {"repos:": ["$spack/var/spack/repos/builtin.mock"]}
+
+
+@pytest.fixture()
+def write_config_file(tmpdir):
+    """Returns a function that writes a config file."""
+
+    def _write(config, data, scope):
+        config_yaml = tmpdir.join(scope, config + ".yaml")
+        config_yaml.ensure()
+        with config_yaml.open("w") as f:
+            syaml.dump_config(data, f)
+
+    return _write
+
 
 @pytest.fixture()
 def env_yaml(tmpdir):
@@ -905,16 +921,19 @@ def test_single_file_scope(config, env_yaml):
         "env", env_yaml, spack.schema.env.schema, yaml_path=["spack"]
     )
 
-    with spack.config.override(scope):
-        # from the single-file config
-        assert spack.config.get("config:verify_ssl") is False
-        assert spack.config.get("config:dirty") is False
+    # TODO/RepoSplit: Is overriding the default how we want to handle repos check?
+    default_scope = spack.config.InternalConfigScope("default", mock_repo_list)
+    with spack.config.override(default_scope):
+        with spack.config.override(scope):
+            # from the single-file config
+            assert spack.config.get("config:verify_ssl") is False
+            assert spack.config.get("config:dirty") is False
 
-        # from the lower config scopes
-        assert spack.config.get("config:checksum") is True
-        assert spack.config.get("config:checksum") is True
-        assert spack.config.get("packages:externalmodule:buildable") is False
-        assert spack.config.get("repos") == ["/x/y/z", "$spack/var/spack/repos/builtin"]
+            # from the lower config scopes
+            assert spack.config.get("config:checksum") is True
+            assert spack.config.get("config:checksum") is True
+            assert spack.config.get("packages:externalmodule:buildable") is False
+            assert spack.config.get("repos") == ["/x/y/z", "$spack/var/spack/repos/builtin.mock"]
 
 
 def test_single_file_scope_section_override(tmpdir, config):
@@ -942,15 +961,18 @@ spack:
         "env", env_yaml, spack.schema.env.schema, yaml_path=["spack"]
     )
 
-    with spack.config.override(scope):
-        # from the single-file config
-        assert spack.config.get("config:verify_ssl") is False
-        assert spack.config.get("packages:all:target") == ["x86_64"]
+    # TODO/RepoSplit: Is overriding the default how we want to handle repos check?
+    default_scope = spack.config.InternalConfigScope("default", mock_repo_list)
+    with spack.config.override(default_scope):
+        with spack.config.override(scope):
+            # from the single-file config
+            assert spack.config.get("config:verify_ssl") is False
+            assert spack.config.get("packages:all:target") == ["x86_64"]
 
-        # from the lower config scopes
-        assert spack.config.get("config:checksum") is True
-        assert not spack.config.get("packages:externalmodule")
-        assert spack.config.get("repos") == ["/x/y/z", "$spack/var/spack/repos/builtin"]
+            # from the lower config scopes
+            assert spack.config.get("config:checksum") is True
+            assert not spack.config.get("packages:externalmodule")
+            assert spack.config.get("repos") == ["/x/y/z", "$spack/var/spack/repos/builtin.mock"]
 
 
 def test_write_empty_single_file_scope(tmpdir):
