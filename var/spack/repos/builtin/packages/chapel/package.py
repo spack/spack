@@ -839,7 +839,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     @llnl.util.lang.memoized
     def _output_version_short(self) -> str:
         if not self.is_versioned_release():
-            return self.get_chpl_version_from_cmakelists()[-2]
+            return ".".join(self.get_chpl_version_from_cmakelists().split(".")[:-1])
         spec_vers_str = str(self.spec.version.up_to(2))
         return spec_vers_str
 
