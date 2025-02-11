@@ -1156,6 +1156,18 @@ class ProcessHandle:
         """
         return complete_build_process(self)
 
+    def terminate_processes(self):
+        """Terminate the active child processes if installation failure/error"""
+        if self.process.is_alive():
+            # opportunity for graceful termination
+            self.process.terminate()
+            self.process.join(timeout=1)
+
+            # if the process didn't gracefully terminate, forcefully kill
+            if self.process.is_alive():
+                os.kill(self.process.pid, signal.SIGKILL)
+                self.process.join()
+
 
 def _setup_pkg_and_run(
     serialized_pkg: "spack.subprocess_context.PackageInstallContext",

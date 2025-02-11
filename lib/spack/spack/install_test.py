@@ -399,10 +399,10 @@ class PackageTest:
         """
         import spack.build_environment  # avoid circular dependency
 
-        spack.build_environment.start_build_process(
+        ph = spack.build_environment.start_build_process(
             self.pkg, test_process, kwargs, timeout=timeout
         )
-        spack.build_environment.complete_build_process()
+        spack.build_environment.ProcessHandle.complete(ph)
 
     def parts(self) -> int:
         """The total number of (checked) test parts."""
