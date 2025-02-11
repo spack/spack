@@ -38,6 +38,7 @@ import multiprocessing
 import os
 import re
 import signal
+import stat
 import sys
 import traceback
 import types

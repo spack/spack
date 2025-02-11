@@ -727,7 +727,7 @@ def test_installing_task_use_cache(install_mockery, monkeypatch):
     task = create_build_task(request.pkg)
 
     monkeypatch.setattr(inst, "_install_from_cache", _true)
-    installer.install()
+    installer.start_task(task, , None)
     assert request.pkg_id in installer.installed
 
 
