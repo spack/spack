@@ -992,7 +992,6 @@ For example, the following environment has three root packages:
 This allows for a much-needed reduction in redundancy between packages
 and constraints.
 
-#JFRYE START
 -----------------
 Modifying Environment Variables
 -----------------
@@ -1016,7 +1015,6 @@ file:
       remove_path:
         PATH_LIST: "path/to/remove"
 	
-#JFRYE END
 -----------------
 Environment Views
 -----------------
