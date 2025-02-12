@@ -186,7 +186,8 @@ class MakeExecutable(Executable):
         output: Union[Optional[TextIO], str] = ...,
         error: Union[Optional[TextIO], str] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
-    ) -> None: ...
+    ) -> None:
+        ...
 
     @overload
     def __call__(
@@ -205,7 +206,8 @@ class MakeExecutable(Executable):
         output: Union[Type[str], Callable] = ...,
         error: Union[Optional[TextIO], str, Type[str], Callable] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
-    ) -> str: ...
+    ) -> str:
+        ...
 
     @overload
     def __call__(
@@ -224,7 +226,8 @@ class MakeExecutable(Executable):
         output: Union[Optional[TextIO], str, Type[str], Callable] = ...,
         error: Union[Type[str], Callable] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
-    ) -> str: ...
+    ) -> str:
+        ...
 
     def __call__(
         self,
