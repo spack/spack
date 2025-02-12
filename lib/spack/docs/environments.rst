@@ -1015,6 +1015,26 @@ file:
       remove_path:
         PATH_LIST: "path/to/remove"
 
+Spack Environments can modify environment variables when activated.  The environment can be
+configured to set, unset, prepend, or append using ``env_vars`` option in the ``spack.yaml``
+file:
+
+.. code-block:: yaml
+
+  spack:
+    env_vars:
+      set:
+        ENVAR_TO_SET_IN_ENV_LOAD: "FOO"
+      unset:
+        ENVAR_TO_UNSET_IN_ENV_LOAD
+      prepend_path:
+        PATH_LIST: "path/to/prepend"
+      append_path:
+        PATH_LIST: "path/to/append"
+      remove_path:
+        PATH_LIST: "path/to/remove"
+	
+#JFRYE END
 -----------------
 Environment Views
 -----------------
