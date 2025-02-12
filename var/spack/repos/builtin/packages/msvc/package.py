@@ -89,6 +89,13 @@ class Msvc(Package, CompilerPackage):
         if fortran_compiler is not None:
             extras["compilers"]["fortran"] = fortran_compiler
         return spec, extras
+    
+    def setup_dependent_package(self, module, dependent_spec):
+        """Populates dependent module with tooling available from VS"""
+        # We want these to resolve to the paths set by MSVC's VCVARs
+        # so no paths
+        module.nmake = MakeExecutable("nmake", jobs=1)
+        module.msbuild = MakeExecutable("msbuild", jobs=1)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.init_msvc()
