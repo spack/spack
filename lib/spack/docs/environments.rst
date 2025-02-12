@@ -1014,9 +1014,6 @@ file:
         PATH_LIST: "path/to/append"
       remove_path:
         PATH_LIST: "path/to/remove"
-
-The changes to environment variables will be present when an environment is activated and
-will be undone when the environment is deactivated.
 	
 -----------------
 Environment Views
