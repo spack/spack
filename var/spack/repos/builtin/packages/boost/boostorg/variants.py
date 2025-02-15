@@ -118,8 +118,8 @@ def load():
         "cxxstd",
         default="14",
         values=(
-            "98",
-            "03",
+            sp.conditional("98", when="@:1.84.0"),
+            sp.conditional("03", when="@:1.84.0"),
             "11",
             "14",
             sp.conditional("17", when="@1.63.0:"),
@@ -429,6 +429,12 @@ def load():
             {"when": "cxxstd=98", "msg": "Boost.Spirit requires cxxstd >= 03"}
         ],
         description="LL parser framework using EBNF grammars",
+    )
+    variants.add(
+        "variant",
+        when="@1.31.0:",
+        buildable="@1.87.0:",
+        description="Safe, generic, stack-based discriminated union container",
     )
     variants.add(
         "program_options",
@@ -753,6 +759,11 @@ def load():
         "log",
         when="@1.54.0:",
         buildable="@1.54.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.Log requires cxxstd >= 11"},
+            {"when": "cxxstd=03", "msg": "Boost.Log requires cxxstd >= 11"},
+            {"when": "@1.84.0: ~regex", "msg": "Boost.Log requires Boost.Regex"},
+        ],
         description="Simple, extensible, and fast logging",
     )
     variants.add(
@@ -1206,13 +1217,22 @@ def load():
         description="C++11 implementations of standard components added in later C++ standards",
     )
     variants.add(
+        "redis",
+        when="@1.84.0:",
+        default=False,
+        conflicts=[
+            {"when": "cxxstd=11", "msg": "Boost.Redis requires cxxstd >= 17"},
+            {"when": "cxxstd=14", "msg": "Boost.Redis requires cxxstd >= 17"},
+            {"when": "~asio", "msg": "Boost.Redis requires Boost.Asio"},
+        ],
+        description="Redis async client library built on top of Boost.Asio",
+    )
+    variants.add(
         "cobalt",
         default=False,
         when="@1.84.0:",
         buildable="@1.84.0:",
         conflicts=[
-            {"when": "cxxstd=98", "msg": "Boost.cobalt requires cxxstd >= 20"},
-            {"when": "cxxstd=03", "msg": "Boost.cobalt requires cxxstd >= 20"},
             {"when": "cxxstd=11", "msg": "Boost.cobalt requires cxxstd >= 20"},
             {"when": "cxxstd=14", "msg": "Boost.cobalt requires cxxstd >= 20"},
             {"when": "cxxstd=17", "msg": "Boost.cobalt requires cxxstd >= 20"},
