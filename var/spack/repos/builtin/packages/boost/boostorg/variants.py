@@ -486,6 +486,11 @@ def load():
     variants.add(
         "asio",
         when="@1.35.0:",
+        conflicts=[
+            {"when": "@1.80.0: cxxstd=98", "msg": "Boost.asio requires cxxstd >= 11"},
+            {"when": "@1.80.0: cxxstd=03", "msg": "Boost.asio requires cxxstd >= 11"},
+            {"when": "@1.80.0: ~context", "msg": "Boost.Asio requires Boost.Context"},
+        ],
         description="Portable networking and other low-level I/O",
     )
     variants.add(
@@ -494,6 +499,8 @@ def load():
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.GIL requires at least c++11"},
             {"when": "cxxstd=03", "msg": "Boost.GIL requires at least c++11"},
+            {"when": "@1.80.0: cxxstd=11", "msg": "Boost.GIL requires at least c++14"},
+            {"when": "@1.80.0: %gcc@:6", "msg": "Boost.GIL requires gcc-6 or newer"},
         ],
         description="Generic Image Library",
     )
