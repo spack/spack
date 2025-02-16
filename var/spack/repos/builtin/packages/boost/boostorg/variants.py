@@ -262,6 +262,7 @@ def load():
         buildable="@1.18.0:",
         conflicts=[
             {"when": "@1.85.0: cxxstd=11", "msg": "Boost.Graph requires at least c++14"},
+            {"when": "@:1.86.0 ~regex", "msg": "Boost.Graph requires Boost.Regex"},
         ],
         description=(
             "Generic components for mathematical graphs (collections of nodes and edges)."
@@ -312,6 +313,12 @@ def load():
         description=(
             "Simple program testing, full unit testing, and program execution monitoring"
         ),
+    )
+    variants.add(
+        "crc",
+        when="@1.22.0:",
+        buildable="@1.87.0:",
+        description="Cyclic Redundancy Code generation for confirming data integrity",
     )
     variants.add(
         "any",
@@ -399,6 +406,11 @@ def load():
         when="@1.29.0:",
         buildable="@1.29.0:",
         description="Calculate, format, and convert dates and times",
+    )
+    variants.add(
+        "format",
+        when="@1.29.0:",
+        description="Type-safe formatting using printf-like format-strings",
     )
     variants.add(
         "signals",
@@ -615,6 +627,11 @@ def load():
         "icl",
         when="@1.46.0:",
         description="Interval sets and maps",
+    )
+    variants.add(
+        "uuid",
+        when="@1.42.0:",
+        description="A universally unique identifier",
     )
     variants.add(
         "chrono",
