@@ -97,6 +97,23 @@ def load():
     #
     #    These variants affect every library.
     # ----------------------------------------------------------------------
+    variants.add(
+        "cxxstd",
+        default="14",
+        values=(
+            "98",
+            "03",
+            "11",
+            "14",
+            sp.conditional("17", when="@1.63.0:"),
+            sp.conditional("2a", when="@1.73.0:"),
+            sp.conditional("20", when="@1.77.0:"),
+            sp.conditional("23", when="@1.79.0:"),
+            sp.conditional("26", when="@1.79.0:"),
+        ),
+        multi=False,
+        description="C++ standard",
+    )
 
     # ----------------------------------------------------------------------
     #  Library-level configurations
