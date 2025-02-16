@@ -6,7 +6,10 @@ import os
 import sys
 from pathlib import Path
 
-from spack.package import *
+from spack.package import *  # noqa: E402
+
+sys.path.append(os.path.dirname(__file__))
+import boostorg.variants as boostvariants  # noqa: E402
 
 
 class Boost(Package):
@@ -153,21 +156,14 @@ class Boost(Package):
         "wave",
     ]
 
-    # Add any extra requirements for specific
-    all_libs_opts = {"charconv": {"when": "@1.85.0:"}, "cobalt": {"when": "@1.84.0:"}}
-
-    for lib in all_libs:
-        lib_opts = all_libs_opts.get(lib, {})
-        variant(lib, default=False, description="Compile with {0} library".format(lib), **lib_opts)
+    boost_variants = boostvariants.load()
 
     @property
     def libs(self):
         query = self.spec.last_query.extra_parameters
         shared = "+shared" in self.spec
 
-        libnames = (
-            query if query else [lib for lib in self.all_libs if self.spec.satisfies("+%s" % lib)]
-        )
+        libnames = query if query else self.boost_variants.libraries_to_build(self.spec)
         libnames += ["monitor"]
         libraries = ["libboost_*%s*" % lib for lib in libnames]
 
