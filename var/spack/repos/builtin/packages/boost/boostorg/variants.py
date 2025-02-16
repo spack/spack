@@ -265,6 +265,14 @@ def load():
         ),
     )
     variants.add(
+        "property_map",
+        when="@1.19.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.PropertyMap requires cxxstd >= 03"},
+        ],
+        description="Concepts defining interfaces which map key objects to value objects",
+    )
+    variants.add(
         "python",
         default=False,
         sticky=False,
@@ -1109,6 +1117,43 @@ def load():
             {"when": "cxxstd=11", "msg": "Boost.PFR requires cxxstd >= 14"},
         ],
         description="Basic reflection for user-defined types",
+    )
+    variants.add(
+        "describe",
+        when="@1.77.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.Describe requires cxxstd >= 14"},
+            {"when": "cxxstd=03", "msg": "Boost.Describe requires cxxstd >= 14"},
+            {"when": "cxxstd=11", "msg": "Boost.Describe requires cxxstd >= 14"},
+        ],
+        description="Advanced reflection for user-defined types",
+    )
+    variants.add(
+        "lambda2",
+        when="@1.77.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.lambda2 requires cxxstd >= 14"},
+            {"when": "cxxstd=03", "msg": "Boost.lambda2 requires cxxstd >= 14"},
+            {"when": "cxxstd=11", "msg": "Boost.lambda2 requires cxxstd >= 14"},
+        ],
+        description="Adds std::bind features to C++14 lambdas",
+    )
+    variants.add(
+        "property_map_parallel",
+        default=False,
+        when="@1.77.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.PropertyMapParallel requires cxxstd >= 03"},
+            {
+                "when": "~graph_parallel",
+                "msg": "Boost.PropertyMap (Parallel) requires Boost.GraphParallel"
+            },
+            {
+                "when": "~property_map",
+                "msg": "Boost.PropertyMap (Parallel) requires Boost.PropertyMap"
+            }
+        ],
+        description="Parallel extensions to Property Map for use with Parallel Graph",
     )
     variants.add(
         "url",
