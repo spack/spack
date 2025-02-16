@@ -134,6 +134,15 @@ def load():
         description="Build in debug mode",
     )
     variants.add(
+        "icu",
+        default=False,
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "ICU requires at least c++11"},
+            {"when": "cxxstd=03", "msg": "ICU requires at least c++11"},
+        ],
+        description="Enable Unicode support via ICU",
+    )
+    variants.add(
         "pic",
         description="Generate binaries with position-independent code",
     )
