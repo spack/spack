@@ -286,6 +286,7 @@ def load():
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.LexicalCast requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.LexicalCast requires cxxstd >= 11"},
+            {"when": "@:1.76.0 ~math", "msg": "Boost.LexicalCast requires Boost.Math"},
         ],
         description="Type-safe text <-> value conversions",
     )
@@ -326,6 +327,8 @@ def load():
         conflicts=[
             {"when": "~octonions", "msg": "Boost.Math requires Boost.Octonions"},
             {"when": "~quaternions", "msg": "Boost.Math requires Boost.Quaternions"},
+            {"when": "@1.76.0: cxxstd=98", "msg": "Boost.Math requires at least c++11"},
+            {"when": "@1.76.0: cxxstd=03", "msg": "Boost.Math requires at least c++11"},
         ],
         description=(
             "Extensive collection of integer, real, and complex mathematical operations"
@@ -334,11 +337,19 @@ def load():
     variants.add(
         "octonions",
         when="@1.23.0:",
+        conflicts=[
+            {"when": "@1.76.0: cxxstd=98", "msg": "Boost.math_octonion requires cxxstd >= 11"},
+            {"when": "@1.76.0: cxxstd=03", "msg": "Boost.math_octonion requires cxxstd >= 11"},
+        ],
         description="Octonions",
     )
     variants.add(
         "quaternions",
         when="@1.23.0:",
+        conflicts=[
+            {"when": "@1.76.0: cxxstd=98", "msg": "Boost.math_quaternion requires cxxstd >= 11"},
+            {"when": "@1.76.0: cxxstd=03", "msg": "Boost.math_quaternion requires cxxstd >= 11"},
+        ],
         description="Quaternions",
     )
     variants.add(
@@ -695,6 +706,10 @@ def load():
     variants.add(
         "multiprecision",
         when="@1.53.0:",
+        conflicts=[
+            {"when": "@1.76.0: cxxstd=98", "msg": "Boost.Multiprecision requires cxxstd >= 11"},
+            {"when": "@1.76.0: cxxstd=03", "msg": "Boost.Multiprecision requires cxxstd >= 11"},
+        ],
         description=(
             "Extended precision arithmetic for floating point, integer, and rational types"
         ),
