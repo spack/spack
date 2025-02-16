@@ -79,6 +79,9 @@ class variant_set:
         """
         libs = list()
 
+        if spec.satisfies("@1.87.0: platform=windows"):
+            libs.append("winapi")
+
         for name, version in self.libraries.items():
             if spec.satisfies("+{0:s} {1:s}".format(name, version)):
                 libs.append(name)
@@ -214,6 +217,7 @@ def load():
     variants.add(
         "integer",
         when="@1.9.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.integer requires cxxstd >= 03"},
         ],
@@ -290,17 +294,28 @@ def load():
     variants.add(
         "conversion",
         when="@1.20.0:",
+        buildable="@1.87.0:",
         description="Extensions to standard casting operators",
     )
     variants.add(
         "lexical_cast",
         when="@1.20.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.LexicalCast requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.LexicalCast requires cxxstd >= 11"},
             {"when": "@:1.76.0 ~math", "msg": "Boost.LexicalCast requires Boost.Math"},
         ],
         description="Type-safe text <-> value conversions",
+    )
+    variants.add(
+        "iterator",
+        when="@1.21.0:",
+        buildable="@1.87.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.iterator requires cxxstd >= 03"},
+        ],
+        description="Extensions to standard iterators",
     )
     variants.add(
         "test",
@@ -323,6 +338,7 @@ def load():
     variants.add(
         "any",
         when="@1.23.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.any requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.any requires cxxstd >= 11"},
@@ -332,6 +348,7 @@ def load():
     variants.add(
         "function",
         when="@1.23.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.function requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.function requires cxxstd >= 11"},
@@ -374,8 +391,27 @@ def load():
         description="Quaternions",
     )
     variants.add(
+        "smart_ptr",
+        when="@1.23.0:",
+        buildable="@1.87.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.smart_ptr requires cxxstd >= 03"},
+        ],
+        description="Smart pointers",
+    )
+    variants.add(
+        "tuple",
+        when="@1.24.0:",
+        buildable="@1.87.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.tuple requires cxxstd >= 03"},
+        ],
+        description="Compile-time fixed-length sequence of arbitrary values",
+    )
+    variants.add(
         "bind",
         when="@1.25.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.bind requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.bind requires cxxstd >= 11"},
@@ -400,6 +436,15 @@ def load():
             {"when": "@1.75.0: cxxstd=03", "msg": "Boost.Preprocessor requires cxxstd >= 11"},
         ],
         description="Preprocessor metaprogramming tools including repetition and recursion",
+    )
+    variants.add(
+        "assert",
+        when="@1.27.0:",
+        buildable="@1.87.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.assert requires cxxstd >= 03"},
+        ],
+        description="Customizable assert macros",
     )
     variants.add(
         "date_time",
@@ -438,6 +483,15 @@ def load():
         ),
     )
     variants.add(
+        "optional",
+        when="@1.30.0:",
+        buildable="@1.87.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.optional requires cxxstd >= 03"},
+        ],
+        description="A value-semantic container that may or may not contain a valid object",
+    )
+    variants.add(
         "spirit",
         when="@1.30.0:",
         conflicts=[
@@ -450,6 +504,18 @@ def load():
         when="@1.31.0:",
         buildable="@1.87.0:",
         description="Safe, generic, stack-based discriminated union container",
+    )
+    variants.add(
+        "multi_index",
+        when="@1.32.0:",
+        buildable="@1.87.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.multi_index requires cxxstd >= 03"},
+        ],
+        description=(
+            "A container accessible by one or more indices with different sorting and "
+            "access semantics"
+        ),
     )
     variants.add(
         "program_options",
@@ -468,6 +534,7 @@ def load():
     variants.add(
         "container_hash",
         when="@1.33.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.container_hash requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.container_hash requires cxxstd >= 11"},
@@ -483,6 +550,7 @@ def load():
     variants.add(
         "parameter",
         when="@1.33.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.Parameter requires at least c++03"},
         ],
@@ -510,12 +578,31 @@ def load():
     variants.add(
         "asio",
         when="@1.35.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "@1.80.0: cxxstd=98", "msg": "Boost.asio requires cxxstd >= 11"},
             {"when": "@1.80.0: cxxstd=03", "msg": "Boost.asio requires cxxstd >= 11"},
             {"when": "@1.80.0: ~context", "msg": "Boost.Asio requires Boost.Context"},
         ],
         description="Portable networking and other low-level I/O",
+    )
+    variants.add(
+        "bimap",
+        when="@1.35.0:",
+        buildable="@1.87.0:",
+        description="Associative containers in which both types can be used as key",
+    )
+    variants.add(
+        "function_types",
+        when="@1.35.0:",
+        buildable="@1.87.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.function_types requires cxxstd >= 03"},
+        ],
+        description=(
+            "Classify, decompose, and synthesize function, function pointer, function reference, "
+            "and pointer-to-member types"
+        ),
     )
     variants.add(
         "gil",
@@ -529,6 +616,27 @@ def load():
         description="Generic Image Library",
     )
     variants.add(
+        "interprocess",
+        when="@1.35.0:",
+        buildable="@1.87.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.interprocess requires cxxstd >= 03"},
+        ],
+        description=(
+            "Shared memory, memory mapped files, process-shared mutexes, condition variables, "
+            "containers, and allocators"
+        ),
+    )
+    variants.add(
+        "intrusive",
+        when="@1.35.0:",
+        buildable="@1.87.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.intrusive requires cxxstd >= 03"},
+        ],
+        description="Intrusive containers and algorithms",
+    )
+    variants.add(
         "mpi",
         default=False,
         sticky=False,
@@ -538,7 +646,7 @@ def load():
             # 1.64 uses out-dated APIs (https://github.com/spack/spack/issues/3963)
             {"when": "@1.64.0 +python", "msg": "Boost.MPI@1.64.0 does not support python"},
             {"when": "@1.72.0 cxxstd=98", "msg": "Boost.MPI@1.72.0 does not support C++98"},
-            {"when": "@1.87.0: ~python", "msg": "Boost.MPI requires Boost.Numpy"},
+            {"when": "@1.87.0: ~python", "msg": "Boost.MPI requires Boost.Python"},
         ],
         description=(
             "C++ wrapper to the Message Passing Interface for distributed-memory parallelism"
@@ -566,6 +674,7 @@ def load():
     variants.add(
         "unordered",
         when="@1.36.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.unordered requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.unordered requires cxxstd >= 11"},
@@ -573,8 +682,18 @@ def load():
         description="Unordered associative containers",
     )
     variants.add(
+        "flyweight",
+        when="@1.38.0:",
+        buildable="@1.87.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.flyweight requires cxxstd >= 03"},
+        ],
+        description="Design pattern to manage large quantities of highly redundant objects",
+    )
+    variants.add(
         "signals2",
         when="@1.39.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.Signals2 requires cxxstd >= 03"}
         ],
@@ -604,6 +723,16 @@ def load():
         description="Structured storage of configuration data",
     )
     variants.add(
+        "uuid",
+        when="@1.42.0:",
+        buildable="@1.87.0:",
+        conflicts=[
+            {"when": "@1.86.0: cxxstd=98", "msg": "Boost.uuid requires cxxstd >= 11"},
+            {"when": "@1.86.0: cxxstd=03", "msg": "Boost.uuid requires cxxstd >= 11"},
+        ],
+        description="Universally unique identifier",
+    )
+    variants.add(
         "functional_factory",
         when="@1.43.0:",
         description="Dynamic and static creation of function objects",
@@ -616,6 +745,7 @@ def load():
     variants.add(
         "msm",
         when="@1.44.0:",
+        buildable="@1.87.0:",
         description="Meta-State Machine: expressive UML2 finite state machines",
     )
     variants.add(
@@ -646,6 +776,7 @@ def load():
     variants.add(
         "geometry",
         when="@1.47.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "@1.75.0: cxxstd=98", "msg": "Boost.Geometry requires cxxstd >= 14"},
             {"when": "@1.75.0: cxxstd=03", "msg": "Boost.Geometry requires cxxstd >= 14"},
@@ -661,6 +792,7 @@ def load():
     variants.add(
         "ratio",
         when="@1.47.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.Ratio requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.Ratio requires cxxstd >= 11"},
@@ -688,6 +820,7 @@ def load():
     variants.add(
         "move",
         when="@1.48.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.Move requires cxxstd >= 03"},
         ],
@@ -696,6 +829,7 @@ def load():
     variants.add(
         "heap",
         when="@1.49.0:",
+        buildable="@1.87.0:",
         description="Priority queue data structures",
     )
     variants.add(
@@ -748,6 +882,7 @@ def load():
     variants.add(
         "lockfree",
         when="@1.53.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.LockFree requires cxxstd >= 03"}
         ],
@@ -806,6 +941,7 @@ def load():
     variants.add(
         "predef",
         when="@1.55.0:",
+        buildable="@1.87.0:",
         description="Macros to identify compilers and their versions",
     )
     variants.add(
@@ -819,6 +955,7 @@ def load():
     variants.add(
         "core",
         when="@1.56.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.core requires cxxstd >= 03"},
         ],
@@ -827,6 +964,7 @@ def load():
     variants.add(
         "throw_exception",
         when="@1.56.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.ThrowException requires cxxstd >= 03"}
         ],
@@ -835,6 +973,7 @@ def load():
     variants.add(
         "type_index",
         when="@1.56.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.TypeIndex requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.TypeIndex requires cxxstd >= 11"},
@@ -844,6 +983,7 @@ def load():
     variants.add(
         "endian",
         when="@1.58.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.Endian requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.Endian requires cxxstd >= 11"},
@@ -870,7 +1010,7 @@ def load():
     variants.add(
         "coroutine2",
         when="@1.59.0:",
-        buildable="@1.59.0:1.64.0",
+        buildable="@1.59.0:1.64.0,1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.Coroutine2 requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.Coroutine2 requires cxxstd >= 11"},
@@ -901,6 +1041,7 @@ def load():
     variants.add(
         "dll",
         when="@1.61.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.dll requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.dll requires cxxstd >= 11"},
@@ -967,6 +1108,7 @@ def load():
     variants.add(
         "poly_collection",
         when="@1.65.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.PolyCollection requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.PolyCollection requires cxxstd >= 11"},
@@ -982,6 +1124,7 @@ def load():
     variants.add(
         "beast",
         when="@1.66.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.Beast requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.Beast requires cxxstd >= 11"},
@@ -1001,6 +1144,7 @@ def load():
     variants.add(
         "mp11",
         when="@1.66.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.MP11 requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.MP11 requires cxxstd >= 11"},
@@ -1081,6 +1225,7 @@ def load():
     variants.add(
         "outcome",
         when="@1.70.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.Outcome requires cxxstd >= 14"},
             {"when": "cxxstd=03", "msg": "Boost.Outcome requires cxxstd >= 14"},
@@ -1101,6 +1246,7 @@ def load():
     variants.add(
         "variant2",
         when="@1.71.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.Variant2 requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.Variant2 requires cxxstd >= 11"},
@@ -1130,6 +1276,7 @@ def load():
     variants.add(
         "stl_interfaces",
         when="@1.74.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.STLInterfaces requires cxxstd >= 14"},
             {"when": "cxxstd=03", "msg": "Boost.STLInterfaces requires cxxstd >= 14"},
@@ -1160,6 +1307,7 @@ def load():
     variants.add(
         "pfr",
         when="@1.75.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.PFR requires cxxstd >= 14"},
             {"when": "cxxstd=03", "msg": "Boost.PFR requires cxxstd >= 14"},
@@ -1170,6 +1318,7 @@ def load():
     variants.add(
         "describe",
         when="@1.77.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.Describe requires cxxstd >= 14"},
             {"when": "cxxstd=03", "msg": "Boost.Describe requires cxxstd >= 14"},
@@ -1180,6 +1329,7 @@ def load():
     variants.add(
         "lambda2",
         when="@1.77.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.lambda2 requires cxxstd >= 14"},
             {"when": "cxxstd=03", "msg": "Boost.lambda2 requires cxxstd >= 14"},
@@ -1218,6 +1368,7 @@ def load():
     variants.add(
         "mysql",
         when="@1.82.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.mysql requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.mysql requires cxxstd >= 11"},
@@ -1232,6 +1383,7 @@ def load():
     variants.add(
         "compat",
         when="@1.83.0:",
+        buildable="@1.87.0:",
         conflicts=[
             {"when": "cxxstd=98", "msg": "Boost.compat requires cxxstd >= 11"},
             {"when": "cxxstd=03", "msg": "Boost.compat requires cxxstd >= 11"},
@@ -1241,6 +1393,7 @@ def load():
     variants.add(
         "redis",
         when="@1.84.0:",
+        buildable="@1.87.0:",
         default=False,
         conflicts=[
             {"when": "cxxstd=11", "msg": "Boost.Redis requires cxxstd >= 17"},
@@ -1274,7 +1427,18 @@ def load():
     variants.add(
         "scope",
         when="@1.85.0:",
+        buildable="@1.87.0:",
         description="Scope guards and a unique_resource wrapper",
+    )
+    variants.add(
+        "parser",
+        when="@1.87.0:",
+        default=False,
+        conflicts=[
+            {"when": "cxxstd=11", "msg": "Boost.Parser requires cxxstd >= 17"},
+            {"when": "cxxstd=14", "msg": "Boost.Parser requires cxxstd >= 17"},
+        ],
+        description="A parser combinator library for building complex parsers",
     )
 
     return variants
