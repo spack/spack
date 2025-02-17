@@ -89,8 +89,6 @@ class Boost(Package):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
-    with_default_variants = "boost"
-
     boost_variants = boostvariants.load()
     boostpatches.load()
 
