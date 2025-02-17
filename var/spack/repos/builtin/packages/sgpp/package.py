@@ -6,7 +6,6 @@ import sys
 
 from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Sgpp(SConsPackage):
@@ -120,7 +119,7 @@ class Sgpp(SConsPackage):
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')
     # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, type=("build", "run", "test"))
+    depends_on("boost", type=("build", "run", "test"))
 
     # Compiler with C++11 support is required
     conflicts("%gcc@:4.8.4", msg="Compiler with c++11 support is required!")
