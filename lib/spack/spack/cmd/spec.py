@@ -7,6 +7,7 @@ import sys
 
 import spack
 import spack.cmd
+import spack.deptypes as dt
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.llnl.util.lang as lang
@@ -73,9 +74,9 @@ for further documentation regarding the spec syntax, see:
         "-t", "--types", action="store_true", default=False, help="show dependency types"
     )
     subparser.add_argument(
-        '--runtime', action='store_true',
-        help='only show the dependencies that are strictly '
-             'required for the package to run'
+        "--show-runtime-deps",
+        action="store_true",
+        help="only show transitive runtime dependencies",
     )
     arguments.add_common_arguments(subparser, ["specs"])
     arguments.add_concretizer_args(subparser)
@@ -116,11 +117,11 @@ def spec(parser, args):
                 print(spec.format(args.format))
         return
 
-    with tree_context():
-        deptypes = ('build', 'link', 'run')
-        if args.runtime:
-            deptypes = ('link', 'run')
+    deptypes = dt.ALL
+    if args.show_runtime_deps:
+        deptypes = dt.LINK | dt.RUN
 
+    with tree_context():
         print(
             spack.spec.tree(
                 concrete_specs,
