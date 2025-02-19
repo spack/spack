@@ -1220,6 +1220,17 @@ def test_install_implicit(install_mockery, mock_fetch):
     assert not create_build_task(pkg).explicit
 
 
+# Install that wipes the prefix directory
+def wipe_prefix(pkg, install_args):
+    shutil.rmtree(pkg.prefix, ignore_errors=True)
+    fs.mkdirp(pkg.prefix)
+    raise Exception("Some fatal install error")
+
+
+def fail(*args, **kwargs):
+    assert False
+
+
 def test_overwrite_install_backup_success(
     monkeypatch, temporary_store, config, mock_packages, tmpdir
 ):
@@ -1238,16 +1249,7 @@ def test_overwrite_install_backup_success(
     installed_file = os.path.join(task.pkg.prefix, "some_file")
     fs.touchp(installed_file)
 
-    # Install that wipes the prefix directory
-    def wipe_prefix(pkg, install_args):
-        shutil.rmtree(pkg.prefix, ignore_errors=True)
-        fs.mkdirp(pkg.prefix)
-        raise Exception("Some fatal install error")
-
     monkeypatch.setattr(inst, "build_process", wipe_prefix)
-
-    def fail(*args, **kwargs):
-        assert False
 
     # Make sure the package is not marked uninstalled
     monkeypatch.setattr(spack.store.STORE.db, "remove", fail)
@@ -1262,6 +1264,15 @@ def test_overwrite_install_backup_success(
 
     # Check that the original file is back.
     assert os.path.exists(installed_file)
+
+
+# Install that removes the backup directory, which is at the same level as
+# the prefix, starting with .backup
+def remove_backup(pkg, install_args):
+    backup_glob = os.path.join(os.path.dirname(os.path.normpath(pkg.prefix)), ".backup*")
+    for backup in glob.iglob(backup_glob):
+        shutil.rmtree(backup)
+    raise Exception("Some fatal install error")
 
 
 def test_overwrite_install_backup_failure(
@@ -1282,15 +1293,6 @@ def test_overwrite_install_backup_failure(
     # Make sure the install prefix exists
     installed_file = os.path.join(task.pkg.prefix, "some_file")
     fs.touchp(installed_file)
-
-    # Install that removes the backup directory, which is at the same level as
-    # the prefix, starting with .backup
-    def remove_backup(*args, **kwargs):
-        backup_glob = os.path.join(os.path.dirname(os.path.normpath(task.pkg.prefix)), ".backup*")
-        for backup in glob.iglob(backup_glob):
-            shutil.rmtree(backup)
-        raise Exception("Some fatal install error")
-
     monkeypatch.setattr(inst, "build_process", remove_backup)
 
     called = False
