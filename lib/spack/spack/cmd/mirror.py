@@ -4,7 +4,7 @@
 
 import argparse
 import sys
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import as_completed
 
 import spack.caches
 import spack.cmd
@@ -661,7 +661,9 @@ def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_version
             executor.submit(create_mirror_for_one_spec, candidate, mirror_cache)
             for candidate in mirror_specs
         ]
-        for mirror_future in futures:
+        for mirror_future in as_completed(futures):
+            #TODO: AQ remove debug statement below. 
+            print("PROCESSING MIRROR FUTURE\n")
             ext_mirror_stats = mirror_future.result()
             mirror_stats.merge(ext_mirror_stats)
 
