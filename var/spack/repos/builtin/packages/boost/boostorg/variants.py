@@ -389,6 +389,16 @@ def load():
         ),
     )
     variants.add(
+        "json",
+        when="@1.75.0:",
+        buildable="@1.75.0:",
+        conflicts=[
+            {"when": "cxxstd=98", "msg": "Boost.JSON requires cxxstd >= 11"},
+            {"when": "cxxstd=03", "msg": "Boost.JSON requires cxxstd >= 11"},
+        ],
+        description="JSON parsing, serialization, and DOM in C++11",
+    )
+    variants.add(
         "leaf",
         when="@1.75.0:",
         conflicts=[
