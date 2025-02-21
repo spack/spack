@@ -95,7 +95,7 @@ class Boost(Package):
     @property
     def libs(self):
         query = self.spec.last_query.extra_parameters
-        shared = "+shared" in self.spec
+        shared = self.spec.satisfies("+shared")
 
         libnames = query if query else self.boost_variants.libraries_to_build(self.spec)
         libnames += ["monitor"]
@@ -318,7 +318,7 @@ class Boost(Package):
 
         if spec.satisfies("platform=windows"):
             # The runtime link must either be shared or static, not both.
-            if "+shared" in spec:
+            if spec.satisfies("+shared"):
                 options.append("runtime-link=shared")
             else:
                 options.append("runtime-link=static")
@@ -486,7 +486,7 @@ class Boost(Package):
 
         # The shared libraries are not installed correctly
         # on Darwin; correct this
-        if (sys.platform == "darwin") and ("+shared" in spec):
+        if (sys.platform == "darwin") and spec.satisfies("+shared"):
             fix_darwin_install_name(prefix.lib)
 
     def setup_run_environment(self, env: EnvironmentModifications) -> None:
@@ -495,7 +495,7 @@ class Boost(Package):
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
     ) -> None:
-        if "+context" in self.spec and "context-impl" in self.spec.variants:
+        if self.spec.satisfies("+context"):
             context_impl = self.spec.variants["context-impl"].value
             # fcontext, as the default, has no corresponding macro
             if context_impl == "ucontext":
