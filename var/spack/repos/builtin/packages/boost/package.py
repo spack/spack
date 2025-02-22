@@ -139,18 +139,7 @@ class Boost(Package):
     conflicts("%oneapi", when="@1.80")
 
     def patch(self):
-        # Disable SSSE3 and AVX2 when using the NVIDIA compiler
-        if self.spec.satisfies("%nvhpc"):
-            filter_file("dump_avx2", "", "libs/log/build/Jamfile.v2")
-            filter_file("<define>BOOST_LOG_USE_AVX2", "", "libs/log/build/Jamfile.v2")
-            filter_file("dump_ssse3", "", "libs/log/build/Jamfile.v2")
-            filter_file("<define>BOOST_LOG_USE_SSSE3", "", "libs/log/build/Jamfile.v2")
-            filter_file("-fast", "-O1", "tools/build/src/tools/pgi.jam")
-            filter_file("-fast", "-O1", "tools/build/src/engine/build.sh")
-
-        # Fixes https://github.com/spack/spack/issues/29352
-        if self.spec.satisfies("@1.78 %intel") or self.spec.satisfies("@1.78 %oneapi"):
-            filter_file("-static", "", "tools/build/src/engine/build.sh")
+        boostpatches.apply(self.spec)
 
     def url_for_version(self, version):
         if version >= Version("1.63.0"):
