@@ -363,6 +363,7 @@ def _find_query(args, env):
     return results, concretized_but_not_installed
 
 
+@cmd.paged
 def find(parser, args):
     env = ev.active_environment()
 
