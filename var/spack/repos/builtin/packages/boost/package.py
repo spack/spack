@@ -107,6 +107,10 @@ class Boost(Package):
     conflicts("cxxstd=98", when="@1.84.0:", msg="This version of Boost requires C++11 or newer")
     conflicts("cxxstd=03", when="@1.84.0:", msg="This version of Boost requires C++11 or newer")
 
+    # Boost 1.80 does not build with the Intel oneapi compiler
+    # https://github.com/spack/spack/pull/32879#issuecomment-1265933265
+    conflicts("%oneapi", when="@1.80")
+
     with when("+icu"):
         depends_on("icu4c")
 
@@ -133,10 +137,6 @@ class Boost(Package):
 
     with when("+mpi"):
         depends_on("mpi")
-
-    # Boost 1.80 does not build with the Intel oneapi compiler
-    # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
-    conflicts("%oneapi", when="@1.80")
 
     def patch(self):
         boostpatches.apply(self.spec)
