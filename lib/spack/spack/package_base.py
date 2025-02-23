@@ -447,14 +447,6 @@ def _num_definitions(when_indexed_dictionary: Dict[spack.spec.Spec, Dict[K, V]])
     return sum(len(dictionary) for dictionary in when_indexed_dictionary.values())
 
 
-def _precedence(obj) -> int:
-    """Get either a 'precedence' attribute or item from an object."""
-    precedence = getattr(obj, "precedence", None)
-    if precedence is None:
-        raise KeyError(f"Couldn't get precedence from {type(obj)}")
-    return precedence
-
-
 def _remove_overridden_defs(defs: List[Tuple[spack.spec.Spec, Any]]) -> None:
     """Remove definitions from the list if their when specs are satisfied by later ones.
 
@@ -503,7 +495,7 @@ def _definitions(
 
     # With multiple definitions, ensure precedence order and simplify overrides
     if len(defs) > 1:
-        defs.sort(key=lambda v: _precedence(v[1]))
+        defs.sort(key=lambda v: getattr(v[1], "precedence", 0))
         _remove_overridden_defs(defs)
 
     return defs
