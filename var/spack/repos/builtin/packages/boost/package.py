@@ -9,6 +9,7 @@ from pathlib import Path
 from spack.package import *  # noqa: E402
 
 sys.path.append(os.path.dirname(__file__))
+import boostorg.bootstrap as bootstrap  # noqa: E402
 import boostorg.patches as boostpatches  # noqa: E402
 import boostorg.toolset  # noqa: E402
 import boostorg.variants as boostvariants  # noqa: E402
@@ -168,31 +169,18 @@ class Boost(Package):
             Path(spec["python"].libs[0]).parent.as_posix(),
         )
 
-    def determine_bootstrap_options(self, spec, options):
-        boost_toolset_id = boostorg.toolset.config(spec)
+    def _bootstrap(self, spec, with_libs, toolset):
+        opts = [f"--prefix={prefix}"]
 
-        # Arm compiler bootstraps with 'gcc' (but builds as 'clang')
-        if spec.satisfies("%arm") or spec.satisfies("%fj"):
-            options.append("--with-toolset=gcc")
+        if spec.satisfies("platform=windows"):
+            version = self.compiler.platform_toolset_ver
+            opts.extend(bootstrap.options_windows(spec, version))
+            Executable("cmd.exe")("/c", ".\\bootstrap.bat", *opts)
         else:
-            options.append("--with-toolset=%s" % boost_toolset_id)
-
-        with_libs = self.boost_variants.libraries_to_build(self.spec)
-
-        if with_libs:
-            options.append("--with-libraries=%s" % ",".join(sorted(with_libs)))
-        else:
-            options.append("--with-libraries=headers")
-
-        if spec.satisfies("+python"):
-            options.append("--with-python=%s" % spec["python"].command.path)
-
-        if spec.satisfies("+icu"):
-            options.append("--with-icu")
-        else:
-            options.append("--without-icu")
-
-        self.write_jam_file(spec, boost_toolset_id)
+            # to make Boost find the user-config.jam
+            env["BOOST_BUILD_PATH"] = self.stage.source_path
+            opts.extend(bootstrap.options(spec, toolset, with_libs))
+            Executable("./bootstrap.sh")(*opts)
 
     def write_jam_file(self, spec, boost_toolset_id=None):
         with open("user-config.jam", "w") as f:
@@ -356,23 +344,6 @@ class Boost(Package):
                     prefix, remainder = lib.split(".", 1)
                     symlink(lib, "%s-mt.%s" % (prefix, remainder))
 
-    def bootstrap_windows(self):
-        """Run the Windows-specific bootstrap.bat. The only bootstrapping command
-        line option that is accepted by the bootstrap.bat script is the compiler
-        information: either the vc version (e.g. MSVC 14.3.x would be vc143)
-        or gcc or clang.
-        """
-        bootstrap_options = list()
-        if self.spec.satisfies("%msvc"):
-            bootstrap_options.append(f"vc{self.compiler.platform_toolset_ver}")
-        elif self.spec.satisfies("%gcc"):
-            bootstrap_options.append("gcc")
-        elif self.spec.satisfies("%clang"):
-            bootstrap_options.append("clang")
-
-        bootstrap = Executable("cmd.exe")
-        bootstrap("/c", ".\\bootstrap.bat", *bootstrap_options)
-
     def install(self, spec, prefix):
         # On Darwin, Boost expects the Darwin libtool. However, one of the
         # dependencies may have pulled in Spack's GNU libtool, and these two
@@ -384,20 +355,19 @@ class Boost(Package):
             force_symlink("/usr/bin/libtool", join_path(newdir, "libtool"))
             env["PATH"] = newdir + ":" + env["PATH"]
 
-        if self.spec.satisfies("platform=windows"):
-            self.bootstrap_windows()
-        else:
-            # to make Boost find the user-config.jam
-            env["BOOST_BUILD_PATH"] = self.stage.source_path
-            bootstrap_options = ["--prefix=%s" % prefix]
-            self.determine_bootstrap_options(spec, bootstrap_options)
-            bootstrap = Executable("./bootstrap.sh")
-            bootstrap(*bootstrap_options)
+        # Library names that need to be passed to `--with-libraries`
+        with_libs = self.boost_variants.libraries_to_build(spec)
+
+        # Compiler/toolset to use
+        toolset = boostorg.toolset.config(spec)
+
+        # Run the bootstrap script
+        self._bootstrap(spec, with_libs, toolset)
 
         # strip the toolchain to avoid double include errors (intel) or
         # user-config being overwritten (again intel, but different boost version)
         filter_file(
-            r"^\s*using {0}.*".format(boostorg.toolset.config(spec)),
+            r"^\s*using {0}.*".format(toolset),
             "",
             os.path.join(self.stage.source_path, "project-config.jam"),
         )
