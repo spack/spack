@@ -10,6 +10,7 @@ from spack.package import *  # noqa: E402
 
 sys.path.append(os.path.dirname(__file__))
 import boostorg.patches as boostpatches  # noqa: E402
+import boostorg.toolset  # noqa: E402
 import boostorg.variants as boostvariants  # noqa: E402
 
 
@@ -155,30 +156,6 @@ class Boost(Package):
                 flags.append("-Wno-error=enum-constexpr-conversion")
         return (flags, None, None)
 
-    def determine_toolset(self, spec):
-        toolsets = {
-            "%gcc": "gcc",
-            "%intel": "intel",
-            "%oneapi": "intel",
-            "%clang": "clang",
-            "%arm": "clang",
-            "%xl": "xlcpp",
-            "%xl_r": "xlcpp",
-            "%nvhpc": "pgi",
-            "%fj": "clang",
-        }
-
-        if spec.satisfies("@1.47:"):
-            toolsets["%intel"] += "-linux"
-            toolsets["%oneapi"] += "-linux"
-
-        for cc, toolset in toolsets.items():
-            if self.spec.satisfies(cc):
-                return toolset
-
-        # fallback to gcc if no toolset found
-        return "gcc"
-
     def bjam_python_line(self, spec):
         # avoid "ambiguous key" error
         if spec.satisfies("@:1.58"):
@@ -192,7 +169,7 @@ class Boost(Package):
         )
 
     def determine_bootstrap_options(self, spec, options):
-        boost_toolset_id = self.determine_toolset(spec)
+        boost_toolset_id = boostorg.toolset.config(spec)
 
         # Arm compiler bootstraps with 'gcc' (but builds as 'clang')
         if spec.satisfies("%arm") or spec.satisfies("%fj"):
@@ -326,7 +303,7 @@ class Boost(Package):
             # --with-toolset in bootstrap.
             # (although it is not currently known if 1.76 is the earliest
             # version that requires specifying the toolset for Intel)
-            options.extend(["toolset=%s" % self.determine_toolset(spec)])
+            options.extend(["toolset=%s" % boostorg.toolset.config(spec)])
 
         # Other C++ flags.
         cxxflags = []
@@ -420,7 +397,7 @@ class Boost(Package):
         # strip the toolchain to avoid double include errors (intel) or
         # user-config being overwritten (again intel, but different boost version)
         filter_file(
-            r"^\s*using {0}.*".format(self.determine_toolset(spec)),
+            r"^\s*using {0}.*".format(boostorg.toolset.config(spec)),
             "",
             os.path.join(self.stage.source_path, "project-config.jam"),
         )
