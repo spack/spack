@@ -2149,7 +2149,7 @@ def _c_compiler_always_exists():
 def mock_test_cache(tmp_path_factory):
     cache_dir = tmp_path_factory.mktemp("cache")
     print(cache_dir)
-    return spack.util.file_cache.FileCache(str(cache_dir))
+    return spack.util.file_cache.FileCache(cache_dir)
 
 
 class MockHTTPResponse(io.IOBase):

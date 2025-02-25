@@ -34,7 +34,7 @@ repo:
   subdirectory: '{request.param}'
 """
         )
-    repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
+    repo_cache = spack.util.file_cache.FileCache(cache_dir)
     return spack.repo.Repo(str(repo_dir), cache=repo_cache), request.param
 
 
@@ -194,7 +194,7 @@ def test_repository_construction_doesnt_use_globals(nullify_globals, tmp_path, r
 
     repo_paths, namespaces = _repo_paths(repos)
 
-    repo_cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+    repo_cache = spack.util.file_cache.FileCache(tmp_path / "cache")
     repo_path = spack.repo.RepoPath(*repo_paths, cache=repo_cache)
     assert len(repo_path.repos) == len(namespaces)
     assert [x.namespace for x in repo_path.repos] == namespaces
