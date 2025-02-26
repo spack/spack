@@ -138,6 +138,19 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     # Using --first should avoid the error condition
     load(shell, "--first", "libelf")
 
+def test_load_last(install_mockery, mock_fetch, mock_archive, mock_packages):
+    """Test with and without the --last option"""
+    shell = "--bat" if sys.platform == "win32" else "--sh"
+    install("libelf@0.8.12")
+    install("libelf@0.8.13")
+
+    # Now there are two versions of libelf, which should cause an error
+    out = load(shell, "libelf", fail_on_error=False)
+    assert "matches multiple packages" in out
+    assert "Use a more specific spec" in out
+
+    # Using --last should avoid the error condition
+    load(shell, "--last", "libelf")
 
 def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test that spack load prints an error message without a shell."""
