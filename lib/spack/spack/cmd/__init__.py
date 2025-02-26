@@ -281,6 +281,7 @@ def disambiguate_spec(
     local: bool = False,
     installed: Union[bool, InstallRecordStatus] = True,
     first: bool = False,
+    last: bool = False,
 ) -> spack.spec.Spec:
     """Given a spec, figure out which installed package it refers to.
 
@@ -292,7 +293,7 @@ def disambiguate_spec(
         first: returns the first matching spec, even if more than one match is found
     """
     hashes = env.all_hashes() if env else None
-    return disambiguate_spec_from_hashes(spec, hashes, local, installed, first)
+    return disambiguate_spec_from_hashes(spec, hashes, local, installed, first, last)
 
 
 def disambiguate_spec_from_hashes(
@@ -301,6 +302,7 @@ def disambiguate_spec_from_hashes(
     local: bool = False,
     installed: Union[bool, InstallRecordStatus] = True,
     first: bool = False,
+    last: bool = False,
 ) -> spack.spec.Spec:
     """Given a spec and a list of hashes, get concrete spec the spec refers to.
 
@@ -320,6 +322,8 @@ def disambiguate_spec_from_hashes(
 
     elif first:
         return matching_specs[0]
+    elif last:
+        return matching_specs[-1]
 
     ensure_single_spec_or_die(spec, matching_specs)
 

@@ -65,6 +65,13 @@ def setup_parser(subparser):
         dest="load_first",
         help="load the first match if multiple packages match the spec",
     )
+    subparser.add_argument(
+        "--last",
+        action="store_true",
+        default=False,
+        dest="load_last",
+        help="load the last match if multiple packages match the spec",
+    )
 
     subparser.add_argument(
         "--list",
@@ -86,7 +93,7 @@ def load(parser, args):
 
     constraint_specs = spack.cmd.parse_specs(args.constraint)
     specs = [
-        spack.cmd.disambiguate_spec(spec, env, first=args.load_first) for spec in constraint_specs
+        spack.cmd.disambiguate_spec(spec, env, first=args.load_first, last=args.load_last) for spec in constraint_specs
     ]
 
     if not args.shell:

@@ -81,6 +81,13 @@ def setup_parser(subparser):
         dest="find_first",
         help="use the first match if multiple packages match the spec",
     )
+    subparser.add_argument(
+        "--last",
+        action="store_true",
+        default=False,
+        dest="find_last",
+        help="use the last match if multiple packages match the spec",
+    )
 
     arguments.add_common_arguments(subparser, ["spec"])
 
@@ -127,7 +134,7 @@ def location(parser, args):
     # install_dir command matches against installed specs.
     if args.install_dir:
         env = ev.active_environment()
-        spec = spack.cmd.disambiguate_spec(specs[0], env, first=args.find_first)
+        spec = spack.cmd.disambiguate_spec(specs[0], env, first=args.find_first, last=args.find_last)
         print(spec.prefix)
         return
 
