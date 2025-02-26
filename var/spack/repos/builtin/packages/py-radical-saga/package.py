@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.url
 from spack.package import *
 
 
@@ -47,5 +48,5 @@ class PyRadicalSaga(PythonPackage):
     def url_for_version(self, version):
         if version >= Version("1.47.1"):
             return super().url_for_version(version)
-        self.pypi = "radical.saga/radical.saga-{0}.tar.gz".format(version)
-        return self.url()
+        return spack.url.substitute_version(self.url.replace("_", "."),
+                                            self.url_version(version))

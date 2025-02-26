@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.url
 from spack.package import *
 
 
@@ -57,5 +58,5 @@ class PyRadicalPilot(PythonPackage):
     def url_for_version(self, version):
         if version >= Version("1.49.3"):
             return super().url_for_version(version)
-        self.pypi = "radical.pilot/radical.pilot-{0}.tar.gz".format(version)
-        return self.url()
+        return spack.url.substitute_version(self.url.replace("_", "."),
+                                            self.url_version(version))
