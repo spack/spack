@@ -28,10 +28,6 @@ class NvplScalapack(Package):
 
     requires("target=armv8.2a:", msg="Any CPU with Arm-v8.2a+ microarch")
 
-    requires("mpi_family=mpich", when="^mpich")
-    requires("mpi_family=mpich", when="^cray-mpich")
-    requires("mpi_family=openmpi", when="^openmpi")
-
     conflicts("%gcc@:7")
     conflicts("%clang@:13")
 
