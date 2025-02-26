@@ -5,7 +5,7 @@
 from spack.package import *
 
 
-class Kubectl(GoPackage):
+class Kubectl(Package):
     """
     Kubectl is a command-line interface for Kubernetes clusters.
     """
@@ -77,14 +77,31 @@ class Kubectl(GoPackage):
             "1.30.0", sha256="16385d1e4af6d3ede885b5c5d617ad06cc2a7a28e40a380fb04c521c9e7fb957"
         )
         version(
+            "1.27.2", sha256="c6fcfddd38f877ce49c49318973496f9a16672e83a29874a921242950cd1c5d2"
+        )
+        version(
             "1.27.1", sha256="3a3f7c6b8cf1d9f03aa67ba2f04669772b1205b89826859f1636062d5f8bec3f"
         )
         version(
             "1.27.0", sha256="536025dba2714ee5e940bb0a6b1df9ca97c244fa5b00236e012776a69121c323"
         )
 
+    depends_on("c", type="build")
     depends_on("bash", type="build")
-    depends_on("go@1.22:", type="build", when="@1.30:")
-    depends_on("go@1.23:", type="build", when="@1.32:")
+    depends_on("gmake", type="build")
 
-    build_directory = "cmd/kubectl"
+    depends_on("go@1.23:", type="build", when="@1.32:")
+    depends_on("go@1.22:", type="build", when="@1.30:")
+    depends_on("go@1.21:", type="build", when="@1.29:")
+    depends_on("go@1.20:", type="build", when="@1.27:")
+    depends_on("go", type="build")
+
+    phases = ["build", "install"]
+
+    def build(self, spec, prefix):
+        components = ["cmd/kubectl"]
+
+        make(f"WHAT={' '.join(components)}")
+
+    def install(self, spec, prefix):
+        install_tree("_output/bin", prefix.bin)
