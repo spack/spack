@@ -50,5 +50,5 @@ class PyRadicalUtils(PythonPackage):
     def url_for_version(self, version):
         if version >= Version("1.48.1"):
             return super().url_for_version(version)
-        return spack.url.substitute_version(self.url.replace("_", "."),
-                                            self.url_version(version))
+        url = self.url.replace("_", ".")
+        return spack.url.substitute_version(url, self.url_version(version))
