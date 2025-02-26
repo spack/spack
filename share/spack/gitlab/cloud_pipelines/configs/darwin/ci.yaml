@@ -13,6 +13,7 @@ ci:
       # as part of installation of a golang package
       # see: https://github.com/spack/spack/issues/49147
       after_script-:
-      - - ./bin/spack clean -a
+      - - if [[ -d tmp ]] ; then chmod -R u+w tmp ; else echo tmp not found ; fi
+        - ./bin/spack clean -a
   - build-job-remove:
       image:: macos-run-on-metal
