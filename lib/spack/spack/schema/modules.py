@@ -48,30 +48,33 @@ module_file_configuration = {
 
 projections_scheme = spack.schema.projections.properties["projections"]
 
-module_type_configuration: Dict = {
+common_props = {
+    "verbose": {"type": "boolean", "default": False},
+    "hash_length": {"type": "integer", "minimum": 0, "default": 7},
+    "include": array_of_strings,
+    "exclude": array_of_strings,
+    "exclude_implicits": {"type": "boolean", "default": False},
+    "defaults": array_of_strings,
+    "hide_implicits": {"type": "boolean", "default": False},
+    "naming_scheme": {"type": "string"},
+    "projections": projections_scheme,
+    "all": module_file_configuration,
+}
+
+tcl_configuration = {
+    "type": "object",
+    "default": {},
+    "validate_spec": True,
+    "properties": {**common_props},
+    "additionalProperties": module_file_configuration,
+}
+
+lmod_configuration = {
     "type": "object",
     "default": {},
     "validate_spec": True,
     "properties": {
-        "verbose": {"type": "boolean", "default": False},
-        "hash_length": {"type": "integer", "minimum": 0, "default": 7},
-        "include": array_of_strings,
-        "exclude": array_of_strings,
-        "exclude_implicits": {"type": "boolean", "default": False},
-        "defaults": array_of_strings,
-        "hide_implicits": {"type": "boolean", "default": False},
-        "naming_scheme": {"type": "string"},
-        "projections": projections_scheme,
-        "all": module_file_configuration,
-    },
-    "additionalProperties": module_file_configuration,
-}
-
-tcl_configuration = module_type_configuration.copy()
-
-lmod_configuration = module_type_configuration.copy()
-lmod_configuration["properties"].update(
-    {
+        **common_props,
         "core_compilers": array_of_strings,
         "hierarchy": array_of_strings,
         "core_specs": array_of_strings,
@@ -80,8 +83,9 @@ lmod_configuration["properties"].update(
             "validate_spec": True,
             "additionalProperties": array_of_strings,
         },
-    }
-)
+    },
+    "additionalProperties": module_file_configuration,
+}
 
 module_config_properties = {
     "use_view": {"anyOf": [{"type": "string"}, {"type": "boolean"}]},
