@@ -820,7 +820,7 @@ class ConcretizationCache:
             spack.util.hash.b32_hash(cache_path), spack.util.crypto.bit_length(sys.maxsize)
         )
 
-    def _update_manifest(self):
+    def flush_manifest(self):
         """Updates the concretization cache manifest file after a cache write operation
         Updates the current byte count and entry counts and writes to the head of the
         manifest file"""
@@ -907,7 +907,7 @@ class ConcretizationCache:
         return None, None
 
 
-CONC_CACHE = llnl.util.lang.Singleton(lambda: ConcretizationCache())
+CONC_CACHE: ConcretizationCache = llnl.util.lang.Singleton(lambda: ConcretizationCache()) # type: ignore
 
 
 def _normalize_packages_yaml(packages_yaml):
@@ -4617,7 +4617,8 @@ class Solver:
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
-
+        CONC_CACHE.flush_manifest()
+        CONC_CACHE.cleanup()
         return self.driver.solve(
             setup, specs, reuse=reusable_specs, output=output, allow_deprecated=allow_deprecated
         )
@@ -4686,6 +4687,9 @@ class Solver:
             input_specs = list(x for (x, y) in result.unsolved_specs)
             for spec in result.specs:
                 reusable_specs.extend(spec.traverse())
+
+        CONC_CACHE.flush_manifest()
+        CONC_CACHE.cleanup()
 
 
 class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
