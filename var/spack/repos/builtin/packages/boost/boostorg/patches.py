@@ -169,13 +169,13 @@ def load():
     # Add option to C/C++ compile commands in clang-linux.jam
     sp.patch(
         "patches/clang-linux_add_option.patch",
-        when="@1.56.0:1.63.0",
+        when="@1.56.0:1.63.0 %clang",
         sha256="d1cd178ea5348fafbba797113fc5a92cc822f3606dc2fe65c14cc2275334001b",
     )
 
     sp.patch(
         "patches/clang-linux_add_option2.patch",
-        when="@1.47.0:1.55.0",
+        when="@1.47.0:1.55.0 %clang",
         sha256="4f0f7c0c0711e330aa077e2a1a989f68cbdcf7a3d20f85db872f3c34fce278e1",
     )
 
