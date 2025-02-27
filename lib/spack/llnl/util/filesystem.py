@@ -2500,16 +2500,12 @@ class WindowsSimulatedRPath:
 
         self.link_install_prefix = link_install_prefix
         if base_modification_prefix:
-            self._base_modification_prefix = pathlib.Path(base_modification_prefix)
+            self.base_modification_prefix = pathlib.Path(base_modification_prefix)
+        else:
+            self.base_modification_prefix = pathlib.Path(self.pkg.prefix)
         self._additional_library_dependents: set[pathlib.Path] = set()
         if not self.link_install_prefix:
             tty.debug(f"Generating rpath for non install context: {base_modification_prefix}")
-
-    @property
-    def base_modification_prefix(self) -> pathlib.Path:
-        if self.link_install_prefix:
-            self._base_modification_prefix = pathlib.Path(self.pkg.prefix)
-        return self._base_modification_prefix
 
     @property
     def library_dependents(self):
