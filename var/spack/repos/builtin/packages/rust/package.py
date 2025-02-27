@@ -86,6 +86,7 @@ class Rust(Package):
     depends_on("rust-bootstrap@1.82:1.83", type="build", when="@1.83")
     depends_on("rust-bootstrap@1.80:1.81", type="build", when="@1.81")
     depends_on("rust-bootstrap@1.77:1.78", type="build", when="@1.78")
+    depends_on("rust-bootstrap@1.75:1.76", type="build", when="@1.76")
     depends_on("rust-bootstrap@1.74:1.75", type="build", when="@1.75")
     depends_on("rust-bootstrap@1.73:1.74", type="build", when="@1.74")
     depends_on("rust-bootstrap@1.72:1.73", type="build", when="@1.73")
@@ -183,6 +184,9 @@ class Rust(Package):
         # Disable bootstrap LLVM download.
         opts.append("llvm.download-ci-llvm=false")
 
+        # Use vendored resources to perform offline build.
+        opts.append("build.vendor=true")
+
         # Convert opts to '--set key=value' format.
         flags = [flag for opt in opts for flag in ("--set", opt)]
 
@@ -198,9 +202,6 @@ class Rust(Package):
 
         # Compile tools into flag for configure.
         flags.append(f"--tools={','.join(tools)}")
-
-        # Use vendored resources to perform offline build.
-        flags.append("--enable-vendor")
 
         configure(*flags)
 

@@ -66,6 +66,17 @@ class RustBootstrap(Package):
                 "powerpc64le": "c5aedb12c552daa18072e386697205fb7b91cef1e8791fe6fb74834723851388",
             },
         },
+        "1.76.0": {
+            "darwin": {
+                "x86_64": "7bdbe085695df8e46389115e99eda7beed37a9494f6b961b45554c658e53b8e7",
+                "aarch64": "17496f15c3cb6ff73d5c36f5b54cc110f1ac31fa09521a7991c0d7ddd890dceb",
+            },
+            "linux": {
+                "x86_64": "9d589d2036b503cc45ecc94992d616fb3deec074deb36cacc2f5c212408f7399",
+                "aarch64": "2e8313421e8fb673efdf356cdfdd4bc16516f2610d4f6faa01327983104c05a0",
+                "powerpc64le": "44b3494675284d26b04747a824dc974e32fd8fd46fc0aa06a7c8ebe851332d2c",
+            },
+        },
         "1.75.0": {
             "darwin": {
                 "x86_64": "ad066e4dec7ae5948c4e7afe68e250c336a5ab3d655570bb119b3eba9cf22851",
