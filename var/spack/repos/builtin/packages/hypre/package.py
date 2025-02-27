@@ -193,7 +193,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+sycl", msg="ROCm and SYCL are mutually exclusive")
     conflicts("+cublas", when="~cuda", msg="cuBLAS requires CUDA to be enabled")
     conflicts("+rocblas", when="~rocm", msg="rocBLAS requires ROCm to be enabled")
-    conflicts("+gpu-profiling", when="~cuda~rocm", msg="GPU profiling requires either CUDA or ROCm")
+    conflicts("+gpu-profiling", when="~cuda~rocm", msg="GPU profiling requires CUDA or ROCm")
 
     configure_directory = "src"
 
