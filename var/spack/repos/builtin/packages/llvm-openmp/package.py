@@ -52,11 +52,11 @@ class LlvmOpenmp(CMakePackage):
         description="Support gomp and the Intel openMP runtime library.",
     )
 
-    # variant for building llvm-openmp as a stand alone library
+    # variant for building only the llvm-openmp openmp library
     variant(
-        "standalone",
+        "openmp_libraries_only",
         default=False,
-        description="Build LLVM openmp libomp library as standalone library.",
+        description="Only build the llvm-openmp openmp library.",
     )
 
     # variant for building libomptarget
@@ -103,7 +103,7 @@ class LlvmOpenmp(CMakePackage):
         # Build llvm-openmp-ompt as a stand alone library
         # CMAKE rpath variable prevents standalone error
         # where this package wants the llvm tools path
-        if "+standalone" in self.spec:
+        if "+openmp_libraries_only" in self.spec:
             cmake_args.extend(
                 [
                     "-DOPENMP_STANDALONE_BUILD=true",
