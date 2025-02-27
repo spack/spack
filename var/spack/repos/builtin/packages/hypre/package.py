@@ -188,9 +188,12 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     conflicts("+magma", when="@:2.28")
 
     # GPU checks
+    conflicts("+cuda", when="+rocm", msg="CUDA and ROCm are mutually exclusive")
+    conflicts("+cuda", when="+sycl", msg="CUDA and SYCL are mutually exclusive")
+    conflicts("+rocm", when="+sycl", msg="ROCm and SYCL are mutually exclusive")
     conflicts("+cublas", when="~cuda", msg="cuBLAS requires CUDA to be enabled")
     conflicts("+rocblas", when="~rocm", msg="rocBLAS requires ROCm to be enabled")
-    conflicts("+gpu-profiling", when="~cuda~rocm+sycl", msg="GPU profiling requires either CUDA or ROCm to be enabled")
+    conflicts("+gpu-profiling", when="~cuda~rocm", msg="GPU profiling requires either CUDA or ROCm to be enabled")
 
     configure_directory = "src"
 
@@ -297,10 +300,14 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 configure_args.append("--enable-cub")
             if spec.satisfies("+cublas"):
                 configure_args.append("--enable-cublas")
+            if spec.satisfies("@2.29.0:"):
+                configure_args.append("--enable-cusolver")
         else:
             configure_args.extend(["--without-cuda", "--disable-curand", "--disable-cusparse"])
             if spec.satisfies("@:2.20.99"):
                 configure_args.append("--disable-cub")
+            if spec.satisfies("@:2.28.99"):
+                configure_args.append("--disable-cusolver")
 
         if spec.satisfies("+rocm"):
             rocm_pkgs = ["rocsparse", "rocthrust", "rocprim", "rocrand"]
@@ -324,8 +331,12 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 configure_args.append(f"--with-gpu-arch={rocm_arch}")
             if spec.satisfies("+rocblas"):
                 configure_args.append("--enable-rocblas")
+            if spec.satisfies("@2.29.0:"):
+                configure_args.append("--enable-rocsolver")
         else:
             configure_args.extend(["--without-hip", "--disable-rocrand", "--disable-rocsparse"])
+            if spec.satisfies("@:2.28.99"):
+                configure_args.append("--disable-rocsolver")
 
         if spec.satisfies("+sycl"):
             configure_args.append("--with-sycl")
