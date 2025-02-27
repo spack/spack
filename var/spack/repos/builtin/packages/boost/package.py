@@ -4,11 +4,11 @@
 
 import os
 import sys
-from pathlib import Path
 
 from spack.package import *  # noqa: E402
 
 sys.path.append(os.path.dirname(__file__))
+import boostorg.bjam as bjam  # noqa: E402
 import boostorg.bootstrap as bootstrap  # noqa: E402
 import boostorg.patches as boostpatches  # noqa: E402
 import boostorg.toolset  # noqa: E402
@@ -153,18 +153,6 @@ class Boost(Package):
                 flags.append("-Wno-error=enum-constexpr-conversion")
         return (flags, None, None)
 
-    def bjam_python_line(self, spec):
-        # avoid "ambiguous key" error
-        if spec.satisfies("@:1.58"):
-            return ""
-
-        return "using python : {0} : {1} : {2} : {3} ;\n".format(
-            spec["python"].version.up_to(2),
-            Path(spec["python"].command.path).as_posix(),
-            Path(spec["python"].headers.directories[0]).as_posix(),
-            Path(spec["python"].libs[0]).parent.as_posix(),
-        )
-
     def _bootstrap(self, spec, with_libs, toolset):
         opts = [f"--prefix={prefix}"]
 
@@ -178,160 +166,46 @@ class Boost(Package):
             opts.extend(bootstrap.options(spec, toolset, with_libs))
             Executable("./bootstrap.sh")(*opts)
 
-    def write_jam_file(self, spec, boost_toolset_id=None):
-        with open("user-config.jam", "w") as f:
-            # Boost may end up using gcc even though clang+gfortran is set in
-            # compilers.yaml. Make sure this does not happen:
-            if not spec.satisfies("platform=windows"):
-                # Skip this on Windows since we don't have a cl.exe wrapper in spack
-                f.write("using {0} : : {1} ;\n".format(boost_toolset_id, spack_cxx))
-
-            if spec.satisfies("+mpi"):
-                # Use the correct mpi compiler.  If the compiler options are
-                # empty or undefined, Boost will attempt to figure out the
-                # correct options by running "${mpicxx} -show" or something
-                # similar, but that doesn't work with the Cray compiler
-                # wrappers.  Since Boost doesn't use the MPI C++ bindings,
-                # that can be used as a compiler option instead.
-                mpi_line = "using mpi : %s" % Path(spec["mpi"].mpicxx).as_posix()
-                f.write(mpi_line + " ;\n")
-
-            if spec.satisfies("+python"):
-                f.write(self.bjam_python_line(spec))
-
-    def determine_b2_options(self, spec, options):
-        if spec.satisfies("+debug"):
-            options.append("variant=debug")
-        else:
-            options.append("variant=release")
-
-        if spec.satisfies("+icu"):
-            options.extend(["-s", "ICU_PATH=%s" % spec["icu4c"].prefix])
-        else:
-            options.append("--disable-icu")
-
-        if spec.satisfies("+iostreams"):
-            options.extend(
-                [
-                    "-s",
-                    "BZIP2_INCLUDE=%s" % spec["bzip2"].prefix.include,
-                    "-s",
-                    "BZIP2_LIBPATH=%s" % spec["bzip2"].prefix.lib,
-                    "-s",
-                    "ZLIB_INCLUDE=%s" % spec["zlib-api"].prefix.include,
-                    "-s",
-                    "ZLIB_LIBPATH=%s" % spec["zlib-api"].prefix.lib,
-                    "-s",
-                    "LZMA_INCLUDE=%s" % spec["xz"].prefix.include,
-                    "-s",
-                    "LZMA_LIBPATH=%s" % spec["xz"].prefix.lib,
-                    "-s",
-                    "ZSTD_INCLUDE=%s" % spec["zstd"].prefix.include,
-                    "-s",
-                    "ZSTD_LIBPATH=%s" % spec["zstd"].prefix.lib,
-                ]
-            )
-            # At least with older Xcode, _lzma_cputhreads is missing (#33998)
-            if self.spec.satisfies("platform=darwin"):
-                options.extend(["-s", "NO_LZMA=1"])
-
-        link_types = ["static"]
-        if spec.satisfies("+shared"):
-            link_types.append("shared")
-
-        threading_opts = []
-        if spec.satisfies("+multithreaded"):
-            threading_opts.append("multi")
-        if spec.satisfies("+singlethreaded"):
-            threading_opts.append("single")
-        if not threading_opts:
-            raise RuntimeError(
-                "At least one of {singlethreaded, " + "multithreaded} must be enabled"
-            )
-
-        # If we are building context, tell b2 which backend to use
-        if spec.satisfies("+context") and "context-impl" in spec.variants:
-            options.extend(["context-impl=%s" % spec.variants["context-impl"].value])
-
-        if spec.satisfies("+taggedlayout"):
-            layout = "tagged"
-        elif spec.satisfies("+versionedlayout"):
-            layout = "versioned"
-        else:
-            if len(threading_opts) > 1:
-                raise RuntimeError(
-                    "Cannot build both single and " + "multi-threaded targets with system layout"
-                )
-            layout = "system"
-
-        options.extend(["link=%s" % ",".join(link_types), "--layout=%s" % layout])
+    def _b2_options(self, spec, toolset):
+        opts = []
 
         if spec.satisfies("platform=windows"):
+            is_64bit = "64" in str(spec.target.family)
+            opts.append(f"address-model={64 if is_64bit else 32}")
+            if not spec.satisfies("+python"):
+                opts.append("--without-python")
+
             # The runtime link must either be shared or static, not both.
             if spec.satisfies("+shared"):
-                options.append("runtime-link=shared")
+                opts.append("runtime-link=shared")
             else:
-                options.append("runtime-link=static")
+                opts.append("runtime-link=static")
 
             # Any library that could be passed to `--with-libraries` but is not
             # an active variant needs to be passed to `--without-<NAME>`.
-            buildable = set(self.boost_variants.libraries_to_build(spec))
+            buildable = set(boost_variants.libraries_to_build(spec))
             all_libs = set(self.boost_variants.all_libraries())
             for lib in all_libs - buildable:
-                options.append(f"--without-{lib}")
+                opts.append(f"--without-{lib}")
+        else:
+            jobs = make_jobs
+            # in 1.59 max jobs became dynamic
+            if jobs > 64 and spec.satisfies("@:1.58"):
+                jobs = 64
 
-        if not spec.satisfies("@:1.75 %intel") and not spec.satisfies("platform=windows"):
-            # When building any version >= 1.76, the toolset must be specified.
-            # Earlier versions could not specify Intel as the toolset
-            # as that was considered to be redundant/conflicting with
-            # --with-toolset in bootstrap.
-            # (although it is not currently known if 1.76 is the earliest
-            # version that requires specifying the toolset for Intel)
-            options.extend(["toolset=%s" % boostorg.toolset.config(spec)])
+            opts.append(f"-j {jobs}")
 
-        # Other C++ flags.
-        cxxflags = []
+            if not spec.satisfies("@:1.75 %intel"):
+                # When building any version >= 1.76, the toolset must be specified.
+                # Earlier versions could not specify Intel as the toolset
+                # as that was considered to be redundant/conflicting with
+                # --with-toolset in bootstrap.
+                # (although it is not currently known if 1.76 is the earliest
+                # version that requires specifying the toolset for Intel)
+                opts.append(f"toolset={toolset}")
 
-        # Deal with C++ standard.
-        if spec.satisfies("@1.66:"):
-            options.append("cxxstd={0}".format(spec.variants["cxxstd"].value))
-        else:  # Add to cxxflags for older Boost.
-            cxxstd = spec.variants["cxxstd"].value
-            flag = getattr(self.compiler, "cxx{0}_flag".format(cxxstd))
-            if flag:
-                cxxflags.append(flag)
-
-        if self.spec.satisfies("+pic"):
-            cxxflags.append(self.compiler.cxx_pic_flag)
-
-        # clang is not officially supported for pre-compiled headers
-        # and at least in clang 3.9 still fails to build
-        #   https://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
-        #   https://svn.boost.org/trac/boost/ticket/12496
-        if spec.satisfies("%apple-clang") or spec.satisfies("%clang") or spec.satisfies("%fj"):
-            options.extend(["pch=off"])
-            if spec.satisfies("+clanglibcpp"):
-                cxxflags.append("-stdlib=libc++")
-                options.extend(["toolset=clang", 'linkflags="-stdlib=libc++"'])
-        elif spec.satisfies("%xl") or spec.satisfies("%xl_r"):
-            # see also: https://lists.boost.org/boost-users/2019/09/89953.php
-            # the cxxstd setting via spack is not sufficient to drive the
-            # change into boost compilation
-            if spec.variants["cxxstd"].value == "11":
-                cxxflags.append("-std=c++11")
-
-        # https://github.com/boostorg/stacktrace/pull/150
-        if spec.satisfies("@1.85: +stacktrace+clanglibcpp"):
-            cxxflags.append("-DBOOST_STACKTRACE_LIBCXX_RUNTIME_MAY_CAUSE_MEMORY_LEAK")
-
-        if cxxflags:
-            options.append("cxxflags={0}".format(" ".join(cxxflags)))
-
-        # Visibility was added in 1.69.0.
-        if spec.satisfies("@1.69.0:"):
-            options.append("visibility=%s" % spec.variants["visibility"].value)
-
-        return threading_opts
+        opts.extend(bjam.b2_options(spec))
+        return opts
 
     def install(self, spec, prefix):
         # On Darwin, Boost expects the Darwin libtool. However, one of the
@@ -350,6 +224,10 @@ class Boost(Package):
         # Compiler/toolset to use
         toolset = boostorg.toolset.config(spec)
 
+        # Create the user-level jam file
+        user_jam_file = os.path.join(self.stage.source_path, "user-config.jam")
+        bjam.write_user_jam_file(user_jam_file, spec, spack_cxx, toolset)
+
         # Run the bootstrap script
         self._bootstrap(spec, with_libs, toolset)
 
@@ -361,42 +239,27 @@ class Boost(Package):
             os.path.join(self.stage.source_path, "project-config.jam"),
         )
 
-        # b2 used to be called bjam, before 1.47 (sigh)
-        b2name = "./b2" if spec.satisfies("@1.47:") else "./bjam"
-        if self.spec.satisfies("platform=windows"):
-            b2name = "b2.exe" if spec.satisfies("@1.47:") else "bjam.exe"
+        # fmt: off
+        # Gather the options for `b2`
+        b2_options = [
+            f"--prefix={self.prefix}",
+            f"--user-config={user_jam_file}"
+        ]
+        # fmt: on
 
-        b2 = Executable(b2name)
-        jobs = make_jobs
-        # in 1.59 max jobs became dynamic
-        if jobs > 64 and spec.satisfies("@:1.58"):
-            jobs = 64
+        b2_options.extend(self._b2_options(spec, toolset))
 
-        if self.spec.satisfies("platform=windows"):
-
-            def is_64bit():
-                # TODO: This method should be abstracted to a more general location
-                #  as it is repeated in many places (msmpi.py for one)
-                return "64" in str(self.spec.target.family)
-
-            b2_options = [f"--prefix={self.prefix}", f"address-model={64 if is_64bit() else 32}"]
-            if not self.spec.satisfies("+python"):
-                b2_options.append("--without-python")
-
-            self.write_jam_file(self.spec)
-        else:
-            b2_options = ["-j", "%s" % jobs]
-        path_to_config = "--user-config=%s" % os.path.join(
-            self.stage.source_path, "user-config.jam"
-        )
-        b2_options.append(path_to_config)
-        threading_opts = self.determine_b2_options(spec, b2_options)
+        # Run b2
+        b2 = Executable(bjam.b2_name(spec))
 
         # Create headers if building from a git checkout
         if spec.satisfies("@develop"):
             b2("headers", *b2_options)
 
+        # Remove any previously-built targets (in case this is a rebuild)
         b2("--clean", *b2_options)
+        
+        threading_opts = bjam.threading_options(spec)
 
         # In theory it could be done on one call but it fails on
         # Boost.MPI if the threading options are not separated.
