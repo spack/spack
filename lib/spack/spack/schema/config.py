@@ -63,8 +63,8 @@ properties: Dict[str, Any] = {
                 "properties": {
                     "enable": {"type": "boolean"},
                     "url": {"type": "string"},
-                    "entry_limit": {"type": "integer", "minimum": -1},
-                    "size_limit": {"type": "integer", "minimum": -1},
+                    "entry_limit": {"type": "integer", "minimum": 0},
+                    "size_limit": {"type": "integer", "minimum": 0},
                 },
             },
             "install_hash_length": {"type": "integer", "minimum": 1},

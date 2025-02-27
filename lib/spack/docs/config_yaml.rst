@@ -341,9 +341,9 @@ create a new alias called ``inst`` that will always call ``install -v``:
 ``concretization_cache:enable``
 -------------------------------
 
-When set to ``true``, Spack will create a cache for the solver output of
+When set to ``true``, Spack will utilize a cache of solver outputs from
 successful concretization runs. When enabled, Spack will check the concretization
-cache prior to running the solver, and if a previous request to solve a given
+cache prior to running the solver. If a previous request to solve a given
 problem is present in the cache, Spack will load the concrete specs and other
 solver data from the cache rather than running the solver. Specs not previously
 concretized will be added to the cache on a successful solve. The cache additionally
@@ -372,7 +372,7 @@ Sets a limit on the number of concretization results that Spack will cache. The 
 after each concretization run; if Spack has stored more results than the limit allows, the
 oldest concretization results are pruned until 10% of the limit has been removed.
 
-Setting this value to 0 or -1 disables the automatic pruning. It is expected users will be
+Setting this value to 0 disables the automatic pruning. It is expected users will be
 responsible for maintaining this cache.
 
 -----------------------------------
@@ -383,5 +383,5 @@ Sets a limit on the size of the concretization cache in bytes. The limit is eval
 after each concretization run; if Spack has stored more results than the limit allows, the
 oldest concretization results are pruned until 10% of the limit has been removed.
 
-Setting this value to 0 or -1 disables the automatic pruning. It is expected users will be
+Setting this value to 0 disables the automatic pruning. It is expected users will be
 responsible for maintaining this cache.
