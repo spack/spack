@@ -25,7 +25,6 @@ import copy
 import functools
 import json
 import os
-import os.path
 import sys
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -293,7 +292,12 @@ class SourceBootstrapper(Bootstrapper):
 
         # Install the spec that should make the module importable
         with spack.config.override(self.mirror_scope):
-            PackageInstaller([concrete_spec.package], fail_fast=True).install()
+            PackageInstaller(
+                [concrete_spec.package],
+                fail_fast=True,
+                package_use_cache=False,
+                dependencies_use_cache=False,
+            ).install()
 
         if _try_import_from_store(module, query_spec=concrete_spec, query_info=info):
             self.last_search = info
@@ -363,6 +367,7 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
     for current_config in bootstrapping_sources():
         if not source_is_enabled(current_config):
             continue
+
         with exception_handler.forward(current_config["name"], Exception):
             if create_bootstrapper(current_config).try_import(module, abstract_spec):
                 return

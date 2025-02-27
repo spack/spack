@@ -51,6 +51,8 @@ from spack.spec import Spec
 from spack.spec_list import SpecList
 from spack.util.path import substitute_path_variables
 
+from ..enums import ConfigScopePriority
+
 SpecPair = spack.concretize.SpecPair
 
 #: environment variable used to indicate the active environment
@@ -581,7 +583,7 @@ def _error_on_nonempty_view_dir(new_root):
     # Check if the target path lexists
     try:
         st = os.lstat(new_root)
-    except (IOError, OSError):
+    except OSError:
         return
 
     # Empty directories are fine
@@ -861,7 +863,7 @@ class ViewDescriptor:
         ):
             try:
                 shutil.rmtree(old_root)
-            except (IOError, OSError) as e:
+            except OSError as e:
                 msg = "Failed to remove old view at %s\n" % old_root
                 msg += str(e)
                 tty.warn(msg)
@@ -2392,6 +2394,8 @@ class Environment:
 
     def __enter__(self):
         self._previous_active = _active_environment
+        if self._previous_active:
+            deactivate()
         activate(self)
         return self
 
@@ -2554,7 +2558,7 @@ def is_latest_format(manifest):
     try:
         with open(manifest, encoding="utf-8") as f:
             data = syaml.load(f)
-    except (OSError, IOError):
+    except OSError:
         return True
     top_level_key = _top_level_key(data)
     changed = spack.schema.env.update(data[top_level_key])
@@ -2633,6 +2637,32 @@ def initialize_environment_dir(
         return
 
     shutil.copy(envfile, target_manifest)
+
+    # Copy relative path includes that live inside the environment dir
+    try:
+        manifest = EnvironmentManifestFile(environment_dir)
+    except Exception:
+        # error handling for bad manifests is handled on other code paths
+        return
+
+    includes = manifest[TOP_LEVEL_KEY].get("include", [])
+    for include in includes:
+        if os.path.isabs(include):
+            continue
+
+        abspath = pathlib.Path(os.path.normpath(environment_dir / include))
+        common_path = pathlib.Path(os.path.commonpath([environment_dir, abspath]))
+        if common_path != environment_dir:
+            tty.debug(f"Will not copy relative include from outside environment: {include}")
+            continue
+
+        orig_abspath = os.path.normpath(envfile.parent / include)
+        if not os.path.exists(orig_abspath):
+            tty.warn(f"Included file does not exist; will not copy: '{include}'")
+            continue
+
+        fs.touchp(abspath)
+        shutil.copy(orig_abspath, abspath)
 
 
 class EnvironmentManifestFile(collections.abc.Mapping):
@@ -3041,14 +3071,12 @@ class EnvironmentManifestFile(collections.abc.Mapping):
     def prepare_config_scope(self) -> None:
         """Add the manifest's scopes to the global configuration search path."""
         for scope in self.env_config_scopes:
-            spack.config.CONFIG.push_scope(scope)
-        spack.config.CONFIG.ensure_scope_ordering()
+            spack.config.CONFIG.push_scope(scope, priority=ConfigScopePriority.ENVIRONMENT)
 
     def deactivate_config_scope(self) -> None:
         """Remove any of the manifest's scopes from the global config path."""
         for scope in self.env_config_scopes:
             spack.config.CONFIG.remove_scope(scope.name)
-        spack.config.CONFIG.ensure_scope_ordering()
 
     @contextlib.contextmanager
     def use_config(self):

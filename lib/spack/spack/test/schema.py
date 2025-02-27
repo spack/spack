@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
-import os.path
+import os
 
 import jsonschema
 import pytest
@@ -17,7 +17,7 @@ import spack.util.spack_yaml as syaml
 def validate_spec_schema():
     return {
         "type": "object",
-        "validate_spec": True,
+        "additionalKeysAreSpecs": True,
         "patternProperties": {r"\w[\w-]*": {"type": "string"}},
     }
 
@@ -34,7 +34,7 @@ def module_suffixes_schema():
                         "type": "object",
                         "properties": {
                             "suffixes": {
-                                "validate_spec": True,
+                                "additionalKeysAreSpecs": True,
                                 "patternProperties": {r"\w[\w-]*": {"type": "string"}},
                             }
                         },
