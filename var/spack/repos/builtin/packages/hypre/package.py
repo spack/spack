@@ -77,7 +77,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("int64", default=False, description="Use 64bit integers")
     variant("mixedint", default=False, description="Use 64bit integers while reducing memory use")
     variant("complex", default=False, description="Use complex values")
-    variant("gpu-aware-mpi", default=False, description="Use gpu-aware mpi")
+    variant("gpu-aware-mpi", default=False, description="Enable GPU-aware MPI support")
+    variant("gpu-profiling", default=False, description="Enable GPU profiling markers (NVTX, rocTX) support")
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=False, description="Enable OpenMP support")
     variant("debug", default=False, description="Build debug instead of optimized version")
@@ -172,8 +173,13 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     # Option added in v2.16.0
     conflicts("+mixedint", when="@:2.15")
 
-    # Option added in v2.21.0
+    # Options added in v2.18.0
+    conflicts("+gpu-aware-mpi", when="@:2.17")
+    conflicts("+gpu-profiling+cuda", when="@:2.17")
+
+    # Options added in v2.21.0
     conflicts("+umpire", when="@:2.20")
+    conflicts("+gpu-profiling+rocm", when="@:2.20")
 
     # Option added in v2.24.0
     conflicts("+sycl", when="@:2.23")
@@ -181,8 +187,10 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     # Option added in v2.29.0
     conflicts("+magma", when="@:2.28")
 
+    # GPU checks
     conflicts("+cublas", when="~cuda", msg="cuBLAS requires CUDA to be enabled")
     conflicts("+rocblas", when="~rocm", msg="rocBLAS requires ROCm to be enabled")
+    conflicts("+gpu-profiling", when="~cuda~rocm+sycl", msg="GPU profiling requires either CUDA or ROCm to be enabled")
 
     configure_directory = "src"
 
@@ -337,6 +345,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if spec.satisfies("+gpu-aware-mpi"):
             configure_args.append("--enable-gpu-aware-mpi")
+
+        if spec.satisfies("+gpu-profiling"):
+            configure_args.append("--enable-gpu-profiling")
 
         configure_args.extend(self.enable_or_disable("fortran"))
 
