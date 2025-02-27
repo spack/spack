@@ -122,8 +122,10 @@ class FileCache:
         Return whether the cache file exists yet or not.
         """
         cache_path = self.cache_path(key)
-
-        exists = cache_path.exists()
+        # Avoid using pathlib here to allow the logic below to
+        # function as is
+        # TODO: Maybe refactor the following logic for pathlib
+        exists = os.path.exists(cache_path)
         if exists:
             if not cache_path.is_file():
                 raise CacheError("Cache file is not a file: %s" % cache_path)
