@@ -793,7 +793,7 @@ class ConcretizationCache:
                 return json.loads(cache_str)["statistics"]
         return None
 
-    def _extract_cache_metadata(self, cache_stream: io.IOBase):
+    def _extract_cache_metadata(self, cache_stream: IO[str]):
         """Extracts and returns cache entry count and bytes count from head of manifest
         file"""
         # make sure we're always reading from the beginning of the stream

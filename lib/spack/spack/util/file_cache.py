@@ -154,7 +154,9 @@ class FileCache:
 
         """
         path = self.cache_path(key)
-        return ReadTransaction(self._get_lock(key), acquire=lambda: ReadContextManager(path)) # type: ignore
+        return ReadTransaction(
+            self._get_lock(key), acquire=lambda: ReadContextManager(path)  # type: ignore
+        )
 
     def write_transaction(self, key: Union[str, pathlib.Path]):
         """Get a write transaction on a file cache item.
@@ -168,7 +170,9 @@ class FileCache:
         if os.path.exists(path) and not os.access(path, os.W_OK):
             raise CacheError(f"Insufficient permissions to write to file cache at {path}")
 
-        return WriteTransaction(self._get_lock(key), acquire=lambda: WriteContextManager(path)) # type: ignore
+        return WriteTransaction(
+            self._get_lock(key), acquire=lambda: WriteContextManager(path)  # type: ignore
+        )
 
     def mtime(self, key: Union[str, pathlib.Path]) -> float:
         """Return modification time of cache file, or -inf if it does not exist.
