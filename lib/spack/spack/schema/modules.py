@@ -39,7 +39,7 @@ module_file_configuration = {
         "load": array_of_strings,
         "suffixes": {
             "type": "object",
-            "validate_spec": True,
+            "additionalKeysAreSpecs": True,
             "additionalProperties": {"type": "string"},  # key
         },
         "environment": spack.schema.environment.definition,
@@ -64,7 +64,7 @@ common_props = {
 tcl_configuration = {
     "type": "object",
     "default": {},
-    "validate_spec": True,
+    "additionalKeysAreSpecs": True,
     "properties": {**common_props},
     "additionalProperties": module_file_configuration,
 }
@@ -72,7 +72,7 @@ tcl_configuration = {
 lmod_configuration = {
     "type": "object",
     "default": {},
-    "validate_spec": True,
+    "additionalKeysAreSpecs": True,
     "properties": {
         **common_props,
         "core_compilers": array_of_strings,
@@ -80,7 +80,7 @@ lmod_configuration = {
         "core_specs": array_of_strings,
         "filter_hierarchy_specs": {
             "type": "object",
-            "validate_spec": True,
+            "additionalKeysAreSpecs": True,
             "additionalProperties": array_of_strings,
         },
     },
