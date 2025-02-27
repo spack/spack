@@ -286,6 +286,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
         configure_args.extend(self.enable_or_disable("debug"))
 
         if spec.satisfies("+cuda"):
+            configure_args.append(f"--with-cuda-home={spec['cuda'].prefix}")
             configure_args.extend(["--with-cuda", "--enable-curand", "--enable-cusparse"])
             cuda_arch_vals = spec.variants["cuda_arch"].value
             if cuda_arch_vals:
@@ -293,10 +294,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 cuda_arch = cuda_arch_sorted[0]
                 configure_args.append(f"--with-gpu-arch={cuda_arch}")
             # New in 2.21.0: replaces --enable-cub
-            if spec.satisfies("@2.21.0:"):
+            if spec.satisfies("@2.21.0: ~umpire"):
                 configure_args.append("--enable-device-memory-pool")
-                configure_args.append(f"--with-cuda-home={spec['cuda'].prefix}")
-            else:
+            elif spec.satisfies("@:2.20.99"):
                 configure_args.append("--enable-cub")
             if spec.satisfies("+cublas"):
                 configure_args.append("--enable-cublas")
