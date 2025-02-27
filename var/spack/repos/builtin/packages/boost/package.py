@@ -258,16 +258,19 @@ class Boost(Package):
 
         # Remove any previously-built targets (in case this is a rebuild)
         b2("--clean", *b2_options)
-        
+
         threading_opts = bjam.threading_options(spec)
 
-        # In theory it could be done on one call but it fails on
-        # Boost.MPI if the threading options are not separated.
-        if not self.spec.satisfies("platform=windows"):
-            for threading_opt in threading_opts:
-                b2("install", "threading=%s" % threading_opt, *b2_options)
-        else:
+        if spec.satisfies("platform=windows"):
+            # Windows doesn't use the the threading option
             b2("install", *b2_options)
+        elif spec.satisfies("+mpi"):
+            # Boost.MPI fails if the threading options aren't separated
+            for o in threading_opts:
+                b2("install", f"threading={o}", *b2_options)
+        else:
+            threading = ",".join(threading_opts)
+            b2("install", f"threading={threading}", *b2_options)
 
         if spec.satisfies("+multithreaded") and spec.satisfies("~taggedlayout"):
             self.add_buildopt_symlinks(prefix)
