@@ -94,3 +94,32 @@ class Kubectl(GoPackage):
     depends_on("go", type="build")
 
     build_directory = "cmd/kubectl"
+
+    # Required to correctly set the version
+    # Method discovered by following the trail below
+    #
+    # 1. https://github.com/kubernetes/kubernetes/blob/v1.32.2/Makefile#L1
+    # 2. https://github.com/kubernetes/kubernetes/blob/v1.32.2/build/root/Makefile#L97
+    # 3. https://github.com/kubernetes/kubernetes/blob/v1.32.2/hack/make-rules/build.sh#L25
+    # 4. https://github.com/kubernetes/kubernetes/blob/v1.32.2/hack/lib/init.sh#L61
+    # 5. https://github.com/kubernetes/kubernetes/blob/v1.32.2/hack/lib/version.sh#L151-L183
+    @property
+    def build_args(self):
+        kube_ldflags = [
+            f"-X 'k8s.io/client-go/pkg/version.gitVersion=v{self.version}'",
+            f"-X 'k8s.io/client-go/pkg/version.gitMajor={self.version.up_to(1)}'",
+            f"-X 'k8s.io/client-go/pkg/version.gitMinor={str(self.version).split('.')[1]}'",
+            f"-X 'k8s.io/component-base/version.gitVersion=v{self.version}'",
+            f"-X 'k8s.io/component-base/version.gitMajor={self.version.up_to(1)}'",
+            f"-X 'k8s.io/component-base/version.gitMinor={str(self.version).split('.')[1]}'",
+        ]
+
+        args = super().build_args
+
+        if "-ldflags" in args:
+            ldflags_index = args.index("-ldflags") + 1
+            args[ldflags_index] = args[ldflags_index] + " " + " ".join(kube_ldflags)
+        else:
+            args.extend(["-ldflags", " ".join(kube_ldflags)])
+
+        return args
