@@ -7,7 +7,6 @@ import copy
 import enum
 import errno
 import functools
-import io
 import hashlib
 import io
 import itertools
@@ -606,7 +605,7 @@ class Result:
 
         def _dict_to_spec(spec_dict):
             loaded_spec = spack.spec.Spec.from_dict(spec_dict)
-            spack.spec.Spec.ensure_external_path_if_external(loaded_spec)
+            _ensure_external_path_if_external(loaded_spec)
             spack.spec.Spec.ensure_no_deprecated(loaded_spec)
             return loaded_spec
 
@@ -710,7 +709,10 @@ class ConcretizationCache:
                                 entry_bytes -= entry_bytes
                                 total_pruned += entry_bytes
                         else:
-                            tty.warn(f"Invalid concretization cache entry '{sha} {manifest_cache_bytes}' on line: {i}")
+                            tty.warn(
+                                "Invalid concretization cache entry "
+                                f"'{sha} {manifest_cache_bytes}' on line: {i}"
+                            )
                         i += 1
                     self._write_manifest(f, entry_count, manifest_bytes)
             for cache_dir in self.root.iterdir():
@@ -766,13 +768,15 @@ class ConcretizationCache:
         Reads the cache hit and uses `Result`'s own deserializer
         to produce a new Result object
         """
-        cache_str = cache_entry_buffer.read()
-        # TODO: Should this be an error if None?
-        # Same for _stats_from_cache
-        if cache_str:
-            cache_entry = json.loads(cache_str)
-            result_json = cache_entry["results"]
-            return Result.from_dict(result_json)
+
+        with current_file_position(cache_entry_buffer, 0):
+            cache_str = cache_entry_buffer.read()
+            # TODO: Should this be an error if None?
+            # Same for _stats_from_cache
+            if cache_str:
+                cache_entry = json.loads(cache_str)
+                result_json = cache_entry["results"]
+                return Result.from_dict(result_json)
         return None
 
     def _stats_from_cache(self, cache_entry_buffer: IO[str]) -> Union[List, None]:
@@ -783,9 +787,10 @@ class ConcretizationCache:
         statistics covering the cached concretization run
         and returns the Python data structures
         """
-        cache_str = cache_entry_buffer.read()
-        if cache_str:
-            return json.loads(cache_str)["statistics"]
+        with current_file_position(cache_entry_buffer, 0):
+            cache_str = cache_entry_buffer.read()
+            if cache_str:
+                return json.loads(cache_str)["statistics"]
         return None
 
     def _extract_cache_metadata(self, cache_stream: io.IOBase):
@@ -842,7 +847,7 @@ class ConcretizationCache:
             new_stats = f"{int(count)+1} {int(cache_bytes)}\n"
             f.write(new_stats)
 
-    def _register_cache_update(self, cache_path: pathlib.Path, bytes_written:int):
+    def _register_cache_update(self, cache_path: pathlib.Path, bytes_written: int):
         """Adds manifest entry to update queue for later updates to the manifest"""
         self._manifest_queue.append((cache_path, bytes_written))
 
@@ -907,7 +912,9 @@ class ConcretizationCache:
         return None, None
 
 
-CONC_CACHE: ConcretizationCache = llnl.util.lang.Singleton(lambda: ConcretizationCache()) # type: ignore
+CONC_CACHE: ConcretizationCache = llnl.util.lang.Singleton(
+    lambda: ConcretizationCache()
+)  # type: ignore
 
 
 def _normalize_packages_yaml(packages_yaml):
