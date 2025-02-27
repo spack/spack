@@ -56,9 +56,8 @@ spack:
       - "target=aarch64"
     gromacs:
       require:
-      - gromacs@2024.3
+      - gromacs@2024.3 ^armpl-gcc ^openmpi
       - "%gcc"
-      - ^armpl-gcc ^openmpi
     libfabric:
       buildable: true
       externals:
