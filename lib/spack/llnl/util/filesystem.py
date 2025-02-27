@@ -21,6 +21,7 @@ import tempfile
 from contextlib import contextmanager
 from itertools import accumulate
 from typing import (
+    IO,
     Callable,
     Deque,
     Dict,
@@ -2814,7 +2815,7 @@ def temporary_file_position(stream):
 
 
 @contextmanager
-def current_file_position(stream: io.IOBase, loc: int, relative_to=io.SEEK_CUR):
+def current_file_position(stream: IO[str], loc: int, relative_to=io.SEEK_CUR):
     with temporary_file_position(stream):
         stream.seek(loc, relative_to)
         yield
