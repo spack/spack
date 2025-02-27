@@ -29,6 +29,7 @@ class Purify(CMakePackage):
     variant("benchmarks", default=False, description="Build benchmarks")
     variant("docs", default=False, description="Enable multithreading with OpenMP")
     variant("coverage", default=False, description="Enable code coverage")
+    variant("hdf5", default=False, description="Enable hdf5 I/O")
     variant(
         "onnxrt",
         when="@5.0.0:",
@@ -55,6 +56,7 @@ class Purify(CMakePackage):
     depends_on("benchmark@1.8~performance_counters", when="+benchmarks")
     depends_on("doxygen@1.9:1.12+graphviz", when="+docs")
     depends_on("py-onnxruntime@1.17.1:", when="+onnxrt")
+    depends_on("highfive", when="+hdf5")
 
     def cmake_args(self):
         args = [
@@ -65,6 +67,7 @@ class Purify(CMakePackage):
             self.define_from_variant("dompi", "mpi"),
             self.define_from_variant("coverage", "coverage"),
             self.define_from_variant("onnxrt", "onnxrt"),
+            self.define_from_variant("hdf5", "hdf5"),
         ]
         return args
 
