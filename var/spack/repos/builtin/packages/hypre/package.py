@@ -78,7 +78,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("mixedint", default=False, description="Use 64bit integers while reducing memory use")
     variant("complex", default=False, description="Use complex values")
     variant("gpu-aware-mpi", default=False, description="Enable GPU-aware MPI support")
-    variant("gpu-profiling", default=False, description="Enable GPU profiling markers (NVTX, rocTX) support")
+    variant("gpu-profiling", default=False, description="Enable GPU profiling markers support")
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=False, description="Enable OpenMP support")
     variant("debug", default=False, description="Build debug instead of optimized version")
@@ -193,7 +193,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+sycl", msg="ROCm and SYCL are mutually exclusive")
     conflicts("+cublas", when="~cuda", msg="cuBLAS requires CUDA to be enabled")
     conflicts("+rocblas", when="~rocm", msg="rocBLAS requires ROCm to be enabled")
-    conflicts("+gpu-profiling", when="~cuda~rocm", msg="GPU profiling requires either CUDA or ROCm to be enabled")
+    conflicts("+gpu-profiling", when="~cuda~rocm", msg="GPU profiling requires either CUDA or ROCm")
 
     configure_directory = "src"
 
