@@ -290,7 +290,25 @@ class PyNumpy(PythonPackage):
 
         return (flags, None, None)
 
-    def blas_lapack_pkg_config(self) -> Tuple[str, str]:
+    def _blas_lapack_pkg_config_mkl(self, spec) -> str:
+        """Determine pkg-config name from MKL configuration
+
+        Returns:
+            The string "mkl-dynamic-[i]lp64-[seq,tbb,iomp,gomp]"
+        """
+        lp64_or_ilp64 = "ilp64" if spec.satisfies("+ilp64") else "lp64"
+        if spec.satisfies("threads=none"):
+            threads = "seq"
+        elif spec.satisfies("threads=tbb"):
+            threads = "tbb"
+        elif spec.satisfies("threads=openmp"):
+            threads = "gomp" if spec.satisfies("%gcc") else "iomp"
+        else:
+            raise InstallError("Unknown 'threads' variant for the Intel MKL libaray")
+
+        return "mkl-dynamic-" + lp64_or_ilp64 + "-" + threads
+
+    def blas_lapack_pkg_config(self) -> Tuple[str, str, str]:
         """Convert library names to pkg-config names.
 
         Returns:
@@ -300,11 +318,11 @@ class PyNumpy(PythonPackage):
         blas = spec["blas"].libs.names[0]
         lapack = spec["lapack"].libs.names[0]
 
-        if spec["blas"].name == "intel-oneapi-mkl":
-            blas = "mkl-dynamic-lp64-seq"
+        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+            blas = self._blas_lapack_pkg_config_mkl(spec["blas"])
 
-        if spec["lapack"].name == "intel-oneapi-mkl":
-            lapack = "mkl-dynamic-lp64-seq"
+        if spec["lapack"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+            lapack = self._blas_lapack_pkg_config_mkl(spec["lapack"])
 
         if spec["blas"].name in ["blis", "amdblis"]:
             blas = "blis"
@@ -327,11 +345,18 @@ class PyNumpy(PythonPackage):
             else:
                 lapack = "armpl-dynamic-lp64-seq"
 
-        return blas, lapack
+        if ("ilp64" in blas.split("-")) != ("ilp64" in lapack.split("-")):
+            raise InstallError(
+                "Either both blas and lapack must use ilp64 or none:"
+                " ({0} vs. {1})".format(blas, lapack)
+            )
+        use_ilp64 = "ilp64" in blas.split("-")
+
+        return blas, lapack, use_ilp64
 
     @when("@1.26:")
     def config_settings(self, spec, prefix):
-        blas, lapack = self.blas_lapack_pkg_config()
+        blas, lapack, use_ilp64 = self.blas_lapack_pkg_config()
 
         settings = {
             "builddir": "build",
@@ -340,6 +365,7 @@ class PyNumpy(PythonPackage):
                 # https://scipy.github.io/devdocs/building/blas_lapack.html
                 "-Dblas": blas,
                 "-Dlapack": lapack,
+                "-Duse-ilp64": use_ilp64,
                 # https://numpy.org/doc/stable/reference/simd/build-options.html
                 # TODO: get this working in CI
                 # "-Dcpu-baseline": "native",
