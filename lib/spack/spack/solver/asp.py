@@ -4625,7 +4625,7 @@ class Solver:
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
-        import pdb; pdb.set_trace()
+
         CONC_CACHE.flush_manifest()
         CONC_CACHE.cleanup()
         return self.driver.solve(
