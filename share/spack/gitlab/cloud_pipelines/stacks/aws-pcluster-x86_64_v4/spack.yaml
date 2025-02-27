@@ -123,8 +123,6 @@ spack:
       externals:
       - prefix: /opt/slurm
         spec: slurm@22.05.8 +pmix
-      require:
-      - +pmix
     wrf:
       require:
       - wrf@4 build_type=dm+sm
