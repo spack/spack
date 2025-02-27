@@ -425,7 +425,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     def test_bigint(self):
         """build and run bigint tests"""
-        if "+mpi" not in self.spec:
+        if spec.satisfies("~mpi"):
             raise SkipTest("Package must be installed with +mpi")
 
         # build and run cached examples
