@@ -62,7 +62,7 @@ properties: Dict[str, Any] = {
                 "type": "object",
                 "properties": {
                     "enable": {"type": "boolean"},
-                    "path": {"type": "string"},
+                    "url": {"type": "string"},
                     "entry_limit": {"type": "integer", "minimum": 1},
                     "size_limit": {"type": "integer", "minimum": 800},
                 },
