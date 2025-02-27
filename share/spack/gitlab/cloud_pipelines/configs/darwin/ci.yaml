@@ -2,6 +2,7 @@ ci:
   broken-tests-packages:
   - mpich
   - openmpi
+  - py-mpi4py
   pipeline-gen:
   - build-job-remove:
       tags: [spack]
