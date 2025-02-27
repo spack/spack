@@ -333,13 +333,6 @@ class Boost(Package):
 
         return threading_opts
 
-    def add_buildopt_symlinks(self, prefix):
-        with working_dir(prefix.lib, create=True):
-            for lib in os.listdir(os.curdir):
-                if os.path.isfile(lib):
-                    prefix, remainder = lib.split(".", 1)
-                    symlink(lib, "%s-mt.%s" % (prefix, remainder))
-
     def install(self, spec, prefix):
         # On Darwin, Boost expects the Darwin libtool. However, one of the
         # dependencies may have pulled in Spack's GNU libtool, and these two
@@ -434,3 +427,10 @@ class Boost(Package):
                 env.append_flags("CXXFLAGS", "-DBOOST_USE_UCONTEXT")
             elif context_impl == "winfib":
                 env.append_flags("CXXFLAGS", "-DBOOST_USE_WINFIB")
+
+    def add_buildopt_symlinks(self, prefix):
+        with working_dir(prefix.lib, create=True):
+            for lib in os.listdir(os.curdir):
+                if os.path.isfile(lib):
+                    prefix, remainder = lib.split(".", 1)
+                    symlink(lib, "%s-mt.%s" % (prefix, remainder))
