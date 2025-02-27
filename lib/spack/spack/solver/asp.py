@@ -654,7 +654,7 @@ class ConcretizationCache:
             )
         self.root = pathlib.Path(spack.util.path.canonicalize_path(root))
         self._fc = FileCache(self.root)
-        self._cache_manifest = self.root / ".cache_manifest"
+        self._cache_manifest = ".cache_manifest"
         self._manifest_queue: List[Tuple[pathlib.Path, int]] = []
 
     def cleanup(self):
@@ -672,13 +672,13 @@ class ConcretizationCache:
             entry_count = int(count)
             manifest_bytes = int(cache_bytes)
             # move beyond the metadata entry
-            f.seek(1)
-            if entry_count > entry_limit:
+            f.readline()
+            if entry_count > entry_limit and entry_limit > 0:
                 with self._fc.write_transaction(self._cache_manifest) as (old, new):
                     # prune the oldest 10% or until we have removed 10% of
                     # total bytes starting from oldest entry
                     # TODO: make this configurable?
-                    prune_count = entry_count // 10
+                    prune_count = entry_limit // 10
                     lines_to_prune = f.readlines(prune_count)
                     for i, line in enumerate(lines_to_prune):
                         sha, cache_entry_bytes = self._parse_manifest_entry(line)
@@ -693,10 +693,10 @@ class ConcretizationCache:
                             )
                     self._write_manifest(f, entry_count, manifest_bytes)
 
-            elif manifest_bytes > bytes_limit:
+            elif manifest_bytes > bytes_limit and bytes_limit > 0:
                 with self._fc.write_transaction(self._cache_manifest) as (old, new):
                     # take 10% of current size off
-                    prune_amount = manifest_bytes // 10
+                    prune_amount = bytes_limit // 10
                     total_pruned = 0
                     i = 0
                     while total_pruned < prune_amount:
@@ -829,8 +829,9 @@ class ConcretizationCache:
         """Updates the concretization cache manifest file after a cache write operation
         Updates the current byte count and entry counts and writes to the head of the
         manifest file"""
-        self._cache_manifest.touch(exist_ok=True)
-        with open(self._cache_manifest, "r+", encoding="utf-8") as f:
+        manifest_file = self.root / self._cache_manifest
+        manifest_file.touch(exist_ok=True)
+        with open(manifest_file, "r+", encoding="utf-8") as f:
             # check if manifest is empty
             count, cache_bytes = self._extract_cache_metadata(f)
             if not count or not cache_bytes:
@@ -4624,6 +4625,7 @@ class Solver:
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
+        import pdb; pdb.set_trace()
         CONC_CACHE.flush_manifest()
         CONC_CACHE.cleanup()
         return self.driver.solve(
