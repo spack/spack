@@ -56,7 +56,7 @@ class LlvmOpenmp(CMakePackage):
     variant(
         "openmp_libraries_only",
         default=False,
-        description="Only build the llvm-openmp openmp library.",
+        description="Only build the llvm-openmp openmp/ompt library.",
     )
 
     # variant for building libomptarget
