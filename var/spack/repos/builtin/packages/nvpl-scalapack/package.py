@@ -6,15 +6,19 @@ from spack.package import *
 
 
 class NvplScalapack(Package):
-    """FIXME: Put a proper description of your package here."""
+    """NVPL ScaLAPACK (NVIDIA Performance Libraries ScaLAPACK)."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
-    url = "https://developer.download.nvidia.com/compute/nvpl/redist/nvpl_scalapack/" "linux-sbsa/nvpl_scalapack-linux-sbsa-0.0.0-archive.tar.xz"
+    homepage = "https://docs.nvidia.com/nvpl/latest/scalapack/index.html"
+    url = (
+        "https://developer.download.nvidia.com/compute/nvpl/redist/nvpl_scalapack/"
+        "linux-sbsa/nvpl_scalapack-linux-sbsa-0.2.1-archive.tar.xz"
+    )
 
     maintainers("RMeli")
 
-    version("0.2.1", sha256="6655898327ed36afd0242719075447058c3c89640b5b9bbfeb5af4dd5c101174")
+    version("0.2.1", sha256="dada4d1ecf044d90609b9e62750b383d11be9b22c87e109414bcc07dce3c83c9")
+
+    provides("scalapack")
 
     variant("ilp64", default=False, description="Force 64-bit Fortran native integers")
 
@@ -24,12 +28,16 @@ class NvplScalapack(Package):
     depends_on("nvpl-lapack ~ilp64", when="~ilp64")
     depends_on("mpi")
 
-    provides("scalapack")
-
     requires("target=armv8.2a:", msg="Any CPU with Arm-v8.2a+ microarch")
 
     conflicts("%gcc@:7")
     conflicts("%clang@:13")
+
+    def url_for_version(self, version):
+        """Spack can't detect the verion in the URL above"""
+        url = "https://developer.download.nvidia.com/compute/nvpl/redist/nvpl_scalapack/linux-sbsa/nvpl_scalapack-linux-sbsa-{0}-archive.tar.xz"
+        print(url, url.format(version))
+        return url.format(version)
 
     @property
     def scalapack_headers(self):
@@ -39,12 +47,12 @@ class NvplScalapack(Package):
     def scalapack_libs(self):
         spec = self.spec
 
-        if spec.satisfies("+ilp64"):
-            int_type = "ilp64"
-        else:
-            int_type = "lp64"
+        int_type = "ilp64" if spec.satisfies("+ilp64") else "lp64"
 
-        if any(spec.satisfies(mpi_library) for mpi_library in ["^mpich", "^cray-mpich", "^mvapich", "^mvapich2"]):
+        if any(
+            spec.satisfies(mpi_library)
+            for mpi_library in ["^mpich", "^cray-mpich", "^mvapich", "^mvapich2"]
+        ):
             mpi_type = "mpich"
         elif spec.satisfies("^openmpi"):
             mpi_type = "openmpi" + spec["openmpi"].version.up_to(1)
