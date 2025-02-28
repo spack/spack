@@ -52,6 +52,7 @@ class Professor(Package):
             return f"https://professor.hepforge.org/downloads/?f=Professor-{version}.tar.gz"
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        env.set("PROF_ROOT", self.stage.source_path)
         env.set("PROF_VERSION", self.spec.version)
 
     @run_before("install")
