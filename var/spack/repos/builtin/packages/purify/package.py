@@ -56,6 +56,7 @@ class Purify(CMakePackage):
     depends_on("benchmark@1.8~performance_counters", when="+benchmarks")
     depends_on("doxygen@1.9:1.12+graphviz", when="+docs")
     depends_on("py-onnxruntime@1.17.1:", when="+onnxrt")
+    depends_on("hdf5+cxx", when="+hdf5")
     depends_on("highfive", when="+hdf5")
 
     def cmake_args(self):
