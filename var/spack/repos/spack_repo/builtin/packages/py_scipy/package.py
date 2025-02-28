@@ -132,6 +132,7 @@ class PyScipy(PythonPackage):
     depends_on("lapack@3.4.1:")
     depends_on("lapack")
     depends_on("blas")
+    conflicts("^openblas +ilp64", msg="SciPy requires a blas library with lp64 symbols")
 
     # Historical dependencies
     with default_args(type="build"):
