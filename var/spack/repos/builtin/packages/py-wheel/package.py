@@ -10,7 +10,7 @@ class PyWheel(Package, PythonExtension):
     """A built-package format for Python."""
 
     homepage = "https://github.com/pypa/wheel"
-    url = "https://files.pythonhosted.org/packages/py3/w/wheel/wheel-0.41.2-py3-none-any.whl"
+    url = "https://files.pythonhosted.org/packages/py3/w/wheel/wheel-0.45.1-py3-none-any.whl"
     list_url = "https://pypi.org/simple/wheel/"
 
     tags = ["build-tools"]
