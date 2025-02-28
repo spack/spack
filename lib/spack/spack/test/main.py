@@ -283,3 +283,50 @@ def test_include_recurse_limit(tmpdir, mutable_config):
 
     with pytest.raises(spack.config.RecursiveIncludeError, match="recursion exceeded"):
         spack.main.add_command_line_scopes(mutable_config, [os.path.dirname(include_path)])
+
+
+# TODO/TLD: Make sure the expected value is appropriate
+@pytest.mark.parametrize("child,expected", [("b", True), ("c", False)])
+def test_include_recurse_diamond(tmpdir, mutable_config, child, expected):
+    """Demonstrate include parent's value overrides that of child in diamond include.
+
+    Check that the value set by b or c overrides that set by d.
+    """
+    configs_root = tmpdir.join("configs")
+    configs_root.mkdir()
+
+    def write(path, contents):
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(contents)
+
+    def debug_contents(value):
+        return f"config:\n  debug: {value}\n"
+
+    def include_contents(paths):
+        indent = "\n  - "
+        values = indent.join([str(p) for p in paths])
+        return f"include:{indent}{values}"
+
+    a_yaml = tmpdir.join("a.yaml")
+    b_yaml = configs_root.join("b.yaml")
+    c_yaml = configs_root.join("c.yaml")
+    d_yaml = configs_root.join("d.yaml")
+    debug_yaml = configs_root.join("enable_debug.yaml")
+
+    write(debug_yaml, debug_contents("true"))
+
+    a_contents = f"""\
+include:
+- {b_yaml}
+- {c_yaml}
+"""
+    write(a_yaml, a_contents)
+    write(d_yaml, debug_contents("false"))
+
+    write(b_yaml, include_contents([debug_yaml, d_yaml] if child == "b" else [d_yaml]))
+    write(c_yaml, include_contents([debug_yaml, d_yaml] if child == "c" else [d_yaml]))
+
+    spack.main.add_command_line_scopes(mutable_config, [str(tmpdir)])
+
+    # TODO: Ensure gets the expected value
+    assert mutable_config.get("config:debug") is expected
