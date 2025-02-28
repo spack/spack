@@ -142,7 +142,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         "curl": "curl",
         "hdf5": "hdf5+hl~mpi",
         "libevent": "libevent",
-        "protobuf": "py-protobuf",
+        "protobuf": "protobuf",
         "ssl": "openssl",
         "yaml": "libyaml@0.1",
         "zmq": "libzmq",
