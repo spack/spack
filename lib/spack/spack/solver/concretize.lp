@@ -1267,7 +1267,6 @@ error(100, "Cannot propagate the variant '{0}' from the package: {1} because pac
 
 node_compiler(node(X, Package), node(Y, Compiler)) :-
      attr("virtual_on_edge", node(X, Package), node(Y, Compiler), Language),
-     attr("version", node(Y, Compiler), Version),
      compiler(Compiler), language(Language).
 
 propagated_flag(node(PackageID, Package), node_flag(FlagType, Flag, FlagGroup, Source), SourceNode) :-
@@ -1430,9 +1429,8 @@ error(10, "Only external, or concrete, compilers are allowed for the {0} languag
 
 error(10, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Target, Compiler, Version)
   :- attr("node_target", node(X, Package), Target),
-     attr("virtual_on_edge", node(X, Package), node(Y, Compiler), Language),
+     node_compiler(node(X, Package), node(Y, Compiler)),
      attr("version", node(Y, Compiler), Version),
-     compiler(Compiler), language(Language),
      not compiler_supports_target(Compiler, Version, Target),
      build(node(X, Package)).
 
