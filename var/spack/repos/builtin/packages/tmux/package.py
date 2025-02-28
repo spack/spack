@@ -19,8 +19,11 @@ class Tmux(AutotoolsPackage):
 
     license("ISC")
 
+    version("3.5a", sha256="16216bd0877170dfcc64157085ba9013610b12b082548c7c9542cc0103198951")
+    version("3.5", sha256="2fe01942e7e7d93f524a22f2c883822c06bc258a4d61dba4b407353d7081950f")
     version("3.4", sha256="551ab8dea0bf505c0ad6b7bb35ef567cdde0ccb84357df142c254f35a23e19aa")
     version("3.3a", sha256="e4fd347843bd0772c4f48d6dde625b0b109b7a380ff15db21e97c11a4dcdf93f")
+    version("3.3", sha256="b2382ac391f6a1c5b93293016cdc9488337d9a04b9d611ae05eac164740351dc")
     version("3.2a", sha256="551553a4f82beaa8dadc9256800bcc284d7c000081e47aa6ecbb6ff36eacd05f")
     version("3.2", sha256="664d345338c11cbe429d7ff939b92a5191e231a7c1ef42f381cebacb1e08a399")
     version("3.1c", sha256="918f7220447bef33a1902d4faff05317afd9db4ae1c9971bef5c787ac6c88386")
