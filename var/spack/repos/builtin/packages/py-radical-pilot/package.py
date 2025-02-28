@@ -46,7 +46,7 @@ class PyRadicalPilot(PythonPackage):
 
     depends_on("py-pymongo@:3", type=("build", "run"), when="@:1.39")
 
-    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@1.48:")
     depends_on("python@3.6:", type=("build", "run"), when="@:1.47")
 
     depends_on("py-requests", type=("build", "run"), when="@1.90:")

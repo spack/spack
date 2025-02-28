@@ -41,7 +41,7 @@ class PyRadicalEntk(PythonPackage):
     depends_on("py-radical-utils@1.39", type=("build", "run"), when="@1.39")
     depends_on("py-radical-pilot@1.39", type=("build", "run"), when="@1.39")
 
-    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@1.53:")
     depends_on("python@3.6:", type=("build", "run"), when="@:1.52")
 
     depends_on("py-setuptools", type="build")

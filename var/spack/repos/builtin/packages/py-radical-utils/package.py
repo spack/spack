@@ -32,7 +32,7 @@ class PyRadicalUtils(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@1.53:")
     depends_on("python@3.6:", type=("build", "run"), when="@:1.52")
 
     depends_on("py-colorama", type=("build", "run"))
