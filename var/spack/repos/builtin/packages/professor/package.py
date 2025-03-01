@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+import spack.util.environment
 from spack.package import *
 
 
@@ -52,7 +53,6 @@ class Professor(Package):
             return f"https://professor.hepforge.org/downloads/?f=Professor-{version}.tar.gz"
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
-        env.set("PROF_ROOT", self.stage.source_path)
         env.set("PROF_VERSION", self.spec.version)
 
     @run_before("install")
@@ -65,7 +65,9 @@ class Professor(Package):
 
     def install(self, spec, prefix):
         with working_dir(self.stage.source_path):
-            make()
-            make(f"PREFIX={prefix}", "install")
-            if self.spec.satisfies("~interactive"):
-                os.remove(join_path(prefix.bin, "prof2-I"))
+             # Makefile sets PROF_ROOT to PWD but that is not set for root user in CI
+            with spack.util.environment.set_env(PWD=self.stage.source_path):
+                make()
+                make(f"PREFIX={prefix}", "install")
+                if self.spec.satisfies("~interactive"):
+                    os.remove(join_path(prefix.bin, "prof2-I"))
