@@ -65,7 +65,7 @@ class Professor(Package):
 
     def install(self, spec, prefix):
         with working_dir(self.stage.source_path):
-             # Makefile sets PROF_ROOT to PWD but that is not set for root user in CI
+            # Makefile sets PROF_ROOT to PWD but that is not set for root user in CI
             with spack.util.environment.set_env(PWD=self.stage.source_path):
                 make()
                 make(f"PREFIX={prefix}", "install")
