@@ -148,7 +148,6 @@ def current_host(request, monkeypatch):
     cpu, _, is_preference = request.param.partition("-")
 
     monkeypatch.setattr(spack.platforms.Test, "default", cpu)
-    monkeypatch.setattr(spack.platforms.Test, "front_end", cpu)
     if not is_preference:
         target = archspec.cpu.TARGETS[cpu]
         monkeypatch.setattr(archspec.cpu, "host", lambda: target)
@@ -385,10 +384,11 @@ class TestConcretize:
     ):
         """Tests that nodes get the flags of the associated compiler."""
         mutable_config.set("compilers", [clang12_with_flags, gcc11_with_flags])
+        t = archspec.cpu.host().family
         client = spack.concretize.concretize_one(
             Spec(
-                "cmake-client %gcc@11.1.0 platform=test os=fe target=fe"
-                " ^cmake %clang@12.2.0 platform=test os=fe target=fe"
+                f"cmake-client %gcc@11.1.0 platform=test os=redhat6 target={t}"
+                f" ^cmake %clang@12.2.0 platform=test os=redhat6 target={t}"
             )
         )
         cmake = client["cmake"]
@@ -413,7 +413,8 @@ class TestConcretize:
     def test_compiler_flags_differ_identical_compilers(self, mutable_config, clang12_with_flags):
         mutable_config.set("compilers", [clang12_with_flags])
         # Correct arch to use test compiler that has flags
-        spec = Spec("pkg-a %clang@12.2.0 platform=test os=fe target=fe")
+        t = archspec.cpu.host().family
+        spec = Spec(f"pkg-a %clang@12.2.0 platform=test os=redhat6 target={t}")
 
         # Get the compiler that matches the spec (
         compiler = spack.compilers.compiler_for_spec("clang@=12.2.0", spec.architecture)
@@ -720,7 +721,7 @@ class TestConcretize:
         assert spec.satisfies("^second-dependency-foo-bar-fee +fee")
         assert not spec.satisfies("parent-foo-bar +fee")
 
-    def test_no_matching_compiler_specs(self, mock_low_high_config):
+    def test_no_matching_compiler_specs(self):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
             s = Spec("pkg-a %gcc@=0.0.0")
@@ -1242,7 +1243,7 @@ class TestConcretize:
     def test_conditional_provides_or_depends_on(self):
         # Check that we can concretize correctly a spec that can either
         # provide a virtual or depend on it based on the value of a variant
-        s = spack.concretize.concretize_one("conditional-provider +disable-v1")
+        s = spack.concretize.concretize_one("v1-consumer ^conditional-provider +disable-v1")
         assert "v1-provider" in s
         assert s["v1"].name == "v1-provider"
         assert s["v2"].name == "conditional-provider"
@@ -2111,14 +2112,15 @@ class TestConcretize:
     def test_require_targets_are_allowed(self, mutable_database):
         """Test that users can set target constraints under the require attribute."""
         # Configuration to be added to packages.yaml
-        external_conf = {"all": {"require": "target=%s" % spack.platforms.test.Test.front_end}}
+        required_target = archspec.cpu.TARGETS[spack.platforms.test.Test.default].family
+        external_conf = {"all": {"require": f"target={required_target}"}}
         spack.config.set("packages", external_conf)
 
         with spack.config.override("concretizer:reuse", False):
             spec = spack.concretize.concretize_one("mpich")
 
         for s in spec.traverse():
-            assert s.satisfies("target=%s" % spack.platforms.test.Test.front_end)
+            assert s.satisfies(f"target={required_target}")
 
     def test_external_python_extensions_have_dependency(self):
         """Test that python extensions have access to a python dependency
@@ -2886,6 +2888,23 @@ class TestConcretizeSeparately:
         assert any(x.satisfies(hdf5_str) for x in result.specs)
         assert any(x.satisfies(pinned_str) for x in result.specs)
 
+    @pytest.mark.regression("44289")
+    def test_all_extensions_depend_on_same_extendee(self):
+        """Tests that we don't reuse dependencies that bring in a different extendee"""
+        setuptools = spack.concretize.concretize_one("py-setuptools ^python@3.10")
+
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(
+            setup, [Spec("py-floating ^python@3.11")], reuse=list(setuptools.traverse())
+        )
+        assert len(result.specs) == 1
+
+        floating = result.specs[0]
+        assert all(setuptools.dag_hash() != x.dag_hash() for x in floating.traverse())
+        pythons = [x for x in floating.traverse() if x.name == "python"]
+        assert len(pythons) == 1 and pythons[0].satisfies("@3.11")
+
 
 @pytest.mark.parametrize(
     "v_str,v_opts,checksummed",
@@ -3236,3 +3255,54 @@ def test_spec_unification(unify, mutable_config, mock_packages):
     maybe_fails = pytest.raises if unify is True else llnl.util.lang.nullcontext
     with maybe_fails(spack.solver.asp.UnsatisfiableSpecError):
         _ = spack.cmd.parse_specs([a_restricted, b], concretize=True)
+
+
+def test_concretization_cache_roundtrip(use_concretization_cache, monkeypatch, mutable_config):
+    """Tests whether we can write the results of a clingo solve to the cache
+    and load the same spec request from the cache to produce identical specs"""
+    # Force determinism:
+    # Solver setup is normally non-deterministic due to non-determinism in
+    # asp solver setup logic generation. The only other inputs to the cache keys are
+    # the .lp files, which are invariant over the course of this test.
+    # This method forces the same setup to be produced for the same specs
+    # which gives us a guarantee of cache hits, as it removes the only
+    # element of non deterministic solver setup for the same spec
+    # Basically just a quick and dirty memoization
+    solver_setup = spack.solver.asp.SpackSolverSetup.setup
+
+    def _setup(self, specs, *, reuse=None, allow_deprecated=False):
+        if not getattr(_setup, "cache_setup", None):
+            cache_setup = solver_setup(self, specs, reuse=reuse, allow_deprecated=allow_deprecated)
+            setattr(_setup, "cache_setup", cache_setup)
+        return getattr(_setup, "cache_setup")
+
+    # monkeypatch our forced determinism setup method into solver setup
+    monkeypatch.setattr(spack.solver.asp.SpackSolverSetup, "setup", _setup)
+
+    assert spack.config.get("config:concretization_cache:enable")
+
+    # run one standard concretization to populate the cache and the setup method
+    # memoization
+    h = spack.concretize.concretize_one("hdf5")
+
+    # due to our forced determinism above, we should not be observing
+    # cache misses, assert that we're not storing any new cache entries
+    def _ensure_no_store(self, problem: str, result, statistics, test=False):
+        # always throw, we never want to reach this code path
+        assert False, "Concretization cache hit expected"
+
+    # Assert that we're actually hitting the cache
+    cache_fetch = spack.solver.asp.ConcretizationCache.fetch
+
+    def _ensure_cache_hits(self, problem: str):
+        result, statistics = cache_fetch(self, problem)
+        assert result, "Expected successful concretization cache hit"
+        assert statistics, "Expected statistics to be non null on cache hit"
+        return result, statistics
+
+    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", _ensure_no_store)
+    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "fetch", _ensure_cache_hits)
+    # ensure subsequent concretizations of the same spec produce the same spec
+    # object
+    for _ in range(5):
+        assert h == spack.concretize.concretize_one("hdf5")
