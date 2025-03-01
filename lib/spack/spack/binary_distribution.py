@@ -3206,6 +3206,43 @@ class DefaultIndexFetcher(IndexFetcher):
         return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
 
 
+class OldLayoutIndexFetcher(IndexFetcher):
+    """Fetcher for index.json and index.json.hash under layout version 2"""
+
+    def __init__(self, mirror: spack.mirrors.mirror.Mirror, urlopen=web_util.urlopen):
+        self.url = mirror.fetch_url
+        self.urlopen = urlopen
+        self.headers = {"User-Agent": web_util.SPACK_USER_AGENT}
+
+    def conditional_fetch(self) -> FetchIndexResult:
+        # Just always download the old index.json, now that our local index cache
+        # tracks the v3 layout index
+        url_index = url_util.join(self.url, "build_cache", spack_db.INDEX_JSON_FILE)
+
+        try:
+            response = self.urlopen(urllib.request.Request(url_index, headers=self.headers))
+        except OSError as e:
+            raise FetchIndexError(f"Could not fetch index from {url_index}", e) from e
+
+        try:
+            result = codecs.getreader("utf-8")(response).read()
+        except (ValueError, OSError) as e:
+            raise FetchIndexError(f"Remote index {url_index} is invalid") from e
+
+        computed_hash = compute_hash(result)
+
+        # For now we only handle etags on http(s), since 304 error handling
+        # in s3:// is not there yet.
+        if urllib.parse.urlparse(self.url).scheme not in ("http", "https"):
+            etag = None
+        else:
+            etag = web_util.parse_etag(
+                response.headers.get("Etag", None) or response.headers.get("etag", None)
+            )
+
+        return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
+
+
 class EtagIndexFetcher(IndexFetcher):
     """Fetcher for index.json, using ETags headers as cache invalidation strategy"""
 
@@ -3305,6 +3342,46 @@ class OCIIndexFetcher(IndexFetcher):
             raise FetchIndexError(f"Remote index {url_manifest} is invalid")
 
         return FetchIndexResult(etag=None, hash=index_digest.digest, data=result, fresh=False)
+
+
+def migrate(mirror: spack.mirrors.mirror.Mirror, delete_existing: bool = False) -> None:
+    delete_action = "deleting" if delete_existing else "keeping"
+    tty.msg(f"Migrating {mirror.push_url} and {delete_action} existing contents")
+
+    index_url = url_util.join(mirror.fetch_url, "build_cache", spack_db.INDEX_JSON_FILE)
+    contents = None
+
+    try:
+        _, _, index_file = web_util.read_from_url(index_url)
+        contents = codecs.getreader("utf-8")(index_file).read()
+    except (web_util.SpackWebError, OSError) as e:
+        tty.error(f"Error reading specfile: {index_url}: {e}")
+
+    if not contents:
+        tty.error(f"Did not find an index at {mirror.fetch_url}")
+        return
+
+    tmpdir = tempfile.mkdtemp()
+    index_path = os.path.join(tmpdir, "_tmp_index.json")
+    with open(index_path, 'w') as fd:
+        fd.write(contents)
+
+    db = spack_db.Database(tmpdir)
+    db._read_from_file(index_path)
+
+    specs_to_migrate = [
+        s
+        for s in db.query_local(installed=InstallRecordStatus.ANY)
+        if not s.external and db.query_local_by_spec_hash(s.dag_hash()).in_buildcache
+    ]
+
+    for s in specs_to_migrate:
+        # Create a list of worklet job args to run in parallel
+        print(f"  {s.name}/{s.dag_hash()[:7]}")
+
+    # use processpoolexecutor to run the worklets in parallel
+
+    tty.msg("done")
 
 
 class NoOverwriteException(spack.error.SpackError):

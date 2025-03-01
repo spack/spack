@@ -271,6 +271,20 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     update_index.set_defaults(func=update_index_fn)
 
+    # Migrate a buildcache from layout_version 2 to version 3
+    migrate = subparsers.add_parser("migrate", help=migrate_fn.__doc__)
+    migrate.add_argument(
+        "mirror", type=arguments.mirror_name, help="name of a configured mirror"
+    )
+    migrate.add_argument(
+        "-d",
+        "--delete-existing",
+        default=False,
+        action="store_true",
+        help="Delete the previous layout, the default is to keep it.",
+    )
+    migrate.set_defaults(func=migrate_fn)
+
 
 def _matching_specs(specs: List[Spec]) -> List[Spec]:
     """Disambiguate specs and return a list of matching specs"""
@@ -711,6 +725,20 @@ def update_index(mirror: spack.mirrors.mirror.Mirror, update_keys=False):
 def update_index_fn(args):
     """update a buildcache index"""
     return update_index(args.mirror, update_keys=args.keys)
+
+
+def migrate_fn(args):
+    """perform in-place binary mirror migration (2 to 3)
+
+    A mirror can contain both layout version 2 and version 3 simultaneously without
+    interference.  This command performs in-place migration of a binary mirror laid
+    out according to version 2, Only indexed specs can be migrated, so consider
+    updating the mirror index before running this command.  Re-running the command
+    to migrate any missing items."""
+    target_mirror = args.mirror
+    assert isinstance(target_mirror, spack.mirrors.mirror.Mirror)
+    delete_existing = args.delete_existing
+    bindist.migrate(target_mirror, delete_existing)
 
 
 def buildcache(parser, args):
