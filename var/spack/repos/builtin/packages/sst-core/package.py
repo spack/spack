@@ -77,7 +77,7 @@ class SstCore(AutotoolsPackage):
     depends_on("python@:3.11", type=("build", "run", "link"))
     depends_on("mpi", when="+pdes_mpi")
     depends_on("zoltan", when="+zoltan")
-    depends_on("hdf5", when="+hdf5")
+    depends_on("hdf5 +cxx", when="+hdf5")
     depends_on("zlib-api", when="+zlib")
     depends_on("gettext")
     depends_on("ncurses", when="+curses", type=("build", "link"))
