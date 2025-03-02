@@ -27,63 +27,39 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
     license("Apache-2.0")
 
-    version("3.4.0", sha256="e15dda82fe2fe8139dc2ac21a36d4ca01d5313c75f99f46c4e8a27709b7294bf")
-    version("3.3.2", sha256="2e8a40b01979afe8be0bbfb3de5dc1c6709fedb46d6c89c10da114ab5fc3d281")
-    version("3.2.3", sha256="52b5f1c6b8022bc5868c308c54fb77705e702d6c6f4594f99a0df216acf46239")
-    version("3.1.7", sha256="053a31fa80cf4aebe1068c987d2ef1e44ce418881427c4464751ae800c31d06c")
-    version("3.0.15", sha256="23c666d0edf20f14249b3d8f0368acaee9ab585b09e1de82107c66e1f3ec9533")
+    version("3.4.1", sha256="002a2d6b30b58bf4bea46c43bdd96365aaf8daa6c428782aa4feee06da197df3")
+    version("3.3.3", sha256="712590fd20aaa60ec75d778fe5b810d6b829ca7fb1e530577917a131f9105539")
+    version("3.2.4", sha256="b23ad7fd9f73e43ad1767e636040e88ba7c9e5775bfa5618436a0dd2c17c3716")
+    version("3.1.8", sha256="d319da6aecde3aa6f426b44bbf997406d95275c5c59ab6f6ef53caaa079f456f")
+    version("3.0.16", sha256="57e03c50feab5d31b152af2b764f10379aecd8ee92f16c985983ce4a99f7ef86")
 
-    version(
-        "3.3.1",
-        sha256="777cd596284c883375a2a7a11bf5d2786fc5413255efab20c50d6ffe6d020b7e",
-        deprecated=True,
-    )
-    version(
-        "3.3.0",
-        sha256="53e66b043322a606abf0087e7699a0e033a37fa13feb9742df35c3a33b18fb02",
-        deprecated=True,
-    )
-    version(
-        "3.2.2",
-        sha256="197149c18d9e9f292c43f0400acaba12e5f52cacfe050f3d199277ea738ec2e7",
-        deprecated=True,
-    )
-    version(
-        "3.2.1",
-        sha256="83c7329fe52c850677d75e5d0b0ca245309b97e8ecbcfdc1dfdc4ab9fac35b39",
-        deprecated=True,
-    )
-    version(
-        "3.1.6",
-        sha256="5d2be4036b478ef3cb0a854ca9b353072c3a0e26d8a56f8f0ab9fb6ed32d38d7",
-        deprecated=True,
-    )
-    version(
-        "3.1.5",
-        sha256="6ae015467dabf0469b139ada93319327be24b98251ffaeceda0221848dc09262",
-        deprecated=True,
-    )
-    version(
-        "3.0.14",
-        sha256="eeca035d4dd4e84fc25846d952da6297484afa0650a6f84c682e39df3a4123ca",
-        deprecated=True,
-    )
-    version(
-        "3.0.13",
-        sha256="88525753f79d3bec27d2fa7c66aa0b92b3aa9498dafd93d7cfa4b3780cdae313",
-        deprecated=True,
-    )
+    with default_args(deprecated=True):
+        version("3.4.0", sha256="e15dda82fe2fe8139dc2ac21a36d4ca01d5313c75f99f46c4e8a27709b7294bf")
+        version("3.3.1", sha256="777cd596284c883375a2a7a11bf5d2786fc5413255efab20c50d6ffe6d020b7e")
+        version("3.3.2", sha256="2e8a40b01979afe8be0bbfb3de5dc1c6709fedb46d6c89c10da114ab5fc3d281")
+        version("3.3.0", sha256="53e66b043322a606abf0087e7699a0e033a37fa13feb9742df35c3a33b18fb02")
+        version("3.2.3", sha256="52b5f1c6b8022bc5868c308c54fb77705e702d6c6f4594f99a0df216acf46239")
+        version("3.2.2", sha256="197149c18d9e9f292c43f0400acaba12e5f52cacfe050f3d199277ea738ec2e7")
+        version("3.2.1", sha256="83c7329fe52c850677d75e5d0b0ca245309b97e8ecbcfdc1dfdc4ab9fac35b39")
+        version("3.1.7", sha256="053a31fa80cf4aebe1068c987d2ef1e44ce418881427c4464751ae800c31d06c")
+        version("3.1.6", sha256="5d2be4036b478ef3cb0a854ca9b353072c3a0e26d8a56f8f0ab9fb6ed32d38d7")
+        version("3.1.5", sha256="6ae015467dabf0469b139ada93319327be24b98251ffaeceda0221848dc09262")
+        version(
+            "3.0.15", sha256="23c666d0edf20f14249b3d8f0368acaee9ab585b09e1de82107c66e1f3ec9533"
+        )
+        version(
+            "3.0.14", sha256="eeca035d4dd4e84fc25846d952da6297484afa0650a6f84c682e39df3a4123ca"
+        )
+        version(
+            "3.0.13", sha256="88525753f79d3bec27d2fa7c66aa0b92b3aa9498dafd93d7cfa4b3780cdae313"
+        )
 
-    version(
-        "1.1.1w",
-        sha256="cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8",
-        deprecated=True,
-    )
-    version(
-        "1.0.2u",
-        sha256="ecd0c6ffb493dd06707d38b14bb4d8c2288bb7033735606569d8f90f89669d16",
-        deprecated=True,
-    )
+        version(
+            "1.1.1w", sha256="cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8"
+        )
+        version(
+            "1.0.2u", sha256="ecd0c6ffb493dd06707d38b14bb4d8c2288bb7033735606569d8f90f89669d16"
+        )
 
     depends_on("c", type="build")  # generated
 
