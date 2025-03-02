@@ -144,7 +144,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         " conventional location. This option is only relevant when regtests need to be run.",
     )
 
-    variant("grpp", default=False, description="Enable GRPP psuedo potentials", when="@2025.2:")
+    variant("grpp", default=False, description="Enable GRPP psuedo potentials", when="@2025.2: build_system=cmake")
 
     with when("+cuda"):
         variant(
