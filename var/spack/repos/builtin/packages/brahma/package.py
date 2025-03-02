@@ -16,6 +16,10 @@ class Brahma(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("0.0.9", tag="v0.0.9", commit="4af20bbe241c983585e52c04e38868e8b56a9c21")
+    version("0.0.8", tag="v0.0.8", commit="a99b0f3a688d144b928e41c38977a2aecdaadb41")
+    version("0.0.7", tag="v0.0.7", commit="010662d1354080244b3b7b32e3e36aa9cfbbf3a1")
+    version("0.0.6", tag="v0.0.6", commit="e8ac7627d6e607310229b4dfe700715bdc92084e")
     version("0.0.5", tag="v0.0.5", commit="219198c653cc4add845a644872e7b963a8de0fe2")
     version("0.0.4", tag="v0.0.4", commit="8f41cc885dd8e31a1f134cbbcbaaab7e5d84331e")
     version("0.0.3", tag="v0.0.3", commit="fd201c653e8fa00d4ba6197a56a513f740e3014e")
