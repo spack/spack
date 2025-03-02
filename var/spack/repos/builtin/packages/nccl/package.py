@@ -62,7 +62,7 @@ class Nccl(MakefilePackage, CudaPackage):
 
     # https://github.com/NVIDIA/nccl/issues/244
     patch("so_reuseport.patch", when="@2.3.7-1:2.4.8-1")
-
+    patch("gcc14.patch", when="%gcc@14")
     conflicts("~cuda", msg="NCCL requires CUDA")
     conflicts(
         "cuda_arch=none",

@@ -1,0 +1,11 @@
+--- nccl/makefiles/common.mk	2024-09-17 08:41:17.000000000 +0200
++++ nccl-2.23.4-1/makefiles/common.mk	2025-03-02 10:08:06.216965856 +0100
+@@ -65,7 +65,7 @@
+ # Maxrregcount needs to be set accordingly to NCCL_MAX_NTHREADS (otherwise it will cause kernel launch errors)
+ # 512 : 120, 640 : 96, 768 : 80, 1024 : 60
+ # We would not have to set this if we used __launch_bounds__, but this only works on kernels, not on functions.
+-NVCUFLAGS  := -ccbin $(CXX) $(NVCC_GENCODE) -std=c++11 --expt-extended-lambda -Xptxas -maxrregcount=96 -Xfatbin -compress-all
++NVCUFLAGS  := -ccbin $(CXX) $(NVCC_GENCODE) -std=c++14 --expt-extended-lambda -Xptxas -maxrregcount=96 -Xfatbin -compress-all
+ # Use addprefix so that we can specify more than one path
+ NVLDFLAGS  := -L${CUDA_LIB} -lcudart -lrt
+ 
