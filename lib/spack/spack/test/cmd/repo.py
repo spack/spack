@@ -44,9 +44,8 @@ def test_env_repo_path_vars_substitution(
 ):
     """Test Spack correctly substitues repo paths with environment variables when creating an
     environment from a manifest file."""
-    # store the repo path in an environment variable that will be used in the environment
-    testrepo = "/somepath"
-    monkeypatch.setenv("CUSTOM_REPO_PATH", testrepo)
+
+    monkeypatch.setenv("CUSTOM_REPO_PATH", ".")
 
     # setup environment from spack.yaml
     envdir = tmpdir.mkdir("env")
@@ -64,6 +63,7 @@ spack:
         # creating env from manifest file
         env("create", "test", "./spack.yaml")
         # check that repo path was correctly substituted with the environment variable
+        current_dir = os.getcwd()
         with ev.read("test") as newenv:
             repos_specs = spack.config.get("repos", default={}, scope=newenv.scope_name)
-            assert testrepo in repos_specs
+            assert current_dir in repos_specs
