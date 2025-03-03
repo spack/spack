@@ -277,12 +277,20 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "mirror", type=arguments.mirror_name, help="name of a configured mirror"
     )
     migrate.add_argument(
+        "-u",
+        "--unsigned",
+        default=False,
+        action="store_true",
+        help="Ignore signatures and do not resign, default is False"
+    )
+    migrate.add_argument(
         "-d",
         "--delete-existing",
         default=False,
         action="store_true",
         help="Delete the previous layout, the default is to keep it.",
     )
+    # TODO: add -y argument to prompt if user really means to delete existing
     migrate.set_defaults(func=migrate_fn)
 
 
@@ -733,12 +741,13 @@ def migrate_fn(args):
     A mirror can contain both layout version 2 and version 3 simultaneously without
     interference.  This command performs in-place migration of a binary mirror laid
     out according to version 2, Only indexed specs can be migrated, so consider
-    updating the mirror index before running this command.  Re-running the command
+    updating the mirror index before running this command.  Re-run the command
     to migrate any missing items."""
     target_mirror = args.mirror
+    unsigned = args.unsigned
     assert isinstance(target_mirror, spack.mirrors.mirror.Mirror)
     delete_existing = args.delete_existing
-    bindist.migrate(target_mirror, delete_existing)
+    bindist.migrate(target_mirror, unsigned=unsigned, delete_existing=delete_existing)
 
 
 def buildcache(parser, args):

@@ -3344,21 +3344,159 @@ class OCIIndexFetcher(IndexFetcher):
         return FetchIndexResult(etag=None, hash=index_digest.digest, data=result, fresh=False)
 
 
-def migrate(mirror: spack.mirrors.mirror.Mirror, delete_existing: bool = False) -> None:
-    delete_action = "deleting" if delete_existing else "keeping"
-    tty.msg(f"Migrating {mirror.push_url} and {delete_action} existing contents")
+def v2_tarball_directory_name(spec):
+    """
+    Return name of the tarball directory according to the convention
+    <os>-<architecture>/<compiler>/<package>-<version>/
+    """
+    return spec.format_path("{architecture}/{compiler.name}-{compiler.version}/{name}-{version}")
 
-    index_url = url_util.join(mirror.fetch_url, "build_cache", spack_db.INDEX_JSON_FILE)
+
+def v2_tarball_name(spec, ext):
+    """
+    Return the name of the tarfile according to the convention
+    <os>-<architecture>-<package>-<dag_hash><ext>
+    """
+    spec_formatted = spec.format_path(
+        "{architecture}-{compiler.name}-{compiler.version}-{name}-{version}-{hash}"
+    )
+    return f"{spec_formatted}{ext}"
+
+
+def v2_tarball_path_name(spec, ext):
+    """
+    Return the full path+name for a given spec according to the convention
+    <tarball_directory_name>/<tarball_name>
+    """
+    return os.path.join(v2_tarball_directory_name(spec), v2_tarball_name(spec, ext))
+
+
+class MigrateSpecResult(NamedTuple):
+    success: bool
+    message: str
+
+
+def _migrate_spec(s: spack.spec.Spec, mirror_url: str, unsigned: bool = False):
+    print_spec = f"{s.name}/{s.dag_hash()[:7]}"
+    # Check if the spec file exists in the new location and exit early if so
+    v3_cache_entry = create_urlbuildcacheentry(
+        layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION
+    )
+    v3_cache_entry.initialize_from_spec_and_mirror(s, mirror_url)
+    exists = v3_cache_entry.exists()
+    if (exists.signed or (unsigned and exists.unsigned)) and exists.tarball:
+        msg = f"No need to migrate {print_spec}"
+        return MigrateSpecResult(True, msg)
+
+    # Try to fetch the spec metadata
+    v2_metadata_urls = [
+        url_util.join(mirror_url, "build_cache", v2_tarball_path_name(s, ".spec.json.sig")),
+    ]
+
+    if unsigned:
+        v2_metadata_urls.append(
+            url_util.join(mirror_url, "build_cache", v2_tarball_path_name(s, ".spec.json"))
+        )
+
+    spec_contents = None
+
+    for meta_url in v2_metadata_urls:
+        try:
+            _, _, meta_file = web_util.read_from_url(meta_url)
+            spec_contents = codecs.getreader("utf-8")(meta_file).read()
+            spec_url = meta_url
+            break
+        except (web_util.SpackWebError, OSError) as e:
+            tty.msg(f"Unable to read: {meta_url}: {e}")
+    else:
+        msg = f"Unable to read metadata for {print_spec}"
+        return MigrateSpecResult(False, msg)
+
+    spec_dict = {}
+    tmpdir = tempfile.mkdtemp()
+
+    if unsigned:
+        # User asked for unsigned, if we found a signed specfile, just ignore
+        # the signature
+        if spec_url.endswith(".sig"):
+            specfile_json = spack.spec.Spec.extract_json_from_clearsig(spec_contents)
+            spec_dict = spack.spec.Spec.from_dict(specfile_json)
+        else:
+            spec_dict = spack.spec.Spec.from_json(spec_contents)
+    else:
+        # User asked for signed, we must successfully verify the signature
+        local_signed_pre_verify = os.path.join(tmpdir, f"{s.name}.spec.json.sig")
+        with open(local_signed_pre_verify, 'w') as fd:
+            fd.write(spec_contents)
+        if not try_verify(local_signed_pre_verify):
+            return MigrateSpecResult(False, f"Failed to verify signature of {print_spec}")
+        with open(local_signed_pre_verify) as fd:
+            specfile_json = spack.spec.Spec.extract_json_from_clearsig(fd.read())
+            spec_dict = spack.spec.Spec.from_dict(specfile_json)
+
+    # Read out the bits needed to rename and position the archive
+    algorithm = spec_dict["buildcache_layout_version"]["hash_algorithm"]
+    checksum = spec_dict["buildcache_layout_version"]["hash"]
+
+    # spec_dict["archive_size"] = checksums[spec.dag_hash()].size
+    # spec_dict["archive_timestamp"] = datetime.datetime.now().astimezone().isoformat()
+    spec_dict["archive_compression"] = "gzip"
+
+    v2_archive_url = url_util.join(mirror_url, "build_cache", v2_tarball_path_name(s, ".spack"))
+    v3_archive_url = url_util.join(mirror_url, buildcache_relative_tarball_url(algorithm, checksum))
+
+    archive_stage = spack.stage.Stage(v2_archive_url)
+
+    try:
+        archive_stage.create()
+        archive_stage.fetch()
+        tty.msg(f"Downloaded archive to stage: {archive_stage.save_filename}")
+
+        web_util.push_to_url(archive_stage.save_filename, v3_archive_url, keep_original=True)
+
+    except spack.error.FetchError as f_err:
+        tty.error(f"Unable to fetch archive")
+
+    finally:
+        #archive_stage.destroy()
+        tty.msg("DO NOT FORGET TO DESTROY ARCHIVE STAGE!")
+
+
+
+    # Update the spec metadata
+    #     - archive timestamp
+    #     - archive
+
+    # Re-sign the updated spec metadata file if not unsigned (and fail if we can't)
+
+    # Formulate the new tarball path
+
+    # Do I need to download and re-upload the tarball?
+    # Or should I do protocol-specific direct copying?
+
+    # Put the tarball in it's new place
+
+    # Put the spec metadata in it's new place
+
+
+
+def migrate(mirror: spack.mirrors.mirror.Mirror, unsigned: bool = False, delete_existing: bool = False) -> None:
+    delete_action = "deleting" if delete_existing else "keeping"
+    sign_action = "unsigned" if unsigned else "signed"
+    tty.msg(f"Performing a {sign_action} migration of {mirror.push_url} and {delete_action} existing contents")
+    mirror_url = mirror.fetch_url
+
+    index_url = url_util.join(mirror_url, "build_cache", spack_db.INDEX_JSON_FILE)
     contents = None
 
     try:
         _, _, index_file = web_util.read_from_url(index_url)
         contents = codecs.getreader("utf-8")(index_file).read()
     except (web_util.SpackWebError, OSError) as e:
-        tty.error(f"Error reading specfile: {index_url}: {e}")
+        tty.error(f"Error reading index: {index_url}: {e}")
 
     if not contents:
-        tty.error(f"Did not find an index at {mirror.fetch_url}")
+        tty.error(f"Did not find an index at {mirror_url}")
         return
 
     tmpdir = tempfile.mkdtemp()
@@ -3379,7 +3517,11 @@ def migrate(mirror: spack.mirrors.mirror.Mirror, delete_existing: bool = False) 
         # Create a list of worklet job args to run in parallel
         print(f"  {s.name}/{s.dag_hash()[:7]}")
 
-    # use processpoolexecutor to run the worklets in parallel
+    # Run the worklets in parallel if possible
+    executor = spack.util.parallel.make_concurrent_executor()
+    migrate_futures = [
+        executor.submit(_migrate_spec, spec, mirror_url, unsigned) for spec in specs_to_migrate
+    ]
 
     tty.msg("done")
 
