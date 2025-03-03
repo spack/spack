@@ -24,6 +24,14 @@ def get_latest_valid_fortran_pth():
     return FC_PATH[sort_fc_ver[-1]] if sort_fc_ver else None
 
 
+MSC_TOOLCHAIN_MATRIX = {
+    "191025017" : "141",
+    "192027508" : "142",
+    "193030705" : "143",
+    "194033811" : "144"
+}
+
+
 class Msvc(Package, CompilerPackage):
     """
     Microsoft Visual C++ is a compiler for the C, C++, C++/CLI and C++/CX programming languages.
@@ -155,6 +163,12 @@ class Msvc(Package, CompilerPackage):
             "c": {"11": "/std:c11", "17": "/std:c17"},
         }
         return flags[language][standard]
+    
+    def determine_msc_toolchain_version(self):
+        """Determines the MSC Toolchain version from compiler version"""
+        for msvc_version in sorted(MSC_TOOLCHAIN_MATRIX.keys(), key=lambda x: Version(x), reverse=True):
+            if self.version.joined > Version(msvc_version):
+                return Version(MSC_TOOLCHAIN_MATRIX[msvc_version])
 
     @property
     def short_msvc_version(self):

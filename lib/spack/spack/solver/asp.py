@@ -316,9 +316,23 @@ def libc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> bool:
     )
 
 
+def msvc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> bool:
+    """MSVC compatibility is determined by Visual Studio Toolchain version
+    Compatible versions can have different paths, and are only defined by a single
+    name "msvc-toolset". So long as the Version we're concretizing with is >=
+    than the version of a dep
+    """
+    return lhs.version >= rhs.version
+
 def using_libc_compatibility() -> bool:
     """Returns True if we are currently using libc compatibility"""
     return spack.platforms.host().name == "linux"
+
+
+def using_msvc_compatibility() -> bool:
+    """Returns True if we're using MSVC Toolset version
+     to determine binary compatibility"""
+    return spack.platforms.host().name == "windows"
 
 
 def c_compiler_runs(compiler) -> bool:
