@@ -49,3 +49,4 @@ class PyTokenizers(PythonPackage):
     depends_on("rust@nightly", when="@:0.8", type="build")
 
     depends_on("c", type="build")
+    depends_on("cxx", type="build")
