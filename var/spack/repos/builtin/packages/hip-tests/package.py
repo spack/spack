@@ -19,6 +19,7 @@ class HipTests(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
 
+    version("6.3.2", sha256="5af72efd608962df5a73c8b66b479954dc432fe01828b671a91bce0451ac688b")
     version("6.3.1", sha256="0fc1cf4f46f2bbef377d65803d86c2489b01b598c468070c79c5114a661f07c6")
     version("6.3.0", sha256="8081d4ab1a43ffa1cebd646668d83008b799ab98c14daf7b455922355a439c8a")
     version("6.2.4", sha256="1478b49583d09cb3a96e26ec3bf8dc5ff3e3ec72fa133bb6d7768595d825051e")
@@ -32,7 +33,7 @@ class HipTests(CMakePackage):
     depends_on("cxx", type="build")  # generated
     depends_on("cmake", type="run")
 
-    for ver in ["6.1.0", "6.1.1", "6.1.2", "6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1"]:
+    for ver in ["6.1.0", "6.1.1", "6.1.2", "6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2"]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
@@ -138,10 +139,11 @@ class HipTests(CMakePackage):
             "2_Cookbook/19_cmake_lang/test_cpp1",
             "2_Cookbook/19_cmake_lang/test_fortran",
             "2_Cookbook/21_cmake_hip_cxx_clang/square1",
-            "2_Cookbook/22_cmake_hip_lang/square2",
             "2_Cookbook/23_cmake_hiprtc/test",
         ]
 
+        if self.spec.satisfies("@6.2:"):
+            sample_test_binaries.append("2_Cookbook/22_cmake_hip_lang/square2")
         test_dir = join_path(self.test_suite.current_test_cache_dir, "samples")
         prefix_paths = ";".join(spack.build_systems.cmake.get_cmake_prefix_path(self))
         clang_cpp_path = join_path(self.spec["llvm-amdgpu"].prefix, "bin", "clang++")
