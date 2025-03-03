@@ -1075,8 +1075,11 @@ class SetupContext:
             if os.path.isdir(bin_dir):
                 env.prepend_path("PATH", bin_dir)
 
-        for cp_dir in spack.build_systems.cmake.get_cmake_prefix_path(dep.package):
-            env.append_path("CMAKE_PREFIX_PATH", cp_dir)
+        prefix_path = spack.build_systems.cmake.get_cmake_prefix_path(
+            dep.package, direct=dt.LINK | dt.RUN
+        )
+        for cp_dir in reversed(prefix_path):
+            env.prepend_path("CMAKE_PREFIX_PATH", cp_dir)
         env.prune_duplicate_paths("CMAKE_PREFIX_PATH")
 
 
