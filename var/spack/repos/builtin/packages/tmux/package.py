@@ -51,6 +51,9 @@ class Tmux(AutotoolsPackage):
         "utf8proc", default=False, description="Build with UTF-8 support from utf8proc library"
     )
     variant("static", default=False, description="Create a static build")
+    variant(
+        "jemalloc", default=False, description="Use jemalloc for memory allocation", when="@3.5:"
+    )
 
     # used by configure to e.g. find libtinfo
     depends_on("pkgconfig", type="build")
@@ -58,6 +61,7 @@ class Tmux(AutotoolsPackage):
     depends_on("ncurses")
 
     depends_on("utf8proc", when="+utf8proc")
+    depends_on("jemalloc", when="+jemalloc")
 
     depends_on("automake", when="@master")
     depends_on("autoconf", when="@master")
@@ -83,5 +87,6 @@ class Tmux(AutotoolsPackage):
 
         options.extend(self.enable_or_disable("utf8proc"))
         options.extend(self.enable_or_disable("static"))
+        options.extend(self.enable_or_disable("jemalloc"))
 
         return options
