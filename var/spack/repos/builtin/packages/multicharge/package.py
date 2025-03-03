@@ -28,6 +28,12 @@ class Multicharge(CMakePackage, MesonPackage):
     depends_on("mctc-lib build_system=cmake", when="build_system=cmake")
     depends_on("mctc-lib build_system=meson", when="build_system=meson")
 
+    def url_for_version(self, version):
+        if self.spec.satisfies("@:0.3.0"):
+            return f"https://github.com/grimme-lab/multicharge/releases/download/v{version}/multicharge-{version}.tar.xz"
+        else:
+            return f"https://github.com/grimme-lab/multicharge/releases/download/v{version}/multicharge-{version}-source.tar.xz"
+
 
 class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
