@@ -7,7 +7,7 @@ docutils==0.21.2
 pygments==2.19.1
 urllib3==2.3.0
 pytest==8.3.4
-isort==6.0.0
+isort==6.0.1
 black==25.1.0
 flake8==7.1.2
 mypy==1.11.1

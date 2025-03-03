@@ -35,9 +35,9 @@ class Globalarrays(AutotoolsPackage):
     version("5.6", sha256="a228dfbae9a6cfaae34694d7e56f589ac758e959b58f4bc49e6ef44058096767")
 
     depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
+    variant("cxx", default=False, description="Enable C++")
     variant("scalapack", default=False, description="Enable SCALAPACK")
     variant(
         "armci",
@@ -53,6 +53,7 @@ class Globalarrays(AutotoolsPackage):
     depends_on("libfabric", when="armci=ofi")
     depends_on("rdma-core", when="armci=openib")
 
+    depends_on("cxx", type="build", when="+cxx")
     depends_on("scalapack", when="+scalapack")
 
     # See release https://github.com/GlobalArrays/ga/releases/tag/v5.7.1
@@ -73,6 +74,9 @@ class Globalarrays(AutotoolsPackage):
             "--with-blas={0}".format(blas_flags),
             "--with-lapack={0}".format(lapack_libs),
         ]
+
+        if self.spec.satisfies("+cxx"):
+            args.append("--enable-cxx")
 
         if self.spec.satisfies("+scalapack"):
             scalapack_libs = self.spec["scalapack"].libs.ld_flags
