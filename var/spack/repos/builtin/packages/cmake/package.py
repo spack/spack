@@ -399,6 +399,10 @@ class Cmake(Package):
     def headers(self):
         return HeaderList([])
 
+    @property
+    def archive_files(self):
+        return [join_path(self.pkg.stage.source_path, "Bootstrap.cmk", "cmake_bootstrap.log")]
+
     def run_version_check(self, bin):
         """Runs and checks output of the installed binary."""
         exe_path = join_path(self.prefix.bin, bin)
