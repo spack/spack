@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
+import os
+
 from spack.package import *
 
 
@@ -99,3 +102,10 @@ class Crtm(CMakePackage):
             filter_file(
                 "-fbacktrace", "-fbacktrace -ffree-line-length-none", "libsrc/CMakeLists.txt"
             )
+
+    @run_after("install")
+    @when("@3.1.1-build1")
+    def cmake_config_softlinks(self):
+        cmake_config_files = glob.glob(join_path(self.prefix, "cmake/crtm/*"))
+        for srcpath in cmake_config_files:
+            os.symlink(srcpath, join_path(self.prefix, "cmake", os.path.basename(srcpath)))
