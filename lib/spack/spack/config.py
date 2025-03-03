@@ -461,10 +461,11 @@ class Configuration:
         """
         tty.debug(f"[CONFIGURATION: PUSH SCOPE]: {str(scope)}, priority={priority}", level=2)
 
+        # TODO: As a follow on to #48784, change this to create a graph of the
+        # TODO: includes AND ensure properly sorted such that the order included
+        # TODO: at the highest level is reflected in the value of an option that
+        # TODO: is set in multiple included files.
         # before pushing the scope itself, push any included scopes recursively, at same priority
-        # TODO/TLD: Change this to create a graph of the includes AND ensure
-        # TODO/TLD: properly sorted (topological?) to meet expectations (e.g.,
-        # TODO/TLD: should be retaining order in include.
         includes = scope.get_section("include")
         if includes:
             include_paths = [included_path(data) for data in includes["include"]]
