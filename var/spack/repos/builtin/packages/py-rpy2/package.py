@@ -33,7 +33,7 @@ class PyRpy2(PythonPackage):
 
     # many of the previous minor and patch versions change dependency versions so future updates
     # should be careful of that    
-    depends_on("python@3.7:", type=("build", "run"), when="@3.5.17:")
+    depends_on("python@3.8:", type=("build", "run"), when="@3.5.17:")
 
     # https://github.com/rpy2/rpy2/blob/RELEASE_3_5_17/setup.py#L42C1-L42C14
     depends_on("r@3.5:", type=("build", "run"), when="@3.5.17:")
@@ -49,15 +49,15 @@ class PyRpy2(PythonPackage):
     depends_on("py-tzlocal", type=("build", "run"), when="@3.5.17:")
 
     # optional variant
-    depends_on("py-ipython", type=("build", "run"), when="+ipython @3.5.17:")
+    depends_on("py-ipython", type=("build", "run"), when="+ipython")
 
     # optional variant
-    depends_on("py-numpy@1.26:", type=("build", "run"), when="+numpy @3.5.17:")
-    depends_on("py-numpy@:1.25", type=("build", "run"), when="+numpy @3.5.17: ^python@:3.8")
+    depends_on("py-numpy@1.26:", type=("build", "run"), when="+numpy ^python@3.9:")
+    depends_on("py-numpy@:1.25", type=("build", "run"), when="+numpy ^python@:3.8")
 
     # optional variant
-    depends_on("py-pandas", type=("build", "run"), when="+pandas @3.5.17: ^python@:3.9")
-    depends_on("py-pandas@1.3.5:", type=("build", "run"), when="+pandas @3.5.17: ^python@3.10:")
+    depends_on("py-pandas", type=("build", "run"), when="+pandas ^python@:3.9")
+    depends_on("py-pandas@1.3.5:", type=("build", "run"), when="+pandas ^python@3.10:")
 
     depends_on("py-backports-zoneinfo", type=("build", "run"), when="@3.5.17: ^python@:3.8")
 
