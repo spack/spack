@@ -111,6 +111,12 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     patch("no-valgrind.patch", when="@:0.20.0")
     patch("jobid-sign-compare-fix.patch", when="@:0.22.0")
 
+    patch(
+        "https://github.com/flux-framework/flux-sched/pull/1338.patch?full_index=1",
+        when="@0.42.2 %oneapi@2025:",
+        sha256="b46579efa70176055f88493caa3fefbfea5a5663a33d9c561b71e83046f763c5",
+    )
+
     def url_for_version(self, version):
         """
         Flux uses a fork of ZeroMQ's Collective Code Construction Contract
