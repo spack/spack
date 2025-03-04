@@ -82,22 +82,23 @@ class SstCore(AutotoolsPackage):
     depends_on("gettext")
     depends_on("ncurses", when="+curses", type=("build", "link"))
 
-    for version_name in ("master", "develop"):
-        depends_on("autoconf@1.68:", type="build", when="@{}".format(version_name))
-        depends_on("automake@1.11.1:", type="build", when="@{}".format(version_name))
-        depends_on("libtool@1.2.4:", type="build", when="@{}".format(version_name))
-        depends_on("m4", type="build", when="@{}".format(version_name))
+    with when("@develop,master,14.0.0"):
+        depends_on("autoconf@1.68:", type="build")
+        depends_on("automake@1.11.1:", type="build")
+        depends_on("libtool@1.2.4:", type="build")
+        depends_on("m4", type="build")
 
     # Backport of https://github.com/sstsimulator/sst-core/pull/1110
     with when("@14.0.0"):
         patch("1110-ncurses_detection.patch", level=0)
-        # Seperated out results of ./autogen.sh
-        patch("1110-ncurses_detection_autoreconf.patch", level=0)
 
     # force out-of-source builds
     build_directory = "spack-build"
 
-    @when("@develop,master")
+    # 14.0.0 could theoretically be avoided here, but introducing the patch
+    # (even with autogen changes) causes file created/modified time problems
+    # that cannot be easily circumvented with `touch`.
+    @when("@develop,master,14.0.0")
     def autoreconf(self, spec, prefix):
         bash = which("bash")
         bash("autogen.sh")
