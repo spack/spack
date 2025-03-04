@@ -121,7 +121,8 @@ class Lvarray(CMakePackage, CudaPackage):
             var = "-".join([var, "cuda"])
 
         hostname = socket.gethostname().rstrip("1234567890")
-        compiler_str = f"{self['c'].name}-{self['c'].version}"
+        c_compiler = self["c"]
+        compiler_str = f"{c_compiler.name}-{c_compiler.version}"
         host_config_path = f"{hostname}-{self._get_sys_type(spec)}-{compiler_str}{var}.cmake"
 
         dest_dir = self.stage.source_path
