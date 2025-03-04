@@ -27,5 +27,3 @@ class PyNcTimeAxis(PythonPackage):
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-six", type=("build", "run"), when="@1.1.0")
-
-    requires("@1.4.1:", when="^python@3.12:")
