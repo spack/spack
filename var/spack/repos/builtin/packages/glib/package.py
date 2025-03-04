@@ -19,7 +19,7 @@ class Glib(MesonPackage):
     """
 
     homepage = "https://developer.gnome.org/glib/"
-    url = "https://download.gnome.org/sources/glib/2.82/glib-2.82.2.tar.xz"
+    url = "https://download.gnome.org/sources/glib/2.82/glib-2.82.5.tar.xz"
     list_url = "https://download.gnome.org/sources/glib"
     list_depth = 1
 
@@ -28,6 +28,9 @@ class Glib(MesonPackage):
     license("LGPL-2.1-or-later")
 
     # Even minor versions are stable, odd minor versions are development, only add even numbers
+    version("2.82.5", sha256="05c2031f9bdf6b5aba7a06ca84f0b4aced28b19bf1b50c6ab25cc675277cbc3f")
+    version("2.82.4", sha256="37dd0877fe964cd15e9a2710b044a1830fb1bd93652a6d0cb6b8b2dff187c709")
+    version("2.82.3", sha256="5d669bd01ad23b8ef8082c58a0d205f4007a9b9c42b0a69fe7aeb17bbee58ce4")
     version("2.82.2", sha256="ab45f5a323048b1659ee0fbda5cecd94b099ab3e4b9abf26ae06aeb3e781fd63")
     version("2.78.3", sha256="609801dd373796e515972bf95fc0b2daa44545481ee2f465c4f204d224b2bc21")
     version("2.78.0", sha256="44eaab8b720877ce303c5540b657b126f12dc94972d9880b52959f43fb537b30")
