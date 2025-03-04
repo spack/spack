@@ -52,7 +52,7 @@ class LlvmOpenmp(CMakePackage):
         description="Support gomp and the Intel openMP runtime library.",
     )
 
-    # variant for building only the llvm-openmp openmp library
+    # variant for only building the llvm-openmp openmp library
     variant(
         "openmp_libraries_only",
         default=False,
