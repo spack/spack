@@ -50,7 +50,7 @@ class Pdi(CMakePackage):
     depends_on("pkgconfig", type=("build"))
     depends_on("python@3.8.2:3", type=("build", "link", "run"), when="+python")
     depends_on(
-        "python@:3.11.9", type=("build", "link", "run"), when="@1.8.0:1.8.2 +python"
+        "python@3:3.11.9", type=("build", "link", "run"), when="@:1.8.2 +python"
     )  # Needs distutils.
     depends_on("py-pybind11@2.4.3:2", type=("link"), when="+python")
     depends_on(
