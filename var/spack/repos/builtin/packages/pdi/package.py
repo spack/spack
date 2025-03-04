@@ -26,8 +26,16 @@ class Pdi(CMakePackage):
     version("develop", branch="main", no_cache=True)
     version("1.8.3", sha256="df7200289a2a368ec874140039b417abdfe681b57fb1b9f4c52f924952226020")
     version("1.8.2", sha256="bb4d1654c97f7ff379067adbff339f8b4117c0cf9432f41f1a5cb20a747cac1a")
-    version("1.8.1", sha256="43f0c0b2bda5515ecf99da7be1600af2c1f669d6c73e3f309275b14940c7e35c", deprecated=True)
-    version("1.8.0", sha256="5d353bfa64f45ee4715b88bd30330030f79f2020cd6bede0ad9b8f9beddadea9", deprecated=True)
+    version(
+        "1.8.1",
+        sha256="43f0c0b2bda5515ecf99da7be1600af2c1f669d6c73e3f309275b14940c7e35c",
+        deprecated=True,
+    )
+    version(
+        "1.8.0",
+        sha256="5d353bfa64f45ee4715b88bd30330030f79f2020cd6bede0ad9b8f9beddadea9",
+        deprecated=True,
+    )
 
     variant("benchs", default=False, description="Build benchmarks")
     variant("docs", default=False, description="Build documentation")
@@ -41,7 +49,9 @@ class Pdi(CMakePackage):
     depends_on("paraconf +fortran", type=("link", "run"), when="+fortran")
     depends_on("paraconf@0.4.14: +shared", type=("link", "run"))
     depends_on("pkgconfig", type=("build"))
-    depends_on("python@3.8.2:3.11.9", type=("build", "link", "run"), when="@1.8.0:1.8.2 +python") # Needs distutils.
+    depends_on(
+        "python@3.8.2:3.11.9", type=("build", "link", "run"), when="@1.8.0:1.8.2 +python"
+    )  # Needs distutils.
     depends_on("py-pybind11@2.3:2", type=("link"), when="+python")
     depends_on("py-pybind11@2.4.3:", type=("link"), when="@1.8: +python")
     depends_on("py-setuptools", type=("build", "link"), when="@1.8.3: +python^python@3.12:")
