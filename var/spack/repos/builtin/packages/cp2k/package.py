@@ -1055,7 +1055,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("CP2K_ENABLE_GRID_GPU", "grid_gpu"),
             self.define_from_variant("CP2K_ENABLE_DBM_GPU", "dbm_gpu"),
             self.define_from_variant("CP2K_ENABLE_PW_GPU", "pw_gpu"),
-            self.defile_from_variant("CP2K_USE_GRPP", "grpp"),
+            self.define_from_variant("CP2K_USE_GRPP", "grpp"),
         ]
 
         # we force the use elpa openmp threading support. might need to be revisited though
