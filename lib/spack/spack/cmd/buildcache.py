@@ -273,15 +273,13 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     # Migrate a buildcache from layout_version 2 to version 3
     migrate = subparsers.add_parser("migrate", help=migrate_fn.__doc__)
-    migrate.add_argument(
-        "mirror", type=arguments.mirror_name, help="name of a configured mirror"
-    )
+    migrate.add_argument("mirror", type=arguments.mirror_name, help="name of a configured mirror")
     migrate.add_argument(
         "-u",
         "--unsigned",
         default=False,
         action="store_true",
-        help="Ignore signatures and do not resign, default is False"
+        help="Ignore signatures and do not resign, default is False",
     )
     migrate.add_argument(
         "-d",
@@ -290,6 +288,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         help="Delete the previous layout, the default is to keep it.",
     )
+    arguments.add_common_arguments(migrate, ["yes_to_all"])
     # TODO: add -y argument to prompt if user really means to delete existing
     migrate.set_defaults(func=migrate_fn)
 
@@ -739,14 +738,47 @@ def migrate_fn(args):
     """perform in-place binary mirror migration (2 to 3)
 
     A mirror can contain both layout version 2 and version 3 simultaneously without
-    interference.  This command performs in-place migration of a binary mirror laid
-    out according to version 2, Only indexed specs can be migrated, so consider
-    updating the mirror index before running this command.  Re-run the command
-    to migrate any missing items."""
+    interference. This command performs in-place migration of a binary mirror laid
+    out according to version 2, to a binary mirror laid out according to layout
+    version 3.  Only indexed specs will be migrated, so consider updating the mirror
+    index before running this command.  Re-run the command to migrate any missing
+    items.
+
+    The default mode of operation is to perform a signed migration, that is, spack
+    will attempt to verify the signatures on specs, and then re-sign them before
+    migration, using whatever keys are already installed in your key ring.  You can
+    migrate a mirror of unsigned binaries (or convert a mirror of signed binaries
+    to unsigned) by providing the --unsigned argument.
+
+    By default spack will leave the original mirror contents (in the old layout) in
+    place after migration. You can have spack remove the old contents by providing
+    the --delete-existing argument.  Because migrating a mostly-already-migrated
+    mirror should be fast, consider a workflow where you perform a default migration,
+    (i.e. preserve the existing layout rather than deleting it) then evaluate the
+    state of the migrated mirror by attempting to install from it, and finally
+    running the migration again with --delete-exising."""
     target_mirror = args.mirror
     unsigned = args.unsigned
     assert isinstance(target_mirror, spack.mirrors.mirror.Mirror)
     delete_existing = args.delete_existing
+
+    proceed = True
+    if delete_existing and not args.yes_to_all:
+        msg = (
+            "Using --delete-existing will delete the entire contents \n"
+            "    of the old layout within the mirror. Because migrating a mirror \n"
+            "    that has already been migrated should be fast, consider a workflow \n"
+            "    where you perform a default migration (i.e. preserve the existing \n"
+            "    layout rather than deleting it), then evaluate the state of the \n"
+            "    migrated mirror by attempting to install from it, and finally, \n"
+            "    run the migration again with --delete-exising."
+        )
+        tty.warn(msg)
+        proceed = tty.get_yes_or_no("Do you want to proceed?", default=False)
+
+    if not proceed:
+        tty.die("Migration aborted.")
+
     bindist.migrate(target_mirror, unsigned=unsigned, delete_existing=delete_existing)
 
 

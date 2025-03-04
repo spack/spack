@@ -1227,15 +1227,13 @@ def _spec_files_from_cache(url: str):
     raise ListMirrorSpecsError("Failed to get list of specs from {0}".format(url))
 
 
-def _url_generate_package_index(url: str, tmpdir: str, concurrency: int = 32):
+def _url_generate_package_index(url: str, tmpdir: str):
     """Create or replace the build cache index on the given mirror.  The
     buildcache index contains an entry for each binary package under the
     cache_prefix.
 
     Args:
         url: Base url of binary mirror.
-        concurrency: The desired threading concurrency to use when fetching the spec files from
-            the mirror.
 
     Return:
         None
@@ -1252,9 +1250,7 @@ def _url_generate_package_index(url: str, tmpdir: str, concurrency: int = 32):
     db._write()
 
     try:
-        _read_specs_and_push_index(
-            file_list, read_fn, url, db, str(db.database_directory), concurrency
-        )
+        _read_specs_and_push_index(file_list, read_fn, url, db, str(db.database_directory))
     except Exception as e:
         raise GenerateIndexError(f"Encountered problem pushing package index to {url}: {e}") from e
 
@@ -3376,13 +3372,14 @@ class MigrateSpecResult(NamedTuple):
     message: str
 
 
-def _migrate_spec(s: spack.spec.Spec, mirror_url: str, tmpdir: str, unsigned: bool = False, signing_key: str = ""):
+def _migrate_spec(
+    s: spack.spec.Spec, mirror_url: str, tmpdir: str, unsigned: bool = False, signing_key: str = ""
+) -> MigrateSpecResult:
+    """Parallelizable function to migrate a single spec"""
     print_spec = f"{s.name}/{s.dag_hash()[:7]}"
 
     # Check if the spec file exists in the new location and exit early if so
-    v3_cache_entry = create_urlbuildcacheentry(
-        layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION
-    )
+    v3_cache_entry = create_urlbuildcacheentry(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     v3_cache_entry.initialize_from_spec_and_mirror(s, mirror_url)
     exists = v3_cache_entry.exists()
     if (exists.signed or (unsigned and exists.unsigned)) and exists.tarball:
@@ -3391,7 +3388,7 @@ def _migrate_spec(s: spack.spec.Spec, mirror_url: str, tmpdir: str, unsigned: bo
 
     # Try to fetch the spec metadata
     v2_metadata_urls = [
-        url_util.join(mirror_url, "build_cache", v2_tarball_name(s, ".spec.json.sig")),
+        url_util.join(mirror_url, "build_cache", v2_tarball_name(s, ".spec.json.sig"))
     ]
 
     if unsigned:
@@ -3405,9 +3402,9 @@ def _migrate_spec(s: spack.spec.Spec, mirror_url: str, tmpdir: str, unsigned: bo
         try:
             _, _, meta_file = web_util.read_from_url(meta_url)
             spec_contents = codecs.getreader("utf-8")(meta_file).read()
-            spec_url = meta_url
+            v2_spec_url = meta_url
             break
-        except (web_util.SpackWebError, OSError) as e:
+        except (web_util.SpackWebError, OSError):
             pass
     else:
         msg = f"Unable to read metadata for {print_spec}"
@@ -3418,14 +3415,16 @@ def _migrate_spec(s: spack.spec.Spec, mirror_url: str, tmpdir: str, unsigned: bo
     if unsigned:
         # User asked for unsigned, if we found a signed specfile, just ignore
         # the signature
-        if spec_url.endswith(".sig"):
+        if v2_spec_url.endswith(".sig"):
             spec_dict = spack.spec.Spec.extract_json_from_clearsig(spec_contents)
         else:
-            spec_dict = spec_contents
+            spec_dict = json.loads(spec_contents)
     else:
         # User asked for signed, we must successfully verify the signature
-        local_signed_pre_verify = os.path.join(tmpdir, f"{s.name}_{s.dag_hash()}_verify.spec.json.sig")
-        with open(local_signed_pre_verify, 'w') as fd:
+        local_signed_pre_verify = os.path.join(
+            tmpdir, f"{s.name}_{s.dag_hash()}_verify.spec.json.sig"
+        )
+        with open(local_signed_pre_verify, "w") as fd:
             fd.write(spec_contents)
         if not try_verify(local_signed_pre_verify):
             return MigrateSpecResult(False, f"Failed to verify signature of {print_spec}")
@@ -3442,7 +3441,9 @@ def _migrate_spec(s: spack.spec.Spec, mirror_url: str, tmpdir: str, unsigned: bo
     spec_dict["buildcache_layout_version"] = CURRENT_BUILD_CACHE_LAYOUT_VERSION
 
     v2_archive_url = url_util.join(mirror_url, "build_cache", v2_tarball_path_name(s, ".spack"))
-    v3_archive_url = url_util.join(mirror_url, buildcache_relative_tarball_url(algorithm, checksum))
+    v3_archive_url = url_util.join(
+        mirror_url, buildcache_relative_tarball_url(algorithm, checksum)
+    )
 
     archive_stage_path = os.path.join(tmpdir, f"archive_stage_{s.name}_{s.dag_hash()}")
     archive_stage = spack.stage.Stage(v2_archive_url, path=archive_stage_path)
@@ -3456,7 +3457,7 @@ def _migrate_spec(s: spack.spec.Spec, mirror_url: str, tmpdir: str, unsigned: bo
     spec_dict["archive_size"] = os.stat(archive_stage.save_filename).st_size
 
     spec_json_path = os.path.join(tmpdir, f"{s.name}_{s.dag_hash()}.spec.json")
-    with open(spec_json_path, 'w') as fd:
+    with open(spec_json_path, "w") as fd:
         json.dump(spec_dict, fd)
 
     if not unsigned:
@@ -3468,7 +3469,7 @@ def _migrate_spec(s: spack.spec.Spec, mirror_url: str, tmpdir: str, unsigned: bo
 
     try:
         web_util.push_to_url(archive_stage.save_filename, v3_archive_url, keep_original=True)
-    except Exception as e:
+    except Exception:
         return MigrateSpecResult(False, f"Failed to push archive for {print_spec}")
 
     ext = ".spec.json" if unsigned else ".spec.json.sig"
@@ -3478,26 +3479,39 @@ def _migrate_spec(s: spack.spec.Spec, mirror_url: str, tmpdir: str, unsigned: bo
 
     try:
         web_util.push_to_url(spec_to_push_path, v3_spec_url, keep_original=True)
-    except Exception as e:
+    except Exception:
         return MigrateSpecResult(False, f"Failed to push spec metadata for {print_spec}")
 
     return MigrateSpecResult(True, f"Successfully migrated {print_spec}")
 
 
-def migrate(mirror: spack.mirrors.mirror.Mirror, unsigned: bool = False, delete_existing: bool = False) -> None:
+def migrate(
+    mirror: spack.mirrors.mirror.Mirror, unsigned: bool = False, delete_existing: bool = False
+) -> None:
+    """Perform migration of the given mirror
+
+    If unsigned is True, signatures on signed specs will be ignored, and specs
+    will not be re-signed before pushing to the new location.  Otherwise, spack
+    will attempt to verify signatures and re-sign specs, and will fail if not
+    able to do so.  If delete_existing is True, spack will delete the original
+    contents of the mirror once the migration is complete."""
     signing_key = ""
     if not unsigned:
         try:
             signing_key = select_signing_key()
-        except (NoKeyException, PickKeyException) as e:
+        except (NoKeyException, PickKeyException):
             raise MigrationException(
-                "Signed migration requires exactly one secret key in keychain")
+                "Signed migration requires exactly one secret key in keychain"
+            )
 
     delete_action = "deleting" if delete_existing else "keeping"
     sign_action = "unsigned" if unsigned else "signed"
     mirror_url = mirror.fetch_url
 
-    tty.msg(f"Performing a {sign_action} migration of {mirror.push_url} and {delete_action} existing contents")
+    tty.msg(
+        f"Performing a {sign_action} migration of {mirror.push_url} "
+        f"and {delete_action} existing contents"
+    )
 
     index_url = url_util.join(mirror_url, "build_cache", spack_db.INDEX_JSON_FILE)
     contents = None
@@ -3514,7 +3528,7 @@ def migrate(mirror: spack.mirrors.mirror.Mirror, unsigned: bool = False, delete_
 
     tmpdir = tempfile.mkdtemp()
     index_path = os.path.join(tmpdir, "_tmp_index.json")
-    with open(index_path, 'w') as fd:
+    with open(index_path, "w") as fd:
         fd.write(contents)
 
     db = BuildCacheDatabase(tmpdir)
@@ -3526,39 +3540,55 @@ def migrate(mirror: spack.mirrors.mirror.Mirror, unsigned: bool = False, delete_
         if not s.external and db.query_local_by_spec_hash(s.dag_hash()).in_buildcache
     ]
 
-    for s in specs_to_migrate:
-        # Create a list of worklet job args to run in parallel
-        print(f"  {s.name}/{s.dag_hash()[:7]}")
-
     # Run the worklets in parallel if possible
     executor = spack.util.parallel.make_concurrent_executor()
     migrate_futures = [
-        executor.submit(_migrate_spec, spec, mirror_url, tmpdir, unsigned, signing_key) for spec in specs_to_migrate
+        executor.submit(_migrate_spec, spec, mirror_url, tmpdir, unsigned, signing_key)
+        for spec in specs_to_migrate
     ]
+
+    success_count = 0
 
     tty.msg("Migration summary:")
     for spec, migrate_future in zip(specs_to_migrate, migrate_futures):
         result = migrate_future.result()
-        tty.msg(f"  {spec.name}/{spec.dag_hash()[:7]}: {result.message}")
+        msg = f"  {spec.name}/{spec.dag_hash()[:7]}: {result.message}"
+        if result.success:
+            success_count += 1
+            tty.msg(msg)
+        else:
+            tty.error(msg)
         # The migrated index should have the same specs as the original index,
         # modulo any specs that we failed to migrate for whatever reason. So
-        # to avoid having to re-fetch all the spec files now, just mark the
-        # in the existing database and push that.
+        # to avoid having to re-fetch all the spec files now, just mark them
+        # appropriately in the existing database and push that.
         db.mark(spec, "in_buildcache", result.success)
 
-    # Push the migrated mirror index
-    cache_prefix = url_util.join(mirror_url, buildcache_relative_specs_url())
-    index_tmpdir = os.path.join(tmpdir, "rebuild_index")
-    os.mkdir(index_tmpdir)
-    _push_index(db, index_tmpdir, cache_prefix)
+    if success_count > 0:
+        tty.msg("Updating index and pushing keys")
 
-    # Push the public part of the signing key
-    keys_tmpdir = os.path.join(tmpdir, "keys")
-    os.mkdir(keys_tmpdir)
-    _url_push_keys(mirror_url, keys=[signing_key], update_index=True, tmpdir=keys_tmpdir)
+        # Push the migrated mirror index
+        cache_prefix = url_util.join(mirror_url, buildcache_relative_specs_url())
+        index_tmpdir = os.path.join(tmpdir, "rebuild_index")
+        os.mkdir(index_tmpdir)
+        _push_index(db, index_tmpdir, cache_prefix)
+
+        # Push the public part of the signing key
+        if not unsigned:
+            keys_tmpdir = os.path.join(tmpdir, "keys")
+            os.mkdir(keys_tmpdir)
+            _url_push_keys(mirror_url, keys=[signing_key], update_index=True, tmpdir=keys_tmpdir)
+    else:
+        tty.warn("No specs migrated, did you mean to perform an unsigned migration instead?")
+
+    # Delete the old layout if the user requested it
+    if delete_existing:
+        delete_prefix = url_util.join(mirror_url, "build_cache")
+        tty.msg(f"Recursively deleting {delete_prefix}")
+        web_util.remove_url(delete_prefix, recursive=True)
 
     # Clean up all working files
-    # shutil.rmtree(tmpdir)
+    shutil.rmtree(tmpdir)
 
     tty.msg("Migration complete")
 
