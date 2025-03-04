@@ -3376,8 +3376,9 @@ class MigrateSpecResult(NamedTuple):
     message: str
 
 
-def _migrate_spec(s: spack.spec.Spec, mirror_url: str, unsigned: bool = False):
+def _migrate_spec(s: spack.spec.Spec, mirror_url: str, tmpdir: str, unsigned: bool = False, signing_key: str = ""):
     print_spec = f"{s.name}/{s.dag_hash()[:7]}"
+
     # Check if the spec file exists in the new location and exit early if so
     v3_cache_entry = create_urlbuildcacheentry(
         layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION
@@ -3390,12 +3391,12 @@ def _migrate_spec(s: spack.spec.Spec, mirror_url: str, unsigned: bool = False):
 
     # Try to fetch the spec metadata
     v2_metadata_urls = [
-        url_util.join(mirror_url, "build_cache", v2_tarball_path_name(s, ".spec.json.sig")),
+        url_util.join(mirror_url, "build_cache", v2_tarball_name(s, ".spec.json.sig")),
     ]
 
     if unsigned:
         v2_metadata_urls.append(
-            url_util.join(mirror_url, "build_cache", v2_tarball_path_name(s, ".spec.json"))
+            url_util.join(mirror_url, "build_cache", v2_tarball_name(s, ".spec.json"))
         )
 
     spec_contents = None
@@ -3407,84 +3408,96 @@ def _migrate_spec(s: spack.spec.Spec, mirror_url: str, unsigned: bool = False):
             spec_url = meta_url
             break
         except (web_util.SpackWebError, OSError) as e:
-            tty.msg(f"Unable to read: {meta_url}: {e}")
+            pass
     else:
         msg = f"Unable to read metadata for {print_spec}"
         return MigrateSpecResult(False, msg)
 
     spec_dict = {}
-    tmpdir = tempfile.mkdtemp()
 
     if unsigned:
         # User asked for unsigned, if we found a signed specfile, just ignore
         # the signature
         if spec_url.endswith(".sig"):
-            specfile_json = spack.spec.Spec.extract_json_from_clearsig(spec_contents)
-            spec_dict = spack.spec.Spec.from_dict(specfile_json)
+            spec_dict = spack.spec.Spec.extract_json_from_clearsig(spec_contents)
         else:
-            spec_dict = spack.spec.Spec.from_json(spec_contents)
+            spec_dict = spec_contents
     else:
         # User asked for signed, we must successfully verify the signature
-        local_signed_pre_verify = os.path.join(tmpdir, f"{s.name}.spec.json.sig")
+        local_signed_pre_verify = os.path.join(tmpdir, f"{s.name}_{s.dag_hash()}_verify.spec.json.sig")
         with open(local_signed_pre_verify, 'w') as fd:
             fd.write(spec_contents)
         if not try_verify(local_signed_pre_verify):
             return MigrateSpecResult(False, f"Failed to verify signature of {print_spec}")
         with open(local_signed_pre_verify) as fd:
-            specfile_json = spack.spec.Spec.extract_json_from_clearsig(fd.read())
-            spec_dict = spack.spec.Spec.from_dict(specfile_json)
+            spec_dict = spack.spec.Spec.extract_json_from_clearsig(fd.read())
 
     # Read out the bits needed to rename and position the archive
-    algorithm = spec_dict["buildcache_layout_version"]["hash_algorithm"]
-    checksum = spec_dict["buildcache_layout_version"]["hash"]
+    algorithm = spec_dict["binary_cache_checksum"]["hash_algorithm"]
+    checksum = spec_dict["binary_cache_checksum"]["hash"]
 
-    # spec_dict["archive_size"] = checksums[spec.dag_hash()].size
-    # spec_dict["archive_timestamp"] = datetime.datetime.now().astimezone().isoformat()
+    # Add fields new to v3 and update layout version
+    spec_dict["archive_timestamp"] = datetime.datetime.now().astimezone().isoformat()
     spec_dict["archive_compression"] = "gzip"
+    spec_dict["buildcache_layout_version"] = CURRENT_BUILD_CACHE_LAYOUT_VERSION
 
     v2_archive_url = url_util.join(mirror_url, "build_cache", v2_tarball_path_name(s, ".spack"))
     v3_archive_url = url_util.join(mirror_url, buildcache_relative_tarball_url(algorithm, checksum))
 
-    archive_stage = spack.stage.Stage(v2_archive_url)
+    archive_stage_path = os.path.join(tmpdir, f"archive_stage_{s.name}_{s.dag_hash()}")
+    archive_stage = spack.stage.Stage(v2_archive_url, path=archive_stage_path)
 
     try:
         archive_stage.create()
         archive_stage.fetch()
-        tty.msg(f"Downloaded archive to stage: {archive_stage.save_filename}")
+    except spack.error.FetchError:
+        return MigrateSpecResult(False, f"Unable to fetch archive for {print_spec}")
 
+    spec_dict["archive_size"] = os.stat(archive_stage.save_filename).st_size
+
+    spec_json_path = os.path.join(tmpdir, f"{s.name}_{s.dag_hash()}.spec.json")
+    with open(spec_json_path, 'w') as fd:
+        json.dump(spec_dict, fd)
+
+    if not unsigned:
+        spec_to_push_path = sign_specfile(signing_key, spec_json_path)
+    else:
+        spec_to_push_path = spec_json_path
+
+    tty.msg(f"Pushing {archive_stage.save_filename} to {v3_archive_url}")
+
+    try:
         web_util.push_to_url(archive_stage.save_filename, v3_archive_url, keep_original=True)
+    except Exception as e:
+        return MigrateSpecResult(False, f"Failed to push archive for {print_spec}")
 
-    except spack.error.FetchError as f_err:
-        tty.error(f"Unable to fetch archive")
+    ext = ".spec.json" if unsigned else ".spec.json.sig"
+    v3_spec_url = url_util.join(mirror_url, buildcache_relative_spec_url(s, ext))
 
-    finally:
-        #archive_stage.destroy()
-        tty.msg("DO NOT FORGET TO DESTROY ARCHIVE STAGE!")
+    tty.msg(f"Pushing {spec_to_push_path} to {v3_spec_url}")
 
+    try:
+        web_util.push_to_url(spec_to_push_path, v3_spec_url, keep_original=True)
+    except Exception as e:
+        return MigrateSpecResult(False, f"Failed to push spec metadata for {print_spec}")
 
-
-    # Update the spec metadata
-    #     - archive timestamp
-    #     - archive
-
-    # Re-sign the updated spec metadata file if not unsigned (and fail if we can't)
-
-    # Formulate the new tarball path
-
-    # Do I need to download and re-upload the tarball?
-    # Or should I do protocol-specific direct copying?
-
-    # Put the tarball in it's new place
-
-    # Put the spec metadata in it's new place
-
+    return MigrateSpecResult(True, f"Successfully migrated {print_spec}")
 
 
 def migrate(mirror: spack.mirrors.mirror.Mirror, unsigned: bool = False, delete_existing: bool = False) -> None:
+    signing_key = ""
+    if not unsigned:
+        try:
+            signing_key = select_signing_key()
+        except (NoKeyException, PickKeyException) as e:
+            raise MigrationException(
+                "Signed migration requires exactly one secret key in keychain")
+
     delete_action = "deleting" if delete_existing else "keeping"
     sign_action = "unsigned" if unsigned else "signed"
-    tty.msg(f"Performing a {sign_action} migration of {mirror.push_url} and {delete_action} existing contents")
     mirror_url = mirror.fetch_url
+
+    tty.msg(f"Performing a {sign_action} migration of {mirror.push_url} and {delete_action} existing contents")
 
     index_url = url_util.join(mirror_url, "build_cache", spack_db.INDEX_JSON_FILE)
     contents = None
@@ -3520,10 +3533,31 @@ def migrate(mirror: spack.mirrors.mirror.Mirror, unsigned: bool = False, delete_
     # Run the worklets in parallel if possible
     executor = spack.util.parallel.make_concurrent_executor()
     migrate_futures = [
-        executor.submit(_migrate_spec, spec, mirror_url, unsigned) for spec in specs_to_migrate
+        executor.submit(_migrate_spec, spec, mirror_url, tmpdir, unsigned, signing_key) for spec in specs_to_migrate
     ]
 
+    tty.msg("Migration summary:")
+    for spec, migrate_future in zip(specs_to_migrate, migrate_futures):
+        result = migrate_future.result()
+        tty.msg(f"  {spec.name}/{spec.dag_hash()[:7]}: {result.message}")
+
+    # TODO:
+    #     - migrate the index (or rebuild the index if any of tasks did not succeed)
+    #     - migrate the signing keys
+
+    # Clean up all working files
+    shutil.rmtree(tmpdir)
+
     tty.msg("done")
+
+
+class MigrationException(spack.error.SpackError):
+    """
+    Raised when migration fails irrevocably
+    """
+
+    def __init__(self, msg):
+        super().__init__(msg)
 
 
 class NoOverwriteException(spack.error.SpackError):
