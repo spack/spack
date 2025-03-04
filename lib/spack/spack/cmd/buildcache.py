@@ -33,6 +33,7 @@ from spack.cmd import display_specs
 from spack.cmd.common import arguments
 from spack.spec import Spec, save_dependency_specfiles
 
+from ..buildcache_migrate import migrate
 from ..enums import InstallRecordStatus
 
 description = "create, download and install binary packages"
@@ -779,7 +780,7 @@ def migrate_fn(args):
     if not proceed:
         tty.die("Migration aborted.")
 
-    bindist.migrate(target_mirror, unsigned=unsigned, delete_existing=delete_existing)
+    migrate(target_mirror, unsigned=unsigned, delete_existing=delete_existing)
 
 
 def buildcache(parser, args):
