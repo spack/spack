@@ -74,6 +74,7 @@ class Onnx(CMakePackage):
 
     generator("ninja")
     depends_on("cmake@3.1:", type="build")
+    depends_on("cmake@3.14:", type="build", when="@1.17:")
     depends_on("python", type="build")
     depends_on("protobuf")
 
