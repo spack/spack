@@ -89,7 +89,7 @@ class SstCore(AutotoolsPackage):
         depends_on("m4", type="build", when="@{}".format(version_name))
 
     # Backport of https://github.com/sstsimulator/sst-core/pull/1110
-    with when("+curses @14.0.0"):
+    with when("@14.0.0"):
         patch("1110-ncurses_detection.patch", level=0)
         # Seperated out results of ./autogen.sh
         patch("1110-ncurses_detection_autoreconf.patch", level=0)
@@ -112,8 +112,7 @@ class SstCore(AutotoolsPackage):
             args.append("--without-hdf5")
         if "+zlib" in self.spec:
             args.append("--with-zlib=%s" % self.spec["zlib-api"].prefix)
-        if "+curses" in self.spec:
-            args.append("--with-curses={}".format(self.spec["ncurses"].prefix))
+        args.extend(self.with_or_without("ncurses", activation_value="prefix", variant="curses"))
 
         if "+pdes_mpi" in self.spec:
             args.append("--enable-mpi")
