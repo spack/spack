@@ -69,6 +69,7 @@ class PySetuptoolsScm(PythonPackage):
         depends_on("py-typing-extensions", when="@7:8.0.4")
         
         depends_on("py-packaging@20.0:", when="@6.3:")
+        
         depends_on("py-importlib-metadata", when="@7: ^python@:3.7")
 
 
