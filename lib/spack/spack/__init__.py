@@ -13,6 +13,18 @@ import spack.util.git
 __version__ = "1.0.0.dev0"
 spack_version = __version__
 
+#: The current Package API version implemented by this version of Spack. The Package API defines
+#: the Python interface for packages as well as the layout of package repositories. The minor
+#: version is incremented when the package API is extended in a backwards-compatible way. The major
+#: version is incremented upon breaking changes. This version is changed independently from the
+#: Spack version.
+package_api_version = (1, 0)
+
+#: The minimum Package API version that this version of Spack is compatible with. This should
+#: always be a tuple of the form ``(major, 0)``, since compatibility with vX.Y implies
+#: compatibility with vX.0.
+min_package_api_version = (1, 0)
+
 
 def __try_int(v):
     try:
@@ -79,4 +91,6 @@ __all__ = [
     "get_version",
     "get_spack_commit",
     "get_short_version",
+    "package_api_version",
+    "min_package_api_version",
 ]

@@ -32,6 +32,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
+import spack
 import spack.caches
 import spack.config
 import spack.error
@@ -48,6 +49,8 @@ import spack.util.spack_yaml as syaml
 
 #: Package modules are imported as spack.pkg.<repo-namespace>.<pkg-name>
 ROOT_PYTHON_NAMESPACE = "spack.pkg"
+
+_API_REGEX = re.compile(r"^v(\d+)\.(\d+)$")
 
 
 def python_package_for_repo(namespace):
@@ -909,19 +912,52 @@ class RepoPath:
         return RepoPath.unmarshal, self.marshal()
 
 
+def _parse_package_api_version(
+    config: Dict[str, Any],
+    min_api: Tuple[int, int] = spack.min_package_api_version,
+    max_api: Tuple[int, int] = spack.package_api_version,
+) -> Tuple[int, int]:
+    api = config.get("api")
+    if api is None:
+        package_api = (1, 0)
+    else:
+        if not isinstance(api, str):
+            raise BadRepoError(f"Invalid Package API version '{api}'. Must be of the form vX.Y")
+        api_match = _API_REGEX.match(api)
+        if api_match is None:
+            raise BadRepoError(f"Invalid Package API version '{api}'. Must be of the form vX.Y")
+        package_api = (int(api_match.group(1)), int(api_match.group(2)))
+
+    if min_api <= package_api <= max_api:
+        return package_api
+
+    min_str = ".".join(str(i) for i in min_api)
+    max_str = ".".join(str(i) for i in max_api)
+    curr_str = ".".join(str(i) for i in package_api)
+    raise BadRepoError(
+        f"Package API v{curr_str} is not supported by this version of Spack ("
+        f"must be between v{min_str} and v{max_str})"
+    )
+
+
 class Repo:
     """Class representing a package repository in the filesystem.
 
-    Each package repository must have a top-level configuration file
-    called `repo.yaml`.
+    Each package repository must have a top-level configuration file called `repo.yaml`.
 
-    Currently, `repo.yaml` must define:
+    It contains the following keys:
 
     `namespace`:
         A Python namespace where the repository's packages should live.
 
     `subdirectory`:
         An optional subdirectory name where packages are placed
+
+    `api`:
+        A string of the form vX.Y that indicates the Package API version. The default is "v1.0".
+        For the repo to be compatible with the current version of Spack, the version must be
+        greater than or equal to :py:data:`spack.min_package_api_version` and less than or equal to
+        :py:data:`spack.package_api_version`.
     """
 
     def __init__(
@@ -958,7 +994,7 @@ class Repo:
             f"{os.path.join(root, repo_config_name)} must define a namespace.",
         )
 
-        self.namespace = config["namespace"]
+        self.namespace: str = config["namespace"]
         check(
             re.match(r"[a-zA-Z][a-zA-Z0-9_.]+", self.namespace),
             f"Invalid namespace '{self.namespace}' in repo '{self.root}'. "
@@ -971,11 +1007,13 @@ class Repo:
         # Keep name components around for checking prefixes.
         self._names = self.full_namespace.split(".")
 
-        packages_dir = config.get("subdirectory", packages_dir_name)
+        packages_dir: str = config.get("subdirectory", packages_dir_name)
         self.packages_path = os.path.join(self.root, packages_dir)
         check(
             os.path.isdir(self.packages_path), f"No directory '{packages_dir}' found in '{root}'"
         )
+
+        self.package_api = _parse_package_api_version(config)
 
         # Class attribute overrides by package name
         self.overrides = overrides or {}
@@ -1026,7 +1064,7 @@ class Repo:
         parts = fullname.split(".")
         return self._names[: len(parts)] == parts
 
-    def _read_config(self) -> Dict[str, str]:
+    def _read_config(self) -> Dict[str, Any]:
         """Check for a YAML config file in this db's root directory."""
         try:
             with open(self.config_file, encoding="utf-8") as reponame_file:
