@@ -201,11 +201,11 @@ def migrate(
             )
 
     delete_action = "deleting" if delete_existing else "keeping"
-    sign_action = "unsigned" if unsigned else "signed"
+    sign_action = "an unsigned" if unsigned else "a signed"
     mirror_url = mirror.fetch_url
 
     tty.msg(
-        f"Performing a {sign_action} migration of {mirror.push_url} "
+        f"Performing {sign_action} migration of {mirror.push_url} "
         f"and {delete_action} existing contents"
     )
 
@@ -216,11 +216,7 @@ def migrate(
         _, _, index_file = web_util.read_from_url(index_url)
         contents = codecs.getreader("utf-8")(index_file).read()
     except (web_util.SpackWebError, OSError) as e:
-        tty.error(f"Error reading index: {index_url}: {e}")
-
-    if not contents:
-        tty.error(f"Did not find an index at {mirror_url}")
-        return
+        raise MigrationException("Buildcache migration requires a buildcache index")
 
     tmpdir = tempfile.mkdtemp()
     index_path = os.path.join(tmpdir, "_tmp_index.json")
