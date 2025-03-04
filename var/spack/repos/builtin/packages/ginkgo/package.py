@@ -219,6 +219,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             if archs != "none":
                 arch_str = ";".join(archs)
                 args.append("-DGINKGO_HIP_AMDGPU={0}".format(arch_str))
+                args.append("-DCMAKE_HIP_ARCHITECTURES={0}".format(arch_str))
             if spec.satisfies("^hip@5.2.0:"):
                 args.append(
                     self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
