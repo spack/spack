@@ -89,8 +89,6 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("sycl", default=False, description="Enable SYCL support")
     variant("magma", default=False, description="Enable MAGMA interface")
     variant("caliper", default=False, description="Enable Caliper support")
-    variant("rocblas", default=False, description="Enable rocBLAS")
-    variant("cublas", default=False, description="Enable cuBLAS")
     variant(
         "precision",
         default="double",
@@ -128,10 +126,12 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("lapack", when="+lapack")
     depends_on("magma", when="+magma")
     depends_on("superlu-dist", when="+superlu-dist+mpi")
+    depends_on("rocsolver", when="+rocm")
     depends_on("rocsparse", when="+rocm")
     depends_on("rocthrust", when="+rocm")
     depends_on("rocrand", when="+rocm")
     depends_on("rocprim", when="+rocm")
+    depends_on("rocblas", when="+rocm")
     depends_on("hipblas", when="+rocm +superlu-dist")
     depends_on("umpire", when="+umpire")
     depends_on("umpire+rocm", when="+umpire+rocm")
@@ -191,8 +191,6 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     conflicts("+cuda", when="+rocm", msg="CUDA and ROCm are mutually exclusive")
     conflicts("+cuda", when="+sycl", msg="CUDA and SYCL are mutually exclusive")
     conflicts("+rocm", when="+sycl", msg="ROCm and SYCL are mutually exclusive")
-    conflicts("+cublas", when="~cuda", msg="cuBLAS requires CUDA to be enabled")
-    conflicts("+rocblas", when="~rocm", msg="rocBLAS requires ROCm to be enabled")
     conflicts("+gpu-profiling", when="~cuda~rocm", msg="GPU profiling requires CUDA or ROCm")
 
     configure_directory = "src"
@@ -298,27 +296,26 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 configure_args.append("--enable-device-memory-pool")
             elif spec.satisfies("@:2.20.99"):
                 configure_args.append("--enable-cub")
-            if spec.satisfies("+cublas"):
-                configure_args.append("--enable-cublas")
             if spec.satisfies("@2.29.0:"):
-                configure_args.append("--enable-cusolver")
+                configure_args.extend["--enable-cublas", "--enable-cusolver"]
         else:
             configure_args.extend(["--without-cuda", "--disable-curand", "--disable-cusparse"])
             if spec.satisfies("@:2.20.99"):
                 configure_args.append("--disable-cub")
-            if spec.satisfies("@:2.28.99"):
+            if spec.satisfies("@2.29:"):
                 configure_args.append("--disable-cusolver")
 
         if spec.satisfies("+rocm"):
-            rocm_pkgs = ["rocsparse", "rocthrust", "rocprim", "rocrand"]
+            configure_args.append("--with-hip")
+            rocm_pkgs = ["rocthrust", "rocprim", "rocrand", "rocsparse", "rocblas"]
             if spec.satisfies("+superlu-dist"):
                 rocm_pkgs.append("hipblas")
-            rocm_inc = ""
-            for pkg in rocm_pkgs:
-                rocm_inc += spec[pkg].headers.include_flags + " "
+            if spec.satisfies("@2.29.0:"):
+                rocm_pkgs.extend(["rocblas", "rocsolver"])
+                configure_args.extend(["--enable-rocblas", "--enable-rocsolver"])
+            rocm_inc = " ".join(set(spec[pkg].headers.include_flags for pkg in rocm_pkgs))
             configure_args.extend(
                 [
-                    "--with-hip",
                     "--enable-rocrand",
                     "--enable-rocsparse",
                     f"--with-extra-CUFLAGS={rocm_inc}",
@@ -329,14 +326,10 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 rocm_arch_sorted = list(sorted(rocm_arch_vals, reverse=True))
                 rocm_arch = rocm_arch_sorted[0]
                 configure_args.append(f"--with-gpu-arch={rocm_arch}")
-            if spec.satisfies("+rocblas"):
-                configure_args.append("--enable-rocblas")
-            if spec.satisfies("@2.29.0:"):
-                configure_args.append("--enable-rocsolver")
         else:
             configure_args.extend(["--without-hip", "--disable-rocrand", "--disable-rocsparse"])
-            if spec.satisfies("@:2.28.99"):
-                configure_args.append("--disable-rocsolver")
+            if spec.satisfies("@2.29.0:"):
+                configure_args.extend(["--disable-rocblas", "--disable-rocsolver"])
 
         if spec.satisfies("+sycl"):
             configure_args.append("--with-sycl")
@@ -425,7 +418,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     def test_bigint(self):
         """build and run bigint tests"""
-        if spec.satisfies("~mpi"):
+        if self.spec.satisfies("~mpi"):
             raise SkipTest("Package must be installed with +mpi")
 
         # build and run cached examples
