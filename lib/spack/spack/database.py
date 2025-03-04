@@ -1803,8 +1803,7 @@ class Database:
 
         results = list(local_results) + list(x for x in upstream_results if x not in local_results)
         results.sort(
-            key=operator.attrgetter("architecture", "versions", "compiler"),
-            reverse=True
+            key=operator.attrgetter("architecture", "versions", "compiler"), reverse=True
         )  # type: ignore[call-overload]
         return results
 
