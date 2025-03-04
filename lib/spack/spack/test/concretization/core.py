@@ -439,7 +439,6 @@ class TestConcretize:
         where the compiler is not forced.
         """
         spec = spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")
-        print(spec.tree())
         for x in spec.traverse(deptype=("link", "run")):
             if "c" not in x or not x.name.startswith("dt-diamond"):
                 continue
@@ -1771,10 +1770,6 @@ class TestConcretize:
         for result in solver.solve_in_rounds(specs):
             for s in result.specs:
                 concrete_specs.update(s.traverse())
-
-        for x in concrete_specs:
-            print(x.tree(hashes=True))
-            print()
 
         for matching_spec, expected_count in checks.items():
             matches = [x for x in concrete_specs if x.satisfies(matching_spec)]
@@ -3215,7 +3210,6 @@ packages:
 def test_compiler_can_depend_on_themselves_to_build(config, mock_packages):
     """Tests that a compiler can depend on itself to bootstrap."""
     s = Spec("gcc@14 %gcc@9.4.0").concretized()
-    print(s.tree())
     assert s.satisfies("gcc@14")
     assert s.satisfies("^gcc-runtime@9.4.0")
 
@@ -3244,7 +3238,6 @@ packages:
 def test_compiler_can_be_built_with_other_compilers(config, mock_packages):
     """Tests that a compiler can be built also with another compiler."""
     s = Spec("llvm@18 +clang %gcc").concretized()
-    print(s.tree())
     assert s.satisfies("llvm@18")
 
     c_compiler = s.dependencies(virtuals=("c",))

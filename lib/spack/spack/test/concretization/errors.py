@@ -60,5 +60,4 @@ def test_error_messages(error_messages, config_set, spec, mock_packages, mutable
         _ = spack.concretize.concretize_one(spec)
 
     for em in error_messages:
-        print(e.value)
         assert em in str(e.value)
