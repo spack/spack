@@ -1294,7 +1294,7 @@ print(json.dumps(config))
             ("c", "CC", "LDSHARED"),
             ("cxx", "CXX", "LDCXXSHARED"),
         ]:
-            if not dependent_spec.dependencies(virtuals=(language,)):
+            if not dependent_spec.has_virtual_dependency(language):
                 continue
 
             compiler_wrapper_pkg = dependent_spec["compiler-wrapper"].package

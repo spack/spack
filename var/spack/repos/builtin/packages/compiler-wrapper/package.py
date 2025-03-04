@@ -146,13 +146,13 @@ class CompilerWrapper(Package):
             return
 
         _var_list = []
-        if dependent_spec.dependencies(virtuals=("c",)):
+        if dependent_spec.has_virtual_dependency("c"):
             _var_list.append(("c", "cc", "CC", "SPACK_CC"))
 
-        if dependent_spec.dependencies(virtuals=("cxx",)):
+        if dependent_spec.has_virtual_dependency("cxx"):
             _var_list.append(("cxx", "cxx", "CXX", "SPACK_CXX"))
 
-        if dependent_spec.dependencies(virtuals=("fortran",)):
+        if dependent_spec.has_virtual_dependency("fortran"):
             _var_list.append(("fortran", "fortran", "F77", "SPACK_F77"))
             _var_list.append(("fortran", "fortran", "FC", "SPACK_FC"))
 
@@ -228,15 +228,15 @@ class CompilerWrapper(Package):
     def setup_dependent_package(self, module, dependent_spec):
         bin_dir = self.bin_dir()
 
-        if dependent_spec.dependencies(virtuals=("c",)):
+        if dependent_spec.has_virtual_dependency("c"):
             compiler_pkg = dependent_spec["c"].package
             setattr(module, "spack_cc", str(bin_dir / compiler_pkg.link_paths["c"]))
 
-        if dependent_spec.dependencies(virtuals=("cxx",)):
+        if dependent_spec.has_virtual_dependency("cxx"):
             compiler_pkg = dependent_spec["cxx"].package
             setattr(module, "spack_cxx", str(bin_dir / compiler_pkg.link_paths["cxx"]))
 
-        if dependent_spec.dependencies(virtuals=("fortran",)):
+        if dependent_spec.has_virtual_dependency("fortran"):
             compiler_pkg = dependent_spec["fortran"].package
             setattr(module, "spack_fc", str(bin_dir / compiler_pkg.link_paths["fortran"]))
             setattr(module, "spack_f77", str(bin_dir / compiler_pkg.link_paths["fortran"]))

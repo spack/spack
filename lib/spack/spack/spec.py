@@ -4441,6 +4441,9 @@ class Spec:
         """Returns the spec format originally used for this spec."""
         return self.annotations.original_spec_format
 
+    def has_virtual_dependency(self, virtual: str) -> bool:
+        return bool(self.dependencies(virtuals=(virtual,)))
+
 
 class VariantMap(lang.HashableMap):
     """Map containing variant instances. New values can be added only
