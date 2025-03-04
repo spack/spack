@@ -207,10 +207,8 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
             ("I_MPI_F90", "spack_fc"),
             ("I_MPI_F77", "spack_f77"),
         ):
-            if not hasattr(dependent_module, attr_name):
-                continue
-
-            env.set(var_name, getattr(dependent_module, attr_name))
+            if hasattr(dependent_module, attr_name):
+                env.set(var_name, getattr(dependent_module, attr_name))
 
         # Set compiler wrappers for dependent build stage
         wrappers = self.wrapper_paths()

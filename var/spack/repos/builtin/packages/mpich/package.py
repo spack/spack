@@ -25,10 +25,8 @@ class MpichEnvironmentModifications(spack.package_base.PackageBase):
             ("MPICH_F90", "spack_fc"),
             ("MPICH_F77", "spack_f77"),
         ):
-            if not hasattr(dependent_module, attr_name):
-                continue
-
-            env.set(var_name, getattr(dependent_module, attr_name))
+            if hasattr(dependent_module, attr_name):
+                env.set(var_name, getattr(dependent_module, attr_name))
 
     def setup_build_environment(self, env):
         env.unset("F90")
