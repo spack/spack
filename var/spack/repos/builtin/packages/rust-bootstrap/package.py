@@ -22,6 +22,17 @@ class RustBootstrap(Package):
     # should update these binary releases as bootstrapping requirements are
     # modified by new releases of Rust.
     rust_releases = {
+        "1.85.0": {
+            "darwin": {
+                "x86_64": "69a36d239e38cc08c6366d1d85071847406645346c6f2d2e0dfaf64b58050d3d",
+                "aarch64": "3ff45cefaf9a002069902acf3a6332113b76b530bb31803fe5cfd30f7ef8ba03",
+            },
+            "linux": {
+                "x86_64": "be4ba7b777100c851ab268e95f70f405d28d7813ba60a9bdcf4e88c88acf8602",
+                "aarch64": "0306c30bee00469fbec4b07bb04ea0308c096454354c3dc96a92b729f1c2acd1",
+                "powerpc64le": "d0761bf0e1786a46dddfe60cc9397b899f680b86e6aebd7ca16b2a70a9dd631b",
+            },
+        },
         "1.82.0": {
             "darwin": {
                 "x86_64": "b1a289cabc523f259f65116a41374ac159d72fbbf6c373bd5e545c8e835ceb6a",
@@ -53,6 +64,17 @@ class RustBootstrap(Package):
                 "x86_64": "1307747915e8bd925f4d5396ab2ae3d8d9c7fad564afbc358c081683d0f22e87",
                 "aarch64": "131eda738cd977fff2c912e5838e8e9b9c260ecddc1247c0fe5473bf09c594af",
                 "powerpc64le": "c5aedb12c552daa18072e386697205fb7b91cef1e8791fe6fb74834723851388",
+            },
+        },
+        "1.76.0": {
+            "darwin": {
+                "x86_64": "7bdbe085695df8e46389115e99eda7beed37a9494f6b961b45554c658e53b8e7",
+                "aarch64": "17496f15c3cb6ff73d5c36f5b54cc110f1ac31fa09521a7991c0d7ddd890dceb",
+            },
+            "linux": {
+                "x86_64": "9d589d2036b503cc45ecc94992d616fb3deec074deb36cacc2f5c212408f7399",
+                "aarch64": "2e8313421e8fb673efdf356cdfdd4bc16516f2610d4f6faa01327983104c05a0",
+                "powerpc64le": "44b3494675284d26b04747a824dc974e32fd8fd46fc0aa06a7c8ebe851332d2c",
             },
         },
         "1.75.0": {
@@ -134,7 +156,6 @@ class RustBootstrap(Package):
     # Pre-release versions of the bootstrap compiler.
     # Note: These versions are unchecksumed since they will change
     # periodically as new versions are released.
-    version("beta")
     version("nightly")
 
     # Stable releases of the bootstrap compiler.
