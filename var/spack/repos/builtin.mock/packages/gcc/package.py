@@ -25,6 +25,7 @@ class Gcc(CompilerPackage, Package):
         description="Compilers and runtime libraries to build",
     )
 
+    provides("c", "cxx", when="languages=c,c++")
     provides("c", when="languages=c")
     provides("cxx", when="languages=c++")
     provides("fortran", when="languages=fortran")
@@ -54,8 +55,7 @@ class Gcc(CompilerPackage, Package):
 
     @property
     def cc(self):
-        msg = "cannot retrieve C compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
+        assert self.spec.concrete, "cannot retrieve C compiler [spec is not concrete]"
         if self.spec.external:
             return self.spec.extra_attributes["compilers"].get("c", None)
         result = None
@@ -65,8 +65,7 @@ class Gcc(CompilerPackage, Package):
 
     @property
     def cxx(self):
-        msg = "cannot retrieve C++ compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
+        assert self.spec.concrete, "cannot retrieve C++ compiler [spec is not concrete]"
         if self.spec.external:
             return self.spec.extra_attributes["compilers"].get("cxx", None)
         result = None
@@ -76,8 +75,7 @@ class Gcc(CompilerPackage, Package):
 
     @property
     def fortran(self):
-        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
+        assert self.spec.concrete, "cannot retrieve Fortran compiler [spec is not concrete]"
         if self.spec.external:
             return self.spec.extra_attributes["compilers"].get("fortran", None)
         result = None

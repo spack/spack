@@ -32,6 +32,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     license("GPL-2.0-or-later AND LGPL-2.1-or-later")
 
+    provides("c", "cxx", when="languages=c,c++")
     provides("c", when="languages=c")
     provides("cxx", when="languages=c++")
     provides("fortran", when="languages=fortran")
@@ -190,10 +191,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         "RelWithDebInfo: -O2 -g; MinSizeRel: -Os",
     )
     variant(
-        "profiled",
-        default=False,
-        description="Use Profile Guided Optimization",
-        when="+bootstrap %gcc",
+        "profiled", default=False, description="Use Profile Guided Optimization", when="+bootstrap"
     )
 
     depends_on("flex", type="build", when="@master")
