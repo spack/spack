@@ -312,6 +312,7 @@ def get_msvc_runtime(compiler) -> Optional[spack.spec.Spec]:
     if hasattr(compiler.package, "determine_msc_toolchain_version"):
         msc_version = compiler.package.determine_msc_toolchain_version()
         runtime_spec = spack.spec.Spec(f"msvc-toolset@={str(msc_version)}")
+        runtime_spec.external_path = compiler.prefix
         return runtime_spec
 
 
@@ -1017,7 +1018,7 @@ def _external_config_with_implicit_externals(configuration):
             runtime_spec = get_msvc_runtime(compiler)
             if runtime_spec and runtime_spec not in seen:
                 seen.add(runtime_spec)
-                entry = {"spec": f"{runtime_spec}", "prefix": compiler.prefix}
+                entry = {"spec": f"{runtime_spec}", "prefix": runtime_spec.external_path}
                 packages_yaml.setdefault(runtime_spec.name, {}).setdefault("externals", []).append(entry)
     return packages_yaml
 
