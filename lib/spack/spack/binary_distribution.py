@@ -1051,42 +1051,8 @@ def sign_specfile(key: str, specfile_path: str) -> str:
     return signed_specfile_path
 
 
-def _read_specs_and_push_index(
-    file_list: List[str],
-    read_method: Callable,
-    cache_prefix: str,
-    db: BuildCacheDatabase,
-    temp_dir: str,
-    concurrency: int,
-):
-    """Read all the specs listed in the provided list, using thread given thread parallelism,
-        generate the index, and push it to the mirror.
-
-    Args:
-        file_list: List of urls or file paths pointing at spec files to read
-        read_method: A function taking a single argument, either a url or a file path,
-            and which reads the spec file at that location, and returns the spec.
-        cache_prefix: prefix of the build cache on s3 where index should be pushed.
-        db: A spack database used for adding specs and then writing the index.
-        temp_dir: Location to write index.json and hash for pushing
-        concurrency: Number of parallel processes to use when fetching
-    """
-    for file in file_list:
-        contents = read_method(file)
-        # Need full spec.json name or this gets confused with index.json.
-        if file.endswith(".json.sig"):
-            specfile_json = spack.spec.Spec.extract_json_from_clearsig(contents)
-            fetched_spec = spack.spec.Spec.from_dict(specfile_json)
-        elif file.endswith(".json"):
-            fetched_spec = spack.spec.Spec.from_json(contents)
-        else:
-            continue
-
-        db.add(fetched_spec)
-        db.mark(fetched_spec, "in_buildcache", True)
-
-    # Now generate the index, compute its hash, and push the two files to
-    # the mirror.
+def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
+    """Generate the index, compute its hash, and push the files to the mirror"""
     index_json_path = os.path.join(temp_dir, spack_db.INDEX_JSON_FILE)
     with open(index_json_path, "w", encoding="utf-8") as f:
         db._write_to_file(f)
@@ -1116,6 +1082,40 @@ def _read_specs_and_push_index(
         keep_original=False,
         extra_args={"ContentType": "text/plain", "CacheControl": "no-cache"},
     )
+
+
+def _read_specs_and_push_index(
+    file_list: List[str],
+    read_method: Callable,
+    cache_prefix: str,
+    db: BuildCacheDatabase,
+    temp_dir: str,
+):
+    """Read listed specs, generate the index, and push it to the mirror.
+
+    Args:
+        file_list: List of urls or file paths pointing at spec files to read
+        read_method: A function taking a single argument, either a url or a file path,
+            and which reads the spec file at that location, and returns the spec.
+        cache_prefix: prefix of the build cache on s3 where index should be pushed.
+        db: A spack database used for adding specs and then writing the index.
+        temp_dir: Location to write index.json and hash for pushing
+    """
+    for file in file_list:
+        contents = read_method(file)
+        # Need full spec.json name or this gets confused with index.json.
+        if file.endswith(".json.sig"):
+            specfile_json = spack.spec.Spec.extract_json_from_clearsig(contents)
+            fetched_spec = spack.spec.Spec.from_dict(specfile_json)
+        elif file.endswith(".json"):
+            fetched_spec = spack.spec.Spec.from_json(contents)
+        else:
+            continue
+
+        db.add(fetched_spec)
+        db.mark(fetched_spec, "in_buildcache", True)
+
+    _push_index(db, temp_dir, cache_prefix)
 
 
 def _specs_from_cache_aws_cli(cache_prefix):
@@ -3517,7 +3517,7 @@ def migrate(mirror: spack.mirrors.mirror.Mirror, unsigned: bool = False, delete_
     with open(index_path, 'w') as fd:
         fd.write(contents)
 
-    db = spack_db.Database(tmpdir)
+    db = BuildCacheDatabase(tmpdir)
     db._read_from_file(index_path)
 
     specs_to_migrate = [
@@ -3540,15 +3540,27 @@ def migrate(mirror: spack.mirrors.mirror.Mirror, unsigned: bool = False, delete_
     for spec, migrate_future in zip(specs_to_migrate, migrate_futures):
         result = migrate_future.result()
         tty.msg(f"  {spec.name}/{spec.dag_hash()[:7]}: {result.message}")
+        # The migrated index should have the same specs as the original index,
+        # modulo any specs that we failed to migrate for whatever reason. So
+        # to avoid having to re-fetch all the spec files now, just mark the
+        # in the existing database and push that.
+        db.mark(spec, "in_buildcache", result.success)
 
-    # TODO:
-    #     - migrate the index (or rebuild the index if any of tasks did not succeed)
-    #     - migrate the signing keys
+    # Push the migrated mirror index
+    cache_prefix = url_util.join(mirror_url, buildcache_relative_specs_url())
+    index_tmpdir = os.path.join(tmpdir, "rebuild_index")
+    os.mkdir(index_tmpdir)
+    _push_index(db, index_tmpdir, cache_prefix)
+
+    # Push the public part of the signing key
+    keys_tmpdir = os.path.join(tmpdir, "keys")
+    os.mkdir(keys_tmpdir)
+    _url_push_keys(mirror_url, keys=[signing_key], update_index=True, tmpdir=keys_tmpdir)
 
     # Clean up all working files
-    shutil.rmtree(tmpdir)
+    # shutil.rmtree(tmpdir)
 
-    tty.msg("done")
+    tty.msg("Migration complete")
 
 
 class MigrationException(spack.error.SpackError):
