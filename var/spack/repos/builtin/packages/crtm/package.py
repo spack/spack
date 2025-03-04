@@ -103,8 +103,8 @@ class Crtm(CMakePackage):
                 "-fbacktrace", "-fbacktrace -ffree-line-length-none", "libsrc/CMakeLists.txt"
             )
 
-    @run_after("install")
     @when("@3.1.1-build1")
+    @run_after("install")
     def cmake_config_softlinks(self):
         cmake_config_files = glob.glob(join_path(self.prefix, "cmake/crtm/*"))
         for srcpath in cmake_config_files:
