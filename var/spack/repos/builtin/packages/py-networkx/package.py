@@ -47,13 +47,15 @@ class PyNetworkx(PythonPackage):
         description="Optional requirements that may require extra steps to install",
     )
 
+    depends_on("python@3.10:", when="@3.3:", type=("build", "run"))
+    depends_on("python@3.9:", when="@3.2:", type=("build", "run"))
     depends_on("python@3.8:", when="@2.7:", type=("build", "run"))
     depends_on("python@3.7:", when="@2.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@61.2:", type="build", when="@3.2:")
 
     with when("+default"):
         # From requirements/default.txt
-        # push numpy up to 2
         depends_on("py-numpy@1.24:", when="@3.4:", type=("build", "run"))
         depends_on("py-numpy@1.23:", when="@3.3:", type=("build", "run"))
         depends_on("py-numpy@1.22:", when="@3.2:", type=("build", "run"))
@@ -69,9 +71,6 @@ class PyNetworkx(PythonPackage):
         depends_on("py-pandas@2.0:", when="@3.4:", type=("build", "run"))
         depends_on("py-pandas@1.4:", when="@3.2:", type=("build", "run"))
         depends_on("py-pandas@1.3:", when="@2.8.6:", type=("build", "run"))
-        depends_on("py-setuptools@61.2:", when="@3.2:", type=("build", "run"))
-        depends_on("python@3.10:", when="@3.3:", type=("build", "run"))
-        depends_on("python@3.8:", when="@2.7:", type=("build", "run"))
 
         # Historical dependencies
         depends_on("py-decorator@4.3.0:4", when="@2.5.1:2.5", type=("build", "run"))
