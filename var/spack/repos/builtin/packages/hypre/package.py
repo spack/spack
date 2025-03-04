@@ -297,7 +297,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             elif spec.satisfies("@:2.20.99"):
                 configure_args.append("--enable-cub")
             if spec.satisfies("@2.29.0:"):
-                configure_args.extend["--enable-cublas", "--enable-cusolver"]
+                configure_args.extend(["--enable-cublas", "--enable-cusolver"])
         else:
             configure_args.extend(["--without-cuda", "--disable-curand", "--disable-cusparse"])
             if spec.satisfies("@:2.20.99"):
