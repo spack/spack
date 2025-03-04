@@ -308,6 +308,23 @@ def all_libcs() -> Set[spack.spec.Spec]:
     return {libc} if libc else set()
 
 
+def get_msvc_runtime(compiler) -> Optional[spack.spec.Spec]:
+    if hasattr(compiler.package, "determine_msc_toolchain_version"):
+        msc_version = compiler.package.determine_msc_toolchain_version()
+        runtime_spec = spack.spec.Spec(f"msvc-toolset@={str(msc_version)}")
+        return runtime_spec
+
+
+def all_msvc_runtimes() -> Set[spack.spec.Spec]:
+    """Return a set of all msvc-runtimes modeled by configured MSVC compilers"""
+    msvcs = set()
+    for comp in spack.compilers.config.all_compilers_from(spack.config.CONFIG):
+        runtime_spec = get_msvc_runtime(comp)
+        if runtime_spec:
+            msvcs.add(runtime_spec)
+    return msvcs
+
+
 def libc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> bool:
     return (
         lhs.name == rhs.name
@@ -322,7 +339,12 @@ def msvc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> bool:
     name "msvc-toolset". So long as the Version we're concretizing with is >=
     than the version of a dep
     """
+    # msc toolset v144 is part of VS22 which is "v143", MS decided to change their
+    # versioning scheme part way through VS22's lifetime
+    if rhs.version == spack.version.Version("144") and lhs.version == spack.version.Version("143"):
+        return True
     return lhs.version >= rhs.version
+
 
 def using_libc_compatibility() -> bool:
     """Returns True if we are currently using libc compatibility"""
@@ -980,16 +1002,23 @@ def _external_config_with_implicit_externals(configuration):
     packages_yaml = _normalize_packages_yaml(configuration.get("packages"))
 
     # Add externals for libc from compilers on Linux
-    if not using_libc_compatibility():
+    if not (using_libc_compatibility() or using_msvc_compatibility()):
         return packages_yaml
 
     seen = set()
     for compiler in spack.compilers.config.all_compilers_from(configuration):
-        libc = CompilerPropertyDetector(compiler).default_libc()
-        if libc and libc not in seen:
-            seen.add(libc)
-            entry = {"spec": f"{libc}", "prefix": libc.external_path}
-            packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
+        if using_libc_compatibility():
+            libc = CompilerPropertyDetector(compiler).default_libc()
+            if libc and libc not in seen:
+                seen.add(libc)
+                entry = {"spec": f"{libc}", "prefix": libc.external_path}
+                packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
+        elif using_msvc_compatibility():
+            runtime_spec = get_msvc_runtime(compiler)
+            if runtime_spec and runtime_spec not in seen:
+                seen.add(runtime_spec)
+                entry = {"spec": f"{runtime_spec}", "prefix": compiler.prefix}
+                packages_yaml.setdefault(runtime_spec.name, {}).setdefault("externals", []).append(entry)
     return packages_yaml
 
 
@@ -1178,6 +1207,8 @@ class PyclingoDriver:
             control_files.append("when_possible.lp")
         if using_libc_compatibility():
             control_files.append("libc_compatibility.lp")
+        elif using_msvc_compatibility():
+            control_files.append("msvc_compatibility.lp")
         else:
             control_files.append("os_compatibility.lp")
         if setup.enable_splicing:
@@ -1549,6 +1580,9 @@ class SpackSolverSetup:
 
         # list of unique libc specs targeted by compilers (or an educated guess if no compiler)
         self.libcs: List[spack.spec.Spec] = []
+
+        # List of unique msvc_runtime specs targeted by compilers
+        self.msvc_runtimes: List[spack.spec.Spec] = []
 
         # If true, we have to load the code for synthesizing splices
         self.enable_splicing: bool = spack.config.CONFIG.get("concretizer:splice:automatic")
@@ -2533,11 +2567,15 @@ class SpackSolverSetup:
                 clauses.append(fn.attr("virtual_on_incoming_edges", spec.name, virtual))
 
         # If the spec is external and concrete, we allow all the libcs on the system
-        if spec.external and spec.concrete and using_libc_compatibility():
-            clauses.append(fn.attr("needs_libc", spec.name))
-            for libc in self.libcs:
-                clauses.append(fn.attr("compatible_libc", spec.name, libc.name, libc.version))
-
+        if spec.external and spec.concrete:
+            if using_libc_compatibility():
+                clauses.append(fn.attr("needs_libc", spec.name))
+                for libc in self.libcs:
+                    clauses.append(fn.attr("compatible_libc", spec.name, libc.name, libc.version))
+            elif using_msvc_compatibility():
+                clauses.append(fn.attr("needs_msvc_runtime"))
+                for runtime in self.msvc_runtimes:
+                    clauses.append(fn.attr("compatible_msvc_runtime", spec.name, runtime.name, runtime.version))
         # add all clauses from dependencies
         if transitive:
             # TODO: Eventually distinguish 2 deps on the same pkg (build and link)
@@ -2565,6 +2603,15 @@ class SpackSolverSetup:
                                     fn.attr("compatible_libc", spec.name, libc.name, libc.version)
                                 )
                         continue
+
+                    if "msvc-runtime" in dspec.virtuals:
+                        clauses.append(fn.attr("needs_msvc_runtime", spec.name))
+                        for msvc_runtime in self.msvc_runtimes:
+                            if msvc_is_compatible(msvc_runtime, dep):
+                                clauses.append(
+                                    fn.attr("compatible_msvc_runtime", spec.name, msvc_runtime.name, msvc_runtime.version)
+                                )
+                        
 
                     # We know dependencies are real for concrete specs. For abstract
                     # specs they just mean the dep is somehow in the DAG.
@@ -3016,6 +3063,7 @@ class SpackSolverSetup:
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
         self.libcs = sorted(all_libcs())  # type: ignore[type-var]
+        self.msvc_runtimes = sorted(all_msvc_runtimes())  # type: ignore[type-var]
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:
@@ -3040,6 +3088,9 @@ class SpackSolverSetup:
         if using_libc_compatibility():
             for libc in self.libcs:
                 self.gen.fact(fn.host_libc(libc.name, libc.version))
+        elif using_msvc_compatibility():
+            for runtime in self.msvc_runtimes:
+                self.gen.fact(fn.host_msvc(runtime.name, runtime.version))
 
         if not allow_deprecated:
             self.gen.fact(fn.deprecated_versions_not_allowed())
@@ -3216,31 +3267,46 @@ class SpackSolverSetup:
                 description=f"Add the compiler wrapper when using {compiler}",
             )
 
-            if not using_libc_compatibility():
-                continue
+            # TODO: we don't actually need the msvc runtime in the DAG
+            # So do we need to include this?
+            if using_libc_compatibility():
+                current_libc = None
+                if compiler.external or compiler.installed:
+                    current_libc = CompilerPropertyDetector(compiler).default_libc()
+                else:
+                    try:
+                        current_libc = compiler["libc"]
+                    except (KeyError, RuntimeError) as e:
+                        tty.debug(f"{compiler} cannot determine libc because: {e}")
 
-            current_libc = None
-            if compiler.external or compiler.installed:
-                current_libc = CompilerPropertyDetector(compiler).default_libc()
-            else:
-                try:
-                    current_libc = compiler["libc"]
-                except (KeyError, RuntimeError) as e:
-                    tty.debug(f"{compiler} cannot determine libc because: {e}")
-
-            if current_libc:
-                recorder("*").depends_on(
-                    "libc",
-                    when=f"%{compiler.name}@{compiler.versions}",
-                    type="link",
-                    description=f"Add libc when using {compiler}",
-                )
-                recorder("*").depends_on(
-                    f"{current_libc.name}@={current_libc.version}",
-                    when=f"%{compiler.name}@{compiler.versions}",
-                    type="link",
-                    description=f"Libc is {current_libc} when using {compiler}",
-                )
+                if current_libc:
+                    recorder("*").depends_on(
+                        "libc",
+                        when=f"%{compiler.name}@{compiler.versions}",
+                        type="link",
+                        description=f"Add libc when using {compiler}",
+                    )
+                    recorder("*").depends_on(
+                        f"{current_libc.name}@={current_libc.version}",
+                        when=f"%{compiler.name}@{compiler.versions}",
+                        type="link",
+                        description=f"Libc is {current_libc} when using {compiler}",
+                    )
+            elif using_msvc_compatibility():
+                current_msvc_runtime = get_msvc_runtime(compiler)
+                if current_msvc_runtime:
+                    recorder("*").depends_on(
+                        "msvc-runtime",
+                        when=f"%{compiler.name}@{compiler.version}",
+                        type="link",
+                        description=f"Add msvc-runtime when using compiler {compiler}",
+                    )
+                    recorder("*").depends_on(
+                        f"{current_msvc_runtime.name}@={current_msvc_runtime.version}",
+                        when=f"%{compiler.name}@={compiler.version}",
+                        type="link",
+                        description=f"MSC Toolset is {current_msvc_runtime} when using {compiler}"
+                    )
 
         recorder.consume_facts()
 
@@ -3733,6 +3799,7 @@ class SpecBuilder:
                 r"^.*_satisfies$",
                 r"^.*_set$",
                 r"^compatible_libc$",
+                r"^compatible_msvc_runtime$",
                 r"^dependency_holds$",
                 r"^external_conditions_hold$",
                 r"^package_hash$",

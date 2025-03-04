@@ -11,33 +11,31 @@
 
 % A package cannot be reused if the msvc is not compatible with it
 error(100, "Cannot reuse {0} since we cannot determine msvc compatibility", ReusedPackage)
-  :- provider(node(X, MsvcToolsetPackage), node(0, "msvc")),
-     attr("version", node(X, MsvcToolsetPackage), MsvcToolsetVersion),
-     attr("hash", node(R, ReusedPackage), Hash),
-     % msvc packages can be reused without the "compatible_msvc_toolset" attribute
-     ReusedPackage != MsvcToolsetPackage,
-     not attr("compatible_msvc_toolset", node(R, ReusedPackage), MsvcToolsetPackage, MsvcToolsetVersion).
+  :- provider(node(X, MsvcRuntimePackage), node(0, "msvc-runtime")),
+     attr("version", node(X, MsvcRuntimePackage), MsvcRuntimeVersion),
+     concrete(node(R, Reusedpackage)),
+     attr("needs_msvc_runtime", node(R, ReusedPackage)),
+     not attr("compatible_msvc_runtime", node(R, ReusedPackage), MsvcRuntimePackage, MsvcRuntimeVersion).
 
-% A msvc toolset is needed in the DAG
-:- has_built_packages(), not provider(_, node(0, "msvc-toolset")).
+% If we have a compiler we're guarunteed to have an MSVC Runtime
+% Ensure it's compatible
+error(100, "Cannot reuse {0} since we cannot determine msvc-runtime compatibility", ReusedPackage)
+  :- not provider(_, node(0, "msvc-runtime")),
+     concrete(node(R, ReusedPackage)),
+     attr("needs_msvc_runtime", node(R, ReusedPackage)),
+     not attr("compatible_msvc_runtime", node(R, ReusedPackage), _, _).
 
-% Non-msvc reused specs must be host msvc compatible. In case we build packages, we get a
-% host compatible msvc provider from other rules. If nothing is built, there is no msvc provider,
+% Non-libc reused specs must be host libc compatible. In case we build packages, we get a
+% host compatible libc provider from other rules. If nothing is built, there is no libc provider,
 % since it's pruned from reusable specs, meaning we have to explicitly impose reused specs are host
 % compatible.
-:- attr("hash", node(R, ReusedPackage), Hash),
-   not provider(node(R, ReusedPackage), node(0, "msvc-toolset")),
-   not attr("compatible_msvc_toolset", node(R, ReusedPackage), _, _).
+%:- attr("hash", node(R, ReusedPackage), Hash),
+%   not provider(node(R, ReusedPackage), node(0, "msvc-runtime")),
+%   not attr("compatible_msvc_runtime", node(R, ReusedPackage), _, _).
 
-% The msvc provider must be one that a compiler can target
+% The msvc-runtime provider must be one that a compiler can target
 :- has_built_packages(),
-   provider(node(X, MsvcToolsetPackage), node(0, "msvc-toolset")),
-   attr("node", node(X, MsvcToolsetPackage)),
-   attr("version", node(X, MsvcToolsetPackage), MsvcToolsetVersion),
-   not host_msvc(MsvcToolsetPackage, MsvcToolsetVersion).
-
-% A built node must depend on msvc
-:- build(PackageNode),
-   provider(MsvcToolsetNode, node(0, "msvc-toolset")),
-   not external(PackageNode),
-   not depends_on(PackageNode, MsvcToolsetNode).
+   provider(node(X, MsvcRuntimePackage), node(0, "msvc-runtime")),
+   attr("node", node(X, MsvcRuntimePackage)),
+   attr("version", node(X, MsvcRuntimePackage), MsvcRuntimeVersion),
+   not host_msvc(MsvcRuntimePackage, MsvcRuntimeVersion).

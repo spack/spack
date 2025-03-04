@@ -169,6 +169,9 @@ class Msvc(Package, CompilerPackage):
         for msvc_version in sorted(MSC_TOOLCHAIN_MATRIX.keys(), key=lambda x: Version(x), reverse=True):
             if self.version.joined > Version(msvc_version):
                 return Version(MSC_TOOLCHAIN_MATRIX[msvc_version])
+            # if the current version isnt newer than anything available in the matrix it's not a version
+            # Spack supports as the lowest version in the matrix is the oldest version of VS17
+        raise RuntimeError(f"Current MSVC Version: {self.version} is unsupported by Spack")
 
     @property
     def short_msvc_version(self):

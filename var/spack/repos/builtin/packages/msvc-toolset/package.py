@@ -8,7 +8,7 @@ from spack.package import *
 class MsvcToolset(BundlePackage):
     """Msvc Toolset - high level representation of the suite 
     of tools containing Microsofts Visual C/C++ compilers, linkers
-    and other tools/libraries
+    runtimes, and other tools/libraries
 
     Cannot be installed via Spack
     """
