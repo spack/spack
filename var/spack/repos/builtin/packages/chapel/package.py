@@ -71,8 +71,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("cxx", type="build")  # generated
 
     patch("fix_spack_cc_wrapper_in_cray_prgenv.patch", when="@2.0.0:")
-    patch("fix_chpl_shared_lib_path.patch", when="@2.1.1:2.2 +python-bindings") # PR 26388
-    patch("fix_chpl_shared_lib_path_2.3.patch", when="@2.2.1:2.3 +python-bindings") # PR 26388
+    patch("fix_chpl_shared_lib_path.patch", when="@2.1.1:2.2 +python-bindings")  # PR 26388
+    patch("fix_chpl_shared_lib_path_2.3.patch", when="@2.2.1:2.3 +python-bindings")  # PR 26388
     patch("fix_chpl_line_length.patch", when="@:2.3.0")  # PRs 26357, 26381, 26491
     patch("fix_checkChplInstall.patch", when="@:2.3.0")  # PR 26317
     patch("fix_llvm_include_path_2.3.patch", when="@=2.3.0 llvm=bundled")  # PR 26402
