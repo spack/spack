@@ -37,6 +37,13 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     version("main", branch="stable")
     version("master", branch="master")
 
+    # commit hash e2fdec corresponds to tag gex-2025.2.0-snapshot
+    version("2025.2.0-snapshot", commit="e2fdece76d86d7b4fa090fbff9b46eb98ce97177")
+
+    # Versions fetched from git require a Bootstrap step
+    def bootstrap_version():
+        return "@master:,2025.2.0-snapshot"
+
     version("2024.5.0", sha256="f945e80f71d340664766b66290496d230e021df5e5cd88f404d101258446daa9")
     version("2023.9.0", sha256="2d9f15a794e10683579ce494cd458b0dd97e2d3327c4d17e1fea79bd95576ce6")
     version("2023.3.0", sha256="e1fa783d38a503cf2efa7662be591ca5c2bb98d19ac72a9bc6da457329a9a14f")
@@ -137,8 +144,8 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     depends_on("mpi", when="conduits=mpi")
     depends_on("libfabric", when="conduits=ofi")
 
-    depends_on("autoconf@2.69", type="build", when="@master:")
-    depends_on("automake@1.16:", type="build", when="@master:")
+    depends_on("autoconf@2.69", type="build", when=bootstrap_version())
+    depends_on("automake@1.16:", type="build", when=bootstrap_version())
 
     conflicts("^hip@:4.4.0", when="+rocm")
 
@@ -147,7 +154,7 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     depends_on("oneapi-level-zero@1.8.0:", when="+level_zero")
 
     def install(self, spec, prefix):
-        if spec.satisfies("@master:"):
+        if spec.satisfies(Gasnet.bootstrap_version()):
             bootstrapsh = Executable("./Bootstrap")
             bootstrapsh()
             # Record git-describe when fetched from git:
