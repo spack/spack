@@ -44,4 +44,5 @@ class PyBlosc(PythonPackage):
     depends_on("c-blosc@1.21.6", type=("build", "run"), when="@1.11.2 ^python@3.12:")
 
     def setup_build_environment(self, env):
-        env.set("USE_SYSTEM_BLOSC", 1)
+        if self.spec.satisfies("@1.11.2 ^python@3.12:"): 
+            env.set("USE_SYSTEM_BLOSC", 1)
