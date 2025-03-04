@@ -256,8 +256,7 @@ class Wrf(Package):
     depends_on("zlib-api")
     depends_on("perl")
     depends_on("jemalloc", when="%aocc")
-    # not sure if +fortran is required, but seems like a good idea
-    depends_on("hdf5+fortran+hl+mpi")
+    depends_on("hdf5+hl+mpi")
     # build script use csh
     depends_on("tcsh", type=("build"))
     # time is not installed on all systems b/c bash provides it
