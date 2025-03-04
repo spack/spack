@@ -105,14 +105,13 @@ class SstCore(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        if "+zoltan" in self.spec:
-            args.append("--with-zoltan=%s" % self.spec["zoltan"].prefix)
-        if "+hdf5" in self.spec:
-            args.append("--with-hdf5=%s" % self.spec["hdf5"].prefix)
-        else:
-            args.append("--without-hdf5")
-        if "+zlib" in self.spec:
-            args.append("--with-zlib=%s" % self.spec["zlib-api"].prefix)
+        args.extend(self.with_or_without("zoltan", activation_value="prefix"))
+        args.extend(self.with_or_without("hdf5", activation_value="prefix"))
+        args.extend(
+            self.with_or_without(
+                "libz", activation_value=lambda _: self.spec["zlib-api"].prefix, variant="zlib"
+            )
+        )
         args.extend(self.with_or_without("ncurses", activation_value="prefix", variant="curses"))
 
         if "+pdes_mpi" in self.spec:
@@ -133,7 +132,8 @@ class SstCore(AutotoolsPackage):
         if "+profile" in self.spec:
             args.append("--enable-profile")
 
-        args.append("--with-python=%s" % self.spec["python"].prefix)
+        # Required, so no need for with_or_without
+        args.append(f"--with-python={self.spec['python'].prefix}")
         return args
 
     def patch(self):
