@@ -5,6 +5,7 @@
 import argparse
 import difflib
 import importlib
+import operator
 import os
 import re
 import sys
@@ -376,7 +377,7 @@ def iter_groups(specs, indent, all_headers):
     ispace = indent * " "
 
     # Traverse the index and print out each package
-    for i, (architecture, compiler) in enumerate(sorted(index)):
+    for i, (architecture, compiler) in enumerate(sorted(index, reverse=True)):
         if i > 0:
             print()
 
@@ -395,7 +396,7 @@ def iter_groups(specs, indent, all_headers):
             tty.hline(colorize(header), char="-")
 
         specs = index[(architecture, compiler)]
-        specs.sort()
+        specs.sort(key=operator.attrgetter("architecture", "versions"), reverse=True)
         yield specs
 
 
