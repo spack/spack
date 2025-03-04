@@ -569,7 +569,6 @@ def test_FetchCacheError_only_accepts_lists_of_errors():
 def test_FetchCacheError_pretty_printing_multiple():
     e = bindist.FetchCacheError([RuntimeError("Oops!"), TypeError("Trouble!")])
     str_e = str(e)
-    print("'" + str_e + "'")
     assert "Multiple errors" in str_e
     assert "Error 1: RuntimeError: Oops!" in str_e
     assert "Error 2: TypeError: Trouble!" in str_e
