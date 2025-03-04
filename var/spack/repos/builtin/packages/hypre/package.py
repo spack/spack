@@ -315,11 +315,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 configure_args.extend(["--enable-rocblas", "--enable-rocsolver"])
             rocm_inc = " ".join(set(spec[pkg].headers.include_flags for pkg in rocm_pkgs))
             configure_args.extend(
-                [
-                    "--enable-rocrand",
-                    "--enable-rocsparse",
-                    f"--with-extra-CUFLAGS={rocm_inc}",
-                ]
+                ["--enable-rocrand", "--enable-rocsparse", f"--with-extra-CUFLAGS={rocm_inc}"]
             )
             rocm_arch_vals = spec.variants["amdgpu_target"].value
             if rocm_arch_vals:
