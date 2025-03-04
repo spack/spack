@@ -4,7 +4,7 @@
 
 from spack import *
 from spack.package import *
-from spack.pkg.pdi.pdi import Pdi
+from spack.pkg.builtin.pdi import Pdi
 
 
 class PdipluginTrace(CMakePackage):
@@ -24,7 +24,7 @@ class PdipluginTrace(CMakePackage):
 
     variant("tests", default=False, description="Build tests")
 
-    depends_on("cmake@3.16.3:", type=("build"), when="@1.8:")
+    depends_on("cmake@3.16.3:", type=("build"))
     for v in Pdi.versions:
         depends_on("pdi@" + str(v), type=("link", "run"), when="@" + str(v))
     depends_on("pkgconfig", type=("build"))

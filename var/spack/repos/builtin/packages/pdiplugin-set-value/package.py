@@ -4,7 +4,7 @@
 
 from spack import *
 from spack.package import *
-from spack.pkg.pdi.pdi import Pdi
+from spack.pkg.builtin.pdi import Pdi
 
 
 class PdipluginSetValue(CMakePackage):
@@ -24,11 +24,11 @@ class PdipluginSetValue(CMakePackage):
 
     variant("tests", default=False, description="Build tests")
 
-    depends_on("cmake@3.16.3:", type=("build"), when="@1.8:")
+    depends_on("cmake@3.16.3:", type=("build"))
     for v in Pdi.versions:
         depends_on("pdi@" + str(v), type=("link", "run"), when="@" + str(v))
     depends_on("pkgconfig", type=("build"))
-    depends_on("spdlog@1.5:", type=("link"), when="@1.5:")
+    depends_on("spdlog@1.5:", type=("link"))
 
     root_cmakelists_dir = "plugins/set_value"
 

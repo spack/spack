@@ -43,18 +43,15 @@ class Pdi(CMakePackage):
     variant("fortran", default=True, description="Enable Fortran support")
     variant("python", default=True, description="Enable Python support")
 
-    depends_on("cmake@3.16.3:", type=("build"), when="@1.8:")
-    depends_on("doxygen@1.8.17:", type=("build"), when="@1.8: +docs")
-    depends_on("paraconf@1:", type=("link", "run"), when="@1.6:")
+    depends_on("cmake@3.16.3:", type=("build"))
+    depends_on("doxygen@1.8.17:", type=("build"), when="+docs")
+    depends_on("paraconf@1: +shared", type=("link", "run"))
     depends_on("paraconf +fortran", type=("link", "run"), when="+fortran")
-    depends_on("paraconf@0.4.14: +shared", type=("link", "run"))
     depends_on("pkgconfig", type=("build"))
-    depends_on(
-        "python@3.8.2:3.11.9", type=("build", "link", "run"), when="@1.8.0:1.8.2 +python"
-    )  # Needs distutils.
-    depends_on("py-pybind11@2.3:2", type=("link"), when="+python")
-    depends_on("py-pybind11@2.4.3:", type=("link"), when="@1.8: +python")
-    depends_on("py-setuptools", type=("build", "link"), when="@1.8.3: +python^python@3.12:")
+    depends_on("python@3.8.2:3", type=("build", "link", "run"), when="+python")
+    depends_on("python@:3.11.9", type=("build", "link", "run"), when="@1.8.0:1.8.2 +python") # Needs distutils.
+    depends_on("py-pybind11@2.4.3:2", type=("link"), when="+python")
+    depends_on("py-setuptools", type=("build", "link"), when="@1.8.3: +python^python@3.12:") # Needs distutils.
     depends_on("spdlog@1.5:", type=("link"), when="@1.5:")
 
     root_cmakelists_dir = "pdi"
