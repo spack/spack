@@ -649,7 +649,7 @@ class Database:
     @property
     def db_version(self) -> vn.ConcreteVersion:
         if self._db_version is None:
-            raise AttributeError("db version is not yet set")
+            raise AttributeError("version not set -- DB has not been read yet")
         return self._db_version
 
     @db_version.setter
@@ -896,7 +896,7 @@ class Database:
 
     def _handle_old_db_versions_read(self, check, db, *, reindex: bool):
         if reindex is False and not self.is_upstream:
-            self.raise_explicit_database_upgrade()
+            self.raise_explicit_database_upgrade_error()
 
         if not self.is_readable():
             raise DatabaseNotReadableError(
@@ -909,7 +909,7 @@ class Database:
         """Returns true if this DB can be read without reindexing"""
         return (self.db_version, _DB_VERSION) in _REINDEX_NOT_NEEDED_ON_READ
 
-    def raise_explicit_database_upgrade(self):
+    def raise_explicit_database_upgrade_error(self):
         """Raises an ExplicitDatabaseUpgradeError with an appropriate message"""
         raise ExplicitDatabaseUpgradeError(
             f"database is v{self.db_version}, but Spack v{spack.__version__} needs v{_DB_VERSION}",
