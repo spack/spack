@@ -32,7 +32,7 @@ class PyRpy2(PythonPackage):
     variant("ipython", default=True, description="iPython", when="@3.5.17:")
 
     # many of the previous minor and patch versions change dependency versions so future updates
-    # should be careful of that    
+    # should be careful of that
     depends_on("python@3.8:", type=("build", "run"), when="@3.5.17:")
 
     # https://github.com/rpy2/rpy2/blob/RELEASE_3_5_17/setup.py#L42C1-L42C14
@@ -73,5 +73,3 @@ class PyRpy2(PythonPackage):
         depends_on("py-pytest", type=("build", "run"))
 
         depends_on("r@3.3:", type=("build", "run"))
-        
-
