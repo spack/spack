@@ -125,7 +125,8 @@ class QtPackage(CMakePackage):
 
         # Qt creates SBOM files based on the used SBOM files in the prefix, and
         # in additional paths for other components.
-        env.prepend_path("QT_ADDITIONAL_SBOM_DOCUMENT_PATHS", self.spec.prefix)
+        self.spec.satisfies("@6.9:"):
+            env.prepend_path("QT_ADDITIONAL_SBOM_DOCUMENT_PATHS", self.spec.prefix)
 
 
 class QtBase(QtPackage):
