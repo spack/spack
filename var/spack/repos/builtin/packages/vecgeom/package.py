@@ -21,9 +21,9 @@ class Vecgeom(CMakePackage, CudaPackage):
 
     version("master", branch="master")
     version(
-        "2.0.0-surfacedev",
-        url="https://gitlab.cern.ch/-/project/135666/uploads/47afee17a8566c225e5d57df620c2800/VecGeom-v2.0.0-surfacedev.tar.gz",
-        sha256="5ee2e17f9827b78920f557d924b567a9d9bc238b16cb153d85c70f4df46686bc"
+        "2.0.0-surfacedev.1",
+        tag="v2.0.0-surfacedev.1",
+        commit="1d9797ea47e3b35ab0114e72ce5925ecbd59cbf4",
     )
     version(
         "1.2.10",
@@ -105,7 +105,7 @@ class Vecgeom(CMakePackage, CudaPackage):
     conflicts("+cuda", when="@:1.1.5")
 
     # NOTE: surface branch doesn't yet compile with volume
-    conflicts("~surface", when="@=2.0.0-surfacedev")
+    conflicts("~surface", when="@=2.0.0-surfacedev.1")
 
     # Fix empty -Xcompiler= with nvcc
     patch(
