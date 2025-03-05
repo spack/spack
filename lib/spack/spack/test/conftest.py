@@ -2148,7 +2148,6 @@ def _c_compiler_always_exists():
 @pytest.fixture(scope="session")
 def mock_test_cache(tmp_path_factory):
     cache_dir = tmp_path_factory.mktemp("cache")
-    print(cache_dir)
     return spack.util.file_cache.FileCache(cache_dir)
 
 

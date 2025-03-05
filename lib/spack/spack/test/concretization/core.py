@@ -2018,7 +2018,6 @@ class TestConcretize:
         s = Spec("develop-branch-version@git.%s=develop" % git_ref)
         c = spack.concretize.concretize_one(s)
         assert git_ref in str(c)
-        print(str(c))
         assert s.satisfies("@develop")
         assert s.satisfies("@0.1:")
 

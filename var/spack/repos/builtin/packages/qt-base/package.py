@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import re
 import shutil
 import sys
 import tempfile
@@ -58,17 +57,6 @@ class QtPackage(CMakePackage):
     def cmake_args(self):
         # Start with upstream cmake_args
         args = super().cmake_args()
-
-        # Qt components typically install cmake config files in a single prefix,
-        # so we have to point them to the cmake config files of dependencies
-        qt_prefix_path = []
-        re_qt = re.compile("qt-.*")
-        for dep in self.spec.dependencies():
-            if re_qt.match(dep.name):
-                qt_prefix_path.append(self.spec[dep.name].prefix)
-
-        # Now append all qt-* dependency prefixes into a prefix path
-        args.append(self.define("QT_ADDITIONAL_PACKAGES_PREFIX_PATH", ":".join(qt_prefix_path)))
 
         # Make our CMAKE_INSTALL_RPATH redundant:
         # for prefix of current package ($ORIGIN/../lib type of rpaths),
@@ -129,6 +117,11 @@ class QtPackage(CMakePackage):
             env.prepend_path("QMAKE_MODULE_PATH", self.prefix.mkspecs.modules)
         if os.path.exists(self.prefix.plugins):
             env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # Qt components typically install cmake config files in a single prefix,
+        # so we have to point dependencies to the cmake config files.
+        env.prepend_path("QT_ADDITIONAL_PACKAGES_PREFIX_PATH", self.spec.prefix)
 
 
 class QtBase(QtPackage):
