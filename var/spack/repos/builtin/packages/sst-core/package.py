@@ -114,7 +114,7 @@ class SstCore(AutotoolsPackage):
         )
         args.extend(self.with_or_without("ncurses", activation_value="prefix", variant="curses"))
 
-        if "+pdes_mpi" in self.spec:
+        if self.spec.satisfies("+pdes_mpi"):
             args.append("--enable-mpi")
             env["CC"] = self.spec["mpi"].mpicc
             env["CXX"] = self.spec["mpi"].mpicxx
@@ -123,14 +123,10 @@ class SstCore(AutotoolsPackage):
         else:
             args.append("--disable-mpi")
 
-        if "+trackevents" in self.spec:
-            args.append("--enable-event-tracking")
-        if "+trackperf" in self.spec:
-            args.append("--enable-perf-tracking")
-        if "+preview" in self.spec:
-            args.append("--enable-preview-build")
-        if "+profile" in self.spec:
-            args.append("--enable-profile")
+        args.extend(self.enable_or_disable("event-tracking", variant="trackevents"))
+        args.extend(self.enable_or_disable("perf-tracking", variant="trackperf"))
+        args.extend(self.enable_or_disable("preview-build", variant="preview"))
+        args.extend(self.enable_or_disable("profile"))
 
         # Required, so no need for with_or_without
         args.append(f"--with-python={self.spec['python'].prefix}")
