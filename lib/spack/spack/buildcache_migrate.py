@@ -76,8 +76,11 @@ def _migrate_spec(
     v3_cache_entry = bindist.create_urlbuildcacheentry(
         layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
     )
+
     v3_cache_entry.initialize_from_spec_and_mirror(s, mirror_url)
     exists = v3_cache_entry.exists()
+    v3_cache_entry.destroy()
+
     if (exists.signed or (unsigned and exists.unsigned)) and exists.tarball:
         msg = f"No need to migrate {print_spec}"
         return MigrateSpecResult(True, msg)

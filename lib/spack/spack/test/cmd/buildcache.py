@@ -5,10 +5,13 @@
 import errno
 import json
 import os
+import pathlib
 import shutil
 from typing import List
 
 import pytest
+
+from llnl.util.filesystem import copy_tree
 
 import spack.binary_distribution
 import spack.cmd.buildcache
@@ -21,6 +24,7 @@ import spack.spec
 import spack.util.url
 import spack.util.web as web_util
 from spack.installer import PackageInstaller
+from spack.paths import test_path
 
 buildcache = spack.main.SpackCommand("buildcache")
 install = spack.main.SpackCommand("install")
@@ -499,3 +503,35 @@ def test_push_without_build_deps(tmp_path, temporary_store, mock_packages, mutab
         "push", "--update-index", "--without-build-dependencies", "my-mirror", f"/{s.dag_hash()}"
     )
     assert spack.binary_distribution.update_cache_and_get_specs() == [s]
+
+
+def test_migrate_unsigned(capsys, tmp_path, mock_packages, mock_stage, mutable_config):
+    source_path = str(pathlib.Path(test_path) / "data" / "mirrors" / "v2_layout" / "unsigned")
+    test_mirror_path = tmp_path / "mirror"
+    test_mirror_dir = str(test_mirror_path)
+
+    copy_tree(source_path, test_mirror_path)
+
+    mirror("add", "my-mirror", test_mirror_dir)
+
+    with capsys.disabled():
+        output = buildcache("migrate", "--unsigned", "my-mirror")
+
+    assert output.count("Successfully migrated") == 2
+
+    build_cache_path = str(test_mirror_path / "build_cache")
+
+    assert os.path.exists(build_cache_path)
+    assert os.path.isdir(build_cache_path)
+
+    with capsys.disabled():
+        output = buildcache("list", "--allarch")
+
+    assert "libdwarf" in output and "libelf" in output
+
+    with capsys.disabled():
+        output = buildcache("migrate", "--unsigned", "--delete-existing", "--yes-to-all", "my-mirror")
+
+    assert output.count("No need to migrate") == 2
+
+    assert not os.path.exists(build_cache_path)
