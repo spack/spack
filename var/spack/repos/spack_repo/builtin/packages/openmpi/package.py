@@ -524,6 +524,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         when="@:4",
         description="Enable deprecated C++ exception support",
     )
+    variant("fortran", default=True, description="Enable Fortran support")
     variant("gpfs", default=False, description="Enable GPFS support")
     variant(
         "singularity",
@@ -947,6 +948,11 @@ with '-Wl,-commons,use_dylibs' and without
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, "mpicc")
         self.spec.mpicxx = join_path(self.prefix.bin, self.cxxname)
+        # Some derived packages define the "fortran" variant, most don't. Checking on the
+        # presence of ~fortran makes us default to add fortran wrappers if the variant is
+        # not declared.
+        if self.spec.satisfies("~fortran"):
+            return
         self.spec.mpifc = join_path(self.prefix.bin, "mpif90")
         self.spec.mpif77 = join_path(self.prefix.bin, "mpif77")
 
@@ -1203,6 +1209,8 @@ with '-Wl,-commons,use_dylibs' and without
 
         config_args.extend(self.enable_or_disable("mpi-cxx", variant="cxx"))
         config_args.extend(self.enable_or_disable("cxx-exceptions", variant="cxx_exceptions"))
+
+        config_args.extend(self.enable_or_disable("mpi-fortran", variant="fortran"))
 
         #
         # the Spack path padding feature causes issues with Open MPI's lex based parsing system
