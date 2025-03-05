@@ -135,6 +135,7 @@ class SpecTokens(TokenBase):
     # FILENAME
     FILENAME = rf"(?:{FILENAME})"
     # Package name
+    UNQUALIFIED_PACKAGE_LIST = rf"(?:{IDENTIFIER},{VALUE})"
     FULLY_QUALIFIED_PACKAGE_NAME = rf"(?:{DOTTED_IDENTIFIER})"
     UNQUALIFIED_PACKAGE_NAME = rf"(?:{IDENTIFIER})"
     # DAG hash
@@ -438,18 +439,35 @@ class EdgeAttributeParser:
 
     def parse(self):
         attributes = {}
+
+        def _add_edge_attribute(*, key: str, value: str):
+            key = key.strip("'\" ")
+            if key not in ("deptypes", "virtuals"):
+                raise SpecParsingError(
+                    "the only accepted edge attributes are 'deptypes' and 'virtuals'",
+                    self.ctx.current_token,
+                    self.literal_str,
+                )
+
+            if key in attributes:
+                raise SpecParsingError(
+                    f"'{key}' is specified multiple times on the edge",
+                    self.ctx.current_token,
+                    self.literal_str,
+                )
+
+            value = value.strip("'\" ").split(",")
+            attributes[key] = value
+
         while True:
             if self.ctx.accept(SpecTokens.KEY_VALUE_PAIR):
                 name, value = self.ctx.current_token.value.split("=", maxsplit=1)
-                name = name.strip("'\" ")
-                value = value.strip("'\" ").split(",")
-                attributes[name] = value
-                if name not in ("deptypes", "virtuals"):
-                    msg = (
-                        "the only edge attributes that are currently accepted "
-                        'are "deptypes" and "virtuals"'
-                    )
-                    raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
+                _add_edge_attribute(key=name, value=value)
+            elif self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_LIST) or self.ctx.accept(
+                SpecTokens.UNQUALIFIED_PACKAGE_NAME
+            ):
+                value = self.ctx.current_token.value
+                _add_edge_attribute(key="virtuals", value=value)
             # TODO: Add code to accept bool variants here as soon as use variants are implemented
             elif self.ctx.accept(SpecTokens.END_EDGE_PROPERTIES):
                 break

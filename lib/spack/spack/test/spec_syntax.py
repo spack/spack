@@ -601,6 +601,41 @@ def specfile_for(default_mock_concretization):
             ],
             "zlib foo==bar",
         ),
+        # Alias for [<virtuals>] on edges are normalized when round tripping
+        (
+            "trilinos ^[mpi] mpich",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "trilinos"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="mpi"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="mpich"),
+            ],
+            "trilinos ^[virtuals=mpi] mpich",
+        ),
+        (
+            "trilinos ^[mpi,lapack] mpich",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "trilinos"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_LIST, value="mpi,lapack"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="mpich"),
+            ],
+            "trilinos ^[virtuals=lapack,mpi] mpich",
+        ),
+        (
+            "trilinos ^[mpi,lapack deptypes=link,run] mpich",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "trilinos"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="^["),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_LIST, value="mpi,lapack"),
+                Token(SpecTokens.KEY_VALUE_PAIR, "deptypes=link,run"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="mpich"),
+            ],
+            "trilinos ^[deptypes=link,run virtuals=lapack,mpi] mpich",
+        ),
     ],
 )
 def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_package):
@@ -735,7 +770,7 @@ def test_cli_spec_roundtrip(args, expected):
         ("y ^x@@1.2", r"y ^x@@1.2\n    ^"),
         ("x@1.2::", r"x@1.2::\n      ^"),
         ("x::", r"x::\n ^^"),
-        ("cflags=''-Wl,a,b,c''", r"cflags=''-Wl,a,b,c''\n            ^ ^ ^ ^^"),
+        ("cflags=''-Wl,a,b,c''", r"cflags=''-Wl,a,b,c''\n            ^     ^^"),
         ("@1.2:   develop   = foo", r"@1.2:   develop   = foo\n                  ^^"),
         ("@1.2:develop   = foo", r"@1.2:develop   = foo\n               ^^"),
     ],
@@ -1011,6 +1046,8 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("^[@foo] zlib", "edge attributes"),
         ("x ^[deptypes=link]foo ^[deptypes=run]foo", "conflicting dependency types"),
         ("x ^[deptypes=build,link]foo ^[deptypes=link]foo", "conflicting dependency types"),
+        ("foo ^[mpi lapack]", "'virtuals' is specified multiple times"),
+        ("foo ^[virtuals=mpi lapack]", "'virtuals' is specified multiple times"),
         # TODO: Remove this as soon as use variants are added and we can parse custom attributes
         ("^[foo=bar] zlib", "edge attributes"),
         # Propagating reserved names generates a parse error
