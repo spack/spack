@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
+import sys
 
 import pytest
 
@@ -41,6 +42,13 @@ def test_rfc_remote_local_path_no_dest():
         _ = rfc_util.local_path(path, "")
 
 
+compilers_sha256 = (
+    "381732677538143a8f900406c0654f2730e2919a11740bdeaf35757ab3e1ef3e"
+    if sys.platform == "win32"
+    else "e91148ed5a0da7844e9f3f9cfce0fa60cce509461886bc3b006ee9eb711f69df"
+)
+
+
 @pytest.mark.parametrize(
     "url,sha256,err,msg",
     [
@@ -50,12 +58,7 @@ def test_rfc_remote_local_path_no_dest():
             ValueError,
             "Requires sha256",
         ),
-        (
-            f"{gitlab_url}/compilers.yaml",
-            "e91148ed5a0da7844e9f3f9cfce0fa60cce509461886bc3b006ee9eb711f69df",
-            None,
-            "",
-        ),
+        (f"{gitlab_url}/compilers.yaml", compilers_sha256, None, ""),
         (f"{gitlab_url}/packages.yaml", "abcdef", ValueError, "does not match"),
         (f"{github_url.format('blob')}/README.md", "", OSError, "No such"),
         (github_url.format("tree"), "", OSError, "No such"),
