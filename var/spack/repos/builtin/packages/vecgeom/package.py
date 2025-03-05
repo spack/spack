@@ -21,9 +21,15 @@ class Vecgeom(CMakePackage, CudaPackage):
 
     version("master", branch="master")
     version(
+        "2.0.0-surfacedev",
+        url="https://gitlab.cern.ch/-/project/135666/uploads/47afee17a8566c225e5d57df620c2800/VecGeom-v2.0.0-surfacedev.tar.gz",
+        sha256="5ee2e17f9827b78920f557d924b567a9d9bc238b16cb153d85c70f4df46686bc"
+    )
+    version(
         "1.2.10",
         url="https://gitlab.cern.ch/-/project/981/uploads/8e0a94013efdd1b2d4f44c3fbb10bcdf/VecGeom-v1.2.10.tar.gz",
         sha256="3e0934842694452e4cb4a265428cb99af1ecc45f0e2d28a32dfeaa0634c21e2a",
+        preferred=True,
     )
     version(
         "1.2.9",
@@ -88,6 +94,7 @@ class Vecgeom(CMakePackage, CudaPackage):
     variant("geant4", default=False, description="Support Geant4 geometry construction")
     variant("root", default=False, description="Support ROOT geometry construction")
     variant("shared", default=True, description="Build shared libraries")
+    variant("surface", default=False, when="@2:", description="Use surface frame representation")
 
     depends_on("veccore")
     depends_on("veccore@0.8.1:", when="+cuda")
@@ -96,6 +103,9 @@ class Vecgeom(CMakePackage, CudaPackage):
     depends_on("veccore@0.4.2", when="@:1.0")
 
     conflicts("+cuda", when="@:1.1.5")
+
+    # NOTE: surface branch doesn't yet compile with volume
+    conflicts("~surface", when="@=2.0.0-surfacedev")
 
     # Fix empty -Xcompiler= with nvcc
     patch(
@@ -158,6 +168,8 @@ class Vecgeom(CMakePackage, CudaPackage):
                 if len(arch) != 1:
                     raise InstallError("Exactly one cuda_arch must be specified")
                 args.append(define("CUDA_ARCH", arch[0]))
+
+        args.append(from_variant("VECGEOM_USE_SURF", "surface"))
 
         # Set testing flags
         build_tests = self.run_tests
