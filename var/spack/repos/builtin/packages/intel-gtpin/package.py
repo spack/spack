@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -37,6 +36,12 @@ class IntelGtpin(Package):
     maintainers("rashawnlk")
 
     license("MIT")
+
+    version(
+        "4.0",
+        sha256="fc12fb3aefdd4ae75b21ef9325e4058439dace52501200900895240c6ef3f0d8",
+        url="https://downloadmirror.intel.com/816037/external-release-gtpin-4.0-linux.tar.xz",
+    )
 
     version(
         "3.7",
@@ -84,10 +89,13 @@ class IntelGtpin(Package):
         url="https://downloadmirror.intel.com/682779/external-gtpin-2.11.4-linux.tar.bz2",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("patchelf", type="build")
 
-    # Gtpin only runs on linux/cray x86_64.
-    conflicts("platform=darwin", msg="intel-gtpin only runs on linux/cray")
+    # Gtpin only runs on linux x86_64.
+    conflicts("platform=darwin", msg="intel-gtpin only runs on linux")
     conflicts("target=ppc64:", msg="intel-gtpin only runs on x86_64")
     conflicts("target=ppc64le:", msg="intel-gtpin only runs on x86_64")
     conflicts("target=aarch64:", msg="intel-gtpin only runs on x86_64")

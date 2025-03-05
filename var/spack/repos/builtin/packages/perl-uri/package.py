@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,6 +10,8 @@ class PerlUri(PerlPackage):
 
     homepage = "https://metacpan.org/pod/URI"
     url = "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/URI-1.72.tar.gz"
+
+    skip_modules = ["URI::urn::isbn"]  # required missing Business::ISBN
 
     license("GPL-1.0-or-later OR Artistic-1.0-Perl")
 

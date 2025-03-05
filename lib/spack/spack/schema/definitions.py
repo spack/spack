@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -10,7 +9,7 @@
 """
 from typing import Any, Dict
 
-import spack.schema
+from .spec_list import spec_list_schema
 
 #: Properties for inclusion in other schemas
 properties: Dict[str, Any] = {
@@ -20,7 +19,7 @@ properties: Dict[str, Any] = {
         "items": {
             "type": "object",
             "properties": {"when": {"type": "string"}},
-            "patternProperties": {r"^(?!when$)\w*": spack.schema.spec_list_schema},
+            "additionalProperties": spec_list_schema,
         },
     }
 }

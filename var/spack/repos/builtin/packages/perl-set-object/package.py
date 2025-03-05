@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -15,11 +14,3 @@ class PerlSetObject(PerlPackage):
     maintainers("EbiArnie")
 
     version("1.42", sha256="d18c5a8a233eabbd0206cf3da5b00fcdd7b37febf12a93dcc3d1c026e6fdec45")
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use Set::Object; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

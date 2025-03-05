@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -71,6 +70,9 @@ class Onednn(CMakePackage):
     version("0.10", sha256="e783d6d085e4dd930a990cf02a76401071f606c6f40e47eae4dc638b54146430")
     version("0.9", sha256="721ab6a14e05f9916645ebb410c3e97fae660d09a1c7df4da7958676504e572b")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     default_cpu_runtime = "omp"
     if sys.platform == "darwin":
         default_cpu_runtime = "tbb"
@@ -85,7 +87,6 @@ class Onednn(CMakePackage):
             "tbb",
             "seq",
             conditional("threadpool", when="@1.4:"),
-            conditional("dpcpp", when="@2:"),
             conditional("sycl", when="@2:"),
         ),
         multi=False,
@@ -94,7 +95,7 @@ class Onednn(CMakePackage):
         "gpu_runtime",
         default="none",
         description="Runtime to use for GPU engines",
-        values=("ocl", "none", conditional("dpcpp", when="@2:"), conditional("sycl", when="@2:")),
+        values=("ocl", "none", conditional("sycl", when="@2:")),
         multi=False,
     )
     variant(

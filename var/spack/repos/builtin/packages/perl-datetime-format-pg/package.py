@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,11 +21,3 @@ class PerlDatetimeFormatPg(PerlPackage):
     depends_on("perl-datetime-format-builder@0.72:", type=("build", "run", "test"))
     depends_on("perl-datetime-timezone@0.05:", type=("build", "run", "test"))
     depends_on("perl-module-build-tiny@0.035:", type=("build"))
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use DateTime::Format::Pg; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

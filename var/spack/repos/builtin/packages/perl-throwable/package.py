@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,11 +21,3 @@ class PerlThrowable(PerlPackage):
     depends_on("perl-module-runtime@0.002:", type=("run"))
     depends_on("perl-moo@1.000001:", type=("run"))
     depends_on("perl-sub-quote", type=("run"))
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use Throwable; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

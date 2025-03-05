@@ -1,12 +1,12 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
+import os
 import sys
 from textwrap import dedent
 
+import spack.paths
 import spack.repo
 from spack.main import SpackCommand
 
@@ -144,12 +144,9 @@ def test_list_repos():
         os.path.join(spack.paths.repos_path, "builder.test"),
     ):
         total_pkgs = len(list().strip().split())
-
         mock_pkgs = len(list("-r", "builtin.mock").strip().split())
         builder_pkgs = len(list("-r", "builder.test").strip().split())
-
-        assert builder_pkgs == 8
-        assert total_pkgs > mock_pkgs > builder_pkgs
-
         both_repos = len(list("-r", "builtin.mock", "-r", "builder.test").strip().split())
+
+        assert total_pkgs > mock_pkgs > builder_pkgs
         assert both_repos == total_pkgs

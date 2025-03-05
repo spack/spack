@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -646,6 +645,8 @@ directories inside the install prefix. This will ensure that even
 manually placed files within the install prefix are owned by the
 assigned group. If no group is assigned, Spack will allow the OS
 default behavior to go as expected.
+
+.. _assigning-package-attributes:
 
 ----------------------------
 Assigning Package Attributes

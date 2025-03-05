@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,7 +17,7 @@ class PyAzuremlSdk(PythonPackage):
     version(
         "1.23.0",
         sha256="b9520f426831acb99fafa1ecd154b6bfd4f73fbf71e918d819f9db4a75438ab9",
-        expand=False,
+        deprecated=True,
     )
 
     # https://github.com/Azure/MachineLearningNotebooks/issues/1285

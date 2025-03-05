@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,11 +21,3 @@ class PerlLogAnyAdapterCallback(PerlPackage):
     version("0.102", sha256="7c01883265bdab65344257c1b1d1e69fbe300e7693dddeebb98f9f67310e07cd")
 
     depends_on("perl-log-any", type=("build", "run", "test"))
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use Log::Any::Adapter::Callback; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

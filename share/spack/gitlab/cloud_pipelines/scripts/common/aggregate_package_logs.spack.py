@@ -6,6 +6,8 @@ This script is meant to be run using:
 
 import os
 
+from llnl.util import tty
+
 
 def find_logs(prefix, filename):
     for root, _, files in os.walk(prefix):
@@ -32,15 +34,17 @@ if __name__ == "__main__":
     # Look in the CWD for logs
     local_log_path = os.path.join(os.getcwd(), args.log)
     if os.path.exists(local_log_path):
-        with open(local_log_path) as fd:
+        with open(local_log_path, encoding="utf-8") as fd:
             data.append(json.load(fd))
 
     # Look in the list of prefixes for logs
     for prefix in prefixes:
-        logs = find_logs(prefix, args.log)
+        logs = [log for log in find_logs(prefix, args.log)]
         for log in logs:
-            with open(log) as fd:
+            tty.debug(f"appending data for {log}")
+            with open(log, encoding="utf-8") as fd:
                 data.append(json.load(fd))
 
-    with open(args.output_file, "w") as fd:
+    tty.info(f"Writing {len(data)} records to {args.output_file}")
+    with open(args.output_file, "w", encoding="utf-8") as fd:
         json.dump(data, fd)

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,11 +30,3 @@ class PerlDatetimeLocale(PerlPackage):
     depends_on("perl-test-file-sharedir", type=("build", "test"))
     depends_on("perl-test2-plugin-nowarnings", type=("build", "test"))
     depends_on("perl-test2-suite", type=("build", "test"))
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use DateTime::Locale; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

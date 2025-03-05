@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,11 +20,3 @@ class PerlDatetimeFormatOracle(PerlPackage):
     depends_on("perl-convert-nls-date-format@0.03:", type=("build", "run", "test"))
     depends_on("perl-datetime", type=("build", "run", "test"))
     depends_on("perl-datetime-format-builder", type=("build", "run", "test"))
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use DateTime::Format::Oracle; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

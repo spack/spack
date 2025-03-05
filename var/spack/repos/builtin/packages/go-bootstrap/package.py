@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -25,8 +24,6 @@ class GoBootstrap(Package):
 
     maintainers("alecbcs")
 
-    depends_on("git", type=("build", "link", "run"))
-
     executables = ["^go$"]
 
     # List binary go releases for multiple operating systems and architectures.
@@ -34,6 +31,28 @@ class GoBootstrap(Package):
     # should update these binary releases on a yearly schedule as
     # bootstrapping requirements are modified by new releases of go.
     go_releases = {
+        "1.22.12": {
+            "darwin": {
+                "amd64": "e7bbe07e96f0bd3df04225090fe1e7852ed33af37c43a23e16edbbb3b90a5b7c",
+                "arm64": "416c35218edb9d20990b5d8fc87be655d8b39926f15524ea35c66ee70273050d",
+            },
+            "linux": {
+                "amd64": "4fa4f869b0f7fc6bb1eb2660e74657fbf04cdd290b5aef905585c86051b34d43",
+                "arm64": "fd017e647ec28525e86ae8203236e0653242722a7436929b1f775744e26278e7",
+                "ppc64le": "9573d30003b0796717a99d9e2e96c48fddd4fc0f29d840f212c503b03d7de112",
+            },
+        },
+        "1.20.6": {
+            "darwin": {
+                "amd64": "98a09c085b4c385abae7d35b9155195d5e584d14988347ac7f18e4cbe3b5ef3d",
+                "arm64": "1163be1998835a13f00dfc869a8e3cdebf86984ad41ff2fff43e35ac2a0d8344",
+            },
+            "linux": {
+                "amd64": "b945ae2bb5db01a0fb4786afde64e6fbab50b67f6fa0eb6cfa4924f16a7ff1eb",
+                "arm64": "4e15ab37556e979181a1a1cc60f6d796932223a0f5351d7c83768b356f84429b",
+                "ppc64le": "a1b91a42a40bba54bfd5c96c23d72250e0c424038d0d2b5c7950b828b4905822",
+            },
+        },
         "1.17.13": {
             "darwin": {
                 "amd64": "c101beaa232e0f448fab692dc036cd6b4677091ff89c4889cc8754b1b29c6608",
@@ -44,7 +63,7 @@ class GoBootstrap(Package):
                 "arm64": "914daad3f011cc2014dea799bb7490442677e4ad6de0b2ac3ded6cee7e3f493d",
                 "ppc64le": "bd0763fb130f8412672ffe1e4a8e65888ebe2419e5caa9a67ac21e8c298aa254",
             },
-        }
+        },
     }
 
     # Normalize architectures returned by platform to those used by the

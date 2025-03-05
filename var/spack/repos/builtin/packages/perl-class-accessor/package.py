@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -15,11 +14,3 @@ class PerlClassAccessor(PerlPackage):
     maintainers("EbiArnie")
 
     version("0.51", sha256="bf12a3e5de5a2c6e8a447b364f4f5a050bf74624c56e315022ae7992ff2f411c")
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use Class::Accessor; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out

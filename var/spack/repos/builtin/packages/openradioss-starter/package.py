@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,6 +27,10 @@ class OpenradiossStarter(CMakePackage):
     maintainers("kjrstory")
     version("main", branch="main")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     variant("sp", default=False, description="Using single precision option")
     variant("debug", default=False, description="Debug Option")
     variant("static_link", default=False, description="Static_link Option")
@@ -43,8 +46,8 @@ class OpenradiossStarter(CMakePackage):
         "%aocc",
         "%arm",
         policy="one_of",
-        msg="Openradioss-starter can be built using GNU Fortran, Intel Fortran, AOCC, \
-             or Armflang compilers only.",
+        msg="Openradioss-starter can be built using GNU Fortran, Intel Fortran, AOCC, "
+        "or Armflang compilers only.",
     )
 
     build_directory = "starter"
@@ -53,47 +56,39 @@ class OpenradiossStarter(CMakePackage):
     @property
     def compiler_name(self):
         compiler_mapping = {
-            "aocc": "64_AOCC",
-            "intel": "64_intel",
-            "oneapi": "64_intel",
-            "gcc": "64_gf",
-            "arm": "a64_gf",
+            "aocc": "linux64_AOCC",
+            "intel": "linux64_intel",
+            "oneapi": "linux64_intel",
+            "gcc": "linux64_gf",
+            "arm": "linuxa64",
         }
         compiler_name = compiler_mapping[self.spec.compiler.name]
         return compiler_name
 
     def cmake_args(self):
         args = [
-            "-DCMAKE_Fortran_COMPILER={0}".format(spack_fc),
-            "-DCMAKE_C_COMPILER={0}".format(spack_cc),
-            "-DCMAKE_CPP_COMPILER={0}".format(spack_cxx),
-            "-DCMAKE_CXX_COMPILER={0}".format(spack_cxx),
-            "-Dsanitize=0",
+            self.define("CMAKE_Fortran_COMPILER", spack_fc),
+            self.define("CMAKE_C_COMPILER", spack_cc),
+            self.define("CMAKE_CPP_COMPILER", spack_cxx),
+            self.define("CMAKE_CXX_COMPILER", spack_cxx),
+            self.define("santize", False),
+            self.define("arch", self.compiler_name),
+            self.define("EXEC_NAME", f"starter_{self.compiler_name}"),
+            self.define_from_variant("debug", "debug"),
+            self.define_from_variant("static_link", "static_link"),
         ]
 
-        args.append("-Darch=linux" + self.compiler_name)
-
         if "+sp" in self.spec:
-            args.append("-Dprecision=sp")
+            args.append(self.define("precision", "sp"))
         else:
-            args.append("-Dprecision=dp")
-
-        if "+debug" in self.spec:
-            args.append("-Ddebug=1")
-        else:
-            args.append("-Ddebug=0")
-
-        if "+static_link" in self.spec:
-            args.append("-Dstatic_link=1")
-        else:
-            args.append("-Dstatic_link=0")
+            args.append(self.define("precision", "dp"))
 
         return args
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix, "exec"))
 
-        exec_file = "starter_linux" + self.compiler_name
+        exec_file = f"starter_{self.compiler_name}"
 
         install(
             join_path(self.stage.source_path, "starter", exec_file),
@@ -101,10 +96,10 @@ class OpenradiossStarter(CMakePackage):
         )
         install_tree(
             join_path(self.stage.source_path, "hm_cfg_files"), join_path(prefix, "hm_cfg_files")
-        ),
+        )
         install_tree(
             join_path(self.stage.source_path, "extlib", "h3d"), join_path(prefix, "extlib", "h3d")
-        ),
+        )
         install_tree(
             join_path(self.stage.source_path, "extlib", "hm_reader"),
             join_path(prefix, "extlib", "hm_reader"),

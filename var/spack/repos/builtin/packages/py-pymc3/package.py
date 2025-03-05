@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,7 +22,9 @@ class PyPymc3(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-arviz@0.4.1:", type=("build", "run"))
     depends_on("py-theano@1.0.4:", type=("build", "run"))
-    depends_on("py-numpy@1.13.0:", type=("build", "run"))
+    # numpy 2 support added in pymc 5.21, pymc3 is the legacy package
+    # https://github.com/pymc-devs/pymc/pull/7688
+    depends_on("py-numpy@1.13.0:1", type=("build", "run"))
     depends_on("py-scipy@0.18.1:", type=("build", "run"))
     depends_on("py-pandas@0.18.0:", type=("build", "run"))
     depends_on("py-patsy@0.4.0:", type=("build", "run"))

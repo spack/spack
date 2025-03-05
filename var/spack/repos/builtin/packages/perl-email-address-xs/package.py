@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,12 +15,6 @@ class PerlEmailAddressXs(PerlPackage):
 
     version("1.05", sha256="1510b7f10d67201037cd50d22c9d6b26eeca55ededa4cdb46bbca27e59a4ea16")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("perl@5.6.0:", type=("build", "link", "run", "test"))
-
-    def test_use(self):
-        """Test 'use module'"""
-        options = ["-we", 'use strict; use Email::Address::XS; print("OK\n")']
-
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
-        assert "OK" in out
