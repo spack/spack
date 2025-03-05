@@ -1146,7 +1146,7 @@ def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
     s = Spec("libdwarf").concretized()
 
     # Install libdwarf
-    install_cmd(s.name)
+    install_cmd("--fake", s.name)
 
     # Push libdwarf to buildcache
     buildcache_cmd("push", "-u", mirror_dir.strpath, s.name)
