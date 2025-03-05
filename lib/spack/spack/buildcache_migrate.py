@@ -124,11 +124,11 @@ def _migrate_spec(
         local_signed_pre_verify = os.path.join(
             tmpdir, f"{s.name}_{s.dag_hash()}_verify.spec.json.sig"
         )
-        with open(local_signed_pre_verify, "w") as fd:
+        with open(local_signed_pre_verify, "w", encoding="utf-8") as fd:
             fd.write(spec_contents)
         if not bindist.try_verify(local_signed_pre_verify):
             return MigrateSpecResult(False, f"Failed to verify signature of {print_spec}")
-        with open(local_signed_pre_verify) as fd:
+        with open(local_signed_pre_verify, encoding="utf-8") as fd:
             spec_dict = spack.spec.Spec.extract_json_from_clearsig(fd.read())
 
     # Read out the bits needed to rename and position the archive
@@ -175,7 +175,7 @@ def _migrate_spec(
     # Whether we need to sign the spec file first, or just push it without signing,
     # we need it on disk.
     spec_json_path = os.path.join(tmpdir, f"{s.name}_{s.dag_hash()}.spec.json")
-    with open(spec_json_path, "w") as fd:
+    with open(spec_json_path, "w", encoding="utf-8") as fd:
         json.dump(spec_dict, fd)
 
     if not unsigned:
@@ -244,7 +244,7 @@ def migrate(
 
     tmpdir = tempfile.mkdtemp()
     index_path = os.path.join(tmpdir, "_tmp_index.json")
-    with open(index_path, "w") as fd:
+    with open(index_path, "w", encoding="utf-8") as fd:
         fd.write(contents)
 
     db = bindist.BuildCacheDatabase(tmpdir)
