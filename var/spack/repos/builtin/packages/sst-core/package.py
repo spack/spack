@@ -65,6 +65,12 @@ class SstCore(AutotoolsPackage):
         description="Build support for interactive sst-info",
     )
 
+    variant("mempools", default=True, description="Use memory pools")
+    variant(
+        "debug",
+        default=False,
+        description="Enable additional debug output from core and components",
+    )
     variant("trackevents", default=False, description="Enable event and activity tracking")
     variant(
         "trackperf",
@@ -123,6 +129,8 @@ class SstCore(AutotoolsPackage):
         else:
             args.append("--disable-mpi")
 
+        args.extend(self.enable_or_disable("mem-pools", variant="mempools"))
+        args.extend(self.enable_or_disable("debug"))
         args.extend(self.enable_or_disable("event-tracking", variant="trackevents"))
         args.extend(self.enable_or_disable("perf-tracking", variant="trackperf"))
         args.extend(self.enable_or_disable("preview-build", variant="preview"))
