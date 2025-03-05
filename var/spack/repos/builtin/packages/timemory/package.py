@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 #
 # ----------------------------------------------------------------------------
+import os
 
 from spack.package import *
 
@@ -215,7 +216,7 @@ class Timemory(CMakePackage, PythonExtension):
     depends_on("caliper", when="+caliper")
     depends_on("dyninst", when="+dyninst")
     depends_on("gperftools", when="+gperftools")
-    depends_on("intel-parallel-studio", when="+vtune")
+    depends_on("intel-oneapi-vtune", when="+vtune")
     depends_on("arm-forge", when="+allinea_map")
 
     conflicts(
@@ -334,5 +335,19 @@ class Timemory(CMakePackage, PythonExtension):
             key = "CUDA_ARCH" if spec.satisfies("@:3.0.1") else "TIMEMORY_CUDA_ARCH"
             args.append(self.define_from_variant(key, "cuda_arch"))
             args.append(self.define_from_variant("CMAKE_CUDA_STANDARD", "cudastd"))
+
+        if self.spec.satisfies("+vtune"):
+            ittnotify_include = os.path.join(
+                self["intel-oneapi-vtune"].component_prefix, "include"
+            )
+            ittnotify_lib = os.path.join(
+                self["intel-oneapi-vtune"].component_prefix, "lib64", "libittnotify.a"
+            )
+            args.extend(
+                [
+                    self.define("ITTNOTIFY_INCLUDE_DIR", ittnotify_include),
+                    self.define("ITTNOTIFY_LIBRARY", ittnotify_lib),
+                ]
+            )
 
         return args
