@@ -19,7 +19,7 @@ class Vecgeom(CMakePackage, CudaPackage):
 
     maintainers("drbenmorgan", "sethrj")
 
-    version("master", branch="master")
+    version("master", branch="master", get_full_repo=True)
     version(
         "2.0.0-surfacedev.1",
         tag="v2.0.0-surfacedev.1",
