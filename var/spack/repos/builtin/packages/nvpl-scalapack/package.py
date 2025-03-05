@@ -34,9 +34,8 @@ class NvplScalapack(Package):
     conflicts("%clang@:13")
 
     def url_for_version(self, version):
-        """Spack can't detect the verion in the URL above"""
+        """Spack can't detect the version in the URL above"""
         url = "https://developer.download.nvidia.com/compute/nvpl/redist/nvpl_scalapack/linux-sbsa/nvpl_scalapack-linux-sbsa-{0}-archive.tar.xz"
-        print(url, url.format(version))
         return url.format(version)
 
     @property
@@ -50,11 +49,11 @@ class NvplScalapack(Package):
         int_type = "ilp64" if spec.satisfies("+ilp64") else "lp64"
 
         if any(
-            spec.satisfies(mpi_library)
-            for mpi_library in ["^mpich", "^cray-mpich", "^mvapich", "^mvapich2"]
+            spec.satisfies(f"^[virtuals=mpi] {mpi_library}")
+            for mpi_library in ["mpich", "cray-mpich", "mvapich", "mvapich2"]
         ):
             mpi_type = "mpich"
-        elif spec.satisfies("^openmpi"):
+        elif spec.satisfies("^[virtuals=mpi] openmpi"):
             mpi_type = "openmpi" + spec["openmpi"].version.up_to(1)
 
         name = [f"libnvpl_blacs_{int_type}_{mpi_type}", f"libnvpl_scalapack_{int_type}"]
