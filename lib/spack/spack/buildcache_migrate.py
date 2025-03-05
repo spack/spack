@@ -18,6 +18,7 @@ import spack.error
 import spack.mirrors.mirror
 import spack.spec
 import spack.stage
+import spack.util.crypto
 import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -144,6 +145,9 @@ def _migrate_spec(
         mirror_url, bindist.buildcache_relative_tarball_url(algorithm, checksum)
     )
 
+    # spacks web utilities do not include direct copying of s3 objects, so we
+    # need to download the archive locally, and then push it back to the target
+    # location
     archive_stage_path = os.path.join(tmpdir, f"archive_stage_{s.name}_{s.dag_hash()}")
     archive_stage = spack.stage.Stage(v2_archive_url, path=archive_stage_path)
 
@@ -153,8 +157,23 @@ def _migrate_spec(
     except spack.error.FetchError:
         return MigrateSpecResult(False, f"Unable to fetch archive for {print_spec}")
 
-    spec_dict["archive_size"] = os.stat(archive_stage.save_filename).st_size
+    local_tarfile_path = archive_stage.save_filename
 
+    # As long as we have to download the tarball anyway, we might as well compute the
+    # checksum locally and check it against the expected value
+    local_checksum = spack.util.crypto.checksum(
+        spack.util.crypto.hash_fun_for_algo(algorithm), local_tarfile_path
+    )
+
+    if local_checksum != checksum:
+        return MigrateSpecResult(
+            False, f"Checksum mismatch for {print_spec}: expected {checksum}, got {local_checksum}"
+        )
+
+    spec_dict["archive_size"] = os.stat(local_tarfile_path).st_size
+
+    # Whether we need to sign the spec file first, or just push it without signing,
+    # we need it on disk.
     spec_json_path = os.path.join(tmpdir, f"{s.name}_{s.dag_hash()}.spec.json")
     with open(spec_json_path, "w") as fd:
         json.dump(spec_dict, fd)
@@ -164,16 +183,18 @@ def _migrate_spec(
     else:
         spec_to_push_path = spec_json_path
 
-    tty.debug(f"Pushing {archive_stage.save_filename} to {v3_archive_url}")
+    # First push the tarball
+    tty.debug(f"Pushing {local_tarfile_path} to {v3_archive_url}")
 
     try:
-        web_util.push_to_url(archive_stage.save_filename, v3_archive_url, keep_original=True)
+        web_util.push_to_url(local_tarfile_path, v3_archive_url, keep_original=True)
     except Exception:
         return MigrateSpecResult(False, f"Failed to push archive for {print_spec}")
 
     ext = ".spec.json" if unsigned else ".spec.json.sig"
     v3_spec_url = url_util.join(mirror_url, bindist.buildcache_relative_spec_url(s, ext))
 
+    # Then push the spec file
     tty.debug(f"Pushing {spec_to_push_path} to {v3_spec_url}")
 
     try:
@@ -218,7 +239,7 @@ def migrate(
     try:
         _, _, index_file = web_util.read_from_url(index_url)
         contents = codecs.getreader("utf-8")(index_file).read()
-    except (web_util.SpackWebError, OSError) as e:
+    except (web_util.SpackWebError, OSError):
         raise MigrationException("Buildcache migration requires a buildcache index")
 
     tmpdir = tempfile.mkdtemp()

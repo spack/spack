@@ -11,9 +11,10 @@ from typing import List
 
 import pytest
 
-from llnl.util.filesystem import copy_tree
+from llnl.util.filesystem import copy_tree, find
 
 import spack.binary_distribution
+import spack.buildcache_migrate as migrate
 import spack.cmd.buildcache
 import spack.concretize
 import spack.environment as ev
@@ -21,7 +22,7 @@ import spack.error
 import spack.main
 import spack.mirrors.mirror
 import spack.spec
-import spack.util.url
+import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.installer import PackageInstaller
 from spack.paths import test_path
@@ -285,9 +286,7 @@ def test_buildcache_sync(
         with open(manifest_file, "w", encoding="utf-8") as fd:
             manifest = {}
             for spec in test_env.specs_by_hash.values():
-                manifest_insert(
-                    manifest, spec, spack.util.url.join(dest_mirror_url, "invalid_path")
-                )
+                manifest_insert(manifest, spec, url_util.join(dest_mirror_url, "invalid_path"))
             json.dump(manifest, fd)
 
         # Trigger the warning
@@ -505,33 +504,153 @@ def test_push_without_build_deps(tmp_path, temporary_store, mock_packages, mutab
     assert spack.binary_distribution.update_cache_and_get_specs() == [s]
 
 
-def test_migrate_unsigned(capsys, tmp_path, mock_packages, mock_stage, mutable_config):
-    source_path = str(pathlib.Path(test_path) / "data" / "mirrors" / "v2_layout" / "unsigned")
-    test_mirror_path = tmp_path / "mirror"
-    test_mirror_dir = str(test_mirror_path)
+@pytest.fixture(scope="function")
+def v2_buildcache_layout(tmp_path):
+    def _layout(signedness: str = "signed"):
+        source_path = str(pathlib.Path(test_path) / "data" / "mirrors" / "v2_layout" / signedness)
+        test_mirror_path = tmp_path / "mirror"
+        copy_tree(source_path, test_mirror_path)
+        return test_mirror_path
 
-    copy_tree(source_path, test_mirror_path)
+    return _layout
 
-    mirror("add", "my-mirror", test_mirror_dir)
+
+def test_basic_migrate_unsigned(capsys, v2_buildcache_layout, mutable_config):
+    """Make sure first unsigned migration results in usable buildcache,
+    leaving the previous layout in place. Also test that a subsequent one
+    doesn't need to migrate anything, and that using --delete-existing
+    removes the previous layout"""
+
+    test_mirror_path = v2_buildcache_layout("unsigned")
+    mirror("add", "my-mirror", str(test_mirror_path))
 
     with capsys.disabled():
         output = buildcache("migrate", "--unsigned", "my-mirror")
 
+    # The output indicates both specs were migrated
     assert output.count("Successfully migrated") == 2
 
     build_cache_path = str(test_mirror_path / "build_cache")
 
+    # Without "--delete-existing" and "--yes-to-all", migration leaves the
+    # previous layout in place
     assert os.path.exists(build_cache_path)
     assert os.path.isdir(build_cache_path)
 
+    # Now list the specs available under the new layout
     with capsys.disabled():
         output = buildcache("list", "--allarch")
 
     assert "libdwarf" in output and "libelf" in output
 
     with capsys.disabled():
-        output = buildcache("migrate", "--unsigned", "--delete-existing", "--yes-to-all", "my-mirror")
+        output = buildcache(
+            "migrate", "--unsigned", "--delete-existing", "--yes-to-all", "my-mirror"
+        )
 
+    # A second migration of the same mirror indicates neither spec
+    # needs to be migrated
     assert output.count("No need to migrate") == 2
 
+    # When we provide "--delete-existing" and "--yes-to-all", migration
+    # removes the old layout
     assert not os.path.exists(build_cache_path)
+
+
+def test_basic_migrate_signed(
+    capsys, v2_buildcache_layout, monkeypatch, mock_gnupghome, mutable_config
+):
+    """Test a signed migration requires a signing key, requires the public
+    key originally used to sign the pkgs, fails and prints reasonable messages
+    if those requirements are unmet, and eventually succeeds when they are met."""
+
+    def _keys_url():
+        return url_util.join("build_cache", "_pgp")
+
+    monkeypatch.setattr(spack.binary_distribution, "buildcache_relative_keys_url", _keys_url)
+
+    test_mirror_path = v2_buildcache_layout("signed")
+    mirror("add", "my-mirror", str(test_mirror_path))
+
+    with pytest.raises(migrate.MigrationException) as error:
+        buildcache("migrate", "my-mirror")
+
+    # Without a signing key spack fails and explains why
+    assert error.value.message == "Signed migration requires exactly one secret key in keychain"
+
+    # Create a signing key and trust the key used to sign the pkgs originally
+    gpg("create", "New Test Signing Key", "noone@nowhere.org")
+
+    with capsys.disabled():
+        output = buildcache("migrate", "my-mirror")
+
+    # Without trusting the original signing key, spack fails with an explanation
+    assert "Failed to verify signature of libelf" in output
+    assert "Failed to verify signature of libdwarf" in output
+    assert "did you mean to perform an unsigned migration" in output
+
+    # Trust original signing key (since it's in the original layout location,
+    # this is where the monkeypatched attribute is used)
+    with capsys.disabled():
+        output = buildcache("keys", "--install", "--trust")
+
+    with capsys.disabled():
+        output = buildcache("migrate", "my-mirror")
+
+    # Once we have the proper keys, migration should succeed
+    assert "Successfully migrated libelf" in output
+    assert "Successfully migrated libelf" in output
+
+    # Now list the specs available under the new layout
+    with capsys.disabled():
+        output = buildcache("list", "--allarch")
+
+    assert "libdwarf" in output and "libelf" in output
+
+
+def test_unsigned_migrate_of_signed_mirror(capsys, v2_buildcache_layout, mutable_config):
+    """Test spack can do an unsigned migration of a signed buildcache by
+    ignoring signatures and skipping re-signing."""
+
+    test_mirror_path = v2_buildcache_layout("signed")
+    mirror("add", "my-mirror", str(test_mirror_path))
+
+    with capsys.disabled():
+        output = buildcache(
+            "migrate", "--unsigned", "--delete-existing", "--yes-to-all", "my-mirror"
+        )
+
+    # Now list the specs available under the new layout
+    with capsys.disabled():
+        output = buildcache("list", "--allarch")
+
+    assert "libdwarf" in output and "libelf" in output
+
+    # After this migration, we should not find any signed spec files
+    file_list = find(test_mirror_path, "*.spec.json.sig")
+    assert not file_list
+
+    # But we should find two unsigned files corresponding to our two specs
+    file_list = find(test_mirror_path, "*.spec.json")
+    assert len(file_list) == 2
+    assert any(["libdwarf" in file for file in file_list])
+    assert any(["libelf" in file for file in file_list])
+
+
+def test_migrate_requires_index(capsys, v2_buildcache_layout, mutable_config):
+    """Test spack fails with a reasonable error message when mirror does
+    not have an index"""
+
+    test_mirror_path = v2_buildcache_layout("unsigned")
+    v2_index_path = test_mirror_path / "build_cache" / "index.json"
+    v2_index_hash_path = test_mirror_path / "build_cache" / "index.json.hash"
+    os.remove(str(v2_index_path))
+    os.remove(str(v2_index_hash_path))
+
+    mirror("add", "my-mirror", str(test_mirror_path))
+
+    with pytest.raises(migrate.MigrationException) as error:
+        buildcache("migrate", "--unsigned", "my-mirror")
+
+    # If the buildcache has no index, spack fails and explains why
+    assert error.value.message == "Buildcache migration requires a buildcache index"
