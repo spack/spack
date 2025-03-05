@@ -50,3 +50,8 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
         output = Executable(exe)("--version", output=str, error=str)
         match = re.search(r"diff \(GNU diffutils\) (\S+)", output)
         return match.group(1) if match else None
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            flags.append("-std=c11")
+        return (flags, None, None)

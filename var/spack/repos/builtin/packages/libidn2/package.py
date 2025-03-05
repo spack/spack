@@ -33,3 +33,8 @@ class Libidn2(AutotoolsPackage, GNUMirrorPackage):
 
     # in-source build fails
     build_directory = "spack-build"
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            flags.append("-std=c11")
+        return (flags, None, None)
