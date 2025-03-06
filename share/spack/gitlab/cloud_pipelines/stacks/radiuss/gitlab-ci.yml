@@ -1,0 +1,16 @@
+
+# On snapshot releases, trigger radiuss-spack-configs CI for compatibility check
+trigger-radiuss-spack-configs:
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^develop-/
+      when: on_success
+    - when: never
+  variables:
+    MY_SPACK_REPO: ${CI_PROJECT_URL}
+    MY_SPACK_COMMIT: ""
+    MY_SPACK_BRANCH: ${CI_COMMIT_BRANCH}
+  trigger:
+    project: radiuss/radiuss-spack-configs
+    branch: ${TRIGGER_PROJECT_BRANCH}
+
+
