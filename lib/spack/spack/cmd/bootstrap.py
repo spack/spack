@@ -20,7 +20,6 @@ import spack.mirrors.utils
 import spack.stage
 import spack.util.path
 import spack.util.spack_yaml
-from spack.binary_distribution import buildcache_relative_specs_path
 from spack.cmd.common import arguments
 
 description = "manage bootstrap configuration"
@@ -411,7 +410,13 @@ def _mirror(args):
         stage.create()
         stage.fetch()
         stage.expand_archive()
-        build_cache_dir = os.path.join(stage.source_path, buildcache_relative_specs_path())
+        # TODO: Once content addressable tarballs PR (#48713) is merged, we can
+        # TODO: merge a PR to spack/spack-bootstrap-mirrors replacing the previous
+        # TODO: spack commit SHA, "d36452cf4e70fa1da8b9db43921850872b82ced9", with an
+        # TODO: updated SHA. Once done, we can make a new release on the bootstrap
+        # TODO: mirrors repo, reflect that new release in BINARY_TARBALL, above, and
+        # TODO: replace "build_cache", below, with "buildcache_relative_specs_path()".
+        build_cache_dir = os.path.join(stage.source_path, "build_cache")
         shutil.move(build_cache_dir, mirror_dir)
         llnl.util.tty.set_msg_enabled(True)
 
