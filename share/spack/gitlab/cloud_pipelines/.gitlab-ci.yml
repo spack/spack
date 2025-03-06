@@ -517,7 +517,7 @@ radiuss-aws-aarch64-build:
       job: radiuss-aws-aarch64-generate
 
 ########################################
-# ECP Data & Vis SDK
+# Data & Vis SDK
 ########################################
 .data-vis-sdk:
   extends: [ ".linux_x86_64_v3" ]

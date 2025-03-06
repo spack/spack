@@ -1,16 +1,16 @@
 spack:
   view: false
+
+  include:
+  # Include the SDK package configurations
+  # TODO: Tag this with a release
+  - https://raw.githubusercontent.com/DAV-SDK/davsdk/refs/heads/main/spack/configs/packages.yaml
+
   packages:
     all:
       require: target=x86_64_v3
     cmake:
       variants: ~ownlibs
-    ecp-data-vis-sdk:
-      require:
-      - "+ascent +adios2 +cinema +darshan +faodel +hdf5 +pnetcdf +sensei +sz +unifyfs +veloc +vtkm +zfp"
-    hdf5:
-      require:
-      - "@1.14"
     mesa:
       require:
       - "+glx +osmesa +opengl ~opengles +llvm"
@@ -18,16 +18,18 @@ spack:
       require: "mesa +glx"
     ospray:
       require:
-      - "@2.8.0"
       - "+denoiser +mpi"
+    paraview:
+      require: +raytracing +fides
     llvm:
       require: ["@14:"]
       # Minimize LLVM
       variants: ~lldb~lld~libomptarget~polly~gold libunwind=none compiler-rt=none
     libllvm:
-      require: ["^llvm"]
+      require: ["llvm"]
     visit:
-      require: ["@3.4.1"]
+      require: ["@3.4.1:"]
+
 
   concretizer:
     unify: when_possible
@@ -35,41 +37,79 @@ spack:
   definitions:
   - paraview_specs:
     - matrix:
-      - - paraview +raytracing +adios2 +fides
+      - - paraview
       - - +qt ^[virtuals=gl] glx # GUI Support w/ GLX Rendering
         - ~qt ^[virtuals=gl] glx # GLX Rendering
         - ^[virtuals=gl] osmesa # OSMesa Rendering
+      - - "@5.11.2"
+        - "@5.12.1"
+        - "@5.13.1"
   - visit_specs:
     - matrix:
       - - visit
       - - ~gui ^[virtuals=gl] glx
         - ~gui ^[virtuals=gl] osmesa
         - +gui ^[virtuals=gl] glx # GUI Support w/ GLX Rendering
-  - sdk_base_spec:
+
+  - rocm_only:
+    - ~rocm
+    # ROCm Variants built in in E4S stacks
+    # - +rocm amdgpu_target=gfx90a
+
+  - cuda_only:
+    - ~cuda
+    # CUDA Variants built in in E4S stacks
+    # - +cuda cuda_arch=80
+
+  - gpu_enabled:
+    - ~cuda ~rocm
+    # GPU Variants built in in E4S stacks
+    # - +cuda ~rocm cuda_arch=80
+    # - ~cuda +rocm amdgpu_target=gfx90a
+
+  - vtkm_specs:
     - matrix:
-      - - ecp-data-vis-sdk +ascent +adios2 +cinema +darshan +faodel +hdf5 +pnetcdf
-          +sensei +sz +unifyfs +veloc +vtkm +zfp
-      - - ~cuda ~rocm
-        # Current testing of GPU supported configurations
-        # is provided in the E4S stack
-        # - +cuda ~rocm
-        # - ~cuda +rocm
+      - - vtk-m
+      - - $gpu_enabled
+    # GPU Variants built in in E4S stacks
+    # - ^vtk-m +cuda ~rocm cuda_arch=80
+    # - ^vtk-m ~cuda +rocm amdgpu_target=gfx90a
 
   specs:
-    # Test ParaView and VisIt builds with different GL backends
-  - matrix:
-    - [$sdk_base_spec]
-    - ["+paraview ~visit"]
-    - [$^paraview_specs]
-  - matrix:
-    - [$sdk_base_spec]
-    - ["~paraview +visit"]
-    - [$^visit_specs]
+    # I/O
+    - matrix:
+      - - adios2
+      - - $gpu_enabled
+
+    - parallel-netcdf
+
+    - hdf5
+    - hdf5-vol-async
+    - hdf5-vol-cache
+    - hdf5-vol-log
+
+    # Compression
+    - matrix:
+      - - zfp
+      - - $cuda_only
+
+    # Visualization
+    - ascent
+
+    - matrix:
+      - - $paraview_specs
+      - - $gpu_enabled
+
+    - matrix:
+      - - $visit_specs
+      - - $^vtkm_specs
+
+    - $vtkm_specs
 
   ci:
     pipeline-gen:
     - build-job:
-        image: {name: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01, entrypoint: [''] }
+        image: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
 
   cdash:
     'build-group:': Data and Vis SDK
