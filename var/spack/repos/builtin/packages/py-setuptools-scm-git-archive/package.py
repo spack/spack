@@ -16,9 +16,10 @@ class PySetuptoolsScmGitArchive(PythonPackage):
 
     license("MIT")
 
+    version("1.4.1", sha256="c418bc77b3974d3ac65f268f058f23e01dc5f991f2233128b0e16a69de227b09")
     version("1.4", sha256="b048b27b32e1e76ec865b0caa4bb85df6ddbf4697d6909f567ac36709f6ef2f0")
     version("1.1", sha256="6026f61089b73fa1b5ee737e95314f41cb512609b393530385ed281d0b46c062")
     version("1.0", sha256="52425f905518247c685fc64c5fdba6e1e74443c8562e141c8de56059be0e31da")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type=("build", "run"))
+    depends_on("py-setuptools-scm@:7", type=("build", "run"))
