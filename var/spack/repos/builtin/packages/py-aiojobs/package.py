@@ -17,7 +17,7 @@ class PyAiojobs(PythonPackage):
 
     version("1.3.0", sha256="03074c884b3dc388b8d798c0de24ec17d72b2799018497fda8062c0431a494b5")
 
-    variant("aiohttp", default=False)
+    variant("aiohttp", default=False, description="Enable aiohttp integration")
 
     depends_on("python@3.9:", type=("build", "run"))
 
