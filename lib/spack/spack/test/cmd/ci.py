@@ -1989,5 +1989,5 @@ def test_ci_verify_versions_manual_package(monkeypatch, mock_packages, mock_git_
     pkg_class = spack.spec.Spec("diff-test").package_class
     monkeypatch.setattr(pkg_class, "manual_download", True)
 
-    out = ci_cmd("verify-versions", commits[-1], commits[-2], fail_on_error=False)
+    out = ci_cmd("verify-versions", commits[-1], commits[-2])
     assert "Skipping manual download package: diff-test" in out
