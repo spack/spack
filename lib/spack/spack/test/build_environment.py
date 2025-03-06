@@ -756,7 +756,9 @@ def test_rpath_with_duplicate_link_deps():
 )
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
 @pytest.mark.not_on_windows("Windows doesn't support the compiler wrapper")
-def test_optimization_flags(compiler_spec, target_name, expected_flags, compiler_factory):
+def test_optimization_flags(
+    mock_packages, compiler_spec, target_name, expected_flags, compiler_factory
+):
     target = archspec.cpu.TARGETS[target_name]
     compiler = spack.spec.parse_with_version_concrete(compiler_spec)
     opt_flags = spack.build_environment.optimization_flags(compiler, target)
