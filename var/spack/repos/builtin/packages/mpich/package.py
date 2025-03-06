@@ -117,6 +117,7 @@ class Mpich(MpichEnvironmentModifications, AutotoolsPackage, CudaPackage, ROCmPa
         values=("default", "pmi", "pmi2", "pmix", "cray"),
         multi=False,
     )
+    variant("internal-libevent", default=False, description="Use internal libevent")
     variant(
         "device",
         default="ch4",
@@ -331,6 +332,9 @@ supported, and netmod is ignored if device is ch3:sock.""",
     depends_on("slurm", when="+slurm")
 
     depends_on("pmix", when="pmi=pmix")
+
+    # Libevent is required when *vendored* PMIx is used
+    depends_on("libevent@2:", when="~internal-libevent")
 
     # +argobots variant requires Argobots
     depends_on("argobots", when="+argobots")
