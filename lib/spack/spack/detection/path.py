@@ -75,7 +75,9 @@ def dedupe_paths(paths: List[str]) -> List[str]:
     the former."""
     seen: Dict[Tuple[int, int], str] = {}
 
-    linked_parent_check = lambda x: any([llnl.util.symlink.islink(str(y)) for y in pathlib.Path(x).parents])
+    linked_parent_check = lambda x: any(
+        [llnl.util.symlink.islink(str(y)) for y in pathlib.Path(x).parents]
+    )
 
     for path in paths:
         identifier = file_identifier(path)
