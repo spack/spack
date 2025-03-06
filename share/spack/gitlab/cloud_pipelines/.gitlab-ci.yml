@@ -540,6 +540,29 @@ data-vis-sdk-build:
       job: data-vis-sdk-generate
 
 ########################################
+# TOOLS SDK
+########################################
+.tools-sdk:
+  extends: [ ".linux_x86_64_v3" ]
+  variables:
+    SPACK_CI_STACK_NAME: tools-sdk
+
+tools-sdk-generate:
+  extends: [ ".tools-sdk", ".generate-x86_64"]
+  image: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
+
+tools-sdk-build:
+  extends: [ ".tools-sdk", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: tools-sdk-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: tools-sdk-generate
+
+########################################
 # Spack Tutorial
 ########################################
 .tutorial:

@@ -1,0 +1,33 @@
+spack:
+  view: false
+
+  include:
+  # Include the SDK package configurations
+  # TODO: Tag this with a release
+  - https://raw.githubusercontent.com/tools-integration/tools-sdk/refs/heads/main/spack/configs/packages.yaml
+
+  packages:
+    all:
+      require: target=x86_64_v3
+    cmake:
+      variants: ~ownlibs
+
+  concretizer:
+    unify: when_possible
+
+  specs:
+  - darshan-runtime
+  - darshan-util
+  - dyninst
+  - hpctoolkit
+  - papi
+  - tau
+
+  ci:
+    pipeline-gen:
+    - build-job:
+        image: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
+
+  cdash:
+    'build-group:': TOOLS SDK
+
