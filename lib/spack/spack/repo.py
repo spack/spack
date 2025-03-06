@@ -1406,6 +1406,8 @@ def create_repo(root, namespace=None, subdir=packages_dir_name):
             config.write(f"  namespace: '{namespace}'\n")
             if subdir != packages_dir_name:
                 config.write(f"  subdirectory: '{subdir}'\n")
+            x, y = spack.package_api_version
+            config.write(f"  api: v{x}.{y}\n")
 
     except OSError as e:
         # try to clean up.
