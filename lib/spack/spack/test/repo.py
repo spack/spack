@@ -11,6 +11,7 @@ import spack.paths
 import spack.repo
 import spack.spec
 import spack.util.file_cache
+import spack.util.naming
 
 
 @pytest.fixture(params=["packages", "", "foo"])
@@ -184,12 +185,12 @@ def test_repository_construction_doesnt_use_globals(nullify_globals, tmp_path, r
                 repo_paths.append(spack.paths.mock_packages_path)
                 namespaces.append("builtin.mock")
             if entry == "extra":
-                name = "extra.mock"
+                name = "extra_mock"
                 repo_dir = tmp_path / name
                 repo_dir.mkdir()
-                _ = spack.repo.MockRepositoryBuilder(repo_dir, name)
-                repo_paths.append(str(repo_dir))
-                namespaces.append(name)
+                repo = spack.repo.MockRepositoryBuilder(repo_dir, name)
+                repo_paths.append(repo.root)
+                namespaces.append(repo.namespace)
         return repo_paths, namespaces
 
     repo_paths, namespaces = _repo_paths(repos)
@@ -364,3 +365,85 @@ repo:
     )
     cache = spack.util.file_cache.FileCache(tmp_path / "cache")
     assert spack.repo.Repo(str(tmp_path / "example"), cache=cache).package_api == (1, 0)
+
+
+def test_mod_to_pkg_name_and_reverse():
+    # In repo v1 the dirname/module name is the package name
+    assert spack.util.naming.mod_to_pkg_name("zlib_ng", package_api=(1, 0)) == "zlib_ng"
+    assert spack.util.naming.mod_to_pkg_name("_3example_4", package_api=(1, 0)) == "_3example_4"
+    assert spack.util.naming.pkg_name_to_mod("zlib_ng", package_api=(1, 0)) == "zlib_ng"
+    assert spack.util.naming.pkg_name_to_mod("_3example_4", package_api=(1, 0)) == "_3example_4"
+
+    # In repo v2 there is a 1-1 mapping between module and package names
+    assert spack.util.naming.mod_to_pkg_name("_3example_4", package_api=(2, 0)) == "3example-4"
+    assert spack.util.naming.mod_to_pkg_name("zlib_ng", package_api=(2, 0)) == "zlib-ng"
+    assert spack.util.naming.pkg_name_to_mod("zlib-ng", package_api=(2, 0)) == "zlib_ng"
+    assert spack.util.naming.pkg_name_to_mod("3example-4", package_api=(2, 0)) == "_3example_4"
+
+
+def test_repo_v2_invalid_module_name(tmp_path: pathlib.Path, capsys):
+    # Create a repo with a v2 structure
+    repo_dir = tmp_path / "repo_1"
+    repo_dir.mkdir()
+    (repo_dir / "repo.yaml").write_text(
+        """
+repo:
+  namespace: repo_1
+  api: v2.0
+"""
+    )
+    # Create two invalid module names
+    (repo_dir / "packages" / "zlib-ng").mkdir(parents=True)
+    (repo_dir / "packages" / "zlib-ng" / "package.py").write_text(
+        """
+from spack.package import Package
+
+class ZlibNg(Package):
+    pass
+"""
+    )
+    (repo_dir / "packages" / "UPPERCASE").mkdir(parents=True)
+    (repo_dir / "packages" / "UPPERCASE" / "package.py").write_text(
+        """
+from spack.package import Package
+
+class Uppercase(Package):
+    pass
+"""
+    )
+
+    with spack.repo.use_repositories(str(repo_dir)) as repo:
+        assert len(repo.all_package_names()) == 0
+
+    stderr = capsys.readouterr().err
+    assert "cannot be used because `zlib-ng` is not a valid Spack package module name" in stderr
+    assert "cannot be used because `UPPERCASE` is not a valid Spack package module name" in stderr
+
+
+def test_repo_v2_module_and_class_to_package_name(tmp_path: pathlib.Path, capsys):
+    # Create a repo with a v2 structure
+    repo_dir = tmp_path / "repo_2"
+    repo_dir.mkdir()
+    (repo_dir / "repo.yaml").write_text(
+        """
+repo:
+  namespace: repo_2
+  api: v2.0
+"""
+    )
+    # Create an invalid module name
+    (repo_dir / "packages" / "_1example_2_test").mkdir(parents=True)
+    (repo_dir / "packages" / "_1example_2_test" / "package.py").write_text(
+        """
+from spack.package import Package
+
+class _1example2Test(Package):
+    pass
+"""
+    )
+
+    with spack.repo.use_repositories(str(repo_dir)) as repo:
+        assert repo.exists("1example-2-test")
+        pkg_cls = repo.get_pkg_class("1example-2-test")
+        assert pkg_cls.name == "1example-2-test"
+        assert pkg_cls.module.__name__ == "spack.pkg.repo_2._1example_2_test"
