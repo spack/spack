@@ -738,6 +738,7 @@ def validate_git_versions(pkg, versions: VersionList) -> bool:
                         f"    {known_commit} could not be located in git repository."
                     )
                     valid_commit = False
+                    continue
 
                 # Test if the specified tag matches the commit in the package.py
                 # We retrieve the commit associated with a tag and compare it to the
@@ -752,6 +753,7 @@ def validate_git_versions(pkg, versions: VersionList) -> bool:
                             f"    [Downloaded] {found_commit}"
                         )
                         valid_commit = False
+                        continue
 
             # If we have downloaded the repository, found the commit, and compared
             # the tag (if specified) we can conclude that the version is pointing
