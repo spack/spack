@@ -1,22 +1,15 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
-import os.path
 import re
 import shutil
 
 import pytest
 
-import spack.concretize
-import spack.paths
 import spack.platforms
 import spack.relocate
 import spack.relocate_text as relocate_text
-import spack.spec
-import spack.store
-import spack.tengine
+import spack.repo
 import spack.util.executable
 
 pytestmark = pytest.mark.not_on_windows("Tests fail on Windows")
@@ -44,14 +37,6 @@ def text_in_bin(text, binary):
         if not pat.search(data):
             return False
         return True
-
-
-@pytest.fixture()
-def mock_patchelf(tmpdir, mock_executable):
-    def _factory(output):
-        return mock_executable("patchelf", output=output)
-
-    return _factory
 
 
 @pytest.fixture()
@@ -127,50 +112,7 @@ def copy_binary(prefix_like):
     return _copy_somewhere
 
 
-@pytest.mark.parametrize(
-    "start_path,path_root,paths,expected",
-    [
-        (
-            "/usr/bin/test",
-            "/usr",
-            ["/usr/lib", "/usr/lib64", "/opt/local/lib"],
-            [
-                os.path.join("$ORIGIN", "..", "lib"),
-                os.path.join("$ORIGIN", "..", "lib64"),
-                "/opt/local/lib",
-            ],
-        )
-    ],
-)
-def test_make_relative_paths(start_path, path_root, paths, expected):
-    relatives = spack.relocate._make_relative(start_path, path_root, paths)
-    assert relatives == expected
-
-
-@pytest.mark.parametrize(
-    "start_path,relative_paths,expected",
-    [
-        # $ORIGIN will be replaced with os.path.dirname('usr/bin/test')
-        # and then normalized
-        (
-            "/usr/bin/test",
-            ["$ORIGIN/../lib", "$ORIGIN/../lib64", "/opt/local/lib"],
-            [
-                os.sep + os.path.join("usr", "lib"),
-                os.sep + os.path.join("usr", "lib64"),
-                "/opt/local/lib",
-            ],
-        ),
-        # Relative path without $ORIGIN
-        ("/usr/bin/test", ["../local/lib"], ["../local/lib"]),
-    ],
-)
-def test_normalize_relative_paths(start_path, relative_paths, expected):
-    normalized = spack.relocate._normalize_relative_paths(start_path, relative_paths)
-    assert normalized == expected
-
-
-@pytest.mark.requires_executables("patchelf", "file", "gcc")
+@pytest.mark.requires_executables("patchelf", "gcc")
 @skip_unless_linux
 def test_relocate_text_bin(binary_with_rpaths, prefix_like):
     prefix = "/usr/" + prefix_like
@@ -187,7 +129,7 @@ def test_relocate_text_bin(binary_with_rpaths, prefix_like):
     assert "%s/lib:%s/lib64" % (new_prefix, new_prefix) in rpaths_for(executable)
 
 
-@pytest.mark.requires_executables("patchelf", "file", "gcc")
+@pytest.mark.requires_executables("patchelf", "gcc")
 @skip_unless_linux
 def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, prefix_tmpdir):
     # Create an executable, set some RPATHs, copy it to another location
@@ -195,62 +137,14 @@ def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, p
     new_binary = copy_binary(orig_binary)
 
     spack.relocate.relocate_elf_binaries(
-        binaries=[str(new_binary)],
-        orig_root=str(orig_binary.dirpath()),
-        new_root=None,  # Not needed when relocating absolute paths
-        new_prefixes={str(orig_binary.dirpath()): "/foo"},
-        rel=False,
-        # Not needed when relocating absolute paths
-        orig_prefix=None,
-        new_prefix=None,
+        binaries=[str(new_binary)], prefix_to_prefix={str(orig_binary.dirpath()): "/foo"}
     )
 
     # Some compilers add rpaths so ensure changes included in final result
     assert "/foo/lib:/usr/lib64" in rpaths_for(new_binary)
 
 
-@pytest.mark.requires_executables("patchelf", "file", "gcc")
-@skip_unless_linux
-def test_relocate_elf_binaries_relative_paths(binary_with_rpaths, copy_binary):
-    # Create an executable, set some RPATHs, copy it to another location
-    orig_binary = binary_with_rpaths(rpaths=["lib", "lib64", "/opt/local/lib"])
-    new_binary = copy_binary(orig_binary)
-
-    spack.relocate.relocate_elf_binaries(
-        binaries=[str(new_binary)],
-        orig_root=str(orig_binary.dirpath()),
-        new_root=str(new_binary.dirpath()),
-        new_prefixes={str(orig_binary.dirpath()): "/foo"},
-        rel=True,
-        orig_prefix=str(orig_binary.dirpath()),
-        new_prefix=str(new_binary.dirpath()),
-    )
-
-    # Some compilers add rpaths so ensure changes included in final result
-    assert "/foo/lib:/foo/lib64:/opt/local/lib" in rpaths_for(new_binary)
-
-
-@pytest.mark.requires_executables("patchelf", "file", "gcc")
-@skip_unless_linux
-def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, prefix_tmpdir):
-    orig_binary = binary_with_rpaths(
-        rpaths=[
-            str(prefix_tmpdir.mkdir("lib")),
-            str(prefix_tmpdir.mkdir("lib64")),
-            "/opt/local/lib",
-        ]
-    )
-    new_binary = copy_binary(orig_binary)
-
-    spack.relocate.make_elf_binaries_relative(
-        [str(new_binary)], [str(orig_binary)], str(orig_binary.dirpath())
-    )
-
-    # Some compilers add rpaths so ensure changes included in final result
-    assert "$ORIGIN/lib:$ORIGIN/lib64:/opt/local/lib" in rpaths_for(new_binary)
-
-
-@pytest.mark.requires_executables("patchelf", "file", "gcc")
+@pytest.mark.requires_executables("patchelf", "gcc")
 @skip_unless_linux
 def test_relocate_text_bin_with_message(binary_with_rpaths, copy_binary, prefix_tmpdir):
     orig_binary = binary_with_rpaths(
@@ -283,14 +177,22 @@ def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
     short_prefix = b"/short"
     long_prefix = b"/much/longer"
     fpath = str(tmpdir.join("fakebin"))
-    with open(fpath, "w") as f:
+    with open(fpath, "w", encoding="utf-8") as f:
         f.write("/short")
     with pytest.raises(relocate_text.BinaryTextReplaceError):
         spack.relocate.relocate_text_bin([fpath], {short_prefix: long_prefix})
 
 
-@pytest.mark.requires_executables("install_name_tool", "file", "cc")
+@pytest.mark.requires_executables("install_name_tool", "cc")
 def test_fixup_macos_rpaths(make_dylib, make_object_file):
+    compiler_cls = spack.repo.PATH.get_pkg_class("apple-clang")
+    compiler_version = compiler_cls.determine_version("cc")
+    try:
+        # See https://forums.swift.org/t/xcode-ships-llvm-15-but-swift-builds-llvm-16/67377
+        xcode_major_version = int(compiler_version.split(".")[0])
+    except IndexError:
+        pytest.xfail("cannot determine the major version of XCode")
+
     # For each of these tests except for the "correct" case, the first fixup
     # should make changes, and the second fixup should be a null-op.
     fixup_rpath = spack.relocate.fixup_macos_rpath
@@ -301,7 +203,9 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
 
     # Non-relocatable library id and duplicate rpaths
     (root, filename) = make_dylib("abs", duplicate_rpaths)
-    assert fixup_rpath(root, filename)
+    # XCode 15 ships a new linker that takes care of deduplication
+    if xcode_major_version < 15:
+        assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
     # Hardcoded but relocatable library id (but we do NOT relocate)
@@ -310,7 +214,9 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
 
     # Library id uses rpath but there are extra duplicate rpaths
     (root, filename) = make_dylib("rpath", duplicate_rpaths)
-    assert fixup_rpath(root, filename)
+    # XCode 15 ships a new linker that takes care of deduplication
+    if xcode_major_version < 15:
+        assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
     # Shared library was constructed with relocatable id from the get-go
@@ -333,7 +239,9 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
     # Duplicate nonexistent rpath will need *two* passes
     (root, filename) = make_dylib("rpath", bad_rpath * 2)
     assert fixup_rpath(root, filename)
-    assert fixup_rpath(root, filename)
+    # XCode 15 ships a new linker that takes care of deduplication
+    if xcode_major_version < 15:
+        assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
     # Test on an object file, which *also* has type 'application/x-mach-binary'

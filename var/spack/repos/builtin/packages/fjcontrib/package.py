@@ -1,9 +1,6 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import inspect
 
 from spack.package import *
 
@@ -16,6 +13,12 @@ class Fjcontrib(AutotoolsPackage):
 
     tags = ["hep"]
 
+    license("GPL-2.0-or-later")
+
+    version("1.100", sha256="52ad945d9195c40f347958dc04041e41c7130e845ebdf0c13f1bbdd5b6d2429b")
+    version("1.056", sha256="fc31544424dece0d0676ea2433ad1e96fd9db82920bc7a7ef6294ce94e659d6e")
+    version("1.055", sha256="d9aa46560fdfd85082f202a5a9ce64768fe0c598660f013206a8c9c17ecd0f36")
+    version("1.054", sha256="1ef922d4c45863e5fe7a3b64dc441703db6b1c2cc92d4160125dc629b05ac331")
     version("1.052", sha256="bde63c28cbdf992bedea4ddedfc3cd52c9fec241a767cc455dd4ad10e8210c39")
     version("1.051", sha256="76a2ec612c768db3eb6bbaf686d02b05ddb64dde477d185e20df563b52308473")
     version("1.045", sha256="667f15556ca371cfaf185086fb41ac579658a233c18fb1e5153382114f9785f8")
@@ -67,6 +70,11 @@ class Fjcontrib(AutotoolsPackage):
     version("0.001", sha256="51f24ad55e28fb1f9d698270602e5077c920fcf58d8ccfd274efbe829d7dd821")
     version("0.000", sha256="9486b11201e6b6e181b8a3abecd929403ae9aa67de0eb8b7353fb82ab4b89f41")
 
+    # fix incorrect soname in 1.100
+    patch("configure-1.100.patch", when="@1.100")
+
+    depends_on("cxx", type="build")  # generated
+
     depends_on("fastjet")
 
     build_targets = ["all", "fragile-shared"]
@@ -82,9 +90,9 @@ class Fjcontrib(AutotoolsPackage):
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
             for target in self.build_targets:
-                inspect.getmodule(self).make(target)
+                make(target)
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             for target in self.install_targets:
-                inspect.getmodule(self).make(target)
+                make(target)

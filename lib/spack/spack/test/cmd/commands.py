@@ -1,16 +1,15 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import filecmp
 import os
 import shutil
-import subprocess
 
 import pytest
 
 import spack.cmd
+import spack.cmd.commands
 import spack.main
 import spack.paths
 from spack.cmd.commands import _dest_to_fish_complete, _positional_to_subroutine
@@ -56,6 +55,24 @@ def test_subcommands():
     assert "spack view symlink" in out2
     assert "spack rm" in out2
     assert "spack compiler add" in out2
+
+
+@pytest.mark.not_on_windows("subprocess not supported on Windows")
+def test_override_alias():
+    """Test that spack commands cannot be overriden by aliases."""
+
+    install = spack.main.SpackCommand("install", subprocess=True)
+    instal = spack.main.SpackCommand("instal", subprocess=True)
+
+    out = install(fail_on_error=False, global_args=["-c", "config:aliases:install:find"])
+    assert "install requires a package argument or active environment" in out
+    assert "Alias 'install' (mapping to 'find') attempts to override built-in command" in out
+
+    out = install(fail_on_error=False, global_args=["-c", "config:aliases:foo bar:find"])
+    assert "Alias 'foo bar' (mapping to 'find') contains a space, which is not supported" in out
+
+    out = instal(fail_on_error=False, global_args=["-c", "config:aliases:instal:find"])
+    assert "install requires a package argument or active environment" not in out
 
 
 def test_rst():
@@ -138,22 +155,6 @@ def test_update_with_header(tmpdir):
     commands("--update", str(update_file), "--header", str(filename))
 
 
-@pytest.mark.xfail
-def test_no_pipe_error():
-    """Make sure we don't see any pipe errors when piping output."""
-
-    proc = subprocess.Popen(
-        ["spack", "commands", "--format=rst"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-
-    # Call close() on stdout to cause a broken pipe
-    proc.stdout.close()
-    proc.wait()
-    stderr = proc.stderr.read().decode("utf-8")
-
-    assert "Broken pipe" not in stderr
-
-
 def test_bash_completion():
     """Test the bash completion writer."""
     out1 = commands("--format=bash")
@@ -234,9 +235,9 @@ def test_update_completion_arg(shell, tmpdir, monkeypatch):
     # make a mock completion file missing the --update-completion argument
     real_args = spack.cmd.commands.update_completion_args
     shutil.copy(real_args[shell]["header"], mock_args[shell]["header"])
-    with open(real_args[shell]["update"]) as old:
+    with open(real_args[shell]["update"], encoding="utf-8") as old:
         old_file = old.read()
-        with open(mock_args[shell]["update"], "w") as mock:
+        with open(mock_args[shell]["update"], "w", encoding="utf-8") as mock:
             mock.write(old_file.replace("update-completion", ""))
 
     monkeypatch.setattr(spack.cmd.commands, "update_completion_args", mock_args)

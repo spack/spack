@@ -1,5 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,6 +19,9 @@ class PyOgb(PythonPackage):
 
     maintainers("meyersbs")
 
+    license("MIT")
+
+    version("1.3.6", sha256="ce90418a0e3206483187aa7b7ecac1a2c5d85b3b99aceedb807138ee43115914")
     version("1.3.5", sha256="ac958094ac3019822e742155b82cb2bf02830aa72a4264ba9ee09b288f0c080c")
 
     depends_on("py-setuptools", type="build")

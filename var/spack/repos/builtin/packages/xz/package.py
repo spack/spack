@@ -1,5 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,6 +25,14 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
 
     executables = [r"^xz$"]
 
+    license("GPL-2.0-or-later AND Public-Domain AND LGPL-2.1-or-later", checked_by="tgamblin")
+
+    version("5.6.3", sha256="a95a49147b2dbb5487517acc0adcd77f9c2032cf00664eeae352405357d14a6c")
+    version("5.6.2", sha256="e12aa03cbd200597bd4ce11d97be2d09a6e6d39a9311ce72c91ac7deacde3171")
+    # ALERT: don't add XZ 5.6.0 or 5.6.1, https://nvd.nist.gov/vuln/detail/CVE-2024-3094
+    version("5.4.7", sha256="9976ed9cd0764e962d852d7d519ee1c3a7f87aca3b86e5d021a45650ba3ecb41")
+    version("5.4.6", sha256="913851b274e8e1d31781ec949f1c23e8dbcf0ecf6e73a2436dc21769dd3e6f49")
+    version("5.4.5", sha256="8ccf5fff868c006f29522e386fb4c6a1b66463fbca65a4cfc3c4bd596e895e79")
     version("5.4.1", sha256="dd172acb53867a68012f94c17389401b2f274a1aa5ae8f84cbfb8b7e383ea8d3")
     version("5.2.10", sha256="01b71df61521d9da698ce3c33148bff06a131628ff037398c09482f3a26e5408")
     version("5.2.7", sha256="b65f1d0c2708e57716f4dd2216989a73847ac6fdb4168ffceb155767e22b834b")
@@ -36,6 +43,8 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
     version("5.2.2", sha256="6ff5f57a4b9167155e35e6da8b529de69270efb2b4cf3fbabf41a4ee793840b5")
     version("5.2.1", sha256="679148f497e0bff2c1adce42dee5a23f746e71321c33ebb0f641a302e30c2a80")
     version("5.2.0", sha256="f7357d7455a1670229b3cca021da71dd5d13b789db62743c20624bdffc9cc4a5")
+
+    depends_on("c", type="build")  # generated
 
     variant("pic", default=False, description="Compile with position independent code.")
 
@@ -53,6 +62,13 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
     conflicts("platform=windows", when="+pic")  # no pic on Windows
     # prior to 5.2.3, build system is for MinGW only, not currently supported by Spack
     conflicts("platform=windows", when="@:5.2.3")
+    conflicts("platform=windows", when="@5.6:")  # CMake is required
+
+    patch(
+        "nvhpc.patch",
+        when="@5.2.10: %nvhpc",
+        sha256="32228638c462651ec7dedab706d05aa352995f064ace2dee915f31c75cc995c0",
+    )
 
     build_system(conditional("msbuild", when="platform=windows"), "autotools", default="autotools")
 

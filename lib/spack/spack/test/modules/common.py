@@ -1,23 +1,31 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pickle
 import stat
 
 import pytest
 
+from llnl.util.symlink import readlink
+
 import spack.cmd.modules
+import spack.concretize
 import spack.config
 import spack.error
+import spack.modules
+import spack.modules.common
 import spack.modules.tcl
 import spack.package_base
-import spack.schema.modules
-import spack.spec
+import spack.package_prefs
+import spack.repo
+from spack.installer import PackageInstaller
 from spack.modules.common import UpstreamModuleIndex
-from spack.spec import Spec
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
+pytestmark = [
+    pytest.mark.not_on_windows("does not run on windows"),
+    pytest.mark.usefixtures("mock_modules_root"),
+]
 
 
 def test_update_dictionary_extending_list():
@@ -52,7 +60,7 @@ def mock_package_perms(monkeypatch):
 def test_modules_written_with_proper_permissions(
     mock_module_filename, mock_package_perms, mock_packages, config
 ):
-    spec = spack.spec.Spec("mpileaks").concretized()
+    spec = spack.concretize.concretize_one("mpileaks")
 
     # The code tested is common to all module types, but has to be tested from
     # one. Tcl picked at random
@@ -66,7 +74,7 @@ def test_modules_written_with_proper_permissions(
 def test_modules_default_symlink(
     module_type, mock_packages, mock_module_filename, mock_module_defaults, config
 ):
-    spec = spack.spec.Spec("mpileaks@2.3").concretized()
+    spec = spack.concretize.concretize_one("mpileaks@2.3")
     mock_module_defaults(spec.format("{name}{@version}"), True)
 
     generator_cls = spack.modules.module_types[module_type]
@@ -75,7 +83,7 @@ def test_modules_default_symlink(
 
     link_path = os.path.join(os.path.dirname(mock_module_filename), "default")
     assert os.path.islink(link_path)
-    assert os.readlink(link_path) == mock_module_filename
+    assert readlink(link_path) == mock_module_filename
 
     generator.remove()
     assert not os.path.lexists(link_path)
@@ -163,7 +171,7 @@ module_index:
         old_index = spack.modules.common.upstream_module_index
         spack.modules.common.upstream_module_index = upstream_index
 
-        m1_path = spack.modules.common.get_module("tcl", s1, True)
+        m1_path = spack.modules.get_module("tcl", s1, True)
         assert m1_path == "/path/to/a"
     finally:
         spack.modules.common.upstream_module_index = old_index
@@ -172,8 +180,9 @@ module_index:
 @pytest.mark.regression("14347")
 def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeypatch):
     """Test that installed packages that have been removed are still loadable"""
-    spec = Spec("trivial-install-test-package").concretized()
-    spec.package.do_install()
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    PackageInstaller([spec.package], explicit=True).install()
+    spack.modules.module_types["tcl"](spec, "default", True).write()
 
     def find_nothing(*args):
         raise spack.repo.UnknownPackageError("Repo package access is disabled for test")
@@ -184,7 +193,7 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
     with pytest.raises(spack.repo.UnknownPackageError):
         spec.package
 
-    module_path = spack.modules.common.get_module("tcl", spec, True)
+    module_path = spack.modules.get_module("tcl", spec, True)
     assert module_path
 
     spack.package_base.PackageBase.uninstall_by_spec(spec)
@@ -194,7 +203,6 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
 def test_check_module_set_name(mutable_config):
     """Tests that modules set name are validated correctly and an error is reported if the
     name we require does not exist or is reserved by the configuration."""
-
     # Minimal modules.yaml config.
     spack.config.set(
         "modules",
@@ -211,8 +219,15 @@ def test_check_module_set_name(mutable_config):
 
     # Invalid module set names
     msg = "Valid module set names are"
-    with pytest.raises(spack.config.ConfigError, match=msg):
+    with pytest.raises(spack.error.ConfigError, match=msg):
         spack.cmd.modules.check_module_set_name("prefix_inspections")
 
-    with pytest.raises(spack.config.ConfigError, match=msg):
+    with pytest.raises(spack.error.ConfigError, match=msg):
         spack.cmd.modules.check_module_set_name("third")
+
+
+@pytest.mark.parametrize("module_type", ["tcl", "lmod"])
+def test_module_writers_are_pickleable(default_mock_concretization, module_type):
+    s = default_mock_concretization("mpileaks")
+    writer = spack.modules.module_types[module_type](s, "default")
+    assert pickle.loads(pickle.dumps(writer)).spec == s

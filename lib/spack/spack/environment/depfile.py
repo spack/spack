@@ -1,5 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """
@@ -9,11 +8,13 @@ depfiles from an environment.
 
 import os
 import re
+import shlex
 from enum import Enum
 from typing import List, Optional
 
 import spack.deptypes as dt
 import spack.environment.environment as ev
+import spack.paths
 import spack.spec
 import spack.traverse as traverse
 
@@ -226,11 +227,16 @@ class MakefileModel:
             "install_deps_target": self._target("install-deps"),
             "any_hash_target": self._target("%"),
             "jobserver_support": self.jobserver_support,
+            "spack_script": shlex.quote(spack.paths.spack_script),
             "adjacency_list": self.make_adjacency_list,
             "phony_convenience_targets": " ".join(self.phony_convenience_targets),
             "pkg_ids_variable": self.pkg_identifier_variable,
             "pkg_ids": " ".join(self.all_pkg_identifiers),
         }
+
+    @property
+    def empty(self):
+        return len(self.roots) == 0
 
     @staticmethod
     def from_env(
@@ -254,15 +260,10 @@ class MakefileModel:
             jobserver: when enabled, make will invoke Spack with jobserver support. For
                 dry-run this should be disabled.
         """
-        # If no specs are provided as a filter, build all the specs in the environment.
-        if filter_specs:
-            entrypoints = [env.matching_spec(s) for s in filter_specs]
-        else:
-            entrypoints = [s for _, s in env.concretized_specs()]
-
+        roots = env.all_matching_specs(*filter_specs) if filter_specs else env.concrete_roots()
         visitor = DepfileSpecVisitor(pkg_buildcache, dep_buildcache)
         traverse.traverse_breadth_first_with_visitor(
-            entrypoints, traverse.CoverNodesVisitor(visitor, key=lambda s: s.dag_hash())
+            roots, traverse.CoverNodesVisitor(visitor, key=lambda s: s.dag_hash())
         )
 
-        return MakefileModel(env, entrypoints, visitor.adjacency_list, make_prefix, jobserver)
+        return MakefileModel(env, roots, visitor.adjacency_list, make_prefix, jobserver)

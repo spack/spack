@@ -1,5 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -13,6 +12,8 @@ class PyPydmd(PythonPackage):
 
     homepage = "https://mathlab.github.io/PyDMD/"
     url = "https://github.com/mathLab/PyDMD/archive/v0.3.tar.gz"
+
+    license("MIT")
 
     version("0.3", sha256="f490fc139677e4d9fc1240636a2c5992d22879517c9574d13164dc5179b0f785")
 
@@ -28,6 +29,7 @@ class PyPydmd(PythonPackage):
     depends_on("texlive", type="build", when="+docs")
     depends_on("py-sphinx@1.4.0:1.4", type="build", when="+docs")
     depends_on("py-sphinx-rtd-theme", type="build", when="+docs")
+    depends_on("gmake", type="build")
 
     # https://github.com/mathLab/PyDMD/pull/133
     patch("isuue-133.patch", when="@0.3")

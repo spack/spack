@@ -1,5 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -648,10 +647,10 @@ function spack_pathadd -d "Add path to specified variable (defaults to PATH)"
         # passed to regular expression matching (`string match -r`)
         set -l _a "$pa_oldvalue"
 
-        # skip path if it is already contained in the variable
+        # skip path if it is already the first in the variable
         # note spaces in regular expression: we're matching to a space delimited
         # list of paths
-        if not echo $_a | string match -q -r " *$pa_new_path *"
+        if not echo $_a | string match -q -r "^$pa_new_path *"
             if test -n "$pa_oldvalue"
                 set $pa_varname $pa_new_path $pa_oldvalue
             else
@@ -789,8 +788,7 @@ end
 #
 set -l fish_version (string split '.' $FISH_VERSION)
 if test $fish_version[1] -gt 3
-    or test $fish_version[1] -eq 3
-    and test $fish_version[2] -ge 2
+    or begin ; test $fish_version[1] -eq 3 ; and test $fish_version[2] -ge 2 ; end
 
     source $sp_share_dir/spack-completion.fish
 end

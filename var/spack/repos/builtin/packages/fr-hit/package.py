@@ -1,5 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -13,6 +12,8 @@ class FrHit(Package):
     homepage = "http://weizhong-lab.ucsd.edu/frhit"
     url = "http://weizhong-lab.ucsd.edu/frhit/fr-hit-v0.7.1-2013-02-20.tar.gz"
 
+    license("MIT")
+
     version(
         "0.7.1-2013-02-20",
         sha256="44dcfeb73106529fcefb02c017ec7b95b04b6523a2a57683b2bc905c142e62eb",
@@ -20,6 +21,7 @@ class FrHit(Package):
 
     depends_on("perl")
     depends_on("python@2.7:")
+    depends_on("gmake", type="build")
 
     # The patch adds the python interpreter to the beginning of the script
     # allowing it to be run directly without passing the entire path to the

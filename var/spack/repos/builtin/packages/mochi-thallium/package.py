@@ -1,5 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -16,6 +15,21 @@ class MochiThallium(CMakePackage):
     maintainers("mdorier")
 
     version("main", branch="main")
+    version("0.15.0", sha256="a7872e926e97fdf80a67c8e44f1217a959c689763dbcf9712abd913d1ef23bdf")
+    version("0.14.6", sha256="dfdd39fc840a82a69c1698e764239e8aa0a5573f677a52fb2bdd6bffd529a232")
+    version("0.14.5", sha256="8a13f1adb6a549053f56b46235ea81ed9c047cd702b8980035fc81be3ea942e3")
+    version("0.14.4", sha256="bca33ef4af640581a1729606b708974a955a2a2a2f3817ee110c2c9da2da9a99")
+    version("0.14.3", sha256="b37b8fa9976471950e9d74e0269c2dc80ca5353e97c7ee4603460077fab28ca3")
+    version("0.14.2", sha256="7dc03a84845aa4b902c0b52d8384dd1b9bef02b53f880efb02ec58a12d8c6381")
+    version("0.14.1", sha256="0de7b7b5b517af552ababab7b5ef973207515398f7fd9685b3f6841432913c7b")
+    version("0.14.0", sha256="3af3c2e4cae15a256e76df89ed9ad46ced68ca9b045216a9510f563e96722104")
+    version("0.13.1", sha256="8166c412ebeb58898198069adbaf126362cffb2ba80ccf3c24b5cead0368acfa")
+    version("0.13.0", sha256="29f50b338c247ce5945ea90241ad938b951c4bac8af070cc3136f10f309ae542")
+    version("0.12.0", sha256="cbb6ea8f479d74a4310847ffd7eb4fb11107732540ebc13b5989b7c9809f6d06")
+    version("0.11.3", sha256="d1ffd7ee1ccbcfb00f246cb29c5bc2560e59f8808609cbc19b7098aa8fc903c4")
+    version("0.11.2", sha256="4f1e57ca843b7592525c179dec73bfb603a27fbda4feaf028d636e05c1b38e36")
+    version("0.11.1", sha256="be99bec2309ce1945a777fba720175f409972cbf27b73388728a740d6406a040")
+    version("0.11.0", sha256="c216310fdef9281e1c7e3264c148c560d7f5edd15816d35866efcc543185b7ee")
     version("0.10.1", sha256="5a8dc1f1622f4186b02fbabd47a8a33ca6be3d07757010f3d63d30e9f74fec8c")
     version("0.10.0", sha256="5319e25a42deab7c639e980885fe3be717cda2c2c693a1906f5a6c79b31edef8")
     version("0.9.1", sha256="dee884d0e054c838807f9c17781acfa99b26e3be1cc527bf09ceaa997336b3e4")
@@ -43,14 +57,19 @@ class MochiThallium(CMakePackage):
     version("0.3.1", sha256="61403b1ba5f4d205408e6a7e04c785df6dea02f59fe9fa1742db05aa752cc8a0")
     version("0.3", sha256="4f9f78e52c1725f6ea5f933d7548bde36729dd9eff08f58fe7fe40682bc5f748")
 
+    depends_on("cxx", type="build")  # generated
+
     variant(
         "cereal",
         default=True,
         description="Use the cereal library for serialization",
         when="@0.4.1:",
     )
+    conflicts("~cereal", when="@0.14.0:", msg="Thallium 0.14.0 and above requires Cereal")
 
     depends_on("pkgconfig", type=("build"))
+    depends_on("mochi-margo@0.18.0:", when="@0.14.0:")
+    depends_on("mochi-margo@0.12.0:", when="@0.11.2:")
     depends_on("mochi-margo@0.9.8:", when="@0.10.0:")
     depends_on("mochi-margo@0.7:", when="@0.7:")
     depends_on("mochi-margo@0.6:", when="@0.5:")

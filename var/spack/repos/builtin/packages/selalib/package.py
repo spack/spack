@@ -1,5 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,6 +16,10 @@ class Selalib(CMakePackage):
     maintainers("pnavaro", "freifrauvonbleifrei")
 
     version("main", branch="main")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("fmempool", default=False, description="Use memory pool")
     variant("mpi", default=True, description="Build with MPI support")
@@ -39,10 +42,12 @@ class Selalib(CMakePackage):
     depends_on("fgsl")
     depends_on("git", type=("build", "run", "test"))
     depends_on("hdf5+fortran+cxx")
+    depends_on("lapack", when="~mpi")
     with when("+mpi"):
         depends_on("mpi")
         depends_on("fftw+mpi")
         depends_on("hdf5+mpi")
+        depends_on("scalapack")
     depends_on("python@3.0.0:", type=("build"))
     # beware: compiling w/ zfp may throw type mismatch errors
     depends_on("zfp+fortran", when="+compression")
