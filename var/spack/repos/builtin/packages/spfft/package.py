@@ -20,66 +20,21 @@ class Spfft(CMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
-    version(
-        "1.1.1",
-        sha256="9aebb9b50adeaa989f531973a95fde0692def1134100e4c0a513b52b1d1ca0ce",
-    )
-    version(
-        "1.1.0",
-        sha256="231454a3142bc56249b1b551ac5175882311365509cc111d7ad0e91ed5537102",
-    )
-    version(
-        "1.0.6",
-        sha256="e1b927c61f8abbb4a9937653f917169e6253e8c40b850df491594310943ca14b",
-    )
-    version(
-        "1.0.5",
-        sha256="2a59d856286ea8559f00a32fc38f9f7546209cfa90112232a5288a69689a6e05",
-    )
-    version(
-        "1.0.4",
-        sha256="41e63880d95343da0d8c3dbe5bfb3d46a1d612199cc9cc13a936f1628a7fdb8e",
-    )
-    version(
-        "1.0.3",
-        sha256="4f87734e3582ef96ddc0402d0db78cfc173bed9cab3e0d9c6a6bf8b660d69559",
-    )
-    version(
-        "1.0.2",
-        sha256="9b1296bda0b9ec3d37c74fd64354a01ebc6e2da7cb026c1f821882160b03c692",
-    )
-    version(
-        "1.0.1",
-        sha256="f8ab706309776cfbd2bfd8e29a6a9ffb5c8f3cd62399bf82db1e416ae5c490c8",
-    )
-    version(
-        "1.0.0",
-        sha256="bd98897aa6734563ec63cd84168e731ef2e2bbc01a574c6dc59b74475742b6ee",
-    )
-    version(
-        "0.9.13",
-        sha256="5ccc93c9362bec14cfb6e31dd0e7ae7e48db0453ab49ebc9722041b69db759ef",
-    )
-    version(
-        "0.9.12",
-        sha256="1f7bf5164dcceb0e3bbce7d6ff9faef3145ad17cf3430149d40a98c43c010acc",
-    )
-    version(
-        "0.9.11",
-        sha256="36542a60378e8672654188dee006975ef9e10f502791459ff7ebf4b38451cb9b",
-    )
-    version(
-        "0.9.10",
-        sha256="9cbbb7ba5e53e17eeb45e809841d8272e5333f739c2442a99c3e255c1ddec3e9",
-    )
-    version(
-        "0.9.9",
-        sha256="a8fd7a2d767716bb73185ca03bf4c106c6981b79130f3e456e5d2e744a2b3ba0",
-    )
-    version(
-        "0.9.8",
-        sha256="f49fa51316bbfa68309e951d2375e1f6904120c93868cbe13bc2974c0b801a3f",
-    )
+    version("1.1.1", sha256="9aebb9b50adeaa989f531973a95fde0692def1134100e4c0a513b52b1d1ca0ce")
+    version("1.1.0", sha256="231454a3142bc56249b1b551ac5175882311365509cc111d7ad0e91ed5537102")
+    version("1.0.6", sha256="e1b927c61f8abbb4a9937653f917169e6253e8c40b850df491594310943ca14b")
+    version("1.0.5", sha256="2a59d856286ea8559f00a32fc38f9f7546209cfa90112232a5288a69689a6e05")
+    version("1.0.4", sha256="41e63880d95343da0d8c3dbe5bfb3d46a1d612199cc9cc13a936f1628a7fdb8e")
+    version("1.0.3", sha256="4f87734e3582ef96ddc0402d0db78cfc173bed9cab3e0d9c6a6bf8b660d69559")
+    version("1.0.2", sha256="9b1296bda0b9ec3d37c74fd64354a01ebc6e2da7cb026c1f821882160b03c692")
+    version("1.0.1", sha256="f8ab706309776cfbd2bfd8e29a6a9ffb5c8f3cd62399bf82db1e416ae5c490c8")
+    version("1.0.0", sha256="bd98897aa6734563ec63cd84168e731ef2e2bbc01a574c6dc59b74475742b6ee")
+    version("0.9.13", sha256="5ccc93c9362bec14cfb6e31dd0e7ae7e48db0453ab49ebc9722041b69db759ef")
+    version("0.9.12", sha256="1f7bf5164dcceb0e3bbce7d6ff9faef3145ad17cf3430149d40a98c43c010acc")
+    version("0.9.11", sha256="36542a60378e8672654188dee006975ef9e10f502791459ff7ebf4b38451cb9b")
+    version("0.9.10", sha256="9cbbb7ba5e53e17eeb45e809841d8272e5333f739c2442a99c3e255c1ddec3e9")
+    version("0.9.9", sha256="a8fd7a2d767716bb73185ca03bf4c106c6981b79130f3e456e5d2e744a2b3ba0")
+    version("0.9.8", sha256="f49fa51316bbfa68309e951d2375e1f6904120c93868cbe13bc2974c0b801a3f")
 
     variant("openmp", default=True, description="Build with OpenMP support")
     variant("mpi", default=True, description="enable MPI")
