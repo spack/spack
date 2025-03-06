@@ -74,6 +74,9 @@ def dedupe_paths(paths: List[str]) -> List[str]:
     This ensures that we pick for example ``/usr/bin`` over ``/bin`` if the latter is a symlink to
     the former."""
     seen: Dict[Tuple[int, int], str] = {}
+
+    linked_parent_check = lambda x: any([llnl.util.symlink.islink(str(y)) for y in pathlib.Path(x).parents])
+
     for path in paths:
         identifier = file_identifier(path)
         if identifier not in seen:
@@ -88,7 +91,7 @@ def dedupe_paths(paths: List[str]) -> List[str]:
         # checking if latest/bin is a symlink will return false because the bin directory
         # is not a symlink, and will cause the "latest/bin" dir to override the "2025.0/bin"
         # checking for all parent paths of our detected binaries will prevent this case
-        elif not any([llnl.util.symlink.islink(str(x)) for x in pathlib.Path(path).parents]):
+        elif not (llnl.util.symlink.islink(path) or linked_parent_check(path)):
             seen[identifier] = path
     return list(seen.values())
 
