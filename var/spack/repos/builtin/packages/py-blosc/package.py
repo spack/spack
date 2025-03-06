@@ -20,10 +20,7 @@ class PyBlosc(PythonPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    # the vendored cpuinfo in 1.9.1 doesn't work with ptyhon@3.7:
-    # https://github.com/Blosc/python-blosc/issues/225
-    depends_on("python@3.6", type=("build", "run"), when="@1.9.1")
-
+    depends_on("python@3.7:", type=("build", "run"), when="@1.9:1.10")
     depends_on("python@3.9:", type=("build", "run"), when="@1.11.2:")
 
     depends_on("py-setuptools", type="build")
@@ -39,10 +36,10 @@ class PyBlosc(PythonPackage):
 
     # c-blosc is internally vendored but 1.11.2 doesn't correctly ship the
     # c-blosc in the tarball https://github.com/Blosc/python-blosc/issues/337
-    # so use the c-blosc version as specified in
+    # so use the exact c-blosc version as specified in
     # https://github.com/Blosc/python-blosc/releases/tag/v1.11.2
     depends_on("c-blosc@1.21.6", type=("build", "run"), when="@1.11.2 ^python@3.12:")
 
     def setup_build_environment(self, env):
-        if self.spec.satisfies("@1.11.2 ^python@3.12:"):
+        if self.spec.satisfies("^c-blosc"):
             env.set("USE_SYSTEM_BLOSC", 1)
