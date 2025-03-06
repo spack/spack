@@ -50,8 +50,9 @@ ninja-1.12.1-vmvycib6vmiofkdqgrblo7zsvp7odwut
 .. code-block:: console
 
     $ spack buildcache push ./spack-cache ninja
-    ==> Pushed ninja@1.12.1/vmvycib
-    ==> Pushed ninja@1.12.1/vmvycib to file:///home/spackuser/spack/spack-cache
+    ==> Selected 30 specs to push to file:///home/spackuser/spack/spack-cache
+    ...
+    ==> [30/30] Pushed ninja@1.12.1/ngldn2k
 
 Note that ``ninja`` must be installed locally for this to work.
 
@@ -101,9 +102,10 @@ Now you can use list:
 .. code-block:: console
 
     $  spack buildcache list
-    ==> 1 cached build.
-    -- linux-ubuntu20.04-skylake / gcc@9.3.0 ------------------------
-    ninja@1.10.2
+    ==> 24 cached builds.
+    -- linux-ubuntu22.04-sapphirerapids / gcc@12.3.0 ----------------
+    [ ... ]
+    ninja@1.12.1
 
 With ``mymirror`` configured and an index available, Spack will automatically
 use it during concretization and installation. That means that you can expect
@@ -114,17 +116,17 @@ verify by re-installing ninja:
 
     $ spack uninstall ninja
     $ spack install ninja
-    ==> Installing ninja-1.11.1-yxferyhmrjkosgta5ei6b4lqf6bxbscz
-    ==> Fetching file:///home/spackuser/spack/spack-cache/build_cache/linux-ubuntu20.04-skylake-gcc-9.3.0-ninja-1.10.2-yxferyhmrjkosgta5ei6b4lqf6bxbscz.spec.json.sig
-    gpg: Signature made Do 12 Jan 2023 16:01:04 CET
-    gpg:                using RSA key 61B82B2B2350E171BD17A1744E3A689061D57BF6
+    [ ... ]
+    ==> Installing ninja-1.12.1-ngldn2kpvb6lqc44oqhhow7fzg7xu7lh [24/24]
+    ==> Fetching file:///home/spackuser/spack/spack-cache/v3/specs/ninja-1.12.1-ngldn2kpvb6lqc44oqhhow7fzg7xu7lh.spec.json.sig
+    gpg: Signature made Thu 06 Mar 2025 10:03:38 AM MST
+    gpg:                using RSA key 75BC0528114909C076E2607418010FFAD73C9B07
     gpg: Good signature from "example (GPG created for Spack) <example@example.com>" [ultimate]
-    ==> Fetching file:///home/spackuser/spack/spack-cache/build_cache/linux-ubuntu20.04-skylake/gcc-9.3.0/ninja-1.10.2/linux-ubuntu20.04-skylake-gcc-9.3.0-ninja-1.10.2-yxferyhmrjkosgta5ei6b4lqf6bxbscz.spack
-    ==> Extracting ninja-1.10.2-yxferyhmrjkosgta5ei6b4lqf6bxbscz from binary cache
-    ==> ninja: Successfully installed ninja-1.11.1-yxferyhmrjkosgta5ei6b4lqf6bxbscz
-    Search: 0.00s.  Fetch: 0.17s.  Install: 0.12s.  Total: 0.29s
-    [+] /home/harmen/spack/opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/ninja-1.11.1-yxferyhmrjkosgta5ei6b4lqf6bxbscz
-
+    ==> Fetching file:///home/spackuser/spack/spack-cache/blobs/sha256/c7/c79ac6e40dfdd01ac499b020e52e57aa91151febaea3ad183f90c0f78b64a31a
+    ==> Extracting ninja-1.12.1-ngldn2kpvb6lqc44oqhhow7fzg7xu7lh from binary cache
+    ==> ninja: Successfully installed ninja-1.12.1-ngldn2kpvb6lqc44oqhhow7fzg7xu7lh
+      Search: 0.00s.  Fetch: 0.11s.  Install: 0.11s.  Extract: 0.10s.  Relocate: 0.00s.  Total: 0.22s
+    [+] /home/spackuser/spack/opt/spack/linux-ubuntu22.04-sapphirerapids/gcc-12.3.0/ninja-1.12.1-ngldn2kpvb6lqc44oqhhow7fzg7xu7lh
 
 It worked! You've just completed a full example of creating a build cache with
 a spec of interest, adding it as a mirror, updating its index, listing the contents,
