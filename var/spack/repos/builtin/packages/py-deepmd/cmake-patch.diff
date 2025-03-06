@@ -1,0 +1,50 @@
+diff --git a/source/CMakeLists.txt b/source/CMakeLists.txt
+index 44868531..ad06422a 100644
+--- a/source/CMakeLists.txt
++++ b/source/CMakeLists.txt
+@@ -15,9 +15,14 @@ set(DEEPMD_C_ROOT
+     ""
+     CACHE PATH "Path to imported DeePMD-kit C library")
+ 
+-if(NOT DEFINED CMAKE_CXX_STANDARD)
+-  set(CMAKE_CXX_STANDARD 11)
+-endif()
++#if(NOT DEFINED CMAKE_CXX_STANDARD)
++#  set(CMAKE_CXX_STANDARD 11)
++#endif()
++
++set(CMAKE_CUDA_STANDARD 14)
++set(CMAKE_HIP_STANDARD 14)
++set(CMAKE_CXX_STANDARD 17)
++
+ macro(set_if_higher VARIABLE VALUE)
+   # ${VARIABLE} is a variable name, not a string
+   if(${VARIABLE} LESS "${VALUE}")
+@@ -438,6 +443,7 @@ set(LOW_PREC_VARIANT "_low")
+ 
+ # find openmp
+ find_package(OpenMP)
++
+ if(OPENMP_FOUND)
+   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+@@ -504,6 +510,7 @@ if(DEEPMD_C_ROOT)
+     PROPERTIES IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+                IMPORTED_LOCATION "${deepmd_c}"
+                INTERFACE_INCLUDE_DIRECTORIES "${DEEPMD_INCLUDE_C_DIR}/deepmd")
++
+   # use variable for TF path to set deepmd_c path
+   set(TENSORFLOW_ROOT "${DEEPMD_C_ROOT}")
+   set(TensorFlow_LIBRARY_PATH "${DEEPMD_C_ROOT}/lib")
+diff --git a/source/lib/src/gpu/CMakeLists.txt b/source/lib/src/gpu/CMakeLists.txt
+index 0d176dc3..0281b8f1 100644
+--- a/source/lib/src/gpu/CMakeLists.txt
++++ b/source/lib/src/gpu/CMakeLists.txt
+@@ -9,7 +9,6 @@ if(USE_CUDA_TOOLKIT)
+     set(CMAKE_CUDA_ARCHITECTURES all)
+   endif()
+   enable_language(CUDA)
+-  set(CMAKE_CUDA_STANDARD 11)
+ 
+   find_package(CUDAToolkit REQUIRED)
+ 
