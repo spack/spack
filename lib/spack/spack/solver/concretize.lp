@@ -1422,6 +1422,7 @@ compiler(Compiler) :- compiler_supports_target(Compiler, _, _).
 language("c").
 language("cxx").
 language("fortran").
+language_runtime("fortran-rt").
 
 error(10, "Only external, or concrete, compilers are allowed for the {0} language", Language)
   :- provider(ProviderNode, node(_, Language)),
@@ -1684,7 +1685,7 @@ opt_criterion(60, "preferred providers for roots").
 #minimize{
     Weight@60+Priority,ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
-      attr("root", ProviderNode), not language(Virtual),
+      attr("root", ProviderNode), not language(Virtual), not language_runtime(Virtual),
       build_priority(ProviderNode, Priority)
 }.
 
@@ -1717,7 +1718,7 @@ opt_criterion(48, "preferred providers (non-roots)").
 #minimize{
     Weight@48+Priority,ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
-      not attr("root", ProviderNode), not language(Virtual),
+      not attr("root", ProviderNode), not language(Virtual), not language_runtime(Virtual),
       build_priority(ProviderNode, Priority)
 }.
 
@@ -1810,6 +1811,15 @@ opt_criterion(5, "non-preferred targets").
       not runtime(Package)
 }.
 
+opt_criterion(4, "preferred providers (language runtimes)").
+#minimize{ 0@204: #true }.
+#minimize{ 0@4: #true }.
+#minimize{
+    Weight@4+Priority,ProviderNode,X,Virtual
+    : provider_weight(ProviderNode, node(X, Virtual), Weight),
+      language_runtime(Virtual),
+      build_priority(ProviderNode, Priority)
+}.
 
 % Choose more recent versions for runtimes
 opt_criterion(3, "version badness (runtimes)").
