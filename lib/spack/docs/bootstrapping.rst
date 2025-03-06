@@ -43,9 +43,9 @@ concretizes a spec, like:
 .. code-block:: console
 
    % spack solve zlib
-   ==> Bootstrapping clingo from pre-built binaries
-   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.1/build_cache/darwin-catalina-x86_64/apple-clang-12.0.0/clingo-bootstrap-spack/darwin-catalina-x86_64-apple-clang-12.0.0-clingo-bootstrap-spack-p5on7i4hejl775ezndzfdkhvwra3hatn.spack
-   ==> Installing "clingo-bootstrap@spack%apple-clang@12.0.0~docs~ipo+python build_type=Release arch=darwin-catalina-x86_64" from a buildcache
+   ==> Fetching https://ghcr.io/v2/spack/bootstrap-buildcache-v1/blobs/sha256:8d2764eefa443c29c7c9120079e3bbe7576bbc496b15843ad18d18892338a5ba
+   ==> Fetching https://ghcr.io/v2/spack/bootstrap-buildcache-v1/blobs/sha256:a4abec667660307ad5cff0a616d6651e187cc7b1386fd8cd4b6b288a01614076
+   ==> Installing "clingo-bootstrap@=spack%gcc@=10.2.1~docs+ipo+optimized+python+static_libstdcpp build_system=cmake build_type=Release generator=make patches=bebb819,ec99431 arch=linux-centos7-x86_64" from a buildcache
    [ ... ]
 
 automatically triggers the bootstrapping of clingo from pre-built binaries as expected.
@@ -56,14 +56,15 @@ might be useful to setup containers or other similar environments:
 .. code-block:: console
 
    $ spack bootstrap now
-   ==> Bootstrapping clingo from pre-built binaries
-   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64-gcc-10.2.1-clingo-bootstrap-spack-shqedxgvjnhiwdcdrvjhbd73jaevv7wt.spec.json
-   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64/gcc-10.2.1/clingo-bootstrap-spack/linux-centos7-x86_64-gcc-10.2.1-clingo-bootstrap-spack-shqedxgvjnhiwdcdrvjhbd73jaevv7wt.spack
-   ==> Installing "clingo-bootstrap@spack%gcc@10.2.1~docs~ipo+python+static_libstdcpp build_type=Release arch=linux-centos7-x86_64" from a buildcache
-   ==> Bootstrapping patchelf from pre-built binaries
-   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64-gcc-10.2.1-patchelf-0.15.0-htk62k7efo2z22kh6kmhaselru7bfkuc.spec.json
-   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.15.0/linux-centos7-x86_64-gcc-10.2.1-patchelf-0.15.0-htk62k7efo2z22kh6kmhaselru7bfkuc.spack
-   ==> Installing "patchelf@0.15.0%gcc@10.2.1 ldflags="-static-libstdc++ -static-libgcc"  arch=linux-centos7-x86_64" from a buildcache
+   ==> Fetching https://ghcr.io/v2/spack/bootstrap-buildcache-v1/blobs/sha256:16f27dafb233a9aff14adff75112d0a8b2e03492f796f12101785c02950aa7f6
+   ==> Fetching https://ghcr.io/v2/spack/bootstrap-buildcache-v1/blobs/sha256:b76a4eaef54b24d0ea9b8dfa9392f7ab519f918ae7e1a8bb919539d9adeddbcb
+   ==> Installing "gcc-runtime@=10.2.1%gcc@=10.2.1 build_system=generic arch=linux-centos7-x86_64" from a buildcache
+   ==> Fetching https://ghcr.io/v2/spack/bootstrap-buildcache-v1/blobs/sha256:5367a0d038a87532fbbe373da31502bd32e399cc113343f403ebbc9d8ca7d552
+   ==> Fetching https://ghcr.io/v2/spack/bootstrap-buildcache-v1/blobs/sha256:79dfb7064e7993a97474c5f6b7560254fe19465a6c4cfc44569852e5a6ab542b
+   ==> Installing "patchelf@=0.17.2%gcc@=10.2.1 build_system=autotools arch=linux-centos7-x86_64" from a buildcache
+   ==> Fetching https://ghcr.io/v2/spack/bootstrap-buildcache-v1/blobs/sha256:8d2764eefa443c29c7c9120079e3bbe7576bbc496b15843ad18d18892338a5ba
+   ==> Fetching https://ghcr.io/v2/spack/bootstrap-buildcache-v1/blobs/sha256:a4abec667660307ad5cff0a616d6651e187cc7b1386fd8cd4b6b288a01614076
+   ==> Installing "clingo-bootstrap@=spack%gcc@=10.2.1~docs+ipo+optimized+python+static_libstdcpp build_system=cmake build_type=Release generator=make patches=bebb819,ec99431 arch=linux-centos7-x86_64" from a buildcache
 
 -----------------------
 The Bootstrapping store
