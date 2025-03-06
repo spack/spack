@@ -19,7 +19,7 @@ class PyAiojobs(PythonPackage):
 
     variant("aiohttp", default=False, description="Enable aiohttp integration")
 
-    depends_on("python@3.9:", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"))
 
     depends_on("py-setuptools@46.4:", type="build")
 
