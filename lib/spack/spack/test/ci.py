@@ -347,7 +347,6 @@ def test_get_spec_filter_list(mutable_mock_env_path, mutable_mock_repo):
     for key, val in expectations.items():
         affected_specs = ci.get_spec_filter_list(e1, touched, dependent_traverse_depth=key)
         affected_pkg_names = set([s.name for s in affected_specs])
-        print(f"{key}: {affected_pkg_names}")
         assert affected_pkg_names == val
 
 

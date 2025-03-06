@@ -210,7 +210,6 @@ def check_args_contents(cc, args, must_contain, must_not_contain):
     """
     with set_env(SPACK_TEST_COMMAND="dump-args"):
         cc_modified_args = cc(*args, output=str).strip().split("\n")
-        print(cc_modified_args)
         for a in must_contain:
             assert a in cc_modified_args
         for a in must_not_contain:

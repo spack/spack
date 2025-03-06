@@ -149,11 +149,8 @@ def test_reverse_environment_modifications(working_env):
     os.environ.clear()
     os.environ.update(start_env)
 
-    print(os.environ)
     to_reverse.apply_modifications()
-    print(os.environ)
     reversal.apply_modifications()
-    print(os.environ)
 
     start_env.pop("UNSET")
     assert os.environ == start_env

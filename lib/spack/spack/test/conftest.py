@@ -66,6 +66,8 @@ from spack.installer import PackageInstaller
 from spack.main import SpackCommand
 from spack.util.pattern import Bunch
 
+from ..enums import ConfigScopePriority
+
 mirror_cmd = SpackCommand("mirror")
 
 
@@ -337,6 +339,16 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if any(x in item.keywords for x in slow_tests):
             item.add_marker(skip_as_slow)
+
+
+@pytest.fixture(scope="function")
+def use_concretization_cache(mutable_config, tmpdir):
+    """Enables the use of the concretization cache"""
+    spack.config.set("config:concretization_cache:enable", True)
+    # ensure we have an isolated concretization cache
+    new_conc_cache_loc = str(tmpdir.mkdir("concretization"))
+    spack.config.set("config:concretization_cache:path", new_conc_cache_loc)
+    yield
 
 
 #
@@ -723,11 +735,23 @@ def configuration_dir(tmpdir_factory, linux_os):
 def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
     return [
-        spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
-        spack.config.DirectoryConfigScope("site", str(configuration_dir.join("site"))),
-        spack.config.DirectoryConfigScope("system", str(configuration_dir.join("system"))),
-        spack.config.DirectoryConfigScope("user", str(configuration_dir.join("user"))),
-        spack.config.InternalConfigScope("command_line"),
+        (
+            ConfigScopePriority.BUILTIN,
+            spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
+        ),
+        (
+            ConfigScopePriority.CONFIG_FILES,
+            spack.config.DirectoryConfigScope("site", str(configuration_dir.join("site"))),
+        ),
+        (
+            ConfigScopePriority.CONFIG_FILES,
+            spack.config.DirectoryConfigScope("system", str(configuration_dir.join("system"))),
+        ),
+        (
+            ConfigScopePriority.CONFIG_FILES,
+            spack.config.DirectoryConfigScope("user", str(configuration_dir.join("user"))),
+        ),
+        (ConfigScopePriority.COMMAND_LINE, spack.config.InternalConfigScope("command_line")),
     ]
 
 
@@ -794,13 +818,11 @@ def mock_wsdk_externals(monkeypatch_session):
 def concretize_scope(mutable_config, tmpdir):
     """Adds a scope for concretization preferences"""
     tmpdir.ensure_dir("concretize")
-    mutable_config.push_scope(
+    with spack.config.override(
         spack.config.DirectoryConfigScope("concretize", str(tmpdir.join("concretize")))
-    )
+    ):
+        yield str(tmpdir.join("concretize"))
 
-    yield str(tmpdir.join("concretize"))
-
-    mutable_config.pop_scope()
     spack.repo.PATH._provider_index = None
 
 
@@ -2126,8 +2148,7 @@ def _c_compiler_always_exists():
 @pytest.fixture(scope="session")
 def mock_test_cache(tmp_path_factory):
     cache_dir = tmp_path_factory.mktemp("cache")
-    print(cache_dir)
-    return spack.util.file_cache.FileCache(str(cache_dir))
+    return spack.util.file_cache.FileCache(cache_dir)
 
 
 class MockHTTPResponse(io.IOBase):

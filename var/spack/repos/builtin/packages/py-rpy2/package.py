@@ -10,39 +10,66 @@ class PyRpy2(PythonPackage):
     interface to R from Python, a proposed high-level interface,
     including wrappers to graphical libraries, as well as R-like
     structures and functions.
-
     """
 
+    homepage = "https://rpy2.github.io"
     pypi = "rpy2/rpy2-2.5.4.tar.gz"
 
     license("GPL-2.0-or-later")
 
-    version("3.0.4", sha256="2af5158a5d56af7f7bf5e54d8d7e87b6f115ff40f056d82f93cad0cbf6acc0cb")
-    version("3.0.0", sha256="34efc2935d9015527837d6b1de29641863d184b19d39ad415d5384be8a015bce")
-    version("2.9.4", sha256="be57f741d0c284b5d8785ab03dff0e829303e5ac30e548d5ceb46e05b168812e")
-    version("2.8.6", sha256="004d13734a7b9a85cbc1e7a93ec87df741e28db1273ab5b0d9efaac04a9c5f98")
-    version("2.5.6", sha256="d0d584c435b5ed376925a95a4525dbe87de7fa9260117e9f208029e0c919ad06")
-    version("2.5.4", sha256="d521ecdd05cd0c31ab017cb63e9f63c29b524e46ec9063a920f640b5875f8a90")
+    maintainers("Chrismarsh")
 
-    # FIXME: Missing dependencies:
-    # ld: cannot find -licuuc
-    # ld: cannot find -licui18
+    version("3.5.17", sha256="dbff08c30f3d79161922623858a5b3b68a3fba8ee1747d6af41bc4ba68f3d582")
 
-    # All versions
-    depends_on("py-setuptools", type="build")
-    depends_on("r", type=("build", "run"))
+    # these are from 2019 and don't cleanly work with new r (4+) and pandas versions
+    # but the exact version incompatibility range is not clear without substantial testing
+    with default_args(deprecated=True):
+        version("3.0.4", sha256="2af5158a5d56af7f7bf5e54d8d7e87b6f115ff40f056d82f93cad0cbf6acc0cb")
+        version("3.0.0", sha256="34efc2935d9015527837d6b1de29641863d184b19d39ad415d5384be8a015bce")
 
-    # @3.0.0:
-    depends_on("py-cffi@1.0.0:", when="@3.0.0:", type=("build", "run"))
-    depends_on("py-simplegeneric", when="@3.0.0:", type=("build", "run"))
-    depends_on("py-pytest", when="@3:", type=("build", "run"))
+    variant("numpy", default=True, description="Numpy", when="@3.5.17:")
+    variant("pandas", default=True, description="Pandas", when="@3.5.17:")
+    variant("ipython", default=True, description="iPython", when="@3.5.17:")
 
-    # @2.9.0:
-    depends_on("r@3.3:", when="@2.9.0:", type=("build", "run"))
-    depends_on("python@3.5:", when="@2.9.0:", type=("build", "run"))
-    depends_on("py-jinja2", when="@2.9.0:", type=("build", "run"))
-    depends_on("py-six", when="@2.9.0:2.9", type=("build", "run"))
+    # many of the previous minor and patch versions change dependency versions so future updates
+    # should be careful of that
+    depends_on("python@3.8:", type=("build", "run"), when="@3.5.17:")
 
-    # @:2.8.6
-    depends_on("r@2.8:", when="@:2.8.6", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
+    # https://github.com/rpy2/rpy2/blob/RELEASE_3_5_17/setup.py#L42C1-L42C14
+    depends_on("r@3.5:", type=("build", "run"), when="@3.5.17:")
+
+    depends_on("py-setuptools@61:", type="build", when="@3.5.17:")
+
+    # not explicity stated as required but needed from testing
+    depends_on("readline", type=("build", "run"), when="@3.5.17:")
+
+    # @1.15.1: is needed for run, @1.15.0: for build but use one version for simplicity
+    depends_on("py-cffi@1.15.1:", type=("build", "run"), when="@3.5.17:")
+    depends_on("py-jinja2", type=("build", "run"), when="@3.5.17:")
+    depends_on("py-tzlocal", type=("build", "run"), when="@3.5.17:")
+
+    # optional variant
+    depends_on("py-ipython", type=("build", "run"), when="+ipython")
+
+    # optional variant
+    depends_on("py-numpy@1.26:", type=("build", "run"), when="+numpy ^python@3.9:")
+    depends_on("py-numpy@:1.25", type=("build", "run"), when="+numpy ^python@:3.8")
+
+    # optional variant
+    depends_on("py-pandas", type=("build", "run"), when="+pandas ^python@:3.9")
+    depends_on("py-pandas@1.3.5:", type=("build", "run"), when="+pandas ^python@3.10:")
+
+    depends_on("py-backports-zoneinfo", type=("build", "run"), when="@3.5.17: ^python@:3.8")
+
+    # These are from 2019 and predate the pyproject.toml config that currently exists
+    with when("@3.0.0:3.0.4"):
+        # Doesn't support post-distutil removal until 3.5.13
+        # https://github.com/rpy2/rpy2/releases/tag/RELEASE_3_5_13
+        depends_on("python@3.5:3.11", type=("build", "run"))
+        depends_on("py-setuptools", type="build")
+
+        depends_on("py-cffi@1.0.0:", type=("build", "run"))
+        depends_on("py-simplegeneric", type=("build", "run"))
+        depends_on("py-pytest", type=("build", "run"))
+
+        depends_on("r@3.3:", type=("build", "run"))

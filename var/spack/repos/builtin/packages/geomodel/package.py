@@ -80,7 +80,12 @@ class Geomodel(CMakePackage):
     depends_on("pythia8", when="+pythia")
     with when("+visualization"):
         depends_on("hdf5+cxx")
-        depends_on("qt +gui +opengl +sql")
+        depends_on("qmake")
+        with when("^[virtuals=qmake] qt"):
+            depends_on("qt +gui +opengl +sql")
+        with when("^[virtuals=qmake] qt-base"):
+            depends_on("qt-base +gui +opengl +sql +widgets")
+            depends_on("qt-5compat")
         depends_on("coin3d")
         depends_on("soqt")
         depends_on("opengl")
@@ -94,5 +99,8 @@ class Geomodel(CMakePackage):
             self.define_from_variant("GEOMODEL_BUILD_EXAMPLES", "examples"),
             self.define_from_variant("GEOMODEL_BUILD_TOOLS", "tools"),
             self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
+            self.define(
+                "GEOMODEL_USE_QT6", self.spec.satisfies("+visualization ^[virtuals=qmake] qt-base")
+            ),
         ]
         return args
