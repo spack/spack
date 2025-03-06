@@ -189,21 +189,18 @@ archive file. The metadata files can either be unsigned, in which case
 the contents are simply the json-serialized concrete spec plus metadata,
 or they can be signed, in which case the json-serialized concrete spec
 plus metadata is wrapped in a gpg cleartext signature. Built package
-metadata files are named to indicate the operating system and
-architecture for which the package was built as well as the compiler
-used to build it and the packages name and version. For example::
+metadata files are named to indicate the package name and version, as
+well as the hash of the concrete spec. For example::
 
-  linux-ubuntu18.04-haswell-gcc-7.5.0-zlib-1.2.12-llv2ysfdxnppzjrt5ldybb5c52qbmoow.spec.json.sig
+  gcc-runtime-12.3.0-qyu2lvgt3nxh7izxycugdbgf5gsdpkjt.spec.json.sig
 
 would contain the concrete spec and binary metadata for a binary package
-of ``zlib@1.2.12``, built for the ``ubuntu`` operating system and ``haswell``
-architecture. The id of the built package exists in the name of the file
-as well (after the package name and version) and in this case begins
-with ``llv2ys``. The id distinguishes a particular built package from all
-other built packages with the same os/arch, compiler, name, and version.
-Below is an example of a signed binary package metadata file. Such a
-file would live in the versioned specs directory of a binary mirror, for
-example ``v3/specs/``::
+of ``gcc-runtime@12.3.0``. The id of the built package is defined to be
+the DAG hash of the concrete spec, and exists in the name of the file
+as well. The id distinguishes a particular built package from all
+other built packages with the same package name and version. Below is an
+example of a signed binary package metadata file. Such a file would live
+in the versioned specs directory of a binary mirror, for example ``v3/specs/``::
 
   -----BEGIN PGP SIGNED MESSAGE-----
   Hash: SHA512
@@ -213,11 +210,13 @@ example ``v3/specs/``::
       <concrete-spec-contents-omitted>
     },
 
-    "buildcache_layout_version": 1,
+    "buildcache_layout_version": 3,
     "binary_cache_checksum": {
       "hash_algorithm": "sha256",
-      "hash": "4f1e46452c35a5e61bcacca205bae1bfcd60a83a399af201a29c95b7cc3e1423"
-     }
+      "hash": "e79acbb06f79c8c5d5aeaf415266d10fe32675f498a60f048299653083534a12"
+    },
+    "archive_size":10731067,
+    "archive_timestamp":"2025-01-24T10:21:18.540345-07:00"
   }
 
   -----BEGIN PGP SIGNATURE-----
@@ -241,28 +240,35 @@ gpg, as follows::
   $ gpg –verify gmake-4.4.1-cgsvs45frdmuvlxcvoghbtabhk4imgxs.spec.json.sig
 
 The metadata (regardless whether signed or unsigned) contains the checksum
-of the ``.spack`` file containing the actual installation. The checksum should
-be compared to a checksum computed locally on the ``.spack`` file to ensure the
-contents have not changed since the binary spec plus metadata were signed. The
-``.spack`` files are actually tarballs containing the compressed archive of the
-install tree.  These files, along with the metadata files, live within the
-versioned specs directory of the mirror, for example ``v3/specs/``. Together,
-these are organized as follows::
+of the compressed tar file containing the actual installation. This checksum
+is also used as the address of the compressed tarball, and hence, must be
+known in order to locate the tarball within the mirror.  Once the tarball
+is downloaded, the checksum should be computed locally and compaerd to the
+checksum in the metadata to ensure the contents have not changed since the
+binary spec plus metadata were signed. Spack organizes the compressed tarballs
+within a ``blobs/<hash-algorithm>/`` directory, using the first two characters
+of the checksum as a sub-directory to reduce the number files in a single
+folder.  These files, along with the metadata files and public keys needed
+to verify the signatures, are organized as follows::
 
   mirror_directory/
     v3/
+      keys/
+        _pgp/
+          75BC0528114909C076E2607418010FFAD73C9B07.pub
       specs/
-        gmake-4.4.1-cgsvs45frdmuvlxcvoghbtabhk4imgxs.spec.json.sig
-        pkgconf-2.3.0-jxzgksm7tn4w6vuhxku7sfhosllvhcm4.spec.json.sig
-        gnuconfig-2024-07-27-sy5lhrkwdighl2kj7u22regqmi46dl43.spec.json.sig
+        index.json
+        gcc-runtime-12.3.0-qyu2lvgt3nxh7izxycugdbgf5gsdpkjt.spec.json.sig
+        pkgconf-2.3.0-w3zjhgm257dfee57srykboqn76abqo6g.spec.json.sig
+        gmake-4.4.1-5pddli3htvfe6svs7nbrqmwi5735agi3.spec.json.sig
     blobs/
       sha256/
-        33/
-        33/33532e2219a424929b923eb83499359bd1917b4986701f1f7a478bf5b4404030
-        f3/
-        f3/f35b571f9ebf1664f6ff60ce43c77dfa10bff9b40df72d1cffc6009a99cb2b6c
-        77/
-        77/77385824aa58c84a858f19ac25b313a0af211992d49bef0a03743bf0ab4ff879
+        e7/
+          e79acbb06f79c8c5d5aeaf415266d10fe32675f498a60f048299653083534a12
+        f0/
+          f08eb62661ad159d2d258890127fc6053f5302a2f490c1c7f7bd677721010ee0
+        2a/
+          2a21836d206ccf0df780ab0be63fdf76d24501375306a35daa6683c409b7922f
 
 Each spec file contains the checksum of the associated compressed tarball, as
 well as the algorithm used to compute the checksum, which are used to address
