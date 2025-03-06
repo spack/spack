@@ -31,6 +31,10 @@ class PyScikitBuild(PythonPackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
+    # 0.18.1 fixes disutils for python 3.12+
+    # https://github.com/scikit-build/scikit-build/commit/77451ffb1b43e3908edfc813f22c9559421c1372
+    depends_on("python@:3.11", when="@:0.17.6")
+
     depends_on("py-hatchling", when="@0.17:", type="build")
     depends_on("py-hatch-fancy-pypi-readme", when="@0.17:", type="build")
     depends_on("py-hatch-vcs", when="@0.17:", type="build")
@@ -50,10 +54,6 @@ class PyScikitBuild(PythonPackage):
 
     # Historical dependencies
     depends_on("py-setuptools-scm+toml", when="@0.15", type="build")
-
-    # fixes disutils for python 3.12+
-    # https://github.com/scikit-build/scikit-build/commit/77451ffb1b43e3908edfc813f22c9559421c1372
-    requires("@0.18:", when="^python@3.12:")
 
     def url_for_version(self, version):
         url = (
