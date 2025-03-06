@@ -131,21 +131,13 @@ The first time you concretize a spec, Spack will bootstrap automatically:
 .. code-block:: console
 
    $ spack spec zlib
-   ==> Bootstrapping clingo from pre-built binaries
-   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.4/build_cache/linux-centos7-x86_64-gcc-10.2.1-clingo-bootstrap-spack-ba5ijauisd3uuixtmactc36vps7yfsrl.spec.json
-   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.4/build_cache/linux-centos7-x86_64/gcc-10.2.1/clingo-bootstrap-spack/linux-centos7-x86_64-gcc-10.2.1-clingo-bootstrap-spack-ba5ijauisd3uuixtmactc36vps7yfsrl.spack
-   ==> Installing "clingo-bootstrap@spack%gcc@10.2.1~docs~ipo+python+static_libstdcpp build_type=Release arch=linux-centos7-x86_64" from a buildcache
-   ==> Bootstrapping patchelf from pre-built binaries
-   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.4/build_cache/linux-centos7-x86_64-gcc-10.2.1-patchelf-0.16.1-p72zyan5wrzuabtmzq7isa5mzyh6ahdp.spec.json
-   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.4/build_cache/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.16.1/linux-centos7-x86_64-gcc-10.2.1-patchelf-0.16.1-p72zyan5wrzuabtmzq7isa5mzyh6ahdp.spack
-   ==> Installing "patchelf@0.16.1%gcc@10.2.1 ldflags="-static-libstdc++ -static-libgcc"  build_system=autotools arch=linux-centos7-x86_64" from a buildcache
-   Input spec
-   --------------------------------
-   zlib
-
-   Concretized
-   --------------------------------
-   zlib@1.2.13%gcc@9.4.0+optimize+pic+shared build_system=makefile arch=linux-ubuntu20.04-icelake
+   ==> Fetching https://ghcr.io/v2/spack/bootstrap-buildcache-v1/blobs/sha256:8d2764eefa443c29c7c9120079e3bbe7576bbc496b15843ad18d18892338a5ba
+   ==> Fetching https://ghcr.io/v2/spack/bootstrap-buildcache-v1/blobs/sha256:a4abec667660307ad5cff0a616d6651e187cc7b1386fd8cd4b6b288a01614076
+   ==> Installing "clingo-bootstrap@=spack%gcc@=10.2.1~docs+ipo+optimized+python+static_libstdcpp build_system=cmake build_type=Release generator=make patches=bebb819,ec99431 arch=linux-centos7-x86_64" from a buildcache
+    -   zlib@1.3.1%gcc@11.4.0+optimize+pic+shared build_system=makefile arch=linux-ubuntu22.04-sapphirerapids
+    -       ^gcc-runtime@11.4.0%gcc@11.4.0 build_system=generic arch=linux-ubuntu22.04-sapphirerapids
+   [e]      ^glibc@2.35%gcc@11.4.0 build_system=autotools arch=linux-ubuntu22.04-sapphirerapids
+    -       ^gmake@4.4.1%gcc@11.4.0~guile build_system=generic arch=linux-ubuntu22.04-sapphirerapids
 
 The default bootstrap behavior is to use pre-built binaries. You can verify the
 active bootstrap repositories with:
