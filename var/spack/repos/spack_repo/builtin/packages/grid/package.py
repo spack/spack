@@ -106,10 +106,10 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
         if spec.satisfies("+cuda") or spec.satisfies("+rocm"):
             if spec.satisfies("+cuda"):
                 arch_config = ",".join(f"arch=compute_{arch},code=sm_{arch}" for arch in spec.variants["cuda_arch"].value)
-                if "comms=none" not in spec:
-                    host_compiler = "-ccbin {}".format(spec["mpi"].mpicxx)
-                else:
+                if "comms=none" in spec:
                     host_compiler = ""
+                else:
+                    host_compiler = "-ccbin {}".format(spec["mpi"].mpicxx)
                 env.set("CXX", join_path(spec["cuda"].prefix, "bin", "nvcc"))
                 env.append_flags("CXXFLAGS", "-gencode {0} -cudart shared {1}".format(
                     arch_config,
@@ -117,16 +117,16 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
                 ))
                 env.set("LDFLAGS", "-cudart shared -lcublas")
             elif spec.satisfies("+rocm"):
-                if "comms=none" not in spec:
-                    mpi_include = spec["mpi"].headers.cpp_flags
-                    mpi_ldflags = "{} -lmpi".format(spec["mpi"].libs.ld_flags)
-                    env.set("MPICXX", spec["mpi"].mpicxx)
-                else:
+                archs = ",".join(self.spec.variants["amdgpu_target"].value)
+                if "comms=none" in spec:
                     mpi_include = ""
                     mpi_ldflags = ""
-                env.set("CXX", spec["hip"].prefix) # ?????
+                else:
+                    mpi_include = spec["mpi"].headers.cpp_flags
+                    mpi_ldflags = "{} -lmpi".format(spec["mpi"].libs.ld_flags)
+                env.set("CXX", join_path(spec["hip"].prefix, "bin", "hipcc"))
                 env.set("LDFLAGS", "{} -lamdhip64".format(mpi_ldflags))
-                env.append_flags("CXXFLAGS", "--offload-arch={} {} {}".format(spec.variants["amdgpu_target"].value, spec["hip"].headers.cpp_flags, mpi_include))
+                env.append_flags("CXXFLAGS", "--offload-arch={} {} {}".format(archs, spec["hip"].headers.cpp_flags, mpi_include))
         else:
             if "comms=none" not in spec:
                 env.append_flags("CXXFLAGS", "-fPIC")
