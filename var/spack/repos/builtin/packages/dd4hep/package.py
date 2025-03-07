@@ -93,6 +93,8 @@ class Dd4hep(CMakePackage):
         " some places in addtion to the debug build type",
     )
 
+    variant("docs", default=False, description="Bulid documentation")
+
     depends_on("cmake @3.12:", type="build")
     depends_on("cmake @3.14:", type="build", when="@1.26:")
     depends_on("boost @1.49:")
@@ -130,6 +132,7 @@ class Dd4hep(CMakePackage):
         depends_on("podio@0.16:", when="@1.24:")
         depends_on("podio@0.16.3:", when="@1.26:")
         depends_on("podio@0.16.7:", when="@1.31:")
+    depends_on("doxygen", type="build", when="+docs")
 
     # See https://github.com/AIDASoft/DD4hep/pull/771 and https://github.com/AIDASoft/DD4hep/pull/876
     conflicts(
@@ -170,6 +173,7 @@ class Dd4hep(CMakePackage):
             self.define_from_variant("DD4HEP_USE_HEPMC3", "hepmc3"),
             self.define_from_variant("DD4HEP_USE_GEANT4_UNITS", "geant4units"),
             self.define_from_variant("DD4HEP_BUILD_DEBUG", "debug"),
+            self.define_from_variant("BUILD_DOCS", "docs"),
             # DD4hep@1.26: with hepmc3@3.2.6: allows compressed hepmc3 files
             self.define(
                 "DD4HEP_HEPMC3_COMPRESSION_SUPPORT", self.spec.satisfies("@1.26: ^hepmc3@3.2.6:")
