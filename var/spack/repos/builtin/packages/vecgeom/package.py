@@ -19,11 +19,17 @@ class Vecgeom(CMakePackage, CudaPackage):
 
     maintainers("drbenmorgan", "sethrj")
 
-    version("master", branch="master")
+    version("master", branch="master", get_full_repo=True)
+    version(
+        "2.0.0-surfacedev.1",
+        tag="v2.0.0-surfacedev.1",
+        commit="1d9797ea47e3b35ab0114e72ce5925ecbd59cbf4",
+    )
     version(
         "1.2.10",
         url="https://gitlab.cern.ch/-/project/981/uploads/8e0a94013efdd1b2d4f44c3fbb10bcdf/VecGeom-v1.2.10.tar.gz",
         sha256="3e0934842694452e4cb4a265428cb99af1ecc45f0e2d28a32dfeaa0634c21e2a",
+        preferred=True,
     )
     version(
         "1.2.9",
@@ -88,6 +94,7 @@ class Vecgeom(CMakePackage, CudaPackage):
     variant("geant4", default=False, description="Support Geant4 geometry construction")
     variant("root", default=False, description="Support ROOT geometry construction")
     variant("shared", default=True, description="Build shared libraries")
+    variant("surface", default=False, when="@2:", description="Use surface frame representation")
 
     depends_on("veccore")
     depends_on("veccore@0.8.1:", when="+cuda")
@@ -97,17 +104,14 @@ class Vecgeom(CMakePackage, CudaPackage):
 
     conflicts("+cuda", when="@:1.1.5")
 
-    # Fix missing CMAKE_CUDA_STANDARD
+    # NOTE: surface branch doesn't yet compile with volume
+    conflicts("~surface", when="@=2.0.0-surfacedev.1")
+
+    # Fix empty -Xcompiler= with nvcc
     patch(
-        "https://gitlab.cern.ch/VecGeom/VecGeom/-/commit/7094dd180ef694f2abb7463cafcedfb8b8ed30a1.diff",
-        sha256="34f1a6899616e40bce33d80a38a9b409f819cbaab07b2e3be7f4ec4bedb52b29",
-        when="@1.1.7 +cuda",
-    )
-    # Fix installed target properties to not propagate flags to nvcc
-    patch(
-        "https://gitlab.cern.ch/VecGeom/VecGeom/-/commit/ac398bd109dd9175e4a898cd4b62571a3cc88252.diff",
-        sha256="a9ba136d3ed4282ec950069da2199f22beadea27d89a4264d8773ba329e253df",
-        when="@1.1.18 +cuda ^cuda@:11.4",
+        "https://gitlab.cern.ch/VecGeom/VecGeom/-/commit/0bf9b675ab70eb5cb9409ff73c1152fd1326dbf4.diff",
+        sha256="f172b0a9ee1de4931b106d8500d1a60d5688c9bce324cf12ca107ec866a16c56",
+        when="@1.2.7:1.2.10 +cuda ^cuda@:11",
     )
 
     def std_when(values):
@@ -164,6 +168,8 @@ class Vecgeom(CMakePackage, CudaPackage):
                 if len(arch) != 1:
                     raise InstallError("Exactly one cuda_arch must be specified")
                 args.append(define("CUDA_ARCH", arch[0]))
+
+        args.append(from_variant("VECGEOM_USE_SURF", "surface"))
 
         # Set testing flags
         build_tests = self.run_tests

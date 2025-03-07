@@ -356,6 +356,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     with when("+rocm"):
         depends_on("rocm-core")
         depends_on("hipblas")
+        depends_on("hipblas-common", when="^hipblas@6.3.0:")
         depends_on("hipsparse")
         depends_on("hipsolver")
         depends_on("rocsparse")
@@ -610,14 +611,14 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if "+exodusii+fortran" in spec and "+fortran" in spec:
             options.append("--with-exodusii-fortran-bindings")
 
+        direct_dependencies = {
+            *(spec.name for spec in spec.dependencies()),
+            *(virtual for edge in spec.edges_to_dependencies() for virtual in edge.virtuals),
+        }
         # tuple format (spacklibname, petsclibname, useinc, uselib)
         # default: 'gmp', => ('gmp', 'gmp', True, True)
         # any other combination needs a full tuple
         # if not (useinc || uselib): usedir - i.e (False, False)
-        direct_dependencies = []
-        for dep in spec.dependencies():
-            direct_dependencies.append(dep.name)
-            direct_dependencies.extend(set(vspec.name for vspec in dep.package.virtuals_provided))
         for library in (
             ("cuda", "cuda", False, False),
             ("hip", "hip", True, False),
@@ -721,7 +722,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 hip_ipkgs.extend(["rocrand"])
             else:
                 hip_lpkgs.extend(["rocrand"])
-            if spec.satisfies("^hipblas@6.3.0:"):
+            if spec.satisfies("^hipblas-common"):
                 hip_ipkgs.extend(["hipblas-common"])
             hip_inc = ""
             hip_lib = ""

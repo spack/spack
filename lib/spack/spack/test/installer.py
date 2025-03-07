@@ -557,7 +557,7 @@ def test_combine_phase_logs(tmpdir):
 
 def test_combine_phase_logs_does_not_care_about_encoding(tmpdir):
     # this is invalid utf-8 at a minimum
-    data = b"\x00\xF4\xBF\x00\xBF\xBF"
+    data = b"\x00\xf4\xbf\x00\xbf\xbf"
     input = [str(tmpdir.join("a")), str(tmpdir.join("b"))]
     output = str(tmpdir.join("c"))
 
@@ -977,7 +977,6 @@ class MyBuildException(Exception):
 
 
 def _install_fail_my_build_exception(installer, task, install_status, **kwargs):
-    print(task, task.pkg.name)
     if task.pkg.name == "pkg-a":
         raise MyBuildException("mock internal package build error for pkg-a")
     else:

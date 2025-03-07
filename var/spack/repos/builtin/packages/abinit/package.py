@@ -28,6 +28,7 @@ class Abinit(AutotoolsPackage):
     license("Apache-2.0")
 
     maintainers("downloadico")
+    version("10.2.7", sha256="e0e1049b01b4ebaec29be632cd554caeccb4b2a8acf2e148c8ac505e6b226dc1")
     version("10.0.9", sha256="17650580295e07895f6c3c4b1f3f0fe0e0f3fea9bab5fd8ce7035b16a62f8e5e")
     version("10.0.7", sha256="a9fc044b33861b7defd50fafd19a73eb6f225e18ae30b23bc731d9c8009c881c")
     version("9.10.5", sha256="a9e0f0e058baa6088ea93d26ada369ccf0fe52dc9d4a865b1c38c20620148cd5")
@@ -76,13 +77,22 @@ class Abinit(AutotoolsPackage):
     depends_on("fftw-api")
 
     depends_on("netcdf-fortran")
-    depends_on("netcdf-c+mpi", when="+mpi")
-    depends_on("netcdf-c~mpi", when="~mpi")
-    depends_on("hdf5+mpi", when="+mpi")
-    depends_on("hdf5~mpi", when="~mpi")
+
+    with when("+mpi"):
+        depends_on("netcdf-c+mpi")
+        depends_on("hdf5+mpi")
+        depends_on("wannier90+shared", when="+wannier90")
+
+    with when("~mpi"):
+        depends_on("netcdf-c~mpi")
+        depends_on("hdf5~mpi")
+        # Cannot ask for +scalapack if it does not depend on MPI
+        conflicts("+scalapack")
+        # Cannot ask for +wannier90 if it does not depend on MPI
+        conflicts("+wannier90")
+
     # constrain version of hdf5
     depends_on("hdf5@:1.8", when="@9:")
-    depends_on("wannier90+shared", when="+wannier90+mpi")
 
     # constrain libxc version
     depends_on("libxc")
@@ -93,15 +103,8 @@ class Abinit(AutotoolsPackage):
     depends_on("libxml2", when="@9:+libxml2")
 
     # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
-    for _intel_pkg in INTEL_MATH_LIBRARIES:
-        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
-        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
-
-    # Cannot ask for +scalapack if it does not depend on MPI
-    conflicts("+scalapack", when="~mpi")
-
-    # Cannot ask for +wannier90 if it does not depend on MPI
-    conflicts("+wannier90", when="~mpi")
+    requires("^[virtuals=fftw-api] intel-oneapi-mkl", when="^[virtuals=lapack]   intel-oneapi-mkl")
+    requires("^[virtuals=lapack]   intel-oneapi-mkl", when="^[virtuals=fftw-api] intel-oneapi-mkl")
 
     # libxml2 needs version 9 and above
     conflicts("+libxml2", when="@:8")
@@ -115,10 +118,8 @@ class Abinit(AutotoolsPackage):
     for fftw in ["amdfftw", "cray-fftw", "fujitsu-fftw", "fftw"]:
         conflicts("+openmp", when=f"^{fftw}~openmp", msg=f"Need to request {fftw} +openmp")
 
-    mkl_message = "Need to set dependent variant to threads=openmp"
-    conflicts("+openmp", when="^intel-mkl threads=none", msg=mkl_message)
-    conflicts("+openmp", when="^intel-mkl threads=tbb", msg=mkl_message)
-    conflicts("+openmp", when="^intel-parallel-studio +mkl threads=none", msg=mkl_message)
+    with when("+openmp"):
+        requires("^intel-oneapi-mkl threads=openmp", when="^[virtuals=lapack] intel-oneapi-mkl")
 
     conflicts(
         "+openmp", when="^fujitsu-ssl2 ~parallel", msg="Need to request fujitsu-ssl2 +parallel"
@@ -139,9 +140,7 @@ class Abinit(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-
-        options = []
-        options += self.with_or_without("libxml2")
+        options = self.with_or_without("libxml2")
 
         oapp = options.append
         if spec.satisfies("@:8"):
