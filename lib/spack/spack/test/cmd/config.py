@@ -89,7 +89,7 @@ def test_config_edit(mutable_config, working_env):
     assert config("edit", "--print-file", "repos").strip() == repos_path
 
 
-def test_config_get_gets_spack_yaml(mutable_mock_env_path):
+def test_config_get_gets_spack_yaml(mock_packages, mutable_mock_env_path):
     with ev.create("test") as env:
         assert "mpileaks" not in config("get")
         env.add("mpileaks")
