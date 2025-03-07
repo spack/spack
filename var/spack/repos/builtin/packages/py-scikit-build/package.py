@@ -17,8 +17,6 @@ class PyScikitBuild(PythonPackage):
     homepage = "https://scikit-build.readthedocs.io/en/latest/"
     pypi = "scikit-build/scikit_build-0.17.6.tar.gz"
 
-    maintainers("coreyjadams")
-
     license("MIT")
 
     version("0.18.1", sha256="a4152ac5a084d499c28a7797be0628d8366c336e2fb0e1a063eb32e55efcb8e7")
