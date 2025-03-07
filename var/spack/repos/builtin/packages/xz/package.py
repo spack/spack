@@ -70,7 +70,6 @@ class Xz(MSBuildPackage, AutotoolsPackage, CMakePackage, SourceforgePackage):
     conflicts("platform=windows", when="+pic")  # no pic on Windows
     # prior to 5.2.3, build system is for MinGW only, not currently supported by Spack
     conflicts("platform=windows", when="@:5.2.3")
-    conflicts("platform=windows", when="@5.6:")  # CMake is required
 
     patch(
         "nvhpc.patch",
