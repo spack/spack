@@ -397,18 +397,18 @@ spack:
   # baz
   - zlib
 """,
-            "libpng",
+            "libdwarf",
             """spack:
   specs:
   # baz
   - zlib
-  - libpng
+  - libdwarf
 """,
         )
     ],
 )
 def test_preserving_comments_when_adding_specs(
-    original_yaml, new_spec, expected_yaml, config, tmp_path
+    mock_packages, original_yaml, new_spec, expected_yaml, config, tmp_path
 ):
     """Ensure that round-tripping a spack.yaml file doesn't change its content."""
     spack_yaml = tmp_path / "spack.yaml"
