@@ -25,6 +25,8 @@ from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import Executable
 
+pytestmark = [pytest.mark.usefixtures("mock_packages")]
+
 # various sha256 sums (using variables for legibility)
 # many file based shas will differ between Windows and other platforms
 # due to the use of carriage returns ('\r\n') in Windows line endings
@@ -144,7 +146,7 @@ third line
             assert filecmp.cmp("foo.txt", "foo-original.txt")
 
 
-def test_patch_in_spec(mock_packages, config):
+def test_patch_in_spec(config):
     """Test whether patches in a package appear in the spec."""
     spec = spack.concretize.concretize_one("patch")
     assert "patches" in list(spec.variants.keys())
@@ -159,7 +161,7 @@ def test_patch_in_spec(mock_packages, config):
     )
 
 
-def test_patch_mixed_versions_subset_constraint(mock_packages, config):
+def test_patch_mixed_versions_subset_constraint(config):
     """If we have a package with mixed x.y and x.y.z versions, make sure that
     a patch applied to a version range of x.y.z versions is not applied to
     an x.y version.
@@ -171,7 +173,7 @@ def test_patch_mixed_versions_subset_constraint(mock_packages, config):
     assert biz_sha256 not in spec2.variants["patches"].value
 
 
-def test_patch_order(mock_packages, config):
+def test_patch_order(config):
     spec = spack.concretize.concretize_one("dep-diamond-patch-top")
 
     mid2_sha256 = (
@@ -202,7 +204,7 @@ def test_patch_order(mock_packages, config):
     assert expected_order == tuple(patch_order)
 
 
-def test_nested_directives(mock_packages):
+def test_nested_directives():
     """Ensure pkg data structures are set up properly by nested directives."""
     # this ensures that the patch() directive results were removed
     # properly from the DirectiveMeta._directives_to_be_executed list
@@ -228,7 +230,7 @@ def test_nested_directives(mock_packages):
 
 
 @pytest.mark.not_on_windows("Test requires Autotools")
-def test_patched_dependency(mock_packages, install_mockery, mock_fetch):
+def test_patched_dependency(install_mockery, mock_fetch):
     """Test whether patched dependencies work."""
     spec = spack.concretize.concretize_one("patch-a-dependency")
     assert "patches" in list(spec["libelf"].variants.keys())
@@ -266,7 +268,7 @@ def trigger_bad_patch(pkg):
 
 
 def test_patch_failure_develop_spec_exits_gracefully(
-    mock_packages, install_mockery, mock_fetch, tmpdir, mock_stage
+    install_mockery, mock_fetch, tmpdir, mock_stage
 ):
     """ensure that a failing patch does not trigger exceptions for develop specs"""
 
@@ -281,7 +283,7 @@ def test_patch_failure_develop_spec_exits_gracefully(
     # success if no exceptions raised
 
 
-def test_patch_failure_restages(mock_packages, install_mockery, mock_fetch):
+def test_patch_failure_restages(install_mockery, mock_fetch):
     """
     ensure that a failing patch does not trigger exceptions
     for non-develop specs and the source gets restaged
@@ -295,7 +297,7 @@ def test_patch_failure_restages(mock_packages, install_mockery, mock_fetch):
         assert not os.path.isfile(bad_patch_indicator)
 
 
-def test_multiple_patched_dependencies(mock_packages, config):
+def test_multiple_patched_dependencies(config):
     """Test whether multiple patched dependencies work."""
     spec = spack.concretize.concretize_one("patch-several-dependencies")
 
@@ -310,7 +312,7 @@ def test_multiple_patched_dependencies(mock_packages, config):
     assert (url2_sha256, url1_sha256) == spec["fake"].variants["patches"].value
 
 
-def test_conditional_patched_dependencies(mock_packages, config):
+def test_conditional_patched_dependencies(config):
     """Test whether conditional patched dependencies work."""
     spec = spack.concretize.concretize_one("patch-several-dependencies @1.0")
 
@@ -386,7 +388,7 @@ def check_multi_dependency_patch_specs(
     assert url2_patch.archive_sha256 == url2_archive_sha256
 
 
-def test_conditional_patched_deps_with_conditions(mock_packages, config):
+def test_conditional_patched_deps_with_conditions(config):
     """Test whether conditional patched dependencies with conditions work."""
     spec = spack.concretize.concretize_one(
         Spec("patch-several-dependencies @1.0 ^libdwarf@20111030")
@@ -401,7 +403,7 @@ def test_conditional_patched_deps_with_conditions(mock_packages, config):
     )
 
 
-def test_write_and_read_sub_dags_with_patched_deps(mock_packages, config):
+def test_write_and_read_sub_dags_with_patched_deps(config):
     """Test whether patched dependencies are still correct after writing and
     reading a sub-DAG of a concretized Spec.
     """
@@ -473,7 +475,7 @@ def test_sha256_setter(mock_patch_stage, config):
     patch.sha256 = "abc"
 
 
-def test_invalid_from_dict(mock_packages, config):
+def test_invalid_from_dict(config):
     dictionary = {}
     with pytest.raises(ValueError, match="Invalid patch dictionary:"):
         spack.patch.from_dict(dictionary)
