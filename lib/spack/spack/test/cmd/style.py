@@ -116,7 +116,7 @@ def test_changed_no_base(git, tmpdir, capfd):
         assert "This repository does not have a 'foobar'" in err
 
 
-def test_changed_files_all_files():
+def test_changed_files_all_files(mock_packages):
     # it's hard to guarantee "all files", so do some sanity checks.
     files = set(
         [
