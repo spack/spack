@@ -26,11 +26,22 @@ class Bgen(WafPackage):
         url="https://enkre.net/cgi-bin/code/bgen/tarball/6ac2d582f9/BGEN-6ac2d582f9.tar.gz",
     )
 
+    variant("source", default=False, description="Install source tree as well")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
+    depends_on("fossil", type="build")
 
     def flag_handler(self, name, flags):
         # Version 1.1.7 not compatible with C++17
         if name == "cxxflags":
-            flags.append("-std=c++14")
+            flags.append("-std=c++11")
         return (flags, None, None)
+
+    def install(self, spec, prefix):
+        super().install(spec, prefix)
+        if spec.satisfies("+source"):
+            src_dir = join_path(prefix.src.bgen)
+            makedirs(src_dir)
+            install_tree(self.stage.source_path, src_dir)
+
