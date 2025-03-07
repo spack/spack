@@ -1080,7 +1080,7 @@ class SetupContext:
         )
         for cp_dir in reversed(prefix_path):
             env.prepend_path("CMAKE_PREFIX_PATH", cp_dir)
-        env.prune_duplicate_paths("CMAKE_PREFIX_PATH")
+        env.prune_duplicate_paths_from_end("CMAKE_PREFIX_PATH")
 
 
 def load_external_modules(context: SetupContext) -> None:
