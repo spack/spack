@@ -282,6 +282,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     depends_on("mpi", when="+mpi")
     depends_on("hipsparse", when="@4.4.0:+rocm")
+    depends_on("hipblas", when="@4.4.0:+rocm")
 
     with when("+mpi"):
         depends_on("hypre")
@@ -986,9 +987,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "^rocprim" in spec and not spec["hip"].external:
                 # rocthrust [via petsc+rocm] has a dependency on rocprim
                 hip_headers += spec["rocprim"].headers
-            if "^hipblas" in spec and not spec["hip"].external:
-                # superlu-dist+rocm needs the hipblas header path
-                hip_headers += spec["hipblas"].headers
+            if "^hipblas" in spec:
+                hipblas = spec["hipblas"]
+                hip_headers += hipblas.headers
+                hip_libs += hipblas.libs
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
                 proc = str(spec.target.family)

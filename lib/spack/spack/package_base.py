@@ -125,9 +125,10 @@ class WindowsRPath:
         # Spack should in general not modify things it has not installed
         # we can reasonably expect externals to have their link interface properly established
         if sys.platform == "win32" and not self.spec.external:
-            self.win_rpath.add_library_dependent(*self.win_add_library_dependent())
-            self.win_rpath.add_rpath(*self.win_add_rpath())
-            self.win_rpath.establish_link()
+            win_rpath = fsys.WindowsSimulatedRPath(self)
+            win_rpath.add_library_dependent(*self.win_add_library_dependent())
+            win_rpath.add_rpath(*self.win_add_rpath())
+            win_rpath.establish_link()
 
 
 #: Registers which are the detectable packages, by repo and package name
@@ -742,7 +743,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Set up timing variables
         self._fetch_time = 0.0
 
-        self.win_rpath = fsys.WindowsSimulatedRPath(self)
         super().__init__()
 
     def __getitem__(self, key: str) -> "PackageBase":

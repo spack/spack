@@ -175,6 +175,13 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         when="^hip@6.0",
     )
 
+    # Fix compilation issue reported by Intel from their new compiler version
+    patch(
+        "https://github.com/LLNL/RAJA/pull/1668.patch?full_index=1",
+        sha256="c0548fc5220f24082fb2592d5b4e8b7c8c783b87906d5f0950d53953d25161f6",
+        when="@2024.02.1:2024.02.99 %oneapi@2025:",
+    )
+
     variant("openmp", default=False, description="Build OpenMP backend")
     variant("shared", default=False, description="Build shared libs")
     variant("desul", default=False, description="Build desul atomics backend")

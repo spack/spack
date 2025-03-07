@@ -22,6 +22,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     license("LGPL-3.0-only")
 
     version("master", branch="master")
+    version("0.42.2", sha256="3a4a513c6539f2927e7a544f431e97456e50c71b63f8744d31e0dee3dc7fcc2e")
     version("0.42.1", sha256="ab56b257e4918ad7e26ef6a375d0ea500a4929bf6633937f0c11c06e21db56b9")
     version("0.41.0", sha256="c89baf72867031847748c157aa99f3b36755f2801df917aae66010d2112e10fe")
     version("0.40.0", sha256="1484befcf8628b0af7833bf550d0bb3864db32b70f2c1bb363c35e30ada1ecc5")
@@ -109,6 +110,12 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     # in the suppressions file. (This patch will be in v0.21.0)
     patch("no-valgrind.patch", when="@:0.20.0")
     patch("jobid-sign-compare-fix.patch", when="@:0.22.0")
+
+    patch(
+        "https://github.com/flux-framework/flux-sched/pull/1338.patch?full_index=1",
+        when="@0.42.2 %oneapi@2025:",
+        sha256="b46579efa70176055f88493caa3fefbfea5a5663a33d9c561b71e83046f763c5",
+    )
 
     def url_for_version(self, version):
         """

@@ -19,6 +19,7 @@ class Detray(CMakePackage):
 
     license("MPL-2.0", checked_by="stephenswat")
 
+    version("0.89.0", sha256="b893b7f5434c1c9951433876ef43d1db1b08d36749f062e261b4e6d48e77d5db")
     version("0.88.1", sha256="89134c86c6857cb3a821181e3bb0565ebb726dd8b1245678db1681483d792cf9")
     version("0.88.0", sha256="bda15501c9c96af961e24ce243982f62051c535b9fe458fb28336a19b54eb47d")
     version("0.87.0", sha256="2d4a76432dd6ddbfc00b88b5d482072e471fefc264b60748bb1f9a123963576e")
@@ -75,7 +76,7 @@ class Detray(CMakePackage):
     depends_on("vecmem@1.8.0:", when="@0.76:")
     depends_on("covfie@0.10.0:")
     depends_on("nlohmann-json@3.11.0:", when="+json")
-    depends_on("dfelibs@20211029:")
+    depends_on("dfelibs@20211029:", when="@:0.88")
     depends_on("acts-algebra-plugins@0.18.0: +vecmem")
     depends_on("acts-algebra-plugins +vc", when="+vc")
     depends_on("acts-algebra-plugins +eigen", when="+eigen")
