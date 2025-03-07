@@ -41,6 +41,7 @@ class Verilator(AutotoolsPackage):
 
     version("master", branch="master")
 
+    version("5.034", sha256="002da98e316ca6eee40407f5deb7d7c43a0788847d39c90d4d31ddbbc03020e8")
     version("5.032", sha256="5a262564b10be8bdb31ff4fb67d77bcf5f52fc1b4e6c88d5ca3264fb481f1e41")
     version("5.030", sha256="b9e7e97257ca3825fcc75acbed792b03c3ec411d6808ad209d20917705407eac")
     version("5.028", sha256="02d4b6f34754b46a97cfd70f5fcbc9b730bd1f0a24c3fc37223397778fcb142c")
