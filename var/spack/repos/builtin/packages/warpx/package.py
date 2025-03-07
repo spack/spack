@@ -25,7 +25,7 @@ class Warpx(CMakePackage, PythonExtension):
 
     # NOTE: if you update the versions here, also see py-warpx
     version("develop", branch="development")
-    version("25.03", sha256="8a9e2886230ec736eef35ce8399a9704d90777535e08ff8543393cca125cad9c")
+    version("25.03", sha256="ec0a032fd2c838acec4b251fa3a8180b47186cc2216bc1adc6242cd275977590")
     version(
         "25.02",
         sha256="c65385a3598bf43278c0b1c10ae2a5a07c1a46f6fa98deded385ecca2021a1a2",

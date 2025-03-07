@@ -18,7 +18,7 @@ class PyAmrex(CMakePackage, PythonExtension, CudaPackage, ROCmPackage):
     license("BSD-3-Clause-LBNL")
 
     version("develop", branch="development")
-    version("25.03", sha256="ca28930eb97da6827d2332f516a3c79e002f47925445c8f88b55cea2526717b8")
+    version("25.03", sha256="5a65545d46b49dd3f2bca2647a174c3ee0384e49791dc3e335a3a39d9a045350")
     version(
         "25.02",
         sha256="c743086b317f9fa90639d825db32a92376cde8dc5e1eab47a4c6a82af36d5b5c",
