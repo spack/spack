@@ -1,8 +1,8 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import textwrap
 from typing import Optional
 
 import llnl.util.tty as tty
@@ -10,6 +10,7 @@ from llnl.util.tty.color import colorize
 
 import spack.environment as ev
 import spack.repo
+import spack.schema.environment
 import spack.store
 from spack.util.environment import EnvironmentModifications
 
@@ -47,29 +48,40 @@ def activate_header(env, shell, prompt=None, view: Optional[str] = None):
         cmds += 'set "SPACK_ENV=%s"\n' % env.path
         if view:
             cmds += 'set "SPACK_ENV_VIEW=%s"\n' % view
-        # TODO: despacktivate
-        # TODO: prompt
     elif shell == "pwsh":
         cmds += "$Env:SPACK_ENV='%s'\n" % env.path
         if view:
             cmds += "$Env:SPACK_ENV_VIEW='%s'\n" % view
     else:
-        if "color" in os.getenv("TERM", "") and prompt:
-            prompt = colorize("@G{%s}" % prompt, color=True, enclose=True)
+        bash_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=True)
+        zsh_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=False, zsh=True)
 
         cmds += "export SPACK_ENV=%s;\n" % env.path
         if view:
             cmds += "export SPACK_ENV_VIEW=%s;\n" % view
         cmds += "alias despacktivate='spack env deactivate';\n"
         if prompt:
-            cmds += "if [ -z ${SPACK_OLD_PS1+x} ]; then\n"
-            cmds += "    if [ -z ${PS1+x} ]; then\n"
-            cmds += "        PS1='$$$$';\n"
-            cmds += "    fi;\n"
-            cmds += '    export SPACK_OLD_PS1="${PS1}";\n'
-            cmds += "fi;\n"
-            cmds += 'export PS1="%s ${PS1}";\n' % prompt
-
+            cmds += textwrap.dedent(
+                rf"""
+                if [ -z ${{SPACK_OLD_PS1+x}} ]; then
+                    if [ -z ${{PS1+x}} ]; then
+                        PS1='$$$$';
+                    fi;
+                    export SPACK_OLD_PS1="${{PS1}}";
+                fi;
+                if [ -n "${{TERM:-}}" ] && [ "${{TERM#*color}}" != "${{TERM}}" ] && \
+                   [ -n "${{BASH:-}}" ];
+                then
+                    export PS1="{bash_color_prompt} ${{PS1}}";
+                elif [ -n "${{TERM:-}}" ] && [ "${{TERM#*color}}" != "${{TERM}}" ] && \
+                     [ -n "${{ZSH_NAME:-}}" ];
+                then
+                    export PS1="{zsh_color_prompt} ${{PS1}}";
+                else
+                    export PS1="{prompt} ${{PS1}}";
+                fi
+                """
+            ).lstrip("\n")
     return cmds
 
 
@@ -145,6 +157,11 @@ def activate(
     # MANPATH, PYTHONPATH, etc. All variables that end in PATH (case-sensitive)
     # become PATH variables.
     #
+
+    env_vars_yaml = env.manifest.configuration.get("env_vars", None)
+    if env_vars_yaml:
+        env_mods.extend(spack.schema.environment.parse(env_vars_yaml))
+
     try:
         if view and env.has_view(view):
             with spack.store.STORE.db.read_transaction():
@@ -177,6 +194,10 @@ def deactivate() -> EnvironmentModifications:
 
     if active is None:
         return env_mods
+
+    env_vars_yaml = active.manifest.configuration.get("env_vars", None)
+    if env_vars_yaml:
+        env_mods.extend(spack.schema.environment.parse(env_vars_yaml).reversed())
 
     active_view = os.getenv(ev.spack_env_view_var)
 

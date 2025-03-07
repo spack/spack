@@ -1,12 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
 import os
-
-import llnl.util.tty as tty
 
 from spack.package import *
 from spack.pkg.builtin.boost import Boost
@@ -21,6 +18,8 @@ class Bcl2fastq2(Package):
     files."""
 
     homepage = "https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-20.html"
+
+    license("BSD-3-Clause")
 
     version(
         "2.20.0.422", sha256="8dd3044767d044aa4ce46de0de562b111c44e5b8b7348e04e665eb1b4f101fe3"
@@ -42,6 +41,7 @@ class Bcl2fastq2(Package):
     depends_on("libxslt@1.1.26~crypto")
     depends_on("libgcrypt")
     depends_on("zlib-api")
+    depends_on("gmake", type="build")
 
     # Their cmake macros don't set the flag when they find a library
     # that makes them happy.

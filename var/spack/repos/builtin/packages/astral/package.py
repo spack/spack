@@ -1,9 +1,8 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
+import os
 
 from spack.package import *
 
@@ -15,6 +14,8 @@ class Astral(Package):
     homepage = "https://github.com/smirarab/ASTRAL"
     url = "https://github.com/smirarab/ASTRAL/archive/v4.10.7.tar.gz"
 
+    license("Apache-2.0")
+
     version("5.7.1", sha256="8aa6fd4324efca325d3dde432517090fac314bea95f407b1dd59977181fec77e")
     version(
         "5.6.1",
@@ -23,8 +24,9 @@ class Astral(Package):
     )
     version("4.10.7", sha256="314b49e0129ec06a7c78a1b60d590259ede6a5e75253407031e108d8048fcc79")
 
-    depends_on("java", type=("build", "run"))
+    depends_on("java@11", type=("build", "run"))
     depends_on("zip", type="build")
+    depends_on("gmake", type="build")
 
     def install(self, spec, prefix):
         make = Executable("./make.sh")

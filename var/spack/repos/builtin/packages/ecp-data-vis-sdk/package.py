@@ -1,5 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,7 +30,7 @@ def dav_sdk_depends_on(spec, when=None, propagate=None):
     # Map the propagated variants to the dependency variant.  Some packages may need
     # overrides to propagate a dependency as something else, e.g., {"visit": "libsim"}.
     # Most call-sites will just use a list.
-    if not type(propagate) is dict:
+    if type(propagate) is not dict:
         propagate = dict([(v, v) for v in propagate])
 
     # Determine the base variant
@@ -187,7 +186,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     )
     # TODO: When Ascent is updated to use VTK-m >= 1.8 move examples to
     # the main spec.
-    depends_on("vtk-m+examples", when="+vtkm ^vtk-m@1.8:")
+    conflicts("^vtk-m~examples", when="+vtkm ^vtk-m@1.8:")
     depends_on("vtk-m+openmp", when="~rocm+vtkm")
     depends_on("vtk-m~openmp", when="+rocm+vtkm")
 

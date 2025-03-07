@@ -1,5 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,12 +10,17 @@ from spack.package import *
 
 class Qrupdate(MakefilePackage, SourceforgePackage):
     """qrupdate is a Fortran library for fast updates of QR and
-    Cholesky decompositions."""
+    Cholesky decompositions.
+    """
 
     homepage = "https://sourceforge.net/projects/qrupdate/"
     sourceforge_mirror_path = "qrupdate/qrupdate-1.1.2.tar.gz"
 
+    license("GPL-3.0-only")
+
     version("1.1.2", sha256="e2a1c711dc8ebc418e21195833814cb2f84b878b90a2774365f0166402308e08")
+
+    depends_on("fortran", type="build")  # generated
 
     depends_on("blas")
     depends_on("lapack")
@@ -32,7 +36,7 @@ class Qrupdate(MakefilePackage, SourceforgePackage):
         makefile = FileFilter("Makefile")
         makefile.filter("make", "$(MAKE)")
 
-        # We may like to compile with any Forran compiler, not always gfortran
+        # We may like to compile with any Fortran compiler, not always gfortran
         makefile = FileFilter("Makeconf")
         makefile.filter("FC=gfortran", "FC ?= gfortran")
 
@@ -42,16 +46,11 @@ class Qrupdate(MakefilePackage, SourceforgePackage):
     def build(self, spec, prefix):
         lapack_blas = spec["lapack"].libs + spec["blas"].libs
 
-        make_args = [
-            "BLAS={0}".format(lapack_blas.ld_flags),
-            "LAPACK={0}".format(lapack_blas.ld_flags),
-        ]
+        make_args = [f"BLAS={lapack_blas.ld_flags}", f"LAPACK={lapack_blas.ld_flags}"]
 
         # If 64-bit BLAS is used:
-        if (
-            spec.satisfies("^openblas+ilp64")
-            or spec.satisfies("^intel-mkl+ilp64")
-            or spec.satisfies("^intel-parallel-studio+mkl+ilp64")
+        if spec.satisfies("^[virtuals=lapack] openblas+ilp64") or spec.satisfies(
+            "^[virtuals=lapack] intel-oneapi-mkl+ilp64"
         ):
             if spec.satisfies("%intel") or spec.satisfies("%oneapi") or spec.satisfies("%nvhpc"):
                 # 64bits integer for ifort and nvfortran are promoted by:

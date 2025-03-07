@@ -1,5 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -10,15 +9,27 @@ from spack.package import *
 
 
 class Emacs(AutotoolsPackage, GNUMirrorPackage):
-    """The Emacs programmable text editor."""
+    """Emacs is an extensible, customizable, free/libre text editor.
+    At its core is an interpreter for Emacs Lisp, a dialect of the Lisp
+    programming language with extensions to support text editing."""
 
     homepage = "https://www.gnu.org/software/emacs"
-    git = "git://git.savannah.gnu.org/emacs.git"
     gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
+    git = "https://git.savannah.gnu.org/git/emacs.git"
+    list_url = "https://ftpmirror.gnu.org/emacs/"
+    list_depth = 0
 
     maintainers("alecbcs")
 
+    license("GPL-3.0-or-later", checked_by="wdconinc")
+
+    sanity_check_is_file = ["bin/emacs"]
+    sanity_check_is_dir = ["share/emacs"]
+
     version("master", branch="master")
+    version("29.4", sha256="1adb1b9a2c6cdb316609b3e86b0ba1ceb523f8de540cfdda2aec95b6a5343abf")
+    version("29.3", sha256="2de8df5cab8ac697c69a1c46690772b0cf58fe7529f1d1999582c67d927d22e4")
+    version("29.2", sha256="ac8773eb17d8b3c0c4a3bccbb478f7c359266b458563f9a5e2c23c53c05e4e59")
     version("29.1", sha256="5b80e0475b0e619d2ad395ef5bc481b7cb9f13894ed23c301210572040e4b5b1")
     version("28.2", sha256="a6912b14ef4abb1edab7f88191bfd61c3edd7085e084de960a4f86485cb7cad8")
     version("28.1", sha256="1439bf7f24e5769f35601dbf332e74dfc07634da6b1e9500af67188a92340a28")
@@ -32,82 +43,99 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     version("25.1", sha256="763344b90db4d40e9fe90c5d14748a9dbd201ce544e2cf0835ab48a0aa4a1c67")
     version("24.5", sha256="2737a6622fb2d9982e9c47fb6f2fb297bda42674e09db40fc9bcc0db4297c3b6")
 
-    variant("X", default=False, description="Enable an X toolkit")
+    variant(
+        "gui",
+        default="none",
+        values=("none", "x11", "cocoa"),
+        description="GUI support (none=terminal only, x11=X11, cocoa=macOS)",
+    )
     variant(
         "toolkit",
         default="gtk",
         values=("gtk", "athena"),
-        description="Select an X toolkit (gtk, athena)",
+        description="X11 toolkit when gui=x11 (gtk, athena)",
+        when="gui=x11",
     )
-    variant("tls", default=True, description="Build Emacs with gnutls")
-    variant("native", default=False, when="@28:", description="enable native compilation of elisp")
-    variant("treesitter", default=False, when="@29:", description="Build with tree-sitter support")
     variant("json", default=False, when="@27:", description="Build with json support")
+    variant("native", default=False, when="@28:", description="Enable native compilation of elisp")
+    variant("tls", default=True, description="Build with gnutls support")
+    variant("treesitter", default=False, when="@29:", description="Build with tree-sitter support")
+
+    # Build dependencies
+    depends_on("c", type="build")
 
     depends_on("pkgconfig", type="build")
     depends_on("gzip", type="build")
+    depends_on("texinfo", type="build", when="@29.4:")
 
-    depends_on("ncurses")
-    depends_on("pcre")
-    depends_on("zlib-api")
-    depends_on("libxml2")
-    depends_on("libtiff", when="+X")
-    depends_on("libpng", when="+X")
-    depends_on("libxpm", when="+X")
-    depends_on("giflib", when="+X")
-    depends_on("libx11", when="+X")
-    depends_on("libxaw", when="+X toolkit=athena")
-    depends_on("gtkplus", when="+X toolkit=gtk")
-    depends_on("gnutls", when="+tls")
-    depends_on("jpeg")
-    depends_on("tree-sitter", when="+treesitter")
     depends_on("m4", type="build", when="@master:")
     depends_on("autoconf", type="build", when="@master:")
     depends_on("automake", type="build", when="@master:")
     depends_on("libtool", type="build", when="@master:")
-    depends_on("texinfo", type="build", when="@master:")
+
+    # Required dependencies
+    depends_on("ncurses")
+    depends_on("pcre")
+    depends_on("zlib-api")
+    depends_on("libxml2")
+    depends_on("jpeg")
+
+    # Optional dependencies
+    depends_on("gnutls", when="+tls")
+    depends_on("tree-sitter", when="+treesitter")
     depends_on("gcc@11: +strip languages=jit", when="+native")
     depends_on("jansson@2.7:", when="+json")
 
+    # GUI dependencies
+    with when("gui=x11"):
+        depends_on("libtiff")
+        depends_on("libpng")
+        depends_on("libxpm")
+        depends_on("giflib")
+        depends_on("libx11")
+        depends_on("libxaw", when="toolkit=athena")
+        depends_on("gtkplus", when="toolkit=gtk")
+
+    # Platform-specific conflicts
+    conflicts("gui=cocoa", when="platform=linux", msg="Use gui=x11 for Linux GUI support")
+    conflicts("gui=cocoa", when="platform=cray", msg="Use gui=x11 for Linux/Cray GUI support")
+    conflicts("gui=x11", when="platform=darwin", msg="Use gui=cocoa for macOS GUI support")
     conflicts("@:26.3", when="platform=darwin os=catalina")
 
-    @when("platform=darwin")
-    def setup_build_environment(self, env):
-        # on macOS, emacs' config does search hard enough for ncurses'
-        # termlib `-ltinfo` lib, which results in linker errors
-        if "+termlib" in self.spec["ncurses"]:
-            env.append_flags("LDFLAGS", "-ltinfo")
-
     def configure_args(self):
-        spec = self.spec
+        args = []
 
-        toolkit = spec.variants["toolkit"].value
-        if "+X" in spec:
-            args = ["--with-x", "--with-x-toolkit={0}".format(toolkit)]
+        gui = self.spec.variants["gui"].value
+        if gui == "x11":
+            toolkit = self.spec.variants["toolkit"].value
+            args.extend(["--with-x", f"--with-x-toolkit={toolkit}"])
+        elif gui == "cocoa":
+            args.append("--without-x")
+            args.append("--disable-ns-self-contained")
         else:
-            args = ["--without-x"]
+            args.append("--without-x")
+            if sys.platform == "darwin":
+                args.append("--without-ns")
 
-        # On OS X/macOS, do not build "nextstep/Emacs.app", because
-        # doing so throws an error at build-time
-        if sys.platform == "darwin":
-            args.append("--without-ns")
-
-        args += self.with_or_without("native-compilation", variant="native")
-        args += self.with_or_without("gnutls", variant="tls")
-        args += self.with_or_without("tree-sitter", variant="treesitter")
-        args += self.with_or_without("json")
+        args.extend(self.with_or_without("native-compilation", variant="native"))
+        args.extend(self.with_or_without("gnutls", variant="tls"))
+        args.extend(self.with_or_without("tree-sitter", variant="treesitter"))
+        args.extend(self.with_or_without("json"))
 
         return args
 
-    def run_version_check(self, bin):
-        """Runs and checks output of the installed binary."""
-        exe_path = join_path(self.prefix.bin, bin)
-        if not os.path.exists(exe_path):
-            raise SkipTest(f"{exe_path} is not installed")
+    @when("platform=darwin")
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("^ncurses+termlib"):
+            env.append_flags("LDFLAGS", "-ltinfo")
 
-        exe = which(exe_path)
-        out = exe("--version", output=str.split, error=str.split)
-        assert str(self.spec.version) in out
+    @run_after("install", when="gui=cocoa")
+    def move_macos_app(self):
+        """Move the Emacs.app build on macOS to <prefix>/Applications.
+        From there users can move it or link it in ~/Applications."""
+        apps_dir = join_path(self.prefix, "Applications")
+        mkdir(apps_dir)
+        move("nextstep/Emacs.app", apps_dir)
 
     def test_ctags(self):
         """check ctags version"""
@@ -128,3 +156,13 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     def test_etags(self):
         """check etags version"""
         self.run_version_check("etags")
+
+    def run_version_check(self, bin):
+        """Runs and checks output of the installed binary."""
+        exe_path = join_path(self.prefix.bin, bin)
+        if not os.path.exists(exe_path):
+            raise SkipTest(f"{exe_path} is not installed")
+
+        exe = which(exe_path)
+        out = exe("--version", output=str.split, error=str.split)
+        assert str(self.spec.version) in out

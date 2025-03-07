@@ -1,5 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,8 +32,6 @@ import glob
 import os
 import re
 
-import llnl.util.tty as tty
-
 from spack.package import *
 from spack.pkg.builtin.openfoam import (
     OpenfoamArch,
@@ -42,7 +39,6 @@ from spack.pkg.builtin.openfoam import (
     rewrite_environ_files,
     write_environ,
 )
-from spack.util.environment import EnvironmentModifications
 
 
 class FoamExtend(Package):
@@ -53,13 +49,20 @@ class FoamExtend(Package):
     and owner of the OPENFOAM trademark.
     """
 
-    homepage = "http://www.extend-project.de/"
+    homepage = "https://sourceforge.net/projects/foam-extend/"
 
+    license("GPL-3.0-only")
+
+    version("5.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-5.0.git")
     version("4.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.1.git")
     version("4.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-4.0.git")
     version("3.2", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.2.git")
-    version("3.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git")
-    version("3.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.0.git")
+    version("3.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git", deprecated=True)
+    version("3.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.0.git", deprecated=True)
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # variant('int64', default=False,
     #         description='Compile with 64-bit label')
@@ -87,6 +90,7 @@ class FoamExtend(Package):
     # mgridgen is statically linked
     depends_on("parmgridgen", when="+parmgridgen", type="build")
     depends_on("paraview@:5.0.1", when="+paraview")
+    depends_on("mesquite")
 
     # General patches
     common = ["spack-Allwmake", "README-spack"]
@@ -166,7 +170,7 @@ class FoamExtend(Package):
         if minimal:
             # pre-build or minimal environment
             tty.info("foam-extend minimal env {0}".format(self.prefix))
-            env.set("FOAM_INST_DIR", os.path.dirname(self.projectdir)),
+            env.set("FOAM_INST_DIR", os.path.dirname(self.projectdir))
             env.set("FOAM_PROJECT_DIR", self.projectdir)
             env.set("WM_PROJECT_DIR", self.projectdir)
             for d in ["wmake", self.archbin]:  # bin added automatically
@@ -201,10 +205,28 @@ class FoamExtend(Package):
         """Relative location of architecture-specific libraries"""
         return join_path("lib", self.foam_arch)
 
+    def rename_source(self):
+        """The github tarfiles have weird names that do not correspond to the
+        canonical name. We need to rename these, but leave a symlink for
+        spack to work with.
+        """
+        # Note that this particular Foam-Extned requires absolute directories
+        # to build correctly!
+        parent = os.path.dirname(self.stage.source_path)
+        original = os.path.basename(self.stage.source_path)
+        target = "foam-extend-{0}".format(self.version)
+        # Could also grep through etc/bashrc for WM_PROJECT_VERSION
+        with working_dir(parent):
+            if original != target and not os.path.lexists(target):
+                os.rename(original, target)
+                os.symlink(target, original)
+                tty.info("renamed {0} -> {1}".format(original, target))
+
     def patch(self):
         """Adjust OpenFOAM build for spack.
         Where needed, apply filter as an alternative to normal patching."""
         add_extra_files(self, self.common, self.assets)
+        self.rename_source()
 
         # Adjust ParMGridGen - this is still a mess
         files = [
@@ -262,11 +284,17 @@ class FoamExtend(Package):
             "flex": {"FLEX_SYSTEM": 1, "FLEX_DIR": spec["flex"].prefix},
             "bison": {"BISON_SYSTEM": 1, "BISON_DIR": spec["flex"].prefix},
             "zlib": {"ZLIB_SYSTEM": 1, "ZLIB_DIR": spec["zlib-api"].prefix},
+            "mesquite": {
+                "MESQUITE_SYSTEM": 1,
+                "MESQUITE_DIR": spec["mesquite"].prefix,
+                "MESQUITE_INCLUDE_DIR": spec["mesquite"].prefix.include,
+                "NESQUITE_LIB_DIR": spec["mesquite"].prefix.lib,
+            },
         }
         # Adjust configuration via prefs - sort second
         self.etc_prefs["001"].update(self.foam_arch.foam_dict())
 
-        if "+scotch" in spec or "+ptscotch" in spec:
+        if spec.satisfies("+scotch") or spec.satisfies("+ptscotch"):
             pkg = spec["scotch"].prefix
             self.etc_prefs["scotch"] = {
                 "SCOTCH_SYSTEM": 1,
@@ -276,7 +304,7 @@ class FoamExtend(Package):
                 "SCOTCH_INCLUDE_DIR": pkg.include,
             }
 
-        if "+metis" in spec:
+        if spec.satisfies("+metis"):
             pkg = spec["metis"].prefix
             self.etc_prefs["metis"] = {
                 "METIS_SYSTEM": 1,
@@ -286,7 +314,7 @@ class FoamExtend(Package):
                 "METIS_INCLUDE_DIR": pkg.include,
             }
 
-        if "+parmetis" in spec:
+        if spec.satisfies("+parmetis"):
             pkg = spec["parmetis"].prefix
             self.etc_prefs["parametis"] = {
                 "PARMETIS_SYSTEM": 1,
@@ -296,7 +324,7 @@ class FoamExtend(Package):
                 "PARMETIS_INCLUDE_DIR": pkg.include,
             }
 
-        if "+parmgridgen" in spec:
+        if spec.satisfies("+parmgridgen"):
             pkg = spec["parmgridgen"].prefix
             self.etc_prefs["parmgridgen"] = {
                 "PARMGRIDGEN_SYSTEM": 1,
@@ -306,7 +334,7 @@ class FoamExtend(Package):
                 "PARMGRIDGEN_INCLUDE_DIR": pkg.include,
             }
 
-        if "+paraview" in self.spec:
+        if self.spec.satisfies("+paraview"):
             self.etc_prefs["paraview"] = {
                 "PARAVIEW_SYSTEM": 1,
                 "PARAVIEW_DIR": spec["paraview"].prefix,
@@ -354,7 +382,7 @@ class FoamExtend(Package):
         }
 
         # All top-level files, except spack build info and possibly Allwmake
-        if "+source" in spec:
+        if spec.satisfies("+source"):
             ignored = re.compile(r"^spack-.*")
         else:
             ignored = re.compile(r"^(Allclean|Allwmake|spack-).*")
@@ -368,7 +396,7 @@ class FoamExtend(Package):
         for d in ["etc", "bin", "wmake", "lib", join_path(appdir, "bin")]:
             install_tree(d, join_path(self.projectdir, d), symlinks=True)
 
-        if "+source" in spec:
+        if spec.satisfies("+source"):
             subitem = join_path(appdir, "Allwmake")
             install(subitem, join_path(self.projectdir, subitem))
 
