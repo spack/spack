@@ -31,6 +31,7 @@ class PyScikitBuild(PythonPackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
+    depends_on("python@3.7:", when="@0.17.6:")
     # 0.18.1 fixes disutils for python 3.12+
     # https://github.com/scikit-build/scikit-build/commit/77451ffb1b43e3908edfc813f22c9559421c1372
     depends_on("python@:3.11", when="@:0.17.6")
@@ -50,7 +51,8 @@ class PyScikitBuild(PythonPackage):
     depends_on("py-wheel@0.29:", type=("build", "run"))
 
     # https://github.com/scikit-build/scikit-build/releases/tag/0.18.0
-    depends_on("cmake@3.5:", type=("build", "run"), when="@0.18")
+    # https://github.com/scikit-build/scikit-build/blob/0.18.1/skbuild/constants.py#L52
+    depends_on("cmake@3.5:", type=("build", "run"), when="@0.18:")
 
     # Historical dependencies
     depends_on("py-setuptools-scm+toml", when="@0.15", type="build")
