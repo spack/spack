@@ -44,4 +44,3 @@ class Bgen(WafPackage):
             src_dir = join_path(prefix.src.bgen)
             makedirs(src_dir)
             install_tree(self.stage.source_path, src_dir)
-
