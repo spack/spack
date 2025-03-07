@@ -505,6 +505,30 @@ def match_predicate(*args):
     return match
 
 
+def dedupe_from_end(sequence, key=None):
+    """Creates a stable de-duplicated list of a hashable sequence by key, keeping later entries
+    in the list.  Because later entries are kept, it is not possible to yield the result.
+
+    Args:
+        sequence: hashable sequence to be de-duplicated
+        key: callable applied on values before uniqueness test; identity
+            by default.
+
+    Returns:
+        stable de-duplication of the sequence, keeping later entries in the list
+
+    Examples:
+
+        Dedupe a list of integers:
+
+            [x for x in dedupe_from_end([1, 2, 1, 3, 2])] == [1, 3, 2]
+
+            [x for x in llnl.util.lang.dedupe_from_end([1,-2,1,3,2], key=abs)] == [1, 3, 2]
+    """
+    reversed_result = list(dedupe(reversed(sequence), key))
+    return reversed(reversed_result)
+
+
 def dedupe(sequence, key=None):
     """Yields a stable de-duplication of an hashable sequence by key
 
