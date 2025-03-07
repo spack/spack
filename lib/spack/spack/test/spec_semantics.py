@@ -25,6 +25,8 @@ from spack.variant import (
     UnknownVariantError,
 )
 
+pytestmark = [pytest.mark.usefixtures("mock_packages")]
+
 
 @pytest.fixture()
 def setup_complex_splice(monkeypatch):
@@ -115,7 +117,7 @@ def setup_complex_splice(monkeypatch):
     return a_red, c_blue
 
 
-@pytest.mark.usefixtures("config", "mock_packages")
+@pytest.mark.usefixtures("config")
 class TestSpecSemantics:
     """Test satisfies(), intersects(), constrain() and other semantic operations on specs."""
 
@@ -1588,7 +1590,7 @@ def test_spec_format_path_posix(spec_str, format_str, expected, mock_git_test_pa
 
 @pytest.mark.regression("3887")
 @pytest.mark.parametrize("spec_str", ["py-extension2", "extension1", "perl-extension"])
-def test_is_extension_after_round_trip_to_dict(config, mock_packages, spec_str):
+def test_is_extension_after_round_trip_to_dict(config, spec_str):
     # x is constructed directly from string, y from a
     # round-trip to dict representation
     x = spack.concretize.concretize_one(spec_str)
@@ -1674,7 +1676,7 @@ def test_spec_installed(default_mock_concretization, database):
 
 
 @pytest.mark.regression("30678")
-def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, default_mock_concretization):
+def test_call_dag_hash_on_old_dag_hash_spec(default_mock_concretization):
     # create a concrete spec
     a = default_mock_concretization("pkg-a")
     dag_hashes = {spec.name: spec.dag_hash() for spec in a.traverse()}
@@ -1691,7 +1693,7 @@ def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, default_mock_concreti
             spec.package_hash()
 
 
-def test_spec_trim(mock_packages, config):
+def test_spec_trim(config):
     top = spack.concretize.concretize_one("dt-diamond")
     top.trim("dt-diamond-left")
     remaining = {x.name for x in top.traverse()}
@@ -1710,7 +1712,7 @@ def test_spec_trim(mock_packages, config):
 
 
 @pytest.mark.regression("30861")
-def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
+def test_concretize_partial_old_dag_hash_spec(config):
     # create an "old" spec with no package hash
     bottom = spack.concretize.concretize_one("dt-diamond-bottom")
     delattr(bottom, "_package_hash")
@@ -1736,7 +1738,7 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
     assert not getattr(spec["dt-diamond-bottom"], "_package_hash", None)
 
 
-def test_package_hash_affects_dunder_and_dag_hash(mock_packages, default_mock_concretization):
+def test_package_hash_affects_dunder_and_dag_hash(default_mock_concretization):
     a1 = default_mock_concretization("pkg-a")
     a2 = default_mock_concretization("pkg-a")
 
@@ -1787,7 +1789,7 @@ def test_abstract_provider_in_spec(abstract_spec, spec_str, default_mock_concret
 @pytest.mark.parametrize(
     "lhs,rhs,expected", [("a", "a", True), ("a", "a@1.0", True), ("a@1.0", "a", False)]
 )
-def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
+def test_abstract_contains_semantic(lhs, rhs, expected):
     s, t = Spec(lhs), Spec(rhs)
     result = s in t
     assert result is expected
