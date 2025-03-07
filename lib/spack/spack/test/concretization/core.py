@@ -3105,7 +3105,9 @@ def test_spec_unification(unify, mutable_config, mock_packages):
         _ = spack.cmd.parse_specs([a_restricted, b], concretize=True)
 
 
-def test_concretization_cache_roundtrip(use_concretization_cache, monkeypatch, mutable_config):
+def test_concretization_cache_roundtrip(
+    mock_packages, use_concretization_cache, monkeypatch, mutable_config
+):
     """Tests whether we can write the results of a clingo solve to the cache
     and load the same spec request from the cache to produce identical specs"""
     # Force determinism:
