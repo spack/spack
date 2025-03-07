@@ -333,7 +333,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
 
     depends_on("pmix", when="pmi=pmix")
 
-    # Libevent is required when *vendored* PMIx is used
+    # Libevent may be required when *external* PMIx is used
     depends_on("libevent@2:", when="~internal-libevent")
 
     # +argobots variant requires Argobots
