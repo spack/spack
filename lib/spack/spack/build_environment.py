@@ -1216,14 +1216,21 @@ class SetupContext:
         return env
 
     def _make_buildtime_detectable(self, dep: spack.spec.Spec, env: EnvironmentModifications):
-        if is_system_path(dep.prefix):
-            return
-
-        env.prepend_path("CMAKE_PREFIX_PATH", dep.prefix)
-        for d in ("lib", "lib64", "share"):
-            pcdir = os.path.join(dep.prefix, d, "pkgconfig")
-            if os.path.isdir(pcdir):
-                env.prepend_path("PKG_CONFIG_PATH", pcdir)
+        if not is_system_path(dep.prefix):
+            env.prepend_path("CMAKE_PREFIX_PATH", dep.prefix)
+            for d in ("lib", "lib64", "share"):
+                pcdir = os.path.join(dep.prefix, d, "pkgconfig")
+                if os.path.isdir(pcdir):
+                    env.prepend_path("PKG_CONFIG_PATH", pcdir)
+        else:
+            # If the build is using externals in system paths, we add them to
+            # PKG_CONFIG_PATH so that Spack-built pkgconfig can find them
+            for d in ("lib", "lib64", "share"):
+                pcfile = os.path.join(
+                    dep.prefix, d, "pkgconfig", f"{dep.package.pkg_config_name}.pc"
+                )
+                if os.path.exists(pcfile):
+                    env.append_path("PKG_CONFIG_PATH", os.path.dirname(pcfile))
 
     def _make_runnable(self, dep: spack.spec.Spec, env: EnvironmentModifications):
         if is_system_path(dep.prefix):

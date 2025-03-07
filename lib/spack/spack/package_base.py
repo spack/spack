@@ -823,6 +823,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return importlib.import_module(cls.__module__)
 
     @classproperty
+    def pkg_config_name(cls):
+        return f"{cls.__name__.lower()}"
+
+    @classproperty
     def namespace(cls):
         """Spack namespace for the package, which identifies its repo."""
         return spack.repo.namespace_from_fullname(cls.__module__)
