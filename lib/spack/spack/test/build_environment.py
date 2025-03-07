@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 import platform
 import posixpath
 import sys
@@ -10,6 +11,7 @@ import pytest
 
 import archspec.cpu
 
+import llnl.util.filesystem as fs
 from llnl.path import Path, convert_to_platform_path
 from llnl.util.filesystem import HeaderList, LibraryList
 
@@ -22,6 +24,7 @@ import spack.deptypes as dt
 import spack.package_base
 import spack.paths
 import spack.spec
+import spack.util.environment
 import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
 from spack.context import Context
@@ -326,6 +329,42 @@ def test_external_config_env(mock_packages, mutable_config, working_env):
     spack.build_environment.setup_package(cmake_client.package, False)
 
     assert os.environ["TEST_ENV_VAR_SET"] == "yes it's set"
+
+
+def test_external_pkgconfig(mock_packages, mutable_config, working_env, monkeypatch, tmpdir):
+    fake_cmake_prefix = pathlib.Path(tmpdir)
+    cmake_config = {"externals": [{"spec": "cmake@1.0", "prefix": f"{fake_cmake_prefix}"}]}
+    spack.config.set("packages:cmake", cmake_config)
+    cmake_pcdir = fake_cmake_prefix / "lib64" / "pkgconfig"
+    fs.mkdirp(str(cmake_pcdir))
+
+    cmake_client = spack.concretize.concretize_one("cmake-client")
+
+    spack.build_environment.setup_package(cmake_client.package, False)
+    assert f"{cmake_pcdir}" in os.environ["PKG_CONFIG_PATH"]
+    os.environ.clear()
+
+    _old_is_system_path = spack.util.environment.is_system_path
+
+    def _is_system_path(x):
+        if pathlib.Path(x).resolve() == fake_cmake_prefix.resolve():
+            return True
+        else:
+            return _old_is_system_path(x)
+
+    # Note: this is setting build_environment's import of is_system_path,
+    # because it is doing a "from ... import ..."
+    monkeypatch.setattr(spack.build_environment, "is_system_path", _is_system_path)
+    spack.build_environment.setup_package(cmake_client.package, False)
+    assert (
+        "PKG_CONFIG_PATH" not in os.environ
+        or f"{cmake_pcdir}" not in os.environ["PKG_CONFIG_PATH"]
+    )
+    os.environ.clear()
+
+    fs.touch(cmake_pcdir / "cmake.pc")
+    spack.build_environment.setup_package(cmake_client.package, False)
+    assert f"{cmake_pcdir}" in os.environ["PKG_CONFIG_PATH"]
 
 
 @pytest.mark.regression("9107")
