@@ -86,7 +86,7 @@ class Scorep(AutotoolsPackage):
     patch("gcc10.patch", when="@3.1:6.0")
     patch(
         "https://gitlab.com/score-p/scorep/-/commit/093ff84f0e155ac1db99bbaa312e028f89affddb.diff",
-        when="@:8.4 +gcc-plugin",
+        when="@7:8.4 +gcc-plugin",
         sha256="d20b3046ba6a89ad9c106bcf372bceb1bd9ab780d4c7dd9e7373f0099b92d933",
     )
 
