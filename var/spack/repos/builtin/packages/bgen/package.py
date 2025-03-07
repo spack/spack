@@ -18,6 +18,7 @@ class Bgen(WafPackage):
     homepage = "https://enkre.net/cgi-bin/code/bgen"
 
     license("BSL-1.0")
+    maintainers("teaguesterling")
 
     version(
         "1.1.7",
@@ -27,3 +28,9 @@ class Bgen(WafPackage):
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
+
+    def flag_handler(self, name, flags):
+        # Version 1.1.7 not compatible with C++17
+        if name == "cxxflags":
+            flags.append("-std=c++14")
+        return (flags, None, None)
