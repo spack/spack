@@ -83,12 +83,12 @@ class TestSpecList:
             ),
             # A constraint affects both the root and a dependency
             (
-                [{"matrix": [["gromacs"], ["%gcc"], ["+plumed ^plumed%gcc"]]}],
-                ["gromacs+plumed%gcc ^plumed%gcc"],
+                [{"matrix": [["version-test-root"], ["%gcc"], ["^version-test-pkg%gcc"]]}],
+                ["version-test-root%gcc ^version-test-pkg%gcc"],
             ),
         ],
     )
-    def test_spec_list_constraint_ordering(self, specs, expected):
+    def test_spec_list_constraint_ordering(self, mock_packages, specs, expected):
         result = SpecListParser().parse_user_specs(name="specs", yaml_list=specs)
         assert result.specs == [Spec(x) for x in expected]
 
@@ -125,7 +125,7 @@ class TestSpecList:
         assert mock_list.specs_as_yaml_list == (DEFAULT_EXPANSION + other_list.specs_as_yaml_list)
         assert mock_list.specs == DEFAULT_SPECS + other_list.specs
 
-    def test_spec_list_nested_matrices(self, parser_and_speclist):
+    def test_spec_list_nested_matrices(self, mock_packages, parser_and_speclist):
         parser, _ = parser_and_speclist
 
         inner_matrix = [{"matrix": [["zlib", "libelf"], ["%gcc", "%intel"]]}]
@@ -171,7 +171,7 @@ class TestSpecList:
         )
         assert len(result.specs) == 1
 
-    def test_spec_list_exclude_with_abstract_hashes(self, mock_packages, install_mockery):
+    def test_spec_list_exclude_with_abstract_hashes(self, install_mockery):
         # Put mpich in the database so it can be referred to by hash.
         mpich_1 = spack.concretize.concretize_one("mpich+debug")
         mpich_2 = spack.concretize.concretize_one("mpich~debug")
