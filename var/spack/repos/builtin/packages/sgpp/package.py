@@ -240,8 +240,8 @@ class Sgpp(SConsPackage):
 
         # For some libraries, SGpp expects the path to be explicitly passed to scons (either using
         # CPPPATH and LIBPATH or using depency-specific variables (BOOST_LIBRARY_PATH).
-        # Here, we set those paths and associated flags for dependencies where SGpp expects them to be
-        # passed manually (Eigen, Dakota, ...):
+        # Here, we set those paths and associated flags the dependencies where SGpp expects them
+        # to be passed manually via CPPPATH/LIBPATH (Eigen, Dakota, ...):
         custom_cpppath = ""
         custom_libpath = ""
         path_separator = ";" if sys.platform == "win32" else ":"
