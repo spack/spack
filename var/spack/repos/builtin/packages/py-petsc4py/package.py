@@ -8,7 +8,7 @@ from spack.package import *
 class PyPetsc4py(PythonPackage):
     """This package provides Python bindings for the PETSc package."""
 
-    homepage = "https://gitlab.com/petsc/petsc4py"
+    homepage = "https://petsc.org/release/petsc4py"
     url = (
         "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc4py-3.20.0.tar.gz"
     )
