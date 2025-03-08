@@ -13,6 +13,8 @@ import spack.main
 import spack.util.pattern
 import spack.version
 
+pytestmark = [pytest.mark.usefixtures("mock_packages")]
+
 compiler = spack.main.SpackCommand("compiler")
 
 
@@ -80,7 +82,7 @@ def test_compiler_find_without_paths(no_packages_yaml, working_env, mock_executa
 
 
 @pytest.mark.regression("37996")
-def test_compiler_remove(mutable_config, mock_packages):
+def test_compiler_remove(mutable_config):
     """Tests that we can remove a compiler from configuration."""
     assert any(
         compiler.satisfies("gcc@=9.4.0") for compiler in spack.compilers.config.all_compilers()
@@ -93,7 +95,7 @@ def test_compiler_remove(mutable_config, mock_packages):
 
 
 @pytest.mark.regression("37996")
-def test_removing_compilers_from_multiple_scopes(mutable_config, mock_packages):
+def test_removing_compilers_from_multiple_scopes(mutable_config):
     # Duplicate "site" scope into "user" scope
     site_config = spack.config.get("packages", scope="site")
     spack.config.set("packages", site_config, scope="user")
@@ -154,6 +156,9 @@ def test_compiler_find_prefer_no_suffix(no_packages_yaml, working_env, compilers
     os.environ["PATH"] = str(compilers_dir)
     output = compiler("find", "--scope=site")
 
+    # TODO/RepoSplit: IF clang is important, need to investigate what more than
+    # TODO/RepoSplit: determine_spec_details and validate_detected_spec needs to
+    # TODO/RepoSplit: be pulled from builtin's llvm package.
     assert "llvm@11.0.0" in output
     assert "gcc@8.4.0" in output
 
