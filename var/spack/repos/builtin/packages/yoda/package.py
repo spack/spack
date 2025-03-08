@@ -123,7 +123,9 @@ class Yoda(AutotoolsPackage):
             args.append(f"--with-yaml-cpp={self.spec['yaml-cpp'].prefix}")
 
         args.extend(self.with_or_without("h5", variant="hdf5"))
-        args.extend(self.with_or_without("highfive", variant="highfive", activation_value="prefix"))
+        args.extend(
+            self.with_or_without("highfive", variant="highfive", activation_value="prefix")
+        )
         args.extend(self.enable_or_disable("root"))
 
         return args
