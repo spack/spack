@@ -72,6 +72,7 @@ import spack.paths
 import spack.spec
 import spack.util.spack_yaml
 import spack.version
+from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.tokenize import Token, TokenBase, Tokenizer
 
 #: Valid name for specs and variants. Here we are not using
@@ -379,16 +380,8 @@ class SpecNodeParser:
                 SpecTokens.COMPILER_AND_VERSION
             ):
                 build_dependency = spack.spec.Spec(self.ctx.current_token.value[1:])
-                name_conversion = {
-                    "clang": "llvm",
-                    "oneapi": "intel-oneapi-compilers",
-                    "rocmcc": "llvm-amdgpu",
-                    "intel": "intel-oneapi-compiler-classic",
-                    "arm": "acfl",
-                }
-
-                if build_dependency.name in name_conversion:
-                    build_dependency.name = name_conversion[build_dependency.name]
+                if build_dependency.name in LEGACY_COMPILER_TO_BUILTIN:
+                    build_dependency.name = LEGACY_COMPILER_TO_BUILTIN[build_dependency.name]
 
                 initial_spec._add_dependency(
                     build_dependency, depflag=spack.deptypes.BUILD, virtuals=(), direct=True

@@ -19,6 +19,7 @@ import spack.repo
 import spack.spec
 import spack.tengine as tengine
 import spack.util.environment
+from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
 
@@ -223,9 +224,9 @@ class LmodConfiguration(BaseConfiguration):
         # If it is in the list of supported compilers family -> compiler
         if self.spec.name in spack.compilers.config.supported_compilers():
             provides["compiler"] = spack.spec.Spec(self.spec.format("{name}{@versions}"))
-        elif self.spec.name in spack.compilers.config.package_name_to_compiler_name:
+        elif self.spec.name in BUILTIN_TO_LEGACY_COMPILER:
             # If it is the package for a supported compiler, but of a different name
-            cname = spack.compilers.config.package_name_to_compiler_name[self.spec.name]
+            cname = BUILTIN_TO_LEGACY_COMPILER[self.spec.name]
             provides["compiler"] = spack.spec.Spec(cname, self.spec.versions)
 
         # All the other tokens in the hierarchy must be virtual dependencies

@@ -25,15 +25,6 @@ import spack.spec
 from spack.operating_systems import windows_os
 from spack.util.environment import get_path
 
-package_name_to_compiler_name = {
-    "llvm": "clang",
-    "intel-oneapi-compilers": "oneapi",
-    "llvm-amdgpu": "rocmcc",
-    "intel-oneapi-compilers-classic": "intel",
-    "acfl": "arm",
-}
-
-
 #: Tag used to identify packages providing a compiler
 COMPILER_TAG = "compiler"
 

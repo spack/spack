@@ -86,6 +86,7 @@ import llnl.util.tty as tty
 import llnl.util.tty.color as clr
 
 import spack
+import spack.aliases
 import spack.compilers.flags
 import spack.deptypes as dt
 import spack.error
@@ -2064,20 +2065,13 @@ class Spec:
     def long_spec(self):
         """Returns a string of the spec with the dependencies completely
         enumerated."""
-        name_conversion = {
-            "llvm": "clang",
-            "intel-oneapi-compilers": "oneapi",
-            "llvm-amdgpu": "rocmcc",
-            "intel-oneapi-compiler-classic": "intel",
-            "acfl": "arm",
-        }
         parts = [self.format()]
         direct, transitive = lang.stable_partition(
             self.edges_to_dependencies(), predicate_fn=lambda x: x.direct
         )
         for item in sorted(direct, key=lambda x: x.spec.name):
             current_name = item.spec.name
-            new_name = name_conversion.get(current_name, current_name)
+            new_name = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(current_name, current_name)
             parts.append(f"%{item.spec.format()}".replace(current_name, new_name))
         for item in sorted(transitive, key=lambda x: x.spec.name):
             # Recurse to attach build deps in order
