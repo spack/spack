@@ -784,6 +784,7 @@ class TestSpecSemantics:
             ("libelf^foo", "libelf^foo+debug"),
             ("libelf^foo", "libelf^foo~debug"),
             ("libelf", "^foo"),
+            ("mpileaks ^callpath %gcc@14", "mpileaks ^callpath %gcc@14.1"),
         ],
     )
     def test_lhs_is_changed_when_constraining(self, lhs, rhs):
@@ -817,6 +818,7 @@ class TestSpecSemantics:
             ("libelf^foo+debug", "libelf^foo+debug"),
             ("libelf^foo~debug", "libelf^foo~debug"),
             ('libelf^foo cppflags="-O3"', 'libelf^foo cppflags="-O3"'),
+            ("mpileaks ^callpath %gcc@14.1", "mpileaks ^callpath %gcc@14"),
         ],
     )
     def test_lhs_is_not_changed_when_constraining(self, lhs, rhs):
@@ -1832,6 +1834,10 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (Spec, "target=:haswell", "target=x86_64_v4:", (False, False, False)),
         # Edge case of uarch that split in a diamond structure, from a common ancestor
         (Spec, "target=:cascadelake", "target=:cannonlake", (False, False, False)),
+        # Spec with compilers
+        (Spec, "mpileaks %gcc@5", "mpileaks %gcc@6", (False, False, False)),
+        (Spec, "mpileaks ^callpath %gcc@5", "mpileaks ^callpath %gcc@6", (False, False, False)),
+        (Spec, "mpileaks ^callpath %gcc@5", "mpileaks ^callpath %gcc@5.4", (True, False, True)),
     ],
 )
 def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
