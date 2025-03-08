@@ -73,25 +73,25 @@ class Yoda(AutotoolsPackage):
     version("1.0.4", sha256="697fe397c69689feecb2a731e19b2ff85e19343b8198c4f18a7064c4f7123950")
     version("1.0.3", sha256="6a1d1d75d9d74da457726ea9463c1b0b6ba38d4b43ef54e1c33f885e70fdae4b")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("cxx", type="build")
 
-    variant("root", default=False, description="Enable ROOT interface")
+    variant("hdf5", default=False, description="Enable HDF5 compatibility", when="@2.1:")
+    variant("highfive", default=False, description="Enable HighFive compatibility", when="@2.1:")
+    variant("root", default=False, description="Enable ROOT interface", when="@:2.0")
 
     depends_on("python", type=("build", "link", "run"))
     depends_on("py-future", type=("build", "run"))
     depends_on("zlib-api")
-    depends_on("boost", when="@:1.6.0", type=("build", "run"))
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants, when="@:1.6.0", type=("build", "run"))
+    depends_on("boost@1.48: ", when="@:1.5", type=("build", "run"))
+    depends_on("yaml-cpp", type=("build", "link", "run"), when="@2.1:")
     depends_on("py-cython@0.18:", type="build", when="@:1.4.0")
     depends_on("py-cython@0.20:", type="build", when="@1.4.0:1.6.5")
     depends_on("py-cython@0.23.5:", type="build", when="@1.6.5:1.8.0")
     depends_on("py-cython@0.24:", type="build", when="@1.8.0:")
     depends_on("py-matplotlib", when="@1.3.0:", type=("build", "run"))
+
+    depends_on("hdf5", type=("build", "link", "run"), when="+hdf5")
+    depends_on("highfive", type=("build", "link", "run"), when="+highfive")
     depends_on("root", type=("build", "link", "run"), when="+root")
 
     extends("python")
@@ -116,8 +116,12 @@ class Yoda(AutotoolsPackage):
     def configure_args(self):
         args = []
         if self.spec.satisfies("@:1.6.0"):
-            args.append("--with-boost=" + self.spec["boost"].prefix)
+            args.append(f"--with-boost={self.spec['boost'].prefix}")
+        if self.spec.satisfies("@2.1:"):
+            args.append(f"--with-yaml-cpp={self.spec['yaml-cpp'].prefix}")
 
+        args.extend(self.with_or_without("h5", variant="hdf5"))
+        args.extend(self.with_or_without("highfive", variant="highfive", activation_value="prefix"))
         args.extend(self.enable_or_disable("root"))
 
         return args
