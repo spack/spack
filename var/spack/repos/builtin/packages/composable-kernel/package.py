@@ -18,6 +18,7 @@ class ComposableKernel(CMakePackage):
     license("MIT")
 
     version("master", branch="develop")
+    version("develop", commit="8086bbe3a78d931eb96fe12fdc014082e18d18d3")
     version("6.3.2", sha256="875237fe493ff040f8f63b827cddf2ff30a8d3aa18864f87d0e35323c7d62a2d")
     version("6.3.1", sha256="3e8c8c832ca3f9ceb99ab90f654b93b7db876f08d90eda87a70bc629c854052a")
     version("6.3.0", sha256="274f87fc27ec2584c76b5bc7ebdbe172923166b6b93e66a24f98475b44be272d")
@@ -84,6 +85,10 @@ class ComposableKernel(CMakePackage):
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("rocm-cmake@" + ver, when="@" + ver, type="build")
+    for ver in ["develop"]:
+        depends_on("hip@6.3.2", when="@" + ver)
+        depends_on("llvm-amdgpu@6.3.2", when="@" + ver)
+        depends_on("rocm-cmake@6.3.2", when="@" + ver, type="build")
 
     # Build is breaking on warning, -Werror, -Wunused-parameter. The patch is part of:
     # https://github.com/ROCm/composable_kernel/commit/959073842c0db839d45d565eb260fd018c996ce4

@@ -304,8 +304,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("rocm-core")
         depends_on("rocfft")
         depends_on("rocblas")
-        depends_on("miopen-hip")
         depends_on("rocminfo")
+        depends_on("aotriton")
+        depends_on("miopen-hip")
+        depends_on("composable-kernel")
     depends_on("mpi", when="+mpi")
     depends_on("ucc", when="+ucc")
     depends_on("ucx", when="+ucc")
@@ -389,11 +391,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         when="@1.5:2.2.2 +rocm",
     )
     # Fixes build failure from pytorch version 2.3 to 2.5.1 with with rocm
-    patch(
-        "https://github.com/ROCm/pytorch/commit/81b1b13beff255201ae0caa675fcbb8f71bceef9.patch?full_index=1",
-        sha256="aac76b3636e71a44adabba96185c3ddac110f007a2c02c6fd6ac82ead361e395",
-        when="@2.3: +rocm",
-    )
     # Fixes 'FindOpenMP.cmake'
     # to detect openmp settings used by Fujitsu compiler.
     patch("detect_omp_of_fujitsu_compiler.patch", when="%fj")
@@ -532,7 +529,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         )
         if self.spec.satisfies("@2.1: + rocm"):
             filter_file(
-                r"${ROCM_INCLUDE_DIRS}/rocm_version.h",
+                r"${ROCM_INCLUDE_DIRS}/rocm-core/rocm_version.h",
                 "{0}/include/rocm-core/rocm_version.h".format(self.spec["rocm-core"].prefix),
                 "cmake/public/LoadHIP.cmake",
                 string=True,
@@ -545,6 +542,32 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
                 "cmake/public/LoadHIP.cmake",
                 string=True,
             )
+        if self.spec.satisfies("@1.5:2.2.2 + rocm"):
+            filter_file(
+                r"/opt/rocm/hcc/include",
+                "$ENV{THRUST_PATH}/include $ENV{ROCPRIM_PATH}/include $ENV{HIPCUB_PATH}/include \
+                    $ENV{ROCRAND_PATH}/include",
+                "caffe2/CMakeLists.txt",
+                string=True,
+            )
+        if self.spec.satisfies("@2.3:2.4 + rocm"):
+            filter_file(
+                r"${ROCM_SOURCE_DIR}/include",
+                "$ENV{THRUST_PATH}/include $ENV{ROCPRIM_PATH}/include $ENV{HIPCUB_PATH}/include \
+                    $ENV{ROCRAND_PATH}/include",
+                "caffe2/CMakeLists.txt",
+                string=True,
+            )
+        if self.spec.satisfies("@2.5: + rocm"):
+            filter_file(
+                r"${ROCM_SOURCE_DIR}/include",
+                "$ENV{AOTRITON_INSTALLED_PREFIX}/include $ENV{THRUST_PATH}/include \
+                    $ENV{ROCPRIM_PATH}/include $ENV{HIPCUB_PATH}/include \
+                    $ENV{ROCRAND_PATH}/include $ENV{TORCHINDUCTOR_CK_DIR}/include",
+                "caffe2/CMakeLists.txt",
+                string=True,
+            )
+        if self.spec.satisfies("@2.1:2.2.2 + rocm"):
             filter_file(
                 r"__HIP_PLATFORM_HCC__",
                 "__HIP_PLATFORM_AMD__",
@@ -627,8 +650,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("HIPCUB_PATH", self.spec["hipcub"].prefix)
             env.set("THRUST_PATH", self.spec["rocthrust"].prefix)
             env.set("ROCTRACER_PATH", self.spec["roctracer-dev"].prefix)
+            env.set("ROCTRACER_INCLUDE_DIR", self.spec["roctracer-dev"].prefix.include.roctracer)
+            env.set("XNNPACK_USE_SYSTEM_LIBS", "ON")
+            env.set("AOTRITON_INSTALLED_PREFIX", self.spec["aotriton"].prefix)
             if self.spec.satisfies("^hip@5.2.0:"):
                 env.set("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
+            if self.spec.satisfies("@2.5:"):
+                env.set("TORCHINDUCTOR_CK_DIR", self.spec["composable-kernel"].prefix)
 
         enable_or_disable("cudnn")
         if "+cudnn" in self.spec:
