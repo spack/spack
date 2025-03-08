@@ -92,6 +92,8 @@ class Yoda(AutotoolsPackage):
 
     depends_on("hdf5", type=("build", "link", "run"), when="+hdf5")
     depends_on("highfive", type=("build", "link", "run"), when="+highfive")
+
+    depends_on("root", type=("build", "link", "run"), when="@2.1:")
     depends_on("root", type=("build", "link", "run"), when="+root")
 
     extends("python")
