@@ -50,7 +50,7 @@ class Msvc(Package, CompilerPackage):
     # based on proper versions of MSVC from there
     # pending acceptance of #28117 for full support using
     # compiler wrappers
-    link_paths = {"c": "", "cxx": "", "fortran": ""}
+    compiler_wrapper_link_paths = {"c": "", "cxx": "", "fortran": ""}
 
     provides("c", "cxx")
     requires("platform=windows", msg="MSVC is only supported on Windows")

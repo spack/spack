@@ -485,7 +485,7 @@ class Nvhpc(Package, CompilerPackage):
     pic_flag = "-fpic"
     openmp_flag = "-mp"
 
-    link_paths = {
+    compiler_wrapper_link_paths = {
         "c": os.path.join("nvhpc", "nvc"),
         "cxx": os.path.join("nvhpc", "nvc++"),
         "fortran": os.path.join("nvhpc", "nvfortran"),

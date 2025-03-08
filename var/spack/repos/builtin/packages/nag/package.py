@@ -83,7 +83,7 @@ class Nag(Package, CompilerPackage):
     debug_flags = ["-g", "-gline", "-g90"]
     opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"]
 
-    link_paths = {"fortran": os.path.join("nag", "nagfor")}
+    compiler_wrapper_link_paths = {"fortran": os.path.join("nag", "nagfor")}
 
     # NAG does not support a flag that would enable verbose output and
     # compilation/linking at the same time (with either '-#' or '-dryrun'

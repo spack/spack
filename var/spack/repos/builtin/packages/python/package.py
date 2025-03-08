@@ -1308,7 +1308,9 @@ print(json.dumps(config))
 
             # The dependent environment will have the compilation command set to
             # the following:
-            new_compile = str(compiler_wrapper_pkg.bin_dir() / compiler_pkg.link_paths[language])
+            new_compile = str(
+                compiler_wrapper_pkg.bin_dir() / compiler_pkg.compiler_wrapper_link_paths[language]
+            )
 
             # Normally, the link command starts with the compilation command:
             if config_link.startswith(config_compile):

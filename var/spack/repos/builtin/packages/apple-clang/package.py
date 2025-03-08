@@ -20,7 +20,10 @@ class AppleClang(BundlePackage, LlvmDetection, CompilerPackage):
 
     openmp_flag = "-Xpreprocessor -fopenmp"
 
-    link_paths = {"c": os.path.join("clang", "clang"), "cxx": os.path.join("clang", "clang++")}
+    compiler_wrapper_link_paths = {
+        "c": os.path.join("clang", "clang"),
+        "cxx": os.path.join("clang", "clang++"),
+    }
 
     required_libs = ["libclang"]
 

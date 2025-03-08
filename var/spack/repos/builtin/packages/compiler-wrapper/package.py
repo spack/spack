@@ -170,10 +170,10 @@ class CompilerWrapper(Package):
             compiler = getattr(compiler_pkg, attr_name)
             env.set(spack_var_name, compiler)
 
-            if language not in compiler_pkg.link_paths:
+            if language not in compiler_pkg.compiler_wrapper_link_paths:
                 continue
 
-            wrapper_path = bin_dir / compiler_pkg.link_paths.get(language)
+            wrapper_path = bin_dir / compiler_pkg.compiler_wrapper_link_paths.get(language)
 
             env.set(wrapper_var_name, str(wrapper_path))
             env.set(f"SPACK_{wrapper_var_name}_RPATH_ARG", compiler_pkg.rpath_arg)
@@ -200,7 +200,9 @@ class CompilerWrapper(Package):
             # Conflicts on case-insensitive systems (like "CC" and "cc") are
             # handled by putting one in the <bin_dir>/case-insensitive
             # directory.  Add that to the path too.
-            compiler_specific_dir = (bin_dir / compiler_pkg.link_paths[language]).parent
+            compiler_specific_dir = (
+                bin_dir / compiler_pkg.compiler_wrapper_link_paths[language]
+            ).parent
 
             for item in [bin_dir, compiler_specific_dir]:
                 env_paths.append(item)
@@ -230,16 +232,28 @@ class CompilerWrapper(Package):
 
         if dependent_spec.has_virtual_dependency("c"):
             compiler_pkg = dependent_spec["c"].package
-            setattr(module, "spack_cc", str(bin_dir / compiler_pkg.link_paths["c"]))
+            setattr(
+                module, "spack_cc", str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["c"])
+            )
 
         if dependent_spec.has_virtual_dependency("cxx"):
             compiler_pkg = dependent_spec["cxx"].package
-            setattr(module, "spack_cxx", str(bin_dir / compiler_pkg.link_paths["cxx"]))
+            setattr(
+                module, "spack_cxx", str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["cxx"])
+            )
 
         if dependent_spec.has_virtual_dependency("fortran"):
             compiler_pkg = dependent_spec["fortran"].package
-            setattr(module, "spack_fc", str(bin_dir / compiler_pkg.link_paths["fortran"]))
-            setattr(module, "spack_f77", str(bin_dir / compiler_pkg.link_paths["fortran"]))
+            setattr(
+                module,
+                "spack_fc",
+                str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["fortran"]),
+            )
+            setattr(
+                module,
+                "spack_f77",
+                str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["fortran"]),
+            )
 
     @property
     def disable_new_dtags(self) -> str:

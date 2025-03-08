@@ -131,7 +131,7 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
 
     opt_flags = ["-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz", "-Og", "-O", "-O4"]
 
-    link_paths = {
+    compiler_wrapper_link_paths = {
         "c": os.path.join("aocc", "clang"),
         "cxx": os.path.join("aocc", "clang++"),
         "fortran": os.path.join("aocc", "flang"),

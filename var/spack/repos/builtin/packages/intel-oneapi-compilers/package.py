@@ -336,7 +336,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
 
     openmp_flag = "-fiopenmp"
 
-    link_paths = {
+    compiler_wrapper_link_paths = {
         "c": os.path.join("oneapi", "icx"),
         "cxx": os.path.join("oneapi", "icpx"),
         "fortran": os.path.join("oneapi", "ifx"),

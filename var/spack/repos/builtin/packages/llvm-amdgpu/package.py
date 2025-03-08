@@ -19,7 +19,11 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
     tags = ["rocm", "compiler"]
     executables = [r"amdclang", r"amdclang\+\+", r"amdflang", r"clang.*", r"flang.*", "llvm-.*"]
 
-    link_paths = {"c": "rocmcc/amdclang", "cxx": "rocmcc/amdclang++", "fortran": "rocmcc/amdflang"}
+    compiler_wrapper_link_paths = {
+        "c": "rocmcc/amdclang",
+        "cxx": "rocmcc/amdclang++",
+        "fortran": "rocmcc/amdflang",
+    }
 
     stdcxx_libs = ("-lstdc++",)
 

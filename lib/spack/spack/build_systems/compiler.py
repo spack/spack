@@ -45,7 +45,7 @@ class CompilerPackage(spack.package_base.PackageBase):
     compiler_languages: Sequence[str] = ["c", "cxx", "fortran"]
 
     #: Relative path to compiler wrappers
-    link_paths: Dict[str, str] = {}
+    compiler_wrapper_link_paths: Dict[str, str] = {}
 
     def __init__(self, spec: "spack.spec.Spec"):
         super().__init__(spec)

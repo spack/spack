@@ -862,7 +862,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
 
     opt_flags = ["-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz", "-Og", "-O", "-O4"]
 
-    link_paths = {
+    compiler_wrapper_link_paths = {
         "c": os.path.join("clang", "clang"),
         "cxx": os.path.join("clang", "clang++"),
         "fortran": os.path.join("clang", "flang"),

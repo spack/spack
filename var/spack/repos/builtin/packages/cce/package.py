@@ -24,7 +24,7 @@ class Cce(Package, CompilerPackage):
 
     debug_flags = ["-g", "-G0", "-G1", "-G2", "-Gfast"]
 
-    link_paths = {
+    compiler_wrapper_link_paths = {
         "c": os.path.join("cce", "craycc"),
         "cxx": os.path.join("cce", "case-insensitive", "crayCC"),
         "fortran": os.path.join("cce", "crayftn"),

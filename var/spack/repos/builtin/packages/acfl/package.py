@@ -385,7 +385,7 @@ class Acfl(Package, CompilerPackage):
 
     opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast"]
 
-    link_paths = {
+    compiler_wrapper_link_paths = {
         "c": os.path.join("arm", "armclang"),
         "cxx": os.path.join("arm", "armclang++"),
         "fortran": os.path.join("arm", "armflang"),

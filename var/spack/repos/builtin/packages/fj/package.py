@@ -38,7 +38,7 @@ class Fj(Package, CompilerPackage):
     pic_flag = "-KPIC"
     openmp_flag = "-Kopenmp"
 
-    link_paths = {
+    compiler_wrapper_link_paths = {
         "c": os.path.join("fj", "fcc"),
         "cxx": os.path.join("fj", "case-insensitive", "FCC"),
         "fortran": os.path.join("fj", "frt"),
