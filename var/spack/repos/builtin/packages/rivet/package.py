@@ -70,6 +70,7 @@ class Rivet(AutotoolsPackage):
     depends_on("yoda@1.9.11:", when="@3.1.11:")
     depends_on("yoda@:1", when="@:3")
     depends_on("yoda@2.0.1:", when="@4.0.0:")
+    depends_on("yoda@2.1.0:", when="@4.1.0:")
 
     # The following versions were not a part of LCG stack
     # and thus the exact version of YODA is unknown
