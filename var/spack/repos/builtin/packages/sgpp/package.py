@@ -64,7 +64,12 @@ class Sgpp(SConsPackage):
     patch("set_boost_lib_path_internally.patch", when="@3.3.0:3.4.0")
 
     variant("debug", default=False, description="Build debug version instead of release version")
-    variant("doc", default=False, description="Build sgpp documentation (doxygen / pydoc)", when="@3.4.0:")
+    variant(
+        "doc",
+        default=False,
+        description="Build sgpp documentation (doxygen / pydoc)",
+        when="@3.4.0:",
+    )
     variant("python", default=True, description="Provide Python bindings for SGpp")
     variant("optimization", default=True, description="Builds the optimization module of SGpp")
     variant("pde", default=True, description="Builds the datadriven module of SGpp")
@@ -77,9 +82,21 @@ class Sgpp(SConsPackage):
         "opencl", default=False, description="Enables support for OpenCL accelerated operations"
     )
     variant("mpi", default=False, description="Enables support for MPI-distributed operations")
-    variant("eigen", default=False, description="Build with Eigen support", when="@3.4.0: +optimization")
-    variant("dakota", default=False, description="Build with Dakota support", when="@3.4.0: +combigrid")
-    variant("visualization", default=False, description="Build with visualization support", when="+python")
+    variant(
+        "eigen",
+        default=False,
+        description="Build with Eigen support",
+        when="@3.4.0: +optimization",
+    )
+    variant(
+        "dakota", default=False, description="Build with Dakota support", when="@3.4.0: +combigrid"
+    )
+    variant(
+        "visualization",
+        default=False,
+        description="Build with visualization support",
+        when="+python",
+    )
 
     # Mandatory dependencies
     depends_on("scons@3:", type="build")
@@ -143,27 +160,35 @@ class Sgpp(SConsPackage):
     def build_args(self, spec, prefix):
         # Testing parameters
         if self.run_tests:
-            self.args = ["COMPILE_BOOST_TESTS=1", "RUN_BOOST_TESTS=1",
-                         "COMPILE_BOOST_PERFORMANCE_TESTS=1", "RUN_BOOST_PERFORMANCE_TESTS=1"]
+            self.args = [
+                "COMPILE_BOOST_TESTS=1",
+                "RUN_BOOST_TESTS=1",
+                "COMPILE_BOOST_PERFORMANCE_TESTS=1",
+                "RUN_BOOST_PERFORMANCE_TESTS=1",
+            ]
             if "+python" in spec:
                 self.args.append("RUN_PYTHON_TESTS=1")
-                if spec.satisfies("@3.3.0:"): 
+                if spec.satisfies("@3.3.0:"):
                     self.args.append("RUN_PYTHON_EXAMPLES=1")
             if spec.satisfies("@1.0.0:3.2.0"):  # argument was renamed after 3.2.0
                 self.args.append("RUN_CPPLINT=1")
             else:
-                self.args.append("CHECK_STYLE=1")
                 self.args.append("RUN_CPP_EXAMPLES=1")
+                self.args.append("CHECK_STYLE=1")
         else:
-            self.args = ["COMPILE_BOOST_TESTS=0", "RUN_BOOST_TESTS=0",
-                         "COMPILE_BOOST_PERFORMANCE_TESTS=0",
-                         "RUN_PYTHON_TESTS=0"]
+            self.args = [
+                "COMPILE_BOOST_TESTS=0",
+                "RUN_BOOST_TESTS=0",
+                "COMPILE_BOOST_PERFORMANCE_TESTS=0",
+                "RUN_BOOST_PERFORMANCE_TESTS=0",
+                "RUN_PYTHON_TESTS=0",
+            ]
             if spec.satisfies("@1.0.0:3.2.0"):  # argument was renamed after 3.2.0
                 self.args.append("RUN_CPPLINT=0")
             else:
-                self.args.append("CHECK_STYLE=0")
-                self.args.append("RUN_CPP_EXAMPLES=0")
                 self.args.append("RUN_PYTHON_EXAMPLES=0")
+                self.args.append("RUN_CPP_EXAMPLES=0")
+                self.args.append("CHECK_STYLE=0")
 
         # Debug build or not
         self.args.append("OPT={0}".format("0" if "+debug" in spec else "1"))
@@ -217,9 +242,9 @@ class Sgpp(SConsPackage):
         # CPPPATH and LIBPATH or using depency-specific variables (BOOST_LIBRARY_PATH).
         # Here, we set those paths and associated flags for dependencies where SGpp expects them to be
         # passed manually (Eigen, Dakota, ...):
-        custom_cpppath=""
-        custom_libpath=""
-        path_separator=';' if sys.platform == "win32" else ':'
+        custom_cpppath = ""
+        custom_libpath = ""
+        path_separator = ";" if sys.platform == "win32" else ":"
         if "+eigen" in spec:
             self.args.append("USE_EIGEN=1")
             custom_cpppath += "{0}{1}".format(self.spec["eigen"].prefix.include, path_separator)
@@ -230,15 +255,18 @@ class Sgpp(SConsPackage):
             # for a libdakota library file which does not exist. However, we can use find_libraries
             # and manually specify an existing library
             # name within dakota to find the correct lib directory:
-            custom_libpath += "{0}{1}".format(find_libraries(
-                "libdakota_src", root=self.spec["dakota"].prefix, shared=True, recursive=True
-            ).directories[0], path_separator)
-        # Add combined paths to CPPPATH/LIBPATH 
+            custom_libpath += "{0}{1}".format(
+                find_libraries(
+                    "libdakota_src", root=self.spec["dakota"].prefix, shared=True, recursive=True
+                ).directories[0],
+                path_separator,
+            )
+        # Add combined paths to CPPPATH/LIBPATH
         if custom_cpppath:
             self.args.append("CPPPATH={0}".format(custom_cpppath))
         if custom_libpath:
             self.args.append("LIBPATH={0}".format(custom_libpath))
-        # Manually set Boost location to the spack one (otherwise SGpp will try to look for 
+        # Manually set Boost location to the spack one (otherwise SGpp will try to look for
         # Boost within the System install directory first)
         self.args.append("BOOST_INCLUDE_PATH={0}".format(self.spec["boost"].prefix.include))
         self.args.append("BOOST_LIBRARY_PATH={0}".format(self.spec["boost"].libs.directories[0]))
