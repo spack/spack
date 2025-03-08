@@ -106,7 +106,7 @@ spack:
   - vecgeom ~cuda
   - whizard +fastjet +gosam hepmc=3 +lcio +lhapdf +openloops +openmp +pythia8
   - xrootd +davix +http +krb5 +python +readline +scitokens-cpp
-  - yoda +root
+  - yoda +hdf5 +highfive
 
   # CUDA
   #- acts +cuda +traccc cuda_arch=80
