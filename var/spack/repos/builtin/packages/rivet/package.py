@@ -92,6 +92,7 @@ class Rivet(AutotoolsPackage):
     depends_on("fastjet@3.4.0:", when="@3.1.7:")
     depends_on("fjcontrib")
     depends_on("highfive", when="@4:")
+    depends_on("yaml-cpp", when="@4.1:")
     depends_on("python", type=("build", "run"))
     depends_on("py-cython@0.24.0:", type="build")
     depends_on("swig", type="build")
@@ -158,6 +159,9 @@ class Rivet(AutotoolsPackage):
 
         if self.spec.satisfies("^highfive"):
             args += ["--with-highfive=" + self.spec["highfive"].prefix]
+
+        if self.spec.satisfies("^yaml-cpp"):
+            args += ["--with-yaml-cpp=" + self.spec["yaml-cpp"].prefix]
 
         args += ["--disable-pdfmanual"]
 
