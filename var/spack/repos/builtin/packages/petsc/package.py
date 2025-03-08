@@ -15,7 +15,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     homepage = "https://petsc.org"
     url = "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-3.20.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
-    maintainers("balay", "barrysmith", "jedbrown")
+    maintainers("balay", "jczhang07", "joseeroman")
 
     tags = ["e4s"]
 

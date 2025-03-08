@@ -14,7 +14,7 @@ class PyPetsc4py(PythonPackage):
     )
     git = "https://gitlab.com/petsc/petsc.git"
 
-    maintainers("balay")
+    maintainers("balay", "jczhang07", "joseeroman")
 
     license("BSD-2-Clause")
 
