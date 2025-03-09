@@ -232,10 +232,17 @@ def parse_spec_from_yaml_string(string: str, *, named: bool = False) -> spack.sp
         raise e
 
     if named is True and not result.name:
-        msg = f"expected a named spec, but got {string} instead"
+        msg = f"expected a named spec, but got '{string}' instead"
         mark = get_mark_from_yaml_data(string)
+
+        # Add a hint in case it's dependencies
+        deps = result.dependencies()
+        if len(deps) == 1:
+            msg = f"{msg}. Maybe you meant just '{deps[0]}'?"
+
         if mark:
             msg = f"{mark.name}:{mark.line + 1}: {msg}"
+
         raise spack.error.SpackError(msg)
 
     return result
