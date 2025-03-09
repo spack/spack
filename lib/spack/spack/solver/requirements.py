@@ -165,7 +165,8 @@ class RequirementParser:
 
                 # validate specs from YAML first, and fail with line numbers if parsing fails.
                 constraints = [
-                    parse_spec_from_yaml_string(constraint) for constraint in constraints
+                    parse_spec_from_yaml_string(constraint, named=kind == RequirementKind.VIRTUAL)
+                    for constraint in constraints
                 ]
                 when_str = requirement.get("when")
                 when = parse_spec_from_yaml_string(when_str) if when_str else spack.spec.Spec()
@@ -203,7 +204,7 @@ class RequirementParser:
                 s.validate_or_raise()
             except spack.error.SpackError as e:
                 tty.debug(
-                    f"[SETUP] Rejecting the default '{constraint}' requirement "
+                    f"[{__name__}] Rejecting the default '{constraint}' requirement "
                     f"on '{pkg_name}': {str(e)}",
                     level=2,
                 )
@@ -211,21 +212,30 @@ class RequirementParser:
         return False
 
 
-def parse_spec_from_yaml_string(string: str) -> spack.spec.Spec:
+def parse_spec_from_yaml_string(string: str, *, named: bool = False) -> spack.spec.Spec:
     """Parse a spec from YAML and add file/line info to errors, if it's available.
 
     Parse a ``Spec`` from the supplied string, but also intercept any syntax errors and
     add file/line information for debugging using file/line annotations from the string.
 
-    Arguments:
+    Args:
         string: a string representing a ``Spec`` from config YAML.
-
+        named: if True, the spec must have a name
     """
     try:
-        return spack.spec.Spec(string)
+        result = spack.spec.Spec(string)
     except spack.error.SpecSyntaxError as e:
         mark = get_mark_from_yaml_data(string)
         if mark:
             msg = f"{mark.name}:{mark.line + 1}: {str(e)}"
             raise spack.error.SpecSyntaxError(msg) from e
         raise e
+
+    if named is True and not result.name:
+        msg = f"expected a named spec, but got {string} instead"
+        mark = get_mark_from_yaml_data(string)
+        if mark:
+            msg = f"{mark.name}:{mark.line + 1}: {msg}"
+        raise spack.error.SpackError(msg)
+
+    return result
