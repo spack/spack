@@ -47,7 +47,7 @@ _versions = {
         ),
         "zyp": (
             "396d17a5b4ef0fca782f6a78561bd58e1eb585516d4b75ef2017f5b78d680a85",
-            "https://repo.radeon.com/rocm/zyp/6.3/main/rocprofiler-sdk-0.5.0.60300-sles155.39.x86_64.rpm"
+            "https://repo.radeon.com/rocm/zyp/6.3/main/rocprofiler-sdk-0.5.0.60300-sles155.39.x86_64.rpm",
         ),
     },
     "6.2.4": {
@@ -61,10 +61,12 @@ _versions = {
         ),
         "zyp": (
             "df015bf40a154cba13c4cea43bcb9940ed5f9e1debaafa1d431f9dd090770cdc",
-            "https://repo.radeon.com/rocm/zyp/6.2.4/main/rocprofiler-sdk-0.4.0-sles155.139.x86_64.rpm"
+            "https://repo.radeon.com/rocm/zyp/6.2.4/main/rocprofiler-sdk-0.4.0-sles155.139.x86_64.rpm",
         ),
     },
 }
+
+
 class RocprofilerSdk(Package):
     """
     ROCProfiler-SDK is AMD’s new and improved tooling infrastructure, providing a
@@ -89,12 +91,7 @@ class RocprofilerSdk(Package):
 
     depends_on("cpio")
 
-    for ver in [
-        "6.2.4",
-        "6.3.0",
-        "6.3.1",
-        "6.3.2",
-    ]:
+    for ver in ["6.2.4", "6.3.0", "6.3.1", "6.3.2"]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocm-cmake@{ver}", type="build", when=f"@{ver}")
 
