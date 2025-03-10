@@ -17,7 +17,7 @@ class SstDumpi(AutotoolsPackage):
     url = "https://github.com/sstsimulator/sst-dumpi/archive/refs/tags/v13.0.0_Final.tar.gz"
     git = "https://github.com/sstsimulator/sst-dumpi.git"
 
-    maintainers("berquist", "jpkenny", "calewis")
+    maintainers("berquist", "jmlapre")
 
     license("BSD-3-Clause")
 

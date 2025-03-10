@@ -15,7 +15,7 @@ class SstElements(AutotoolsPackage):
     git = "https://github.com/sstsimulator/sst-elements.git"
     url = "https://github.com/sstsimulator/sst-elements/releases/download/v14.1.0_Final/sstelements-14.1.0.tar.gz"
 
-    maintainers("berquist", "naromero77")
+    maintainers("berquist", "jmlapre", "naromero77")
 
     license("BSD-3-Clause")
 
