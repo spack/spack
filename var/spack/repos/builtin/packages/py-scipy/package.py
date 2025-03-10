@@ -282,8 +282,8 @@ class PyScipy(PythonPackage):
             "setup-args": {
                 # http://scipy.github.io/devdocs/building/blas_lapack.html
                 "-Dfortran_std": fortran_std,
-                "-Dblas": blas,
-                "-Dlapack": lapack,
+                "-Dblas": blas if blas != "Accelerate.framework" else "accelerate",
+                "-Dlapack": lapack if lapack != "Accelerate.framework" else "accelerate",
             },
         }
 
