@@ -25,7 +25,7 @@ class AppleVeclib(BundlePackage):
         return HeaderList(
             join_path(
                 self.prefix,
-                "System/Library/Frameworks/Accelerate.framework/Frameworks/vecLib.Framework/Headers",
+                "System/Library/Frameworks/Accelerate.framework/Frameworks/vecLib.framework/Headers",
             )
         )
 
@@ -34,6 +34,6 @@ class AppleVeclib(BundlePackage):
         return LibraryList(
             join_path(
                 self.prefix,
-                "System/Library/Frameworks/Accelerate.framework/Frameworks/vecLib.Framework",
+                "System/Library/Frameworks/Accelerate.framework",
             )
         )
