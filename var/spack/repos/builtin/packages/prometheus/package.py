@@ -28,7 +28,7 @@ class Prometheus(MakefilePackage):
     depends_on("go@1.14:", type="build", when="@2.23.0:")
     depends_on("go@1.13:", type="build", when="@2.17.0:")
 
-    depends_on("node-js@16:", type="build", when="@2.31.0")
+    depends_on("node-js@16:", type="build", when="@2.31.0:")
     depends_on("node-js@11.10.1:", type="build")
 
     depends_on("npm@7:", type="build", when="@2.31.0:")
