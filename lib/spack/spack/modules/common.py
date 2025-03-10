@@ -566,6 +566,10 @@ class BaseContext(tengine.Context):
         return self.conf.spec
 
     @tengine.context_property
+    def tags(self):
+        return self.conf.spec.package.tags
+
+    @tengine.context_property
     def timestamp(self):
         return datetime.datetime.now()
 
@@ -896,14 +900,6 @@ class BaseModuleFileWriter:
         # Context key in modules.yaml
         conf_update = self.conf.context
         context.update(conf_update)
-
-        # add tags to context
-        all_tags = spack.tag.packages_with_tags(None, True, True)
-        related_tags = list()
-        for tag in all_tags:
-            if self.spec.name in all_tags[tag]:
-                related_tags.append(tag)
-        context["tags"] = related_tags
 
         # Render the template
         text = template.render(context)
