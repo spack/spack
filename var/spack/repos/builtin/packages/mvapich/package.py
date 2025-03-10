@@ -69,7 +69,7 @@ class Mvapich(MpichEnvironmentModifications, AutotoolsPackage):
         "pmi_version",
         description="Which pmi version to be used. If using pmi2 add it to your CFLAGS",
         default="none",
-        values=("none","pmi1", "pmi2", "pmix"),
+        values=("none", "pmi1", "pmi2", "pmix"),
         multi=False,
     )
 
@@ -232,7 +232,7 @@ class Mvapich(MpichEnvironmentModifications, AutotoolsPackage):
 
         args.extend(self.enable_or_disable("alloca"))
         if not spec.satisfies("pmi_version=none"):
-           args.append("--with-pmi=" + spec.variants["pmi_version"].value)
+            args.append("--with-pmi=" + spec.variants["pmi_version"].value)
         if "pmi_version=pmix" in spec:
             args.append("--with-pmix={0}".format(spec["pmix"].prefix))
 
