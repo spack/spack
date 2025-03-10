@@ -81,10 +81,14 @@ class MiopenHip(CMakePackage):
     patch("0001-link-with-roctracer-when-building-miopendriver-6.1.0.patch", when="@6.1")
     patch("0001-link-with-roctracer-when-building-miopendriver-6.2.0.patch", when="@6.2")
 <<<<<<< HEAD:var/spack/repos/spack_repo/builtin/packages/miopen_hip/package.py
+<<<<<<< HEAD:var/spack/repos/spack_repo/builtin/packages/miopen_hip/package.py
 =======
     # patch("0003-link-with-hipblas-roctracer-rocrand-6.3.0.patch", when="@6.3")
     patch("0004-link-with-hipblas-roctracer-rocrand-6.3.1.patch", when="@6.3")
 >>>>>>> cc07d332b6 (miopen-hip: add frugally-deep dependency):var/spack/repos/builtin/packages/miopen-hip/package.py
+=======
+    patch("0003-link-with-hipblas-roctracer-rocrand-6.3.0.patch", when="@6.3")
+>>>>>>> 8cad432ab9 (uncoment patch):var/spack/repos/builtin/packages/miopen-hip/package.py
     patch(
         "https://github.com/ROCm/MIOpen/commit/f60aa1ff89f8fb596b4a6a4c70aa7d557803db87.patch?full_index=1",
         sha256="7f382c872d89f22da1ad499e85ffe9881cc7404c8465e42877a210a09382e2ea",
