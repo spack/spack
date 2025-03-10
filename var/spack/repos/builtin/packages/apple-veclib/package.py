@@ -32,8 +32,5 @@ class AppleVeclib(BundlePackage):
     @property
     def libs(self):
         return LibraryList(
-            join_path(
-                self.prefix,
-                "System/Library/Frameworks/Accelerate.framework",
-            )
+            join_path(self.prefix, "System/Library/Frameworks/Accelerate.framework")
         )
