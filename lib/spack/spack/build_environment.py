@@ -881,17 +881,17 @@ def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]
     return _get_rpath_deps_from_spec(pkg.spec, pkg.transitive_rpaths)
 
 
-def load_external_modules(pkg):
+def load_external_modules(external_specs):
     """Traverse a package's spec DAG and load any external modules.
 
     Traverse a package's dependencies and load any external modules
     associated with them.
 
     Args:
-        pkg (spack.package_base.PackageBase): package to load deps for
+        external_specs: an iterable set of external specs (should be ordered based on traversal)
     """
-    for dep in list(pkg.spec.traverse()):
-        external_modules = dep.external_modules or []
+    for spec, _ in external_specs:
+        external_modules = spec.external_modules or []
         for external_module in external_modules:
             load_module(external_module)
 
@@ -946,7 +946,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         for mod in pkg.compiler.modules:
             load_module(mod)
 
-    load_external_modules(pkg)
+    load_external_modules(setup_context.external)
 
     # Make sure nothing's strange about the Spack environment.
     validate(env_mods, tty.warn)
