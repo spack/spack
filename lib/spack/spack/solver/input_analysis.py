@@ -72,6 +72,9 @@ class NoStaticAnalysis(PossibleDependencyGraph):
         self.repo = repo
         self.runtime_pkgs = set(self.repo.packages_with_tags(RUNTIME_TAG))
         self.runtime_virtuals = set()
+        self._platform_condition = spack.spec.Spec(
+            f"platform={spack.platforms.host()} target={archspec.cpu.host().family}:"
+        )
         for x in self.runtime_pkgs:
             pkg_class = self.repo.get_pkg_class(x)
             self.runtime_virtuals.update(pkg_class.provided_virtual_names())
@@ -88,14 +91,11 @@ class NoStaticAnalysis(PossibleDependencyGraph):
     def is_allowed_on_this_platform(self, *, pkg_name: str) -> bool:
         """Returns true if a package is allowed on the current host"""
         pkg_cls = self.repo.get_pkg_class(pkg_name)
-        platform_condition = (
-            f"platform={spack.platforms.host()} target={archspec.cpu.host().family}:"
-        )
         for when_spec, conditions in pkg_cls.requirements.items():
-            if not when_spec.intersects(platform_condition):
+            if not when_spec.intersects(self._platform_condition):
                 continue
             for requirements, _, _ in conditions:
-                if not any(x.intersects(platform_condition) for x in requirements):
+                if not any(x.intersects(self._platform_condition) for x in requirements):
                     tty.debug(f"[{__name__}] {pkg_name} is not for this platform")
                     return False
         return True
@@ -381,7 +381,9 @@ class Counter:
             self.all_types = dt.LINK | dt.RUN | dt.BUILD
 
         self._possible_dependencies: Set[str] = set()
-        self._possible_virtuals: Set[str] = set(x.name for x in specs if x.virtual)
+        self._possible_virtuals: Set[str] = {
+            x.name for x in specs if spack.repo.PATH.is_virtual(x.name)
+        }
 
     def possible_dependencies(self) -> Set[str]:
         """Returns the list of possible dependencies"""
@@ -466,14 +468,27 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         gen.newline()
 
         gen.h2("Packages with at multiple possible nodes (build-tools)")
+        default = spack.config.CONFIG.get("concretizer:duplicates:max_dupes:default", 2)
         for package_name in sorted(self.possible_dependencies() & build_tools):
-            gen.fact(fn.max_dupes(package_name, 2))
-            gen.fact(fn.multiple_unification_sets(package_name))
+            max_dupes = spack.config.CONFIG.get(
+                f"concretizer:duplicates:max_dupes:{package_name}", default
+            )
+            gen.fact(fn.max_dupes(package_name, max_dupes))
+            if max_dupes > 1:
+                gen.fact(fn.multiple_unification_sets(package_name))
         gen.newline()
 
-        gen.h2("Maximum number of nodes (virtual packages)")
-        for package_name in sorted(self.possible_virtuals()):
+        gen.h2("Maximum number of nodes (link-run virtuals)")
+        for package_name in sorted(self._link_run_virtuals):
             gen.fact(fn.max_dupes(package_name, 1))
+        gen.newline()
+
+        gen.h2("Maximum number of nodes (other virtuals)")
+        for package_name in sorted(self.possible_virtuals() - self._link_run_virtuals):
+            max_dupes = spack.config.CONFIG.get(
+                f"concretizer:duplicates:max_dupes:{package_name}", default
+            )
+            gen.fact(fn.max_dupes(package_name, max_dupes))
         gen.newline()
 
         gen.h2("Possible package in link-run subDAG")

@@ -4,17 +4,20 @@ spack:
   concretizer:
     reuse: false
     unify: when_possible
+    static_analysis: true
 
   packages:
     all:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - "%gcc"
+      - target=x86_64_v3
       providers:
         blas: [openblas]
         mpi: [mpich]
         tbb: [intel-tbb]
       variants: +mpi
     acts:
-      require: +analysis +dd4hep +edm4hep +examples +fatras +geant4 +hepmc3 +podio +pythia8 +python ~svg +tgeo cxxstd=20
+      require: +analysis +dd4hep +edm4hep +examples +fatras +geant4 +hepmc3 +podio +pythia8 +python +svg +tgeo cxxstd=20
     celeritas:
       require: +geant4 +hepmc3 +root +shared cxxstd=20
     hip:

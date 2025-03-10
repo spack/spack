@@ -12,6 +12,7 @@ import llnl.util.filesystem as fs
 
 import spack.config
 import spack.environment as ev
+import spack.platforms
 import spack.solver.asp
 import spack.spec
 from spack.environment.environment import (
@@ -190,8 +191,7 @@ def test_environment_cant_modify_environments_root(tmpdir):
 @pytest.mark.parametrize(
     "original_content",
     [
-        (
-            """\
+        """\
 spack:
   specs:
   - matrix:
@@ -199,7 +199,6 @@ spack:
     - - a
   concretizer:
     unify: false"""
-        )
     ],
 )
 def test_roundtrip_spack_yaml_with_comments(original_content, mock_packages, config, tmp_path):
@@ -521,7 +520,9 @@ def test_error_message_when_using_too_new_lockfile(tmp_path):
         ("when_possible", True),
     ],
 )
-def test_environment_concretizer_scheme_used(tmp_path, unify_in_lower_scope, unify_in_spack_yaml):
+def test_environment_concretizer_scheme_used(
+    tmp_path, mutable_config, unify_in_lower_scope, unify_in_spack_yaml
+):
     """Tests that "unify" settings in spack.yaml always take precedence over settings in lower
     configuration scopes.
     """
@@ -535,10 +536,11 @@ spack:
     unify: {str(unify_in_spack_yaml).lower()}
 """
     )
-
-    with spack.config.override("concretizer:unify", unify_in_lower_scope):
-        with ev.Environment(manifest.parent) as e:
-            assert e.unify == unify_in_spack_yaml
+    mutable_config.set("concretizer:unify", unify_in_lower_scope)
+    assert mutable_config.get("concretizer:unify") == unify_in_lower_scope
+    with ev.Environment(manifest.parent) as e:
+        assert mutable_config.get("concretizer:unify") == unify_in_spack_yaml
+        assert e.unify == unify_in_spack_yaml
 
 
 @pytest.mark.parametrize("unify_in_config", [True, False, "when_possible"])
@@ -920,3 +922,50 @@ def test_environment_from_name_or_dir(mock_packages, mutable_mock_env_path, tmp_
 
     with pytest.raises(ev.SpackEnvironmentError, match="no such environment"):
         _ = ev.environment_from_name_or_dir("fake-env")
+
+
+def test_env_include_configs(mutable_mock_env_path, mock_packages):
+    """check config and package values using new include schema"""
+    env_path = mutable_mock_env_path
+    env_path.mkdir()
+
+    this_os = spack.platforms.host().default_os
+    config_root = env_path / this_os
+    config_root.mkdir()
+    config_path = str(config_root / "config.yaml")
+    with open(config_path, "w", encoding="utf-8") as f:
+        f.write(
+            """\
+config:
+  verify_ssl: False
+"""
+        )
+
+    packages_path = str(env_path / "packages.yaml")
+    with open(packages_path, "w", encoding="utf-8") as f:
+        f.write(
+            """\
+packages:
+  python:
+    require:
+    - spec: "@3.11:"
+"""
+        )
+
+    spack_yaml = env_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""\
+spack:
+  include:
+  - path: {config_path}
+    optional: true
+  - path: {packages_path}
+"""
+    )
+
+    e = ev.Environment(env_path)
+    with e.manifest.use_config():
+        assert not spack.config.get("config:verify_ssl")
+        python_reqs = spack.config.get("packages")["python"]["require"]
+        req_specs = set(x["spec"] for x in python_reqs)
+        assert req_specs == set(["@3.11:"])

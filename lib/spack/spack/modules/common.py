@@ -331,17 +331,16 @@ class BaseConfiguration:
     default_projections = {"all": "{name}/{version}-{compiler.name}-{compiler.version}"}
 
     def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
-        # Module where type(self) is defined
-        m = inspect.getmodule(self)
-        assert m is not None  # make mypy happy
-        self.module = m
         # Spec for which we want to generate a module file
         self.spec = spec
         self.name = module_set_name
         self.explicit = explicit
-        # Dictionary of configuration options that should be applied
-        # to the spec
+        # Dictionary of configuration options that should be applied to the spec
         self.conf = merge_config_rules(self.module.configuration(self.name), self.spec)
+
+    @property
+    def module(self):
+        return inspect.getmodule(self)
 
     @property
     def projections(self):
@@ -776,10 +775,6 @@ class BaseModuleFileWriter:
     ) -> None:
         self.spec = spec
 
-        # This class is meant to be derived. Get the module of the
-        # actual writer.
-        self.module = inspect.getmodule(self)
-        assert self.module is not None  # make mypy happy
         m = self.module
 
         # Create the triplet of configuration/layout/context
@@ -816,6 +811,10 @@ class BaseModuleFileWriter:
             msg += "Did you forget to define it in the class?"
             name = type(self).__name__
             raise ModulercHeaderNotDefined(msg.format(name))
+
+    @property
+    def module(self):
+        return inspect.getmodule(self)
 
     def _get_template(self):
         """Gets the template that will be rendered for this spec."""

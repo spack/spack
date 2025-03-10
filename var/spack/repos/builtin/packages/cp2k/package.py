@@ -119,13 +119,36 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     variant("dftd4", when="@2024.2:", default=False, description="Enable DFT-D4 support")
     variant("mpi_f08", default=False, description="Use MPI F08 module")
     variant("smeagol", default=False, description="Enable libsmeagol support", when="@2025.2:")
-
+    variant(
+        "pw_gpu", default=True, description="Enable FFT calculations on GPU", when="@2025.2: +cuda"
+    )
+    variant("grid_gpu", default=True, description="Enable grid GPU backend", when="@2025.2:")
+    variant("dbm_gpu", default=True, description="Enable DBM GPU backend", when="@2025.2:")
+    variant(
+        "pw_gpu",
+        default=False,
+        description="Enable FFT calculations on GPU",
+        when="@2025.2: +rocm",
+    )
+    variant(
+        "hip_backend_cuda",
+        default=False,
+        description="Enable HIP backend on Nvidia GPU",
+        when="@2025.2: +cuda",
+    )
     variant(
         "enable_regtests",
         default=False,
         description="Configure cp2k to run the regtests afterwards."
         " It build cp2k normally but put the executables in exe/cmake-build-* instead of the"
         " conventional location. This option is only relevant when regtests need to be run.",
+    )
+
+    variant(
+        "grpp",
+        default=False,
+        description="Enable GRPP psuedo potentials",
+        when="@2025.2: build_system=cmake",
     )
 
     with when("+cuda"):
@@ -147,6 +170,12 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
             when="@:7",  # req in CP2K v8+
             description="Use CUBLAS for general matrix operations in DBCSR",
         )
+
+    with when("+hip_backend_cuda"):
+        depends_on("hipcc")
+        depends_on("hip+cuda")
+        depends_on("hipfft+cuda")
+        depends_on("hipblas+cuda")
 
     HFX_LMAX_RANGE = range(4, 8)
 
@@ -983,10 +1012,15 @@ class CMakeBuilder(cmake.CMakeBuilder):
                 raise InstallError("CP2K supports only one cuda_arch at a time.")
             else:
                 gpu_ver = GPU_MAP[spec.variants["cuda_arch"].value[0]]
-                args += [
-                    self.define("CP2K_USE_ACCEL", "CUDA"),
-                    self.define("CP2K_WITH_GPU", gpu_ver),
-                ]
+                if spec.satisfies("+hip_backend_cuda"):
+                    args += [
+                        self.define("CP2K_USE_ACCEL", "HIP"),
+                        self.define("CMAKE_HIP_PLATFORM", "nvidia"),
+                    ]
+                else:
+                    args += [self.define("CP2K_USE_ACCEL", "CUDA")]
+
+                args += [self.define("CP2K_WITH_GPU", gpu_ver)]
 
         if spec.satisfies("+rocm"):
             if len(spec.variants["amdgpu_target"].value) > 1:
@@ -1018,6 +1052,10 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("CP2K_USE_DFTD4", "dftd4"),
             self.define_from_variant("CP2K_USE_MPI_F08", "mpi_f08"),
             self.define_from_variant("CP2K_USE_LIBSMEAGOL", "smeagol"),
+            self.define_from_variant("CP2K_ENABLE_GRID_GPU", "grid_gpu"),
+            self.define_from_variant("CP2K_ENABLE_DBM_GPU", "dbm_gpu"),
+            self.define_from_variant("CP2K_ENABLE_PW_GPU", "pw_gpu"),
+            self.define_from_variant("CP2K_USE_GRPP", "grpp"),
         ]
 
         # we force the use elpa openmp threading support. might need to be revisited though

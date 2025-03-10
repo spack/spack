@@ -114,6 +114,12 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         description="Enable breakpad crash dump library",
         when="@1.10:1.11",
     )
+    # Flash attention has very high memory requirements that may cause the build to fail
+    # https://github.com/pytorch/pytorch/issues/111526
+    # https://github.com/pytorch/pytorch/issues/124018
+    _desc = "Build the flash_attention kernel for scaled dot product attention"
+    variant("flash_attention", default=True, description=_desc, when="@1.13:+cuda")
+    variant("flash_attention", default=True, description=_desc, when="@1.13:+rocm")
     # py-torch has strict dependencies on old protobuf/py-protobuf versions that
     # cause problems with other packages that require newer versions of protobuf
     # and py-protobuf --> provide an option to use the internal/vendored protobuf.
@@ -169,6 +175,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("py-typing-extensions@4.8:", when="@2.2:")
         depends_on("py-typing-extensions@3.6.2.1:", when="@1.7:")
         depends_on("py-setuptools")
+        depends_on("py-sympy@1.13.1", when="@2.5:")
         depends_on("py-sympy", when="@2:")
         depends_on("py-networkx", when="@2:")
         depends_on("py-jinja2", when="@2:")
@@ -594,17 +601,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("CUDNN_INCLUDE_DIR", self.spec["cudnn"].prefix.include)
             env.set("CUDNN_LIBRARY", self.spec["cudnn"].libs[0])
 
-        # Flash attention has very high memory requirements that may cause the build to fail
-        # https://github.com/pytorch/pytorch/issues/111526
-        # https://github.com/pytorch/pytorch/issues/124018
-        env.set("USE_FLASH_ATTENTION", "OFF")
-
         enable_or_disable("fbgemm")
         enable_or_disable("kineto")
         enable_or_disable("magma")
         enable_or_disable("metal")
         enable_or_disable("mps")
         enable_or_disable("breakpad")
+        enable_or_disable("flash_attention")
 
         enable_or_disable("nccl")
         if "+cuda+nccl" in self.spec:
