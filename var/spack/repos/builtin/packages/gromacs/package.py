@@ -8,7 +8,7 @@ import spack.build_systems.cmake
 from spack.package import *
 
 
-class Gromacs(CMakePackage, CudaPackage):
+class Gromacs(CMakePackage, CudaPackage, ROCmPackage):
     """GROMACS is a molecular dynamics package primarily designed for simulations
     of proteins, lipids and nucleic acids. It was originally developed in
     the Biophysical Chemistry department of University of Groningen, and is now
@@ -49,6 +49,7 @@ class Gromacs(CMakePackage, CudaPackage):
     # 2025 is supported.
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2025.0", sha256="a27ad35a646295bbec129abe684d9d03d1e2e0bd76b0d625e9055746aaefae82")
     version("2024.4", sha256="ac618ece2e58afa86b536c5a2c4fcb937f0760318f12d18f10346b6bdebd86a8")
     version("2024.3", sha256="bbda056ee59390be7d58d84c13a9ec0d4e3635617adf2eb747034922cba1f029")
     version("2024.2", sha256="802a7e335f2e895770f57b159e4ec368ebb0ff2ce6daccf706c6e8025c36852b")
@@ -60,13 +61,41 @@ class Gromacs(CMakePackage, CudaPackage):
     version("2023.2", sha256="bce1480727e4b2bb900413b75d99a3266f3507877da4f5b2d491df798f9fcdae")
     version("2023.1", sha256="eef2bb4a6cb6314cf9da47f26df2a0d27af4bf7b3099723d43601073ab0a42f4")
     version("2023", sha256="ac92c6da72fbbcca414fd8a8d979e56ecf17c4c1cdabed2da5cfb4e7277b7ba8")
-    version("2022.6", sha256="75d277138475679dd3e334e384a71516570cde767310476687f2a5b72333ea41")
-    version("2022.5", sha256="083cc3c424bb93ffe86c12f952e3e5b4e6c9f6520de5338761f24b75e018c223")
-    version("2022.4", sha256="c511be602ff29402065b50906841def98752639b92a95f1b0a1060d9b5e27297")
-    version("2022.3", sha256="14cfb130ddaf8f759a3af643c04f5a0d0d32b09bc3448b16afa5b617f5e35dae")
-    version("2022.2", sha256="656404f884d2fa2244c97d2a5b92af148d0dbea94ad13004724b3fcbf45e01bf")
-    version("2022.1", sha256="85ddab5197d79524a702c4959c2c43be875e0fc471df3a35224939dce8512450")
-    version("2022", sha256="fad60d606c02e6164018692c6c9f2c159a9130c2bf32e8c5f4f1b6ba2dda2b68")
+    version(
+        "2022.6",
+        sha256="75d277138475679dd3e334e384a71516570cde767310476687f2a5b72333ea41",
+        deprecated=True,
+    )
+    version(
+        "2022.5",
+        sha256="083cc3c424bb93ffe86c12f952e3e5b4e6c9f6520de5338761f24b75e018c223",
+        deprecated=True,
+    )
+    version(
+        "2022.4",
+        sha256="c511be602ff29402065b50906841def98752639b92a95f1b0a1060d9b5e27297",
+        deprecated=True,
+    )
+    version(
+        "2022.3",
+        sha256="14cfb130ddaf8f759a3af643c04f5a0d0d32b09bc3448b16afa5b617f5e35dae",
+        deprecated=True,
+    )
+    version(
+        "2022.2",
+        sha256="656404f884d2fa2244c97d2a5b92af148d0dbea94ad13004724b3fcbf45e01bf",
+        deprecated=True,
+    )
+    version(
+        "2022.1",
+        sha256="85ddab5197d79524a702c4959c2c43be875e0fc471df3a35224939dce8512450",
+        deprecated=True,
+    )
+    version(
+        "2022",
+        sha256="fad60d606c02e6164018692c6c9f2c159a9130c2bf32e8c5f4f1b6ba2dda2b68",
+        deprecated=True,
+    )
     version(
         "2021.7",
         sha256="4db7bbbfe5424de48373686ec0e8c5bfa7175d5cd74290ef1c1e840e6df67f06",
@@ -304,6 +333,9 @@ class Gromacs(CMakePackage, CudaPackage):
         when="@2022: +sycl",
         description="Enable support for Intel Data Center GPU Max",
     )
+    variant("hip", default=False, when="@2025:", description="Enable HIP support")
+    depends_on("rocm-core", when="+hip")
+    depends_on("rocprim", when="+hip")
     variant("nosuffix", default=False, description="Disable default suffixes")
     variant(
         "build_type",
@@ -500,6 +532,7 @@ class Gromacs(CMakePackage, CudaPackage):
 
     depends_on("cuda", when="+cuda")
     depends_on("sycl", when="+sycl")
+    depends_on("rocm@5.3:", when="+rocm")
     depends_on("lapack")
     depends_on("blas")
     depends_on("gcc", when="%intel ~intel_provided_gcc")
@@ -763,6 +796,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 options.append("-DGMX_GPU:STRING=OpenCL")
             elif self.spec.satisfies("+sycl"):
                 options.append("-DGMX_GPU:STRING=SYCL")
+            elif self.spec.satisfies("+hip"):
+                options.append("-DGMX_GPU:STRING=HIP")
             else:
                 options.append("-DGMX_GPU:STRING=OFF")
         else:
@@ -778,6 +813,12 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             if not self.spec.satisfies("cuda_arch=none"):
                 cuda_arch = self.spec.variants["cuda_arch"].value
                 options.append(f"-DGMX_CUDA_TARGET_SM:STRING={';'.join(cuda_arch)}")
+
+        if self.spec.satisfies("+hip"):
+            options.append("-DCMAKE_INSTALL_PREFIX:STRING=" + self.spec["rocm_core"].prefix)
+            if not self.spec.satisfies("amdgpu_target=none"):
+                rocm_arch = self.spec.variants["amdgpu_targets"].value
+                options.append(f"-DGMX_HIP_TARGET_ARCH:STRING={';'.join(amdgpu_targets)}")
 
         options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
         if self.spec["lapack"].libs:
