@@ -33,6 +33,7 @@ import spack.util.gpg as gpg_util
 import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack.package_base import PackageBase
 from spack.util.executable import ProcessError
 from spack.version import StandardVersion, VersionList
 
@@ -672,12 +673,12 @@ def _gitlab_artifacts_url(url: str) -> str:
     return urlunparse(parsed._replace(path="/".join(parts), fragment="", query=""))
 
 
-def validate_standard_versions(pkg, versions: VersionList) -> bool:
+def validate_standard_versions(pkg: PackageBase, versions: VersionList) -> bool:
     """Get and test the checksum of a package version based on a tarball.
     Args:
-      pkg (spack.package_base.PackageBase): Spack package for which to validate a version checksum
-      versions (spack.version.VersionList): list of package versions to validate
-    Returns: (bool): result of the validation. True is valid and false is failed.
+      pkg spack.package_base.PackageBase: Spack package for which to validate a version checksum
+      versions spack.version.VersionList: list of package versions to validate
+    Returns: bool: result of the validation. True is valid and false is failed.
     """
     url_dict: Dict[StandardVersion, str] = {}
 
@@ -705,12 +706,12 @@ def validate_standard_versions(pkg, versions: VersionList) -> bool:
     return valid_checksums
 
 
-def validate_git_versions(pkg, versions: VersionList) -> bool:
+def validate_git_versions(pkg: PackageBase, versions: VersionList) -> bool:
     """Get and test the commit and tag of a package version based on a git repository.
     Args:
-      pkg (spack.package_base.PackageBase): Spack package for which to validate a version
-      versions (spack.version.VersionList): list of package versions to validate
-    Returns: (bool): result of the validation. True is valid and false is failed.
+      pkg spack.package_base.PackageBase: Spack package for which to validate a version
+      versions spack.version.VersionList: list of package versions to validate
+    Returns: bool: result of the validation. True is valid and false is failed.
     """
     git = spack.util.git.git(required=True)
 
@@ -801,18 +802,8 @@ def ci_verify_versions(args):
             elif "commit" in pkg.versions[version]:
                 commits_version_dict[pkg.versions[version]["commit"]] = version
 
-            # It'd be great to turn this on one day and enforce every package
-            # version have a commit or a sha256 defined if not an infinite version
-            # however there are a lot of package's where this doesn't work yet.
-            # elif not version.isdevelop():
-            #     tty.error(
-            #         f"{pkg_name}@{version} does not define a sha256 or commit.\n",
-            #         "You may generate one by running the following command,\n"
-            #         "\n",
-            #         f"        spack checksum {pkg_name} {version}\n",
-            #         "\n",
-            #     )
-            #     failed_version = True
+            # TODO: enforce every version have a commit or a sha256 defined if not
+            # an infinite version (there are a lot of package's where this doesn't work yet.)
 
         with fs.working_dir(spack.paths.prefix):
             added_checksums = spack_ci.get_added_versions(
