@@ -23,10 +23,3 @@ class FrugallyDeep(CMakePackage):
     depends_on("functionalplus")
     depends_on("eigen")
     depends_on("nlohmann-json")
-
-    def cmake_args(self):
-        # FIXME: Add arguments other than
-        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-        # FIXME: If not needed delete this function
-        args = []
-        return args
