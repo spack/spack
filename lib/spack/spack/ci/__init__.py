@@ -99,10 +99,14 @@ def get_added_versions(
     diff_lines = git_exe("diff", from_ref, to_ref, "--", path, output=str).split("\n")
 
     # Store added and removed versions
+    # Removed versions are tracked here to determine when versions are moved in a file
+    # and show up as both added and removed in a git diff.
     added_checksums = set()
     removed_checksums = set()
 
-    # Scrape diff for modified versions
+    # Scrape diff for modified versions and prune added versions if they show up
+    # as also removed (which means they've actually just moved in the file and
+    # we shouldn't need to rechecksum them)
     for checksum in checksums_version_dict.keys():
         for line in diff_lines:
             if checksum in line:
