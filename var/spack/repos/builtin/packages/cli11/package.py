@@ -28,6 +28,8 @@ class Cli11(CMakePackage):
 
     depends_on("cxx", type="build")  # generated
 
+    variant("pic", default=True, description="Produce position-independent code")
+
     depends_on("cmake@3.4:", type="build")
     depends_on("cmake@3.5:", type="build", when="@2.4:")
     depends_on("cmake@3.10:", type="build", when="@2.5:")
@@ -38,5 +40,6 @@ class Cli11(CMakePackage):
             self.define("CLI11_BUILD_DOCS", False),
             self.define("CLI11_BUILD_TESTS", False),
             self.define("CLI11_PRECOMPILED", True),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
         return args
