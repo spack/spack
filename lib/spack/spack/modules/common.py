@@ -51,7 +51,6 @@ import spack.schema
 import spack.schema.environment
 import spack.spec
 import spack.store
-import spack.tag
 import spack.tengine as tengine
 import spack.user_environment
 import spack.util.environment
