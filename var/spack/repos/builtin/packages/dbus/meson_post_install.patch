@@ -1,0 +1,9 @@
+diff --git a/meson_post_install.py b/meson_post_install.py
+index cfc03b22..1d007ad6 100755
+--- a/meson_post_install.py
++++ b/meson_post_install.py
+@@ -103,4 +103,3 @@ def post_install_exe():
+ 
+ if __name__ == "__main__":
+     post_install_relocation()
+-    post_install_exe()
