@@ -3394,7 +3394,13 @@ class Spec:
                 # Note: this relies on abstract specs from string not being deeper than 2 levels
                 # e.g. in foo %fee ^bar %baz we cannot go deeper than "baz" and e.g. specify its
                 # dependencies too.
-                current_node = self if rhs_edge.parent.name is None else self[rhs_edge.parent.name]
+                #
+                # We also need to account for cases like gcc@<new> %gcc@<old> where the parent
+                # name is the same as the child name
+                current_node = self
+                if rhs_edge.parent.name is not None and rhs_edge.parent.name != rhs_edge.spec.name:
+                    current_node = self[rhs_edge.parent.name]
+
                 candidates = current_node.dependencies(
                     name=rhs_edge.spec.name,
                     deptype=rhs_edge.depflag,
@@ -3637,8 +3643,8 @@ class Spec:
 
         # Consider all direct dependencies and transitive runtime dependencies
         order = itertools.chain(
-            self.traverse_edges(deptype=dt.LINK | dt.RUN, order="breadth", cover="edges"),
             self.edges_to_dependencies(depflag=dt.BUILD | dt.TEST),
+            self.traverse_edges(deptype=dt.LINK | dt.RUN, order="breadth", cover="edges"),
         )
 
         try:
