@@ -492,7 +492,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     patch(
         "allow-empty-config-environment-variables.patch",
         sha256="e061875c2ca9c157a7837d02afdd25205817def3460745523d5089bbeaa77d29",
-        when="@1.4.0:"
+        when="@1.4.0:",
     )
 
     # Version 2.10 produces an error related to cuBLAS:
