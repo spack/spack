@@ -10,7 +10,7 @@ import spack.config
 import spack.error
 import spack.package_base
 import spack.spec
-from spack.config import get_mark_from_yaml_data
+from spack.util.spack_yaml import get_mark_from_yaml_data
 
 
 class RequirementKind(enum.Enum):

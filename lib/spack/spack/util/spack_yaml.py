@@ -495,3 +495,25 @@ class SpackYAMLError(spack.error.SpackError):
 
     def __init__(self, msg, yaml_error):
         super().__init__(msg, str(yaml_error))
+
+
+def get_mark_from_yaml_data(obj):
+    """Try to get ``spack.util.spack_yaml`` mark from YAML data.
+
+    We try the object, and if that fails we try its first member (if it's a container).
+
+    Returns:
+        mark if one is found, otherwise None.
+    """
+    # mark of object itelf
+    mark = getattr(obj, "_start_mark", None)
+    if mark:
+        return mark
+
+    # mark of first member if it is a container
+    if isinstance(obj, (list, dict)):
+        first_member = next(iter(obj), None)
+        if first_member:
+            mark = getattr(first_member, "_start_mark", None)
+
+    return mark
