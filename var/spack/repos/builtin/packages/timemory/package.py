@@ -123,7 +123,7 @@ class Timemory(CMakePackage, PythonExtension):
     variant(
         "cpu_target",
         default="auto",
-        description=("Build for specific cpu architecture (specify " "cpu-model)"),
+        description="Build for specific cpu architecture (specify " "cpu-model)",
     )
     variant(
         "use_arch",
@@ -144,7 +144,7 @@ class Timemory(CMakePackage, PythonExtension):
     variant(
         "statistics",
         default=True,
-        description=("Build components w/ support for statistics " "(min/max/stddev)"),
+        description="Build components w/ support for statistics " "(min/max/stddev)",
     )
     variant(
         "extra_optimizations",
@@ -340,13 +340,21 @@ class Timemory(CMakePackage, PythonExtension):
             ittnotify_include = os.path.join(
                 self["intel-oneapi-vtune"].component_prefix, "include"
             )
-            ittnotify_lib = os.path.join(
-                self["intel-oneapi-vtune"].component_prefix, "lib64", "libittnotify.a"
+            ittnotify_libraries = find_libraries(
+                "libittnotify",
+                root=self["intel-oneapi-vtune"].component_prefix,
+                shared=False,
+                recursive=True,
             )
+            if len(ittnotify_libraries) != 1:
+                vtune_spec = self.spec["intel-oneapi-vtune"]
+                raise InstallError(f"{self.spec} cannot find libittnotify from {vtune_spec}")
+
+            ittnotify_library = ittnotify_libraries.libraries[0]
             args.extend(
                 [
                     self.define("ITTNOTIFY_INCLUDE_DIR", ittnotify_include),
-                    self.define("ITTNOTIFY_LIBRARY", ittnotify_lib),
+                    self.define("ITTNOTIFY_LIBRARY", ittnotify_library),
                 ]
             )
 
