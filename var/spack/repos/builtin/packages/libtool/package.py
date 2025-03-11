@@ -61,7 +61,7 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
         depends_on("autoconf@2.62:")
         depends_on("automake")
 
-    with default_args(when="@2.4.2", type="build"):
+    with default_args(when="@2.4.2:", type="build"):
         depends_on("autoconf")
         depends_on("automake")
         depends_on("help2man")
