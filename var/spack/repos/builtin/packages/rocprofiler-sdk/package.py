@@ -15,7 +15,11 @@ class RocprofilerSdk(CMakePackage):
     git = "https://github.com/ROCm/rocprofiler-sdk.git"
     url = "https://github.com/ROCm/rocprofiler-sdk/archive/refs/tags/rocm-6.3.2.tar.gz"
 
+    tags = ["rocm"]
+
     maintainers("afzpatel", "srekolam", "renjithravindrankannath")
+
+    license("MIT")
 
     version(
         "6.3.2",
