@@ -2,9 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
-from llnl.util.symlink import symlink
 import os
+
+from llnl.util.symlink import symlink
+
+from spack.package import *
 
 
 class NvplFft(Package):
