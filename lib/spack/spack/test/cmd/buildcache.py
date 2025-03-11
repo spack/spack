@@ -214,9 +214,7 @@ def test_buildcache_sync(
             if in_env_pkg in p:
                 found_pkg = True
 
-        if not found_pkg:
-            print("Expected to find {0} in {1}".format(in_env_pkg, dest_mirror_dir))
-            assert False
+        assert found_pkg, f"Expected to find {in_env_pkg} in {dest_mirror_dir}"
 
     # Install a package and put it in the buildcache
     s = spack.concretize.concretize_one(out_env_pkg)

@@ -144,6 +144,13 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         " conventional location. This option is only relevant when regtests need to be run.",
     )
 
+    variant(
+        "grpp",
+        default=False,
+        description="Enable GRPP psuedo potentials",
+        when="@2025.2: build_system=cmake",
+    )
+
     with when("+cuda"):
         variant(
             "cuda_arch_35_k20x",
@@ -1048,6 +1055,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("CP2K_ENABLE_GRID_GPU", "grid_gpu"),
             self.define_from_variant("CP2K_ENABLE_DBM_GPU", "dbm_gpu"),
             self.define_from_variant("CP2K_ENABLE_PW_GPU", "pw_gpu"),
+            self.define_from_variant("CP2K_USE_GRPP", "grpp"),
         ]
 
         # we force the use elpa openmp threading support. might need to be revisited though

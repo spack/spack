@@ -15,7 +15,7 @@ class Warpx(CMakePackage, PythonExtension):
     """
 
     homepage = "https://ecp-warpx.github.io"
-    url = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/24.10.tar.gz"
+    url = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/25.03.tar.gz"
     git = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers("ax3l", "dpgrote", "EZoni", "RemiLehe")
@@ -25,7 +25,12 @@ class Warpx(CMakePackage, PythonExtension):
 
     # NOTE: if you update the versions here, also see py-warpx
     version("develop", branch="development")
-    version("25.02", sha256="c65385a3598bf43278c0b1c10ae2a5a07c1a46f6fa98deded385ecca2021a1a2")
+    version("25.03", sha256="ec0a032fd2c838acec4b251fa3a8180b47186cc2216bc1adc6242cd275977590")
+    version(
+        "25.02",
+        sha256="c65385a3598bf43278c0b1c10ae2a5a07c1a46f6fa98deded385ecca2021a1a2",
+        deprecated=True,
+    )
     version(
         "24.10",
         sha256="1fe3a86bf820a2ecef853cdcd9427fba4e0cb1efb05326da7dc9dbf94551202f",
@@ -250,7 +255,7 @@ class Warpx(CMakePackage, PythonExtension):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
-    for v in ["25.02", "24.10", "24.08", "develop"]:
+    for v in ["25.03", "25.02", "24.10", "24.08", "develop"]:
         depends_on(
             f"amrex@{v} build_system=cmake +linear_solvers +pic +particles +shared +tiny_profile",
             when=f"@{v}",

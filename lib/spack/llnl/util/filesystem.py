@@ -7,6 +7,7 @@ import errno
 import fnmatch
 import glob
 import hashlib
+import io
 import itertools
 import numbers
 import os
@@ -20,6 +21,7 @@ import tempfile
 from contextlib import contextmanager
 from itertools import accumulate
 from typing import (
+    IO,
     Callable,
     Deque,
     Dict,
@@ -2879,6 +2881,20 @@ def keep_modification_time(*filenames):
     for f, mtime in mtimes.items():
         if os.path.exists(f):
             os.utime(f, (os.path.getatime(f), mtime))
+
+
+@contextmanager
+def temporary_file_position(stream):
+    orig_pos = stream.tell()
+    yield
+    stream.seek(orig_pos)
+
+
+@contextmanager
+def current_file_position(stream: IO[str], loc: int, relative_to=io.SEEK_CUR):
+    with temporary_file_position(stream):
+        stream.seek(loc, relative_to)
+        yield
 
 
 @contextmanager
