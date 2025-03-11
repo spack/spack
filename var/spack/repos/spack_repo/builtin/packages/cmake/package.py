@@ -38,24 +38,8 @@ class Cmake(Package):
         sha256="653427f0f5014750aafff22727fb2aa60c6c732ca91808cfb78ce22ddd9e55f0",
         preferred=True,
     )
-    version("3.31.5", sha256="66fb53a145648be56b46fa9e8ccade3a4d0dfc92e401e52ce76bdad1fea43d27")
-    version("3.31.4", sha256="a6130bfe75f5ba5c73e672e34359f7c0a1931521957e8393a5c2922c8b0f7f25")
-    version("3.31.3", sha256="fac45bc6d410b49b3113ab866074888d6c9e9dc81a141874446eb239ac38cb87")
-    version("3.31.2", sha256="42abb3f48f37dbd739cdfeb19d3712db0c5935ed5c2aef6c340f9ae9114238a2")
-    version("3.31.1", sha256="c4fc2a9bd0cd5f899ccb2fb81ec422e175090bc0de5d90e906dd453b53065719")
-    version("3.31.0", sha256="300b71db6d69dcc1ab7c5aae61cbc1aa2778a3e00cbd918bc720203e311468c3")
     version("3.30.8", sha256="10434223a40531b4d6bd77f8ffc471f1714029f4e6d2c83c499187a940276720")
-    version("3.30.7", sha256="470e44d9c7caa3bd869ef953071b84f565b5d378d0a9eccbbbcd72031f21b9de")
-    version("3.30.6", sha256="a7aa25cdd8545156fe0fec95ebbd53cb2b5173a8717e227f6e8a755185c168cf")
-    version("3.30.5", sha256="9f55e1a40508f2f29b7e065fa08c29f82c402fa0402da839fffe64a25755a86d")
-    version("3.30.4", sha256="c759c97274f1e7aaaafcb1f0d261f9de9bf3a5d6ecb7e2df616324a46fe704b2")
-    version("3.30.3", sha256="6d5de15b6715091df7f5441007425264bdd477809f80333fdf95f846aaff88e4")
-    version("3.30.2", sha256="46074c781eccebc433e98f0bbfa265ca3fd4381f245ca3b140e7711531d60db2")
-    version("3.30.1", sha256="df9b3c53e3ce84c3c1b7c253e5ceff7d8d1f084ff0673d048f260e04ccb346e1")
-    version("3.30.0", sha256="157e5be6055c154c34f580795fe5832f260246506d32954a971300ed7899f579")
     version("3.29.6", sha256="1391313003b83d48e2ab115a8b525a557f78d8c1544618b48d1d90184a10f0af")
-    version("3.29.5", sha256="dd63da7d763c0db455ca232f2c443f5234fe0b11f8bd6958a81d29cc987dfd6e")
-    version("3.29.4", sha256="b1b48d7100bdff0b46e8c8f6a3c86476dbe872c8df39c42b8d104298b3d56a2c")
     version("3.28.6", sha256="c39c733900affc4eb0e9688b4d1a45435a732105d9bf9cc1e75dd2b9b81a36bb")
     version("3.27.9", sha256="609a9b98572a6a5ea477f912cffb973109ed4d0a6a6b3f9e2353d2cdc048708e")
     version("3.26.6", sha256="070b9a2422e666d2c1437e2dab239a236e8a63622d0a8d0ffe9e389613d2b76a")
@@ -85,6 +69,27 @@ class Cmake(Package):
     version("3.1.0", sha256="8bdc3fa3f2da81bc10c772a6b64cc9052acc2901d42e1e1b2588b40df224aad9")
     version("3.0.2", sha256="6b4ea61eadbbd9bec0ccb383c29d1f4496eacc121ef7acf37c7a24777805693e")
     version("2.8.10.2", sha256="ce524fb39da06ee6d47534bbcec6e0b50422e18b62abc4781a4ba72ea2910eb1")
+
+    with default_args(deprecated=True):
+        version("3.31.5", sha256="66fb53a145648be56b46fa9e8ccade3a4d0dfc92e401e52ce76bdad1fea43d27")
+        version("3.31.4", sha256="a6130bfe75f5ba5c73e672e34359f7c0a1931521957e8393a5c2922c8b0f7f25")
+        version("3.31.3", sha256="fac45bc6d410b49b3113ab866074888d6c9e9dc81a141874446eb239ac38cb87")
+        version("3.31.2", sha256="42abb3f48f37dbd739cdfeb19d3712db0c5935ed5c2aef6c340f9ae9114238a2")
+        version("3.31.1", sha256="c4fc2a9bd0cd5f899ccb2fb81ec422e175090bc0de5d90e906dd453b53065719")
+        version("3.31.0", sha256="300b71db6d69dcc1ab7c5aae61cbc1aa2778a3e00cbd918bc720203e311468c3")
+        version("3.30.7", sha256="470e44d9c7caa3bd869ef953071b84f565b5d378d0a9eccbbbcd72031f21b9de")
+        version("3.30.6", sha256="a7aa25cdd8545156fe0fec95ebbd53cb2b5173a8717e227f6e8a755185c168cf")
+        version("3.30.5", sha256="9f55e1a40508f2f29b7e065fa08c29f82c402fa0402da839fffe64a25755a86d")
+        version("3.30.4", sha256="c759c97274f1e7aaaafcb1f0d261f9de9bf3a5d6ecb7e2df616324a46fe704b2")
+        version("3.30.3", sha256="6d5de15b6715091df7f5441007425264bdd477809f80333fdf95f846aaff88e4")
+        version("3.30.2", sha256="46074c781eccebc433e98f0bbfa265ca3fd4381f245ca3b140e7711531d60db2")
+        version("3.30.1", sha256="df9b3c53e3ce84c3c1b7c253e5ceff7d8d1f084ff0673d048f260e04ccb346e1")
+        version("3.30.0", sha256="157e5be6055c154c34f580795fe5832f260246506d32954a971300ed7899f579")
+        version("3.29.5", sha256="dd63da7d763c0db455ca232f2c443f5234fe0b11f8bd6958a81d29cc987dfd6e")
+        version("3.29.4", sha256="b1b48d7100bdff0b46e8c8f6a3c86476dbe872c8df39c42b8d104298b3d56a2c")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     variant(
         "build_type",
