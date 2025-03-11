@@ -9,7 +9,7 @@ class Oniguruma(AutotoolsPackage):
     """Regular expression library."""
 
     homepage = "https://github.com/kkos/oniguruma"
-    url = "https://github.com/kkos/oniguruma/releases/download/v6.9.4/onig-6.9.4.tar.gz"
+    url = "https://github.com/kkos/oniguruma/releases/download/v6.9.10/onig-6.9.10.tar.gz"
 
     license("BSD-2-Clause")
 
