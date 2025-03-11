@@ -51,7 +51,7 @@ class NvplFft(Package):
 
     @run_after("install")
     def fix_include(self):
-        # include/nvpl_fftw/ is on;y present in version 0.4 and later
+        # include/nvpl_fftw/ is only present in version 0.4 and later
         if self.spec.satisfies("@:0.3"):
             return
 
