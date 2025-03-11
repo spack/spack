@@ -238,7 +238,7 @@ def parse_spec_from_yaml_string(string: str, *, named: bool = False) -> spack.sp
         # Add a hint in case it's dependencies
         deps = result.dependencies()
         if len(deps) == 1:
-            msg = f"{msg}. Maybe you meant just '{deps[0]}'?"
+            msg = f"{msg}. Did you mean '{deps[0]}'?"
 
         if mark:
             msg = f"{mark.name}:{mark.line + 1}: {msg}"

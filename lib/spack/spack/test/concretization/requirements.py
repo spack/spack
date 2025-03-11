@@ -1128,28 +1128,43 @@ def test_strong_preferences_higher_priority_than_reuse(concretize_scope, mock_pa
 
 
 @pytest.mark.parametrize(
-    "packages_yaml",
+    "packages_yaml,err_match",
     [
-        """
+        (
+            """
 packages:
   mpi:
     require:
     - "+bzip2"
 """,
-        """
+            "expected a named spec",
+        ),
+        (
+            """
 packages:
   mpi:
     require:
     - one_of: ["+bzip2", openmpi]
 """,
+            "expected a named spec",
+        ),
+        (
+            """
+packages:
+  mpi:
+    require:
+    - "^mpich"
+""",
+            "Did you mean",
+        ),
     ],
 )
 def test_anonymous_spec_cannot_be_used_in_virtual_requirements(
-    packages_yaml, concretize_scope, mock_packages
+    packages_yaml, err_match, concretize_scope, mock_packages
 ):
     """Tests that using anonymous specs in requirements for virtual packages raises an
     appropriate error message.
     """
     update_packages_config(packages_yaml)
-    with pytest.raises(spack.error.SpackError, match="expected a named spec"):
+    with pytest.raises(spack.error.SpackError, match=err_match):
         spack.concretize.concretize_one("mpileaks")
