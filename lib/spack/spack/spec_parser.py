@@ -485,23 +485,18 @@ def parse_one_or_raise(
         text (str): text to be parsed
         initial_spec: buffer where to parse the spec. If None a new one will be created.
     """
-    stripped_text = text.strip()
-    parser = SpecParser(stripped_text)
+    parser = SpecParser(text)
     result = parser.next_spec(initial_spec)
-    last_token = parser.ctx.current_token
+    next_token = parser.ctx.next_token
 
-    if last_token is not None and last_token.end != len(stripped_text):
-        message = "a single spec was requested, but parsed more than one:"
-        message += f"\n{text}"
-        if last_token is not None:
-            underline = f"\n{' ' * last_token.end}{'^' * (len(text) - last_token.end)}"
-            message += color.colorize(f"@*r{{{underline}}}")
+    if next_token:
+        message = f"expected a single spec, but got more:\n{text}"
+        underline = f"\n{' ' * next_token.start}{'^' * len(next_token.value)}"
+        message += color.colorize(f"@*r{{{underline}}}")
         raise ValueError(message)
 
     if result is None:
-        message = "a single spec was requested, but none was parsed:"
-        message += f"\n{text}"
-        raise ValueError(message)
+        raise ValueError("expected a single spec, but got none")
 
     return result
 
