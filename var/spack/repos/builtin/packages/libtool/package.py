@@ -22,6 +22,8 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
         submodules=True,
     )
 
+    version("2.5.4", sha256="da8ebb2ce4dcf46b90098daf962cffa68f4b4f62ea60f798d0ef12929ede6adf")
+    version("2.5.3", sha256="9322bd8f6bc848fda3e385899dd1934957169652acef716d19d19d24053abb95")
     version("2.4.7", sha256="04e96c2404ea70c590c546eba4202a4e12722c640016c12b9b2f1ce3d481e9a8")
     version("2.4.6", sha256="e3bd4d5d3d025a36c21dd6af7ea818a2afcd4dfc1ea5a17b39d7854bcd0c06e3")
     # Version released in 2011
@@ -41,15 +43,6 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
     # https://github.com/autotools-mirror/libtool/blob/v2.4.2/libltdl/config/ltmain.m4sh#L3028
     depends_on("findutils", type="run")
 
-    with when("@2.4.2"):
-        depends_on("autoconf", type="build")
-        depends_on("automake", type="build")
-        depends_on("help2man", type="build")
-
-    with when("@2.4.6"):
-        depends_on("autoconf@2.62:", type="test")
-        depends_on("automake", type="test")
-
     with when("@develop"):
         depends_on("autoconf", type="build")
         depends_on("automake", type="build")
@@ -59,6 +52,19 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
         # Fix parsing of compiler output when collecting predeps and postdeps
         # https://lists.gnu.org/archive/html/bug-libtool/2016-03/msg00003.html
         patch("flag_space.patch")
+
+    with default_args(when="@2.5.1:", type="test"):
+        depends_on("autoconf@2.64:")
+        depends_on("automake")
+
+    with default_args(when="@2.4.6", type="test"):
+        depends_on("autoconf@2.62:")
+        depends_on("automake")
+
+    with default_args(when="@2.4.2", type="build"):
+        depends_on("autoconf")
+        depends_on("automake")
+        depends_on("help2man")
 
     build_directory = "spack-build"
 
