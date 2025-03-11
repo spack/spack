@@ -334,7 +334,7 @@ class Gromacs(CMakePackage, CudaPackage, ROCmPackage):
         description="Enable support for Intel Data Center GPU Max",
     )
     variant("hip", default=False, when="@2025:", description="Enable HIP support")
-    depends_on("rocm-core", when="+hip")
+    depends_on("hip@5.3:", when="+hip")
     depends_on("rocprim", when="+hip")
     variant("nosuffix", default=False, description="Disable default suffixes")
     variant(
@@ -532,7 +532,6 @@ class Gromacs(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cuda", when="+cuda")
     depends_on("sycl", when="+sycl")
-    depends_on("rocm@5.3:", when="+rocm")
     depends_on("lapack")
     depends_on("blas")
     depends_on("gcc", when="%intel ~intel_provided_gcc")
@@ -815,9 +814,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 options.append(f"-DGMX_CUDA_TARGET_SM:STRING={';'.join(cuda_arch)}")
 
         if self.spec.satisfies("+hip"):
-            options.append("-DCMAKE_INSTALL_PREFIX:STRING=" + self.spec["rocm_core"].prefix)
+            options.append("-DCMAKE_INSTALL_PREFIX:STRING=" + self.spec["hip"].prefix)
             if not self.spec.satisfies("amdgpu_target=none"):
-                rocm_arch = self.spec.variants["amdgpu_targets"].value
+                amdgpu_targets = self.spec.variants["amdgpu_targets"].value
                 options.append(f"-DGMX_HIP_TARGET_ARCH:STRING={';'.join(amdgpu_targets)}")
 
         options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
