@@ -31,10 +31,11 @@ class Cmake(Package):
 
     version("master", branch="master")
     version(
-        "4.0.0-rc3",
-        sha256="d1ae66637fb083efde5c12b45a76ab9bcd419970979c93b14a0d0d21eb8c6c08",
+        "4.0.0-rc4",
+        sha256="bf51cc9d842cc70551d1c34cfd846085e5aee7c90937fa91ead4ee68e5d2bb41",
         preferred=True,
     )
+    version("4.0.0-rc3", sha256="d1ae66637fb083efde5c12b45a76ab9bcd419970979c93b14a0d0d21eb8c6c08")
     version("4.0.0-rc2", sha256="087dde74196edfba0ed48a25ac0aae419a10c814f76ba2a3cf30f0c467c83b7d")
     version("4.0.0-rc1", sha256="70428d4deede456100acf8573b0263bc4d53a55675e62df89cc187dfb40b8618")
     version("3.31.6", sha256="653427f0f5014750aafff22727fb2aa60c6c732ca91808cfb78ce22ddd9e55f0")
