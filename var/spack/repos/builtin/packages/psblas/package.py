@@ -49,10 +49,12 @@ class Psblas(AutotoolsPackage):
             url = "https://github.com/sfilippone/psblas3/archive/refs/tags/v3.8.1-2.tar.gz")
     version("3.8.1-rc1-3", 
             sha256="00b994158d12644853180d1115ed530b1aed3903c38a9d7bc3d3efc203b2890b",
-            url = "https://github.com/sfilippone/psblas3/archive/refs/tags/v3.8.1-rc1-3.tar.gz")
+            url = "https://github.com/sfilippone/psblas3/archive/refs/tags/v3.8.1-rc1-3.tar.gz",
+            deprecated=True)
     version("3.8.1-rc1-1", 
             sha256="4f7371000592d73603010adef654d4e9d27a9692d5204db20c0f7b39c462fd83",
-            url = "https://github.com/sfilippone/psblas3/archive/refs/tags/v3.8.1-rc1-1.tar.gz")
+            url = "https://github.com/sfilippone/psblas3/archive/refs/tags/v3.8.1-rc1-1.tar.gz",
+            deprecated=True)
     version("3.8.1", 
             sha256="02e1f00e644426eb15eb08c735cf9c8ae692392f35c2cfe4f7474e1ab91575dc",
             url = "https://github.com/sfilippone/psblas3/archive/refs/tags/v3.8.1.tar.gz")
@@ -61,10 +63,12 @@ class Psblas(AutotoolsPackage):
             url = "https://github.com/sfilippone/psblas3/archive/refs/tags/v3.8.0-2.tar.gz")
     version("3.8.0-1", 
             sha256="dca593010f258af669eb40d92c4934eaaa016ef17280d4ab1208afc3d5aa13f0",
-            url = "https://github.com/sfilippone/psblas3/archive/refs/tags/v3.8.0-1.tar.gz")
+            url = "https://github.com/sfilippone/psblas3/archive/refs/tags/v3.8.0-1.tar.gz",
+            deprecated=True)
     version("3.8.0", 
             sha256="0eaef8f5fd41313ee1925a54bda33c5e1756a6d14b679c54e8423556881875e8",
-            url = "https://github.com/sfilippone/psblas3/archive/refs/tags/v3.8.0.tar.gz")
+            url = "https://github.com/sfilippone/psblas3/archive/refs/tags/v3.8.0.tar.gz",
+            deprecated=True)
     version("3.7.0.2", 
             sha256="2c4f5ae23051b689ee9186db6baf8ca77eed7c8cb430fbc665329394036cc7f7",
             url = "https://github.com/sfilippone/psblas3/archive/refs/tags/v3.7.0-2.tar.gz")
@@ -178,7 +182,7 @@ class Psblas(AutotoolsPackage):
     def build(self, spec, prefix):
         make()
 
-    def install(self, spec, prefix):
+    def install(self, spec, prefix)
         make("install")
 
     def samples(self, spec, prefix):
