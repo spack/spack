@@ -176,6 +176,8 @@ class Tau(Package):
     depends_on("oneapi-level-zero", when="+level_zero")
     depends_on("dyninst@12.3.0:", when="+dyninst")
 
+    conflicts("+comm", when="@:2.34 +python", msg="Bug in +comm with +python up to @2.34")
+
     # Elf only required from 2.28.1 on
     conflicts("+elf", when="@:2.28.0")
     conflicts("+libdwarf", when="@:2.28.0")

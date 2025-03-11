@@ -53,6 +53,8 @@ class Mgard(CMakePackage, CudaPackage):
     depends_on("pkgconfig", type=("build",), when="@2022-11-18:")
     depends_on("zstd")
     depends_on("protobuf@3.4:", when="@2022-11-18:")
+    # See https://github.com/CODARcode/MGARD/issues/240
+    depends_on("protobuf@:3.28", when="@:2023-12-09")
     depends_on("libarchive", when="@2021-11-12:")
     depends_on("tclap", when="@2021-11-12")
     depends_on("yaml-cpp", when="@2021-11-12:")

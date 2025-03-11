@@ -11,10 +11,10 @@ class PyRtree(PythonPackage):
     homepage = "https://github.com/Toblerity/rtree"
     pypi = "Rtree/rtree-1.3.0.tar.gz"
 
+    license("MIT")
     maintainers("adamjstewart", "hobu")
 
-    license("MIT")
-
+    version("1.4.0", sha256="9d97c7c5dcf25f6c0599c76d9933368c6a8d7238f2c1d00e76f1a69369ca82a0")
     version("1.3.0", sha256="b36e9dd2dc60ffe3d02e367242d2c26f7281b00e1aaf0c39590442edaaadd916")
     version("1.2.0", sha256="f5145f7852bf7f95c126fb16bf1a4c2ca9300ae151b07f8a0f7083ea47912675")
     version("1.1.0", sha256="6f8ee504dde5d005b25b08aaf5be0b3404af3ad5fece6e1ddcde35908a798a95")
@@ -23,12 +23,11 @@ class PyRtree(PythonPackage):
     version("0.9.7", sha256="be8772ca34699a9ad3fb4cfe2cfb6629854e453c10b3328039301bbfc128ca3e")
     version("0.8.3", sha256="6cb9cf3000963ea6a3db777a597baee2bc55c4fc891e4f1967f262cc96148649")
 
-    depends_on("python@3.8:", when="@1.1:", type=("build", "run"))
     depends_on("py-setuptools@61:", when="@1.1:", type="build")
     depends_on("py-setuptools@39.2:", when="@1:", type="build")
     depends_on("py-setuptools", type="build")
-    depends_on("py-typing-extensions@3.7:", when="@1: ^python@:3.7", type=("build", "run"))
     depends_on("libspatialindex@1.8.5:")
+    depends_on("py-numpy", when="@1.4:", type="test")
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/R/Rtree/{}-{}.tar.gz"

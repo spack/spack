@@ -20,6 +20,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     tags = ["e4s"]
 
     version("main", branch="main")
+    version("3.22.4", sha256="c32e9c606b858ff587949ddc5f28da8934b00c41ab1f6d9be5001a705bef62ee")
     version("3.22.3", sha256="88c0d465a3bd688cb17ebf06a17c06d6e9cc457fa6b9643d217389424e6bd795")
     version("3.22.2", sha256="83624de0178b42d37ca1f7f905e1093556c6919fe5accd3e9f11d00a66e11256")
     version("3.22.1", sha256="7117d3ae6827f681ed9737939d4e86896b4751e27cca941bb07e5703f19a0a7b")
@@ -356,6 +357,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     with when("+rocm"):
         depends_on("rocm-core")
         depends_on("hipblas")
+        depends_on("hipblas-common", when="^hipblas@6.3.0:")
         depends_on("hipsparse")
         depends_on("hipsolver")
         depends_on("rocsparse")
@@ -721,7 +723,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 hip_ipkgs.extend(["rocrand"])
             else:
                 hip_lpkgs.extend(["rocrand"])
-            if spec.satisfies("^hipblas@6.3.0:"):
+            if spec.satisfies("^hipblas-common"):
                 hip_ipkgs.extend(["hipblas-common"])
             hip_inc = ""
             hip_lib = ""

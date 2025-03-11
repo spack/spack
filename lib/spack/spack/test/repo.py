@@ -34,7 +34,7 @@ repo:
   subdirectory: '{request.param}'
 """
         )
-    repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
+    repo_cache = spack.util.file_cache.FileCache(cache_dir)
     return spack.repo.Repo(str(repo_dir), cache=repo_cache), request.param
 
 
@@ -194,7 +194,7 @@ def test_repository_construction_doesnt_use_globals(nullify_globals, tmp_path, r
 
     repo_paths, namespaces = _repo_paths(repos)
 
-    repo_cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+    repo_cache = spack.util.file_cache.FileCache(tmp_path / "cache")
     repo_path = spack.repo.RepoPath(*repo_paths, cache=repo_cache)
     assert len(repo_path.repos) == len(namespaces)
     assert [x.namespace for x in repo_path.repos] == namespaces
@@ -319,3 +319,48 @@ class TestRepoPath:
         # foo is not there, raise
         with pytest.raises(spack.repo.UnknownNamespaceError):
             repo.get_repo("foo")
+
+
+def test_parse_package_api_version():
+    """Test that we raise an error if a repository has a version that is not supported."""
+    # valid version
+    assert spack.repo._parse_package_api_version(
+        {"api": "v1.2"}, min_api=(1, 0), max_api=(2, 3)
+    ) == (1, 2)
+    # too new and too old
+    with pytest.raises(
+        spack.repo.BadRepoError,
+        match=r"Package API v2.4 is not supported .* \(must be between v1.0 and v2.3\)",
+    ):
+        spack.repo._parse_package_api_version({"api": "v2.4"}, min_api=(1, 0), max_api=(2, 3))
+    with pytest.raises(
+        spack.repo.BadRepoError,
+        match=r"Package API v0.9 is not supported .* \(must be between v1.0 and v2.3\)",
+    ):
+        spack.repo._parse_package_api_version({"api": "v0.9"}, min_api=(1, 0), max_api=(2, 3))
+    # default to v1.0 if not specified
+    assert spack.repo._parse_package_api_version({}, min_api=(1, 0), max_api=(2, 3)) == (1, 0)
+    # if v1.0 support is dropped we should also raise
+    with pytest.raises(
+        spack.repo.BadRepoError,
+        match=r"Package API v1.0 is not supported .* \(must be between v2.0 and v2.3\)",
+    ):
+        spack.repo._parse_package_api_version({}, min_api=(2, 0), max_api=(2, 3))
+    # finally test invalid input
+    with pytest.raises(spack.repo.BadRepoError, match="Invalid Package API version"):
+        spack.repo._parse_package_api_version({"api": "v2"}, min_api=(1, 0), max_api=(3, 3))
+    with pytest.raises(spack.repo.BadRepoError, match="Invalid Package API version"):
+        spack.repo._parse_package_api_version({"api": 2.0}, min_api=(1, 0), max_api=(3, 3))
+
+
+def test_repo_package_api_version(tmp_path: pathlib.Path):
+    """Test that we can specify the API version of a repository."""
+    (tmp_path / "example" / "packages").mkdir(parents=True)
+    (tmp_path / "example" / "repo.yaml").write_text(
+        """\
+repo:
+    namespace: example
+"""
+    )
+    cache = spack.util.file_cache.FileCache(tmp_path / "cache")
+    assert spack.repo.Repo(str(tmp_path / "example"), cache=cache).package_api == (1, 0)

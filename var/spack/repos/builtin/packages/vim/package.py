@@ -21,6 +21,7 @@ class Vim(AutotoolsPackage):
 
     license("Vim")
 
+    version("9.1.1194", sha256="4575b9ae81cca6a304f165d16ea3c65f4864390001ed5d7bf000e55417153f30")
     version("9.1.0437", sha256="7024fbf8d0e8eec2eae21d279d487b60c58dc4ba3d42146388dc3743506d1fe6")
     version("9.0.0045", sha256="594a31e96e3eda07a358db305de939ca749693b4684de9e027bfa70311b1994d")
     version(
