@@ -207,9 +207,11 @@ class Bazel(Package):
     # Newer versions of grpc and abseil dependencies are needed but are not in bazel-4.0.0
     conflicts("@4.0.0", when="%gcc@11:")
 
-    # https://github.com/bazelbuild/bazel/pull/23667
-    conflicts("%apple-clang@16:", when="@:7.3")
-
+    # https://github.com/bazelbuild/bazel/pull/23667 doesn't cleanly apply on older versions...
+    # however... it is commonly accepted the -Werror should only be used for project developers
+    # and not for building releases for end users so just nuke it from orbit when we find it.
+    patch("no_werror.patch", when="@6:8", sha256="4f4ad047701f7c5f10840ce4f065d352d50429bf09d44bb4c814fbe14c1d2c2f")
+    
     executables = ["^bazel$"]
 
     # Download resources to perform offline build with bazel.

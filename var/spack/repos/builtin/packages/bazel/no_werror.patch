@@ -1,0 +1,56 @@
+diff --git a/distdir_deps.bzl b/distdir_deps.bzl
+index fabaf84a31..14cef576d7 100644
+--- a/distdir_deps.bzl
++++ b/distdir_deps.bzl
+@@ -242,6 +242,10 @@ DIST_DEPS = {
+             "https://mirror.bazel.build/github.com/protocolbuffers/upb/archive/a5477045acaa34586420942098f5fecd3570f577.tar.gz",
+             "https://github.com/protocolbuffers/upb/archive/a5477045acaa34586420942098f5fecd3570f577.tar.gz",
+         ],
++        "patch_args": ["-p1"],
++        "patches": [
++            "//third_party:upb/no_werror.patch",
++        ],
+         "used_in": [
+             "additional_distfiles",
+         ],
+diff --git a/third_party/upb/no_werror.patch b/third_party/upb/no_werror.patch
+new file mode 100644
+index 0000000000..d2b0154739
+--- /dev/null
++++ b/third_party/upb/no_werror.patch
+@@ -0,0 +1,21 @@
++diff --git a/bazel/build_defs.bzl b/bazel/build_defs.bzl
++index b5bc64f0..376f1436 100644
++--- a/bazel/build_defs.bzl
+++++ b/bazel/build_defs.bzl
++@@ -34,13 +34,13 @@ _DEFAULT_COPTS = []
++ _DEFAULT_CPPOPTS.extend([
++     "-Wextra",
++     # "-Wshorten-64-to-32",  # not in GCC (and my Kokoro images doesn't have Clang)
++-    "-Werror",
+++    # "-Werror",
++     "-Wno-long-long",
++ ])
++ _DEFAULT_COPTS.extend([
++     "-std=c99",
++-    "-pedantic",
++-    "-Werror=pedantic",
+++    # "-pedantic",
+++    # "-Werror=pedantic",
++     "-Wall",
++     "-Wstrict-prototypes",
++     # GCC (at least) emits spurious warnings for this that cannot be fixed
+diff --git a/tools/cpp/unix_cc_toolchain_config.bzl b/tools/cpp/unix_cc_toolchain_config.bzl
+index 1dd0e7a6e7..4b401ac4f4 100644
+--- a/tools/cpp/unix_cc_toolchain_config.bzl
++++ b/tools/cpp/unix_cc_toolchain_config.bzl
+@@ -1357,3 +1357,3 @@ # Linux artifact name patterns are the default.
+             unfiltered_compile_flags_feature,
+-            treat_warnings_as_errors_feature,
++            # treat_warnings_as_errors_feature,
+             archive_param_file_feature,
+@@ -1394,3 +1394,3 @@ # macOS artifact name patterns differ from the defaults only for dynamic
+             unfiltered_compile_flags_feature,
+-            treat_warnings_as_errors_feature,
++            # treat_warnings_as_errors_feature,
+             archive_param_file_feature,
