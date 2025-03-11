@@ -487,6 +487,14 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         when="@2.9:2.10.0",
     )
 
+    # can set an upper bound if/when
+    # https://github.com/tensorflow/tensorflow/pull/89032 is merged
+    patch(
+        "allow-empty-config-environment-variables.patch",
+        sha256="e061875c2ca9c157a7837d02afdd25205817def3460745523d5089bbeaa77d29",
+        when="@1.4.0:"
+    )
+
     # Version 2.10 produces an error related to cuBLAS:
     # E tensorflow/stream_executor/cuda/cuda_blas.cc:2981] Unable to register
     # cuBLAS factory: Attempting to register factory for plugin cuBLAS when one
