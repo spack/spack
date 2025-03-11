@@ -828,7 +828,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     def post_configure_fixes(self):
         spec = self.spec
 
-        if spec.satisfies("@2.17:"):
+        if spec.satisfies("@2.17:") and ("patchelf" in spec):
             filter_file(
                 "patchelf",
                 spec["patchelf"].prefix.bin.patchelf,
