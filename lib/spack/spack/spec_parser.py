@@ -60,13 +60,17 @@ import json
 import pathlib
 import re
 import sys
+import traceback
+import warnings
 from typing import Iterator, List, Optional
 
 from llnl.util.tty import color
 
 import spack.deptypes
 import spack.error
+import spack.paths
 import spack.spec
+import spack.util.spack_yaml
 import spack.version
 from spack.tokenize import Token, TokenBase, Tokenizer
 
@@ -212,6 +216,66 @@ class SpecParser:
     def __init__(self, literal_str: str):
         self.literal_str = literal_str
         self.ctx = TokenContext(filter(lambda x: x.kind != SpecTokens.WS, tokenize(literal_str)))
+
+        last_compiler = "none"
+        is_compiler = False
+        in_edge_attrs = False
+
+        issues = []
+        for x in SPEC_TOKENIZER.tokenize(literal_str):
+            if x.kind == SpecTokens.UNEXPECTED:
+                return
+            elif x.kind == SpecTokens.WS:
+                continue
+            elif in_edge_attrs and x.kind == SpecTokens.END_EDGE_PROPERTIES:
+                in_edge_attrs = False
+            elif x.kind == SpecTokens.START_EDGE_PROPERTIES:
+                last_compiler = "none"
+                is_compiler = False
+                in_edge_attrs = True
+            elif x.kind == SpecTokens.DEPENDENCY:
+                last_compiler = "none"
+                is_compiler = False
+            elif x.kind in (
+                SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME,
+                SpecTokens.UNQUALIFIED_PACKAGE_NAME,
+            ):
+                is_compiler = False
+            elif x.kind in (SpecTokens.COMPILER, SpecTokens.COMPILER_AND_VERSION):
+                last_compiler = x.value
+                is_compiler = True
+            elif is_compiler and x.kind in (
+                SpecTokens.VERSION,
+                SpecTokens.VERSION_HASH_PAIR,
+                SpecTokens.GIT_VERSION,
+                SpecTokens.BOOL_VARIANT,
+                SpecTokens.PROPAGATED_BOOL_VARIANT,
+                SpecTokens.KEY_VALUE_PAIR,
+                SpecTokens.PROPAGATED_KEY_VALUE_PAIR,
+            ):
+                issues.append(f"`{x.value}` should go before `{last_compiler}`")
+
+        if issues:
+            ignore = [spack.paths.lib_path, spack.paths.bin_path]
+            mark = spack.util.spack_yaml.get_mark_from_yaml_data(literal_str)
+            issue_str = ", ".join(issues)
+            error = f"{issue_str} in the spec string `{literal_str}`"
+
+            # warning from config file
+            if mark:
+                warnings.warn(f"{mark.name}:{mark.line + 1}: {error}")
+                return
+
+            # warning from hopefully package.py
+            for frame in reversed(traceback.extract_stack()):
+                if frame.lineno and not any(frame.filename.startswith(path) for path in ignore):
+                    warnings.warn_explicit(
+                        error,
+                        category=spack.error.SpackAPIWarning,
+                        filename=frame.filename,
+                        lineno=frame.lineno,
+                    )
+                    return
 
     def tokens(self) -> List[Token]:
         """Return the entire list of token from the initial text. White spaces are
