@@ -524,9 +524,7 @@ class Hip(CMakePackage):
                 separator=" ",
             )
             env.append_path(
-                "HIPCC_LINK_FLAGS_APPEND",
-                f"--gcc-toolchain={self.compiler.prefix}",
-                separator=" ",
+                "HIPCC_LINK_FLAGS_APPEND", f"--gcc-toolchain={self.compiler.prefix}", separator=" "
             )
             # This is picked up by CMake when using HIP as a CMake language.
             env.append_path("HIPFLAGS", f"--gcc-toolchain={self.compiler.prefix}", separator=" ")
