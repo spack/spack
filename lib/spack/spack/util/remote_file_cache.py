@@ -4,6 +4,7 @@
 
 import hashlib
 import os.path
+import pathlib
 import shutil
 import tempfile
 import urllib.parse
@@ -76,17 +77,23 @@ def local_path(raw_path: str, sha256: str, make_dest: Optional[Callable[[], str]
     if not raw_path:
         raise ValueError("path argument is required to cache remote files")
 
+    file_schemes = ["", "file"]
+
     # Allow paths (and URLs) to contain spack config/environment variables,
     # etc.
+    win_path = pathlib.PureWindowsPath(raw_path)
+    if win_path.drive:
+        file_schemes.append(win_path.drive.lower().strip(":"))
+
     path = canonicalize_path(raw_path)
+
     url = urllib.parse.urlparse(path)
 
     # Path isn't remote so return absolute, normalized path with substitutions.
-    if url.scheme in ["", "file"]:
-        return path
+    if url.scheme in file_schemes:
+        return os.path.normpath(path)
 
-    # If scheme is not valid, path is not a url
-    # of a type Spack is generally aware
+    # If scheme is not valid, path is not a supported url.
     if validate_scheme(url.scheme):
         # Fetch files from supported URL schemes.
         if url.scheme in ("http", "https", "ftp"):
