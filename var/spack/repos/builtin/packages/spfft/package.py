@@ -71,13 +71,6 @@ class Spfft(CMakePackage, CudaPackage, ROCmPackage):
     # before version 1.0.3
     patch("0001-fix-missing-limits-include.patch", when="@:1.0.2")
 
-    # Enable NVPL FFT
-    patch(
-        "https://github.com/eth-cscs/SpFFT/pull/64.patch?full_index=1",
-        when="@1.1.1",
-        sha256="570f56cb1f4a3e89b8f437c945e18749052c148aa228237e72b640d3f32dd027",
-    )
-    conflicts("@:1.1.0", when="^[virtuals=fftw-api] nvpl-fft")
     conflicts("^[virtuals=fftw-api] nvpl-fft@:0.3")  # fftw3.h is not available in nvpl-fft@:0.3
 
     def cmake_args(self):
