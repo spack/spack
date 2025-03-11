@@ -13,6 +13,8 @@ class PyQuestionary(PythonPackage):
     homepage = "https://github.com/tmbo/questionary"
     pypi = "questionary/questionary-1.9.0.tar.gz"
 
+    maintainers("mathomp4")
+
     license("MIT")
 
     version("2.1.0", sha256="6302cdd645b19667d8f6e6634774e9538bfcd1aad9be287e743d96cacaf95587")
