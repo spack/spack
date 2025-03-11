@@ -165,7 +165,7 @@ class Psblas(AutotoolsPackage):
     def build(self, spec, prefix):
         make()
 
-    def install(self, spec, prefix)
+    def install(self, spec, prefix):
         make("install")
 
     def samples(self, spec, prefix):
