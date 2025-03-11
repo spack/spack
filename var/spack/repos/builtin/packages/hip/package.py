@@ -503,6 +503,11 @@ class Hip(CMakePackage):
                 "--rocm-path={0}".format(paths["rocm-path"]),
                 separator=" ",
             )
+            env.append_path(
+                "HIPCC_LINK_FLAGS_APPEND",
+                "--rocm-path={0}".format(paths["rocm-path"]),
+                separator=" ",
+            )
         elif self.spec.satisfies("+cuda"):
             env.set("CUDA_PATH", self.spec["cuda"].prefix)
             env.set("HIP_PATH", self.spec.prefix)
@@ -515,6 +520,11 @@ class Hip(CMakePackage):
             # This is picked up by hipcc.
             env.append_path(
                 "HIPCC_COMPILE_FLAGS_APPEND",
+                f"--gcc-toolchain={self.compiler.prefix}",
+                separator=" ",
+            )
+            env.append_path(
+                "HIPCC_LINK_FLAGS_APPEND",
                 f"--gcc-toolchain={self.compiler.prefix}",
                 separator=" ",
             )
