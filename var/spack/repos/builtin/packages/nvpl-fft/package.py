@@ -51,7 +51,12 @@ class NvplFft(Package):
 
     @run_after("install")
     def fix_include(self):
+        # include/nvpl_fftw/ is on;y present in version 0.4 and later
+        if self.spec.satisfies("@:0.3"):
+            return
+
         subdir = os.path.join(self.prefix.include, "nvpl_fftw")  # include/nvpl_fftw/
+
         for file in os.listdir(subdir):
             file_symlink = os.path.join(self.prefix.include, os.path.basename(file))
             # nvpl_fft_version.h is duplicated in include/ and include/nvpl_fftw/
