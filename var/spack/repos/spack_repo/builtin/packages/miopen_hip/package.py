@@ -82,7 +82,7 @@ class MiopenHip(CMakePackage):
     patch("0001-link-with-roctracer-when-building-miopendriver-6.2.0.patch", when="@6.2")
     patch(
         "https://github.com/ROCm/MIOpen/commit/f60aa1ff89f8fb596b4a6a4c70aa7d557803db87.patch?full_index=1",
-        sha256="7f382c872d89f22da1ad499e85ffe9881cc7404c8465e42877a210a09382e2ea",
+        sha256="843ebbe79c62c7d720776a6250db9f169463973fa22977e60998dfe5c44f1c45",
         when="@5.7",
     )
     patch(
