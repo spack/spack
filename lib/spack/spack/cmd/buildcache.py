@@ -35,6 +35,7 @@ from spack.spec import Spec, save_dependency_specfiles
 
 from ..buildcache_migrate import migrate
 from ..enums import InstallRecordStatus
+from ..url_buildcache import URLBuildcacheEntry, create_url_buildcache_entry
 
 description = "create, download and install binary packages"
 section = "packaging"
@@ -573,7 +574,7 @@ def save_specfile_fn(args):
     )
 
 
-def copy_buildcache_entry(cache_entry: bindist.URLBuildcacheEntry, destination_url: str):
+def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str):
     """Download buildcache entry and copy it to the destination_url"""
     try:
         spec_dict = cache_entry.fetch_metadata()
@@ -588,7 +589,7 @@ def copy_buildcache_entry(cache_entry: bindist.URLBuildcacheEntry, destination_u
     spec_dest_url = url_util.join(
         destination_url,
         bindist.buildcache_relative_spec_path(
-            target_spec, ".spec.json", layout_version=cache_entry.layout_version
+            target_spec, ".spec.json", layout_version=cache_entry.get_layout_version()
         ),
     )
 
@@ -662,7 +663,7 @@ def sync_fn(args):
     tty.debug("Syncing the following specs:")
     for s in env.all_specs():
         tty.debug("  {0}{1}: {2}".format("* " if s in env.roots() else "  ", s.name, s.dag_hash()))
-        cache_entry = bindist.create_urlbuildcacheentry(
+        cache_entry = create_url_buildcache_entry(
             layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
         cache_entry.initialize_from_spec_and_mirror(s, src_mirror_url)
@@ -686,7 +687,7 @@ def manifest_copy(
                 deduped_manifest[spec_hash] = copy_obj
 
     for spec_hash, copy_obj in deduped_manifest.items():
-        cache_entry = bindist.create_urlbuildcacheentry(
+        cache_entry = create_url_buildcache_entry(
             layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
         cache_entry.initialize_from_spec_url(copy_obj["src"])

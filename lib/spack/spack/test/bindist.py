@@ -46,6 +46,7 @@ from spack.database import INDEX_JSON_FILE
 from spack.installer import PackageInstaller
 from spack.paths import test_path
 from spack.spec import Spec
+from spack.url_buildcache import create_url_buildcache_entry, get_valid_spec_file
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
@@ -1102,9 +1103,7 @@ def test_get_valid_spec_file(tmp_path, layout, expect_success):
         json.dump(spec_dict, f)
 
     try:
-        spec_dict_disk, layout_disk = bindist._get_valid_spec_file(
-            str(path), max_supported_layout=1
-        )
+        spec_dict_disk, layout_disk = get_valid_spec_file(str(path), max_supported_layout=1)
         assert expect_success
         assert spec_dict_disk == spec_dict
         assert layout_disk == effective_layout
@@ -1114,7 +1113,7 @@ def test_get_valid_spec_file(tmp_path, layout, expect_success):
 
 def test_get_valid_spec_file_doesnt_exist(tmp_path):
     with pytest.raises(bindist.InvalidMetadataFile, match="No such file"):
-        bindist._get_valid_spec_file(str(tmp_path / "no-such-file"), max_supported_layout=1)
+        get_valid_spec_file(str(tmp_path / "no-such-file"), max_supported_layout=1)
 
 
 def test_get_valid_spec_file_gzipped(tmp_path):
@@ -1125,14 +1124,14 @@ def test_get_valid_spec_file_gzipped(tmp_path):
     with pytest.raises(
         bindist.InvalidMetadataFile, match="Compressed spec files are not supported"
     ):
-        bindist._get_valid_spec_file(str(path), max_supported_layout=1)
+        get_valid_spec_file(str(path), max_supported_layout=1)
 
 
 @pytest.mark.parametrize("filename", ["spec.json", "spec.json.sig"])
 def test_get_valid_spec_file_no_json(tmp_path, filename):
     tmp_path.joinpath(filename).write_text("not json")
     with pytest.raises(bindist.InvalidMetadataFile):
-        bindist._get_valid_spec_file(str(tmp_path / filename), max_supported_layout=1)
+        get_valid_spec_file(str(tmp_path / filename), max_supported_layout=1)
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch", "temporary_mirror")
@@ -1159,7 +1158,7 @@ def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
         assert actual_archive_size == expected_archive_size
 
     # 1) initialize with a concrete spec and mirror url
-    build_cache = bindist.create_urlbuildcacheentry()
+    build_cache = create_url_buildcache_entry(bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     build_cache.initialize_from_spec_and_mirror(s, mirror_url)
 
     spec_dict = build_cache.fetch_metadata()
@@ -1174,7 +1173,7 @@ def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
     assert not os.path.exists(local_tarball_path)
 
     # 2) initialize with only the full spec url
-    cache_entry = bindist.create_urlbuildcacheentry()
+    cache_entry = create_url_buildcache_entry(bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     cache_entry.initialize_from_spec_url(remote_spec_url)
 
     build_cache.fetch_metadata()

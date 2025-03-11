@@ -24,6 +24,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 
 from .enums import InstallRecordStatus
+from .url_buildcache import create_url_buildcache_entry, try_verify
 
 
 def v2_tarball_directory_name(spec):
@@ -74,9 +75,7 @@ def _migrate_spec(
     print_spec = f"{s.name}/{s.dag_hash()[:7]}"
 
     # Check if the spec file exists in the new location and exit early if so
-    v3_cache_entry = bindist.create_urlbuildcacheentry(
-        layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
-    )
+    v3_cache_entry = create_url_buildcache_entry(layout_version=3)
 
     v3_cache_entry.initialize_from_spec_and_mirror(s, mirror_url)
     exists = v3_cache_entry.exists()
@@ -126,7 +125,7 @@ def _migrate_spec(
         )
         with open(local_signed_pre_verify, "w", encoding="utf-8") as fd:
             fd.write(spec_contents)
-        if not bindist.try_verify(local_signed_pre_verify):
+        if not try_verify(local_signed_pre_verify):
             return MigrateSpecResult(False, f"Failed to verify signature of {print_spec}")
         with open(local_signed_pre_verify, encoding="utf-8") as fd:
             spec_dict = spack.spec.Spec.extract_json_from_clearsig(fd.read())
@@ -138,7 +137,7 @@ def _migrate_spec(
     # Add fields new to v3 and update layout version
     spec_dict["archive_timestamp"] = datetime.datetime.now().astimezone().isoformat()
     spec_dict["archive_compression"] = "gzip"
-    spec_dict["buildcache_layout_version"] = bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+    spec_dict["buildcache_layout_version"] = 3
 
     v2_archive_url = url_util.join(mirror_url, "build_cache", v2_tarball_path_name(s, ".spack"))
     v3_archive_url = url_util.join(
