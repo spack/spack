@@ -75,8 +75,9 @@ class Postgresql(AutotoolsPackage):
     depends_on("perl+opcode", when="+perl")
     depends_on("python", when="+python")
     depends_on("libxml2", when="+xml")
-    depends_on("flex", when="@17:")
-    depends_on("bison", when="@17:")
+    depends_on("perl", when="@17:", type="build")
+    depends_on("flex", when="@17:", type="build")
+    depends_on("bison", when="@17:", type="build")
     depends_on("pkgconfig", when="+xml", type="build")
 
     @property
