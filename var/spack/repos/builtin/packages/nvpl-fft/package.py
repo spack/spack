@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from llnl.util.symlink import symlink
+import os
 
 
 class NvplFft(Package):
@@ -36,3 +38,20 @@ class NvplFft(Package):
 
     def install(self, spec, prefix):
         install_tree(".", prefix)
+
+    @property
+    def headers(self):
+        return find_all_headers(self.spec.prefix.include)
+
+    @property
+    def libs(self):
+        return find_libraries("libnvpl_fftw", self.spec.prefix.lib, shared=True, recursive=True)
+
+    @run_after("install")
+    def fix_include(self):
+        subdir = os.path.join(self.prefix.include, "nvpl_fftw")  # include/nvpl_fftw/
+        for file in os.listdir(subdir):
+            file_symlink = os.path.join(self.prefix.include, os.path.basename(file))
+            # nvpl_fft_version.h is duplicated in include/ and include/nvpl_fftw/
+            if not os.path.exists(file_symlink):
+                symlink(os.path.join(subdir, file), file_symlink)

@@ -77,6 +77,8 @@ class Spfft(CMakePackage, CudaPackage, ROCmPackage):
         when="@1.1.1",
         sha256="570f56cb1f4a3e89b8f437c945e18749052c148aa228237e72b640d3f32dd027",
     )
+    conflicts("@:1.1.0", when="^[virtuals=fftw-api] nvpl-fft")
+    conflicts("^[virtuals=fftw-api] nvpl-fft@:0.3")  # fftw3.h is not available in nvpl-fft@:0.3
 
     def cmake_args(self):
         spec = self.spec
@@ -87,6 +89,11 @@ class Spfft(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("SPFFT_GPU_DIRECT", "gpu_direct"),
             self.define_from_variant("SPFFT_FORTRAN", "fortran"),
             self.define_from_variant("SPFFT_STATIC", "static"),
+            self.define("SPFFT_FFTW_LIB", "FFTW"),
+            self.define("FFTW_INCLUDE_DIRS", spec["fftw-api"].prefix.include),
+            self.define("FFTWF_INCLUDE_DIRS", spec["fftw-api"].prefix.include),
+            self.define("FFTW_LIBRARIES", spec["fftw-api"].libs.ld_flags),
+            self.define("FFTWF_LIBRARIES", spec["fftw-api"].libs.ld_flags),
         ]
 
         if spec.satisfies("+cuda"):
@@ -110,12 +117,5 @@ class Spfft(CMakePackage, CudaPackage, ROCmPackage):
                 "-DHIP_HCC_FLAGS=--amdgpu-target={0}".format(archs),
                 "-DHIP_CXX_COMPILER={0}".format(self.spec["hip"].hipcc),
             ]
-
-        if spec.satisfies("^[virtuals=fftw-api] intel-oneapi-mkl"):
-            args += ["-DSPFFT_FFTW_LIB=MKL"]
-        elif self.spec.satisfies("@1.1.1: ^nvpl-ffw"):
-            args.append(self.define("SPFFT_FFTW_LIB", "NVPL"))
-        else:
-            args += ["-DSPFFT_FFTW_LIB=FFTW"]
 
         return args
