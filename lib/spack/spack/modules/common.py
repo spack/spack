@@ -566,9 +566,9 @@ class BaseContext(tengine.Context):
 
     @tengine.context_property
     def tags(self):
-        if not hasattr(self.conf.spec.package, "tags"):
+        if not hasattr(self.spec.package, "tags"):
             return []
-        return self.conf.spec.package.tags
+        return self.spec.package.tags
 
     @tengine.context_property
     def timestamp(self):
