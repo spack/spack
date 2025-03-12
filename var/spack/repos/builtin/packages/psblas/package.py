@@ -61,7 +61,7 @@ class Psblas(AutotoolsPackage):
     phases = ["configure", "build", "install", "samples"]
 
     # Add dependencies:
-    # Languages: Fortran for much of the library, c for the interfaces, 
+    # Languages: Fortran for much of the library, c for the interfaces,
     # c++ for the matching routines
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -78,7 +78,8 @@ class Psblas(AutotoolsPackage):
     depends_on("blas")
     depends_on("lapack")
     # CUDA
-    variant("cuda", default=False, description="Activate CUDA support", when="@development,3.9.0-rc1")
+    variant("cuda", default=False, description="Activate CUDA support",
+            when="@development,3.9.0-rc1")
     depends_on("cuda", when="+cuda")
     variant("cudacc", default="70,75,80,86,89,90", multi=True,
             description="Specify CUDA Compute Capabilities", when="+cuda")
@@ -104,12 +105,16 @@ class Psblas(AutotoolsPackage):
     variant("libs", default="none", description="Additional link flags")
     variant("clibs", default="none", description="Additional CLIBS flags")
     variant("flibs", default="none", description="Additional FLIBS flags")
-    variant("extra_nvcc", default="none", description="Additional EXTRA_NVCC flags", when="+cuda")
-    variant("extraopenacc", default="none", description="Additional EXTRAOPENACC flags", when="+openacc")
-    variant("ccopenacc", default="none", description="Additional CCOPENACC flags", when="+openacc")
-    variant("cxxopenacc", default="none", description="Additional CXXOPENACC flags", when="+openacc")
-    variant("fcopenacc", default="none", description="Additional FCOPENACC flags", when="+openacc")
-
+    variant("extra_nvcc", default="none", description="Additional EXTRA_NVCC flags",
+            when="+cuda")
+    variant("extraopenacc", default="none", description="Additional EXTRAOPENACC flags",
+            when="+openacc")
+    variant("ccopenacc", default="none", description="Additional CCOPENACC flags",
+            when="+openacc")
+    variant("cxxopenacc", default="none", description="Additional CXXOPENACC flags",
+            when="+openacc")
+    variant("fcopenacc", default="none", description="Additional FCOPENACC flags",
+            when="+openacc")
 
     def configure_args(self):
         args = [f"--prefix={self.prefix}"]
