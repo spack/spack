@@ -44,7 +44,11 @@ class Dbus(AutotoolsPackage, MesonPackage):
     version("1.8.2", sha256="5689f7411165adc953f37974e276a3028db94447c76e8dd92efe910c6d3bae08")
     # Skip function that tries to do something if you're root that doesn't work in a container.
     # Only tested on 1.15.10, but probably works for other versions as well.
-    patch('meson_post_install.patch', sha256='d121f842418af606f414ebfc523b51fdd23a2d231e73d66229a4b0ab3486edc4', when='@1.15.10')
+    patch(
+        "meson_post_install.patch",
+        sha256="d121f842418af606f414ebfc523b51fdd23a2d231e73d66229a4b0ab3486edc4",
+        when="@1.15.10",
+    )
 
     variant("xml_docs", default=False, description="Build XML documentation")
     variant("system-socket", default="default", description="Location for the DBus system socket")
