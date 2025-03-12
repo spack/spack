@@ -3308,3 +3308,29 @@ packages:
     s = spack.concretize.concretize_one(spec_str)
     libelf = s["libelf"]
     assert libelf.external and libelf.external_path == str(tmp_path / expected)
+
+
+def test_specifying_compilers_with_virtuals_syntax(default_mock_concretization):
+    """Tests that we can pin compilers to nodes using the %[virtuals=...] syntax"""
+    # clang will be used for both C and C++, since they are provided together
+    mpich = default_mock_concretization("mpich %[virtuals=fortran] gcc %clang")
+
+    assert mpich["fortran"].satisfies("gcc")
+    assert mpich["c"].satisfies("llvm")
+    assert mpich["cxx"].satisfies("llvm")
+
+    # gcc is the default compiler
+    mpileaks = default_mock_concretization(
+        "mpileaks ^libdwarf %gcc ^mpich %[virtuals=fortran] gcc %clang"
+    )
+
+    assert mpileaks["c"].satisfies("gcc")
+
+    libdwarf = mpileaks["libdwarf"]
+    assert libdwarf["c"].satisfies("gcc")
+    assert libdwarf["c"].satisfies("gcc")
+
+    mpich = mpileaks["mpi"]
+    assert mpich["fortran"].satisfies("gcc")
+    assert mpich["c"].satisfies("llvm")
+    assert mpich["cxx"].satisfies("llvm")

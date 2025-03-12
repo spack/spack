@@ -1620,12 +1620,16 @@ class Spec:
             return ""
 
         union = DependencySpec(parent=Spec(), spec=self, depflag=0, virtuals=())
+        all_direct_edges = all(x.direct for x in edges)
+
         for edge in edges:
             union.update_deptypes(edge.depflag)
             union.update_virtuals(edge.virtuals)
-        deptypes_str = (
-            f"deptypes={','.join(dt.flag_to_tuple(union.depflag))}" if union.depflag else ""
-        )
+
+        deptypes_str = ""
+        if not all_direct_edges and union.depflag:
+            deptypes_str = f"deptypes={','.join(dt.flag_to_tuple(union.depflag))}"
+
         virtuals_str = f"virtuals={','.join(union.virtuals)}" if union.virtuals else ""
         if not deptypes_str and not virtuals_str:
             return ""
@@ -2072,7 +2076,12 @@ class Spec:
         for item in sorted(direct, key=lambda x: x.spec.name):
             current_name = item.spec.name
             new_name = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(current_name, current_name)
-            parts.append(f"%{item.spec.format()}".replace(current_name, new_name))
+            # note: depflag not allowed, currently, on "direct" edges
+            edge_attributes = ""
+            if item.virtuals:
+                edge_attributes = item.spec.format("{edge_attributes}") + " "
+
+            parts.append(f"%{edge_attributes}{item.spec.format()}".replace(current_name, new_name))
         for item in sorted(transitive, key=lambda x: x.spec.name):
             # Recurse to attach build deps in order
             edge_attributes = ""
@@ -3399,7 +3408,10 @@ class Spec:
                 # name is the same as the child name
                 current_node = self
                 if rhs_edge.parent.name is not None and rhs_edge.parent.name != rhs_edge.spec.name:
-                    current_node = self[rhs_edge.parent.name]
+                    try:
+                        current_node = self[rhs_edge.parent.name]
+                    except KeyError:
+                        return False
 
                 candidates = current_node.dependencies(
                     name=rhs_edge.spec.name,
@@ -3408,6 +3420,8 @@ class Spec:
                 )
                 if not candidates or not any(x.satisfies(rhs_edge.spec) for x in candidates):
                     return False
+
+                continue
 
             if not rhs_edge.virtuals:
                 continue

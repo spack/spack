@@ -504,6 +504,9 @@ attr("node_version_satisfies", node(X, BuildDependency), Constraint) :-
 
 attr("depends_on",  node(X, Parent), node(Y, BuildDependency), "build") :- build_requirement(node(X, Parent), node(Y, BuildDependency)).
 
+1 { attr("provider_set", node(X, BuildDependency), node(0..Y-1, Virtual)) : max_dupes(Virtual, Y) } 1 :-
+  attr("build_requirement", ParentNode, build_requirement("provider_set", BuildDependency, Virtual)),
+  build_requirement(ParentNode, node(X, BuildDependency)).
 
 % Reconstruct virtual dependencies for reused specs
 attr("virtual_on_edge", node(X, A1), node(Y, A2), Virtual)
@@ -712,8 +715,8 @@ attr("virtual_on_incoming_edges", ProviderNode, Virtual)
 % The provider must be selected among the possible providers.
 
 error(100, "'{0}' cannot be a provider for the '{1}' virtual", Package, Virtual)
-  :-  attr("provider_set", node(min_dupe_id, Package), node(min_dupe_id, Virtual)),
-      not virtual_condition_holds( node(min_dupe_id, Package), Virtual).
+  :-  attr("provider_set", node(X, Package), node(Y, Virtual)),
+      not virtual_condition_holds( node(X, Package), Virtual).
 
 error(100, "Cannot find valid provider for virtual {0}", Virtual)
   :- attr("virtual_node", node(X, Virtual)),

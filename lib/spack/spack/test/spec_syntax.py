@@ -603,6 +603,42 @@ def specfile_for(default_mock_concretization):
             ],
             "zlib foo==bar",
         ),
+        # Compilers specifying virtuals
+        (
+            "zlib %[virtuals=c] gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(SpecTokens.COMPILER_WITH_VIRTUALS, "%[virtuals=c] gcc"),
+            ],
+            "zlib %[virtuals=c] gcc",
+        ),
+        (
+            "zlib %[virtuals=c,cxx] gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(SpecTokens.COMPILER_WITH_VIRTUALS, "%[virtuals=c,cxx] gcc"),
+            ],
+            "zlib %[virtuals=c,cxx] gcc",
+        ),
+        (
+            "zlib %[virtuals=c,cxx] gcc@14.1",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS, "%[virtuals=c,cxx] gcc@14.1"),
+            ],
+            "zlib %[virtuals=c,cxx] gcc@14.1",
+        ),
+        (
+            "zlib %[virtuals=fortran] gcc@14.1 %[virtuals=c,cxx] clang",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(
+                    SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS, "%[virtuals=fortran] gcc@14.1"
+                ),
+                Token(SpecTokens.COMPILER_WITH_VIRTUALS, "%[virtuals=c,cxx] clang"),
+            ],
+            "zlib %[virtuals=fortran] gcc@14.1 %[virtuals=c,cxx] clang",
+        ),
     ],
 )
 def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_package):

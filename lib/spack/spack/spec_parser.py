@@ -102,6 +102,9 @@ VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VER
 #: Regex with groups to use for splitting (optionally propagated) key-value pairs
 SPLIT_KVP = re.compile(rf"^({NAME})(==?)(.*)$")
 
+#: Regex with groups to use for splitting %[virtuals=...] tokens
+SPLIT_COMPILER_TOKEN = re.compile(rf"^%\[virtuals=({VALUE}|{QUOTED_VALUE})]\s*(.*)$")
+
 #: A filename starts either with a "." or a "/" or a "{name}/, or on Windows, a drive letter
 #: followed by a colon and "\" or "." or {name}\
 WINDOWS_FILENAME = r"(?:\.|[a-zA-Z0-9-_]*\\|[a-zA-Z]:\\)(?:[a-zA-Z0-9-_\.\\]*)(?:\.json|\.yaml)"
@@ -137,6 +140,11 @@ class SpecTokens(TokenBase):
     # Compilers
     COMPILER_AND_VERSION = rf"(?:%\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
     COMPILER = rf"(?:%\s*(?:{NAME}))"
+    COMPILER_AND_VERSION_WITH_VIRTUALS = (
+        rf"(?:%\[virtuals=(?:{VALUE}|{QUOTED_VALUE})\]"
+        rf"\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
+    )
+    COMPILER_WITH_VIRTUALS = rf"(?:%\[virtuals=(?:{VALUE}|{QUOTED_VALUE})\]\s*(?:{NAME}))"
     # FILENAME
     FILENAME = rf"(?:{FILENAME})"
     # Package name
@@ -376,15 +384,31 @@ class SpecNodeParser:
                 parser_warnings.append(f"`{token}` should go before `{last_compiler}`")
 
         while True:
-            if self.ctx.accept(SpecTokens.COMPILER) or self.ctx.accept(
-                SpecTokens.COMPILER_AND_VERSION
+            if (
+                self.ctx.accept(SpecTokens.COMPILER)
+                or self.ctx.accept(SpecTokens.COMPILER_AND_VERSION)
+                or self.ctx.accept(SpecTokens.COMPILER_WITH_VIRTUALS)
+                or self.ctx.accept(SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS)
             ):
-                build_dependency = spack.spec.Spec(self.ctx.current_token.value[1:])
+                current_token = self.ctx.current_token
+                if current_token.kind in (
+                    SpecTokens.COMPILER_WITH_VIRTUALS,
+                    SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS,
+                ):
+                    m = SPLIT_COMPILER_TOKEN.match(current_token.value)
+                    assert m, "SPLIT_COMPILER_TOKEN and COMPILER_* do not agree."
+                    virtuals_str, compiler_str = m.groups()
+                    virtuals = tuple(virtuals_str.strip("'\" ").split(","))
+                else:
+                    virtuals = tuple()
+                    compiler_str = current_token.value[1:]
+
+                build_dependency = spack.spec.Spec(compiler_str)
                 if build_dependency.name in LEGACY_COMPILER_TO_BUILTIN:
                     build_dependency.name = LEGACY_COMPILER_TO_BUILTIN[build_dependency.name]
 
                 initial_spec._add_dependency(
-                    build_dependency, depflag=spack.deptypes.BUILD, virtuals=(), direct=True
+                    build_dependency, depflag=spack.deptypes.BUILD, virtuals=virtuals, direct=True
                 )
                 last_compiler = self.ctx.current_token.value
 
