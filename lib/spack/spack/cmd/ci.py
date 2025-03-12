@@ -7,7 +7,6 @@ import os
 import re
 import shutil
 import sys
-import tempfile
 from typing import Dict
 from urllib.parse import urlparse, urlunparse
 
@@ -22,6 +21,7 @@ import spack.cmd.buildcache as buildcache
 import spack.cmd.common.arguments
 import spack.config as cfg
 import spack.environment as ev
+import spack.fetch_strategy
 import spack.hash_types as ht
 import spack.mirrors.mirror
 import spack.paths
@@ -33,7 +33,6 @@ import spack.util.gpg as gpg_util
 import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
-import spack.fetch_strategy
 from spack.package_base import PackageBase
 from spack.util.executable import ProcessError
 from spack.version import StandardVersion, VersionList
@@ -736,7 +735,9 @@ def validate_git_versions(pkg: PackageBase, versions: VersionList) -> bool:
                 tag = pkg.versions[version]["tag"]
                 try:
                     with fs.working_dir(stage.source_path):
-                        found_commit = fetcher.git("rev-list", "-n", "1", tag, output=str, error=str).strip()
+                        found_commit = fetcher.git(
+                            "rev-list", "-n", "1", tag, output=str, error=str
+                        ).strip()
                 except ProcessError:
                     tty.error(
                         f"Invalid tag for {pkg.name}@{version}\n"
