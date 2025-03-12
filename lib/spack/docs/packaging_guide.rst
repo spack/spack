@@ -2781,7 +2781,8 @@ Spack makes it possible to express such constraints with the ``conflicts`` direc
 The directive supports the optional ``when`` clause, which means the conflict
 applies only to the spec indicated by the value of the clause's argument. The
 syntax and spec options for the argument are consistent with those of other
-directives.
+directives and can include constraints on the compiler, version, variants,
+architecture, dependencies, etc. of the spec.
 
 An optional custom error message can be added via the ``msg=`` parameter, and
 will be printed by Spack in case the conflict cannot be avoided and leads to a
@@ -2801,12 +2802,24 @@ Adding the following to a package:
 expresses the fact that the current package *cannot be built* with the Intel
 compiler when we are trying to install a version "<=1.2".
 
-If the ``when`` argument is omitted then conflict will always be active.
+A conflict with the ``when`` argument omitted means the conflict is always
+active for specs matching the first argument. For example,
 
-.. note::
+.. code-block:: python
 
-    More examples of conflicts using the ``when`` clause can be found in
-    :ref:`group_when_spec`.
+    conflicts("+cuda+rocm", msg="Cannot build with both +cuda and +rocm"))
+
+means the package cannot be installed when both variants are enabled.
+
+Similarly,
+
+.. code-block:: python
+
+    for os in ["ventura", "monterey", "bigsur"]:
+        conflicts(f"platform=darwin os={os}", msg=f"{os} is not supported")
+
+expresses that the package cannot be built on a Mac running Ventura, Monterey,
+or Big Sur.
 
 Sometimes, packages allow only very specific choices and they can't use the rest. In those cases
 the ``requires`` directive can be used:
