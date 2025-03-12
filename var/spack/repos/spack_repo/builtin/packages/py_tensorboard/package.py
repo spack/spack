@@ -21,6 +21,7 @@ class PyTensorboard(PythonPackage):
     license("Apache-2.0")
     maintainers("aweits")
 
+    version("2.19.0", sha256="5e71b98663a641a7ce8a6e70b0be8e1a4c0c45d48760b076383ac4755c35b9a0")
     version("2.18.0", sha256="107ca4821745f73e2aefa02c50ff70a9b694f39f790b11e6f682f7d326745eab")
     version("2.17.1", sha256="253701a224000eeca01eee6f7e978aea7b408f60b91eb0babdb04e78947b773e")
     version("2.17.0", sha256="859a499a9b1fb68a058858964486627100b71fcb21646861c61d31846a6478fb")

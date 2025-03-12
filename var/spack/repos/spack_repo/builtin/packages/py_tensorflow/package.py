@@ -50,6 +50,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     maintainers("adamjstewart", "aweits")
     tags = ["e4s"]
 
+    version("2.19.0", sha256="4691b18e8c914cdf6759b80f1b3b7f3e17be41099607ed0143134f38836d058e")
+    version("2.18.1", sha256="467c512b631e72ad5c9d5c16b23669bcf89675de630cfbb58f9dde746d34afa8")
     version(
         "2.18.0-rocm-enhanced",
         sha256="85f44bed166927b2e22db28f5c4e4538da22221fedd9c2f47c763c52a0e40814",
@@ -328,13 +330,14 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             depends_on("py-grpcio@1.32", when="@2.4")
             depends_on("py-grpcio@1.8.6:", when="@:2.3")
 
-        for minor_ver in range(2, 19):
+        for minor_ver in range(2, 20):
             depends_on("py-tensorboard@2.{}".format(minor_ver), when="@2.{}".format(minor_ver))
 
         # TODO: support circular run-time dependencies
         # depends_on('py-keras')
 
-        depends_on("py-numpy@1.26:2.0", when="@2.18:")
+        depends_on("py-numpy@1.26:2.1", when="@2.19:")
+        depends_on("py-numpy@1.26:2.0", when="@2.18")
         depends_on("py-numpy@1.23.5:", when="@2.14:2.17")
         depends_on("py-numpy@1.22:1.24.3", when="@2.13")
         depends_on("py-numpy@1.22:1.23", when="@2.12")
@@ -356,7 +359,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         depends_on("py-h5py~mpi", when="@2.1.3:~mpi")
         depends_on("hdf5+mpi", when="@2.1.3:+mpi")
         depends_on("hdf5~mpi", when="@2.1.3:~mpi")
-        depends_on("py-ml-dtypes@0.4", when="@2.18:")
+        depends_on("py-ml-dtypes@0.5.1:0", when="@2.19:")
+        depends_on("py-ml-dtypes@0.4", when="@2.18")
         depends_on("py-ml-dtypes@0.3.1:0.4", when="@2.17")
         depends_on("py-ml-dtypes@0.3.1:0.3", when="@2.15.1:2.16")
         depends_on("py-ml-dtypes@0.2", when="@2.15.0")
