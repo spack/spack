@@ -175,15 +175,17 @@ HASH_COLOR = "@K"  #: color for highlighting package hashes
 #:     Spec(Spec("string").format()) == Spec("string)"
 DEFAULT_FORMAT = (
     "{name}{@versions}"
-    "{%compiler.name}{@compiler.versions}{compiler_flags}"
+    "{compiler_flags}"
     "{variants}{ namespace=namespace_if_anonymous}{ arch=architecture}{/abstract_hash}"
+    " {%compiler.name}{@compiler.versions}"
 )
 
 #: Display format, which eliminates extra `@=` in the output, for readability.
 DISPLAY_FORMAT = (
     "{name}{@version}"
-    "{%compiler.name}{@compiler.version}{compiler_flags}"
+    "{compiler_flags}"
     "{variants}{ namespace=namespace_if_anonymous}{ arch=architecture}{/abstract_hash}"
+    " {%compiler.name}{@compiler.version}"
 )
 
 #: Regular expression to pull spec contents out of clearsigned signature
@@ -2106,16 +2108,18 @@ class Spec:
     def short_spec(self):
         """Returns a version of the spec with the dependencies hashed
         instead of completely enumerated."""
-        spec_format = "{name}{@version}{%compiler.name}{@compiler.version}"
-        spec_format += "{variants}{ arch=architecture}{/hash:7}"
-        return self.format(spec_format)
+        return self.format(
+            "{name}{@version}{variants}{ arch=architecture}"
+            "{/hash:7}{%compiler.name}{@compiler.version}"
+        )
 
     @property
     def cshort_spec(self):
         """Returns an auto-colorized version of ``self.short_spec``."""
-        spec_format = "{name}{@version}{%compiler.name}{@compiler.version}"
-        spec_format += "{variants}{ arch=architecture}{/hash:7}"
-        return self.cformat(spec_format)
+        return self.cformat(
+            "{name}{@version}{variants}{ arch=architecture}"
+            "{/hash:7}{%compiler.name}{@compiler.version}"
+        )
 
     @property
     def prefix(self) -> spack.util.prefix.Prefix:
@@ -5295,8 +5299,10 @@ class UnconstrainableDependencySpecError(spack.error.SpecError):
 
 class AmbiguousHashError(spack.error.SpecError):
     def __init__(self, msg, *specs):
-        spec_fmt = "{namespace}.{name}{@version}{%compiler}{compiler_flags}"
-        spec_fmt += "{variants}{ arch=architecture}{/hash:7}"
+        spec_fmt = (
+            "{namespace}.{name}{@version}{compiler_flags}{variants}"
+            "{ arch=architecture}{/hash:7}{%compiler}"
+        )
         specs_str = "\n  " + "\n  ".join(spec.format(spec_fmt) for spec in specs)
         super().__init__(msg + specs_str)
 

@@ -165,7 +165,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.COMPILER_AND_VERSION, value="%bar@1.0"),
                 Token(SpecTokens.VERSION, value="@2.0"),
             ],
-            "foo@2.0%bar@1.0",
+            "foo@2.0 %bar@1.0",
         ),
         # Single dependency with version
         dependency_with_version("openmpi ^hwloc@1.2e6"),
@@ -187,7 +187,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(SpecTokens.VERSION, value="@8.1_1e"),
             ],
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4 ^stackwalker@8.1_1e",
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6+debug~qt_4 %intel@12.1 ^stackwalker@8.1_1e",
         ),
         (
             "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2 ^stackwalker@8.1_1e",
@@ -203,7 +203,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(SpecTokens.VERSION, value="@8.1_1e"),
             ],
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2 ^stackwalker@8.1_1e",
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6~qt_4 debug=2 %intel@12.1 ^stackwalker@8.1_1e",
         ),
         (
             "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags=-O3 +debug~qt_4 "
@@ -221,7 +221,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(SpecTokens.VERSION, value="@8.1_1e"),
             ],
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags=-O3 +debug~qt_4 "
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6 cppflags=-O3 +debug~qt_4 %intel@12.1 "
             "^stackwalker@8.1_1e",
         ),
         # Specs containing YAML or JSON in the package name
@@ -235,7 +235,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="boost"),
                 Token(SpecTokens.VERSION, value="@3.1.4"),
             ],
-            "yaml-cpp@0.1.8%intel@12.1 ^boost@3.1.4",
+            "yaml-cpp@0.1.8 %intel@12.1 ^boost@3.1.4",
         ),
         (
             r"builtin.yaml-cpp%gcc",
@@ -243,7 +243,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME, value="builtin.yaml-cpp"),
                 Token(SpecTokens.COMPILER, value="%gcc"),
             ],
-            "yaml-cpp%gcc",
+            "yaml-cpp %gcc",
         ),
         (
             r"testrepo.yaml-cpp%gcc",
@@ -251,7 +251,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME, value="testrepo.yaml-cpp"),
                 Token(SpecTokens.COMPILER, value="%gcc"),
             ],
-            "yaml-cpp%gcc",
+            "yaml-cpp %gcc",
         ),
         (
             r"builtin.yaml-cpp@0.1.8%gcc@7.2.0 ^boost@3.1.4",
@@ -263,7 +263,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="boost"),
                 Token(SpecTokens.VERSION, value="@3.1.4"),
             ],
-            "yaml-cpp@0.1.8%gcc@7.2.0 ^boost@3.1.4",
+            "yaml-cpp@0.1.8 %gcc@7.2.0 ^boost@3.1.4",
         ),
         (
             r"builtin.yaml-cpp ^testrepo.boost ^zlib",
@@ -490,7 +490,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.COMPILER_AND_VERSION, value="% intel @ 12.1:12.6"),
                 Token(SpecTokens.BOOL_VARIANT, value="+ debug"),
             ],
-            "%intel@12.1:12.6+debug",
+            "+debug %intel@12.1:12.6",
         ),
         (
             "@ 12.1:12.6 + debug - qt_4",
@@ -515,7 +515,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.VERSION, value="@:0.4"),
                 Token(SpecTokens.COMPILER, value="% nvhpc"),
             ],
-            "@:0.4%nvhpc",
+            "@:0.4 %nvhpc",
         ),
         (
             "^[virtuals=mpi] openmpi",
