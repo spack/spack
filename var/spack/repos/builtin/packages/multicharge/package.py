@@ -19,6 +19,7 @@ class Multicharge(CMakePackage, MesonPackage):
 
     build_system("cmake", "meson", default="meson")
 
+    version("0.3.1", sha256="180541714c26804a2d66edd892c8cd4cb40a21acbaf7edb24aaf04d580368b97")
     version("0.3.0", sha256="e8f6615d445264798b12d2854e25c93938373dc149bb79e6eddd23fc4309749d")
 
     variant("openmp", default=True, description="Enable OpenMP support")
@@ -26,6 +27,12 @@ class Multicharge(CMakePackage, MesonPackage):
     depends_on("lapack")
     depends_on("mctc-lib build_system=cmake", when="build_system=cmake")
     depends_on("mctc-lib build_system=meson", when="build_system=meson")
+
+    def url_for_version(self, version):
+        if self.spec.satisfies("@:0.3.0"):
+            return f"https://github.com/grimme-lab/multicharge/releases/download/v{version}/multicharge-{version}.tar.xz"
+        else:
+            return f"https://github.com/grimme-lab/multicharge/releases/download/v{version}/multicharge-{version}-source.tar.xz"
 
 
 class CMakeBuilder(cmake.CMakeBuilder):

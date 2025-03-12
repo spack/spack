@@ -20,8 +20,9 @@ ci:
         - k=$CI_GPG_KEY_ROOT/intermediate_ci_signing_key.gpg; [[ -r $k ]] && spack gpg trust $k
         - k=$CI_GPG_KEY_ROOT/spack_public_key.gpg; [[ -r $k ]] && spack gpg trust $k
       script::
-      - - spack config blame mirrors
-        - spack --color=always --backtrace ci rebuild -j ${SPACK_BUILD_JOBS} --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+      - - if [ -n "$SPACK_EXTRA_MIRROR" ]; then spack mirror add local "$SPACK_EXTRA_MIRROR"; fi
+        - spack config blame mirrors
+      - - spack --color=always --backtrace ci rebuild -j ${SPACK_BUILD_JOBS} --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
       after_script:
       - - cat /proc/loadavg || true
         - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true

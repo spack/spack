@@ -5,8 +5,6 @@
 import os
 import sys
 
-from llnl.util.filesystem import find_first
-
 import spack.build_systems.autotools
 import spack.build_systems.nmake
 from spack.package import *
@@ -183,6 +181,12 @@ class AnyBuilder(BaseBuilder):
 
 class AutotoolsBuilder(AnyBuilder, spack.build_systems.autotools.AutotoolsBuilder):
     configure_directory = "unix"
+
+    # if TCL is present on the system this may be set to the system's
+    # existing TCL so ensure it is unset
+    # https://wiki.tcl-lang.org/page/TCL%5FLIBRARY
+    def setup_build_environment(self, env):
+        env.set("TCL_LIBRARY", "")
 
     def install(self, pkg, spec, prefix):
         with working_dir(self.build_directory):

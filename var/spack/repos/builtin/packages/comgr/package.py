@@ -29,6 +29,7 @@ class Comgr(CMakePackage):
     license("NCSA")
 
     version("master", branch="amd-stg-open")
+    version("6.3.2", sha256="1f52e45660ea508d3fe717a9903fe27020cee96de95a3541434838e0193a4827")
     version("6.3.1", sha256="e9c2481cccacdea72c1f8d3970956c447cec47e18dfb9712cbbba76a2820552c")
     version("6.3.0", sha256="79580508b039ca6c50dfdfd7c4f6fbcf489fe1931037ca51324818851eea0c1c")
     version("6.2.4", sha256="7af782bf5835fcd0928047dbf558f5000e7f0207ca39cf04570969343e789528")
@@ -88,6 +89,7 @@ class Comgr(CMakePackage):
         "6.2.4",
         "6.3.0",
         "6.3.1",
+        "6.3.2",
         "master",
     ]:
         # llvm libs are linked statically, so this *could* be a build dep
@@ -115,6 +117,7 @@ class Comgr(CMakePackage):
         "6.2.4",
         "6.3.0",
         "6.3.1",
+        "6.3.2",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
@@ -132,6 +135,15 @@ class Comgr(CMakePackage):
         if self.spec.satisfies("@5.7:"):
             args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
         return args
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("@5.7: +asan"):
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     @classmethod
     def determine_version(cls, lib):

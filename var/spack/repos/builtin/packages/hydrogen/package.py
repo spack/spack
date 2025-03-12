@@ -15,7 +15,10 @@ from spack.package import *
 
 class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     """Hydrogen: Distributed-memory dense and sparse-direct linear algebra
-    and optimization library. Based on the Elemental library."""
+    and optimization library.
+
+    Based on the Elemental library.
+    """
 
     homepage = "https://libelemental.org"
     url = "https://github.com/LLNL/Elemental/archive/v1.5.1.tar.gz"
@@ -31,8 +34,8 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("1.5.2", sha256="a902cad3962471216cfa278ba0561c18751d415cd4d6b2417c02a43b0ab2ea33")
     version("1.5.1", sha256="447da564278f98366906d561d9c8bc4d31678c56d761679c2ff3e59ee7a2895c")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     # Older versions are no longer supported.
 
     variant("shared", default=True, description="Enables the build of shared libraries.")
@@ -71,13 +74,6 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         description="Use OpenMP taskloops instead of parallel for loops",
     )
 
-    # Users should spec this on their own on the command line, no?
-    # This doesn't affect Hydrogen itself at all. Not one bit.
-    # variant(
-    #     "openmp_blas",
-    #     default=False,
-    #     description="Use OpenMP for threading in the BLAS library")
-
     variant("test", default=False, description="Builds test suite")
 
     conflicts("+cuda", when="+rocm", msg="CUDA and ROCm support are mutually exclusive")
@@ -90,22 +86,25 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("blas")
     depends_on("lapack")
 
-    # Note that #1712 forces us to enumerate the different blas variants
-    # Note that this forces us to use OpenBLAS until #1712 is fixed
-    depends_on("openblas", when="blas=openblas")
-    depends_on("openblas +ilp64", when="blas=openblas +int64_blas")
-    depends_on("openblas@0.3.21:0.3.23", when="blas=openblas arch=ppc64le:")
+    with when("blas=openblas"):
+        requires("^[virtuals=blas,lapack] openblas")
+        requires("^[virtuals=blas,lapack] openblas~ilp64", when="~int64_blas")
+        requires("^[virtuals=blas,lapack] openblas+ilp64", when="+int64_blas")
+        requires("^[virtuals=blas,lapack] openblas@0.3.21:0.3.23", when="arch=ppc64le:")
 
-    depends_on("intel-mkl", when="blas=mkl")
-    depends_on("intel-mkl +ilp64", when="blas=mkl +int64_blas")
+    with when("blas=mkl"):
+        requires("^[virtuals=blas,lapack] intel-oneapi-mkl")
+        requires("^[virtuals=blas,lapack] intel-oneapi-mkl ~ilp64", when="~int64_blas")
+        requires("^[virtuals=blas,lapack] intel-oneapi-mkl +ilp64", when="+int64_blas")
 
     # I don't think this is true...
     depends_on("veclibfort", when="blas=accelerate")
 
-    depends_on("essl", when="blas=essl")
-    depends_on("essl +ilp64", when="blas=essl +int64_blas")
-
-    depends_on("netlib-lapack +external-blas", when="blas=essl")
+    with when("blas=essl"):
+        requires("^[virtuals=blas] essl")
+        requires("^[virtuals=blas] essl ~ilp64", when="~int64_blas")
+        requires("^[virtuals=blas] essl +ilp64", when="+int64_blas")
+        requires("^[virtuals=lapack] netlib-lapack +external-blas")
 
     depends_on("cray-libsci", when="blas=libsci")
 
@@ -117,14 +116,12 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("aluminum +rocm +ht", when="+al +rocm")
 
     for arch in CudaPackage.cuda_arch_values:
-        depends_on("aluminum +cuda cuda_arch=%s" % arch, when="+al +cuda cuda_arch=%s" % arch)
+        depends_on(f"aluminum +cuda cuda_arch={arch}", when=f"+al +cuda cuda_arch={arch}")
 
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
     for val in ROCmPackage.amdgpu_targets:
-        depends_on(
-            "aluminum +rocm amdgpu_target=%s" % val, when="+al +rocm amdgpu_target=%s" % val
-        )
+        depends_on(f"aluminum +rocm amdgpu_target={val}", when=f"+al +rocm amdgpu_target={val}")
 
     depends_on("cuda@11.0.0:", when="+cuda")
     depends_on("hipcub +rocm", when="+rocm +cub")
@@ -142,8 +139,7 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         return find_libraries("libHydrogen", root=self.prefix, shared=shared, recursive=True)
 
     def cmake_args(self):
-        args = []
-        return args
+        return []
 
     def get_cuda_flags(self):
         spec = self.spec
@@ -188,9 +184,7 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_string("OpenMP_CXX_FLAGS", "-fopenmp=libomp"))
             entries.append(cmake_cache_string("OpenMP_CXX_LIB_NAMES", "libomp"))
             entries.append(
-                cmake_cache_string(
-                    "OpenMP_libomp_LIBRARY", "{0}/lib/libomp.dylib".format(clang_root)
-                )
+                cmake_cache_string("OpenMP_libomp_LIBRARY", f"{clang_root}/lib/libomp.dylib")
             )
 
         return entries
@@ -259,9 +253,9 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
             )
             # CMAKE_PREFIX_PATH should handle this
             entries.append(cmake_cache_string("OpenBLAS_DIR", spec["openblas"].prefix))
-        elif spec.satisfies("blas=mkl") or spec.satisfies("^intel-mkl"):
+        elif spec.satisfies("blas=mkl"):
             entries.append(cmake_cache_option("Hydrogen_USE_MKL", True))
-        elif spec.satisfies("blas=essl") or spec.satisfies("^essl"):
+        elif spec.satisfies("blas=essl"):
             entries.append(cmake_cache_string("BLA_VENDOR", "IBMESSL"))
             # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
             entries.append(
@@ -280,7 +274,7 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
             )
         elif spec.satisfies("blas=accelerate"):
             entries.append(cmake_cache_option("Hydrogen_USE_ACCELERATE", True))
-        elif spec.satisfies("^netlib-lapack"):
+        elif spec.satisfies("^[virtuals=blas,lapack] netlib-lapack"):
             entries.append(cmake_cache_string("BLA_VENDOR", "Generic"))
 
         return entries

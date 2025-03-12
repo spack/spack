@@ -52,10 +52,12 @@ spack:
   packages:
     acfl:
       require:
-      - '%gcc target=aarch64'
+      - "%gcc"
+      - "target=aarch64"
     gromacs:
       require:
-      - gromacs@2024.3 %gcc ^armpl-gcc ^openmpi
+      - gromacs@2024.3 ^armpl-gcc ^openmpi
+      - "%gcc"
     libfabric:
       buildable: true
       externals:
@@ -67,13 +69,14 @@ spack:
       variants: ~lldb
     mpas-model:
       require:
-      - precision=single %gcc ^parallelio+pnetcdf
+      - precision=single ^parallelio+pnetcdf
+      - "%gcc"
     mpich:
       require:
       - mpich pmi=pmi2 device=ch4 netmod=ofi +slurm
     nvhpc:
       require:
-      - nvhpc %gcc target=aarch64
+      - "target=aarch64"
     openfoam:
       require:
       - openfoam ^scotch@6.0.9
@@ -85,7 +88,7 @@ spack:
     #   require:
     #     - one_of: ["palace cxxflags=\"-include cstdint\" ^fmt@9.1.0"]
     pmix:
-      require: 'pmix@3:'
+      require: "pmix@3:"
     quantum-espresso:
       require:
       - quantum-espresso@6.6 %gcc ^armpl-gcc

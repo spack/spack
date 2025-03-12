@@ -21,6 +21,7 @@ class Fish(CMakePackage):
     license("GPL-2.0-only")
 
     version("master", branch="master")
+    version("4.0.0", sha256="2fda5bd970357064d8d4c896e08285ba59965ca2a8c4829ca8a82bf3b89c69f3")
     version("3.7.1", sha256="614c9f5643cd0799df391395fa6bbc3649427bb839722ce3b114d3bbc1a3b250")
     version("3.7.0", sha256="df1b7378b714f0690b285ed9e4e58afe270ac98dbc9ca5839589c1afcca33ab1")
     version("3.6.4", sha256="0f3f610e580de092fbe882c8aa76623ecf91bb16fdf0543241e6e90d5d4bc393")
@@ -35,19 +36,24 @@ class Fish(CMakePackage):
     version("3.1.0", sha256="e5db1e6839685c56f172e1000c138e290add4aa521f187df4cd79d4eab294368")
     version("3.0.0", sha256="ea9dd3614bb0346829ce7319437c6a93e3e1dfde3b7f6a469b543b0d2c68f2cf")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("docs", default=False, description="Build documentation")
 
     # https://github.com/fish-shell/fish-shell#dependencies-1
+    depends_on("rust@1.70:", when="@4:")
+    depends_on("cmake@3.15:", when="@4:", type="build")
     depends_on("cmake@3.5:", when="@3.4:", type="build")
     depends_on("cmake@3.2:", type="build")
-    depends_on("ncurses")
+    depends_on("c", when="@4:", type="build")
     depends_on("pcre2@10.21:")
     depends_on("gettext")
     depends_on("py-sphinx", when="+docs", type="build")
-    depends_on("python@3.3:", type="test")
+    depends_on("python", type="test")
+    depends_on("tmux", when="@4:", type="test")
     depends_on("py-pexpect", type="test")
+
+    # Historical dependencies
+    depends_on("cxx", when="@:3", type="build")
+    depends_on("ncurses", when="@:3")
 
     # https://github.com/fish-shell/fish-shell/issues/7310
     patch("codesign.patch", when="@3.1.2 platform=darwin")
@@ -68,20 +74,5 @@ class Fish(CMakePackage):
             ext = "xz"
         return url.format(version, ext)
 
-    def setup_build_environment(self, env):
-        env.append_flags("LDFLAGS", self.spec["ncurses"].libs.link_flags)
-
     def cmake_args(self):
-        args = [
-            "-DBUILD_SHARED_LIBS=ON",
-            "-DMAC_CODESIGN_ID=OFF",
-            "-DPCRE2_LIB=" + self.spec["pcre2"].libs[0],
-            "-DPCRE2_INCLUDE_DIR=" + self.spec["pcre2"].headers.directories[0],
-        ]
-
-        if self.spec.satisfies("+docs"):
-            args.append("-DBUILD_DOCS=ON")
-        else:
-            args.append("-DBUILD_DOCS=OFF")
-
-        return args
+        return [self.define_from_variant("BUILD_DOCS", "docs")]

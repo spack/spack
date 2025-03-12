@@ -220,10 +220,8 @@ class SuiteSparse(Package):
             make_args += [f"CFLAGS+={self.compiler.c11_flag}"]
 
         # 64bit blas in UMFPACK:
-        if (
-            spec.satisfies("^openblas+ilp64")
-            or spec.satisfies("^intel-mkl+ilp64")
-            or spec.satisfies("^intel-parallel-studio+mkl+ilp64")
+        if spec.satisfies("^[virtuals=lapack] openblas+ilp64") or spec.satisfies(
+            "^[virtuals=lapack] intel-oneapi-mkl+ilp64"
         ):
             make_args.append('UMFPACK_CONFIG=-DLONGBLAS="long long"')
 

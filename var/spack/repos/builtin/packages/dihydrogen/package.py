@@ -8,33 +8,31 @@ from spack.package import *
 
 
 # This is a hack to get around some deficiencies in Hydrogen.
-def get_blas_entries(inspec):
+def get_blas_entries(dyhidrogen_spec):
     entries = []
-    spec = inspec["hydrogen"]
+    spec = dyhidrogen_spec["hydrogen"]
     if spec.satisfies("blas=openblas"):
         entries.append(cmake_cache_option("DiHydrogen_USE_OpenBLAS", True))
-    elif "blas=mkl" in spec or spec.satisfies("^intel-mkl"):
+    elif spec.satisfies("blas=mkl"):
         entries.append(cmake_cache_option("DiHydrogen_USE_MKL", True))
-    elif "blas=essl" in spec or spec.satisfies("^essl"):
+    elif spec.satisfies("blas=essl"):
         entries.append(cmake_cache_string("BLA_VENDOR", "IBMESSL"))
         # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
         entries.append(
             cmake_cache_string(
                 "LAPACK_LIBRARIES",
-                "%s;-llapack;-lblas"
-                % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names),
+                f"{';'.join(f'-l{lib}' for lib in spec['essl'].libs.names)};-llapack;-lblas",
             )
         )
         entries.append(
             cmake_cache_string(
                 "BLAS_LIBRARIES",
-                "%s;-lblas"
-                % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names),
+                f"{';'.join(f'-l{lib}' for lib in spec['essl'].libs.names)};-lblas",
             )
         )
     elif spec.satisfies("blas=accelerate"):
         entries.append(cmake_cache_option("DiHydrogen_USE_ACCELERATE", True))
-    elif spec.satisfies("^netlib-lapack"):
+    elif spec.satisfies("^[virtuals=blas,lapack] netlib-lapack"):
         entries.append(cmake_cache_string("BLA_VENDOR", "Generic"))
     return entries
 
