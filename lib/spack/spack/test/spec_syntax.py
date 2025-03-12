@@ -21,6 +21,7 @@ from spack.spec_parser import (
     SpecParsingError,
     SpecTokenizationError,
     SpecTokens,
+    parse_one_or_raise,
 )
 from spack.tokenize import Token
 
@@ -1285,3 +1286,19 @@ def test_git_ref_spec_equivalences(mock_packages, lhs_str, rhs_str, expected):
 def test_platform_is_none_if_not_present(spec_str):
     s = SpecParser(spec_str).next_spec()
     assert s.architecture.platform is None, s
+
+
+def test_parse_one_or_raise_error_message():
+    with pytest.raises(ValueError) as exc:
+        parse_one_or_raise("  x y   z")
+
+    msg = """\
+expected a single spec, but got more:
+  x y   z
+    ^\
+"""
+
+    assert str(exc.value) == msg
+
+    with pytest.raises(ValueError, match="expected a single spec, but got none"):
+        parse_one_or_raise("    ")

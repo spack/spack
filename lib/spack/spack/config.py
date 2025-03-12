@@ -65,6 +65,7 @@ import spack.schema.view
 import spack.util.remote_file_cache as rfc_util
 import spack.util.spack_yaml as syaml
 from spack.util.cpus import cpus_available
+from spack.util.spack_yaml import get_mark_from_yaml_data
 
 from .enums import ConfigScopePriority
 
@@ -1594,28 +1595,6 @@ def create_from(*scopes_or_paths: Union[ScopeWithOptionalPriority, str]) -> Conf
     for priority, scope in scopes_with_priority:
         result.push_scope(scope, priority=priority)
     return result
-
-
-def get_mark_from_yaml_data(obj):
-    """Try to get ``spack.util.spack_yaml`` mark from YAML data.
-
-    We try the object, and if that fails we try its first member (if it's a container).
-
-    Returns:
-        mark if one is found, otherwise None.
-    """
-    # mark of object itelf
-    mark = getattr(obj, "_start_mark", None)
-    if mark:
-        return mark
-
-    # mark of first member if it is a container
-    if isinstance(obj, (list, dict)):
-        first_member = next(iter(obj), None)
-        if first_member:
-            mark = getattr(first_member, "_start_mark", None)
-
-    return mark
 
 
 def determine_number_of_jobs(
