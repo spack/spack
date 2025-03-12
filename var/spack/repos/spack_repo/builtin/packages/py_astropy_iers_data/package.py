@@ -17,6 +17,10 @@ class PyAstropyIersData(PythonPackage):
     pypi = "astropy-iers-data/astropy_iers_data-0.2024.4.29.0.28.48.tar.gz"
 
     version(
+        "0.2025.3.10.0.29.26",
+        sha256="dd4865861f00dec8a442ef8135f034675a7b05f17846562e2ea71678f5dbaa97",
+    )
+    version(
         "0.2024.5.20.0.29.40",
         sha256="7fff3d3404ae8560533ac0e685db7acc02c4d8984faa4ac3d607096879fba2d1",
     )
