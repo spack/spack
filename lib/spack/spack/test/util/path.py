@@ -156,8 +156,8 @@ def test_canonicalize_linux_file(path, expected):
     "path,expected",
     [
         (r"C:\Files (x86)\Windows\10", r"C:\Files (x86)\Windows\10"),
-        (r"C:builds\spack", f"C:" + os.path.join(spack_root, "builds", "spack")),
-        (r"C:/spack stage", "C:\\spack stage"),
+        (r"C:builds\spack", "C:" + os.path.join(spack_root, "builds", "spack")),
+        (r"E:/spack stage", "E:\\spack stage"),
     ],
 )
 def test_canonicalize_windows_file(path, expected):
