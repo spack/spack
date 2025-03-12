@@ -6,7 +6,7 @@ from spack.package import *
 
 
 class Psblas(AutotoolsPackage):
-    """PSBLAS: Parallel Sparrse BLAS. A library of distributed sparse
+    """PSBLAS: Parallel Sparse BLAS. A library of distributed sparse
     linear algebra with support for GPU and Multithread acceleration.
     Part of the PSCToolkit: Parallel Sparse Computation Toolkit."""
 
