@@ -26,7 +26,7 @@ class FftwBase(AutotoolsPackage):
     variant("shared", default=True, description="Build shared libraries")
 
     depends_on("mpi", when="+mpi")
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
 
     # https://github.com/FFTW/fftw3/commit/902d0982522cdf6f0acd60f01f59203824e8e6f3
     conflicts("%gcc@8.0:8", when="@3.3.7")
@@ -87,7 +87,7 @@ class FftwBase(AutotoolsPackage):
         return self.spec.variants["precision"].value
 
     def setup_build_environment(self, env):
-        if self.spec.satisfies("%apple-clang +openmp"):
+        if self.spec.satisfies("+openmp %apple-clang"):
             env.append_flags("CPPFLAGS", self.compiler.openmp_flag)
             env.append_flags("CFLAGS", self.spec["llvm-openmp"].headers.include_flags)
             env.append_flags("CXXFLAGS", self.spec["llvm-openmp"].headers.include_flags)

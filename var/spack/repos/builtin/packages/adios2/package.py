@@ -257,9 +257,9 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     def setup_build_environment(self, env):
         # https://github.com/ornladios/ADIOS2/issues/2228
-        if self.spec.satisfies("%gcc@10: +fortran"):
+        if self.spec.satisfies("+fortran %gcc@10:"):
             env.set("FFLAGS", "-fallow-argument-mismatch")
-        elif self.spec.satisfies("%fj +fortran"):
+        elif self.spec.satisfies("+fortran %fj"):
             env.set("FFLAGS", "-Ccpp")
 
     def cmake_args(self):

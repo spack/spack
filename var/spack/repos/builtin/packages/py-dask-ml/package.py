@@ -57,7 +57,7 @@ class PyDaskMl(PythonPackage):
 
     patch("xgboost_dependency.patch")
 
-    conflicts("+docs", when="%gcc target=aarch64:")
+    conflicts("+docs", when="target=aarch64: %gcc")
 
     @run_after("install")
     def install_docs(self):

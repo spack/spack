@@ -127,7 +127,7 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("hipcub +rocm", when="+rocm +cub")
     depends_on("half", when="+half")
 
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
 
     # Fixes https://github.com/spack/spack/issues/42286
     # https://github.com/LLNL/Elemental/pull/177
@@ -175,8 +175,8 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
 
-        if spec.satisfies("%clang +openmp platform=darwin") or spec.satisfies(
-            "%clang +omp_taskloops platform=darwin"
+        if spec.satisfies("+openmp platform=darwin %clang") or spec.satisfies(
+            "+omp_taskloops platform=darwin %clang"
         ):
             clang = self.compiler.cc
             clang_bin = os.path.dirname(clang)
@@ -280,7 +280,7 @@ class Hydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         return entries
 
     def setup_build_environment(self, env):
-        if self.spec.satisfies("%apple-clang +openmp"):
+        if self.spec.satisfies("+openmp %apple-clang"):
             env.append_flags("CPPFLAGS", self.compiler.openmp_flag)
             env.append_flags("CFLAGS", self.spec["llvm-openmp"].headers.include_flags)
             env.append_flags("CXXFLAGS", self.spec["llvm-openmp"].headers.include_flags)

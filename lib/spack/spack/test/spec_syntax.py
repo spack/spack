@@ -159,11 +159,11 @@ def specfile_for(default_mock_concretization):
         ),
         # Version after compiler
         (
-            "foo %bar@1.0 @2.0",
+            "foo @2.0 %bar@1.0",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="foo"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="%bar@1.0"),
                 Token(SpecTokens.VERSION, value="@2.0"),
+                Token(SpecTokens.COMPILER_AND_VERSION, value="%bar@1.0"),
             ],
             "foo@2.0%bar@1.0",
         ),
@@ -174,15 +174,15 @@ def specfile_for(default_mock_concretization):
         dependency_with_version("openmpi ^hwloc@1.2e6:1.4b7-rc3"),
         # Complex specs with multiple constraints
         (
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4 ^stackwalker@8.1_1e",
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6+debug~qt_4 %intel@12.1 ^stackwalker@8.1_1e",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="mvapich_foo"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="_openmpi"),
                 Token(SpecTokens.VERSION, value="@1.2:1.4,1.6"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
                 Token(SpecTokens.BOOL_VARIANT, value="+debug"),
                 Token(SpecTokens.BOOL_VARIANT, value="~qt_4"),
+                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(SpecTokens.VERSION, value="@8.1_1e"),
@@ -190,15 +190,15 @@ def specfile_for(default_mock_concretization):
             "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4 ^stackwalker@8.1_1e",
         ),
         (
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2 ^stackwalker@8.1_1e",
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6~qt_4 debug=2 %intel@12.1 ^stackwalker@8.1_1e",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="mvapich_foo"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="_openmpi"),
                 Token(SpecTokens.VERSION, value="@1.2:1.4,1.6"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
                 Token(SpecTokens.BOOL_VARIANT, value="~qt_4"),
                 Token(SpecTokens.KEY_VALUE_PAIR, value="debug=2"),
+                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(SpecTokens.VERSION, value="@8.1_1e"),
@@ -206,17 +206,17 @@ def specfile_for(default_mock_concretization):
             "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2 ^stackwalker@8.1_1e",
         ),
         (
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags=-O3 +debug~qt_4 "
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6 cppflags=-O3 +debug~qt_4 %intel@12.1 "
             "^stackwalker@8.1_1e",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="mvapich_foo"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="_openmpi"),
                 Token(SpecTokens.VERSION, value="@1.2:1.4,1.6"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
                 Token(SpecTokens.KEY_VALUE_PAIR, value="cppflags=-O3"),
                 Token(SpecTokens.BOOL_VARIANT, value="+debug"),
                 Token(SpecTokens.BOOL_VARIANT, value="~qt_4"),
+                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(SpecTokens.VERSION, value="@8.1_1e"),
@@ -485,10 +485,10 @@ def specfile_for(default_mock_concretization):
             "a@1:",
         ),
         (
-            "% intel @ 12.1:12.6 + debug",
+            "+ debug % intel @ 12.1:12.6",
             [
-                Token(SpecTokens.COMPILER_AND_VERSION, value="% intel @ 12.1:12.6"),
                 Token(SpecTokens.BOOL_VARIANT, value="+ debug"),
+                Token(SpecTokens.COMPILER_AND_VERSION, value="% intel @ 12.1:12.6"),
             ],
             "%intel@12.1:12.6+debug",
         ),
@@ -639,15 +639,15 @@ def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_p
             ["mvapich cppflags=-O3", "emacs"],
         ),
         (
-            "mvapich emacs @1.1.1 %intel cflags=-O3",
+            "mvapich emacs @1.1.1 cflags=-O3 %intel",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="mvapich"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="emacs"),
                 Token(SpecTokens.VERSION, value="@1.1.1"),
-                Token(SpecTokens.COMPILER, value="%intel"),
                 Token(SpecTokens.KEY_VALUE_PAIR, value="cflags=-O3"),
+                Token(SpecTokens.COMPILER, value="%intel"),
             ],
-            ["mvapich", "emacs @1.1.1 %intel cflags=-O3"],
+            ["mvapich", "emacs @1.1.1 cflags=-O3 %intel"],
         ),
         (
             'mvapich cflags="-O3 -fPIC" emacs^ncurses%intel',
@@ -1231,7 +1231,7 @@ def test_compare_abstract_specs():
         "foo.foo@foo+foo",
         "foo.foo@foo+foo arch=foo-foo-foo",
         "foo.foo@foo+foo arch=foo-foo-foo %foo",
-        "foo.foo@foo+foo arch=foo-foo-foo %foo cflags=foo",
+        "foo.foo@foo+foo arch=foo-foo-foo cflags=foo %foo",
     ]
     specs = [SpecParser(s).next_spec() for s in constraints]
 

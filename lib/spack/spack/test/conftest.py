@@ -1700,7 +1700,7 @@ def installation_dir_with_headers(tmpdir_factory):
 ##########
 
 
-@pytest.fixture(params=["conflict%clang+foo", "conflict-parent@0.9^conflict~foo"])
+@pytest.fixture(params=["conflict+foo%clang", "conflict-parent@0.9^conflict~foo"])
 def conflict_spec(request):
     """Specs which violate constraints specified with the "conflicts"
     directive in the "conflict" package.

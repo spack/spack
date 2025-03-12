@@ -270,7 +270,7 @@ class SuiteSparse(Package):
                 ]
             make_args += [f"CMAKE_OPTIONS={' '.join(cmake_args)}"]
 
-        if spec.satisfies("%gcc platform=darwin"):
+        if spec.satisfies("platform=darwin %gcc"):
             make_args += ["LDLIBS=-lm"]
 
         if "%cce" in spec:

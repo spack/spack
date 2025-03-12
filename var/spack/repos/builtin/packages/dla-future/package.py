@@ -135,7 +135,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     # Compilation problem triggered by the bundled fmt in Umpire together with
     # fmt 10, which only happens with GCC 9 and nvcc 11.2 and older:
     # https://github.com/eth-cscs/DLA-Future/issues/1044
-    conflicts("^fmt@10:", when="@:0.3.0 %gcc@9 +cuda ^cuda@:11.2 ^umpire@2022.10:")
+    conflicts("^fmt@10:", when="@:0.3.0 +cuda %gcc@9 ^cuda@:11.2 ^umpire@2022.10:")
 
     # Pedantic warnings, triggered by GCC 9 and 10, are always errors until 0.3.1:
     # https://github.com/eth-cscs/DLA-Future/pull/1043

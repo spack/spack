@@ -125,7 +125,7 @@ class QuantumEspresso(CMakePackage, Package):
     with when("+mpi"):
         depends_on("mpi")
         variant("scalapack", default=True, description="Enables scalapack support")
-        with when("%nvhpc+cuda"):
+        with when("+cuda%nvhpc"):
             # add mpi_gpu_aware variant, False by default
             variant("mpigpu", default=False, description="Enables GPU-aware MPI operations")
 
@@ -292,7 +292,7 @@ class QuantumEspresso(CMakePackage, Package):
 
     # Internal compiler error gcc8 and a64fx, I check only 6.5 and 6.6
     conflicts(
-        "@5.3:", when="%gcc@8 target=a64fx", msg="Internal compiler error with gcc8 and a64fx"
+        "@5.3:", when="target=a64fx %gcc@8", msg="Internal compiler error with gcc8 and a64fx"
     )
 
     conflicts("@6.5:", when="+environ", msg="6.4.x is the latest QE series supported by Environ")

@@ -156,7 +156,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             args.extend([self.define_from_variant("STRUMPACK_C_INTERFACE", "c_interface")])
 
         # Workaround for linking issue on Mac:
-        if spec.satisfies("%apple-clang +mpi"):
+        if spec.satisfies("+mpi %apple-clang"):
             args.append("-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc)
 
         if "+cuda" in spec:

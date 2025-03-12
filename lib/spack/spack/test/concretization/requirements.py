@@ -359,10 +359,10 @@ packages:
     update_packages_config(conf_str)
 
     s1 = spack.concretize.concretize_one("y@2.5")
-    assert s1.satisfies("%clang~shared")
+    assert s1.satisfies("~shared%clang")
 
     s2 = spack.concretize.concretize_one("y@2.4")
-    assert s2.satisfies("%gcc+shared")
+    assert s2.satisfies("+shared%gcc")
 
 
 @pytest.mark.regression("34241")
@@ -499,7 +499,7 @@ packages:
     "requirements,expectations",
     [
         (("%gcc", "%clang"), ("%gcc", "%clang")),
-        (("%gcc~shared", "@1.0"), ("%gcc~shared", "@1.0+shared")),
+        (("~shared%gcc", "@1.0"), ("~shared%gcc", "@1.0+shared")),
     ],
 )
 def test_default_and_package_specific_requirements(
@@ -754,7 +754,7 @@ def test_skip_requirement_when_default_requirement_condition_cannot_be_met(
     update_packages_config(packages_yaml)
     s = spack.concretize.concretize_one("mpileaks")
 
-    assert s.satisfies("%clang+shared")
+    assert s.satisfies("+shared %clang")
     # Sanity checks that 'callpath' doesn't have the shared variant, but that didn't
     # cause failures during concretization.
     assert "shared" not in s["callpath"].variants

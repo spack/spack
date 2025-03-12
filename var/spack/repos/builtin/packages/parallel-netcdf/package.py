@@ -84,7 +84,7 @@ class ParallelNetcdf(AutotoolsPackage):
     # detected using macro AC_FC_LIBRARY_LDFLAGS, which means that we can
     # override the verbose output flag for Fortran compiler on the command line
     # (see below).
-    conflicts("+shared", when="@:1.9%nag+fortran")
+    conflicts("+shared", when="@:1.9+fortran%nag")
 
     @property
     def libs(self):
@@ -145,7 +145,7 @@ class ParallelNetcdf(AutotoolsPackage):
             args += self.enable_or_disable("shared")
             args.extend(["--enable-static", "--disable-silent-rules"])
 
-        if self.spec.satisfies("%nag+fortran+shared"):
+        if self.spec.satisfies("+fortran+shared%nag"):
             args.extend(["ac_cv_prog_fc_v=-Wl,-v", "ac_cv_prog_f77_v=-Wl,-v"])
 
         if self.spec.satisfies("+burstbuffer"):

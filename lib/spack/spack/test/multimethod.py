@@ -53,7 +53,7 @@ def test_no_version_match(pkg_name):
         # Constraints on compilers with a default
         ("%gcc", "has_a_default", "gcc"),
         ("%clang", "has_a_default", "clang"),
-        ("%apple-clang os=elcapitan", "has_a_default", "default"),
+        ("os=elcapitan %apple-clang", "has_a_default", "default"),
         # Constraints on dependencies
         ("^zmpi", "different_by_dep", "zmpi"),
         ("^mpich", "different_by_dep", "mpich"),
@@ -74,7 +74,7 @@ def test_multimethod_calls(
     with spack.config.override(
         "compilers", [compiler_factory(spec="apple-clang@9.1.0", operating_system="elcapitan")]
     ):
-        s = spack.concretize.concretize_one(pkg_name + constraint_str)
+        s = spack.concretize.concretize_one(f"{pkg_name} {constraint_str}")
     msg = f"Method {method_name} from {s} is giving a wrong result"
     assert getattr(s.package, method_name)() == expected_result, msg
 
