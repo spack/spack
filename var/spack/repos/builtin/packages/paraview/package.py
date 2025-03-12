@@ -384,6 +384,16 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # Applying it for every compiler is fine.
     patch("vtk-fft-icc.patch", when="@5.12.0:5.13.2")
 
+    # Patch for ParaView 5.13.0-5.13.2. Classic Intel compilers have a different
+    # keyword annotating attributes. Applying it for every compiler is fine.
+    # Fixed for ParaView 5.13 series after 5.13.2
+    # by https://gitlab.kitware.com/vtk/vtk/-/merge_requests/11937 brought into
+    # ParaView by https://gitlab.kitware.com/paraview/paraview/-/merge_requests/7210.
+    # Fixed in future ParaView versions greater than 5.13.x by
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/11277 brought into
+    # ParaView by https://gitlab.kitware.com/paraview/paraview/-/merge_requests/6912.
+    patch("vtk-wrap-hierarchy.patch", when="@5.13.0:5.13.2")
+
     generator("ninja", "make", default="ninja")
     # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
     conflicts("generator=ninja", when="%xl")
