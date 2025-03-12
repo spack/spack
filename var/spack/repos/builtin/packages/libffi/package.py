@@ -35,7 +35,7 @@ class Libffi(AutotoolsPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    patch("clang-powerpc-3.2.1.patch", when="@3.2.1%clang platform=linux")
+    patch("clang-powerpc-3.2.1.patch", when="@3.2.1 platform=linux %clang")
     # ref.: https://github.com/libffi/libffi/pull/561
     patch("powerpc-3.3.patch", when="@3.3")
     patch(

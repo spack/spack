@@ -106,7 +106,7 @@ class Onednn(CMakePackage):
     depends_on("cmake@2.8.12:", when="@2.3:", type="build")
     depends_on("cmake@2.8.11:", type="build")
     depends_on("tbb@2017:", when="cpu_runtime=tbb")
-    depends_on("llvm-openmp", when="%apple-clang cpu_runtime=omp")
+    depends_on("llvm-openmp", when="cpu_runtime=omp %apple-clang")
     depends_on("opencl@1.2:", when="gpu_runtime=ocl")
     depends_on("armcomputelibrary", when="+acl")
     depends_on("tbb", when="cpu_runtime=sycl")
@@ -125,7 +125,7 @@ class Onednn(CMakePackage):
             args.append("-DDNNL_BUILD_TESTS=OFF")
 
         # https://github.com/oneapi-src/oneDNN/issues/591
-        if self.spec.satisfies("%apple-clang cpu_runtime=omp"):
+        if self.spec.satisfies("cpu_runtime=omp %apple-clang"):
             args.extend(
                 [
                     "-DOpenMP_CXX_FLAGS={0}".format(self.compiler.openmp_flag),

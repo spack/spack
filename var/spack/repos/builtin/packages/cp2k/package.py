@@ -527,7 +527,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
             fcflags += ["-qpreprocess", "-qstrict", "-q64"]
             ldflags += ["-Wl,--allow-multiple-definition"]
 
-        if "%gcc@10: +mpi" in spec and spec["mpi"].name in ["mpich", "cray-mpich"]:
+        if "+mpi %gcc@10:" in spec and spec["mpi"].name in ["mpich", "cray-mpich"]:
             fcflags += [
                 "-fallow-argument-mismatch"
             ]  # https://github.com/pmodels/mpich/issues/4300

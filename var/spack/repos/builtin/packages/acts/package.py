@@ -360,7 +360,9 @@ class Acts(CMakePackage, CudaPackage):
         depends_on("actsvg@0.4.35:", when="@28:")
         depends_on("actsvg@0.4.39:", when="@32:")
         depends_on("actsvg@0.4.40:", when="@32.1:")
-        depends_on("actsvg@0.4.50:", when="@37:")
+        depends_on(
+            "actsvg@0.4.51:", when="@37:"
+        )  # https://github.com/acts-project/actsvg/issues/94
     depends_on("acts-algebra-plugins @0.24:", when="+traccc")
     depends_on("autodiff @0.6:", when="@17: +autodiff")
     depends_on("autodiff @0.5.11:0.5.99", when="@1.2:16 +autodiff")

@@ -30,13 +30,13 @@ spack:
     mpi:
       require: mpich
     mpich:
-      require: '~wrapperrpath ~hwloc %gcc target=neoverse_v2'
+      require: '~wrapperrpath ~hwloc target=neoverse_v2 %gcc'
     tbb:
       require: intel-tbb
     vtk-m:
-      require: "+examples %gcc target=neoverse_v2"
+      require: "+examples target=neoverse_v2 %gcc"
     paraview:
-      require: "+examples %gcc target=neoverse_v2"
+      require: "+examples target=neoverse_v2 %gcc"
 
   specs:
   # CPU

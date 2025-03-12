@@ -13,6 +13,6 @@ class AppleGlu(AppleGlBase):
     provides("glu@1.3")
 
     requires(
-        "%apple-clang platform=darwin",
+        "platform=darwin %apple-clang",
         msg="Apple-GLU is only available on Darwin, when using Apple Clang",
     )

@@ -257,9 +257,9 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     def setup_build_environment(self, env):
         # https://github.com/ornladios/ADIOS2/issues/2228
-        if self.spec.satisfies("%gcc@10: +fortran"):
+        if self.spec.satisfies("+fortran %gcc@10:"):
             env.set("FFLAGS", "-fallow-argument-mismatch")
-        elif self.spec.satisfies("%fj +fortran"):
+        elif self.spec.satisfies("+fortran %fj"):
             env.set("FFLAGS", "-Ccpp")
 
     def cmake_args(self):
@@ -395,6 +395,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
         # Create the build tree within this spec's test stage dir so it gets
         # cleaned up automatically
         build_dir = tempfile.mkdtemp(dir=test_stage_dir)
+        cmake = Executable(spec["cmake"].prefix.bin.cmake)
 
         std_cmake_args = []
 
@@ -409,7 +410,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
                 self, "test_examples_build", purpose="build example against installed adios2"
             ):
                 cmake(src_dir, *std_cmake_args)
-                make()
+                cmake(*(["--build", "."]))
 
             for p in built_programs:
                 exe = which(join_path(".", p))
