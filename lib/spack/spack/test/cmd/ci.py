@@ -1838,7 +1838,7 @@ def test_ci_validate_git_versions_valid(
 ):
     spec = spack.spec.Spec("diff-test")
     pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
-    version_list = [spack.version.Version(v) for v, c in versions]
+    version_list = [spack.version.Version(v) for v, _ in versions]
 
     repo_path, filename, commits = mock_git_version_info
     version_commit_dict = {
@@ -1853,8 +1853,8 @@ def test_ci_validate_git_versions_valid(
     assert spack.cmd.ci.validate_git_versions(pkg, version_list)
 
     out, err = capfd.readouterr()
-    for version in versions:
-        assert f"Validated diff-test@{version[0]}" in out
+    for version in version_list:
+        assert f"Validated diff-test@{version}" in out
 
 
 @pytest.mark.parametrize("versions", [[("1.0", 0)], [("1.1", 0), ("2.0", 0)]])
@@ -1863,7 +1863,7 @@ def test_ci_validate_git_versions_bad_tag(
 ):
     spec = spack.spec.Spec("diff-test")
     pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
-    version_list = [spack.version.Version(v) for v, c in versions]
+    version_list = [spack.version.Version(v) for v, _ in versions]
 
     repo_path, filename, commits = mock_git_version_info
     version_commit_dict = {
@@ -1878,8 +1878,8 @@ def test_ci_validate_git_versions_bad_tag(
     assert spack.cmd.ci.validate_git_versions(pkg, version_list) is False
 
     out, err = capfd.readouterr()
-    for version in versions:
-        assert f"Mismatched tag <--> commit found for diff-test@{version[0]}" in err
+    for version in version_list:
+        assert f"Mismatched tag <-> commit found for diff-test@{version}" in err
 
 
 @pytest.mark.parametrize("versions", [[("1.0", -2)], [("1.1", -4), ("2.0", -6)]])
@@ -1888,7 +1888,7 @@ def test_ci_validate_git_versions_invalid(
 ):
     spec = spack.spec.Spec("diff-test")
     pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
-    version_list = [spack.version.Version(v) for v, c in versions]
+    version_list = [spack.version.Version(v) for v, _ in versions]
 
     repo_path, filename, commits = mock_git_version_info
     version_commit_dict = {
@@ -1907,8 +1907,8 @@ def test_ci_validate_git_versions_invalid(
     assert spack.cmd.ci.validate_git_versions(pkg, version_list) is False
 
     out, err = capfd.readouterr()
-    for version in versions:
-        assert f"Invalid commit for diff-test@{version[0]}" in err
+    for version in version_list:
+        assert f"Invalid commit for diff-test@{version}" in err
 
 
 @pytest.fixture

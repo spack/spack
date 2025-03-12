@@ -33,6 +33,7 @@ import spack.util.gpg as gpg_util
 import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
+import spack.fetch_strategy
 from spack.package_base import PackageBase
 from spack.util.executable import ProcessError
 from spack.version import StandardVersion, VersionList
@@ -713,55 +714,52 @@ def validate_git_versions(pkg: PackageBase, versions: VersionList) -> bool:
       versions spack.version.VersionList: list of package versions to validate
     Returns: bool: result of the validation. True is valid and false is failed.
     """
-    git = spack.util.git.git(required=True)
-
-    with tempfile.TemporaryDirectory() as tmpdirpath:
-        # Test if repository can be cloned.
-        try:
-            _ = git("clone", pkg.git, tmpdirpath, output=str, error=str)
-        except ProcessError as exp:
-            tty.error(f"Unable to clone git repository for {pkg.name}", exp)
-            return False
-
-        valid_commit = True
-        for version in versions:
+    valid_commit = True
+    for version in versions:
+        fetcher = spack.fetch_strategy.for_package_version(pkg, version)
+        with spack.stage.Stage(fetcher) as stage:
             known_commit = pkg.versions[version]["commit"]
-            with fs.working_dir(tmpdirpath):
-                # Test if the specified commit is in the repository.
-                # If the commit is located in the repository the command will return 0 and
-                # print the word "commit" else it will fail with a lookup error
-                try:
-                    git("cat-file", "-t", known_commit, output=str, error=str)
+            try:
+                stage.fetch()
+            except spack.error.FetchError:
+                tty.error(
+                    f"Invalid commit for {pkg.name}@{version}\n"
+                    f"    {known_commit} could not be checked out in the git repository."
+                )
+                valid_commit = False
+                continue
 
+            # Test if the specified tag matches the commit in the package.py
+            # We retrieve the commit associated with a tag and compare it to the
+            # commit that is located in the package.py file.
+            if "tag" in pkg.versions[version]:
+                tag = pkg.versions[version]["tag"]
+                try:
+                    with fs.working_dir(stage.source_path):
+                        found_commit = fetcher.git("rev-list", "-n", "1", tag, output=str, error=str).strip()
                 except ProcessError:
                     tty.error(
-                        f"Invalid commit for {pkg.name}@{version}\n"
-                        f"    {known_commit} could not be located in git repository."
+                        f"Invalid tag for {pkg.name}@{version}\n"
+                        f"    {tag} could not be found in the git repository."
                     )
                     valid_commit = False
                     continue
 
-                # Test if the specified tag matches the commit in the package.py
-                # We retrieve the commit associated with a tag and compare it to the
-                # commit that is located in the package.py file.
-                if "tag" in pkg.versions[version]:
-                    tag = pkg.versions[version]["tag"]
-                    found_commit = git("rev-list", "-n", "1", tag, output=str).strip()
-                    if found_commit != known_commit:
-                        tty.error(
-                            f"Mismatched tag <--> commit found for {pkg.name}@{version}\n"
-                            f"    [package.py] {known_commit}\n"
-                            f"    [Downloaded] {found_commit}"
-                        )
-                        valid_commit = False
-                        continue
+                if found_commit != known_commit:
+                    tty.error(
+                        f"Mismatched tag <-> commit found for {pkg.name}@{version}\n"
+                        f"    [package.py] {known_commit}\n"
+                        f"    [Downloaded] {found_commit}"
+                    )
+                    valid_commit = False
+                    continue
 
             # If we have downloaded the repository, found the commit, and compared
             # the tag (if specified) we can conclude that the version is pointing
             # at what we would expect.
             tty.info(f"Validated {pkg.name}@{version} --> {known_commit}")
 
-        return valid_commit
+    return valid_commit
 
 
 def ci_verify_versions(args):
