@@ -252,16 +252,6 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
     import urllib.parse
     import urllib.request
 
-    def joined_path(drive, filename, path):
-        if filename:
-            path = drive.upper() + os.path.join(filename, path)
-            return path
-
-        base = default_wd or os.getcwd()
-        tty.debug(f"Using working directory {base} as base for abspath")
-        path = drive.upper() + os.path.join(base, path)
-        return path
-
     # Get file in which path was written in case we need to make it absolute
     # relative to that path.
     filename = None
@@ -274,11 +264,7 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
     # Ensure properly process a Windows path
     win_path = pathlib.PureWindowsPath(path)
     if win_path.drive:
-        if win_path.is_absolute():
-            return os.path.normpath(str(win_path))
-
-        path = os.sep.join(win_path.parts[1:])
-        return os.path.normpath(joined_path(win_path.drive, filename, path))
+        return os.path.normpath(str(win_path))
 
     # Now process linux paths and remote URLs
     url = urllib.parse.urlparse(path)
@@ -291,10 +277,15 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
         # Drop the URL scheme from the local path
         path = url_path
 
-    if os.path.isabs(path):
-        return os.path.normpath(path)
+    if not os.path.isabs(path):
+        if filename:
+            path = os.path.join(filename, path)
+        else:
+            base = default_wd or os.getcwd()
+            path = os.path.join(base, path)
+            tty.debug(f"Using working directory {base} as base for abspath")
 
-    return os.path.normpath(joined_path("", filename, path))
+    return os.path.normpath(path)
 
 
 def longest_prefix_re(string, capture=True):

@@ -81,11 +81,11 @@ def local_path(raw_path: str, sha256: str, make_dest: Optional[Callable[[], str]
 
     # Allow paths (and URLs) to contain spack config/environment variables,
     # etc.
+    path = canonicalize_path(raw_path)
+
     win_path = pathlib.PureWindowsPath(raw_path)
     if win_path.drive:
         file_schemes.append(win_path.drive.lower().strip(":"))
-
-    path = canonicalize_path(raw_path)
 
     url = urllib.parse.urlparse(path)
 

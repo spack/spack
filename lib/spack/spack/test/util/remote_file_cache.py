@@ -47,7 +47,6 @@ def test_rfc_local_linux_file(path, expected):
     "path,expected",
     [
         (r"C:\Files (x86)\Windows\10", r"C:\Files (x86)\Windows\10"),
-        (r"C:builds\spack", "C:" + os.path.join(spack_root, "builds", "spack")),
         (r"D:/spack stage", "D:\\spack stage"),
     ],
 )
