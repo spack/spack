@@ -13,9 +13,8 @@ import re
 import sys
 from typing import List, Optional, Union
 
-from llnl.util.filesystem import edit_in_place_through_temporary_file
 from llnl.util import tty
-from llnl.util.filesystem import join_path, windows_drive
+from llnl.util.filesystem import edit_in_place_through_temporary_file, join_path, windows_drive
 from llnl.util.lang import memoized
 
 import spack.config
@@ -73,7 +72,7 @@ class WindowsKitExternalPaths:
 
     @staticmethod
     def find_windows_kit_bin_paths(
-        kit_base: Union[Optional[str], Optional[list]] = None
+        kit_base: Union[Optional[str], Optional[list]] = None,
     ) -> List[str]:
         """Returns Windows kit bin directory per version"""
         kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base
@@ -88,7 +87,7 @@ class WindowsKitExternalPaths:
 
     @staticmethod
     def find_windows_kit_lib_paths(
-        kit_base: Union[Optional[str], Optional[list]] = None
+        kit_base: Union[Optional[str], Optional[list]] = None,
     ) -> List[str]:
         """Returns Windows kit lib directory per version"""
         kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base

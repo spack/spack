@@ -25,9 +25,7 @@ import spack.config
 import spack.error
 import spack.schema
 import spack.spec
-import spack.util.environment
 import spack.util.spack_yaml
-import spack.util.windows_registry
 
 
 def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:
