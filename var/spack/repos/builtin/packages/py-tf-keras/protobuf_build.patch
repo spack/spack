@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 def py_proto_library(
         name,
         srcs = [],
