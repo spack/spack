@@ -424,8 +424,6 @@ class Conduit(CMakePackage):
         cfg.write(cmake_cache_entry("CMAKE_EXE_LINKER_FLAGS", linkerflags))
         if spec.satisfies("+shared"):
             cfg.write(cmake_cache_entry("CMAKE_SHARED_LINKER_FLAGS", linkerflags))
-        else:
-            cfg.write(cmake_cache_entry("CMAKE_STATIC_LINKER_FLAGS", linkerflags))
 
         #######################
         # BLT

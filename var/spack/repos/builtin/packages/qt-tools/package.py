@@ -19,6 +19,7 @@ class QtTools(QtPackage):
     license("BSD-3-Clause")
 
     # src/assistant/qlitehtml is a submodule that is not in the git archive
+    version("6.8.2", commit="8aa2456d4461516f54c98916fcd699557afb41ad", submodules=True)
     version("6.8.1", commit="b0d66c51cbda17b213bed73d379f0900c77f457c", submodules=True)
     version("6.8.0", commit="3dd2b6ad0dd1a0480628b4cc74cb7b89a89e4a61", submodules=True)
     version("6.7.3", commit="ec4747e62a837a0262212a5f4fb03734660c7360", submodules=True)

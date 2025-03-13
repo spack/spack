@@ -39,6 +39,6 @@ class AppleGl(AppleGlBase):
     provides("gl@4.1")
 
     requires(
-        "%apple-clang platform=darwin",
+        "platform=darwin %apple-clang",
         msg="Apple-GL is only available on Darwin, when using Apple Clang",
     )

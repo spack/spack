@@ -94,7 +94,7 @@ def test_mix_spec_and_compiler_cfg(concretize_scope, test_repo):
     conf_str = _compiler_cfg_one_entry_with_cflags("-Wall")
     update_concretize_scope(conf_str, "compilers")
 
-    s1 = spack.concretize.concretize_one('y %gcc@12.100.100 cflags="-O2"')
+    s1 = spack.concretize.concretize_one('y cflags="-O2" %gcc@12.100.100')
     assert s1.satisfies('cflags="-Wall -O2"')
 
 
@@ -182,7 +182,7 @@ def test_propagate_and_compiler_cfg(concretize_scope, test_repo):
     conf_str = _compiler_cfg_one_entry_with_cflags("-f2")
     update_concretize_scope(conf_str, "compilers")
 
-    root_spec = spack.concretize.concretize_one("v %gcc@12.100.100 cflags=='-f1'")
+    root_spec = spack.concretize.concretize_one("v cflags=='-f1' %gcc@12.100.100")
     assert root_spec["y"].satisfies("cflags='-f1 -f2'")
 
 
@@ -229,7 +229,7 @@ def test_dev_mix_flags(tmp_path, concretize_scope, mutable_mock_env_path, test_r
     env_content = f"""\
 spack:
   specs:
-  - y %gcc@12.100.100 cflags=='-fsanitize=address'
+  - y cflags=='-fsanitize=address' %gcc@12.100.100
   develop:
     y:
       spec: y cflags=='-fsanitize=address'

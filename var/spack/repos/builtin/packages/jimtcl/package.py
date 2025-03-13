@@ -13,6 +13,7 @@ class Jimtcl(AutotoolsPackage):
 
     license("BSD-2-Clause")
 
+    version("0.83", sha256="6f2df00009f5ac4ad654c1ae1d2f8ed18191de38d1f5a88a54ea99cc16936686")
     version("0.82", sha256="e8af929b815e4d30e54ff116b2b933e56c00a02b9110529d1a58660b2469aea7")
     version("0.79", sha256="ab8204cd03b946f5149e1273af9c86d8e73b146084a0fbeb1d4f41a75b0b3411")
     version("0.78", sha256="cf801795c9fd98bfff6882c14afdf96424ba86dead58c2a4e15978b176d3e12b")

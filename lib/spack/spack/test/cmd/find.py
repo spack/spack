@@ -320,7 +320,7 @@ def test_find_very_long(database, config):
 @pytest.mark.db
 def test_find_show_compiler(database, config):
     output = find("--no-groups", "--show-full-compiler", "mpileaks")
-    assert "mpileaks@2.3%gcc@10.2.1" in output
+    assert "mpileaks@2.3 %gcc@10.2.1" in output
 
 
 @pytest.mark.db
@@ -464,7 +464,7 @@ def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
 
     with test_environment:
         output = find()
-    assert "zlib%gcc@12.1.0" in output
+    assert "zlib %gcc@12.1.0" in output
 
 
 _pkga = (

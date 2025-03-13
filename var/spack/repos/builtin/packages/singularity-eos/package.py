@@ -142,7 +142,7 @@ class SingularityEos(CMakePackage, CudaPackage):
     # can be removed once <1.8.0 versions have been removed
     def flag_handler(self, name, flags):
         if name == "fflags":
-            if self.spec.satisfies("%cce+fortran"):
+            if self.spec.satisfies("+fortran%cce"):
                 # The Cray fortran compiler generates module files with
                 # uppercase names by default, which is not handled by the
                 # CMake scripts. The following flag forces the compiler to

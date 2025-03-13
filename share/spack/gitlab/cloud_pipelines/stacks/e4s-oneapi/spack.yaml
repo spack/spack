@@ -20,7 +20,7 @@ spack:
     elfutils:
       variants: ~nls
     gcc-runtime:
-      require: "%gcc target=x86_64_v3"
+      require: "target=x86_64_v3 %gcc"
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
@@ -47,32 +47,32 @@ spack:
         prefix: /opt/intel/oneapi
     unzip:
       require:
-      - '%gcc target=x86_64_v3'
+      - 'target=x86_64_v3 %gcc'
     binutils:
       require:
-      - '%gcc target=x86_64_v3'
+      - 'target=x86_64_v3 %gcc'
       variants: +ld +gold +headers +libiberty ~nls
     llvm:
       require:
-      - '%gcc target=x86_64_v3'
+      - 'target=x86_64_v3 %gcc'
     ruby:
       require:
-      - '%gcc target=x86_64_v3'
+      - 'target=x86_64_v3 %gcc'
     rust:
       require:
-      - '%gcc target=x86_64_v3'
+      - 'target=x86_64_v3 %gcc'
     krb5:
       require:
-      - '%gcc target=x86_64_v3'
+      - 'target=x86_64_v3 %gcc'
     openssh:
       require:
-      - '%gcc target=x86_64_v3'
+      - 'target=x86_64_v3 %gcc'
     dyninst:
       require:
-      - '%gcc target=x86_64_v3'
+      - 'target=x86_64_v3 %gcc'
     bison:
       require:
-      - '%gcc target=x86_64_v3'
+      - 'target=x86_64_v3 %gcc'
     paraview:
       require:
       - +examples target=x86_64_v3

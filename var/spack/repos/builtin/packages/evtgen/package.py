@@ -79,7 +79,7 @@ class Evtgen(CMakePackage):
         # the `-undefined dynamic_lookup` flag enables weak linking on Mac
         # Patch taken from CMS recipe:
         # https://github.com/cms-sw/cmsdist/blob/IB/CMSSW_12_1_X/master/evtgen.spec#L48
-        if not self.spec.satisfies("%gcc platform=darwin"):
+        if not self.spec.satisfies("platform=darwin %gcc"):
             return
 
         filter_file("-shared", "-dynamiclib -undefined dynamic_lookup", "make.inc")

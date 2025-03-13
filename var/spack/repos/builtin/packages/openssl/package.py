@@ -168,7 +168,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
         # The default glibc provided by CentOS 7 does not provide proper
         # atomic support when using the NVIDIA compilers
-        if self.spec.satisfies("%nvhpc os=centos7"):
+        if self.spec.satisfies("os=centos7 %nvhpc"):
             options.append("-D__STDC_NO_ATOMICS__")
 
         # Make a flag for shared library builds
