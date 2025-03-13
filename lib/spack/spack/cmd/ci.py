@@ -33,9 +33,10 @@ import spack.util.gpg as gpg_util
 import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.package_base import PackageBase
-from spack.util.executable import ProcessError
-from spack.version import StandardVersion, VersionList
+import spack.error
+import spack.package_base
+import spack.version
+import spack.util.executable
 
 description = "manage continuous integration pipelines"
 section = "build"
@@ -673,14 +674,14 @@ def _gitlab_artifacts_url(url: str) -> str:
     return urlunparse(parsed._replace(path="/".join(parts), fragment="", query=""))
 
 
-def validate_standard_versions(pkg: PackageBase, versions: VersionList) -> bool:
+def validate_standard_versions(pkg: spack.package_base.PackageBase, versions: spack.version.VersionList) -> bool:
     """Get and test the checksum of a package version based on a tarball.
     Args:
       pkg spack.package_base.PackageBase: Spack package for which to validate a version checksum
       versions spack.version.VersionList: list of package versions to validate
     Returns: bool: result of the validation. True is valid and false is failed.
     """
-    url_dict: Dict[StandardVersion, str] = {}
+    url_dict: Dict[spack.version.StandardVersion, str] = {}
 
     for version in versions:
         url = pkg.find_valid_url_for_version(version)
@@ -706,7 +707,7 @@ def validate_standard_versions(pkg: PackageBase, versions: VersionList) -> bool:
     return valid_checksums
 
 
-def validate_git_versions(pkg: PackageBase, versions: VersionList) -> bool:
+def validate_git_versions(pkg: spack.package_base.PackageBase, versions: spack.version.VersionList) -> bool:
     """Get and test the commit and tag of a package version based on a git repository.
     Args:
       pkg spack.package_base.PackageBase: Spack package for which to validate a version
@@ -738,7 +739,7 @@ def validate_git_versions(pkg: PackageBase, versions: VersionList) -> bool:
                         found_commit = fetcher.git(
                             "rev-list", "-n", "1", tag, output=str, error=str
                         ).strip()
-                except ProcessError:
+                except spack.util.executable.ProcessError:
                     tty.error(
                         f"Invalid tag for {pkg.name}@{version}\n"
                         f"    {tag} could not be found in the git repository."
