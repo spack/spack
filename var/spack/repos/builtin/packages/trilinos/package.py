@@ -1096,7 +1096,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         if "+exodus" in self.spec:
             env.prepend_path("PYTHONPATH", self.prefix.lib)
 
-        if "+cuda" in self.spec:
-            # currently Trilinos doesn't perform the memory fence so
-            # it relies on blocking CUDA kernel launch.
+        if self.spec.satisfies("@:13.1.0 +cuda"):
+            # older releases of  Trilinos doesn't perform the memory fence so
+            # it relies on blocking CUDA kernel launch. This is needed
+            # in case the dependent app also run a CUDA backend via Trilinos
             env.set("CUDA_LAUNCH_BLOCKING", "1")
