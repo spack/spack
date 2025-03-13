@@ -1857,7 +1857,7 @@ def test_ci_validate_git_versions_valid(
         assert f"Validated diff-test@{version}" in out
 
 
-@pytest.mark.parametrize("versions", [[("1.0", 0)], [("1.1", 0), ("2.0", 0)]])
+@pytest.mark.parametrize("versions", [[("1.0", -3)], [("1.1", -5), ("2.0", -5)]])
 def test_ci_validate_git_versions_bad_tag(
     capfd, monkeypatch, mock_packages, mock_git_version_info, versions
 ):
@@ -1882,7 +1882,7 @@ def test_ci_validate_git_versions_bad_tag(
         assert f"Mismatched tag <-> commit found for diff-test@{version}" in err
 
 
-@pytest.mark.parametrize("versions", [[("1.0", -2)], [("1.1", -4), ("2.0", -6)]])
+@pytest.mark.parametrize("versions", [[("1.0", -2)], [("1.1", -4), ("2.0", -6), ("3.0", -6)]])
 def test_ci_validate_git_versions_invalid(
     capfd, monkeypatch, mock_packages, mock_git_version_info, versions
 ):
