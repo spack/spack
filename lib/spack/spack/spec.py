@@ -3774,9 +3774,6 @@ class Spec:
     def _cmp_iter(self):
         """Lazily yield components of self for comparison."""
 
-        for item in self._cmp_node():
-            yield item
-
         # If there is ever a breaking change to hash computation, whether accidental or purposeful,
         # two specs can be identical modulo DAG hash, depending on what time they were concretized
         # From the perspective of many operation in Spack (database, build cache, etc) a different
@@ -3794,13 +3791,12 @@ class Spec:
         # TODO: spec hashing.
         yield self.process_hash() if self.concrete else None
 
-        def deps():
-            for dep in sorted(itertools.chain.from_iterable(self._dependencies.values())):
-                yield dep.spec.name
-                yield dep.depflag
-                yield dep.spec._cmp_iter
+        for edge in self.traverse_edges(order="breadth", cover="edges"):
+            def yield_edge():
+                yield edge.spec._cmp_node
+                yield edge.depflag
+            yield yield_edge
 
-        yield deps
 
     @property
     def namespace_if_anonymous(self):
