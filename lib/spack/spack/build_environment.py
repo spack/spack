@@ -881,21 +881,6 @@ def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]
     return _get_rpath_deps_from_spec(pkg.spec, pkg.transitive_rpaths)
 
 
-def load_external_modules(pkg):
-    """Traverse a package's spec DAG and load any external modules.
-
-    Traverse a package's dependencies and load any external modules
-    associated with them.
-
-    Args:
-        pkg (spack.package_base.PackageBase): package to load deps for
-    """
-    for dep in list(pkg.spec.traverse()):
-        external_modules = dep.external_modules or []
-        for external_module in external_modules:
-            load_module(external_module)
-
-
 def setup_package(pkg, dirty, context: Context = Context.BUILD):
     """Execute all environment setup routines."""
     if context not in (Context.BUILD, Context.TEST):
@@ -946,7 +931,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         for mod in pkg.compiler.modules:
             load_module(mod)
 
-    load_external_modules(pkg)
+    load_external_modules(setup_context)
 
     # Make sure nothing's strange about the Spack environment.
     validate(env_mods, tty.warn)
@@ -1233,6 +1218,21 @@ class SetupContext:
             bin_dir = os.path.join(dep.prefix, d)
             if os.path.isdir(bin_dir):
                 env.prepend_path("PATH", bin_dir)
+
+
+def load_external_modules(context: SetupContext) -> None:
+    """Traverse a package's spec DAG and load any external modules.
+
+    Traverse a package's dependencies and load any external modules
+    associated with them.
+
+    Args:
+        context: A populated SetupContext object
+    """
+    for spec, _ in context.external:
+        external_modules = spec.external_modules or []
+        for external_module in external_modules:
+            load_module(external_module)
 
 
 def _setup_pkg_and_run(

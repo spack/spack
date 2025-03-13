@@ -104,9 +104,9 @@ class Spfft(CMakePackage, CudaPackage, ROCmPackage):
                 "-DHIP_CXX_COMPILER={0}".format(self.spec["hip"].hipcc),
             ]
 
-        if "fftw" in spec:
-            args += ["-DSPFFT_FFTW_LIB=FFTW"]
-        elif "intel-mkl" in spec:
+        if spec.satisfies("^[virtuals=fftw-api] intel-oneapi-mkl"):
             args += ["-DSPFFT_FFTW_LIB=MKL"]
+        else:
+            args += ["-DSPFFT_FFTW_LIB=FFTW"]
 
         return args

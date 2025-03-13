@@ -18,7 +18,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
-    tags = ["ecp", "e4s"]
+    tags = ["ecp", "e4s", "hpsf"]
 
     maintainers("WeiqunZhang", "asalmgren", "atmyers")
 

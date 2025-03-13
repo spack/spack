@@ -648,10 +648,9 @@ class ConcretizationCache:
     """
 
     def __init__(self, root: Union[str, None] = None):
-        if not root:
-            root = spack.config.get(
-                "config:concretization_cache:url", spack.paths.default_conc_cache_path
-            )
+        root = root or spack.config.get(
+            "config:concretization_cache:url", spack.paths.default_conc_cache_path
+        )
         self.root = pathlib.Path(spack.util.path.canonicalize_path(root))
         self._fc = FileCache(self.root)
         self._cache_manifest = ".cache_manifest"

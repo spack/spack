@@ -165,7 +165,7 @@ class Zoltan(AutotoolsPackage):
         config_fcflags = config_cflags[:]
         config_cxxflags = config_cflags[:]
 
-        if spec.satisfies("%gcc@10:+fortran"):
+        if spec.satisfies("+fortran%gcc@10:"):
             config_fcflags.append("-fallow-argument-mismatch")
 
         # NOTE: Early versions of Zoltan come packaged with a few embedded

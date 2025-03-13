@@ -166,7 +166,7 @@ class Graphviz(AutotoolsPackage):
         if self.spec.satisfies("+quartz"):
             env.set("OBJC", self.compiler.cc)
 
-    @when("%clang platform=darwin")
+    @when("platform=darwin %clang")
     def patch(self):
         # When using Clang, replace GCC's libstdc++ with LLVM's libc++
         mkdirs = ["cmd/dot", "cmd/edgepaint", "cmd/mingle", "plugin/gdiplus"]

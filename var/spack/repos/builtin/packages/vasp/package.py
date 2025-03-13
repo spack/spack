@@ -205,7 +205,7 @@ class Vasp(MakefilePackage, CudaPackage):
                     "-fallow-argument-mismatch", " -fno-fortran-main", make_include, string=True
                 )
         # fj
-        elif spec.satisfies("@6.4.3: %fj target=a64fx"):
+        elif spec.satisfies("@6.4.3: target=a64fx %fj"):
             include_string += "fujitsu_a64fx"
             omp_flag = "-Kopenmp"
             fc.extend(["simd_nouse_multiple_structures", "-X03"])
@@ -323,7 +323,7 @@ class Vasp(MakefilePackage, CudaPackage):
         os.rename(make_include, "makefile.include")
 
     def setup_build_environment(self, spack_env):
-        if self.spec.satisfies("%nvhpc +cuda"):
+        if self.spec.satisfies("+cuda %nvhpc"):
             spack_env.set("NVHPC_CUDA_HOME", self.spec["cuda"].prefix)
 
     def build(self, spec, prefix):
