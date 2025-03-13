@@ -37,7 +37,8 @@ class Simdjson(CMakePackage):
     variant(
         "simdjson_static",
         default=False,
-        description="Build the `simdjson_static` library along with the dynamically linked `simdjson`",
+        description="Build the `simdjson_static` library along with the dynamically linked"
+        " `simdjson`",
         when="+shared",
     )
 
