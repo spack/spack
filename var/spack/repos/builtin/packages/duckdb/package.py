@@ -29,6 +29,16 @@ class Duckdb(MakefilePackage):
         sha256="04e472e646f5cadd0a3f877a143610674b0d2bcf9f4102203ac3c3d02f1c5f26",
         deprecated=True,
     )
+    version(
+        "0.10.3",
+        sha256="7855587b3491dd488993287caee28720bee43ae28e92e8f41ea4631e9afcbf88",
+        deprecated=True,
+    )
+    version(
+        "0.10.2",
+        sha256="662a0ba5c35d678ab6870db8f65ffa1c72e6096ad525a35b41b275139684cea6",
+        deprecated=True,
+    )
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
