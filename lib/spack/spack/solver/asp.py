@@ -2006,7 +2006,9 @@ class SpackSolverSetup:
 
     def package_dependencies_rules(self, pkg):
         """Translate 'depends_on' directives into ASP logic."""
-        for cond, deps_by_name in sorted(pkg.dependencies.items()):
+        for cond, deps_by_name in sorted(
+            pkg.dependencies.items()
+        ):  # this is the source of a good deal of non determinism
             for _, dep in sorted(deps_by_name.items()):
                 depflag = dep.depflag
                 # Skip test dependencies if they're not requested
