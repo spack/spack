@@ -6,12 +6,10 @@ from spack.package import *
 
 
 class Simdjson(CMakePackage):
-    """simdjson is an extremely fast SIMD-accelerated JSON parsing library for
-    C++.
-
-    It leverages commonly available SIMD instructions and microparallel
-    algorithms to parse gigabytes of JSON per second, and is used as the JSON
-    parser in the Node.js runtime and in many other projects."""
+    """
+    simdjson is a SIMD-accelerated JSON parsing library for C++ that can parse gigabytes of JSON
+    per second.
+    """
 
     homepage = "https://simdjson.org"
     url = "https://github.com/simdjson/simdjson/archive/v3.12.2.tar.gz"
