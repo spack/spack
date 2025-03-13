@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 
 from spack.package import *
 
@@ -32,35 +33,17 @@ class Llvm(Package, CompilerPackage):
             f.write('#!/bin/bash\necho "%s"' % str(spec.version))
         set_executable(prefix.bin.gcc)
 
-    @property
-    def cc(self):
-        msg = "cannot retrieve C compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("c", None)
-        result = None
-        if "+clang" in self.spec:
-            result = os.path.join(self.spec.prefix.bin, "clang")
-        return result
+    def _cc_path(self):
+        if self.spec.satisfies("+clang"):
+            return os.path.join(self.spec.prefix.bin, "clang")
+        return None
 
-    @property
-    def cxx(self):
-        msg = "cannot retrieve C++ compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("cxx", None)
-        result = None
-        if "+clang" in self.spec:
-            result = os.path.join(self.spec.prefix.bin, "clang++")
-        return result
+    def _cxx_path(self):
+        if self.spec.satisfies("+clang"):
+            return os.path.join(self.spec.prefix.bin, "clang++")
+        return None
 
-    @property
-    def fortan(self):
-        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("fc", None)
-        result = None
-        if "+flang" in self.spec:
-            result = os.path.join(self.spec.prefix.bin, "flang")
-        return result
+    def _fortran_path(self):
+        if self.spec.satisfies("+flang"):
+            return os.path.join(self.spec.prefix.bin, "flang")
+        return None

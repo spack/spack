@@ -53,35 +53,20 @@ class Gcc(CompilerPackage, Package):
             f.write('#!/bin/bash\necho "%s"' % str(spec.version))
         set_executable(prefix.bin.gcc)
 
-    @property
-    def cc(self):
-        assert self.spec.concrete, "cannot retrieve C compiler [spec is not concrete]"
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("c", None)
-        result = None
-        if "languages=c" in self.spec:
-            result = str(self.spec.prefix.bin.gcc)
-        return result
+    def _cc_path(self):
+        if self.spec.satisfies("languages=c"):
+            return str(self.spec.prefix.bin.gcc)
+        return None
 
-    @property
-    def cxx(self):
-        assert self.spec.concrete, "cannot retrieve C++ compiler [spec is not concrete]"
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("cxx", None)
-        result = None
-        if "languages=c++" in self.spec:
-            result = os.path.join(self.spec.prefix.bin, "g++")
-        return result
+    def _cxx_path(self):
+        if self.spec.satisfies("languages=c++"):
+            return os.path.join(self.spec.prefix.bin, "g++")
+        return None
 
-    @property
-    def fortran(self):
-        assert self.spec.concrete, "cannot retrieve Fortran compiler [spec is not concrete]"
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("fortran", None)
-        result = None
-        if "languages=fortran" in self.spec:
-            result = str(self.spec.prefix.bin.gfortran)
-        return result
+    def _fortran_path(self):
+        if self.spec.satisfies("languages=fortran"):
+            return str(self.spec.prefix.bin.gfortran)
+        return None
 
     @classmethod
     def runtime_constraints(cls, *, spec, pkg):
