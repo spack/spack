@@ -336,32 +336,31 @@ class SpecNodeParser:
         """
         parser_warnings: List[str] = []
         last_compiler = None
-        ctx = self.ctx
 
         if initial_spec is None:
             initial_spec = spack.spec.Spec()
 
-        if not ctx.next_token or ctx.expect(SpecTokens.DEPENDENCY):
+        if not self.ctx.next_token or self.ctx.expect(SpecTokens.DEPENDENCY):
             return initial_spec, parser_warnings
 
         # If we start with a package name we have a named spec, we cannot
         # accept another package name afterwards in a node
-        if ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME):
-            initial_spec.name = ctx.current_token.value
+        if self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME):
+            initial_spec.name = self.ctx.current_token.value
 
-        elif ctx.accept(SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME):
-            parts = ctx.current_token.value.split(".")
+        elif self.ctx.accept(SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME):
+            parts = self.ctx.current_token.value.split(".")
             name = parts[-1]
             namespace = ".".join(parts[:-1])
             initial_spec.name = name
             initial_spec.namespace = namespace
 
-        elif ctx.accept(SpecTokens.FILENAME):
-            return FileParser(ctx).parse(initial_spec), parser_warnings
+        elif self.ctx.accept(SpecTokens.FILENAME):
+            return FileParser(self.ctx).parse(initial_spec), parser_warnings
 
         def raise_parsing_error(string: str, cause: Optional[Exception] = None):
             """Raise a spec parsing error with token context."""
-            raise SpecParsingError(string, ctx.current_token, self.literal_str) from cause
+            raise SpecParsingError(string, self.ctx.current_token, self.literal_str) from cause
 
         def add_flag(name: str, value: str, propagate: bool):
             """Wrapper around ``Spec._add_flag()`` that adds parser context to errors raised."""
@@ -377,73 +376,73 @@ class SpecNodeParser:
                 parser_warnings.append(f"`{token}` should go before `{last_compiler}`")
 
         while True:
-            if ctx.accept(SpecTokens.COMPILER):
+            if self.ctx.accept(SpecTokens.COMPILER):
                 if self.has_compiler:
                     raise_parsing_error("Spec cannot have multiple compilers")
 
-                compiler_name = ctx.current_token.value[1:]
+                compiler_name = self.ctx.current_token.value[1:]
                 initial_spec.compiler = spack.spec.CompilerSpec(compiler_name.strip(), ":")
                 self.has_compiler = True
-                last_compiler = ctx.current_token.value
+                last_compiler = self.ctx.current_token.value
 
-            elif ctx.accept(SpecTokens.COMPILER_AND_VERSION):
+            elif self.ctx.accept(SpecTokens.COMPILER_AND_VERSION):
                 if self.has_compiler:
                     raise_parsing_error("Spec cannot have multiple compilers")
 
-                compiler_name, compiler_version = ctx.current_token.value[1:].split("@")
+                compiler_name, compiler_version = self.ctx.current_token.value[1:].split("@")
                 initial_spec.compiler = spack.spec.CompilerSpec(
                     compiler_name.strip(), compiler_version
                 )
                 self.has_compiler = True
-                last_compiler = ctx.current_token.value
+                last_compiler = self.ctx.current_token.value
 
             elif (
-                ctx.accept(SpecTokens.VERSION_HASH_PAIR)
-                or ctx.accept(SpecTokens.GIT_VERSION)
-                or ctx.accept(SpecTokens.VERSION)
+                self.ctx.accept(SpecTokens.VERSION_HASH_PAIR)
+                or self.ctx.accept(SpecTokens.GIT_VERSION)
+                or self.ctx.accept(SpecTokens.VERSION)
             ):
                 if self.has_version:
                     raise_parsing_error("Spec cannot have multiple versions")
 
                 initial_spec.versions = spack.version.VersionList(
-                    [spack.version.from_string(ctx.current_token.value[1:])]
+                    [spack.version.from_string(self.ctx.current_token.value[1:])]
                 )
                 initial_spec.attach_git_version_lookup()
                 self.has_version = True
-                warn_if_after_compiler(ctx.current_token.value)
+                warn_if_after_compiler(self.ctx.current_token.value)
 
-            elif ctx.accept(SpecTokens.BOOL_VARIANT):
-                variant_value = ctx.current_token.value[0] == "+"
-                add_flag(ctx.current_token.value[1:].strip(), variant_value, propagate=False)
-                warn_if_after_compiler(ctx.current_token.value)
+            elif self.ctx.accept(SpecTokens.BOOL_VARIANT):
+                variant_value = self.ctx.current_token.value[0] == "+"
+                add_flag(self.ctx.current_token.value[1:].strip(), variant_value, propagate=False)
+                warn_if_after_compiler(self.ctx.current_token.value)
 
-            elif ctx.accept(SpecTokens.PROPAGATED_BOOL_VARIANT):
-                variant_value = ctx.current_token.value[0:2] == "++"
-                add_flag(ctx.current_token.value[2:].strip(), variant_value, propagate=True)
-                warn_if_after_compiler(ctx.current_token.value)
+            elif self.ctx.accept(SpecTokens.PROPAGATED_BOOL_VARIANT):
+                variant_value = self.ctx.current_token.value[0:2] == "++"
+                add_flag(self.ctx.current_token.value[2:].strip(), variant_value, propagate=True)
+                warn_if_after_compiler(self.ctx.current_token.value)
 
-            elif ctx.accept(SpecTokens.KEY_VALUE_PAIR):
-                match = SPLIT_KVP.match(ctx.current_token.value)
+            elif self.ctx.accept(SpecTokens.KEY_VALUE_PAIR):
+                match = SPLIT_KVP.match(self.ctx.current_token.value)
                 assert match, "SPLIT_KVP and KEY_VALUE_PAIR do not agree."
 
                 name, _, value = match.groups()
                 add_flag(name, strip_quotes_and_unescape(value), propagate=False)
-                warn_if_after_compiler(ctx.current_token.value)
+                warn_if_after_compiler(self.ctx.current_token.value)
 
-            elif ctx.accept(SpecTokens.PROPAGATED_KEY_VALUE_PAIR):
-                match = SPLIT_KVP.match(ctx.current_token.value)
+            elif self.ctx.accept(SpecTokens.PROPAGATED_KEY_VALUE_PAIR):
+                match = SPLIT_KVP.match(self.ctx.current_token.value)
                 assert match, "SPLIT_KVP and PROPAGATED_KEY_VALUE_PAIR do not agree."
 
                 name, _, value = match.groups()
                 add_flag(name, strip_quotes_and_unescape(value), propagate=True)
-                warn_if_after_compiler(ctx.current_token.value)
+                warn_if_after_compiler(self.ctx.current_token.value)
 
-            elif ctx.expect(SpecTokens.DAG_HASH):
+            elif self.ctx.expect(SpecTokens.DAG_HASH):
                 if initial_spec.abstract_hash:
                     break
-                ctx.accept(SpecTokens.DAG_HASH)
-                initial_spec.abstract_hash = ctx.current_token.value[1:]
-                warn_if_after_compiler(ctx.current_token.value)
+                self.ctx.accept(SpecTokens.DAG_HASH)
+                initial_spec.abstract_hash = self.ctx.current_token.value[1:]
+                warn_if_after_compiler(self.ctx.current_token.value)
 
             else:
                 break
