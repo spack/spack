@@ -100,4 +100,4 @@ class Crtm(CMakePackage):
                     "-fbacktrace", "-fbacktrace -ffree-line-length-none", "libsrc/CMakeLists.txt"
                 )
         if not self.run_tests:
-            filter_file("add_subdirectory\(test\)", "# disable testing", "CMakeLists.txt")
+            filter_file(r"add_subdirectory\(test\)", "# disable testing", "CMakeLists.txt")
