@@ -1504,6 +1504,7 @@ class SpackSolverSetup:
         )
 
         self.possible_compilers: List[spack.spec.Spec] = []
+        self.rejected_compilers: Set[spack.spec.Spec] = set()
         self.possible_oses: Set = set()
         self.variant_values_from_specs: Set = set()
         self.version_constraints: Set = set()
@@ -2262,6 +2263,13 @@ class SpackSolverSetup:
             external_versions = []
             for local_idx, spec in enumerate(candidate_specs):
                 msg = f"{spec.name} available as external when satisfying {spec}"
+
+                if any(x.satisfies(spec) for x in self.rejected_compilers):
+                    tty.debug(
+                        f"[{__name__}]: not considering {spec} as external, since "
+                        f"it's a non-working compiler"
+                    )
+                    continue
 
                 if spec_filters and spec not in selected_externals:
                     continue
@@ -3045,7 +3053,9 @@ class SpackSolverSetup:
         compilers_from_reuse = {
             x for x in reuse if x.name in supported_compilers and not x.external
         }
-        candidate_compilers = possible_compilers(configuration=spack.config.CONFIG)
+        candidate_compilers, self.rejected_compilers = possible_compilers(
+            configuration=spack.config.CONFIG
+        )
         for x in candidate_compilers:
             if x.external or x in reuse:
                 continue
@@ -3414,12 +3424,13 @@ class ProblemInstanceBuilder:
         return "".join(self.asp_problem)
 
 
-def possible_compilers(*, configuration) -> Set["spack.spec.Spec"]:
-    result = set()
+def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:
+    result, rejected = set(), set()
 
     # Compilers defined in configuration
     for c in spack.compilers.config.all_compilers_from(configuration):
         if using_libc_compatibility() and not c_compiler_runs(c):
+            rejected.add(c)
             try:
                 compiler = c.extra_attributes["compilers"]["c"]
                 tty.debug(
@@ -3432,6 +3443,7 @@ def possible_compilers(*, configuration) -> Set["spack.spec.Spec"]:
             continue
 
         if using_libc_compatibility() and not CompilerPropertyDetector(c).default_libc():
+            rejected.add(c)
             warnings.warn(
                 f"cannot detect libc from {c}. The compiler will not be used "
                 f"during concretization."
@@ -3451,7 +3463,7 @@ def possible_compilers(*, configuration) -> Set["spack.spec.Spec"]:
     for pkg_name in supported_compilers:
         result.update(spack.store.STORE.db.query(pkg_name))
 
-    return result
+    return result, rejected
 
 
 class RuntimePropertyRecorder:
@@ -4692,3 +4704,7 @@ class SolverError(InternalConcretizerError):
 
 class InvalidSpliceError(spack.error.SpackError):
     """For cases in which the splice configuration is invalid."""
+
+
+class NoCompilerFoundError(spack.error.SpackError):
+    """Raised when there is no possible compiler"""
