@@ -40,7 +40,8 @@ def setup_parser(subparser):
         action="store_true",
         dest="clone",
         default=True,
-        help="(default) clone the package unless the path already exists, use --force to overwrite",
+        help=("(default) clone the package unless the path already exists, "
+              "use --force to overwrite"),
     )
 
     subparser.add_argument(
