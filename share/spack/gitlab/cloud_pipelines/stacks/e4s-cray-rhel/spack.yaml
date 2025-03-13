@@ -72,6 +72,9 @@ spack:
       require:
       - "~qt ^[virtuals=gl] osmesa"
       - target=x86_64_v3
+    petsc:
+      require:
+      - "+batch"
     trilinos:
       require:
       - one_of: [+amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext +ifpack
