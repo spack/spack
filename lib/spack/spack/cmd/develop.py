@@ -42,7 +42,7 @@ def setup_parser(subparser):
         default=True,
         help=(
             "(default) clone the package unless the path already exists, "
-              "use --force to overwrite"
+            "use --force to overwrite"
         ),
     )
 
