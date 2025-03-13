@@ -37,10 +37,15 @@ class Simdjson(CMakePackage):
     variant(
         "simdjson_static",
         default=False,
-        description="Build the `simdjson_static` library along with the dynamically linked"
-        " `simdjson`",
+        description="Build the simdjson_static library along with the dynamically linked simdjson",
         when="+shared",
     )
+
+    # variants by sanitizers
+    variant("ubsan", default=False, description="Enable UndefinedBehaviorSanitizer")
+    variant("asan", default=False, description="Enable AddressSanitizer")
+    variant("msan", default=False, description="Enable MemorySanitizer")
+    variant("tsan", default=False, description="Enable ThreadSanitizer", when="+ubsan")
 
     # variants by features
     variant("deprecated", default=True, description="Enable deprecated APIs")
@@ -51,23 +56,18 @@ class Simdjson(CMakePackage):
     def cmake_args(self):
         args = [
             "-DSIMDJSON_DEVELOPER_MODE:BOOL=OFF",
-            "-DSIMDJSON_SANITIZE_UNDEFINED:BOOL=OFF",
-            "-DSIMDJSON_SANITIZE:BOOL=OFF",
-            "-DSIMDJSON_SANITIZE_THREADS:BOOL=OFF",
             "-DSIMDJSON_VERBOSE_LOGGING:BOOL=OFF",
             self.define(
                 "SIMDJSON_DEVELOPMENT_CHECKS",
                 self.spec.satisfies("build_type=Debug")
                 or self.spec.satisfies("build_type=RelWithDebInfo"),
             ),
-        ]
-
-        args += [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("SIMDJSON_BUILD_STATIC_LIB", "simdjson_static"),
-        ]
-
-        args += [
+            self.define_from_variant("SIMDJSON_SANITIZE_UNDEFINED", "ubsan"),
+            self.define_from_variant("SIMDJSON_SANITIZE", "asan"),
+            self.define_from_variant("SIMDJSON_SANITIZE_MEMORY", "msan"),
+            self.define_from_variant("SIMDJSON_SANITIZE_THREADS", "tsan"),
             self.define("SIMDJSON_DISABLE_DEPRECATED_API", self.spec.satisfies("-deprecated")),
             self.define_from_variant("SIMDJSON_EXCEPTIONS", "exceptions"),
             self.define_from_variant("SIMDJSON_ENABLE_THREADS", "threads"),
