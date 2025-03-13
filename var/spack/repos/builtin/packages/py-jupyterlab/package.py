@@ -14,8 +14,9 @@ class PyJupyterlab(PythonPackage):
     pypi = "jupyterlab/jupyterlab-2.2.7.tar.gz"
     tags = ["build-tools"]
 
-    license("BSD-3-Clause")
+    license("BSD-3-Clause", checked_by="lgarrison")
 
+    version("4.3.5", sha256="c779bf72ced007d7d29d5bcef128e7fdda96ea69299e19b04a43635a7d641f9d")
     version("4.0.1", sha256="4dc3901f7bbfd4704c994b7a893a49955256abf57dba9831f4825e3f3165b8bb")
     version("3.4.8", sha256="1fafb8b657005d91603f3c3adfd6d9e8eaf33fdc601537fef09283332efe67cb")
     version("3.4.2", sha256="38abd3a4f83a8f97e3f15bebbcc0825903c15519809eedfaa41340d260be2160")
@@ -34,23 +35,29 @@ class PyJupyterlab(PythonPackage):
     depends_on("npm", type="run")
 
     depends_on("python@3.8:", when="@4:", type=("build", "run"))
-    depends_on("py-hatchling@1.5:", when="@4:", type=("build", "run"))
+    depends_on("py-hatchling@1.21.1:", when="@4.3.5:", type="build")
+    depends_on("py-hatchling@1.5:", when="@4:", type="build")
     # under [tool.hatch.build.hooks.jupyter-builder] in pyproject.toml
     depends_on("py-hatch-jupyter-builder@0.3.2:", when="@4:", type=("build", "run"))
 
     depends_on("py-async-lru@1:", when="@4:", type=("build", "run"))
+    depends_on("py-httpx@0.25:", when="@4.3.5:", type=("build", "run"))
     depends_on("py-importlib-metadata@4.8.3:", when="@4: ^python@:3.9", type=("build", "run"))
     depends_on("py-importlib-resources@1.4:", when="@4: ^python@:3.8", type=("build", "run"))
+    depends_on("py-ipykernel@6.5.0:", when="@4.3.5:", type=("build", "run"))
     depends_on("py-ipykernel", when="@4:", type=("build", "run"))
     depends_on("py-jinja2@3.0.3:", when="@4:", type=("build", "run"))
     depends_on("py-jupyter-core", when="@3:", type=("build", "run"))
     depends_on("py-jupyter-lsp@2:", when="@4:", type=("build", "run"))
     depends_on("py-jupyter-server@2.4:2", when="@4:", type=("build", "run"))
+    depends_on("py-jupyterlab-server@2.27.1:2", when="@4.3.5:", type=("build", "run"))
     depends_on("py-jupyterlab-server@2.19:2", when="@4:", type=("build", "run"))
     depends_on("py-notebook-shim@0.2:", when="@4:", type=("build", "run"))
     depends_on("py-packaging", when="@3:", type=("build", "run"))
+    depends_on("py-setuptools@40.8.0:", when="@4.3.5:", type=("build", "run"))
     depends_on("py-traitlets", when="@4:", type=("build", "run"))
     depends_on("py-tornado@6.2:", when="@4:", type=("build", "run"))
+    depends_on("py-tomli@1.2.2:", when="@4.3.5: ^python@:3.10", type=("build", "run"))
     depends_on("py-tomli", when="@4: ^python@:3.10", type=("build", "run"))
     depends_on("py-tomli", when="@3.4.7:3", type=("build", "run"))
 
