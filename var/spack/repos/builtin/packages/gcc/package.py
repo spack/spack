@@ -395,9 +395,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     conflicts(
         "~binutils", when="@10: os=rhel7", msg="gcc: Add +binutils - preinstalled as might be old"
     )
-    conflicts(
-        "~binutils", when="@10: os=rhel8", msg="gcc: Add +binutils - preinstalled as might be old"
-    )
 
     # GCC 11 requires GCC 4.8 or later (https://gcc.gnu.org/gcc-11/changes.html)
     conflicts("%gcc@:4.7", when="@11:")
