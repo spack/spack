@@ -11,12 +11,16 @@ class Topaz(PythonPackage):
     featuring micrograph and tomogram denoising with DNNs."""
 
     homepage = "https://topaz-em.readthedocs.io/"
-    pypi = "topaz-em/topaz_em-0.2.5.tar.gz"
+    pypi = "topaz-em/topaz_em-0.3.7.tar.gz"
 
     license("GPL-3.0-or-later")
 
     version("0.3.7", sha256="ae3c0d6ccb1e8ad2e4926421442b8cb33a4d01d1ee1dff83174949a9f91cc8a9")
-    version("0.2.5", sha256="002a6eb775598b6c4df0225f3a488bfe6a6da9246e8ca42eb4e7d58f694c25cc")
+    version(
+        "0.2.5",
+        sha256="002a6eb775598b6c4df0225f3a488bfe6a6da9246e8ca42eb4e7d58f694c25cc",
+        url="https://files.pythonhosted.org/packages/source/t/topaz-em/topaz-em-0.2.5.tar.gz",
+    )
 
     depends_on("py-setuptools", type="build")
     depends_on("py-torch@1:2.3.1", type=("build", "run"))
