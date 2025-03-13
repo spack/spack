@@ -21,22 +21,22 @@ import spack.cmd.buildcache as buildcache
 import spack.cmd.common.arguments
 import spack.config as cfg
 import spack.environment as ev
+import spack.error
 import spack.fetch_strategy
 import spack.hash_types as ht
 import spack.mirrors.mirror
+import spack.package_base
 import spack.paths
 import spack.repo
 import spack.spec
 import spack.stage
+import spack.util.executable
 import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
-import spack.error
-import spack.package_base
 import spack.version
-import spack.util.executable
 
 description = "manage continuous integration pipelines"
 section = "build"
@@ -674,7 +674,9 @@ def _gitlab_artifacts_url(url: str) -> str:
     return urlunparse(parsed._replace(path="/".join(parts), fragment="", query=""))
 
 
-def validate_standard_versions(pkg: spack.package_base.PackageBase, versions: spack.version.VersionList) -> bool:
+def validate_standard_versions(
+    pkg: spack.package_base.PackageBase, versions: spack.version.VersionList
+) -> bool:
     """Get and test the checksum of a package version based on a tarball.
     Args:
       pkg spack.package_base.PackageBase: Spack package for which to validate a version checksum
@@ -707,7 +709,9 @@ def validate_standard_versions(pkg: spack.package_base.PackageBase, versions: sp
     return valid_checksums
 
 
-def validate_git_versions(pkg: spack.package_base.PackageBase, versions: spack.version.VersionList) -> bool:
+def validate_git_versions(
+    pkg: spack.package_base.PackageBase, versions: spack.version.VersionList
+) -> bool:
     """Get and test the commit and tag of a package version based on a git repository.
     Args:
       pkg spack.package_base.PackageBase: Spack package for which to validate a version
