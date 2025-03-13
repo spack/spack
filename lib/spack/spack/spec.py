@@ -2712,7 +2712,7 @@ class Spec:
                 return name, depflag
 
             def spec_and_dependency_types(
-                s: Union[Spec, Tuple[Spec, str]],
+                s: Union[Spec, Tuple[Spec, str]]
             ) -> Tuple[Spec, dt.DepFlag]:
                 """Given a non-string key in the literal, extracts the spec
                 and its dependency types.
@@ -3798,7 +3798,7 @@ class Spec:
             for dep in sorted(itertools.chain.from_iterable(self._dependencies.values())):
                 yield dep.spec.name
                 yield dep.depflag
-                yield hash(dep.spec)
+                yield dep.spec._cmp_iter
 
         yield deps
 
