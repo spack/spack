@@ -633,19 +633,21 @@ def _rewrite_spec_strings(path: str, line: int, col: int, old: str, new: str):
 SpecStrHandler = Callable[[str, int, int, str, str], None]
 
 
-def _spec_str_ast(path: str, node: ast.AST, handler: SpecStrHandler) -> None:
+def _spec_str_ast(path: str, tree: ast.AST, handler: SpecStrHandler) -> None:
     """Walk the AST of a Python file and print reformatted spec strings."""
-    for node in ast.walk(node):
-        if (
-            not isinstance(node, ast.Constant)
-            or not isinstance(node.value, str)
-            or not IS_PROBABLY_COMPILER.search(node.value)
-        ):
+    has_constant = sys.version_info >= (3, 8)
+    for node in ast.walk(tree):
+        if has_constant and isinstance(node, ast.Constant):
+            current_str = node.value
+        elif not has_constant and isinstance(node, ast.Str):
+            current_str = node.s
+        else:
             continue
-        current = node.value
-        new = _spec_str_reformat(current)
+        if not IS_PROBABLY_COMPILER.search(current_str):
+            continue
+        new = _spec_str_reformat(current_str)
         if new is not None:
-            handler(path, node.lineno, node.col_offset, current, new)
+            handler(path, node.lineno, node.col_offset, current_str, new)
 
 
 def _spec_str_json_and_yaml(path: str, data: dict, handler: SpecStrHandler) -> None:

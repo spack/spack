@@ -484,7 +484,9 @@ spec:
         handler=spack.cmd.style._rewrite_spec_strings,
     )
 
-    assert (tmp_path / "example.json").read_text() == """\
+    assert (
+        (tmp_path / "example.json").read_text()
+        == """\
 {
     "spec": [
         "+foo +bar~nope %gcc   ^dep +yup @3.2 target=x86_64 /abcdef %clang ^another   %gcc   ",
@@ -493,15 +495,22 @@ spec:
     "x=y %gcc": 2
 }
 """
-    assert (tmp_path / "example.py").read_text() == """\
+    )
+    assert (
+        (tmp_path / "example.py").read_text()
+        == """\
 def func(x):
     print("dont fix %s me" % x)
     return x.satisfies("+foo +bar %gcc") and x.satisfies("+baz %gcc")
 """
-    assert (tmp_path / "example.yaml").read_text() == """\
+    )
+    assert (
+        (tmp_path / "example.yaml").read_text()
+        == """\
 spec:
   - "+foo +bar   %gcc"
   - "+baz %gcc"
   - "this is fine %clang"
 "x=y %gcc": 2
 """
+    )
