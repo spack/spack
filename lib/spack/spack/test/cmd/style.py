@@ -481,7 +481,7 @@ spec:
             str(tmp_path / "example.json"),
             str(tmp_path / "example.yaml"),
         ],
-        handler=spack.cmd.style._rewrite_spec_strings,
+        handler=spack.cmd.style._spec_str_fix_handler,
     )
 
     assert (

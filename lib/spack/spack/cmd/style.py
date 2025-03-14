@@ -539,9 +539,9 @@ def _spec_str_reorder_compiler(idx: int, blocks: List[List[Token]]) -> None:
     blocks.append(compiler_block)
 
 
-def _spec_str_reformat(spec_str: str):
+def _spec_str_format(spec_str: str) -> Optional[str]:
     """Given any string, try to parse as spec string, and rotate the compiler token to the end
-    of each spec instance."""
+    of each spec instance. Returns the formatted string if it was changed, otherwise None."""
     # We parse blocks of tokens that include leading whitespace, and move the compiler block to
     # the end when we hit a dependency ^... or the end of a string.
     # [@3.1][ +foo][ +bar][ %gcc@3.1][ +baz]
@@ -610,11 +610,16 @@ def _spec_str_reformat(spec_str: str):
     return new_spec_str if spec_str != new_spec_str else None
 
 
+SpecStrHandler = Callable[[str, int, int, str, str], None]
+
+
 def _spec_str_default_handler(path: str, line: int, col: int, old: str, new: str):
+    """A SpecStrHandler that prints formatted spec strings and their locations."""
     print(f"{path}:{line}:{col}: `{old}` -> `{new}`")
 
 
-def _rewrite_spec_strings(path: str, line: int, col: int, old: str, new: str):
+def _spec_str_fix_handler(path: str, line: int, col: int, old: str, new: str):
+    """A SpecStrHandler that updates formatted spec strings in files."""
     with open(path, "r", encoding="utf-8") as f:
         lines = f.readlines()
     new_line = lines[line - 1].replace(old, new)
@@ -627,11 +632,8 @@ def _rewrite_spec_strings(path: str, line: int, col: int, old: str, new: str):
         f.writelines(lines)
 
 
-SpecStrHandler = Callable[[str, int, int, str, str], None]
-
-
 def _spec_str_ast(path: str, tree: ast.AST, handler: SpecStrHandler) -> None:
-    """Walk the AST of a Python file and apply handler to reformatted spec strings."""
+    """Walk the AST of a Python file and apply handler to formatted spec strings."""
     has_constant = sys.version_info >= (3, 8)
     for node in ast.walk(tree):
         if has_constant and isinstance(node, ast.Constant):
@@ -642,13 +644,13 @@ def _spec_str_ast(path: str, tree: ast.AST, handler: SpecStrHandler) -> None:
             continue
         if not IS_PROBABLY_COMPILER.search(current_str):
             continue
-        new = _spec_str_reformat(current_str)
+        new = _spec_str_format(current_str)
         if new is not None:
             handler(path, node.lineno, node.col_offset, current_str, new)
 
 
 def _spec_str_json_and_yaml(path: str, data: dict, handler: SpecStrHandler) -> None:
-    """Walk a YAML or JSON data structure and apply handler to reformatted spec strings."""
+    """Walk a YAML or JSON data structure and apply handler to formatted spec strings."""
     queue = [data]
     seen = set()
 
@@ -663,7 +665,7 @@ def _spec_str_json_and_yaml(path: str, data: dict, handler: SpecStrHandler) -> N
         elif isinstance(current, list):
             queue.extend(current)
         elif isinstance(current, str) and IS_PROBABLY_COMPILER.search(current):
-            new = _spec_str_reformat(current)
+            new = _spec_str_format(current)
             if new is not None:
                 mark = getattr(current, "_start_mark", None)
                 if mark:
@@ -676,9 +678,8 @@ def _spec_str_json_and_yaml(path: str, data: dict, handler: SpecStrHandler) -> N
 def _check_spec_strings(
     paths: List[str], handler: SpecStrHandler = _spec_str_default_handler
 ) -> None:
-    """Open Python, JSON and YAML files, and reformat their string literals that look like spec
-    strings. A handler is called for each reformatting, which can be used to print or apply
-    fixes."""
+    """Open Python, JSON and YAML files, and format their string literals that look like spec
+    strings. A handler is called for each formatting, which can be used to print or apply fixes."""
     for path in paths:
         is_json_or_yaml = path.endswith(".json") or path.endswith(".yaml") or path.endswith(".yml")
         is_python = path.endswith(".py")
@@ -704,7 +705,7 @@ def style(parser, args):
     if args.spec_strings:
         if not args.files:
             tty.die("No files provided to check spec strings.")
-        handler = _rewrite_spec_strings if args.fix else _spec_str_default_handler
+        handler = _spec_str_fix_handler if args.fix else _spec_str_default_handler
         return _check_spec_strings(args.files, handler)
 
     # save initial working directory for relativizing paths later
