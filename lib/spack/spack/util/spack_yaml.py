@@ -183,7 +183,7 @@ class OrderedLineRepresenter(representer.RoundTripRepresenter):
         if hasattr(data, "override") and data.override:
             data = data + ":"
         if len(data.splitlines()) > 1:
-            return super().represent_scalar('tag:yaml.org,2002:str', data, style="|")
+            return super().represent_scalar("tag:yaml.org,2002:str", data, style="|")
         return super().represent_str(data)
 
 
