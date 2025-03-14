@@ -1,0 +1,15 @@
+diff --git a/packages/kokkos-kernels/sparse/src/KokkosSparse_spadd_handle.hpp b/packages/kokkos-kernels/sparse/src/KokkosSparse_spadd_handle.hpp
+index 6d726e3da65..01d96f55115 100644
+--- a/packages/kokkos-kernels/sparse/src/KokkosSparse_spadd_handle.hpp
++++ b/packages/kokkos-kernels/sparse/src/KokkosSparse_spadd_handle.hpp
+@@ -76,10 +76,6 @@ class SPADDHandle {
+    */
+   size_type get_c_nnz() { return this->result_nnz_size; }
+
+-  void set_sort_option(int option) { this->sort_option = option; }
+-
+-  int get_sort_option() { return this->sort_option; }
+-
+   /**
+    * \brief Default constructor.
+    */
