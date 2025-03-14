@@ -597,10 +597,7 @@ def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str)
         spec_dest_url = f"{spec_dest_url}.sig"
 
     tarball_dest_url = url_util.join(
-        destination_url,
-        bindist.buildcache_relative_tarball_path(
-            cache_entry.get_archive_checksum_algorithm(), cache_entry.get_archive_checksum_hash()
-        ),
+        destination_url, *cache_entry.get_relative_tarball_components()
     )
 
     local_tarball_path = cache_entry.get_local_archive_path()

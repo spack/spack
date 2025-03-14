@@ -59,7 +59,7 @@ class URLBuildcacheEntry:
     LAYOUT_VERSION = 3
 
     @classmethod
-    def get_layout_version(cls):
+    def get_layout_version(cls) -> int:
         return cls.LAYOUT_VERSION
 
     def __init__(self):
@@ -88,20 +88,24 @@ class URLBuildcacheEntry:
         self._checked_unsigned = False
         self._checked_tarball = False
 
-    def initialize_from_spec_and_mirror(self, spec: spack.spec.Spec, mirror_url: str):
-        if not spec.concrete:
-            raise BuildcacheEntryError("Concrete spec required for URLBuildcacheEntry")
+    def initialize_from_spec_dict_and_mirror(self, spec_dict: Dict[Any, Any], mirror_url: str):
+        """Initialize the buildcache entry from an in-memory buildcache .spec.json
+        dictionary and a base url.  Useful when creating a buildcache entry locally
+        to push elsewhere."""
+        try:
+            self.spec = spack.spec.Spec.from_dict(spec_dict["spec"])
+        except Exception as err:
+            raise BuildcacheEntryError("Provided spec dict does not contain valid spec") from err
+
+        self._set_spec_dict(spec_dict)
 
         self.mirror_url = mirror_url
-        self.remote_spec_url_signed = self.compute_remote_spec_url(spec, mirror_url, signed=True)
-        self.remote_spec_url_unsigned = self.compute_remote_spec_url(
-            spec, mirror_url, signed=False
-        )
 
     def initialize_from_spec_url(self, spec_url: str):
-        """Initialized the buildcache entry from a url to a spec metadata file.  If the
-        metadata url is not for a v3 spec, or otherwise does match the expected format
-        or does not exist, an exception is raised."""
+        """Initialize the buildcache entry from a url to a spec metadata file.  Useful when
+        buildcache entry must be retrieved from remote mirror.  If the metadata url is not
+        for a v3 spec, or otherwise does match the expected format or does not exist, an
+        exception is raised."""
         rematch = URLBuildcacheEntry.SPEC_URL_REGEX.search(spec_url)
 
         if not rematch:
@@ -135,16 +139,14 @@ class URLBuildcacheEntry:
             raise BuildcacheEntryError(f"Unable to parse spec url: {spec_url}")
         return rematch.group(1)
 
-    def compute_remote_archive_url(self, mirror_url: str, algorithm: str, checksum: str) -> str:
-        rel_tarball_components = self.get_relative_tarball_components(algorithm, checksum)
+    def compute_remote_archive_url(self, mirror_url: str) -> str:
+        rel_tarball_components = self.get_relative_tarball_components()
         return url_util.join(mirror_url, *rel_tarball_components)
 
-    def compute_remote_spec_url(
-        self, spec: spack.spec.Spec, mirror_url: str, signed: bool = True
-    ) -> str:
-        url_prefix = url_util.join(mirror_url, *self.get_relative_spec_components(spec, ".spec"))
-        ext = ".json.sig" if signed else ".json"
-        return f"{url_prefix}{ext}"
+    @classmethod
+    def compute_remote_spec_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
+        # TODO: This will always be the same, signed or unsiged "blah.manifest.json"
+        return url_util.join(mirror_url, *cls.get_relative_spec_components(spec, ".spec.json.sig"))
 
     def _check_metadata_exists(self):
         if not self._checked_signed:
@@ -181,6 +183,31 @@ class URLBuildcacheEntry:
             self.remote_archive_url,
         )
 
+    def _set_spec_dict(self, spec_dict: Dict[Any, Any]) -> Dict[Any, Any]:
+        if not self.spec_dict:
+            self.spec_dict = spec_dict
+
+            # Retrieve the alg and hash from the spec dict, use them to build the path to
+            # the tarball.
+
+            if "binary_cache_checksum" not in self.spec_dict:
+                raise BuildcacheEntryError(
+                    "Provided spec dict must contain 'binary_cache_checksum'"
+                )
+
+            bchecksum = self.spec_dict["binary_cache_checksum"]
+
+            if "hash_algorithm" not in bchecksum or "hash" not in bchecksum:
+                raise BuildcacheEntryError(
+                    "Provided spec dict contains invalid 'binary_cache_checksum'"
+                )
+
+            self.remote_archive_checksum_algorithm = bchecksum["hash_algorithm"]
+            self.remote_archive_checksum_hash = bchecksum["hash"]
+            self.remote_archive_url = self.compute_remote_archive_url(self.mirror_url)
+
+        return self.spec_dict
+
     def fetch_metadata(self) -> dict:
         """Retrieve metadata for the spec, yields the validated spec+ dict"""
         if self.spec_dict:
@@ -209,23 +236,17 @@ class URLBuildcacheEntry:
 
         # Check spec file for validity and read it, or else cleanup and exit early
         try:
-            self.spec_dict, _ = get_valid_spec_file(
-                self.local_specfile_path, self.get_layout_version()
-            )
+            spec_dict, _ = get_valid_spec_file(self.local_specfile_path, self.get_layout_version())
         except InvalidMetadataFile as e:
             self.destroy()
             raise BuildcacheEntryError("Buildcache entry does not have valid metadata file") from e
 
-        # Retrieve the alg and hash from the spec dict, use them to build the path to
-        # the tarball.
-        bchecksum = self.spec_dict["binary_cache_checksum"]
-        self.remote_archive_checksum_algorithm = bchecksum["hash_algorithm"]
-        self.remote_archive_checksum_hash = bchecksum["hash"]
-        self.remote_archive_url = self.compute_remote_archive_url(
-            self.mirror_url,
-            self.remote_archive_checksum_algorithm,
-            self.remote_archive_checksum_hash,
-        )
+        try:
+            self.spec = spack.spec.Spec.from_dict(spec_dict["spec"])
+        except Exception as err:
+            raise BuildcacheEntryError("Fetched spec dict does not contain valid spec") from err
+
+        self._set_spec_dict(spec_dict)
 
         return self.spec_dict
 
@@ -262,20 +283,29 @@ class URLBuildcacheEntry:
 
         return self.local_archive_path
 
-    def get_relative_spec_components(self, spec: spack.spec.Spec, ext: str) -> List[str]:
+    @classmethod
+    def get_relative_spec_components(cls, spec: spack.spec.Spec, ext: str) -> List[str]:
         spec_formatted = spec.format_path("{name}-{version}-{hash}")
-        return [f"v{self.get_layout_version()}", "specs", f"{spec_formatted}{ext}"]
+        return [f"v{cls.get_layout_version()}", "specs", f"{spec_formatted}{ext}"]
 
-    def get_relative_tarball_components(self, algorithm: str, checksum: str) -> List[str]:
-        return ["blobs", algorithm, checksum[:2], checksum]
+    def get_relative_tarball_components(self) -> List[str]:
+        return [
+            "blobs",
+            self.remote_archive_checksum_algorithm,
+            self.remote_archive_checksum_hash[:2],
+            self.remote_archive_checksum_hash,
+        ]
 
-    def get_relative_keys_components(self) -> List[str]:
-        return [f"v{self.get_layout_version()}", "keys", "_pgp"]
+    @classmethod
+    def get_relative_keys_components(cls) -> List[str]:
+        return [f"v{cls.get_layout_version()}", "keys", "_pgp"]
 
-    def get_relative_specs_components(self) -> List[str]:
-        return [f"v{self.get_layout_version()}", "specs"]
+    @classmethod
+    def get_relative_specs_components(cls) -> List[str]:
+        return [f"v{cls.get_layout_version()}", "specs"]
 
-    def get_relative_blobs_components(self) -> List[str]:
+    @classmethod
+    def get_relative_blobs_components(cls) -> List[str]:
         return ["blobs"]
 
     def get_remote_spec_url(self):
@@ -314,9 +344,31 @@ class URLBuildcacheEntry:
         return self.spec_dict
 
 
+class URLBuildcacheEntryV2(URLBuildcacheEntry):
+    SPEC_URL_REGEX = re.compile(r"(.+)/build_cache/.+")
+    LAYOUT_VERSION = 2
+
+    @classmethod
+    def get_layout_version(cls) -> int:
+        return cls.LAYOUT_VERSION
+
+    @classmethod
+    def compute_remote_spec_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
+        return url_util.join(mirror_url, *cls.get_relative_spec_components(spec, ".spec.json.sig"))
+
+    def initialize_from_spec_url(self, spec_url):
+        try:
+            return super().initialize_from_spec_url(spec_url)
+        except BuildcacheEntryError:
+            if spec_url.endswith(".sig"):
+                return super().initialize_from_spec_url(spec_url[:-4])
+
+
 def create_url_buildcache_entry(layout_version: int) -> URLBuildcacheEntry:
     if layout_version == 3:
         return URLBuildcacheEntry()
+    elif layout_version == 2:
+        return URLBuildcacheEntryV2()
     else:
         raise UnknownBuildcacheLayoutError(
             f"Buildcache layout version {layout_version} is unknown"

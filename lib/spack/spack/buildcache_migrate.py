@@ -15,6 +15,7 @@ import llnl.util.tty as tty
 import spack.binary_distribution as bindist
 import spack.database as spack_db
 import spack.error
+import spack.hash_types as ht
 import spack.mirrors.mirror
 import spack.spec
 import spack.stage
@@ -77,8 +78,10 @@ def _migrate_spec(
     # Check if the spec file exists in the new location and exit early if so
     v3_cache_entry = create_url_buildcache_entry(layout_version=3)
 
-    v3_cache_entry.initialize_from_spec_and_mirror(s, mirror_url)
+    spec_dict = s.to_dict(hash=ht.dag_hash)
+    v3_cache_entry.initialize_from_spec_dict_and_mirror(spec_dict, mirror_url)
     exists = v3_cache_entry.exists()
+    v3_archive_url = url_util.join(mirror_url, *v3_cache_entry.get_relative_tarball_components())
     v3_cache_entry.destroy()
 
     if (exists.signed or (unsigned and exists.unsigned)) and exists.tarball:
@@ -140,9 +143,6 @@ def _migrate_spec(
     spec_dict["buildcache_layout_version"] = 3
 
     v2_archive_url = url_util.join(mirror_url, "build_cache", v2_tarball_path_name(s, ".spack"))
-    v3_archive_url = url_util.join(
-        mirror_url, bindist.buildcache_relative_tarball_url(algorithm, checksum)
-    )
 
     # spacks web utilities do not include direct copying of s3 objects, so we
     # need to download the archive locally, and then push it back to the target

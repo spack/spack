@@ -652,20 +652,6 @@ def buildcache_relative_spec_url(
     return url_util.join(*cache_entry.get_relative_spec_components(spec, ext))
 
 
-def buildcache_relative_tarball_path(
-    algorithm: str, checksum: str, layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION
-) -> str:
-    cache_entry = create_url_buildcache_entry(layout_version=layout_version)
-    return os.path.join(*cache_entry.get_relative_tarball_components(algorithm, checksum))
-
-
-def buildcache_relative_tarball_url(
-    algorithm: str, checksum: str, layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION
-) -> str:
-    cache_entry = create_url_buildcache_entry(layout_version=layout_version)
-    return url_util.join(*cache_entry.get_relative_tarball_components(algorithm, checksum))
-
-
 def buildcache_relative_keys_path(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
     cache_entry = create_url_buildcache_entry(layout_version=layout_version)
     return os.path.join(*cache_entry.get_relative_keys_components())
@@ -1107,7 +1093,7 @@ def _exists_in_buildcache(spec: spack.spec.Spec, tmpdir: str, out_url: str) -> E
     """returns a tuple of bools (signed, unsigned, tarball) indicating whether specfiles/tarballs
     exist in the buildcache"""
     cache_entry = create_url_buildcache_entry(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    cache_entry.initialize_from_spec_and_mirror(spec, out_url)
+    cache_entry.initialize_from_spec_url(cache_entry.compute_remote_spec_url(spec, out_url))
     cache_exists = cache_entry.exists()
     cache_entry.destroy()
     return cache_exists
@@ -1128,8 +1114,6 @@ def _url_upload_tarball_and_specfile(
     signing_key: Optional[str],
 ):
     layout_version = CURRENT_BUILD_CACHE_LAYOUT_VERSION
-    cache_entry = create_url_buildcache_entry(layout_version=layout_version)
-    cache_entry.initialize_from_spec_and_mirror(spec, out_url)
     tarball = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
     checksum, _ = create_tarball(spec, tarball)
     spec_dict = spec.to_dict(hash=ht.dag_hash)
@@ -1140,6 +1124,9 @@ def _url_upload_tarball_and_specfile(
     spec_dict["archive_timestamp"] = datetime.datetime.now().astimezone().isoformat()
     spec_dict["archive_compression"] = "gzip"
 
+    cache_entry = create_url_buildcache_entry(layout_version=layout_version)
+    cache_entry.initialize_from_spec_dict_and_mirror(spec_dict, out_url)
+
     if exists.tarball:
         web_util.remove_url(exists.tarball_url)
     if exists.signed:
@@ -1148,9 +1135,7 @@ def _url_upload_tarball_and_specfile(
         web_util.remove_url(exists.unsigned_url)
 
     web_util.push_to_url(
-        tarball,
-        cache_entry.compute_remote_archive_url(out_url, hash_algorithm, checksum),
-        keep_original=False,
+        tarball, cache_entry.compute_remote_archive_url(out_url), keep_original=False
     )
 
     specfile = os.path.join(tmpdir, f"{spec.dag_hash()}.spec.json")
@@ -1166,9 +1151,7 @@ def _url_upload_tarball_and_specfile(
         specfile = sign_specfile(signing_key, specfile)
 
     web_util.push_to_url(
-        specfile,
-        cache_entry.compute_remote_spec_url(spec, out_url, signed=bool(signing_key)),
-        keep_original=False,
+        specfile, cache_entry.compute_remote_spec_url(spec, out_url), keep_original=False
     )
 
 
@@ -2017,7 +2000,9 @@ def download_tarball(spec, unsigned: Optional[bool] = False, mirrors_for_spec=No
             }
         else:
             cache_entry = create_url_buildcache_entry(layout_version=layout_version)
-            cache_entry.initialize_from_spec_and_mirror(spec, fetch_url)
+            cache_entry.initialize_from_spec_url(
+                cache_entry.compute_remote_spec_url(spec, fetch_url)
+            )
 
             try:
                 cache_entry.fetch_metadata()
@@ -2431,7 +2416,9 @@ def try_direct_fetch(spec, mirrors=None):
         # layout_version could eventually come from the mirror config
         layout_version = CURRENT_BUILD_CACHE_LAYOUT_VERSION
         cache_entry = create_url_buildcache_entry(layout_version=layout_version)
-        cache_entry.initialize_from_spec_and_mirror(spec, mirror.fetch_url)
+        cache_entry.initialize_from_spec_url(
+            cache_entry.compute_remote_spec_url(spec, mirror.fetch_url)
+        )
 
         try:
             spec_dict = cache_entry.fetch_metadata()
@@ -2604,7 +2591,7 @@ def needs_rebuild(spec, mirror_url):
     # format of the name, in order to determine if the package
     # needs to be rebuilt.
     cache_entry = create_url_buildcache_entry(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    cache_entry.initialize_from_spec_and_mirror(spec, mirror_url)
+    cache_entry.initialize_from_spec_url(cache_entry.compute_remote_spec_url(spec, mirror_url))
     exists = cache_entry.exists()
     cache_entry.destroy()
     return not (exists.signed or exists.unsigned) or not exists.tarball
@@ -2680,7 +2667,9 @@ def download_single_spec(
 
     for url in urls:
         cache_entry = create_url_buildcache_entry(layout_version)
-        cache_entry.initialize_from_spec_and_mirror(concrete_spec, url)
+        cache_entry.initialize_from_spec_url(
+            cache_entry.compute_remote_spec_url(concrete_spec, url)
+        )
 
         try:
             cache_entry.fetch_metadata()
