@@ -12,7 +12,7 @@ class Psblas(AutotoolsPackage):
 
     # Url for your package's homepage here.
     homepage = "https://psctoolkit.github.io/"
-    git = "https://github.com/sfilippone/psblas3"
+    git = "https://github.com/sfilippone/psblas3.git"
 
     # List of GitHub accounts to notify when the package is updated.
     maintainers("cirdans-home", "sfilippone")
