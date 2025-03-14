@@ -44,22 +44,13 @@ class Fds(MakefilePackage):
     )
 
     requires(
-        "^intel-mkl",
-        "^intel-oneapi-mkl",
-        policy="one_of",
-        msg="FDS builds require either Intel MKL or Intel oneAPI MKL library",
+        "^intel-oneapi-mkl", policy="one_of", msg="FDS builds require Intel oneAPI MKL library"
     )
 
     requires(
         "^openmpi",
         when="platform=linux %gcc",
         msg="OpenMPI can only be used with GNU Fortran on Linux platform",
-    )
-
-    requires(
-        "^intel-mpi^intel-mkl",
-        when="platform=linux %intel",
-        msg="Intel MPI and Intel MKL can only be used with Intel Fortran on Linux platform",
     )
 
     requires(
