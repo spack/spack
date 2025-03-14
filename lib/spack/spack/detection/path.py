@@ -83,7 +83,7 @@ def dedupe_paths(paths: List[str]) -> List[str]:
         identifier = file_identifier(path)
         if identifier not in seen:
             seen[identifier] = path
-        # we also want to deprioritize paths if they contain a symlink in any parent 
+        # we also want to deprioritize paths if they contain a symlink in any parent
         # (not just the basedir): e.g. oneapi has "latest/bin",
         # where "latest" is a symlink to 2025.0"
         elif not (llnl.util.symlink.islink(path) or linked_parent_check(path)):
