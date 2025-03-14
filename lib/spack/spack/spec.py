@@ -699,6 +699,11 @@ class DeprecatedCompilerSpec(lang.DeprecatedProperty):
         super().__init__(name="compiler")
 
     def factory(self, instance, owner):
+        if instance.original_spec_format() < 5:
+            compiler = instance.annotations.compiler_node_attribute
+            assert compiler is not None, "a compiler spec is expected"
+            return CompilerSpec(compiler)
+
         for language in ("c", "cxx", "fortran"):
             deps = instance.dependencies(virtuals=language)
             if deps:

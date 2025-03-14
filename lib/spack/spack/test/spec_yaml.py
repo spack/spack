@@ -428,6 +428,11 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls):
     for edge in s2.traverse_edges():
         assert isinstance(edge.virtuals, tuple), edge
 
+    # Ensure we can format {compiler} tokens
+    assert s2.format("{compiler}") != "none"
+    assert s2.format("{compiler.name}") == "gcc"
+    assert s2.format("{compiler.version}") != "none"
+
 
 def test_anchorify_1():
     """Test that anchorify replaces duplicate values with references to a single instance, and
