@@ -525,11 +525,8 @@ def _spec_str_reorder_compiler(idx: int, blocks: List[List[Token]]) -> None:
     # only move the compiler to the back if it exists and is not already at the end
     if not 0 <= idx < len(blocks) - 1:
         return
-    # ensure there is at least one non-WS token after the compiler token
-    for block in blocks[idx + 1 :]:
-        if any(token.kind != SpecTokens.WS for token in block):
-            break
-    else:
+    # if there's only whitespace after the compiler, don't move it
+    if all(token.kind == SpecTokens.WS for block in blocks[idx + 1 :] for token in block):
         return
     # rotate left and always add at least one WS token between compiler and previous token
     compiler_block = blocks.pop(idx)
@@ -634,7 +631,7 @@ SpecStrHandler = Callable[[str, int, int, str, str], None]
 
 
 def _spec_str_ast(path: str, tree: ast.AST, handler: SpecStrHandler) -> None:
-    """Walk the AST of a Python file and print reformatted spec strings."""
+    """Walk the AST of a Python file and apply handler to reformatted spec strings."""
     has_constant = sys.version_info >= (3, 8)
     for node in ast.walk(tree):
         if has_constant and isinstance(node, ast.Constant):
@@ -651,7 +648,7 @@ def _spec_str_ast(path: str, tree: ast.AST, handler: SpecStrHandler) -> None:
 
 
 def _spec_str_json_and_yaml(path: str, data: dict, handler: SpecStrHandler) -> None:
-    """Walk a YAML or JSON data structure and print reformatted spec strings."""
+    """Walk a YAML or JSON data structure and apply handler to reformatted spec strings."""
     queue = [data]
     seen = set()
 
