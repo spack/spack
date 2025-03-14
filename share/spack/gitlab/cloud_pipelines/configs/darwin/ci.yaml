@@ -8,8 +8,5 @@ ci:
       tags: [spack]
   - build-job:
       tags: [ "macos-sequoia", "apple-clang-16", "aarch64-macos" ]
-
-      script-:
-      - ls $(spack location --stage-dir /${SPACK_JOB_SPEC_DAG_HASH})
   - build-job-remove:
       image:: macos-run-on-metal
