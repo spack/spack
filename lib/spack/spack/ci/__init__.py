@@ -583,9 +583,8 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
 
     try:
         package_metadata_root = pathlib.Path(spack.store.STORE.layout.metadata_path(job_spec))
-    except AssertionError:
-        msg = f"Cannot copy logs: job spec ({job_spec}) must be concrete"
-        tty.error(msg)
+    except spack.error.SpackError as e:
+        tty.error(f"Cannot copy logs: {str(e)}")
         return
 
     # Get the package's archived files
