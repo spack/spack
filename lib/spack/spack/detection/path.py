@@ -83,16 +83,9 @@ def dedupe_paths(paths: List[str]) -> List[str]:
         identifier = file_identifier(path)
         if identifier not in seen:
             seen[identifier] = path
-        # OneAPI symlinks a "latest" directory to a versioned directory
-        # where the layout is something like:
-        # latest -> 2025.0
-        # 2025.0  /
-        #         | - bin
-        #         | - lib
-        #         etc
-        # checking if latest/bin is a symlink will return false because the bin directory
-        # is not a symlink, and will cause the "latest/bin" dir to override the "2025.0/bin"
-        # checking for all parent paths of our detected binaries will prevent this case
+        # we also want to deprioritize paths if they contain a symlink in any parent 
+        # (not just the basedir): e.g. oneapi has "latest/bin",
+        # where "latest" is a symlink to 2025.0"
         elif not (llnl.util.symlink.islink(path) or linked_parent_check(path)):
             seen[identifier] = path
     return list(seen.values())
@@ -277,7 +270,6 @@ class Finder:
             return []
 
         result = []
-
         for candidate_path, items_in_prefix in _group_by_prefix(
             llnl.util.lang.dedupe(paths)
         ).items():

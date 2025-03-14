@@ -58,15 +58,15 @@ class Msvc(Package, CompilerPackage):
         # MSVC uses same executable for both languages
         spec, extras = super().determine_variants(exes, version_str)
         extras["compilers"]["c"] = extras["compilers"]["cxx"]
-        # manually populate intel compilers stored from previous
-        # attempt to detect the intel compilers
-        # compiler detection sorts the detected paths, so oneAPI
-        # will always be interrogated as msvc before MSVC is
-        # this means we can store the oneAPI detections, and
-        # then use them to manually populate the MSVC compiler entries
-        # TODO: remove this once compilers as nodes lands
+        # This depends on oneapi being processed before msvc
+        # which is guarunteed from detection behavior.
+        # Processing oneAPI tracks oneAPI installations within
+        # this module, which are then used to populate compatible
+        # MSVC version's fortran compiler spots
+
+        # TODO: remove this once #45189 lands
         # TODO: interrogate intel and msvc for compatibility after
-        # compilers as nodes lands
+        # #45189 lands
         extras["compilers"]["fortran"] = get_latest_valid_fortran_pth()
         return spec, extras
 
