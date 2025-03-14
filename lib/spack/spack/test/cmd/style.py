@@ -415,7 +415,7 @@ def test_spec_strings(tmp_path):
     (tmp_path / "example.py").write_text(
         """\
 def func(x):
-    print("dont fix %s me" % x)
+    print("dont fix %s me" % x, 3)
     return x.satisfies("+foo %gcc +bar") and x.satisfies("%gcc +baz")
 """
     )
@@ -500,7 +500,7 @@ spec:
         (tmp_path / "example.py").read_text()
         == """\
 def func(x):
-    print("dont fix %s me" % x)
+    print("dont fix %s me" % x, 3)
     return x.satisfies("+foo +bar %gcc") and x.satisfies("+baz %gcc")
 """
     )
