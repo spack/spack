@@ -230,12 +230,12 @@ PrunerCallback = Callable[[spack.spec.Spec], RebuildDecision]
 def create_redistribution_pruner() -> PrunerCallback:
     """Return a filter to skip CI for Specs that cannot be stored in a binary cache."""
 
-    def redistributable_filter(s: spack.spec.Spec) -> RebuildDecision:
+    def redistribute_binary_filter(s: spack.spec.Spec) -> RebuildDecision:
         if s.package.redistribute_binary:
-            return RebuildDecision(True, "redistributable")
-        return RebuildDecision(False, "not redistributable")
+            return RebuildDecision(True, "binary is redistributable")
+        return RebuildDecision(False, "binary is not redistributable")
 
-    return redistributable_filter
+    return redistribute_binary_filter
 
 
 def create_unaffected_pruner(affected_specs: Set[spack.spec.Spec]) -> PrunerCallback:
@@ -382,6 +382,7 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     options.prune_external = args.prune_externals
     options.check_index_only = args.index_only
     options.forward_variables = args.forward_variable or []
+    options.private = args.private
 
     ci_config = cfg.get("ci")
 

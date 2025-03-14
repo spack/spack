@@ -365,6 +365,7 @@ class PipelineOptions:
         pipeline_type: Optional[PipelineType] = None,
         require_signing: bool = False,
         cdash_handler: Optional["CDashHandler"] = None,
+        private: bool = False,
     ):
         """
         Args:
@@ -403,6 +404,7 @@ class PipelineOptions:
         self.require_signing = require_signing
         self.cdash_handler = cdash_handler
         self.forward_variables: List[str] = []
+        self.private = private
 
 
 class PipelineNode:
