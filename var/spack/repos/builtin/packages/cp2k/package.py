@@ -166,7 +166,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         default=False,
         description="Enable DeepMD-kit support",
     )
-    conflicts("+deepmd") # DeepMD-kit is not yet supported in Spack
+    conflicts("+deepmd", msg="DeepMD-kit is not yet available in Spack")
 
     with when("+cuda"):
         variant(
