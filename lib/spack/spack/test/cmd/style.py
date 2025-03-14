@@ -445,6 +445,7 @@ spec:
     def collect_issues(path: str, line: int, col: int, old: str, new: str):
         issues.add((path, line, col, old, new))
 
+    # check for issues with custom handler
     spack.cmd.style._check_spec_strings(
         [
             str(tmp_path / "nonexistent.py"),
@@ -471,3 +472,36 @@ spec:
         (str(tmp_path / "example.yaml"), 3, 5, "%gcc +baz", "+baz %gcc"),
         (str(tmp_path / "example.yaml"), 5, 1, "%gcc x=y", "x=y %gcc"),
     }
+
+    # fix the issues in the files
+    spack.cmd.style._check_spec_strings(
+        [
+            str(tmp_path / "nonexistent.py"),
+            str(tmp_path / "example.py"),
+            str(tmp_path / "example.json"),
+            str(tmp_path / "example.yaml"),
+        ],
+        handler=spack.cmd.style._rewrite_spec_strings,
+    )
+
+    assert (tmp_path / "example.json").read_text() == """\
+{
+    "spec": [
+        "+foo +bar~nope %gcc   ^dep +yup @3.2 target=x86_64 /abcdef %clang ^another   %gcc   ",
+        "+baz %gcc"
+    ],
+    "x=y %gcc": 2
+}
+"""
+    assert (tmp_path / "example.py").read_text() == """\
+def func(x):
+    print("dont fix %s me" % x)
+    return x.satisfies("+foo +bar %gcc") and x.satisfies("+baz %gcc")
+"""
+    assert (tmp_path / "example.yaml").read_text() == """\
+spec:
+  - "+foo +bar   %gcc"
+  - "+baz %gcc"
+  - "this is fine %clang"
+"x=y %gcc": 2
+"""
