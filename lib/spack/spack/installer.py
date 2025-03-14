@@ -1267,10 +1267,17 @@ class BuildTask(Task):
                 self.success_result = ExecuteResult.SUCCESS
                 return
             elif self.cache_only:
-                self.error_result = spack.error.InstallError(
-                    "No binary found when cache-only was specified", pkg=pkg
-                )
-                return
+                # only require cache for packages with redistrubutable binaries
+                if not pkg.redistribute_binary:
+                    tty.msg(
+                        f"No binary for {pkg_id} which is not redistributable:"
+                        " installing from source"
+                    )
+                else:
+                    self.error_result = spack.error.InstallError(
+                        "No binary found when cache-only was specified", pkg=pkg
+                    )
+                    return
             else:
                 tty.msg(f"No binary for {pkg_id} found: installing from source")
 
