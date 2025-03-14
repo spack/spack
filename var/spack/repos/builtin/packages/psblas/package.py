@@ -108,7 +108,7 @@ class Psblas(AutotoolsPackage):
         when="+cuda",
     )
     # Metis
-    variant("metis", default=False, description="Activate METIS suppot")
+    variant("metis", default=False, description="Activate METIS support")
     depends_on("metis@5:+int64", when="+metis LPK=8")
     depends_on("metis@5:~int64", when="+metis LPK=4")
     # SuiteSparse: Enable AMD library support via SuiteSparse
