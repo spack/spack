@@ -67,8 +67,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("graphviz", when="+graphviz")
     depends_on("hdf5+hl+mpi", when="+hdf5")
-    depends_on("metis@5.1.0:")
-    depends_on("parmetis@4.0.3:")
+    depends_on("metis@5.1.0:", when="@:2.3.1")
+    depends_on("parmetis@4.0.3:", when="@:2.3.1")
     depends_on("boost@1.70.0: cxxstd=17 +program_options +stacktrace")
 
     depends_on("cmake@3.15:")
