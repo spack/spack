@@ -161,11 +161,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         description="Enable TrexIO support",
         when="@2025.2: build_system=cmake",
     )
-    variant(
-        "deepmd",
-        default=False,
-        description="Enable DeepMD-kit support",
-    )
+    variant("deepmd", default=False, description="Enable DeepMD-kit support")
     conflicts("+deepmd", msg="DeepMD-kit is not yet available in Spack")
 
     with when("+cuda"):
