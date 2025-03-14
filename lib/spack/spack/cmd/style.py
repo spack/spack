@@ -676,6 +676,9 @@ def _spec_str_json_and_yaml(path: str, data: dict, handler: SpecStrHandler) -> N
 def _check_spec_strings(
     paths: List[str], handler: SpecStrHandler = _spec_str_default_handler
 ) -> None:
+    """Open Python, JSON and YAML files, and reformat their string literals that look like spec
+    strings. A handler is called for each reformatting, which can be used to print or apply
+    fixes."""
     for path in paths:
         is_json_or_yaml = path.endswith(".json") or path.endswith(".yaml") or path.endswith(".yml")
         is_python = path.endswith(".py")
