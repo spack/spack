@@ -72,7 +72,7 @@ class Psblas(AutotoolsPackage):
     version(
         "3.7.0.2",
         sha256="2c4f5ae23051b689ee9186db6baf8ca77eed7c8cb430fbc665329394036cc7f7",
-        url="https://github.com/sfilippone/psblas3/archive/refs/tags/v3.7.0-2.tar.gz",
+        url="https://github.com/sfilippone/psblas3/archive/refs/tags/v3.7.0.2.tar.gz",
     )
 
     # Explicit phases: autoreconf, configure, build, install, and post_install
