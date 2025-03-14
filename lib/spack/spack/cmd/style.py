@@ -617,6 +617,19 @@ def _spec_str_default_handler(path: str, line: int, col: int, old: str, new: str
     print(f"{path}:{line}:{col}: `{old}` -> `{new}`")
 
 
+def _rewrite_spec_strings(path: str, line: int, col: int, old: str, new: str):
+    with open(path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    new_line = lines[line - 1].replace(old, new)
+    if new_line == lines[line - 1]:
+        tty.warn(f"{path}:{line}:{col}: could not apply fix: `{old}` -> `{new}`")
+        return
+    lines[line - 1] = new_line
+    print(f"{path}:{line}:{col}: fixed `{old}` -> `{new}`")
+    with open(path, "w", encoding="utf-8") as f:
+        f.writelines(lines)
+
+
 SpecStrHandler = Callable[[str, int, int, str, str], None]
 
 
@@ -638,9 +651,13 @@ def _spec_str_ast(path: str, node: ast.AST, handler: SpecStrHandler) -> None:
 def _spec_str_json_and_yaml(path: str, data: dict, handler: SpecStrHandler) -> None:
     """Walk a YAML or JSON data structure and print reformatted spec strings."""
     queue = [data]
+    seen = set()
 
     while queue:
         current = queue.pop(0)
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
         if isinstance(current, dict):
             queue.extend(current.values())
             queue.extend(current.keys())
@@ -668,6 +685,10 @@ def _check_spec_strings(
 
         try:
             with open(path, "r", encoding="utf-8") as f:
+                # skip files that are likely too large to be user code or config
+                if os.fstat(f.fileno()).st_size > 1024 * 1024:
+                    warnings.warn(f"skipping {path}: too large.")
+                    continue
                 if is_json_or_yaml:
                     _spec_str_json_and_yaml(path, spack.util.spack_yaml.load_config(f), handler)
                 elif is_python:
@@ -681,9 +702,8 @@ def style(parser, args):
     if args.spec_strings:
         if not args.files:
             tty.die("No files provided to check spec strings.")
-        if args.fix:
-            tty.die("spack style --fix not yet implemented for --spec-strings.")
-        return _check_spec_strings(args.files)
+        handler = _rewrite_spec_strings if args.fix else _spec_str_default_handler
+        return _check_spec_strings(args.files, handler)
 
     # save initial working directory for relativizing paths later
     args.initial_working_dir = os.getcwd()
