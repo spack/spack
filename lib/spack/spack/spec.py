@@ -961,7 +961,6 @@ def _sort_by_dep_types(dspec: DependencySpec):
     return dspec.depflag
 
 
-@lang.lazy_lexicographic_ordering
 class _EdgeMap(collections.abc.Mapping):
     """Represent a collection of edges (DependencySpec objects) in the DAG.
 
@@ -998,21 +997,6 @@ class _EdgeMap(collections.abc.Mapping):
 
     def __str__(self) -> str:
         return f"{{deps: {', '.join(str(d) for d in sorted(self.values()))}}}"
-
-    def _cmp_iter(self):
-        for item in sorted(itertools.chain.from_iterable(self.edges.values())):
-            yield item
-
-    def copy(self):
-        """Copies this object and returns a clone"""
-        clone = type(self)()
-        clone.store_by_child = self.store_by_child
-
-        # Copy everything from this dict into it.
-        for dspec in itertools.chain.from_iterable(self.values()):
-            clone.add(dspec.copy())
-
-        return clone
 
     def select(
         self,
