@@ -214,7 +214,9 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
 
                 args.append(self.define("MKL_MPI", mkl_mpi))
         else:
-            args.append(self.define("DLAF_WITH_MKL", spec["lapack"].name in INTEL_MATH_LIBRARIES))
+            args.append(
+                self.define("DLAF_WITH_MKL", spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl"))
+            )
             add_dlaf_prefix = lambda x: x if spec.satisfies("@:0.6") else "DLAF_" + x
             args.append(
                 self.define(
