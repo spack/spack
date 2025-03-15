@@ -76,6 +76,12 @@ class PyPip(Package, PythonExtension):
         expand=False,
     )
 
+    conflicts(
+        "setuptools@:75.1.0",
+        when="@25 ^python@:3.9",
+        msg="https://github.com/pypa/pyproject-hooks/issues/206",
+    )
+
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/{0}/p/pip/pip-{1}-{0}-none-any.whl"
         if version >= Version("21"):
