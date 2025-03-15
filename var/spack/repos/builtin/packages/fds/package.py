@@ -76,7 +76,7 @@ class Fds(MakefilePackage):
     @property
     def build_targets(self):
         spec = self.spec
-        mpi_mapping = {"openmpi": "ompi", "intel-oneapi-mpi": "impi", "intel-mpi": "impi"}
+        mpi_mapping = {"openmpi": "ompi", "intel-oneapi-mpi": "impi"}
         compiler_mapping = {"gcc": "gnu", "oneapi": "intel", "intel": "intel"}
         platform_mapping = {"linux": "linux", "darwin": "osx"}
         mpi_prefix = mpi_mapping[spec["mpi"].name]
