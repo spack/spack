@@ -240,7 +240,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         if "^cray-libsci" in spec:
             args.append(self.define(cm_label + "USE_CRAY_LIBSCI", "ON"))
 
-        if spec["blas"].name in INTEL_MATH_LIBRARIES:
+        if spec.satisfies("^[virtuals=blas] intel-oneapi-mkl"):
             args.append(self.define(cm_label + "USE_MKL", "ON"))
 
             if spec.satisfies("@7.6.0:"):
