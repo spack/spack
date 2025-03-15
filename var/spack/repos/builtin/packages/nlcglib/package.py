@@ -91,7 +91,7 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl"):
             mkl_mapper = {
                 "threading": {"none": "sequential", "openmp": "gnu_thread", "tbb": "tbb_thread"},
-                "mpi": {"intel-mpi": "intelmpi", "mpich": "mpich", "openmpi": "openmpi"},
+                "mpi": {"intel-oneapi-mpi": "intelmpi", "mpich": "mpich", "openmpi": "openmpi"},
             }
 
             mkl_threads = mkl_mapper["threading"][
