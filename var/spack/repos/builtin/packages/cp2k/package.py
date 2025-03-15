@@ -184,6 +184,14 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
             description="Use CUBLAS for general matrix operations in DBCSR",
         )
 
+    # fix a memory leak introduced when unified memory support was added.
+    with when("+rocm") or when("+hip_backend_cuda"):
+        patch(
+            "https://github.com/cp2k/cp2k/commit/077f9c65228ef5bc8857d343f8f7a1bb6024b4e5.patch?full_index=1",
+            sha256="a4ce0e5dfa08da35b392bda8f2bf8e597a8e9a2e08831b248db2736815317fad",
+            when="@2024.1:2025.2",
+        )
+
     with when("+hip_backend_cuda"):
         depends_on("hipcc")
         depends_on("hip+cuda")
