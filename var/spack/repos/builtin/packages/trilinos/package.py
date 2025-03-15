@@ -33,7 +33,17 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-12-12-1.tar.gz"
     git = "https://github.com/trilinos/Trilinos.git"
 
-    maintainers("keitat", "kuberry", "jwillenbring", "psakievich")
+    maintainers(
+        "keitat",
+        "kuberry",
+        "jwillenbring",
+        "psakievich",
+        "ccober6",
+        "fryeguy52",
+        "sebrowne",
+        "rppawlo",
+        "cgcgcg",
+    )
 
     tags = ["e4s"]
 
@@ -583,8 +593,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         return url.format(version.dashed)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        if "+cuda" in self.spec:
-            # currently Trilinos doesn't perform the memory fence so
+        if self.spec.satisfies("@:13.1.0 +cuda"):
+            # older releases of  Trilinos doesn't perform the memory fence so
             # it relies on blocking CUDA kernel launch. This is needed
             # in case the dependent app also run a CUDA backend via Trilinos
             env.set("CUDA_LAUNCH_BLOCKING", "1")
@@ -1086,7 +1096,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         if "+exodus" in self.spec:
             env.prepend_path("PYTHONPATH", self.prefix.lib)
 
-        if "+cuda" in self.spec:
-            # currently Trilinos doesn't perform the memory fence so
-            # it relies on blocking CUDA kernel launch.
+        if self.spec.satisfies("@:13.1.0 +cuda"):
+            # older releases of  Trilinos doesn't perform the memory fence so
+            # it relies on blocking CUDA kernel launch. This is needed
+            # in case the dependent app also run a CUDA backend via Trilinos
             env.set("CUDA_LAUNCH_BLOCKING", "1")

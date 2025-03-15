@@ -29,6 +29,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     license("GPL-3.0-or-later")
 
+    version("9.4.0", sha256="da9481205bfa717660b7d4a16732d8b2d58aadceab4993d41242a8e2848ea6c1")
     version("9.3.0", sha256="809fa39a7acc84815bf4dc4d2d7e6b228ce75a07f3b2413f3313aa8e0aaa3287")
     version("9.1.0", sha256="3f8c6c6ecfa249a47c97e18e651be4db8499be2f5de1a095a3eea53efc01d6a1")
     version("8.4.0", sha256="6b38dd9751678424aeb3a9d666432b1f378eb3971a21290a90cd3d35119d56ad")
@@ -51,9 +52,9 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     version("4.0.2", sha256="39cd8fd36c218fc00adace28d74a6c7c9c6faab7113a5ba3c4372324c755bdc1")
     version("4.0.0", sha256="4c7ee0957f5dd877e3feb9dfe07ad5f39b311f9373932f0d2a289dc97cca3280")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     # patches
     # see https://savannah.gnu.org/bugs/?50234
@@ -178,7 +179,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         config_args = []
 
         # Required dependencies
-        if spec["lapack"].name in INTEL_MATH_LIBRARIES and "gfortran" in self.compiler.fc:
+        if spec["lapack"].name == "intel-oneapi-mkl" and "gfortran" in self.compiler.fc:
             mkl_re = re.compile(r"(mkl_)intel(_i?lp64\b)")
             config_args.extend(
                 [
@@ -236,14 +237,14 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
         if "+fftw" in spec:
             fftw_string = "fftw-api"
-            if ("^intel-mkl" in spec) or ("^intel-oneapi-mkl" in spec):
+            if spec.satisfies("^[virtuals=fftw-api] intel-oneapi-mkl"):
                 config_args.extend(
                     [
                         "--with-fftw3={0}".format(spec[fftw_string].libs.ld_flags),
                         "--with-fftw3f={0}".format(spec[fftw_string].libs.ld_flags),
                     ]
                 )
-            elif "^amdfftw" in spec:
+            elif spec.satisfies("^[virtuals=fftw-api] amdfftw"):
                 specAmdfftw = spec[fftw_string].token[0]
                 AMD_FFTW3_LIBS = "-lfftw3"
                 AMD_FFTW3F_LIBS = "-lfftw3f"
@@ -360,10 +361,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         if spec.satisfies("~pcre2"):
             config_args.append("--without-pcre2")
         # If 64-bit BLAS is used:
-        if (
-            spec.satisfies("^openblas+ilp64")
-            or spec.satisfies("^intel-mkl+ilp64")
-            or spec.satisfies("^intel-parallel-studio+mkl+ilp64")
+        if spec.satisfies("^[virtuals=blas] openblas+ilp64") or spec.satisfies(
+            "^[virtuals=blas] intel-oneapi-mkl+ilp64"
         ):
             config_args.append("F77_INTEGER_8_FLAG=-fdefault-integer-8")
 
