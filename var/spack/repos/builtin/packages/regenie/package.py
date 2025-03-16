@@ -20,18 +20,18 @@ class Regenie(CMakePackage):
 
     variant("boostio", default=True, description="Build with Boost IO support")
     variant("static", default=False, description="Build a statically linked version")
-    variant("builtin-eigen", default=False, description="Build with vendored eigen library")
-    variant("builtin-cxxopts", default=False, description="Build with vendored cxxopts library")
-    variant("builtin-lbfgspp", default=False, description="Build with vendored LBFGSpp library")
+    variant("bundled-eigen", default=False, description="Build with vendored eigen library")
+    variant("bundled-cxxopts", default=False, description="Build with vendored cxxopts library")
+    variant("bundled-lbfgspp", default=False, description="Build with vendored LBFGSpp library")
     variant(
-        "bgen-builtins", default=False, description="Build with sqlite, boost, and zstd from bgen"
+        "bgen-bundled-deps", default=False, description="Build with sqlite, boost, and zstd from bgen"
     )
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
     depends_on("fortran", type="build")
 
-    depends_on("zlib")  # Not zlib-api
+    depends_on("zlib-api")
     depends_on("openssl")
     depends_on("bzip2")
     depends_on("lzma")
@@ -41,18 +41,19 @@ class Regenie(CMakePackage):
     depends_on("htslib")
     depends_on("htslib+pic", when="+static")
     depends_on("python@3")
-    depends_on("bgen+source")
+    depends_on("bgen+headers+libs")
     depends_on("cmake@3.13:")
     depends_on("boost+iostreams", when="+boostio")
-    depends_on("eigen@3.4:", when="~builtin-eigen")
-    depends_on("cxxopts@3", when="~builtin-cxxopts")
-    depends_on("cxxopts@3.0", when="~builtin-cxxopts+bgen-builtins")
-    depends_on("lbfgspp", when="~builtin-lbfgspp")
+    depends_on("eigen@3.4:", when="~bundled-eigen")
+    depends_on("cxxopts@3", when="~bundled-cxxopts")
+    depends_on("cxxopts@3.0", when="~bundled-cxxopts+bgen-bundled-deps")
+    depends_on("lbfgspp", when="~bundled-lbfgspp")
 
-    with when("~bgen-builtins"):
+    with when("~bgen-bundled-deps"):
+        depends_on("bgen~bundled-deps")
         depends_on("zstd")
         depends_on("sqlite@3")
-        depends_on("boost@1.55+chrono+date_time+exception+filesystem+math+system+thread+timer")
+        depends_on("boost@1.55:+chrono+date_time+exception+filesystem+math+system+thread+timer")
         depends_on("zstd libs=static", when="+static")
         with when("~static"):
             depends_on("zstd libs=shared")
@@ -65,24 +66,26 @@ class Regenie(CMakePackage):
             return " ".join(f'"{d}"' for d in dep.directories)
 
         # Avoid accidentally linking against system
-        filter_file("-L/usr/lib", "", "Makefile")  # Don't explictly link system
-        filter_file("-Wno-c11-extensions", "", "CMakeLists.txt")  # Flag doesn't exist
+        filter_file("-L/usr/lib", "", "Makefile", string=True)  # Don't explictly link system
+        filter_file("-Wno-c11-extensions", "", "CMakeLists.txt", string=True)  # Flag doesn't exist
 
         # libcrypt needs to be defined explicitly and libssl needs to be linked
         # before everything else or symbols will not be found
         ssl = self.spec["openssl"]
         filter_file(
-            r"  find_library\(CRYPTO_LIB crypto REQUIRED\)",
+            "  find_library(CRYPTO_LIB crypto REQUIRED)",
             f"  find_library(CRYPTO_LIB crypto HINTS {dep_dirs(ssl.libs)})\n"
             f"  find_library(SSL_LIB ssl HINTS {dep_dirs(ssl.libs)})\n"
             "  target_link_libraries(regenie PUBLIC ${SSL_LIB})",
             "CMakeLists.txt",
+            string=True,
         )
         # libblas needs to be defined before lapack
         filter_file(
-            r"\$\{LAPACK_LIB\} -llapacke \$\{BLAS_LIB\}",
+            "${LAPACK_LIB} -llapacke ${BLAS_LIB}",
             "${BLAS_LIB} ${LAPACK_LIB} -llapacke",
             "CMakeLists.txt",
+            string=True,
         )
 
         # Record any libraries that will be statically linked by default
@@ -105,26 +108,31 @@ class Regenie(CMakePackage):
 
         # Avoid using (some) vendored dependencies included with regenie
         for dep, old_path in [
-            ("eigen", r"\$\{EXTERN_LIBS_PATH\}/eigen-3.4.0/"),
-            ("cxxopts", r"\$\{EXTERN_LIBS_PATH\}/cxxopts/include/"),
-            ("lbfgspp", r"\$\{EXTERN_LIBS_PATH\}/LBFGSpp/include/"),
+            ("eigen", r"${EXTERN_LIBS_PATH}/eigen-3.4.0/"),
+            ("cxxopts", r"${EXTERN_LIBS_PATH}/cxxopts/include/"),
+            ("lbfgspp", r"${EXTERN_LIBS_PATH}/LBFGSpp/include/"),
         ]:
-            if self.spec.satisfies(f"~builtin-{dep}"):
+            if self.spec.satisfies(f"~bundled-{dep}"):
                 lib = self.spec[dep]
-                filter_file(old_path, dep_dirs(lib.headers), "CMakeLists.txt")
+                filter_file(
+                    old_path, 
+                    dep_dirs(lib.headers), 
+                    "CMakeLists.txt",
+                    string=True,
+                )
 
         # Avoid using vendored dependencies distribued with bgen
-        if satisfies("~bgen-builtins"):
+        if satisfies("~bgen-bundled-deps"):
             for dep, lib_name, old_lib, old_inc in [
                 ("zstd", "zstd", "zstd-1.1.0", "zstd-1.1.0/lib"),
                 ("sqlite", "sqlite3", "sqlite3", "sqlite3"),
                 ("boost", "boost", "boost_1_55_0", "boost_1_55_0/"),
             ]:
                 lib = self.spec[dep]
-                lib_pat = f'"\\$\\{{BGEN_PATH\\}}/build/3rd_party/{old_lib}"'
-                inc_pat = f"\\$\\{{BGEN_PATH\\}}/3rd_party/{old_inc}"
-                filter_file(lib_pat, dep_dirs(lib.libs), "CMakeLists.txt")
-                filter_file(inc_pat, dep_dirs(lib.headers), "CMakeLists.txt")
+                lib_pat = f'"${{BGEN_PATH}}/build/3rd_party/{old_lib}"'
+                inc_pat = f"${{BGEN_PATH}}/3rd_party/{old_inc}"
+                filter_file(lib_pat, dep_dirs(lib.libs), "CMakeLists.txt", string=True)
+                filter_file(inc_pat, dep_dirs(lib.headers), "CMakeLists.txt", string=True)
                 statics.append(lib_name)
 
         # Convert static libraries to shared unless we are actually building static
@@ -134,11 +142,11 @@ class Regenie(CMakePackage):
                     lib_override = " ".join(statics_lib_overrides[lib_name])
                 else:
                     lib_override = lib_name
-                filter_file(f"lib{lib_name}\\.a", lib_override, "CMakeLists.txt")
-        elif satisfies("~bgen-builtins"):
+                filter_file(f"lib{lib_name}.a", lib_override, "CMakeLists.txt", string=True)
+        elif satisfies("~bgen-bundled-deps"):
             for lib_name, overrides in statics_lib_overrides.items():
                 override = [f"lib{override}.a" for override in statics_lib_overrides[lib_name]]
-                filter_file(f"lib{lib_name}\\.a", " ".join(override), "CMakeLists.txt")
+                filter_file(f"lib{lib_name}.a", " ".join(override), "CMakeLists.txt")
 
     def setup_build_environment(self, env):
         bgen = self.spec["bgen"]
