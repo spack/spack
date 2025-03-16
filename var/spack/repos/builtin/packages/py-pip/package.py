@@ -58,16 +58,6 @@ class PyPip(Package, PythonExtension):
         # Uses collections.MutableMapping
         depends_on("python@:3.9", when="@:19.1")
 
-    requires(
-        "python@3.10:",
-        "py-setuptools@75.2.0:",
-        when="@25:",
-        policy="any_of",
-        msg="@25: vendors pyproject-hooks@1.2. "
-        "The combination pyproject-hooks@1.2, python@:3.9, and py-setuptools@:75.1.0 is broken. "
-        "See https://github.com/pypa/pyproject-hooks/issues/206 for details.",
-    )
-
     resource(
         name="pip-bootstrap",
         url="https://bootstrap.pypa.io/pip/zipapp/pip-22.3.1.pyz",
