@@ -85,7 +85,9 @@ class Msvc(Package, CompilerPackage):
         # TODO: remove this once #45189 lands
         # TODO: interrogate intel and msvc for compatibility after
         # #45189 lands
-        extras["compilers"]["fortran"] = get_latest_valid_fortran_pth()
+        fortran_compiler = get_latest_valid_fortran_pth()
+        if fortran_compiler is not None:
+            extras["compilers"]["fortran"] = fortran_compiler
         return spec, extras
 
     def setup_dependent_build_environment(self, env, dependent_spec):
