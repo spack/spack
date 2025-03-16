@@ -50,7 +50,7 @@ class Hipsycl(CMakePackage, ROCmPackage):
     # recent versions support only up to llvm18
     # https://github.com/spack/spack/issues/46681
     # https://github.com/spack/spack/issues/49506
-    
+
     # The following list was made based on the version tested in adaptivecpp github
     depends_on("llvm@14:18", when="@develop")
     depends_on("llvm@14:18", when="@stable")
@@ -63,7 +63,7 @@ class Hipsycl(CMakePackage, ROCmPackage):
     depends_on("llvm@11:14", when="@0.9.3")
     depends_on("llvm@11:13", when="@0.9.2")
     depends_on("llvm@11", when="@0.9.1")
-    #depends_on("llvm@10:11", when="@0.9.0") # missing in releases
+    # depends_on("llvm@10:11", when="@0.9.0") # missing in releases
     depends_on("llvm@8:10", when="@0.8.0")
 
     # https://github.com/spack/spack/issues/45029 and https://github.com/spack/spack/issues/43142
