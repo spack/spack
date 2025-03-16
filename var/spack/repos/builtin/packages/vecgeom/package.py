@@ -20,15 +20,19 @@ class Vecgeom(CMakePackage, CudaPackage):
     maintainers("drbenmorgan", "sethrj")
 
     version("master", branch="master", get_full_repo=True)
+    # NOTE: the surfacedev branches are not stable or official and will be
+    # deleted when the next 2.0 RC comes out
     version(
         "2.0.0-surfacedev.2",
         tag="v2.0.0-surfacedev.2",
-        commit="1a3999a82d17d484ba627ee18f23623664aaaf6d",
+        commit="91f5ee554e012ffa3baecd2b30e6f5e6905e5ffb",
+        deprecated=True,
     )
     version(
         "2.0.0-surfacedev.1",
         tag="v2.0.0-surfacedev.1",
         commit="1d9797ea47e3b35ab0114e72ce5925ecbd59cbf4",
+        deprecated=True,
     )
     version(
         "1.2.10",
