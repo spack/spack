@@ -246,7 +246,8 @@ class NodeJs(Package):
     @run_after("build")
     @on_package_attributes(run_tests=True)
     def build_test(self):
-        make("test")
+        # Note: target "test" requires a full git checkout with linters
+        make("test-only")
         make("test-addons")
 
     def install(self, spec, prefix):
