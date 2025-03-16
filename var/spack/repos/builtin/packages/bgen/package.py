@@ -62,8 +62,8 @@ class Bgen(WafPackage):
 
         if self.spec.satisfies("^boost@1.56:"):
             filter_file(
-                "(total_count == 0)", 
-                "(*total_count == 0)", 
+                "(total_count == 0)",
+                "(*total_count == 0)",
                 "appcontext/src/CmdLineUIContext.cpp",
                 string=True,
             )
