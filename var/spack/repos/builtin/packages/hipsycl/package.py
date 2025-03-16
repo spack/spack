@@ -76,6 +76,7 @@ class Hipsycl(CMakePackage, ROCmPackage):
     )
     # https://github.com/spack/spack/issues/46681
     conflicts("^llvm@19", when="@24.02.0:24.06.0")
+    conflicts("^llvm@20", when="@24.02.0:24.06.0")
 
     def cmake_args(self):
         spec = self.spec
