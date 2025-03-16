@@ -41,7 +41,8 @@ class Regenie(CMakePackage):
     depends_on("htslib")
     depends_on("htslib+pic", when="+static")
     depends_on("python@3")
-    depends_on("bgen+headers+libs")
+    depends_on("bgen+headers+libs", when="~bgen-bundled-deps")
+    depends_on("bgen+full-source", when="+bgen-bundled-deps")
     depends_on("cmake@3.13:")
     depends_on("boost+iostreams", when="+boostio")
     depends_on("eigen@3.4:", when="~bundled-eigen")
@@ -146,14 +147,26 @@ class Regenie(CMakePackage):
         elif satisfies("~bgen-bundled-deps"):
             for lib_name, overrides in statics_lib_overrides.items():
                 override = [f"lib{override}.a" for override in statics_lib_overrides[lib_name]]
-                filter_file(f"lib{lib_name}.a", " ".join(override), "CMakeLists.txt")
+                filter_file(f"lib{lib_name}.a", " ".join(override), "CMakeLists.txt", string=True)
+
+        bgen = self.spec["bgen"]
+        if satisfies("^bgen~full-source"):
+            for old_path, new_path in [
+                ("${BGEN_PATH}/build", bgen.prefix.lib.bgen),
+                ("${BGEN_PATH} ${BGEN_PATH}/genfile/include/", f"{bgen.prefix.include} {bgen.prefix.include.genfile}"),
+                ("${BGEN_PATH}/db/include/", bgen.prefix.include.db),
+            ]:
+                filter_file(old_path, new_path, "CMakeLists.txt", string=True)
 
     def setup_build_environment(self, env):
         bgen = self.spec["bgen"]
         htslib = self.spec["htslib"]
         openblas = self.spec["openblas"]
-        env.set("BGEN_PATH", bgen.prefix.src.bgen)
         env.set("HTSLIB_PATH", htslib.prefix.lib)
         env.set("OPENBLAS_ROOT", openblas.prefix)
         env.set("STATIC", "1" if self.spec.satisfies("+static") else "0")
         env.set("HAS_BOOST_IOSTREAM", "1" if self.spec.satisfies("+boostio") else "0")
+        if self.spec.satisfies("^bgen~full-source"):
+            env.set("BGEN_PATH", bgen.prefix)
+        else:
+            env.set("BGEN_PATH", bgen.prefix.opt.bgen)
