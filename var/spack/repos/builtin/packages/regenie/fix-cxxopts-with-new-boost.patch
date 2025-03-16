@@ -1,0 +1,19 @@
+diff --git a/src/Regenie.cpp b/src/Regenie.cpp
+index b501f4f..4a06c21 100755
+--- a/src/Regenie.cpp
++++ b/src/Regenie.cpp
+@@ -1393,11 +1393,11 @@ void read_params_and_check(int& argc, char *argv[], struct param* params, struct
+     check_seed(params->rng_seed, vm.count("seed"));
+     print_args(arguments, valid_args, sout);
+ 
+-  } catch (const cxxopts::OptionException& e) {
++  } catch (const cxxopts::exceptions::exception& msg) {
+     if (sout.coss.is_open())
+       print_header(sout.coss);
+     print_header(cout);
+-    sout << "ERROR: " << e.what() << endl << params->err_help << "\n";
++    sout << "ERROR: " << msg.what() << endl << params->err_help << "\n";
+     exit(EXIT_FAILURE);
+   } catch (const std::string& msg) {// after opening sout
+     sout <<  "ERROR: " <<  msg << "\n" <<  params->err_help << "\n";
+
