@@ -101,7 +101,7 @@ class Bgen(WafPackage):
                     install_tree(src_dir, code_dir)
 
         if spec.satisfies("+libs"):
-            mkdirp(prefix.lib.bgen)
+            mkdirp(prefix.lib.bgen.db)
             build_dir = join_path(self.stage.source_path, "build")
             install(join_path(build_dir, "libbgen.a"), prefix.lib.bgen)
             install(join_path(build_dir, "db/libdb.a"), prefix.lib.bgen.db)
