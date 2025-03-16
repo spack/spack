@@ -77,8 +77,8 @@ class PyPip(Package, PythonExtension):
     )
 
     conflicts(
-        "^py-setuptools@:75.1.0",
-        when="@25 ^python@:3.9",
+        "^py-setuptools@:75.1.0 ^python@:3.9",
+        when="@25",
         msg="https://github.com/pypa/pyproject-hooks/issues/206",
     )
 
