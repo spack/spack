@@ -21,6 +21,11 @@ class Vecgeom(CMakePackage, CudaPackage):
 
     version("master", branch="master", get_full_repo=True)
     version(
+        "2.0.0-surfacedev.2",
+        tag="v2.0.0-surfacedev.2",
+        commit="1a3999a82d17d484ba627ee18f23623664aaaf6d",
+    )
+    version(
         "2.0.0-surfacedev.1",
         tag="v2.0.0-surfacedev.1",
         commit="1d9797ea47e3b35ab0114e72ce5925ecbd59cbf4",
@@ -91,6 +96,7 @@ class Vecgeom(CMakePackage, CudaPackage):
         description="Use the specified C++ standard when building",
     )
     variant("gdml", default=True, description="Support native GDML geometry descriptions")
+    # TODO: delete geant4/root variants since they don't affect the build
     variant("geant4", default=False, description="Support Geant4 geometry construction")
     variant("root", default=False, description="Support ROOT geometry construction")
     variant("shared", default=True, description="Build shared libraries")
