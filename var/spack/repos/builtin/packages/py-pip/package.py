@@ -64,7 +64,7 @@ class PyPip(Package, PythonExtension):
         when="@25:",
         policy="any_of",
         msg="@25: vendors pyproject-hooks@1.2. "
-        "The combination pyproject-hooks@1.2, python@:3.9, and py-setuptools@75.1.0 is broken. "
+        "The combination pyproject-hooks@1.2, python@:3.9, and py-setuptools@:75.1.0 is broken. "
         "See https://github.com/pypa/pyproject-hooks/issues/206 for details.",
     )
 
