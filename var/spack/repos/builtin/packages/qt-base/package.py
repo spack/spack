@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import re
 import shutil
 import sys
 import tempfile
@@ -58,17 +57,6 @@ class QtPackage(CMakePackage):
     def cmake_args(self):
         # Start with upstream cmake_args
         args = super().cmake_args()
-
-        # Qt components typically install cmake config files in a single prefix,
-        # so we have to point them to the cmake config files of dependencies
-        qt_prefix_path = []
-        re_qt = re.compile("qt-.*")
-        for dep in self.spec.dependencies():
-            if re_qt.match(dep.name):
-                qt_prefix_path.append(self.spec[dep.name].prefix)
-
-        # Now append all qt-* dependency prefixes into a prefix path
-        args.append(self.define("QT_ADDITIONAL_PACKAGES_PREFIX_PATH", ":".join(qt_prefix_path)))
 
         # Make our CMAKE_INSTALL_RPATH redundant:
         # for prefix of current package ($ORIGIN/../lib type of rpaths),
@@ -130,6 +118,16 @@ class QtPackage(CMakePackage):
         if os.path.exists(self.prefix.plugins):
             env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # Qt components typically install cmake config files in a single prefix,
+        # so we have to point dependencies to the cmake config files.
+        env.prepend_path("QT_ADDITIONAL_PACKAGES_PREFIX_PATH", self.spec.prefix)
+
+        # Qt creates SBOM files based on the used SBOM files in the prefix, and
+        # in additional paths for other components.
+        if self.spec.satisfies("@6.9:"):
+            env.prepend_path("QT_ADDITIONAL_SBOM_DOCUMENT_PATHS", self.spec.prefix)
+
 
 class QtBase(QtPackage):
     """Qt Base (Core, Gui, Widgets, Network, ...)"""
@@ -141,6 +139,7 @@ class QtBase(QtPackage):
 
     license("BSD-3-Clause")
 
+    version("6.8.2", sha256="9dddbb2ea3c107e20a99b816c1c6ba1483915325918936dda2c762bd73836ad9")
     version("6.8.1", sha256="9b81b83e4079d2f79ae057902973fc0ebb10d566ec022f483e7c0f2294acb19c")
     version("6.8.0", sha256="3e526ceaaf615005bc89a98ee8a52b87db6fefe7155595bf75c40fd82cd1a7ce")
     version("6.7.3", sha256="65771d1618cab08ec5e9bbfdc265b5d2ce2ccf0373143d7d9d139647a7196aec")

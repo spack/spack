@@ -49,7 +49,6 @@ def test_single_file_verify_cmd(tmpdir):
         sjson.dump({filepath: data}, f)
 
     results = verify("manifest", "-f", filepath, fail_on_error=False)
-    print(results)
     assert not results
 
     os.utime(filepath, (0, 0))

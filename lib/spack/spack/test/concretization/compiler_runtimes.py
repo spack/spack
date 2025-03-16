@@ -92,7 +92,7 @@ def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_p
         # Same as before, but tests that we can reuse from a more generic target
         pytest.param(
             "pkg-a%gcc@9.4.0",
-            "pkg-b%gcc@10.2.1 target=x86_64",
+            "pkg-b target=x86_64 %gcc@10.2.1",
             {"pkg-a": "gcc-runtime@9.4.0", "pkg-b": "gcc-runtime@9.4.0"},
             1,
             marks=pytest.mark.skipif(
@@ -101,7 +101,7 @@ def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_p
         ),
         pytest.param(
             "pkg-a%gcc@10.2.1",
-            "pkg-b%gcc@9.4.0 target=x86_64",
+            "pkg-b target=x86_64 %gcc@9.4.0",
             {
                 "pkg-a": "gcc-runtime@10.2.1 target=x86_64",
                 "pkg-b": "gcc-runtime@9.4.0 target=x86_64",

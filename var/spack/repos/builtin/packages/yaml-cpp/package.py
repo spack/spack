@@ -48,7 +48,7 @@ class YamlCpp(CMakePackage):
     conflicts("%xl@:13.1", when="@0.6.0:", msg="versions 0.6.0: require c++11 support")
     conflicts("%xl_r@:13.1", when="@0.6.0:", msg="versions 0.6.0: require c++11 support")
     conflicts(
-        '%clang cxxflags="-stdlib=libc++"', when="+tests", msg=yaml_cpp_tests_libcxx_error_msg
+        'cxxflags="-stdlib=libc++" %clang', when="+tests", msg=yaml_cpp_tests_libcxx_error_msg
     )
 
     def flag_handler(self, name, flags):

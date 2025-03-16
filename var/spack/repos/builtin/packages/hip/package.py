@@ -25,28 +25,28 @@ class Hip(CMakePackage):
     license("MIT")
 
     version("master", branch="master")
-    version("6.3.2", sha256="2832e21d75369f87beee767949177a93ac113710afae6b73da5548c0047962ec")
-    version("6.3.1", sha256="ebde9fa80ad1f4ba3fbe04fd36d90548492ebe5828ac459995b5f9d384a29783")
-    version("6.3.0", sha256="d8dba8cdf05463afb7879de2833983cafa6a006ba719815a35b96d9b92fc7fc4")
-    version("6.2.4", sha256="76e4583ae3d31786270fd92abbb2e3dc5e665b22fdedb5ceff0093131d4dc0ca")
-    version("6.2.1", sha256="a8b86666a59867cae67409c4a45e0b8f29a6328c9739e6512c2b5612376f30cf")
-    version("6.2.0", sha256="7ca261eba79793427674bf2372c92ac5483cc0fac5278f8ad611de396fad8bee")
-    version("6.1.2", sha256="9ba5f70a553b48b2cea25c7e16b97ad49320750c0152763b173b63b9f151e783")
-    version("6.1.1", sha256="09e8013b8071fca2cf914758001bbd1dccaa237e798e945970e4356cb9b90050")
-    version("6.1.0", sha256="6fd57910a16d0b54df822807e67b6207146233a2de5a46c6a05b940a21e2c4d7")
-    version("6.0.2", sha256="b47178db94f2acc106e1a88ceb029844805266ebaba11ef63744e90d224b11be")
-    version("6.0.0", sha256="0d575788e0b731124a8489a36652014a165b9ebab92d5456ec3c976e062f3a82")
-    version("5.7.1", sha256="eaa0e14a9ae45c58ed37863797b683a7778b3cbbf92f5b6529ec65fd61d61f3e")
-    version("5.7.0", sha256="cb61234eec7879fb7e20937659ad535b93a6e66fc8de0a543da8b7702474f2fc")
-    version("5.6.1", sha256="4b3c4dfcf8595da0e1b8c3e8067b1ccebeaac337762ff098db14375fa8dd4487")
-    version("5.6.0", sha256="a8237768c1ae70029d972376f8d279f4de18a1e6106fff6215d1e16847bc375e")
-    version("5.5.1", sha256="1f5f6bb72d8d64335ccc8242ef2e2ea8efeb380cce2997f475b1ee77528d9fb4")
-    version("5.5.0", sha256="5b0d0253e62f85cc21d043513f7c11c64e4a4ec416159668f0b160d732d09a3c")
+    version("6.3.2", sha256="66a4eba98bd74fc7126ce7cb4d59653b22075fe95a70412fe283dc806ae366e0")
+    version("6.3.1", sha256="76f862493c4912a06e0e0b8da3917c2ba7481f1e05f2c23ffd5e05f8c44e3037")
+    version("6.3.0", sha256="950bfaf108a0af44eb169646f81f564f75f49e974acd06139b77245cfd327267")
+    version("6.2.4", sha256="7a88edd689230b422250852a391b3b377b4371bbaef1e4f36d7fb699fcb0562b")
+    version("6.2.1", sha256="1f130fa8d0a60cfb3560892c50ed7c57902b1398b21d3168f4be2d7ee512da96")
+    version("6.2.0", sha256="95de10ef1815e8076a94a53bae3752dfd0e9f0abe513ca3fb79969773cff12d4")
+    version("6.1.2", sha256="34b168f34d8e4365ef160863c1c9deaa193bdbe8cc98726fe7481c85534a4f64")
+    version("6.1.1", sha256="30cba362ee2487fe50159b12a777edfe76346cd81510963e25b655f37c865049")
+    version("6.1.0", sha256="b5e209eff044b629c65d735ce7d92b4861bb321caa7d97e7be4054f1b943982a")
+    version("6.0.2", sha256="84163ffb5d81f192f4a879f3f9722db2402d72c2a90f104c5b2b8a4212f4f9b0")
+    version("6.0.0", sha256="ba8ce0d0960b260ff44ab47da58f98b8df9b659835aa62e32e018a63379bbc79")
+    version("5.7.1", sha256="ea34c75d2cff366fcdd45109c5be460a48d4fcf72b8a534368b54eae5d05db0e")
+    version("5.7.0", sha256="8974a436e7f1daf232a77e27a215bcb24a8cc132aa11b5b885a7417ad4246074")
+    version("5.6.1", sha256="1b0178da8e997eb0cbf2af63e1940f56aeddc8b9715d822d2c87fd60dbc01173")
+    version("5.6.0", sha256="befbfb4691d4331b1fdfe1f17a862e82e962eb9fb90457b2c61a5130b3e6b85b")
+    version("5.5.1", sha256="674caca5d55cc96451d790729f6dab0a16682d2ae9e13359e8648afda0ff97b3")
+    version("5.5.0", sha256="0f5bf69ea8ea8200e352efd83725f1976d36c2eb9661057000bcf6118d61e6f3")
     with default_args(deprecated=True):
-        version("5.4.3", sha256="23e51d3af517cd63019f8d199e46b84d5a18251d148e727f3985e8d99ccb0e58")
-        version("5.4.0", sha256="e290f835d69ef23e8b5833a7e616b0a989ff89ada4412d9742430819546efc6c")
-        version("5.3.3", sha256="51d4049dc37d261afb9e1270e60e112708ff06b470721ff21023e16e040e4403")
-        version("5.3.0", sha256="05225832fb5a4d24f49a773ac27e315239943a6f24291a50d184e2913f2cdbe0")
+        version("5.4.3", sha256="f74b6d6b85830e60d26503fa35b599537a9f4c5bcfc05b49632d9998abf094f4")
+        version("5.4.0", sha256="2e422a06c312b88929cc3303e793ac8f037cf39dbcfe7b4640a7fbb4fc7905c2")
+        version("5.3.3", sha256="0e6988f531ed83f8b2271e9b3d42b73da7ff536d34cdd89f74648335b3bc18c8")
+        version("5.3.0", sha256="7bed30f6bc3e4e08bd29a5001c17de0ad3a92a6a948864d884b9341f4c90965b")
 
     variant("rocm", default=True, description="Enable ROCm support")
     variant("cuda", default=False, description="Build with CUDA")
@@ -348,7 +348,7 @@ class Hip(CMakePackage):
     # See https://github.com/ROCm/HIP/pull/3206
     patch(
         "https://github.com/ROCm/HIP/commit/50ee82f6bc4aad10908ce09198c9f7ebfb2a3561.patch?full_index=1",
-        sha256="c2ee21cdc55262c7c6ba65546b5ca5f65ea89730",
+        sha256="c469ddecbae6d4ee30132af7c37d5e7958420af2d083f2c50d93fc3a7d162c49",
         when="@5.2:5.7",
     )
 

@@ -867,7 +867,7 @@ spack:
             logs_dir = scratch / "logs_dir"
             logs_dir.mkdir()
             ci.copy_stage_logs_to_artifacts(concrete_spec, str(logs_dir))
-            assert "spack-build-out.txt" in os.listdir(logs_dir)
+            assert "spack-build-out.txt.gz" in os.listdir(logs_dir)
 
             dl_dir = scratch / "download_dir"
             buildcache_cmd("download", "--spec-file", json_path, "--path", str(dl_dir))

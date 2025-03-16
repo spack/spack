@@ -54,7 +54,7 @@ class PyNumcodecs(PythonPackage):
     depends_on("py-entrypoints", when="@0.10.1:0.11", type=("build", "run"))
     depends_on("py-msgpack", type=("build", "run"), when="+msgpack")
 
-    patch("apple-clang-12.patch", when="%apple-clang@12: @:0.13")
+    patch("apple-clang-12.patch", when="@:0.13 %apple-clang@12:")
 
     # TODO: this package should really depend on blosc, zstd, lz4, zlib, but right now it vendors
     # those libraries without any way to use the system versions.

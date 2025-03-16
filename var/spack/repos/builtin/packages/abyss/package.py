@@ -26,6 +26,7 @@ class Abyss(AutotoolsPackage):
     homepage = "https://www.bcgsc.ca/platform/bioinfo/software/abyss"
     url = "https://github.com/bcgsc/abyss/releases/download/2.3.1/abyss-2.3.1.tar.gz"
 
+    version("2.3.10", sha256="bbe42e00d1ebb53ec6afaad07779baaaee994aa5c65b9a38cf4ad2011bb93c65")
     version("2.3.7", sha256="ba37780e79ec3aa359b6003e383caef13479a87f4d0022af01b86398f9ffca1f")
     version("2.3.5", sha256="5455f7708531681ee15ec4fd5620526a53c86d28f959e630dc495f526b7d40f7")
     version("2.3.1", sha256="664045e7903e9732411effc38edb9ebb1a0c1b7636c64b3a14a681f465f43677")
@@ -35,8 +36,8 @@ class Abyss(AutotoolsPackage):
     version("2.0.2", sha256="d87b76edeac3a6fb48f24a1d63f243d8278a324c9a5eb29027b640f7089422df")
     version("1.5.2", sha256="8a52387f963afb7b63db4c9b81c053ed83956ea0a3981edcad554a895adf84b1")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     variant(
         "maxk", default=128, values=is_multiple_32, description="set the maximum k-mer length."
@@ -45,6 +46,8 @@ class Abyss(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("bwa", type="run")
+
+    depends_on("btllib", when="@2.3.6:")
 
     depends_on("mpi")
     depends_on("boost@:1.50.0,1.53.0:", when="@2.0.2:")
@@ -55,10 +58,11 @@ class Abyss(AutotoolsPackage):
     depends_on("sqlite")
     depends_on("libtool")
 
-    conflicts("^intel-mpi")
-    conflicts("^intel-parallel-studio+mpi")
-    conflicts("^mvapich2")
-    conflicts("^spectrum-mpi")
+    conflicts("^[virtuals=mpi] intel-oneapi-mpi")
+    conflicts("^[virtuals=mpi] mvapich2")
+    conflicts("^[virtuals=mpi] spectrum-mpi")
+
+    patch("fix_BloomFilter.hpp.patch", when="@2.0.0:2.1.4")
 
     def configure_args(self):
         maxk = int(self.spec.variants["maxk"].value)
@@ -72,5 +76,3 @@ class Abyss(AutotoolsPackage):
         if self.spec["mpi"].name == "mpich":
             args.append("--enable-mpich")
         return args
-
-    patch("fix_BloomFilter.hpp.patch", when="@2.0.0:2.1.4")

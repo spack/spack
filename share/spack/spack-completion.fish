@@ -1203,19 +1203,19 @@ complete -c spack -n '__fish_spack_using_command config' -l scope -r -d 'configu
 
 # spack config get
 set -g __fish_spack_optspecs_spack_config_get h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 config get' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars mirrors modules packages repos upstreams view'
+complete -c spack -n '__fish_spack_using_command_pos 0 config get' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos upstreams view'
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -d 'show this help message and exit'
 
 # spack config blame
 set -g __fish_spack_optspecs_spack_config_blame h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 config blame' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars mirrors modules packages repos upstreams view'
+complete -c spack -n '__fish_spack_using_command_pos 0 config blame' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos upstreams view'
 complete -c spack -n '__fish_spack_using_command config blame' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config blame' -s h -l help -d 'show this help message and exit'
 
 # spack config edit
 set -g __fish_spack_optspecs_spack_config_edit h/help print-file
-complete -c spack -n '__fish_spack_using_command_pos 0 config edit' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars mirrors modules packages repos upstreams view'
+complete -c spack -n '__fish_spack_using_command_pos 0 config edit' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos upstreams view'
 complete -c spack -n '__fish_spack_using_command config edit' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config edit' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config edit' -l print-file -f -a print_file
@@ -2896,7 +2896,7 @@ complete -c spack -n '__fish_spack_using_command stage' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command stage' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack style
-set -g __fish_spack_optspecs_spack_style h/help b/base= a/all r/root-relative U/no-untracked f/fix root= t/tool= s/skip=
+set -g __fish_spack_optspecs_spack_style h/help b/base= a/all r/root-relative U/no-untracked f/fix root= t/tool= s/skip= spec-strings
 
 complete -c spack -n '__fish_spack_using_command style' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command style' -s h -l help -d 'show this help message and exit'
@@ -2916,6 +2916,8 @@ complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -f -a to
 complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -d 'specify which tools to run (default: import, isort, black, flake8, mypy)'
 complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -f -a skip
 complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -d 'specify tools to skip (choose from import, isort, black, flake8, mypy)'
+complete -c spack -n '__fish_spack_using_command style' -l spec-strings -f -a spec_strings
+complete -c spack -n '__fish_spack_using_command style' -l spec-strings -d 'upgrade spec strings in Python, JSON and YAML files for compatibility with Spack v1.0 and v0.x. Example: spack style --spec-strings $(git ls-files). Note: this flag will be removed in Spack v1.0.'
 
 # spack tags
 set -g __fish_spack_optspecs_spack_tags h/help i/installed a/all

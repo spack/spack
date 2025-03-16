@@ -17,6 +17,7 @@ class Duckdb(MakefilePackage):
     maintainers("glentner", "teaguesterling")
 
     version("master", branch="master")
+    version("1.2.1", sha256="481a05d59cb8eaf4d78e5495ab0c99ed53e3b41e84aeaf24eef4144f2c60d1cc")
     version("1.2.0", sha256="f22c97e18c071fa8e43b5e150c03c6ab4bcc510cca6e6b50cbe13af8535fa701")
     version("1.1.3", sha256="2aea0af898ad753fee82b776fea1bf78ccbc9648986e7f7a87372df5e74cdb98")
     version("1.1.2", sha256="a3319a64c390ed0454c869b2e4fc0af2413cd49f55cd0f1400aaed9069cdbc4c")
@@ -36,26 +37,6 @@ class Duckdb(MakefilePackage):
     version(
         "0.10.2",
         sha256="662a0ba5c35d678ab6870db8f65ffa1c72e6096ad525a35b41b275139684cea6",
-        deprecated=True,
-    )
-    version(
-        "0.10.0",
-        sha256="5a925b8607d00a97c1a3ffe6df05c0a62a4df063abd022ada82ac1e917792013",
-        deprecated=True,
-    )
-    version(
-        "0.9.2",
-        sha256="afff7bd925a98dc2af4039b8ab2159b0705cbf5e0ee05d97f7bb8dce5f880dc2",
-        deprecated=True,
-    )
-    version(
-        "0.9.1",
-        sha256="37a43188d9354ce3ca101b2b118d867f5f76d04c3b83c09d86fd7508351a631b",
-        deprecated=True,
-    )
-    version(
-        "0.9.0",
-        sha256="3dbf3326a831bf0797591572440e81a3d6d668f8e33a25ce04efae19afc3a23d",
         deprecated=True,
     )
 
