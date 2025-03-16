@@ -1,0 +1,97 @@
+diff --git a/wscript b/wscript
+index a6385d9..1a17fc0 100644
+--- a/wscript
++++ b/wscript
+@@ -24,6 +24,8 @@ def configure( cfg ):
+ 		raise Exception( "Unknown value for --mode, please specify --mode=debug or --mode=release" )
+ 
+ 	cfg.check_cxx( lib='z', uselib_store='zlib', msg = 'zlib' )
++	cfg.check_cxx( lib='zstd', uselib_store='zstd', msg = 'zstd' )
++	cfg.check_cxx( lib='sqlite3', uselib_store='sqlite', msg = 'sqlite' )
+ 	if platform.system() != "Darwin":
+ 		cfg.check_cxx( lib='rt', uselib_store='rt', msg = 'rt' )
+ 		cfg.check_cxx( lib='pthread', uselib_store='pthread', msg = 'pthread' )
+@@ -63,7 +65,7 @@ def build( bld ):
+ 		use = 'zlib zstd sqlite3 db',
+ 		export_includes = 'genfile/include'
+ 	)
+-	bld.recurse( [ '3rd_party', 'appcontext', 'genfile', 'db', 'apps', 'example', 'test', 'R' ] )
++	bld.recurse( [ 'appcontext', 'genfile', 'db', 'apps', 'example', 'test', 'R' ] )
+ 	# Copy files into rbgen package directory
+ 	for source in bgen_sources:
+ 		bld( rule = 'cp ${SRC} ${TGT}', source = source, target = 'R/rbgen/src/bgen/' + os.path.basename( source.abspath() ), always = True )
+@@ -125,66 +127,19 @@ class ReleaseBuilder:
+ 		rbgen_dir = os.path.join( tempdir, release_stub )
+ 		shutil.copytree( 'R/package/', rbgen_dir )
+ 		os.makedirs( os.path.join( rbgen_dir, "src", "include" ))
+-		os.makedirs( os.path.join( rbgen_dir, "src", "include", "boost" ))
+-		os.makedirs( os.path.join( rbgen_dir, "src", "include", "zstd-1.1.0" ))
+ 		os.makedirs( os.path.join( rbgen_dir, "src", "db" ))
+ 		os.makedirs( os.path.join( rbgen_dir, "src", "bgen" ))
+-		os.makedirs( os.path.join( rbgen_dir, "src", "boost" ))
+-		os.makedirs( os.path.join( rbgen_dir, "src", "sqlite3" ))
+-		os.makedirs( os.path.join( rbgen_dir, "src", "zstd-1.1.0" ))
+ 
+ 		# Copy source files in
+ 		from glob import glob
+ 		for filename in glob( 'src/*.cpp' ):
+ 			shutil.copy( filename, os.path.join( rbgen_dir, "src", "bgen", os.path.basename( filename ) ) )
+ 
+-		for filename in glob( 'db/src/*.cpp' ):
+-			shutil.copy( filename, os.path.join( rbgen_dir, "src", "db", os.path.basename( filename ) ) )
+-
+-		for filename in glob( '3rd_party/sqlite3/sqlite3/sqlite3.c' ):
+-			shutil.copy( filename, os.path.join( rbgen_dir, "src", "sqlite3", os.path.basename( filename ) ) )
+-
+-		for filename in glob( '3rd_party/zstd-1.1.0/lib/common/*.c' ) + glob( '3rd_party/zstd-1.1.0/lib/compress/*.c' ) + glob( '3rd_party/zstd-1.1.0/lib/decompress/*.c' ):
+-			shutil.copy( filename, os.path.join( rbgen_dir, "src", "zstd-1.1.0", os.path.basename( filename ) ) )
+-
+-		boostGlobs = [
+-			'libs/system/src/*.cpp',
+-			'libs/thread/src/*.cpp',
+-			'libs/thread/src/*.inl',
+-			'libs/thread/src/pthread/once_atomic.cpp',
+-			'libs/thread/src/pthread/thread.cpp',
+-			'libs/thread/src/pthread/timeconv.inl',
+-			'libs/filesystem/src/*.cpp',
+-			'libs/date_time/src/posix_time/*.cpp',
+-			'libs/timer/src/*.cpp',
+-			'libs/chrono/src/*.cpp',
+-		]
+-
+-		for pattern in boostGlobs:
+-			for filename in glob( '3rd_party/boost_1_55_0/%s' % pattern ):
+-				shutil.copy( filename, os.path.join( rbgen_dir, "src", "boost", os.path.basename( filename ) ) )
+-
+ 		include_paths = [
+-			"3rd_party/boost_1_55_0/boost/",
+-			"3rd_party/zstd-1.1.0/",
+-			"3rd_party/sqlite3/",
+ 			"genfile/include/genfile",
+ 			"db/include/db"
+ 		]
+ 		
+-		boostHeaderLibs = [
+-			'system',
+-			'thread',
+-			'filesystem',
+-			'date_time',
+-			'timer',
+-			'chrono',
+-			'preprocessor',
+-			'function',
+-			'optional',
+-			'mpl'
+-		]
+-		
+ 		for include_path in include_paths:
+ 			for root, path, filenames in os.walk( include_path ):
+ 				self.makedirs( os.path.join( rbgen_dir, "src", "include", root ))
+@@ -198,7 +153,6 @@ class ReleaseBuilder:
+ 					):
+ 						dest = os.path.join( rbgen_dir, "src", "include", root, name )
+ 						shutil.copy( fullname, os.path.join( rbgen_dir, "src", "include", fullname ))
+-						#print "Copied \"%s\"." % fullname
+ 
+ 		tarball = self.create_tarball( 'rbgen', release_stub, tempdir )
+ 		return os.path.join( tempdir, tarball )
