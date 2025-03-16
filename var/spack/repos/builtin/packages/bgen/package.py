@@ -27,6 +27,7 @@ class Bgen(WafPackage):
     )
 
     variant("headers", default=True, description="Install headers")
+    variant("libs", default=True, description="Install static libraries")
     variant("bundled-deps", default=False, description="Use bundled 3rd party dependencies")
     variant("full-source", default=False, description="Install source tree as well")
 
@@ -99,7 +100,17 @@ class Bgen(WafPackage):
                 if src not in ["genfile"]:
                     install_tree(src_dir, code_dir)
 
+        if spec.satisfies("+libs"):
+            mkdirp(prefix.lib.bgen)
+            build_dir = join_path(self.stage.source_path, "build")
+            install(join_path(build_dir, "libbgen.a"), prefix.lib.bgen)
+            install(join_path(build_dir, "db/libdb.a"), prefix.lib.bgen.db)
+
         if spec.satisfies("+full-source"):
             src_dir = join_path(prefix.opt.src.bgen)
             makedirs(src_dir)
             install_tree(self.stage.source_path, src_dir)
+
+    @property
+    def bgen_static_lib_dir(self):
+        return self.install.lib.bgen
