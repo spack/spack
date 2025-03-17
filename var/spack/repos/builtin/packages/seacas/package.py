@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -35,6 +34,9 @@ class Seacas(CMakePackage):
 
     # ###################### Versions ##########################
     version("master", branch="master")
+    version(
+        "2025-02-27", sha256="224468d6215b4f4b15511ee7a29f755cdd9e7be18c08dfece9d9991e68185cfc"
+    )
     version(
         "2024-08-15", sha256="c85130b0dac5ab9a08dcb53c8ccff478122d72b08bd41d99c0adfddc5eb18a52"
     )
@@ -296,6 +298,9 @@ class Seacas(CMakePackage):
     )
     conflicts("+shared", when="platform=windows")
     conflicts("+x11", when="platform=windows")
+
+    conflicts("@2024-06-27 platform=windows")
+
     # Remove use of variable in array assignment (triggers c2057 on MSVC)
     # See https://github.com/sandialabs/seacas/issues/438
     patch(

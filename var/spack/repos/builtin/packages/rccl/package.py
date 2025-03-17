@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,6 +20,18 @@ class Rccl(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
     libraries = ["librccl"]
+    version(
+        "6.3.2",
+        tag="rocm-6.3.2",
+        commit="9a0e6a114c8f7371fa3050b413a350d6945fb7db",
+        submodules=True,
+    )
+    version(
+        "6.3.1",
+        tag="rocm-6.3.1",
+        commit="4ab67f5a5946d851a963b281cd9aa7b86eee752a",
+        submodules=True,
+    )
     version(
         "6.3.0",
         tag="rocm-6.3.0",
@@ -58,6 +69,7 @@ class Rccl(CMakePackage):
         values=auto_or_any_combination_of(*amdgpu_targets),
         sticky=True,
     )
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     patch("0003-Fix-numactl-rocm-smi-path-issue.patch", when="@5.2.3:5.6")
     patch("0004-Set-rocm-core-path-for-version-file.patch", when="@6.0:6.2")
@@ -87,6 +99,8 @@ class Rccl(CMakePackage):
         "6.2.1",
         "6.2.4",
         "6.3.0",
+        "6.3.1",
+        "6.3.2",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
@@ -109,10 +123,12 @@ class Rccl(CMakePackage):
         "6.2.1",
         "6.2.4",
         "6.3.0",
+        "6.3.1",
+        "6.3.2",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
-    depends_on("googletest@1.11.0:", when="@5.3:")
+    depends_on("googletest@1.11.0:", type="test", when="@5.3:")
 
     @classmethod
     def determine_version(cls, lib):
@@ -128,6 +144,11 @@ class Rccl(CMakePackage):
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
         env.set("ROCMCORE_PATH", self.spec["rocm-core"].prefix)
+        if self.spec.satisfies("+asan"):
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     def cmake_args(self):
         args = [
@@ -139,10 +160,10 @@ class Rccl(CMakePackage):
             args.append(self.define_from_variant("AMDGPU_TARGETS", "amdgpu_target"))
 
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
-            args.append(self.define("__skip_rocmclang", "ON"))
+            args.append(self.define("__skip_rocmclang", True))
 
         if self.spec.satisfies("@5.3.0:"):
-            args.append(self.define("BUILD_TESTS", "ON"))
+            args.append(self.define("BUILD_TESTS", self.run_tests))
         return args
 
     def test_unit(self):

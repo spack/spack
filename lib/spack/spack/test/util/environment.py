@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -150,11 +149,8 @@ def test_reverse_environment_modifications(working_env):
     os.environ.clear()
     os.environ.update(start_env)
 
-    print(os.environ)
     to_reverse.apply_modifications()
-    print(os.environ)
     reversal.apply_modifications()
-    print(os.environ)
 
     start_env.pop("UNSET")
     assert os.environ == start_env

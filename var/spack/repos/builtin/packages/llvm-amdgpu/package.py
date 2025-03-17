@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -25,6 +24,8 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     license("Apache-2.0")
 
     version("master", branch="amd-stg-open")
+    version("6.3.2", sha256="1f52e45660ea508d3fe717a9903fe27020cee96de95a3541434838e0193a4827")
+    version("6.3.1", sha256="e9c2481cccacdea72c1f8d3970956c447cec47e18dfb9712cbbba76a2820552c")
     version("6.3.0", sha256="79580508b039ca6c50dfdfd7c4f6fbcf489fe1931037ca51324818851eea0c1c")
     version("6.2.4", sha256="7af782bf5835fcd0928047dbf558f5000e7f0207ca39cf04570969343e789528")
     version("6.2.1", sha256="4840f109d8f267c28597e936c869c358de56b8ad6c3ed4881387cf531846e5a7")
@@ -160,6 +161,8 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         when="@master +rocm-device-libs",
     )
     for d_version, d_shasum in [
+        ("6.3.2", "aaecaa7206b6fa1d5d7b8f7c1f7c5057a944327ba4779448980d7e7c7122b074"),
+        ("6.3.1", "547ceeeda9a41cdffa21e57809dc5834f94938a0a2809c283aebcbcf01901df0"),
         ("6.3.0", "8fd6bcd6a5afd0ae5a59e33b786a525f575183d38c34049c2dab6b9270a1ca3b"),
         ("6.2.4", "b7aa0055855398d1228c39a6f4feb7d7be921af4f43d82855faf0b531394bb9b"),
         ("6.2.1", "dbe477b323df636f5e3221471780da156c938ec00dda4b50639aa8d7fb9248f4"),
@@ -312,6 +315,11 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     def setup_dependent_run_environment(self, env, dependent_spec):
         llvm_amdgpu_home = self.spec["llvm-amdgpu"].prefix
         env.prepend_path("LD_LIBRARY_PATH", llvm_amdgpu_home + "/lib")
+        # Required for enabling asan on dependent packages
+        for root, _, files in os.walk(self.spec["llvm-amdgpu"].prefix):
+            if "libclang_rt.asan-x86_64.so" in files:
+                env.prepend_path("LD_LIBRARY_PATH", root)
+        env.prune_duplicate_paths("LD_LIBRARY_PATH")
 
     @run_after("install")
     def post_install(self):

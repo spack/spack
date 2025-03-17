@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,6 +15,9 @@ from spack.main import SpackCommand, SpackCommandError
 
 uninstall = SpackCommand("uninstall")
 install = SpackCommand("install")
+
+# Unit tests should not be affected by the user's managed environments
+pytestmark = pytest.mark.usefixtures("mutable_mock_env_path")
 
 
 class MockArgs:
@@ -221,9 +223,7 @@ class TestUninstallFromEnv:
     find = SpackCommand("find")
 
     @pytest.fixture(scope="function")
-    def environment_setup(
-        self, mutable_mock_env_path, mock_packages, mutable_database, install_mockery
-    ):
+    def environment_setup(self, mock_packages, mutable_database, install_mockery):
         TestUninstallFromEnv.env("create", "e1")
         e1 = spack.environment.read("e1")
         with e1:

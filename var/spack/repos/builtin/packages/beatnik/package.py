@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -45,7 +44,7 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos @4:")
     depends_on("kokkos +cuda +cuda_lambda +cuda_constexpr", when="+cuda")
     depends_on("kokkos +rocm", when="+rocm")
-    depends_on("kokkos +wrapper", when="%gcc+cuda")
+    depends_on("kokkos +wrapper", when="+cuda%gcc")
 
     # Cabana dependencies
     depends_on("cabana @0.7.0 +grid +heffte +silo +hdf5 +mpi +arborx", when="@1.1")

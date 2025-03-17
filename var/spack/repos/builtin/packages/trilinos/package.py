@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -34,7 +33,17 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-12-12-1.tar.gz"
     git = "https://github.com/trilinos/Trilinos.git"
 
-    maintainers("keitat", "kuberry", "jwillenbring", "psakievich")
+    maintainers(
+        "keitat",
+        "kuberry",
+        "jwillenbring",
+        "psakievich",
+        "ccober6",
+        "fryeguy52",
+        "sebrowne",
+        "rppawlo",
+        "cgcgcg",
+    )
 
     tags = ["e4s"]
 
@@ -415,14 +424,14 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("kokkos-kernels~shared", when="+cuda_rdc")
         depends_on("kokkos-kernels~shared", when="+rocm_rdc")
         depends_on("kokkos~complex_align")
-        depends_on("kokkos@4.5.00", when="@master:")
+        depends_on("kokkos@4.5.01", when="@master:")
         depends_on("kokkos@4.3.01", when="@16")
         depends_on("kokkos@4.2.01", when="@15.1:15")
         depends_on("kokkos@4.1.00", when="@14.4:15.0")
-        depends_on("kokkos-kernels@4.5.00", when="@master:")
+        depends_on("kokkos-kernels@4.5.01", when="@master:")
         depends_on("kokkos-kernels@4.3.01", when="@16")
         depends_on("kokkos-kernels@4.2.01", when="@15.1:15")
-        depends_on("kokkos-kernels@4.1.00", when="@15.0")
+        depends_on("kokkos+openmp", when="+openmp")
 
         for a in CudaPackage.cuda_arch_values:
             arch_str = f"+cuda cuda_arch={a}"
@@ -584,27 +593,28 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         return url.format(version.dashed)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        if "+cuda" in self.spec:
-            # currently Trilinos doesn't perform the memory fence so
+        if self.spec.satisfies("@:13.1.0 +cuda"):
+            # older releases of  Trilinos doesn't perform the memory fence so
             # it relies on blocking CUDA kernel launch. This is needed
             # in case the dependent app also run a CUDA backend via Trilinos
             env.set("CUDA_LAUNCH_BLOCKING", "1")
 
-    def setup_dependent_package(self, module, dependent_spec):
-        if "+wrapper" in self.spec:
-            self.spec.kokkos_cxx = self.spec["kokkos-nvcc-wrapper"].kokkos_cxx
-        else:
-            self.spec.kokkos_cxx = spack_cxx
+    @property
+    def kokkos_cxx(self) -> str:
+        if self.spec.satisfies("+wrapper"):
+            return self["kokkos-nvcc-wrapper"].kokkos_cxx
+        # Assumes build-time globals have been set already
+        return spack_cxx
 
     def setup_build_environment(self, env):
         spec = self.spec
         if "+cuda" in spec and "+wrapper" in spec:
             if "+mpi" in spec:
-                env.set("OMPI_CXX", spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-                env.set("MPICH_CXX", spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-                env.set("MPICXX_CXX", spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+                env.set("OMPI_CXX", self["kokkos-nvcc-wrapper"].kokkos_cxx)
+                env.set("MPICH_CXX", self["kokkos-nvcc-wrapper"].kokkos_cxx)
+                env.set("MPICXX_CXX", self["kokkos-nvcc-wrapper"].kokkos_cxx)
             else:
-                env.set("CXX", spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+                env.set("CXX", self["kokkos-nvcc-wrapper"].kokkos_cxx)
 
         if "+rocm" in spec:
             if "+mpi" in spec:
@@ -907,7 +917,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         # External Kokkos
         if spec.satisfies("@14.4.0: +kokkos"):
             options.append(define_tpl_enable("Kokkos"))
-        if spec.satisfies("@15.0: +kokkos"):
+        if spec.satisfies("@15.1: +kokkos"):
             options.append(define_tpl_enable("KokkosKernels", True))
 
         # MPI settings
@@ -1086,7 +1096,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         if "+exodus" in self.spec:
             env.prepend_path("PYTHONPATH", self.prefix.lib)
 
-        if "+cuda" in self.spec:
-            # currently Trilinos doesn't perform the memory fence so
-            # it relies on blocking CUDA kernel launch.
+        if self.spec.satisfies("@:13.1.0 +cuda"):
+            # older releases of  Trilinos doesn't perform the memory fence so
+            # it relies on blocking CUDA kernel launch. This is needed
+            # in case the dependent app also run a CUDA backend via Trilinos
             env.set("CUDA_LAUNCH_BLOCKING", "1")

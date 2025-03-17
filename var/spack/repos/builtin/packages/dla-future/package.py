@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,6 +15,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSD-3-Clause")
 
+    version("0.8.0", sha256="4c30c33ee22417514d839a75d99ae4c24860078fb595ee24ce4ebf45fbce5e69")
     version("0.7.3", sha256="8c829b72f4ea9c924abdb6fe2ac7489304be4056ab76b8eba226c33ce7b7dc0e")
     version(
         "0.7.1",
@@ -74,7 +74,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     generator("ninja")
 
     depends_on("cmake@3.22:", type="build")
-    depends_on("pkgconfig", type="build")
+    depends_on("pkgconfig", type=("build", "link"))
     depends_on("doxygen", type="build", when="+doc")
     depends_on("mpi")
 
@@ -135,7 +135,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     # Compilation problem triggered by the bundled fmt in Umpire together with
     # fmt 10, which only happens with GCC 9 and nvcc 11.2 and older:
     # https://github.com/eth-cscs/DLA-Future/issues/1044
-    conflicts("^fmt@10:", when="@:0.3.0 %gcc@9 +cuda ^cuda@:11.2 ^umpire@2022.10:")
+    conflicts("^fmt@10:", when="@:0.3.0 +cuda %gcc@9 ^cuda@:11.2 ^umpire@2022.10:")
 
     # Pedantic warnings, triggered by GCC 9 and 10, are always errors until 0.3.1:
     # https://github.com/eth-cscs/DLA-Future/pull/1043

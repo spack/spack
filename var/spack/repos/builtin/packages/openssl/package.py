@@ -1,12 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import re
-
-import llnl.util.tty as tty
 
 from spack.package import *
 
@@ -171,7 +168,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
         # The default glibc provided by CentOS 7 does not provide proper
         # atomic support when using the NVIDIA compilers
-        if self.spec.satisfies("%nvhpc os=centos7"):
+        if self.spec.satisfies("os=centos7 %nvhpc"):
             options.append("-D__STDC_NO_ATOMICS__")
 
         # Make a flag for shared library builds

@@ -1,11 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-
-import llnl.util.tty as tty
 
 from spack.package import *
 
@@ -87,7 +84,7 @@ class ParallelNetcdf(AutotoolsPackage):
     # detected using macro AC_FC_LIBRARY_LDFLAGS, which means that we can
     # override the verbose output flag for Fortran compiler on the command line
     # (see below).
-    conflicts("+shared", when="@:1.9%nag+fortran")
+    conflicts("+shared", when="@:1.9+fortran%nag")
 
     @property
     def libs(self):
@@ -107,8 +104,8 @@ class ParallelNetcdf(AutotoolsPackage):
         if libs:
             return libs
 
-        msg = f"Unable to recursively locate {'shared' if shared else 'static'} \
-{self.spec.name} libraries in {self.spec.prefix}"
+        msg = f"Unable to recursively locate {'shared' if shared else 'static'} "
+        msg += f"{self.spec.name} libraries in {self.spec.prefix}"
         raise NoLibrariesError(msg)
 
     @when("@master")
@@ -148,7 +145,7 @@ class ParallelNetcdf(AutotoolsPackage):
             args += self.enable_or_disable("shared")
             args.extend(["--enable-static", "--disable-silent-rules"])
 
-        if self.spec.satisfies("%nag+fortran+shared"):
+        if self.spec.satisfies("+fortran+shared%nag"):
             args.extend(["ac_cv_prog_fc_v=-Wl,-v", "ac_cv_prog_f77_v=-Wl,-v"])
 
         if self.spec.satisfies("+burstbuffer"):

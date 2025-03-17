@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,7 +25,7 @@ class XkeyboardConfig(AutotoolsPackage, XorgPackage):
     depends_on("intltool@0.30:", type="build")
     depends_on("xproto@7.0.20:", type="build")
 
-    provides("xkbdata")
+    provides("xkbdata-api")
 
     # TODO: missing dependencies
     # xgettext

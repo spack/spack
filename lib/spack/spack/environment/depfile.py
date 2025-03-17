@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """
@@ -167,7 +166,7 @@ class MakefileModel:
                 " ".join(self._install_target(s.safe_name()) for s in item.prereqs),
                 item.target.spec_hash(),
                 item.target.unsafe_format(
-                    "{name}{@version}{%compiler}{variants}{arch=architecture}"
+                    "{name}{@version}{variants}{ arch=architecture} {%compiler}"
                 ),
                 item.buildcache_flag,
             )

@@ -82,6 +82,12 @@ spack:
       require:
       - lammps_sizes=bigbig +molecule +kspace +rigid +asphere +opt +openmp +openmp-package fft=mkl ^intel-oneapi-mkl
       - one_of: [+intel target=x86_64_v4, target=x86_64_v3]
+    bison:
+      require:
+      - "%gcc"
+    boost:
+      require:
+      - "%gcc"
     libfabric:
       buildable: true
       externals:

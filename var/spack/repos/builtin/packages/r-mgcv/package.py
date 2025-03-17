@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -42,3 +41,4 @@ class RMgcv(RPackage):
     depends_on("r@3.6.0:", type=("build", "run"), when="@1.8.34:")
     depends_on("r-nlme@3.1-64:", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"))
+    depends_on("gettext")

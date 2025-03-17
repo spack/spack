@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Common utilities for managing intel oneapi packages."""
@@ -143,7 +142,7 @@ class IntelOneApiPackage(Package):
            $ source {prefix}/{component}/{version}/env/vars.sh
         """
         # Only if environment modifications are desired (default is +envmods)
-        if "~envmods" not in self.spec:
+        if "+envmods" in self.spec:
             env.extend(
                 EnvironmentModifications.from_sourcing_file(
                     self.component_prefix.env.join("vars.sh"), *self.env_script_args

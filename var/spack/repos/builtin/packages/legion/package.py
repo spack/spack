@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -80,11 +79,11 @@ class Legion(CMakePackage, ROCmPackage):
     for nvarch in cuda_arch_list:
         depends_on(
             f"kokkos@3.3.01:+cuda+cuda_lambda+wrapper cuda_arch={nvarch}",
-            when=f"%gcc+kokkos+cuda cuda_arch={nvarch}",
+            when=f"+kokkos+cuda cuda_arch={nvarch} %gcc",
         )
         depends_on(
             f"kokkos@3.3.01:+cuda+cuda_lambda~wrapper cuda_arch={nvarch}",
-            when=f"%clang+kokkos+cuda cuda_arch={nvarch}",
+            when=f"+kokkos+cuda cuda_arch={nvarch} %clang",
         )
 
     depends_on("kokkos@3.3.01:~cuda", when="+kokkos~cuda")
@@ -407,8 +406,8 @@ class Legion(CMakePackage, ROCmPackage):
         if spec.satisfies("+kokkos"):
             # default is off.
             options.append("-DLegion_USE_Kokkos=ON")
-            os.environ["KOKKOS_CXX_COMPILER"] = spec["kokkos"].kokkos_cxx
-            if spec.satisfies("+cuda+cuda_unsupported_compiler ^kokkos%clang +cuda"):
+            os.environ["KOKKOS_CXX_COMPILER"] = self["kokkos"].kokkos_cxx
+            if spec.satisfies("+cuda+cuda_unsupported_compiler ^kokkos+cuda %clang"):
                 # Keep CMake CUDA compiler detection happy
                 options.append(
                     self.define("CMAKE_CUDA_FLAGS", "--allow-unsupported-compiler -std=c++17")

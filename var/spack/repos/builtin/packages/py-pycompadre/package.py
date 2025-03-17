@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -62,7 +61,7 @@ class PyPycompadre(PythonPackage):
         with open("cmake_opts.txt", "w") as f:
             f.write("KokkosCore_PREFIX:PATH=%s\n" % spec["kokkos"].prefix)
             f.write("KokkosKernels_PREFIX:PATH=%s\n" % spec["kokkos-kernels"].prefix)
-            f.write("CMAKE_CXX_COMPILER:STRING={0}\n".format(spec["kokkos"].kokkos_cxx))
+            f.write("CMAKE_CXX_COMPILER:STRING={0}\n".format(self["kokkos"].kokkos_cxx))
             if spec.variants["debug"].value == "0":
                 f.write(
                     "CMAKE_CXX_FLAGS:STRING=%s\n"

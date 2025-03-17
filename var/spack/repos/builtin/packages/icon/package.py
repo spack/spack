@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -130,6 +129,7 @@ class Icon(AutotoolsPackage):
             "atmo",
             "les",
             "upatmo",
+            "ocean",
             "jsbach",
             "waves",
             "aes",
@@ -241,7 +241,7 @@ class Icon(AutotoolsPackage):
                 ]
             )
 
-            if self.spec.satisfies("%oneapi+coupling"):
+            if self.spec.satisfies("+coupling%oneapi"):
                 flags["ICON_YAC_CFLAGS"].extend(["-O2", "-fp-model precise"])
 
             if self.spec.satisfies("+ocean"):
@@ -269,7 +269,7 @@ class Icon(AutotoolsPackage):
                     ["-acc=gpu", "-gpu=cc{0}".format(self.nvidia_targets[gpu])]
                 )
 
-            if self.spec.satisfies("%nvhpc@:23.9+coupling"):
+            if self.spec.satisfies("+coupling%nvhpc@:23.9"):
                 args.append("yac_cv_fc_is_contiguous_works=yes")
 
         else:

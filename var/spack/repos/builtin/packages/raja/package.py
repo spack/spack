@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -174,6 +173,13 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         "https://github.com/LLNL/RAJA/commit/406eb8dee05a41eb32c421c375688a4863b60642.patch?full_index=1",
         sha256="d9ce5ef038555cbccb330a9016b7be77e56ae0660583cba955dab9d0297a4b07",
         when="^hip@6.0",
+    )
+
+    # Fix compilation issue reported by Intel from their new compiler version
+    patch(
+        "https://github.com/LLNL/RAJA/pull/1668.patch?full_index=1",
+        sha256="c0548fc5220f24082fb2592d5b4e8b7c8c783b87906d5f0950d53953d25161f6",
+        when="@2024.02.1:2024.02.99 %oneapi@2025:",
     )
 
     variant("openmp", default=False, description="Build OpenMP backend")

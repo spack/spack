@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -15,6 +14,7 @@ case you want to skip directly to specific docs:
 * :ref:`compilers.yaml <compiler-config>`
 * :ref:`concretizer.yaml <concretizer-options>`
 * :ref:`config.yaml <config-yaml>`
+* :ref:`include.yaml <include-yaml>`
 * :ref:`mirrors.yaml <mirrors>`
 * :ref:`modules.yaml <modules>`
 * :ref:`packages.yaml <packages-config>`

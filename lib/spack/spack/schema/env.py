@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -30,11 +29,7 @@ properties: Dict[str, Any] = {
             # merged configuration scope schemas
             spack.schema.merged.properties,
             # extra environment schema properties
-            {
-                "include": {"type": "array", "default": [], "items": {"type": "string"}},
-                "specs": spec_list_schema,
-                "include_concrete": include_concrete,
-            },
+            {"specs": spec_list_schema, "include_concrete": include_concrete},
         ),
     }
 }

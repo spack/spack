@@ -1,12 +1,9 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import shutil
-
-import llnl.util.filesystem as fs
 
 from spack.package import *
 
@@ -16,6 +13,8 @@ class PythonVenv(Package):
 
     homepage = "https://docs.python.org/3/library/venv.html"
     has_code = False
+
+    tags = ["build-tools"]
 
     maintainers("haampie")
 
@@ -37,7 +36,7 @@ class PythonVenv(Package):
             # Replace the VIRTUAL_ENV variable in the activate scripts after copying
             if name.lower().startswith("activate"):
                 shutil.copy(src, dst)
-                fs.filter_file(
+                filter_file(
                     self.spec.prefix,
                     os.path.abspath(view.get_projection_for_spec(self.spec)),
                     dst,

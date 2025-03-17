@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Query the status of bootstrapping on this machine"""
@@ -64,7 +63,6 @@ def _missing(name: str, purpose: str, system_only: bool = True) -> str:
 
 def _core_requirements() -> List[RequiredResponseType]:
     _core_system_exes = {
-        "make": _missing("make", "required to build software from sources"),
         "patch": _missing("patch", "required to patch source code before building"),
         "tar": _missing("tar", "required to manage code archives"),
         "gzip": _missing("gzip", "required to compress/decompress code archives"),

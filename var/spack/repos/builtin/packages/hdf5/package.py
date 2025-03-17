@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,7 +8,6 @@ import shutil
 import sys
 
 import llnl.util.lang
-import llnl.util.tty as tty
 
 from spack.package import *
 
@@ -347,7 +345,7 @@ class Hdf5(CMakePackage):
             if spec.satisfies("@:1.8.12+cxx~shared"):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
         elif name == "fflags":
-            if spec.satisfies("%cce+fortran"):
+            if spec.satisfies("+fortran%cce"):
                 # Cray compiler generates module files with uppercase names by
                 # default, which is not handled by the CMake scripts. The
                 # following flag forces the compiler to produce module files

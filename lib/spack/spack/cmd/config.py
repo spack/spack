@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
@@ -351,9 +350,12 @@ def _config_change(config_path, match_spec_str=None):
                 if spack.config.get(key_path, scope=scope):
                     ideal_scope_to_modify = scope
                     break
+            # If we find our key in a specific scope, that's the one we want
+            # to modify. Otherwise we use the default write scope.
+            write_scope = ideal_scope_to_modify or spack.config.default_modify_scope()
 
             update_path = f"{key_path}:[{str(spec)}]"
-            spack.config.add(update_path, scope=ideal_scope_to_modify)
+            spack.config.add(update_path, scope=write_scope)
     else:
         raise ValueError("'config change' can currently only change 'require' sections")
 
