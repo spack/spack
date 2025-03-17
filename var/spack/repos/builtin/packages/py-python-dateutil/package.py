@@ -29,8 +29,12 @@ class PyPythonDateutil(PythonPackage):
         version("1.5", sha256="6f197348b46fb8cdf9f3fcfc2a7d5a97da95db3e2e8667cf657216274fe1b009")
 
     with default_args(type="build"):
-        depends_on("py-setuptools@24.3:")
         depends_on("py-setuptools@:39", when="@2.8.0: ^python@3.3")
+        depends_on("py-setuptools@24.3:")
+
+        # 2.7.1 introduces pyproject.toml which requires toml parsing
+        # libtoml was added in python 3.11, earlier versions require py-tomli
+        depends_on("py-tomli@1:", when="@2.7.1: ^python@:3.10")
 
         depends_on("py-setuptools-scm@:7", when="@2.7.0:")
 
