@@ -326,11 +326,11 @@ class Warpx(CMakePackage, PythonExtension):
 
         return args
 
-    phases = ("cmake", "build", "install", "pip_install_nodeps")
-    build_targets = ["all"]
-    with when("+python"):
-        build_targets += ["pip_wheel"]
+    phases = ["cmake", "build", "install"]
+    #with when("+python"):
+    #    phases += ["pip_install_nodeps"]
 
+    @run_after("install", when="+python")
     def pip_install_nodeps(self, spec, prefix):
         """Install everything from build directory."""
         pip = spec["python"].command
