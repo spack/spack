@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -38,3 +37,7 @@ class PyNatsort(PythonPackage):
     version("4.0.1", sha256="1c1d29150938ca71f0943363a06765dbb2cea01f9c4d760ba880cc65f39baba0")
 
     depends_on("py-setuptools", type=("build"))
+
+    variant("icu", default=False, when="@5.0.3:", description="Use icu for locale sorting")
+
+    depends_on("py-pyicu", type=("build", "run"), when="+icu")
