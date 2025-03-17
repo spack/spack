@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,14 +25,23 @@ These settings can be overridden in ``etc/spack/config.yaml`` or
 The location where Spack will install packages and their dependencies.
 Default is ``$spack/opt/spack``.
 
----------------------------------------------------
-``install_hash_length`` and ``install_path_scheme``
----------------------------------------------------
+---------------
+``projections``
+---------------
 
-The default Spack installation path can be very long and can create problems
-for scripts with hardcoded shebangs. Additionally, when using the Intel
-compiler, and if there is also a long list of dependencies, the compiler may
-segfault. If you see the following:
+.. warning::
+
+   Modifying projections of the install tree is strongly discouraged.
+
+By default Spack installs all packages into a unique directory relative to the install
+tree root with the following layout:
+
+.. code-block::
+
+   {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
+
+In very rare cases, it may be necessary to reduce the length of this path. For example,
+very old versions of the Intel compiler are known to segfault when input paths are too long:
 
      .. code-block:: console
 
@@ -41,36 +49,25 @@ segfault. If you see the following:
        ** Segmentation violation signal raised. **
        Access violation or stack overflow. Please contact Intel Support for assistance.
 
-it may be because variables containing dependency specs may be too long. There
-are two parameters to help with long path names. Firstly, the
-``install_hash_length`` parameter can set the length of the hash in the
-installation path from 1 to 32. The default path uses the full 32 characters.
+Another case is Python and R packages with many runtime dependencies, which can result
+in very large ``PYTHONPATH`` and ``R_LIBS`` environment variables. This can cause the
+``execve`` system call to fail with ``E2BIG``, preventing processes from starting.
 
-Secondly, it is also possible to modify the entire installation
-scheme. By default Spack uses
-``{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}``
-where the tokens that are available for use in this directive are the
-same as those understood by the :meth:`~spack.spec.Spec.format`
-method. Using this parameter it is possible to use a different package
-layout or reduce the depth of the installation paths. For example
+For this reason, Spack allows users to modify the installation layout through custom
+projections. For example
 
      .. code-block:: yaml
 
        config:
-         install_path_scheme: '{name}/{version}/{hash:7}'
+         install_tree:
+           root: $spack/opt/spack
+           projections:
+             all: "{name}/{version}/{hash:16}"
 
-would install packages into sub-directories using only the package
-name, version and a hash length of 7 characters.
+would install packages into sub-directories using only the package name, version and a
+hash length of 16 characters.
 
-When using either parameter to set the hash length it only affects the
-representation of the hash in the installation directory. You
-should be aware that the smaller the hash length the more likely
-naming conflicts will occur. These parameters are independent of those
-used to configure module names.
-
-.. warning:: Modifying the installation hash length or path scheme after
-   packages have been installed will prevent Spack from being
-   able to find the old installation directories.
+Notice that reducing the hash length increases the likelihood of hash collisions.
 
 --------------------
 ``build_stage``
@@ -127,6 +124,8 @@ Location to cache downloaded tarballs and repositories.  By default these
 are stored in ``$spack/var/spack/cache``.  These are stored indefinitely
 by default. Can be purged with :ref:`spack clean --downloads
 <cmd-spack-clean>`.
+
+.. _Misc Cache:
 
 --------------------
 ``misc_cache``
@@ -337,3 +336,52 @@ create a new alias called ``inst`` that will always call ``install -v``:
 
    aliases:
      inst: install -v
+
+-------------------------------
+``concretization_cache:enable``
+-------------------------------
+
+When set to ``true``, Spack will utilize a cache of solver outputs from
+successful concretization runs. When enabled, Spack will check the concretization
+cache prior to running the solver. If a previous request to solve a given
+problem is present in the cache, Spack will load the concrete specs and other
+solver data from the cache rather than running the solver. Specs not previously
+concretized will be added to the cache on a successful solve. The cache additionally
+holds solver statistics, so commands like ``spack solve`` will still return information
+about the run that produced a given solver result.
+
+This cache is a subcache of the :ref:`Misc Cache` and as such will be cleaned when the Misc
+Cache is cleaned.
+
+When ``false`` or ommitted, all concretization requests will be performed from scatch
+
+----------------------------
+``concretization_cache:url``
+----------------------------
+
+Path to the location where Spack will root the concretization cache. Currently this only supports
+paths on the local filesystem.
+
+Default location is under the :ref:`Misc Cache` at: ``$misc_cache/concretization``
+
+------------------------------------
+``concretization_cache:entry_limit``
+------------------------------------
+
+Sets a limit on the number of concretization results that Spack will cache. The limit is evaluated
+after each concretization run; if Spack has stored more results than the limit allows, the
+oldest concretization results are pruned until 10% of the limit has been removed.
+
+Setting this value to 0 disables the automatic pruning. It is expected users will be
+responsible for maintaining this cache.
+
+-----------------------------------
+``concretization_cache:size_limit``
+-----------------------------------
+
+Sets a limit on the size of the concretization cache in bytes. The limit is evaluated
+after each concretization run; if Spack has stored more results than the limit allows, the
+oldest concretization results are pruned until 10% of the limit has been removed.
+
+Setting this value to 0 disables the automatic pruning. It is expected users will be
+responsible for maintaining this cache.

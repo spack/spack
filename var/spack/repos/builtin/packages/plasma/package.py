@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import spack.build_systems.cmake
@@ -27,6 +26,7 @@ class Plasma(CMakePackage):
     license("BSD-3-Clause")
 
     version("develop", git=git)
+    version("24.8.7", sha256="748464deb08642d2ea7309fb667e1383d85127c2cd8f0d134180b39c17834503")
     version("23.8.2", sha256="2db34de0575f3e3d16531bdcf1caddef146f68e71335977a3e8ec193003ab943")
     version("22.9.29", sha256="78827898b7e3830eee2e388823b9180858279f77c5eda5aa1be173765c53ade5")
     version("21.8.29", sha256="e0bb4d9143c8540f9f46cbccac9ed0cbea12500a864e6954fce2fe94ea057a10")
@@ -42,6 +42,9 @@ class Plasma(CMakePackage):
         sha256="d4b89f7c3d240a69dfe986284a14471eec4830b9e352ae902ea8861f15573dee",
         url="https://github.com/icl-utk-edu/plasma/releases/download/17.01/plasma-17.01.tar.gz",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     build_system(
         conditional("makefile", when="@:17.1"),
@@ -69,18 +72,9 @@ class Plasma(CMakePackage):
     conflicts("^veclibfort")
 
     # only GCC 4.9+ and higher have sufficient support for OpenMP 4+ tasks+deps
-    conflicts("%gcc@:4.8", when="@:17.1")
+    requires("%gcc@4.9:", when="@17.1:")
     # only GCC 6.0+ and higher have for OpenMP 4+ Clause "priority"
-    conflicts("%gcc@:5", when="@17.2:")
-
-    conflicts("%cce")
-    conflicts("%apple-clang")
-    conflicts("%clang")
-    conflicts("%intel")
-    conflicts("%nag")
-    conflicts("%pgi")
-    conflicts("%xl")
-    conflicts("%xl_r")
+    requires("%gcc@6:", when="@17.2:")
 
     patch("remove_absolute_mkl_include.patch", when="@17.1")
     patch("protect_cmake_version.patch", when="@19.8.0:19.8.9")
@@ -110,7 +104,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
         for package, provider in (
             ("openblas", "openblas"),
-            ("intel-mkl", "mkl"),
+            ("intel-oneapi-mkl", "mkl"),
             ("netlib-lapack", "netlib"),
         ):
             if package in self.spec:
@@ -118,7 +112,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                     options.append(self.define("{}_PROVIDER".format(lib), provider))
         if "cray-libsci" in self.spec:
             for lib in ("CBLAS", "LAPACKE"):
-                libsci_prefix = self.spec["cray-libsci"].package.external_prefix
+                libsci_prefix = self["cray-libsci"].external_prefix
                 options.append(self.define("{}_PROVIDER".format(lib), "generic"))
                 options.append(
                     self.define("{}_INCLUDE_DIRS".format(lib), join_path(libsci_prefix, "include"))
@@ -138,7 +132,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         make_inc = FileFilter("make.inc")
 
-        if not spec.satisfies("^intel-mkl"):
+        if not spec.satisfies("^[virtuals=blas,lapack] intel-oneapi-mkl"):
             make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
             make_inc.filter("LIBS *= *.*", "LIBS = " + self.spec["blas"].libs.ld_flags + " -lm")
 
