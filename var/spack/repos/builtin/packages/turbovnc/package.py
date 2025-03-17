@@ -11,9 +11,9 @@ class Turbovnc(CMakePackage):
     homepage = "https://turbovnc.org/"
     url = "https://github.com/TurboVNC/turbovnc/archive/refs/tags/3.1.1.tar.gz"
 
-    maintainers("teaguesterling")
-
     license("GPLv2", checked_by="teaguesterling")
+
+    maintainers("teaguesterling")
 
     version("3.1.3", sha256="50ec787c716a1649e270cfd79bf57190fe78c874df541bad2876c1fa8e1de393")
     version("3.1.1", sha256="834392e985cf29a6d7d3b21b6b95b8249c1390f2c4bbf716e03945ca9384bbc8")

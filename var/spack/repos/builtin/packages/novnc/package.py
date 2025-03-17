@@ -11,9 +11,9 @@ class Novnc(Package):
     homepage = "https://novnc.com/info.html"
     url = "https://github.com/novnc/noVNC/archive/refs/tags/v1.4.0.tar.gz"
 
-    maintainers("teaguesterling")
-
     license("MPL", checked_by="teaguesterling")
+
+    maintainers("teaguesterling")
 
     version("1.4.0", sha256="89b0354c94ad0b0c88092ec7a08e28086d3ed572f13660bac28d5470faaae9c1")
     version("1.3.0", sha256="ee8f91514c9ce9f4054d132f5f97167ee87d9faa6630379267e569d789290336")
