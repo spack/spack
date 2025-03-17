@@ -18,6 +18,7 @@ class Xfce4Panel(AutotoolsPackage):
 
     license("GPLv2 OR LGPLv2", checked_by="teaguesterling")  # https://wiki.xfce.org/licenses/audit
 
+    version("4.20.0", sha256="ff33cd5f5d16c2193fe305f4878d82cd8d2feea92f2594bcd27b2b5c392d43b8")
     version("4.18.0", sha256="be80023fd546587831bab25ded15ae4c9e346289a75744b6ba4cf4ee53794710")
     version("4.16.0", sha256="5e979aeeb37d306d72858b1bc67448222ea7a68de01409055b846cd31f3cc53d")
 
@@ -27,7 +28,9 @@ class Xfce4Panel(AutotoolsPackage):
     patch("fix-libxfce4util-gir.patch", when="@4.16.0")  # Capitalization difference causes error
 
     # Base requirements
-    depends_on("intltool@0.51.0:", type="build")
+    with default_args(type="build"):
+        depends_on("intltool@0.51.0:", when="@:4.18")
+        depends_on("gettext", when="@4.20:")
     with default_args(type=("build", "link", "run")):
         depends_on("libxfce4ui")
         depends_on("libxfce4util")
@@ -40,7 +43,9 @@ class Xfce4Panel(AutotoolsPackage):
         with when("+introspection"):
             depends_on("libxfce4ui+introspection")
             depends_on("gobject-introspection")
-            depends_on("gobject-introspection")
+        with when("@4.20.0:"):
+            depends_on("glib@2.72:")
+            depends_on("gobject-introspection@1.72:", when="+introspection")
         with when("@4.18.0:"):
             depends_on("glib@2.66:")
             depends_on("gtkplus@3.24:")

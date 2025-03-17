@@ -14,10 +14,11 @@ class Tumbler(AutotoolsPackage):
     list_url = "https://archive.xfce.org/xfce"
     list_depth = 2
 
-    maintainers("teaguesterling")
-
     license("GPLv2", checked_by="teaguesterling")  # https://wiki.xfce.org/licenses/audit
 
+    maintainers("teaguesterling")
+
+    version("4.20.0", sha256="74b1647d55926547e98bfac70838ff63c5a84299a5e10c81c38d1fab90e25880")
     version("4.18.0", sha256="4087f3af4ef31271d3f315421a2f1fe67e4fda7ad60bbab1f073627914dfcf00")
     version("4.16.0", sha256="9b0b7fed0c64041733d490b1b307297984629d0dd85369749617a8766850af66")
 
@@ -36,8 +37,8 @@ class Tumbler(AutotoolsPackage):
 
     # Base requirements
     with default_args(type="build"):
-        depends_on("intltool@0.35.0:")
-        depends_on("gettext")
+        depends_on("intltool@0.35.0:", when="@4.16")
+        depends_on("gettext", when="@4.18:")
     depends_on("pkgconfig", type=("build", "link"))
     with default_args(type=("build", "link", "run")):
         depends_on("libxfce4util")
@@ -50,6 +51,9 @@ class Tumbler(AutotoolsPackage):
         depends_on("libjpeg", when="+jpeg-thumbnailer")
         depends_on("ffmpeg", when="+ffmpeg-thumbnailer")
         depends_on("poppler+glib", when="+poppler-thumbnailer")
+        with when("@4.20.0:"):
+            depends_on("glib@2.72:")
+            depends_on("gdk-pixbuf@2.42.8:")
         with when("@4.18.0:"):
             depends_on("glib@2.66:")
             depends_on("gtkplus@3.24:")

@@ -13,10 +13,11 @@ class Libxfce4ui(AutotoolsPackage):
     list_url = "https://archive.xfce.org/xfce/"
     list_depth = 2
 
-    maintainers("teaguesterling")
-
     license("LGPLv2", checked_by="teaguesterling")  # https://wiki.xfce.org/licenses/audit
 
+    maintainers("teaguesterling")
+
+    version("4.20.0", sha256="75e8996984f20375aadecd5c16f5147c211ed0bd26d7861ab0257561eb76eaee")
     version("4.18.0", sha256="532247c4387c17bb9ef94a73147039b8d013c3131c95cdbd2fa85fbcc848d06b")
     version("4.16.0", sha256="8b06c9e94f4be88a9d87c47592411b6cbc32073e7af9cbd64c7b2924ec90ceaa")
 
@@ -25,7 +26,9 @@ class Libxfce4ui(AutotoolsPackage):
     variant("vala", default=True, description="Build with vala support")
     variant("notification", default=True, description="Build with startup-notification support")
 
-    depends_on("intltool@0.35.0:", type="build")
+    with default_args(type="build"):
+        depends_on("intltool@0.35.0:", when="@:4.18")
+        depends_on("gettext", when="@4.20:")
     with default_args(type=("build", "link", "run")):
         depends_on("libxfce4util")
         depends_on("xfconf")
@@ -39,6 +42,9 @@ class Libxfce4ui(AutotoolsPackage):
         with when("+vala"):
             depends_on("vala")
             depends_on("libxfce4util+vala")
+        with when("@4.20"):
+            depends_on("glib@2.72:")
+            depends_on("gobject-introspection@1.72:", when="+introspection")
         with when("@4.18:"):
             depends_on("glib@2.66:")
             depends_on("gtkplus@3.24:")

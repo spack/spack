@@ -14,10 +14,11 @@ class Xfce4Settings(AutotoolsPackage):
     list_url = "https://archive.xfce.org/xfce/"
     list_depth = 2
 
-    maintainers("teaguesterling")
-
     license("GPLv2", checked_by="teaguesterling")
 
+    maintainers("teaguesterling")
+
+    version("4.20.0", sha256="23548da3429a296501fbfdbc98a861ee241b9fdd47e8d5de1781f57c6bbce5a9")
     version("4.18.0", sha256="ed3f75837cb33cd694610fc87cd569c4782b7ac4e099143a3dbe8fff1f1c6a9d")
     version("4.16.0", sha256="67a1404fc754c675c6431e22a8fe0e5d79644fdfadbfe25a4523d68e1442ddc2")
 
@@ -26,6 +27,9 @@ class Xfce4Settings(AutotoolsPackage):
     variant("libnotify", default=True, description="Build with libnotify support")
 
     # Base requirements
+    with default_args(type="build"):
+        depends_on("intltool@0.39.0:", when="@:4.18")
+        depends_on("gettext", when="@4.20:")
     with default_args(type=("build", "link", "run")):
         depends_on("xfconf")
         depends_on("libxfce4ui")
@@ -40,9 +44,10 @@ class Xfce4Settings(AutotoolsPackage):
             depends_on("libxfce4util+introspection")
             depends_on("libxfce4ui+introspection")
             depends_on("gobject-introspection")
-
-    depends_on("intltool@0.39.0:", type="build")
     with default_args(type=("build", "link", "run")):
+        with when("@4.20.0:"):
+            depends_on("glib@2.72:")
+            depends_on("gobject-introspection@1.72:", when="+introspection")
         with when("@4.18.0:"):
             depends_on("glib@2.66:")
             depends_on("gobject-introspection@1.66:", when="+introspection")

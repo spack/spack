@@ -18,6 +18,7 @@ class Libxfce4util(AutotoolsPackage):
 
     license("LGPLv2", checked_by="teague")  # https://wiki.xfce.org/licenses/audit
 
+    version("4.20.0", sha256="21493f9c9995a282823db93839f6b9f06ae31edb094191ba9acf04d932a2b592")
     version("4.18.0", sha256="1157ca717fd3dd1da7724a6432a4fb24af9cd922f738e971fd1fd36dfaeac3c9")
     version("4.16.0", sha256="60598d745d1fc81ff5ad3cecc3a8d1b85990dd22023e7743f55abd87d8b55b83")
 
@@ -25,14 +26,16 @@ class Libxfce4util(AutotoolsPackage):
     variant("vala", default=True, description="Build with vala support")
 
     with default_args(type="build"):
-        depends_on("intltool@0.35.0:", when="@4.16:")
+        depends_on("intltool@0.35.0:", when="@:4.16")
         depends_on("gettext", when="@4.18:")
-
     with default_args(type=("run", "link", "build")):
         depends_on("pkgconfig@0.9.0:")
         depends_on("glib@2")
         depends_on("gobject-introspection", when="+introspection")
         depends_on("vala", when="+vala")
+        with when("@4.20:"):
+            depends_on("glib@2.72:")
+            depends_on("gobject-introspection@1.72:", when="+introspection")
         with when("@4.18:"):
             depends_on("glib@2.66:")
             depends_on("gobject-introspection@1.66:", when="+introspection")

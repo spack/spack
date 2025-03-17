@@ -18,6 +18,7 @@ class Xfdesktop(AutotoolsPackage):
 
     license("GPLv2", checked_by="teaguesterling")  # https://wiki.xfce.org/licenses/audit
 
+    version("4.20.0", sha256="227041ba80c7f3eb9c99dec817f1132b35d8aec7a4335703f61ba1735cd65632")
     version("4.18.0", sha256="661783e7e6605459926d80bca46d25ce2197c221456457a863ea9d0252120d14")
     version("4.16.0", sha256="934ba5affecff21e62d9fac1dd50c50cd94b3a807fefa5f5bff59f3d6f155bae")
 
@@ -25,7 +26,9 @@ class Xfdesktop(AutotoolsPackage):
     variant("thunarx", default=False, description="Build with thunarx support")  # TODO
 
     # Base requirements
-    depends_on("intltool@0.35.0:", type="build")
+    with default_args(type="build"):
+        depends_on("intltool@0.35.0:", when="@:4.18")
+        depends_on("gettext", when="@4.20:")
     with default_args(type=("build", "link", "run")):
         depends_on("xfconf")
         depends_on("libxfce4ui")
@@ -34,9 +37,9 @@ class Xfdesktop(AutotoolsPackage):
         depends_on("garcon")
         depends_on("glib@2:")
         depends_on("gtkplus@3:")
-
         depends_on("libnotify", when="+libnotify")
-
+        with when("@4.20.0:"):
+            depends_on("glib@2.72:")
         with when("@4.18.0:"):
             depends_on("glib@2.66:")
             depends_on("gtkplus@3.24:")

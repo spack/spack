@@ -17,6 +17,7 @@ class Thunar(AutotoolsPackage):
     maintainers("teaguesterling")
     license("GPLv2", checked_by="teaguesterling")  # https://wiki.xfce.org/licenses/audit
 
+    version("4.20.0", sha256="27731a76f3aecf3752b1ca35afad89e264c52244f70083d933507dd4a17548b0")
     version("4.18.0", sha256="d1f4b080c97b9e390eff199aaaac7562fb20f031686f8d5ee5207e953bfc2feb")
     version("4.16.0", sha256="6277c448116a91ebfa564972645d8d79ef69864992a02bb164b7b13f98fdfd9b")
 
@@ -32,7 +33,9 @@ class Thunar(AutotoolsPackage):
     extendable = True
 
     # Base requirements
-    depends_on("intltool@0.39.0:", type="build")
+    with default_args(type="build"):
+        depends_on("intltool@0.39.0:", when="@:4.18")
+        depends_on("gettext", when="@4.20:")
     with default_args(type=("build", "link", "run")):
         depends_on("libxfce4util")
         depends_on("xfconf")
@@ -51,6 +54,9 @@ class Thunar(AutotoolsPackage):
             depends_on("libxfce4util+introspection")
             depends_on("libxfce4ui+introspection")
             depends_on("gobject-introspection")
+        with when("@4.20.0:"):
+            depends_on("glib@2.72:")
+            depends_on("gobject-introspection@1.72:", when="+introspection")
         with when("@4.18.0:"):
             depends_on("glib@2.66:")
             depends_on("gtkplus@3.24:")

@@ -12,34 +12,29 @@ class Xfce4Core(BundlePackage):
 
     maintainers("teaguesterling")
 
+    version("4.20")
     version("4.18")
     version("4.16")
 
-    with when("@4.18"):
-        depends_on("libxfce4util@4.18")
-        depends_on("xfconf@4.18")
-        depends_on("libxfce4ui@4.18")
-        depends_on("garcon@4.18.0")
-        depends_on("exo@4.18")
-        depends_on("thunar@4.18")
-        depends_on("xfce4-session@4.18")
-        depends_on("xfce4-panel@4.18")
-        depends_on("xfce4-settings@4.18")
-        depends_on("xfdesktop@4.18")
-        depends_on("xfwm4@4.18")
-        depends_on("xfce4-appfinder@4.18")
-        depends_on("tumbler@4.18")
-    with when("@4.16"):
-        depends_on("libxfce4util@4.16")
-        depends_on("xfconf@4.16")
-        depends_on("libxfce4ui@4.16")
-        depends_on("garcon@0.8.0")
-        depends_on("exo@4.16")
-        depends_on("thunar@4.16")
-        depends_on("xfce4-session@4.16")
-        depends_on("xfce4-panel@4.16")
-        depends_on("xfce4-settings@4.16")
-        depends_on("xfdesktop@4.16")
-        depends_on("xfwm4@4.16")
-        depends_on("xfce4-appfinder@4.16")
-        depends_on("tumbler@4.16")
+    for xfce4_version, new, override in [
+        ("4.20", [], {}),  # TODO: Add libxfce4windowing
+        ("4.18", [], {}),
+        ("4.16", [], {"garcon": "0.8.0"}),
+    ]:
+        with when(f"@{xfce4_version}"):
+            for component in [
+                "libxfce4util",
+                "xfconf",
+                "libxfce4ui",
+                "garcon",
+                "exo",
+                "thunar",
+                "xfce4-session",
+                "xfce4-panel",
+                "xfce4-settings",
+                "xfdesktop",
+                "xfwm4",
+                "xfce4-appfinder",
+                "tumbler",
+            ]:
+                depends_on(f"{component}@{override.get(component, xfce4_version)}")

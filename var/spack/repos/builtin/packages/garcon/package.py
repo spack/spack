@@ -14,23 +14,28 @@ class Garcon(AutotoolsPackage):
     list_url = "https://archive.xfce.org/xfce/"
     list_depth = 2
 
-    maintainers("teaguesterling")
-
     license("LGPLv2", checked_by="teaguesterling")  # https://wiki.xfce.org/licenses/audit
 
+    maintainers("teaguesterling")
+
+    version("4.20.0", sha256="7fb8517c12309ca4ddf8b42c34bc0c315e38ea077b5442bfcc4509415feada8f")
     version("4.18.0", sha256="54633487566a8b8502b71c11a7f719efe27c069bd5773cc95f11ff4ea8f11a14")
     version("0.8.0", sha256="4811d89ee5bc48dbdeffd69fc3eec6c112bbf01fde98a9e848335b374a4aa1bb")
 
     variant("introspection", default=True, description="Build with gobject-introspection support")
 
-    # Base requirements
-    depends_on("intltool@0.51.0:", type="build")
+    with default_args(type="build"):
+        depends_on("intltool@0.51.0:", when="@:4.18")
+        depends_on("gettext", when="@4.20:")
     with default_args(type=("build", "link", "run")):
         depends_on("libxfce4util")
         depends_on("xfconf")
         depends_on("libxfce4ui")
         depends_on("glib@2:")
         depends_on("gtkplus@3:")
+        with when("@4.20.0:"):
+            depends_on("glib@2.72:")
+            depends_on("gobject-introspection@1.72:", when="+introspection")
         with when("@4.18.0:"):
             depends_on("glib@2.66:")
             depends_on("gtkplus@3.24:")
