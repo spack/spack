@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,7 +15,7 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
     """Theora Video Compression."""
 
     homepage = "https://www.theora.org"
-    url = "http://downloads.xiph.org/releases/theora/libtheora-1.1.1.tar.xz"
+    url = "https://downloads.xiph.org/releases/theora/libtheora-1.1.1.tar.xz"
     git = "https://gitlab.xiph.org/xiph/theora.git"
 
     license("BSD-3-Clause")

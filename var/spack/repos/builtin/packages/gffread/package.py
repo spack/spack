@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -10,7 +9,7 @@ class Gffread(MakefilePackage):
     """gffread: GFF/GTF utility providing format conversions, region filtering,
     FASTA sequence extraction and more"""
 
-    homepage = "http://ccb.jhu.edu/software/stringtie/gff.shtml#gffread"
+    homepage = "https://ccb.jhu.edu/software/stringtie/gff.shtml#gffread"
     url = "https://github.com/gpertea/gffread/releases/download/v0.12.7/gffread-0.12.7.tar.gz"
 
     license("MIT")

@@ -1,7 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import sys
 
 from spack.package import *
 
@@ -29,7 +30,8 @@ class UtilLinuxUuid(AutotoolsPackage):
 
     depends_on("pkgconfig", type="build")
 
-    provides("uuid")
+    if sys.platform not in ["darwin", "win32"]:
+        provides("uuid")
 
     def url_for_version(self, version):
         url = "https://www.kernel.org/pub/linux/utils/util-linux/v{0}/util-linux-{1}.tar.gz"

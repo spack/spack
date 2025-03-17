@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -67,7 +66,7 @@ class Datatransferkit(CMakePackage):
             "-DMPI_BASE_DIR=" + spec["mpi"].prefix,
         ]
 
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             options.append("-DDataTransferKit_ENABLE_OpenMP=ON")
 
         return options

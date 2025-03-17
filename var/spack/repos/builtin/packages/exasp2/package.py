@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -48,7 +47,7 @@ class Exasp2(MakefilePackage):
     def build_targets(self):
         targets = []
         spec = self.spec
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             targets.append("PARALLEL=MPI")
             targets.append("MPICC={0}".format(spec["mpi"].mpicc))
             targets.append("MPI_LIB=-L" + spec["mpi"].prefix.lib + " -lmpi")

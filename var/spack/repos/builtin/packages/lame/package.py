@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -10,7 +9,7 @@ class Lame(AutotoolsPackage):
     """LAME is a high quality MPEG Audio Layer III (MP3) encoder licensed
     under the LGPL."""
 
-    homepage = "http://lame.sourceforge.net/"
+    homepage = "https://lame.sourceforge.net/"
     url = "https://download.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
 
     license("LGPL-2.0-or-later")

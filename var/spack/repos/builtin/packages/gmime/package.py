@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,7 +10,7 @@ class Gmime(AutotoolsPackage):
     parsing of messages using the Multipurpose Internet Mail Extension (MIME).
     """
 
-    homepage = "http://spruce.sourceforge.net/gmime/"
+    homepage = "https://spruce.sourceforge.net/gmime/"
     url = "https://download.gnome.org/sources/gmime/2.6/gmime-2.6.23.tar.xz"
 
     license("LGPL-2.1-or-later")

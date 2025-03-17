@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,7 +10,7 @@ class Libnids(AutotoolsPackage):
     NIDS (Network Intrusion Detection System) components, namely
     E-component."""
 
-    homepage = "http://libnids.sourceforge.net/"
+    homepage = "https://libnids.sourceforge.net/"
     url = "https://github.com/MITRECND/libnids/archive/1.25.tar.gz"
     git = "https://github.com/MITRECND/libnids.git"
 

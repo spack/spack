@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,7 +32,7 @@ class Cgm(AutotoolsPackage):
         spec = self.spec
         args = []
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             args.extend(
                 [
                     "--with-mpi",
@@ -44,15 +43,15 @@ class Cgm(AutotoolsPackage):
         else:
             args.append("--without-mpi")
 
-        if "+oce" in spec:
+        if spec.satisfies("+oce"):
             args.append("--with-occ={0}".format(spec["oce"].prefix))
         else:
             args.append("--without-occ")
 
-        if "+debug" in spec:
+        if spec.satisfies("+debug"):
             args.append("--enable-debug")
 
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             args.append("--enable-shared")
 
         return args

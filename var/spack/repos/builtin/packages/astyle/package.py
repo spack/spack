@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -12,7 +11,7 @@ class Astyle(CMakePackage, MakefilePackage):
     Objective-C, C#, and Java Source Code.
     """
 
-    homepage = "http://astyle.sourceforge.net/"
+    homepage = "https://astyle.sourceforge.net/"
     url = "https://sourceforge.net/projects/astyle/files/astyle/astyle%204.1.11/astyle-4.1.11.tar.bz2"
     list_url = "https://sourceforge.net/projects/astyle/files/astyle"
     list_depth = 1

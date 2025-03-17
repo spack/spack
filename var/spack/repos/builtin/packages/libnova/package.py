@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -10,7 +9,7 @@ class Libnova(AutotoolsPackage):
     """ "libnova is a general purpose, double precision, Celestial Mechanics,
     Astrometry and Astrodynamics library."""
 
-    homepage = "http://libnova.sourceforge.net"
+    homepage = "https://libnova.sourceforge.net"
     url = "https://sourceforge.net/projects/libnova/files/libnova/v%200.15.0/libnova-0.15.0.tar.gz/download"
 
     license("LGPL-2.0-only")

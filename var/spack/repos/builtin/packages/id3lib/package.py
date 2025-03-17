@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,7 +8,7 @@ from spack.package import *
 class Id3lib(AutotoolsPackage):
     """Library for manipulating ID3v1 and ID3v2 tags"""
 
-    homepage = "http://id3lib.sourceforge.net/"
+    homepage = "https://id3lib.sourceforge.net/"
     url = "https://downloads.sourceforge.net/project/id3lib/id3lib/3.8.3/id3lib-3.8.3.tar.gz"
 
     license("GPL-2.0-only")

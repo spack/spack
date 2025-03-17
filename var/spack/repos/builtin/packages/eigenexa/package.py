@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -74,7 +73,7 @@ class Eigenexa(AutotoolsPackage):
     @run_after("install")
     def cache_test_sources(self):
         """Save off benchmark files for stand-alone tests."""
-        self.cache_extra_test_sources("benchmark")
+        cache_extra_test_sources(self, "benchmark")
 
     def test_benchmarks(self):
         """run benchmark checks"""

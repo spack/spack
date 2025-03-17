@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -59,7 +58,7 @@ class Genomeworks(CMakePackage, CudaPackage):
     def cmake_args(self):
         args = []
         spec = self.spec
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             args.append("-DWITH_CUDA=ON")
             args.append("-Dgw_cuda_gen_all_arch=ON")
             args.append("-DTHRUST_IGNORE_CUB_VERSION_CHECK=ON")

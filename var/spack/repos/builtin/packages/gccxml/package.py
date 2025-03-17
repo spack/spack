@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,6 +18,6 @@ class Gccxml(CMakePackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    patch("darwin-gcc.patch", when="%gcc platform=darwin")
+    patch("darwin-gcc.patch", when="platform=darwin %gcc")
     # taken from https://github.com/gccxml/gccxml/issues/11#issuecomment-140334118
     patch("gcc-5.patch", when="%gcc@5:")

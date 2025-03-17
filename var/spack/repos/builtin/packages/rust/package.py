@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,11 +30,13 @@ class Rust(Package):
     #
     #     $ spack install -n rust@pre-release-version
     #
-    version("beta")
     version("master", branch="master", submodules=True)
     version("nightly")
 
     # Stable versions.
+    version("1.85.0", sha256="2f4f3142ffb7c8402139cfa0796e24baaac8b9fd3f96b2deec3b94b4045c6a8a")
+    version("1.83.0", sha256="722d773bd4eab2d828d7dd35b59f0b017ddf9a97ee2b46c1b7f7fac5c8841c6e")
+    version("1.81.0", sha256="872448febdff32e50c3c90a7e15f9bb2db131d13c588fe9071b0ed88837ccfa7")
     version("1.78.0", sha256="ff544823a5cb27f2738128577f1e7e00ee8f4c83f2a348781ae4fc355e91d5a9")
     version("1.76.0", sha256="9e5cff033a7f0d2266818982ad90e4d3e4ef8f8ee1715776c6e25073a136c021")
     version("1.75.0", sha256="5b739f45bc9d341e2d1c570d65d2375591e22c2d23ef5b8a37711a0386abc088")
@@ -44,9 +45,6 @@ class Rust(Package):
     version("1.70.0", sha256="b2bfae000b7a5040e4ec4bbc50a09f21548190cb7570b0ed77358368413bd27c")
     version("1.65.0", sha256="5828bb67f677eabf8c384020582b0ce7af884e1c84389484f7f8d00dd82c0038")
     version("1.60.0", sha256="20ca826d1cf674daf8e22c4f8c4b9743af07973211c839b85839742314c838b7")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
 
     variant(
         "dev",
@@ -57,6 +55,9 @@ class Rust(Package):
     variant("src", default=True, description="Include standard library source files.")
 
     # Core dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("curl+nghttp2")
     depends_on("libgit2")
     depends_on("libssh2")
@@ -75,27 +76,30 @@ class Rust(Package):
     # Compiling Rust requires a previous version of Rust.
     # The easiest way to bootstrap a Rust environment is to
     # download the binary distribution of the compiler and build with that.
-    depends_on("rust-bootstrap", type="build")
 
     # Pre-release version dependencies
-    depends_on("rust-bootstrap@beta", type="build", when="@beta")
     depends_on("rust-bootstrap@nightly", type="build", when="@master")
     depends_on("rust-bootstrap@nightly", type="build", when="@nightly")
 
     # Stable version dependencies
-    depends_on("rust-bootstrap", type="build")
-    depends_on("rust-bootstrap@1.59:1.60", type="build", when="@1.60")
-    depends_on("rust-bootstrap@1.64:1.65", type="build", when="@1.65")
-    depends_on("rust-bootstrap@1.69:1.70", type="build", when="@1.70")
-    depends_on("rust-bootstrap@1.72:1.73", type="build", when="@1.73")
-    depends_on("rust-bootstrap@1.73:1.74", type="build", when="@1.74")
-    depends_on("rust-bootstrap@1.74:1.75", type="build", when="@1.75")
+    depends_on("rust-bootstrap@1.84:1.85", type="build", when="@1.85")
+    depends_on("rust-bootstrap@1.82:1.83", type="build", when="@1.83")
+    depends_on("rust-bootstrap@1.80:1.81", type="build", when="@1.81")
     depends_on("rust-bootstrap@1.77:1.78", type="build", when="@1.78")
+    depends_on("rust-bootstrap@1.75:1.76", type="build", when="@1.76")
+    depends_on("rust-bootstrap@1.74:1.75", type="build", when="@1.75")
+    depends_on("rust-bootstrap@1.73:1.74", type="build", when="@1.74")
+    depends_on("rust-bootstrap@1.72:1.73", type="build", when="@1.73")
+    depends_on("rust-bootstrap@1.69:1.70", type="build", when="@1.70")
+    depends_on("rust-bootstrap@1.64:1.65", type="build", when="@1.65")
+    depends_on("rust-bootstrap@1.59:1.60", type="build", when="@1.60")
 
     # src/llvm-project/llvm/cmake/modules/CheckCompilerVersion.cmake
     conflicts("%gcc@:7.3", when="@1.73:", msg="Host GCC version must be at least 7.4")
     # https://github.com/rust-lang/llvm-project/commit/4d039a7a71899038b3bc6ed6fe5a8a48d915caa0
     conflicts("%gcc@13:", when="@:1.63", msg="Rust<1.64 not compatible with GCC>=13")
+    conflicts("%intel", msg="Rust not compatible with Intel Classic compilers")
+    conflicts("%oneapi", msg="Rust not compatible with Intel oneAPI compilers")
 
     extendable = True
     executables = ["^rustc$", "^cargo$"]
@@ -113,7 +117,7 @@ class Rust(Package):
         match = re.match(r"rustc (\S+)", output)
         if match:
             version_str = match.group(1)
-            return Spec.from_detection(f"rust@{version_str}")
+            return Spec.from_detection(f"rust@{version_str}", external_path=prefix)
 
     def setup_dependent_package(self, module, dependent_spec):
         module.cargo = Executable(os.path.join(self.spec.prefix.bin, "cargo"))
@@ -180,6 +184,9 @@ class Rust(Package):
         # Disable bootstrap LLVM download.
         opts.append("llvm.download-ci-llvm=false")
 
+        # Use vendored resources to perform offline build.
+        opts.append("build.vendor=true")
+
         # Convert opts to '--set key=value' format.
         flags = [flag for opt in opts for flag in ("--set", opt)]
 
@@ -196,13 +203,13 @@ class Rust(Package):
         # Compile tools into flag for configure.
         flags.append(f"--tools={','.join(tools)}")
 
-        # Use vendored resources to perform offline build.
-        flags.append("--enable-vendor")
-
         configure(*flags)
 
     def build(self, spec, prefix):
-        python("./x.py", "build")
+        python("./x.py", "build", "-j", str(make_jobs))
 
     def install(self, spec, prefix):
-        python("./x.py", "install")
+        python("./x.py", "install", "-j", str(make_jobs))
+
+    # known issue: https://github.com/rust-lang/rust/issues/132604
+    unresolved_libraries = ["libz.so.*"]

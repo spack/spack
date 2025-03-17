@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -53,20 +52,20 @@ class Argobots(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        if "+perf" in self.spec:
+        if self.spec.satisfies("+perf"):
             args.append("--enable-perf-opt")
 
-        if "+valgrind" in self.spec:
+        if self.spec.satisfies("+valgrind"):
             args.append("--enable-valgrind")
         else:
             args.append("--disable-valgrind")
 
-        if "+debug" in self.spec:
+        if self.spec.satisfies("+debug"):
             args.append("--enable-debug=yes")
         else:
             args.append("--disable-debug")
 
-        if "+stackunwind" in self.spec:
+        if self.spec.satisfies("+stackunwind"):
             args.append("--enable-stack-unwind")
             args.append("--with-libunwind={0}".format(self.spec["libunwind"].prefix))
 
@@ -74,10 +73,10 @@ class Argobots(AutotoolsPackage):
         if stackguard != "none":
             args.append("--enable-stack-overflow-check={0}".format(stackguard))
 
-        if "+tool" in self.spec:
+        if self.spec.satisfies("+tool"):
             args.append("--enable-tool")
 
-        if "+affinity" in self.spec:
+        if self.spec.satisfies("+affinity"):
             args.append("--enable-affinity")
 
         return args

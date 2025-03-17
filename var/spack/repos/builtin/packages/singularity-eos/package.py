@@ -1,10 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
+import spack
 from spack.package import *
 
 
@@ -33,9 +33,6 @@ class SingularityEos(CMakePackage, CudaPackage):
         sha256="c6d92dfecf9689ffe2df615791c039f7e527e9f47799a862e26fa4e3420fe5d7",
         deprecated=True,
     )
-
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     # build with kokkos, kokkos-kernels for offloading support
     variant("kokkos", default=False, description="Enable kokkos")
@@ -68,6 +65,10 @@ class SingularityEos(CMakePackage, CudaPackage):
     variant("spiner", default=True, description="Use Spiner")
 
     variant("closure", default=True, description="Build closure module")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
 
     # building/testing/docs
     depends_on("cmake@3.19:", type="build")
@@ -110,19 +111,17 @@ class SingularityEos(CMakePackage, CudaPackage):
     for _flag in ("~cuda", "+cuda", "~openmp", "+openmp"):
         depends_on("kokkos ~shared" + _flag, when="+kokkos" + _flag)
         depends_on("kokkos-kernels" + _flag, when="+kokkos-kernels" + _flag)
-        depends_on("spiner" + _flag, when="+kokkos" + _flag)
 
     # specfic specs when using GPU/cuda offloading
     depends_on("kokkos +wrapper+cuda_lambda", when="+cuda+kokkos")
 
     # fix for older spacks
-    if spack.version.Version(spack.spack_version) >= spack.version.Version("0.17"):
+    if Version(spack.spack_version) >= Version("0.17"):
         depends_on("kokkos-kernels ~shared", when="+kokkos-kernels")
 
     for _flag in list(CudaPackage.cuda_arch_values):
         depends_on("kokkos cuda_arch=" + _flag, when="+cuda+kokkos cuda_arch=" + _flag)
         depends_on("kokkos-kernels cuda_arch=" + _flag, when="+cuda+kokkos cuda_arch=" + _flag)
-        depends_on("spiner cuda_arch=" + _flag, when="+cuda+kokkos cuda_arch=" + _flag)
 
     conflicts("cuda_arch=none", when="+cuda", msg="CUDA architecture is required")
 
@@ -143,7 +142,7 @@ class SingularityEos(CMakePackage, CudaPackage):
     # can be removed once <1.8.0 versions have been removed
     def flag_handler(self, name, flags):
         if name == "fflags":
-            if self.spec.satisfies("%cce+fortran"):
+            if self.spec.satisfies("+fortran%cce"):
                 # The Cray fortran compiler generates module files with
                 # uppercase names by default, which is not handled by the
                 # CMake scripts. The following flag forces the compiler to
@@ -185,7 +184,7 @@ class SingularityEos(CMakePackage, CudaPackage):
         ]
 
         if "+kokkos+cuda" in self.spec:
-            args.append(self.define("CMAKE_CXX_COMPILER", self.spec["kokkos"].kokkos_cxx))
+            args.append(self.define("CMAKE_CXX_COMPILER", self["kokkos"].kokkos_cxx))
 
         return args
 

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,7 +8,7 @@ from spack.package import *
 class Plplot(CMakePackage):
     """PLplot is a cross-platform package for creating scientific plots."""
 
-    homepage = "http://plplot.sourceforge.net/"
+    homepage = "https://plplot.sourceforge.net/"
     url = "https://sourceforge.net/projects/plplot/files/plplot/5.13.0%20Source/plplot-5.13.0.tar.gz/download"
 
     license("LGPL-2.0-or-later")

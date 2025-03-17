@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import spack.build_systems.autotools
@@ -48,6 +47,7 @@ class Sz(CMakePackage, AutotoolsPackage):
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
 
     build_system(
         conditional("autotools", when="@:2.1.8.0"),
@@ -87,6 +87,9 @@ class Sz(CMakePackage, AutotoolsPackage):
 
     patch("ctags-only-if-requested.patch", when="@2.1.8.1:2.1.8.3")
 
+    # Windows requires numerous commits that only exist on master at the moment
+    conflicts("platform=windows", when="@:2.1.12.5")
+
     def flag_handler(self, name, flags):
         if name == "cflags":
             if self.spec.satisfies("%oneapi"):
@@ -97,87 +100,69 @@ class Sz(CMakePackage, AutotoolsPackage):
         if "+hdf5" in self.spec:
             env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib64)
 
-    def _test_2d_float(self):
-        """This test performs simple 2D compression/decompression (float)"""
+    def test_2d_float(self):
+        """Run simple 2D compression/decompression"""
         test_data_dir = self.test_suite.current_test_data_dir
 
-        filename = "testfloat_8_8_128.dat"
-        orifile = test_data_dir.join(filename)
+        exe = which(self.prefix.bin.sz)
+        if exe is None:
+            raise SkipTest(f"sz is not installed for version {self.version}")
 
-        exe = "sz"
-        reason = "testing 2D compression of {0}".format(exe)
-        options = ["-z", "-f", "-i", orifile, "-M", "REL", "-R", "1E-3", "-2", "8", "1024"]
+        with working_dir(test_data_dir):
+            filename = "testfloat_8_8_128.dat"
+            orifile = test_data_dir.join(filename)
+            with test_part(
+                self, "test_2d_float_compression", purpose="testing 2D compression of sz"
+            ):
+                options = ["-z", "-f", "-i", orifile, "-M", "REL", "-R", "1E-3", "-2", "8", "1024"]
+                exe(*options)
 
-        self.run_test(
-            exe,
-            options,
-            [],
-            installed=True,
-            purpose=reason,
-            skip_missing=True,
-            work_dir=test_data_dir,
-        )
+            filename = "testfloat_8_8_128.dat.sz"
+            decfile = test_data_dir.join(filename)
 
-        filename = "testfloat_8_8_128.dat.sz"
-        decfile = test_data_dir.join(filename)
+            with test_part(
+                self, "test_2d_float_decompression", purpose="testing 2D decompression of sz"
+            ):
+                options = ["-x", "-f", "-i", orifile, "-s", decfile, "-2", "8", "1024", "-a"]
+                exe(*options)
 
-        reason = "testing 2D decompression of {0}".format(exe)
-        options = ["-x", "-f", "-i", orifile, "-s", decfile, "-2", "8", "1024", "-a"]
-
-        self.run_test(
-            exe,
-            options,
-            [],
-            installed=True,
-            purpose=reason,
-            skip_missing=True,
-            work_dir=test_data_dir,
-        )
-
-    def _test_3d_float(self):
-        """This test performs simple 3D compression/decompression (float)"""
-
+    def test_3d_float(self):
+        """Run simple 3D compression/decompression"""
         test_data_dir = self.test_suite.current_test_data_dir
 
-        filename = "testfloat_8_8_128.dat"
-        orifile = test_data_dir.join(filename)
+        exe = which(self.prefix.bin.sz)
+        if exe is None:
+            raise SkipTest(f"sz is not installed for version {self.version}")
 
-        exe = "sz"
-        reason = "testing 3D compression of {0}".format(exe)
-        options = ["-z", "-f", "-i", orifile, "-M", "REL", "-R", "1E-3", "-3", "8", "8", "128"]
+        with working_dir(test_data_dir):
+            filename = "testfloat_8_8_128.dat"
+            orifile = test_data_dir.join(filename)
+            with test_part(
+                self, "test_3d_float_compression", purpose="testing 3D compression of sz"
+            ):
+                options = [
+                    "-z",
+                    "-f",
+                    "-i",
+                    orifile,
+                    "-M",
+                    "REL",
+                    "-R",
+                    "1E-3",
+                    "-3",
+                    "8",
+                    "8",
+                    "128",
+                ]
+                exe(*options)
 
-        self.run_test(
-            exe,
-            options,
-            [],
-            installed=True,
-            purpose=reason,
-            skip_missing=True,
-            work_dir=test_data_dir,
-        )
-
-        filename = "testfloat_8_8_128.dat.sz"
-        decfile = test_data_dir.join(filename)
-
-        reason = "testing 3D decompression of {0}".format(exe)
-        options = ["-x", "-f", "-i", orifile, "-s", decfile, "-3", "8", "8", "128", "-a"]
-
-        self.run_test(
-            exe,
-            options,
-            [],
-            installed=True,
-            purpose=reason,
-            skip_missing=True,
-            work_dir=test_data_dir,
-        )
-
-    def test(self):
-        """Perform smoke tests on the installed package"""
-        # run 2D compression and decompression (float)
-        self._test_2d_float()
-        # run 3D compression and decompression (float)
-        self._test_3d_float()
+            filename = "testfloat_8_8_128.dat.sz"
+            decfile = test_data_dir.join(filename)
+            with test_part(
+                self, "test_3d_float_decompression", purpose="testing 3D decompression of sz"
+            ):
+                options = ["-x", "-f", "-i", orifile, "-s", decfile, "-3", "8", "8", "128", "-a"]
+                exe(*options)
 
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,7 +10,7 @@ class Argtable(AutotoolsPackage):
     options with a minimum of fuss.
     """
 
-    homepage = "http://argtable.sourceforge.net/"
+    homepage = "https://argtable.sourceforge.net/"
     url = "https://sourceforge.net/projects/argtable/files/argtable/argtable-2.13/argtable2-13.tar.gz/download"
 
     license("LGPL-2.0-or-later")

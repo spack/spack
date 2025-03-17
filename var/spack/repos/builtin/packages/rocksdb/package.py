@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -45,6 +44,12 @@ class Rocksdb(MakefilePackage):
     variant("tbb", default=False, description="Enable Intel TBB support")
     variant("werror", default=False, description="Build with -Werror")
     variant("rtti", default=False, description="Build with RTTI")
+
+    depends_on("bash", type="build")
+    # Depends on coreutil's install command (e.g., Alpine's Busybox version does not work)
+    depends_on("coreutils", type="build")
+    depends_on("perl", type="build")
+    depends_on("which", type="build")
 
     depends_on("bzip2", when="+bz2")
     depends_on("gflags")

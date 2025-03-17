@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -10,7 +9,7 @@ from spack.package import *
 class PyMyhdl(PythonPackage):
     """Python as a Hardware Description Language"""
 
-    homepage = "http://www.myhdl.org"
+    homepage = "https://www.myhdl.org"
     pypi = "myhdl/myhdl-0.9.0.tar.gz"
 
     license("LGPL-2.1-or-later")

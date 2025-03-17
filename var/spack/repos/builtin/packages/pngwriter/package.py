@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,7 +15,7 @@ class Pngwriter(CMakePackage):
     bezier curves, opening existing PNG images and more.
     """
 
-    homepage = "http://pngwriter.sourceforge.net/"
+    homepage = "https://pngwriter.sourceforge.net/"
     url = "https://github.com/pngwriter/pngwriter/archive/0.5.6.tar.gz"
     git = "https://github.com/pngwriter/pngwriter.git"
 

@@ -1,10 +1,6 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import inspect
-import os.path
 
 import spack.build_systems.cmake
 import spack.build_systems.makefile
@@ -94,7 +90,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         substitutions.append(("@FLDFLAGS", fldflags.lstrip()))
 
-        template = join_path(os.path.dirname(inspect.getmodule(self).__file__), "make.inc")
+        template = join_path(os.path.dirname(__file__), "make.inc")
         makefile = join_path(pkg.stage.source_path, "make.inc")
         copy(template, makefile)
         for key, value in substitutions:

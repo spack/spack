@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,7 +10,7 @@ from spack.package import *
 class PerlAlienSvn(PerlPackage):
     """Perl SVN extension."""
 
-    homepage = "http://metacpan.org/source/MSCHWERN/Alien-SVN-v1.8.11.0"
+    homepage = "https://metacpan.org/source/MSCHWERN/Alien-SVN-v1.8.11.0"
     url = "https://cpan.metacpan.org/authors/id/M/MS/MSCHWERN/Alien-SVN-v1.8.11.0.tar.gz"
 
     version("1.8.11.0", sha256="acf8ebce1cb6958ef24611a453abee32b8e4dfe767563834362891ef3f30fc68")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,7 +8,7 @@ from spack.package import *
 class Mummer(Package):
     """MUMmer is a system for rapidly aligning entire genomes."""
 
-    homepage = "http://mummer.sourceforge.net/"
+    homepage = "https://mummer.sourceforge.net/"
     url = "https://sourceforge.net/projects/mummer/files/mummer/3.23/MUMmer3.23.tar.gz/download"
 
     license("Artistic-1.0")
@@ -21,6 +20,7 @@ class Mummer(Package):
 
     depends_on("gnuplot")
     depends_on("perl", type=("build", "run"))
+    depends_on("gmake", type="build")
 
     patch("Makefile.patch")
     patch("scripts-Makefile.patch")

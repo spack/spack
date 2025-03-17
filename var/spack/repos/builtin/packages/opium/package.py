@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,7 +8,7 @@ from spack.package import *
 class Opium(AutotoolsPackage):
     """DFT pseudopotential generation project"""
 
-    homepage = "http://opium.sourceforge.net"
+    homepage = "https://opium.sourceforge.net"
     url = "https://downloads.sourceforge.net/project/opium/opium/opium-v3.8/opium-v3.8-src.tgz"
 
     license("GPL-2.0-or-later")

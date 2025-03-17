@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -10,7 +9,7 @@ class SharedMimeInfo(AutotoolsPackage):
     """Database of common MIME types."""
 
     homepage = "https://freedesktop.org/wiki/Software/shared-mime-info"
-    url = "http://freedesktop.org/~hadess/shared-mime-info-1.8.tar.xz"
+    url = "https://people.freedesktop.org/~hadess/shared-mime-info-1.8.tar.xz"
 
     license("GPL-2.0-or-later")
 

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -76,7 +75,7 @@ class Channelflow(CMakePackage):
         args.append("-DWITH_NETCDF:STRING={0}".format(netcdf_str[spec.variants["netcdf"].value]))
 
         # Set an MPI compiler for parallel builds
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             args.append("-DCMAKE_CXX_COMPILER:PATH={0}".format(spec["mpi"].mpicxx))
 
         return args

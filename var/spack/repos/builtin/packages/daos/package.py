@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -55,7 +54,7 @@ class Daos(SConsPackage):
     def build_args(self, spec, prefix):
         args = ["PREFIX={0}".format(prefix), "USE_INSTALLED=all"]
 
-        if "+debug" in spec:
+        if spec.satisfies("+debug"):
             args.append("--debug=explain,findlibs,includes")
 
         # Construct ALT_PREFIX and make sure that '/usr' is last.

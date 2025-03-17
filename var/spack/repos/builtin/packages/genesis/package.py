@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -84,7 +83,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
         options.extend(self.enable_or_disable("openmp"))
         options.extend(self.enable_or_disable("single"))
         options.extend(self.enable_or_disable("hmdisk"))
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             options.append("--enable-gpu")
             options.append("--with-cuda=%s" % spec["cuda"].prefix)
         else:
@@ -99,7 +98,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
         env.set("CC", self.spec["mpi"].mpicc, force=True)
         env.set("CXX", self.spec["mpi"].mpicxx, force=True)
         env.set("LAPACK_LIBS", self.spec["lapack"].libs.ld_flags)
-        if "+cuda" in self.spec:
+        if self.spec.satisfies("+cuda"):
             cuda_arch = self.spec.variants["cuda_arch"].value
             cuda_gencode = " ".join(self.cuda_flags(cuda_arch))
             env.set("NVCCFLAGS", cuda_gencode)
@@ -117,4 +116,4 @@ class Genesis(AutotoolsPackage, CudaPackage):
     def cache_test_sources(self):
         """Copy test files after the package is installed for test()."""
         if self.spec.satisfies("@master"):
-            self.cache_extra_test_sources(["tests"])
+            cache_extra_test_sources(self, ["tests"])
