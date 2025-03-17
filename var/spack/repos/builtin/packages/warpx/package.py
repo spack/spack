@@ -174,6 +174,13 @@ class Warpx(CMakePackage, PythonExtension):
 
     conflicts("~qed +qedtablegen", msg="WarpX PICSAR QED table generation needs +qed")
 
+    # https://github.com/BLAST-WarpX/warpx/issues/5774
+    conflicts(
+        "compute=sycl dims=rz",
+        when="+fft",
+        msg="WarpX spectral solvers are not yet running on SYCL GPUs for RZ (GH#5774)",
+    )
+
     def cmake_args(self):
         spec = self.spec
 
