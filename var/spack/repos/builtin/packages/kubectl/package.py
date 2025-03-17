@@ -38,12 +38,13 @@ class Kubectl(GoPackage):
             "1.27.0", sha256="536025dba2714ee5e940bb0a6b1df9ca97c244fa5b00236e012776a69121c323"
         )
 
-    depends_on("bash", type="build")
-    depends_on("go@1.23:", type="build", when="@1.32:")
-    depends_on("go@1.22:", type="build", when="@1.30:")
-    depends_on("go@1.21:", type="build", when="@1.29:")
-    depends_on("go@1.20:", type="build", when="@1.27:")
-    depends_on("go", type="build")
+    with default_args(type="build"):
+        depends_on("bash")
+
+        depends_on("go@1.23:", when="@1.32:")
+        depends_on("go@1.22:", when="@1.30:")
+        depends_on("go@1.21:", when="@1.29:")
+        depends_on("go@1.20:", when="@1.27:")
 
     build_directory = "cmd/kubectl"
 
