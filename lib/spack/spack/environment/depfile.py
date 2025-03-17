@@ -166,7 +166,7 @@ class MakefileModel:
                 " ".join(self._install_target(s.safe_name()) for s in item.prereqs),
                 item.target.spec_hash(),
                 item.target.unsafe_format(
-                    "{name}{@version}{%compiler}{variants}{arch=architecture}"
+                    "{name}{@version}{variants}{ arch=architecture} {%compiler}"
                 ),
                 item.buildcache_flag,
             )

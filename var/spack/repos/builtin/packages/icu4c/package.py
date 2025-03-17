@@ -53,6 +53,9 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
         depends_on("automake", type="build")
         depends_on("libtool", type="build")
 
+    with when("build_system=msbuild"):
+        patch("ICU4C_NMAKE_NO_DOUBLE_QUOTE_VARS.patch", when="@64.1:")
+
     conflicts(
         "%intel@:16",
         when="@60.1:",
@@ -72,7 +75,7 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
         return url.format(version.dashed, version.underscored)
 
     def flag_handler(self, name, flags):
-        if name == "cxxflags":
+        if name == "cxxflags" and not self.spec.platform == "windows":
             # Control of the C++ Standard is via adding the required "-std"
             # flag to CXXFLAGS in env
             flags.append(getattr(self.compiler, f"cxx{self.spec.variants['cxxstd'].value}_flag"))
@@ -125,7 +128,7 @@ class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
     @property
     def build_directory(self):
         solution_path = pathlib.Path(self.pkg.stage.source_path)
-        if self.spec.satsifies("@:67"):
+        if self.spec.satisfies("@:67"):
             solution_path = solution_path / "icu"
         solution_path = solution_path / "source" / "allinone"
         return str(solution_path)

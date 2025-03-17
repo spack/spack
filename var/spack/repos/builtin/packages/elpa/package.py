@@ -64,6 +64,12 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         )
 
     patch("fujitsu.patch", when="%fj")
+    # wrong filename handling in elpa's custom preprocessor
+    patch(
+        "https://gitlab.mpcdf.mpg.de/elpa/elpa/-/commit/5a821b79dd2905c691fc0973c9f3044904ac2653.diff",
+        sha256="90f18c84e740a35d726e44078a111fac3b6278a0e750ce1f3ea154ee78e93298",
+        when="@:2025.01.001",
+    )
 
     depends_on("autoconf@2.71:", type="build", when="@master")
     depends_on("automake", type="build", when="@master")

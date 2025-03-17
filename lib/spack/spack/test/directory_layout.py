@@ -161,7 +161,7 @@ def test_handle_unknown_package(temporary_store, config, mock_packages, tmp_path
     """
     layout = temporary_store.layout
 
-    repo_cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+    repo_cache = spack.util.file_cache.FileCache(tmp_path / "cache")
     mock_db = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=repo_cache)
 
     not_in_mock = set.difference(

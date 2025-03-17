@@ -120,6 +120,9 @@ class Visit(CMakePackage):
     patch("19958-enable-python-and-check-pip.patch", when="@3.4:3.4.1 +python")
     patch("20127-remove-relink-visitmodule-py-setup.patch", when="@3.4.1 +python")
 
+    # Fix missing cmath include in QvisStripChart.C
+    patch("20270-missing-cmath-QvisStripChart.patch", when="@:3.4.2")
+
     conflicts(
         "+gui", when="^[virtuals=gl] osmesa", msg="GUI cannot be activated with OSMesa front-end"
     )
