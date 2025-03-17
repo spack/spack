@@ -12,6 +12,7 @@ import llnl.util.tty.color as color
 import spack.cmd as cmd
 import spack.config
 import spack.environment as ev
+import spack.install_test
 import spack.repo
 import spack.spec
 import spack.store
