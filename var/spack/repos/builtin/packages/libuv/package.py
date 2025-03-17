@@ -1,10 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
 import spack.build_systems
+import spack.build_systems.autotools
 from spack.package import *
 
 
@@ -112,7 +112,7 @@ class Libuv(CMakePackage, AutotoolsPackage):
     # Tries to build an Objective-C file with GCC's C frontend
     # https://github.com/libuv/libuv/issues/2805
     conflicts(
-        "%gcc platform=darwin",
+        "platform=darwin %gcc",
         when="@:1.37.9",
         msg="libuv does not compile with GCC on macOS yet, use clang. "
         "See: https://github.com/libuv/libuv/issues/2805",

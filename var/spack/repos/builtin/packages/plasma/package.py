@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import spack.build_systems.cmake
@@ -73,18 +72,9 @@ class Plasma(CMakePackage):
     conflicts("^veclibfort")
 
     # only GCC 4.9+ and higher have sufficient support for OpenMP 4+ tasks+deps
-    conflicts("%gcc@:4.8", when="@:17.1")
+    requires("%gcc@4.9:", when="@17.1:")
     # only GCC 6.0+ and higher have for OpenMP 4+ Clause "priority"
-    conflicts("%gcc@:5", when="@17.2:")
-
-    conflicts("%cce")
-    conflicts("%apple-clang")
-    conflicts("%clang")
-    conflicts("%intel")
-    conflicts("%nag")
-    conflicts("%pgi")
-    conflicts("%xl")
-    conflicts("%xl_r")
+    requires("%gcc@6:", when="@17.2:")
 
     patch("remove_absolute_mkl_include.patch", when="@17.1")
     patch("protect_cmake_version.patch", when="@19.8.0:19.8.9")
@@ -114,7 +104,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
         for package, provider in (
             ("openblas", "openblas"),
-            ("intel-mkl", "mkl"),
+            ("intel-oneapi-mkl", "mkl"),
             ("netlib-lapack", "netlib"),
         ):
             if package in self.spec:
@@ -122,7 +112,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                     options.append(self.define("{}_PROVIDER".format(lib), provider))
         if "cray-libsci" in self.spec:
             for lib in ("CBLAS", "LAPACKE"):
-                libsci_prefix = self.spec["cray-libsci"].package.external_prefix
+                libsci_prefix = self["cray-libsci"].external_prefix
                 options.append(self.define("{}_PROVIDER".format(lib), "generic"))
                 options.append(
                     self.define("{}_INCLUDE_DIRS".format(lib), join_path(libsci_prefix, "include"))
@@ -142,7 +132,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         make_inc = FileFilter("make.inc")
 
-        if not spec.satisfies("^intel-mkl"):
+        if not spec.satisfies("^[virtuals=blas,lapack] intel-oneapi-mkl"):
             make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
             make_inc.filter("LIBS *= *.*", "LIBS = " + self.spec["blas"].libs.ld_flags + " -lm")
 

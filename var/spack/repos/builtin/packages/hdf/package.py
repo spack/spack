@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -127,7 +126,7 @@ class Hdf(AutotoolsPackage):
 
         if not libs:
             msg = "Unable to recursively locate {0} {1} libraries in {2}"
-            raise spack.error.NoLibrariesError(
+            raise NoLibrariesError(
                 msg.format("shared" if shared else "static", self.spec.name, self.spec.prefix)
             )
 
@@ -154,10 +153,15 @@ class Hdf(AutotoolsPackage):
                 self.spec.satisfies("@:4.2.15 %apple-clang")
                 or self.spec.satisfies("%clang@16:")
                 or self.spec.satisfies("%oneapi")
+                or self.spec.satisfies("%gcc@14:")
             ):
                 flags.append("-Wno-error=implicit-function-declaration")
 
-            if self.spec.satisfies("%clang@16:") or self.spec.satisfies("%apple-clang@15:"):
+            if (
+                self.spec.satisfies("%clang@16:")
+                or self.spec.satisfies("%apple-clang@15:")
+                or self.spec.satisfies("%gcc@14:")
+            ):
                 flags.append("-Wno-error=implicit-int")
 
         return flags, None, None

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -61,12 +60,12 @@ class Libxslt(AutotoolsPackage):
     def configure_args(self):
         args = []
 
-        if "+crypto" in self.spec:
+        if self.spec.satisfies("+crypto"):
             args.append("--with-crypto")
         else:
             args.append("--without-crypto")
 
-        if "+python" in self.spec:
+        if self.spec.satisfies("+python"):
             args.append("--with-python={0}".format(self.spec["python"].home))
         else:
             args.append("--without-python")
@@ -76,7 +75,7 @@ class Libxslt(AutotoolsPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def import_module_test(self):
-        if "+python" in self.spec:
+        if self.spec.satisfies("+python"):
             with working_dir("spack-test", create=True):
                 python("-c", "import libxslt")
 

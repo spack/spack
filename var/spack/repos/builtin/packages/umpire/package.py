@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -243,6 +242,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("camp")
     depends_on("camp+openmp", when="+openmp")
     depends_on("camp~cuda", when="~cuda")
+    depends_on("camp~rocm", when="~rocm")
     depends_on("camp@main", when="@develop")
     depends_on("camp@2024.07.0:", when="@2024.07.0:")
     depends_on("camp@2024.02.1", when="@2024.02.1")

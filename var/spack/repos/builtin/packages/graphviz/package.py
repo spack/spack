@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -167,7 +166,7 @@ class Graphviz(AutotoolsPackage):
         if self.spec.satisfies("+quartz"):
             env.set("OBJC", self.compiler.cc)
 
-    @when("%clang platform=darwin")
+    @when("platform=darwin %clang")
     def patch(self):
         # When using Clang, replace GCC's libstdc++ with LLVM's libc++
         mkdirs = ["cmd/dot", "cmd/edgepaint", "cmd/mingle", "plugin/gdiplus"]

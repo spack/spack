@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,11 +19,14 @@ class Mpifileutils(CMakePackage):
     url = "https://github.com/hpc/mpifileutils/archive/v0.9.tar.gz"
     git = "https://github.com/hpc/mpifileutils.git"
 
+    maintainers("gonsie", "carbonneau1")
+
     tags = ["e4s"]
 
     license("BSD-3-Clause")
 
     version("develop", branch="main")
+    version("0.12", sha256="adfcfd2c15ad5ef827bb19def2dd094bff4e2aab7ba47e1efc5d1b0b7ba1bf2f")
     version("0.11.1", sha256="e2cba53309b5b3ee581b6ff82e4e66f54628370cce694c34224ed947fece32d4")
     version("0.11", sha256="f5dc1b39077b3c04f79b2c335c4fd80306f8c57ecfbcacbb82cf532caf02b5fd")
     version("0.10.1", sha256="4c8409ef4140f6f557d0e93f0c1267baf5d893c203b29fb7a33d9bc3c5a5d25c")
@@ -32,7 +34,8 @@ class Mpifileutils(CMakePackage):
     version("0.9.1", sha256="15a22450f86b15e7dc4730950b880fda3ef6f59ac82af0b268674d272aa61c69")
     version("0.9", sha256="1b8250af01aae91c985ca5d61521bfaa4564e46efa15cee65cd0f82cf5a2bcfb")
 
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     variant("xattr", default=True, description="Enable code for extended attributes")
     variant("lustre", default=False, description="Enable optimizations and features for Lustre")
@@ -66,7 +69,7 @@ class Mpifileutils(CMakePackage):
     def flag_handler(self, name, flags):
         spec = self.spec
         if name == "cflags":
-            if spec.satisfies("%oneapi"):
+            if spec.satisfies("%oneapi") or spec.satisfies("%cce"):
                 flags.append("-Wno-error=implicit-function-declaration")
         return (flags, None, None)
 

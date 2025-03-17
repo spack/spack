@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,11 +23,13 @@ class Abinit(AutotoolsPackage):
     programs are provided.
     """
 
-    homepage = "https://www.abinit.org/"
-    url = "https://www.abinit.org/sites/default/files/packages/abinit-10.0.7.tar.gz"
+    homepage = "https://abinit.github.io/abinit_web/"
+    url = "https://forge.abinit.org/abinit-10.0.9.tar.gz"
     license("Apache-2.0")
 
     maintainers("downloadico")
+    version("10.2.7", sha256="e0e1049b01b4ebaec29be632cd554caeccb4b2a8acf2e148c8ac505e6b226dc1")
+    version("10.0.9", sha256="17650580295e07895f6c3c4b1f3f0fe0e0f3fea9bab5fd8ce7035b16a62f8e5e")
     version("10.0.7", sha256="a9fc044b33861b7defd50fafd19a73eb6f225e18ae30b23bc731d9c8009c881c")
     version("9.10.5", sha256="a9e0f0e058baa6088ea93d26ada369ccf0fe52dc9d4a865b1c38c20620148cd5")
     version("9.10.3", sha256="3f2a9aebbf1fee9855a09dd687f88d2317b8b8e04f97b2628ab96fb898dce49b")
@@ -41,8 +42,6 @@ class Abinit(AutotoolsPackage):
     version("8.8.2", sha256="15216703bd56a799a249a112b336d07d733627d3756487a4b1cb48ebb625c3e7")
     version("8.6.3", sha256="82e8d071088ab8dc1b3a24380e30b68c544685678314df1213180b449c84ca65")
     version("8.2.2", sha256="e43544a178d758b0deff3011c51ef7c957d7f2df2ce8543366d68016af9f3ea1")
-    # Versions before 8.0.8b are not supported.
-    version("8.0.8b", sha256="37ad5f0f215d2a36e596383cb6e54de3313842a0390ce8d6b48a423d3ee25af2")
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -78,13 +77,22 @@ class Abinit(AutotoolsPackage):
     depends_on("fftw-api")
 
     depends_on("netcdf-fortran")
-    depends_on("netcdf-c+mpi", when="+mpi")
-    depends_on("netcdf-c~mpi", when="~mpi")
-    depends_on("hdf5+mpi", when="+mpi")
-    depends_on("hdf5~mpi", when="~mpi")
+
+    with when("+mpi"):
+        depends_on("netcdf-c+mpi")
+        depends_on("hdf5+mpi")
+        depends_on("wannier90+shared", when="+wannier90")
+
+    with when("~mpi"):
+        depends_on("netcdf-c~mpi")
+        depends_on("hdf5~mpi")
+        # Cannot ask for +scalapack if it does not depend on MPI
+        conflicts("+scalapack")
+        # Cannot ask for +wannier90 if it does not depend on MPI
+        conflicts("+wannier90")
+
     # constrain version of hdf5
     depends_on("hdf5@:1.8", when="@9:")
-    depends_on("wannier90+shared", when="+wannier90+mpi")
 
     # constrain libxc version
     depends_on("libxc")
@@ -95,15 +103,8 @@ class Abinit(AutotoolsPackage):
     depends_on("libxml2", when="@9:+libxml2")
 
     # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
-    for _intel_pkg in INTEL_MATH_LIBRARIES:
-        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
-        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
-
-    # Cannot ask for +scalapack if it does not depend on MPI
-    conflicts("+scalapack", when="~mpi")
-
-    # Cannot ask for +wannier90 if it does not depend on MPI
-    conflicts("+wannier90", when="~mpi")
+    requires("^[virtuals=fftw-api] intel-oneapi-mkl", when="^[virtuals=lapack]   intel-oneapi-mkl")
+    requires("^[virtuals=lapack]   intel-oneapi-mkl", when="^[virtuals=fftw-api] intel-oneapi-mkl")
 
     # libxml2 needs version 9 and above
     conflicts("+libxml2", when="@:8")
@@ -117,10 +118,8 @@ class Abinit(AutotoolsPackage):
     for fftw in ["amdfftw", "cray-fftw", "fujitsu-fftw", "fftw"]:
         conflicts("+openmp", when=f"^{fftw}~openmp", msg=f"Need to request {fftw} +openmp")
 
-    mkl_message = "Need to set dependent variant to threads=openmp"
-    conflicts("+openmp", when="^intel-mkl threads=none", msg=mkl_message)
-    conflicts("+openmp", when="^intel-mkl threads=tbb", msg=mkl_message)
-    conflicts("+openmp", when="^intel-parallel-studio +mkl threads=none", msg=mkl_message)
+    with when("+openmp"):
+        requires("^intel-oneapi-mkl threads=openmp", when="^[virtuals=lapack] intel-oneapi-mkl")
 
     conflicts(
         "+openmp", when="^fujitsu-ssl2 ~parallel", msg="Need to request fujitsu-ssl2 +parallel"
@@ -141,9 +140,7 @@ class Abinit(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-
-        options = []
-        options += self.with_or_without("libxml2")
+        options = self.with_or_without("libxml2")
 
         oapp = options.append
         if spec.satisfies("@:8"):
@@ -181,7 +178,7 @@ class Abinit(AutotoolsPackage):
             if spec.satisfies("@:8"):
                 oapp("--with-dft-flavor=atompaw+libxc")
             else:
-                "--without-wannier90",
+                oapp("--without-wannier90")
 
         if spec.satisfies("+mpi"):
             oapp(f"CC={spec['mpi'].mpicc}")
@@ -210,14 +207,23 @@ class Abinit(AutotoolsPackage):
 
         # BLAS/LAPACK/SCALAPACK-ELPA
         linalg = spec["lapack"].libs + spec["blas"].libs
+
+        # linalg_flavor is selected using the virtual lapack provider
         is_using_intel_libraries = spec["lapack"].name in INTEL_MATH_LIBRARIES
+
+        # These *must* be elifs, otherwise spack's lapack provider is ignored
+        # linalg_flavor ends up as "custom", which is not supported by abinit@9.10.3:
         if is_using_intel_libraries:
             linalg_flavor = "mkl"
-        if spec.satisfies("@9:") and spec.satisfies("^openblas"):
-            linalg_flavor = "openblas"
-        if spec.satisfies("@9:") and spec.satisfies("^fujitsu-ssl2"):
+        # Else, if spack's virtual "lapack" provider is openblas, use it:
+        elif spec.satisfies("@9:") and (
+            spec["lapack"].name == "openblas" or spec.satisfies("^fujitsu-ssl2")
+        ):
             linalg_flavor = "openblas"
         else:
+            # If you need to force custom (and not have it as fallback, like now)
+            # you should likely implement a variant to force it, but it seems that
+            # newer versions do not have it, so it should likely be a fallback:
             linalg_flavor = "custom"
 
         if spec.satisfies("+scalapack"):

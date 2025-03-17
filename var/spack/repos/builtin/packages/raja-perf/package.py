@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -321,7 +320,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
         entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
         entries.append(cmake_cache_option("RAJA_ENABLE_OPENMP_TASK", "+omptask" in spec))
-        entries.append(cmake_cache_option("RAJA_ENABLE_SYCL", spec.satisfies("+sycl")))
+        entries.append(cmake_cache_option("ENABLE_SYCL", spec.satisfies("+sycl")))
 
         # C++17
         if spec.satisfies("@2024.07.0:") and spec.satisfies("+sycl"):

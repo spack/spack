@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -8,8 +7,6 @@ import os
 import shutil
 import socket
 from os import environ as env
-
-import llnl.util.tty as tty
 
 from spack.package import *
 
@@ -427,8 +424,6 @@ class Conduit(CMakePackage):
         cfg.write(cmake_cache_entry("CMAKE_EXE_LINKER_FLAGS", linkerflags))
         if spec.satisfies("+shared"):
             cfg.write(cmake_cache_entry("CMAKE_SHARED_LINKER_FLAGS", linkerflags))
-        else:
-            cfg.write(cmake_cache_entry("CMAKE_STATIC_LINKER_FLAGS", linkerflags))
 
         #######################
         # BLT

@@ -1,10 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
 
+import spack.build_systems.generic
 from spack.package import *
 
 
@@ -86,3 +86,8 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
 
             for file in rdoff:
                 install(file, self.prefix.rdoff)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # This is required as NASM installs its binaries into an
+        # atypical location (i.e. flat in the prefix)
+        env.prepend_path("PATH", self.pkg.prefix)
