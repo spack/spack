@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -34,6 +33,7 @@ class Kentutils(MakefilePackage):
         deprecated=True,
     )
 
+
     # The bundled version of kentlib has some custom changes that are used by parts of
     # kentlib. See https://github.com/spack/spack/pull/44501#issuecomment-2162789410
     # for some additional details. A built-in version SHOULD work for most things though.
@@ -43,6 +43,9 @@ class Kentutils(MakefilePackage):
         description="Build with bundled htslib (using an external htslib may lead to errors)",
         sticky=True,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     with default_args(type=("build", "link", "run")):
         depends_on("libpng")

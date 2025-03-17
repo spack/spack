@@ -1,66 +1,75 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
 
 
-class Warpx(CMakePackage):
+class Warpx(CMakePackage, PythonExtension):
     """WarpX is an advanced electromagnetic Particle-In-Cell code. It supports
     many features including Perfectly-Matched Layers (PML) and mesh refinement.
-    In addition, WarpX is a highly-parallel and highly-optimized code and
-    features hybrid OpenMP/MPI parallelization, advanced vectorization
-    techniques and load balancing capabilities.
 
-    For WarpX' Python bindings and PICMI input support, see the 'py-warpx' package.
+    In addition, WarpX is a highly-parallel and highly-optimized code and
+    features hybrid GPU/OpenMP/MPI parallelization and load balancing capabilities.
     """
 
     homepage = "https://ecp-warpx.github.io"
-    url = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/23.08.tar.gz"
-    git = "https://github.com/ECP-WarpX/WarpX.git"
+    url = "https://github.com/BLAST-WarpX/warpx/archive/refs/tags/25.03.tar.gz"
+    git = "https://github.com/BLAST-WarpX/warpx.git"
 
-    maintainers("ax3l", "dpgrote", "MaxThevenet", "RemiLehe")
-    tags = ["e4s", "ecp"]
+    maintainers("ax3l", "dpgrote", "EZoni", "RemiLehe")
+    tags = ["e4s", "ecp", "hpsf"]
 
     license("BSD-3-Clause-LBNL")
 
     # NOTE: if you update the versions here, also see py-warpx
     version("develop", branch="development")
-    version("23.08", sha256="67695ff04b83d1823ea621c19488e54ebaf268532b0e5eb4ea8ad293d7ab3ddc")
-    version("23.07", sha256="511633f94c0d0205013609bde5bbf92a29c2e69f6e69b461b80d09dc25602945")
-    version("23.06", sha256="75fcac949220c44dce04de581860c9a2caa31a0eee8aa7d49455fa5fc928514b")
-    version("23.05", sha256="34306a98fdb1f5f44ab4fb92f35966bfccdcf1680a722aa773af2b59a3060d73")
-    version("23.04", sha256="e5b285c73e13a0d922eba5d83760c168d4fd388e54a519830003b2e692dab823")
-    version("23.03", sha256="e1274aaa2a2c83d599d61c6e4c426db4ed5d4c5dc61a2002715783a6c4843718")
-    version("23.02", sha256="a6c63ebc38cbd224422259a814be501ac79a3b734dab7f59500b6957cddaaac1")
-    version("23.01", sha256="e853d01c20ea00c8ddedfa82a31a11d9d91a7f418d37d7f064cf8a241ea4da0c")
-    version("22.12", sha256="96019902cd6ea444a1ae515e8853048e9074822c168021e4ec1687adc72ef062")
-    version("22.11", sha256="528f65958f2f9e60a094e54eede698e871ccefc89fa103fe2a6f22e4a059515e")
-    version("22.10", sha256="3cbbbbb4d79f806b15e81c3d0e4a4401d1d03d925154682a3060efebd3b6ca3e")
-    version("22.09", sha256="dbef1318248c86c860cc47f7e18bbb0397818e3acdfb459e48075004bdaedea3")
-    version("22.08", sha256="5ff7fd628e8bf615c1107e6c51bc55926f3ef2a076985444b889d292fecf56d4")
-    version("22.07", sha256="0286adc788136cb78033cb1678d38d36e42265bcfd3d0c361a9bcc2cfcdf241b")
-    version("22.06", sha256="e78398e215d3fc6bc5984f5d1c2ddeac290dcbc8a8e9d196e828ef6299187db9")
-    version("22.05", sha256="2fa69e6a4db36459b67bf663e8fbf56191f6c8c25dc76301dbd02a36f9b50479")
-    version("22.04", sha256="9234d12e28b323cb250d3d2cefee0b36246bd8a1d1eb48e386f41977251c028f")
-    version("22.03", sha256="ddbef760c8000f2f827dfb097ca3359e7aecbea8766bec5c3a91ee28d3641564")
-    version("22.02", sha256="d74b593d6f396e037970c5fbe10c2e5d71d557a99c97d40e4255226bc6c26e42")
-    version("22.01", sha256="e465ffadabb7dc360c63c4d3862dc08082b5b0e77923d3fb05570408748b0d28")
-    # 22.01+ requires C++17 or newer
-    version("21.12", sha256="847c98aac20c73d94c823378803c82be9a14139f1c14ea483757229b452ce4c1")
-    version("21.11", sha256="ce60377771c732033a77351cd3500b24b5d14b54a5adc7a622767b9251c10d0b")
-    version("21.10", sha256="d372c573f0360094d5982d64eceeb0149d6620eb75e8fdbfdc6777f3328fb454")
-    version("21.09", sha256="861a65f11846541c803564db133c8678b9e8779e69902ef1637b21399d257eab")
-    version("21.08", sha256="6128a32cfd075bc63d08eebea6d4f62d33ce0570f4fd72330a71023ceacccc86")
-    version("21.07", sha256="a8740316d813c365715f7471201499905798b50bd94950d33f1bd91478d49561")
-    version("21.06", sha256="a26039dc4061da45e779dd5002467c67a533fc08d30841e01e7abb3a890fbe30")
-    version("21.05", sha256="f835f0ae6c5702550d23191aa0bb0722f981abb1460410e3d8952bc3d945a9fc")
-    version("21.04", sha256="51d2d8b4542eada96216e8b128c0545c4b7527addc2038efebe586c32c4020a0")
-    # 20.01+ requires C++14 or newer
+    version("25.03", sha256="18155ff67b036a00db2a25303058316167192a81cfe6dc1dec65fdef0b6d9903")
+    with default_args(deprecated=True):
+        version("25.02", sha256="7bdea9c1e94f82dbc3565f14f6b6ad7658a639217a10a6cf08c05a16aa26266f")
+        version("24.10", sha256="73b486b5fc561d97773fe95bb82751b9085aa8dfe27b4e2f285d646396b41323")
+        version("24.08", sha256="081b0d803d7b2b491626ba36e87e867b1fd1d20ddf0dee9c6ed4ff84f7d37553")
+        version("23.08", sha256="22b9ad39c89c3fae81b1ed49abd72f698fbc79d8ac3b8dd733fd02185c0fdf63")
+        version("23.07", sha256="eab91672191d7bf521cda40f2deb71a144da452b35245567b14873938f97497e")
+        version("23.06", sha256="9bbdcbfae3d7e87cd4457a0debd840897e9a9d15e14eaad4be8c8e16e13adca2")
+        version("23.05", sha256="fa4f6d8d0537057313bb657c60d5fd91ae6219d3de95d446282f1ad47eeda863")
+        version("23.04", sha256="90462a91106db8e241758aeb8aabdf3e217c9e3d2c531d6d30f0d03fd3ef789c")
+        version("23.03", sha256="26e79f8c7f0480b5f795d87ec2663e553b357894fc4b591c8e70d64bfbcb72a4")
+        version("23.02", sha256="596189e5cebb06e8e58a587423566db536f4ac3691d01db8d11f5503f1e7e35e")
+        version("23.01", sha256="ed0536ae5a75df4b93c275c6839a210fba61c9524a50ec6217c44d5ac83776b3")
+        version("22.12", sha256="bdd0a9ec909a5ac00f288bb4ab5193136b460e39e570ecb37d3d5d742b7e67bf")
+        version("22.11", sha256="03c580bcd0cf7b99a81b9ef09d14172c96672c7fb028a0ed6728b3cc9ec207e7")
+        version("22.10", sha256="736747184eaae65fb1bbeb6867b890c90b233132bc185d85ea605525637e7c53")
+        version("22.09", sha256="0dc7076bad1c46045abd812729fa650bc4f3d17fdfded6666cbaf06da70f09d7")
+        version("22.08", sha256="95930c4f4fc239dfe4ed36b1023dd3768637ad37ff746bb33cf05231ca08ee7a")
+        version("22.07", sha256="7d91305f8b54b36acf2359daec5a94e154e2a8d7cbae97429ed8e93f7c5ea661")
+        version("22.06", sha256="faa6550d7dd48fc64d4b4d67f583d34209c020bf4f026d10feb7c9b224caa208")
+        version("22.05", sha256="be97d695a425cfb0ecd3689a0b9706575b7b48ce1c73c39d4ea3abd616b15ad7")
+        version("22.04", sha256="ff6e3a379fafb76e311b2f48089da6b1ab328c5b52eccd347c41cce59d0441ed")
+        version("22.03", sha256="808a9f43514ee40fa4fa9ab5bf0ed11219ab6f9320eb414bb4f043fab112f7a0")
+        version("22.02", sha256="3179c54481c5dabde77a4e9a670bb97b599cecc617ad30f32ab3177559f67ffe")
+        version("22.01", sha256="73a65c1465eca80f0db2dab4347c22ddf68ad196e3bd0ccc0861d782f13b7388")
+        # 22.01+ requires C++17 or newer
+        version("21.12", sha256="3dd96d36db531f518cfec631bec243029fe63e1084b8cf7e8e75be50ebbdc794")
+        version("21.11", sha256="03727c21ee350fdc63057d4eebbff142928d74481f2234a8c3821cf338bfa4a0")
+        version("21.10", sha256="c35a98b1bd349cb944296c02d6e0602b6b7e33d1008207dd0d041a75cfb971e9")
+        version("21.09", sha256="0b20c5d7f13448f01115f68f131a3721e037ad9fab06aa3c24530bc48859c9eb")
+        version("21.08", sha256="5e61e4ec5a8605aa4fb89d49feba4a42d7d3f627745d4c85faab3657baf56011")
+        version("21.07", sha256="fe566f3de8d5b17a720e084d244c6617c87523b7d80756cbb5850df6e8100f5f")
+        version("21.06", sha256="246fb2c2bdb1dad347550c48e375326bc7bdeec0496c113c1057d2721a9ffd14")
+        version("21.05", sha256="16a206e898b22ace07c8dc9ea70af7f6f6f91a7a2e42c392fd15eb223faa1597")
+        version("21.04", sha256="13b13aebb25f43b7239743312dc9bb96bb365b72a99eb3c64492ae38f5141cff")
+        # 20.01+ requires C++14 or newer
 
     variant("app", default=True, description="Build the WarpX executable application")
     variant("ascent", default=False, description="Enable Ascent in situ visualization")
+    variant(
+        "catalyst",
+        default=False,
+        description="Enable Catalyst2 in situ visualization",
+        when="@24.09:",
+    )
     variant("sensei", default=False, description="Enable SENSEI in situ visualization")
     variant(
         "compute",
@@ -85,7 +94,15 @@ class Warpx(CMakePackage):
         description="Number of spatial dimensions",
         when="@23.06:",
     )
-    variant("eb", default=False, description="Embedded boundary support (in development)")
+    variant("eb", default=True, description="Embedded boundary support", when="@24.10:")
+    variant("eb", default=False, description="Embedded boundary support", when="@:24.09")
+    # Spack defaults to False but pybind11 defaults to True (and IPO is highly
+    # encouraged to be used)
+    variant(
+        "python_ipo",
+        default=True,
+        description="CMake interprocedural optimization for Python bindings (recommended)",
+    )
     variant("lib", default=True, description="Build WarpX as a shared library")
     variant("mpi", default=True, description="Enable MPI support")
     variant(
@@ -101,90 +118,155 @@ class Warpx(CMakePackage):
         multi=False,
         description="Floating point precision (single/double)",
     )
-    variant("psatd", default=True, description="Enable PSATD solver support")
+    variant("fft", default=True, description="Enable support for FFT-based solvers")
+    variant("python", default=False, description="Enable Python bindings")
     variant("qed", default=True, description="Enable QED support")
     variant("qedtablegen", default=False, description="QED table generation support")
     variant("shared", default=True, description="Build a shared version of the library")
     variant("tprof", default=True, description="Enable tiny profiling features")
 
-    depends_on("sensei@4.0.0:", when="@22.07: +sensei")
-    conflicts("+sensei", when="@:22.06", msg="WarpX supports SENSEI 4.0+ with 22.07 and newer")
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
-    depends_on("ascent", when="+ascent")
-    depends_on("ascent +cuda", when="+ascent compute=cuda")
-    depends_on("ascent +mpi", when="+ascent +mpi")
+    for v in ["25.03", "25.02", "24.10", "24.08", "develop"]:
+        depends_on(
+            f"amrex@{v} build_system=cmake +linear_solvers +pic +particles +shared +tiny_profile",
+            when=f"@{v}",
+            type=("build", "link"),
+        )
+        depends_on("py-amrex@{0}".format(v), when="@{0} +python".format(v), type=("build", "run"))
+
     depends_on("boost@1.66.0: +math", when="+qedtablegen")
     depends_on("cmake@3.15.0:", type="build")
     depends_on("cmake@3.18.0:", type="build", when="@22.01:")
     depends_on("cmake@3.20.0:", type="build", when="@22.08:")
+    depends_on("cmake@3.24.0:", type="build", when="@24.09:")
+    with when("+ascent"):
+        depends_on("ascent", when="+ascent")
+        depends_on("ascent +cuda", when="+ascent compute=cuda")
+        depends_on("ascent +mpi", when="+ascent +mpi")
+        depends_on("amrex +ascent +conduit")
+    with when("+catalyst"):
+        depends_on("libcatalyst@2.0: +conduit")
+        depends_on("libcatalyst +mpi", when="+mpi")
+        depends_on("amrex +catalyst +conduit")
+    with when("dims=1"):
+        depends_on("amrex dimensions=1")
+    with when("dims=2"):
+        depends_on("amrex dimensions=2")
+    with when("dims=rz"):
+        depends_on("amrex dimensions=2")
+    with when("dims=3"):
+        depends_on("amrex dimensions=3")
+    with when("+eb"):
+        depends_on("amrex +eb")
+    with when("+fft"):
+        depends_on("amrex +fft", when="@24.11:")
     depends_on("mpi", when="+mpi")
+    with when("+mpi"):
+        depends_on("amrex +mpi")
+        depends_on("py-amrex +mpi", when="+python")
+    with when("~mpi"):
+        depends_on("amrex ~mpi")
+        depends_on("py-amrex ~mpi", when="~python")
+    with when("precision=single"):
+        depends_on("amrex precision=single")
+    with when("precision=double"):
+        depends_on("amrex precision=double")
+    depends_on("py-pybind11@2.12.0:", when="@24.04: +python", type=("build", "link"))
+    depends_on("sensei@4.0.0:", when="@22.07: +sensei")
     with when("compute=cuda"):
+        depends_on("amrex +cuda")
         depends_on("cuda@9.2.88:")
         depends_on("cuda@11.0:", when="@22.01:")
     with when("compute=hip"):
-        depends_on("rocfft", when="+psatd")
+        depends_on("amrex +rocm")
+        depends_on("rocfft", when="+fft")
         depends_on("rocprim")
         depends_on("rocrand")
     with when("compute=noacc"):
-        with when("+psatd"):
+        depends_on("amrex ~cuda ~openmp ~rocm ~sycl")
+        with when("+fft"):
             depends_on("fftw@3: ~mpi", when="~mpi")
             depends_on("fftw@3: +mpi", when="+mpi")
             depends_on("pkgconfig", type="build")
     with when("compute=omp"):
+        depends_on("amrex +openmp")
         depends_on("llvm-openmp", when="%apple-clang")
-        with when("+psatd"):
+        with when("+fft"):
             depends_on("fftw@3: +openmp")
             depends_on("fftw ~mpi", when="~mpi")
             depends_on("fftw +mpi", when="+mpi")
             depends_on("pkgconfig", type="build")
-    with when("+psatd dims=rz"):
+    with when("+fft dims=rz"):
         depends_on("lapackpp")
         depends_on("blaspp")
         depends_on("blaspp +cuda", when="compute=cuda")
     with when("+openpmd"):
         depends_on("openpmd-api@0.13.1:")
         depends_on("openpmd-api@0.14.2:", when="@21.09:")
+        depends_on("openpmd-api@0.15.1:", when="@23.05:")
+        depends_on("openpmd-api@0.16.1:", when="@25.02:")
         depends_on("openpmd-api ~mpi", when="~mpi")
         depends_on("openpmd-api +mpi", when="+mpi")
 
+    # Python bindings
+    # note: in Spack, we only need the cmake package, not py-cmake
+    with when("+python"):
+        extends("python")
+        depends_on("python@3.8:", type=("build", "run"))
+        depends_on("py-numpy@1.15.0:", type=("build", "run"))
+        depends_on("py-mpi4py@2.1.0:", type=("build", "run"), when="+mpi")
+        depends_on("py-periodictable@1.5:1", type=("build", "run"))
+        depends_on("py-picmistandard@0.28.0", type=("build", "run"), when="@23.11:24.07")
+        depends_on("py-picmistandard@0.29.0", type=("build", "run"), when="@24.08")
+        depends_on("py-picmistandard@0.30.0", type=("build", "run"), when="@24.09:24.12")
+        depends_on("py-picmistandard@0.33.0", type=("build", "run"), when="@25.01:")
+        depends_on("py-pip@23:", type="build")
+        depends_on("py-setuptools@42:", type="build")
+        depends_on("py-pybind11@2.12.0:", type=("build", "link"))
+        depends_on("py-wheel@0.40:", type="build")
+
+    conflicts("+python", when="@:24.04", msg="Python bindings only supported in 24.04+")
     conflicts("dims=1", when="@:21.12", msg="WarpX 1D support starts in 22.01+")
     conflicts("~qed +qedtablegen", msg="WarpX PICSAR QED table generation needs +qed")
     conflicts(
         "compute=sycl",
-        when="+psatd",
-        msg="WarpX spectral solvers are not yet tested with SYCL " '(use "warpx ~psatd")',
+        when="+fft",
+        msg="WarpX spectral solvers are not yet tested with SYCL " '(use "warpx ~fft")',
     )
+    conflicts("+sensei", when="@:22.06", msg="WarpX supports SENSEI 4.0+ with 22.07 and newer")
 
     # The symbolic aliases for our +lib target were missing in the install
     # location
-    # https://github.com/ECP-WarpX/WarpX/pull/2626
+    # https://github.com/BLAST-WarpX/warpx/pull/2626
     patch(
-        "https://github.com/ECP-WarpX/WarpX/pull/2626.patch?full_index=1",
+        "https://github.com/BLAST-WarpX/warpx/pull/2626.patch?full_index=1",
         sha256="a431d4664049d6dcb6454166d6a948d8069322a111816ca5ce01553800607544",
         when="@21.12",
     )
 
     # Workaround for AMReX<=22.06 no-MPI Gather
-    # https://github.com/ECP-WarpX/WarpX/pull/3134
+    # https://github.com/BLAST-WarpX/warpx/pull/3134
     # https://github.com/AMReX-Codes/amrex/pull/2793
     patch(
-        "https://github.com/ECP-WarpX/WarpX/pull/3134.patch?full_index=1",
+        "https://github.com/BLAST-WarpX/warpx/pull/3134.patch?full_index=1",
         sha256="b786ce64a3c2c2b96ff2e635f0ee48532e4ae7ad9637dbf03f11c0768c290690",
         when="@22.02:22.05",
     )
 
     # Forgot to install ABLASTR library
-    # https://github.com/ECP-WarpX/WarpX/pull/3141
+    # https://github.com/BLAST-WarpX/warpx/pull/3141
     patch(
-        "https://github.com/ECP-WarpX/WarpX/pull/3141.patch?full_index=1",
+        "https://github.com/BLAST-WarpX/warpx/pull/3141.patch?full_index=1",
         sha256="dab6fb44556ee1fd466a4cb0e20f89bde1ce445c9a51a2c0f59d1740863b5e7d",
         when="@22.04,22.05",
     )
 
     # Fix failing 1D CUDA build
-    # https://github.com/ECP-WarpX/WarpX/pull/3162
+    # https://github.com/BLAST-WarpX/warpx/pull/3162
     patch(
-        "https://github.com/ECP-WarpX/WarpX/pull/3162.patch?full_index=1",
+        "https://github.com/BLAST-WarpX/warpx/pull/3162.patch?full_index=1",
         sha256="0ae573d1390ed8063f84e3402d30d34e522e65dc5dfeea3d07e165127ab373e9",
         when="@22.06",
     )
@@ -198,6 +280,7 @@ class Warpx(CMakePackage):
             # variants
             self.define_from_variant("WarpX_APP", "app"),
             self.define_from_variant("WarpX_ASCENT", "ascent"),
+            self.define_from_variant("WarpX_CATALYST", "catalyst"),
             self.define_from_variant("WarpX_SENSEI", "sensei"),
             "-DWarpX_COMPUTE={0}".format(spec.variants["compute"].value.upper()),
             "-DWarpX_DIMS={0}".format(";".join(spec.variants["dims"].value).upper()),
@@ -207,10 +290,16 @@ class Warpx(CMakePackage):
             self.define_from_variant("WarpX_MPI_THREAD_MULTIPLE", "mpithreadmultiple"),
             self.define_from_variant("WarpX_OPENPMD", "openpmd"),
             "-DWarpX_PRECISION={0}".format(spec.variants["precision"].value.upper()),
-            self.define_from_variant("WarpX_PSATD", "psatd"),
+            self.define_from_variant("WarpX_PYTHON", "python"),
             self.define_from_variant("WarpX_QED", "qed"),
             self.define_from_variant("WarpX_QED_TABLE_GEN", "qedtablegen"),
         ]
+
+        if spec.satisfies("@24.08:"):
+            args.append("-DWarpX_amrex_internal=OFF")
+            args.append(self.define_from_variant("WarpX_FFT", "fft"))
+        else:
+            args.append(self.define_from_variant("WarpX_PSATD", "fft"))
 
         # FindMPI needs an extra hint sometimes, particularly on cray systems
         if "+mpi" in spec:
@@ -219,6 +308,12 @@ class Warpx(CMakePackage):
 
         if "+openpmd" in spec:
             args.append("-DWarpX_openpmd_internal=OFF")
+
+        if "+python" in spec:
+            if spec.satisfies("@24.08:"):
+                args.append("-DWarpX_pyamrex_internal=OFF")
+                args.append("-DWarpX_pybind11_internal=OFF")
+                args.append(self.define_from_variant("WarpX_PYTHON_IPO", "python_ipo"))
 
         # Work-around for SENSEI 4.0: wrong install location for CMake config
         #   https://github.com/SENSEI-insitu/SENSEI/issues/79
@@ -230,6 +325,28 @@ class Warpx(CMakePackage):
         args.append(self.define(ccache_var, False))
 
         return args
+
+    phases = ("cmake", "build", "install", "pip_install_nodeps")
+    build_targets = ["all"]
+    with when("+python"):
+        build_targets += ["pip_wheel"]
+
+    def pip_install_nodeps(self, spec, prefix):
+        """Install everything from build directory."""
+        pip = spec["python"].command
+        pip.add_default_arg("-m", "pip")
+
+        args = PythonPipBuilder.std_args(self) + [
+            f"--prefix={prefix}",
+            "--find-links=warpx-whl",
+            "pywarpx",
+        ]
+
+        with working_dir(self.build_directory):
+            pip(*args)
+
+        # todo: from PythonPipBuilder
+        # ....execute_install_time_tests()
 
     @property
     def libs(self):
@@ -257,9 +374,17 @@ class Warpx(CMakePackage):
             install_test_root(self) if post_install else self.stage.source_path,
             self.examples_src_dir,
         )
-        inputs_nD = {"1": "inputs_1d", "2": "inputs_2d", "3": "inputs_3d", "rz": "inputs_rz"}
-        if spec.satisfies("@:21.12"):
-            inputs_nD["rz"] = "inputs_2d_rz"
+        if spec.satisfies("@:24.09"):
+            inputs_nD = {"1": "inputs_1d", "2": "inputs_2d", "3": "inputs_3d", "rz": "inputs_rz"}
+            if spec.satisfies("@:21.12"):
+                inputs_nD["rz"] = "inputs_2d_rz"
+        else:
+            inputs_nD = {
+                "1": "inputs_test_1d_laser_acceleration",
+                "2": "inputs_base_2d",
+                "3": "inputs_base_3d",
+                "rz": "inputs_base_rz",
+            }
         inputs = join_path(examples_dir, inputs_nD[dim])
 
         cli_args = [inputs, "max_step=50", "diag1.intervals=10"]
@@ -291,7 +416,14 @@ class Warpx(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         cache_extra_test_sources(self, [self.examples_src_dir])
 
+    # TODO: remove installed static ablastr lib
+    #       (if build as static lib - Spack default is shared)
+    #    @run_after("install")
+    #    def remove_unwanted_library(self):
+    #        ... libablastr_{1d,2d,3d,rz}.a ...
+
     def run_warpx(self, dim):
+        """Perform smoke tests on the installed package."""
         if "+app" not in self.spec:
             raise SkipTest("Package must be installed with +app")
         if dim not in self.spec.variants["dims"].value:
