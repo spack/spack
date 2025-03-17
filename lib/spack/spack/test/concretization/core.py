@@ -3163,7 +3163,7 @@ def test_filtering_reused_specs(
 @pytest.mark.usefixtures("mutable_database", "mock_store")
 @pytest.mark.parametrize(
     "reuse_yaml,expected_length",
-    [({"from": [{"type": "local"}]}, 17), ({"from": [{"type": "buildcache"}]}, 0)],
+    [({"from": [{"type": "local"}]}, 18), ({"from": [{"type": "buildcache"}]}, 0)],
 )
 @pytest.mark.not_on_windows("Expected length is different on Windows")
 def test_selecting_reused_sources(
