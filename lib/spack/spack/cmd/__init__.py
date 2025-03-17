@@ -171,7 +171,9 @@ def quote_kvp(string: str) -> str:
 
 
 def parse_specs(
-    args: Union[str, List[str]], concretize: bool = False, tests: bool = False
+    args: Union[str, List[str]],
+    concretize: bool = False,
+    tests: spack.concretize.TestsType = False,
 ) -> List[spack.spec.Spec]:
     """Convenience function for parsing arguments from specs.  Handles common
     exceptions and dies if there are errors.
@@ -183,11 +185,13 @@ def parse_specs(
     if not concretize:
         return specs
 
-    to_concretize = [(s, None) for s in specs]
+    to_concretize: List[spack.concretize.SpecPairInput] = [(s, None) for s in specs]
     return _concretize_spec_pairs(to_concretize, tests=tests)
 
 
-def _concretize_spec_pairs(to_concretize, tests=False):
+def _concretize_spec_pairs(
+    to_concretize: List[spack.concretize.SpecPairInput], tests: spack.concretize.TestsType = False
+) -> List[spack.spec.Spec]:
     """Helper method that concretizes abstract specs from a list of abstract,concrete pairs.
 
     Any spec with a concrete spec associated with it will concretize to that spec. Any spec
@@ -198,7 +202,7 @@ def _concretize_spec_pairs(to_concretize, tests=False):
     # Special case for concretizing a single spec
     if len(to_concretize) == 1:
         abstract, concrete = to_concretize[0]
-        return [concrete or abstract.concretized()]
+        return [concrete or spack.concretize.concretize_one(abstract, tests=tests)]
 
     # Special case if every spec is either concrete or has an abstract hash
     if all(
@@ -250,9 +254,9 @@ def matching_spec_from_env(spec):
     """
     env = ev.active_environment()
     if env:
-        return env.matching_spec(spec) or spec.concretized()
+        return env.matching_spec(spec) or spack.concretize.concretize_one(spec)
     else:
-        return spec.concretized()
+        return spack.concretize.concretize_one(spec)
 
 
 def matching_specs_from_env(specs):
@@ -293,7 +297,7 @@ def disambiguate_spec(
 
 def disambiguate_spec_from_hashes(
     spec: spack.spec.Spec,
-    hashes: List[str],
+    hashes: Optional[List[str]],
     local: bool = False,
     installed: Union[bool, InstallRecordStatus] = True,
     first: bool = False,
@@ -326,7 +330,7 @@ def ensure_single_spec_or_die(spec, matching_specs):
     if len(matching_specs) <= 1:
         return
 
-    format_string = "{name}{@version}{%compiler.name}{@compiler.version}{ arch=architecture}"
+    format_string = "{name}{@version}{ arch=architecture} {%compiler.name}{@compiler.version}"
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
         colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
@@ -467,12 +471,11 @@ def display_specs(specs, args=None, **kwargs):
         nfmt = "{fullname}" if namespaces else "{name}"
         ffmt = ""
         if full_compiler or flags:
-            ffmt += "{%compiler.name}"
+            ffmt += "{compiler_flags} {%compiler.name}"
             if full_compiler:
                 ffmt += "{@compiler.version}"
-            ffmt += " {compiler_flags}"
         vfmt = "{variants}" if variants else ""
-        format_string = nfmt + "{@version}" + ffmt + vfmt
+        format_string = nfmt + "{@version}" + vfmt + ffmt
 
     def fmt(s, depth=0):
         """Formatter function for all output specs"""

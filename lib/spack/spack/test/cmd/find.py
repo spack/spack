@@ -12,13 +12,13 @@ import pytest
 
 import spack.cmd as cmd
 import spack.cmd.find
+import spack.concretize
 import spack.environment as ev
 import spack.repo
 import spack.store
 import spack.user_environment as uenv
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand
-from spack.spec import Spec
 from spack.test.conftest import create_test_repo
 from spack.test.utilities import SpackCommandArgs
 from spack.util.pattern import Bunch
@@ -201,7 +201,8 @@ def test_find_json_deps(database):
 @pytest.mark.db
 def test_display_json(database, capsys):
     specs = [
-        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
+        spack.concretize.concretize_one(s)
+        for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     cmd.display_specs_as_json(specs)
@@ -216,7 +217,8 @@ def test_display_json(database, capsys):
 @pytest.mark.db
 def test_display_json_deps(database, capsys):
     specs = [
-        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
+        spack.concretize.concretize_one(s)
+        for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     cmd.display_specs_as_json(specs, deps=True)
@@ -231,21 +233,27 @@ def test_display_json_deps(database, capsys):
 @pytest.mark.db
 def test_find_format(database, config):
     output = find("--format", "{name}-{^mpi.name}", "mpileaks")
-    assert set(output.strip().split("\n")) == set(
-        ["mpileaks-zmpi", "mpileaks-mpich", "mpileaks-mpich2"]
-    )
+    assert set(output.strip().split("\n")) == {
+        "mpileaks-zmpi",
+        "mpileaks-mpich",
+        "mpileaks-mpich2",
+    }
 
     output = find("--format", "{name}-{version}-{compiler.name}-{^mpi.name}", "mpileaks")
     assert "installed package" not in output
-    assert set(output.strip().split("\n")) == set(
-        ["mpileaks-2.3-gcc-zmpi", "mpileaks-2.3-gcc-mpich", "mpileaks-2.3-gcc-mpich2"]
-    )
+    assert set(output.strip().split("\n")) == {
+        "mpileaks-2.3-gcc-zmpi",
+        "mpileaks-2.3-gcc-mpich",
+        "mpileaks-2.3-gcc-mpich2",
+    }
 
     output = find("--format", "{name}-{^mpi.name}-{hash:7}", "mpileaks")
     elements = output.strip().split("\n")
-    assert set(e[:-7] for e in elements) == set(
-        ["mpileaks-zmpi-", "mpileaks-mpich-", "mpileaks-mpich2-"]
-    )
+    assert set(e[:-7] for e in elements) == {
+        "mpileaks-zmpi-",
+        "mpileaks-mpich-",
+        "mpileaks-mpich2-",
+    }
 
     # hashes are in base32
     for e in elements:
@@ -275,7 +283,7 @@ mpileaks-2.3
 def test_find_format_deps_paths(database, config):
     output = find("-dp", "--format", "{name}-{version}", "mpileaks", "^zmpi")
 
-    spec = Spec("mpileaks ^zmpi").concretized()
+    spec = spack.concretize.concretize_one("mpileaks ^zmpi")
     prefixes = [s.prefix for s in spec.traverse()]
 
     assert (
@@ -300,7 +308,8 @@ def test_find_very_long(database, config):
     output = find("-L", "--no-groups", "mpileaks")
 
     specs = [
-        Spec(s).concretized() for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
+        spack.concretize.concretize_one(s)
+        for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     assert set(output.strip().split("\n")) == set(
@@ -311,7 +320,7 @@ def test_find_very_long(database, config):
 @pytest.mark.db
 def test_find_show_compiler(database, config):
     output = find("--no-groups", "--show-full-compiler", "mpileaks")
-    assert "mpileaks@2.3%gcc@10.2.1" in output
+    assert "mpileaks@2.3 %gcc@10.2.1" in output
 
 
 @pytest.mark.db
@@ -345,7 +354,7 @@ def test_find_prefix_in_env(
     """Test `find` formats requiring concrete specs work in environments."""
     env("create", "test")
     with ev.read("test"):
-        install("--add", "mpileaks")
+        install("--fake", "--add", "mpileaks")
         find("-p")
         find("-l")
         find("-L")
@@ -455,7 +464,7 @@ def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
 
     with test_environment:
         output = find()
-    assert "zlib%gcc@12.1.0" in output
+    assert "zlib %gcc@12.1.0" in output
 
 
 _pkga = (

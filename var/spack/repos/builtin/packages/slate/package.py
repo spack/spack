@@ -6,10 +6,10 @@ from spack.package import *
 
 
 class Slate(CMakePackage, CudaPackage, ROCmPackage):
-    """The Software for Linear Algebra Targeting Exascale (SLATE) project is
-    to provide fundamental dense linear algebra capabilities to the US
+    """The Software for Linear Algebra Targeting Exascale (SLATE) project
+    provides fundamental dense linear algebra capabilities to the US
     Department of Energy and to the high-performance computing (HPC) community
-    at large. To this end, SLATE will provide basic dense matrix operations
+    at large. To this end, SLATE provides basic dense matrix operations
     (e.g., matrix multiplication, rank-k update, triangular solve), linear
     systems solvers, least square solvers, singular value and eigenvalue
     solvers."""
@@ -165,8 +165,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     def cache_test_sources(self):
         if self.spec.satisfies("@2020.10.00"):
             return
-        """Copy the example source files after the package is installed to an
-        install test subdirectory for use during `spack test run`."""
+        # Copy the example source files after the package is installed to an
+        # install test subdirectory for use during `spack test run`.
         cache_extra_test_sources(self, ["examples"])
 
     def mpi_launcher(self):

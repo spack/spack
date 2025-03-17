@@ -29,107 +29,28 @@ class PyWarpx(PythonPackage):
     license("BSD-3-Clause-LBNL")
 
     # NOTE: if you update the versions here, also see warpx
-    version("develop", branch="development", deprecated=True)
-    version(
-        "23.08",
-        sha256="67695ff04b83d1823ea621c19488e54ebaf268532b0e5eb4ea8ad293d7ab3ddc",
-        deprecated=True,
-    )
-    version(
-        "23.07",
-        sha256="511633f94c0d0205013609bde5bbf92a29c2e69f6e69b461b80d09dc25602945",
-        deprecated=True,
-    )
-    version(
-        "23.06",
-        sha256="75fcac949220c44dce04de581860c9a2caa31a0eee8aa7d49455fa5fc928514b",
-        deprecated=True,
-    )
-    version(
-        "23.05",
-        sha256="34306a98fdb1f5f44ab4fb92f35966bfccdcf1680a722aa773af2b59a3060d73",
-        deprecated=True,
-    )
-    version(
-        "23.04",
-        sha256="e5b285c73e13a0d922eba5d83760c168d4fd388e54a519830003b2e692dab823",
-        deprecated=True,
-    )
-    version(
-        "23.03",
-        sha256="e1274aaa2a2c83d599d61c6e4c426db4ed5d4c5dc61a2002715783a6c4843718",
-        deprecated=True,
-    )
-    version(
-        "23.02",
-        sha256="a6c63ebc38cbd224422259a814be501ac79a3b734dab7f59500b6957cddaaac1",
-        deprecated=True,
-    )
-    version(
-        "23.01",
-        sha256="e853d01c20ea00c8ddedfa82a31a11d9d91a7f418d37d7f064cf8a241ea4da0c",
-        deprecated=True,
-    )
-    version(
-        "22.12",
-        sha256="96019902cd6ea444a1ae515e8853048e9074822c168021e4ec1687adc72ef062",
-        deprecated=True,
-    )
-    version(
-        "22.11",
-        sha256="528f65958f2f9e60a094e54eede698e871ccefc89fa103fe2a6f22e4a059515e",
-        deprecated=True,
-    )
-    version(
-        "22.10",
-        sha256="3cbbbbb4d79f806b15e81c3d0e4a4401d1d03d925154682a3060efebd3b6ca3e",
-        deprecated=True,
-    )
-    version(
-        "22.09",
-        sha256="dbef1318248c86c860cc47f7e18bbb0397818e3acdfb459e48075004bdaedea3",
-        deprecated=True,
-    )
-    version(
-        "22.08",
-        sha256="5ff7fd628e8bf615c1107e6c51bc55926f3ef2a076985444b889d292fecf56d4",
-        deprecated=True,
-    )
-    version(
-        "22.07",
-        sha256="0286adc788136cb78033cb1678d38d36e42265bcfd3d0c361a9bcc2cfcdf241b",
-        deprecated=True,
-    )
-    version(
-        "22.06",
-        sha256="e78398e215d3fc6bc5984f5d1c2ddeac290dcbc8a8e9d196e828ef6299187db9",
-        deprecated=True,
-    )
-    version(
-        "22.05",
-        sha256="2fa69e6a4db36459b67bf663e8fbf56191f6c8c25dc76301dbd02a36f9b50479",
-        deprecated=True,
-    )
-    version(
-        "22.04",
-        sha256="9234d12e28b323cb250d3d2cefee0b36246bd8a1d1eb48e386f41977251c028f",
-        deprecated=True,
-    )
-    version(
-        "22.03",
-        sha256="ddbef760c8000f2f827dfb097ca3359e7aecbea8766bec5c3a91ee28d3641564",
-        deprecated=True,
-    )
-    version(
-        "22.02",
-        sha256="d74b593d6f396e037970c5fbe10c2e5d71d557a99c97d40e4255226bc6c26e42",
-        deprecated=True,
-    )
-    version(
-        "22.01",
-        sha256="e465ffadabb7dc360c63c4d3862dc08082b5b0e77923d3fb05570408748b0d28",
-        deprecated=True,
-    )
+    with default_args(deprecated=True):
+        version("develop", branch="development")
+        version("23.08", sha256="22b9ad39c89c3fae81b1ed49abd72f698fbc79d8ac3b8dd733fd02185c0fdf63")
+        version("23.07", sha256="eab91672191d7bf521cda40f2deb71a144da452b35245567b14873938f97497e")
+        version("23.06", sha256="9bbdcbfae3d7e87cd4457a0debd840897e9a9d15e14eaad4be8c8e16e13adca2")
+        version("23.05", sha256="fa4f6d8d0537057313bb657c60d5fd91ae6219d3de95d446282f1ad47eeda863")
+        version("23.04", sha256="90462a91106db8e241758aeb8aabdf3e217c9e3d2c531d6d30f0d03fd3ef789c")
+        version("23.03", sha256="26e79f8c7f0480b5f795d87ec2663e553b357894fc4b591c8e70d64bfbcb72a4")
+        version("23.02", sha256="596189e5cebb06e8e58a587423566db536f4ac3691d01db8d11f5503f1e7e35e")
+        version("23.01", sha256="ed0536ae5a75df4b93c275c6839a210fba61c9524a50ec6217c44d5ac83776b3")
+        version("22.12", sha256="bdd0a9ec909a5ac00f288bb4ab5193136b460e39e570ecb37d3d5d742b7e67bf")
+        version("22.11", sha256="03c580bcd0cf7b99a81b9ef09d14172c96672c7fb028a0ed6728b3cc9ec207e7")
+        version("22.10", sha256="736747184eaae65fb1bbeb6867b890c90b233132bc185d85ea605525637e7c53")
+        version("22.09", sha256="0dc7076bad1c46045abd812729fa650bc4f3d17fdfded6666cbaf06da70f09d7")
+        version("22.08", sha256="95930c4f4fc239dfe4ed36b1023dd3768637ad37ff746bb33cf05231ca08ee7a")
+        version("22.07", sha256="7d91305f8b54b36acf2359daec5a94e154e2a8d7cbae97429ed8e93f7c5ea661")
+        version("22.06", sha256="faa6550d7dd48fc64d4b4d67f583d34209c020bf4f026d10feb7c9b224caa208")
+        version("22.05", sha256="be97d695a425cfb0ecd3689a0b9706575b7b48ce1c73c39d4ea3abd616b15ad7")
+        version("22.04", sha256="ff6e3a379fafb76e311b2f48089da6b1ab328c5b52eccd347c41cce59d0441ed")
+        version("22.03", sha256="808a9f43514ee40fa4fa9ab5bf0ed11219ab6f9320eb414bb4f043fab112f7a0")
+        version("22.02", sha256="3179c54481c5dabde77a4e9a670bb97b599cecc617ad30f32ab3177559f67ffe")
+        version("22.01", sha256="73a65c1465eca80f0db2dab4347c22ddf68ad196e3bd0ccc0861d782f13b7388")
 
     depends_on("cxx", type="build")  # generated
 

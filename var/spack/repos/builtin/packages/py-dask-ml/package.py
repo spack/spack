@@ -53,10 +53,11 @@ class PyDaskMl(PythonPackage):
 
     depends_on("py-xgboost+dask", type=("build", "run"), when="+docs")
     depends_on("py-xgboost+dask", type=("build", "run"), when="+xgboost")
+    depends_on("gmake", type="build")
 
     patch("xgboost_dependency.patch")
 
-    conflicts("+docs", when="%gcc target=aarch64:")
+    conflicts("+docs", when="target=aarch64: %gcc")
 
     @run_after("install")
     def install_docs(self):

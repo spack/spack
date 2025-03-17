@@ -158,6 +158,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     )
 
     depends_on("cxx", type="build")  # generated
+    depends_on("gmake", type="build")
 
     variant("static", default=True, description="Build static library")
     variant("shared", default=False, description="Build shared library")
@@ -281,6 +282,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     depends_on("mpi", when="+mpi")
     depends_on("hipsparse", when="@4.4.0:+rocm")
+    depends_on("hipblas", when="@4.4.0:+rocm")
 
     with when("+mpi"):
         depends_on("hypre")
@@ -985,9 +987,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "^rocprim" in spec and not spec["hip"].external:
                 # rocthrust [via petsc+rocm] has a dependency on rocprim
                 hip_headers += spec["rocprim"].headers
-            if "^hipblas" in spec and not spec["hip"].external:
-                # superlu-dist+rocm needs the hipblas header path
-                hip_headers += spec["hipblas"].headers
+            if "^hipblas" in spec:
+                hipblas = spec["hipblas"]
+                hip_headers += hipblas.headers
+                hip_libs += hipblas.libs
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
                 proc = str(spec.target.family)
@@ -1309,7 +1312,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     @property
     def config_mk(self):
         """Export the location of the config.mk file.
-        This property can be accessed using spec["mfem"].package.config_mk
+        This property can be accessed using pkg["mfem"].config_mk
         """
         dirs = [self.prefix, self.prefix.share.mfem]
         for d in dirs:
@@ -1321,7 +1324,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     @property
     def test_mk(self):
         """Export the location of the test.mk file.
-        This property can be accessed using spec["mfem"].package.test_mk.
+        This property can be accessed using pkg["mfem"].test_mk.
         In version 3.3.2 and newer, the location of test.mk is also defined
         inside config.mk, variable MFEM_TEST_MK.
         """
