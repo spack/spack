@@ -50,7 +50,6 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
-import spack.hash_types as ht
 import spack.package_base
 import spack.package_prefs
 import spack.patch
@@ -567,7 +566,6 @@ class Result:
         serial_node_arg = (
             lambda node_dict: f"""{{"id": "{node_dict.id}", "pkg": "{node_dict.pkg}"}}"""
         )
-        spec_hash_type = ht.process_hash if test else ht.dag_hash
         ret = dict()
         ret["asp"] = self.asp
         ret["criteria"] = self.criteria
@@ -581,14 +579,14 @@ class Result:
             serial_answer = answer[:2]
             serial_answer_dict = {}
             for node, spec in answer[2].items():
-                serial_answer_dict[serial_node_arg(node)] = spec.to_dict(hash=spec_hash_type)
+                serial_answer_dict[serial_node_arg(node)] = spec.to_dict()
             serial_answer = serial_answer + (serial_answer_dict,)
             serial_answers.append(serial_answer)
         ret["answers"] = serial_answers
         ret["specs_by_input"] = {}
         input_specs = {} if not self.specs_by_input else self.specs_by_input
         for input, spec in input_specs.items():
-            ret["specs_by_input"][str(input)] = spec.to_dict(hash=spec_hash_type)
+            ret["specs_by_input"][str(input)] = spec.to_dict()
         return ret
 
     @staticmethod

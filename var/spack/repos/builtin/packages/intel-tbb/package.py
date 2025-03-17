@@ -255,9 +255,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
         # Deactivate use of RTM with GCC when on an OS with a very old
         # assembler.
         if (
-            spec.satisfies("%gcc@4.8.0: os=rhel6")
-            or spec.satisfies("%gcc@4.8.0: os=centos6")
-            or spec.satisfies("%gcc@4.8.0: os=scientific6")
+            spec.satisfies("os=rhel6 %gcc@4.8.0:")
+            or spec.satisfies("os=centos6 %gcc@4.8.0:")
+            or spec.satisfies("os=scientific6 %gcc@4.8.0:")
         ):
             filter_file(r"RTM_KEY.*=.*rtm.*", "RTM_KEY =", join_path("build", "linux.gcc.inc"))
 

@@ -15,6 +15,8 @@ class PyAmrex(CMakePackage, PythonExtension, CudaPackage, ROCmPackage):
 
     maintainers("ax3l", "EZoni", "RTSandberg", "sayerhs", "WeiqunZhang")
 
+    tags = ["e4s", "hpsf"]
+
     license("BSD-3-Clause-LBNL")
 
     version("develop", branch="development")

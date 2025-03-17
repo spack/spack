@@ -258,7 +258,7 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option("CMAKE_EXPORT_COMPILE_COMMANDS", True))
         entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
 
-        if spec.satisfies("%clang +distconv platform=darwin"):
+        if spec.satisfies("+distconv platform=darwin %clang"):
             clang = self.compiler.cc
             clang_bin = os.path.dirname(clang)
             clang_root = os.path.dirname(clang_bin)
@@ -349,7 +349,7 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         return entries
 
     def setup_build_environment(self, env):
-        if self.spec.satisfies("%apple-clang +openmp"):
+        if self.spec.satisfies("+openmp %apple-clang"):
             env.append_flags("CPPFLAGS", self.compiler.openmp_flag)
             env.append_flags("CFLAGS", self.spec["llvm-openmp"].headers.include_flags)
             env.append_flags("CXXFLAGS", self.spec["llvm-openmp"].headers.include_flags)

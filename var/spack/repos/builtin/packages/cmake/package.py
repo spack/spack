@@ -141,7 +141,7 @@ class Cmake(Package):
 
     # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
     conflicts(
-        "%gcc platform=darwin",
+        "platform=darwin %gcc",
         when="@:3.17",
         msg="CMake <3.18 does not compile with GCC on macOS, "
         "please use %apple-clang or a newer CMake release. "

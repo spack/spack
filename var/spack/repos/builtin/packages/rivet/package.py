@@ -18,6 +18,8 @@ class Rivet(AutotoolsPackage):
 
     license("GPL-3.0-or-later")
 
+    version("4.1.0", sha256="6548a351a44e5a4303fb2277e7521690a9d84195df96d92c707b816f3b40c843")
+    version("4.0.3", sha256="dbb97b769d1877f34c3c50190127bfda7847bcec79ba1de59561fdf43cdd4869")
     version("4.0.2", sha256="65a3b36f42bff782ed2767930e669e09b140899605d7972fc8f77785b4a882c0")
     version("4.0.1", sha256="4e8692d6e8a53961c77983eb6ba4893c3765cf23f705789e4d865be4892eff79")
     version("4.0.0", sha256="d3c42d9b83ede3e7f4b534535345c2e06e6dafb851454c2b0a5d2331ab0f04d0")
@@ -68,6 +70,7 @@ class Rivet(AutotoolsPackage):
     depends_on("yoda@1.9.11:", when="@3.1.11:")
     depends_on("yoda@:1", when="@:3")
     depends_on("yoda@2.0.1:", when="@4.0.0:")
+    depends_on("yoda@2.1.0:", when="@4.1.0:")
 
     # The following versions were not a part of LCG stack
     # and thus the exact version of YODA is unknown
@@ -89,6 +92,7 @@ class Rivet(AutotoolsPackage):
     depends_on("fastjet@3.4.0:", when="@3.1.7:")
     depends_on("fjcontrib")
     depends_on("highfive", when="@4:")
+    depends_on("yaml-cpp", when="@4.1:")
     depends_on("python", type=("build", "run"))
     depends_on("py-cython@0.24.0:", type="build")
     depends_on("swig", type="build")
@@ -155,6 +159,9 @@ class Rivet(AutotoolsPackage):
 
         if self.spec.satisfies("^highfive"):
             args += ["--with-highfive=" + self.spec["highfive"].prefix]
+
+        if self.spec.satisfies("^yaml-cpp"):
+            args += ["--with-yaml-cpp=" + self.spec["yaml-cpp"].prefix]
 
         args += ["--disable-pdfmanual"]
 

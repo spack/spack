@@ -359,10 +359,10 @@ packages:
     update_packages_config(conf_str)
 
     s1 = spack.concretize.concretize_one("y@2.5")
-    assert s1.satisfies("%clang~shared")
+    assert s1.satisfies("~shared%clang")
 
     s2 = spack.concretize.concretize_one("y@2.4")
-    assert s2.satisfies("%gcc+shared")
+    assert s2.satisfies("+shared%gcc")
 
 
 @pytest.mark.regression("34241")
@@ -499,7 +499,7 @@ packages:
     "requirements,expectations",
     [
         (("%gcc", "%clang"), ("%gcc", "%clang")),
-        (("%gcc~shared", "@1.0"), ("%gcc~shared", "@1.0+shared")),
+        (("~shared%gcc", "@1.0"), ("~shared%gcc", "@1.0+shared")),
     ],
 )
 def test_default_and_package_specific_requirements(
@@ -754,7 +754,7 @@ def test_skip_requirement_when_default_requirement_condition_cannot_be_met(
     update_packages_config(packages_yaml)
     s = spack.concretize.concretize_one("mpileaks")
 
-    assert s.satisfies("%clang+shared")
+    assert s.satisfies("+shared %clang")
     # Sanity checks that 'callpath' doesn't have the shared variant, but that didn't
     # cause failures during concretization.
     assert "shared" not in s["callpath"].variants
@@ -1125,3 +1125,46 @@ def test_strong_preferences_higher_priority_than_reuse(concretize_scope, mock_pa
         )
         ascent = result.specs[0]
     assert ascent["adios2"].dag_hash() == reused_spec.dag_hash(), ascent
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,err_match",
+    [
+        (
+            """
+packages:
+  mpi:
+    require:
+    - "+bzip2"
+""",
+            "expected a named spec",
+        ),
+        (
+            """
+packages:
+  mpi:
+    require:
+    - one_of: ["+bzip2", openmpi]
+""",
+            "expected a named spec",
+        ),
+        (
+            """
+packages:
+  mpi:
+    require:
+    - "^mpich"
+""",
+            "Did you mean",
+        ),
+    ],
+)
+def test_anonymous_spec_cannot_be_used_in_virtual_requirements(
+    packages_yaml, err_match, concretize_scope, mock_packages
+):
+    """Tests that using anonymous specs in requirements for virtual packages raises an
+    appropriate error message.
+    """
+    update_packages_config(packages_yaml)
+    with pytest.raises(spack.error.SpackError, match=err_match):
+        spack.concretize.concretize_one("mpileaks")

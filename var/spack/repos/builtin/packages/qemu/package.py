@@ -155,7 +155,7 @@ class Qemu(AutotoolsPackage):
             "--disable-docs",
         ]
         extra_cflags = "-Wno-unknown-warning-option"
-        if self.spec.satisfies("%apple-clang platform=darwin"):
+        if self.spec.satisfies("platform=darwin %apple-clang"):
             # qemu 9: uses pthread_jit_write_protect_np which requires OSX 11.0 or newer
             extra_cflags += " -mmacosx-version-min=11.0"
         args.append(f"--extra-cflags={extra_cflags}")

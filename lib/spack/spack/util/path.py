@@ -9,6 +9,7 @@ TODO: this is really part of spack.config. Consolidate it.
 import contextlib
 import getpass
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -245,6 +246,7 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
 
     Arguments:
         path: path being converted as needed
+        default_wd: optional working directory/root for non-yaml string paths
 
     Returns: An absolute path or non-file URL with path variable substitution
     """
@@ -260,6 +262,14 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
 
     path = substitute_path_variables(path)
 
+    # Ensure properly process a Windows path
+    win_path = pathlib.PureWindowsPath(path)
+    if win_path.drive:
+        # Assume only absolute paths are supported with a Windows drive
+        # (though DOS does allow drive-relative paths).
+        return os.path.normpath(str(win_path))
+
+    # Now process linux-like paths and remote URLs
     url = urllib.parse.urlparse(path)
     url_path = urllib.request.url2pathname(url.path)
     if url.scheme:
@@ -270,15 +280,18 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
         # Drop the URL scheme from the local path
         path = url_path
 
-    if not os.path.isabs(path):
-        if filename:
-            path = os.path.join(filename, path)
-        else:
-            base = default_wd or os.getcwd()
-            path = os.path.join(base, path)
-            tty.debug(f"Using working directory {base} as base for abspath")
+    if os.path.isabs(path):
+        return os.path.normpath(path)
 
-    return os.path.normpath(path)
+    # Have a relative path so prepend the appropriate dir to make it absolute
+    if filename:
+        # Prepend the directory of the syaml path
+        return os.path.normpath(os.path.join(filename, path))
+
+    # Prepend the default, if provided, or current working directory.
+    base = default_wd or os.getcwd()
+    tty.debug(f"Using working directory {base} as base for abspath")
+    return os.path.normpath(os.path.join(base, path))
 
 
 def longest_prefix_re(string, capture=True):

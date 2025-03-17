@@ -29,11 +29,20 @@ def test_rfc_local_path_bad_scheme(path, err):
 
 
 @pytest.mark.parametrize(
-    "path", ["/a/b/c/d/e/config.py", "file:///this/is/a/file/url/include.yaml"]
+    "path,expected",
+    [
+        ("/a/b/c/d/e/config.py", "/a/b/c/d/e/config.py"),
+        ("file:///this/is/a/file/url/include.yaml", "/this/is/a/file/url/include.yaml"),
+        (
+            "relative/packages.txt",
+            os.path.join(os.environ["SPACK_ROOT"], "relative", "packages.txt"),
+        ),
+        (r"C:\Files (x86)\Windows\10", r"C:\Files (x86)\Windows\10"),
+        (r"D:/spack stage", "D:\\spack stage"),
+    ],
 )
-def test_rfc_local_path_file(path):
-    actual = path.split("://")[1] if ":" in path else path
-    assert rfc_util.local_path(path, "") == os.path.normpath(actual)
+def test_rfc_local_file(path, expected):
+    assert rfc_util.local_path(path, "") == os.path.normpath(expected)
 
 
 def test_rfc_remote_local_path_no_dest():

@@ -52,19 +52,19 @@ class Fds(MakefilePackage):
 
     requires(
         "^openmpi",
-        when="%gcc platform=linux",
+        when="platform=linux %gcc",
         msg="OpenMPI can only be used with GNU Fortran on Linux platform",
     )
 
     requires(
         "^intel-mpi^intel-mkl",
-        when="%intel platform=linux",
+        when="platform=linux %intel",
         msg="Intel MPI and Intel MKL can only be used with Intel Fortran on Linux platform",
     )
 
     requires(
         "^intel-oneapi-mpi^intel-oneapi-mkl",
-        when="%oneapi platform=linux",
+        when="platform=linux %oneapi",
         msg="Intel oneAPI MPI and MKL can only be used with oneAPI Fortran on Linux platform",
     )
 
