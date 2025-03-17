@@ -38,7 +38,10 @@ class PyTqdm(PythonPackage):
         depends_on("python@2.7:2,3.4:", when="@4.53.0:")
         depends_on("python@2.6:2,3.2:", when="@4.8.4:")
 
+        # not in original requirements, but pyproject.toml [project] requires py-setuptools@61:
+        depends_on("py-setuptools@61:", when="@4.65.1:")
         depends_on("py-setuptools@42:")
+
         depends_on("py-colorama", when="platform=windows")
 
         depends_on("py-requests", when="+telegram")
