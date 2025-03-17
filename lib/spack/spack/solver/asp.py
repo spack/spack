@@ -3432,8 +3432,7 @@ class ProblemInstanceBuilder:
         self.asp_problem = []
 
     def fact(self, atom: AspFunction) -> None:
-        symbol = atom.symbol() if hasattr(atom, "symbol") else atom
-        self.asp_problem.append(f"{str(symbol)}.\n")
+        self.asp_problem.append(f"{atom}.\n")
 
     def append(self, rule: str) -> None:
         self.asp_problem.append(rule)
