@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -12,10 +11,20 @@ class PySphinx(PythonPackage):
     homepage = "https://www.sphinx-doc.org/en/master/"
     pypi = "Sphinx/sphinx-7.1.0.tar.gz"
 
+    license("BSD-2-Clause")
     maintainers("adamjstewart")
 
-    license("BSD-2-Clause")
+    version("8.2.0", sha256="5b0067853d6e97f3fa87563e3404ebd008fce03525b55b25da90706764da6215")
+    version("8.1.3", sha256="43c1911eecb0d3e161ad78611bc905d1ad0e523e4ddc202a58a821773dc4c927")
+    version("8.1.2", sha256="b19e24b51d1926567e0bb8f4fbd372e40cb19f1f62bcba91b45c9ee0cdd8874e")
+    version("8.1.1", sha256="65e0ee8f76c9cbfd53ec8466ac8c87a73f9ed911767a8ef36c3bf3c522242bcd")
+    version("8.1.0", sha256="109454425dbf4c78ecfdd481e56f078376d077edbda29804dba05c5161c8de06")
+    version("8.0.2", sha256="0cce1ddcc4fd3532cf1dd283bc7d886758362c5c1de6598696579ce96d8ffa5b")
+    version("8.0.1", sha256="7f762c18cfc1d4493e42f4a06a204c1ca55806c53f80a059e208e88d0668d661")
+    version("8.0.0", sha256="22551dc8fda6038a422bf1de59d91b31837b66afe45a3f30b2d8cc5aa9337343")
 
+    version("7.4.7", sha256="242f92a7ea7e6c5b406fdc2615413890ba9f699114a9c09192d7dfead2ee9cfe")
+    version("7.4.6", sha256="116918d455c493fff3178edea12b4fe1c1e4894680fd81e7b7431ea21d47ca52")
     version("7.4.5", sha256="a4abe5385bf856df094c1e6cadf24a2351b12057be3670b99a12c05a01d209f5")
     version("7.4.4", sha256="43c911f997a4530b6cffd4ff8d5516591f6c60d178591f4406f0dd02282e3f64")
     version("7.4.3", sha256="bd846bcb09fd2b6e94ce3e1ad50f4618bccf03cc7c17d0f3fa87393c0bd9178b")
@@ -95,20 +104,31 @@ class PySphinx(PythonPackage):
     version("1.4.5", sha256="c5df65d97a58365cbf4ea10212186a9a45d89c61ed2c071de6090cdf9ddb4028")
     version("1.3.1", sha256="1a6e5130c2b42d2de301693c299f78cc4bd3501e78b610c08e45efc70e2b5114")
 
-    depends_on("py-flit-core@3.7:", when="@5.2:", type="build")
+    with default_args(type="build"):
+        depends_on("py-flit-core@3.10:", when="@8.2:")
+        depends_on("py-flit-core@3.7:", when="@5.2:")
 
     with default_args(type=("build", "run")):
+        depends_on("python@3.11:", when="@8.2:")
+        depends_on("python@3.10:", when="@8:")
         depends_on("python@3.9:", when="@7.2:")
         depends_on("python@3.8:", when="@6:")
+        # https://github.com/sphinx-doc/sphinx/issues/10440
+        depends_on("python@:3.12", when="@:6.1")
+        depends_on("py-sphinxcontrib-applehelp@1.0.7:", when="@8.1:")
         depends_on("py-sphinxcontrib-applehelp", when="@2:")
+        depends_on("py-sphinxcontrib-devhelp@1.0.6:", when="@8.1:")
         depends_on("py-sphinxcontrib-devhelp", when="@2:")
-        depends_on("py-sphinxcontrib-jsmath", when="@2:")
+        depends_on("py-sphinxcontrib-htmlhelp@2.0.6:", when="@8.1:")
         depends_on("py-sphinxcontrib-htmlhelp@2:", when="@4.1.1:")
         depends_on("py-sphinxcontrib-htmlhelp", when="@2:")
+        depends_on("py-sphinxcontrib-jsmath@1.0.1:", when="@8.1:")
+        depends_on("py-sphinxcontrib-jsmath", when="@2:")
+        depends_on("py-sphinxcontrib-qthelp@1.0.6:", when="@8.1:")
+        depends_on("py-sphinxcontrib-qthelp", when="@2:")
         depends_on("py-sphinxcontrib-serializinghtml@1.1.9:", when="@7.2.3:")
         depends_on("py-sphinxcontrib-serializinghtml@1.1.5:", when="@4.1.1:")
         depends_on("py-sphinxcontrib-serializinghtml", when="@2:")
-        depends_on("py-sphinxcontrib-qthelp", when="@2:")
         depends_on("py-jinja2@3.1:", when="@7.4:")
         depends_on("py-jinja2@3:", when="@5.2:")
         depends_on("py-jinja2@2.3:2", when="@:4.0.1")
@@ -133,21 +153,19 @@ class PySphinx(PythonPackage):
         depends_on("py-babel@2.13:", when="@7.4:")
         depends_on("py-babel@2.9:", when="@5.2:")
         depends_on("py-babel@1.3:")
-        depends_on("py-alabaster@0.7.14:0.7", when="@7.3:")
-        depends_on("py-alabaster@0.7")
+        depends_on("py-alabaster@0.7.14:", when="@8:")
+        depends_on("py-alabaster@0.7.14:0.7", when="@7.3:7.4")
+        depends_on("py-alabaster@0.7", when="@:7.2")
         depends_on("py-imagesize@1.3:", when="@5.2:")
         depends_on("py-imagesize", when="@1.4:")
         depends_on("py-requests@2.30:", when="@7.4:")
         depends_on("py-requests@2.25:", when="@6:")
         depends_on("py-requests@2.5:", when="@2:")
         depends_on("py-requests@2.4:", when="@1.5.2:")
+        depends_on("py-roman-numerals-py@1:", when="@8.2:")
         depends_on("py-packaging@23:", when="@7.4:")
         depends_on("py-packaging@21:", when="@5.2:")
         depends_on("py-packaging", when="@1.7:")
-        depends_on("py-importlib-metadata@6:", when="@7.4: ^python@:3.9")
-        depends_on("py-importlib-metadata@4.8:", when="@5.2: ^python@:3.9")
-        depends_on("py-importlib-metadata@4.4:", when="@4.4: ^python@:3.9")
-        depends_on("py-tomli@2:", when="@7.3.1: ^python@:3.10")
         depends_on("py-colorama@0.4.6:", when="@7.4: platform=windows")
         depends_on("py-colorama@0.4.5:", when="@5.2: platform=windows")
         depends_on("py-colorama@0.3.5:", when="platform=windows")
@@ -156,10 +174,14 @@ class PySphinx(PythonPackage):
     depends_on("py-setuptools", when="@4.4:5.1", type="build")
 
     with default_args(type=("build", "run")):
+        depends_on("py-importlib-metadata@6:", when="@7.4: ^python@:3.9")
+        depends_on("py-importlib-metadata@4.8:", when="@5.2: ^python@:3.9")
+        depends_on("py-importlib-metadata@4.4:", when="@4.4: ^python@:3.9")
         depends_on("py-setuptools", when="@:4.3")
         depends_on("py-sphinxcontrib-websupport", when="@1.6:1")
         depends_on("py-six@1.5:", when="@:1")
         depends_on("py-sphinx-rtd-theme@0.1:", when="@:1.3")
+        depends_on("py-tomli@2:", when="@7.3.1: ^python@:3.10")
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/S/Sphinx/{}-{}.tar.gz"

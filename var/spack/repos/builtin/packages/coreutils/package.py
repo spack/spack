@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -60,7 +59,7 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
         spec = self.spec
         configure_args = []
         if spec.satisfies("platform=darwin"):
-            if "+gprefix" in self.spec:
+            if self.spec.satisfies("+gprefix"):
                 configure_args.append("--program-prefix=g")
             configure_args.append("--without-gmp")
             configure_args.append("gl_cv_func_ftello_works=yes")

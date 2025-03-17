@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,6 +32,7 @@ class Ffte(Package):
     variant("vector", default=False, description="Use vectorized FFT")
 
     depends_on("mpi", when="+mpi")
+    depends_on("gmake", type="build")
 
     requires("%nvhpc", when="+cuda", msg="ffte+cuda must use NVHPC compiler")
 
@@ -87,7 +87,7 @@ class Ffte(Package):
 
     def install(self, spec, prefix):
         self.edit(spec, prefix)
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             env["CC"] = spec["mpi"].mpicc
             env["F77"] = spec["mpi"].mpif77
             env["FC"] = spec["mpi"].mpifc
@@ -103,5 +103,5 @@ class Ffte(Package):
         make()
         mkdirp(prefix.lib)
         install("libffte.a", prefix.lib)
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             install("mpi/libfftempi.a", prefix.lib)

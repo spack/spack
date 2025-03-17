@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,7 +8,7 @@ from spack.package import *
 class Uncrustify(CMakePackage, AutotoolsPackage):
     """Source Code Beautifier for C, C++, C#, ObjectiveC, Java, and others."""
 
-    homepage = "http://uncrustify.sourceforge.net/"
+    homepage = "https://uncrustify.sourceforge.net/"
     git = "https://github.com/uncrustify/uncrustify"
     url = "https://sourceforge.net/projects/uncrustify/files/uncrustify/uncrustify-0.69/uncrustify-0.69.tar.gz"
 

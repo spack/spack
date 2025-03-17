@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -10,7 +9,7 @@ class PyCrcmod(PythonPackage):
     """Python module for generating objects that
     compute the Cyclic Redundancy Check (CRC)"""
 
-    homepage = "http://crcmod.sourceforge.net/"
+    homepage = "https://crcmod.sourceforge.net/"
     pypi = "crcmod/crcmod-1.7.tar.gz"
 
     license("MIT")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -38,9 +37,9 @@ class Cdhit(MakefilePackage):
     def build(self, spec, prefix):
         mkdirp(prefix.bin)
         make_args = []
-        if "~openmp" in spec:
+        if spec.satisfies("~openmp"):
             make_args.append("openmp=no")
-        if "~zlib" in spec:
+        if spec.satisfies("~zlib"):
             make_args.append("zlib=no")
         make(*make_args)
 

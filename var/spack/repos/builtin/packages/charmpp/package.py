@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -141,6 +140,7 @@ class Charmpp(Package):
     # Git versions of Charm++ require automake and autoconf
     depends_on("automake", when="@develop")
     depends_on("autoconf", when="@develop")
+    depends_on("gmake", type="build")
 
     conflicts("~tracing", "+papi")
 
@@ -276,12 +276,10 @@ class Charmpp(Package):
     #            build-target=LIBS backend={0}'.format(b))
 
     def install(self, spec, prefix):
-        if not ("backend=mpi" in self.spec) or not ("backend=netlrts" in self.spec):
-            if "+pthreads" in self.spec:
+        if "backend=mpi" not in self.spec or "backend=netlrts" not in self.spec:
+            if self.spec.satisfies("+pthreads"):
                 raise InstallError(
-                    "The pthreads option is only\
-                                    available on the Netlrts and MPI \
-                                    network layers."
+                    "The pthreads option is only available on the Netlrts and MPI network layers."
                 )
 
         if (
@@ -289,12 +287,10 @@ class Charmpp(Package):
             or ("backend=ofi" in self.spec)
             or ("backend=gni" in self.spec)
         ):
-            if "pmi=none" in self.spec:
+            if self.spec.satisfies("pmi=none"):
                 raise InstallError(
-                    "The UCX/OFI/GNI backends need \
-                                    PMI to run. Please add pmi=... \
-                                    Note that PMIx is the preferred \
-                                    option."
+                    "The UCX/OFI/GNI backends need PMI to run. Please add pmi=... "
+                    "Note that PMIx is the preferred option."
                 )
 
         if (
@@ -302,12 +298,10 @@ class Charmpp(Package):
             or ("pmi=slurmpmi" in self.spec)
             or ("pmi=slurmpmi2" in self.spec)
         ):
-            if "^openmpi" in self.spec:
+            if self.spec.satisfies("^openmpi"):
                 raise InstallError(
-                    "To use any process management \
-                                    interface other than PMIx, \
-                                    a non OpenMPI based MPI must be \
-                                    present on the system"
+                    "To use any process management interface other than PMIx, "
+                    "a non OpenMPI based MPI must be present on the system"
                 )
 
         target = spec.variants["build-target"].value
@@ -324,15 +318,15 @@ class Charmpp(Package):
         options.append("-j%d" % make_jobs)
         options.append("--destination=%s" % builddir)
 
-        if "pmi=slurmpmi" in spec:
+        if spec.satisfies("pmi=slurmpmi"):
             options.append("slurmpmi")
-        if "pmi=slurmpmi2" in spec:
+        if spec.satisfies("pmi=slurmpmi2"):
             options.append("slurmpmi2")
-        if "pmi=pmix" in spec:
+        if spec.satisfies("pmi=pmix"):
             options.append("ompipmix")
             options.extend(["--basedir=%s" % spec["openmpi"].prefix])
 
-        if "backend=mpi" in spec:
+        if spec.satisfies("backend=mpi"):
             # in intelmpi <prefix>/include and <prefix>/lib fails so --basedir
             # cannot be used
             options.extend(
@@ -342,9 +336,9 @@ class Charmpp(Package):
                 ["--libdir={0}".format(libdir) for libdir in spec["mpi"].libs.directories]
             )
 
-        if "backend=ucx" in spec:
+        if spec.satisfies("backend=ucx"):
             options.extend(["--basedir=%s" % spec["ucx"].prefix])
-        if "+papi" in spec:
+        if spec.satisfies("+papi"):
             options.extend(["papi", "--basedir=%s" % spec["papi"].prefix])
         if "+smp" in spec and "backend=multicore" not in spec:
             # The 'multicore' backend always uses SMP, so we don't have to
@@ -352,7 +346,7 @@ class Charmpp(Package):
             # of Charm++ v7.0.0 it is actually a build error to append 'smp'
             # with the 'multicore' backend.
             options.append("smp")
-        if "+tcp" in spec:
+        if spec.satisfies("+tcp"):
             if "backend=netlrts" not in spec:
                 # This is a Charm++ limitation; it would lead to a
                 # build error
@@ -360,19 +354,26 @@ class Charmpp(Package):
                     "The +tcp variant requires " "the backend=netlrts communication mechanism"
                 )
             options.append("tcp")
-        if "+omp" in spec:
+        if spec.satisfies("+omp"):
             options.append("omp")
-        if "+pthreads" in spec:
+        if spec.satisfies("+pthreads"):
             options.append("pthreads")
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             options.append("cuda")
 
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             options.append("--build-shared")
-        if "+production" in spec:
+        if spec.satisfies("+production"):
             options.append("--with-production")
-        if "+tracing" in spec:
+        if spec.satisfies("+tracing"):
             options.append("--enable-tracing")
+
+        # charmpp build was failing with clang based compilers for -DNETWORK=mpi as discussed in
+        # https://github.com/charmplusplus/charm/issues/3645
+        # Fix was suggested in https://github.com/charmplusplus/charm/pull/3646 and the same has
+        # been implemented in v8.0.0
+        if self.spec.satisfies("@8.0.0: %aocc"):
+            options.append("--disable-fortran")
 
         # Call "make" via the build script
         # Note: This builds Charm++ in the "tmp" subdirectory of the
@@ -395,7 +396,7 @@ class Charmpp(Package):
                         copy(filepath, tmppath)
                         os.remove(filepath)
                         os.rename(tmppath, filepath)
-                    except (IOError, OSError):
+                    except OSError:
                         pass
 
         tmp_path = join_path(builddir, "tmp")

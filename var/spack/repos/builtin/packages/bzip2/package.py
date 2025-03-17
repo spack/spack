@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -65,9 +64,9 @@ class Bzip2(Package, SourcewarePackage):
 
     def flag_handler(self, name, flags):
         if name == "cflags":
-            if "+pic" in self.spec:
+            if self.spec.satisfies("+pic"):
                 flags.append(self.compiler.cc_pic_flag)
-            if "+debug" in self.spec:
+            if self.spec.satisfies("+debug"):
                 flags.append("-g")
         return (flags, None, None)
 
@@ -84,7 +83,7 @@ class Bzip2(Package, SourcewarePackage):
         filter_file(r"^CC=gcc", "CC={0}".format(spack_cc), "Makefile-libbz2_so")
 
         # The Makefiles use GCC flags that are incompatible with PGI
-        if self.spec.satisfies("%pgi") or self.spec.satisfies("%nvhpc@:20.11"):
+        if self.spec.satisfies("%nvhpc@:20.11"):
             filter_file("-Wall -Winline", "-Minform=inform", "Makefile")
             filter_file("-Wall -Winline", "-Minform=inform", "Makefile-libbz2_so")
 
@@ -123,7 +122,7 @@ class Bzip2(Package, SourcewarePackage):
 
     def install(self, spec, prefix):
         # Build the dynamic library first
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             make("-f", "Makefile-libbz2_so")
 
         # Build the static library and everything else
@@ -145,7 +144,7 @@ class Bzip2(Package, SourcewarePackage):
             make()
             make("install", "PREFIX={0}".format(prefix))
 
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             install("bzip2-shared", join_path(prefix.bin, "bzip2"))
 
             v1, v2, v3 = (self.spec.version.up_to(i) for i in (1, 2, 3))

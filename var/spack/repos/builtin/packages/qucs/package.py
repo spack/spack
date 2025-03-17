@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -17,7 +16,7 @@ class Qucs(AutotoolsPackage):
     on a presentation page or window.
     """
 
-    homepage = "http://qucs.sourceforge.net/"
+    homepage = "https://qucs.sourceforge.net/"
     url = "https://sourceforge.net/projects/qucs/files/qucs/0.0.19/qucs-0.0.19.tar.gz"
     git = "https://git.code.sf.net/p/qucs/git"
 

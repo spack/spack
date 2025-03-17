@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -15,7 +14,7 @@ from spack.package import *
 class _7zip(SourceforgePackage, Package):
     """7-Zip is a file archiver for Windows"""
 
-    homepage = "https://sourceforge.net/projects/sevenzip"
+    homepage = "https://sourceforge.net/projects/sevenzip/"
     sourceforge_mirror_path = "sevenzip/files/7z2107-src.tar.xz"
     tags = ["windows"]
 
@@ -101,10 +100,8 @@ class _7zip(SourceforgePackage, Package):
                 for ext in exts:
                     glob_str = os.path.join(pth, ext)
                     files = glob.glob(glob_str)
-                    [
+                    for x in files:
                         shutil.copy(
                             os.path.join(self._7z_src_dir, x),
                             os.path.join(prefix, os.path.basename(x)),
                         )
-                        for x in files
-                    ]

@@ -1,8 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
@@ -192,7 +192,6 @@ class Fenics(CMakePackage):
     # build python interface of dolfin
     @run_after("install")
     def install_python_interface(self):
-        if "+python" in self.spec:
+        if self.spec.satisfies("+python"):
             with working_dir("python"):
-                args = std_pip_args + ["--prefix=" + self.prefix, "."]
-                pip(*args)
+                pip(*PythonPipBuilder.std_args(self), f"--prefix={self.prefix}", ".")

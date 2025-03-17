@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -13,7 +12,7 @@ class Expect(AutotoolsPackage):
     """Expect is a tool for automating interactive applications such as
     telnet, ftp, passwd, fsck, rlogin, tip, etc."""
 
-    homepage = "http://expect.sourceforge.net/"
+    homepage = "https://expect.sourceforge.net/"
     url = (
         "https://sourceforge.net/projects/expect/files/Expect/5.45.4/expect5.45.4.tar.gz/download"
     )

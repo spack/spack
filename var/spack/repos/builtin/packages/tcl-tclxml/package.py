@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -12,7 +11,7 @@ class TclTclxml(AutotoolsPackage):
     XSL Transformations (TclXSLT). These allow Tcl scripts to read, manipulate
     and write XML documents."""
 
-    homepage = "http://tclxml.sourceforge.net/tclxml.html"
+    homepage = "https://tclxml.sourceforge.net/tclxml.html"
     url = "https://sourceforge.net/projects/tclxml/files/TclXML/3.2/tclxml-3.2.tar.gz"
     list_url = "https://sourceforge.net/projects/tclxml/files/TclXML/"
     list_depth = 1

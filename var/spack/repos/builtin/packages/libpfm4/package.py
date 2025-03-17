@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,7 +10,7 @@ class Libpfm4(MakefilePackage):
     setup performance events for use with
     the perf_events Linux kernel interface."""
 
-    homepage = "http://perfmon2.sourceforge.net"
+    homepage = "https://perfmon2.sourceforge.net"
     url = "https://downloads.sourceforge.net/project/perfmon2/libpfm4/libpfm-4.12.0.tar.gz"
     maintainers("mwkrentel")
 

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # ----------------------------------------------------------------------------
@@ -35,7 +34,7 @@ class Gptl(AutotoolsPackage):
     def configure_args(self):
         args = []
 
-        if "+pmpi" in self.spec:
+        if self.spec.satisfies("+pmpi"):
             args.append("--enable-pmpi")
             args.append("CC=" + self.spec["mpi"].mpicc)
             args.append("CXX=" + self.spec["mpi"].mpicxx)
@@ -43,13 +42,13 @@ class Gptl(AutotoolsPackage):
             args.append("F90=" + self.spec["mpi"].mpifc)
             args.append("F77=" + self.spec["mpi"].mpif77)
 
-        if "+papi" in self.spec:
+        if self.spec.satisfies("+papi"):
             args.append("--enable-papi")
 
-        if "+nestedomp" in self.spec:
+        if self.spec.satisfies("+nestedomp"):
             args.append("--enable-nestedomp")
 
-        if "+disable-unwind" in self.spec:
+        if self.spec.satisfies("+disable-unwind"):
             args.append("--disable-libunwind")
 
         return args

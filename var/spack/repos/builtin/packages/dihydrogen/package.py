@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,33 +8,31 @@ from spack.package import *
 
 
 # This is a hack to get around some deficiencies in Hydrogen.
-def get_blas_entries(inspec):
+def get_blas_entries(dyhidrogen_spec):
     entries = []
-    spec = inspec["hydrogen"]
-    if "blas=openblas" in spec:
+    spec = dyhidrogen_spec["hydrogen"]
+    if spec.satisfies("blas=openblas"):
         entries.append(cmake_cache_option("DiHydrogen_USE_OpenBLAS", True))
-    elif "blas=mkl" in spec or spec.satisfies("^intel-mkl"):
+    elif spec.satisfies("blas=mkl"):
         entries.append(cmake_cache_option("DiHydrogen_USE_MKL", True))
-    elif "blas=essl" in spec or spec.satisfies("^essl"):
+    elif spec.satisfies("blas=essl"):
         entries.append(cmake_cache_string("BLA_VENDOR", "IBMESSL"))
         # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
         entries.append(
             cmake_cache_string(
                 "LAPACK_LIBRARIES",
-                "%s;-llapack;-lblas"
-                % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names),
+                f"{';'.join(f'-l{lib}' for lib in spec['essl'].libs.names)};-llapack;-lblas",
             )
         )
         entries.append(
             cmake_cache_string(
                 "BLAS_LIBRARIES",
-                "%s;-lblas"
-                % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names),
+                f"{';'.join(f'-l{lib}' for lib in spec['essl'].libs.names)};-lblas",
             )
         )
-    elif "blas=accelerate" in spec:
+    elif spec.satisfies("blas=accelerate"):
         entries.append(cmake_cache_option("DiHydrogen_USE_ACCELERATE", True))
-    elif spec.satisfies("^netlib-lapack"):
+    elif spec.satisfies("^[virtuals=blas,lapack] netlib-lapack"):
         entries.append(cmake_cache_string("BLA_VENDOR", "Generic"))
     return entries
 
@@ -261,7 +258,7 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option("CMAKE_EXPORT_COMPILE_COMMANDS", True))
         entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
 
-        if spec.satisfies("%clang +distconv platform=darwin"):
+        if spec.satisfies("+distconv platform=darwin %clang"):
             clang = self.compiler.cc
             clang_bin = os.path.dirname(clang)
             clang_root = os.path.dirname(clang_bin)
@@ -332,18 +329,18 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         # all this, but this shouldn't hurt to have.
         entries.append(cmake_cache_path("spdlog_ROOT", spec["spdlog"].prefix))
 
-        if "+developer" in spec:
+        if spec.satisfies("+developer"):
             entries.append(cmake_cache_path("Catch2_ROOT", spec["catch2"].prefix))
 
-        if "+coverage" in spec:
+        if spec.satisfies("+coverage"):
             entries.append(cmake_cache_path("lcov_ROOT", spec["lcov"].prefix))
             entries.append(cmake_cache_path("genhtml_ROOT", spec["lcov"].prefix))
-            if "+ci" in spec:
+            if spec.satisfies("+ci"):
                 entries.append(cmake_cache_path("gcovr_ROOT", spec["py-gcovr"].prefix))
 
-        if "+distconv" in spec:
+        if spec.satisfies("+distconv"):
             entries.append(cmake_cache_path("Aluminum_ROOT", spec["aluminum"].prefix))
-            if "+cuda" in spec:
+            if spec.satisfies("+cuda"):
                 entries.append(cmake_cache_path("cuDNN_ROOT", spec["cudnn"].prefix))
 
         # Currently this is a hack for all Hydrogen versions. WIP to
@@ -352,7 +349,7 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         return entries
 
     def setup_build_environment(self, env):
-        if self.spec.satisfies("%apple-clang +openmp"):
+        if self.spec.satisfies("+openmp %apple-clang"):
             env.append_flags("CPPFLAGS", self.compiler.openmp_flag)
             env.append_flags("CFLAGS", self.spec["llvm-openmp"].headers.include_flags)
             env.append_flags("CXXFLAGS", self.spec["llvm-openmp"].headers.include_flags)

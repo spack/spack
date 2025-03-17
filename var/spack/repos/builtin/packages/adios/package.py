@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -129,7 +128,7 @@ class Adios(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         # https://github.com/ornladios/ADIOS/issues/206
-        if self.spec.satisfies("%gcc@10: +fortran"):
+        if self.spec.satisfies("+fortran %gcc@10:"):
             env.set("FCFLAGS", "-fallow-argument-mismatch")
 
     def configure_args(self):
@@ -144,14 +143,14 @@ class Adios(AutotoolsPackage):
         extra_args += self.enable_or_disable("shared")
         extra_args += self.enable_or_disable("fortran")
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             env["MPICC"] = spec["mpi"].mpicc
             env["MPICXX"] = spec["mpi"].mpicxx
 
         extra_args += self.with_or_without("mpi", activation_value="prefix")
         extra_args += self.with_or_without("infiniband")
 
-        if "+zlib" in spec:
+        if spec.satisfies("+zlib"):
             extra_args.append(f"--with-zlib={spec['zlib-api'].prefix}")
         else:
             extra_args.append("--without-zlib")

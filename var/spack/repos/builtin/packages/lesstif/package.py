@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,7 +8,7 @@ from spack.package import *
 class Lesstif(AutotoolsPackage):
     """LessTif is the Hungry Programmers' version of OSF/Motif."""
 
-    homepage = "https://sourceforge.net/projects/lesstif"
+    homepage = "https://sourceforge.net/projects/lesstif/"
     url = "https://sourceforge.net/projects/lesstif/files/lesstif/0.95.2/lesstif-0.95.2.tar.bz2/download"
 
     license("LGPL-2.0-only")
@@ -42,8 +41,8 @@ class Lesstif(AutotoolsPackage):
             "--disable-debug",
             "--enable-production",
             "--disable-dependency-tracking",
-            "--enable-shared" if "+shared" in spec else "--disable-shared",
-            "--enable-static" if "+static" in spec else "--disable-static",
+            "--enable-shared" if spec.satisfies("+shared") else "--disable-shared",
+            "--enable-static" if spec.satisfies("+static") else "--disable-static",
         ]
 
         return args

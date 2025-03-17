@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -10,7 +9,7 @@ class LibpressioOpt(CMakePackage):
     """Metacompressor which preforms optimization of compressor settings for LibPressio"""
 
     homepage = "https://github.com/robertu94/libpressio_opt"
-    git = "git@github.com:robertu94/libpressio_opt"
+    git = "https://github.com/robertu94/libpressio_opt.git"
     url = "https://github.com/robertu94/libpressio_opt/archive/refs/tags/0.11.0.tar.gz"
 
     maintainers("robertu94")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -66,7 +65,7 @@ class Conquest(MakefilePackage):
         fflags = "-O3 -fallow-argument-mismatch"
         ldflags = ""
 
-        if "+openmp" in self.spec:
+        if self.spec.satisfies("+openmp"):
             fflags += " " + self.compiler.openmp_flag
             ldflags += " " + self.compiler.openmp_flag
 
@@ -94,7 +93,7 @@ class Conquest(MakefilePackage):
         defs_file.filter(".*FFT_LIB=.*", f"FFT_LIB={fftw_ld}")
         defs_file.filter(".*XC_LIB=.*", f"XC_LIB={libxc_ld} -lxcf90 -lxc")
 
-        if "+openmp" in self.spec:
+        if self.spec.satisfies("+openmp"):
             defs_file.filter("OMP_DUMMY = DUMMY", "OMP_DUMMY = ")
 
         if self.spec.variants["mult_kern"].value != "default":

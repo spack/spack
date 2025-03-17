@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -29,6 +28,7 @@ class Fltk(Package):
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
+    depends_on("gmake", type="build")
 
     depends_on("libx11")
 
@@ -61,16 +61,16 @@ class Fltk(Package):
             "--enable-localzlib",
         ]
 
-        if "+shared" in spec:
+        if spec.satisfies("+shared"):
             options.append("--enable-shared")
 
-        if "+xft" in spec:
+        if spec.satisfies("+xft"):
             # https://www.fltk.org/articles.php?L374+I0+TFAQ+P1+Q
             options.append("--enable-xft")
         else:
             options.append("--disable-xft")
 
-        if "~gl" in spec:
+        if spec.satisfies("~gl"):
             options.append("--disable-gl")
 
         # FLTK needs to be built in-source

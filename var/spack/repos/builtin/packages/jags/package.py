@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -13,7 +12,7 @@ class Jags(AutotoolsPackage):
 
     tags = ["mcmc", "Gibbs-sampler"]
 
-    homepage = "http://mcmc-jags.sourceforge.net/"
+    homepage = "https://mcmc-jags.sourceforge.net/"
     url = "https://downloads.sourceforge.net/project/mcmc-jags/JAGS/4.x/Source/JAGS-4.2.0.tar.gz"
 
     license("GPL-2.0-or-later")

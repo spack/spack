@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -35,7 +34,7 @@ repo:
   subdirectory: '{request.param}'
 """
         )
-    repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
+    repo_cache = spack.util.file_cache.FileCache(cache_dir)
     return spack.repo.Repo(str(repo_dir), cache=repo_cache), request.param
 
 
@@ -66,16 +65,27 @@ def test_repo_unknown_pkg(mutable_mock_repo):
         mutable_mock_repo.get_pkg_class("builtin.mock.nonexistentpackage")
 
 
-@pytest.mark.maybeslow
-def test_repo_last_mtime():
-    latest_mtime = max(
-        os.path.getmtime(p.module.__file__) for p in spack.repo.PATH.all_package_classes()
-    )
-    assert spack.repo.PATH.last_mtime() == latest_mtime
+def test_repo_last_mtime(mock_packages):
+    mtime_with_package_py = [
+        (os.path.getmtime(p.module.__file__), p.module.__file__)
+        for p in spack.repo.PATH.all_package_classes()
+    ]
+    repo_mtime = spack.repo.PATH.last_mtime()
+    max_mtime, max_file = max(mtime_with_package_py)
+    if max_mtime > repo_mtime:
+        modified_after = "\n    ".join(
+            f"{path} ({mtime})" for mtime, path in mtime_with_package_py if mtime > repo_mtime
+        )
+        assert (
+            max_mtime <= repo_mtime
+        ), f"the following files were modified while running tests:\n    {modified_after}"
+    assert max_mtime == repo_mtime, f"last_mtime incorrect for {max_file}"
 
 
 def test_repo_invisibles(mutable_mock_repo, extra_repo):
-    with open(os.path.join(extra_repo[0].root, extra_repo[1], ".invisible"), "w"):
+    with open(
+        os.path.join(extra_repo[0].root, extra_repo[1], ".invisible"), "w", encoding="utf-8"
+    ):
         pass
     extra_repo[0].all_package_names()
 
@@ -90,13 +100,13 @@ def test_namespace_hasattr(attr_name, exists, mutable_mock_repo):
 
 
 @pytest.mark.regression("24552")
-def test_all_package_names_is_cached_correctly():
+def test_all_package_names_is_cached_correctly(mock_packages):
     assert "mpi" in spack.repo.all_package_names(include_virtuals=True)
     assert "mpi" not in spack.repo.all_package_names(include_virtuals=False)
 
 
 @pytest.mark.regression("29203")
-def test_use_repositories_doesnt_change_class():
+def test_use_repositories_doesnt_change_class(mock_packages):
     """Test that we don't create the same package module and class multiple times
     when swapping repositories.
     """
@@ -165,19 +175,26 @@ def test_repo_dump_virtuals(tmpdir, mutable_mock_repo, mock_packages, ensure_deb
     assert "package.py" in os.listdir(tmpdir), "Expected the virtual's package to be copied"
 
 
-@pytest.mark.parametrize(
-    "repo_paths,namespaces",
-    [
-        ([spack.paths.packages_path], ["builtin"]),
-        ([spack.paths.mock_packages_path], ["builtin.mock"]),
-        ([spack.paths.packages_path, spack.paths.mock_packages_path], ["builtin", "builtin.mock"]),
-        ([spack.paths.mock_packages_path, spack.paths.packages_path], ["builtin.mock", "builtin"]),
-    ],
-)
-def test_repository_construction_doesnt_use_globals(
-    nullify_globals, tmp_path, repo_paths, namespaces
-):
-    repo_cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+@pytest.mark.parametrize("repos", [["mock"], ["extra"], ["mock", "extra"], ["extra", "mock"]])
+def test_repository_construction_doesnt_use_globals(nullify_globals, tmp_path, repos):
+    def _repo_paths(repos):
+        repo_paths, namespaces = [], []
+        for entry in repos:
+            if entry == "mock":
+                repo_paths.append(spack.paths.mock_packages_path)
+                namespaces.append("builtin.mock")
+            if entry == "extra":
+                name = "extra.mock"
+                repo_dir = tmp_path / name
+                repo_dir.mkdir()
+                _ = spack.repo.MockRepositoryBuilder(repo_dir, name)
+                repo_paths.append(str(repo_dir))
+                namespaces.append(name)
+        return repo_paths, namespaces
+
+    repo_paths, namespaces = _repo_paths(repos)
+
+    repo_cache = spack.util.file_cache.FileCache(tmp_path / "cache")
     repo_path = spack.repo.RepoPath(*repo_paths, cache=repo_cache)
     assert len(repo_path.repos) == len(namespaces)
     assert [x.namespace for x in repo_path.repos] == namespaces
@@ -302,3 +319,48 @@ class TestRepoPath:
         # foo is not there, raise
         with pytest.raises(spack.repo.UnknownNamespaceError):
             repo.get_repo("foo")
+
+
+def test_parse_package_api_version():
+    """Test that we raise an error if a repository has a version that is not supported."""
+    # valid version
+    assert spack.repo._parse_package_api_version(
+        {"api": "v1.2"}, min_api=(1, 0), max_api=(2, 3)
+    ) == (1, 2)
+    # too new and too old
+    with pytest.raises(
+        spack.repo.BadRepoError,
+        match=r"Package API v2.4 is not supported .* \(must be between v1.0 and v2.3\)",
+    ):
+        spack.repo._parse_package_api_version({"api": "v2.4"}, min_api=(1, 0), max_api=(2, 3))
+    with pytest.raises(
+        spack.repo.BadRepoError,
+        match=r"Package API v0.9 is not supported .* \(must be between v1.0 and v2.3\)",
+    ):
+        spack.repo._parse_package_api_version({"api": "v0.9"}, min_api=(1, 0), max_api=(2, 3))
+    # default to v1.0 if not specified
+    assert spack.repo._parse_package_api_version({}, min_api=(1, 0), max_api=(2, 3)) == (1, 0)
+    # if v1.0 support is dropped we should also raise
+    with pytest.raises(
+        spack.repo.BadRepoError,
+        match=r"Package API v1.0 is not supported .* \(must be between v2.0 and v2.3\)",
+    ):
+        spack.repo._parse_package_api_version({}, min_api=(2, 0), max_api=(2, 3))
+    # finally test invalid input
+    with pytest.raises(spack.repo.BadRepoError, match="Invalid Package API version"):
+        spack.repo._parse_package_api_version({"api": "v2"}, min_api=(1, 0), max_api=(3, 3))
+    with pytest.raises(spack.repo.BadRepoError, match="Invalid Package API version"):
+        spack.repo._parse_package_api_version({"api": 2.0}, min_api=(1, 0), max_api=(3, 3))
+
+
+def test_repo_package_api_version(tmp_path: pathlib.Path):
+    """Test that we can specify the API version of a repository."""
+    (tmp_path / "example" / "packages").mkdir(parents=True)
+    (tmp_path / "example" / "repo.yaml").write_text(
+        """\
+repo:
+    namespace: example
+"""
+    )
+    cache = spack.util.file_cache.FileCache(tmp_path / "cache")
+    assert spack.repo.Repo(str(tmp_path / "example"), cache=cache).package_api == (1, 0)

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -55,7 +54,7 @@ class Gate(CMakePackage):
     def cmake_args(self):
         args = []
 
-        if "+rtk" in self.spec:
+        if self.spec.satisfies("+rtk"):
             args.extend(["-DGATE_USE_ITK=ON", "-DGATE_USE_RTK=ON"])
         else:
             args.extend(["-DGATE_USE_ITK=OFF", "-DGATE_USE_RTK=OFF"])

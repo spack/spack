@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -50,11 +49,11 @@ class Comd(MakefilePackage):
         comd_variant = "CoMD"
         cc = spack_cc
 
-        if "+openmp" in self.spec:
+        if self.spec.satisfies("+openmp"):
             targets.append("--directory=src-openmp")
             comd_variant += "-openmp"
             cflags += " -fopenmp "
-            if "+mpi" in self.spec:
+            if self.spec.satisfies("+mpi"):
                 comd_variant += "-mpi"
                 targets.append("CC = {0}".format(self.spec["mpi"].mpicc))
             else:
@@ -62,17 +61,17 @@ class Comd(MakefilePackage):
 
         else:
             targets.append("--directory=src-mpi")
-            if "~mpi" in self.spec:
+            if self.spec.satisfies("~mpi"):
                 comd_variant += "-serial"
                 targets.append("CC = {0}".format(cc))
             else:
                 comd_variant += "-mpi"
                 targets.append("CC = {0}".format(self.spec["mpi"].mpicc))
-        if "+mpi" in self.spec:
+        if self.spec.satisfies("+mpi"):
             cflags += "-DDO_MPI"
             targets.append("INCLUDES = {0}".format(self.spec["mpi"].prefix.include))
 
-        if "+precision" in self.spec:
+        if self.spec.satisfies("+precision"):
             cflags += " -DDOUBLE "
         else:
             cflags += " -DSINGLE "

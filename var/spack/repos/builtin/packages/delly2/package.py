@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -43,7 +42,7 @@ class Delly2(MakefilePackage):
     depends_on("bcftools", type="run")
 
     def edit(self, spec, prefix):
-        if "+openmp" in self.spec:
+        if self.spec.satisfies("+openmp"):
             env["PARALLEL"] = "1"
         # Only want to build delly source, not submodules. Build fails
         # using provided submodules, succeeds with existing spack recipes.

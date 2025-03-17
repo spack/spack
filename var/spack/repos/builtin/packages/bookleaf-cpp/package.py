@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -39,16 +38,16 @@ class BookleafCpp(CMakePackage):
         spec = self.spec
         cmake_args = []
 
-        if "+typhon" in spec:
+        if spec.satisfies("+typhon"):
             cmake_args.append("-DENABLE_TYPHON=ON")
 
-        if "+parmetis" in spec:
+        if spec.satisfies("+parmetis"):
             cmake_args.append("-DENABLE_PARMETIS=ON")
 
-        if "+silo" in spec:
+        if spec.satisfies("+silo"):
             cmake_args.append("-DENABLE_SILO=ON")
 
-        if "+caliper" in spec:
+        if spec.satisfies("+caliper"):
             cmake_args.append("-DENABLE_CALIPER=ON")
 
         return cmake_args

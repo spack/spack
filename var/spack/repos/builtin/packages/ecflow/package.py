@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -76,6 +75,7 @@ class Ecflow(CMakePackage):
     # https://github.com/JCSDA/spack-stack/issues/1001
     # https://github.com/JCSDA/spack-stack/issues/1009
     patch("ctsapi_cassert.patch", when="@5.11.4")
+    patch("vfile_cassert.patch", when="@5.11.4")
 
     @when("@:4.13.0")
     def patch(self):

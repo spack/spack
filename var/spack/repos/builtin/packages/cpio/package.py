@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -42,10 +41,10 @@ class Cpio(AutotoolsPackage, GNUMirrorPackage):
         spec = self.spec
 
         if name == "cflags":
-            if "%intel@:17" in spec:
+            if spec.satisfies("%intel@:17"):
                 flags.append("-no-gcc")
 
-            elif "%clang" in spec or "%fj" in spec:
+            elif spec.satisfies("%clang") or spec.satisfies("%fj"):
                 flags.append("--rtlib=compiler-rt")
 
         return (flags, None, None)

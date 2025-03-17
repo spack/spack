@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -94,7 +93,7 @@ class Flann(CMakePackage):
             "src/python/CMakeLists.txt",
         )
         # Fix the install location so that spack activate works
-        if "+python" in self.spec:
+        if self.spec.satisfies("+python"):
             filter_file("share/flann/python", python_platlib, "src/python/CMakeLists.txt")
         # Hack. Don't install setup.py
         filter_file("install( FILES", "# install( FILES", "src/python/CMakeLists.txt", string=True)

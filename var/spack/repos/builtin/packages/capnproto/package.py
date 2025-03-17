@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -53,12 +52,12 @@ class Capnproto(AutotoolsPackage):
     def configure_args(self):
         args = []
 
-        if "+tls" in self.spec:
+        if self.spec.satisfies("+tls"):
             args.append("--with-openssl")
         else:
             args.append("--without-openssl")
 
-        if "+zlib" in self.spec:
+        if self.spec.satisfies("+zlib"):
             args.append("--with-zlib")
         else:
             args.append("--without-zlib")

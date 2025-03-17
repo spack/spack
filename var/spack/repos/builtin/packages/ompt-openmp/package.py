@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -15,7 +14,7 @@ class OmptOpenmp(CMakePackage):
     """
 
     homepage = "https://github.com/OpenMPToolsInterface/LLVM-openmp"
-    url = "http://github.com/khuck/LLVM-openmp/archive/v0.1.tar.gz"
+    url = "https://github.com/khuck/LLVM-openmp/archive/v0.1.tar.gz"
 
     license("MIT")
 

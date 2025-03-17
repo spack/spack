@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -60,7 +59,7 @@ class Botan(MakefilePackage):
     def configure_args(self):
         spec = self.spec
         args = ["--prefix={0}".format(self.prefix)]
-        if "+doc" in spec:
+        if spec.satisfies("+doc"):
             args.append("--with-documentation")
         else:
             args.append("--without-documentation")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,7 +10,7 @@ class Emboss(AutotoolsPackage):
     developed for the needs of the molecular biology (e.g. EMBnet) user
     community"""
 
-    homepage = "http://emboss.sourceforge.net/"
+    homepage = "https://emboss.sourceforge.net/"
     url = "ftp://emboss.open-bio.org/pub/EMBOSS/EMBOSS-6.6.0.tar.gz"
 
     license("GPL-2.0-only")

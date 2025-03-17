@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -39,15 +38,15 @@ class Amg2013(MakefilePackage):
         include_cflags = ["-DTIMER_USE_MPI"]
         include_lflags = ["-lm"]
 
-        if "+openmp" in self.spec:
+        if self.spec.satisfies("+openmp"):
             include_cflags.append("-DHYPRE_USING_OPENMP")
             include_cflags.append(self.compiler.openmp_flag)
             include_lflags.append(self.compiler.openmp_flag)
-            if "+optflags" in self.spec:
+            if self.spec.satisfies("+optflags"):
                 include_cflags.append("-DHYPRE_USING_PERSISTENT_COMM")
                 include_cflags.append("-DHYPRE_HOPSCOTCH")
 
-        if "+int64" in self.spec:
+        if self.spec.satisfies("+int64"):
             include_cflags.append("-DHYPRE_BIGINT")
 
         targets.append(f"INCLUDE_CFLAGS={' '.join(include_cflags)}")

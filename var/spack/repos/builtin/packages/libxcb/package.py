@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,6 +15,8 @@ class Libxcb(AutotoolsPackage, XorgPackage):
     xorg_mirror_path = "lib/libxcb-1.14.tar.xz"
 
     license("MIT")
+
+    tags = ["build-tools"]
 
     maintainers("wdconinc")
 
@@ -60,3 +61,13 @@ class Libxcb(AutotoolsPackage, XorgPackage):
 
     def patch(self):
         filter_file("typedef struct xcb_auth_info_t {", "typedef struct {", "src/xcb.h")
+
+    # libxcb fails to build with non-UTF-8 locales, see:
+    # https://www.linuxfromscratch.org/blfs/view/git/x/libxcb.html
+    # https://gitlab.freedesktop.org/xorg/lib/libxcb/-/merge_requests/53 (merged in 1.17.0)
+    # https://gitlab.freedesktop.org/xorg/lib/libxcb/-/merge_requests/60
+    # If a newer release can be verified to build with LC_ALL=en_US.ISO-8859-1,
+    # then we can limit the following function, e.g.
+    # when("@:1.17")
+    def setup_build_environment(self, env):
+        env.set("LC_ALL", "C.UTF-8")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -12,7 +11,7 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     advection-diffusion type problems on streaming architectures
     using the Flux Reconstruction approach of Huynh."""
 
-    homepage = "http://www.pyfr.org/"
+    homepage = "https://www.pyfr.org/"
     pypi = "pyfr/pyfr-1.13.0.tar.gz"
     git = "https://github.com/PyFR/PyFR/"
     maintainers("MichaelLaufer")

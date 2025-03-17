@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,7 +30,7 @@ class Eem(MakefilePackage):
         settings.filter("$(HOME)/local", prefix, string=True)
         settings.filter("mpicxx", self.spec["mpi"].mpicxx, string=True)
 
-        if "+K" in self.spec:
+        if self.spec.satisfies("+K"):
             settings.filter("CXXFLAGS= -Wall -Wno-sign-compare -g", "CXXFLAGS=", string=True)
             settings.filter(
                 "CXXFLAGS+= -std=c++11 -DHAVE_UNORDERED_MAP",

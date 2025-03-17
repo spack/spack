@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
@@ -45,10 +44,10 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
     def patch(self):
         # The full perl shebang might be too long
         files_to_be_patched_fmt = "bin/{0}.in"
-        if "@:1.15.1" in self.spec:
+        if self.spec.satisfies("@:1.15.1"):
             files_to_be_patched_fmt = "t/wrap/{0}.in"
 
-        if "@1.16.3:" in self.spec:
+        if self.spec.satisfies("@1.16.3:"):
             shebang_string = "^#!@PERL@"
         else:
             shebang_string = "^#!@PERL@ -w"

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -36,7 +35,7 @@ class Ebms(MakefilePackage):
 
         cflags = "-g -O3 -std=gnu99"
 
-        if "+mpi" in self.spec:
+        if self.spec.satisfies("+mpi"):
             targets.append("CC={0}".format(self.spec["mpi"].mpicc))
 
         targets.append("CFLAGS={0}".format(cflags))

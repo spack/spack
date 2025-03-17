@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -12,10 +11,11 @@ class Sz3(CMakePackage):
     homepage = "https://github.com/szcompressor/SZ3"
     git = "https://github.com/szcompressor/SZ3"
 
-    maintainers("disheng222")
+    maintainers("disheng222", "robertu94")
     tags = ["e4s"]
 
     version("master")
+    version("3.2.0", commit="b3dab4018425803a55d8073dc55dade7fa46b7b4")
     version("3.1.8", commit="e308ebf8528c233286874b920c72c0a6c0218fb2")
     version("3.1.7", commit="c49fd17f2d908835c41000c1286c510046c0480e")
     version("3.1.5.4", commit="4c6ddf628f27d36b28d1bbda02174359cd05573d")

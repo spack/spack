@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -10,7 +9,7 @@ class Qjson(CMakePackage):
     """QJson is a Qt-based library that maps JSON data to QVariant
     objects and vice versa."""
 
-    homepage = "http://qjson.sourceforge.net/"
+    homepage = "https://qjson.sourceforge.net/"
     url = "https://github.com/flavio/qjson/archive/0.9.0.tar.gz"
 
     license("LGPL-2.1-or-later")
