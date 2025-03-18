@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,7 +27,8 @@ class YamlCpp(CMakePackage):
     version("0.5.3", sha256="decc5beabb86e8ed9ebeb04358d5363a5c4f72d458b2c788cb2f3ac9c19467b2")
     version("0.3.0", sha256="ab8d0e07aa14f10224ed6682065569761f363ec44bc36fcdb2946f6d38fe5a89")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     variant("shared", default=True, description="Build shared instead of static libraries")
     variant("pic", default=True, description="Build with position independent code")
@@ -48,7 +48,7 @@ class YamlCpp(CMakePackage):
     conflicts("%xl@:13.1", when="@0.6.0:", msg="versions 0.6.0: require c++11 support")
     conflicts("%xl_r@:13.1", when="@0.6.0:", msg="versions 0.6.0: require c++11 support")
     conflicts(
-        '%clang cxxflags="-stdlib=libc++"', when="+tests", msg=yaml_cpp_tests_libcxx_error_msg
+        'cxxflags="-stdlib=libc++" %clang', when="+tests", msg=yaml_cpp_tests_libcxx_error_msg
     )
 
     def flag_handler(self, name, flags):

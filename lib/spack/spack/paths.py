@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -109,6 +108,8 @@ default_user_bootstrap_path = os.path.join(user_cache_path, "bootstrap")
 #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
 default_misc_cache_path = os.path.join(user_cache_path, "cache")
 
+#: concretization cache for Spack concretizations
+default_conc_cache_path = os.path.join(default_misc_cache_path, "concretization")
 
 # Below paths pull configuration from the host environment.
 #

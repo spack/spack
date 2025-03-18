@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -55,7 +54,7 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
             when="+nalu_wind_gpu+rocm amdgpu_target=%s" % arch,
         )
 
-    depends_on("nalu-wind+hypre+fsi+openfast+tioga")
+    depends_on("nalu-wind+hypre+openfast+tioga")
     depends_on("amr-wind+netcdf+mpi+tiny_profile")
     depends_on("trilinos")
     depends_on("yaml-cpp@0.6:")
@@ -122,9 +121,9 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
             # Manually turn off device self.defines to solve Kokkos issues in Nalu-Wind headers
             env.append_flags("CXXFLAGS", "-U__HIP_DEVICE_COMPILE__ -DDESUL_HIP_RDC")
         if self.spec.satisfies("+cuda"):
-            env.set("OMPI_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-            env.set("MPICH_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-            env.set("MPICXX_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+            env.set("OMPI_CXX", self["kokkos-nvcc-wrapper"].kokkos_cxx)
+            env.set("MPICH_CXX", self["kokkos-nvcc-wrapper"].kokkos_cxx)
+            env.set("MPICXX_CXX", self["kokkos-nvcc-wrapper"].kokkos_cxx)
         if self.spec.satisfies("+rocm"):
             env.set("OMPI_CXX", self.spec["hip"].hipcc)
             env.set("MPICH_CXX", self.spec["hip"].hipcc)

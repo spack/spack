@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -10,6 +9,8 @@ import sys
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 from spack.util.environment import is_system_path
+
+_is_macos = sys.platform == "darwin"
 
 
 class Root(CMakePackage):
@@ -34,6 +35,10 @@ class Root(CMakePackage):
     version("develop", branch="master")
 
     # Production version
+    version("6.34.04", sha256="e320c5373a8e87bb29b7280954ca8355ad8c4295cf49235606f0c8b200acb374")
+    version("6.34.02", sha256="166bec562e420e177aaf3133fa3fb09f82ecddabe8a2e1906345bad442513f94")
+    version("6.34.00", sha256="f3b00f3db953829c849029c39d7660a956468af247efd946e89072101796ab03")
+    version("6.32.08", sha256="29ad4945a72dff1a009c326a65b6fa5ee2478498823251d3cef86a2cbeb77b27")
     version("6.32.06", sha256="3fc032d93fe848dea5adb1b47d8f0a86279523293fee0aa2b3cd52a1ffab7247")
     version("6.32.04", sha256="132f126aae7d30efbccd7dcd991b7ada1890ae57980ef300c16421f9d4d07ea8")
     version("6.32.02", sha256="3d0f76bf05857e1807ccfb2c9e014f525bcb625f94a2370b455f4b164961602d")
@@ -89,9 +94,9 @@ class Root(CMakePackage):
     version("6.06.04", sha256="ab86dcc80cbd8e704099af0789e23f49469932ac4936d2291602301a7aa8795b")
     version("6.06.02", sha256="18a4ce42ee19e1a810d5351f74ec9550e6e422b13b5c58e0c3db740cdbc569d1")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
 
     # ###################### Patches ##########################
 
@@ -139,7 +144,7 @@ class Root(CMakePackage):
     patch(
         "https://github.com/root-project/root/commit/2f00d6df258906c1f6fe848135a88b836db3077f.patch?full_index=1",
         sha256="8da36032082e65ae246c03558a4c3fd67b157d1d0c6d20adac9de263279d1db6",
-        when="@6.28:6.28.12",
+        when="@6.28.6:6.28.12",
     )
     patch(
         "https://github.com/root-project/root/commit/14838b35600b08278e69bc3d8d8669773bc11399.patch?full_index=1",
@@ -154,7 +159,7 @@ class Root(CMakePackage):
         when="@6.32.0:6.32.02",
     )
 
-    if sys.platform == "darwin":
+    if _is_macos:
         # Resolve non-standard use of uint, _cf_
         # https://sft.its.cern.ch/jira/browse/ROOT-7886.
         patch("math_uint.patch", when="@6.06.02")
@@ -184,7 +189,7 @@ class Root(CMakePackage):
     # See README.md for specific notes about what ROOT configuration
     # options are or are not supported, and why.
 
-    variant("aqua", default=False, description="Enable Aqua interface")
+    variant("aqua", default=_is_macos, description="Enable native macOS (Cocoa) interface")
     variant("arrow", default=False, description="Enable Arrow interface")
     variant("cuda", when="@6.08.00:", default=False, description="Enable CUDA support")
     variant("cudnn", when="@6.20.02:", default=False, description="Enable cuDNN support")
@@ -204,6 +209,10 @@ class Root(CMakePackage):
         default=True,
         description="Ignore most of Root's feature defaults except for " "basic graphic options",
     )
+    variant("geom", default=True, description="Enable support for the geometry library")
+    conflicts("~geom", when="@:6.33", msg="geom is always enabled through 6.33")
+    variant("geombuilder", default=False, description="Enable support for the geombuilder library")
+    conflicts("~geombuilder", when="@:6.33", msg="geombuilder is always enabled through 6.33")
     variant("gsl", default=True, description="Enable linking against shared libraries for GSL")
     variant("http", default=False, description="Enable HTTP server support")
     variant(
@@ -256,10 +265,16 @@ class Root(CMakePackage):
         description="Build TMVA with CPU support for deep learning (requires BLAS)",
     )
     variant(
+        "tmva-cudnn",
+        when="@6.34.00:",
+        default=True,
+        description="Enable support for cuDNN in TMVA",
+    )
+    variant(
         "tmva-gpu",
         when="@6.15.02:",
         default=False,
-        description="Build TMVA with GPU support for deep learning (requries CUDA)",
+        description="Build TMVA with GPU support for deep learning (requires CUDA)",
     )
     variant(
         "tmva-pymva",
@@ -274,6 +289,12 @@ class Root(CMakePackage):
         description="Build TMVA with support for sofie - "
         "fast inference code generation (requires protobuf 3)",
     )
+    variant(
+        "tpython",
+        when="@6.34.00: +python",
+        default=True,
+        description="Build the TPython class to run Python code from C++",
+    )
     variant("unuran", default=True, description="Use UNURAN for random number generation")
     variant("vc", default=False, description="Enable Vc for adding new types for SIMD programming")
     variant("vdt", default=True, description="Enable set of fast and vectorisable math functions")
@@ -286,7 +307,7 @@ class Root(CMakePackage):
     variant(
         "webgui", default=True, description="Enable web-based UI components of ROOT", when="+root7"
     )
-    variant("x", default=True, description="Enable set of graphical options")
+    variant("x", default=(not _is_macos), description="Enable set of graphical options")
     variant("xml", default=True, description="Enable XML parser interface")
     variant("xrootd", default=False, description="Build xrootd file server and its client")
 
@@ -306,6 +327,7 @@ class Root(CMakePackage):
     depends_on("cmake@3.9:", type="build", when="@6.18.00:")
     depends_on("cmake@3.16:", type="build", when="@6.26.00:")
     depends_on("cmake@3.19:", type="build", when="@6.28.00: platform=darwin")
+    depends_on("cmake@3.20:", type="build", when="@6.34.00:")
     depends_on("pkgconfig", type="build")
 
     # 6.32.00 requires sys/random.h
@@ -351,6 +373,7 @@ class Root(CMakePackage):
     # Python
     depends_on("python@2.7:", when="+python", type=("build", "run"))
     depends_on("python@2.7:3.10", when="@:6.26.09 +python", type=("build", "run"))
+    depends_on("python@3.8:", when="@6.34.00: +python", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"), when="+tmva-pymva")
     # See: https://sft.its.cern.ch/jira/browse/ROOT-10626
     depends_on("py-numpy", type=("build", "run"), when="@6.20.00:6.20.05 +python")
@@ -382,6 +405,7 @@ class Root(CMakePackage):
     depends_on("pythia8", when="+pythia8")
     depends_on("r", when="+r", type=("build", "run"))
     depends_on("r-rcpp", when="+r", type=("build", "run"))
+    depends_on("r-rcpp@:1.0.12", when="+r @:6.32.02", type=("build", "run"))
     depends_on("r-rinside", when="+r", type=("build", "run"))
     depends_on("readline", when="+r")
     depends_on("shadow", when="+shadow")
@@ -417,18 +441,23 @@ class Root(CMakePackage):
     conflicts("%intel")
 
     # ROOT <6.08 was incompatible with the GCC 5+ ABI
-    conflicts("%gcc@5.0.0:", when="@:6.07")
+    conflicts("%gcc@5:", when="@:6.07")
 
     # The version of Clang featured in ROOT <6.12 fails to build with
     # GCC 9.2.1, which we can safely extrapolate to the GCC 9 series.
-    conflicts("%gcc@9.0.0:", when="@:6.11")
+    conflicts("%gcc@9:", when="@:6.11")
+
+    # GCC 15 support was added in 6.34.04
+    conflicts("%gcc@15:", when="@:6.34.02")
 
     # See https://github.com/root-project/root/issues/9297
     conflicts("target=ppc64le:", when="@:6.24")
 
     # Incompatible variants
-    if sys.platform == "darwin":
+    if _is_macos:
         conflicts("+opengl", when="~x ~aqua", msg="root+opengl requires X or Aqua")
+        # https://github.com/root-project/root/issues/7160
+        conflicts("+aqua", when="~opengl", msg="+aqua requires OpenGL to be enabled")
     else:
         conflicts("+opengl", when="~x", msg="root+opengl requires X")
     conflicts("+math", when="~gsl", msg="root+math requires GSL")
@@ -447,19 +476,21 @@ class Root(CMakePackage):
         "cxxstd=20", when="@:6.28.02", msg="C++20 support requires root version at least 6.28.04"
     )
 
+    conflicts("%gcc@:10", when="cxxstd=20")
+
     # See https://github.com/root-project/root/issues/11128
     conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in root 6.26.08")
 
     # See https://github.com/spack/spack/pull/44826
-    if sys.platform == "darwin" and macos_version() == Version("12"):
+    if _is_macos and macos_version() == Version("12"):
         conflicts("@:6.27", when="+python", msg="macOS 12 python support for 6.28: only")
 
     # See https://github.com/root-project/root/issues/11714
-    if sys.platform == "darwin" and macos_version() >= Version("13"):
+    if _is_macos and macos_version() >= Version("13"):
         conflicts("@:6.26.09", msg="macOS 13 support was added in root 6.26.10")
 
     # See https://github.com/root-project/root/issues/16219
-    if sys.platform == "darwin" and macos_version() >= Version("15"):
+    if _is_macos and macos_version() >= Version("15"):
         conflicts("@:6.32.05", msg="macOS 15 support was added in root 6.32.06")
 
     # ROOT <6.14 is incompatible with Python >=3.7, which is the minimum supported by spack
@@ -534,6 +565,8 @@ class Root(CMakePackage):
         _add_variant(v, f, "fitsio", "+fits")
         _add_variant(v, f, ("ftgl", "opengl"), "+opengl")
         _add_variant(v, f, "gdml", "+gdml")
+        _add_variant(v, f, "geom", "+geom")
+        _add_variant(v, f, "geombuilder", "+geombuilder")
         _add_variant(v, f, "mathmore", "+math")
         _add_variant(v, f, "gviz", "+graphviz")
         _add_variant(v, f, "http", "+http")
@@ -623,8 +656,6 @@ class Root(CMakePackage):
         # Options related to ROOT's ability to download and build its own
         # dependencies. Per Spack convention, this should generally be avoided.
 
-        afterimage_enabled = ("+x" in self.spec) if "platform=darwin" not in self.spec else True
-
         options += [
             define("builtin_cfitsio", False),
             define("builtin_davix", False),
@@ -632,7 +663,7 @@ class Root(CMakePackage):
             define("builtin_freetype", False),
             define("builtin_ftgl", False),
             define("builtin_gl2ps", False),
-            define("builtin_glew", self.spec.satisfies("platform=darwin")),
+            define("builtin_glew", False),
             define("builtin_gsl", False),
             define("builtin_llvm", True),
             define("builtin_lz4", self.spec.satisfies("@6.12.02:6.12")),
@@ -651,7 +682,12 @@ class Root(CMakePackage):
         ]
 
         if self.spec.satisfies("@:6.32"):
-            options.append(define("builtin_afterimage", afterimage_enabled))
+            options.append(
+                define(
+                    "builtin_afterimage",
+                    ("+x" in self.spec) if "platform=darwin" not in self.spec else True,
+                )
+            )
 
         # Features
         options += [
@@ -674,6 +710,8 @@ class Root(CMakePackage):
             define_from_variant("fitsio", "fits"),
             define_from_variant("ftgl", "opengl"),
             define_from_variant("gdml"),
+            define_from_variant("geom"),
+            define_from_variant("geombuilder"),
             define_from_variant("genvector", "math"),
             define("geocad", False),
             define("gfal", False),
@@ -758,9 +796,14 @@ class Root(CMakePackage):
         if self.spec.satisfies("@:6.30"):
             options.append(define_from_variant("minuit2", "minuit"))
 
+        if self.spec.satisfies("@6.34:"):
+            options.append(define_from_variant("tmva-cudnn", "tmva-cudnn"))
+            options.append(define_from_variant("tmva-cudnn", "cudnn"))
+            options.append(define_from_variant("tpython"))
+
         # #################### Compiler options ####################
 
-        if sys.platform == "darwin" and self.compiler.cc == "gcc":
+        if _is_macos and self.compiler.cc == "gcc":
             cflags = "-D__builtin_unreachable=__builtin_trap"
             options.extend([define("CMAKE_C_FLAGS", cflags), define("CMAKE_CXX_FLAGS", cflags)])
 
@@ -833,12 +876,11 @@ class Root(CMakePackage):
         # the following vars are copied from thisroot.sh; silence a cppyy warning
         env.set("CLING_STANDARD_PCH", "none")
         env.set("CPPYY_API_PATH", "none")
+        env.set("CPPYY_BACKEND_LIBRARY", self.prefix.lib.root.libcppyy_backend)
         if "+rpath" not in self.spec:
             env.prepend_path(self.root_library_path, self.prefix.lib.root)
 
-    def setup_dependent_build_environment(
-        self, env: spack.util.environment.EnvironmentModifications, dependent_spec
-    ):
+    def setup_dependent_build_environment(self, env: EnvironmentModifications, dependent_spec):
         env.set("ROOTSYS", self.prefix)
         env.set("ROOT_VERSION", "v{0}".format(self.version.up_to(1)))
         env.prepend_path("PYTHONPATH", self.prefix.lib.root)
@@ -851,15 +893,13 @@ class Root(CMakePackage):
             # Newer deployment targets cause fatal errors in rootcling
             env.unset("MACOSX_DEPLOYMENT_TARGET")
 
-    def setup_dependent_run_environment(
-        self, env: spack.util.environment.EnvironmentModifications, dependent_spec
-    ):
+    def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec):
         env.prepend_path("ROOT_INCLUDE_PATH", dependent_spec.prefix.include)
         # For dependents that build dictionaries, ROOT needs to know where the
         # dictionaries have been installed.  This can be facilitated by
         # automatically prepending dependent package library paths to
         # ROOT_LIBRARY_PATH (for @6.26:) or LD_LIBRARY_PATH (for older
         # versions).
-        for lib_path in (dependent_spec.prefix.lib, dependent_spec.prefix.lib64):
+        for lib_path in [dependent_spec.prefix.lib, dependent_spec.prefix.lib64]:
             if os.path.exists(lib_path):
                 env.prepend_path(self.root_library_path, lib_path)

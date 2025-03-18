@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,7 +15,7 @@ class CudaPackage(PackageBase):
     """Auxiliary class which contains CUDA variant, dependencies and conflicts
     and is meant to unify and facilitate its usage.
 
-    Maintainers: ax3l, Rombur, davidbeckingsale
+    Maintainers: ax3l, Rombur, davidbeckingsale, pauleonix
     """
 
     # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#gpu-feature-list
@@ -48,6 +47,12 @@ class CudaPackage(PackageBase):
         "89",
         "90",
         "90a",
+        "100",
+        "100a",
+        "101",
+        "101a",
+        "120",
+        "120a",
     )
 
     # FIXME: keep cuda and cuda_arch separate to make usage easier until
@@ -100,39 +105,56 @@ class CudaPackage(PackageBase):
     # CUDA version vs Architecture
     # https://en.wikipedia.org/wiki/CUDA#GPUs_supported
     # https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html#deprecated-features
+    # Tesla support:
     depends_on("cuda@:6.0", when="cuda_arch=10")
     depends_on("cuda@:6.5", when="cuda_arch=11")
     depends_on("cuda@2.1:6.5", when="cuda_arch=12")
     depends_on("cuda@2.1:6.5", when="cuda_arch=13")
 
+    # Fermi support:
     depends_on("cuda@3.0:8.0", when="cuda_arch=20")
     depends_on("cuda@3.2:8.0", when="cuda_arch=21")
 
+    # Kepler support:
     depends_on("cuda@5.0:10.2", when="cuda_arch=30")
     depends_on("cuda@5.0:10.2", when="cuda_arch=32")
     depends_on("cuda@5.0:11.8", when="cuda_arch=35")
     depends_on("cuda@6.5:11.8", when="cuda_arch=37")
 
+    # Maxwell support:
     depends_on("cuda@6.0:", when="cuda_arch=50")
     depends_on("cuda@6.5:", when="cuda_arch=52")
     depends_on("cuda@6.5:", when="cuda_arch=53")
 
+    # Pascal support:
     depends_on("cuda@8.0:", when="cuda_arch=60")
     depends_on("cuda@8.0:", when="cuda_arch=61")
     depends_on("cuda@8.0:", when="cuda_arch=62")
 
+    # Volta support:
     depends_on("cuda@9.0:", when="cuda_arch=70")
+    # Turing support:
     depends_on("cuda@9.0:", when="cuda_arch=72")
     depends_on("cuda@10.0:", when="cuda_arch=75")
 
+    # Ampere support:
     depends_on("cuda@11.0:", when="cuda_arch=80")
     depends_on("cuda@11.1:", when="cuda_arch=86")
     depends_on("cuda@11.4:", when="cuda_arch=87")
+    # Ada support:
     depends_on("cuda@11.8:", when="cuda_arch=89")
 
+    # Hopper support:
     depends_on("cuda@12.0:", when="cuda_arch=90")
     depends_on("cuda@12.0:", when="cuda_arch=90a")
 
+    # Blackwell support:
+    depends_on("cuda@12.8:", when="cuda_arch=100")
+    depends_on("cuda@12.8:", when="cuda_arch=100a")
+    depends_on("cuda@12.8:", when="cuda_arch=101")
+    depends_on("cuda@12.8:", when="cuda_arch=101a")
+    depends_on("cuda@12.8:", when="cuda_arch=120")
+    depends_on("cuda@12.8:", when="cuda_arch=120a")
     # From the NVIDIA install guide we know of conflicts for particular
     # platforms (linux, darwin), architectures (x86, powerpc) and compilers
     # (gcc, clang). We don't restrict %gcc and %clang conflicts to
@@ -164,6 +186,7 @@ class CudaPackage(PackageBase):
         conflicts("%gcc@12:", when="+cuda ^cuda@:11.8")
         conflicts("%gcc@13:", when="+cuda ^cuda@:12.3")
         conflicts("%gcc@14:", when="+cuda ^cuda@:12.6")
+        conflicts("%gcc@15:", when="+cuda ^cuda@:12.8")
         conflicts("%clang@12:", when="+cuda ^cuda@:11.4.0")
         conflicts("%clang@13:", when="+cuda ^cuda@:11.5")
         conflicts("%clang@14:", when="+cuda ^cuda@:11.7")
@@ -172,6 +195,7 @@ class CudaPackage(PackageBase):
         conflicts("%clang@17:", when="+cuda ^cuda@:12.3")
         conflicts("%clang@18:", when="+cuda ^cuda@:12.5")
         conflicts("%clang@19:", when="+cuda ^cuda@:12.6")
+        conflicts("%clang@20:", when="+cuda ^cuda@:12.8")
 
         # https://gist.github.com/ax3l/9489132#gistcomment-3860114
         conflicts("%gcc@10", when="+cuda ^cuda@:11.4.0")
@@ -180,13 +204,6 @@ class CudaPackage(PackageBase):
         conflicts("%gcc@7:", when="+cuda ^cuda@:9.1 target=x86_64:")
         conflicts("%gcc@8:", when="+cuda ^cuda@:10.0.130 target=x86_64:")
         conflicts("%gcc@9:", when="+cuda ^cuda@:10.2.89 target=x86_64:")
-        conflicts("%pgi@:14.8", when="+cuda ^cuda@:7.0.27 target=x86_64:")
-        conflicts("%pgi@:15.3,15.5:", when="+cuda ^cuda@7.5 target=x86_64:")
-        conflicts("%pgi@:16.2,16.0:16.3", when="+cuda ^cuda@8 target=x86_64:")
-        conflicts("%pgi@:15,18:", when="+cuda ^cuda@9.0:9.1 target=x86_64:")
-        conflicts("%pgi@:16,19:", when="+cuda ^cuda@9.2.88:10.0 target=x86_64:")
-        conflicts("%pgi@:17,20:", when="+cuda ^cuda@10.1.105:10.2.89 target=x86_64:")
-        conflicts("%pgi@:17,21:", when="+cuda ^cuda@11.0.2:11.1.0 target=x86_64:")
         conflicts("%clang@:3.4", when="+cuda ^cuda@:7.5 target=x86_64:")
         conflicts("%clang@:3.7,4:", when="+cuda ^cuda@8.0:9.0 target=x86_64:")
         conflicts("%clang@:3.7,4.1:", when="+cuda ^cuda@9.1 target=x86_64:")
@@ -212,9 +229,6 @@ class CudaPackage(PackageBase):
         conflicts("%gcc@8:", when="+cuda ^cuda@:10.0.130 target=ppc64le:")
         conflicts("%gcc@9:", when="+cuda ^cuda@:10.1.243 target=ppc64le:")
         # officially, CUDA 11.0.2 only supports the system GCC 8.3 on ppc64le
-        conflicts("%pgi", when="+cuda ^cuda@:8 target=ppc64le:")
-        conflicts("%pgi@:16", when="+cuda ^cuda@:9.1.185 target=ppc64le:")
-        conflicts("%pgi@:17", when="+cuda ^cuda@:10 target=ppc64le:")
         conflicts("%clang@4:", when="+cuda ^cuda@:9.0.176 target=ppc64le:")
         conflicts("%clang@5:", when="+cuda ^cuda@:9.1 target=ppc64le:")
         conflicts("%clang@6:", when="+cuda ^cuda@:9.2 target=ppc64le:")

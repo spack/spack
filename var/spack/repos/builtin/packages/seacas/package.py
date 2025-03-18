@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -35,6 +34,12 @@ class Seacas(CMakePackage):
 
     # ###################### Versions ##########################
     version("master", branch="master")
+    version(
+        "2025-03-13", sha256="406aff5b8908d6a3bf6687d825905990101caa9cf8c1213a508938eed2134d6d"
+    )
+    version(
+        "2025-02-27", sha256="224468d6215b4f4b15511ee7a29f755cdd9e7be18c08dfece9d9991e68185cfc"
+    )
     version(
         "2024-08-15", sha256="c85130b0dac5ab9a08dcb53c8ccff478122d72b08bd41d99c0adfddc5eb18a52"
     )
@@ -147,9 +152,9 @@ class Seacas(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
 
     # ###################### Variants ##########################
     # Package options
@@ -296,6 +301,9 @@ class Seacas(CMakePackage):
     )
     conflicts("+shared", when="platform=windows")
     conflicts("+x11", when="platform=windows")
+
+    conflicts("@2024-06-27 platform=windows")
+
     # Remove use of variable in array assignment (triggers c2057 on MSVC)
     # See https://github.com/sandialabs/seacas/issues/438
     patch(
@@ -303,6 +311,9 @@ class Seacas(CMakePackage):
         sha256="d088208511fb0a087e2bf70ae70676e59bfefe8d8f5b24bd53b829566f5147d2",
         when="@:2023-10-24",
     )
+
+    # Based on install-tpl.sh script, cereal seems to only be used when faodel enabled
+    depends_on("cereal", when="@2021-04-02: +faodel")
 
     def setup_run_environment(self, env):
         env.prepend_path("PYTHONPATH", self.prefix.lib)
@@ -485,6 +496,15 @@ class Seacas(CMakePackage):
         for pkg in ("Faodel", "BOOST"):
             if pkg.lower() in spec:
                 options.append(define(pkg + "_ROOT", spec[pkg.lower()].prefix))
+
+        if "+faodel" in spec:
+            # faodel headers are under $faodel_prefix/include/faodel but seacas
+            # leaves off the faodel part
+            faodel_incdir = spec["faodel"].prefix.include
+            faodel_incdir2 = spec["faodel"].prefix.include.faodel
+            faodel_incdirs = [faodel_incdir, faodel_incdir2]
+            options.append(define("Faodel_INCLUDE_DIRS", ";".join(faodel_incdirs)))
+            options.append(define("Faodel_LIBRARY_DIRS", spec["faodel"].prefix.lib))
 
         options.append(from_variant("TPL_ENABLE_ADIOS2", "adios2"))
         if "+adios2" in spec:

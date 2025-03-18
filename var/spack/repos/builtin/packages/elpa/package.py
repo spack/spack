@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,6 +23,12 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
 
+    version(
+        "2025.01.001", sha256="3ef0c6aed9a3e05db6efafe6e14d66eb88b2a1354d61e765b7cde0d3d5f3951e"
+    )
+    version(
+        "2024.05.001", sha256="9caf41a3e600e2f6f4ce1931bd54185179dade9c171556d0c9b41bbc6940f2f6"
+    )
     version(
         "2024.03.001", sha256="41c6cbf56d2dac26443faaba8a77307d261bf511682a64b96e24def77c813622"
     )
@@ -65,6 +70,12 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         )
 
     patch("fujitsu.patch", when="%fj")
+    # wrong filename handling in elpa's custom preprocessor
+    patch(
+        "https://gitlab.mpcdf.mpg.de/elpa/elpa/-/commit/5a821b79dd2905c691fc0973c9f3044904ac2653.diff",
+        sha256="90f18c84e740a35d726e44078a111fac3b6278a0e750ce1f3ea154ee78e93298",
+        when="@:2025.01.001",
+    )
 
     depends_on("autoconf@2.71:", type="build", when="@master")
     depends_on("automake", type="build", when="@master")

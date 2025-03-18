@@ -1,9 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import warnings
 
 from spack.package import *
 
@@ -12,8 +12,8 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     """GASNet is a language-independent, networking middleware layer that
     provides network-independent, high-performance communication primitives
     including Remote Memory Access (RMA) and Active Messages (AM). It has been
-    used to implement parallel programming models and libraries such as UPC,
-    UPC++, Co-Array Fortran, Legion, Chapel, and many others. The interface is
+    used to implement parallel programming models and libraries including UPC,
+    UPC++, multi-image Fortran, Legion, Chapel, and many others. The interface is
     primarily intended as a compilation target and for use by runtime library
     writers (as opposed to end users), and the primary goals are high
     performance, interface portability, and expressiveness.
@@ -21,12 +21,12 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     ***NOTICE***: The GASNet library built by this Spack package is ONLY intended for
     unit-testing purposes, and is generally UNSUITABLE FOR PRODUCTION USE.
     The RECOMMENDED way to build GASNet is as an embedded library as configured
-    by the higher-level client runtime package (UPC++, Legion, etc), including
+    by the higher-level client runtime package (UPC++, Legion, Chapel, etc), including
     system-specific configuration.
     """
 
     homepage = "https://gasnet.lbl.gov"
-    url = "https://gasnet.lbl.gov/EX/GASNet-2021.3.0.tar.gz"
+    url = "https://gasnet.lbl.gov/EX/GASNet-2024.5.0.tar.gz"
     git = "https://bitbucket.org/berkeleylab/gasnet.git"
 
     maintainers("PHHargrove", "bonachea")
@@ -37,11 +37,26 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     version("main", branch="stable")
     version("master", branch="master")
 
+    # commit hash e2fdec corresponds to tag gex-2025.2.0-snapshot
+    version("2025.2.0-snapshot", commit="e2fdece76d86d7b4fa090fbff9b46eb98ce97177")
+
+    # Versions fetched from git require a Bootstrap step
+    def bootstrap_version():
+        return "@master:,2025.2.0-snapshot"
+
     version("2024.5.0", sha256="f945e80f71d340664766b66290496d230e021df5e5cd88f404d101258446daa9")
     version("2023.9.0", sha256="2d9f15a794e10683579ce494cd458b0dd97e2d3327c4d17e1fea79bd95576ce6")
     version("2023.3.0", sha256="e1fa783d38a503cf2efa7662be591ca5c2bb98d19ac72a9bc6da457329a9a14f")
-    version("2022.9.2", sha256="2352d52f395a9aa14cc57d82957d9f1ebd928d0a0021fd26c5f1382a06cd6f1d")
-    version("2022.9.0", sha256="6873ff4ad8ebee49da4378f2d78095a6ccc31333d6ae4cd739b9f772af11f936")
+    version(
+        "2022.9.2",
+        deprecated=True,
+        sha256="2352d52f395a9aa14cc57d82957d9f1ebd928d0a0021fd26c5f1382a06cd6f1d",
+    )
+    version(
+        "2022.9.0",
+        deprecated=True,
+        sha256="6873ff4ad8ebee49da4378f2d78095a6ccc31333d6ae4cd739b9f772af11f936",
+    )
     version(
         "2022.3.0",
         deprecated=True,
@@ -72,11 +87,12 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
         deprecated=True,
         sha256="117f5fdb16e53d0fa8a47a1e28cccab1d8020ed4f6e50163d985dc90226aaa2c",
     )
+    # Do NOT add older versions here.
+    # GASNet-EX releases over 2 years old are not supported.
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-    # Do NOT add older versions here.
-    # GASNet-EX releases over 2 years old are not supported.
+    depends_on("gmake", type="build")
 
     # The optional network backends:
     variant(
@@ -128,8 +144,8 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     depends_on("mpi", when="conduits=mpi")
     depends_on("libfabric", when="conduits=ofi")
 
-    depends_on("autoconf@2.69", type="build", when="@master:")
-    depends_on("automake@1.16:", type="build", when="@master:")
+    depends_on("autoconf@2.69", type="build", when=bootstrap_version())
+    depends_on("automake@1.16:", type="build", when=bootstrap_version())
 
     conflicts("^hip@:4.4.0", when="+rocm")
 
@@ -138,15 +154,15 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     depends_on("oneapi-level-zero@1.8.0:", when="+level_zero")
 
     def install(self, spec, prefix):
-        if spec.satisfies("@master:"):
+        if spec.satisfies(Gasnet.bootstrap_version()):
             bootstrapsh = Executable("./Bootstrap")
             bootstrapsh()
             # Record git-describe when fetched from git:
             try:
                 git = which("git")
                 git("describe", "--long", "--always", output="version.git")
-            except spack.util.executable.ProcessError:
-                spack.main.send_warning_to_tty("Omitting version stamp due to git error")
+            except ProcessError:
+                warnings.warn("Omitting version stamp due to git error")
 
         # The GASNet-EX library has a highly multi-dimensional configure space,
         # to accomodate the varying behavioral requirements of each client runtime.

@@ -1,10 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import os.path
 
 import llnl.util.lang
 
@@ -28,7 +26,7 @@ class FftwBase(AutotoolsPackage):
     variant("shared", default=True, description="Build shared libraries")
 
     depends_on("mpi", when="+mpi")
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
 
     # https://github.com/FFTW/fftw3/commit/902d0982522cdf6f0acd60f01f59203824e8e6f3
     conflicts("%gcc@8.0:8", when="@3.3.7")
@@ -89,7 +87,7 @@ class FftwBase(AutotoolsPackage):
         return self.spec.variants["precision"].value
 
     def setup_build_environment(self, env):
-        if self.spec.satisfies("%apple-clang +openmp"):
+        if self.spec.satisfies("+openmp %apple-clang"):
             env.append_flags("CPPFLAGS", self.compiler.openmp_flag)
             env.append_flags("CFLAGS", self.spec["llvm-openmp"].headers.include_flags)
             env.append_flags("CXXFLAGS", self.spec["llvm-openmp"].headers.include_flags)
@@ -129,12 +127,8 @@ class FftwBase(AutotoolsPackage):
         # float only
         float_simd_features = ["altivec", "sse", "neon"]
 
-        # Workaround PGI compiler bug when avx2 is enabled
-        if spec.satisfies("%pgi") and "avx2" in simd_features:
-            simd_features.remove("avx2")
-
         # Workaround NVIDIA/PGI compiler bug when avx512 is enabled
-        if spec.satisfies("%nvhpc") or spec.satisfies("%pgi"):
+        if spec.satisfies("%nvhpc"):
             if "avx512" in simd_features:
                 simd_features.remove("avx512")
 
@@ -254,5 +248,4 @@ class Fftw(FftwBase):
     )
     patch("pfft-3.3.5.patch", when="@3.3.5:3.3.8+pfft_patches", level=0)
     patch("pfft-3.3.4.patch", when="@3.3.4+pfft_patches", level=0)
-    patch("pgi-3.3.6-pl2.patch", when="@3.3.6-pl2%pgi", level=0)
     patch("intel-configure.patch", when="@3:3.3.8%intel", level=0)

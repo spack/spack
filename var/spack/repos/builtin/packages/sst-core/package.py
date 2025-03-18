@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,7 +15,7 @@ class SstCore(AutotoolsPackage):
     git = "https://github.com/sstsimulator/sst-core.git"
     url = "https://github.com/sstsimulator/sst-core/releases/download/v14.1.0_Final/sstcore-14.1.0.tar.gz"
 
-    maintainers("berquist", "naromero77")
+    maintainers("berquist", "jmlapre", "naromero77")
 
     license("BSD-3-Clause")
 

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -216,7 +215,7 @@ class Lvarray(CMakePackage, CudaPackage):
             debug_flags = "-O0 -g"
             cfg.write(cmake_cache_string("CMAKE_CXX_FLAGS_DEBUG", debug_flags))
 
-            if spec.satisfies("%clang arch=linux-rhel7-ppc64le"):
+            if spec.satisfies("arch=linux-rhel7-ppc64le%clang"):
                 cfg.write(cmake_cache_entry("CMAKE_EXE_LINKER_FLAGS", "-Wl,--no-toc-optimize"))
 
             if spec.satisfies("+cuda"):

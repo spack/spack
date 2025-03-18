@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -41,6 +40,15 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("39.2.0", commit="94cf48783efd713f38106b18211d1c59f4e8cdec", submodules=True)
+    version("39.1.0", commit="09225b0d0bba24d57a696e347e3027b39404bb75", submodules=True)
+    version("39.0.0", commit="b055202e2fbdd509bc186eb4782714bc46f38f3f", submodules=True)
+    version("38.2.0", commit="9cb8f4494656553fd9b85955938b79b2fac4c9b0", submodules=True)
+    version("38.1.0", commit="8a20c88808f10bf4fcdfd7c6e077f23614c3ab90", submodules=True)
+    version("38.0.0", commit="0a6b5155e29e3b755bf351b8a76067fff9b4214b", submodules=True)
+    version("37.4.0", commit="4ae9a44f54c854599d1d753222ec36e0b5b4e9c7", submodules=True)
+    version("37.3.0", commit="b3e856d4dadcda7d1a88a9b846ce5a7acd8410c4", submodules=True)
+    version("37.2.0", commit="821144dc40d35b44aee0d7857a0bd1c99e4a3932", submodules=True)
     version("37.1.0", commit="fa6ad4d52e0bd09cf8c78507fcbb18e9ac2c87a3", submodules=True)
     version("37.0.1", commit="998b9c9dd42d5160c2540f8fa820505869bfdb79", submodules=True)
     version("37.0.0", commit="117feaaadc7a2336755274e0cd70ba58a047a1de", submodules=True)
@@ -188,7 +196,8 @@ class Acts(CMakePackage, CudaPackage):
     version("0.08.1", commit="289bdcc320f0b3ff1d792e29e462ec2d3ea15df6")
     version("0.08.0", commit="99eedb38f305e3a1cd99d9b4473241b7cd641fa9")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build", when="+dd4hep")  # DD4hep requires C
+    depends_on("cxx", type="build")
 
     # Variants that affect the core Acts library
     variant(
@@ -336,7 +345,7 @@ class Acts(CMakePackage, CudaPackage):
         "tbb",
         default=True,
         description="Build the examples with Threading Building Blocks library",
-        when="@19.8:19,20.1: +examples",
+        when="@19.8:19,20.1:37.2 +examples",
     )
     variant("analysis", default=False, description="Build analysis applications in the examples")
 
@@ -351,7 +360,9 @@ class Acts(CMakePackage, CudaPackage):
         depends_on("actsvg@0.4.35:", when="@28:")
         depends_on("actsvg@0.4.39:", when="@32:")
         depends_on("actsvg@0.4.40:", when="@32.1:")
-        depends_on("actsvg@0.4.50:", when="@37:")
+        depends_on(
+            "actsvg@0.4.51:", when="@37:"
+        )  # https://github.com/acts-project/actsvg/issues/94
     depends_on("acts-algebra-plugins @0.24:", when="+traccc")
     depends_on("autodiff @0.6:", when="@17: +autodiff")
     depends_on("autodiff @0.5.11:0.5.99", when="@1.2:16 +autodiff")
@@ -381,6 +392,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("hepmc3 @3.2.1:", when="+hepmc3")
     depends_on("heppdt", when="+hepmc3 @:4.0")
     depends_on("intel-tbb @2020.1:", when="+examples +tbb")
+    depends_on("intel-tbb @2020.1:", when="+examples @37.3:")
     depends_on("mlpack@3.1.1:", when="+mlpack")
     depends_on("nlohmann-json @3.9.1:", when="@0.14: +json")
     depends_on("nlohmann-json @3.10.5:", when="@37: +json")
@@ -418,12 +430,20 @@ class Acts(CMakePackage, CudaPackage):
         for _scalar in _scalar_values:
             depends_on(f"detray scalar={_scalar}", when=f"scalar={_scalar}")
 
+    # ACTS enables certain options anyway based on other options
+    conflicts("~svg", when="+traccc")
+    conflicts("~json", when="+traccc")
+
     # ACTS has been using C++17 for a while, which precludes use of old GCC
     conflicts("%gcc@:7", when="@0.23:")
     # When using C++20, disable gcc 9 and lower.
     conflicts("%gcc@:9", when="cxxstd=20")
+    # See https://github.com/acts-project/acts/pull/3362
+    conflicts("^geant4@11.3:", when="@:35")
     # See https://github.com/acts-project/acts/pull/3512
     conflicts("^boost@1.85.0")
+    # See https://github.com/acts-project/acts/pull/3921
+    conflicts("^edm4hep@0.99:", when="@:37")
 
     def cmake_args(self):
         spec = self.spec
@@ -506,6 +526,8 @@ class Acts(CMakePackage, CudaPackage):
         # Use dependencies provided by spack
         if spec.satisfies("@20.3:"):
             args.append("-DACTS_USE_SYSTEM_LIBS=ON")
+            if spec.satisfies("@35.1:36.0"):
+                args.append("-DACTS_USE_SYSTEM_DFELIBS=OFF")
         else:
             if spec.satisfies("+autodiff"):
                 args.append("-DACTS_USE_SYSTEM_AUTODIFF=ON")

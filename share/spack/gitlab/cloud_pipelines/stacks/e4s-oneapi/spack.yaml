@@ -4,12 +4,13 @@ spack:
   concretizer:
     reuse: false
     unify: false
+    static_analysis: false
 
   packages:
     all:
       require:
-      - "target=x86_64_v3"
-      - "%oneapi"
+      - target=x86_64_v3
+      - '%oneapi'
       providers:
         blas: [openblas]
         tbb: [intel-tbb]
@@ -19,7 +20,7 @@ spack:
     elfutils:
       variants: ~nls
     gcc-runtime:
-      require: "%gcc target=x86_64_v3"
+      require: "target=x86_64_v3 %gcc"
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
@@ -38,32 +39,43 @@ spack:
     xz:
       variants: +pic
     mpi:
-      require: 'mpich@4: target=x86_64_v3'
-    mpich:
-      require: '~wrapperrpath ~hwloc target=x86_64_v3'
+      require: intel-oneapi-mpi
+    intel-oneapi-mpi:
+      buildable: false
+      externals:
+      - spec: intel-oneapi-mpi@2021.13.1
+        prefix: /opt/intel/oneapi
     unzip:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
     binutils:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
       variants: +ld +gold +headers +libiberty ~nls
     llvm:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
     ruby:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
     rust:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
     krb5:
-      require: '%gcc target=x86_64_v3'
-    papi:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
     openssh:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
     dyninst:
-      require: "%gcc target=x86_64_v3"
+      require:
+      - 'target=x86_64_v3 %gcc'
     bison:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
     paraview:
-      require: "+examples %oneapi target=x86_64_v3"
+      require:
+      - +examples target=x86_64_v3
 
   specs:
   # CPU
@@ -84,7 +96,7 @@ spack:
   - charliecloud
   - conduit
   - datatransferkit
-  - dealii
+  - dealii ~vtk ~taskflow cflags=-O0 cxxflags=-O0 # +vtk +taskflow: ^taskflow: CMake Error at CMakeLists.txt:81 (message): Taskflow currently supports the following compilers: g++ v7.0 or above, clang++ v6.0 or above; use -O0 to work around compiler failure
   - drishti
   - dxt-explorer
   - ecp-data-vis-sdk ~cuda ~rocm +adios2 ~ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp # +ascent: fides: fides/xgc/XGCCommon.cxx:233:10: error: no member named 'iota' in namespace 'std'; +visit: visit_vtk/lightweight/vtkSkewLookupTable.C:32:10: error: cannot initialize return object of type 'unsigned char *' with an rvalue of type 'const unsigned char *'
@@ -113,6 +125,7 @@ spack:
   - laghos
   - lammps
   - legion
+  - libceed
   - libnrm
   - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp
   - libquo
@@ -127,7 +140,7 @@ spack:
   - nccmp
   - nco
   - netlib-scalapack
-  - nrm
+  - nrm ^py-scipy cflags="-Wno-error=incompatible-function-pointer-types" # py-scipy@1.8.1 fails without cflags here
   - nwchem
   - omega-h
   - openfoam
@@ -223,7 +236,7 @@ spack:
   # - py-torch        # error
 
   # GPU
-  - aml +ze
+  - aml +level_zero
   - amrex +sycl
   - arborx +sycl ^kokkos +sycl +openmp cxxstd=17 +examples
   - cabana +sycl ^kokkos +sycl +openmp cxxstd=17 +examples

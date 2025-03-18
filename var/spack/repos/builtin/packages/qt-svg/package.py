@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,6 +17,9 @@ class QtSvg(QtPackage):
 
     license("BSD-3-Clause")
 
+    version("6.8.2", sha256="b2d1f8acc7471658c963cacf8dc99912fd20e7072b3bdf7a53ccf99ba41788e8")
+    version("6.8.1", sha256="288f233991686bc411a11cc331fb1be5f12ed43be03e29639158e545685ce7c9")
+    version("6.8.0", sha256="ec3112668b7b8cfd1790bf4f936268dd6d32251ea81bb20d3aa4c4bac2031866")
     version("6.7.3", sha256="2852d8f1f52b60f0624ca5edf479125e4b32d579b1177d8b76d8e28fac98a701")
     version("6.7.2", sha256="c0e140bbba4157cdbbe0e84ddbb4e238b87aa0ca7b870bad283d8cf2a7fa74b6")
     version("6.7.1", sha256="55134e1242305e554610bf1a77e71d3d15104ee819a3c87def1f8b736d5ecf0e")
@@ -36,7 +38,8 @@ class QtSvg(QtPackage):
     version("6.4.0", sha256="375eb69f320121e42d5dc107f9455008980c149646931b8ace19e6bc235dcd80")
     version("6.3.2", sha256="781055bca458be46ef69f2fff147a00226e41f3a23d02c91238b0328a7156518")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     variant("widgets", default=False, description="Build SVG widgets.")
 

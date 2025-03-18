@@ -1,8 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 
 from spack.package import *
 
@@ -16,9 +16,14 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/gsl"
     gnu_mirror_path = "gsl/gsl-2.3.tar.gz"
+    maintainers("cessenat")
+
+    tags = ["hpc"]
+    executables = ["^gsl-config$"]
 
     license("GPL-3.0-or-later")
 
+    version("2.8", sha256="6a99eeed15632c6354895b1dd542ed5a855c0f15d9ad1326c6fe2b2c9e423190")
     version("2.7.1", sha256="dcb0fbd43048832b757ff9942691a8dd70026d5da0ff85601e52687f6deeb34b")
     version("2.7", sha256="efbbf3785da0e53038be7907500628b466152dbc3c173a87de1b5eba2e23602b")
     version("2.6", sha256="b782339fc7a38fe17689cb39966c4d821236c28018b6593ddb6fd59ee40786a8")
@@ -38,7 +43,8 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
 
     # from https://dev.gentoo.org/~mgorny/dist/gsl-2.3-cblas.patch.bz2
     patch("gsl-2.3-cblas.patch", when="@2.3:2.5+external-cblas")
-    patch("gsl-2.6-cblas.patch", when="@2.6: +external-cblas")
+    patch("gsl-2.6-cblas.patch", when="@2.6:2.7 +external-cblas")
+    patch("gsl-2.8-cblas.patch", when="@2.8: +external-cblas")
 
     conflicts("+external-cblas", when="@:2.2")
 
@@ -69,3 +75,9 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
         # cmake looks for GSL_ROOT_DIR to find GSL so this helps pick the spack one
         # when there are multiple installations (e.g. a system one and a spack one)
         env.set("GSL_ROOT_DIR", self.prefix)
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"\s*(\d[\d\.]+)", output)
+        return match.group(1) if match else None

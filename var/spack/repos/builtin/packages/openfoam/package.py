@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -44,11 +43,8 @@ import glob
 import os
 import re
 
-import llnl.util.tty as tty
-
 from spack.package import *
 from spack.pkg.builtin.boost import Boost
-from spack.util.environment import EnvironmentModifications
 
 # Not the nice way of doing things, but is a start for refactoring
 __all__ = [
@@ -269,6 +265,8 @@ class Openfoam(Package):
 
     version("develop", branch="develop", submodules="True")
     version("master", branch="master", submodules="True")
+    version("2412", sha256="c353930105c39b75dac7fa7cfbfc346390caa633a868130fd8c9816ef5f732cd")
+    version("2406", sha256="8d1450fb89eec1e7cecc55c3bb7bc486ccbf63d069379d1d5d7518fa16a4686a")
     version("2312", sha256="f113183a4d027c93939212af8967053c5f8fe76fb62e5848cb11bbcf8e829552")
     version("2306", sha256="d7fba773658c0f06ad17f90199565f32e9bf502b7bb03077503642064e1f5344")
     version(
@@ -383,6 +381,9 @@ class Openfoam(Package):
     depends_on("flex@:2.6.1,2.6.4:")
     depends_on("cmake", type="build")
     depends_on("m4", type="build")
+    depends_on("json-c")
+    depends_on("libyaml")
+    depends_on("readline")
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
     depends_on("scotch~metis+mpi~int64", when="+scotch~int64")
@@ -893,6 +894,18 @@ class Openfoam(Package):
                 f for f in glob.glob(join_path("..", self.archbin, "*")) if os.path.isfile(f)
             ]:
                 os.symlink(f, os.path.basename(f))
+
+    # Executables like decomposePar require interface libraries for optional dependencies, but if
+    # the dependency is missing, an dummy library is used and put in lib/dummy. Allow this until
+    # the https://develop.openfoam.com/Development/openfoam/-/issues/3283 is resolved.
+    unresolved_libraries = [
+        "libkahipDecomp.so",
+        "libmetisDecomp.so",
+        "libMGridGen.so",
+        "libPstream.so",
+        "libptscotchDecomp.so",
+        "libscotchDecomp.so",
+    ]
 
 
 # -----------------------------------------------------------------------------

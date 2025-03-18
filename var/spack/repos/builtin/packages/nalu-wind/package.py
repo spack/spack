@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -48,7 +47,6 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("catalyst", default=False, description="Compile with Catalyst support")
     variant("shared", default=True, description="Build shared libraries")
     variant("fftw", default=False, description="Compile with FFTW support")
-    variant("fsi", default=False, description="Enable fluid-structure-interaction models")
     variant("boost", default=False, description="Enable Boost integration")
     variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
     variant("wind-utils", default=False, description="Build wind-utils")
@@ -62,8 +60,9 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("fortran", type="build", when="+openfast")
 
     depends_on("mpi")
-    depends_on("yaml-cpp@0.5.3:")
-    depends_on("openfast@4.0.0:+cxx+netcdf", when="+fsi")
+    depends_on("yaml-cpp@0.6.0:0.7.0")
+    depends_on("openfast@4.0.2:+cxx+netcdf", when="+openfast")
+    depends_on("trilinos@15.1.1", when="@=2.1.0")
     depends_on("trilinos@13.4.1", when="@=2.0.0")
     depends_on("hypre@2.29.0:", when="@2.0.0:+hypre")
     depends_on(
@@ -71,7 +70,6 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
         "gotype=long cxxstd=17"
     )
     depends_on("trilinos~cuda~wrapper", when="~cuda")
-    depends_on("openfast@2.6.0: +cxx", when="+openfast")
     depends_on("tioga@1.0.0:", when="+tioga")
     depends_on("hypre@2.18.2: ~int64+mpi~superlu-dist", when="+hypre")
     depends_on("trilinos+muelu+belos+amesos2+ifpack2", when="+trilinos-solvers")
@@ -92,16 +90,16 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
             when="+cuda cuda_arch={0}".format(_arch),
         )
         depends_on(
-            "hypre@develop +mpi+cuda~int64~superlu-dist cuda_arch={0}".format(_arch),
+            "hypre@2.30.0: +cuda cuda_arch={0}".format(_arch),
             when="+hypre+cuda cuda_arch={0}".format(_arch),
         )
     for _arch in ROCmPackage.amdgpu_targets:
         depends_on(
-            "trilinos@13.4: ~shared+rocm+rocm_rdc amdgpu_target={0}".format(_arch),
+            "trilinos~shared+rocm+rocm_rdc amdgpu_target={0}".format(_arch),
             when="+rocm amdgpu_target={0}".format(_arch),
         )
         depends_on(
-            "hypre+rocm amdgpu_target={0}".format(_arch),
+            "hypre@2.30.0: +rocm amdgpu_target={0}".format(_arch),
             when="+hypre+rocm amdgpu_target={0}".format(_arch),
         )
 
@@ -127,6 +125,9 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^trilinos+cuda", when="~cuda")
     conflicts("^trilinos+rocm", when="~rocm")
     conflicts("+shared", when="+trilinos-solvers")
+    conflicts(
+        "openfast@4.0.0:4.0.1", msg="OpenFAST 4.0.0:4.0.1 contains a bug. Use OpenFAST >= 4.0.2."
+    )
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         spec = self.spec
@@ -140,9 +141,9 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         env.append_flags("CXXFLAGS", "-DUSE_STK_SIMD_NONE")
         if spec.satisfies("+cuda"):
-            env.set("OMPI_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-            env.set("MPICH_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-            env.set("MPICXX_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+            env.set("OMPI_CXX", self["kokkos-nvcc-wrapper"].kokkos_cxx)
+            env.set("MPICH_CXX", self["kokkos-nvcc-wrapper"].kokkos_cxx)
+            env.set("MPICXX_CXX", self["kokkos-nvcc-wrapper"].kokkos_cxx)
         if spec.satisfies("+rocm"):
             env.append_flags("CXXFLAGS", "-fgpu-rdc")
 
