@@ -416,8 +416,9 @@ def use_concretization_cache(mutable_config, tmpdir):
     spack.config.set("config:concretization_cache:enable", True)
     # ensure we have an isolated concretization cache
     new_conc_cache_loc = str(tmpdir.mkdir("concretization"))
-    spack.config.set("config:concretization_cache:path", new_conc_cache_loc)
+    spack.config.set("config:concretization_cache:url", new_conc_cache_loc)
     yield
+    shutil.rmtree(tmpdir)
 
 
 #

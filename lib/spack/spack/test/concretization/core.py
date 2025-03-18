@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import io
 import os
 import pathlib
 import platform
@@ -3915,3 +3916,36 @@ def test_satisfies_conditional_spec(
     assert abstract_spec.satisfies(conditional_spec) is expected_abstract
     assert concrete_spec.satisfies(conditional_spec) is expected_concrete
     assert concrete_spec.satisfies(abstract_spec)
+def test_concretization_cache_manifest_metadata_extraction(use_concretization_cache, mutable_config, monkeypatch):
+    """Test that the concretization cache is able to correctly extract manifest data"""
+    cache_root = pathlib.Path(spack.config.get("config:concretization_cache:url"))
+    cache = cache_root / ".cache_manifest"
+    with cache.open("r") as f:
+        cache_metadata = f.readline().strip("\n").split(" ")
+        assert len(cache_metadata) == 2, f"Invalid cache metadata structure: {len(cache_metadata)} values detected"
+        f.seek(0, io.SEEK_CUR)
+        cache_count, cache_byte_size = spack.solver.asp.CONC_CACHE._extract_cache_metadata(f)
+        count, byte_size = cache_metadata
+        assert cache_count == count, f"Invalid cache metadata read, count value was {count}, but parsed {cache_count}"
+        assert cache_byte_size == byte_size, f"Invalid cache metadata read, byte size value was {byte_size}, but parsed {cache_byte_size}"
+
+
+def test_concretization_cache_manifest_updating(use_concretization_cache, mutable_config, monkeypatch):
+    """Tests that the concretization cache manifest keeps proper track of all manifest entries"""
+    def extract_cache_metadata(cache_root: pathlib.Path):
+        cache = cache_root / ".cache_manifest"
+        with cache.open("r") as f:
+            return spack.solver.asp.CONC_CACHE._extract_cache_metadata(f)
+
+    cache_root = pathlib.Path(spack.config.get("config:concretization_cache:url"))
+    spack.concretize.concretize_one("zlib")
+    spack.concretize.concretize_one("hdf5")
+    spack.concretize.concretize_one("py-black")
+    parsed_count, parsed_byte_size = extract_cache_metadata(cache_root)
+    count = 0
+    byte_size = 0
+    for i, entry in enumerate(spack.solver.asp.CONC_CACHE.cache_entries()):
+        count += i
+        byte_size += entry.stat().st_size
+    assert parsed_count == count, f"Concretization cache manifest entry count incorrect. Expected count {count}, got {parsed_count}"
+    assert parsed_byte_size == byte_size, f"Concretization cache manifest byte count incorrect. Expected count {byte_size}, got {parsed_byte_size}"

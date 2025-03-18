@@ -7,7 +7,7 @@ import copy
 import enum
 import errno
 import functools
-import hashlib
+import gzip
 import io
 import itertools
 import json
@@ -28,6 +28,7 @@ from typing import (
     List,
     NamedTuple,
     Optional,
+    Sequence,
     Set,
     Tuple,
     Type,
@@ -671,15 +672,16 @@ class ConcretizationCache:
                 return
             entry_count = int(count)
             manifest_bytes = int(cache_bytes)
-            # move beyond the metadata entry
-            f.readline()
             if entry_count > entry_limit and entry_limit > 0:
                 with self._fc.write_transaction(self._cache_manifest) as (old, new):
+                    self._synchronize_manifest(old, new)
+                    # advance new beyond metadata entry
+                    new.readline()
                     # prune the oldest 10% or until we have removed 10% of
                     # total bytes starting from oldest entry
                     # TODO: make this configurable?
                     prune_count = entry_limit // 10
-                    lines_to_prune = f.readlines(prune_count)
+                    lines_to_prune = new.readlines(prune_count)
                     for i, line in enumerate(lines_to_prune):
                         sha, cache_entry_bytes = self._parse_manifest_entry(line)
                         if sha and cache_entry_bytes:
@@ -691,16 +693,19 @@ class ConcretizationCache:
                             tty.warn(
                                 f"Invalid concretization cache entry: '{line}' on line: {i+1}"
                             )
-                    self._write_manifest(f, entry_count, manifest_bytes)
+                    self._write_manifest(new, entry_count, manifest_bytes)
 
             elif manifest_bytes > bytes_limit and bytes_limit > 0:
                 with self._fc.write_transaction(self._cache_manifest) as (old, new):
+                    self._synchronize_manifest(old, new)
+                    # advance new beyond metadata entry
+                    new.readline()
                     # take 10% of current size off
                     prune_amount = bytes_limit // 10
                     total_pruned = 0
                     i = 0
                     while total_pruned < prune_amount:
-                        sha, manifest_cache_bytes = self._parse_manifest_entry(f.readline())
+                        sha, manifest_cache_bytes = self._parse_manifest_entry(new.readline())
                         if sha and manifest_cache_bytes:
                             entry_bytes = int(manifest_cache_bytes)
                             cache_path = self.root / sha[:2] / sha
@@ -714,7 +719,7 @@ class ConcretizationCache:
                                 f"'{sha} {manifest_cache_bytes}' on line: {i}"
                             )
                         i += 1
-                    self._write_manifest(f, entry_count, manifest_bytes)
+                    self._write_manifest(new, entry_count, manifest_bytes)
             for cache_dir in self.root.iterdir():
                 if cache_dir.is_dir() and not any(cache_dir.iterdir()):
                     self._safe_remove(cache_dir)
@@ -735,17 +740,19 @@ class ConcretizationCache:
                             "within the concretization cache."
                         )
 
-    def _parse_manifest_entry(self, line):
+    def _parse_manifest_entry(self, line: str) -> Sequence[Union[None, str]]:
         """Returns parsed manifest entry lines
         with handling for invalid reads."""
         if line:
             cache_values = line.strip("\n").split(" ")
-            if len(cache_values) < 2:
+            cache_metadata_size = len(cache_values)
+            if cache_metadata_size != 2:
                 tty.warn(f"Invalid cache entry at {line}")
                 return None, None
+            return cache_values
         return None, None
 
-    def _write_manifest(self, manifest_file, entry_count, entry_bytes):
+    def _write_manifest(self, manifest_file: IO[str], entry_count, entry_bytes):
         """Writes new concretization cache manifest file.
 
         Arguments:
@@ -770,7 +777,7 @@ class ConcretizationCache:
         """
 
         with current_file_position(cache_entry_buffer, 0):
-            cache_str = cache_entry_buffer.read()
+            cache_str = self._unzip_cache_entry(cache_entry_buffer.read())
             # TODO: Should this be an error if None?
             # Same for _stats_from_cache
             if cache_str:
@@ -788,7 +795,7 @@ class ConcretizationCache:
         and returns the Python data structures
         """
         with current_file_position(cache_entry_buffer, 0):
-            cache_str = cache_entry_buffer.read()
+            cache_str = self._unzip_cache_entry(cache_entry_buffer.read())
             if cache_str:
                 return json.loads(cache_str)["statistics"]
         return None
@@ -803,7 +810,7 @@ class ConcretizationCache:
 
     def _prefix_digest(self, problem: str) -> Tuple[str, str]:
         """Return the first two characters of, and the full, sha256 of the given asp problem"""
-        prob_digest = hashlib.sha256(problem.encode()).hexdigest()
+        prob_digest = spack.util.hash.b32_hash(problem)
         prefix = prob_digest[:2]
         return prefix, prob_digest
 
@@ -825,28 +832,51 @@ class ConcretizationCache:
             spack.util.hash.b32_hash(cache_path), spack.util.crypto.bit_length(sys.maxsize)
         )
 
+    def _zip_cache_entry(self, cache_data):
+        """Compress cache entries via gzip"""
+        return gzip.compress(cache_data)
+
+    def _unzip_cache_entry(self, cache_data):
+        """Decompresses cache entries, which are gzipped by default"""
+        return gzip.decompress(cache_data)
+
+    def _synchronize_manifest(self, old, new):
+        """Ensures that cache manifest is synchronized between the original
+        and temporary file created by the file cache write transaction manager
+
+        Returns both stream cursors to beginning of each stream
+        """
+        # synchronize manifests as old will be deleted by
+        # filecache once the context manager exits
+        cache_context = old.read()
+        old.seek(0, io.SEEK_SET)
+        new.write(cache_context)
+        new.seek(0, io.SEEK_SET)
+
     def flush_manifest(self):
         """Updates the concretization cache manifest file after a cache write operation
         Updates the current byte count and entry counts and writes to the head of the
         manifest file"""
         manifest_file = self.root / self._cache_manifest
         manifest_file.touch(exist_ok=True)
-        with open(manifest_file, "r+", encoding="utf-8") as f:
+        with self._fc.write_transaction(self._cache_manifest) as (old, new):
+            self._synchronize_manifest(old, new)
             # check if manifest is empty
-            count, cache_bytes = self._extract_cache_metadata(f)
+            # now all operations can be perofrmed
+            count, cache_bytes = self._extract_cache_metadata(new)
             if not count or not cache_bytes:
                 # cache is unintialized
                 count = 0
                 cache_bytes = 0
-            f.seek(0, io.SEEK_END)
+            new.seek(0, io.SEEK_END)
             for manifest_update in self._manifest_queue:
                 entry_path, entry_bytes = manifest_update
                 count += 1
                 cache_bytes += entry_bytes
-                f.write(f"{entry_path.name} {entry_bytes}")
-            f.seek(0, io.SEEK_SET)
+                new.write(f"{entry_path.name} {entry_bytes}")
+            new.seek(0, io.SEEK_SET)
             new_stats = f"{int(count)+1} {int(cache_bytes)}\n"
-            f.write(new_stats)
+            new.write(new_stats)
 
     def _register_cache_update(self, cache_path: pathlib.Path, bytes_written: int):
         """Adds manifest entry to update queue for later updates to the manifest"""
@@ -890,7 +920,7 @@ class ConcretizationCache:
                 tty.debug(f"Cache entry {cache_path} exists, will not be overwritten")
                 return
             cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
-            bytes_written = new.write(json.dumps(cache_dict))
+            bytes_written = new.write(self._zip_cache_entry(json.dumps(cache_dict)))
             self._register_cache_update(cache_path, bytes_written)
 
     def fetch(self, problem: str) -> Union[Tuple[Result, List], Tuple[None, None]]:
