@@ -126,12 +126,12 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("lapack", when="+lapack")
     depends_on("magma", when="+magma")
     depends_on("superlu-dist", when="+superlu-dist+mpi")
-    depends_on("rocsolver", when="+rocm")
     depends_on("rocsparse", when="+rocm")
     depends_on("rocthrust", when="+rocm")
     depends_on("rocrand", when="+rocm")
     depends_on("rocprim", when="+rocm")
-    depends_on("rocblas", when="+rocm")
+    depends_on("rocsolver", when="@2.29.0: +rocm")
+    depends_on("rocblas", when="@2.29.0: +rocm")
     depends_on("hipblas", when="+rocm +superlu-dist")
     depends_on("umpire", when="+umpire")
     depends_on("umpire+rocm", when="+umpire+rocm")
@@ -307,7 +307,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if spec.satisfies("+rocm"):
             configure_args.append("--with-hip")
-            rocm_pkgs = ["rocthrust", "rocprim", "rocrand", "rocsparse", "rocblas"]
+            rocm_pkgs = ["rocthrust", "rocprim", "rocrand", "rocsparse"]
             if spec.satisfies("+superlu-dist"):
                 rocm_pkgs.append("hipblas")
             if spec.satisfies("@2.29.0:"):
