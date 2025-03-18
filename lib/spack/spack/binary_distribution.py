@@ -86,11 +86,12 @@ from spack.util.executable import which
 from .enums import InstallRecordStatus
 from .url_buildcache import (
     BuildcacheEntryError,
-    ExistsInBuildcache,
     InvalidMetadataFile,
     MirrorForSpec,
     MirrorURLAndVersion,
+    URLBuildcacheEntry,
     create_url_buildcache_entry,
+    get_url_buildcache_class,
     get_valid_spec_file,
 )
 
@@ -696,13 +697,6 @@ def select_signing_key() -> str:
     return keys[0]
 
 
-def sign_specfile(key: str, specfile_path: str) -> str:
-    """sign and return the path to the signed specfile"""
-    signed_specfile_path = f"{specfile_path}.sig"
-    spack.util.gpg.sign(key, specfile_path, signed_specfile_path, clearsign=True)
-    return signed_specfile_path
-
-
 def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
     """Generate the index, compute its hash, and push the files to the mirror"""
     index_json_path = os.path.join(temp_dir, spack_db.INDEX_JSON_FILE)
@@ -1089,14 +1083,12 @@ def _do_create_tarball(
     return tar_gz_checksum.hexdigest(), tar_checksum.hexdigest()
 
 
-def _exists_in_buildcache(spec: spack.spec.Spec, tmpdir: str, out_url: str) -> ExistsInBuildcache:
-    """returns a tuple of bools (signed, unsigned, tarball) indicating whether specfiles/tarballs
-    exist in the buildcache"""
-    cache_entry = create_url_buildcache_entry(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    cache_entry.initialize_from_spec_url(cache_entry.compute_remote_spec_url(spec, out_url))
-    cache_exists = cache_entry.exists()
-    cache_entry.destroy()
-    return cache_exists
+def _exists_in_buildcache(spec: spack.spec.Spec, out_url: str) -> URLBuildcacheEntry:
+    """creates and returns (after checking existence) a URLBuildcacheEntry"""
+    cache_type = get_url_buildcache_class(CURRENT_BUILD_CACHE_LAYOUT_VERSION)
+    cache_entry = cache_type(out_url, spec)
+    cache_entry.exists()
+    return cache_entry
 
 
 def prefixes_to_relocate(spec):
@@ -1109,50 +1101,12 @@ def prefixes_to_relocate(spec):
 def _url_upload_tarball_and_specfile(
     spec: spack.spec.Spec,
     tmpdir: str,
-    out_url: str,
-    exists: ExistsInBuildcache,
+    cache_entry: URLBuildcacheEntry,
     signing_key: Optional[str],
 ):
-    layout_version = CURRENT_BUILD_CACHE_LAYOUT_VERSION
     tarball = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
     checksum, _ = create_tarball(spec, tarball)
-    spec_dict = spec.to_dict(hash=ht.dag_hash)
-    hash_algorithm = "sha256"
-    spec_dict["buildcache_layout_version"] = layout_version
-    spec_dict["binary_cache_checksum"] = {"hash_algorithm": hash_algorithm, "hash": checksum}
-    spec_dict["archive_size"] = os.stat(tarball).st_size
-    spec_dict["archive_timestamp"] = datetime.datetime.now().astimezone().isoformat()
-    spec_dict["archive_compression"] = "gzip"
-
-    cache_entry = create_url_buildcache_entry(layout_version=layout_version)
-    cache_entry.initialize_from_spec_dict_and_mirror(spec_dict, out_url)
-
-    if exists.tarball:
-        web_util.remove_url(exists.tarball_url)
-    if exists.signed:
-        web_util.remove_url(exists.signed_url)
-    if exists.unsigned:
-        web_util.remove_url(exists.unsigned_url)
-
-    web_util.push_to_url(
-        tarball, cache_entry.compute_remote_archive_url(out_url), keep_original=False
-    )
-
-    specfile = os.path.join(tmpdir, f"{spec.dag_hash()}.spec.json")
-    with open(specfile, "w", encoding="utf-8") as f:
-        # Note: when using gpg clear sign, we need to avoid long lines (19995 chars).
-        # If lines are longer, they are truncated without error. Thanks GPG!
-        # So, here we still add newlines, but no indent, so save on file size and
-        # line length.
-        json.dump(spec_dict, f, indent=0, separators=(",", ":"))
-
-    # sign the tarball and spec file with gpg
-    if signing_key:
-        specfile = sign_specfile(signing_key, specfile)
-
-    web_util.push_to_url(
-        specfile, cache_entry.compute_remote_spec_url(spec, out_url), keep_original=False
-    )
+    cache_entry.push(spec, tarball, "sha256", checksum, tmpdir, signing_key)
 
 
 class Uploader:
@@ -1350,10 +1304,10 @@ def _url_push(
     errors: List[Tuple[spack.spec.Spec, BaseException]] = []
 
     exists_futures = [
-        executor.submit(_exists_in_buildcache, spec, tmpdir, out_url) for spec in specs
+        executor.submit(_exists_in_buildcache, spec, out_url) for spec in specs
     ]
 
-    exists = {
+    cache_entries = {
         spec.dag_hash(): exists_future.result()
         for spec, exists_future in zip(specs, exists_futures)
     }
@@ -1362,8 +1316,7 @@ def _url_push(
         specs_to_upload = []
 
         for spec in specs:
-            signed, _, unsigned, _, tarball, _ = exists[spec.dag_hash()]
-            if (signed or unsigned) and tarball:
+            if cache_entries[spec.dag_hash()].exists():
                 skipped.append(spec)
             else:
                 specs_to_upload.append(spec)
@@ -1383,8 +1336,7 @@ def _url_push(
             _url_upload_tarball_and_specfile,
             spec,
             tmpdir,
-            out_url,
-            exists[spec.dag_hash()],
+            cache_entries[spec.dag_hash()],
             signing_key,
         )
         for spec in specs_to_upload

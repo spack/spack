@@ -18,6 +18,7 @@ import urllib.request
 import urllib.response
 from pathlib import Path, PurePath
 
+import jsonschema
 import pytest
 
 from llnl.util.filesystem import copy_tree, join_path
@@ -45,6 +46,7 @@ from spack.binary_distribution import INDEX_HASH_FILE, CannotListKeys, GenerateI
 from spack.database import INDEX_JSON_FILE
 from spack.installer import PackageInstaller
 from spack.paths import test_path
+from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 from spack.spec import Spec
 from spack.url_buildcache import create_url_buildcache_entry, get_valid_spec_file
 
@@ -1187,6 +1189,32 @@ def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
     build_cache.destroy()
 
     assert not os.path.exists(local_tarball_path)
+
+
+def test_validate_buildcache_manifest():
+    """Make sure schema validates as expected"""
+
+    manifest_data = {
+        "version": 3,
+        "data": [
+            {
+                "content-length": 34343434,
+                "content-type": "tarball-v1",
+                "compression": "gzip",
+                "checksum-algorithm": "sha256",
+                "checksum": "e79acbb06f79c8c5d5aeaf415266d10fe32675f498a60f048299653083534a12"
+            },
+            {
+                "content-length": 123,
+                "content-type": "spec-v6",
+                "compression": "gzip",
+                "checksum-algorithm": "sha256",
+                "checksum": "f08eb62661ad159d2d258890127fc6053f5302a2f490c1c7f7bd677721010ee0"
+            },
+        ]
+    }
+
+    jsonschema.validate(manifest_data, buildcache_manifest_schema)
 
 
 @pytest.mark.parametrize(
