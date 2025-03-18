@@ -1,0 +1,44 @@
+diff --git a/wmake/rules/linuxARM64Arm/c b/wmake/rules/linuxARM64Arm/c
+index 8850f93416..3d02366d2d 100644
+--- a/wmake/rules/linuxARM64Arm/c
++++ b/wmake/rules/linuxARM64Arm/c
+@@ -18,7 +18,7 @@ ctoo        = $(WM_SCHEDULER) $(cc) $(cFLAGS) -c $< -o $@
+ 
+ include $(GENERAL_RULES)/Clang/link-c
+ 
+-LINKLIBSO  += -armpl
+-LINKEXE    += -armpl
++LINKLIBSO  += -L$(ARMPL_LIBRARIES) -Wl,-rpath $(ARMPL_LIBRARIES) -larmpl -fveclib=ArmPL
++LINKEXE    += -L$(ARMPL_LIBRARIES) -Wl,-rpath=$(ARMPL_LIBRARIES) -larmpl -fveclib=ArmPL
+ 
+ #------------------------------------------------------------------------------
+diff --git a/wmake/rules/linuxARM64Arm/c++ b/wmake/rules/linuxARM64Arm/c++
+index 430762435b..d1ab9ea923 100644
+--- a/wmake/rules/linuxARM64Arm/c++
++++ b/wmake/rules/linuxARM64Arm/c++
+@@ -21,7 +21,7 @@ cxxtoo      = $(Ctoo)
+ 
+ include $(GENERAL_RULES)/Clang/link-c++
+ 
+-LINKLIBSO  += -armpl
+-LINKEXE    += -armpl
++LINKLIBSO  += -L$(ARMPL_LIBRARIES) -Wl,-rpath=$(ARMPL_LIBRARIES) -larmpl -fveclib=ArmPL
++LINKEXE    += -L$(ARMPL_LIBRARIES) -Wl,-rpath=$(ARMPL_LIBRARIES) -larmpl -fveclib=ArmPL
+ 
+ #------------------------------------------------------------------------------
+diff --git a/wmake/rules/linuxARM64Arm/c++Opt b/wmake/rules/linuxARM64Arm/c++Opt
+index 7a4e09d9f4..da3e03d6fb 100644
+--- a/wmake/rules/linuxARM64Arm/c++Opt
++++ b/wmake/rules/linuxARM64Arm/c++Opt
+@@ -1,2 +1,2 @@
+ c++DBUG     =
+-c++OPT      = -ffp-contract=fast -ffast-math -O3 -funsafe-math-optimizations -fsimdmath -armpl
++c++OPT      = -ffp-contract=fast -ffast-math -O3 -funsafe-math-optimizations -I$(ARMPL_INCLUDES) -fveclib=ArmPL
+diff --git a/wmake/rules/linuxARM64Arm/cOpt b/wmake/rules/linuxARM64Arm/cOpt
+index 10aa6fc610..1fe2d80eaf 100644
+--- a/wmake/rules/linuxARM64Arm/cOpt
++++ b/wmake/rules/linuxARM64Arm/cOpt
+@@ -1,2 +1,2 @@
+ cDBUG       =
+-cOPT        = -ffp-contract=fast -ffast-math -O3 -armpl
++cOPT        = -ffp-contract=fast -ffast-math -O3 -I$(ARMPL_INCLUDES) -fveclib=ArmPL

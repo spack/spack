@@ -429,6 +429,9 @@ class Openfoam(Package):
         sha256="bad4b0e80fd26ea702bce9ccfb925edbbaa3308f70392fe6da2c7671b1d39bea",
     )
 
+    # Fix: compile flags for Arm Compiler for Linux 24.10 and Arm Toolchain for Linux
+    patch("openfoam_arm.patch")
+
     # Some user config settings
     # default: 'compile-option': '-spack',
     # default: 'mplib': 'USERMPI',  # User-defined mpi for spack
