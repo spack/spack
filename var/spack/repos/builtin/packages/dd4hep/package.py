@@ -93,7 +93,7 @@ class Dd4hep(CMakePackage):
         " some places in addtion to the debug build type",
     )
 
-    variant("docs", default=False, description="Bulid documentation")
+    variant("docs", default=False, description="Build documentation")
 
     depends_on("cmake @3.12:", type="build")
     depends_on("cmake @3.14:", type="build", when="@1.26:")
