@@ -240,7 +240,7 @@ def generate_openmpi_entries(_common_arch, _common_compiler):
     return list(x.to_dict() for x in [openmpi, hwloc])
 
 
-def test_generate_specs_from_manifest(generate_openmpi_entries):
+def test_generate_specs_from_manifest(mock_packages, generate_openmpi_entries):
     """Given JSON entries, check that we can form a set of Specs
     including dependency references.
     """
@@ -249,7 +249,7 @@ def test_generate_specs_from_manifest(generate_openmpi_entries):
     assert openmpi_spec["hwloc"]
 
 
-def test_translate_cray_platform_to_linux(monkeypatch, _common_compiler):
+def test_translate_cray_platform_to_linux(mock_packages, monkeypatch, _common_compiler):
     """Manifests might list specs on newer Cray platforms as being "cray",
     but Spack identifies such platforms as "linux". Make sure we
     automaticaly transform these entries.
