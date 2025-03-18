@@ -157,6 +157,9 @@ class PySetuptools(Package, PythonExtension):
         depends_on("python@3.8:", when="@68.1:")
         depends_on("python@3.7:", when="@59.7:")
         depends_on("python@3.6:", when="@51:")
+        depends_on("python@3.5:", when="@45:")
+        depends_on("python@3.4:", when="@40:")
+        depends_on("python@3.3:", when="@30:")
 
         # Uses HTMLParser.unescape
         depends_on("python@:3.8", when="@:41.0")
