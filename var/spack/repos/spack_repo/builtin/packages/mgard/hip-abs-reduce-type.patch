@@ -1,0 +1,32 @@
+From 61fcf45bc9a8324ae00a8ab21d5c65529d04eb9c Mon Sep 17 00:00:00 2001
+From: Kenneth Moreland <morelandkd@ornl.gov>
+Date: Tue, 18 Mar 2025 10:38:15 -0400
+Subject: [PATCH] Correct type for AbsMax reduction in HIP
+
+The hip device collective for AbsMax does a reduction operation.
+The initial value was set to a literal int 0, which is wrong for
+floating types of arrays. This could cause wrong results or compile
+errors.
+
+Fixes #241
+---
+ include/mgard-x/RuntimeX/DeviceAdapters/DeviceAdapterHip.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/include/mgard-x/RuntimeX/DeviceAdapters/DeviceAdapterHip.h b/include/mgard-x/RuntimeX/DeviceAdapters/DeviceAdapterHip.h
+index 5689be9f..77e40b04 100644
+--- a/include/mgard-x/RuntimeX/DeviceAdapters/DeviceAdapterHip.h
++++ b/include/mgard-x/RuntimeX/DeviceAdapters/DeviceAdapterHip.h
+@@ -2341,7 +2341,8 @@ public:
+     AbsMaxOp absMaxOp;
+     hipStream_t stream = DeviceRuntime<HIP>::GetQueue(queue_idx);
+     hipcub::DeviceReduce::Reduce(d_temp_storage, temp_storage_bytes, v.data(),
+-                                 result.data(), n, absMaxOp, 0, stream);
++                                 result.data(), n, absMaxOp, static_cast<T>(0),
++                                 stream);
+     ErrorAsyncCheck(hipGetLastError(), "DeviceCollective<HIP>::AbsMax");
+     if (DeviceRuntime<HIP>::SyncAllKernelsAndCheckErrors) {
+       ErrorSyncCheck(hipDeviceSynchronize(), "DeviceCollective<HIP>::AbsMax");
+-- 
+2.39.5 (Apple Git-154)
+

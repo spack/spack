@@ -84,6 +84,7 @@ class Mgard(CMakePackage, CudaPackage, ROCmPackage):
 
     patch("hip-pointer-attribute-struct-fix.patch", when="@:2023-12-09")
     patch("hip-cub-configure.patch", when="@:2023-12-09")
+    patch("hip-abs-reduce-type.patch", when="@:2023-12-09")
 
     def flag_handler(self, name, flags):
         if name == "cxxflags":
