@@ -279,8 +279,8 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append("#------------------{0}\n".format("-" * 30))
 
             if spec.satisfies("^blt@0.7:"):
-                rocm_root = dirname(spec["llvm-amdgpu"].prefix)
-                options.append(cmake_cache_path("ROCM_PATH", rocm_root))
+                rocm_root = os.path.dirname(spec["llvm-amdgpu"].prefix)
+                entries.append(cmake_cache_path("ROCM_PATH", rocm_root))
             else:
                 # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
                 entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
