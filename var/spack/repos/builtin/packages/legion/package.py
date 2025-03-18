@@ -111,6 +111,12 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("mpi", when="network=mpi")
     depends_on("mpi", when="network=gasnet")  # MPI is required to build gasnet (needs mpicc).
     depends_on("ucx", when="network=ucx")
+    depends_on("ucc", when="network=ucx @25.03.0:")
+    depends_on("ucc", when="network=ucx @stable")
+    depends_on("ucc+cuda+nccl", when="network=ucx +cuda @25.03.0:")
+    depends_on("ucc+cuda+nccl", when="network=ucx +cuda @stable")
+    depends_on("ucc+rocm+rccl", when="network=ucx +rocm @25.03.0:")
+    depends_on("ucc+rocm+rccl", when="network=ucx +rocm @stable")
     depends_on("ucx", when="conduit=ucx")
     depends_on("mpi", when="conduit=mpi")
     depends_on("cuda@10.0:11.9", when="+cuda_unsupported_compiler @21.03.0:23.03.0")
@@ -126,14 +132,15 @@ class Legion(CMakePackage, ROCmPackage):
 
     # cuda-centric
     cuda_arch_list = CudaPackage.cuda_arch_values
-    for nvarch in cuda_arch_list:
+    for arch in cuda_arch_list:
+        depends_on(f"ucc cuda_arch={arch}", when=f"network=ucx +cuda cuda_arch={arch}")
         depends_on(
-            f"kokkos@3.3.01:+cuda+cuda_lambda+wrapper cuda_arch={nvarch}",
-            when=f"+kokkos+cuda cuda_arch={nvarch} %gcc",
+            f"kokkos@3.3.01:+cuda+cuda_lambda+wrapper cuda_arch={arch}",
+            when=f"+kokkos+cuda cuda_arch={arch} %gcc",
         )
         depends_on(
-            f"kokkos@3.3.01:+cuda+cuda_lambda~wrapper cuda_arch={nvarch}",
-            when=f"+kokkos+cuda cuda_arch={nvarch} %clang",
+            f"kokkos@3.3.01:+cuda+cuda_lambda~wrapper cuda_arch={arch}",
+            when=f"+kokkos+cuda cuda_arch={arch} %clang",
         )
 
     depends_on("kokkos@3.3.01:~cuda", when="+kokkos~cuda")
@@ -170,6 +177,7 @@ class Legion(CMakePackage, ROCmPackage):
     )
 
     for arch in ROCmPackage.amdgpu_targets:
+        depends_on(f"ucc amdgpu_target={arch}", when=f"network=ucx +rocm amdgpu_target={arch}")
         depends_on(f"kokkos@3.3.01:+rocm amdgpu_target={arch}", when=f"+rocm amdgpu_target={arch}")
 
     depends_on("kokkos@3.3.01:+rocm", when="+kokkos+rocm")
