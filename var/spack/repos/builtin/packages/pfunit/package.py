@@ -100,6 +100,8 @@ class Pfunit(CMakePackage):
         description="Enable MPI Fortran 2008 bindings",
         when="@4.4.0: +mpi",
     )
+    # You can't have mpi_f08 without mpi
+    conflicts("+mpi_f08", when="~mpi")
 
     # The maximum rank of an array in the Fortran 2008 standard is 15
     max_rank = 15
@@ -215,7 +217,7 @@ class Pfunit(CMakePackage):
             )
 
         if spec.satisfies("@4.4.0: +mpi"):
-            args.extend([self.define_from_variant("ENABLE_MPI_F08", "mpi_f08")])
+            args.append(self.define_from_variant("ENABLE_MPI_F08", "mpi_f08"))
 
         return args
 
