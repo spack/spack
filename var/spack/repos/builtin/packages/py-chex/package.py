@@ -15,6 +15,7 @@ class PyChex(PythonPackage):
 
     license("Apache-2.0")
 
+    version("0.1.89", sha256="78f856e6a0a8459edfcbb402c2c044d2b8102eac4b633838cbdfdcdb09c6c8e0")
     version("0.1.86", sha256="e8b0f96330eba4144659e1617c0f7a57b161e8cbb021e55c6d5056c7378091d1")
     version("0.1.85", sha256="a27cfe87119d6e1fe24ccc1438a59195e6dc1d6e0e10099fcf618c3f64771faf")
     version("0.1.5", sha256="686858320f8f220c82a6c7eeb54dcdcaa4f3d7f66690dacd13a24baa1ee8299e")
