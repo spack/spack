@@ -6,6 +6,7 @@ from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
 
 from spack.package import *
 
+
 class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
     """Data parallel C++ mathematical object library."""
 
@@ -46,14 +47,33 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("chroma", default=False, description="Chroma regression tests")
     variant("cuda", default=False, description="Build with CUDA support")
     variant("gparity", default=True, description="Build with gparity support")
-    variant("fermion-reps", default=True, description="Build non-fundamental fermion representations")
+    variant(
+        "fermion-reps", default=True, description="Build non-fundamental fermion representations"
+    )
     variant("Sp", default=True, description="Build with support for symplectic gauge groups")
-    variant("Nc", default="3", values=("2","3","4","5","8"), description="Instantiate for this number of colours")
-    variant("alloc-align", default="2MB", values=("4k", "2MB"), description="Grid allocator alignment")
+    variant(
+        "Nc",
+        default="3",
+        values=("2", "3", "4", "5", "8"),
+        description="Instantiate for this number of colours",
+    )
+    variant(
+        "alloc-align", default="2MB", values=("4k", "2MB"), description="Grid allocator alignment"
+    )
     variant("unified-device-memory", default=False, description="Enable unified device memory")
-    variant("shared-memory", default="no", values=("shmopen", "shmget", "hugetlbfs", "nvlink", "no"), description="Interprocess shared memory allocation technique")
+    variant(
+        "shared-memory",
+        default="no",
+        values=("shmopen", "shmget", "hugetlbfs", "nvlink", "no"),
+        description="Interprocess shared memory allocation technique",
+    )
     variant("accelerator-aware-mpi", default=False, description="Build with GPU aware MPI")
-    variant("tracing", default="none", values=("none", "nvtx", "roctx", "timer"), description="Enable tracing")
+    variant(
+        "tracing",
+        default="none",
+        values=("none", "nvtx", "roctx", "timer"),
+        description="Enable tracing",
+    )
 
     # Prefer 4 colours by default when enabling Sp.
     requires("Nc=4", "Nc=5", "Nc=8", "Nc=2", "Nc=3", "@:", when="+Sp", policy="any_of")
@@ -93,8 +113,16 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
         when="+cuda",
         msg="Must specify CUDA compute capabilities of your GPU, see https://developer.nvidia.com/cuda-gpus",
     )
-    conflicts("+accelerator-aware-mpi", when="-cuda -rocm", msg="Cannot compile for GPU-aware MPI when not compiling for GPU")
-    conflicts("shared-memory=nvlink", when="-cuda -rocm", msg="Cannot compile with nvlink when not compiling for GPU")
+    conflicts(
+        "+accelerator-aware-mpi",
+        when="-cuda -rocm",
+        msg="Cannot compile for GPU-aware MPI when not compiling for GPU",
+    )
+    conflicts(
+        "shared-memory=nvlink",
+        when="-cuda -rocm",
+        msg="Cannot compile with nvlink when not compiling for GPU",
+    )
 
     def autoreconf(self, spec, prefix):
         Executable("./bootstrap.sh")()
@@ -105,16 +133,19 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if spec.satisfies("+cuda") or spec.satisfies("+rocm"):
             if spec.satisfies("+cuda"):
-                arch_config = ",".join(f"arch=compute_{arch},code=sm_{arch}" for arch in spec.variants["cuda_arch"].value)
+                arch_config = ",".join(
+                    f"arch=compute_{arch},code=sm_{arch}"
+                    for arch in spec.variants["cuda_arch"].value
+                )
                 if "comms=none" in spec:
                     host_compiler = ""
                 else:
                     host_compiler = "-ccbin {}".format(spec["mpi"].mpicxx)
                 env.set("CXX", join_path(spec["cuda"].prefix, "bin", "nvcc"))
-                env.append_flags("CXXFLAGS", "-gencode {0} -cudart shared {1}".format(
-                    arch_config,
-                    host_compiler,
-                ))
+                env.append_flags(
+                    "CXXFLAGS",
+                    "-gencode {0} -cudart shared {1}".format(arch_config, host_compiler),
+                )
                 env.set("LDFLAGS", "-cudart shared -lcublas")
             elif spec.satisfies("+rocm"):
                 archs = ",".join(self.spec.variants["amdgpu_target"].value)
@@ -126,7 +157,12 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
                     mpi_ldflags = "{} -lmpi".format(spec["mpi"].libs.ld_flags)
                 env.set("CXX", join_path(spec["hip"].prefix, "bin", "hipcc"))
                 env.set("LDFLAGS", "{} -lamdhip64".format(mpi_ldflags))
-                env.append_flags("CXXFLAGS", "--offload-arch={} {} {}".format(archs, spec["hip"].headers.cpp_flags, mpi_include))
+                env.append_flags(
+                    "CXXFLAGS",
+                    "--offload-arch={} {} {}".format(
+                        archs, spec["hip"].headers.cpp_flags, mpi_include
+                    ),
+                )
         else:
             if "comms=none" not in spec:
                 env.append_flags("CXXFLAGS", "-fPIC")
@@ -155,10 +191,10 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
         args.extend(self.enable_or_disable("sp", variant="Sp"))
         args.extend(self.enable_or_disable("unified", variant="unified-device-memory"))
 
-        args.append("--enable-tracing={}".format(spec.variants['tracing'].value))
-        args.append("--enable-Nc={}".format(spec.variants['Nc'].value))
-        args.append("--enable-alloc-align={}".format(spec.variants['alloc-align'].value))
-        args.append("--enable-shm={}".format(spec.variants['shared-memory'].value))
+        args.append("--enable-tracing={}".format(spec.variants["tracing"].value))
+        args.append("--enable-Nc={}".format(spec.variants["Nc"].value))
+        args.append("--enable-alloc-align={}".format(spec.variants["alloc-align"].value))
+        args.append("--enable-shm={}".format(spec.variants["shared-memory"].value))
 
         if spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl") or spec.satisfies(
             "^[virtuals=fftw-api] intel-oneapi-mkl"
@@ -177,7 +213,9 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
         # TODO: Add sycl support
         if spec.satisfies("+cuda") or spec.satisfies("+rocm"):
             args.append("--enable-simd=GPU")
-            args.append("--enable-gen-simd-width={0}".format(spec.variants["gen-simd-width"].value))
+            args.append(
+                "--enable-gen-simd-width={0}".format(spec.variants["gen-simd-width"].value)
+            )
             if spec.satisfies("+cuda"):
                 args.append("--enable-accelerator=cuda")
 
@@ -186,19 +224,9 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         else:
             if "avx512" in spec.target:
-                args.extend(
-                    [
-                        "--enable-simd=AVX512",
-                        "--enable-gen-simd-width=64",
-                    ]
-                )
+                args.extend(["--enable-simd=AVX512", "--enable-gen-simd-width=64"])
             elif "avx2" in spec.target:
-                args.extend(
-                    [
-                        "--enable-simd=AVX2",
-                        "--enable-gen-simd-width=32",
-                    ]
-                )
+                args.extend(["--enable-simd=AVX2", "--enable-gen-simd-width=32"])
             elif "avx" in spec.target:
                 if "fma4" in spec.target:
                     args.append("--enable-simd=AVXFMA4")
@@ -208,31 +236,16 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
                     args.append("--enable-simd=AVX")
                 args.append("--enable-gen-simd-width=16")
             elif "sse4_2" in spec.target:
-                args.extend(
-                    [
-                        "--enable-simd=SSE4",
-                        "--enable-gen-simd-width=16",
-                    ]
-                )
+                args.extend(["--enable-simd=SSE4", "--enable-gen-simd-width=16"])
             elif spec.target == "a64fx":
-                args.extend(
-                    [
-                        "--enable-simd=A64FX",
-                        "--enable-gen-simd-width=64",
-                    ]
-                )
+                args.extend(["--enable-simd=A64FX", "--enable-gen-simd-width=64"])
             elif "neon" in spec.target:
-                args.extend(
-                    [
-                        "--enable-simd=NEONv8",
-                        "--enable-gen-simd-width=16",
-                    ]
-                )
+                args.extend(["--enable-simd=NEONv8", "--enable-gen-simd-width=16"])
             else:
                 args.extend(
                     [
                         "--enable-simd=GEN",
-                        f"--enable-gen-simd-width={spec.variants['gen-simd-width'].value}",
+                        f"--enable-gen-simd-width={spec.variants["gen-simd-width"].value}",
                     ]
                 )
 
