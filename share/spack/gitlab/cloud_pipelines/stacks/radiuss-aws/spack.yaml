@@ -32,7 +32,7 @@ spack:
     - umpire +cuda
 
   - compiler:
-    - '%gcc@9.5.0'
+    - '%gcc@7.3.1'
 
   - target:
     - 'target=x86_64_v3'
