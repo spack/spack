@@ -228,6 +228,7 @@ spack:
   - cabana +rocm amdgpu_target=gfx908
   - caliper +rocm amdgpu_target=gfx908
   - chai +rocm amdgpu_target=gfx908
+  - chapel +rocm amdgpu_target=gfx908
   - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx908
   - fftx +rocm amdgpu_target=gfx908
   - gasnet +rocm amdgpu_target=gfx908
@@ -256,7 +257,6 @@ spack:
   # - paraview +rocm amdgpu_target=gfx908 # mesa: https://github.com/spack/spack/issues/44745
   # - vtk-m ~openmp +rocm amdgpu_target=gfx908  # vtk-m: https://github.com/spack/spack/issues/40268
   # --
-  # - chapel +rocm amdgpu_target=gfx908         # chapel: need chapel >= 2.2 to support ROCm >5.4
   # - cp2k +mpi +rocm amdgpu_target=gfx908      # cp2k: Error: KeyError: 'No spec with name rocm in... "-L{}".format(spec["rocm"].libs.directories[0]),
   # - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx908 ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx908 # raja: https://github.com/spack/spack/issues/44593
   # - lammps +rocm amdgpu_target=gfx908         # lammps: KeyError: 'No spec with name llvm-amdgpu in rocm-openmp-extras@6.2.1/xafvl6rnd3tjagjvezszdz6itqzcl3zj'
@@ -274,6 +274,7 @@ spack:
   - cabana +rocm amdgpu_target=gfx90a
   - caliper +rocm amdgpu_target=gfx90a
   - chai +rocm amdgpu_target=gfx90a
+  - chapel +rocm amdgpu_target=gfx9a
   - ecp-data-vis-sdk +paraview +vtkm +rocm amdgpu_target=gfx90a
   - fftx +rocm amdgpu_target=gfx90a
   - gasnet +rocm amdgpu_target=gfx90a
@@ -302,7 +303,6 @@ spack:
   # - paraview +rocm amdgpu_target=gfx90a # mesa: https://github.com/spack/spack/issues/44745
   # - vtk-m ~openmp +rocm amdgpu_target=gfx90a  # vtk-m: https://github.com/spack/spack/issues/40268
   # --
-  # - chapel +rocm amdgpu_target=gfx9a          # chapel: need chapel >= 2.2 to support ROCm >5.4
   # - cp2k +mpi +rocm amdgpu_target=gfx90a      # cp2k: Error: KeyError: 'No spec with name rocm in... "-L{}".format(spec["rocm"].libs.directories[0]),
   # - exago +mpi +python +raja +hiop +rocm amdgpu_target=gfx90a ~ipopt cxxflags="-Wno-error=non-pod-varargs" ^hiop@1.0.0 ~sparse +mpi +raja +rocm amdgpu_target=gfx90a # raja: https://github.com/spack/spack/issues/44593
   # - lammps +rocm amdgpu_target=gfx90a         # lammps: KeyError: 'No spec with name llvm-amdgpu in rocm-openmp-extras@6.2.1/xafvl6rnd3tjagjvezszdz6itqzcl3zj'
