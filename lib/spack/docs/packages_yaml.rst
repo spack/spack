@@ -486,6 +486,8 @@ present. For instance with a configuration like:
 
 you will use ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
 
+.. _package-strong-preferences:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Conflicts and strong preferences
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
