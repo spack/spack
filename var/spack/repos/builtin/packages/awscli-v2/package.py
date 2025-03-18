@@ -14,6 +14,7 @@ class AwscliV2(PythonPackage):
 
     maintainers("climbfuji", "teaguesterling")
 
+    version("2.24.24", sha256="d7b135ef02c96d50d81c0b5eb2723cf474cfda8e1758cccabbcaa6c14f281419")
     version("2.22.4", sha256="56c6170f3be830afef2dea60fc3fd7ed14cf2ca2efba055c085fe6a7c4de358e")
     version("2.15.53", sha256="a4f5fd4e09b8f2fb3d2049d0610c7b0993f9aafaf427f299439f05643b25eb4b")
     version("2.13.22", sha256="dd731a2ba5973f3219f24c8b332a223a29d959493c8a8e93746d65877d02afc1")

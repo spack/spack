@@ -826,18 +826,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         if spec.satisfies("languages=jit"):
             options.append("--enable-host-shared")
 
-        # Binutils
-        if spec.satisfies("+binutils"):
-            binutils = spec["binutils"].prefix.bin
-            options.extend(
-                [
-                    "--with-gnu-ld",
-                    "--with-ld=" + binutils.ld,
-                    "--with-gnu-as",
-                    "--with-as=" + binutils.join("as"),
-                ]
-            )
-
         # enable_bootstrap
         if spec.satisfies("+bootstrap"):
             options.extend(["--enable-bootstrap"])
