@@ -28,7 +28,6 @@ from typing import (
     List,
     NamedTuple,
     Optional,
-    Sequence,
     Set,
     Tuple,
     Type,
@@ -740,7 +739,7 @@ class ConcretizationCache:
                             "within the concretization cache."
                         )
 
-    def _parse_manifest_entry(self, line: str) -> Sequence[Union[None, str]]:
+    def _parse_manifest_entry(self, line: str) -> Union[Tuple[None, None], Tuple[int, int]]:
         """Returns parsed manifest entry lines
         with handling for invalid reads."""
         if line:
@@ -749,7 +748,9 @@ class ConcretizationCache:
             if cache_metadata_size != 2:
                 tty.warn(f"Invalid cache entry at {line}")
                 return None, None
-            return cache_values
+            cache_count = int(cache_values[0])
+            cache_byte_size = int(cache_values[1])
+            return cache_count, cache_byte_size
         return None, None
 
     def _write_manifest(self, manifest_file: IO[str], entry_count, entry_bytes):
