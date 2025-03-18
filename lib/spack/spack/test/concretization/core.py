@@ -3938,7 +3938,8 @@ def test_concretization_cache_manifest_metadata_extraction(
         ), f"Invalid cache metadata read, count value was {count}, but parsed {cache_count}"
         assert (
             cache_byte_size == byte_size
-        ), f"Invalid cache metadata read, byte size value was {byte_size}, but parsed {cache_byte_size}"
+        ), f"Invalid cache metadata read,"
+        "byte size value was {byte_size}, but parsed {cache_byte_size}"
 
 
 def test_concretization_cache_manifest_updating(use_concretization_cache, mutable_config):
@@ -3961,10 +3962,12 @@ def test_concretization_cache_manifest_updating(use_concretization_cache, mutabl
         byte_size += entry.stat().st_size
     assert (
         parsed_count == count
-    ), f"Concretization cache manifest entry count incorrect. Expected count {count}, got {parsed_count}"
+    ), f"Concretization cache manifest entry count incorrect. "
+    "Expected count {count}, got {parsed_count}"
     assert (
         parsed_byte_size == byte_size
-    ), f"Concretization cache manifest byte count incorrect. Expected count {byte_size}, got {parsed_byte_size}"
+    ), f"Concretization cache manifest byte count incorrect. "
+    "Expected count {byte_size}, got {parsed_byte_size}"
 
 
 def test_concretization_cache_cleanup_count(use_concretization_cache, mutable_config):
