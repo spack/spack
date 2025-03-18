@@ -34,10 +34,51 @@ class PySetuptools(Package, PythonExtension):
     # Last version supporting Python 3.6
     version("59.6.0", sha256="4ce92f1e1f8f01233ee9952c04f6b81d1e02939d6e1b488428154974a4d0783e")
 
+    # @:75 (py-wxpython)
+    # Last version supporting Python 3.8
+
+    # @:73 (gobject-introspection)
+    version("69.2.0", sha256="c21c49fb1042386df081cb5d86759792ab89efca84cf114889191cd09aacc80c")
+
+    # @68.2.2 (py-line-profiler)
+    # @:68 (py-zstandard)
+    version("68.2.2", sha256="b454a35605876da60632df1a60f736524eb73cc47bbc9f3f1ef1b644de74fd2a")
+
+    # @68.0.0 (py-neo4j)
+    # Last version supporting Python 3.7
+
+    # @:67 (py-d2to1, py-immutables)
+    version("67.6.0", sha256="b78aaa36f6b90a074c1fa651168723acbf45d14cb1196b6f02c0fd07f17623b2")
+
+    # @:64 (py-pywavelets)
+    # @:64.0.0 (py-scikits-odes)
+    version("64.0.0", sha256="63f463b90ff5e0a1422010100268fd688e15c44ae0798659013c8412963e15e4")
+
+    # @:63 (py-darshan, py-numpy, py-pytest-allclose, py-shapely)
+    version("63.4.3", sha256="7f61f7e82647f77d4118eeaf43d64cbcd4d87e38af9611694d4866eb070cd10d")
+
+    # @:60 (py-ipyparallel, py-jupyter-packaging, py-symengine)
+    # @:59 (py-numpy, py-pyvista, py-pyzmq, py-scikit-learn, py-scipy)
+    # Last version supporting Python 3.6
+
+    # @:59.4.0 (py-pyfftw)
+    # @:59.4 (py-scikit-image)
+    version("59.4.0", sha256="feb5ff19b354cde9efd2344ef6d5e79880ce4be643037641b49508bbb850d060")
+
+    # @:57 (gdal, py-blessings, py-cmseq, py-deap, py-docutils, py-fs, py-jsmin, py-nose,
+    #       py-pylatex, py-pyvcf, py-rnc2rng, py-scipy)
+    version("57.4.0", sha256="a49230977aa6cfb9d933614d2f7b79036e9945c4cdd7583163f4e920b83418d6")
+
+    # @:51.0.0 (py-scipy)
+    version("51.0.0", sha256="8c177936215945c9a37ef809ada0fab365191952f7a123618432bbfac353c529")
+
+    # @:47 (py-botorch)
+    version("46.1.3", sha256="4fe404eec2738c20ab5841fa2d791902d2a645f32318a7850ef26f8d7215a8ee")
+
+    # @:45 (py-openslide-python, py-zope-interface)
+    version("44.1.1", sha256="27a714c09253134e60a6fa68130f78c7037e5562c4f21f8f318f2ae900d152d5")
+
     with default_args(deprecated=True):
-        version(
-            "69.2.0", sha256="c21c49fb1042386df081cb5d86759792ab89efca84cf114889191cd09aacc80c"
-        )
         version(
             "69.1.1", sha256="02fa291a0471b3a18b2b2481ed902af520c69e8ae0919c13da936542754b4c56"
         )
@@ -48,19 +89,10 @@ class PySetuptools(Package, PythonExtension):
             "68.2.2", sha256="b454a35605876da60632df1a60f736524eb73cc47bbc9f3f1ef1b644de74fd2a"
         )
         version(
-            "67.6.0", sha256="b78aaa36f6b90a074c1fa651168723acbf45d14cb1196b6f02c0fd07f17623b2"
-        )
-        version(
             "65.5.0", sha256="f62ea9da9ed6289bfe868cd6845968a2c854d1427f8548d52cae02a42b4f0356"
         )
         version(
             "65.0.0", sha256="fe9a97f68b064a6ddd4bacfb0b4b93a4c65a556d97ce906255540439d0c35cef"
-        )
-        version(
-            "64.0.0", sha256="63f463b90ff5e0a1422010100268fd688e15c44ae0798659013c8412963e15e4"
-        )
-        version(
-            "63.4.3", sha256="7f61f7e82647f77d4118eeaf43d64cbcd4d87e38af9611694d4866eb070cd10d"
         )
         version(
             "63.0.0", sha256="045aec56a3eee5c82373a70e02db8b6da9a10f7faf61ff89a14ab66c738ed370"
@@ -75,19 +107,10 @@ class PySetuptools(Package, PythonExtension):
             "62.3.2", sha256="68e45d17c9281ba25dc0104eadd2647172b3472d9e01f911efa57965e8d51a36"
         )
         version(
-            "59.4.0", sha256="feb5ff19b354cde9efd2344ef6d5e79880ce4be643037641b49508bbb850d060"
-        )
-        version(
             "58.2.0", sha256="2551203ae6955b9876741a26ab3e767bb3242dafe86a32a749ea0d78b6792f11"
         )
         version(
-            "57.4.0", sha256="a49230977aa6cfb9d933614d2f7b79036e9945c4cdd7583163f4e920b83418d6"
-        )
-        version(
             "57.1.0", sha256="ddae4c1b9220daf1e32ba9d4e3714df6019c5b583755559be84ff8199f7e1fe3"
-        )
-        version(
-            "51.0.0", sha256="8c177936215945c9a37ef809ada0fab365191952f7a123618432bbfac353c529"
         )
         version(
             "50.3.2", sha256="2c242a0856fbad7efbe560df4a7add9324f340cf48df43651e9604924466794a"
@@ -100,12 +123,6 @@ class PySetuptools(Package, PythonExtension):
         )
         version(
             "49.2.0", sha256="272c7f48f5cddc5af5901f4265274c421c7eede5c8bc454ac2903d3f8fc365e9"
-        )
-        version(
-            "46.1.3", sha256="4fe404eec2738c20ab5841fa2d791902d2a645f32318a7850ef26f8d7215a8ee"
-        )
-        version(
-            "44.1.1", sha256="27a714c09253134e60a6fa68130f78c7037e5562c4f21f8f318f2ae900d152d5"
         )
         version(
             "44.1.0", sha256="992728077ca19db6598072414fb83e0a284aca1253aaf2e24bb1e55ee6db1a30"
