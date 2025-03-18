@@ -96,7 +96,7 @@ class Psi4(CMakePackage):
             "-I{0}".format(
                 " -I".join(
                     [
-                        os.path.join(spec["psi4"].prefix.include, "psi4"),
+                        os.path.join(self.prefix.include, "psi4"),
                         os.path.join(spec["boost"].prefix.include, "boost"),
                         os.path.join(spec["python"].headers.directories[0]),
                         spec["lapack"].prefix.include,
