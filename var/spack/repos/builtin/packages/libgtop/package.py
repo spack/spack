@@ -14,11 +14,13 @@ class Libgtop(AutotoolsPackage):
 
     license("GPLv2", checked_by="teaguesterling")
 
+    version("2.41.3", sha256="775676df958e2ea2452f7568f28b2ea581063d312773dd5c0b7624c1b9b2da8c")
+    version("2.41.2", sha256="d9026cd8a48d27cdffd332f8d60a92764b56424e522c420cd13a01f40daf92c3")
+    version("2.41.1", sha256="43ea9ad13f7caf98303e64172b191be9b96bab340b019deeec72251ee140fe3b")
     version("2.41.2", sha256="d9026cd8a48d27cdffd332f8d60a92764b56424e522c420cd13a01f40daf92c3")
     version("2.41.1", sha256="43ea9ad13f7caf98303e64172b191be9b96bab340b019deeec72251ee140fe3b")
 
     depends_on("c", type="build")  # generated
-
     depends_on("pkgconfig", type="build")
     with default_args(type=("build", "link", "run")):
         depends_on("glib@2.65:", when="@2.40:")

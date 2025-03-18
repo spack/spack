@@ -21,34 +21,10 @@ class PyAmrex(CMakePackage, PythonExtension, CudaPackage, ROCmPackage):
 
     version("develop", branch="development")
     version("25.03", sha256="5a65545d46b49dd3f2bca2647a174c3ee0384e49791dc3e335a3a39d9a045350")
-    version(
-        "25.02",
-        sha256="c743086b317f9fa90639d825db32a92376cde8dc5e1eab47a4c6a82af36d5b5c",
-        deprecated=True,
-    )
-    version(
-        "24.10",
-        sha256="dc1752ed3fbd5113dcfdbddcfe6c3c458e572b288ac9d41ed3ed7db130591d74",
-        deprecated=True,
-    )
-    version(
-        "24.08",
-        sha256="e7179d88261f64744f392a2194ff2744fe323fe0e21d0742ba60458709a1b47e",
-        deprecated=True,
-    )
-    version(
-        "24.04",
-        sha256="ab85695bb9644b702d0fc84e77205d264d27ba94999cab912c8a3212a7eb77fc",
-        deprecated=True,
-    )
+    with default_args(deprecated=True):
+        version("25.02", sha256="c743086b317f9fa90639d825db32a92376cde8dc5e1eab47a4c6a82af36d5b5c")
 
-    version(
-        "24.03",
-        sha256="bf85b4ad35b623278cbaae2c07e22138545dec0732d15c4ab7c53be76a7f2315",
-        deprecated=True,
-    )
-
-    for v in ["25.03", "25.02", "24.10", "24.08", "24.04", "24.03"]:
+    for v in ["25.03", "25.02", "develop"]:
         depends_on("amrex@{0}".format(v), when="@{0}".format(v), type=("build", "link"))
 
     variant(
@@ -77,8 +53,7 @@ class PyAmrex(CMakePackage, PythonExtension, CudaPackage, ROCmPackage):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
-    depends_on("cmake@3.20:3", type="build", when="@:24.08")
-    depends_on("cmake@3.24:3", type="build", when="@24.09:")
+    depends_on("cmake@3.24:3", type="build")
     depends_on("pkgconfig", type="build")  # amrex +fft
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-mpi4py@2.1.0:", type=("build", "run"), when="+mpi")
@@ -128,38 +103,29 @@ class PyAmrex(CMakePackage, PythonExtension, CudaPackage, ROCmPackage):
     depends_on("py-pandas", type="test")
     depends_on("py-cupy", type="test", when="+cuda")
 
-    phases = ("cmake", "build", "install", "pip_install_nodeps")
-    build_targets = ["all", "pip_wheel"]
+    phases = ("cmake", "build", "install")
+    build_targets = ["all", "pip_wheel", "pip_install_nodeps"]
 
     tests_src_dir = "tests/"
 
     def cmake_args(self):
-        args = ["-DpyAMReX_amrex_internal=OFF", "-DpyAMReX_pybind11_internal=OFF"]
-        return args
+        pip_args = PythonPipBuilder.std_args(self) + [f"--prefix={self.prefix}"]
+        idx = pip_args.index("install")
+        # Docs: https://pyamrex.readthedocs.io/en/24.10/install/cmake.html#build-options
 
-    def pip_install_nodeps(self, spec, prefix):
-        """Install everything from build directory."""
-        pip = spec["python"].command
-        pip.add_default_arg("-m", "pip")
-
-        args = PythonPipBuilder.std_args(self) + [
-            f"--prefix={prefix}",
-            "--find-links=amrex-whl",
-            "amrex",
+        return [
+            "-DpyAMReX_amrex_internal=OFF",
+            "-DpyAMReX_pybind11_internal=OFF",
+            "-DPY_PIP_OPTIONS=" + ";".join(pip_args[:idx]),
+            "-DPY_PIP_INSTALL_OPTIONS=" + ";".join(pip_args[idx + 1 :]),
         ]
-
-        with working_dir(self.build_directory):
-            pip(*args)
-
-        # todo: from PythonPipBuilder
-        # ....execute_install_time_tests()
 
     def check(self):
         """Checks after the build phase"""
         pytest = which("pytest")
         pytest(join_path(self.stage.source_path, self.tests_src_dir))
 
-    @run_after("pip_install_nodeps")
+    @run_after("install")
     def copy_test_sources(self):
         """Copy the example test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
