@@ -26,7 +26,13 @@ class PySetuptools(Package, PythonExtension):
     version("75.8.2", sha256="558e47c15f1811c1fa7adbd0096669bf76c1d3f433f58324df69f3f5ecac4e8f")
     version("75.8.1", sha256="3bc32c0b84c643299ca94e77f834730f126efd621de0cc1de64119e0e17dab1f")
     version("75.8.0", sha256="e3982f444617239225d675215d51f6ba05f845d4eec313da4418fdbb56fb27e3")
+
+    # Last version supporting Python 3.8
     version("75.3.0", sha256="f2504966861356aa38616760c0f66568e535562374995367b4e69c7143cf6bcd")
+    # Last version supporting Python 3.7
+    version("68.0.0", sha256="11e52c67415a381d10d6b462ced9cfb97066179f0e871399e006c4ab101fc85f")
+    # Last version supporting Python 3.6
+    version("59.6.0", sha256="4ce92f1e1f8f01233ee9952c04f6b81d1e02939d6e1b488428154974a4d0783e")
 
     with default_args(deprecated=True):
         version(
@@ -40,9 +46,6 @@ class PySetuptools(Package, PythonExtension):
         )
         version(
             "68.2.2", sha256="b454a35605876da60632df1a60f736524eb73cc47bbc9f3f1ef1b644de74fd2a"
-        )
-        version(
-            "68.0.0", sha256="11e52c67415a381d10d6b462ced9cfb97066179f0e871399e006c4ab101fc85f"
         )
         version(
             "67.6.0", sha256="b78aaa36f6b90a074c1fa651168723acbf45d14cb1196b6f02c0fd07f17623b2"
