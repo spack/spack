@@ -690,6 +690,9 @@ class Cuda(Package):
     # Mojave support -- only macOS High Sierra 10.13 is supported.
     conflicts("arch=darwin-mojave-x86_64")
 
+    # cuda-12.8 libcusolver.so requires log2f@GLIBC_2.27
+    conflicts("glibc@:2.26", when="@12.8:")
+
     variant(
         "dev", default=False, description="Enable development dependencies, i.e to use cuda-gdb"
     )
