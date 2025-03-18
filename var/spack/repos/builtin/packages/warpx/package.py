@@ -240,10 +240,9 @@ class Warpx(CMakePackage, PythonExtension):
 
         return args
 
-    phases = ("cmake", "build", "install")
-    build_targets = ["all"]
-    with when("+python"):
-        build_targets += ["pip_wheel", "pip_install_nodeps"]
+    def edit(self, spec, prefix):
+        with when("+python"):
+            self.build_targets.extend(["pip_wheel", "pip_install_nodeps"])
 
     @property
     def libs(self):
