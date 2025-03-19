@@ -953,12 +953,14 @@ error(100, "Cannot set variant '{0}' for package '{1}' because the variant condi
      build(node(ID, Package)).
 
 % at most one variant value for single-valued variants.
-error(100, "'{0}' required multiple values for single-valued variant '{1}'", Package, Variant)
+error(100, "'{0}' requires conflicting variant values 'Spec({1}={2})' and 'Spec({1}={3})'", Package, Variant, Value1, Value2)
   :- attr("node", node(ID, Package)),
      node_has_variant(node(ID, Package), Variant, _),
      variant_single_value(node(ID, Package), Variant),
-     build(node(ID, Package)),
-     2 { attr("variant_value", node(ID, Package), Variant, Value) }.
+     attr("variant_value", node(ID, Package), Variant, Value1),
+     attr("variant_value", node(ID, Package), Variant, Value2),
+     Value1 < Value2,
+     build(node(ID, Package)).
 
 error(100, "No valid value for variant '{1}' of package '{0}'", Package, Variant)
   :- attr("node", node(ID, Package)),
