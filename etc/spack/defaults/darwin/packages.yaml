@@ -50,8 +50,11 @@ packages:
     - spec: apple-libuuid@1353.100.2
       prefix: /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
   c:
-    require: apple-clang
+    prefer:
+    - apple-clang
   cxx:
-    require: apple-clang
+    prefer:
+    - apple-clang
   fortran:
-    require: gcc
+    prefer:
+    - gcc
