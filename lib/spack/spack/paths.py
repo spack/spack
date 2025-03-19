@@ -101,6 +101,9 @@ per_spack_user_root = str(user_root())
 #: placed in per-spack-instance user root
 default_misc_cache_path = os.path.join(per_spack_user_root, "cache")
 
+#: concretization cache for Spack concretizations
+default_conc_cache_path = os.path.join(default_misc_cache_path, "concretization")
+
 modules_base = None
 for module_dir in ["lmod", "modules"]:
     if dir_is_occupied(os.path.join(share_path, module_dir)):
