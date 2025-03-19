@@ -1373,8 +1373,7 @@ print(json.dumps(config))
 
     def test_hello_world(self):
         """run simple hello world program"""
-        # do not use self.command because we are also testing the run env
-        python = self.spec["python"].command
+        python = self.command
 
         msg = "hello world!"
         out = python("-c", f'print("{msg}")', output=str.split, error=str.split)
@@ -1382,7 +1381,7 @@ print(json.dumps(config))
 
     def test_import_executable(self):
         """ensure import of installed executable works"""
-        python = self.spec["python"].command
+        python = self.command
 
         out = python("-c", "import sys; print(sys.executable)", output=str.split, error=str.split)
         assert self.spec.prefix in out
