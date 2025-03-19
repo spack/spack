@@ -36,7 +36,7 @@ from spack import traverse
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
-from spack.url_buildcache import create_url_buildcache_entry
+from spack.url_buildcache import get_url_buildcache_class
 
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
@@ -179,13 +179,12 @@ def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
 
     for release_spec in specs:
         release_spec_dag_hash = release_spec.dag_hash()
-        # TODO: This assumes signed version of the spec
-        cache_entry = create_url_buildcache_entry(
+        cache_class = get_url_buildcache_class(
             layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
         buildcache_copies[release_spec_dag_hash] = {
-            "src": cache_entry.compute_remote_spec_url(release_spec, src_prefix, signed=True),
-            "dest": cache_entry.compute_remote_spec_url(release_spec, dest_prefix, signed=True),
+            "src": cache_class.get_manifest_url(release_spec, src_prefix),
+            "dest": cache_class.get_manifest_url(release_spec, dest_prefix),
         }
 
     target_dir = os.path.dirname(output_file)

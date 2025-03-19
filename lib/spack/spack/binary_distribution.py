@@ -1822,6 +1822,8 @@ def download_tarball(
         (if required), and its checksum validated. Otherwise, return the stage
         containing the downloaded tarball.
     """
+    # import pdb
+    # pdb.set_trace()
     configured_mirrors: Iterable[spack.mirrors.mirror.Mirror] = (
         spack.mirrors.mirror.MirrorCollection(binary=True).values()
     )
@@ -1930,9 +1932,9 @@ def download_tarball(
             try:
                 cache_entry.fetch_archive(allow_unsigned=currently_unsigned)
             except Exception as e:
-                tty.warn(
+                tty.debug(
                     f"Encountered error attempting to fetch archive for "
-                    f"{spec.name()}/{spec.dag_hash()[:7]} from {fetch_url} "
+                    f"{spec.name}/{spec.dag_hash()[:7]} from {fetch_url} "
                     f"(v{layout_version}) due to {e}"
                 )
                 cache_entry.destroy()

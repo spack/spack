@@ -149,9 +149,6 @@ class URLBuildcacheEntry:
 
         self._checked_exists = False
 
-        if self.spec:
-            self.read_manifest(self._get_manifest_url(self.spec, self.mirror_url))
-
     @classmethod
     def get_layout_version(cls) -> int:
         return cls.LAYOUT_VERSION
@@ -166,6 +163,12 @@ class URLBuildcacheEntry:
     @classmethod
     def get_relative_path_components(cls, component: BuildcacheComponent) -> List[str]:
         return cls.COMPONENT_PATHS[component]
+
+    @classmethod
+    def get_manifest_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
+        spec_formatted = spec.format_path("{name}-{version}-{hash}")
+        path_components = cls.get_relative_path_components(BuildcacheComponent.SPECS)
+        return url_util.join(mirror_url, *path_components, f"{spec_formatted}.manifest.json")
 
     def get_local_spec_path(self):
         return self.local_specfile_path
@@ -187,12 +190,6 @@ class URLBuildcacheEntry:
         if self.remote_archive_url:
             self.has_tarball = web_util.url_exists(self.remote_archive_url)
 
-    def _get_manifest_url(self, spec: spack.spec.Spec, mirror_url: str) -> str:
-        spec_formatted = spec.format_path("{name}-{version}-{hash}")
-        path_components = self.get_relative_path_components(BuildcacheComponent.SPECS)
-        path_components.append(f"{spec_formatted}.manifest.json")
-        return url_util.join(mirror_url, *path_components)
-
     def _maybe_verify_and_extract(self, manifest_contents: str, verify: bool = False) -> dict:
         magic_string = "-----BEGIN PGP SIGNED MESSAGE-----"
         if manifest_contents.startswith(magic_string):
@@ -202,7 +199,7 @@ class URLBuildcacheEntry:
                 tmpdir = tempfile.mkdtemp()
                 try:
                     manifest_path = os.path.join(tmpdir, "manifest.json.sig")
-                    with open(manifest_path, "wb", encoding="utf-8") as fd:
+                    with open(manifest_path, "w", encoding="utf-8") as fd:
                         fd.write(manifest_contents)
                     if not try_verify(manifest_path):
                         raise NoVerifyException(
@@ -235,7 +232,7 @@ class URLBuildcacheEntry:
                 raise BuildcacheEntryError(
                     "Either manifest url or spec and mirror are required to read manifest"
                 )
-            manifest_url = self._get_manifest_url(self.spec, self.mirror_url)
+            manifest_url = self.get_manifest_url(self.spec, self.mirror_url)
 
         self.remote_manifest_url = manifest_url
         manifest_contents = ""
@@ -244,7 +241,7 @@ class URLBuildcacheEntry:
             _, _, manifest_file = web_util.read_from_url(manifest_url)
             manifest_contents = codecs.getreader("utf-8")(manifest_file).read()
         except (web_util.SpackWebError, OSError) as e:
-            tty.error(f"Error reading specfile: {manifest_url}: {e}")
+            raise BuildcacheEntryError(f"Error reading manifest at {manifest_url}") from e
 
         if not manifest_contents:
             raise BuildcacheEntryError("Unable to read manifest or manifest empty")
@@ -291,7 +288,7 @@ class URLBuildcacheEntry:
     def exists(self) -> bool:
         if not self._checked_exists:
             try:
-                self.read_manifest()
+                self.read_manifest(verify_signature=False)
             except BuildcacheEntryError:
                 return False
 
@@ -439,7 +436,7 @@ class URLBuildcacheEntry:
         # compress the spec dict and compute its checksum
         metadata_checksum = ""
         specfile = os.path.join(tmpdir, f"{spec.dag_hash()}.spec.json")
-        with open(specfile, "wb", encoding="utf-8") as f:
+        with open(specfile, "wb",) as f:
             compressed_bytes = gzip.compress(
                 json.dumps(spec_dict).encode("utf-8"), compresslevel=6, mtime=0
             )
@@ -476,7 +473,7 @@ class URLBuildcacheEntry:
 
         # write the manifest to a temporary location
         manifest_path = os.path.join(tmpdir, f"{spec.dag_hash()}.manifest.json")
-        with open(manifest_path, "wb", encoding="utf-8") as f:
+        with open(manifest_path, "w", encoding="utf-8") as f:
             json.dump(manifest, f)
 
         # possibly sign the manifest
@@ -506,6 +503,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         BuildcacheComponent.BLOBS: ["build_cache"],
         BuildcacheComponent.INDICES: ["build_cache"],
         BuildcacheComponent.INDEX: ["build_cache", INDEX_JSON_FILE],
+        BuildcacheComponent.INDEX_HASH: ["build_cache", INDEX_HASH_FILE],
         BuildcacheComponent.KEYS: ["build_cache", "keys", "_pgp"],
         BuildcacheComponent.SPECS: ["build_cache"],
     }
@@ -517,6 +515,8 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 
         self.has_metadata: bool = False
         self.has_tarball: bool = False
+        self.has_signed: bool = False
+        self.has_unsigned: bool = False
         self.spec_stage: Optional[spack.stage.Stage] = None
         self.local_specfile_path: str = ""
         self.archive_stage: Optional[spack.stage.Stage] = None
@@ -530,6 +530,8 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 
         self.data: List[BlobRecord] = []
 
+        self._checked_signed = False
+        self._checked_unsigned = False
         self._checked_exists = False
 
     @classmethod
@@ -543,8 +545,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
             "{architecture}-{compiler.name}-{compiler.version}-{name}-{version}-{hash}"
         )
         path_components = self.get_relative_path_components(BuildcacheComponent.SPECS)
-        path_components.append(f"{spec_formatted}{ext}")
-        return url_util.join(mirror_url, *path_components)
+        return url_util.join(mirror_url, *path_components, f"{spec_formatted}{ext}")
 
     def _get_tarball_url(self, spec: spack.spec.Spec, mirror_url: str) -> str:
         directory_name = spec.format_path(
@@ -663,6 +664,10 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         )
 
         return self.local_archive_path
+
+    @classmethod
+    def get_manifest_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
+        raise BuildcacheEntryError("v2 buildcache entries do not have a manifest url")
 
     def read_manifest(
         self, manifest_url: Optional[str] = None, verify_signature: bool = True

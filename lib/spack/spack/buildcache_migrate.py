@@ -213,6 +213,8 @@ def _migrate_spec(
     except Exception:
         return MigrateSpecResult(False, f"Failed to push spec metadata for {print_spec}")
 
+    # TODO: generate, possibly sign, and push the manifest
+
     return MigrateSpecResult(True, f"Successfully migrated {print_spec}")
 
 

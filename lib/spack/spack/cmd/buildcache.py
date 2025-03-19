@@ -35,7 +35,12 @@ from spack.spec import Spec, save_dependency_specfiles
 
 from ..buildcache_migrate import migrate
 from ..enums import InstallRecordStatus
-from ..url_buildcache import URLBuildcacheEntry, get_url_buildcache_class
+from ..url_buildcache import (
+    BuildcacheComponent,
+    BuildcacheEntryError,
+    URLBuildcacheEntry,
+    get_url_buildcache_class,
+)
 
 description = "create, download and install binary packages"
 section = "packaging"
@@ -577,33 +582,34 @@ def save_specfile_fn(args):
 def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str):
     """Download buildcache entry and copy it to the destination_url"""
     try:
-        spec_dict = cache_entry.fetch_metadata()
+        spec_dict = cache_entry.fetch_metadata(allow_unsigned=True)
         cache_entry.fetch_archive(allow_unsigned=True)
     except bindist.BuildcacheEntryError as e:
         tty.warn(f"Failed to retrieve buildcache for copying due to {e}")
         cache_entry.destroy()
         return
 
-    target_spec = spack.spec.Spec.from_dict(spec_dict)
-
-    spec_dest_url = url_util.join(
-        destination_url,
-        bindist.buildcache_relative_spec_path(
-            target_spec, ".spec.json", layout_version=cache_entry.get_layout_version()
-        ),
-    )
-
-    if cache_entry.get_remote_spec_url().endswith(".sig"):
-        spec_dest_url = f"{spec_dest_url}.sig"
-
-    tarball_dest_url = url_util.join(
-        destination_url, *cache_entry.get_relative_tarball_components()
-    )
-
-    local_tarball_path = cache_entry.get_local_archive_path()
+    spec_blob_record = cache_entry.spec_manifest_record
     local_spec_path = cache_entry.get_local_spec_path()
+    tarball_blob_record = cache_entry.tarball_manifest_record
+    local_tarball_path = cache_entry.get_local_archive_path()
+
+    target_spec = spack.spec.Spec.from_dict(spec_dict)
+    spec_label = f"{target_spec.name}/{target_spec.dag_hash()[:7]}"
+
+    if not tarball_blob_record:
+        cache_entry.destroy()
+        raise BuildcacheEntryError(f"No source tarball blob record, failed to sync {spec_label}")
 
     # Try to push the tarball
+    tarball_dest_url = url_util.join(
+        destination_url,
+        *cache_entry.get_relative_path_components(BuildcacheComponent.BLOBS),
+        tarball_blob_record.checksum_alg,
+        tarball_blob_record.checksum[:2],
+        tarball_blob_record.checksum,
+    )
+
     try:
         web_util.push_to_url(local_tarball_path, tarball_dest_url, keep_original=True)
     except Exception as e:
@@ -611,12 +617,50 @@ def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str)
         cache_entry.destroy()
         return
 
-    # Finally try to push the spec file
+    if not spec_blob_record:
+        cache_entry.destroy()
+        raise BuildcacheEntryError(f"No source spec blob record, failed to sync {spec_label}")
+
+    # Try to push the spec file
+    spec_dest_url = url_util.join(
+        destination_url,
+        *cache_entry.get_relative_path_components(BuildcacheComponent.BLOBS),
+        spec_blob_record.checksum_alg,
+        spec_blob_record.checksum[:2],
+        spec_blob_record.checksum,
+    )
+
     try:
         web_util.push_to_url(local_spec_path, spec_dest_url, keep_original=True)
     except Exception as e:
         tty.warn(f"Failed to push {local_spec_path} to {spec_dest_url} due to {e}")
+        cache_entry.destroy()
+        return
 
+    # Stage the manifest locally, since if it's signed, we don't want to try to
+    # to reproduce that here. Instead just push the locally staged manifest to
+    # the expected path at the destination url.
+    manifest_src_url = cache_entry.remote_manifest_url
+    manifest_dest_url = cache_entry.get_manifest_url(target_spec, destination_url)
+
+    manifest_stage = spack.stage.Stage(manifest_src_url)
+
+    try:
+        manifest_stage.fetch()
+    except Exception as e:
+        tty.warn(f"Failed to fetch manifest from {manifest_src_url} due to {e}")
+        manifest_stage.destroy()
+        cache_entry.destroy()
+        return
+
+    local_manifest_path = manifest_stage.save_filename
+
+    try:
+        web_util.push_to_url(local_manifest_path, manifest_dest_url, keep_original=True)
+    except Exception as e:
+        tty.warn(f"Failed to push manifest to {manifest_dest_url} due to {e}")
+
+    manifest_stage.destroy()
     cache_entry.destroy()
 
 
@@ -663,8 +707,9 @@ def sync_fn(args):
         cache_class = get_url_buildcache_class(
             layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
-        cache_entry = cache_class(src_mirror_url, s)
-        copy_buildcache_entry(cache_entry, dest_mirror_url)
+        src_cache_entry = cache_class(src_mirror_url, s)
+        src_cache_entry.read_manifest(verify_signature=False)
+        copy_buildcache_entry(src_cache_entry, dest_mirror_url)
 
 
 def manifest_copy(
@@ -687,13 +732,14 @@ def manifest_copy(
         cache_class = get_url_buildcache_class(
             layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
-        cache_entry = cache_class(copy_obj["src"])
+        src_cache_entry = cache_class(cache_class.get_base_url(copy_obj["src"]))
+        src_cache_entry.read_manifest(manifest_url=copy_obj["src"], verify_signature=False)
         if dest_mirror:
             destination_url = dest_mirror.push_url
         else:
-            destination_url = cache_entry.get_base_url(copy_obj["dest"])
+            destination_url = cache_class.get_base_url(copy_obj["dest"])
         tty.debug("copying {0} to {1}".format(copy_obj["src"], destination_url))
-        copy_buildcache_entry(cache_entry, destination_url)
+        copy_buildcache_entry(src_cache_entry, destination_url)
 
 
 def update_index(mirror: spack.mirrors.mirror.Mirror, update_keys=False):
