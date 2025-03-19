@@ -19,16 +19,16 @@ from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
 
 
-def make_pyvenv_cfg(python_spec: Spec, venv_prefix: str) -> str:
+def make_pyvenv_cfg(python_pkg: Package, venv_prefix: str) -> str:
     """Make a pyvenv_cfg file for a given (real) python command and venv prefix."""
-    python_cmd = python_spec.command.path
+    python_cmd = python_pkg.command.path
     lines = [
         # directory containing python command
         f"home = {os.path.dirname(python_cmd)}",
         # venv should not allow site packages from the real python to be loaded
         "include-system-site-packages = false",
         # version of the python command
-        f"version = {python_spec.version}",
+        f"version = {python_pkg.spec.version}",
         # the path to the python command
         f"executable = {python_cmd}",
         # command "used" to create the pyvenv.cfg
@@ -1369,19 +1369,15 @@ print(json.dumps(config))
             return
 
         with open(pyvenv_cfg, "w") as cfg_file:
-            cfg_file.write(make_pyvenv_cfg(self.spec["python"], projection))
+            cfg_file.write(make_pyvenv_cfg(self, projection))
 
     def test_hello_world(self):
         """run simple hello world program"""
-        python = self.command
-
-        msg = "hello world!"
-        out = python("-c", f'print("{msg}")', output=str.split, error=str.split)
-        assert msg in out
+        out = self.command("-c", 'print("hello world!")', output=str.split, error=str.split)
+        assert "hello world!" in out
 
     def test_import_executable(self):
         """ensure import of installed executable works"""
         python = self.command
-
         out = python("-c", "import sys; print(sys.executable)", output=str.split, error=str.split)
         assert self.spec.prefix in out
