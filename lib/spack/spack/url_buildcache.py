@@ -194,8 +194,7 @@ class URLBuildcacheEntry:
         magic_string = "-----BEGIN PGP SIGNED MESSAGE-----"
         if manifest_contents.startswith(magic_string):
             if verify:
-                # write to file
-                # try to verify and raise if we fail
+                # Rry to verify and raise if we fail
                 tmpdir = tempfile.mkdtemp()
                 try:
                     manifest_path = os.path.join(tmpdir, "manifest.json.sig")
@@ -209,8 +208,12 @@ class URLBuildcacheEntry:
                     shutil.rmtree(tmpdir)
 
             return spack.spec.Spec.extract_json_from_clearsig(manifest_contents)
-
-        return json.loads(manifest_contents)
+        else:
+            if verify:
+                raise NoVerifyException(
+                    f"Required signature was not found on {self.remote_manifest_url}"
+                )
+            return json.loads(manifest_contents)
 
     def read_manifest(
         self, manifest_url: Optional[str] = None, verify_signature: bool = True
@@ -316,7 +319,7 @@ class URLBuildcacheEntry:
             self.spec_stage.fetch()
         except spack.error.FetchError as e:
             self.destroy()
-            raise BuildcacheEntryError("Unable to fetch metadata") from e
+            raise BuildcacheEntryError(f"Unable to fetch metadata from {self.remote_spec_url}") from e
 
         self.local_specfile_path = self.spec_stage.save_filename
 
@@ -335,7 +338,7 @@ class URLBuildcacheEntry:
             raise BuildcacheEntryError("Buildcache entry does not have valid metadata file") from e
 
         try:
-            self.spec = spack.spec.Spec.from_dict(spec_dict["spec"])
+            self.spec = spack.spec.Spec.from_dict(spec_dict)
         except Exception as err:
             raise BuildcacheEntryError("Fetched spec dict does not contain valid spec") from err
 
@@ -555,7 +558,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
             "{architecture}-{compiler.name}-{compiler.version}-{name}-{version}-{hash}"
         )
         filename = f"{spec_formatted}.spack"
-        return url_util.join(mirror_url, directory_name, filename)
+        return url_util.join(mirror_url, *self.get_relative_path_components(BuildcacheComponent.BLOBS), directory_name, filename)
 
     def _check_metadata_exists(self):
         if not self.spec:
@@ -602,7 +605,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
             self.spec_stage.fetch()
         except spack.error.FetchError as e:
             self.destroy()
-            raise BuildcacheEntryError("Unable to fetch metadata") from e
+            raise BuildcacheEntryError(f"Unable to fetch metadata from {self.remote_spec_url}") from e
 
         self.local_specfile_path = self.spec_stage.save_filename
 
@@ -617,7 +620,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
             raise BuildcacheEntryError("Buildcache entry does not have valid metadata file") from e
 
         try:
-            self.spec = spack.spec.Spec.from_dict(spec_dict["spec"])
+            self.spec = spack.spec.Spec.from_dict(spec_dict)
         except Exception as err:
             raise BuildcacheEntryError("Fetched spec dict does not contain valid spec") from err
 
@@ -652,7 +655,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
             self.archive_stage.fetch()
         except spack.error.FetchError as e:
             self.destroy()
-            raise BuildcacheEntryError("Unable to fetch metadata") from e
+            raise BuildcacheEntryError(f"Unable to fetch archive from {self.remote_archive_url}") from e
 
         self.local_archive_path = self.archive_stage.save_filename
 
