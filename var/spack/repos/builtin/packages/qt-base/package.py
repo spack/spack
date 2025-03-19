@@ -68,7 +68,7 @@ class QtPackage(CMakePackage):
         # are not read from the environment
         for v in ["QT_ADDITIONAL_PACKAGES_PREFIX_PATH", "QT_ADDITIONAL_SBOM_DOCUMENT_PATHS"]:
             if v in os.environ:
-                args.append(self.define(v, ";".join(os.environ[v].split(":"))))
+                args.append(self.define(v, os.environ[v].split(":")))
 
         return args
 
