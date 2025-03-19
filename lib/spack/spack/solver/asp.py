@@ -1209,7 +1209,7 @@ class PyclingoDriver:
         full_path = lambda x: os.path.join(parent_dir, x)
         abs_control_files = [full_path(x) for x in control_files]
         for ctrl_file in abs_control_files:
-            with open(ctrl_file, "r+", encoding="utf-8") as f:
+            with open(ctrl_file, "r", encoding="utf-8") as f:
                 problem_repr += "\n" + f.read()
 
         result = None
