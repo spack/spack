@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,6 +20,8 @@ class PyBottleneck(PythonPackage):
     version("1.3.0", sha256="9d7814c61c31f42cfb4f26e050c2659c88a198f1398a9714174ae78347aad737")
     version("1.2.1", sha256="6efcde5f830aed64feafca0359b51db0e184c72af8ba6675b4a99f263922eb36")
     version("1.0.0", sha256="8d9b7ad4fadf9648acc924a6ee522c7cb5b474e75faaad9d90dfd55e2805b495")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("py-setuptools", type="build")
     depends_on("py-versioneer", when="@1.3.3:", type="build")

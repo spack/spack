@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -12,12 +11,18 @@ class Rocminfo(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocminfo"
     git = "https://github.com/ROCm/rocminfo.git"
-    url = "https://github.com/ROCm/rocminfo/archive/rocm-6.1.2.tar.gz"
+    url = "https://github.com/ROCm/rocminfo/archive/rocm-6.2.4.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
     version("master", branch="master")
+    version("6.3.2", sha256="a98a32bae0e118397b5559b4a584c9363191bb2d1f45fe13b09f502016745e8f")
+    version("6.3.1", sha256="30cf7ed537c066e325a8731d0fbe62be2f0f66c8700a06f334e787e9f0f87437")
+    version("6.3.0", sha256="40e2ef89e135770196022761cb929af93c80c41869082b3ef80e42b7772267d0")
+    version("6.2.4", sha256="14d4b0e22e2314156091ac9ad1646dd20909dba3a43e037584a503a6754e7f9e")
+    version("6.2.1", sha256="ae6e08962535e76a81ed872cbd6bf6860c46fa6e4e4bc8f7849c8781359798d8")
+    version("6.2.0", sha256="4d9a9051bda3355f8d2050e981435cd02528a04264a7f61162d685e7e1629f73")
     version("6.1.2", sha256="882ebe3db60b6290a81a98e0bac9b8923fbf83966f1706fd24484700b8213bcc")
     version("6.1.1", sha256="ef5e33ad3d0bae462d01e1528ffa9c83c587ccbf7ef5947e096e550480d83819")
     version("6.1.0", sha256="973352210fdc65932f0125e2db68729383727eaf4ebb7f52c88a948c14bbbb73")
@@ -31,11 +36,30 @@ class Rocminfo(CMakePackage):
         version("5.5.1", sha256="bcab27bb3595d5a4c981e2416458d169e85c27e603c22e743d9240473bfbe98a")
         version("5.5.0", sha256="b6107d362b70e20a10911741eb44247139b4eb43489f7fa648daff880b6de37f")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("cmake@3:", type="build")
 
     for ver in ["master"]:
-        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
+    for ver in [
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.2.0",
+        "6.2.1",
+        "6.2.4",
+    ]:
+        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
 
     for ver in [
         "5.5.0",
@@ -49,8 +73,13 @@ class Rocminfo(CMakePackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
+        "6.2.0",
+        "6.2.1",
+        "6.2.4",
+        "6.3.0",
+        "6.3.1",
+        "6.3.2",
     ]:
-        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 

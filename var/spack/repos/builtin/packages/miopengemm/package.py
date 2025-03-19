@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -32,6 +31,8 @@ class Miopengemm(CMakePackage):
         version("5.5.1", sha256="a997b560521641e7173613cf547ecde5d15ac6fac1786d392b0f133c91f99a40")
         version("5.5.0", sha256="ffd9775129564662b338952588057a088f7e9723b4a9a766b2dd96fdc0992c26")
         version("5.4.3", sha256="5051051cab60ca0f6347a981da6c9dbeddf8b0de698d4e5409a0db0c622acafc")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3:", type="build")
 

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -39,6 +38,8 @@ class UtilLinux(AutotoolsPackage):
     version("2.29.1", sha256="a6a7adba65a368e6dad9582d9fbedee43126d990df51266eaee089a73c893653")
     version("2.25", sha256="7e43273a9e2ab99b5a54ac914fddf5d08ba7ab9b114c550e9f03474672bd23a1")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("python@2.7:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("ncurses", type="link")
@@ -48,6 +49,8 @@ class UtilLinux(AutotoolsPackage):
     variant("bash", default=False, description="Install bash completion scripts")
 
     depends_on("bash", when="+bash", type="run")
+
+    patch("missing-errno-header.patch", when="@2.40.2")
 
     def url_for_version(self, version):
         url = "https://www.kernel.org/pub/linux/utils/util-linux/v{0}/util-linux-{1}.tar.gz"

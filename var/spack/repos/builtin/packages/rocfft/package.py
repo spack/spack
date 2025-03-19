@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,10 +15,17 @@ class Rocfft(CMakePackage):
     url = "https://github.com/ROCm/rocfft/archive/rocm-6.1.1.tar.gz"
     tags = ["rocm"]
 
-    maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
+    maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie", "afzpatel")
     libraries = ["librocfft"]
 
     license("MIT")
+    version("master", branch="master")
+    version("6.3.2", sha256="0511d04d2367dcac6b35bc6b449337ba37bb623b8382fb11178fc608b5435437")
+    version("6.3.1", sha256="f8aa0e68d8e303725d0be8ae1d7c0113b6ca019a3b9f08572abf8a02db690662")
+    version("6.3.0", sha256="afc716c95d1c80097f7a965e0c3cf1fe246c9fdf10a8fd9a303202156bd3811d")
+    version("6.2.4", sha256="8ddc4e779a84b73c21b054ae37fec69e5c2f248589c7fb1b84a2197baf6ce995")
+    version("6.2.1", sha256="662d56cbc4c40a82e2f320bfc8e48a571a448e19c04a9ce30d3419b47fcf3574")
+    version("6.2.0", sha256="c9886ec2c713c502dcde4f5fed3d6e1a7dd019023fb07e82d3b622e66c6f2c36")
     version("6.1.2", sha256="6f54609b0ecb8ceae8b7acd4c8692514c2c2dbaf0f8b199fe990fd4711428193")
     version("6.1.1", sha256="d517a931d49a1e59df4e494ab2b68e301fe7ebf39723863985567467f111111c")
     version("6.1.0", sha256="9e6643174a2b0f376127f43454e78d4feba6fac695d4cda9796da50005ecac66")
@@ -32,6 +38,9 @@ class Rocfft(CMakePackage):
         version("5.6.0", sha256="e3d4a6c1bdac78f9a22033f57011af783d560308103f73542f9e0e4dd133d38a")
         version("5.5.1", sha256="57423a64f5cdb1c37ff0891b6c17b59f73198d46be42db4ae23781ef2c0cd49d")
         version("5.5.0", sha256="9288152e66504b06082e4eed8cdb791b4f9ae2836b3defbeb4d2b54901b96485")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
@@ -47,6 +56,11 @@ class Rocfft(CMakePackage):
         values=auto_or_any_combination_of(*amdgpu_targets),
         sticky=True,
     )
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    conflicts("+asan", when="os=rhel9")
+    conflicts("+asan", when="os=centos7")
+    conflicts("+asan", when="os=centos8")
 
     depends_on("cmake@3.16:", type="build")
     depends_on("python@3.6:", type="build")
@@ -71,6 +85,13 @@ class Rocfft(CMakePackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
+        "6.2.0",
+        "6.2.1",
+        "6.2.4",
+        "6.3.0",
+        "6.3.1",
+        "6.3.2",
+        "master",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
@@ -81,8 +102,10 @@ class Rocfft(CMakePackage):
     # This adds  the include headers from the rocrand and fftw in the cmakelists.txt
     # issue is seen from 5.7.0 onwards
     patch(
-        "0005-Fix-clients-tests-include-rocrand-fftw-include-dir-rocm-6.0.0.patch", when="@5.7.0:"
+        "0005-Fix-clients-tests-include-rocrand-fftw-include-dir-rocm-6.0.0.patch",
+        when="@5.7.0:6.2",
     )
+    patch("0005-Fix-clients-tests-include-rocrand-fftw-include-dir-rocm-6.3.patch", when="@6.3")
 
     # Set LD_LIBRARY_PATH for executing the binaries from build directoryfix missing type
     # https://github.com/ROCm/rocFFT/pull/449)
@@ -94,6 +117,15 @@ class Rocfft(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
+        if self.spec.satisfies("+asan"):
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
+        if self.spec.satisfies("%gcc@8.0:8.9") and self.spec.satisfies("@6.1:"):
+            env.append_flags("LDFLAGS", "-lstdc++fs")
 
     @run_after("build")
     @on_package_attributes(run_tests=True)
@@ -125,7 +157,7 @@ class Rocfft(CMakePackage):
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
 
-        if self.spec.satisfies("@5.2.0:"):
+        if self.spec.satisfies("@5.2.0:6.3.1"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
 
         if self.spec.satisfies("@5.3.0:"):

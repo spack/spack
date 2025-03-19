@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,6 +30,8 @@ class PyMesonPython(PythonPackage):
         sha256="9fcfa350f44ca80dd4f5f9c3d251725434acf9a07d9618f382e6cc4629dcbe84",
         deprecated=True,
     )
+
+    depends_on("c", type="build")  # generated
 
     depends_on("py-colorama", when="platform=windows", type=("build", "run"))
     depends_on("meson@0.63.3:", when="@0.11:", type=("build", "run"))

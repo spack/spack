@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,12 +22,17 @@ class HipExamples(Package):
     version("5.5.1", sha256="c8522ef3f0804c85eef7e9efe2671f375b0d7f2100de85f55dcc2401efed6389")
     version("5.5.0", sha256="bea8a4155bbfbdb3bc1f83c22e4bd1214b1b4e1840b58dc7d37704620de5b103")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     patch("0001-add-inc-and-lib-paths-to-openmp-helloworld.patch")
     patch("0002-add-fpic-compile-to-add4.patch")
 
     for ver in ["5.6.1", "5.6.0", "5.5.1", "5.5.0"]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-openmp-extras@" + ver, when="@" + ver)
+    depends_on("gmake", type="build")
 
     def install(self, spec, prefix):
         stage = os.getcwd()

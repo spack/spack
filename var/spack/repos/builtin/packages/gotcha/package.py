@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,6 +23,9 @@ class Gotcha(CMakePackage):
     version("1.0.3", tag="1.0.3", commit="1aafd1e30d46ce4e6555c8a4ea5f5edf6a5eade5")
     version("1.0.2", tag="1.0.2", commit="bed1b7c716ebb0604b3e063121649b5611640f25")
     version("0.0.2", tag="0.0.2", commit="c82f74778f7cae958a1bf21926d34fc910613d19")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     variant("test", default=False, description="Build tests for Gotcha")
     patch(

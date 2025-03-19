@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,13 +16,19 @@ class HsaRocrDev(CMakePackage):
 
     homepage = "https://github.com/ROCm/ROCR-Runtime"
     git = "https://github.com/ROCm/ROCR-Runtime.git"
-    url = "https://github.com/ROCm/ROCR-Runtime/archive/rocm-6.0.2.tar.gz"
+    url = "https://github.com/ROCm/ROCR-Runtime/archive/rocm-6.2.4.tar.gz"
     tags = ["rocm"]
 
-    maintainers("srekolam", "renjithravindrankannath", "haampie")
+    maintainers("srekolam", "renjithravindrankannath", "haampie", "afzpatel")
     libraries = ["libhsa-runtime64"]
 
     version("master", branch="master")
+    version("6.3.2", sha256="aaecaa7206b6fa1d5d7b8f7c1f7c5057a944327ba4779448980d7e7c7122b074")
+    version("6.3.1", sha256="547ceeeda9a41cdffa21e57809dc5834f94938a0a2809c283aebcbcf01901df0")
+    version("6.3.0", sha256="8fd6bcd6a5afd0ae5a59e33b786a525f575183d38c34049c2dab6b9270a1ca3b")
+    version("6.2.4", sha256="b7aa0055855398d1228c39a6f4feb7d7be921af4f43d82855faf0b531394bb9b")
+    version("6.2.1", sha256="dbe477b323df636f5e3221471780da156c938ec00dda4b50639aa8d7fb9248f4")
+    version("6.2.0", sha256="c98090041fa56ca4a260709876e2666f85ab7464db9454b177a189e1f52e0b1a")
     version("6.1.2", sha256="6eb7a02e5f1e5e3499206b9e74c9ccdd644abaafa2609dea0993124637617866")
     version("6.1.1", sha256="72841f112f953c16619938273370eb8727ddf6c2e00312856c9fca54db583b99")
     version("6.1.0", sha256="50386ebcb7ff24449afa2a10c76a059597464f877225c582ba3e097632a43f9c")
@@ -36,6 +41,9 @@ class HsaRocrDev(CMakePackage):
         version("5.6.0", sha256="30875d440df9d8481ffb24d87755eae20a0efc1114849a72619ea954f1e9206c")
         version("5.5.1", sha256="53d84ad5ba5086ed4ad67ad892c52c0e4eba8ddfa85c2dd341bf825f4d5fe4ee")
         version("5.5.0", sha256="8dbc776b56f93ddaa2ca38bf3b88299b8091de7c1b3f2e481064896cf6808e6c")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     variant("shared", default=True, description="Build shared or static library")
     variant("image", default=True, description="build with or without image support")
@@ -50,12 +58,29 @@ class HsaRocrDev(CMakePackage):
     depends_on("elf", type="link")
     depends_on("numactl")
     depends_on("pkgconfig")
+    depends_on("libdrm", when="@6.3:")
 
     for ver in ["master"]:
-        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
         # allow standalone rocm-device-libs (useful for aomp)
         depends_on(f"rocm-device-libs@{ver}", when=f"@{ver} ^llvm-amdgpu ~rocm-device-libs")
+    for ver in [
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.2.0",
+        "6.2.1",
+        "6.2.4",
+    ]:
+        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
 
     for ver in [
         "5.5.0",
@@ -69,8 +94,13 @@ class HsaRocrDev(CMakePackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
+        "6.2.0",
+        "6.2.1",
+        "6.2.4",
+        "6.3.0",
+        "6.3.1",
+        "6.3.2",
     ]:
-        depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
         # allow standalone rocm-device-libs (useful for aomp)
         depends_on(f"rocm-device-libs@{ver}", when=f"@{ver} ^llvm-amdgpu ~rocm-device-libs")
@@ -78,7 +108,12 @@ class HsaRocrDev(CMakePackage):
 
     patch("0002-Remove-explicit-RPATH-again.patch", when="@5.5.0:5.6")
 
-    root_cmakelists_dir = "src"
+    @property
+    def root_cmakelists_dir(self):
+        if self.spec.satisfies("@6.3:"):
+            return "."
+        else:
+            return "src"
 
     @classmethod
     def determine_version(cls, lib):
@@ -90,6 +125,17 @@ class HsaRocrDev(CMakePackage):
         else:
             ver = None
         return ver
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("@5.7: +asan"):
+            numa_inc = self.spec["numactl"].prefix.include
+            numa_lib = self.spec["numactl"].prefix.lib
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", f"-fsanitize=address -shared-libasan -I{numa_inc} -L{numa_lib}")
+            env.set("CXXFLAGS", f"-fsanitize=address -shared-libasan -I{numa_inc} -L{numa_lib}")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     def cmake_args(self):
         spec = self.spec
@@ -120,6 +166,10 @@ class HsaRocrDev(CMakePackage):
             args.append(self.define("ROCM_PATCH_VERSION", "60000"))
         if self.spec.satisfies("@6.1"):
             args.append(self.define("ROCM_PATCH_VERSION", "60100"))
+        if self.spec.satisfies("@6.2"):
+            args.append(self.define("ROCM_PATCH_VERSION", "60200"))
+        if self.spec.satisfies("@6.3"):
+            args.append(self.define("ROCM_PATCH_VERSION", "60300"))
         if self.spec.satisfies("@5.7.0:"):
             args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
 

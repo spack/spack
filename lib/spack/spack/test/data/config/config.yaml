@@ -13,5 +13,6 @@ config:
   ssl_certs: $SSL_CERT_FILE
   checksum: true
   dirty: false
-  concretizer: {1}
-  locks: {2}
+  locks: {1}
+  concretization_cache:
+    enable: false

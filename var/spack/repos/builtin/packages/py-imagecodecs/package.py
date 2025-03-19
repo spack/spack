@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,6 +18,9 @@ class PyImagecodecs(PythonPackage):
     license("BSD-3-Clause")
 
     version("2022.2.22", sha256="062bef6b003290a8163abed2744b406854238208dfdd41cf7165253c6e01c0bd")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-numpy@1.19.2:", type=("build", "run"))

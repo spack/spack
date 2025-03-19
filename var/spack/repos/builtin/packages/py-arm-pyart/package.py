@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,6 +20,8 @@ class PyArmPyart(PythonPackage):
     pypi = "arm_pyart/arm_pyart-1.12.7.tar.gz"
 
     version("1.12.7", sha256="b7b23ecef270c60b017d94603941f0c117de072a10125c5f58c0685d801f9161")
+
+    depends_on("c", type="build")  # generated
 
     variant("cartopy", description="Plot grids on maps", default=False)
     variant("cylp", description="Linear programming solver", default=False)

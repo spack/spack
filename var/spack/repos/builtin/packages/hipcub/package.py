@@ -1,8 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.variant
 from spack.package import *
 
 
@@ -16,7 +16,13 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSD-3-Clause")
 
-    maintainers("srekolam", "renjithravindrankannath")
+    maintainers("srekolam", "renjithravindrankannath", "afzpatel")
+    version("6.3.2", sha256="4a1443c2ea12c3aa05fb65703eb309ccf8b893f9e6cbebec4ccf5502ba54b940")
+    version("6.3.1", sha256="e5d100c7b8f95fe6243ad9f22170c136aa34db4e588136bec54ede7cb2e7f12f")
+    version("6.3.0", sha256="a609cde18cefa90a1970049cc5630f2ec263f12961aa85993897580da2ca0456")
+    version("6.2.4", sha256="06f3655b110d3d2e2ecf0aca052d3ba3f2ef012c069e5d2d82f2b75d50555f46")
+    version("6.2.1", sha256="e0203e72afac4da19cb1d62896fff404ec44517141b420bd38f6e962e52ef6fd")
+    version("6.2.0", sha256="8dda8b77740e722fd4cf7223476313fc873bad75d50e6cb86ff284a91d76752d")
     version("6.1.2", sha256="830a0f3231e07fcc6cd6261c4e1af2d7d0ac4862c606ecdc80c2635557ca3d9f")
     version("6.1.1", sha256="967716d67e4270c599a60b770d543ea9148948edb907a0fa4d8be3a1785c2058")
     version("6.1.0", sha256="39ac03053ecf35f1faf212e5b197b03c0104b74b0833f7cce5cf625c273ba71c")
@@ -29,6 +35,8 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
         version("5.6.0", sha256="5e74ddbf833f39836bf9ec6c6750348c7386a85ca67aaf9bb54d16c9e1959031")
         version("5.5.1", sha256="ad83f3f1ed85ead9e3012906957c125a896168be913f6fb6af298228fc571480")
         version("5.5.0", sha256="3eec838119326a67eb4cc006c706e328f3a51a01e98bbfb518df8fe4a4707e13")
+
+    depends_on("cxx", type="build")  # generated
 
     # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
     amdgpu_targets = ROCmPackage.amdgpu_targets
@@ -64,6 +72,12 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
+        "6.2.0",
+        "6.2.1",
+        "6.2.4",
+        "6.3.0",
+        "6.3.1",
+        "6.3.2",
     ]:
         depends_on(f"rocprim@{ver}", when=f"+rocm @{ver}")
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
@@ -87,7 +101,7 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
         # FindHIP.cmake is still used for +cuda
         if self.spec.satisfies("+cuda"):
             args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip))
-        if self.spec.satisfies("@5.2.0:"):
+        if self.spec.satisfies("@5.2.0:6.3.1"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
 
         return args

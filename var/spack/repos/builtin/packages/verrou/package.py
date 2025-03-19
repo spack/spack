@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -30,6 +29,9 @@ class Verrou(AutotoolsPackage):
     version("develop", branch="master")
     version("2.2.0", sha256="d4ea3d19f0c61329723907b5b145d85776bb702643c1605a31f584484d2c5efc")
     version("2.1.0", sha256="b1ba49f84aebab15b8ab5649946c9c31b53ad1499f6ffb681c98db41ed28566d")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # The server is sometimes a bit slow to respond
     timeout = {"timeout": 60}

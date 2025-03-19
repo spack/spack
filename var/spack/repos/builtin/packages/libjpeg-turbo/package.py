@@ -1,8 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
+import spack.build_systems.cmake
 from spack.package import *
 
 
@@ -54,6 +56,9 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
         sha256="5008aeeac303ea9159a0ec3ccff295434f4e63b05aed4a684c9964d497304524",
         deprecated=True,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     provides("jpeg")
 
@@ -108,7 +113,8 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
     @property
     def libs(self):
         shared = self.spec.satisfies("libs=shared")
-        return find_libraries("libjpeg*", root=self.prefix, shared=shared, recursive=True)
+        name = "jpeg" if sys.platform == "win32" else "libjpeg*"
+        return find_libraries(name, root=self.prefix, shared=shared, recursive=True, runtime=False)
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
@@ -125,5 +131,5 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     @run_after("install")
     def darwin_fix(self):
         # The shared library is not installed correctly on Darwin; fix this
-        if self.spec.satisfies("platform=darwin") and ("+shared" in self.spec):
+        if self.spec.satisfies("platform=darwin") and self.spec.satisfies("+shared"):
             fix_darwin_install_name(self.prefix.lib)

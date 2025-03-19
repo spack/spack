@@ -1,11 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
-import spack.util.executable
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
@@ -24,6 +22,15 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     license("LGPL-3.0-only")
 
     version("master", branch="master")
+    version("0.43.0", sha256="0d9f6b88f99270fa84094b144a35bd6075adf92b9ec5c7f7f60fceffa668c996")
+    version("0.42.2", sha256="3a4a513c6539f2927e7a544f431e97456e50c71b63f8744d31e0dee3dc7fcc2e")
+    version("0.42.1", sha256="ab56b257e4918ad7e26ef6a375d0ea500a4929bf6633937f0c11c06e21db56b9")
+    version("0.41.0", sha256="c89baf72867031847748c157aa99f3b36755f2801df917aae66010d2112e10fe")
+    version("0.40.0", sha256="1484befcf8628b0af7833bf550d0bb3864db32b70f2c1bb363c35e30ada1ecc5")
+    version("0.39.0", sha256="7e87029f8ad17b9286096e4e2d44982b5d6634908aefde3282497bdd3f44f2f8")
+    version("0.38.0", sha256="0cb3efbd490256b28df580bb14f8e89c02084a9126e0b1754d6334a99ecfa969")
+    version("0.37.0", sha256="b354d451183fcb8455e6a61d31e18c7f4af13e16a86b71216738f0991a7bcd50")
+    version("0.36.1", sha256="0ee37ed364912f3f5a48ed5b5f5f21cb86cda43ff357486695b9454c217ad8b8")
     version("0.36.0", sha256="c20814eae65b6eb9f2c919dbcc216dd4b87f038a341cf99510cca88d43631c41")
     version("0.35.0", sha256="38fde51464f4e34ecbd1e4fbbf00267f96b639db5987257a7ad07f811e2f09d2")
     version("0.34.0", sha256="10c03d78fa2302de7ddf9599ea59fb7a2dc7ccf6f526fd9fbfc9e3ff6ba39713")
@@ -47,6 +54,9 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     version("0.18.0", sha256="a4d8a6444fdb7b857b26f47fdea57992b486c9522f4ff92d5a6f547d95b586ae")
     version("0.17.0", sha256="5acfcb757e2294a92eaa91be58ba9b42736b88b42d2937de4a78f4642b1c4933")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # Avoid the infinite symlink issue
     # This workaround is documented in PR #3543
     build_directory = "spack-build"
@@ -68,6 +78,8 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     depends_on("uuid")
     depends_on("pkgconfig")
     conflicts("%gcc@:9.3", when="@0.34:")
+    conflicts("%gcc@:11", when="@0.37:", msg="gcc version must be 12 or higher")
+    conflicts("%clang@:14", when="@0.37:", msg="clang must be version 15 or higher")
     depends_on("py-sphinx@1.6.3:", when="+docs", type="build")
 
     depends_on("flux-core", type=("build", "link", "run"))
@@ -100,6 +112,12 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     patch("no-valgrind.patch", when="@:0.20.0")
     patch("jobid-sign-compare-fix.patch", when="@:0.22.0")
 
+    patch(
+        "https://github.com/flux-framework/flux-sched/pull/1338.patch?full_index=1",
+        when="@0.42.2 %oneapi@2025:",
+        sha256="b46579efa70176055f88493caa3fefbfea5a5663a33d9c561b71e83046f763c5",
+    )
+
     def url_for_version(self, version):
         """
         Flux uses a fork of ZeroMQ's Collective Code Construction Contract
@@ -131,7 +149,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
                 git("fetch", "--unshallow")
                 git("config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*")
                 git("fetch", "origin")
-            except spack.util.executable.ProcessError:
+            except ProcessError:
                 git("fetch")
 
     def autoreconf(self, spec, prefix):
@@ -163,6 +181,12 @@ class FluxSched(CMakePackage, AutotoolsPackage):
         return os.path.join("lib", "lua", str(self.lua_version))
 
     def setup_run_environment(self, env):
+        # If this package is external, we expect the external provider to set
+        # things like LUA paths. So, we early return. If the package is not
+        # external, properly set these environment variables to make sure the
+        # user environment is configured correctly
+        if self.spec.external:
+            return
         env.prepend_path(
             "LUA_PATH", os.path.join(self.spec.prefix, self.lua_share_dir, "?.lua"), separator=";"
         )
