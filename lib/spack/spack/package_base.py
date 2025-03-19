@@ -48,6 +48,7 @@ import spack.spec
 import spack.store
 import spack.url
 import spack.util.environment
+import spack.util.executable
 import spack.util.path
 import spack.util.web
 import spack.variant
@@ -1368,6 +1369,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def home(self):
         return self.prefix
+
+    @property
+    def command(self) -> spack.util.executable.Executable:
+        """Returns the main executable for this package."""
+        path = os.path.join(self.home.bin, self.spec.name)
+        if fsys.is_exe(path):
+            return spack.util.executable.Executable(path)
+        raise RuntimeError(f"Unable to locate {self.spec.name} command in {self.home.bin}")
 
     @property  # type: ignore[misc]
     @memoized

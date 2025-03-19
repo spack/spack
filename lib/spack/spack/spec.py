@@ -97,7 +97,6 @@ import spack.repo
 import spack.spec_parser
 import spack.store
 import spack.traverse
-import spack.util.executable
 import spack.util.hash
 import spack.util.prefix
 import spack.util.spack_json as sjson
@@ -1110,28 +1109,6 @@ class _EdgeMap(collections.abc.Mapping):
         self.edges.clear()
 
 
-def _command_default_handler(spec: "Spec"):
-    """Default handler when looking for the 'command' attribute.
-
-    Tries to search for ``spec.name`` in the ``spec.home.bin`` directory.
-
-    Parameters:
-        spec: spec that is being queried
-
-    Returns:
-        Executable: An executable of the command
-
-    Raises:
-        RuntimeError: If the command is not found
-    """
-    home = getattr(spec.package, "home")
-    path = os.path.join(home.bin, spec.name)
-
-    if fs.is_exe(path):
-        return spack.util.executable.Executable(path)
-    raise RuntimeError(f"Unable to locate {spec.name} command in {home.bin}")
-
-
 def _headers_default_handler(spec: "Spec"):
     """Default handler when looking for the 'headers' attribute.
 
@@ -1335,9 +1312,7 @@ class SpecBuildInterface(lang.ObjectWrapper):
     home = ForwardQueryToPackage("home", default_handler=None)
     headers = ForwardQueryToPackage("headers", default_handler=_headers_default_handler)
     libs = ForwardQueryToPackage("libs", default_handler=_libs_default_handler)
-    command = ForwardQueryToPackage(
-        "command", default_handler=_command_default_handler, _indirect=True
-    )
+    command = ForwardQueryToPackage("command", default_handler=None, _indirect=True)
 
     def __init__(
         self,
