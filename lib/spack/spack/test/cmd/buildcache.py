@@ -23,10 +23,9 @@ import spack.main
 import spack.mirrors.mirror
 import spack.spec
 import spack.util.url as url_util
-import spack.util.web as web_util
 from spack.installer import PackageInstaller
 from spack.paths import test_path
-from spack.url_buildcache import create_url_buildcache_entry
+from spack.url_buildcache import get_url_buildcache_class
 
 buildcache = spack.main.SpackCommand("buildcache")
 install = spack.main.SpackCommand("install")
@@ -98,19 +97,11 @@ def tests_buildcache_create_env(
 
     mirror_url = f"file://{tmpdir.strpath}"
 
-    cache_entry = create_url_buildcache_entry(
+    cache_class = get_url_buildcache_class(
         layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
     )
-    cache_entry.initialize_from_spec_and_mirror(spec, mirror_url)
-
-    exists = cache_entry.exists()
-
-    assert exists.unsigned
-    assert exists.tarball
-
-    assert web_util.url_exists(exists.unsigned_url)
-    assert web_util.url_exists(exists.tarball_url)
-
+    cache_entry = cache_class(mirror_url, spec)
+    assert cache_entry.exists()
     cache_entry.destroy()
 
 
@@ -265,12 +256,14 @@ def test_buildcache_sync(
         shutil.rmtree(dest_mirror_dir)
 
         def manifest_insert(manifest, spec, dest_url):
-            cache_entry = create_url_buildcache_entry(
+            cache_class = get_url_buildcache_class(
                 layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
             )
+            src_cache_entry = cache_class(src_mirror_url)
+            dest_cache_entry = cache_class(dest_url)
             manifest[spec.dag_hash()] = {
-                "src": cache_entry.compute_remote_spec_url(spec, src_mirror_url, signed=False),
-                "dest": cache_entry.compute_remote_spec_url(spec, dest_url, signed=False),
+                "src": src_cache_entry.compute_remote_spec_url(spec, src_mirror_url, signed=False),
+                "dest": dest_cache_entry.compute_remote_spec_url(spec, dest_url, signed=False),
             }
 
         manifest_file = os.path.join(tmpdir.strpath, "manifest_dest.json")
@@ -321,10 +314,10 @@ def test_buildcache_create_install(
     mirror_url = f"file://{tmpdir.strpath}"
 
     spec = spack.concretize.concretize_one(pkg)
-    cache_entry = create_url_buildcache_entry(
+    cache_class = get_url_buildcache_class(
         layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
     )
-    cache_entry.initialize_from_spec_and_mirror(spec, mirror_url)
+    cache_entry = cache_class(mirror_url, spec)
     spec_path = os.path.join(
         str(tmpdir), *cache_entry.get_relative_spec_components(spec, ".spec.json")
     )

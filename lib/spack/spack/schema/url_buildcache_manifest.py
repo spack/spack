@@ -15,7 +15,13 @@ properties: Dict[str, Any] = {
         "type": "array",
         "items": {
             "type": "object",
-            "required": ["content-length", "content-type", "compression", "checksum-algorithm", "checksum"],
+            "required": [
+                "content-length",
+                "content-type",
+                "compression",
+                "checksum-algorithm",
+                "checksum",
+            ],
             "properties": {
                 "content-length": {"type": "integer"},
                 "content-type": {"type": "string"},

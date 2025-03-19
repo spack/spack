@@ -35,7 +35,7 @@ from spack.spec import Spec, save_dependency_specfiles
 
 from ..buildcache_migrate import migrate
 from ..enums import InstallRecordStatus
-from ..url_buildcache import URLBuildcacheEntry, create_url_buildcache_entry
+from ..url_buildcache import URLBuildcacheEntry, get_url_buildcache_class
 
 description = "create, download and install binary packages"
 section = "packaging"
@@ -660,10 +660,10 @@ def sync_fn(args):
     tty.debug("Syncing the following specs:")
     for s in env.all_specs():
         tty.debug("  {0}{1}: {2}".format("* " if s in env.roots() else "  ", s.name, s.dag_hash()))
-        cache_entry = create_url_buildcache_entry(
+        cache_class = get_url_buildcache_class(
             layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
-        cache_entry.initialize_from_spec_and_mirror(s, src_mirror_url)
+        cache_entry = cache_class(src_mirror_url, s)
         copy_buildcache_entry(cache_entry, dest_mirror_url)
 
 
@@ -684,10 +684,10 @@ def manifest_copy(
                 deduped_manifest[spec_hash] = copy_obj
 
     for spec_hash, copy_obj in deduped_manifest.items():
-        cache_entry = create_url_buildcache_entry(
+        cache_class = get_url_buildcache_class(
             layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
-        cache_entry.initialize_from_spec_url(copy_obj["src"])
+        cache_entry = cache_class(copy_obj["src"])
         if dest_mirror:
             destination_url = dest_mirror.push_url
         else:

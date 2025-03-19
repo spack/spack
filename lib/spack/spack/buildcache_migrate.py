@@ -25,7 +25,13 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 
 from .enums import InstallRecordStatus
-from .url_buildcache import create_url_buildcache_entry, try_verify
+from .url_buildcache import (
+    BuildcacheComponent,
+    URLBuildcacheEntry,
+    get_url_buildcache_class,
+    sign_specfile,
+    try_verify,
+)
 
 
 def v2_tarball_directory_name(spec):
@@ -76,15 +82,13 @@ def _migrate_spec(
     print_spec = f"{s.name}/{s.dag_hash()[:7]}"
 
     # Check if the spec file exists in the new location and exit early if so
-    v3_cache_entry = create_url_buildcache_entry(layout_version=3)
 
-    spec_dict = s.to_dict(hash=ht.dag_hash)
-    v3_cache_entry.initialize_from_spec_dict_and_mirror(spec_dict, mirror_url)
+    v3_cache_class = get_url_buildcache_class(layout_version=3)
+    v3_cache_entry = v3_cache_class(mirror_url, s)
     exists = v3_cache_entry.exists()
-    v3_archive_url = url_util.join(mirror_url, *v3_cache_entry.get_relative_tarball_components())
     v3_cache_entry.destroy()
 
-    if (exists.signed or (unsigned and exists.unsigned)) and exists.tarball:
+    if exists:
         msg = f"No need to migrate {print_spec}"
         return MigrateSpecResult(True, msg)
 
@@ -178,9 +182,20 @@ def _migrate_spec(
         json.dump(spec_dict, fd)
 
     if not unsigned:
-        spec_to_push_path = bindist.sign_specfile(signing_key, spec_json_path)
+        spec_to_push_path = sign_specfile(signing_key, spec_json_path)
     else:
         spec_to_push_path = spec_json_path
+
+    # TODO: compress spec file, compute the checksum, and build v3_spec_url
+    v3_spec_url = ""
+
+    v3_archive_url = url_util.join(
+        mirror_url,
+        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.BLOBS),
+        algorithm,
+        checksum[:2],
+        checksum,
+    )
 
     # First push the tarball
     tty.debug(f"Pushing {local_tarfile_path} to {v3_archive_url}")
@@ -189,9 +204,6 @@ def _migrate_spec(
         web_util.push_to_url(local_tarfile_path, v3_archive_url, keep_original=True)
     except Exception:
         return MigrateSpecResult(False, f"Failed to push archive for {print_spec}")
-
-    ext = ".spec.json" if unsigned else ".spec.json.sig"
-    v3_spec_url = url_util.join(mirror_url, bindist.buildcache_relative_spec_url(s, ext))
 
     # Then push the spec file
     tty.debug(f"Pushing {spec_to_push_path} to {v3_spec_url}")

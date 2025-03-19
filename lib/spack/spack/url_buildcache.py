@@ -4,6 +4,7 @@
 
 import codecs
 import datetime
+import enum
 import gzip
 import json
 import os
@@ -14,6 +15,7 @@ from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 import jsonschema
 
+import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
 
 import spack.config as config
@@ -25,7 +27,10 @@ import spack.util.crypto
 import spack.util.gpg
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack.database import INDEX_JSON_FILE
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
+
+INDEX_HASH_FILE = "index.json.hash"
 
 
 class ExistsInBuildcache(NamedTuple):
@@ -35,6 +40,15 @@ class ExistsInBuildcache(NamedTuple):
     unsigned_url: str
     tarball: bool
     tarball_url: str
+
+
+class BuildcacheComponent(enum.Enum):
+    SPECS = enum.auto()
+    BLOBS = enum.auto()
+    INDICES = enum.auto()
+    KEYS = enum.auto()
+    INDEX = enum.auto()
+    INDEX_HASH = enum.auto()
 
 
 class BlobRecord:
@@ -88,49 +102,45 @@ class URLBuildcacheEntry:
 
     To help with downloading, this class manages two spack.spec.Stage objects
     internally, which must be destroyed when finished.  Specifically, if you
-    call any of the following methods on an instance, you must eventually also
+    call either of the following methods on an instance, you must eventually also
     call destroy():
 
-        exists()
         fetch_metadata()
         fetch_archive()
-
-    An instance of this class must be initialized, which can be accomplished
-    in one of two ways: from a concrete spec and a mirror url, or else from a
-    full url to an existing spec in a mirror (either signed or unsigned). The
-    two methods to do this are:
-
-        initialize_from_spec_and_mirror()
-        initialize_from_spec_url()
 
     """
 
     SPEC_URL_REGEX = re.compile(r"(.+)/v([\d]+)/specs/.+")
     LAYOUT_VERSION = 3
-
-    @classmethod
-    def get_layout_version(cls) -> int:
-        return cls.LAYOUT_VERSION
+    SPEC_VERSION = "spec-v6"
+    TARBALL_VERSION = "tarball-v1"
+    COMPONENT_PATHS = {
+        BuildcacheComponent.BLOBS: ["blobs"],
+        BuildcacheComponent.INDICES: [f"v{LAYOUT_VERSION}", "specs"],
+        BuildcacheComponent.INDEX: [f"v{LAYOUT_VERSION}", "specs", INDEX_JSON_FILE],
+        BuildcacheComponent.INDEX_HASH: [f"v{LAYOUT_VERSION}", "specs", INDEX_HASH_FILE],
+        BuildcacheComponent.KEYS: [f"v{LAYOUT_VERSION}", "keys", "_pgp"],
+        BuildcacheComponent.SPECS: [f"v{LAYOUT_VERSION}", "specs"],
+    }
 
     def __init__(self, push_url_base: str, spec: Optional[spack.spec.Spec] = None):
         """Lazily initialize the object"""
-        super().__init__()
-
         self.mirror_url: str = push_url_base
-        self.spec = spec
+        self.spec: Optional[spack.spec.Spec] = spec
 
         self.has_manifest: bool = False
         self.has_metadata: bool = False
         self.has_tarball: bool = False
         self.spec_stage: Optional[spack.stage.Stage] = None
-        self.local_specfile_path = ""
+        self.local_specfile_path: str = ""
         self.archive_stage: Optional[spack.stage.Stage] = None
         self.local_archive_path: str = ""
-        self.verified: bool = False
 
-        self.remote_manifest_url = ""
-        self.remote_spec_url = ""
+        self.remote_manifest_url: str = ""
+        self.remote_spec_url: str = ""
+        self.spec_manifest_record: Optional[BlobRecord] = None
         self.remote_archive_url: str = ""
+        self.tarball_manifest_record: Optional[BlobRecord] = None
         self.remote_archive_checksum_algorithm: str = ""
         self.remote_archive_checksum_hash: str = ""
         self.spec_dict: Dict[Any, Any] = {}
@@ -140,22 +150,34 @@ class URLBuildcacheEntry:
         self._checked_exists = False
 
         if self.spec:
-            self.read_manifest(self.get_manifest_url(self.spec, self.mirror_url))
+            self.read_manifest(self._get_manifest_url(self.spec, self.mirror_url))
 
-    def get_base_url(self, spec_url: str) -> str:
-        rematch = URLBuildcacheEntry.SPEC_URL_REGEX.search(spec_url)
+    @classmethod
+    def get_layout_version(cls) -> int:
+        return cls.LAYOUT_VERSION
+
+    @classmethod
+    def get_base_url(cls, spec_url: str) -> str:
+        rematch = cls.SPEC_URL_REGEX.search(spec_url)
         if not rematch:
             raise BuildcacheEntryError(f"Unable to parse spec url: {spec_url}")
         return rematch.group(1)
 
-    def compute_remote_archive_url(self, mirror_url: str) -> str:
-        rel_tarball_components = self.get_relative_tarball_components()
-        return url_util.join(mirror_url, *rel_tarball_components)
-
     @classmethod
-    def compute_remote_spec_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
-        # TODO: This will always be the same, signed or unsiged "blah.manifest.json"
-        return url_util.join(mirror_url, *cls.get_relative_spec_components(spec, ".spec.json.sig"))
+    def get_relative_path_components(cls, component: BuildcacheComponent) -> List[str]:
+        return cls.COMPONENT_PATHS[component]
+
+    def get_local_spec_path(self):
+        return self.local_specfile_path
+
+    def get_local_archive_path(self):
+        return self.local_archive_path
+
+    def get_remote_spec_url(self):
+        return self.remote_spec_url
+
+    def get_remote_archive_url(self):
+        return self.remote_archive_url
 
     def _check_metadata_exists(self):
         if self.remote_spec_url:
@@ -165,9 +187,11 @@ class URLBuildcacheEntry:
         if self.remote_archive_url:
             self.has_tarball = web_util.url_exists(self.remote_archive_url)
 
-    @classmethod
-    def get_manifest_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
-        return url_util.join(mirror_url, *cls.get_relative_spec_components(spec, ".manifest.json"))
+    def _get_manifest_url(self, spec: spack.spec.Spec, mirror_url: str) -> str:
+        spec_formatted = spec.format_path("{name}-{version}-{hash}")
+        path_components = self.get_relative_path_components(BuildcacheComponent.SPECS)
+        path_components.append(f"{spec_formatted}.manifest.json")
+        return url_util.join(mirror_url, *path_components)
 
     def _maybe_verify_and_extract(self, manifest_contents: str, verify: bool = False) -> dict:
         magic_string = "-----BEGIN PGP SIGNED MESSAGE-----"
@@ -182,7 +206,7 @@ class URLBuildcacheEntry:
                         fd.write(manifest_contents)
                     if not try_verify(manifest_path):
                         raise NoVerifyException(
-                            f"Signature on {self.remote_spec_url} could not be verified"
+                            f"Signature on {self.remote_manifest_url} could not be verified"
                         )
                 finally:
                     shutil.rmtree(tmpdir)
@@ -191,17 +215,27 @@ class URLBuildcacheEntry:
 
         return json.loads(manifest_contents)
 
-    def read_manifest(self, manifest_url: Optional[str] = None, verify_signature: bool = False) -> None:
+    def read_manifest(
+        self, manifest_url: Optional[str] = None, verify_signature: bool = True
+    ) -> None:
         """Read and process the the buildcache entry manifest.
 
         If no manifest url is provided, build the url from the internal spec and
         base push url."""
+        self.spec_dict = {}
+        self.remote_spec_url = ""
+        self.spec_manifest_record = None
+        self.remote_archive_url = ""
+        self.tarball_manifest_record = None
+        self._checked_exists = False
+        self.has_manifest = False
+
         if not manifest_url:
             if not self.spec or not self.mirror_url:
                 raise BuildcacheEntryError(
                     "Either manifest url or spec and mirror are required to read manifest"
                 )
-            manifest_url = self.get_manifest_url(self.spec, self.mirror_url)
+            manifest_url = self._get_manifest_url(self.spec, self.mirror_url)
 
         self.remote_manifest_url = manifest_url
         manifest_contents = ""
@@ -215,7 +249,9 @@ class URLBuildcacheEntry:
         if not manifest_contents:
             raise BuildcacheEntryError("Unable to read manifest or manifest empty")
 
-        manifest_contents = self._maybe_verify_and_extract(manifest_contents, verify=verify_signature)
+        manifest_contents = self._maybe_verify_and_extract(
+            manifest_contents, verify=verify_signature
+        )
 
         jsonschema.validate(manifest_contents, buildcache_manifest_schema)
 
@@ -230,18 +266,27 @@ class URLBuildcacheEntry:
             self.data.append(record)
             blob_url = url_util.join(
                 self.mirror_url,
-                *self.get_relative_blobs_components(),
+                *self.get_relative_path_components(BuildcacheComponent.BLOBS),
                 record.checksum_alg,
                 record.checksum[:2],
                 record.checksum,
             )
-            if record.content_type.startswith("spec"):
+            if record.content_type == self.SPEC_VERSION:
                 self.remote_spec_url = blob_url
-            elif record.content_type.startswith("tarball"):
+                self.spec_manifest_record = record
+            elif record.content_type == self.TARBALL_VERSION:
                 self.remote_archive_url = blob_url
+                self.tarball_manifest_record = record
+
+        if not self.spec_manifest_record:
+            raise BuildcacheEntryError(f"No valid spec record found in {self.remote_manifest_url}")
+
+        if not self.tarball_manifest_record:
+            raise BuildcacheEntryError(
+                f"No valid tarball record found in {self.remote_manifest_url}"
+            )
 
         self.has_manifest = True
-        self._checked_exists = False
 
     def exists(self) -> bool:
         if not self._checked_exists:
@@ -256,15 +301,15 @@ class URLBuildcacheEntry:
 
         return self.has_metadata and self.has_tarball
 
-    def fetch_metadata(self) -> dict:
+    def fetch_metadata(self, allow_unsigned: bool = False) -> dict:
         """Retrieve metadata for the spec, yields the validated spec+ dict"""
-        if self.spec_dict:
-            # Only fetch the metadata once
-            return self.spec_dict
+        if not self.remote_spec_url:
+            # Reading the manifest will either successfully compute the remote
+            # spec url, or else raise an exception
+            self.read_manifest(verify_signature=not allow_unsigned)
 
-        # Reading the manifest will either successfully compute the remote
-        # spec url, or else raise
-        self.read_manifest()
+        if not self.spec_manifest_record:
+            raise BuildcacheEntryError("Cannot fetch metadata without valid spec record")
 
         self.spec_stage = spack.stage.Stage(self.remote_spec_url)
 
@@ -276,9 +321,14 @@ class URLBuildcacheEntry:
             self.destroy()
             raise BuildcacheEntryError("Unable to fetch metadata") from e
 
-        # Uncompress fetched data here, so local specfile path is useful?
-
         self.local_specfile_path = self.spec_stage.save_filename
+
+        # Raises if checksum does not match expectation
+        validate_checksum(
+            self.local_specfile_path,
+            self.spec_manifest_record.checksum_alg,
+            self.spec_manifest_record.checksum,
+        )
 
         # Check spec file for validity and read it, or else cleanup and exit early
         try:
@@ -292,28 +342,18 @@ class URLBuildcacheEntry:
         except Exception as err:
             raise BuildcacheEntryError("Fetched spec dict does not contain valid spec") from err
 
-        self._set_spec_dict(spec_dict)
+        self.spec_dict = spec_dict
 
         return self.spec_dict
 
-    def fetch_archive(self, allow_unsigned: bool = False):
+    def fetch_archive(self, allow_unsigned: bool = False) -> str:
         """Retrieve the archive file and return the local archive file path"""
-        if not self.spec_dict:
-            raise BuildcacheEntryError(
-                "Cannot fetch archive without first fetching valid metadata"
-            )
+        if not self.remote_archive_url:
+            # Raises if problems encountered, including not being able to verify signagure
+            self.read_manifest(verify_signature=not allow_unsigned)
 
-        if not allow_unsigned:
-            if not self.has_signed:
-                raise BuildcacheEntryError(
-                    "Buildcache entry created with allow_unsigned=False, but no signed "
-                    "spec file exists on mirror"
-                )
-            self.verified = try_verify(self.get_local_spec_path())
-            if not self.verified:
-                raise NoVerifyException(
-                    f"Signature on {self.remote_spec_url} could not be verified"
-                )
+        if not self.tarball_manifest_record:
+            raise BuildcacheEntryError("Cannot fetch archive without valid spec record")
 
         self.archive_stage = spack.stage.Stage(self.remote_archive_url)
 
@@ -327,64 +367,14 @@ class URLBuildcacheEntry:
 
         self.local_archive_path = self.archive_stage.save_filename
 
+        # Raises if checksum does not match expectation
+        validate_checksum(
+            self.local_archive_path,
+            self.tarball_manifest_record.checksum_alg,
+            self.tarball_manifest_record.checksum,
+        )
+
         return self.local_archive_path
-
-    @classmethod
-    def get_relative_spec_components(cls, spec: spack.spec.Spec, ext: str) -> List[str]:
-        spec_formatted = spec.format_path("{name}-{version}-{hash}")
-        return [f"v{cls.get_layout_version()}", "specs", f"{spec_formatted}{ext}"]
-
-    def get_relative_tarball_components(self) -> List[str]:
-        return [
-            "blobs",
-            self.remote_archive_checksum_algorithm,
-            self.remote_archive_checksum_hash[:2],
-            self.remote_archive_checksum_hash,
-        ]
-
-    @classmethod
-    def get_relative_keys_components(cls) -> List[str]:
-        return [f"v{cls.get_layout_version()}", "keys", "_pgp"]
-
-    @classmethod
-    def get_relative_specs_components(cls) -> List[str]:
-        return [f"v{cls.get_layout_version()}", "specs"]
-
-    @classmethod
-    def get_relative_blobs_components(cls) -> List[str]:
-        return ["blobs"]
-
-    def get_remote_spec_url(self):
-        return self.remote_spec_url
-
-    def get_remote_archive_url(self):
-        return self.remote_archive_url
-
-    def get_local_spec_path(self):
-        return self.local_specfile_path
-
-    def get_local_archive_path(self):
-        return self.local_archive_path
-
-    def get_archive_checksum_algorithm(self):
-        return self.remote_archive_checksum_algorithm
-
-    def get_archive_checksum_hash(self):
-        return self.remote_archive_checksum_hash
-
-    def destroy(self):
-        if self.spec_stage:
-            self.spec_stage.destroy()
-            self.spec_stage = None
-        if self.archive_stage:
-            self.archive_stage.destroy()
-            self.archive_stage = None
-
-    def is_verified(self):
-        return self.verified
-
-    def get_spec_dict(self) -> Dict:
-        return self.spec_dict
 
     def push(
         self,
@@ -395,6 +385,13 @@ class URLBuildcacheEntry:
         tmpdir: str,
         signing_key: Optional[str],
     ) -> None:
+        """Push tarball, specfile, and manifest to the remote mirror
+
+        Pushing should only be done after checking for the pre-existence of a
+        buildcache entry for this spec, and represents a force push if one is
+        found.  Thus, any pre-existing files are first removed.
+        """
+
         spec_dict = spec.to_dict(hash=ht.dag_hash)
         layout_version = self.get_layout_version()
         spec_dict["buildcache_layout_version"] = layout_version
@@ -415,9 +412,10 @@ class URLBuildcacheEntry:
         if self.has_manifest:
             web_util.remove_url(self.remote_manifest_url)
 
+        # Any previous archive/tarball is gone, compute the path to the new one
         self.remote_archive_url = url_util.join(
             self.mirror_url,
-            *self.get_relative_blobs_components(),
+            *self.get_relative_path_components(BuildcacheComponent.BLOBS),
             checksum_algorithm,
             tarball_checksum[:2],
             tarball_checksum,
@@ -426,6 +424,7 @@ class URLBuildcacheEntry:
         # push the archive/tarball blob to the remote
         web_util.push_to_url(tarball_path, self.remote_archive_url, keep_original=False)
 
+        # Clear out the previous data, then add a record for the new blob
         self.data = []
         self.data.append(
             BlobRecord(
@@ -441,7 +440,9 @@ class URLBuildcacheEntry:
         metadata_checksum = ""
         specfile = os.path.join(tmpdir, f"{spec.dag_hash()}.spec.json")
         with open(specfile, "wb", encoding="utf-8") as f:
-            compressed_bytes = gzip.compress(json.dumps(spec_dict).encode("utf-8"), compresslevel=6, mtime=0)
+            compressed_bytes = gzip.compress(
+                json.dumps(spec_dict).encode("utf-8"), compresslevel=6, mtime=0
+            )
             f.write(compressed_bytes)
             hasher = spack.util.crypto.hash_fun_for_algo(checksum_algorithm)()
             hasher.update(compressed_bytes)
@@ -449,9 +450,10 @@ class URLBuildcacheEntry:
 
         metadata_size = os.stat(specfile).st_size
 
+        # Any previous metadata blob is gone, compute the path to the new one
         self.remote_spec_url = url_util.join(
             self.mirror_url,
-            *self.get_relative_blobs_components(),
+            *self.get_relative_path_components(BuildcacheComponent.BLOBS),
             checksum_algorithm,
             metadata_checksum[:2],
             metadata_checksum,
@@ -462,11 +464,7 @@ class URLBuildcacheEntry:
 
         self.data.append(
             BlobRecord(
-                metadata_size,
-                "spec-v6",
-                compression,
-                checksum_algorithm,
-                metadata_checksum,
+                metadata_size, "spec-v6", compression, checksum_algorithm, metadata_checksum
             )
         )
 
@@ -485,53 +483,102 @@ class URLBuildcacheEntry:
         if signing_key:
             manifest_path = sign_specfile(signing_key, manifest_path)
 
-        self.remote_manifest_url = url_util.join(
-            self.mirror_url,
-            *self.get_relative_spec_components(spec, ".manifest.json"),
-        )
-
-        # push the manifest file to the remote
+        # Push the manifest file to the remote. The remote manifest url for
+        # a given concrete spec is fixed, so we donn't have to recompute it,
+        # even if we deleted the pre-existing one.
         web_util.push_to_url(manifest_path, self.remote_manifest_url, keep_original=False)
+
+    def destroy(self):
+        """Destroy stages if they exist"""
+        if self.spec_stage:
+            self.spec_stage.destroy()
+            self.spec_stage = None
+        if self.archive_stage:
+            self.archive_stage.destroy()
+            self.archive_stage = None
 
 
 class URLBuildcacheEntryV2(URLBuildcacheEntry):
     SPEC_URL_REGEX = re.compile(r"(.+)/build_cache/.+")
     LAYOUT_VERSION = 2
+    # Uses the same SPEC_VERSION and TARBALL_VERSION as v3
+    COMPONENT_PATHS = {
+        BuildcacheComponent.BLOBS: ["build_cache"],
+        BuildcacheComponent.INDICES: ["build_cache"],
+        BuildcacheComponent.INDEX: ["build_cache", INDEX_JSON_FILE],
+        BuildcacheComponent.KEYS: ["build_cache", "keys", "_pgp"],
+        BuildcacheComponent.SPECS: ["build_cache"],
+    }
+
+    def __init__(self, push_url_base: str, spec: Optional[spack.spec.Spec] = None):
+        """Lazily initialize the object"""
+        self.mirror_url: str = push_url_base
+        self.spec: Optional[spack.spec.Spec] = spec
+
+        self.has_metadata: bool = False
+        self.has_tarball: bool = False
+        self.spec_stage: Optional[spack.stage.Stage] = None
+        self.local_specfile_path: str = ""
+        self.archive_stage: Optional[spack.stage.Stage] = None
+        self.local_archive_path: str = ""
+
+        self.remote_spec_url: str = ""
+        self.remote_archive_url: str = ""
+        self.remote_archive_checksum_algorithm: str = ""
+        self.remote_archive_checksum_hash: str = ""
+        self.spec_dict: Dict[Any, Any] = {}
+
+        self.data: List[BlobRecord] = []
+
+        self._checked_exists = False
 
     @classmethod
     def get_layout_version(cls) -> int:
         return cls.LAYOUT_VERSION
 
-    @classmethod
-    def compute_remote_spec_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
-        return url_util.join(mirror_url, *cls.get_relative_spec_components(spec, ".spec.json.sig"))
+    def _get_spec_url(
+        self, spec: spack.spec.Spec, mirror_url: str, ext: str = ".spec.json.sig"
+    ) -> str:
+        spec_formatted = spec.format_path(
+            "{architecture}-{compiler.name}-{compiler.version}-{name}-{version}-{hash}"
+        )
+        path_components = self.get_relative_path_components(BuildcacheComponent.SPECS)
+        path_components.append(f"{spec_formatted}{ext}")
+        return url_util.join(mirror_url, *path_components)
 
-    def initialize_from_spec_url(self, spec_url: str):
-        try:
-            return super().initialize_from_spec_url(spec_url)
-        except BuildcacheEntryError:
-            if spec_url.endswith(".sig"):
-                return super().initialize_from_spec_url(spec_url[:-4])
-
-    def read_manifest(self, manifest_url: Optional[str] = None) -> None:
-        raise BuildcacheEntryError("v2 buildcache entries do not have a manifest file")
+    def _get_tarball_url(self, spec: spack.spec.Spec, mirror_url: str) -> str:
+        directory_name = spec.format_path(
+            "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}"
+        )
+        spec_formatted = spec.format_path(
+            "{architecture}-{compiler.name}-{compiler.version}-{name}-{version}-{hash}"
+        )
+        filename = f"{spec_formatted}.spack"
+        return url_util.join(mirror_url, directory_name, filename)
 
     def _check_metadata_exists(self):
+        if not self.spec:
+            return
+
         if not self._checked_signed:
-            if web_util.url_exists(self.remote_spec_url_signed):
-                self.remote_spec_url = self.remote_spec_url_signed
+            signed_url = self._get_spec_url(self.spec, self.mirror_url, ext=".spec.json.sig")
+            if web_util.url_exists(signed_url):
+                self.remote_spec_url = signed_url
                 self.has_signed = True
             self._checked_signed = True
 
         if not self.has_signed and not self._checked_unsigned:
-            if web_util.url_exists(self.remote_spec_url_unsigned):
-                if not self.has_signed:
-                    self.remote_spec_url = self.remote_spec_url_unsigned
+            unsigned_url = self._get_spec_url(self.spec, self.mirror_url, ext=".spec.json")
+            if web_util.url_exists(unsigned_url):
+                self.remote_spec_url = unsigned_url
                 self.has_unsigned = True
             self._checked_unsigned = True
 
-    def fetch_metadata(self) -> dict:
-        """Retrieve metadata for the spec, yields the validated spec+ dict"""
+    def exists(self) -> bool:
+        return False
+
+    def fetch_metadata(self, allow_unsigned: bool = False) -> dict:
+        """Retrieve the v2 specfile for the spec, yields the validated spec+ dict"""
         if self.spec_dict:
             # Only fetch the metadata once
             return self.spec_dict
@@ -539,9 +586,11 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         self._check_metadata_exists()
 
         if not self.remote_spec_url:
+            raise BuildcacheEntryError(f"Mirror {self.mirror_url} does not have metadata for spec")
+
+        if not allow_unsigned and self.has_unsigned:
             raise BuildcacheEntryError(
-                f"Mirror {self.mirror_url} has neither {self.remote_spec_url_signed} "
-                f"nor {self.remote_spec_url_unsigned}"
+                f"Mirror {self.mirror_url} does not have signed metadata for spec"
             )
 
         self.spec_stage = spack.stage.Stage(self.remote_spec_url)
@@ -556,6 +605,9 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 
         self.local_specfile_path = self.spec_stage.save_filename
 
+        if not allow_unsigned and not try_verify(self.local_specfile_path):
+            raise NoVerifyException(f"Signature on {self.remote_spec_url} could not be verified")
+
         # Check spec file for validity and read it, or else cleanup and exit early
         try:
             spec_dict, _ = get_valid_spec_file(self.local_specfile_path, self.get_layout_version())
@@ -568,24 +620,68 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         except Exception as err:
             raise BuildcacheEntryError("Fetched spec dict does not contain valid spec") from err
 
-        self._set_spec_dict(spec_dict)
+        self.spec_dict = spec_dict
+
+        # Retrieve the alg and hash from the spec dict, use them to build the path to
+        # the tarball.
+        if "binary_cache_checksum" not in self.spec_dict:
+            raise BuildcacheEntryError("Provided spec dict must contain 'binary_cache_checksum'")
+
+        bchecksum = self.spec_dict["binary_cache_checksum"]
+
+        if "hash_algorithm" not in bchecksum or "hash" not in bchecksum:
+            raise BuildcacheEntryError(
+                "Provided spec dict contains invalid 'binary_cache_checksum'"
+            )
+
+        self.remote_archive_checksum_algorithm = bchecksum["hash_algorithm"]
+        self.remote_archive_checksum_hash = bchecksum["hash"]
+        self.remote_archive_url = self._get_tarball_url(self.spec, self.mirror_url)
 
         return self.spec_dict
+
+    def fetch_archive(self, allow_unsigned: bool = False) -> str:
+        self.fetch_metadata(allow_unsigned=allow_unsigned)
+
+        self.archive_stage = spack.stage.Stage(self.remote_archive_url)
+
+        # Fetch the archive file, or else cleanup and exit early
+        try:
+            self.archive_stage.create()
+            self.archive_stage.fetch()
+        except spack.error.FetchError as e:
+            self.destroy()
+            raise BuildcacheEntryError("Unable to fetch metadata") from e
+
+        self.local_archive_path = self.archive_stage.save_filename
+
+        # Raises if checksum does not match expected
+        validate_checksum(
+            self.local_archive_path,
+            self.remote_archive_checksum_algorithm,
+            self.remote_archive_checksum_hash,
+        )
+
+        return self.local_archive_path
+
+    def read_manifest(
+        self, manifest_url: Optional[str] = None, verify_signature: bool = True
+    ) -> None:
+        raise BuildcacheEntryError("v2 buildcache entries do not have a manifest file")
 
     def push(
         self,
         spec: spack.spec.Spec,
         tarball_path: str,
-        tarball_checksum_algo: str,
+        checksum_algorithm: str,
         tarball_checksum: str,
         tmpdir: str,
-        push_url_base: str,
         signing_key: Optional[str],
     ) -> None:
         raise BuildcacheEntryError("Spack can no longer push v2 buildcache entries")
 
 
-def get_url_buildcache_class(layout_version: int) -> type:
+def get_url_buildcache_class(layout_version: int) -> type[URLBuildcacheEntry]:
     if layout_version == 2:
         return URLBuildcacheEntryV2
     elif layout_version == 3:
@@ -596,14 +692,16 @@ def get_url_buildcache_class(layout_version: int) -> type:
         )
 
 
-def create_url_buildcache_entry(layout_version: int) -> URLBuildcacheEntry:
-    if layout_version == 3:
-        return URLBuildcacheEntry()
-    elif layout_version == 2:
-        return URLBuildcacheEntryV2()
-    else:
-        raise UnknownBuildcacheLayoutError(
-            f"Buildcache layout version {layout_version} is unknown"
+def validate_checksum(file_path, checksum_algorithm, expected_checksum) -> None:
+    """Compute the checksum of the given file and raise if invalid"""
+    local_checksum = spack.util.crypto.checksum(
+        spack.util.crypto.hash_fun_for_algo(checksum_algorithm), file_path
+    )
+
+    if local_checksum != expected_checksum:
+        size, contents = fsys.filesummary(file_path)
+        raise spack.error.NoChecksumException(
+            file_path, size, contents, checksum_algorithm, expected_checksum, local_checksum
         )
 
 
@@ -616,9 +714,9 @@ def get_valid_spec_file(path: str, max_supported_layout: int) -> Tuple[Dict, int
     except OSError:
         raise InvalidMetadataFile(f"No such file: {path}")
 
-    # In the future we may support transparently decompressing compressed spec files.
+    # Decompress spec file if necessary
     if binary_content[:2] == b"\x1f\x8b":
-        raise InvalidMetadataFile("Compressed spec files are not supported")
+        binary_content = gzip.decompress(binary_content)
 
     try:
         as_string = binary_content.decode("utf-8")

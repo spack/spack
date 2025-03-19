@@ -48,7 +48,13 @@ from spack.installer import PackageInstaller
 from spack.paths import test_path
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 from spack.spec import Spec
-from spack.url_buildcache import create_url_buildcache_entry, get_valid_spec_file
+from spack.url_buildcache import (
+    BuildcacheComponent,
+    URLBuildcacheEntry,
+    URLBuildcacheEntryV2,
+    get_url_buildcache_class,
+    get_valid_spec_file,
+)
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
@@ -1160,29 +1166,11 @@ def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
         assert actual_archive_size == expected_archive_size
 
     # 1) initialize with a concrete spec and mirror url
-    build_cache = create_url_buildcache_entry(bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    build_cache.initialize_from_spec_and_mirror(s, mirror_url)
+    cache_class = get_url_buildcache_class(bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION)
+    build_cache = cache_class(mirror_url, s)
 
     spec_dict = build_cache.fetch_metadata()
     local_tarball_path = build_cache.fetch_archive(allow_unsigned=True)
-
-    validate(spec_dict, local_tarball_path)
-
-    remote_spec_url = build_cache.get_remote_spec_url()
-
-    build_cache.destroy()
-
-    assert not os.path.exists(local_tarball_path)
-
-    # 2) initialize with only the full spec url
-    cache_entry = create_url_buildcache_entry(bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    cache_entry.initialize_from_spec_url(remote_spec_url)
-
-    build_cache.fetch_metadata()
-    build_cache.fetch_archive(allow_unsigned=True)
-
-    local_tarball_path = build_cache.get_local_archive_path()
-    spec_dict = build_cache.get_spec_dict()
 
     validate(spec_dict, local_tarball_path)
 
@@ -1202,19 +1190,35 @@ def test_validate_buildcache_manifest():
                 "content-type": "tarball-v1",
                 "compression": "gzip",
                 "checksum-algorithm": "sha256",
-                "checksum": "e79acbb06f79c8c5d5aeaf415266d10fe32675f498a60f048299653083534a12"
+                "checksum": "e79acbb06f79c8c5d5aeaf415266d10fe32675f498a60f048299653083534a12",
             },
             {
                 "content-length": 123,
                 "content-type": "spec-v6",
                 "compression": "gzip",
                 "checksum-algorithm": "sha256",
-                "checksum": "f08eb62661ad159d2d258890127fc6053f5302a2f490c1c7f7bd677721010ee0"
+                "checksum": "f08eb62661ad159d2d258890127fc6053f5302a2f490c1c7f7bd677721010ee0",
             },
-        ]
+        ],
     }
 
     jsonschema.validate(manifest_data, buildcache_manifest_schema)
+
+
+def test_relative_path_components():
+    blobs_v3 = URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.BLOBS)
+    assert len(blobs_v3) == 1
+    assert "blobs" in blobs_v3
+
+    blobs_v2 = URLBuildcacheEntryV2.get_relative_path_components(BuildcacheComponent.BLOBS)
+    assert len(blobs_v2) == 1
+    assert "build_cache" in blobs_v2
+
+    v2_spec_url = "file:///home/me/mymirror/build_cache/linux-ubuntu22.04-sapphirerapids-gcc-12.3.0-gmake-4.4.1-5pddli3htvfe6svs7nbrqmwi5735agi3.spec.json.sig"
+    assert URLBuildcacheEntryV2.get_base_url(v2_spec_url) == "file:///home/me/mymirror"
+
+    v3_manifest_url = "file:///home/me/mymirror/v3/specs/gmake-4.4.1-5pddli3htvfe6svs7nbrqmwi5735agi3.manifest.json"
+    assert URLBuildcacheEntry.get_base_url(v3_manifest_url) == "file:///home/me/mymirror"
 
 
 @pytest.mark.parametrize(
