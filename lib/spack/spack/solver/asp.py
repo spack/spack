@@ -851,8 +851,12 @@ class ConcretizationCache:
         """
         # synchronize manifests as old will be deleted by
         # filecache once the context manager exits
+        # skip the manifest header data
+        old.readline()
         cache_context = old.read()
         old.seek(0, io.SEEK_SET)
+        # write an empty to line for manifest header
+        new.write("\n")
         new.write(cache_context)
         new.seek(0, io.SEEK_SET)
 
