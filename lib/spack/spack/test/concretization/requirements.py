@@ -947,8 +947,8 @@ def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages)
             - "%clang"
     """,
             "multivalue-variant",
-            ["llvm"],
-            ["gcc"],
+            ["%[virtuals=c] llvm"],
+            ["%gcc"],
         ),
         (
             """
@@ -958,8 +958,8 @@ def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages)
                 - "%clang"
         """,
             "multivalue-variant %gcc",
-            ["gcc"],
-            ["llvm"],
+            ["%[virtuals=c] gcc"],
+            ["%llvm"],
         ),
         # Test parsing objects instead of strings
         (
@@ -970,8 +970,8 @@ def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages)
                 - spec: "%clang"
         """,
             "multivalue-variant",
-            ["llvm"],
-            ["gcc"],
+            ["%[virtuals=c] llvm"],
+            ["%gcc"],
         ),
         # Test using preferences on virtuals
         (
@@ -1021,7 +1021,7 @@ def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages)
         ),
     ],
 )
-def test_compiler_strong_preferences_packages_yaml(
+def test_strong_preferences_packages_yaml(
     packages_yaml, spec_str, expected, not_expected, concretize_scope, mock_packages
 ):
     """Tests that strong preferences are taken into account for compilers."""
@@ -1029,10 +1029,10 @@ def test_compiler_strong_preferences_packages_yaml(
     s = spack.concretize.concretize_one(spec_str)
 
     for constraint in expected:
-        assert s.dependencies(deptype="build", name=constraint)
+        assert s.satisfies(constraint)
 
     for constraint in not_expected:
-        assert not s.dependencies(deptype="build", name=constraint)
+        assert not s.satisfies(constraint)
 
 
 @pytest.mark.parametrize(
