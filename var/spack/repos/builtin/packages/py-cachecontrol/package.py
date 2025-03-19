@@ -14,6 +14,7 @@ class PyCachecontrol(PythonPackage):
 
     license("Apache-2.0")
 
+    version("0.14.2", sha256="7d47d19f866409b98ff6025b6a0fca8e4c791fb31abbd95f622093894ce903a2")
     version("0.14.0", sha256="7db1195b41c81f8274a7bbd97c956f44e8348265a1bc7641c37dfebc39f0c938")
     version("0.13.1", sha256="f012366b79d2243a6118309ce73151bf52a38d4a5dac8ea57f09bd29087e506b")
     version("0.13.0", sha256="fd3fd2cb0ca66b9a6c1d56cc9709e7e49c63dbd19b1b1bcbd8d3f94cedfe8ce5")
