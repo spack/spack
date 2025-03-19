@@ -191,7 +191,7 @@ class Mivisionx(CMakePackage):
     depends_on("libjpeg-turbo@2.0.6+partial_decoder", type="build", when="@:6.2.0")
     depends_on("rpp@1.2.0", when="@5.5:5.6")
     depends_on("lmdb", when="@5.5:")
-    depends_on("python@3.5:", when="@5.5:") 
+    depends_on("python@3.5:", when="@5.5:")
     depends_on("py-setuptools", when="@5.6:")
     depends_on("py-wheel", when="@5.6:")
     depends_on("py-pybind11", when="@5.6:")
