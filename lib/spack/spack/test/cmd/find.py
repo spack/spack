@@ -448,7 +448,7 @@ def test_find_loaded(database, working_env):
 
 
 @pytest.mark.regression("37712")
-def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
+def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path, mock_packages):
     """Tests that having an active environment with a root spec containing a compiler constrained
     by a version range (i.e. @X.Y rather the single version than @=X.Y) doesn't result in an error
     when invoking "spack find".
