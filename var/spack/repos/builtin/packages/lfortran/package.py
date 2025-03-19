@@ -19,7 +19,11 @@ class Lfortran(CMakePackage):
     version("main", branch="main", get_full_repo=True)
     version("0.49.0", sha256="a9225fd33d34ce786f72a964a1179579caff62dd176a6a1477d2594fecdc7cd6")
     version("0.30.0", sha256="aafdfbfe81d69ceb3650ae1cf9bcd8a1f1532d895bf88f3071fe9610859bcd6f")
-    version("0.19.0", sha256="d496f61d7133b624deb3562677c0cbf98e747262babd4ac010dbd3ab4303d805")
+    version(
+        "0.19.0",
+        sha256="d496f61d7133b624deb3562677c0cbf98e747262babd4ac010dbd3ab4303d805",
+        url="https://lfortran.github.io/tarballs/release/lfortran-0.19.0.tar.gz",
+    )
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
