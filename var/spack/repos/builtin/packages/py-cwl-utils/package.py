@@ -29,7 +29,8 @@ class PyCwlUtils(PythonPackage):
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-cachecontrol", type=("build", "run"))
     depends_on("py-schema-salad@8.3.20220825114525:8", when="@:0.31", type=("build", "run"))
-    depends_on("py-schema-salad@8.8.20250205075315:8", when="@0.37", type=("build", "run"))
+    # intermediate versions 0.32:0.36 may not require 8.8, but should work with this stricter requirement
+    depends_on("py-schema-salad@8.8.20250205075315:8", when="@0.32:", type=("build", "run"))
     depends_on("py-ruamel-yaml@0.17.6:0.18", when="@0.30:", type=("build", "run"))
     depends_on("py-typing-extensions", when="@0.37 ^python@:3.9", type=("build", "run"))
 
