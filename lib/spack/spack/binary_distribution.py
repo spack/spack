@@ -713,7 +713,7 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
     # Push the index itself
     web_util.push_to_url(
         index_json_path,
-        url_util.join(cache_prefix, spack_db.INDEX_JSON_FILE),
+        url_util.join(cache_prefix, buildcache_relative_specs_url(), spack_db.INDEX_JSON_FILE),
         keep_original=False,
         extra_args={"ContentType": "application/json", "CacheControl": "no-cache"},
     )
@@ -721,7 +721,7 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
     # Push the hash
     web_util.push_to_url(
         index_hash_path,
-        url_util.join(cache_prefix, INDEX_HASH_FILE),
+        url_util.join(cache_prefix, buildcache_relative_specs_url(), INDEX_HASH_FILE),
         keep_original=False,
         extra_args={"ContentType": "text/plain", "CacheControl": "no-cache"},
     )
@@ -745,16 +745,7 @@ def _read_specs_and_push_index(
         temp_dir: Location to write index.json and hash for pushing
     """
     for file in file_list:
-        contents = read_method(file)
-        # Need full spec.json name or this gets confused with index.json.
-        if file.endswith(".json.sig"):
-            specfile_json = spack.spec.Spec.extract_json_from_clearsig(contents)
-            fetched_spec = spack.spec.Spec.from_dict(specfile_json)
-        elif file.endswith(".json"):
-            fetched_spec = spack.spec.Spec.from_json(contents)
-        else:
-            continue
-
+        fetched_spec = spack.spec.Spec.from_dict(read_method(file))
         db.add(fetched_spec)
         db.mark(fetched_spec, "in_buildcache", True)
 
@@ -774,9 +765,13 @@ def _specs_from_cache_aws_cli(cache_prefix):
     file_list = None
     aws = which("aws")
 
-    def file_read_method(file_path):
-        with open(file_path, encoding="utf-8") as fd:
-            return fd.read()
+    def file_read_method(manifest_path):
+        cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
+        cache_entry = cache_class(cache_prefix)
+        cache_entry.read_manifest(manifest_url=f"file://{manifest_path}", verify_signature=False)
+        spec_dict = cache_entry.fetch_metadata(allow_unsigned=True)
+        cache_entry.destroy()
+        return spec_dict
 
     tmpspecsdir = tempfile.mkdtemp()
     sync_command_args = [
@@ -785,19 +780,17 @@ def _specs_from_cache_aws_cli(cache_prefix):
         "--exclude",
         "*",
         "--include",
-        "*.spec.json.sig",
-        "--include",
-        "*.spec.json",
+        "*.manifest.json",
         cache_prefix,
         tmpspecsdir,
     ]
 
     try:
         tty.debug(
-            "Using aws s3 sync to download specs from {0} to {1}".format(cache_prefix, tmpspecsdir)
+            "Using aws s3 sync to download manifests from {0} to {1}".format(cache_prefix, tmpspecsdir)
         )
         aws(*sync_command_args, output=os.devnull, error=os.devnull)
-        file_list = fsys.find(tmpspecsdir, ["*.spec.json.sig", "*.spec.json"])
+        file_list = fsys.find(tmpspecsdir, ["*.manifest.json"])
         read_fn = file_read_method
     except Exception:
         tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
@@ -819,20 +812,20 @@ def _specs_from_cache_fallback(url: str):
     read_fn = None
     file_list = None
 
-    def url_read_method(url):
-        contents = None
-        try:
-            _, _, spec_file = web_util.read_from_url(url)
-            contents = codecs.getreader("utf-8")(spec_file).read()
-        except (web_util.SpackWebError, OSError) as e:
-            tty.error(f"Error reading specfile: {url}: {e}")
-        return contents
+    def url_read_method(manifest_url):
+        cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
+        cache_entry = cache_class(url)
+        cache_entry.read_manifest(manifest_url, verify_signature=False)
+        spec_dict = cache_entry.fetch_metadata(allow_unsigned=True)
+        cache_entry.destroy()
+        return spec_dict
 
     try:
+        url_to_list = url_util.join(url, buildcache_relative_specs_url())
         file_list = [
-            url_util.join(url, entry)
-            for entry in web_util.list_url(url)
-            if entry.endswith("spec.json") or entry.endswith("spec.json.sig")
+            url_util.join(url_to_list, entry)
+            for entry in web_util.list_url(url_to_list)
+            if entry.endswith("manifest.json")
         ]
         read_fn = url_read_method
     except Exception as err:
@@ -881,7 +874,6 @@ def _url_generate_package_index(url: str, tmpdir: str):
     Return:
         None
     """
-    url = url_util.join(url, buildcache_relative_specs_url())
     try:
         file_list, read_fn = _spec_files_from_cache(url)
     except ListMirrorSpecsError as e:
