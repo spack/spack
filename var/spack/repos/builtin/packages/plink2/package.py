@@ -38,7 +38,7 @@ class Plink2(MakefilePackage):
     build_directory = "2.0/build_dynamic"
 
     def url_for_version(self, version):
-        return f"https://github.com/chrchang/plink-ng/archive/refs/tags/{version!s}.tar.gz"
+        return f"https://github.com/chrchang/plink-ng/archive/refs/tags/v{version!s}.tar.gz"
 
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
