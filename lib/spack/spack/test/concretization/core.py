@@ -3961,13 +3961,9 @@ def test_concretization_cache_manifest_updating(use_concretization_cache, mutabl
     for entry in spack.solver.asp.CONC_CACHE.cache_entries():
         count += 1
         byte_size += entry.stat().st_size
-    assert (
-        parsed_count == count
-    ), "Concretization cache manifest entry count incorrect. "
+    assert parsed_count == count, "Concretization cache manifest entry count incorrect. "
     f"Expected count {count}, got {parsed_count}"
-    assert (
-        parsed_byte_size == byte_size
-    ), "Concretization cache manifest byte count incorrect. "
+    assert parsed_byte_size == byte_size, "Concretization cache manifest byte count incorrect. "
     f"Expected count {byte_size}, got {parsed_byte_size}"
 
 
@@ -3996,11 +3992,7 @@ def test_concretization_cache_cleanup(use_concretization_cache, mutable_config):
 
     real_count, real_size = get_current_cache_data()
     manifest_count, manifest_size = extract_cache_metadata()
-    assert (
-        real_count == manifest_count
-    ),  "Concretization cache manifest entry count incorrect. "
+    assert real_count == manifest_count, "Concretization cache manifest entry count incorrect. "
     f"Expected count {real_count}, got {manifest_count}"
-    assert (
-        real_size == manifest_size
-    ), "Concretization cache manifest byte count incorrect. "
+    assert real_size == manifest_size, "Concretization cache manifest byte count incorrect. "
     f"Expected count {real_size}, got {manifest_size}"

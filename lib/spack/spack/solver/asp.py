@@ -751,11 +751,9 @@ class ConcretizationCache:
             return cache_count, cache_byte_size
         return None, None
 
-    def _write_manifest(self,
-                        old_manifest_file: IO[str],
-                        new_manifest_file: IO[str],
-                        entry_count,
-                        entry_bytes):
+    def _write_manifest(
+        self, old_manifest_file: IO[str], new_manifest_file: IO[str], entry_count, entry_bytes
+    ):
         """Writes new concretization cache manifest file.
 
         Arguments:
@@ -808,7 +806,7 @@ class ConcretizationCache:
         # make sure we're always reading from the beginning of the stream
         # concretization cache manifest data lives at the top of the file
         with current_file_position(cache_stream, 0):
-            count, bytes_count =  self._parse_manifest_entry(cache_stream.readline())
+            count, bytes_count = self._parse_manifest_entry(cache_stream.readline())
             if count and bytes_count:
                 return int(count), int(bytes_count)
             return None, None
