@@ -128,7 +128,7 @@ class Adios(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         # https://github.com/ornladios/ADIOS/issues/206
-        if self.spec.satisfies("%gcc@10: +fortran"):
+        if self.spec.satisfies("+fortran %gcc@10:"):
             env.set("FCFLAGS", "-fallow-argument-mismatch")
 
     def configure_args(self):

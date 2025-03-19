@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
+import os
 
 from spack.package import *
 
@@ -220,10 +220,8 @@ class SuiteSparse(Package):
             make_args += [f"CFLAGS+={self.compiler.c11_flag}"]
 
         # 64bit blas in UMFPACK:
-        if (
-            spec.satisfies("^openblas+ilp64")
-            or spec.satisfies("^intel-mkl+ilp64")
-            or spec.satisfies("^intel-parallel-studio+mkl+ilp64")
+        if spec.satisfies("^[virtuals=lapack] openblas+ilp64") or spec.satisfies(
+            "^[virtuals=lapack] intel-oneapi-mkl+ilp64"
         ):
             make_args.append('UMFPACK_CONFIG=-DLONGBLAS="long long"')
 
@@ -272,7 +270,7 @@ class SuiteSparse(Package):
                 ]
             make_args += [f"CMAKE_OPTIONS={' '.join(cmake_args)}"]
 
-        if spec.satisfies("%gcc platform=darwin"):
+        if spec.satisfies("platform=darwin %gcc"):
             make_args += ["LDLIBS=-lm"]
 
         if "%cce" in spec:

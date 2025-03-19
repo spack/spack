@@ -60,13 +60,6 @@ def test_new_versions_only(monkeypatch):
 
 
 @pytest.mark.maybeslow
-def test_no_versions():
-    """Test a package for which no remote versions are available."""
-
-    versions("converge")
-
-
-@pytest.mark.maybeslow
 def test_no_unchecksummed_versions():
     """Test a package for which no unchecksummed versions are available."""
 

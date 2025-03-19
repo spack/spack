@@ -4,13 +4,14 @@
 
 import collections
 import datetime
+import email.message
 import errno
 import functools
 import inspect
+import io
 import itertools
 import json
 import os
-import os.path
 import pathlib
 import re
 import shutil
@@ -29,7 +30,15 @@ import archspec.cpu.schema
 import llnl.util.lang
 import llnl.util.lock
 import llnl.util.tty as tty
-from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, working_dir
+from llnl.util.filesystem import (
+    copy,
+    copy_tree,
+    join_path,
+    mkdirp,
+    remove_linked_tree,
+    touchp,
+    working_dir,
+)
 
 import spack.binary_distribution
 import spack.bootstrap.core
@@ -64,6 +73,9 @@ from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
 from spack.util.pattern import Bunch
+from spack.util.remote_file_cache import raw_github_gitlab_url
+
+from ..enums import ConfigScopePriority
 
 mirror_cmd = SpackCommand("mirror")
 
@@ -336,6 +348,16 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if any(x in item.keywords for x in slow_tests):
             item.add_marker(skip_as_slow)
+
+
+@pytest.fixture(scope="function")
+def use_concretization_cache(mutable_config, tmpdir):
+    """Enables the use of the concretization cache"""
+    spack.config.set("config:concretization_cache:enable", True)
+    # ensure we have an isolated concretization cache
+    new_conc_cache_loc = str(tmpdir.mkdir("concretization"))
+    spack.config.set("config:concretization_cache:path", new_conc_cache_loc)
+    yield
 
 
 #
@@ -620,7 +642,7 @@ def linux_os():
     platform = spack.platforms.host()
     name, version = "debian", "6"
     if platform.name == "linux":
-        current_os = platform.operating_system("default_os")
+        current_os = platform.default_operating_system()
         name, version = current_os.name, current_os.version
     LinuxOS = collections.namedtuple("LinuxOS", ["name", "version"])
     return LinuxOS(name=name, version=version)
@@ -679,7 +701,6 @@ def mock_uarch_configuration(mock_uarch_json):
 def mock_targets(mock_uarch_configuration, monkeypatch):
     """Use this fixture to enable mock uarch targets for testing."""
     targets_json, targets = mock_uarch_configuration
-
     monkeypatch.setattr(archspec.cpu.schema, "TARGETS_JSON", targets_json)
     monkeypatch.setattr(archspec.cpu.microarchitecture, "TARGETS", targets)
 
@@ -723,11 +744,23 @@ def configuration_dir(tmpdir_factory, linux_os):
 def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
     return [
-        spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
-        spack.config.DirectoryConfigScope("site", str(configuration_dir.join("site"))),
-        spack.config.DirectoryConfigScope("system", str(configuration_dir.join("system"))),
-        spack.config.DirectoryConfigScope("user", str(configuration_dir.join("user"))),
-        spack.config.InternalConfigScope("command_line"),
+        (
+            ConfigScopePriority.BUILTIN,
+            spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
+        ),
+        (
+            ConfigScopePriority.CONFIG_FILES,
+            spack.config.DirectoryConfigScope("site", str(configuration_dir.join("site"))),
+        ),
+        (
+            ConfigScopePriority.CONFIG_FILES,
+            spack.config.DirectoryConfigScope("system", str(configuration_dir.join("system"))),
+        ),
+        (
+            ConfigScopePriority.CONFIG_FILES,
+            spack.config.DirectoryConfigScope("user", str(configuration_dir.join("user"))),
+        ),
+        (ConfigScopePriority.COMMAND_LINE, spack.config.InternalConfigScope("command_line")),
     ]
 
 
@@ -794,13 +827,11 @@ def mock_wsdk_externals(monkeypatch_session):
 def concretize_scope(mutable_config, tmpdir):
     """Adds a scope for concretization preferences"""
     tmpdir.ensure_dir("concretize")
-    mutable_config.push_scope(
+    with spack.config.override(
         spack.config.DirectoryConfigScope("concretize", str(tmpdir.join("concretize")))
-    )
+    ):
+        yield str(tmpdir.join("concretize"))
 
-    yield str(tmpdir.join("concretize"))
-
-    mutable_config.pop_scope()
     spack.repo.PATH._provider_index = None
 
 
@@ -1669,7 +1700,7 @@ def installation_dir_with_headers(tmpdir_factory):
 ##########
 
 
-@pytest.fixture(params=["conflict%clang+foo", "conflict-parent@0.9^conflict~foo"])
+@pytest.fixture(params=["conflict+foo%clang", "conflict-parent@0.9^conflict~foo"])
 def conflict_spec(request):
     """Specs which violate constraints specified with the "conflicts"
     directive in the "conflict" package.
@@ -1884,35 +1915,21 @@ def mock_curl_configs(mock_config_data, monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def mock_spider_configs(mock_config_data, monkeypatch):
-    """
-    Mock retrieval of configuration file URLs from the web by grabbing
-    them from the test data configuration directory.
-    """
-    config_data_dir, config_files = mock_config_data
+def mock_fetch_url_text(tmpdir, mock_config_data, monkeypatch):
+    """Mock spack.util.web.fetch_url_text."""
 
-    def _spider(*args, **kwargs):
-        root_urls = args[0]
-        if not root_urls:
-            return [], set()
+    stage_dir, config_files = mock_config_data
 
-        root_urls = [root_urls] if isinstance(root_urls, str) else root_urls
+    def _fetch_text_file(url, dest_dir):
+        raw_url = raw_github_gitlab_url(url)
+        mkdirp(dest_dir)
+        basename = os.path.basename(raw_url)
+        src = join_path(stage_dir, basename)
+        dest = join_path(dest_dir, basename)
+        copy(src, dest)
+        return dest
 
-        # Any URL with an extension will be treated like a file; otherwise,
-        # it is considered a directory/folder and we'll grab all available
-        # files.
-        urls = []
-        for url in root_urls:
-            if os.path.splitext(url)[1]:
-                urls.append(url)
-            else:
-                urls.extend([os.path.join(url, f) for f in config_files])
-
-        return [], set(urls)
-
-    monkeypatch.setattr(spack.util.web, "spider", _spider)
-
-    yield
+    monkeypatch.setattr(spack.util.web, "fetch_url_text", _fetch_text_file)
 
 
 @pytest.fixture(scope="function")
@@ -2126,5 +2143,76 @@ def _c_compiler_always_exists():
 @pytest.fixture(scope="session")
 def mock_test_cache(tmp_path_factory):
     cache_dir = tmp_path_factory.mktemp("cache")
-    print(cache_dir)
-    return spack.util.file_cache.FileCache(str(cache_dir))
+    return spack.util.file_cache.FileCache(cache_dir)
+
+
+class MockHTTPResponse(io.IOBase):
+    """This is a mock HTTP response, which implements part of http.client.HTTPResponse"""
+
+    def __init__(self, status, reason, headers=None, body=None):
+        self.msg = None
+        self.version = 11
+        self.url = None
+        self.headers = email.message.EmailMessage()
+        self.status = status
+        self.code = status
+        self.reason = reason
+        self.debuglevel = 0
+        self._body = body
+
+        if headers is not None:
+            for key, value in headers.items():
+                self.headers[key] = value
+
+    @classmethod
+    def with_json(cls, status, reason, headers=None, body=None):
+        """Create a mock HTTP response with JSON string as body"""
+        body = io.BytesIO(json.dumps(body).encode("utf-8"))
+        return cls(status, reason, headers, body)
+
+    def read(self, *args, **kwargs):
+        return self._body.read(*args, **kwargs)
+
+    def getheader(self, name, default=None):
+        self.headers.get(name, default)
+
+    def getheaders(self):
+        return self.headers.items()
+
+    def fileno(self):
+        return 0
+
+    def getcode(self):
+        return self.status
+
+    def info(self):
+        return self.headers
+
+
+@pytest.fixture()
+def mock_runtimes(config, mock_packages):
+    return mock_packages.packages_with_tags("runtime")
+
+
+@pytest.fixture()
+def write_config_file(tmpdir):
+    """Returns a function that writes a config file."""
+
+    def _write(config, data, scope):
+        config_yaml = tmpdir.join(scope, config + ".yaml")
+        config_yaml.ensure()
+        with config_yaml.open("w") as f:
+            syaml.dump_config(data, f)
+        return config_yaml
+
+    return _write
+
+
+def _include_cache_root():
+    return join_path(str(tempfile.mkdtemp()), "user_cache", "includes")
+
+
+@pytest.fixture()
+def mock_include_cache(monkeypatch):
+    """Override the include cache directory so tests don't pollute user cache."""
+    monkeypatch.setattr(spack.config, "_include_cache_location", _include_cache_root)

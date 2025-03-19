@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-""" Test ABI-based splicing of dependencies """
+"""Test ABI-based splicing of dependencies"""
 
 from typing import List
 
@@ -103,7 +103,6 @@ def test_splice_build_splice_node(install_specs, mutable_config):
     assert concrete["splice-h"].build_spec.dag_hash() == concrete["splice-h"].dag_hash()
 
 
-@pytest.mark.xfail(reason="the spliced splice-h has sometimes the original splice-h hash")
 def test_double_splice(install_specs, mutable_config):
     """Tests splicing two dependencies of an installed spec, for other installed specs"""
     splice_t, splice_h, splice_z = install_specs(

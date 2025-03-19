@@ -7,7 +7,9 @@ spack:
 
   packages:
     all:
-      require: '%gcc target=neoverse_v2'
+      require:
+      - "%gcc"
+      - target=neoverse_v2
       providers:
         blas: [openblas]
         mpi: [mpich]
@@ -28,13 +30,13 @@ spack:
     mpi:
       require: mpich
     mpich:
-      require: '~wrapperrpath ~hwloc %gcc target=neoverse_v2'
+      require: '~wrapperrpath ~hwloc target=neoverse_v2 %gcc'
     tbb:
       require: intel-tbb
     vtk-m:
-      require: "+examples %gcc target=neoverse_v2"
+      require: "+examples target=neoverse_v2 %gcc"
     paraview:
-      require: "+examples %gcc target=neoverse_v2"
+      require: "+examples target=neoverse_v2 %gcc"
 
   specs:
   # CPU
@@ -84,6 +86,7 @@ spack:
   - lammps
   - lbann
   - legion
+  - libceed
   - libnrm
   - libquo
   - libunwind
@@ -192,6 +195,7 @@ spack:
   - hpx +cuda cuda_arch=90
   - kokkos +wrapper +cuda cuda_arch=90
   - kokkos-kernels +cuda cuda_arch=90 ^kokkos +wrapper +cuda cuda_arch=90
+  - libceed +cuda cuda_arch=90
   - magma +cuda cuda_arch=90
   - mfem +cuda cuda_arch=90
   - mgard +serial +openmp +timing +unstructured +cuda cuda_arch=90

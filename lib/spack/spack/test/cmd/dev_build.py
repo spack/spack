@@ -127,16 +127,15 @@ def test_dev_build_before_until(tmpdir, install_mockery):
         assert not_installed in out
 
 
-def print_spack_cc(*args):
-    # Eat arguments and print environment variable to test
-    print(os.environ.get("CC", ""))
+def _print_spack_short_spec(*args):
+    print(f"SPACK_SHORT_SPEC={os.environ['SPACK_SHORT_SPEC']}")
 
 
 def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch, install_mockery, working_env):
-    monkeypatch.setattr(os, "execvp", print_spack_cc)
+    monkeypatch.setattr(os, "execvp", _print_spack_short_spec)
     with tmpdir.as_cwd():
         output = dev_build("-b", "edit", "--drop-in", "sh", "dev-build-test-install@0.0.0")
-        assert os.path.join("lib", "spack", "env") in output
+        assert "SPACK_SHORT_SPEC=dev-build-test-install@0.0.0" in output
 
 
 def test_dev_build_fails_already_installed(tmpdir, install_mockery):
@@ -178,6 +177,18 @@ def test_dev_build_fails_nonexistent_package_name(mock_packages):
 def test_dev_build_fails_no_version(mock_packages):
     output = dev_build("dev-build-test-install", fail_on_error=False)
     assert "dev-build spec must have a single, concrete version" in output
+
+
+def test_dev_build_can_parse_path_with_at_symbol(tmpdir, install_mockery):
+    special_char_dir = tmpdir.mkdir("tmp@place")
+    spec = spack.spec.Spec(f'dev-build-test-install@0.0.0 dev_path="{special_char_dir}"')
+    spec.concretize()
+
+    with special_char_dir.as_cwd():
+        with open(spec.package.filename, "w", encoding="utf-8") as f:
+            f.write(spec.package.original_string)
+        dev_build("dev-build-test-install@0.0.0")
+    assert spec.package.filename in os.listdir(spec.prefix)
 
 
 def test_dev_build_env(tmpdir, install_mockery, mutable_mock_env_path):

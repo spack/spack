@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
 import pathlib
 
 import pytest
@@ -182,7 +181,7 @@ def test_requirement_adds_version_satisfies(
 
     # Sanity check: early version of T does not include U
     s0 = spack.concretize.concretize_one("t@2.0")
-    assert not ("u" in s0)
+    assert "u" not in s0
 
     conf_str = """\
 packages:
@@ -200,11 +199,11 @@ packages:
 
 @pytest.mark.parametrize("require_checksum", (True, False))
 def test_requirement_adds_git_hash_version(
-    require_checksum, concretize_scope, test_repo, mock_git_version_info, monkeypatch, working_env
+    require_checksum, concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
     # A full commit sha is a checksummed version, so this test should pass in both cases
     if require_checksum:
-        os.environ["SPACK_CONCRETIZER_REQUIRE_CHECKSUM"] = "yes"
+        monkeypatch.setenv("SPACK_CONCRETIZER_REQUIRE_CHECKSUM", "yes")
 
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
@@ -360,10 +359,10 @@ packages:
     update_packages_config(conf_str)
 
     s1 = spack.concretize.concretize_one("y@2.5")
-    assert s1.satisfies("%clang~shared")
+    assert s1.satisfies("~shared%clang")
 
     s2 = spack.concretize.concretize_one("y@2.4")
-    assert s2.satisfies("%gcc+shared")
+    assert s2.satisfies("+shared%gcc")
 
 
 @pytest.mark.regression("34241")
@@ -500,7 +499,7 @@ packages:
     "requirements,expectations",
     [
         (("%gcc", "%clang"), ("%gcc", "%clang")),
-        (("%gcc~shared", "@1.0"), ("%gcc~shared", "@1.0+shared")),
+        (("~shared%gcc", "@1.0"), ("~shared%gcc", "@1.0+shared")),
     ],
 )
 def test_default_and_package_specific_requirements(
@@ -755,7 +754,7 @@ def test_skip_requirement_when_default_requirement_condition_cannot_be_met(
     update_packages_config(packages_yaml)
     s = spack.concretize.concretize_one("mpileaks")
 
-    assert s.satisfies("%clang+shared")
+    assert s.satisfies("+shared %clang")
     # Sanity checks that 'callpath' doesn't have the shared variant, but that didn't
     # cause failures during concretization.
     assert "shared" not in s["callpath"].variants
@@ -1126,3 +1125,46 @@ def test_strong_preferences_higher_priority_than_reuse(concretize_scope, mock_pa
         )
         ascent = result.specs[0]
     assert ascent["adios2"].dag_hash() == reused_spec.dag_hash(), ascent
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,err_match",
+    [
+        (
+            """
+packages:
+  mpi:
+    require:
+    - "+bzip2"
+""",
+            "expected a named spec",
+        ),
+        (
+            """
+packages:
+  mpi:
+    require:
+    - one_of: ["+bzip2", openmpi]
+""",
+            "expected a named spec",
+        ),
+        (
+            """
+packages:
+  mpi:
+    require:
+    - "^mpich"
+""",
+            "Did you mean",
+        ),
+    ],
+)
+def test_anonymous_spec_cannot_be_used_in_virtual_requirements(
+    packages_yaml, err_match, concretize_scope, mock_packages
+):
+    """Tests that using anonymous specs in requirements for virtual packages raises an
+    appropriate error message.
+    """
+    update_packages_config(packages_yaml)
+    with pytest.raises(spack.error.SpackError, match=err_match):
+        spack.concretize.concretize_one("mpileaks")
