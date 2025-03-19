@@ -42,51 +42,20 @@ class PyScipy(PythonPackage):
     version("1.7.2", sha256="fa2dbabaaecdb502641b0b3c00dec05fb475ae48655c66da16c9ed24eda1e711")
     version("1.7.1", sha256="6b47d5fa7ea651054362561a28b1ccc8da9368a39514c1bbf6c0977a1c376764")
     version("1.7.0", sha256="998c5e6ea649489302de2c0bc026ed34284f531df89d2bdc8df3a0d44d165739")
-    version("1.6.3", sha256="a75b014d3294fce26852a9d04ea27b5671d86736beb34acdfc05859246260707")
-    version("1.6.2", sha256="e9da33e21c9bc1b92c20b5328adb13e5f193b924c9b969cd700c8908f315aa59")
-    version("1.6.1", sha256="c4fceb864890b6168e79b0e714c585dbe2fd4222768ee90bc1aa0f8218691b11")
-    version("1.6.0", sha256="cb6dc9f82dfd95f6b9032a8d7ea70efeeb15d5b5fd6ed4e8537bb3c673580566")
-    version("1.5.4", sha256="4a453d5e5689de62e5d38edf40af3f17560bfd63c9c5bd228c18c1f99afa155b")
-    version(
-        "1.5.3",
-        sha256="ddae76784574cc4c172f3d5edd7308be16078dd3b977e8746860c76c195fa707",
-        deprecated=True,
-    )
-    version(
-        "1.5.2",
-        sha256="066c513d90eb3fd7567a9e150828d39111ebd88d3e924cdfc9f8ce19ab6f90c9",
-        deprecated=True,
-    )
-    version(
-        "1.5.1",
-        sha256="039572f0ca9578a466683558c5bf1e65d442860ec6e13307d528749cfe6d07b8",
-        deprecated=True,
-    )
-    version(
-        "1.5.0",
-        sha256="4ff72877d19b295ee7f7727615ea8238f2d59159df0bdd98f91754be4a2767f0",
-        deprecated=True,
-    )
-    version(
-        "1.4.1",
-        sha256="dee1bbf3a6c8f73b6b218cb28eed8dd13347ea2f87d572ce19b289d6fd3fbc59",
-        deprecated=True,
-    )
-    version(
-        "1.4.0",
-        sha256="31f7cfa93b01507c935c12b535e24812594002a02a56803d7cd063e9920d25e8",
-        deprecated=True,
-    )
-    version(
-        "1.3.3",
-        sha256="64bf4e8ae0db2d42b58477817f648d81e77f0b381d0ea4427385bba3f959380a",
-        deprecated=True,
-    )
-    version(
-        "1.3.2",
-        sha256="a03939b431994289f39373c57bbe452974a7da724ae7f9620a1beee575434da4",
-        deprecated=True,
-    )
+    with default_args(deprecated=True):
+        version("1.6.3", sha256="a75b014d3294fce26852a9d04ea27b5671d86736beb34acdfc05859246260707")
+        version("1.6.2", sha256="e9da33e21c9bc1b92c20b5328adb13e5f193b924c9b969cd700c8908f315aa59")
+        version("1.6.1", sha256="c4fceb864890b6168e79b0e714c585dbe2fd4222768ee90bc1aa0f8218691b11")
+        version("1.6.0", sha256="cb6dc9f82dfd95f6b9032a8d7ea70efeeb15d5b5fd6ed4e8537bb3c673580566")
+        version("1.5.4", sha256="4a453d5e5689de62e5d38edf40af3f17560bfd63c9c5bd228c18c1f99afa155b")
+        version("1.5.3", sha256="ddae76784574cc4c172f3d5edd7308be16078dd3b977e8746860c76c195fa707")
+        version("1.5.2", sha256="066c513d90eb3fd7567a9e150828d39111ebd88d3e924cdfc9f8ce19ab6f90c9")
+        version("1.5.1", sha256="039572f0ca9578a466683558c5bf1e65d442860ec6e13307d528749cfe6d07b8")
+        version("1.5.0", sha256="4ff72877d19b295ee7f7727615ea8238f2d59159df0bdd98f91754be4a2767f0")
+        version("1.4.1", sha256="dee1bbf3a6c8f73b6b218cb28eed8dd13347ea2f87d572ce19b289d6fd3fbc59")
+        version("1.4.0", sha256="31f7cfa93b01507c935c12b535e24812594002a02a56803d7cd063e9920d25e8")
+        version("1.3.3", sha256="64bf4e8ae0db2d42b58477817f648d81e77f0b381d0ea4427385bba3f959380a")
+        version("1.3.2", sha256="a03939b431994289f39373c57bbe452974a7da724ae7f9620a1beee575434da4")
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
