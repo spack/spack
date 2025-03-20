@@ -336,12 +336,21 @@ def test_new_entries_are_reported_correctly(mock_executable, mutable_config, mon
 
 @pytest.mark.parametrize("command_args", [("-t", "build-tools"), ("-t", "build-tools", "cmake")])
 def test_use_tags_for_detection(command_args, mock_executable, mutable_config, monkeypatch):
+    versions = {"cmake": "3.19.1", "openssl": "2.8.3"}
+
+    @classmethod
+    def _determine_version(cls, exe):
+        return versions[os.path.basename(exe)]
+
+    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+    monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
+
     # Prepare an environment to detect a fake cmake
-    cmake_exe = mock_executable("cmake", output="echo cmake version 3.19.1")
+    cmake_exe = mock_executable("cmake", output=f"echo cmake version {versions['cmake']}")
     prefix = os.path.dirname(cmake_exe)
     monkeypatch.setenv("PATH", prefix)
 
-    openssl_exe = mock_executable("openssl", output="OpenSSL 2.8.3")
+    openssl_exe = mock_executable("openssl", output=f"OpenSSL {versions['openssl']}")
     prefix = os.path.dirname(openssl_exe)
     monkeypatch.setenv("PATH", prefix)
 
