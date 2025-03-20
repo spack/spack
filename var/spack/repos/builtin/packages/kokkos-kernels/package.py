@@ -128,19 +128,48 @@ class KokkosKernels(CMakePackage, CudaPackage):
     )
 
     variant("shared", default=True, description="Build shared libraries")
-    variant("execspace_cuda", default=False, description="Whether to pre instantiate kernels for the execution space Kokkos::Cuda")
-    variant("execspace_openmp", default=False, description="Whether to pre instantiate kernels for the execution space Kokkos::Experimental::OpenMPTarget")
-    variant("execspace_threads", default=False, description="Whether to pre instantiate kernels for the execution space Kokkos::Threads")
-    variant("execspace_serial", default=False, description="Whether to pre instantiate kernels for the execution space Kokkos::Serial")
-    variant("memspace_cudauvmspace", default=False, description="Whether to pre instantiate kernels for the memory space Kokkos::CudaUVMSpace")
-    variant("memspace_cudaspace", default=False, description="Whether to pre instantiate kernels for the memory space Kokkos::CudaSpace")
+    variant(
+        "execspace_cuda",
+        default=False,
+        description="Whether to pre instantiate kernels for the execution space Kokkos::Cuda",
+    )
+    variant(
+        "execspace_openmp",
+        default=False,
+        description="Whether to pre instantiate kernels for the execution space Kokkos::Experimental::OpenMPTarget",
+    )
+    variant(
+        "execspace_threads",
+        default=False,
+        description="Whether to pre instantiate kernels for the execution space Kokkos::Threads",
+    )
+    variant(
+        "execspace_serial",
+        default=False,
+        description="Whether to pre instantiate kernels for the execution space Kokkos::Serial",
+    )
+    variant(
+        "memspace_cudauvmspace",
+        default=False,
+        description="Whether to pre instantiate kernels for the memory space Kokkos::CudaUVMSpace",
+    )
+    variant(
+        "memspace_cudaspace",
+        default=False,
+        description="Whether to pre instantiate kernels for the memory space Kokkos::CudaSpace",
+    )
     variant("serial", default=False, description="Enable serial backend")
     variant("openmp", default=False, description="Enable OpenMP backend")
     variant("threads", default=False, description="Enable C++ threads backend")
     variant("ordinals", default="int", values=["int", "int64_t"], multi=True)
     variant("offsets", default="int,size_t", values=["int", "size_t"], multi=True)
     variant("layouts", default="left", values=["left", "right"])
-    variant("scalars", default="double", values=["float", "double", "complex_float", "comples_double"], multi=True)
+    variant(
+        "scalars",
+        default="double",
+        values=["float", "double", "complex_float", "comples_double"],
+        multi=True,
+    )
 
     depends_on("cxx", type="build")
     depends_on("kokkos")
@@ -239,15 +268,32 @@ class KokkosKernels(CMakePackage, CudaPackage):
             options.append(self.define(f"KokkosKernels_INST_OFFSET_{val.upper()}", True))
         for val in spec.variants["scalars"].value:
             options.append(self.define(f"KokkosKernels_INST_{val.upper()}", True))
-        options.append(self.define(f"KokkosKernels_INST_LAYOUT{spec.variants["layouts"].value.upper()}", True))
+        layout_value = spec.variants["layouts"].value
+        options.append(self.define(f"KokkosKernels_INST_LAYOUT{layout_value.upper()}", True))
 
-        options.append(self.define_from_variant("KokkosKernels_INST_EXECSPACE_CUDA", "execspace_cuda"))
-        options.append(self.define_from_variant("KokkosKernels_INST_EXECSPACE_OPENMP", "execspace_openmp"))
-        options.append(self.define_from_variant("KokkosKernels_INST_EXECSPACE_THREADS", "execspace_threads"))
-        options.append(self.define_from_variant("KokkosKernels_INST_EXECSPACE_SERIAL", "execspace_serial"))
-        options.append(self.define_from_variant("KokkosKernels_INST_EXECSPACE_SERIAL", "execspace_serial"))
-        options.append(self.define_from_variant("KokkosKernels_INST_MEMSPACE_CUDAUVMSPACE", "memspace_cudauvmspace"))
-        options.append(self.define_from_variant("KokkosKernels_INST_MEMSPACE_CUDASPACE", "memspace_cudaspace"))
+        options.append(
+            self.define_from_variant("KokkosKernels_INST_EXECSPACE_CUDA", "execspace_cuda")
+        )
+        options.append(
+            self.define_from_variant("KokkosKernels_INST_EXECSPACE_OPENMP", "execspace_openmp")
+        )
+        options.append(
+            self.define_from_variant("KokkosKernels_INST_EXECSPACE_THREADS", "execspace_threads")
+        )
+        options.append(
+            self.define_from_variant("KokkosKernels_INST_EXECSPACE_SERIAL", "execspace_serial")
+        )
+        options.append(
+            self.define_from_variant("KokkosKernels_INST_EXECSPACE_SERIAL", "execspace_serial")
+        )
+        options.append(
+            self.define_from_variant(
+                "KokkosKernels_INST_MEMSPACE_CUDAUVMSPACE", "memspace_cudauvmspace"
+            )
+        )
+        options.append(
+            self.define_from_variant("KokkosKernels_INST_MEMSPACE_CUDASPACE", "memspace_cudaspace")
+        )
         options.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
         return options
