@@ -188,7 +188,7 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
         args.extend(self.enable_or_disable("gparity"))
         args.extend(self.enable_or_disable("accelerator-aware-mpi"))
         args.extend(self.enable_or_disable("fermion-reps"))
-        args.extend(self.enable_or_disable("sp", variant="Sp"))
+        args.extend(self.enable_or_disable("Sp"))
         args.extend(self.enable_or_disable("unified", variant="unified-device-memory"))
 
         args.append("--enable-tracing={}".format(spec.variants["tracing"].value))
