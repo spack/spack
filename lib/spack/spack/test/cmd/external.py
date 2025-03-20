@@ -143,6 +143,7 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
             ["detectable"],
             [],
             [
+                "builtin.mock.cmake",
                 "builtin.mock.find-externals1",
                 "builtin.mock.gcc",
                 "builtin.mock.llvm",
@@ -154,16 +155,26 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
             None,
             ["detectable"],
             ["builtin.mock.find-externals1"],
-            ["builtin.mock.gcc", "builtin.mock.llvm", "builtin.mock.intel-oneapi-compilers"],
+            [
+                "builtin.mock.cmake",
+                "builtin.mock.gcc",
+                "builtin.mock.llvm",
+                "builtin.mock.intel-oneapi-compilers",
+            ],
         ),
         (
             None,
             ["detectable"],
             ["find-externals1"],
-            ["builtin.mock.gcc", "builtin.mock.llvm", "builtin.mock.intel-oneapi-compilers"],
+            [
+                "builtin.mock.cmake",
+                "builtin.mock.gcc",
+                "builtin.mock.llvm",
+                "builtin.mock.intel-oneapi-compilers",
+            ],
         ),
-        # find cmake (and cmake is not detectable)
-        (["cmake"], ["detectable"], [], []),
+        # find hwloc (and mock hwloc is not detectable)
+        (["hwloc"], ["detectable"], [], []),
     ],
 )
 def test_package_selection(names, tags, exclude, expected, mutable_mock_repo):
