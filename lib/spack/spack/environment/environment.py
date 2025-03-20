@@ -31,7 +31,6 @@ import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.spec
-import spack.spec_list
 import spack.store
 import spack.user_environment as uenv
 import spack.util.environment
@@ -44,11 +43,11 @@ from spack import traverse
 from spack.installer import PackageInstaller
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
-from spack.spec_list import SpecList
 from spack.util.path import substitute_path_variables
 
 from ..enums import ConfigScopePriority
 from .definitions import DefinitionBuilder
+from .list import SpecList, SpecListError
 
 SpecPair = spack.concretize.SpecPair
 
@@ -1395,7 +1394,7 @@ class Environment:
                 list_to_change.remove(spec)
                 self.update_stale_references(list_name)
                 new_specs = set(self.user_specs)
-            except spack.spec_list.SpecListError as e:
+            except SpecListError as e:
                 # define new specs list
                 new_specs = set(self.user_specs)
                 msg = str(e)

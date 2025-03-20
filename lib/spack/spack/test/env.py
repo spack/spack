@@ -20,7 +20,7 @@ from spack.environment.environment import (
     SpackEnvironmentViewError,
     _error_on_nonempty_view_dir,
 )
-from spack.spec_list import UndefinedReferenceError
+from spack.environment.list import UndefinedReferenceError
 
 pytestmark = pytest.mark.not_on_windows("Envs are not supported on windows")
 

@@ -4,7 +4,8 @@
 from typing import Dict
 
 import spack.spec
-from spack.spec_list import SpecList
+
+from .list import SpecList
 
 
 class DefinitionBuilder:

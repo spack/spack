@@ -6,9 +6,9 @@ import itertools
 import pytest
 
 import spack.concretize
+from spack.environment.list import SpecList
 from spack.installer import PackageInstaller
 from spack.spec import Spec
-from spack.spec_list import SpecList
 
 
 class TestSpecList:
