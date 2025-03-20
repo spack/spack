@@ -44,7 +44,7 @@ class RocmValidationSuite(CMakePackage):
 
     patch(
         "007-cleanup-path-reference-donot-download-googletest-yaml-library-path_5.3.patch",
-        when="@5.3.0:5.5",
+        when="@:5.5",
     )
     patch(
         "007-cleanup-path-reference-donot-download-googletest-yaml-library-path_5.6.patch",
@@ -93,10 +93,6 @@ class RocmValidationSuite(CMakePackage):
         depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
 
     for ver in [
-        "5.3.0",
-        "5.3.3",
-        "5.4.0",
-        "5.4.3",
         "5.5.0",
         "5.5.1",
         "5.6.0",

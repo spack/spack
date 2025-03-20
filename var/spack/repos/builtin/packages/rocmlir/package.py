@@ -28,7 +28,11 @@ class Rocmlir(CMakePackage):
     version("6.1.0", sha256="dd800783f1ce66ce7c560d5193d053ddf3797abae5ec9375c9842243f5a8ca0b")
     version("6.0.2", sha256="6ed039e8045169bb64c10fb063c2e1753b8d52d6d56c60e001c929082be1f20b")
     version("6.0.0", sha256="128915abdceaf5cef26a717d154f2b2f9466f6904f4490f158038878cedbf618")
+    version("5.7.1", commit="711c1dfe4f4a935c4da25f5b359628481547746c")
+    version("5.7.0", commit="711c1dfe4f4a935c4da25f5b359628481547746c")
     with default_args(deprecated=True):
+        version("5.6.1", commit="e602c6710c36e8c3b77cf054193561d8161ba083")
+        version("5.6.0", commit="e602c6710c36e8c3b77cf054193561d8161ba083")
         version("5.5.1", commit="8c29325e7e68e3248e863172bf0e7f97055d45ee")
         version("5.5.0", sha256="a5f62769d28a73e60bc8d61022820f050e97c977c8f6f6275488db31512e1f42")
 
@@ -63,6 +67,10 @@ class Rocmlir(CMakePackage):
     for ver in [
         "5.5.0",
         "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
         "6.0.0",
         "6.0.2",
         "6.1.0",
