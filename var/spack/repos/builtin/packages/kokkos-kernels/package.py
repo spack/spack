@@ -227,19 +227,19 @@ class KokkosKernels(CMakePackage, CudaPackage):
         for tpl in self.tpls:
             dflt, spackname, rootname, condition, descr = self.tpls[tpl]
             if spec.satisfies(f"+{tpl}"):
-                options.append(self.define(f"KokkosKernels_ENABLE_TPL_{tpl.upper()}"))
+                options.append(self.define(f"KokkosKernels_ENABLE_TPL_{tpl.upper()}", True))
                 if rootname:
-                    options.append(self.define(f"{rootname}_ROOT={spec[spackname].prefix}"))
+                    options.append(self.define(f"{rootname}_ROOT", spec[spackname].prefix))
                 else:
                     pass
 
         for val in spec.variants["ordinals"].value:
-            options.append(self.define(f"KokkosKernels_INST_ORDINAL_{val.upper()}"), True)
+            options.append(self.define(f"KokkosKernels_INST_ORDINAL_{val.upper()}", True))
         for val in spec.variants["offsets"].value:
-            options.append(self.define(f"KokkosKernels_INST_OFFSET_{val.upper()}"), True)
+            options.append(self.define(f"KokkosKernels_INST_OFFSET_{val.upper()}", True))
         for val in spec.variants["scalars"].value:
-            options.append(self.define(f"KokkosKernels_INST_{val.upper()}"), True)
-        options.append(self.define(f"KokkosKernels_INST_LAYOUT{spec.variants["layouts"].value.upper()}"), True)
+            options.append(self.define(f"KokkosKernels_INST_{val.upper()}", True))
+        options.append(self.define(f"KokkosKernels_INST_LAYOUT{spec.variants["layouts"].value.upper()}", True))
 
         options.append(self.define_from_variant("KokkosKernels_INST_EXECSPACE_CUDA", "execspace_cuda"))
         options.append(self.define_from_variant("KokkosKernels_INST_EXECSPACE_OPENMP", "execspace_openmp"))
