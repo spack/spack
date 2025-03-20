@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import filecmp
 import glob
-import gzip
 import io
 import json
 import os
@@ -489,8 +488,7 @@ def test_generate_package_index_failure(monkeypatch, tmp_path, capfd):
 
     assert (
         "Warning: Encountered problem listing packages at "
-        f"{test_url}/{bindist.buildcache_relative_specs_url()}: Some HTTP error"
-        in capfd.readouterr().err
+        f"{test_url}: Some HTTP error" in capfd.readouterr().err
     )
 
 
@@ -1124,17 +1122,6 @@ def test_get_valid_spec_file_doesnt_exist(tmp_path):
         get_valid_spec_file(str(tmp_path / "no-such-file"), max_supported_layout=1)
 
 
-def test_get_valid_spec_file_gzipped(tmp_path):
-    # Create a gzipped file, contents don't matter
-    path = tmp_path / "spec.json.gz"
-    with gzip.open(path, "wb") as f:
-        f.write(b"hello")
-    with pytest.raises(
-        bindist.InvalidMetadataFile, match="Compressed spec files are not supported"
-    ):
-        get_valid_spec_file(str(path), max_supported_layout=1)
-
-
 @pytest.mark.parametrize("filename", ["spec.json", "spec.json.sig"])
 def test_get_valid_spec_file_no_json(tmp_path, filename):
     tmp_path.joinpath(filename).write_text("not json")
@@ -1165,11 +1152,10 @@ def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
         actual_archive_size = os.stat(tarball_path).st_size
         assert actual_archive_size == expected_archive_size
 
-    # 1) initialize with a concrete spec and mirror url
     cache_class = get_url_buildcache_class(bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     build_cache = cache_class(mirror_url, s)
 
-    spec_dict = build_cache.fetch_metadata()
+    spec_dict = build_cache.fetch_metadata(allow_unsigned=True)
     local_tarball_path = build_cache.fetch_archive(allow_unsigned=True)
 
     validate(spec_dict, local_tarball_path)

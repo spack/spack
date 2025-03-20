@@ -787,7 +787,9 @@ def _specs_from_cache_aws_cli(cache_prefix):
 
     try:
         tty.debug(
-            "Using aws s3 sync to download manifests from {0} to {1}".format(cache_prefix, tmpspecsdir)
+            "Using aws s3 sync to download manifests from {0} to {1}".format(
+                cache_prefix, tmpspecsdir
+            )
         )
         aws(*sync_command_args, output=os.devnull, error=os.devnull)
         file_list = fsys.find(tmpspecsdir, ["*.manifest.json"])

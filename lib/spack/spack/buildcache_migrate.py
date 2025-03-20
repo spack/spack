@@ -15,7 +15,6 @@ import llnl.util.tty as tty
 import spack.binary_distribution as bindist
 import spack.database as spack_db
 import spack.error
-import spack.hash_types as ht
 import spack.mirrors.mirror
 import spack.spec
 import spack.stage
@@ -26,8 +25,10 @@ import spack.util.web as web_util
 
 from .enums import InstallRecordStatus
 from .url_buildcache import (
+    BlobRecord,
     BuildcacheComponent,
     URLBuildcacheEntry,
+    compress_and_write_spec,
     get_url_buildcache_class,
     sign_specfile,
     try_verify,
@@ -175,20 +176,14 @@ def _migrate_spec(
 
     spec_dict["archive_size"] = os.stat(local_tarfile_path).st_size
 
-    # Whether we need to sign the spec file first, or just push it without signing,
-    # we need it on disk.
+    # Compress the spec dict and compute its checksum
+    metadata_checksum_algo = "sha256"
     spec_json_path = os.path.join(tmpdir, f"{s.name}_{s.dag_hash()}.spec.json")
-    with open(spec_json_path, "w", encoding="utf-8") as fd:
-        json.dump(spec_dict, fd)
+    metadata_checksum, metadata_size = compress_and_write_spec(
+        spec_json_path, spec_dict, metadata_checksum_algo
+    )
 
-    if not unsigned:
-        spec_to_push_path = sign_specfile(signing_key, spec_json_path)
-    else:
-        spec_to_push_path = spec_json_path
-
-    # TODO: compress spec file, compute the checksum, and build v3_spec_url
-    v3_spec_url = ""
-
+    # Compute the url to the archive/tarball blob
     v3_archive_url = url_util.join(
         mirror_url,
         *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.BLOBS),
@@ -205,15 +200,51 @@ def _migrate_spec(
     except Exception:
         return MigrateSpecResult(False, f"Failed to push archive for {print_spec}")
 
+    # Compute the url to the metadata/spec blob
+    v3_spec_url = url_util.join(
+        mirror_url,
+        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.BLOBS),
+        metadata_checksum_algo,
+        metadata_checksum[:2],
+        metadata_checksum,
+    )
+
     # Then push the spec file
-    tty.debug(f"Pushing {spec_to_push_path} to {v3_spec_url}")
+    tty.debug(f"Pushing {spec_json_path} to {v3_spec_url}")
 
     try:
-        web_util.push_to_url(spec_to_push_path, v3_spec_url, keep_original=True)
+        web_util.push_to_url(spec_json_path, v3_spec_url, keep_original=True)
     except Exception:
         return MigrateSpecResult(False, f"Failed to push spec metadata for {print_spec}")
 
-    # TODO: generate, possibly sign, and push the manifest
+    # Generate the manifest and write it to a temporary location
+    manifest = {
+        "version": v3_cache_class.get_layout_version(),
+        "data": [
+            BlobRecord(
+                spec_dict["archive_size"], "tarball-v1", "gzip", checksum, algorithm
+            ).to_json(),
+            BlobRecord(
+                metadata_size, "spec-v6", "gzip", metadata_checksum_algo, metadata_checksum
+            ).to_json(),
+        ],
+    }
+
+    manifest_path = os.path.join(tmpdir, f"{s.dag_hash()}.manifest.json")
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f)
+
+    # Possibly sign the manifest
+    if not unsigned:
+        manifest_path = sign_specfile(signing_key, manifest_path)
+
+    v3_manifest_url = v3_cache_class.get_manifest_url(s, mirror_url)
+
+    # Push the manifest
+    try:
+        web_util.push_to_url(manifest_path, v3_manifest_url, keep_original=True)
+    except Exception:
+        return MigrateSpecResult(False, f"Failed to push manifest for {print_spec}")
 
     return MigrateSpecResult(True, f"Successfully migrated {print_spec}")
 

@@ -646,6 +646,7 @@ def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str)
     manifest_stage = spack.stage.Stage(manifest_src_url)
 
     try:
+        manifest_stage.create()
         manifest_stage.fetch()
     except Exception as e:
         tty.warn(f"Failed to fetch manifest from {manifest_src_url} due to {e}")
