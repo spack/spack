@@ -88,10 +88,10 @@ class Sos(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         bash = Executable("bash")
         if spec.satisfies("@main") or spec.satisfies("@1.5.3:"):
+            branch_name = str(spec.version)
+            if spec.satisfies("@1.5.3:"):
+                branch_name = "v" + branch_name
             try:
-                branch_name = str(spec.version)
-                if spec.satisfies("@1.5.3:"):
-                    branch_name = "v" + branch_name
                 git = which("git")
                 git(
                     "clone",
@@ -102,7 +102,7 @@ class Sos(AutotoolsPackage):
                     "https://github.com/openshmem-org/tests-sos.git",
                     "./modules/tests-sos",
                 )
-            except:
+            except ProcessError:
                 warnings.warn(
                     "Unable to clone tests-sos submodule, which is required for sos "
                     + str(spec.version)
