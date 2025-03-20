@@ -499,14 +499,10 @@ class Hip(CMakePackage):
             # bin/.hipVersion file can still be parsed.
             # See also https://github.com/ROCm/HIP/issues/2223
             env.append_path(
-                "HIPCC_COMPILE_FLAGS_APPEND",
-                "--rocm-path={0}".format(paths["rocm-path"]),
-                separator=" ",
+                "HIPCC_COMPILE_FLAGS_APPEND", f"--rocm-path={paths['rocm-path']}", separator=" "
             )
             env.append_path(
-                "HIPCC_LINK_FLAGS_APPEND",
-                "--rocm-path={0}".format(paths["rocm-path"]),
-                separator=" ",
+                "HIPCC_LINK_FLAGS_APPEND", f"--rocm-path={paths['rocm-path']}", separator=" "
             )
         elif self.spec.satisfies("+cuda"):
             env.set("CUDA_PATH", self.spec["cuda"].prefix)
