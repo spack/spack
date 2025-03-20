@@ -208,7 +208,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
     for eti in space_etis:
         deflt, descr, backend_required = space_etis[eti]
         variant(eti, default=deflt, description=descr)
-        depends_on("kokkos+%s" % backend_required, when="+%s" % eti)
+        depends_on(f"kokkos+{backend_required}", when=f"{eti}=auto")
 
     # kokkos-kernels requires KOKKOS_LAMBDA to be available since 4.0.00
     depends_on("kokkos+cuda_lambda", when="@4.0.00:+cuda")
