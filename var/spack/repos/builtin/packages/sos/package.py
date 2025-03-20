@@ -2,8 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 import warnings
+
+from spack.package import *
 
 
 class Sos(AutotoolsPackage):
@@ -86,17 +87,26 @@ class Sos(AutotoolsPackage):
 
     def autoreconf(self, spec, prefix):
         bash = Executable("bash")
-        if spec.satisfies('@main') or spec.satisfies('@1.5.3:'):
+        if spec.satisfies("@main") or spec.satisfies("@1.5.3:"):
             try:
                 branch_name = str(spec.version)
-                if spec.satisfies('@1.5.3:'):
-                    branch_name = 'v' + branch_name
-                git = which('git')
-                git('clone', '--depth', '1', '-b', branch_name,
-                    'https://github.com/openshmem-org/tests-sos.git', './modules/tests-sos')
+                if spec.satisfies("@1.5.3:"):
+                    branch_name = "v" + branch_name
+                git = which("git")
+                git(
+                    "clone",
+                    "--depth",
+                    "1",
+                    "-b",
+                    branch_name,
+                    "https://github.com/openshmem-org/tests-sos.git",
+                    "./modules/tests-sos",
+                )
             except:
-                warnings.warn("Unable to clone tests-sos submodule, which is required for sos " + \
-                              str(spec.version))
+                warnings.warn(
+                    "Unable to clone tests-sos submodule, which is required for sos "
+                    + str(spec.version)
+                )
         bash("./autogen.sh")
 
     def configure_args(self):
