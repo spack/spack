@@ -18,13 +18,15 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
-    tags = ["ecp", "e4s"]
+    tags = ["ecp", "e4s", "hpsf"]
 
     maintainers("WeiqunZhang", "asalmgren", "atmyers")
 
     license("BSD-3-Clause")
 
     version("develop", branch="development")
+    version("25.03", sha256="7a2dc60d01619afdcbce0ff624a3c1a5a605e28dd8721c0fbec638076228cab0")
+    version("25.02", sha256="2680a5a9afba04e211cd48d27799c5a25abbb36c6c3d2b6c13cd4757c7176b23")
     version("25.01", sha256="29eb35cf67d66b0fd0654282454c210abfadf27fcff8478b256e3196f237c74f")
     version("24.12", sha256="ca4b41ac73fabb9cf3600b530c9823eb3625f337d9b7b9699c1089e81c67fc67")
     version("24.11", sha256="31cc37b39f15e02252875815f6066046fc56a479bf459362b9889b0d6a202df6")
@@ -136,7 +138,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("eb", default=True, description="Build Embedded Boundary classes", when="@24.10:")
     variant("eb", default=False, description="Build Embedded Boundary classes", when="@:24.09")
-    variant("fft", default=False, description="Build FFT support", when="@24.11:")
+    variant("fft", default=True, description="Build FFT support", when="@25.03:")
+    variant("fft", default=False, description="Build FFT support", when="@24.11:25.02")
     variant("fortran", default=False, description="Build Fortran API")
     variant("linear_solvers", default=True, description="Build linear solvers")
     variant("amrdata", default=False, description="Build data services")
@@ -157,6 +160,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     with when("+fft"):
         depends_on("rocfft", when="+rocm")
         depends_on("fftw@3", when="~cuda ~rocm ~sycl")
+        depends_on("pkgconfig", type="build")
     with when("+ascent"):
         depends_on("ascent")
         depends_on("ascent +cuda", when="+cuda")
@@ -360,7 +364,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DAMReX_GPU_BACKEND=SYCL")
             # SYCL GPU backend only supported with Intel's oneAPI or DPC++ compilers
             sycl_compatible_compilers = ["icpx"]
-            if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
+            if os.path.basename(self.compiler.cxx) not in sycl_compatible_compilers:
                 raise InstallError(
                     "AMReX's SYCL GPU Backend requires the oneAPI CXX (icpx) compiler."
                 )

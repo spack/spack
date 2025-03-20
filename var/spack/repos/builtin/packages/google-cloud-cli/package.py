@@ -101,3 +101,5 @@ class GoogleCloudCli(Package):
 
         install_tree("bin", prefix.bin)
         install_tree("lib", prefix.lib)
+        ignore_bundledpython = lambda p: p == "bundledpythonunix"
+        install_tree("platform", prefix.platform, ignore=ignore_bundledpython)

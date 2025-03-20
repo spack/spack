@@ -13,11 +13,14 @@ class Plink2(MakefilePackage):
     url = "https://github.com/chrchang/plink-ng/archive/refs/tags/v2.00a5.11.tar.gz"
     list_url = "https://github.com/chrchang/plink-ng/tags"
 
-    maintainers("teaguesterling")
-
     license("GPLv3", checked_by="teaguesterling")
     # See: https://github.com/chrchang/plink-ng/blob/master/2.0/COPYING
 
+    maintainers("teaguesterling")
+
+    version(
+        "2.0.0-a.6.9", sha256="492fc1e87b60b2209b7c3c1d616a01c1126978424cf795184d013ecf8a47e028"
+    )
     version("2.00a5.11", sha256="8b664baa0b603f374123c32818ea2f053272840ba60e998d06cb864f3a6f1c38")
     version("2.00a5.10", sha256="53d845c6a04f8fc701e6f58f6431654e36cbf6b79bff25099862d169a8199a45")
     version("2.00a4.3", sha256="3cd1d26ac6dd1c451b42440f479789aa19d2b57642c118aac530a5ff1b0b4ce6")
@@ -33,6 +36,9 @@ class Plink2(MakefilePackage):
     depends_on("lapack")
 
     build_directory = "2.0/build_dynamic"
+
+    def url_for_version(self, version):
+        return f"https://github.com/chrchang/plink-ng/archive/refs/tags/v{version!s}.tar.gz"
 
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):

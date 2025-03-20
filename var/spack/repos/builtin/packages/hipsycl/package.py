@@ -24,10 +24,10 @@ class Hipsycl(CMakePackage, ROCmPackage):
     license("BSD-2-Clause")
 
     version("stable", branch="stable", submodules=True)
+    version("24.10.0", commit="7677cf6eefd8ab46d66168cd07ab042109448124", submodules=True)
     version("24.06.0", commit="fc51dae9006d6858fc9c33148cc5f935bb56b075", submodules=True)
     version("24.02.0", commit="974adc33ea5a35dd8b5be68c7a744b37482b8b64", submodules=True)
     version("23.10.0", commit="3952b468c9da89edad9dff953cdcab0a3c3bf78c", submodules=True)
-    version("0.9.4", commit="99d9e24d462b35e815e0e59c1b611936c70464ae", submodules=True)
     version("0.9.4", commit="99d9e24d462b35e815e0e59c1b611936c70464ae", submodules=True)
     version("0.9.3", commit="51507bad524c33afe8b124804091b10fa25618dc", submodules=True)
     version("0.9.2", commit="49fd02499841ae884c61c738610e58c27ab51fdb", submodules=True)
@@ -44,9 +44,28 @@ class Hipsycl(CMakePackage, ROCmPackage):
     depends_on("python@3:")
     depends_on("llvm@8: +clang", when="~cuda")
     depends_on("llvm@9: +clang", when="+cuda")
+
     # hipSYCL 0.8.0 supported only LLVM 8-10:
     # (https://github.com/AdaptiveCpp/AdaptiveCpp/blob/v0.8.0/CMakeLists.txt#L29-L37)
+    # recent versions support only up to llvm18
+    # https://github.com/spack/spack/issues/46681
+    # https://github.com/spack/spack/issues/49506
+
+    # The following list was made based on the version tested in adaptivecpp github
+    depends_on("llvm@14:18", when="@develop")
+    depends_on("llvm@14:18", when="@stable")
+
+    depends_on("llvm@14:18", when="@24.10.0")
+    depends_on("llvm@14:18", when="@24.06.0")
+    depends_on("llvm@13:17", when="@24.02.0")
+    depends_on("llvm@13:17", when="@23.10.0")
+    depends_on("llvm@11:15", when="@0.9.4")
+    depends_on("llvm@11:14", when="@0.9.3")
+    depends_on("llvm@11:13", when="@0.9.2")
+    depends_on("llvm@11", when="@0.9.1")
+    # depends_on("llvm@10:11", when="@0.9.0") # missing in releases
     depends_on("llvm@8:10", when="@0.8.0")
+
     # https://github.com/spack/spack/issues/45029 and https://github.com/spack/spack/issues/43142
     conflicts("^gcc@12", when="@23.10.0")
     # https://github.com/OpenSYCL/OpenSYCL/pull/918 was introduced after 0.9.4
@@ -74,8 +93,6 @@ class Hipsycl(CMakePackage, ROCmPackage):
         "further info please refer to: "
         "https://github.com/illuhad/hipSYCL/blob/master/doc/install-cuda.md",
     )
-    # https://github.com/spack/spack/issues/46681
-    conflicts("^llvm@19", when="@24.02.0:24.06.0")
 
     def cmake_args(self):
         spec = self.spec

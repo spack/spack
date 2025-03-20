@@ -30,7 +30,7 @@ than always choosing the latest versions or default variants.
 
 .. note::
 
-    As a rule of thumb: requirements + constraints > reuse > preferences > defaults.
+    As a rule of thumb: requirements + constraints > strong preferences > reuse > preferences > defaults.
 
 The following set of criteria (from lowest to highest precedence) explain
 common cases where concretization output may seem surprising at first.
@@ -56,7 +56,19 @@ common cases where concretization output may seem surprising at first.
       concretizer:
         reuse: dependencies  # other options are 'true' and 'false'
 
-3. :ref:`Package requirements <package-requirements>` configured in ``packages.yaml``,
+3. :ref:`Strong preferences <package-strong-preferences>` configured in ``packages.yaml``
+   are higher priority than reuse, and can be used to strongly prefer a specific version
+   or variant, without erroring out if it's not possible. Strong preferences are specified
+   as follows:
+
+   .. code-block:: yaml
+
+      packages:
+        foo:
+          prefer:
+          - "@1.1: ~mpi"
+
+4. :ref:`Package requirements <package-requirements>` configured in ``packages.yaml``,
    and constraints from the command line as well as ``package.py`` files override all
    of the above. Requirements are specified as follows:
 
@@ -66,6 +78,8 @@ common cases where concretization output may seem surprising at first.
         foo:
           require:
           - "@1.2: +mpi"
+          conflicts:
+          - "@1.4"
 
 Requirements and constraints restrict the set of possible solutions, while reuse
 behavior and preferences influence what an optimal solution looks like.

@@ -42,10 +42,10 @@ from typing import List, Optional, Set, TextIO, Tuple
 import llnl.util.tty.color
 
 import spack.deptypes as dt
-import spack.repo
 import spack.spec
 import spack.tengine
 import spack.traverse
+from spack.solver.input_analysis import create_graph_analyzer
 
 
 def find(seq, predicate):
@@ -482,7 +482,7 @@ class SimpleDAG(DotGraphBuilder):
     """Simple DOT graph, with nodes colored uniformly and edges without properties"""
 
     def node_entry(self, node):
-        format_option = "{name}{@version}{%compiler}{/hash:7}"
+        format_option = "{name}{@version}{/hash:7}{%compiler}"
         return node.dag_hash(), f'[label="{node.format(format_option)}"]'
 
     def edge_entry(self, edge):
@@ -515,7 +515,7 @@ class DAGWithDependencyTypes(DotGraphBuilder):
         super().visit(edge)
 
     def node_entry(self, node):
-        node_str = node.format("{name}{@version}{%compiler}{/hash:7}")
+        node_str = node.format("{name}{@version}{/hash:7}{%compiler}")
         options = f'[label="{node_str}", group="build_dependencies", fillcolor="coral"]'
         if node.dag_hash() in self.main_unified_space:
             options = f'[label="{node_str}", group="main_psid"]'
@@ -537,10 +537,11 @@ class DAGWithDependencyTypes(DotGraphBuilder):
 
 def _static_edges(specs, depflag):
     for spec in specs:
-        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
-        possible = pkg_cls.possible_dependencies(expand_virtuals=True, depflag=depflag)
+        *_, edges = create_graph_analyzer().possible_dependencies(
+            spec.name, expand_virtuals=True, allowed_deps=depflag
+        )
 
-        for parent_name, dependencies in possible.items():
+        for parent_name, dependencies in edges.items():
             for dependency_name in dependencies:
                 yield spack.spec.DependencySpec(
                     spack.spec.Spec(parent_name),

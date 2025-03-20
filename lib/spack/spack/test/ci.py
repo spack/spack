@@ -1,8 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import io
 import os
 import subprocess
+from urllib.error import HTTPError
 
 import pytest
 
@@ -15,6 +17,8 @@ import spack.error
 import spack.paths as spack_paths
 import spack.repo as repo
 import spack.util.git
+from spack.test.conftest import MockHTTPResponse
+from spack.version import Version
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
 
@@ -25,6 +29,43 @@ def repro_dir(tmp_path):
     result.mkdir()
     with fs.working_dir(str(tmp_path)):
         yield result
+
+
+def test_get_added_versions_new_checksum(mock_git_package_changes):
+    repo_path, filename, commits = mock_git_package_changes
+
+    checksum_versions = {
+        "3f6576971397b379d4205ae5451ff5a68edf6c103b2f03c4188ed7075fbb5f04": Version("2.1.5"),
+        "a0293475e6a44a3f6c045229fe50f69dc0eebc62a42405a51f19d46a5541e77a": Version("2.1.4"),
+        "6c0853bb27738b811f2b4d4af095323c3d5ce36ceed6b50e5f773204fb8f7200": Version("2.0.7"),
+        "86993903527d9b12fc543335c19c1d33a93797b3d4d37648b5addae83679ecd8": Version("2.0.0"),
+    }
+
+    with fs.working_dir(str(repo_path)):
+        added_versions = ci.get_added_versions(
+            checksum_versions, filename, from_ref=commits[-1], to_ref=commits[-2]
+        )
+        assert len(added_versions) == 1
+        assert added_versions[0] == Version("2.1.5")
+
+
+def test_get_added_versions_new_commit(mock_git_package_changes):
+    repo_path, filename, commits = mock_git_package_changes
+
+    checksum_versions = {
+        "74253725f884e2424a0dd8ae3f69896d5377f325": Version("2.1.6"),
+        "3f6576971397b379d4205ae5451ff5a68edf6c103b2f03c4188ed7075fbb5f04": Version("2.1.5"),
+        "a0293475e6a44a3f6c045229fe50f69dc0eebc62a42405a51f19d46a5541e77a": Version("2.1.4"),
+        "6c0853bb27738b811f2b4d4af095323c3d5ce36ceed6b50e5f773204fb8f7200": Version("2.0.7"),
+        "86993903527d9b12fc543335c19c1d33a93797b3d4d37648b5addae83679ecd8": Version("2.0.0"),
+    }
+
+    with fs.working_dir(str(repo_path)):
+        added_versions = ci.get_added_versions(
+            checksum_versions, filename, from_ref=commits[2], to_ref=commits[1]
+        )
+        assert len(added_versions) == 1
+        assert added_versions[0] == Version("2.1.6")
 
 
 def test_pipeline_dag(config, tmpdir):
@@ -162,38 +203,8 @@ def test_import_signing_key(mock_gnupghome):
     ci.import_signing_key(signing_key)
 
 
-class FakeWebResponder:
-    def __init__(self, response_code=200, content_to_read=[]):
-        self._resp_code = response_code
-        self._content = content_to_read
-        self._read = [False for c in content_to_read]
-
-    def open(self, request, data=None, timeout=object()):
-        return self
-
-    def getcode(self):
-        return self._resp_code
-
-    def read(self, length=None):
-        if len(self._content) <= 0:
-            return None
-
-        if not self._read[-1]:
-            return_content = self._content[-1]
-            if length:
-                self._read[-1] = True
-            else:
-                self._read.pop()
-                self._content.pop()
-            return return_content
-
-        self._read.pop()
-        self._content.pop()
-        return None
-
-
-def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
-    os.environ.update({"GITLAB_PRIVATE_TOKEN": "faketoken"})
+def test_download_and_extract_artifacts(tmpdir, monkeypatch):
+    monkeypatch.setenv("GITLAB_PRIVATE_TOKEN", "faketoken")
 
     url = "https://www.nosuchurlexists.itsfake/artifacts.zip"
     working_dir = os.path.join(tmpdir.strpath, "repro")
@@ -201,10 +212,13 @@ def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
         spack_paths.test_path, "data", "ci", "gitlab", "artifacts.zip"
     )
 
-    with open(test_artifacts_path, "rb") as fd:
-        fake_responder = FakeWebResponder(content_to_read=[fd.read()])
+    def _urlopen_OK(*args, **kwargs):
+        with open(test_artifacts_path, "rb") as f:
+            return MockHTTPResponse(
+                "200", "OK", {"Content-Type": "application/zip"}, io.BytesIO(f.read())
+            )
 
-    monkeypatch.setattr(ci, "build_opener", lambda handler: fake_responder)
+    monkeypatch.setattr(ci, "urlopen", _urlopen_OK)
 
     ci.download_and_extract_artifacts(url, working_dir)
 
@@ -214,7 +228,11 @@ def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
     found_install = fs.find(working_dir, "install.sh")
     assert len(found_install) == 1
 
-    fake_responder._resp_code = 400
+    def _urlopen_500(*args, **kwargs):
+        raise HTTPError(url, 500, "Internal Server Error", {}, None)
+
+    monkeypatch.setattr(ci, "urlopen", _urlopen_500)
+
     with pytest.raises(spack.error.SpackError):
         ci.download_and_extract_artifacts(url, working_dir)
 
@@ -328,16 +346,14 @@ def test_get_spec_filter_list(mutable_mock_env_path, mutable_mock_repo):
     e1.add("hypre")
     e1.concretize()
 
-    """
-    Concretizing the above environment results in the following graphs:
+    # Concretizing the above environment results in the following graphs:
 
-    mpileaks -> mpich (provides mpi virtual dep of mpileaks)
-             -> callpath -> dyninst -> libelf
-                                    -> libdwarf -> libelf
-                         -> mpich (provides mpi dep of callpath)
+    # mpileaks -> mpich (provides mpi virtual dep of mpileaks)
+    #          -> callpath -> dyninst -> libelf
+    #                                 -> libdwarf -> libelf
+    #                      -> mpich (provides mpi dep of callpath)
 
-    hypre -> openblas-with-lapack (provides lapack and blas virtual deps of hypre)
-    """
+    # hypre -> openblas-with-lapack (provides lapack and blas virtual deps of hypre)
 
     touched = ["libdwarf"]
 
@@ -369,7 +385,6 @@ def test_get_spec_filter_list(mutable_mock_env_path, mutable_mock_repo):
     for key, val in expectations.items():
         affected_specs = ci.get_spec_filter_list(e1, touched, dependent_traverse_depth=key)
         affected_pkg_names = set([s.name for s in affected_specs])
-        print(f"{key}: {affected_pkg_names}")
         assert affected_pkg_names == val
 
 

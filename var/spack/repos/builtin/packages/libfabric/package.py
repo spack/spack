@@ -160,9 +160,8 @@ class Libfabric(AutotoolsPackage, CudaPackage):
             variants = []
             output = Executable(exe)("--list", output=str, error=os.devnull)
             # fabrics
-            fabrics = get_options_from_variant(cls, "fabrics")
             used_fabrics = []
-            for fabric in fabrics:
+            for fabric in cls.fabrics:
                 match = re.search(r"^%s:.*\n.*version: (\S+)" % fabric, output, re.MULTILINE)
                 if match:
                     used_fabrics.append(fabric)
@@ -177,15 +176,13 @@ class Libfabric(AutotoolsPackage, CudaPackage):
 
     # To enable this package add it to the LD_LIBRARY_PATH
     def setup_run_environment(self, env):
-        libfabric_home = self.spec["libfabric"].prefix
-        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib)
-        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib64)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
 
     # To enable this package add it to the LD_LIBRARY_PATH
     def setup_dependent_run_environment(self, env, dependent_spec):
-        libfabric_home = self.spec["libfabric"].prefix
-        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib)
-        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib64)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
 
     @when("@main")
     def autoreconf(self, spec, prefix):
@@ -219,20 +216,3 @@ class Libfabric(AutotoolsPackage, CudaPackage):
     def installcheck(self):
         fi_info = Executable(self.prefix.bin.fi_info)
         fi_info()
-
-
-# This code gets all the fabric names from the variants list
-# Idea taken from the AutotoolsPackage source.
-def get_options_from_variant(self, name):
-    values = self.variants[name][0].values
-    explicit_values = []
-    if getattr(values, "feature_values", None):
-        values = values.feature_values
-    for value in sorted(values):
-        if hasattr(value, "when"):
-            if value.when is True:
-                # Explicitly extract the True value for downstream use
-                explicit_values.append("{0}".format(value))
-        else:
-            explicit_values.append(value)
-    return explicit_values

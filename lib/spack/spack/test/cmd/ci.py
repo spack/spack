@@ -22,12 +22,17 @@ import spack.environment as ev
 import spack.hash_types as ht
 import spack.main
 import spack.paths as spack_paths
+import spack.repo
+import spack.spec
+import spack.stage
 import spack.util.spack_yaml as syaml
+import spack.version
 from spack.ci import gitlab as gitlab_generator
 from spack.ci.common import PipelineDag, PipelineOptions, SpackCIConfig
 from spack.ci.generator_registry import generator
 from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
 from spack.database import INDEX_JSON_FILE
+from spack.error import SpackError
 from spack.schema.buildcache_spec import schema as specfile_schema
 from spack.schema.database_index import schema as db_idx_schema
 from spack.spec import Spec
@@ -170,7 +175,9 @@ spack:
     url: https://my.fake.cdash
     project: Not used
     site: Nothing
-"""
+""",
+        "--artifacts-root",
+        str(tmp_path / "my_artifacts_root"),
     )
     yaml_contents = syaml.load(outputfile.read_text())
 
@@ -192,7 +199,7 @@ spack:
 
     assert "variables" in yaml_contents
     assert "SPACK_ARTIFACTS_ROOT" in yaml_contents["variables"]
-    assert yaml_contents["variables"]["SPACK_ARTIFACTS_ROOT"] == "jobs_scratch_dir"
+    assert yaml_contents["variables"]["SPACK_ARTIFACTS_ROOT"] == "my_artifacts_root"
 
 
 def test_ci_generate_with_env_missing_section(ci_generate_test, tmp_path, mock_binary_index):
@@ -329,14 +336,14 @@ def test_ci_generate_pkg_with_deps(ci_generate_test, tmp_path, ci_base_environme
         f"""\
 spack:
   specs:
-    - flatten-deps
+    - dependent-install
   mirrors:
     buildcache-destination: {tmp_path / 'ci-mirror'}
   ci:
     pipeline-gen:
     - submapping:
       - match:
-          - flatten-deps
+          - dependent-install
         build-job:
           tags:
             - donotcare
@@ -355,12 +362,12 @@ spack:
             assert "stage" in ci_obj
             assert ci_obj["stage"] == "stage-0"
             found.append("dependency-install")
-        if "flatten-deps" in ci_key:
+        if "dependent-install" in ci_key:
             assert "stage" in ci_obj
             assert ci_obj["stage"] == "stage-1"
-            found.append("flatten-deps")
+            found.append("dependent-install")
 
-    assert "flatten-deps" in found
+    assert "dependent-install" in found
     assert "dependency-install" in found
 
 
@@ -372,14 +379,14 @@ def test_ci_generate_for_pr_pipeline(ci_generate_test, tmp_path, monkeypatch):
         f"""\
 spack:
   specs:
-    - flatten-deps
+    - dependent-install
   mirrors:
     buildcache-destination: {tmp_path / 'ci-mirror'}
   ci:
     pipeline-gen:
     - submapping:
       - match:
-          - flatten-deps
+          - dependent-install
         build-job:
           tags:
             - donotcare
@@ -864,7 +871,7 @@ spack:
             logs_dir = scratch / "logs_dir"
             logs_dir.mkdir()
             ci.copy_stage_logs_to_artifacts(concrete_spec, str(logs_dir))
-            assert "spack-build-out.txt" in os.listdir(logs_dir)
+            assert "spack-build-out.txt.gz" in os.listdir(logs_dir)
 
             dl_dir = scratch / "download_dir"
             buildcache_cmd("download", "--spec-file", json_path, "--path", str(dl_dir))
@@ -899,7 +906,7 @@ def test_ci_generate_override_runner_attrs(
         f"""\
 spack:
   specs:
-    - flatten-deps
+    - dependent-install
     - pkg-a
   mirrors:
     buildcache-destination: {tmp_path / "ci-mirror"}
@@ -908,7 +915,7 @@ spack:
     - match_behavior: {match_behavior}
       submapping:
         - match:
-            - flatten-deps
+            - dependent-install
           build-job:
             tags:
               - specific-one
@@ -1006,8 +1013,8 @@ spack:
             assert the_elt["script"][0] == "main step"
             assert len(the_elt["after_script"]) == 1
             assert the_elt["after_script"][0] == "post step one"
-        if "flatten-deps" in ci_key:
-            # The flatten-deps match specifies that we keep the two
+        if "dependent-install" in ci_key:
+            # The dependent-install match specifies that we keep the two
             # top level variables, but add a third specifc one.  It
             # also adds a custom tag which should be combined with
             # the top-level tag.
@@ -1062,7 +1069,7 @@ spack:
             with open(tmp_path / "spec.json", "w", encoding="utf-8") as f:
                 f.write(concrete_spec.to_json(hash=ht.dag_hash))
 
-            install_cmd("--add", "-f", str(tmp_path / "spec.json"))
+            install_cmd("--fake", "--add", "-f", str(tmp_path / "spec.json"))
             buildcache_cmd("push", "-u", "-f", mirror_url, "callpath")
             ci_cmd("rebuild-index")
 
@@ -1182,12 +1189,12 @@ def test_ci_generate_read_broken_specs_url(
     spec_a = spack.concretize.concretize_one("pkg-a")
     a_dag_hash = spec_a.dag_hash()
 
-    spec_flattendeps = spack.concretize.concretize_one("flatten-deps")
+    spec_flattendeps = spack.concretize.concretize_one("dependent-install")
     flattendeps_dag_hash = spec_flattendeps.dag_hash()
 
     broken_specs_url = tmp_path.as_uri()
 
-    # Mark 'a' as broken (but not 'flatten-deps')
+    # Mark 'a' as broken (but not 'dependent-install')
     broken_spec_a_url = "{0}/{1}".format(broken_specs_url, a_dag_hash)
     job_stack = "job_stack"
     a_job_url = "a_job_url"
@@ -1201,7 +1208,7 @@ def test_ci_generate_read_broken_specs_url(
             f"""\
 spack:
   specs:
-    - flatten-deps
+    - dependent-install
     - pkg-a
   mirrors:
     buildcache-destination: {(tmp_path / "ci-mirror").as_uri()}
@@ -1211,7 +1218,7 @@ spack:
     - submapping:
       - match:
           - pkg-a
-          - flatten-deps
+          - dependent-install
           - pkg-b
           - dependency-install
         build-job:
@@ -1234,7 +1241,7 @@ spack:
             )
             assert expected in output
 
-            not_expected = f"flatten-deps/{flattendeps_dag_hash[:7]} (in stack"
+            not_expected = f"dependent-install/{flattendeps_dag_hash[:7]} (in stack"
             assert not_expected not in output
 
 
@@ -1322,44 +1329,50 @@ spack:
         env.concretize()
         env.write()
 
-        repro_dir.mkdir()
+    def fake_download_and_extract_artifacts(url, work_dir, merge_commit_test=True):
+        with working_dir(tmp_path), ev.Environment(".") as env:
+            if not os.path.exists(repro_dir):
+                repro_dir.mkdir()
 
-        job_spec = env.concrete_roots()[0]
-        with open(repro_dir / "archivefiles.json", "w", encoding="utf-8") as f:
-            f.write(job_spec.to_json(hash=ht.dag_hash))
+            job_spec = env.concrete_roots()[0]
+            with open(repro_dir / "archivefiles.json", "w", encoding="utf-8") as f:
+                f.write(job_spec.to_json(hash=ht.dag_hash))
+                artifacts_root = repro_dir / "jobs_scratch_dir"
+                pipeline_path = artifacts_root / "pipeline.yml"
 
-        artifacts_root = repro_dir / "scratch_dir"
-        pipeline_path = artifacts_root / "pipeline.yml"
-
-        ci_cmd(
-            "generate",
-            "--output-file",
-            str(pipeline_path),
-            "--artifacts-root",
-            str(artifacts_root),
-        )
-
-        job_name = gitlab_generator.get_job_name(job_spec)
-
-        with open(repro_dir / "repro.json", "w", encoding="utf-8") as f:
-            f.write(
-                json.dumps(
-                    {
-                        "job_name": job_name,
-                        "job_spec_json": "archivefiles.json",
-                        "ci_project_dir": str(repro_dir),
-                    }
+                ci_cmd(
+                    "generate",
+                    "--output-file",
+                    str(pipeline_path),
+                    "--artifacts-root",
+                    str(artifacts_root),
                 )
-            )
 
-        with open(repro_dir / "install.sh", "w", encoding="utf-8") as f:
-            f.write("#!/bin/sh\n\n#fake install\nspack install blah\n")
+                job_name = gitlab_generator.get_job_name(job_spec)
 
-        with open(repro_dir / "spack_info.txt", "w", encoding="utf-8") as f:
-            f.write(f"\nMerge {last_two_git_commits[1]} into {last_two_git_commits[0]}\n\n")
+                with open(repro_dir / "repro.json", "w", encoding="utf-8") as f:
+                    f.write(
+                        json.dumps(
+                            {
+                                "job_name": job_name,
+                                "job_spec_json": "archivefiles.json",
+                                "ci_project_dir": str(repro_dir),
+                            }
+                        )
+                    )
 
-    def fake_download_and_extract_artifacts(url, work_dir):
-        pass
+                with open(repro_dir / "install.sh", "w", encoding="utf-8") as f:
+                    f.write("#!/bin/sh\n\n#fake install\nspack install blah\n")
+
+                with open(repro_dir / "spack_info.txt", "w", encoding="utf-8") as f:
+                    if merge_commit_test:
+                        f.write(
+                            f"\nMerge {last_two_git_commits[1]} into {last_two_git_commits[0]}\n\n"
+                        )
+                    else:
+                        f.write(f"\ncommit {last_two_git_commits[1]}\n\n")
+
+            return "jobs_scratch_dir"
 
     monkeypatch.setattr(ci, "download_and_extract_artifacts", fake_download_and_extract_artifacts)
     rep_out = ci_cmd(
@@ -1374,6 +1387,64 @@ spack:
 
     # Make sure we tell the user where it is when not in interactive mode
     assert f"$ {repro_dir}/start.sh" in rep_out
+
+    # Ensure the correct commits are used
+    assert f"checkout_commit: {last_two_git_commits[0]}" in rep_out
+    assert f"merge_commit: {last_two_git_commits[1]}" in rep_out
+
+    # Test re-running in dirty working dir
+    with pytest.raises(SpackError, match=f"{repro_dir}"):
+        rep_out = ci_cmd(
+            "reproduce-build",
+            "https://example.com/api/v1/projects/1/jobs/2/artifacts",
+            "--working-dir",
+            str(repro_dir),
+            output=str,
+        )
+
+    # Cleanup between  tests
+    shutil.rmtree(repro_dir)
+
+    # Test --use-local-head
+    rep_out = ci_cmd(
+        "reproduce-build",
+        "https://example.com/api/v1/projects/1/jobs/2/artifacts",
+        "--use-local-head",
+        "--working-dir",
+        str(repro_dir),
+        output=str,
+    )
+
+    # Make sure we are checkout out the HEAD commit without a merge commit
+    assert "checkout_commit: HEAD" in rep_out
+    assert "merge_commit: None" in rep_out
+
+    # Test the case where the spack_info.txt is not a merge commit
+    monkeypatch.setattr(
+        ci,
+        "download_and_extract_artifacts",
+        lambda url, wd: fake_download_and_extract_artifacts(url, wd, False),
+    )
+
+    # Cleanup between  tests
+    shutil.rmtree(repro_dir)
+
+    rep_out = ci_cmd(
+        "reproduce-build",
+        "https://example.com/api/v1/projects/1/jobs/2/artifacts",
+        "--working-dir",
+        str(repro_dir),
+        output=str,
+    )
+    # Make sure the script was generated
+    assert (repro_dir / "start.sh").exists()
+
+    # Make sure we tell the user where it is when not in interactive mode
+    assert f"$ {repro_dir}/start.sh" in rep_out
+
+    # Ensure the correct commit is used (different than HEAD)
+    assert f"checkout_commit: {last_two_git_commits[1]}" in rep_out
+    assert "merge_commit: None" in rep_out
 
 
 @pytest.mark.parametrize(
@@ -1447,7 +1518,7 @@ spack:
   include: [{configs_path}]
   view: false
   specs:
-    - flatten-deps
+    - dependent-install
   mirrors:
     buildcache-destination: {tmp_path / "ci-mirror"}
   ci:
@@ -1774,3 +1845,216 @@ spack:
 
     assert pipeline_doc.startswith("unittestpipeline")
     assert "externaltest" in pipeline_doc
+
+
+@pytest.fixture
+def fetch_versions_match(monkeypatch):
+    """Fake successful checksums returned from downloaded tarballs."""
+
+    def get_checksums_for_versions(url_by_version, package_name, **kwargs):
+        pkg_cls = spack.repo.PATH.get_pkg_class(package_name)
+        return {v: pkg_cls.versions[v]["sha256"] for v in url_by_version}
+
+    monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
+
+
+@pytest.fixture
+def fetch_versions_invalid(monkeypatch):
+    """Fake successful checksums returned from downloaded tarballs."""
+
+    def get_checksums_for_versions(url_by_version, package_name, **kwargs):
+        return {
+            v: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+            for v in url_by_version
+        }
+
+    monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
+
+
+@pytest.mark.parametrize("versions", [["2.1.4"], ["2.1.4", "2.1.5"]])
+def test_ci_validate_standard_versions_valid(capfd, mock_packages, fetch_versions_match, versions):
+    spec = spack.spec.Spec("diff-test")
+    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    version_list = [spack.version.Version(v) for v in versions]
+
+    assert spack.cmd.ci.validate_standard_versions(pkg, version_list)
+
+    out, err = capfd.readouterr()
+    for version in versions:
+        assert f"Validated diff-test@{version}" in out
+
+
+@pytest.mark.parametrize("versions", [["2.1.4"], ["2.1.4", "2.1.5"]])
+def test_ci_validate_standard_versions_invalid(
+    capfd, mock_packages, fetch_versions_invalid, versions
+):
+    spec = spack.spec.Spec("diff-test")
+    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    version_list = [spack.version.Version(v) for v in versions]
+
+    assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
+
+    out, err = capfd.readouterr()
+    for version in versions:
+        assert f"Invalid checksum found diff-test@{version}" in err
+
+
+@pytest.mark.parametrize("versions", [[("1.0", -2)], [("1.1", -4), ("2.0", -6)]])
+def test_ci_validate_git_versions_valid(
+    capfd, monkeypatch, mock_packages, mock_git_version_info, versions
+):
+    spec = spack.spec.Spec("diff-test")
+    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    version_list = [spack.version.Version(v) for v, _ in versions]
+
+    repo_path, filename, commits = mock_git_version_info
+    version_commit_dict = {
+        spack.version.Version(v): {"tag": f"v{v}", "commit": commits[c]} for v, c in versions
+    }
+
+    pkg_class = spec.package_class
+
+    monkeypatch.setattr(pkg_class, "git", repo_path)
+    monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
+
+    assert spack.cmd.ci.validate_git_versions(pkg, version_list)
+
+    out, err = capfd.readouterr()
+    for version in version_list:
+        assert f"Validated diff-test@{version}" in out
+
+
+@pytest.mark.parametrize("versions", [[("1.0", -3)], [("1.1", -5), ("2.0", -5)]])
+def test_ci_validate_git_versions_bad_tag(
+    capfd, monkeypatch, mock_packages, mock_git_version_info, versions
+):
+    spec = spack.spec.Spec("diff-test")
+    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    version_list = [spack.version.Version(v) for v, _ in versions]
+
+    repo_path, filename, commits = mock_git_version_info
+    version_commit_dict = {
+        spack.version.Version(v): {"tag": f"v{v}", "commit": commits[c]} for v, c in versions
+    }
+
+    pkg_class = spec.package_class
+
+    monkeypatch.setattr(pkg_class, "git", repo_path)
+    monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
+
+    assert spack.cmd.ci.validate_git_versions(pkg, version_list) is False
+
+    out, err = capfd.readouterr()
+    for version in version_list:
+        assert f"Mismatched tag <-> commit found for diff-test@{version}" in err
+
+
+@pytest.mark.parametrize("versions", [[("1.0", -2)], [("1.1", -4), ("2.0", -6), ("3.0", -6)]])
+def test_ci_validate_git_versions_invalid(
+    capfd, monkeypatch, mock_packages, mock_git_version_info, versions
+):
+    spec = spack.spec.Spec("diff-test")
+    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    version_list = [spack.version.Version(v) for v, _ in versions]
+
+    repo_path, filename, commits = mock_git_version_info
+    version_commit_dict = {
+        spack.version.Version(v): {
+            "tag": f"v{v}",
+            "commit": "abcdefabcdefabcdefabcdefabcdefabcdefabc",
+        }
+        for v, c in versions
+    }
+
+    pkg_class = spec.package_class
+
+    monkeypatch.setattr(pkg_class, "git", repo_path)
+    monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
+
+    assert spack.cmd.ci.validate_git_versions(pkg, version_list) is False
+
+    out, err = capfd.readouterr()
+    for version in version_list:
+        assert f"Invalid commit for diff-test@{version}" in err
+
+
+@pytest.fixture
+def verify_standard_versions_valid(monkeypatch):
+    def validate_standard_versions(pkg, versions):
+        for version in versions:
+            print(f"Validated {pkg.name}@{version}")
+        return True
+
+    monkeypatch.setattr(spack.cmd.ci, "validate_standard_versions", validate_standard_versions)
+
+
+@pytest.fixture
+def verify_git_versions_valid(monkeypatch):
+    def validate_git_versions(pkg, versions):
+        for version in versions:
+            print(f"Validated {pkg.name}@{version}")
+        return True
+
+    monkeypatch.setattr(spack.cmd.ci, "validate_git_versions", validate_git_versions)
+
+
+@pytest.fixture
+def verify_standard_versions_invalid(monkeypatch):
+    def validate_standard_versions(pkg, versions):
+        for version in versions:
+            print(f"Invalid checksum found {pkg.name}@{version}")
+        return False
+
+    monkeypatch.setattr(spack.cmd.ci, "validate_standard_versions", validate_standard_versions)
+
+
+@pytest.fixture
+def verify_git_versions_invalid(monkeypatch):
+    def validate_git_versions(pkg, versions):
+        for version in versions:
+            print(f"Invalid commit for {pkg.name}@{version}")
+        return False
+
+    monkeypatch.setattr(spack.cmd.ci, "validate_git_versions", validate_git_versions)
+
+
+def test_ci_verify_versions_valid(
+    monkeypatch,
+    mock_packages,
+    mock_git_package_changes,
+    verify_standard_versions_valid,
+    verify_git_versions_valid,
+):
+    repo_path, _, commits = mock_git_package_changes
+    monkeypatch.setattr(spack.paths, "prefix", repo_path)
+
+    out = ci_cmd("verify-versions", commits[-1], commits[-3])
+    assert "Validated diff-test@2.1.5" in out
+    assert "Validated diff-test@2.1.6" in out
+
+
+def test_ci_verify_versions_standard_invalid(
+    monkeypatch,
+    mock_packages,
+    mock_git_package_changes,
+    verify_standard_versions_invalid,
+    verify_git_versions_invalid,
+):
+    repo_path, _, commits = mock_git_package_changes
+
+    monkeypatch.setattr(spack.paths, "prefix", repo_path)
+
+    out = ci_cmd("verify-versions", commits[-1], commits[-3], fail_on_error=False)
+    assert "Invalid checksum found diff-test@2.1.5" in out
+    assert "Invalid commit for diff-test@2.1.6" in out
+
+
+def test_ci_verify_versions_manual_package(monkeypatch, mock_packages, mock_git_package_changes):
+    repo_path, _, commits = mock_git_package_changes
+    monkeypatch.setattr(spack.paths, "prefix", repo_path)
+
+    pkg_class = spack.spec.Spec("diff-test").package_class
+    monkeypatch.setattr(pkg_class, "manual_download", True)
+
+    out = ci_cmd("verify-versions", commits[-1], commits[-2])
+    assert "Skipping manual download package: diff-test" in out

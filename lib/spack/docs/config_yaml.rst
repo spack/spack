@@ -125,6 +125,8 @@ are stored in ``$spack/var/spack/cache``.  These are stored indefinitely
 by default. Can be purged with :ref:`spack clean --downloads
 <cmd-spack-clean>`.
 
+.. _Misc Cache:
+
 --------------------
 ``misc_cache``
 --------------------
@@ -334,3 +336,52 @@ create a new alias called ``inst`` that will always call ``install -v``:
 
    aliases:
      inst: install -v
+
+-------------------------------
+``concretization_cache:enable``
+-------------------------------
+
+When set to ``true``, Spack will utilize a cache of solver outputs from
+successful concretization runs. When enabled, Spack will check the concretization
+cache prior to running the solver. If a previous request to solve a given
+problem is present in the cache, Spack will load the concrete specs and other
+solver data from the cache rather than running the solver. Specs not previously
+concretized will be added to the cache on a successful solve. The cache additionally
+holds solver statistics, so commands like ``spack solve`` will still return information
+about the run that produced a given solver result.
+
+This cache is a subcache of the :ref:`Misc Cache` and as such will be cleaned when the Misc
+Cache is cleaned.
+
+When ``false`` or ommitted, all concretization requests will be performed from scatch
+
+----------------------------
+``concretization_cache:url``
+----------------------------
+
+Path to the location where Spack will root the concretization cache. Currently this only supports
+paths on the local filesystem.
+
+Default location is under the :ref:`Misc Cache` at: ``$misc_cache/concretization``
+
+------------------------------------
+``concretization_cache:entry_limit``
+------------------------------------
+
+Sets a limit on the number of concretization results that Spack will cache. The limit is evaluated
+after each concretization run; if Spack has stored more results than the limit allows, the
+oldest concretization results are pruned until 10% of the limit has been removed.
+
+Setting this value to 0 disables the automatic pruning. It is expected users will be
+responsible for maintaining this cache.
+
+-----------------------------------
+``concretization_cache:size_limit``
+-----------------------------------
+
+Sets a limit on the size of the concretization cache in bytes. The limit is evaluated
+after each concretization run; if Spack has stored more results than the limit allows, the
+oldest concretization results are pruned until 10% of the limit has been removed.
+
+Setting this value to 0 disables the automatic pruning. It is expected users will be
+responsible for maintaining this cache.

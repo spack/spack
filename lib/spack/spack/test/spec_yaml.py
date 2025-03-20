@@ -204,13 +204,6 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
 
     # specs and their hashes are equal to the original
     assert (
-        spec.process_hash()
-        == from_yaml.process_hash()
-        == from_json.process_hash()
-        == from_yaml_rev.process_hash()
-        == from_json_rev.process_hash()
-    )
-    assert (
         spec.dag_hash()
         == from_yaml.dag_hash()
         == from_json.dag_hash()
@@ -426,6 +419,9 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls):
 
     openmpi_edges = s2.edges_to_dependencies(name="openmpi")
     assert len(openmpi_edges) == 1
+
+    # Check that virtuals have been reconstructed
+    assert "mpi" in openmpi_edges[0].virtuals
 
     # The virtuals attribute must be a tuple, when read from a
     # JSON or YAML file, not a list

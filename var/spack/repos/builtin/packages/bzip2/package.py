@@ -170,7 +170,7 @@ class Bzip2(Package, SourcewarePackage):
     @run_after("install")
     def install_pkgconfig(self):
         # Add pkgconfig file after installation
-        libdir = self.spec["bzip2"].libs.directories[0]
+        libdir = self.libs.directories[0]
         pkg_path = join_path(self.prefix.lib, "pkgconfig")
         mkdirp(pkg_path)
 

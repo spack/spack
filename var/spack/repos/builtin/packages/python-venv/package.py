@@ -5,8 +5,6 @@
 import os
 import shutil
 
-import llnl.util.filesystem as fs
-
 from spack.package import *
 
 
@@ -15,6 +13,8 @@ class PythonVenv(Package):
 
     homepage = "https://docs.python.org/3/library/venv.html"
     has_code = False
+
+    tags = ["build-tools"]
 
     maintainers("haampie")
 
@@ -36,7 +36,7 @@ class PythonVenv(Package):
             # Replace the VIRTUAL_ENV variable in the activate scripts after copying
             if name.lower().startswith("activate"):
                 shutil.copy(src, dst)
-                fs.filter_file(
+                filter_file(
                     self.spec.prefix,
                     os.path.abspath(view.get_projection_for_spec(self.spec)),
                     dst,
@@ -54,7 +54,7 @@ class PythonVenv(Package):
     def command(self):
         """Returns a python Executable instance"""
         python_name = "python" if self.spec.satisfies("platform=windows") else "python3"
-        return which(python_name, path=self.bindir)
+        return which(python_name, path=self.bindir, required=True)
 
     def _get_path(self, name) -> str:
         return self.command(

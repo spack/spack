@@ -241,7 +241,7 @@ class Icon(AutotoolsPackage):
                 ]
             )
 
-            if self.spec.satisfies("%oneapi+coupling"):
+            if self.spec.satisfies("+coupling%oneapi"):
                 flags["ICON_YAC_CFLAGS"].extend(["-O2", "-fp-model precise"])
 
             if self.spec.satisfies("+ocean"):
@@ -269,7 +269,7 @@ class Icon(AutotoolsPackage):
                     ["-acc=gpu", "-gpu=cc{0}".format(self.nvidia_targets[gpu])]
                 )
 
-            if self.spec.satisfies("%nvhpc@:23.9+coupling"):
+            if self.spec.satisfies("+coupling%nvhpc@:23.9"):
                 args.append("yac_cv_fc_is_contiguous_works=yes")
 
         else:

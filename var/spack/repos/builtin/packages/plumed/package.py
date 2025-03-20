@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
-import os.path
+import os
 
 from spack.package import *
 
@@ -244,7 +244,7 @@ class Plumed(AutotoolsPackage):
 
     def setup_dependent_package(self, module, dependent_spec):
         # Make plumed visible from dependent packages
-        module.plumed = dependent_spec["plumed"].command
+        module.plumed = self.command
 
     @property
     def plumed_inc(self):
@@ -292,10 +292,9 @@ class Plumed(AutotoolsPackage):
         if "+mpi" in spec:
             configure_opts.extend(["--enable-mpi", "CXX={0}".format(spec["mpi"].mpicxx)])
 
-            # If the MPI dependency is provided by the intel-mpi package then
-            # the following additional argument is required to allow it to
-            # build.
-            if "intel-mpi" in spec:
+            # If the MPI dependency is provided by the intel-oneapi-mpi package then the following
+            # additional argument is required to allow it to build.
+            if spec.satisfies("^[virtuals=mpi] intel-oneapi-mpi"):
                 configure_opts.extend(["STATIC_LIBS=-mt_mpi"])
 
         extra_libs = []

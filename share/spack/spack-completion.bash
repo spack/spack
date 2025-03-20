@@ -687,7 +687,7 @@ _spack_ci() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="generate rebuild-index rebuild reproduce-build"
+        SPACK_COMPREPLY="generate rebuild-index rebuild reproduce-build verify-versions"
     fi
 }
 
@@ -706,7 +706,16 @@ _spack_ci_rebuild() {
 _spack_ci_reproduce_build() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --runtime --working-dir -s --autostart --gpg-file --gpg-url"
+        SPACK_COMPREPLY="-h --help --runtime --working-dir -s --autostart --use-local-head --gpg-file --gpg-url"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_ci_verify_versions() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
     else
         SPACK_COMPREPLY=""
     fi
@@ -929,12 +938,8 @@ _spack_debug() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create-db-tarball report"
+        SPACK_COMPREPLY="report"
     fi
-}
-
-_spack_debug_create_db_tarball() {
-    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_debug_report() {
@@ -1871,7 +1876,7 @@ _spack_stage() {
 _spack_style() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -b --base -a --all -r --root-relative -U --no-untracked -f --fix --root -t --tool -s --skip"
+        SPACK_COMPREPLY="-h --help -b --base -a --all -r --root-relative -U --no-untracked -f --fix --root -t --tool -s --skip --spec-strings"
     else
         SPACK_COMPREPLY=""
     fi
@@ -2031,9 +2036,27 @@ _spack_url_stats() {
 _spack_verify() {
     if $list_options
     then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY="manifest libraries"
+    fi
+}
+
+_spack_verify_manifest() {
+    if $list_options
+    then
         SPACK_COMPREPLY="-h --help -l --local -j --json -a --all -s --specs -f --files"
     else
         _all_packages
+    fi
+}
+
+_spack_verify_libraries() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        _installed_packages
     fi
 }
 

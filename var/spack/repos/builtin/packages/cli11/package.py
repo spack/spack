@@ -15,10 +15,12 @@ class Cli11(CMakePackage):
 
     license("BSD-3-Clause")
 
+    version("2.5.0", sha256="17e02b4cddc2fa348e5dbdbb582c59a3486fa2b2433e70a0c3bacb871334fd55")
     version("2.4.2", sha256="f2d893a65c3b1324c50d4e682c0cdc021dd0477ae2c048544f39eed6654b699a")
     version("2.4.1", sha256="73b7ec52261ce8fe980a29df6b4ceb66243bb0b779451dbd3d014cfec9fdbb58")
     version("2.3.2", sha256="aac0ab42108131ac5d3344a9db0fdf25c4db652296641955720a4fbe52334e22")
     version("2.3.1", sha256="378da73d2d1d9a7b82ad6ed2b5bda3e7bc7093c4034a1d680a2e009eb067e7b2")
+    version("2.1.2", sha256="26291377e892ba0e5b4972cdfd4a2ab3bf53af8dac1f4ea8fe0d1376b625c8cb")
     version("2.1.1", sha256="d69023d1d0ab6a22be86b4f59d449422bc5efd9121868f4e284d6042e52f682e")
     version("2.1.0", sha256="2661b0112b02478bad3dc7f1749c4825bfc7e37b440cbb4c8c0e2ffaa3999112")
     version("2.0.0", sha256="2c672f17bf56e8e6223a3bfb74055a946fa7b1ff376510371902adb9cb0ab6a3")
@@ -26,8 +28,11 @@ class Cli11(CMakePackage):
 
     depends_on("cxx", type="build")  # generated
 
+    variant("pic", default=True, description="Produce position-independent code")
+
     depends_on("cmake@3.4:", type="build")
     depends_on("cmake@3.5:", type="build", when="@2.4:")
+    depends_on("cmake@3.10:", type="build", when="@2.5:")
 
     def cmake_args(self):
         args = [
@@ -35,5 +40,6 @@ class Cli11(CMakePackage):
             self.define("CLI11_BUILD_DOCS", False),
             self.define("CLI11_BUILD_TESTS", False),
             self.define("CLI11_PRECOMPILED", True),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
         return args
