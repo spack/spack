@@ -100,9 +100,7 @@ class Padicotm(AutotoolsPackage):
             Executable("./autogen.sh")()
 
     def configure_args(self):
-        config_args = [
-            "--without-portals4",  # portals4 not packaged in spack
-        ]
+        config_args = ["--without-portals4"]  # portals4 not packaged in spack
         config_args += self.enable_or_disable("optimize")
         config_args += self.enable_or_disable("debug")
         config_args += self.enable_or_disable("asan")
