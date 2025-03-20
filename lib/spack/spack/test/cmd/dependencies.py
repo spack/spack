@@ -14,6 +14,7 @@ from spack.main import SpackCommand
 dependencies = SpackCommand("dependencies")
 
 MPIS = [
+    "cray-mpich",
     "intel-parallel-studio",
     "low-priority-provider",
     "mpich",
