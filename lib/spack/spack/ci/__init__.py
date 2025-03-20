@@ -6,6 +6,7 @@ import base64
 import codecs
 import json
 import os
+import pathlib
 import re
 import shutil
 import stat
@@ -23,7 +24,6 @@ from llnl.util.tty.color import cescape, colorize
 
 import spack
 import spack.binary_distribution as bindist
-import spack.builder
 import spack.concretize
 import spack.config as cfg
 import spack.environment as ev
@@ -33,6 +33,7 @@ import spack.mirrors.mirror
 import spack.paths
 import spack.repo
 import spack.spec
+import spack.store
 import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
@@ -581,22 +582,25 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
     tty.debug(f"job spec: {job_spec}")
 
     try:
-        pkg_cls = spack.repo.PATH.get_pkg_class(job_spec.name)
-        job_pkg = pkg_cls(job_spec)
-        tty.debug(f"job package: {job_pkg}")
-    except AssertionError:
-        msg = f"Cannot copy stage logs: job spec ({job_spec}) must be concrete"
-        tty.error(msg)
+        package_metadata_root = pathlib.Path(spack.store.STORE.layout.metadata_path(job_spec))
+    except spack.error.SpackError as e:
+        tty.error(f"Cannot copy logs: {str(e)}")
         return
 
-    stage_dir = job_pkg.stage.path
-    tty.debug(f"stage dir: {stage_dir}")
-    for file in [
-        job_pkg.log_path,
-        job_pkg.env_mods_path,
-        *spack.builder.create(job_pkg).archive_files,
-    ]:
-        copy_files_to_artifacts(file, job_log_dir)
+    # Get the package's archived files
+    archive_files = []
+    archive_root = package_metadata_root / "archived-files"
+    if archive_root.is_dir():
+        archive_files = [f for f in archive_root.rglob("*") if f.is_file()]
+    else:
+        msg = "Cannot copy package archived files: archived-files must be a directory"
+        tty.warn(msg)
+
+    build_log_zipped = package_metadata_root / "spack-build-out.txt.gz"
+    build_env_mods = package_metadata_root / "spack-build-env.txt"
+
+    for f in [build_log_zipped, build_env_mods, *archive_files]:
+        copy_files_to_artifacts(str(f), job_log_dir)
 
 
 def copy_test_logs_to_artifacts(test_stage, job_test_dir):

@@ -120,4 +120,4 @@ class Go(Package):
         install_tree('bin', prefix.bin)
         """
         #  Add a go command/compiler for extensions
-        module.go = self.spec["go"].command
+        module.go = self.command

@@ -185,9 +185,9 @@ class Zfp(CMakePackage, CudaPackage):
             cmake = Executable(spec["cmake"].prefix.bin.cmake)
             ctest = Executable(spec["cmake"].prefix.bin.ctest)
 
-            cmake(*([".", "-DZFP_ROOT=" + spec["zfp"].prefix]))
-            cmake(*(["--build", "."]))
-            ctest(*(["--verbose"]))
+            cmake(".", f"-DZFP_ROOT={self.prefix}")
+            cmake("--build", ".")
+            ctest("--verbose")
 
     @run_after("install")
     def copy_test_files(self):

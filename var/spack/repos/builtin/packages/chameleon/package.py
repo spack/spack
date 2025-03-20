@@ -113,15 +113,13 @@ class Chameleon(CMakePackage, CudaPackage):
                 ]
             )
 
-        if spec.satisfies("~simgrid"):
-            if spec.satisfies("^intel-mkl") or spec.satisfies("^intel-parallel-studio+mkl"):
-                if spec.satisfies("threads=none"):
-                    args.extend([self.define("BLA_VENDOR", "Intel10_64lp_seq")])
-                else:
-                    args.extend([self.define("BLA_VENDOR", "Intel10_64lp")])
-            elif spec.satisfies("^netlib-lapack"):
-                args.extend([self.define("BLA_VENDOR", "Generic")])
-            elif spec.satisfies("^openblas"):
-                args.extend([self.define("BLA_VENDOR", "OpenBLAS")])
+        if spec.satisfies("^[virtuals=blas,lapack] intel-oneapi-mkl threads=none"):
+            args.extend([self.define("BLA_VENDOR", "Intel10_64lp_seq")])
+        elif spec.satisfies("^[virtuals=blas,lapack] intel-oneapi-mkl"):
+            args.extend([self.define("BLA_VENDOR", "Intel10_64lp")])
+        elif spec.satisfies("^[virtuals=blas,lapack] netlib-lapack"):
+            args.extend([self.define("BLA_VENDOR", "Generic")])
+        elif spec.satisfies("^[virtuals=blas,lapack] openblas"):
+            args.extend([self.define("BLA_VENDOR", "OpenBLAS")])
 
         return args

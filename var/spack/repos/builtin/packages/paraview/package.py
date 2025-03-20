@@ -748,19 +748,15 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     def test_smoke_test(self):
         """Simple smoke test for ParaView"""
-        spec = self.spec
-
-        pvserver = Executable(spec["paraview"].prefix.bin.pvserver)
+        pvserver = Executable(self.prefix.bin.pvserver)
         pvserver("--help")
 
     def test_pvpython(self):
         """Test pvpython"""
-        spec = self.spec
-
-        if "~python" in spec:
+        if "~python" in self.spec:
             raise SkipTest("Package must be installed with +python")
 
-        pvpython = Executable(spec["paraview"].prefix.bin.pvpython)
+        pvpython = Executable(self.prefix.bin.pvpython)
         pvpython("-c", "import paraview")
 
     def test_mpi_ensemble(self):
@@ -771,8 +767,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             raise SkipTest("Package must be installed with +mpi and +python")
 
         mpirun = spec["mpi"].prefix.bin.mpirun
-        pvserver = spec["paraview"].prefix.bin.pvserver
-        pvpython = Executable(spec["paraview"].prefix.bin.pvpython)
+        pvserver = self.prefix.bin.pvserver
+        pvpython = Executable(self.prefix.bin.pvpython)
 
         with working_dir("smoke_test_build", create=True):
             with Popen(

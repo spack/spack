@@ -377,11 +377,14 @@ packages:
 """
     update_packages_config(conf_str)
 
-    spec_mpich2 = spack.concretize.concretize_one("mpich2")
-    assert spec_mpich2.satisfies("cflags=-g")
+    mpich2 = spack.concretize.concretize_one("mpich2")
+    assert mpich2.satisfies("cflags=-g")
 
-    spec_mpi = spack.concretize.concretize_one("mpi")
-    assert spec_mpi.satisfies("mpich cflags=-O1")
+    mpileaks = spack.concretize.concretize_one("mpileaks")
+    assert mpileaks["mpi"].satisfies("mpich cflags=-O1")
+
+    mpi = spack.concretize.concretize_one("mpi")
+    assert mpi.satisfies("mpich cflags=-O1")
 
 
 def test_requirements_for_package_that_is_not_needed(concretize_scope, test_repo):
@@ -982,6 +985,52 @@ def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages)
             ["%clang"],
             ["%gcc"],
         ),
+        # Test using preferences on virtuals
+        (
+            """
+            packages:
+              all:
+                providers:
+                  mpi: [mpich]
+              mpi:
+                prefer:
+                - zmpi
+        """,
+            "mpileaks",
+            ["^[virtuals=mpi] zmpi"],
+            ["^[virtuals=mpi] mpich"],
+        ),
+        (
+            """
+            packages:
+              all:
+                providers:
+                  mpi: [mpich]
+              mpi:
+                prefer:
+                - zmpi
+        """,
+            "mpileaks ^[virtuals=mpi] mpich",
+            ["^[virtuals=mpi] mpich"],
+            ["^[virtuals=mpi] zmpi"],
+        ),
+        # Tests that strong preferences can be overridden by requirements
+        (
+            """
+                packages:
+                  all:
+                    providers:
+                      mpi: [zmpi]
+                  mpi:
+                    require:
+                    - mpich
+                    prefer:
+                    - zmpi
+            """,
+            "mpileaks",
+            ["^[virtuals=mpi] mpich"],
+            ["^[virtuals=mpi] zmpi"],
+        ),
     ],
 )
 def test_strong_preferences_packages_yaml(
@@ -1031,6 +1080,16 @@ def test_strong_preferences_packages_yaml(
                   message: "cannot use clang with version 2"
         """,
             "multivalue-variant@=2.3 %clang",
+        ),
+        # Test using conflict on virtual
+        (
+            """
+        packages:
+          mpi:
+            conflict:
+            - mpich
+    """,
+            "mpileaks ^[virtuals=mpi] mpich",
         ),
     ],
 )
@@ -1168,3 +1227,26 @@ def test_anonymous_spec_cannot_be_used_in_virtual_requirements(
     update_packages_config(packages_yaml)
     with pytest.raises(spack.error.SpackError, match=err_match):
         spack.concretize.concretize_one("mpileaks")
+
+
+def test_virtual_requirement_respects_any_of(concretize_scope, mock_packages):
+    """Tests that "any of" requirements can be used with virtuals"""
+    conf_str = """\
+        packages:
+          mpi:
+            require:
+            - any_of: ["mpich2", "mpich"]
+        """
+    update_packages_config(conf_str)
+
+    s = spack.concretize.concretize_one("mpileaks")
+    assert s.satisfies("^[virtuals=mpi] mpich2")
+
+    s = spack.concretize.concretize_one("mpileaks ^mpich2")
+    assert s.satisfies("^[virtuals=mpi] mpich2")
+
+    s = spack.concretize.concretize_one("mpileaks ^mpich")
+    assert s.satisfies("^[virtuals=mpi] mpich")
+
+    with pytest.raises(spack.error.SpackError):
+        spack.concretize.concretize_one("mpileaks ^[virtuals=mpi] zmpi")
