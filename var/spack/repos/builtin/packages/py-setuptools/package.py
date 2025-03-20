@@ -34,11 +34,20 @@ class PySetuptools(Package, PythonExtension):
     # Last version supporting Python 3.6
     version("59.6.0", sha256="4ce92f1e1f8f01233ee9952c04f6b81d1e02939d6e1b488428154974a4d0783e")
 
+    # regexes used to find dependent packages that might break if versions are deprecated
+    # depends_on\("py-setuptools@:[\d\.]+"
+    # depends_on\("py-setuptools@=[\d\.]+
+    # depends_on\("py-setuptools@[\d\.]+:[\d\.]+"
+    # conflicts\(.+py-setuptools
+
     # @:75 (py-wxpython)
     # Last version supporting Python 3.8
 
     # @:73 (gobject-introspection)
     version("69.2.0", sha256="c21c49fb1042386df081cb5d86759792ab89efca84cf114889191cd09aacc80c")
+
+    # @61:69.2 (py-django)
+    version("69.1.1", sha256="02fa291a0471b3a18b2b2481ed902af520c69e8ae0919c13da936542754b4c56")
 
     # @68.2.2 (py-line-profiler)
     # @:68 (py-zstandard)
@@ -50,6 +59,10 @@ class PySetuptools(Package, PythonExtension):
     # @:67 (py-d2to1, py-immutables)
     version("67.6.0", sha256="b78aaa36f6b90a074c1fa651168723acbf45d14cb1196b6f02c0fd07f17623b2")
 
+    # @40.8.0:66 (py-datalad)
+    # @21:65.5.1 (py-lightly)
+    version("65.5.0", sha256="f62ea9da9ed6289bfe868cd6845968a2c854d1427f8548d52cae02a42b4f0356")
+
     # @:64 (py-pywavelets)
     # @:64.0.0 (py-scikits-odes)
     version("64.0.0", sha256="63f463b90ff5e0a1422010100268fd688e15c44ae0798659013c8412963e15e4")
@@ -57,8 +70,13 @@ class PySetuptools(Package, PythonExtension):
     # @:63 (py-darshan, py-numpy, py-pytest-allclose, py-shapely)
     version("63.4.3", sha256="7f61f7e82647f77d4118eeaf43d64cbcd4d87e38af9611694d4866eb070cd10d")
 
+    # @62.6:62 (py-astroid, py-pylint)
+    version("62.6.0", sha256="c1848f654aea2e3526d17fc3ce6aeaa5e7e24e66e645b5be2171f3f6b4e5a178")
+
     # @:60 (py-ipyparallel, py-jupyter-packaging, py-symengine)
+    # @40.8:60 (py-pyviz-comms)
     # @:59 (py-numpy, py-pyvista, py-pyzmq, py-scikit-learn, py-scipy)
+    # @59.1.1:59.6 (py-celery)
     # Last version supporting Python 3.6
 
     # @:59.4.0 (py-pyfftw)
@@ -66,11 +84,14 @@ class PySetuptools(Package, PythonExtension):
     version("59.4.0", sha256="feb5ff19b354cde9efd2344ef6d5e79880ce4be643037641b49508bbb850d060")
 
     # @:57 (gdal, py-blessings, py-cmseq, py-deap, py-docutils, py-fs, py-jsmin, py-nose,
-    #       py-pylatex, py-pyvcf, py-rnc2rng, py-scipy)
+    #       py-pylatex, py-pyvcf, py-rnc2rng, py-scipy, py-mkdocs-jupyter)
     version("57.4.0", sha256="a49230977aa6cfb9d933614d2f7b79036e9945c4cdd7583163f4e920b83418d6")
 
     # @:51.0.0 (py-scipy)
     version("51.0.0", sha256="8c177936215945c9a37ef809ada0fab365191952f7a123618432bbfac353c529")
+
+    # @40:49.1 (py-deephyper)
+    version("49.6.0", sha256="4dd5bb0a0a0cff77b46ca5dd3a84857ee48c83e8223886b556613c724994073f")
 
     # @:47 (py-botorch)
     version("46.1.3", sha256="4fe404eec2738c20ab5841fa2d791902d2a645f32318a7850ef26f8d7215a8ee")
@@ -80,25 +101,16 @@ class PySetuptools(Package, PythonExtension):
 
     with default_args(deprecated=True):
         version(
-            "69.1.1", sha256="02fa291a0471b3a18b2b2481ed902af520c69e8ae0919c13da936542754b4c56"
-        )
-        version(
             "69.0.3", sha256="385eb4edd9c9d5c17540511303e39a147ce2fc04bc55289c322b9e5904fe2c05"
         )
         version(
             "68.2.2", sha256="b454a35605876da60632df1a60f736524eb73cc47bbc9f3f1ef1b644de74fd2a"
         )
         version(
-            "65.5.0", sha256="f62ea9da9ed6289bfe868cd6845968a2c854d1427f8548d52cae02a42b4f0356"
-        )
-        version(
             "65.0.0", sha256="fe9a97f68b064a6ddd4bacfb0b4b93a4c65a556d97ce906255540439d0c35cef"
         )
         version(
             "63.0.0", sha256="045aec56a3eee5c82373a70e02db8b6da9a10f7faf61ff89a14ab66c738ed370"
-        )
-        version(
-            "62.6.0", sha256="c1848f654aea2e3526d17fc3ce6aeaa5e7e24e66e645b5be2171f3f6b4e5a178"
         )
         version(
             "62.4.0", sha256="5a844ad6e190dccc67d6d7411d119c5152ce01f7c76be4d8a1eaa314501bba77"
@@ -117,9 +129,6 @@ class PySetuptools(Package, PythonExtension):
         )
         version(
             "50.1.0", sha256="4537c77e6e7dc170081f8547564551d4ff4e4999717434e1257600bbd3a23296"
-        )
-        version(
-            "49.6.0", sha256="4dd5bb0a0a0cff77b46ca5dd3a84857ee48c83e8223886b556613c724994073f"
         )
         version(
             "49.2.0", sha256="272c7f48f5cddc5af5901f4265274c421c7eede5c8bc454ac2903d3f8fc365e9"
