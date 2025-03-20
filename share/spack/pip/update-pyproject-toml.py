@@ -4,6 +4,8 @@ import sys
 
 import toml
 
+verbosity = 0
+
 
 def update_value(fqn, value):
     if fqn == ".project.name":
@@ -20,15 +22,17 @@ def update_value(fqn, value):
         else:
             new_val = "/spack/" + value
     else:
-        print("Not changed:")
-        print(fqn)
-        print("    ", value)
-        print()
+        if verbosity >= 2:
+            print("Not changed:")
+            print(fqn)
+            print("    ", value)
+            print()
         return value
 
-    print("Updated", fqn)
-    print("   ", value)
-    print("   ", new_val)
+    if verbosity >= 1:
+        print("Updated", fqn)
+        print("   ", value)
+        print("   ", new_val)
     return new_val
 
 
@@ -51,30 +55,31 @@ def descend(coll, fqn=""):
                 coll[k] = update_value(new_fqn, v)
             else:
                 if should_delete(new_fqn):
-                    print("Marking for deletion:")
-                    print(coll[k])
+                    if verbosity >= 1:
+                        print("Marking for deletion:")
+                        print(coll[k])
                     to_delete.append(k)
                 else:
                     descend(coll[k], new_fqn)
     elif type(coll) is list:
         for idx in range(len(coll)):
-            # new_fqn = fqn + '[' + str(idx) + ']'
-            new_fqn = fqn
+            new_fqn = fqn # Explicitly omit index from fqn
             if type(coll[idx]) is str:
-                # print(new_fqn, coll[idx])
                 coll[idx] = update_value(new_fqn, coll[idx])
             elif type(coll[idx]) in [int, bool]:
                 pass
             else:
                 descend(coll[idx], new_fqn)
     else:
-        print(type(coll))
-        assert False
+        print('Collection if of unexpected type:', type(coll))
+        assert(coll is not dict and coll is not list)
     for section in to_delete:
         del coll[section]
 
 
 if __name__ == "__main__":
+    global verbosity
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-i", "--input", type=str, help="Input pyproject.toml", action="store", default=sys.stdin
@@ -87,7 +92,11 @@ if __name__ == "__main__":
         action="store",
         default=sys.stdout,
     )
+    parser.add_argument(
+        "-v", "--verbose", help="Increase verbosity of this tool", action="count", default=0
+    )
     args = parser.parse_args()
+    verbosity = args.verbosity
 
     spack_toml = toml.load(args.input)
 
