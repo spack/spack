@@ -12,7 +12,6 @@ from spack.spec import Spec
 
 class SpecList:
     def __init__(self, name="specs", yaml_list=None, reference=None):
-        # Normalize input arguments
         yaml_list = yaml_list or []
         reference = reference or {}
 
@@ -151,7 +150,7 @@ class SpecList:
             msg += " which does not appear in its reference dict."
             raise UndefinedReferenceError(msg)
 
-        return (name, sigil)
+        return name, sigil
 
     def _expand_references(self, yaml):
         if isinstance(yaml, list):

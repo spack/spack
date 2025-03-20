@@ -48,6 +48,7 @@ from spack.spec_list import SpecList
 from spack.util.path import substitute_path_variables
 
 from ..enums import ConfigScopePriority
+from .definitions import DefinitionBuilder
 
 SpecPair = spack.concretize.SpecPair
 
@@ -1001,26 +1002,6 @@ class Environment:
         """Get a write lock context manager for use in a `with` block."""
         return lk.WriteTransaction(self.txlock, acquire=self._re_read)
 
-    def _process_definition(self, entry):
-        """Process a single spec definition item."""
-        when_string = entry.get("when")
-        if when_string is not None:
-            when = spack.spec.eval_conditional(when_string)
-            assert len([x for x in entry if x != "when"]) == 1
-        else:
-            when = True
-            assert len(entry) == 1
-
-        if when:
-            for name, spec_list in entry.items():
-                if name == "when":
-                    continue
-                user_specs = SpecList(name, spec_list, self.spec_lists.copy())
-                if name in self.spec_lists:
-                    self.spec_lists[name].extend(user_specs)
-                else:
-                    self.spec_lists[name] = user_specs
-
     def _process_view(self, env_view: Optional[Union[bool, str, Dict]]):
         """Process view option(s), which can be boolean, string, or None.
 
@@ -1085,8 +1066,9 @@ class Environment:
         self.spec_lists = collections.OrderedDict()
         self.views = {}
 
-        for item in spack.config.get("definitions", []):
-            self._process_definition(item)
+        self.spec_lists.update(
+            DefinitionBuilder().parse_definitions(spack.config.get("definitions", []))
+        )
 
         env_configuration = self.manifest[TOP_LEVEL_KEY]
         spec_list = env_configuration.get(user_speclist_name, [])
