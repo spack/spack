@@ -9,7 +9,9 @@ class Mpibenchmark(AutotoolsPackage):
     """MadMPI benchmark.
 
     MadMPI benchmark is benchmark designed to assess the performance
-    of MPI libraries using various metrics. It may be used to
+    of MPI libraries using various metrics: point-to-point communications,
+    collectives, communication/computation overlap, scalability with the
+    number of requests, RMA, multi-threaded communications. It may be used to
     benchmark any MPI library.
     """
 
