@@ -992,9 +992,9 @@ For example, the following environment has three root packages:
 This allows for a much-needed reduction in redundancy between packages
 and constraints.
 
------------------
+-------------------------------
 Modifying Environment Variables
------------------
+-------------------------------
 
 Spack Environments can modify environment variables when activated.  The environment can be
 configured to set, unset, prepend, or append using ``env_vars`` option in the ``spack.yaml``
