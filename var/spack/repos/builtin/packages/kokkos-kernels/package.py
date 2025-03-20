@@ -160,6 +160,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
     depends_on("kokkos@3.0.00", when="@3.0.00")
     depends_on("cmake@3.16:", type="build")
 
+    patch("pr2296-spadd-handle-delete-sort-option.patch", when="@4.3.01 %oneapi@2025")
+
     backends = {
         "serial": (False, "enable Serial backend (default)"),
         "cuda": (False, "enable Cuda backend"),

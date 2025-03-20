@@ -1,0 +1,14 @@
+diff -ruN spack-src/sparse/src/KokkosSparse_spadd_handle.hpp spack-src-patched/sparse/src/KokkosSparse_spadd_handle.hpp
+--- spack-src/sparse/src/KokkosSparse_spadd_handle.hpp	2024-05-08 22:01:11.000000000 +0000
++++ spack-src-patched/sparse/src/KokkosSparse_spadd_handle.hpp	2025-03-20 20:42:27.708953166 +0000
+@@ -110,10 +110,6 @@
+    */
+   size_type get_c_nnz() { return this->result_nnz_size; }
+ 
+-  void set_sort_option(int option) { this->sort_option = option; }
+-
+-  int get_sort_option() { return this->sort_option; }
+-
+ #ifdef KOKKOSKERNELS_ENABLE_TPL_CUSPARSE
+   SpaddCusparseData cusparseData;
+ #endif
