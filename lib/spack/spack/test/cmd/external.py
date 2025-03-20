@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import getuid, touch
+from llnl.util.filesystem import getuid, join_path, touch
 
 import spack
 import spack.cmd.external
@@ -55,13 +55,26 @@ def test_find_external_single_package(mock_packages, mock_executable, monkeypatc
     assert len(detected_spec) == 1 and detected_spec[0] == Spec("cmake@1.foo")
 
 
-def test_find_external_two_instances_same_package(mock_executable):
+def test_find_external_two_instances_same_package(mock_packages, mock_executable, monkeypatch):
     # Each of these cmake instances is created in a different prefix
     # In Windows, quoted strings are echo'd with quotes includes
     # we need to avoid that for proper regex.
-    cmake1 = mock_executable("cmake", output="echo cmake version 1.foo", subdir=("base1", "bin"))
-    cmake2 = mock_executable("cmake", output="echo cmake version 3.17.2", subdir=("base2", "bin"))
-    search_paths = [str(cmake1.parent.parent), str(cmake2.parent.parent)]
+    versions = {"base1": "1.foo", "base2": "3.17.2"}
+
+    @classmethod
+    def _determine_version(cls, exe):
+        base = "base1" if "base1" in exe else "base2"
+        return versions[base]
+
+    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+    monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
+
+    search_paths = []
+    for base in versions:
+        cmake = mock_executable(
+            "cmake", output=f"echo cmake version {versions[base]}", subdir=(base, "bin")
+        )
+        search_paths.append(str(cmake.parent.parent))
 
     finder = spack.detection.path.ExecutablesFinder()
     detected_specs = finder.find(
@@ -70,12 +83,11 @@ def test_find_external_two_instances_same_package(mock_executable):
 
     assert len(detected_specs) == 2
     spec_to_path = {s: s.external_path for s in detected_specs}
-    assert spec_to_path[Spec("cmake@1.foo")] == (
-        spack.detection.executable_prefix(str(cmake1.parent))
-    ), spec_to_path
-    assert spec_to_path[Spec("cmake@3.17.2")] == (
-        spack.detection.executable_prefix(str(cmake2.parent))
-    )
+
+    for base, path in zip(versions, search_paths):
+        assert spec_to_path[Spec(f"cmake@{versions[base]}")] == (
+            spack.detection.executable_prefix(join_path(path, "bin"))
+        ), spec_to_path
 
 
 def test_find_external_update_config(mutable_config):
