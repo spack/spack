@@ -3065,14 +3065,26 @@ def test_stack_view_activate_from_default(
 
 def test_envvar_set_in_activate(tmp_path, mock_packages, install_mockery):
     spack_yaml = tmp_path / "spack.yaml"
+    env_vars_yaml = tmp_path / "env_vars.yaml"
+
+    env_vars_yaml.write_text(
+        """
+env_vars:
+  set:
+    CONFIG_ENVAR_SET_IN_ENV_LOAD: "True"
+"""
+    )
+
     spack_yaml.write_text(
         """
 spack:
+  include:
+  - env_vars.yaml
   specs:
     - cmake%gcc
   env_vars:
     set:
-      ENVAR_SET_IN_ENV_LOAD: "True"
+      SPACK_ENVAR_SET_IN_ENV_LOAD: "True"
 """
     )
 
@@ -3083,12 +3095,16 @@ spack:
     test_env = ev.read("test")
     output = env("activate", "--sh", "test")
 
-    assert "ENVAR_SET_IN_ENV_LOAD=True" in output
+    assert "SPACK_ENVAR_SET_IN_ENV_LOAD=True" in output
+    assert "CONFIG_ENVAR_SET_IN_ENV_LOAD=True" in output
 
     with test_env:
-        with spack.util.environment.set_env(ENVAR_SET_IN_ENV_LOAD="True"):
+        with spack.util.environment.set_env(
+            SPACK_ENVAR_SET_IN_ENV_LOAD="True", CONFIG_ENVAR_SET_IN_ENV_LOAD="True"
+        ):
             output = env("deactivate", "--sh")
-            assert "unset ENVAR_SET_IN_ENV_LOAD" in output
+            assert "unset SPACK_ENVAR_SET_IN_ENV_LOAD" in output
+            assert "unset CONFIG_ENVAR_SET_IN_ENV_LOAD" in output
 
 
 def test_stack_view_no_activate_without_default(
