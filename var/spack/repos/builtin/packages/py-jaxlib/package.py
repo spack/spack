@@ -245,9 +245,7 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
             if spec.satisfies("@:0.4.35"):
                 args.append("--enable_rocm")
             if spec.satisfies("@0.5.3:"):
-                args.append(
-                    "--bazel_options=--@local_config_rocm//rocm:rocm_path_type=multiple"
-                )
+                args.append("--bazel_options=--@local_config_rocm//rocm:rocm_path_type=multiple")
 
         args.extend(
             [
