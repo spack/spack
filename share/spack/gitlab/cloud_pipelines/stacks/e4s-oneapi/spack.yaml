@@ -48,6 +48,9 @@ spack:
     unzip:
       require:
       - 'target=x86_64_v3 %gcc'
+    py-maturin:
+      require:
+        - 'target=x86_64_v3 %gcc'
     binutils:
       require:
       - 'target=x86_64_v3 %gcc'
