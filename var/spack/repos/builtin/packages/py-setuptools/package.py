@@ -91,8 +91,6 @@ class PySetuptools(Package, PythonExtension):
     version("51.0.0", sha256="8c177936215945c9a37ef809ada0fab365191952f7a123618432bbfac353c529")
 
     # @40:49.1 (py-deephyper)
-    version("49.6.0", sha256="4dd5bb0a0a0cff77b46ca5dd3a84857ee48c83e8223886b556613c724994073f")
-
     # @:47 (py-botorch)
     version("46.1.3", sha256="4fe404eec2738c20ab5841fa2d791902d2a645f32318a7850ef26f8d7215a8ee")
 
@@ -129,6 +127,9 @@ class PySetuptools(Package, PythonExtension):
         )
         version(
             "50.1.0", sha256="4537c77e6e7dc170081f8547564551d4ff4e4999717434e1257600bbd3a23296"
+        )
+        version(
+            "49.6.0", sha256="4dd5bb0a0a0cff77b46ca5dd3a84857ee48c83e8223886b556613c724994073f"
         )
         version(
             "49.2.0", sha256="272c7f48f5cddc5af5901f4265274c421c7eede5c8bc454ac2903d3f8fc365e9"
