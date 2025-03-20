@@ -94,6 +94,7 @@ def mpi_names(mock_inspector):
                 "intel-parallel-studio",
                 "mpich",
                 "libelf",
+                "cray-mpich",
             },
         ),
         (
@@ -143,7 +144,10 @@ def test_possible_dependencies_with_multiple_classes(
 ):
     pkgs = ["dt-diamond", "mpileaks"]
     expected = set(mpileaks_possible_deps)
-    expected.update({"dt-diamond", "dt-diamond-left", "dt-diamond-right", "dt-diamond-bottom"})
+    expected.update(
+        {"dt-diamond", "dt-diamond-left", "dt-diamond-right", "dt-diamond-bottom", "cray-mpich"}
+    )
+    expected.update(mock_packages.packages_with_tags("runtime"))
 
     real_pkgs, *_ = mock_inspector.possible_dependencies(*pkgs, allowed_deps=dt.ALL)
     assert set(expected) == real_pkgs
