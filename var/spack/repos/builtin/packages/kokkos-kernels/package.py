@@ -136,7 +136,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
     variant(
         "execspace_openmp",
         default=False,
-        description="Whether to pre instantiate kernels for the execution space Kokkos::Experimental::OpenMPTarget",
+        description="Whether to pre instantiate kernels for the execution space "
+        "Kokkos::Experimental::OpenMPTarget",
     )
     variant(
         "execspace_threads",
