@@ -22,6 +22,7 @@ class Mpibenchmark(AutotoolsPackage):
     license("GPL-2.0-or-later", checked_by="a-denis")
 
     version("master", branch="master")
+    version("0.6", sha256="4e956394856476b5b31fb170b488fc3c2fbbcd98fe140d71d0bca9bc171617be")
     version("0.5", sha256="bba9e5aa8b58c041f89e4518a0a7f80a63ebfaf0f90bb8bdd0976d1bf22bed83")
     version("0.4", sha256="f3d562683bad29e00efae11a449596feacdef5f29cd4f1d60d01368adacece37")
     version("0.3", sha256="af82d48a0a00971c9294725ea6944b8683c12ab3b8203357379fa0969e61325f")
