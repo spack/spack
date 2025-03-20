@@ -106,8 +106,6 @@ class Nmad(AutotoolsPackage):
     conflicts("%clang", when="+fortran", msg="No FORTRAN support with clang.")
 
     provides("mpi", when="+mpi")
-    provides("madmpi", when="+mpi")
-    provides("newmadeleine")
 
     configure_directory = "nmad"
     build_directory = "build"
