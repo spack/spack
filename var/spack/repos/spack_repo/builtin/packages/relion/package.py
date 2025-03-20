@@ -96,6 +96,11 @@ class Relion(CMakePackage, CudaPackage):
     depends_on("mkl", when="+mklfft")
     depends_on("ctffind", type="run")
     depends_on("motioncor2", type="run", when="+external_motioncor2")
+    # version 5 deps
+    depends_on("py-relion-blush", type="run", when="@5:")
+    depends_on("py-relion-classranker", type="run", when="@5:")
+    depends_on("topaz-3dem", type="run", when="@5:")
+    depends_on("model-angelo", type="run", when="@5:")
 
     # TODO: more externals to add
     # Spack packages needed

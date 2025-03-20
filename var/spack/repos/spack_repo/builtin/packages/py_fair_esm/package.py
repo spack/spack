@@ -16,6 +16,7 @@ class PyFairEsm(PythonPackage):
     license("MIT")
 
     version("2.0.0", sha256="4ed34d4598ec75ed6550a4e581d023bf8d4a8375317ecba6269bb68135f80c85")
+    version("1.0.3", sha256="a37b5d86ffd5b0668ac594f2aa9665056fde782694eb1534d40f2b3e0b0d68a1")
 
     depends_on("py-setuptools@59.5.0:", type=("build"))
 
