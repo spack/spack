@@ -121,13 +121,24 @@ external = SpackCommand("external")
 # TODO: this test should be made to work, but in the meantime it is
 # causing intermittent (spurious) CI failures on all PRs
 @pytest.mark.not_on_windows("Test fails intermittently on Windows")
-def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_executable):
+def test_find_external_cmd_not_buildable(
+    mutable_config, working_env, mock_executable, monkeypatch
+):
     """When the user invokes 'spack external find --not-buildable', the config
     for any package where Spack finds an external version should be marked as
     not buildable.
     """
-    cmake_path1 = mock_executable("cmake", output="echo cmake version 1.foo")
-    os.environ["PATH"] = os.pathsep.join([os.path.dirname(cmake_path1)])
+    version = "1.foo"
+
+    @classmethod
+    def _determine_version(cls, exe):
+        return version
+
+    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+    monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
+
+    cmake_path = mock_executable("cmake", output=f"echo cmake version {version}")
+    os.environ["PATH"] = str(cmake_path.parent)
     external("find", "--not-buildable", "cmake")
     pkgs_cfg = spack.config.get("packages")
     assert "cmake" in pkgs_cfg
