@@ -36,10 +36,18 @@ def define_plat_exe(exe):
     return exe
 
 
-def test_find_external_single_package(mock_executable):
-    cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
-    search_dir = cmake_path.parent.parent
+def test_find_external_single_package(mock_packages, mock_executable, monkeypatch):
+    version = "1.foo"
+    cmake_path = mock_executable("cmake", output=f"echo cmake version {version}")
 
+    @classmethod
+    def _determine_version(cls, exe):
+        return version
+
+    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+    monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
+
+    search_dir = cmake_path.parent.parent
     specs_by_package = spack.detection.by_path(["cmake"], path_hints=[str(search_dir)])
 
     assert len(specs_by_package) == 1 and "cmake" in specs_by_package
