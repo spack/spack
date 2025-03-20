@@ -14,7 +14,7 @@ import sys
 from typing import List, Optional, Union
 
 from llnl.util import tty
-from llnl.util.filesystem import edit_in_place_through_temporary_file, join_path, windows_drive
+from llnl.util.filesystem import edit_in_place_through_temporary_file, windows_drive
 from llnl.util.lang import memoized
 
 import spack.config
