@@ -973,6 +973,12 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             # the MacOSX{nn.n}.sdk since that breaks at every xcode update
             options.append(define_tpl_enable("DLlib", False))
 
+            # math_errhandling is an 'extern int' and not a constexpr in MacOS
+            # headers and this is not accounted for directly in the STK code
+            if spec.satisfies("+stk"):
+                options.append(define("STK_HAVE_FP_EXCEPT", False))
+                options.append(define("STK_HAVE_FP_ERRNO", False))
+
         # ################# Explicit template instantiation #################
 
         complex_s = spec.variants["complex"].value
