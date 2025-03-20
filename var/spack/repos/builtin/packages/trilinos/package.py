@@ -975,7 +975,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
             # math_errhandling is an 'extern int' and not a constexpr in MacOS
             # headers and this is not accounted for directly in the STK code
-            if spec.satisfies("+stk"):
+            # so we must disable floating point exception handling in that case
+            if spec.satisfies("@16: +stk"):
                 options.append(define("STK_HAVE_FP_EXCEPT", False))
                 options.append(define("STK_HAVE_FP_ERRNO", False))
 
