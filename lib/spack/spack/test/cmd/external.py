@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import getuid, touch
+from llnl.util.filesystem import getuid, join_path, touch
 
 import spack
 import spack.cmd.external
@@ -67,13 +67,24 @@ external = SpackCommand("external")
 # TODO: this test should be made to work, but in the meantime it is
 # causing intermittent (spurious) CI failures on all PRs
 @pytest.mark.not_on_windows("Test fails intermittently on Windows")
-def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_executable):
+def test_find_external_cmd_not_buildable(
+    mock_packages, mutable_config, working_env, mock_executable, monkeypatch
+):
     """When the user invokes 'spack external find --not-buildable', the config
     for any package where Spack finds an external version should be marked as
     not buildable.
     """
-    cmake_path1 = mock_executable("cmake", output="echo cmake version 1.foo")
-    os.environ["PATH"] = os.pathsep.join([os.path.dirname(cmake_path1)])
+    version = "1.foo"
+
+    @classmethod
+    def _determine_version(cls, exe):
+        return version
+
+    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+    monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
+
+    cmake_path = mock_executable("cmake", output=f"echo cmake version {version}")
+    os.environ["PATH"] = str(cmake_path.parent)
     external("find", "--not-buildable", "cmake")
     pkgs_cfg = spack.config.get("packages")
     assert "cmake" in pkgs_cfg
@@ -89,10 +100,12 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
             ["detectable"],
             [],
             [
+                "builtin.mock.cmake",
                 "builtin.mock.find-externals1",
                 "builtin.mock.gcc",
-                "builtin.mock.llvm",
                 "builtin.mock.intel-oneapi-compilers",
+                "builtin.mock.llvm",
+                "builtin.mock.mpich",
             ],
         ),
         # find --all --exclude find-externals1
@@ -100,16 +113,28 @@ def test_find_external_cmd_not_buildable(mutable_config, working_env, mock_execu
             None,
             ["detectable"],
             ["builtin.mock.find-externals1"],
-            ["builtin.mock.gcc", "builtin.mock.llvm", "builtin.mock.intel-oneapi-compilers"],
+            [
+                "builtin.mock.cmake",
+                "builtin.mock.gcc",
+                "builtin.mock.intel-oneapi-compilers",
+                "builtin.mock.llvm",
+                "builtin.mock.mpich",
+            ],
         ),
         (
             None,
             ["detectable"],
             ["find-externals1"],
-            ["builtin.mock.gcc", "builtin.mock.llvm", "builtin.mock.intel-oneapi-compilers"],
+            [
+                "builtin.mock.cmake",
+                "builtin.mock.gcc",
+                "builtin.mock.intel-oneapi-compilers",
+                "builtin.mock.llvm",
+                "builtin.mock.mpich",
+            ],
         ),
-        # find cmake (and cmake is not detectable)
-        (["cmake"], ["detectable"], [], []),
+        # find hwloc (and mock hwloc is not detectable)
+        (["hwloc"], ["detectable"], [], []),
     ],
 )
 def test_package_selection(names, tags, exclude, expected, mutable_mock_repo):
@@ -218,7 +243,7 @@ def test_list_detectable_packages(mutable_config, mutable_mock_repo):
     assert external.returncode == 0
 
 
-def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
+def test_overriding_prefix(mock_packages, mock_executable, mutable_config, monkeypatch):
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     search_dir = gcc_exe.parent
 
@@ -242,7 +267,9 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
 
 
 @pytest.mark.not_on_windows("Fails spuriously on Windows")
-def test_new_entries_are_reported_correctly(mock_executable, mutable_config, monkeypatch):
+def test_new_entries_are_reported_correctly(
+    mock_packages, mock_executable, mutable_config, monkeypatch
+):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     prefix = os.path.dirname(gcc_exe)
@@ -259,13 +286,24 @@ def test_new_entries_are_reported_correctly(mock_executable, mutable_config, mon
 
 
 @pytest.mark.parametrize("command_args", [("-t", "build-tools"), ("-t", "build-tools", "cmake")])
-def test_use_tags_for_detection(command_args, mock_executable, mutable_config, monkeypatch):
+def test_use_tags_for_detection(
+    mock_packages, command_args, mock_executable, mutable_config, monkeypatch
+):
+    versions = {"cmake": "3.19.1", "openssl": "2.8.3"}
+
+    @classmethod
+    def _determine_version(cls, exe):
+        return versions[os.path.basename(exe)]
+
+    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+    monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
+
     # Prepare an environment to detect a fake cmake
-    cmake_exe = mock_executable("cmake", output="echo cmake version 3.19.1")
+    cmake_exe = mock_executable("cmake", output=f"echo cmake version {versions['cmake']}")
     prefix = os.path.dirname(cmake_exe)
     monkeypatch.setenv("PATH", prefix)
 
-    openssl_exe = mock_executable("openssl", output="OpenSSL 2.8.3")
+    openssl_exe = mock_executable("openssl", output=f"OpenSSL {versions['openssl']}")
     prefix = os.path.dirname(openssl_exe)
     monkeypatch.setenv("PATH", prefix)
 
@@ -279,9 +317,19 @@ def test_use_tags_for_detection(command_args, mock_executable, mutable_config, m
 @pytest.mark.regression("38733")
 @pytest.mark.not_on_windows("the test uses bash scripts")
 def test_failures_in_scanning_do_not_result_in_an_error(
-    mock_executable, monkeypatch, mutable_config
+    mock_packages, mock_executable, monkeypatch, mutable_config
 ):
     """Tests that scanning paths with wrong permissions, won't cause `external find` to error."""
+    versions = {"first": "3.19.1", "second": "3.23.3"}
+
+    @classmethod
+    def _determine_version(cls, exe):
+        bin_parent = os.path.dirname(exe).split(os.sep)[-2]
+        return versions[bin_parent]
+
+    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+    monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
+
     cmake_exe1 = mock_executable(
         "cmake", output="echo cmake version 3.19.1", subdir=("first", "bin")
     )
@@ -299,21 +347,30 @@ def test_failures_in_scanning_do_not_result_in_an_error(
     assert external.returncode == 0
     assert "The following specs have been" in output
     assert "cmake" in output
-    assert "3.23.3" in output
-    assert "3.19.1" not in output
+    for vers in versions.values():
+        assert vers in output
 
 
-def test_detect_virtuals(mock_executable, mutable_config, monkeypatch):
+def test_detect_virtuals(mock_packages, mock_executable, mutable_config, monkeypatch):
     """Test whether external find --not-buildable sets virtuals as non-buildable (unless user
     config sets them to buildable)"""
-    mpich = mock_executable("mpichversion", output="echo MPICH Version:    4.0.2")
+    version = "4.0.2"
+
+    @classmethod
+    def _determine_version(cls, exe):
+        return version
+
+    cmake_cls = spack.repo.PATH.get_pkg_class("mpich")
+    monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
+
+    mpich = mock_executable("mpichversion", output=f"echo MPICH Version:    {version}")
     prefix = os.path.dirname(mpich)
     external("find", "--path", prefix, "--not-buildable", "mpich")
 
     # Check that mpich was correctly detected
     mpich = mutable_config.get("packages:mpich")
     assert mpich["buildable"] is False
-    assert Spec(mpich["externals"][0]["spec"]).satisfies("mpich@4.0.2")
+    assert Spec(mpich["externals"][0]["spec"]).satisfies(f"mpich@{version}")
 
     # Check that the virtual package mpi was marked as non-buildable
     assert mutable_config.get("packages:mpi:buildable") is False
