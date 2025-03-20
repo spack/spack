@@ -46,8 +46,7 @@ from spack.spec import Spec
 from spack.util.path import substitute_path_variables
 
 from ..enums import ConfigScopePriority
-from .definitions import DefinitionBuilder
-from .list import SpecList, SpecListError
+from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = spack.concretize.SpecPair
 
@@ -1066,7 +1065,7 @@ class Environment:
         self.views = {}
 
         self.spec_lists.update(
-            DefinitionBuilder().parse_definitions(spack.config.get("definitions", []))
+            SpecListParser().parse_definitions(spack.config.get("definitions", []))
         )
 
         env_configuration = self.manifest[TOP_LEVEL_KEY]
