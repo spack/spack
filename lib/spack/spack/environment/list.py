@@ -267,7 +267,7 @@ class SpecListParser:
     def __init__(self):
         self.definitions: Dict[str, SpecList] = {}
 
-    def parse_definitions(self, data: Dict[str, Any]) -> Dict[str, SpecList]:
+    def parse_definitions(self, *, data: Dict[str, Any]) -> Dict[str, SpecList]:
         definitions_from_yaml: Dict[str, List[Definition]] = {}
         for item in data:
             value = self._parse_yaml_definition(item)
@@ -275,8 +275,11 @@ class SpecListParser:
 
         self.definitions = {}
         self._build_definitions(definitions_from_yaml)
-
         return self.definitions
+
+    def parse_user_specs(self, *, name, yaml_list) -> SpecList:
+        definition = Definition(name=name, yaml_list=yaml_list, when=None)
+        return self._speclist_from_definitions(name, [definition])
 
     def _parse_yaml_definition(self, yaml_entry) -> Definition:
         when_string = yaml_entry.get("when")
@@ -299,24 +302,28 @@ class SpecListParser:
 
     def _build_definitions(self, definitions_from_yaml: Dict[str, List[Definition]]):
         for name, definitions in definitions_from_yaml.items():
-            combined_yaml_list = []
-            for def_part in definitions:
-                if def_part.when is not None and not spack.spec.eval_conditional(def_part.when):
-                    continue
-                combined_yaml_list.extend(def_part.yaml_list)
+            self.definitions[name] = self._speclist_from_definitions(name, definitions)
 
-            expanded_list = self._expand_yaml_list(combined_yaml_list)
-            self.definitions[name] = SpecList.from_parser(
-                name=name, yaml_list=combined_yaml_list, expanded_list=expanded_list
-            )
+    def _speclist_from_definitions(self, name, definitions) -> SpecList:
+        combined_yaml_list = []
+        for def_part in definitions:
+            if def_part.when is not None and not spack.spec.eval_conditional(def_part.when):
+                continue
+            combined_yaml_list.extend(def_part.yaml_list)
+        expanded_list = self._expand_yaml_list(combined_yaml_list)
+        return SpecList.from_parser(
+            name=name, yaml_list=combined_yaml_list, expanded_list=expanded_list
+        )
 
     def _expand_yaml_list(self, raw_yaml_list):
         result = []
         for item in raw_yaml_list:
-            value = item
             if isinstance(item, str) and item.startswith("$"):
-                value = self._expand_reference(item)
-            elif isinstance(item, dict):
+                result.extend(self._expand_reference(item))
+                continue
+
+            value = item
+            if isinstance(item, dict):
                 value = self._expand_yaml_matrix(item)
             result.append(value)
         return result

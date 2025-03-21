@@ -1064,15 +1064,12 @@ class Environment:
         self.spec_lists = collections.OrderedDict()
         self.views = {}
 
-        self.spec_lists.update(
-            SpecListParser().parse_definitions(spack.config.get("definitions", []))
-        )
+        parser = SpecListParser()
+        self.spec_lists.update(parser.parse_definitions(data=spack.config.get("definitions", [])))
 
         env_configuration = self.manifest[TOP_LEVEL_KEY]
         spec_list = env_configuration.get(user_speclist_name, [])
-        user_specs = SpecList(
-            user_speclist_name, [s for s in spec_list if s], self.spec_lists.copy()
-        )
+        user_specs = parser.parse_user_specs(name=user_speclist_name, yaml_list=spec_list)
         self.spec_lists[user_speclist_name] = user_specs
 
         self._process_view(spack.config.get("view", True))

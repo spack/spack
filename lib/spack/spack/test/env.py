@@ -776,10 +776,8 @@ def test_env_with_include_def_missing(mutable_mock_env_path, mock_packages):
 """
     )
 
-    e = ev.Environment(env_path)
-    with e:
-        with pytest.raises(UndefinedReferenceError, match=r"which does not appear"):
-            e.concretize()
+    with pytest.raises(UndefinedReferenceError, match=r"which is not defined"):
+        _ = ev.Environment(env_path)
 
 
 @pytest.mark.regression("41292")
