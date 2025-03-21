@@ -293,13 +293,12 @@ class SpecListParser:
 
     def _build_definitions(self, definitions_from_yaml: Dict[str, List[Definition]]):
         for name, definitions in definitions_from_yaml.items():
-            value = SpecList(name)
+            combined_yaml_list = []
             for def_part in definitions:
                 if def_part.when is not None and not spack.spec.eval_conditional(def_part.when):
                     continue
-                part = SpecList(name, def_part.yaml_list, self.definitions.copy())
-                value.extend(part)
-            self.definitions[name] = value
+                combined_yaml_list.extend(def_part.yaml_list)
+            self.definitions[name] = SpecList(name, combined_yaml_list, self.definitions.copy())
 
 
 class SpecListError(SpackError):
