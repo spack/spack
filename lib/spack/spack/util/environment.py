@@ -369,7 +369,9 @@ class RemoveFirstPath(NameValueModifier):
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)
         directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
-        directories.remove(path_to_os_path(os.path.normpath(self.value)).pop())
+        val = path_to_os_path(os.path.normpath(self.value)).pop()
+        if val in directories:
+            directories.remove(val)
         env[self.name] = self.separator.join(directories)
 
 
@@ -379,7 +381,9 @@ class RemoveLastPath(NameValueModifier):
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)[::-1]
         directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
-        directories.remove(path_to_os_path(os.path.normpath(self.value)).pop())
+        val = path_to_os_path(os.path.normpath(self.value)).pop()
+        if val in directories:
+            directories.remove(val)
         env[self.name] = self.separator.join(directories[::-1])
 
 
