@@ -72,17 +72,9 @@ class Plasma(CMakePackage):
     conflicts("^veclibfort")
 
     # only GCC 4.9+ and higher have sufficient support for OpenMP 4+ tasks+deps
-    conflicts("%gcc@:4.8", when="@:17.1")
+    requires("%gcc@4.9:", when="@17.1:")
     # only GCC 6.0+ and higher have for OpenMP 4+ Clause "priority"
-    conflicts("%gcc@:5", when="@17.2:")
-
-    conflicts("%cce")
-    conflicts("%apple-clang")
-    conflicts("%clang")
-    conflicts("%intel")
-    conflicts("%nag")
-    conflicts("%xl")
-    conflicts("%xl_r")
+    requires("%gcc@6:", when="@17.2:")
 
     patch("remove_absolute_mkl_include.patch", when="@17.1")
     patch("protect_cmake_version.patch", when="@19.8.0:19.8.9")
@@ -112,7 +104,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
         for package, provider in (
             ("openblas", "openblas"),
-            ("intel-mkl", "mkl"),
+            ("intel-oneapi-mkl", "mkl"),
             ("netlib-lapack", "netlib"),
         ):
             if package in self.spec:
@@ -140,7 +132,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         make_inc = FileFilter("make.inc")
 
-        if not spec.satisfies("^intel-mkl"):
+        if not spec.satisfies("^[virtuals=blas,lapack] intel-oneapi-mkl"):
             make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
             make_inc.filter("LIBS *= *.*", "LIBS = " + self.spec["blas"].libs.ld_flags + " -lm")
 

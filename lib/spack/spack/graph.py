@@ -482,7 +482,7 @@ class SimpleDAG(DotGraphBuilder):
     """Simple DOT graph, with nodes colored uniformly and edges without properties"""
 
     def node_entry(self, node):
-        format_option = "{name}{@version}{%compiler}{/hash:7}"
+        format_option = "{name}{@version}{/hash:7}{%compiler}"
         return node.dag_hash(), f'[label="{node.format(format_option)}"]'
 
     def edge_entry(self, edge):
@@ -515,7 +515,7 @@ class DAGWithDependencyTypes(DotGraphBuilder):
         super().visit(edge)
 
     def node_entry(self, node):
-        node_str = node.format("{name}{@version}{%compiler}{/hash:7}")
+        node_str = node.format("{name}{@version}{/hash:7}{%compiler}")
         options = f'[label="{node_str}", group="build_dependencies", fillcolor="coral"]'
         if node.dag_hash() in self.main_unified_space:
             options = f'[label="{node_str}", group="main_psid"]'

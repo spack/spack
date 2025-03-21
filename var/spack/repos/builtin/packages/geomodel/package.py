@@ -17,6 +17,7 @@ class Geomodel(CMakePackage):
 
     license("Apache-2.0", checked_by="wdconinc")
 
+    version("6.10.0", sha256="968a0f7c8108b14f22041ca0c6ae8a3293175131c6f61055527ecdefe8c7839a")
     version("6.9.0", sha256="ea34dad8a0cd392e06794b8a1b7407dd6ad617fefd19fb4cccdf36b154749793")
     version("6.8.0", sha256="4dfd5a932955ee2618a880bb210aed9ce7087cfadd31f23f92e5ff009c8384eb")
     version("6.7.0", sha256="bfa69062ba191d0844d7099b28c0d6c3c0f87e726dacfaa21dba7a6f593d34bf")
@@ -80,7 +81,12 @@ class Geomodel(CMakePackage):
     depends_on("pythia8", when="+pythia")
     with when("+visualization"):
         depends_on("hdf5+cxx")
-        depends_on("qt +gui +opengl +sql")
+        depends_on("qmake")
+        with when("^[virtuals=qmake] qt"):
+            depends_on("qt +gui +opengl +sql")
+        with when("^[virtuals=qmake] qt-base"):
+            depends_on("qt-base +gui +opengl +sql +widgets")
+            depends_on("qt-5compat")
         depends_on("coin3d")
         depends_on("soqt")
         depends_on("opengl")
@@ -94,5 +100,8 @@ class Geomodel(CMakePackage):
             self.define_from_variant("GEOMODEL_BUILD_EXAMPLES", "examples"),
             self.define_from_variant("GEOMODEL_BUILD_TOOLS", "tools"),
             self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
+            self.define(
+                "GEOMODEL_USE_QT6", self.spec.satisfies("+visualization ^[virtuals=qmake] qt-base")
+            ),
         ]
         return args

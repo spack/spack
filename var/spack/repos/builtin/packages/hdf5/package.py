@@ -345,7 +345,7 @@ class Hdf5(CMakePackage):
             if spec.satisfies("@:1.8.12+cxx~shared"):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
         elif name == "fflags":
-            if spec.satisfies("%cce+fortran"):
+            if spec.satisfies("+fortran%cce"):
                 # Cray compiler generates module files with uppercase names by
                 # default, which is not handled by the CMake scripts. The
                 # following flag forces the compiler to produce module files

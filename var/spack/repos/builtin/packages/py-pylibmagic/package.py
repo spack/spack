@@ -16,7 +16,7 @@ class PyPylibmagic(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools_scm@3.4:+toml", type="build")
+    depends_on("py-setuptools-scm@3.4:+toml", type="build")
     depends_on("py-scikit-build", type="build")
     depends_on("cmake", type="build")
     depends_on("ninja", type="build")

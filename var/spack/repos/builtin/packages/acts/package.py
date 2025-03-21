@@ -40,6 +40,7 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("39.2.0", commit="94cf48783efd713f38106b18211d1c59f4e8cdec", submodules=True)
     version("39.1.0", commit="09225b0d0bba24d57a696e347e3027b39404bb75", submodules=True)
     version("39.0.0", commit="b055202e2fbdd509bc186eb4782714bc46f38f3f", submodules=True)
     version("38.2.0", commit="9cb8f4494656553fd9b85955938b79b2fac4c9b0", submodules=True)
@@ -359,7 +360,9 @@ class Acts(CMakePackage, CudaPackage):
         depends_on("actsvg@0.4.35:", when="@28:")
         depends_on("actsvg@0.4.39:", when="@32:")
         depends_on("actsvg@0.4.40:", when="@32.1:")
-        depends_on("actsvg@0.4.50:", when="@37:")
+        depends_on(
+            "actsvg@0.4.51:", when="@37:"
+        )  # https://github.com/acts-project/actsvg/issues/94
     depends_on("acts-algebra-plugins @0.24:", when="+traccc")
     depends_on("autodiff @0.6:", when="@17: +autodiff")
     depends_on("autodiff @0.5.11:0.5.99", when="@1.2:16 +autodiff")

@@ -80,9 +80,7 @@ class Tk(AutotoolsPackage, SourceforgePackage):
 
             # Replace stage dir -> installed src dir in tkConfig
             filter_file(
-                stage_src,
-                installed_src,
-                join_path(self.spec["tk"].libs.directories[0], "tkConfig.sh"),
+                stage_src, installed_src, join_path(self.libs.directories[0], "tkConfig.sh")
             )
 
     @run_after("install")
@@ -92,8 +90,7 @@ class Tk(AutotoolsPackage, SourceforgePackage):
 
     def test_tk_help(self):
         """run tk help"""
-        tk = self.spec["tk"].command
-        tk("-h")
+        self.command("-h")
 
     def test_tk_load(self):
         """check that tk can be loaded"""
@@ -112,15 +109,11 @@ class Tk(AutotoolsPackage, SourceforgePackage):
         # Although we symlink wishX.Y to wish, we also need to support external
         # installations that may not have this symlink, or may have multiple versions
         # of Tk installed in the same directory.
-        return Executable(
-            os.path.realpath(self.prefix.bin.join("wish{0}".format(self.version.up_to(2))))
-        )
+        return Executable(os.path.realpath(self.prefix.bin.join(f"wish{self.version.up_to(2)}")))
 
     @property
     def libs(self):
-        return find_libraries(
-            ["libtk{0}".format(self.version.up_to(2))], root=self.prefix, recursive=True
-        )
+        return find_libraries([f"libtk{self.version.up_to(2)}"], root=self.prefix, recursive=True)
 
     def _find_script_dir(self):
         # Put more-specific prefixes first

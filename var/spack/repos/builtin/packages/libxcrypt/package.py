@@ -22,6 +22,9 @@ class Libxcrypt(AutotoolsPackage):
 
     license("LGPL-2.1-or-later")
 
+    version("4.4.38", sha256="80304b9c306ea799327f01d9a7549bdb28317789182631f1b54f4511b4206dd6")
+    # 4.4.37 requires pkg-config and is not included here
+    version("4.4.36", sha256="e5e1f4caee0a01de2aee26e3138807d6d3ca2b8e67287966d1fefd65e1fd8943")
     version("4.4.35", sha256="a8c935505b55f1df0d17f8bfd59468c7c6709a1d31831b0f8e3e045ab8fd455d")
     version("4.4.34", sha256="bb3f467af21c48046ce662186eb2ddf078ca775c441fdf1c3628448a3833a230")
     version("4.4.33", sha256="e87acf9c652c573a4713d5582159f98f305d56ed5f754ce64f57d4194d6b3a6f")

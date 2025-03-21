@@ -49,5 +49,4 @@ class Rsyslog(AutotoolsPackage):
         Executable("./autogen.sh")()
 
     def configure_args(self):
-        args = ["--with-systemdsystemunitdir=" + self.spec["rsyslog"].prefix.lib.systemd.system]
-        return args
+        return [f"--with-systemdsystemunitdir={self.prefix.lib.systemd.system}"]

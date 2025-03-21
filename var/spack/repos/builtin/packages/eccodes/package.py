@@ -158,7 +158,7 @@ class Eccodes(CMakePackage):
         when="@:2.4.0+netcdf",
     )
 
-    @when("%nag+fortran")
+    @when("+fortran%nag")
     def patch(self):
         # A number of Fortran source files assume that the kinds of integer and
         # real variables are specified in bytes. However, the NAG compiler

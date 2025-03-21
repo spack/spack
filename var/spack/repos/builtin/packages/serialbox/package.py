@@ -62,10 +62,10 @@ class Serialbox(CMakePackage):
     patch("ppser_py3.patch", when="@2.2.0:")
 
     # NAG patches:
-    patch("nag/interface.patch", when="@2.0.1:%nag+fortran")
-    patch("nag/examples.patch", when="@2.3.1:%nag+fortran+examples")
-    patch("nag/ftg.patch", when="@2.3.1:%nag+ftg")
-    patch("nag/bool_getters.patch", when="@2.3.1:%nag@7.1:+fortran")
+    patch("nag/interface.patch", when="@2.0.1:+fortran%nag")
+    patch("nag/examples.patch", when="@2.3.1:+fortran+examples%nag")
+    patch("nag/ftg.patch", when="@2.3.1:+ftg%nag")
+    patch("nag/bool_getters.patch", when="@2.3.1:+fortran%nag@7.1:")
 
     # Add missing include directives
     # (part of https://github.com/GridTools/serialbox/pull/259):
@@ -144,7 +144,7 @@ class Serialbox(CMakePackage):
             # undefined reference to
             #     `std::experimental::filesystem::v1::__cxx11::path::
             #         _M_find_extension[abi:cxx11]() const'
-            if self.spec.satisfies("%intel@:19.0.1+std-filesystem"):
+            if self.spec.satisfies("+std-filesystem%intel@:19.0.1"):
                 cmake_flags.append("-D_GLIBCXX_USE_CXX11_ABI=0")
 
         return flags, None, (cmake_flags or None)

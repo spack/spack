@@ -250,6 +250,9 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     variant("shared", default=True, description="Build shared libraries")
 
+    patch("pr_2296_430.patch", when="@4.3.00:4.4.00")
+    patch("pr_2296_400.patch", when="@4.0.00:4.2.01")
+
     # sanity check
     sanity_check_is_file = [join_path("include", "KokkosKernels_config.h")]
     sanity_check_is_dir = ["include"]

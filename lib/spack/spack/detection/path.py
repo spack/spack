@@ -7,6 +7,7 @@ and running executables.
 import collections
 import concurrent.futures
 import os
+import pathlib
 import re
 import sys
 import traceback
@@ -15,6 +16,7 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
 
 import llnl.util.filesystem
 import llnl.util.lang
+import llnl.util.symlink
 import llnl.util.tty
 
 import spack.error
@@ -70,13 +72,21 @@ def dedupe_paths(paths: List[str]) -> List[str]:
     """Deduplicate paths based on inode and device number. In case the list contains first a
     symlink and then the directory it points to, the symlink is replaced with the directory path.
     This ensures that we pick for example ``/usr/bin`` over ``/bin`` if the latter is a symlink to
-    the former`."""
+    the former."""
     seen: Dict[Tuple[int, int], str] = {}
+
+    linked_parent_check = lambda x: any(
+        [llnl.util.symlink.islink(str(y)) for y in pathlib.Path(x).parents]
+    )
+
     for path in paths:
         identifier = file_identifier(path)
         if identifier not in seen:
             seen[identifier] = path
-        elif not os.path.islink(path):
+        # we also want to deprioritize paths if they contain a symlink in any parent
+        # (not just the basedir): e.g. oneapi has "latest/bin",
+        # where "latest" is a symlink to 2025.0"
+        elif not (llnl.util.symlink.islink(path) or linked_parent_check(path)):
             seen[identifier] = path
     return list(seen.values())
 

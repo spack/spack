@@ -291,10 +291,7 @@ class OpenspeedshopUtils(CMakePackage):
 
         # Find openspeedshop library path
         oss_libdir = find_libraries(
-            "libopenss-framework",
-            root=self.spec["openspeedshop-utils"].prefix,
-            shared=True,
-            recursive=True,
+            "libopenss-framework", root=self.prefix, shared=True, recursive=True
         )
         env.prepend_path("LD_LIBRARY_PATH", os.path.dirname(oss_libdir.joined()))
 
