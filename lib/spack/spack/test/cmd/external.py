@@ -122,7 +122,7 @@ external = SpackCommand("external")
 # causing intermittent (spurious) CI failures on all PRs
 @pytest.mark.not_on_windows("Test fails intermittently on Windows")
 def test_find_external_cmd_not_buildable(
-    mutable_config, working_env, mock_executable, monkeypatch
+    mock_packages, mutable_config, working_env, mock_executable, monkeypatch
 ):
     """When the user invokes 'spack external find --not-buildable', the config
     for any package where Spack finds an external version should be marked as
