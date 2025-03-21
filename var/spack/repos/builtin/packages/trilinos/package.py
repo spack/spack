@@ -547,6 +547,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         when="@14 %oneapi@2025:"
     )
 
+    patch(
+        "14-patch11676.patch",
+        when="@14.0 %oneapi@2025:"
+    )
+
     def flag_handler(self, name, flags):
         spec = self.spec
         is_cce = spec.satisfies("%cce")
