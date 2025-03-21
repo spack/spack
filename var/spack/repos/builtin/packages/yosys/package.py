@@ -9,22 +9,15 @@ class Yosys(MakefilePackage):
     """Yosys is a framework for RTL synthesis tools. It currently has extensive
     Verilog-2005 support and provides a basic set of synthesis algorithms for
     various application domains.
-
-    Yosys can be adapted to perform any synthesis job by combining the existing
-    passes (algorithms) using synthesis scripts and adding additional passes
-    as needed by extending the yosys C++ code base.
-
-    Yosys is free software licensed under the ISC license (a GPL compatible
-    license that is similar in terms to the MIT license or the 2-clause BSD license).
     """
+
+    license("ISC")
 
     homepage = "https://yosyshq.net/yosys"
     url = "https://github.com/YosysHQ/yosys/archive/refs/tags/yosys-0.46.tar.gz"
     git = "https://github.com/YosysHQ/yosys.git"
 
     maintainers("davekeeshan")
-
-    license("ISC")
 
     version("master", branch="master")
 
