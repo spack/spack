@@ -116,7 +116,7 @@ class RocprofilerSystems(CMakePackage):
             depends_on(f"roctracer-dev@{ver}", when=f"@{ver}")
             depends_on(f"rocprofiler-dev@{ver}", when=f"@{ver}")
 
-    patch("add_cstdint.patch", when="%gcc@13:")
+    patch("gcc_13_fix.patch", when="%gcc@13:")
 
     def cmake_args(self):
         spec = self.spec
