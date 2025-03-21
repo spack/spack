@@ -928,8 +928,8 @@ class ConcretizationCache:
                 tty.debug(f"Cache entry {cache_path} exists, will not be overwritten")
                 return
             cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
-            new_bytes = open(new.name, "wb")
-            bytes_written = new_bytes.write(self._zip_cache_entry(json.dumps(cache_dict)))
+            with open(new.name, "wb") as new_bytes:
+                bytes_written = new_bytes.write(self._zip_cache_entry(json.dumps(cache_dict)))
             self._register_cache_update(cache_path, bytes_written)
 
     def fetch(self, problem: str) -> Union[Tuple[Result, List], Tuple[None, None]]:
