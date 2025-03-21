@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
-from typing import Any, Dict, List
+from typing import Any, Dict, List, NamedTuple, Optional, Union
 
 import spack.spec
+import spack.util.spack_yaml
 import spack.variant
 from spack.error import SpackError
 from spack.spec import Spec
@@ -250,31 +251,55 @@ def _sigilify(item, sigil):
         return sigil + item
 
 
+class Definition(NamedTuple):
+    name: str
+    yaml_list: List[Union[str, Dict]]
+    when: Optional[str]
+
+
 class SpecListParser:
     def __init__(self):
         self.definitions: Dict[str, SpecList] = {}
 
     def parse_definitions(self, data: Dict[str, Any]) -> Dict[str, SpecList]:
-        self.definitions = {}
+        definitions_from_yaml: Dict[str, List[Definition]] = {}
         for item in data:
-            self._process_definition(item)
+            value = self._parse_yaml_definition(item)
+            definitions_from_yaml.setdefault(value.name, []).append(value)
+
+        self.definitions = {}
+        self._build_definitions(definitions_from_yaml)
 
         return self.definitions
 
-    def _process_definition(self, entry):
-        """Process a single spec definition item."""
-        when_string = entry.get("when")
-        if when_string is not None and not spack.spec.eval_conditional(when_string):
-            return
+    def _parse_yaml_definition(self, yaml_entry) -> Definition:
+        when_string = yaml_entry.get("when")
 
-        for name, yaml_list in entry.items():
+        if (when_string and len(yaml_entry) > 2) or (not when_string and len(yaml_entry) > 1):
+            mark = spack.util.spack_yaml.get_mark_from_yaml_data(yaml_entry)
+            attributes = ", ".join(x for x in yaml_entry if x != "when")
+            error_msg = f"definition must have a single attribute, got many: {attributes}"
+            raise SpecListError(f"{mark.name}:{mark.line + 1}: {error_msg}")
+
+        for name, yaml_list in yaml_entry.items():
             if name == "when":
                 continue
-            user_specs = SpecList(name, yaml_list, self.definitions.copy())
-            if name in self.definitions:
-                self.definitions[name].extend(user_specs)
-            else:
-                self.definitions[name] = user_specs
+            return Definition(name=name, yaml_list=yaml_list, when=when_string)
+
+        # If we are here, it means only "when" is in the entry
+        mark = spack.util.spack_yaml.get_mark_from_yaml_data(yaml_entry)
+        error_msg = "definition must have a single attribute, got none"
+        raise SpecListError(f"{mark.name}:{mark.line + 1}: {error_msg}")
+
+    def _build_definitions(self, definitions_from_yaml: Dict[str, List[Definition]]):
+        for name, definitions in definitions_from_yaml.items():
+            value = SpecList(name)
+            for def_part in definitions:
+                if def_part.when is not None and not spack.spec.eval_conditional(def_part.when):
+                    continue
+                part = SpecList(name, def_part.yaml_list, self.definitions.copy())
+                value.extend(part)
+            self.definitions[name] = value
 
 
 class SpecListError(SpackError):
