@@ -541,24 +541,28 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         sha256="063a38f402439fa39fd8d57315a321e6510adcd04aec5400a88e744aaa60bc8e",
         when="@13.0.0:13.0.1 +teko gotype=long",
     )
-    
+
+    # https://github.com/kokkos/kokkos-kernels/pull/2296
+    patch(
+        "13.4.1-kokkoskernel-patch2296.patch",
+        when="@13.4.1 %oneapi@2025:"
+    )
+
+    # https://github.com/kokkos/kokkos-kernels/pull/2296
     patch(
         "14-14.2-kokkoskernel-patch2296.patch",
         when="@14 %oneapi@2025:"
     )
 
+    # https://github.com/trilinos/Trilinos/pull/11676
     patch(
         "13.4.1-14-patch11676.patch",
         when="@13.4.1:14.0 %oneapi@2025:"
     )
 
+    # https://github.com/trilinos/Trilinos/pull/11600
     patch(
         "13.4.1-patch11600.patch",
-        when="@13.4.1 %oneapi@2025:"
-    )
-
-    patch(
-        "13.4.1-kokkoskernel-patch2296.patch",
         when="@13.4.1 %oneapi@2025:"
     )
 
