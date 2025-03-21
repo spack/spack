@@ -24,6 +24,7 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
     homepage = (
         "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onedal.html"
     )
+
     version(
         "2025.4.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/e4da59ef-aa3a-4223-b3a0-4728014113e6/intel-onedal-2025.4.0.655_offline.sh",
