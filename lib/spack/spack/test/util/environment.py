@@ -128,17 +128,21 @@ def test_dump_environment(prepare_environment_for_tests, shell_as, shell, tmpdir
 
 
 def test_reverse_environment_modifications(working_env):
+    prepend_val = os.sep + os.path.join("new", "path", "prepended")
+    append_val = os.sep + os.path.join("new", "path", "appended")
+
     start_env = {
-        "PREPEND_PATH": os.sep + os.path.join("path", "to", "prepend", "to"),
-        "APPEND_PATH": os.sep + os.path.join("path", "to", "append", "to"),
+        "PREPEND_PATH": prepend_val + os.pathsep + os.path.join("path", "to", "prepend", "to"),
+        "APPEND_PATH": os.path.sep
+        + os.path.join("path", "to", "append", "to" + os.pathsep + append_val),
         "UNSET": "var_to_unset",
         "APPEND_FLAGS": "flags to append to",
     }
 
     to_reverse = envutil.EnvironmentModifications()
 
-    to_reverse.prepend_path("PREPEND_PATH", "/new/path/prepended")
-    to_reverse.append_path("APPEND_PATH", "/new/path/appended")
+    to_reverse.prepend_path("PREPEND_PATH", prepend_val)
+    to_reverse.append_path("APPEND_PATH", append_val)
     to_reverse.set_path("SET_PATH", ["/one/set/path", "/two/set/path"])
     to_reverse.set("SET", "a var")
     to_reverse.unset("UNSET")
