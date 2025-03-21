@@ -1,9 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
+import os
 from os import path
 
 from llnl.util import filesystem
@@ -11,7 +11,7 @@ from llnl.util import filesystem
 from spack.package import *
 
 
-class Hipsycl(CMakePackage):
+class Hipsycl(CMakePackage, ROCmPackage):
     """hipSYCL is an implementation of the SYCL standard programming model
     over NVIDIA CUDA/AMD HIP"""
 
@@ -19,15 +19,15 @@ class Hipsycl(CMakePackage):
     url = "https://github.com/illuhad/hipSYCL/archive/v0.8.0.tar.gz"
     git = "https://github.com/illuhad/hipSYCL.git"
 
-    maintainers("nazavode")
-
     provides("sycl")
 
     license("BSD-2-Clause")
 
     version("stable", branch="stable", submodules=True)
+    version("24.10.0", commit="7677cf6eefd8ab46d66168cd07ab042109448124", submodules=True)
+    version("24.06.0", commit="fc51dae9006d6858fc9c33148cc5f935bb56b075", submodules=True)
+    version("24.02.0", commit="974adc33ea5a35dd8b5be68c7a744b37482b8b64", submodules=True)
     version("23.10.0", commit="3952b468c9da89edad9dff953cdcab0a3c3bf78c", submodules=True)
-    version("0.9.4", commit="99d9e24d462b35e815e0e59c1b611936c70464ae", submodules=True)
     version("0.9.4", commit="99d9e24d462b35e815e0e59c1b611936c70464ae", submodules=True)
     version("0.9.3", commit="51507bad524c33afe8b124804091b10fa25618dc", submodules=True)
     version("0.9.2", commit="49fd02499841ae884c61c738610e58c27ab51fdb", submodules=True)
@@ -36,6 +36,7 @@ class Hipsycl(CMakePackage):
     version("develop", branch="develop", submodules=True)
 
     variant("cuda", default=False, description="Enable CUDA backend for SYCL kernels")
+    variant("rocm", default=False, description="Enable ROCM backend for SYCL kernels")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("boost +filesystem", when="@:0.8")
@@ -43,11 +44,32 @@ class Hipsycl(CMakePackage):
     depends_on("python@3:")
     depends_on("llvm@8: +clang", when="~cuda")
     depends_on("llvm@9: +clang", when="+cuda")
+
     # hipSYCL 0.8.0 supported only LLVM 8-10:
     # (https://github.com/AdaptiveCpp/AdaptiveCpp/blob/v0.8.0/CMakeLists.txt#L29-L37)
+    # recent versions support only up to llvm18
+    # https://github.com/spack/spack/issues/46681
+    # https://github.com/spack/spack/issues/49506
+
+    # The following list was made based on the version tested in adaptivecpp github
+    depends_on("llvm@14:18", when="@develop")
+    depends_on("llvm@14:18", when="@stable")
+
+    depends_on("llvm@14:18", when="@24.10.0")
+    depends_on("llvm@14:18", when="@24.06.0")
+    depends_on("llvm@13:17", when="@24.02.0")
+    depends_on("llvm@13:17", when="@23.10.0")
+    depends_on("llvm@11:15", when="@0.9.4")
+    depends_on("llvm@11:14", when="@0.9.3")
+    depends_on("llvm@11:13", when="@0.9.2")
+    depends_on("llvm@11", when="@0.9.1")
+    # depends_on("llvm@10:11", when="@0.9.0") # missing in releases
     depends_on("llvm@8:10", when="@0.8.0")
+
+    # https://github.com/spack/spack/issues/45029 and https://github.com/spack/spack/issues/43142
+    conflicts("^gcc@12", when="@23.10.0")
     # https://github.com/OpenSYCL/OpenSYCL/pull/918 was introduced after 0.9.4
-    conflicts("^llvm@16:", when="@:0.9.4")
+    conflicts("^gcc@12.2.0", when="@:0.9.4")
     # LLVM PTX backend requires cuda7:10.1 (https://tinyurl.com/v82k5qq)
     depends_on("cuda@9:10.1", when="@0.8.1: +cuda ^llvm@9")
     depends_on("cuda@9:", when="@0.8.1: +cuda ^llvm@10:")
@@ -76,9 +98,8 @@ class Hipsycl(CMakePackage):
         spec = self.spec
         args = [
             "-DWITH_CPU_BACKEND:Bool=TRUE",
-            # TODO: no ROCm stuff available in spack yet
-            "-DWITH_ROCM_BACKEND:Bool=FALSE",
-            "-DWITH_CUDA_BACKEND:Bool={0}".format("TRUE" if "+cuda" in spec else "FALSE"),
+            "-DWITH_ROCM_BACKEND:Bool={0}".format("TRUE" if spec.satisfies("+rocm") else "FALSE"),
+            "-DWITH_CUDA_BACKEND:Bool={0}".format("TRUE" if spec.satisfies("+cuda") else "FALSE"),
             # prevent hipSYCL's cmake to look for other LLVM installations
             # if the specified one isn't compatible
             "-DDISABLE_LLVM_VERSION_CHECK:Bool=TRUE",
@@ -116,8 +137,13 @@ class Hipsycl(CMakePackage):
             )
         args.append("-DCLANG_EXECUTABLE_PATH:String={0}".format(llvm_clang_bin))
         # explicit CUDA toolkit
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             args.append("-DCUDA_TOOLKIT_ROOT_DIR:String={0}".format(spec["cuda"].prefix))
+        if spec.satisfies("+rocm"):
+            args.append("-DWITH_ACCELERATED_CPU:STRING=OFF")
+            args.append("-DROCM_PATH:STRING={0}".format(os.environ.get("ROCM_PATH")))
+            if self.spec.satisfies("@24.02.0:"):
+                args.append("-DWITH_SSCP_COMPILER=OFF")
         return args
 
     @run_after("install")
@@ -156,31 +182,32 @@ class Hipsycl(CMakePackage):
             #    the libc++.so and libc++abi.so dyn linked to the sycl
             #    ptx backend
             rpaths = set()
-            so_paths = filesystem.find_libraries(
-                "libc++", self.spec["llvm"].prefix, shared=True, recursive=True
-            )
-            if len(so_paths) != 1:
-                raise InstallError(
-                    "concretized llvm dependency must provide a "
-                    "unique directory containing libc++.so, "
-                    "found: {0}".format(so_paths)
+            if self.spec.satisfies("~rocm"):
+                so_paths = filesystem.find_libraries(
+                    "libc++", self.spec["llvm"].prefix, shared=True, recursive=True
                 )
-            rpaths.add(path.dirname(so_paths[0]))
-            so_paths = filesystem.find_libraries(
-                "libc++abi", self.spec["llvm"].prefix, shared=True, recursive=True
-            )
-            if len(so_paths) != 1:
-                raise InstallError(
-                    "concretized llvm dependency must provide a "
-                    "unique directory containing libc++abi, "
-                    "found: {0}".format(so_paths)
+                if len(so_paths) != 1:
+                    raise InstallError(
+                        "concretized llvm dependency must provide a "
+                        "unique directory containing libc++.so, "
+                        "found: {0}".format(so_paths)
+                    )
+                rpaths.add(path.dirname(so_paths[0]))
+                so_paths = filesystem.find_libraries(
+                    "libc++abi", self.spec["llvm"].prefix, shared=True, recursive=True
                 )
-            rpaths.add(path.dirname(so_paths[0]))
+                if len(so_paths) != 1:
+                    raise InstallError(
+                        "concretized llvm dependency must provide a "
+                        "unique directory containing libc++abi, "
+                        "found: {0}".format(so_paths)
+                    )
+                rpaths.add(path.dirname(so_paths[0]))
 
-            def adjust_cuda_config(config):
-                config["default-cuda-link-line"] += " " + " ".join(
-                    "-rpath {0}".format(p) for p in rpaths
-                )
-                return config
+                def adjust_cuda_config(config):
+                    config["default-cuda-link-line"] += " " + " ".join(
+                        "-rpath {0}".format(p) for p in rpaths
+                    )
+                    return config
 
-            edit_config(configfiles["cuda"], adjust_cuda_config)
+                edit_config(configfiles["cuda"], adjust_cuda_config)
