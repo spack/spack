@@ -20,7 +20,12 @@ class Greenx(CMakePackage):
 
     variant("shared", default=True, description="Build shared libraries")
     variant("ac", default=True, description="Enable Analytical Continuation component")
-    variant("gmp", when="+ac", default=True, description="Enable GMP library for multiple precision arithmetic")
+    variant(
+        "gmp",
+        when="+ac",
+        default=True,
+        description="Enable GMP library for multiple precision arithmetic",
+    )
     variant("minmax", default=True, description="Enable minmac time-frequency grids component")
     variant("lbasis", default=False, description="Enable localized basis component")
     variant("paw", default=False, description="Enable PAW component")
