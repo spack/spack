@@ -12,6 +12,12 @@ from spack.spec import Spec
 
 
 class SpecList:
+    @staticmethod
+    def from_parser(*, name, yaml_list, expanded_list) -> "SpecList":
+        result = SpecList(name=name, yaml_list=yaml_list)
+        result._expanded_list = expanded_list
+        return result
+
     def __init__(self, name="specs", yaml_list=None, reference=None):
         yaml_list = yaml_list or []
         reference = reference or {}
@@ -298,7 +304,55 @@ class SpecListParser:
                 if def_part.when is not None and not spack.spec.eval_conditional(def_part.when):
                     continue
                 combined_yaml_list.extend(def_part.yaml_list)
-            self.definitions[name] = SpecList(name, combined_yaml_list, self.definitions.copy())
+
+            expanded_list = self._expand_yaml_list(combined_yaml_list)
+            self.definitions[name] = SpecList.from_parser(
+                name=name, yaml_list=combined_yaml_list, expanded_list=expanded_list
+            )
+
+    def _expand_yaml_list(self, raw_yaml_list):
+        result = []
+        for item in raw_yaml_list:
+            value = item
+            if isinstance(item, str) and item.startswith("$"):
+                value = self._expand_reference(item)
+            elif isinstance(item, dict):
+                value = self._expand_yaml_matrix(item)
+            result.append(value)
+        return result
+
+    def _expand_reference(self, item: str):
+        sigil, name = "", item[1:]
+        if name.startswith("^") or name.startswith("%"):
+            sigil, name = name[0], name[1:]
+
+        if name not in self.definitions:
+            mark = spack.util.spack_yaml.get_mark_from_yaml_data(item)
+            error_msg = f"trying to expand the name '{name}', which is not defined yet"
+            raise UndefinedReferenceError(f"{mark.name}:{mark.line + 1}: {error_msg}")
+
+        value = self.definitions[name].specs_as_yaml_list
+        if not sigil:
+            return value
+        return [_sigilify(x, sigil) for x in value]
+
+    def _expand_yaml_matrix(self, matrix_yaml):
+        extra_attributes = set(matrix_yaml) - {"matrix", "exclude"}
+        if extra_attributes:
+            mark = spack.util.spack_yaml.get_mark_from_yaml_data(matrix_yaml)
+            error_msg = f"extra attributes in spec matrix: {','.join(sorted(extra_attributes))}"
+            raise SpecListError(f"{mark.name}:{mark.line + 1}: {error_msg}")
+
+        if "matrix" not in matrix_yaml:
+            mark = spack.util.spack_yaml.get_mark_from_yaml_data(matrix_yaml)
+            error_msg = "matrix is missing the 'matrix' attribute"
+            raise SpecListError(f"{mark.name}:{mark.line + 1}: {error_msg}")
+
+        # Assume data has been validated against the YAML schema
+        result = {"matrix": [self._expand_yaml_list(row) for row in matrix_yaml["matrix"]]}
+        if "exclude" in matrix_yaml:
+            result["exclude"] = matrix_yaml["exclude"]
+        return result
 
 
 class SpecListError(SpackError):
