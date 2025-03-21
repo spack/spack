@@ -367,6 +367,16 @@ def test_failures_in_scanning_do_not_result_in_an_error(
     mock_executable, monkeypatch, mutable_config
 ):
     """Tests that scanning paths with wrong permissions, won't cause `external find` to error."""
+    versions = {"first": "3.19.1", "second": "3.23.3"}
+
+    @classmethod
+    def _determine_version(cls, exe):
+        bin_parent = os.path.dirname(exe).split(os.sep)[-2]
+        return versions[bin_parent]
+
+    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+    monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
+
     cmake_exe1 = mock_executable(
         "cmake", output="echo cmake version 3.19.1", subdir=("first", "bin")
     )
@@ -384,8 +394,8 @@ def test_failures_in_scanning_do_not_result_in_an_error(
     assert external.returncode == 0
     assert "The following specs have been" in output
     assert "cmake" in output
-    assert "3.23.3" in output
-    assert "3.19.1" not in output
+    for vers in versions.values():
+        assert vers in output
 
 
 def test_detect_virtuals(mock_executable, mutable_config, monkeypatch):
