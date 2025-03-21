@@ -208,9 +208,6 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             submodules=True,
         )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("hypre", default=False, description="Enable Hypre integration")
     variant("ascent", default=False, description="Enable Ascent integration")
     variant("masa", default=False, description="Enable MASA integration")
@@ -231,6 +228,8 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("fft", default=False, description="Enable FFT support for MAC projection")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("hdf5~mpi", when="+hdf5~mpi")
     depends_on("hdf5+mpi", when="+hdf5+mpi")
@@ -245,6 +244,8 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("ascent~mpi", when="+ascent~mpi")
     depends_on("ascent+mpi", when="+ascent+mpi")
     depends_on("netcdf-c", when="+netcdf")
+    depends_on("py-netcdf4", when="+netcdf")
+    depends_on("py-numpy", when="+netcdf")
     depends_on("py-matplotlib", when="+masa")
     depends_on("py-pandas", when="+masa")
     depends_on("openfast+cxx", when="+openfast")
