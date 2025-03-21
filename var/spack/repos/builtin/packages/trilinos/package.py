@@ -543,28 +543,16 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     # https://github.com/kokkos/kokkos-kernels/pull/2296
-    patch(
-        "13.4.1-kokkoskernel-patch2296.patch",
-        when="@13.4.1 %oneapi@2025:"
-    )
+    patch("13.4.1-kokkoskernel-patch2296.patch", when="@13.4.1 %oneapi@2025:")
 
     # https://github.com/kokkos/kokkos-kernels/pull/2296
-    patch(
-        "14-14.2-kokkoskernel-patch2296.patch",
-        when="@14 %oneapi@2025:"
-    )
+    patch("14-14.2-kokkoskernel-patch2296.patch", when="@14 %oneapi@2025:")
 
     # https://github.com/trilinos/Trilinos/pull/11676
-    patch(
-        "13.4.1-14-patch11676.patch",
-        when="@13.4.1:14.0 %oneapi@2025:"
-    )
+    patch("13.4.1-14-patch11676.patch", when="@13.4.1:14.0 %oneapi@2025:")
 
     # https://github.com/trilinos/Trilinos/pull/11600
-    patch(
-        "13.4.1-patch11600.patch",
-        when="@13.4.1 %oneapi@2025:"
-    )
+    patch("13.4.1-patch11600.patch", when="@13.4.1 %oneapi@2025:")
 
     def flag_handler(self, name, flags):
         spec = self.spec
