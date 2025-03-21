@@ -46,6 +46,7 @@ class Openfast(CMakePackage):
     depends_on("fortran", type="build")  # generated
 
     patch("hub_seg_fault.patch", when="@2.7:3.2")
+    patch("openmp.patch", when="@3.5.3:3.5.4")
 
     variant("shared", default=True, description="Build shared libraries")
     variant("double-precision", default=True, description="Treat REAL as double precision")
