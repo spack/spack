@@ -64,6 +64,12 @@ class QtPackage(CMakePackage):
         # for prefixes of dependencies
         args.append(self.define("QT_NO_DISABLE_CMAKE_INSTALL_RPATH_USE_LINK_PATH", True))
 
+        # Pass path variables as cmake arguments since some
+        # are not read from the environment
+        for v in ["QT_ADDITIONAL_PACKAGES_PREFIX_PATH", "QT_ADDITIONAL_SBOM_DOCUMENT_PATHS"]:
+            if v in os.environ:
+                args.append(self.define(v, os.environ[v].split(":")))
+
         return args
 
     @run_after("install")
