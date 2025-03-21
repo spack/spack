@@ -31,7 +31,7 @@ class PyRuff(PythonPackage):
         depends_on("py-maturin@1")
 
         # Found in Cargo.toml
-        depends_on("rust@1.83", when="@0.9.8:")
+        depends_on("rust@1.83:", when="@0.9.8:")
         depends_on("rust@1.80:", when="@0.7.1:")
         depends_on("rust@1.76:", when="@0.5.6:")
         depends_on("rust@1.71:")
