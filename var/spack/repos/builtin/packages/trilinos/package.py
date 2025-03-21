@@ -578,8 +578,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             if "+wrapper" in spec:
                 flags.append("--expt-extended-lambda")
             if spec.satisfies("%oneapi@2025:"):
-                flags.append("-Wno-error=missing-template-arg-list-after-template-kw "
-                     "-Wno-missing-template-arg-list-after-template-kw"
+                flags.append(
+                    "-Wno-error=missing-template-arg-list-after-template-kw "
+                    "-Wno-missing-template-arg-list-after-template-kw"
                 )
         elif name == "ldflags":
             if spec.satisfies("%cce@:14"):
