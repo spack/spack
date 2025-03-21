@@ -1243,3 +1243,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         if relocation_args:
             with open(specs_file, "a") as f:
                 f.write(f"*self_spec:\n+ {' '.join(relocation_args)}\n\n")
+
+        # mkheaders runs at GCC compile time to ensure system headers
+        # won't cause errors with this gcc version, so we need to run it
+        # at buildcache install time to ensure spack doesn't leak
+        # the buildcache's system headers into the user environment.
+        libexec = join_path(self.prefix, "libexec")
+        # use glob to get past arch and version without being too picky:
+        # e.g., libexec/gcc/aarch64-unknown-linux-gnu/11.2.0/install-tools/mkheaders
+        mkheaders = glob.glob(f"{libexec}/gcc/*/*/install-tools/mkheaders")
+        for script in mkheaders:
+            mkheader = Executable(script)
+            mkheader(output=str).rstrip("\n")
