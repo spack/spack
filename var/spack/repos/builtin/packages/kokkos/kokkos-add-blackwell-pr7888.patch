@@ -1,0 +1,89 @@
+diff -ruN spack-src/cmake/kokkos_arch.cmake spack-src-patched/cmake/kokkos_arch.cmake
+--- spack-src/cmake/kokkos_arch.cmake	2024-12-20 15:28:28.000000000 +0000
++++ spack-src-patched/cmake/kokkos_arch.cmake	2025-03-21 20:15:01.334301504 +0000
+@@ -94,6 +94,8 @@
+ kokkos_arch_option(AMPERE86 GPU "NVIDIA Ampere generation CC 8.6" "KOKKOS_SHOW_CUDA_ARCHS")
+ kokkos_arch_option(ADA89 GPU "NVIDIA Ada generation CC 8.9" "KOKKOS_SHOW_CUDA_ARCHS")
+ kokkos_arch_option(HOPPER90 GPU "NVIDIA Hopper generation CC 9.0" "KOKKOS_SHOW_CUDA_ARCHS")
++kokkos_arch_option(BLACKWELL100 GPU "NVIDIA Blackwell generation CC 10.0" "KOKKOS_SHOW_CUDA_ARCHS")
++kokkos_arch_option(BLACKWELL120 GPU "NVIDIA Blackwell generation CC 12.0" "KOKKOS_SHOW_CUDA_ARCHS")
+ 
+ if(Kokkos_ENABLE_HIP
+    OR Kokkos_ENABLE_OPENMPTARGET
+@@ -833,6 +835,8 @@
+ check_cuda_arch(AMPERE86 sm_86)
+ check_cuda_arch(ADA89 sm_89)
+ check_cuda_arch(HOPPER90 sm_90)
++check_cuda_arch(BLACKWELL100 sm_100)
++check_cuda_arch(BLACKWELL120 sm_120)
+ 
+ set(AMDGPU_ARCH_ALREADY_SPECIFIED "")
+ function(CHECK_AMDGPU_ARCH ARCH FLAG)
+@@ -1163,6 +1167,10 @@
+   set(KOKKOS_ARCH_HOPPER ON)
+ endif()
+ 
++if(KOKKOS_ARCH_BLACKWELL100 OR KOKKOS_ARCH_BLACKWELL120)
++  set(KOKKOS_ARCH_BLACKWELL ON)
++endif()
++
+ function(CHECK_AMD_APU ARCH)
+   set(BINARY_TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/cmake/compile_tests/AmdApuWorkdir)
+   file(REMOVE_RECURSE ${BINARY_TEST_DIR})
+diff -ruN spack-src/cmake/KokkosCore_config.h.in spack-src-patched/cmake/KokkosCore_config.h.in
+--- spack-src/cmake/KokkosCore_config.h.in	2024-12-20 15:28:28.000000000 +0000
++++ spack-src-patched/cmake/KokkosCore_config.h.in	2025-03-21 20:14:19.239794757 +0000
+@@ -113,6 +113,9 @@
+ #cmakedefine KOKKOS_ARCH_ADA89
+ #cmakedefine KOKKOS_ARCH_HOPPER
+ #cmakedefine KOKKOS_ARCH_HOPPER90
++#cmakedefine KOKKOS_ARCH_BLACKWELL
++#cmakedefine KOKKOS_ARCH_BLACKWELL100
++#cmakedefine KOKKOS_ARCH_BLACKWELL120
+ #cmakedefine KOKKOS_ARCH_AMD_ZEN
+ #cmakedefine KOKKOS_ARCH_AMD_ZEN2
+ #cmakedefine KOKKOS_ARCH_AMD_ZEN3
+diff -ruN spack-src/core/src/Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp spack-src-patched/core/src/Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp
+--- spack-src/core/src/Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp	2024-12-20 15:28:28.000000000 +0000
++++ spack-src-patched/core/src/Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp	2025-03-21 20:15:19.539088188 +0000
+@@ -33,7 +33,9 @@
+     case 5:
+     case 7:
+     case 8:
+-    case 9: return 4;
++    case 9:
++    case 10:
++    case 12: return 4;
+     case 6: return (properties.minor == 0 ? 2 : 4);
+     default:
+       throw_runtime_exception(
+diff -ruN spack-src/core/src/impl/Kokkos_Core.cpp spack-src-patched/core/src/impl/Kokkos_Core.cpp
+--- spack-src/core/src/impl/Kokkos_Core.cpp	2024-12-20 15:28:28.000000000 +0000
++++ spack-src-patched/core/src/impl/Kokkos_Core.cpp	2025-03-21 20:16:31.487245123 +0000
+@@ -740,6 +740,12 @@
+ #elif defined(KOKKOS_ARCH_HOPPER90)
+       declare_configuration_metadata("architecture", "GPU architecture",
+                                      "HOPPER90");
++#elif defined(KOKKOS_ARCH_BLACKWELL100)
++  declare_configuration_metadata("architecture", "GPU architecture",
++                                 "BLACKWELL100");
++#elif defined(KOKKOS_ARCH_BLACKWELL120)
++  declare_configuration_metadata("architecture", "GPU architecture",
++                                 "BLACKWELL120");
+ #elif defined(KOKKOS_ARCH_AMD_GFX906)
+       declare_configuration_metadata("architecture", "GPU architecture",
+                                      "AMD_GFX906");
+diff -ruN spack-src/core/src/impl/Kokkos_NvidiaGpuArchitectures.hpp spack-src-patched/core/src/impl/Kokkos_NvidiaGpuArchitectures.hpp
+--- spack-src/core/src/impl/Kokkos_NvidiaGpuArchitectures.hpp	2024-12-20 15:28:28.000000000 +0000
++++ spack-src-patched/core/src/impl/Kokkos_NvidiaGpuArchitectures.hpp	2025-03-21 20:16:43.230107519 +0000
+@@ -49,6 +49,10 @@
+ #define KOKKOS_IMPL_ARCH_NVIDIA_GPU 89
+ #elif defined(KOKKOS_ARCH_HOPPER90)
+ #define KOKKOS_IMPL_ARCH_NVIDIA_GPU 90
++#elif defined(KOKKOS_ARCH_BLACKWELL100)
++#define KOKKOS_IMPL_ARCH_NVIDIA_GPU 100
++#elif defined(KOKKOS_ARCH_BLACKWELL120)
++#define KOKKOS_IMPL_ARCH_NVIDIA_GPU 120
+ #elif defined(KOKKOS_ENABLE_CUDA)
+ // do not raise an error on other backends that may run on NVIDIA GPUs such as
+ // OpenACC, OpenMPTarget, or SYCL

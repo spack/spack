@@ -244,6 +244,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "86": "ampere86",
         "89": "ada89",
         "90": "hopper90",
+        "100": "blackwell100",
+        "120": "blackwell120",
     }
     cuda_arches = spack_cuda_arch_map.values()
     conflicts("+cuda", when="cuda_arch=none")
@@ -357,6 +359,10 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hpx@1.7:", when="@3.6: +hpx")
 
     # Patches
+    # https://github.com/kokkos/kokkos/pull/7888
+    patch("kokkos-add-blackwell-pr7888.patch", when="@4.5.01 +cuda cuda_arch=100")
+    patch("kokkos-add-blackwell-pr7888.patch", when="@4.5.01 +cuda cuda_arch=120")
+
     patch("hpx_profiling_fences.patch", when="@3.5.00 +hpx")
     patch("sycl_bhalft_test.patch", when="@4.2.00 +sycl")
     # adds amd_gfx940 support to Kokkos 4.2.00 (upstreamed in https://github.com/kokkos/kokkos/pull/6671)
