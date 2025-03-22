@@ -16,8 +16,8 @@ class Xfce4Core(BundlePackage):
     version("4.18")
     version("4.16")
 
-    for xfce4_version, new, override in [
-        ("4.20", [], {}),  # TODO: Add libxfce4windowing
+    for xfce4_version, new_components, override in [
+        ("4.20", ["libxfce4windowing"], {}),
         ("4.18", [], {}),
         ("4.16", [], {"garcon": "0.8.0"}),
     ]:
@@ -36,5 +36,5 @@ class Xfce4Core(BundlePackage):
                 "xfwm4",
                 "xfce4-appfinder",
                 "tumbler",
-            ]:
+            ] + new_components:
                 depends_on(f"{component}@{override.get(component, xfce4_version)}")

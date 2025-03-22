@@ -42,7 +42,8 @@ class Libxfce4ui(AutotoolsPackage):
         with when("+vala"):
             depends_on("vala")
             depends_on("libxfce4util+vala")
-        with when("@4.20"):
+        with when("@4.20:"):
+            depends_on("libxfce4windowing")
             depends_on("glib@2.72:")
             depends_on("gobject-introspection@1.72:", when="+introspection")
         with when("@4.18:"):
