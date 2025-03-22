@@ -18,6 +18,8 @@ import spack.repo
 from spack.main import SpackCommand
 from spack.spec import Spec
 
+pytestmark = [pytest.mark.usefixtures("mock_packages")]
+
 
 @pytest.fixture
 def executables_found(monkeypatch):
@@ -36,7 +38,7 @@ def define_plat_exe(exe):
     return exe
 
 
-def test_find_external_single_package(mock_packages, mock_executable, monkeypatch):
+def test_find_external_single_package(mock_executable, monkeypatch):
     version = "1.foo"
     cmake_path = mock_executable("cmake", output=f"echo cmake version {version}")
 
@@ -55,7 +57,7 @@ def test_find_external_single_package(mock_packages, mock_executable, monkeypatc
     assert len(detected_spec) == 1 and detected_spec[0] == Spec("cmake@1.foo")
 
 
-def test_find_external_two_instances_same_package(mock_packages, mock_executable, monkeypatch):
+def test_find_external_two_instances_same_package(mock_executable, monkeypatch):
     # Each of these cmake instances is created in a different prefix
     # In Windows, quoted strings are echo'd with quotes includes
     # we need to avoid that for proper regex.
@@ -122,7 +124,7 @@ external = SpackCommand("external")
 # causing intermittent (spurious) CI failures on all PRs
 @pytest.mark.not_on_windows("Test fails intermittently on Windows")
 def test_find_external_cmd_not_buildable(
-    mock_packages, mutable_config, working_env, mock_executable, monkeypatch
+    mutable_config, working_env, mock_executable, monkeypatch
 ):
     """When the user invokes 'spack external find --not-buildable', the config
     for any package where Spack finds an external version should be marked as
@@ -159,6 +161,7 @@ def test_find_external_cmd_not_buildable(
                 "builtin.mock.gcc",
                 "builtin.mock.llvm",
                 "builtin.mock.intel-oneapi-compilers",
+                "builtin.mock.mpich",
             ],
         ),
         # find --all --exclude find-externals1
@@ -171,6 +174,7 @@ def test_find_external_cmd_not_buildable(
                 "builtin.mock.gcc",
                 "builtin.mock.llvm",
                 "builtin.mock.intel-oneapi-compilers",
+                "builtin.mock.mpich",
             ],
         ),
         (
@@ -182,6 +186,7 @@ def test_find_external_cmd_not_buildable(
                 "builtin.mock.gcc",
                 "builtin.mock.llvm",
                 "builtin.mock.intel-oneapi-compilers",
+                "builtin.mock.mpich",
             ],
         ),
         # find hwloc (and mock hwloc is not detectable)
