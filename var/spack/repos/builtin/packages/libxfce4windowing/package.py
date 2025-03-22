@@ -7,16 +7,18 @@ from spack.package import *
 
 class Libxfce4windowing(AutotoolsPackage):
     """
-    An abstraction library that attempts to present windowing concepts 
+    An abstraction library that attempts to present windowing concepts
     (screens, toplevel windows, workspaces, etc.) in a windowing-system-independent manner.
     """
 
     homepage = "https://docs.xfce.org/xfce/libxfce4windowing/start"
-    url = "https://archive.xfce.org/src/xfce/libxfce4windowing/4.20/libxfce4windowing-4.20.2.tar.bz2"
+    url = (
+        "https://archive.xfce.org/src/xfce/libxfce4windowing/4.20/libxfce4windowing-4.20.2.tar.bz2"
+    )
 
     maintainers("teaguesterling")
 
-    license("LGPLv2", checked_by="teaguesterling") 
+    license("LGPLv2", checked_by="teaguesterling")
 
     version("4.20.2", sha256="0b9b95aee8b868a2953920c2feafc026672ad19584976f19e89119e93ab1abc8")
 
@@ -38,8 +40,8 @@ class Libxfce4windowing(AutotoolsPackage):
     depends_on("gettext", when="@4.20:", type="build")
     with default_args(type=("build", "link", "run")):
         depends_on("libxfce4util")
-        #depends_on("xfconf")
-        #depends_on("glib@2:")
+        # depends_on("xfconf")
+        # depends_on("glib@2:")
         with when("+introspection"):
             depends_on("gobject-introspection")
             depends_on("libxfce4util+introspection")

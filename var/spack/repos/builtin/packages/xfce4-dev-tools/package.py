@@ -26,4 +26,3 @@ class Xfce4DevTools(AutotoolsPackage):
 
     depends_on("libxslt", type="build")
     depends_on("meson", type="build")
-
