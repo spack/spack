@@ -20,7 +20,7 @@ class Kentutils(MakefilePackage):
 
     maintainers("teaguesterling")
 
-    version("478", sha256="dcbe4bbab811e8634f2993512540d8d1ee279da8c49e8048cdd42b17cbe5ba2b") 
+    version("478", sha256="dcbe4bbab811e8634f2993512540d8d1ee279da8c49e8048cdd42b17cbe5ba2b")
     version("465", sha256="eef17b1f3182d1d9dc99b5c73a6b0468d5d3bd80470f25d3f7706cc1372e04b0")
     version("464", sha256="24e20fe68e2a2894d802c87662f69a62f71b3c15fafb2e4d6c3c425c63638bb2")
     version("460", sha256="b955e56ee880074521ef1ab1371491f47e66dc6fdd93b05328386dd675a635fa")
@@ -32,7 +32,6 @@ class Kentutils(MakefilePackage):
         sha256="0b6e89a183e6385c713cf010a7aeead9da6626d8d2f78c363a4f1bc56ccccebb",
         deprecated=True,
     )
-
 
     # The bundled version of kentlib has some custom changes that are used by parts of
     # kentlib. See https://github.com/spack/spack/pull/44501#issuecomment-2162789410
