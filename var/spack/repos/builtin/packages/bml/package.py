@@ -85,12 +85,12 @@ class Bml(CMakePackage):
     conflicts(
         "+magma",
         when="@1.1.0:",
-        msg="Invalid version configuration. bml can only be compiled with magma when using the josh-magma branch",
+        msg="Must use josh-magma branch of bml",
     )
     conflicts(
         "+magma",
         when="master",
-        msg="Invalid version configuration. bml can only be compiled with magma when using the josh-magma branch",
+        msg="Must use josh-magma branch of bml",
     )
 
     # define cusolver variant, requires that bml be built with magma
