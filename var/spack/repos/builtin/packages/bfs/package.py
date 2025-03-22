@@ -20,6 +20,7 @@ class Bfs(MakefilePackage):
     sanity_check_is_file = ["bin/bfs"]
 
     version("main", branch="main")
+    version("4.0.6", sha256="446a0a1a5bcbf8d026aab2b0f70f3d99c08e5fe18d3c564a8b7d9acde0792112")
     version("4.0.5", sha256="f7d9ebff00d9a010a5d6cc9b7bf1933095d7e5c0b11a8ec48c96c7ed8f993e5f")
     version("4.0.4", sha256="209da9e9f43d8fe30fd689c189ea529e9d6b5358ce84a63a44721003aea3e1ca")
     version("4.0.1", sha256="8117b76b0a967887278a11470cbfa9e7aeae98f11a7eeb136f456ac462e5ba23")
