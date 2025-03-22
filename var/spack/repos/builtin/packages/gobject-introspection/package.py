@@ -102,8 +102,7 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     patch("setuptools.patch", when="@1.78: ^python@3.12:")
     # for older versions we conflict with newer python
     conflicts(
-        "^python@3.12:",
-        when="@:1.77",
+        "@:1.77 ^python@3.12:",
         msg="gobject-introspection still uses distutils which was removed in Python 3.12",
     )
     conflicts(
