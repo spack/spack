@@ -63,8 +63,7 @@ class Bml(CMakePackage):
 
     def setup_build_environment(self, env):
         """
-        Set environment variables used to control the build. 
-        Tell bml cmake where to find MAGMA.
+        Set environment variables.
         """
         if "+magma" in self.spec:
             print(self.spec["magma"].prefix)
