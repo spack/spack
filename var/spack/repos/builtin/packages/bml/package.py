@@ -20,17 +20,50 @@ class Bml(CMakePackage):
 
     version("master", branch="master")
     version("josh-magma", branch="josh-magma")
-    version("2.2.0", sha256="41703eee605bcb0ce3bcb5dde5914363aaa382393138ab24f02acf84f670fad0")
-    version("2.1.2", sha256="d5bb4726759eb35ec66fae7b6ce8b4978cee33fa879aed314bf7aa1fa7eece91")
-    version("2.1.1", sha256="412cdc1609e8d66d4a47799806c0974ed3f84c25f09132ad2821a173e8d89261")
-    version("2.1.0", sha256="f95f0289d055a91d8499e2a37f785f69ca3b86dc6cf16726ee6c433b8b8a7f62")
-    version("2.0.1", sha256="ffb590b745888bbf1ff1892e920c29dd3edd7b29405ade3a738df4db5b1e2370")
-    version("2.0.0", sha256="dd9454f825605ee849b68e80bf28c2eaec0d0dd1d491807895352eb08e616bd9")
-    version("1.3.1", sha256="d9cbf95467f7a97d0eaa5a1a7a16481a160464c930a593bce4f2a32b012e2c24")
-    version("1.3.0", sha256="c2d3de0021b314b3fbdaa5445b96109dc22b1ae5c78363eac08fbde692ffe1ad")
-    version("1.2.3", sha256="8106b8ba3d1fb402b98fcfb0110e00ac18264b240b47320268888fc27971aeab")
-    version("1.2.2", sha256="babc2fd0229397e418be00f3691277e86f549b5a23cadbcee66078595e9176a0")
-    version("1.1.0", sha256="a90ede19d80ed870f0bf1588875a9f371484d89006a7296010d8d791da3eac33")
+    version(
+        "2.2.0",
+        sha256="41703eee605bcb0ce3bcb5dde5914363aaa382393138ab24f02acf84f670fad0",
+    )
+    version(
+        "2.1.2",
+        sha256="d5bb4726759eb35ec66fae7b6ce8b4978cee33fa879aed314bf7aa1fa7eece91",
+    )
+    version(
+        "2.1.1",
+        sha256="412cdc1609e8d66d4a47799806c0974ed3f84c25f09132ad2821a173e8d89261",
+    )
+    version(
+        "2.1.0",
+        sha256="f95f0289d055a91d8499e2a37f785f69ca3b86dc6cf16726ee6c433b8b8a7f62",
+    )
+    version(
+        "2.0.1",
+        sha256="ffb590b745888bbf1ff1892e920c29dd3edd7b29405ade3a738df4db5b1e2370",
+    )
+    version(
+        "2.0.0",
+        sha256="dd9454f825605ee849b68e80bf28c2eaec0d0dd1d491807895352eb08e616bd9",
+    )
+    version(
+        "1.3.1",
+        sha256="d9cbf95467f7a97d0eaa5a1a7a16481a160464c930a593bce4f2a32b012e2c24",
+    )
+    version(
+        "1.3.0",
+        sha256="c2d3de0021b314b3fbdaa5445b96109dc22b1ae5c78363eac08fbde692ffe1ad",
+    )
+    version(
+        "1.2.3",
+        sha256="8106b8ba3d1fb402b98fcfb0110e00ac18264b240b47320268888fc27971aeab",
+    )
+    version(
+        "1.2.2",
+        sha256="babc2fd0229397e418be00f3691277e86f549b5a23cadbcee66078595e9176a0",
+    )
+    version(
+        "1.1.0",
+        sha256="a90ede19d80ed870f0bf1588875a9f371484d89006a7296010d8d791da3eac33",
+    )
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -49,11 +82,24 @@ class Bml(CMakePackage):
     # define magma variant
     variant("magma", default=False, description="Build with magma support")
     depends_on("magma", when="+magma")
-    conflicts("+magma", when="@1.1.0:", msg="must use josh-magma branch of bml")
-    conflicts("+magma", when="master", msg="must use josh-magma branch of bml")
+    conflicts(
+        "+magma",
+        when="@1.1.0:",
+        msg="Invalid version configuration. bml can only be compiled with magma when using the josh-magma branch",
+    )
+    conflicts(
+        "+magma",
+        when="master",
+        msg="Invalid version configuration. bml can only be compiled with magma when using the josh-magma branch",
+    )
 
     # define cusolver variant, requires that bml be built with magma
-    variant("cusolver", default=False, when="+magma", description="Use cusolver diagonalization.")
+    variant(
+        "cusolver",
+        default=False,
+        when="+magma",
+        description="Use cusolver diagonalization instead of slower internal magma diagonalization.",
+    )
     depends_on("cuda", when="+cusolver")
 
     def setup_build_environment(self, env):
@@ -78,9 +124,12 @@ class Bml(CMakePackage):
         # if using magma variant
         if "+magma" in self.spec:
             args.append("-DBML_MAGMA=True")
-            # camke cant find lapack libs, so have to say explicitly
-            args.append("-DBLAS_LIBRARIES="+str(self.spec["blas"].libs))
-            args.append("-DLAPACK_LIBRARIES="+str(self.spec["blas"].libs))
+            args.append(
+                "-DBLAS_LIBRARIES=" + str(self.spec["blas"].libs)
+            )  # cmake doesnt find lapack lib without explicilty setting it.
+            args.append(
+                "-DLAPACK_LIBRARIES=" + str(self.spec["blas"].libs)
+            )  # cmake doesnt find lapack lib without explicilty setting it.
 
             # if using cusolver variant, magma required to use cusolver
             if "+cusolver" in self.spec:
