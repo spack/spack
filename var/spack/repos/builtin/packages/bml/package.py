@@ -49,13 +49,12 @@ class Bml(CMakePackage):
     # define magma variant
     variant("magma", default=False, description="Build with magma support")
     depends_on("magma", when="+magma")
-    conflicts("+magma", when="@1.1.0:", msg="Invalid version configuration. bml can only be compiled with magma when using the josh-magma branch")
-    conflicts("+magma", when="master", msg= "Invalid version configuration. bml can only be compiled with magma when using the josh-magma branch")
+    conflicts("+magma", when="@1.1.0:", msg="bml can only be compiled with magma when using the josh-magma branch")
+    conflicts("+magma", when="master", msg="bml can only be compiled with magma when using the josh-magma branch")
 
     # define cusolver variant, requires that bml be built with magma
-    variant("cusolver", default=False, when="+magma",description="Use cusolver diagonalization instead of slower internal magma diagonalization.")
-    depends_on("cuda", when="+cusolver")
-
+    variant("cusolver",default=False,when="+magma",description="Use cusolver diagonalization diagonalization.")
+    depends_on("cuda",when="+cusolver")
 
     def setup_build_environment(self, env):
         """
@@ -79,10 +78,10 @@ class Bml(CMakePackage):
         # if using magma variant
         if "+magma" in self.spec:
             args.append("-DBML_MAGMA=True")
-            args.append("-DBLAS_LIBRARIES="+str(self.spec["blas"].libs))   #cmake doesnt find lapack lib without explicilty setting it.
-            args.append("-DLAPACK_LIBRARIES="+str(self.spec["blas"].libs)) #cmake doesnt find lapack lib without explicilty setting it.
-   
-            # if using cusolver variant, magma required to use cusolver 
+            args.append("-DBLAS_LIBRARIES="+str(self.spec["blas"].libs))   # cmake doesnt find lapack lib
+            args.append("-DLAPACK_LIBRARIES="+str(self.spec["blas"].libs)) # cmake doesnt find lapack lib  
+
+            # if using cusolver variant, magma required to use cusolver
             if "+cusolver" in self.spec:
                 args.append("-DBML_CUSOLVER=True")
         return args
