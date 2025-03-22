@@ -44,8 +44,8 @@ class Kentutils(MakefilePackage):
         sticky=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     with default_args(type=("build", "link", "run")):
         depends_on("libpng")
