@@ -21,4 +21,3 @@ class LibdisplayInfo(MesonPackage):
     with default_args(type="build"):
         depends_on("hwdata@0.392:")
         depends_on("python")
-
