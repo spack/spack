@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -73,6 +72,7 @@ class Blt(Package):
     #  if you export targets this could cause problems in downstream
     #  projects if not handled properly. More info here:
     #  https://llnl-blt.readthedocs.io/en/develop/tutorial/exporting_targets.html
+    version("0.7.0", sha256="df8720a9cba1199d21f1d32649cebb9dddf95aa61bc3ac23f6c8a3c6b6083528")
     version("0.6.2", sha256="84b663162957c1fe0e896ac8e94cbf2b6def4a152ccfa12a293db14fb25191c8")
     version("0.6.1", sha256="205540b704b8da5a967475be9e8f2d1a5e77009b950e7fbf01c0edabc4315906")
     version("0.6.0", sha256="ede355e85f7b11d7c8442b51e4f7871c152093818606e00b1e1cf30f67ebdb23")
@@ -87,6 +87,10 @@ class Blt(Package):
     version("0.3.0", sha256="bb917a67cb7335d6721c997ba9c5dca70506006d7bba5e0e50033dd0836481a5")
     version("0.2.5", sha256="3a000f60194e47b3e5623cc528cbcaf88f7fea4d9620b3c7446ff6658dc582a5")
     version("0.2.0", sha256="c0cadf1269c2feb189e398a356e3c49170bc832df95e5564e32bdbb1eb0fa1b3")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake", type="run")
 

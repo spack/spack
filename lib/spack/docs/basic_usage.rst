@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -1175,6 +1174,17 @@ unspecified version, but packages can depend on other packages with
 could depend on ``mpich@1.2:`` if it can only build with version
 ``1.2`` or higher of ``mpich``.
 
+.. note:: Windows Spec Syntax Caveats
+   Windows has a few idiosyncrasies when it comes to the Spack spec syntax and the use of certain shells
+   Spack's spec dependency syntax uses the carat (``^``) character, however this is an escape string in CMD
+   so it must be escaped with an additional carat (i.e. ``^^``).
+   CMD also will attempt to interpret strings with ``=`` characters in them. Any spec including this symbol
+   must double quote the string.
+
+   Note: All of these issues are unique to CMD, they can be avoided by using Powershell.
+
+   For more context on these caveats see the related issues: `carat <https://github.com/spack/spack/issues/42833>`_ and `equals <https://github.com/spack/spack/issues/43348>`_
+
 Below are more details about the specifiers that you can add to specs.
 
 .. _version-specifier:
@@ -1347,6 +1357,10 @@ For example, for the ``stackstart`` variant:
 
     mpileaks stackstart==4   # variant will be propagated to dependencies
     mpileaks stackstart=4    # only mpileaks will have this variant value
+
+Spack also allows variants to be propagated from a package that does
+not have that variant.
+
 
 ^^^^^^^^^^^^^^
 Compiler Flags
@@ -1747,19 +1761,24 @@ Verifying installations
 The ``spack verify`` command can be used to verify the validity of
 Spack-installed packages any time after installation.
 
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+``spack verify manifest``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
 At installation time, Spack creates a manifest of every file in the
 installation prefix. For links, Spack tracks the mode, ownership, and
 destination. For directories, Spack tracks the mode, and
 ownership. For files, Spack tracks the mode, ownership, modification
-time, hash, and size. The Spack verify command will check, for every
-file in each package, whether any of those attributes have changed. It
-will also check for newly added files or deleted files from the
-installation prefix. Spack can either check all installed packages
+time, hash, and size. The ``spack verify manifest`` command will check,
+for every file in each package, whether any of those attributes have
+changed. It will also check for newly added files or deleted files from
+the installation prefix. Spack can either check all installed packages
 using the `-a,--all` or accept specs listed on the command line to
 verify.
 
-The ``spack verify`` command can also verify for individual files that
-they haven't been altered since installation time. If the given file
+The ``spack verify manifest`` command can also verify for individual files
+that they haven't been altered since installation time. If the given file
 is not in a Spack installation prefix, Spack will report that it is
 not owned by any package. To check individual files instead of specs,
 use the ``-f,--files`` option.
@@ -1773,6 +1792,22 @@ The ``spack verify`` command also accepts the ``-l,--local`` option to
 check only local packages (as opposed to those used transparently from
 ``upstream`` spack instances) and the ``-j,--json`` option to output
 machine-readable json data for any errors.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+``spack verify libraries``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``spack verify libraries`` command can be used to verify that packages
+do not have accidental system dependencies. This command scans the install
+prefixes of packages for executables and shared libraries, and resolves
+their needed libraries in their RPATHs. When needed libraries cannot be
+located, an error is reported. This typically indicates that a package
+was linked against a system library, instead of a library provided by
+a Spack package.
+
+This verification can also be enabled as a post-install hook by setting
+``config:shared_linking:missing_library_policy`` to ``error`` or ``warn``
+in :ref:`config.yaml <config-yaml>`.
 
 -----------------------
 Filesystem requirements

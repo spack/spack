@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -25,6 +24,7 @@ class Moosefs(AutotoolsPackage):
     version("3.0.104", sha256="b3209ecd8366038ba898c4642dd6fdf2fa5d50a37345f01ed209e078700db5bb")
     version("3.0.103", sha256="c5f1f6f78c2b7d8d6563000deed704ead3deac77279cb13f9f16d7ee56ee7ff7")
 
+    depends_on("c", type="build")  # generated
+
     def configure_args(self):
-        args = ["--with-systemdsystemunitdir=" + self.spec["moosefs"].prefix.lib.systemd.system]
-        return args
+        return [f"--with-systemdsystemunitdir={self.prefix.lib.systemd.system}"]

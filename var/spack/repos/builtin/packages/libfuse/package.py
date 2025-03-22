@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -30,6 +29,9 @@ class Libfuse(MesonPackage):
     version("3.9.3", sha256="0f8f7ad9cc6667c6751efa425dd0a665dcc9d75f0b7fc0cb5b85141a514110e9")
     version("3.9.2", sha256="b4409255cbda6f6975ca330f5b04cb335b823a95ddd8c812c3d224ec53478fc0")
     version("2.9.9", sha256="d0e69d5d608cc22ff4843791ad097f554dd32540ddc9bed7638cc6fea7c1b4b5")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     def url_for_version(self, version):
         if version < Version("3.0.0"):
@@ -62,6 +64,7 @@ class Libfuse(MesonPackage):
     depends_on("automake", type="build", when="@:2")
     depends_on("libtool", type="build", when="@:2")
     depends_on("gettext", type="build", when="@:2")
+    depends_on("gmake", type="build")
 
     provides("fuse")
     conflicts("+useroot", when="~system_install", msg="useroot requires system_install")
@@ -91,6 +94,13 @@ class Libfuse(MesonPackage):
         sha256="94d5c6d9785471147506851b023cb111ef2081d1c0e695728037bbf4f64ce30a",
         when="@:2",
     )
+    # fixed in v3.x, but some packages still require v2.x
+    # backport of https://github.com/libfuse/libfuse/commit/6b02a7082ae4c560427ff95b51aa8930bb4a6e1f
+    patch(
+        "fix_aarch64_compile.patch",
+        sha256="6ced88c987543d8e62614fa9bd796e7ede7238d55cc50910ece4355c9c4e57d6",
+        when="@:2 target=aarch64:",
+    )
 
     executables = ["^fusermount3?$"]
 
@@ -103,19 +113,19 @@ class Libfuse(MesonPackage):
     def meson_args(self):
         args = []
 
-        if "+utils" in self.spec:
+        if self.spec.satisfies("+utils"):
             args.append("-Dutils=true")
             args.append("-Dexamples=true")
         else:
             args.append("-Dutils=false")
             args.append("-Dexamples=false")
 
-        if "+useroot" in self.spec:
+        if self.spec.satisfies("+useroot"):
             args.append("-Duseroot=true")
         else:
             args.append("-Duseroot=false")
 
-        if "~system_install" in self.spec:
+        if self.spec.satisfies("~system_install"):
             # Fix meson's setup if meson does not have the host system's udev package:
             args.append("-Dudevrulesdir={0}".format(self.prefix.etc.rules.d))
 
@@ -144,10 +154,14 @@ class Libfuse(MesonPackage):
         ]
 
         args.append(
-            "--enable-static" if "default_library=static" in self.spec else "--disable-static"
+            "--enable-static"
+            if self.spec.satisfies("default_library=static")
+            else "--disable-static"
         )
         args.append(
-            "--enable-shared" if "default_library=shared" in self.spec else "--disable-shared"
+            "--enable-shared"
+            if self.spec.satisfies("default_library=shared")
+            else "--disable-shared"
         )
 
         configure(*args)

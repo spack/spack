@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -54,10 +53,11 @@ class PyDaskMl(PythonPackage):
 
     depends_on("py-xgboost+dask", type=("build", "run"), when="+docs")
     depends_on("py-xgboost+dask", type=("build", "run"), when="+xgboost")
+    depends_on("gmake", type="build")
 
     patch("xgboost_dependency.patch")
 
-    conflicts("+docs", when="%gcc target=aarch64:")
+    conflicts("+docs", when="target=aarch64: %gcc")
 
     @run_after("install")
     def install_docs(self):

@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -486,6 +485,8 @@ present. For instance with a configuration like:
        require: '~cuda'
 
 you will use ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
+
+.. _package-strong-preferences:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Conflicts and strong preferences

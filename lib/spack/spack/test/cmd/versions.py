@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,13 +8,6 @@ from spack.main import SpackCommand
 from spack.version import Version
 
 versions = SpackCommand("versions")
-
-
-def test_safe_only_versions():
-    """Only test the safe versions of a package.
-    (Using the deprecated command line argument)
-    """
-    versions("--safe-only", "zlib")
 
 
 def test_safe_versions():
@@ -65,13 +57,6 @@ def test_new_versions_only(monkeypatch):
     monkeypatch.setattr(Brillig, "fetch_remote_versions", mock_fetch_remote_versions)
     v = versions("--new", "brillig")
     assert v.strip(" \n\t") == "99.99.99\n  3.2.1"
-
-
-@pytest.mark.maybeslow
-def test_no_versions():
-    """Test a package for which no remote versions are available."""
-
-    versions("converge")
 
 
 @pytest.mark.maybeslow
