@@ -14,11 +14,12 @@ class Bml(CMakePackage):
     url = "https://github.com/lanl/bml/archive/refs/tags/v2.2.0.tar.gz"
     git = "https://github.com/lanl/bml.git"
 
-    maintainers("jeanlucf22")
+    maintainers("jeanlucf22,finkeljos")
 
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("josh-magma", branch="josh-magma")
     version("2.2.0", sha256="41703eee605bcb0ce3bcb5dde5914363aaa382393138ab24f02acf84f670fad0")
     version("2.1.2", sha256="d5bb4726759eb35ec66fae7b6ce8b4978cee33fa879aed314bf7aa1fa7eece91")
     version("2.1.1", sha256="412cdc1609e8d66d4a47799806c0974ed3f84c25f09132ad2821a173e8d89261")
@@ -34,16 +35,35 @@ class Bml(CMakePackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("shared", default=True, description="Build shared libs")
-    variant("mpi", default=True, description="Build with MPI Support")
-
-    conflicts("+mpi", when="@:1.2.2")
-
     depends_on("blas")
     depends_on("lapack")
+
+    # build shared libraries for bml, on by default
+    variant("shared", default=True, description="Build shared libs")
+
+    # define mpi variant, on by default
+    variant("mpi", default=True, description="Build with MPI Support")
     depends_on("mpi", when="+mpi")
-    depends_on("python", type="build")
+    conflicts("+mpi", when="@:1.2.2")
+
+    # define magma variant
+    variant("magma", default=False, description="Build with magma support")
+    depends_on("magma", when="+magma")
+    conflicts("+magma", when="@1.1.0:", msg="Invalid version configuration. bml can only be compiled with magma when using the josh-magma branch")
+    conflicts("+magma", when="master", msg= "Invalid version configuration. bml can only be compiled with magma when using the josh-magma branch")
+
+    # define cusolver variant, requires that bml be built with magma
+    variant("cusolver", default=False, when="+magma",description="Use cusolver diagonalization instead of slower internal magma diagonalization.")
+    depends_on("cuda", when="+cusolver")
+
+
+    def setup_build_environment(self, env):
+        """
+        Set environment variables used to control the build. Tell bml cmake where to find MAGMA.
+        """
+        if "+magma" in self.spec:
+            print(self.spec["magma"].prefix)
+            env.set("MAGMA_ROOT", self.spec["magma"].prefix)
 
     def cmake_args(self):
         args = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
@@ -55,4 +75,14 @@ class Bml(CMakePackage):
             args.append("-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc)
         else:
             args.append("-DBML_MPI=False")
+
+        # if using magma variant
+        if "+magma" in self.spec:
+            args.append("-DBML_MAGMA=True")
+            args.append("-DBLAS_LIBRARIES="+str(self.spec["blas"].libs))   #cmake doesnt find lapack lib without explicilty setting it.
+            args.append("-DLAPACK_LIBRARIES="+str(self.spec["blas"].libs)) #cmake doesnt find lapack lib without explicilty setting it.
+   
+            # if using cusolver variant, magma required to use cusolver 
+            if "+cusolver" in self.spec:
+                args.append("-DBML_CUSOLVER=True")
         return args
