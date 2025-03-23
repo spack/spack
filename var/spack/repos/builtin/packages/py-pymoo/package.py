@@ -24,6 +24,10 @@ class PyPymoo(PythonPackage):
 
     depends_on("cxx", type="build")  # generated
 
+    with default_args(type="build"):
+        depends_on("py-setuptools")
+        depends_on("py-cython@0.29:", when="@0.6.1.3:")
+
     with default_args(type=("build", "run")):
         depends_on("python@3.4:")
         depends_on("py-autograd")
@@ -38,7 +42,3 @@ class PyPymoo(PythonPackage):
             depends_on("py-alive-progress")
             depends_on("py-dill")
             depends_on("py-deprecated")
-
-    with default_args(type="build"):
-        depends_on("py-setuptools")
-        depends_on("py-cython@0.29:", when="@0.6.1.3:")
