@@ -25,25 +25,19 @@ class PyPymoo(PythonPackage):
     depends_on("cxx", type="build")  # generated
 
     with default_args(type=("build", "run")):
-        depends_on("python@3.9:", when="@0.6.1.3:")
         depends_on("python@3.4:")
-
-        depends_on("py-numpy@1.15:", when="@0.6.1.3:")
-
-        depends_on("py-scipy@1.1:", when="@0.6.1.3:")
-
-        depends_on("py-matplotlib@3:", when="@0.6.1.3:")
-
-        depends_on("py-autograd@1.4:", when="@0.6.1.3:")
         depends_on("py-autograd")
 
-        depends_on("py-cma@3.2.2:", when="@0.6.1.3:")
-
-        depends_on("py-alive-progress", when="@0.6.1.3:")
-
-        depends_on("py-dill", when="@0.6.1.3:")
-
-        depends_on("py-deprecated", when="@0.6.1.3:")
+        with when("@0.6.1.3:"):
+            depends_on("python@3.9:")
+            depends_on("py-numpy@1.15:")
+            depends_on("py-scipy@1.1:")
+            depends_on("py-matplotlib@3:")
+            depends_on("py-autograd@1.4:")
+            depends_on("py-cma@3.2.2:")
+            depends_on("py-alive-progress")
+            depends_on("py-dill")
+            depends_on("py-deprecated")
 
     with default_args(type="build"):
         depends_on("py-setuptools")
