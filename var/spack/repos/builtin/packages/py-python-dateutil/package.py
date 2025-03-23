@@ -32,10 +32,6 @@ class PyPythonDateutil(PythonPackage):
         depends_on("py-setuptools@:39", when="@2.8.0: ^python@3.3")
         depends_on("py-setuptools@24.3:")
 
-        # 2.7.1 introduces pyproject.toml which requires toml parsing
-        # libtoml was added in python 3.11, earlier versions require py-tomli
-        depends_on("py-tomli@1:", when="@2.7.1: ^python@:3.10")
-
         depends_on("py-setuptools-scm@:7", when="@2.7.0:")
 
         depends_on("py-wheel", when="@2.8.0:")
