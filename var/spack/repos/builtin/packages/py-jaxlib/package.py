@@ -8,6 +8,7 @@ from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
 
 rocm_dependencies = [
+    "comgr",
     "hip",
     "hipblas",
     "hipblaslt",
