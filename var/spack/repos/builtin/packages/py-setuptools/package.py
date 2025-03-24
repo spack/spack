@@ -110,6 +110,12 @@ class PySetuptools(Package, PythonExtension):
 
     depends_on("py-pip", type="build")
 
+    conflicts(
+        "py-pip@25",
+        when="@:75.1.0 ^python@:3.9",
+        msg="https://github.com/pypa/pyproject-hooks/issues/206",
+    )
+
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/{0}/s/setuptools/setuptools-{1}-{0}-none-any.whl"
 
