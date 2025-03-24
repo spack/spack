@@ -91,7 +91,8 @@ class PyDeephyper(PythonPackage):
 
         depends_on("py-psutil", when="@0.8:")
 
-        depends_on("py-pymoo@0.6:", when="@0.8:")
+        # https://github.com/spack/spack/pull/49603
+        # depends_on("py-pymoo@0.6:", when="@0.8:")
 
         depends_on("py-pyyaml")
 
