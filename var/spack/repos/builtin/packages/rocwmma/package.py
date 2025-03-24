@@ -26,6 +26,7 @@ class Rocwmma(CMakePackage):
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
+    version("6.3.3", sha256="5bfd2909cc9b4601bb83ddd79da6cfa4075afa6d6e9396d9bbe1df844163fbd2")
     version("6.3.2", sha256="f9dc5e837ac30efe4600775fb309e46ed8ef112a673435663d2ef7fdf28f8f12")
     version("6.3.1", sha256="9afd06c58b405dd86535ea1ca479fd6f9d717fa8665710bb64fc8027a26e6ac7")
     version("6.3.0", sha256="8dcd06599083dc3a67958a1b6f7c29c1880758eb6ff579143e0fb162985b0612")
@@ -96,6 +97,7 @@ class Rocwmma(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -119,6 +121,7 @@ class Rocwmma(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
 

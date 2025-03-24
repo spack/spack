@@ -17,6 +17,7 @@ class Rocmlir(CMakePackage):
 
     maintainers("srekolam", "afzpatel", "renjithravindrankannath")
 
+    version("6.3.3", sha256="87242b811536132a02ce79fe430c70485f9b1477de22d8376e7e923a9c9ad98b")
     version("6.3.2", sha256="5911e880a66faecb08d242efa3e5eb6f8ce32cb21ea09dec36f4aef111c395fb")
     version("6.3.1", sha256="b9e0ea8cfb83c20553b1ec1556752958afaa421a8d7326b1da748395ba7b75ac")
     version("6.3.0", sha256="8dd167250e138fac0609f4ed06fc6a4dca5edad346166a291f20b4dad99bbd0b")
@@ -80,6 +81,7 @@ class Rocmlir(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
