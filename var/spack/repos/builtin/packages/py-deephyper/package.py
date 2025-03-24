@@ -101,41 +101,41 @@ class PyDeephyper(PythonPackage):
 
         depends_on("openssl@3.4.0:", when="@0.8:")
 
-    with when("+dev"), default_args(type=("build", "run")):
-        depends_on("py-pytest")
-
-        with when("@0.9.3:"):
+        with when("+dev"):
             depends_on("py-pytest")
-            depends_on("py-tox")
-            depends_on("py-twine")
-            depends_on("py-ruff")
-            # depends_on("py-rstcheck")
-            depends_on("py-gitpython")
-            depends_on("py-ipython")
-            depends_on("py-nbsphinx")
-            depends_on("py-sphinx@5:")
-            # depends_on("py-sphinx-book-theme@1.1.3")
-            # depends_on("py-pydata-sphinx-theme@0.15.4")
-            depends_on("py-sphinx-copybutton")
-            depends_on("py-sphinx-design@0.6.1")
-            depends_on("py-sphinx-gallery")
-            # depends_on("py-sphinx-lfs-content")
-            # depends_on("py-sphinx-togglebutton")
 
-    # Jax for GPU is not currently available on Spack
-    with when("+jax-cpu"), default_args(type=("build", "run")):
-        depends_on("py-jax@0.3.25:", when="@0.8.1:")
-        # depends_on("py-numpyro@0.15.3:", when="@0.8:")
+            with when("@0.9.3:"):
+                depends_on("py-pytest")
+                depends_on("py-tox")
+                depends_on("py-twine")
+                depends_on("py-ruff")
+                # depends_on("py-rstcheck")
+                depends_on("py-gitpython")
+                depends_on("py-ipython")
+                depends_on("py-nbsphinx")
+                depends_on("py-sphinx@5:")
+                # depends_on("py-sphinx-book-theme@1.1.3")
+                # depends_on("py-pydata-sphinx-theme@0.15.4")
+                depends_on("py-sphinx-copybutton")
+                depends_on("py-sphinx-design@0.6.1")
+                depends_on("py-sphinx-gallery")
+                # depends_on("py-sphinx-lfs-content")
+                # depends_on("py-sphinx-togglebutton")
 
-    with when("+torch"), default_args(type=("build", "run")):
-        depends_on("py-torch@2:", when="@0.8.1:")
+        # Jax for GPU is not currently available on Spack
+        with when("+jax-cpu"):
+            depends_on("py-jax@0.3.25:", when="@0.8.1:")
+            # depends_on("py-numpyro@0.15.3:", when="@0.8:")
 
-    with when("+mpi"), default_args(type=("build", "run")):
-        depends_on("py-mpi4py@3.1.3:", when="@0.8.1:")
+        with when("+torch"):
+            depends_on("py-torch@2:", when="@0.8.1:")
 
-    with when("+ray"), default_args(type=("build", "run")):
-        depends_on("py-ray@1.3.0:", when="@0.8.1:")
+        with when("+mpi"):
+            depends_on("py-mpi4py@3.1.3:", when="@0.8.1:")
 
-    with when("+redis"), default_args(type=("build", "run")):
-        depends_on("py-redis")
-        # depends_on("redisjson")
+        with when("+ray"):
+            depends_on("py-ray@1.3.0:", when="@0.8.1:")
+
+        with when("+redis"):
+            depends_on("py-redis")
+            # depends_on("redisjson")
