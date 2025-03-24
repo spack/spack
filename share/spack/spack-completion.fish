@@ -1236,11 +1236,11 @@ complete -c spack -n '__fish_spack_using_command config list' -s h -l help -f -a
 complete -c spack -n '__fish_spack_using_command config list' -s h -l help -d 'show this help message and exit'
 
 # spack config list-scopes
-set -g __fish_spack_optspecs_spack_config_list_scopes h/help file non-platform
+set -g __fish_spack_optspecs_spack_config_list_scopes h/help f/file non-platform
 complete -c spack -n '__fish_spack_using_command config list-scopes' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config list-scopes' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command config list-scopes' -l file -f -a file
-complete -c spack -n '__fish_spack_using_command config list-scopes' -l file -d 'list only writable scopes with an associated file'
+complete -c spack -n '__fish_spack_using_command config list-scopes' -s f -l file -f -a file
+complete -c spack -n '__fish_spack_using_command config list-scopes' -s f -l file -d 'list only writable scopes with an associated file'
 complete -c spack -n '__fish_spack_using_command config list-scopes' -l non-platform -f -a non_platform
 complete -c spack -n '__fish_spack_using_command config list-scopes' -l non-platform -d 'list only non-platform scopes'
 
