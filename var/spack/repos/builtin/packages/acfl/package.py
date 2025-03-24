@@ -391,7 +391,7 @@ class Acfl(Package, CompilerPackage):
         "fortran": os.path.join("arm", "armflang"),
     }
 
-    required_libs = ["libclang", "libflang"]
+    implicit_rpath_libs = ["libclang", "libflang"]
 
     def _standard_flag(self, *, language, standard):
         flags = {

@@ -491,7 +491,7 @@ class Nvhpc(Package, CompilerPackage):
         "fortran": os.path.join("nvhpc", "nvfortran"),
     }
 
-    required_libs = ["libnvc", "libnvf"]
+    implicit_rpath_libs = ["libnvc", "libnvf"]
     stdcxx_libs = ("-c++libs",)
 
     def _standard_flag(self, *, language, standard):

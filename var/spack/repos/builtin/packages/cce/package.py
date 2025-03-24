@@ -30,7 +30,7 @@ class Cce(Package, CompilerPackage):
         "fortran": os.path.join("cce", "crayftn"),
     }
 
-    required_libs = [
+    implicit_rpath_libs = [
         "libalign",
         "libcrayacc_amdgpu",
         "libcrayacc_x86_64",

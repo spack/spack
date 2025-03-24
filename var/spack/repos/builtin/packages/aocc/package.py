@@ -137,7 +137,7 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
         "fortran": os.path.join("aocc", "flang"),
     }
 
-    required_libs = ["libclang"]
+    implicit_rpath_libs = ["libclang"]
 
     def _standard_flag(self, *, language: str, standard: str) -> str:
         flags = {

@@ -868,7 +868,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
         "fortran": os.path.join("clang", "flang"),
     }
 
-    required_libs = ["libclang"]
+    implicit_rpath_libs = ["libclang"]
 
     def _standard_flag(self, *, language, standard):
         flags = {

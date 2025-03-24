@@ -342,7 +342,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         "fortran": os.path.join("oneapi", "ifx"),
     }
 
-    required_libs = [
+    implicit_rpath_libs = [
         "libirc",
         "libifcore",
         "libifcoremt",

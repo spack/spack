@@ -250,7 +250,11 @@ class CompilerPropertyDetector:
             return []
 
         link_dirs = parse_non_system_link_dirs(output)
-        all_required_libs = list(self.spec.package.required_libs) + ["libc", "libc++", "libstdc++"]
+        all_required_libs = list(self.spec.package.implicit_rpath_libs) + [
+            "libc",
+            "libc++",
+            "libstdc++",
+        ]
         dynamic_linker = self.default_dynamic_linker()
         result = DefaultDynamicLinkerFilter(dynamic_linker)(
             paths_containing_libs(link_dirs, all_required_libs)

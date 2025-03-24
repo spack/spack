@@ -25,7 +25,7 @@ class AppleClang(BundlePackage, LlvmDetection, CompilerPackage):
         "cxx": os.path.join("clang", "clang++"),
     }
 
-    required_libs = ["libclang"]
+    implicit_rpath_libs = ["libclang"]
 
     provides("c", "cxx")
 

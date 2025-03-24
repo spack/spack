@@ -46,7 +46,7 @@ class IntelOneapiCompilersClassic(Package, CompilerPackage):
         "fortran": os.path.join("intel", "ifort"),
     }
 
-    required_libs = ["libirc", "libifcore", "libifcoremt", "libirng"]
+    implicit_rpath_libs = ["libirc", "libifcore", "libifcoremt", "libirng"]
 
     stdcxx_libs = ("-cxxlib",)
 

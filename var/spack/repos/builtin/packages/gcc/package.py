@@ -617,7 +617,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     debug_flags = ["-g", "-gstabs+", "-gstabs", "-gxcoff+", "-gxcoff", "-gvms"]
     opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-Os", "-Ofast", "-Og"]
 
-    required_libs = ["libgcc", "libgfortran"]
+    implicit_rpath_libs = ["libgcc", "libgfortran"]
     stdcxx_libs = "-lstdc++"
 
     def _standard_flag(self, *, language, standard):

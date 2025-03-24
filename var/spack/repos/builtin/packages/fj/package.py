@@ -44,7 +44,7 @@ class Fj(Package, CompilerPackage):
         "fortran": os.path.join("fj", "frt"),
     }
 
-    required_libs = ["libfj90i", "libfj90f", "libfjsrcinfo"]
+    implicit_rpath_libs = ["libfj90i", "libfj90f", "libfjsrcinfo"]
 
     def _standard_flag(self, *, language, standard):
         flags = {

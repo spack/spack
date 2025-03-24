@@ -159,7 +159,7 @@ class CompilerPackage(spack.package_base.PackageBase):
     #: Flag to activate OpenMP support
     openmp_flag: str = "-fopenmp"
 
-    required_libs: List[str] = []
+    implicit_rpath_libs: List[str] = []
 
     def standard_flag(self, *, language: str, standard: str) -> str:
         """Returns the flag used to enforce a given standard for a language"""
