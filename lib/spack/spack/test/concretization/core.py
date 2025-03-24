@@ -439,6 +439,8 @@ class TestConcretize:
         where the compiler is not forced.
         """
         spec = spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")
+        # This is intended to traverse the "root" unification set, and check compilers
+        # on the nodes in the set
         for x in spec.traverse(deptype=("link", "run")):
             if "c" not in x or not x.name.startswith("dt-diamond"):
                 continue
@@ -3208,7 +3210,7 @@ packages:
 
 
 def test_compiler_can_depend_on_themselves_to_build(config, mock_packages):
-    """Tests that a compiler can depend on itself to bootstrap."""
+    """Tests that a compiler can depend on "itself" to bootstrap."""
     s = Spec("gcc@14 %gcc@9.4.0").concretized()
     assert s.satisfies("gcc@14")
     assert s.satisfies("^gcc-runtime@9.4.0")
