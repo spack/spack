@@ -3451,8 +3451,8 @@ def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["s
             continue
 
         if c in result:
-            warnings.warn(
-                f"duplicate {c.long_spec} compiler found. Edit your packages.yaml to remove it."
+            tty.debug(
+                f"[{__name__}] duplicate {c.long_spec} compiler found"
             )
             continue
 
