@@ -771,7 +771,8 @@ def test_requires_directive(mock_packages, config):
     s = spack.concretize.concretize_one("requires_clang_or_gcc %gcc")
     assert s.satisfies("%gcc")
     s = spack.concretize.concretize_one("requires_clang_or_gcc %clang")
-    assert s.satisfies("%llvm")
+    # Test both the real package (llvm) and its alias (clang)
+    assert s.satisfies("%llvm") and s.satisfies("%clang")
 
     # This package can only be compiled with clang
     s = spack.concretize.concretize_one("requires_clang")
