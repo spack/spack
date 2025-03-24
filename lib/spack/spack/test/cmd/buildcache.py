@@ -638,15 +638,16 @@ def test_unsigned_migrate_of_signed_mirror(capsys, v2_buildcache_layout, mutable
 
     assert "libdwarf" in output and "libelf" in output
 
-    # After this migration, we should not find any signed spec files
-    file_list = find(test_mirror_path, "*.spec.json.sig")
-    assert not file_list
-
-    # But we should find two unsigned files corresponding to our two specs
-    file_list = find(test_mirror_path, "*.spec.json")
+    # We should find two spec manifest files, one for each spec
+    file_list = find(test_mirror_path, "*.manifest.json")
     assert len(file_list) == 2
     assert any(["libdwarf" in file for file in file_list])
     assert any(["libelf" in file for file in file_list])
+
+    # The two spec manifest files should be unsigned
+    for file_path in file_list:
+        with open(file_path, "r") as fd:
+            assert json.load(fd)
 
 
 def test_migrate_requires_index(capsys, v2_buildcache_layout, mutable_config):

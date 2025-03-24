@@ -222,7 +222,7 @@ def _migrate_spec(
         "version": v3_cache_class.get_layout_version(),
         "data": [
             BlobRecord(
-                spec_dict["archive_size"], "tarball-v1", "gzip", checksum, algorithm
+                spec_dict["archive_size"], "tarball-v1", "gzip", algorithm, checksum
             ).to_json(),
             BlobRecord(
                 metadata_size, "spec-v6", "gzip", metadata_checksum_algo, metadata_checksum
@@ -328,10 +328,9 @@ def migrate(
         tty.msg("Updating index and pushing keys")
 
         # Push the migrated mirror index
-        cache_prefix = url_util.join(mirror_url, bindist.buildcache_relative_specs_url())
         index_tmpdir = os.path.join(tmpdir, "rebuild_index")
         os.mkdir(index_tmpdir)
-        bindist._push_index(db, index_tmpdir, cache_prefix)
+        bindist._push_index(db, index_tmpdir, mirror_url)
 
         # Push the public part of the signing key
         if not unsigned:
