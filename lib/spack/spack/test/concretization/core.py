@@ -2527,7 +2527,7 @@ class TestConcretize:
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(setup, [Spec("pkg-b")], reuse=[fst, snd])
         assert len(result.specs) == 1
-        assert result.specs[0] == snd, result.specs[0].tree()
+        assert result.specs[0] == snd
 
     @pytest.mark.regression("45321")
     @pytest.mark.parametrize(
