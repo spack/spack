@@ -146,7 +146,7 @@ def wrapper_environment(working_env):
         SPACK_CXX=real_cc,
         SPACK_FC=real_cc,
         SPACK_PREFIX=pkg_prefix,
-        SPACK_ENV_PATH="test",
+        SPACK_COMPILER_WRAPPER_PATH="test",
         SPACK_DEBUG_LOG_DIR=".",
         SPACK_DEBUG_LOG_ID="foo-hashabc",
         SPACK_SHORT_SPEC="foo@1.2 arch=linux-rhel6-x86_64 /hashabc",
@@ -737,19 +737,19 @@ def test_expected_args_with_flags(wrapper_environment, wrapper_flags, wrapper_di
 
 
 def test_system_path_cleanup(wrapper_environment, wrapper_dir):
-    """Ensure SPACK_ENV_PATH is removed from PATH, even with trailing /
+    """Ensure SPACK_COMPILER_WRAPPER_PATH is removed from PATH, even with trailing /
 
     The compiler wrapper has to ensure that it is not called nested
     like it would happen when gcc's collect2 looks in PATH for ld.
 
     To prevent nested calls, the compiler wrapper removes the elements
-    of SPACK_ENV_PATH from PATH. Autotest's generated testsuite appends
+    of SPACK_COMPILER_WRAPPER_PATH from PATH. Autotest's generated testsuite appends
     a / to each element of PATH when adding AUTOTEST_PATH.
     Thus, ensure that PATH cleanup works even with trailing /.
     """
     cc = wrapper_dir / "cc"
     system_path = "/bin:/usr/bin:/usr/local/bin"
-    with set_env(SPACK_ENV_PATH=str(wrapper_dir), SPACK_CC="true"):
+    with set_env(SPACK_COMPILER_WRAPPER_PATH=str(wrapper_dir), SPACK_CC="true"):
         with set_env(PATH=str(wrapper_dir) + ":" + system_path):
             check_env_var(cc, "PATH", system_path)
         with set_env(PATH=str(wrapper_dir) + "/:" + system_path):

@@ -48,7 +48,7 @@ def build_environment(monkeypatch, wrapper_dir, tmp_path):
     monkeypatch.setenv("SPACK_FC", realcc)
 
     monkeypatch.setenv("SPACK_PREFIX", prefix)
-    monkeypatch.setenv("SPACK_ENV_PATH", "test")
+    monkeypatch.setenv("SPACK_COMPILER_WRAPPER_PATH", "test")
     monkeypatch.setenv("SPACK_DEBUG_LOG_DIR", ".")
     monkeypatch.setenv("SPACK_DEBUG_LOG_ID", "foo-hashabc")
     monkeypatch.setenv("SPACK_SHORT_SPEC", "foo@1.2 arch=linux-rhel6-x86_64 /hashabc")
@@ -312,7 +312,7 @@ def test_spack_paths_before_module_paths(
     mutable_config.set("packages", {"gcc": {"externals": [gcc_entry]}})
 
     module_path = os.path.join("path", "to", "module")
-    monkeypatch.setenv("SPACK_ENV_PATH", wrapper_dir)
+    monkeypatch.setenv("SPACK_COMPILER_WRAPPER_PATH", wrapper_dir)
 
     def _set_wrong_cc(x):
         os.environ["PATH"] = module_path + os.pathsep + os.environ["PATH"]

@@ -36,7 +36,7 @@ readonly lsep=''
 # the script runs. They are set by routines in spack.build_environment
 # as part of the package installation process.
 readonly params="\
-SPACK_ENV_PATH
+SPACK_COMPILER_WRAPPER_PATH
 SPACK_DEBUG_LOG_DIR
 SPACK_DEBUG_LOG_ID
 SPACK_SHORT_SPEC
@@ -418,7 +418,7 @@ new_dirs=""
 IFS=':'
 for dir in $PATH; do
     addpath=true
-    for spack_env_dir in $SPACK_ENV_PATH; do
+    for spack_env_dir in $SPACK_COMPILER_WRAPPER_PATH; do
         case "${dir%%/}" in
             "$spack_env_dir"|'.'|'')
                 addpath=false

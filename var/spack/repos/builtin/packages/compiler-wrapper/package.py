@@ -43,7 +43,7 @@ class CompilerWrapper(Package):
     if sys.platform != "win32":
         version(
             "1.0",
-            sha256="84a26f8f37329bcdfb41d23a8a4f4c46efbede983eb73737135c95a4c126b5b7",
+            sha256="c65a9d2b2d4eef67ab5cb0684d706bb9f005bb2be94f53d82683d7055bdb837c",
             expand=False,
         )
     else:
@@ -225,7 +225,7 @@ class CompilerWrapper(Package):
         env.set("SPACK_DISABLE_NEW_DTAGS", self.disable_new_dtags)
 
         for item in env_paths:
-            env.prepend_path("SPACK_ENV_PATH", item)
+            env.prepend_path("SPACK_COMPILER_WRAPPER_PATH", item)
 
     def setup_dependent_package(self, module, dependent_spec):
         bin_dir = self.bin_dir()

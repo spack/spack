@@ -113,7 +113,7 @@ SPACK_NO_PARALLEL_MAKE = "SPACK_NO_PARALLEL_MAKE"
 # set_wrapper_variables and used to pass parameters to
 # Spack's compiler wrappers.
 #
-SPACK_ENV_PATH = "SPACK_ENV_PATH"
+SPACK_COMPILER_WRAPPER_PATH = "SPACK_COMPILER_WRAPPER_PATH"
 SPACK_MANAGED_DIRS = "SPACK_MANAGED_DIRS"
 SPACK_INCLUDE_DIRS = "SPACK_INCLUDE_DIRS"
 SPACK_LINK_DIRS = "SPACK_LINK_DIRS"
@@ -748,8 +748,10 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
 
     tty.debug("setup_package: adding compiler wrappers paths")
     env_by_name = env_mods.group_by_name()
-    for x in env_by_name["SPACK_ENV_PATH"]:
-        assert isinstance(x, PrependPath), "unexpected setting used for SPACK_ENV_PATH"
+    for x in env_by_name["SPACK_COMPILER_WRAPPER_PATH"]:
+        assert isinstance(
+            x, PrependPath
+        ), "unexpected setting used for SPACK_COMPILER_WRAPPER_PATH"
         env_mods.prepend_path("PATH", x.value)
 
     # Check whether we want to force RPATH or RUNPATH
