@@ -43,6 +43,8 @@ class PySetuptoolsScm(PythonPackage):
         depends_on("python@2.7:2.8,3.5:", when="@4:")
         depends_on("python@2.7:2.8,3.4:")
 
+        depends_on("python@:3.10", when="@:7.0.5")
+
         depends_on("py-setuptools@61:", when="@8:")
         depends_on("py-setuptools@45:", when="@6:")
         depends_on("py-setuptools@42:", when="@5:")
