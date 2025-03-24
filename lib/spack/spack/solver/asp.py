@@ -4267,6 +4267,8 @@ def _is_reusable(spec: spack.spec.Spec, packages, local: bool) -> bool:
 
 
 def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
+    # TODO (compiler as nodes): this function contains specific names from builtin, and should
+    # be made more general
     if "gcc" in spec and "gcc-runtime" not in spec:
         return False
 
