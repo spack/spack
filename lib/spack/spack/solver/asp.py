@@ -3641,7 +3641,6 @@ class RuntimePropertyRecorder:
         body_str, node_variable = self.rule_body_from(when_spec)
         constraint_spec = spack.spec.Spec(constraint_str)
 
-        # constraint_spec.name = placeholder
         constraint_clauses = self._setup.spec_clauses(constraint_spec, body=False)
         for clause in constraint_clauses:
             if clause.args[0] == "node_version_satisfies":
