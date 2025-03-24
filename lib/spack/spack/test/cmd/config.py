@@ -13,6 +13,7 @@ import spack.config
 import spack.database
 import spack.environment as ev
 import spack.main
+import spack.platforms
 import spack.schema.config
 import spack.store
 import spack.util.spack_yaml as syaml
@@ -44,11 +45,13 @@ def test_config_list_scopes():
     output = config("list-scopes")
     assert "command_line" in output
     assert "_builtin" in output
+    assert f"site/{spack.platforms.host()}" in output
 
 
 def test_config_list_scopes_file():
     output = config("list-scopes", "--file")
     assert "site" in output
+    assert f"site/{spack.platforms.host()}" in output
     assert "_builtin" not in output
 
 
@@ -57,10 +60,12 @@ def test_config_list_scopes_non_platform():
     output = config("list-scopes", "--non-platform")
     assert "site" in output
     assert "user" not in output
+    assert f"site/{spack.platforms.host()}" not in output
     del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
     output = config("list-scopes", "--non-platform")
     assert "site" in output
     assert "user" in output
+    assert f"site/{spack.platforms.host()}" not in output
 
 
 def test_get_config_scope(mock_low_high_config):
