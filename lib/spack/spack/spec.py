@@ -3119,6 +3119,8 @@ class Spec:
             raise UnconstrainableDependencySpecError(other)
 
         # Handle common first-order constraints directly
+        # Note: This doesn't handle constraining transitive dependencies with the same name
+        # as direct dependencies
         changed = False
         common_dependencies = {x.name for x in self.dependencies()}
         common_dependencies &= {x.name for x in other.dependencies()}
@@ -3411,6 +3413,8 @@ class Spec:
                 #
                 # We also need to account for cases like gcc@<new> %gcc@<old> where the parent
                 # name is the same as the child name
+                #
+                # The same assumptions hold on Spec.constrain, and Spec.intersect
                 current_node = self
                 if rhs_edge.parent.name is not None and rhs_edge.parent.name != rhs_edge.spec.name:
                     try:
