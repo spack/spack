@@ -314,12 +314,6 @@ possible_version_weight(node(ID, Package), Weight)
 { attr("version", node(ID, Package), Version) : pkg_fact(Package, version_satisfies(Constraint, Version)) }
   :- attr("node_version_satisfies", node(ID, Package), Constraint).
 
-% If there is at least a version that satisfy the constraint, impose a lower
-% bound on the choice rule to avoid false positives with the error below
-{ attr("version", node(ID, Package), Version) : pkg_fact(Package, version_satisfies(Constraint, Version)) }
-  :- attr("node_version_satisfies", node(ID, Package), Constraint),
-     pkg_fact(Package, version_satisfies(Constraint, _)).
-
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
 error(1, "Cannot satisfy '{0}@{1}'", Package, Constraint)
