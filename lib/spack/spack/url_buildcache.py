@@ -32,15 +32,6 @@ from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_s
 INDEX_HASH_FILE = "index.json.hash"
 
 
-class ExistsInBuildcache(NamedTuple):
-    signed: bool
-    signed_url: str
-    unsigned: bool
-    unsigned_url: str
-    tarball: bool
-    tarball_url: str
-
-
 class BuildcacheComponent(enum.Enum):
     SPECS = enum.auto()
     BLOBS = enum.auto()
