@@ -70,6 +70,7 @@ def setup_parser(subparser):
 
     list_scopes_parser = sp.add_parser("list-scopes", help="list defined scopes")
     list_scopes_parser.add_argument(
+        "-f",
         "--file",
         action="store_true",
         default=False,
