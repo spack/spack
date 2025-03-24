@@ -68,6 +68,14 @@ def test_config_list_scopes_non_platform():
     assert f"site/{spack.platforms.host()}" not in output
 
 
+def test_config_list_scopes_file_non_platform():
+    del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
+    output = config("list-scopes", "--non-platform", "--file")
+    assert "site" in output
+    assert "_builtin" not in output
+    assert f"site/{spack.platforms.host()}" not in output
+
+
 def test_get_config_scope(mock_low_high_config):
     assert config("get", "compilers").strip() == "compilers: {}"
 
