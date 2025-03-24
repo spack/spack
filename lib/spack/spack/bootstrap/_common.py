@@ -234,10 +234,6 @@ def _root_spec(spec_str: str) -> str:
     # Add a compiler and platform requirement to the root spec.
     platform = str(spack.platforms.host())
 
-    if platform == "windows":
-        spec_str += " %msvc"
-    elif platform == "freebsd":
-        spec_str += " %clang"
     spec_str += f" platform={platform}"
     target = archspec.cpu.host().family
     spec_str += f" target={target}"
