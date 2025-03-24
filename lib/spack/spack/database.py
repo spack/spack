@@ -914,8 +914,11 @@ class Database:
         raise ExplicitDatabaseUpgradeError(
             f"database is v{self.db_version}, but Spack v{spack.__version__} needs v{_DB_VERSION}",
             long_message=(
-                f"\nUse `spack reindex` to upgrade the store at {self.root} to version "
-                f"{_DB_VERSION}, or change config:install_tree:root to use a different store"
+                f"\nChange config:install_tree:root to use a different store, or use `spack "
+                f"reindex` to migrate the store at {self.root} to version {_DB_VERSION}.\n\n"
+                f"If you decide to migrate the store, note that:\n"
+                f"1. The operation cannot be reverted, and\n"
+                f"2. Older Spack versions will not be able to read the store anymore\n"
             ),
         )
 
