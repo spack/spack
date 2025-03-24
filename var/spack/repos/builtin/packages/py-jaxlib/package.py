@@ -178,6 +178,16 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
     # Fails to build with freshly released CUDA (#48708).
     conflicts("^cuda@12.8:", when="@:0.4.31")
 
+    resource(
+        name="xla",
+        url="https://github.com/ROCm/xla/archive/07543ab117699a57c1267b453a62f89b1d5953fd.tar.gz",
+        sha256="cee377479654201c61cc3f230d89603cd589525fea2faf44564a23c70ba1448d",
+        expand=True,
+        destination="",
+        placement="xla",
+        when="@0.4.38:0.5.2 +rocm",
+    )
+
     def url_for_version(self, version):
         url = "https://github.com/jax-ml/jax/archive/refs/tags/{}-v{}.tar.gz"
         if version >= Version("0.4.33"):
@@ -188,7 +198,7 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
 
     def setup_build_environment(self, env):
         spec = self.spec
-        if spec.satisfies("@0.5.3 +rocm"):
+        if spec.satisfies("@0.4.38: +rocm"):
             if spec.satisfies("^hip@6.2:"):
                 rocm_dependencies.append("rocprofiler-register")
             if spec.satisfies("^hip@6.3:"):
@@ -246,6 +256,10 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
                 args.append("--enable_rocm")
             if spec.satisfies("@0.5.3:"):
                 args.append("--bazel_options=--@local_config_rocm//rocm:rocm_path_type=multiple")
+            if spec.satisfies("@0.4.38:0.5.2"):
+                args.append(
+                    f"--bazel_options=--override_repository=xla={self.stage.source_path}/xla"
+                )
 
         args.extend(
             [
