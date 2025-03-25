@@ -24,6 +24,7 @@ import spack.spec
 import spack.store
 import spack.util.environment
 import spack.util.executable
+import spack.util.libc
 
 from .config import spec_for_current_python
 
@@ -233,6 +234,9 @@ def _root_spec(spec_str: str) -> str:
     """
     # Add a compiler and platform requirement to the root spec.
     platform = str(spack.platforms.host())
+    spec_str += f" platform={platform}"
+    target = archspec.cpu.host().family
+    spec_str += f" target={target}"
 
     if platform == "darwin":
         spec_str += " %apple-clang"
@@ -240,11 +244,11 @@ def _root_spec(spec_str: str) -> str:
         spec_str += " %msvc"
     elif platform == "linux":
         spec_str += " %gcc"
+        libc = spack.util.libc.libc_from_current_python_process()
+        if libc:
+            spec_str += f" ^[virtuals=libc] {libc.name}@:{libc.version}"
     elif platform == "freebsd":
         spec_str += " %clang"
-    spec_str += f" platform={platform}"
-    target = archspec.cpu.host().family
-    spec_str += f" target={target}"
 
     tty.debug(f"[BOOTSTRAP ROOT SPEC] {spec_str}")
     return spec_str
