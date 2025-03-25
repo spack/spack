@@ -793,8 +793,13 @@ def ci_verify_versions(args):
 
     failed_version = False
     for pkg_name, path in pkgs:
-        spec = spack.spec.Spec(pkg_name)
-        pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+        try:
+            spec = spack.spec.Spec(pkg_name)
+            pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+
+        # Skip removed packages that are no longer in the repository
+        except spack.repo.UnknownPackageError:
+            continue
 
         # Skip checking manual download packages and trust the maintainers
         if pkg.manual_download:
