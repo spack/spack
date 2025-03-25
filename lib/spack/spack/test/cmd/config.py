@@ -69,7 +69,8 @@ def test_config_list_scopes_non_platform():
 
 
 def test_config_list_scopes_file_non_platform():
-    del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
+    if "SPACK_DISABLE_LOCAL_CONFIG" in os.environ:
+        del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
     output = config("list-scopes", "--non-platform", "--file")
     assert "site" in output
     assert "_builtin" not in output
