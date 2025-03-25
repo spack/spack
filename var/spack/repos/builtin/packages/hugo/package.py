@@ -19,6 +19,7 @@ class Hugo(GoPackage):
 
     license("Apache-2.0")
 
+    version("0.145.0", sha256="f6cfcfa4575ff25a08e68b638367df60b28e28a7917471c5deec6396eae26ae2")
     version("0.140.2", sha256="45594ddf39d62d227cfd54c19fb9a09ab851cf537caee6138de0ddd4f1f6f117")
     version("0.135.0", sha256="a75c4c684d2125255f214d11b9834a5ec6eb64353f4de2c06952d2b3b7430f0e")
     version("0.127.0", sha256="549c7ebdf2ee6b3107ea10a9fbd9932a91bb3f30f7e8839245f6d8e318aca88c")
@@ -34,11 +35,12 @@ class Hugo(GoPackage):
     version("0.107.0", sha256="31d959a3c1633087d338147782d03bdef65323b67ff3efcec7b40241413e270a")
     version("0.106.0", sha256="9219434beb51466487b9f8518edcbc671027c1998e5a5820d76d517e1dfbd96a")
 
-    depends_on("go@1.11:", type="build", when="@0.48:")
-    depends_on("go@1.18:", type="build", when="@0.106:")
-    depends_on("go@1.20:", type="build", when="@0.123:")
-    depends_on("go@1.21.8:", type="build", when="@0.131:")
+    depends_on("go@1.23:", type="build", when="@0.144:")
     depends_on("go@1.22.6:", type="build", when="@0.133:")
+    depends_on("go@1.21.8:", type="build", when="@0.131:")
+    depends_on("go@1.20:", type="build", when="@0.123:")
+    depends_on("go@1.18:", type="build", when="@0.106:")
+    depends_on("go@1.11:", type="build", when="@0.48:")
 
     variant("extended", default=False, description="Enable extended features")
 
