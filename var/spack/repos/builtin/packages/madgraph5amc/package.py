@@ -87,7 +87,7 @@ class Madgraph5amc(MakefilePackage):
             "uutt_sch_4fermion",
             "uutt_tch_scalar",
         ),
-        default=[],
+        default=None,
         multi=True,
         description="Models that will be installed by Madgraph. These models can be used"
         "without them being installed first, then madgraph will download them"
