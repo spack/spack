@@ -40,8 +40,22 @@ can be used for conditional activation in the ``when`` clauses.
 Included files can be specified by path or by their parent directory.
 Paths may be absolute, relative (to the configuration file including the path), 
 or specified as URLs. Only the ``file``, ``ftp``, ``http`` and ``https`` protocols (or
-schemes) are supported. Spack-specific, environment and user path variables
+schemes) are supported.  Spack-specific, environment and user path variables
 can be used. (See :ref:`config-file-variables` for more information.)
+
+A ``sha256`` is required for remote file URLs and must be specified as follows:
+
+.. code-block:: yaml
+
+   include:
+   - path: https://github.com/path/to/raw/config/compilers.yaml
+     sha256: 26e871804a92cd07bb3d611b31b4156ae93d35b6a6d6e0ef3a67871fcb1d258b
+
+Additionally, remote file URLs must link to the **raw** form of the file's
+contents (e.g., `GitHub
+<https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files#viewing-or-copying-the-raw-file-content>`_
+or `GitLab
+<https://docs.gitlab.com/ee/api/repository_files.html#get-raw-file-from-repository>`_).
 
 .. warning::
 
