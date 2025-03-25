@@ -50,13 +50,13 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
     # version("0.5.2", sha256="8e9de1e012dd65fc4a9eec8af4aa2bf6782767130a5d8e1c1e342b7d658280fe")
     # version("0.5.1", sha256="e74b1209517682075933f757d646b73040d09fe39ee3e9e4cd398407dd0902d2")
     # version("0.5.0", sha256="04cc2eeb2e7ce1916674cea03a7d75a59d583ddb779d5104e103a2798a283ce9")
-    # version("0.4.38", sha256="ca1e63c488d505b9c92e81499e8b06cc1977319c50d64a0e58adbd2dae1a625c")
-    # version("0.4.37", sha256="17a8444a931f26edda8ccbc921ab71c6bf46857287b1db186deebd357e526870")
-    # version("0.4.36", sha256="442bfdf491b509995aa160361e23a9db488d5b97c87e6648cc733501b06eda77")
-    # version("0.4.35", sha256="65e086708ae56670676b7b2340ad82b901d8c9993d1241a839c8990bdb8d6212")
-    # version("0.4.34", sha256="d3a75ad667772309ade81350fa70c4a78028a920028800282e46d8383c0ee6bb")
-    # version("0.4.33", sha256="122a806e80fc1cd7d8ffaf9620701f2cb8e4fe22271c2cec53a9c60b30bd4c31")
-    # version("0.4.32", sha256="3fe36d596e4d640443c0a5c533845c74fbc4341e024d9bb1cd75cb49f5f419c2")
+    version("0.4.38", sha256="ca1e63c488d505b9c92e81499e8b06cc1977319c50d64a0e58adbd2dae1a625c")
+    version("0.4.37", sha256="17a8444a931f26edda8ccbc921ab71c6bf46857287b1db186deebd357e526870")
+    version("0.4.36", sha256="442bfdf491b509995aa160361e23a9db488d5b97c87e6648cc733501b06eda77")
+    version("0.4.35", sha256="65e086708ae56670676b7b2340ad82b901d8c9993d1241a839c8990bdb8d6212")
+    version("0.4.34", sha256="d3a75ad667772309ade81350fa70c4a78028a920028800282e46d8383c0ee6bb")
+    version("0.4.33", sha256="122a806e80fc1cd7d8ffaf9620701f2cb8e4fe22271c2cec53a9c60b30bd4c31")
+    version("0.4.32", sha256="3fe36d596e4d640443c0a5c533845c74fbc4341e024d9bb1cd75cb49f5f419c2")
     version("0.4.31", sha256="022ea1347f9b21cbea31410b3d650d976ea4452a48ea7317a5f91c238031bf94")
     version("0.4.30", sha256="0ef9635c734d9bbb44fcc87df4f1c3ccce1cfcfd243572c80d36fcdf826fe1e6")
     version("0.4.29", sha256="3a8005f4f62d35a5aad7e3dbd596890b47c81cc6e34fcfe3dcb93b3ca7cb1246")
@@ -103,6 +103,9 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
         for pkg_dep in rocm_dependencies:
             depends_on(f"{pkg_dep}@6:", when="@0.4.28:")
             depends_on(pkg_dep)
+        depends_on("rocprofiler-register", when="^hip@6.2:")
+        depends_on("hipblas-common", when="^hip@6.3:")
+        depends_on("hsakmt-roct", when="^hip@:6.2")
         depends_on("llvm-amdgpu")
         depends_on("py-nanobind")
 
@@ -199,7 +202,7 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
 
     def setup_build_environment(self, env):
         spec = self.spec
-        if spec.satisfies("@0.4.38: +rocm"):
+        if spec.satisfies("@0.4.38: +rocm") and not spec["hip"].external:
             if spec.satisfies("^hip@6.2:"):
                 rocm_dependencies.append("rocprofiler-register")
             if spec.satisfies("^hip@6.3:"):
@@ -255,7 +258,7 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
             args.append(f"--rocm_path={self.spec['hip'].prefix}")
             if spec.satisfies("@:0.4.35"):
                 args.append("--enable_rocm")
-            if spec.satisfies("@0.4.38:"):
+            if spec.satisfies("@0.4.38:") and not spec["hip"].external:
                 args.append("--bazel_options=--@local_config_rocm//rocm:rocm_path_type=multiple")
             if spec.satisfies("@0.4.38:0.5.2"):
                 args.append(
