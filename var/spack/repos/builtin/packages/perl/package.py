@@ -458,17 +458,15 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     @run_after("install")
     def install_cpanm(self):
-        spec = self.spec
         maker = make
         cpan_dir = join_path("cpanm", "cpanm")
         if sys.platform == "win32":
             maker = nmake
             cpan_dir = join_path(self.stage.source_path, cpan_dir)
             cpan_dir = windows_sfn(cpan_dir)
-        if "+cpanm" in spec:
+        if "+cpanm" in self.spec:
             with working_dir(cpan_dir):
-                perl = spec["perl"].command
-                perl("Makefile.PL")
+                self.command("Makefile.PL")
                 maker()
                 maker("install")
 
@@ -502,7 +500,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if dependent_spec.package.is_extension:
             # perl extension builds can have a global perl
             # executable function
-            module.perl = self.spec["perl"].command
+            module.perl = self.command
 
             # Add variables for library directory
             module.perl_lib_dir = dependent_spec.prefix.lib.perl5
@@ -541,8 +539,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         kwargs = {"ignore_absent": True, "backup": False, "string": False}
 
         # Find the actual path to the installed Config.pm file.
-        perl = self.spec["perl"].command
-        config_dot_pm = perl(
+        config_dot_pm = self.command(
             "-MModule::Loaded", "-MConfig", "-e", "print is_loaded(Config)", output=str
         )
 
@@ -606,17 +603,15 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             ext = ""
             if sys.platform == "win32":
                 ext = ".exe"
-            path = os.path.join(self.prefix.bin, "{0}{1}{2}".format(self.spec.name, ver, ext))
+            path = os.path.join(self.prefix.bin, f"{self.spec.name}{ver}{ext}")
             if os.path.exists(path):
                 return Executable(path)
         else:
-            msg = "Unable to locate {0} command in {1}"
-            raise RuntimeError(msg.format(self.spec.name, self.prefix.bin))
+            raise RuntimeError(f"Unable to locate {self.spec.name} command in {self.prefix.bin}")
 
     def test_version(self):
         """check version"""
-        perl = self.spec["perl"].command
-        out = perl("--version", output=str.split, error=str.split)
+        out = self.command("--version", output=str.split, error=str.split)
         expected = ["perl", str(self.spec.version)]
         for expect in expected:
             assert expect in out
@@ -626,6 +621,5 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         msg = "Hello, World!"
         options = ["-e", "use warnings; use strict;\nprint('%s\n');" % msg]
 
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
+        out = self.command(*options, output=str.split, error=str.split)
         assert msg in out

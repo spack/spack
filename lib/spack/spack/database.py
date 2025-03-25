@@ -41,6 +41,8 @@ from typing import (
     Union,
 )
 
+import spack.repo
+
 try:
     import uuid
 
@@ -1124,7 +1126,7 @@ class Database:
             installation_time:
                 Date and time of installation
             allow_missing: if True, don't warn when installation is not found on on disk
-                This is useful when installing specs without build deps.
+                This is useful when installing specs without build/test deps.
         """
         if not spec.concrete:
             raise NonConcreteSpecAddError("Specs added to DB must be concrete.")
@@ -1144,10 +1146,8 @@ class Database:
                 edge.spec,
                 explicit=False,
                 installation_time=installation_time,
-                # allow missing build-only deps. This prevents excessive warnings when a spec is
-                # installed, and its build dep is missing a build dep; there's no need to install
-                # the build dep's build dep first, and there's no need to warn about it missing.
-                allow_missing=allow_missing or edge.depflag == dt.BUILD,
+                # allow missing build / test only deps
+                allow_missing=allow_missing or edge.depflag & (dt.BUILD | dt.TEST) == edge.depflag,
             )
 
         # Make sure the directory layout agrees whether the spec is installed
@@ -1556,7 +1556,12 @@ class Database:
         # If we did fine something, the query spec can't be virtual b/c we matched an actual
         # package installation, so skip the virtual check entirely. If we *didn't* find anything,
         # check all the deferred specs *if* the query is virtual.
-        if not results and query_spec is not None and deferred and query_spec.virtual:
+        if (
+            not results
+            and query_spec is not None
+            and deferred
+            and spack.repo.PATH.is_virtual(query_spec.name)
+        ):
             results = [spec for spec in deferred if spec.satisfies(query_spec)]
 
         return results

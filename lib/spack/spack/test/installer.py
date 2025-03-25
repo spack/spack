@@ -557,7 +557,7 @@ def test_combine_phase_logs(tmpdir):
 
 def test_combine_phase_logs_does_not_care_about_encoding(tmpdir):
     # this is invalid utf-8 at a minimum
-    data = b"\x00\xF4\xBF\x00\xBF\xBF"
+    data = b"\x00\xf4\xbf\x00\xbf\xbf"
     input = [str(tmpdir.join("a")), str(tmpdir.join("b"))]
     output = str(tmpdir.join("c"))
 
@@ -680,13 +680,19 @@ def test_install_spliced_build_spec_installed(install_mockery, capfd, mock_fetch
         assert node.build_spec.installed
 
 
+# Unit tests should not be affected by the user's managed environments
 @pytest.mark.not_on_windows("lacking windows support for binary installs")
 @pytest.mark.parametrize("transitive", [True, False])
 @pytest.mark.parametrize(
     "root_str", ["splice-t^splice-h~foo", "splice-h~foo", "splice-vt^splice-a"]
 )
 def test_install_splice_root_from_binary(
-    install_mockery, mock_fetch, mutable_temporary_mirror, transitive, root_str
+    mutable_mock_env_path,
+    install_mockery,
+    mock_fetch,
+    mutable_temporary_mirror,
+    transitive,
+    root_str,
 ):
     """Test installing a spliced spec with the root available in binary cache"""
     # Test splicing and rewiring a spec with the same name, different hash.
@@ -977,7 +983,6 @@ class MyBuildException(Exception):
 
 
 def _install_fail_my_build_exception(installer, task, install_status, **kwargs):
-    print(task, task.pkg.name)
     if task.pkg.name == "pkg-a":
         raise MyBuildException("mock internal package build error for pkg-a")
     else:

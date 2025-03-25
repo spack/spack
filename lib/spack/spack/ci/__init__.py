@@ -6,6 +6,7 @@ import base64
 import codecs
 import json
 import os
+import pathlib
 import re
 import shutil
 import stat
@@ -13,16 +14,16 @@ import subprocess
 import tempfile
 import zipfile
 from collections import namedtuple
-from typing import Callable, Dict, List, Set
+from typing import Callable, Dict, List, Set, Union
 from urllib.request import Request
 
+import llnl.path
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 
 import spack
 import spack.binary_distribution as bindist
-import spack.builder
 import spack.concretize
 import spack.config as cfg
 import spack.environment as ev
@@ -32,6 +33,7 @@ import spack.mirrors.mirror
 import spack.paths
 import spack.repo
 import spack.spec
+import spack.store
 import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
@@ -40,6 +42,7 @@ import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
+from spack.version import GitVersion, StandardVersion
 
 from .common import (
     IS_WINDOWS,
@@ -78,11 +81,53 @@ def get_change_revisions():
     return None, None
 
 
+def get_added_versions(
+    checksums_version_dict: Dict[str, Union[StandardVersion, GitVersion]],
+    path: str,
+    from_ref: str = "HEAD~1",
+    to_ref: str = "HEAD",
+) -> List[Union[StandardVersion, GitVersion]]:
+    """Get a list of the versions added between `from_ref` and `to_ref`.
+    Args:
+       checksums_version_dict (Dict): all package versions keyed by known checksums.
+       path (str): path to the package.py
+       from_ref (str): oldest git ref, defaults to `HEAD~1`
+       to_ref (str): newer git ref, defaults to `HEAD`
+    Returns: list of versions added between refs
+    """
+    git_exe = spack.util.git.git(required=True)
+
+    # Gather git diff
+    diff_lines = git_exe("diff", from_ref, to_ref, "--", path, output=str).split("\n")
+
+    # Store added and removed versions
+    # Removed versions are tracked here to determine when versions are moved in a file
+    # and show up as both added and removed in a git diff.
+    added_checksums = set()
+    removed_checksums = set()
+
+    # Scrape diff for modified versions and prune added versions if they show up
+    # as also removed (which means they've actually just moved in the file and
+    # we shouldn't need to rechecksum them)
+    for checksum in checksums_version_dict.keys():
+        for line in diff_lines:
+            if checksum in line:
+                if line.startswith("+"):
+                    added_checksums.add(checksum)
+                if line.startswith("-"):
+                    removed_checksums.add(checksum)
+
+    return [checksums_version_dict[c] for c in added_checksums - removed_checksums]
+
+
 def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
     """Given an environment manifest path and two revisions to compare, return
     whether or not the stack was changed.  Returns True if the environment
     manifest changed between the provided revisions (or additionally if the
     `.gitlab-ci.yml` file itself changed).  Returns False otherwise."""
+    # git returns posix paths always, normalize input to be comptaible
+    # with that
+    env_path = llnl.path.convert_to_posix_path(env_path)
     git = spack.util.git.git()
     if git:
         with fs.working_dir(spack.paths.prefix):
@@ -220,7 +265,7 @@ def create_external_pruner() -> Callable[[spack.spec.Spec], RebuildDecision]:
 
 def _format_pruning_message(spec: spack.spec.Spec, prune: bool, reasons: List[str]) -> str:
     reason_msg = ", ".join(reasons)
-    spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
+    spec_fmt = "{name}{@version}{/hash:7}{%compiler}"
 
     if not prune:
         status = colorize("@*g{[x]}  ")
@@ -577,22 +622,25 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
     tty.debug(f"job spec: {job_spec}")
 
     try:
-        pkg_cls = spack.repo.PATH.get_pkg_class(job_spec.name)
-        job_pkg = pkg_cls(job_spec)
-        tty.debug(f"job package: {job_pkg}")
-    except AssertionError:
-        msg = f"Cannot copy stage logs: job spec ({job_spec}) must be concrete"
-        tty.error(msg)
+        package_metadata_root = pathlib.Path(spack.store.STORE.layout.metadata_path(job_spec))
+    except spack.error.SpackError as e:
+        tty.error(f"Cannot copy logs: {str(e)}")
         return
 
-    stage_dir = job_pkg.stage.path
-    tty.debug(f"stage dir: {stage_dir}")
-    for file in [
-        job_pkg.log_path,
-        job_pkg.env_mods_path,
-        *spack.builder.create(job_pkg).archive_files,
-    ]:
-        copy_files_to_artifacts(file, job_log_dir)
+    # Get the package's archived files
+    archive_files = []
+    archive_root = package_metadata_root / "archived-files"
+    if archive_root.is_dir():
+        archive_files = [f for f in archive_root.rglob("*") if f.is_file()]
+    else:
+        msg = "Cannot copy package archived files: archived-files must be a directory"
+        tty.warn(msg)
+
+    build_log_zipped = package_metadata_root / "spack-build-out.txt.gz"
+    build_env_mods = package_metadata_root / "spack-build-env.txt"
+
+    for f in [build_log_zipped, build_env_mods, *archive_files]:
+        copy_files_to_artifacts(str(f), job_log_dir)
 
 
 def copy_test_logs_to_artifacts(test_stage, job_test_dir):
@@ -612,7 +660,7 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     copy_files_to_artifacts(os.path.join(test_stage, "*", "*.txt"), job_test_dir)
 
 
-def download_and_extract_artifacts(url, work_dir):
+def download_and_extract_artifacts(url, work_dir) -> str:
     """Look for gitlab artifacts.zip at the given url, and attempt to download
         and extract the contents into the given work_dir
 
@@ -620,6 +668,10 @@ def download_and_extract_artifacts(url, work_dir):
 
         url (str): Complete url to artifacts.zip file
         work_dir (str): Path to destination where artifacts should be extracted
+
+    Output:
+
+        Artifacts root path relative to the archive root
     """
     tty.msg(f"Fetching artifacts from: {url}")
 
@@ -637,13 +689,25 @@ def download_and_extract_artifacts(url, work_dir):
         response = urlopen(request, timeout=SPACK_CDASH_TIMEOUT)
         with open(artifacts_zip_path, "wb") as out_file:
             shutil.copyfileobj(response, out_file)
+
+        with zipfile.ZipFile(artifacts_zip_path) as zip_file:
+            zip_file.extractall(work_dir)
+            # Get the artifact root
+            artifact_root = ""
+            for f in zip_file.filelist:
+                if "spack.lock" in f.filename:
+                    artifact_root = os.path.dirname(os.path.dirname(f.filename))
+                    break
     except OSError as e:
         raise SpackError(f"Error fetching artifacts: {e}")
+    finally:
+        try:
+            os.remove(artifacts_zip_path)
+        except FileNotFoundError:
+            # If the file doesn't exist we are already raising
+            pass
 
-    with zipfile.ZipFile(artifacts_zip_path) as zip_file:
-        zip_file.extractall(work_dir)
-
-    os.remove(artifacts_zip_path)
+    return artifact_root
 
 
 def get_spack_info():
@@ -757,7 +821,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
     return True
 
 
-def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
+def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head):
     """Given a url to gitlab artifacts.zip from a failed 'spack ci rebuild' job,
     attempt to setup an environment in which the failure can be reproduced
     locally.  This entails the following:
@@ -771,8 +835,11 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
     commands to run to reproduce the build once inside the container.
     """
     work_dir = os.path.realpath(work_dir)
+    if os.path.exists(work_dir) and os.listdir(work_dir):
+        raise SpackError(f"Cannot run reproducer in non-emptry working dir:\n  {work_dir}")
+
     platform_script_ext = "ps1" if IS_WINDOWS else "sh"
-    download_and_extract_artifacts(url, work_dir)
+    artifact_root = download_and_extract_artifacts(url, work_dir)
 
     gpg_path = None
     if gpg_url:
@@ -834,6 +901,9 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
     with open(repro_file, encoding="utf-8") as fd:
         repro_details = json.load(fd)
 
+    spec_file = fs.find(work_dir, repro_details["job_spec_json"])[0]
+    reproducer_spec = spack.spec.Spec.from_specfile(spec_file)
+
     repro_dir = os.path.dirname(repro_file)
     rel_repro_dir = repro_dir.replace(work_dir, "").lstrip(os.path.sep)
 
@@ -894,17 +964,20 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
     commit_regex = re.compile(r"commit\s+([^\s]+)")
     merge_commit_regex = re.compile(r"Merge\s+([^\s]+)\s+into\s+([^\s]+)")
 
-    # Try the more specific merge commit regex first
-    m = merge_commit_regex.search(spack_info)
-    if m:
-        # This was a merge commit and we captured the parents
-        commit_1 = m.group(1)
-        commit_2 = m.group(2)
+    if use_local_head:
+        commit_1 = "HEAD"
     else:
-        # Not a merge commit, just get the commit sha
-        m = commit_regex.search(spack_info)
+        # Try the more specific merge commit regex first
+        m = merge_commit_regex.search(spack_info)
         if m:
+            # This was a merge commit and we captured the parents
             commit_1 = m.group(1)
+            commit_2 = m.group(2)
+        else:
+            # Not a merge commit, just get the commit sha
+            m = commit_regex.search(spack_info)
+            if m:
+                commit_1 = m.group(1)
 
     setup_result = False
     if commit_1:
@@ -979,6 +1052,8 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
             "entrypoint", entrypoint_script, work_dir, run=False, exit_on_failure=False
         )
 
+        # Attempt to create a unique name for the reproducer container
+        container_suffix = "_" + reproducer_spec.dag_hash() if reproducer_spec else ""
         docker_command = [
             runtime,
             "run",
@@ -986,14 +1061,14 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime):
             "-t",
             "--rm",
             "--name",
-            "spack_reproducer",
+            f"spack_reproducer{container_suffix}",
             "-v",
             ":".join([work_dir, mounted_workdir, "Z"]),
             "-v",
             ":".join(
                 [
-                    os.path.join(work_dir, "jobs_scratch_dir"),
-                    os.path.join(mount_as_dir, "jobs_scratch_dir"),
+                    os.path.join(work_dir, artifact_root),
+                    os.path.join(mount_as_dir, artifact_root),
                     "Z",
                 ]
             ),

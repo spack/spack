@@ -26,6 +26,7 @@ class Mvapich(MpichEnvironmentModifications, AutotoolsPackage):
     license("Unlicense")
 
     # Prefer the latest stable release
+    version("4.0", sha256="c532f7bdd5cca71f78c12e0885c492f6e276e283711806c84d0b0f80bb3e3b74")
     version("3.0", sha256="ee076c4e672d18d6bf8dd2250e4a91fa96aac1db2c788e4572b5513d86936efb")
 
     depends_on("c", type="build")
@@ -67,8 +68,8 @@ class Mvapich(MpichEnvironmentModifications, AutotoolsPackage):
     variant(
         "pmi_version",
         description="Which pmi version to be used. If using pmi2 add it to your CFLAGS",
-        default="simple",
-        values=("simple", "pmi2", "pmix"),
+        default="none",
+        values=("none", "pmi1", "pmi2", "pmix"),
         multi=False,
     )
 
@@ -163,7 +164,6 @@ class Mvapich(MpichEnvironmentModifications, AutotoolsPackage):
         if "process_managers=slurm" in spec:
             opts = [
                 "--with-pm=slurm",
-                "--with-pmi=simple",
                 "--with-slurm={0}".format(spec["slurm"].prefix),
                 "CFLAGS=-I{0}/include/slurm".format(spec["slurm"].prefix),
             ]
@@ -231,7 +231,8 @@ class Mvapich(MpichEnvironmentModifications, AutotoolsPackage):
         ]
 
         args.extend(self.enable_or_disable("alloca"))
-        args.append("--with-pmi=" + spec.variants["pmi_version"].value)
+        if not spec.satisfies("pmi_version=none"):
+            args.append("--with-pmi=" + spec.variants["pmi_version"].value)
         if "pmi_version=pmix" in spec:
             args.append("--with-pmix={0}".format(spec["pmix"].prefix))
 

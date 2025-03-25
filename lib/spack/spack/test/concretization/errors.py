@@ -29,8 +29,7 @@ external_error_messages = [
 ]
 
 variant_error_messages = [
-    "'fftw' required multiple values for single-valued variant 'mpi'",
-    "    Requested '~mpi' and '+mpi'",
+    "'fftw' requires conflicting variant values '~mpi' and '+mpi'",
     "        required because quantum-espresso depends on fftw+mpi when +invino",
     "          required because quantum-espresso+invino ^fftw~mpi requested explicitly",
     "        required because quantum-espresso+invino ^fftw~mpi requested explicitly",

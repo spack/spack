@@ -288,7 +288,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # ==========================================================================
     # https://github.com/LLNL/sundials/pull/434
     # https://github.com/LLNL/sundials/pull/437
-    patch("sundials-hip-platform.patch", when="@7.0.0 +rocm")
+    patch("sundials-hip-platform.patch", when="@6.7.0:7.0.0 +rocm")
 
     # https://github.com/spack/spack/issues/29526
     patch("nvector-pic.patch", when="@6.1.0:6.2.0 +rocm")

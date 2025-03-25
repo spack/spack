@@ -111,7 +111,6 @@ class SingularityEos(CMakePackage, CudaPackage):
     for _flag in ("~cuda", "+cuda", "~openmp", "+openmp"):
         depends_on("kokkos ~shared" + _flag, when="+kokkos" + _flag)
         depends_on("kokkos-kernels" + _flag, when="+kokkos-kernels" + _flag)
-        depends_on("spiner" + _flag, when="+kokkos" + _flag)
 
     # specfic specs when using GPU/cuda offloading
     depends_on("kokkos +wrapper+cuda_lambda", when="+cuda+kokkos")
@@ -123,7 +122,6 @@ class SingularityEos(CMakePackage, CudaPackage):
     for _flag in list(CudaPackage.cuda_arch_values):
         depends_on("kokkos cuda_arch=" + _flag, when="+cuda+kokkos cuda_arch=" + _flag)
         depends_on("kokkos-kernels cuda_arch=" + _flag, when="+cuda+kokkos cuda_arch=" + _flag)
-        depends_on("spiner cuda_arch=" + _flag, when="+cuda+kokkos cuda_arch=" + _flag)
 
     conflicts("cuda_arch=none", when="+cuda", msg="CUDA architecture is required")
 
@@ -144,7 +142,7 @@ class SingularityEos(CMakePackage, CudaPackage):
     # can be removed once <1.8.0 versions have been removed
     def flag_handler(self, name, flags):
         if name == "fflags":
-            if self.spec.satisfies("%cce+fortran"):
+            if self.spec.satisfies("+fortran%cce"):
                 # The Cray fortran compiler generates module files with
                 # uppercase names by default, which is not handled by the
                 # CMake scripts. The following flag forces the compiler to
@@ -186,7 +184,7 @@ class SingularityEos(CMakePackage, CudaPackage):
         ]
 
         if "+kokkos+cuda" in self.spec:
-            args.append(self.define("CMAKE_CXX_COMPILER", self.spec["kokkos"].kokkos_cxx))
+            args.append(self.define("CMAKE_CXX_COMPILER", self["kokkos"].kokkos_cxx))
 
         return args
 

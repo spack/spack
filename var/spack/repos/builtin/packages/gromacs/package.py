@@ -262,6 +262,7 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
     depends_on("fortran", type="build", when="@:4.5.5")  # No core Fortran code since 4.6
+    depends_on("fortran", type="build", when="+cp2k")  # Need Fortan compiler for CP2K
 
     variant(
         "mpi", default=True, description="Activate MPI support (disable for Thread-MPI support)"
@@ -501,10 +502,10 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("sycl", when="+sycl")
     depends_on("lapack")
     depends_on("blas")
-    depends_on("gcc", when="%intel ~intel_provided_gcc")
+    depends_on("gcc", when="~intel_provided_gcc %intel")
     # TODO this can be expanded to all clang-based compilers once
     # the principle is demonstrated to work
-    with when("%oneapi ~intel_provided_gcc"):
+    with when("~intel_provided_gcc %oneapi"):
         depends_on("gcc-runtime@5:", when="@2020")
         depends_on("gcc-runtime@7:", when="@2021:2022")
         depends_on("gcc-runtime@9:", when="@2023:2024")

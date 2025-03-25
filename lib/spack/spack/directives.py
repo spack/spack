@@ -462,8 +462,7 @@ def extends(spec, when=None, type=("build", "run"), patches=None):
         if dep_spec.name == "python" and not pkg.name == "python-venv":
             _depends_on(pkg, spack.spec.Spec("python-venv"), when=when, type=("build", "run"))
 
-        # TODO: the values of the extendees dictionary are not used. Remove in next refactor.
-        pkg.extendees[dep_spec.name] = (dep_spec, None)
+        pkg.extendees[dep_spec.name] = (dep_spec, when_spec)
 
     return _execute_extends
 
@@ -568,7 +567,7 @@ def patch(
     """
 
     def _execute_patch(
-        pkg_or_dep: Union[Type[spack.package_base.PackageBase], Dependency]
+        pkg_or_dep: Union[Type[spack.package_base.PackageBase], Dependency],
     ) -> None:
         pkg = pkg_or_dep.pkg if isinstance(pkg_or_dep, Dependency) else pkg_or_dep
 

@@ -7,8 +7,7 @@ import typing
 import warnings
 
 import jsonschema
-
-import llnl.util.lang
+import jsonschema.validators
 
 from spack.error import SpecSyntaxError
 
@@ -18,59 +17,59 @@ class DeprecationMessage(typing.NamedTuple):
     error: bool
 
 
-# jsonschema is imported lazily as it is heavy to import
-# and increases the start-up time
-def _make_validator():
-    def _validate_spec(validator, is_spec, instance, schema):
-        """Check if the attributes on instance are valid specs."""
-        import spack.spec_parser
+def _validate_spec(validator, is_spec, instance, schema):
+    """Check if all additional keys are valid specs."""
+    import spack.spec_parser
 
-        if not validator.is_type(instance, "object"):
-            return
+    if not validator.is_type(instance, "object"):
+        return
 
-        for spec_str in instance:
-            try:
-                spack.spec_parser.parse(spec_str)
-            except SpecSyntaxError:
-                yield jsonschema.ValidationError(f"the key '{spec_str}' is not a valid spec")
+    properties = schema.get("properties") or {}
 
-    def _deprecated_properties(validator, deprecated, instance, schema):
-        if not (validator.is_type(instance, "object") or validator.is_type(instance, "array")):
-            return
-
-        if not deprecated:
-            return
-
-        deprecations = {
-            name: DeprecationMessage(message=x["message"], error=x["error"])
-            for x in deprecated
-            for name in x["names"]
-        }
-
-        # Get a list of the deprecated properties, return if there is none
-        issues = [entry for entry in instance if entry in deprecations]
-        if not issues:
-            return
-
-        # Process issues
-        errors = []
-        for name in issues:
-            msg = deprecations[name].message.format(name=name)
-            if deprecations[name].error:
-                errors.append(msg)
-            else:
-                warnings.warn(msg)
-
-        if errors:
-            yield jsonschema.ValidationError("\n".join(errors))
-
-    return jsonschema.validators.extend(
-        jsonschema.Draft7Validator,
-        {"validate_spec": _validate_spec, "deprecatedProperties": _deprecated_properties},
-    )
+    for spec_str in instance:
+        if spec_str in properties:
+            continue
+        try:
+            spack.spec_parser.parse(spec_str)
+        except SpecSyntaxError:
+            yield jsonschema.ValidationError(f"the key '{spec_str}' is not a valid spec")
 
 
-Validator = llnl.util.lang.Singleton(_make_validator)
+def _deprecated_properties(validator, deprecated, instance, schema):
+    if not (validator.is_type(instance, "object") or validator.is_type(instance, "array")):
+        return
+
+    if not deprecated:
+        return
+
+    deprecations = {
+        name: DeprecationMessage(message=x["message"], error=x["error"])
+        for x in deprecated
+        for name in x["names"]
+    }
+
+    # Get a list of the deprecated properties, return if there is none
+    issues = [entry for entry in instance if entry in deprecations]
+    if not issues:
+        return
+
+    # Process issues
+    errors = []
+    for name in issues:
+        msg = deprecations[name].message.format(name=name)
+        if deprecations[name].error:
+            errors.append(msg)
+        else:
+            warnings.warn(msg)
+
+    if errors:
+        yield jsonschema.ValidationError("\n".join(errors))
+
+
+Validator = jsonschema.validators.extend(
+    jsonschema.Draft7Validator,
+    {"additionalKeysAreSpecs": _validate_spec, "deprecatedProperties": _deprecated_properties},
+)
 
 
 def _append(string: str) -> bool:
