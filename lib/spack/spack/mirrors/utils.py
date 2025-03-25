@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import traceback
+import multiprocessing
+import time
+import signal
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -314,3 +317,63 @@ def require_mirror_name(mirror_name):
     if not mirror:
         raise ValueError(f'no mirror named "{mirror_name}"')
     return mirror
+
+
+def watchdog_directory(process_pid, directory_path, timeout_threshold=20, check_interval=2):
+    """
+    Monitors a directory for any file changes and kills the process if no changes occur.
+
+    Args:
+        process_pid (int): The PID of the process to monitor.
+        directory_path (str): The directory to check for file changes.
+        timeout_threshold (int): Time (in seconds) before killing the process if no updates occur.
+        check_interval (int): Time interval (in seconds) between checks.
+    """
+    print(f"Watchdog started (PID: {os.getpid()}), monitoring process {process_pid} and directory {directory_path}")
+
+    if not os.path.exists(directory_path):
+        print(f"Watchdog Warning: Directory '{directory_path}' does not exist at start, I will wait.")
+        last_mod_times = {}
+    else:
+        # Create a mapping of each file in the directory to its last modification time.
+        last_mod_times = {
+            os.path.join(directory_path, f): os.path.getmtime(os.path.join(directory_path, f))
+            for f in os.listdir(directory_path)
+            if os.path.isfile(os.path.join(directory_path, f))
+        }
+    
+    # Use a separate timer to track when the last change occurred.
+    last_update_time = time.time()
+
+    while True:
+        time.sleep(check_interval)  # Sleep before checking again
+
+        if not os.path.exists(directory_path):
+            print("Directory not found, waiting...")
+            continue  # Keep waiting if the directory doesn’t exist yet
+
+        # Build the current mapping of file modification times.
+        current_mod_times = {
+            os.path.join(directory_path, f): os.path.getmtime(os.path.join(directory_path, f))
+            for f in os.listdir(directory_path)
+            if os.path.isfile(os.path.join(directory_path, f))
+        }
+
+        if current_mod_times != last_mod_times:
+            print("Change detected in directory, resetting timer.")
+            last_mod_times = current_mod_times  # Update the stored modification times.
+            last_update_time = time.time()         # Reset the timer.
+        else:
+            elapsed_time = time.time() - last_update_time
+            print(f"No changes detected for {elapsed_time:.2f}s")
+            if elapsed_time > timeout_threshold:
+                print(f"No changes detected for {elapsed_time:.2f}s! Killing process {process_pid}.")
+                try:
+                    # Attempt to gracefully terminate the process.
+                    os.kill(process_pid, signal.SIGTERM)
+                    print(f"Process {process_pid} has been terminated.")
+                except OSError as e:
+                    print(f"Failed to kill process {process_pid}: {e}")
+                break  # Exit watchdog loop
+
+    print("Watchdog shutting down.")
