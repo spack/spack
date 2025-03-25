@@ -17,8 +17,9 @@ spack:
     - py-transformers
 
     # JAX
-    - py-jax
-    - py-jaxlib
+    # jax aarch64 build is not working past 0.4.32
+    # - py-jax
+    # - py-jaxlib
 
     # Keras
     - py-keras backend=tensorflow
