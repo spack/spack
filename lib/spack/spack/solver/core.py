@@ -94,7 +94,7 @@ class AspFunction(AspObject):
         return AspFunction(self.name, self.args + args)
 
     def __str__(self) -> str:
-        args = f"({','.join(str(_id(arg)) for arg in self.args)})" if self.args else ""
+        args = f"({','.join(str(_id(arg)) for arg in self.args)})"
         return f"{self.name}{args}"
 
     def __repr__(self) -> str:
