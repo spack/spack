@@ -9,6 +9,7 @@ import sys
 from spack_repo.builtin.build_systems.cuda import CudaPackage
 from spack_repo.builtin.build_systems.generic import Package
 from spack_repo.builtin.build_systems.rocm import ROCmPackage
+from spack_repo.builtin.build_systems.generic import GenericBuilder
 
 from spack.package import *
 
@@ -24,6 +25,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     maintainers("v-dobrev", "tzanio", "acfisher", "markcmiller86")
 
     test_requires_compiler = True
+
+    build_system("generic", default="generic")
 
     # Recommended mfem builds to test when updating this file: see the shell
     # script 'test_builds.sh' in the same directory as this file.
@@ -518,6 +521,28 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch("mfem-4.7.patch", when="@4.7.0")
     patch("mfem-4.7-sundials-7.patch", when="@4.7.0+sundials ^sundials@7:")
 
+class AnyBuilder(BaseBuilder):
+    @run_after("install")
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        # Clean the 'examples' directory -- at least one example is always built
+        # and we do not want to cache executables.
+        make("examples/clean", parallel=False)
+        extra_install_tests = [self.examples_src_dir, self.examples_data_dir]
+        cache_extra_test_sources(self.pkg, extra_install_tests)
+
+# without splitting the cache_test_sources into AnyBuilder,
+# cache_extra_test_sources was not available in the GenericBuilder
+# took the idea from the superlu package
+class GenericBuilder(AnyBuilder, GenericBuilder):
+    #
+    # Note: Although MFEM does support CMake configuration, MFEM
+    # development team indicates that vanilla GNU Make is the
+    # preferred mode of configuration of MFEM and the mode most
+    # likely to be up to date in supporting *all* of MFEM's
+    # configuration options. So, don't use CMake
+    #
     phases = ["configure", "build", "install"]
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
@@ -530,16 +555,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             env.set("OMPI_CXX", spack_cxx)
             env.set("MPICXX_CXX", spack_cxx)
 
-    #
-    # Note: Although MFEM does support CMake configuration, MFEM
-    # development team indicates that vanilla GNU Make is the
-    # preferred mode of configuration of MFEM and the mode most
-    # likely to be up to date in supporting *all* of MFEM's
-    # configuration options. So, don't use CMake
-    #
     def get_make_config_options(self, spec, prefix):
         def yes_no(varstr):
-            return "YES" if varstr in self.spec else "NO"
+            return "YES" if varstr in spec else "NO"
 
         xcompiler = "" if "~cuda" in spec else "-Xcompiler="
 
@@ -632,18 +650,18 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         # Determine C++ standard to use:
         cxxstd = None
-        if self.spec.satisfies("@4.0.0:"):
+        if spec.satisfies("@4.0.0:"):
             cxxstd = "11"
-        if self.spec.satisfies("^raja@2022.03.0:"):
+        if spec.satisfies("^raja@2022.03.0:"):
             cxxstd = "14"
-        if self.spec.satisfies("^umpire@2022.03.0:"):
+        if spec.satisfies("^umpire@2022.03.0:"):
             cxxstd = "14"
-        if self.spec.satisfies("^sundials@6.4.0:"):
+        if spec.satisfies("^sundials@6.4.0:"):
             cxxstd = "14"
-        if self.spec.satisfies("^ginkgo"):
+        if spec.satisfies("^ginkgo"):
             cxxstd = "14"
         # When rocPRIM is used (e.g. by PETSc + ROCm) we need C++14:
-        if self.spec.satisfies("^rocprim@5.5.0:"):
+        if spec.satisfies("^rocprim@5.5.0:"):
             cxxstd = "14"
         cxxstd_req = spec.variants["cxxstd"].value
         if cxxstd_req != "auto":
@@ -655,7 +673,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "+cuda" in spec:
                 cxxstd_flag = "-std=c++" + cxxstd
             else:
-                cxxstd_flag = getattr(self.compiler, "cxx" + cxxstd + "_flag")
+                cxxstd_flag = getattr(self.pkg.compiler, "cxx" + cxxstd + "_flag")
 
         cuda_arch = None if "~cuda" in spec else spec.variants["cuda_arch"].value
 
@@ -663,8 +681,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         if cxxflags:
             # Add opt/debug flags if they are not present in global cxx flags
-            opt_flag_found = any(f in self["cxx"].opt_flags for f in cxxflags)
-            debug_flag_found = any(f in self["cxx"].debug_flags for f in cxxflags)
+            opt_flag_found = any(f in self.pkg.compiler.opt_flags for f in cxxflags)
+            debug_flag_found = any(f in self.pkg.compiler.debug_flags for f in cxxflags)
 
             if "+debug" in spec:
                 if not debug_flag_found:
@@ -702,7 +720,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if "~static" in spec:
             options += ["STATIC=NO"]
         if "+shared" in spec:
-            options += ["SHARED=YES", "PICFLAG=%s" % (xcompiler + self.compiler.cxx_pic_flag)]
+            options += ["SHARED=YES", "PICFLAG=%s" % (xcompiler + pkg.compiler.cxx_pic_flag)]
 
         if "+mpi" in spec:
             options += ["MPICXX=%s" % spec["mpi"].mpicxx]
@@ -782,8 +800,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 # The "+openmp" in the spec means strumpack will TRY to find
                 # OpenMP; if not found, we should not add any flags -- how do
                 # we figure out if strumpack found OpenMP?
-                if not self.spec.satisfies("%apple-clang"):
-                    sp_opt += [xcompiler + self.compiler.openmp_flag]
+                if not spec.satisfies("%apple-clang"):
+                    sp_opt += [xcompiler + pkg.compiler.openmp_flag]
             if "^parmetis" in strumpack:
                 parmetis = strumpack["parmetis"]
                 sp_opt += [parmetis.headers.cpp_flags]
@@ -937,7 +955,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             ]
 
         if "+openmp" in spec:
-            options += ["OPENMP_OPT=%s" % (xcompiler + self.compiler.openmp_flag)]
+            options += ["OPENMP_OPT=%s" % (xcompiler + pkg.compiler.openmp_flag)]
 
         if "+cuda" in spec:
             options += [
@@ -1168,7 +1186,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             mumps_opt = ["-I%s" % mumps.prefix.include]
             if "+openmp" in mumps:
                 if not self.spec.satisfies("%apple-clang"):
-                    mumps_opt += [xcompiler + self.compiler.openmp_flag]
+                    mumps_opt += [xcompiler + compiler.openmp_flag]
             options += [
                 "MUMPS_OPT=%s" % " ".join(mumps_opt),
                 "MUMPS_LIB=%s" % ld_flags_from_library_list(mumps.libs),
@@ -1176,19 +1194,19 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         return options
 
-    def configure(self, spec, prefix):
+    def configure(self, pkg, spec, prefix):
         options = self.get_make_config_options(spec, prefix)
         make("config", *options, parallel=False)
         make("info", parallel=False)
 
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         make("lib")
 
     @run_after("build")
     def check_or_test(self):
         # Running 'make check' or 'make test' may fail if MFEM_MPIEXEC or
         # MFEM_MPIEXEC_NP are not set appropriately.
-        if not self.run_tests:
+        if not self.pkg.run_tests:
             # check we can build ex1 (~mpi) or ex1p (+mpi).
             make("-C", "examples", "ex1p" if ("+mpi" in self.spec) else "ex1", parallel=False)
             # make('check', parallel=False)
@@ -1196,7 +1214,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             make("all")
             make("test", parallel=False)
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         make("install", parallel=False)
 
         # TODO: The way the examples and miniapps are being installed is not
@@ -1232,23 +1250,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     examples_src_dir = "examples"
     examples_data_dir = "data"
 
-    @run_after("install")
-    def cache_test_sources(self):
-        """Copy the example source files after the package is installed to an
-        install test subdirectory for use during `spack test run`."""
-        # Clean the 'examples' directory -- at least one example is always built
-        # and we do not want to cache executables.
-        make("examples/clean", parallel=False)
-        cache_extra_test_sources(self, [self.examples_src_dir, self.examples_data_dir])
-
     def test_ex10(self):
         """build and run ex10(p)"""
         # MFEM has many examples to serve as a suitable smoke check. ex10
         # was chosen arbitrarily among the examples that work both with
         # MPI and without it
-        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.pkg.examples_src_dir)
 
-        mesh = join_path("..", self.examples_data_dir, "beam-quad.mesh")
+        mesh = join_path("..", self.pkg.examples_data_dir, "beam-quad.mesh")
         test_exe = "ex10p" if ("+mpi" in self.spec) else "ex10"
 
         with working_dir(test_dir):
