@@ -11,7 +11,7 @@ class Bigwhoop(CMakePackage):
     """
 
     homepage = "https://github.com/ptvogler/BigWhoop"
-    url = "https://github.com/ptvogler/BigWhoop"
+    url = "https://github.com/ptvogler/BigWhoop/archive/refs/tags/v0.2.0.tar.gz"
     git = "https://github.com/ptvogler/BigWhoop.git"
 
     maintainers("ptvogler", "gregorweiss")
