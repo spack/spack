@@ -19,7 +19,6 @@ class Bml(CMakePackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
-    version("josh-magma", branch="josh-magma")
     version("2.2.0", sha256="41703eee605bcb0ce3bcb5dde5914363aaa382393138ab24f02acf84f670fad0")
     version("2.1.2", sha256="d5bb4726759eb35ec66fae7b6ce8b4978cee33fa879aed314bf7aa1fa7eece91")
     version("2.1.1", sha256="412cdc1609e8d66d4a47799806c0974ed3f84c25f09132ad2821a173e8d89261")
@@ -49,8 +48,7 @@ class Bml(CMakePackage):
     # define magma variant
     variant("magma", default=False, description="Build with magma support")
     depends_on("magma", when="+magma")
-    conflicts("+magma", when="@1.1.0:", msg="Must use josh-magma branch of bml")
-    conflicts("+magma", when="master", msg="Must use josh-magma branch of bml")
+    conflicts("+magma", when="@1.1.0:", msg="Must use master branch of bml")
 
     # define cusolver variant, requires that bml be built with magma
     variant(
@@ -66,7 +64,6 @@ class Bml(CMakePackage):
         Set environment variables.
         """
         if "+magma" in self.spec:
-            print(self.spec["magma"].prefix)
             env.set("MAGMA_ROOT", self.spec["magma"].prefix)
 
     def cmake_args(self):
@@ -87,7 +84,7 @@ class Bml(CMakePackage):
                 "-DBLAS_LIBRARIES=" + str(self.spec["blas"].libs)
             )  # cmake doesnt find lapack lib without explicilty setting it.
             args.append(
-                "-DLAPACK_LIBRARIES=" + str(self.spec["blas"].libs)
+                "-DLAPACK_LIBRARIES=" + str(self.spec["lapack"].libs)
             )  # cmake doesnt find lapack lib without explicilty setting it.
 
             # if using cusolver variant, magma required to use cusolver
