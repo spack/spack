@@ -39,3 +39,9 @@ class Erlang(AutotoolsPackage):
     depends_on("m4", type="build")
     depends_on("libtool", type="build")
     depends_on("ncurses", type="link")
+
+    def url_for_version(self, version):
+        if self.spec.satisfies("@:26.0"):
+            return f"https://erlang.org/download/otp_src_{version}.tar.gz"
+        else:
+            return f"https://github.com/erlang/otp/releases/download/OTP-{version}/otp_src_{version}.tar.gz"
