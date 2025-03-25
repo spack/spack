@@ -48,7 +48,9 @@ class PyTriton(PythonPackage):
 
         for py_ver in ["3.8", "3.9", "3.10", "3.11", "3.12"]:
             depends_on(
-                "python@" + py_ver + ".0:" + py_ver, when="@3.1.0-py" + py_ver, type=("build", "run")
+                "python@" + py_ver + ".0:" + py_ver,
+                when="@3.1.0-py" + py_ver,
+                type=("build", "run"),
             )
 
     depends_on("c", type="build")  # generated
