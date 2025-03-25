@@ -710,14 +710,6 @@ Only the ``file``, ``ftp``, ``http`` and ``https`` protocols (or schemes) are
 supported. Spack-specific, environment and user path variables can be used.
 (See :ref:`config-file-variables` for more information.)
 
-.. note::
-
-   Recursive includes are not currently processed in a breadth-first manner
-   so the value of a configuration option that is altered by multiple included
-   files may not be what you expect. This will be addressed in a future
-   update.
-
-
 .. warning::
 
    Recursive includes are not currently processed in a breadth-first manner
