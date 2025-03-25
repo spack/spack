@@ -46,10 +46,10 @@ class PyTriton(PythonPackage):
             url="https://files.pythonhosted.org/packages/15/3c/e972ac0dd0f35ba5fb7058152dd52127a225f579eba2d7527eb1ffb3891a/triton-3.1.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
         )
 
-    for py_ver in ["3.8", "3.9", "3.10", "3.11", "3.12"]:
-        depends_on(
-            "python@" + py_ver + ".0:" + py_ver, when="@3.1.0-py" + py_ver, type=("build", "run")
-        )
+        for py_ver in ["3.8", "3.9", "3.10", "3.11", "3.12"]:
+            depends_on(
+                "python@" + py_ver + ".0:" + py_ver, when="@3.1.0-py" + py_ver, type=("build", "run")
+            )
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
