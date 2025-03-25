@@ -665,59 +665,62 @@ class ConcretizationCache:
         bytes_limit = spack.config.get("config:concretization_cache:size_limit", 3e8)
         # lock the entire buildcache as we're removing a lot of data from the
         # manifest and cache itself
+        entry_count, manifest_bytes = 0,0
+
+        import pdb; pdb.set_trace()
         with self._fc.read_transaction(self._cache_manifest) as f:
             entry_count, manifest_bytes = self._extract_cache_metadata(f)
-            if not entry_count or not manifest_bytes:
-                return
-            if entry_count > entry_limit and entry_limit > 0:
-                with self._fc.write_transaction(self._cache_manifest) as (old, new):
-                    # advance new beyond metadata entry
-                    old.readline()
-                    # prune the oldest 10% or until we have removed 10% of
-                    # total bytes starting from oldest entry
-                    # TODO: make this configurable?
-                    prune_count = entry_limit // 10
-                    lines_to_prune = old.readlines(prune_count)
-                    for i, line in enumerate(lines_to_prune):
-                        sha, cache_entry_bytes = self._parse_manifest_entry(line)
-                        if sha and cache_entry_bytes:
-                            cache_path = self._cache_path_from_hash(sha)
-                            if self._fc.remove(cache_path):
-                                entry_count -= 1
-                                manifest_bytes -= int(cache_entry_bytes)
-                        else:
-                            tty.warn(
-                                f"Invalid concretization cache entry: '{line}' on line: {i+1}"
-                            )
-                    self._write_manifest(old, new, entry_count, manifest_bytes)
+        if not entry_count or not manifest_bytes:
+            return
+        if entry_count > entry_limit and entry_limit > 0:
+            with self._fc.write_transaction(self._cache_manifest) as (old, new):
+                # advance new beyond metadata entry
+                old.readline()
+                # prune the oldest 10% or until we have removed 10% of
+                # total bytes starting from oldest entry
+                # TODO: make this configurable?
+                prune_count = entry_limit // 10
+                lines_to_prune = old.readlines(prune_count)
+                for i, line in enumerate(lines_to_prune):
+                    sha, cache_entry_bytes = self._parse_manifest_entry(line)
+                    if sha and cache_entry_bytes:
+                        cache_path = self._cache_path_from_hash(sha)
+                        if self._fc.remove(cache_path):
+                            entry_count -= 1
+                            manifest_bytes -= int(cache_entry_bytes)
+                    else:
+                        tty.warn(
+                            f"Invalid concretization cache entry: '{line}' on line: {i+1}"
+                        )
+                self._write_manifest(old, new, entry_count, manifest_bytes)
 
-            elif manifest_bytes > bytes_limit and bytes_limit > 0:
-                with self._fc.write_transaction(self._cache_manifest) as (old, new):
-                    # advance new beyond metadata entry
-                    old.readline()
-                    # take 10% of current size off
-                    prune_amount = bytes_limit // 10
-                    total_pruned = 0
-                    i = 0
-                    while total_pruned < prune_amount:
-                        sha, manifest_cache_bytes = self._parse_manifest_entry(old.readline())
-                        if sha and manifest_cache_bytes:
-                            manifest_cache_bytes = int(manifest_cache_bytes)
-                            cache_path = self.root / sha[:2] / sha
-                            if self._safe_remove(cache_path):
-                                entry_count -= 1
-                                manifest_bytes -= manifest_cache_bytes
-                                total_pruned += manifest_cache_bytes
-                        else:
-                            tty.warn(
-                                "Invalid concretization cache entry "
-                                f"'{sha} {manifest_cache_bytes}' on line: {i}"
-                            )
-                        i += 1
-                    self._write_manifest(old, new, entry_count, manifest_bytes)
-            for cache_dir in self.root.iterdir():
-                if cache_dir.is_dir() and not any(cache_dir.iterdir()):
-                    self._safe_remove(cache_dir)
+        elif manifest_bytes > bytes_limit and bytes_limit > 0:
+            with self._fc.write_transaction(self._cache_manifest) as (old, new):
+                # advance new beyond metadata entry
+                old.readline()
+                # take 10% of current size off
+                prune_amount = bytes_limit // 10
+                total_pruned = 0
+                i = 0
+                while total_pruned < prune_amount:
+                    sha, manifest_cache_bytes = self._parse_manifest_entry(old.readline())
+                    if sha and manifest_cache_bytes:
+                        manifest_cache_bytes = int(manifest_cache_bytes)
+                        cache_path = self.root / sha[:2] / sha
+                        if self._safe_remove(cache_path):
+                            entry_count -= 1
+                            manifest_bytes -= manifest_cache_bytes
+                            total_pruned += manifest_cache_bytes
+                    else:
+                        tty.warn(
+                            "Invalid concretization cache entry "
+                            f"'{sha} {manifest_cache_bytes}' on line: {i}"
+                        )
+                    i += 1
+                self._write_manifest(old, new, entry_count, manifest_bytes)
+        for cache_dir in self.root.iterdir():
+            if cache_dir.is_dir() and not any(cache_dir.iterdir()):
+                self._safe_remove(cache_dir)
 
     def cache_entries(self):
         """Generator producing cache entries"""

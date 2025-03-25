@@ -3212,6 +3212,20 @@ def test_commit_variant_can_be_reused(installed_commit, incoming_commit, reusabl
         assert (spec1.dag_hash() == spec2.dag_hash()) == reusable
 
 
+def get_current_cache_data():
+    count, byte_size = 0, 0
+    for entry in spack.solver.asp.CONC_CACHE.cache_entries():
+        count += 1
+        byte_size += entry.stat().st_size
+    return count, byte_size
+
+def extract_cache_metadata():
+    cache_root = pathlib.Path(spack.config.get("config:concretization_cache:url"))
+    cache = cache_root / ".cache_manifest"
+    with cache.open("r") as f:
+        return spack.solver.asp.CONC_CACHE._extract_cache_metadata(f)
+
+
 @pytest.mark.regression("42679")
 @pytest.mark.parametrize("compiler_str", ["gcc@=9.4.0", "gcc@=9.4.0-foo"])
 def test_selecting_compiler_with_suffix(mutable_config, mock_packages, compiler_str):
@@ -3945,17 +3959,10 @@ def test_concretization_cache_manifest_metadata_extraction(
 
 def test_concretization_cache_manifest_updating(use_concretization_cache, mutable_config):
     """Tests that the concretization cache manifest keeps proper track of all manifest entries"""
-
-    def extract_cache_metadata(cache_root: pathlib.Path):
-        cache = cache_root / ".cache_manifest"
-        with cache.open("r") as f:
-            return spack.solver.asp.CONC_CACHE._extract_cache_metadata(f)
-
-    cache_root = pathlib.Path(spack.config.get("config:concretization_cache:url"))
     spack.concretize.concretize_one("zlib")
     spack.concretize.concretize_one("hdf5")
     spack.concretize.concretize_one("py-black")
-    parsed_count, parsed_byte_size = extract_cache_metadata(cache_root)
+    parsed_count, parsed_byte_size = extract_cache_metadata()
     count = 0
     byte_size = 0
     for entry in spack.solver.asp.CONC_CACHE.cache_entries():
@@ -3967,24 +3974,11 @@ def test_concretization_cache_manifest_updating(use_concretization_cache, mutabl
     f"Expected count {byte_size}, got {parsed_byte_size}"
 
 
-def test_concretization_cache_cleanup(use_concretization_cache, mutable_config):
+def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_config):
     """Tests to ensure we are cleaning the cache when we should be and that the manifest is updated
     correctly and reflects the current state of the cache"""
 
-    def get_current_cache_data():
-        count, byte_size = 0, 0
-        for entry in spack.solver.asp.CONC_CACHE.cache_entries():
-            count += 1
-            byte_size += entry.stat().st_size
-        return count, byte_size
-
-    def extract_cache_metadata():
-        cache_root = pathlib.Path(spack.config.get("config:concretization_cache:url"))
-        cache = cache_root / ".cache_manifest"
-        with cache.open("r") as f:
-            return spack.solver.asp.CONC_CACHE._extract_cache_metadata(f)
-
-    spack.config.set("config:concretization_cache:entry_size", 2)
+    spack.config.set("config:concretization_cache:entry_limit", 2)
     spack.concretize.concretize_one("zlib")
     spack.concretize.concretize_one("hdf5")
     # cleanup should be run after the third execution
@@ -3992,7 +3986,32 @@ def test_concretization_cache_cleanup(use_concretization_cache, mutable_config):
 
     real_count, real_size = get_current_cache_data()
     manifest_count, manifest_size = extract_cache_metadata()
+    # ensure we only have 2 entries
+    assert real_count == 2, "Concretization cache cleanup pruned incorrectly"
+    # ensure the manifest reports that
     assert real_count == manifest_count, "Concretization cache manifest entry count incorrect. "
     f"Expected count {real_count}, got {manifest_count}"
+    # Ensure the bytes count was updated properly
     assert real_size == manifest_size, "Concretization cache manifest byte count incorrect. "
+    f"Expected count {real_size}, got {manifest_size}"
+
+
+def test_concretization_cache_bytes_cleanup(use_concretization_cache, mutable_config):
+
+    spack.config.set("config:concretization_cache:size_limit", 3000)
+    spack.concretize.concretize_one("zlib")
+    # cleanup should be run after hdf5 is concretized
+    spack.concretize.concretize_one("hdf5")
+
+    real_count, real_size = get_current_cache_data()
+    manifest_count, manifest_size = extract_cache_metadata()
+    # ensure we have less than our byte size limit
+    assert real_size < 3000, "Concretization cache cleanup did not reduce enough bytes"
+    # ensure there's only one cache entry
+    assert real_count == 1, "Concretization cache did not properly prune on byte limit"
+    # ensure the manifest reports that
+    assert real_size == manifest_size, "Concretization cache manifest entry count incorrect. "
+    f"Expected count {real_count}, got {manifest_count}"
+    # Ensure the manifest count entry was updated correctly
+    assert real_count == manifest_count, "Concretization cache manifest byte count incorrect. "
     f"Expected count {real_size}, got {manifest_size}"
