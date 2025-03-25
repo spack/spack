@@ -597,6 +597,13 @@ attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
 attr("virtual_on_incoming_edges", ProviderNode, Virtual)
   :- attr("virtual_on_edge", _, ProviderNode, Virtual).
 
+% This is needed to allow requirement on virtuals,
+% when a virtual root is requested
+attr("virtual_on_incoming_edges", ProviderNode, Virtual)
+  :- attr("virtual_root", node(min_dupe_id, Virtual)),
+     attr("root", ProviderNode),
+     provider(ProviderNode, node(min_dupe_id, Virtual)).
+
 % dependencies on virtuals also imply that the virtual is a virtual node
 1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) }
   :- node_depends_on_virtual(PackageNode, Virtual).
@@ -953,12 +960,14 @@ error(100, "Cannot set variant '{0}' for package '{1}' because the variant condi
      build(node(ID, Package)).
 
 % at most one variant value for single-valued variants.
-error(100, "'{0}' required multiple values for single-valued variant '{1}'", Package, Variant)
+error(100, "'{0}' requires conflicting variant values 'Spec({1}={2})' and 'Spec({1}={3})'", Package, Variant, Value1, Value2)
   :- attr("node", node(ID, Package)),
      node_has_variant(node(ID, Package), Variant, _),
      variant_single_value(node(ID, Package), Variant),
-     build(node(ID, Package)),
-     2 { attr("variant_value", node(ID, Package), Variant, Value) }.
+     attr("variant_value", node(ID, Package), Variant, Value1),
+     attr("variant_value", node(ID, Package), Variant, Value2),
+     Value1 < Value2,
+     build(node(ID, Package)).
 
 error(100, "No valid value for variant '{1}' of package '{0}'", Package, Variant)
   :- attr("node", node(ID, Package)),

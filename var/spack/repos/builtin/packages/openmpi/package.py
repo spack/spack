@@ -1084,9 +1084,15 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.extend(["--enable-debug"])
 
         # Package dependencies
-        for dep in ["libevent", "lustre", "singularity", "valgrind"]:
+        for dep in ["lustre", "singularity", "valgrind"]:
             if "^" + dep in spec:
                 config_args.append("--with-{0}={1}".format(dep, spec[dep].prefix))
+
+        # libevent support
+        if spec.satisfies("+internal-libevent"):
+            config_args.append("--with-libevent=internal")
+        elif "^libevent" in spec:
+            config_args.append("--with-libevent={0}".format(spec["libevent"].prefix))
 
         # PMIx support
         if spec.satisfies("+internal-pmix"):

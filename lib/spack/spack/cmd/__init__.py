@@ -330,7 +330,7 @@ def ensure_single_spec_or_die(spec, matching_specs):
     if len(matching_specs) <= 1:
         return
 
-    format_string = "{name}{@version}{%compiler.name}{@compiler.version}{ arch=architecture}"
+    format_string = "{name}{@version}{ arch=architecture} {%compiler.name}{@compiler.version}"
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
         colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
@@ -471,12 +471,11 @@ def display_specs(specs, args=None, **kwargs):
         nfmt = "{fullname}" if namespaces else "{name}"
         ffmt = ""
         if full_compiler or flags:
-            ffmt += "{%compiler.name}"
+            ffmt += "{compiler_flags} {%compiler.name}"
             if full_compiler:
                 ffmt += "{@compiler.version}"
-            ffmt += " {compiler_flags}"
         vfmt = "{variants}" if variants else ""
-        format_string = nfmt + "{@version}" + ffmt + vfmt
+        format_string = nfmt + "{@version}" + vfmt + ffmt
 
     def fmt(s, depth=0):
         """Formatter function for all output specs"""

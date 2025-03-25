@@ -299,6 +299,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("zlib-api")
     depends_on("libcatalyst@2:", when="+libcatalyst")
     depends_on("hip@5.2:", when="+rocm")
+    # CUDA thrust is already include in the CUDA pkg
+    depends_on("rocthrust", when="@5.13: +rocm ^cmake@3.24:")
     for target in ROCmPackage.amdgpu_targets:
         depends_on(
             "kokkos@:3.7.01 +rocm amdgpu_target={0}".format(target),
@@ -384,6 +386,12 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     patch("kits_with_catalyst_5_12.patch", when="@5.12.0")
 
+    # https://github.com/Kitware/VTK-m/commit/c805a6039ea500cb96158cfc11271987c9f67aa4
+    patch("vtkm-remove-unused-method-from-mir-tables.patch", when="@5.13.2 %oneapi@2025:")
+
+    # https://github.com/Kitware/VTK-m/commit/48e385af319543800398656645327243a29babfb
+    patch("vtkm-fix-problems-in-class-member-names.patch", when="@5.13.2 %oneapi@2025:")
+
     generator("ninja", "make", default="ninja")
     # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
     conflicts("generator=ninja", when="%xl")
@@ -437,6 +445,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             elif self.spec.satisfies("@5.10: +hdf5"):
                 if self.spec["hdf5"].satisfies("@1.12:"):
                     flags.append("-DH5_USE_110_API")
+
+            if self.spec.satisfies("%oneapi@2025:"):
+                flags.append("-Wno-error=missing-template-arg-list-after-template-kw")
+                flags.append("-Wno-missing-template-arg-list-after-template-kw")
 
         return flags, None, None
 
@@ -748,19 +760,15 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     def test_smoke_test(self):
         """Simple smoke test for ParaView"""
-        spec = self.spec
-
-        pvserver = Executable(spec["paraview"].prefix.bin.pvserver)
+        pvserver = Executable(self.prefix.bin.pvserver)
         pvserver("--help")
 
     def test_pvpython(self):
         """Test pvpython"""
-        spec = self.spec
-
-        if "~python" in spec:
+        if "~python" in self.spec:
             raise SkipTest("Package must be installed with +python")
 
-        pvpython = Executable(spec["paraview"].prefix.bin.pvpython)
+        pvpython = Executable(self.prefix.bin.pvpython)
         pvpython("-c", "import paraview")
 
     def test_mpi_ensemble(self):
@@ -771,8 +779,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             raise SkipTest("Package must be installed with +mpi and +python")
 
         mpirun = spec["mpi"].prefix.bin.mpirun
-        pvserver = spec["paraview"].prefix.bin.pvserver
-        pvpython = Executable(spec["paraview"].prefix.bin.pvpython)
+        pvserver = self.prefix.bin.pvserver
+        pvpython = Executable(self.prefix.bin.pvpython)
 
         with working_dir("smoke_test_build", create=True):
             with Popen(

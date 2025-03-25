@@ -278,17 +278,24 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append("# ROCm")
             entries.append("#------------------{0}\n".format("-" * 30))
 
-            # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
-            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-            llvm_bin = spec["llvm-amdgpu"].prefix.bin
-            llvm_prefix = spec["llvm-amdgpu"].prefix
-            # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
-            # others point to /<path>/rocm-<ver>/llvm
-            if os.path.basename(os.path.normpath(llvm_prefix)) != "llvm":
-                llvm_bin = os.path.join(llvm_prefix, "llvm/bin/")
-            entries.append(
-                cmake_cache_filepath("CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "clang++"))
-            )
+            if spec.satisfies("^blt@0.7:"):
+                rocm_root = os.path.dirname(spec["llvm-amdgpu"].prefix)
+                entries.append(cmake_cache_path("ROCM_PATH", rocm_root))
+            else:
+                # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
+                entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
+                llvm_bin = spec["llvm-amdgpu"].prefix.bin
+                llvm_prefix = spec["llvm-amdgpu"].prefix
+                # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
+                # others point to /<path>/rocm-<ver>/llvm
+                if os.path.basename(os.path.normpath(llvm_prefix)) != "llvm":
+                    llvm_bin = os.path.join(llvm_prefix, "llvm/bin/")
+                entries.append(
+                    cmake_cache_filepath(
+                        "CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "amdclang++")
+                    )
+                )
+
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)

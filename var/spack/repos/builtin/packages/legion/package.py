@@ -79,11 +79,11 @@ class Legion(CMakePackage, ROCmPackage):
     for nvarch in cuda_arch_list:
         depends_on(
             f"kokkos@3.3.01:+cuda+cuda_lambda+wrapper cuda_arch={nvarch}",
-            when=f"%gcc+kokkos+cuda cuda_arch={nvarch}",
+            when=f"+kokkos+cuda cuda_arch={nvarch} %gcc",
         )
         depends_on(
             f"kokkos@3.3.01:+cuda+cuda_lambda~wrapper cuda_arch={nvarch}",
-            when=f"%clang+kokkos+cuda cuda_arch={nvarch}",
+            when=f"+kokkos+cuda cuda_arch={nvarch} %clang",
         )
 
     depends_on("kokkos@3.3.01:~cuda", when="+kokkos~cuda")
@@ -407,7 +407,7 @@ class Legion(CMakePackage, ROCmPackage):
             # default is off.
             options.append("-DLegion_USE_Kokkos=ON")
             os.environ["KOKKOS_CXX_COMPILER"] = self["kokkos"].kokkos_cxx
-            if spec.satisfies("+cuda+cuda_unsupported_compiler ^kokkos%clang +cuda"):
+            if spec.satisfies("+cuda+cuda_unsupported_compiler ^kokkos+cuda %clang"):
                 # Keep CMake CUDA compiler detection happy
                 options.append(
                     self.define("CMAKE_CUDA_FLAGS", "--allow-unsupported-compiler -std=c++17")

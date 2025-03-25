@@ -49,7 +49,7 @@ class PyDgl(CMakePackage, PythonExtension, CudaPackage):
     )
 
     depends_on("cmake@3.5:", type="build")
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
 
     # Python dependencies
     # See python/setup.py

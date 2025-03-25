@@ -18,8 +18,15 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     license("Apache-2.0")
 
     version("master", branch="main", submodules=True)
-    version("1.1.0", tag="v1.1.0", submodules=True)
-    version("1.0.0", tag="v1.0.0", submodules=True)
+    version(
+        "1.2.0", tag="v1.2.0", commit="4c49c7775c580b6bd2556e6c00fd13c08737d5eb", submodules=True
+    )
+    version(
+        "1.1.0", tag="v1.1.0", commit="c8823f19fc8d19ea051df0ff68780e56981a7f94", submodules=True
+    )
+    version(
+        "1.0.0", tag="v1.0.0", commit="85718893d2510c8a2e8c8e94c768ce6a67f94703", submodules=True
+    )
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")

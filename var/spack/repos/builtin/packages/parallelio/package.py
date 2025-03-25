@@ -88,6 +88,7 @@ class Parallelio(CMakePackage):
             define("GENF90_PATH", join_path(src, "genf90")),
             define_from_variant("BUILD_SHARED_LIBS", "shared"),
             define("PIO_ENABLE_EXAMPLES", False),
+            define_from_variant("WITH_PNETCDF", "pnetcdf"),
         ]
         if spec.satisfies("+ncint"):
             args.extend([define("PIO_ENABLE_NETCDF_INTEGRATION", True)])

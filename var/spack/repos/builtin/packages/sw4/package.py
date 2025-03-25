@@ -40,7 +40,7 @@ class Sw4(MakefilePackage):
     depends_on("zfp", when="+zfp")
     depends_on("h5z-zfp@develop", when="+zfp")
     depends_on("fftw@3: +mpi", when="+fftw")
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["mpi"].mpicxx)
@@ -66,7 +66,7 @@ class Sw4(MakefilePackage):
         env.set("EXTRA_LINK_FLAGS", "-lstdc++ -lm -ldl")
         env.append_flags("EXTRA_LINK_FLAGS", self.spec["blas"].libs.ld_flags)
         env.append_flags("EXTRA_LINK_FLAGS", self.spec["lapack"].libs.ld_flags)
-        if self.spec.satisfies("%apple-clang +openmp"):
+        if self.spec.satisfies("+openmp %apple-clang"):
             env.append_flags("EXTRA_LINK_FLAGS", self.spec["llvm-openmp"].libs.ld_flags)
         # From spack/trilinos
         if (

@@ -15,8 +15,14 @@ class Expat(AutotoolsPackage, CMakePackage):
     url = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
 
     license("MIT")
-    version("2.6.4", sha256="8dc480b796163d4436e6f1352e71800a774f73dbae213f1860b60607d2a83ada")
-    # deprecate all releases before 2.6.4 because of security issues
+    version("2.7.0", sha256="10f3e94896cd7f44de566cafa2e0e1f35e8df06d119b38d117c0e72d74a4b4b7")
+    # deprecate all releases before 2.7.0 because of security issues
+    # CVE-2024-8176  (fixed in 2.7.0)
+    version(
+        "2.6.4",
+        sha256="8dc480b796163d4436e6f1352e71800a774f73dbae213f1860b60607d2a83ada",
+        deprecated=True,
+    )
     # CVE-2024-50602 (fixed in 2.6.4)
     version(
         "2.6.3",

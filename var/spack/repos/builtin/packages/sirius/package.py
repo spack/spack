@@ -33,56 +33,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     version("7.3.2", sha256="a256508de6b344345c295ad8642dbb260c4753cd87cc3dd192605c33542955d7")
     version("7.3.1", sha256="8bf9848b8ebf0b43797fd359adf8c84f00822de4eb677e3049f22baa72735e98")
     version("7.3.0", sha256="69b5cf356adbe181be6c919032859c4e0160901ff42a885d7e7ea0f38cc772e2")
-    version(
-        "7.2.7",
-        sha256="929bf7f131a4847624858b9c4295532c24b0c06f6dcef5453c0dfc33fb78eb03",
-        deprecated=True,
-    )
-    version(
-        "7.2.6",
-        sha256="e751fd46cdc7c481ab23b0839d3f27fb00b75dc61dc22a650c92fe8e35336e3a",
-        deprecated=True,
-    )
-    version(
-        "7.2.5",
-        sha256="794e03d4da91025f77542d3d593d87a8c74e980394f658a0210a4fd91c011f22",
-        deprecated=True,
-    )
-    version(
-        "7.2.4",
-        sha256="aeed0e83b80c3a79a9469e7f3fe10d80ad331795e38dbc3c49cb0308e2bd084d",
-        deprecated=True,
-    )
-    version(
-        "7.2.3",
-        sha256="6c10f0e87e50fcc7cdb4d1b2d35e91dba6144de8f111e36c7d08912e5942a906",
-        deprecated=True,
-    )
-    version(
-        "7.2.1",
-        sha256="01bf6c9893ff471473e13351ca7fdc2ed6c1f4b1bb7afa151909ea7cd6fa0de7",
-        deprecated=True,
-    )
-    version(
-        "7.2.0",
-        sha256="537800459db8a7553d7aa251c19f3a31f911930194b068bc5bca2dfb2c9b71db",
-        deprecated=True,
-    )
-    version(
-        "7.0.2",
-        sha256="ee613607ce3be0b2c3f69b560b2415ce1b0e015179002aa90739430dbfaa0389",
-        deprecated=True,
-    )
-    version(
-        "7.0.1",
-        sha256="cca11433f86e7f4921f7956d6589f27bf0fd5539f3e8f96e66a3a6f274888595",
-        deprecated=True,
-    )
-    version(
-        "7.0.0",
-        sha256="da783df11e7b65668e29ba8d55c8a6827e2216ad6d88040f84f42ac20fd1bb99",
-        deprecated=True,
-    )
 
     depends_on("cxx", type="build")
     depends_on("c", type="build")
@@ -234,7 +184,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("umpire+cuda~device_alloc", when="+cuda")
         depends_on("umpire+rocm~device_alloc", when="+rocm")
 
-    patch("mpi_datatypes.patch", when="@:7.2.6")
     patch("fj.patch", when="@7.3.2: %fj")
 
     def cmake_args(self):

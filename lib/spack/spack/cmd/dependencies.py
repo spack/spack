@@ -55,7 +55,7 @@ def dependencies(parser, args):
         env = ev.active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
-        format_string = "{name}{@version}{%compiler}{/hash:7}"
+        format_string = "{name}{@version}{/hash:7}{%compiler}"
         if sys.stdout.isatty():
             tty.msg("Dependencies of %s" % spec.format(format_string, color=True))
         deps = spack.store.STORE.db.installed_relatives(

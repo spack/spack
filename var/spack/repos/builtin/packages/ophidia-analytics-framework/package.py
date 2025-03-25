@@ -42,10 +42,8 @@ class OphidiaAnalyticsFramework(AutotoolsPackage):
     def configure_args(self):
         args = [
             "--enable-parallel-netcdf",
-            "--with-web-server-path={0}/html".format(
-                self.spec["ophidia-analytics-framework"].prefix
-            ),
+            f"--with-web-server-path={self.prefix}/html",
             "--with-web-server-url=http://127.0.0.1/ophidia",
-            "--with-ophidiaio-server-path={0}".format(self.spec["ophidia-io-server"].prefix),
+            f"--with-ophidiaio-server-path={self.spec['ophidia-io-server'].prefix}",
         ]
         return args
