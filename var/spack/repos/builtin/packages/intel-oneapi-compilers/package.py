@@ -529,13 +529,20 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         gcc = Executable(self.compiler.cc)
         cc1 = Executable(gcc("-print-prog-name=cc1", output=str).strip())
         multiarch_triplet = gcc("-print-multiarch", output=str).strip()
-        incdir = [
-            i
-            for i in cc1(
-                "-imultiarch", multiarch_triplet, "-o", "/dev/null", "-v", "/dev/null", error=str
-            ).split(" ")
-            if "nonexistent" not in i and i.endswith(multiarch_triplet + "\n")
-        ]
+        if multiarch_triplet:
+            incdir = [
+                i
+                for i in cc1(
+                    "-imultiarch",
+                    multiarch_triplet,
+                    "-o",
+                    "/dev/null",
+                    "-v",
+                    "/dev/null",
+                    error=str,
+                ).split(" ")
+                if "nonexistent" not in i and i.endswith(multiarch_triplet + "\n")
+            ]
         if incdir:
             classic_flags.append("-isystem" + incdir[0].strip())
 
