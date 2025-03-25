@@ -141,11 +141,7 @@ class Simgrid(CMakePackage):
         " please use an older release (e.g., %gcc@:9).",
     )
 
-    conflicts(
-        "+msg",
-        when="@3.34:",
-        msg="MSG was removed from SimGrid v3.33."
-    )
+    conflicts("+msg", when="@3.34:", msg="MSG was removed from SimGrid v3.33.")
 
     def setup_dependent_package(self, module, dep_spec):
         if self.spec.satisfies("+smpi"):
