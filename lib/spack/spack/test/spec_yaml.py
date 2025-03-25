@@ -389,6 +389,9 @@ ordered_spec = collections.OrderedDict(
 )
 
 
+# TODO/RepoSplit: A suitable mock or real post-split package must be chosen
+# TODO/RepoSplit:   and gzip'd spec files in json need to be generated so
+# TODO/RepoSplit:   tests with v0.13 through v0.19 tests work.
 @pytest.mark.parametrize(
     "specfile,expected_hash,reader_cls",
     [
