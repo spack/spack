@@ -1078,7 +1078,6 @@ def _exists_in_buildcache(spec: spack.spec.Spec, out_url: str) -> URLBuildcacheE
     """creates and returns (after checking existence) a URLBuildcacheEntry"""
     cache_type = get_url_buildcache_class(CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     cache_entry = cache_type(out_url, spec)
-    cache_entry.exists()
     return cache_entry
 
 
@@ -1302,7 +1301,9 @@ def _url_push(
         specs_to_upload = []
 
         for spec in specs:
-            if cache_entries[spec.dag_hash()].exists():
+            if cache_entries[spec.dag_hash()].exists(
+                [BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL]
+            ):
                 skipped.append(spec)
             else:
                 specs_to_upload.append(spec)
@@ -1934,7 +1935,7 @@ def download_tarball(
                 cache_entry.destroy()
                 continue
 
-            return cache_entry.archive_stage
+            return cache_entry.get_archive_stage()
 
     # Falling through the nested loops meeans we exhaustively searched
     # for all known kinds of spec files on all mirrors and did not find
@@ -2457,7 +2458,7 @@ def needs_rebuild(spec, mirror_url):
     # needs to be rebuilt.
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     cache_entry = cache_class(mirror_url, spec)
-    exists = cache_entry.exists()
+    exists = cache_entry.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
     return not exists
 
 

@@ -101,7 +101,7 @@ def tests_buildcache_create_env(
         layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
     )
     cache_entry = cache_class(mirror_url, spec)
-    assert cache_entry.exists()
+    assert cache_entry.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
     cache_entry.destroy()
 
 
@@ -328,9 +328,8 @@ def test_buildcache_create_install(
     )
 
     assert os.path.exists(manifest_path)
-    buildcache_manifest = cache_entry.read_manifest(verify_signature=False)
-    spec_blob_record = buildcache_manifest.get_blob_record(cache_class.SPEC_VERSION)
-    tarball_blob_record = buildcache_manifest.get_blob_record(cache_class.TARBALL_VERSION)
+    spec_blob_record = cache_entry.get_blob_record(BuildcacheComponent.SPEC)
+    tarball_blob_record = cache_entry.get_blob_record(BuildcacheComponent.TARBALL)
 
     spec_blob_path = os.path.join(
         tmpdir.strpath, *cache_class.get_blob_path_components(spec_blob_record)

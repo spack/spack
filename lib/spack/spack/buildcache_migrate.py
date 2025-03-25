@@ -86,7 +86,7 @@ def _migrate_spec(
 
     v3_cache_class = get_url_buildcache_class(layout_version=3)
     v3_cache_entry = v3_cache_class(mirror_url, s)
-    exists = v3_cache_entry.exists()
+    exists = v3_cache_entry.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
     v3_cache_entry.destroy()
 
     if exists:

@@ -589,9 +589,9 @@ def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str)
         cache_entry.destroy()
         return
 
-    spec_blob_record = cache_entry.spec_manifest_record
+    spec_blob_record = cache_entry.get_blob_record(BuildcacheComponent.SPEC)
     local_spec_path = cache_entry.get_local_spec_path()
-    tarball_blob_record = cache_entry.tarball_manifest_record
+    tarball_blob_record = cache_entry.get_blob_record(BuildcacheComponent.TARBALL)
     local_tarball_path = cache_entry.get_local_archive_path()
 
     target_spec = spack.spec.Spec.from_dict(spec_dict)

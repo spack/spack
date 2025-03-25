@@ -1145,20 +1145,20 @@ def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
     # Push libdwarf to buildcache
     buildcache_cmd("push", "-u", mirror_dir.strpath, s.name)
 
-    def validate(spec_data_dict, tarball_path):
-        assert "archive_size" in spec_data_dict
-        expected_archive_size = spec_data_dict["archive_size"]
-        assert os.path.exists(tarball_path)
-        actual_archive_size = os.stat(tarball_path).st_size
-        assert actual_archive_size == expected_archive_size
-
     cache_class = get_url_buildcache_class(bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     build_cache = cache_class(mirror_url, s)
 
+    manifest = build_cache.read_manifest(verify_signature=False)
     spec_dict = build_cache.fetch_metadata(allow_unsigned=True)
     local_tarball_path = build_cache.fetch_archive(allow_unsigned=True)
 
-    validate(spec_dict, local_tarball_path)
+    assert "spec" in spec_dict
+
+    for blob_record in manifest.data:
+        blob_path = build_cache.get_staged_blob_path(blob_record)
+        assert os.path.exists(blob_path)
+        actual_blob_size = os.stat(blob_path).st_size
+        assert blob_record.content_length == actual_blob_size
 
     build_cache.destroy()
 
