@@ -677,7 +677,7 @@ class ConcretizationCache:
                     # total bytes starting from oldest entry
                     # TODO: make this configurable?
                     prune_count = entry_limit // 10
-                    lines_to_prune = new.readlines(prune_count)
+                    lines_to_prune = old.readlines(prune_count)
                     for i, line in enumerate(lines_to_prune):
                         sha, cache_entry_bytes = self._parse_manifest_entry(line)
                         if sha and cache_entry_bytes:
