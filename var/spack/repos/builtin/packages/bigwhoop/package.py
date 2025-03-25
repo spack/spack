@@ -19,7 +19,7 @@ class Bigwhoop(CMakePackage):
     license("BSD-2-Clause", checked_by="ptvogler")
 
     version("main", branch="main")
-    version("0.2.0", sha256="77c2fb566a777917e8a9fc07f8c29a59292105bfd481c0a5a23429a705a3e460")
+    version("0.2.0", sha256="48e6aeaf9c6d39c18c030397e0cb46c43491cbf64400dda1efb4293696716692")
 
     depends_on("c", type="build")
     depends_on("fortran", type="build")
