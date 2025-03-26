@@ -79,6 +79,13 @@ class PyWaves(PythonPackage):
             python("-m build --no-isolation")
 
     @run_after("install")
+    def install_docs(self):
+        if "+docs" in self.spec:
+            scons = which("scons")
+            scons("html")
+            install_tree("docs", self.prefix.docs.html)
+
+    @run_after("install")
     @on_package_attributes(run_tests=True)
     def build_test(self):
         pytest = which("pytest")
