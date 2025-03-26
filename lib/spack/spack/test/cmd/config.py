@@ -44,13 +44,11 @@ def test_config_list_scopes():
     output = config("list-scopes")
     assert "command_line" in output
     assert "_builtin" in output
-    assert "site/test" in output  # Test platform
 
 
 def test_config_list_scopes_file():
     output = config("list-scopes", "--file")
     assert "site" in output
-    assert "site/test" in output  # Test platform
     assert "_builtin" not in output
 
 
@@ -59,12 +57,10 @@ def test_config_list_scopes_non_platform():
     output = config("list-scopes", "--non-platform")
     assert "site" in output
     assert "user" not in output
-    assert "site/test" not in output  # Test platform
     del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
     output = config("list-scopes", "--non-platform")
     assert "site" in output
     assert "user" in output
-    assert "site/test" not in output  # Test platform
 
 
 def test_config_list_scopes_file_non_platform():
@@ -73,7 +69,6 @@ def test_config_list_scopes_file_non_platform():
     output = config("list-scopes", "--non-platform", "--file")
     assert "site" in output
     assert "_builtin" not in output
-    assert "site/test" not in output  # Test platform
 
 
 def test_get_config_scope(mock_low_high_config):
