@@ -126,6 +126,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     variant("custom-protobuf", default=False, description="Use vendored protobuf")
 
     conflicts("+cuda+rocm")
+    conflicts("+rocm", when="@2.6", msg="py-torch 2.6 support is not supported on Rocm releases")
+    conflicts("+rocm", when="@2.4", msg="Rocm doesn't support py-torch 2.4 release")
     conflicts("+tensorpipe", when="+rocm ^hip@:5.1", msg="TensorPipe not supported until ROCm 5.2")
     conflicts("+breakpad", when="target=ppc64:")
     conflicts("+breakpad", when="target=ppc64le:")
@@ -305,9 +307,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("rocfft")
         depends_on("rocblas")
         depends_on("rocminfo")
-        depends_on("aotriton")
+        depends_on("aotriton@0.7b", when="@2.4.0:2.4.2")
+        depends_on("aotriton@0.8.1b", when="@2.5.0:2.5.2")
         depends_on("miopen-hip")
-        depends_on("composable-kernel")
+        depends_on("composable-kernel@:6.3.2")
     depends_on("mpi", when="+mpi")
     depends_on("ucc", when="+ucc")
     depends_on("ucx", when="+ucc")
@@ -519,6 +522,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         working_dir="third_party/fbgemm",
     )
 
+    # Below pull request in review to add required include paths
+    # https://github.com/ROCm/pytorch/pull/2001
+    patch(
+        "https://github.com/ROCm/pytorch/commit/fb91f41dc98757a7ed74f1809ca3ab0f8e5b330e.patch?full_index=1",
+        sha256="733ce349aa15236829b3989311c00b994112a02998bb3755ed352261c43ec6a3",
+        when="@2.5 +rocm",
+    )
     @when("@1.5.0:")
     def patch(self):
         # https://github.com/pytorch/pytorch/issues/52208
@@ -555,15 +565,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
                 r"${ROCM_SOURCE_DIR}/include",
                 "$ENV{THRUST_PATH}/include $ENV{ROCPRIM_PATH}/include $ENV{HIPCUB_PATH}/include \
                     $ENV{ROCRAND_PATH}/include",
-                "caffe2/CMakeLists.txt",
-                string=True,
-            )
-        if self.spec.satisfies("@2.5: + rocm"):
-            filter_file(
-                r"${ROCM_SOURCE_DIR}/include",
-                "$ENV{AOTRITON_INSTALLED_PREFIX}/include $ENV{THRUST_PATH}/include \
-                    $ENV{ROCPRIM_PATH}/include $ENV{HIPCUB_PATH}/include \
-                    $ENV{ROCRAND_PATH}/include $ENV{TORCHINDUCTOR_CK_DIR}/include",
                 "caffe2/CMakeLists.txt",
                 string=True,
             )
@@ -655,7 +656,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("AOTRITON_INSTALLED_PREFIX", self.spec["aotriton"].prefix)
             if self.spec.satisfies("^hip@5.2.0:"):
                 env.set("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
-            if self.spec.satisfies("@2.5:"):
+            if self.spec.satisfies("@2.5"):
                 env.set("TORCHINDUCTOR_CK_DIR", self.spec["composable-kernel"].prefix)
 
         enable_or_disable("cudnn")
@@ -664,11 +665,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("CUDNN_INCLUDE_DIR", self.spec["cudnn"].prefix.include)
             env.set("CUDNN_LIBRARY", self.spec["cudnn"].libs[0])
 
-        # Flash attention has very high memory requirements that may cause the build to fail
-        # https://github.com/pytorch/pytorch/issues/111526
-        # https://github.com/pytorch/pytorch/issues/124018
-        env.set("USE_FLASH_ATTENTION", "OFF")
-        env.set("USE_MEM_EFF_ATTENTION", "OFF")
 
         enable_or_disable("fbgemm")
         enable_or_disable("kineto")
