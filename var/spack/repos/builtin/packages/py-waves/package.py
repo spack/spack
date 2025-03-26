@@ -74,6 +74,7 @@ class PyWaves(PythonPackage):
     depends_on("py-xarray", type=("run", "test"))
 
     depends_on("py-pytest", type="test")
+    depends_on("py-pytest-xdist", type="test")
 
     phases = ("build", "install")
 
@@ -121,5 +122,6 @@ class PyWaves(PythonPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def install_test(self):
-        pytest = which("pytest")
-        pytest("-vvv", "-m", "not systemtest")
+        with working_dir(self.build_directory):
+            pytest = which("pytest")
+            pytest("-vvv", "-n", "4", "-m", "not systemtest")
