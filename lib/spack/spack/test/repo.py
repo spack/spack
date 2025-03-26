@@ -311,7 +311,7 @@ class TestRepoPath:
         repo = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=mock_test_cache)
         assert len(repo.repos) == 1
         assert repo.repos[0]._finder is repo
-        assert repo.by_namespace["spack.pkg.builtin.mock"] is repo.repos[0]
+        assert repo.by_namespace["builtin.mock"] is repo.repos[0]
 
     def test_get_repo(self, mock_test_cache):
         repo = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=mock_test_cache)
@@ -422,8 +422,8 @@ class Uppercase(Package):
 
 def test_repo_v2_module_and_class_to_package_name(tmp_path: pathlib.Path, capsys):
     # Create a repo with a v2 structure
-    repo_dir = tmp_path / "repo_2"
-    repo_dir.mkdir()
+    repo_dir = tmp_path / "spack_repo" / "repo_2"
+    repo_dir.mkdir(parents=True)
     (repo_dir / "repo.yaml").write_text(
         """
 repo:
@@ -446,4 +446,4 @@ class _1example2Test(Package):
         assert repo.exists("1example-2-test")
         pkg_cls = repo.get_pkg_class("1example-2-test")
         assert pkg_cls.name == "1example-2-test"
-        assert pkg_cls.module.__name__ == "spack.pkg.repo_2._1example_2_test"
+        assert pkg_cls.module.__name__ == "spack_repo.repo_2.packages._1example_2_test.package"

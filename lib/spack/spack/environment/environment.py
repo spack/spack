@@ -2314,7 +2314,7 @@ class Environment:
         """Add the root node of the spec to the environment repository"""
         namespace: str = spec_node.namespace
         repository = spack.repo.create_or_construct(
-            path=os.path.join(self.repos_path, namespace),
+            root=os.path.join(self.repos_path, namespace),
             namespace=namespace,
             package_api=spack.repo.PATH.get_repo(namespace).package_api,
         )

@@ -1733,15 +1733,14 @@ class TestConcretize:
 
     @pytest.mark.regression("28259")
     def test_reuse_with_unknown_package_dont_raise(self, tmpdir, temporary_store, monkeypatch):
-        builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"), namespace="myrepo")
+        builder = spack.repo.MockRepositoryBuilder(str(tmpdir), namespace="myrepo")
         builder.add_package("pkg-c")
+        print(builder.root)
         with spack.repo.use_repositories(builder.root, override=False):
             s = spack.concretize.concretize_one("pkg-c")
             assert s.namespace == "myrepo"
             PackageInstaller([s.package], fake=True, explicit=True).install()
-
-        del sys.modules["spack.pkg.myrepo.pkg_c"]
-        del sys.modules["spack.pkg.myrepo"]
+        del sys.modules["spack_repo.myrepo.packages.pkg_c"]
         builder.remove("pkg-c")
         with spack.repo.use_repositories(builder.root, override=False) as repos:
             # TODO (INJECT CONFIGURATION): unclear why the cache needs to be invalidated explicitly

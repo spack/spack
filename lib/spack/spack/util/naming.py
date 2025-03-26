@@ -20,8 +20,8 @@ __all__ = [
 ]
 
 # Valid module names can contain '-' but can't start with it.
-_valid_module_re_v1 = re.compile(r"^\w[\w-]*$")
-_valid_module_re_v2 = re.compile(r"^[a-z_][a-z0-9_]*$")
+_VALID_MODULE_RE_V1 = re.compile(r"^\w[\w-]*$")
+_VALID_MODULE_RE_V2 = re.compile(r"^[a-z_][a-z0-9_]*$")
 
 
 def pkg_name_to_class_name(pkg_name: str):
@@ -133,7 +133,7 @@ def simplify_name(name):
 
 def valid_module_name(mod_name: str, package_api: Tuple[int, int]) -> bool:
     """Return whether mod_name is valid for use in Spack."""
-    regex = _valid_module_re_v1 if package_api[0] == 1 else _valid_module_re_v2
+    regex = _VALID_MODULE_RE_V1 if package_api[0] == 1 else _VALID_MODULE_RE_V2
     return bool(regex.match(mod_name))
 
 

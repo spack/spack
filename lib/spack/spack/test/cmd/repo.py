@@ -26,16 +26,16 @@ def test_help_option():
 def test_create_add_list_remove(mutable_config, tmp_path: pathlib.Path):
     # Create a new repository and check that the expected
     # files are there
-    repo("create", str(tmp_path / "mockrepo"))
-    assert (tmp_path / "mockrepo" / "repo.yaml").exists()
+    repo("create", str(tmp_path), "mockrepo")
+    assert (tmp_path / "spack_repo" / "mockrepo" / "repo.yaml").exists()
 
     # Add the new repository and check it appears in the list output
-    repo("add", "--scope=site", str(tmp_path / "mockrepo"))
+    repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
     output = repo("list", "--scope=site", output=str)
     assert "mockrepo" in output
 
     # Then remove it and check it's not there
-    repo("remove", "--scope=site", str(tmp_path / "mockrepo"))
+    repo("remove", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
     output = repo("list", "--scope=site", output=str)
     assert "mockrepo" not in output
 

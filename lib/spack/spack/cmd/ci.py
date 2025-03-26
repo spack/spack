@@ -791,7 +791,9 @@ def ci_verify_versions(args):
     """
     # Get a list of all packages that have been changed or added
     # between from_ref and to_ref
-    pkgs = spack.repo.get_all_package_diffs("AC", args.from_ref, args.to_ref)
+    pkgs = spack.repo.get_all_package_diffs(
+        "AC", spack.repo.builtin_repo(), args.from_ref, args.to_ref
+    )
 
     failed_version = False
     for pkg_name in pkgs:

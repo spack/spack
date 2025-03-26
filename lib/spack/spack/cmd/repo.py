@@ -24,9 +24,7 @@ def setup_parser(subparser):
     create_parser = sp.add_parser("create", help=repo_create.__doc__)
     create_parser.add_argument("directory", help="directory to create the repo in")
     create_parser.add_argument(
-        "namespace",
-        help="namespace to identify packages in the repository (defaults to the directory name)",
-        nargs="?",
+        "namespace", help="name or namespace to identify packages in the repository"
     )
     create_parser.add_argument(
         "-d",

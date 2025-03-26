@@ -880,9 +880,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
                 REPO_TO_PACKAGE_API[repo_yaml] = version
 
-            name = cls.module.__name__
+            components = cls.module.__name__.split(".")
 
-            cls._name = spack.util.naming.mod_to_pkg_name(name[name.rindex(".") + 1 :], version)
+            if version[0] == 1:
+                name = components[-1]
+            else:
+                assert components[-1] == "package"
+                name = components[-2]
+
+            cls._name = spack.util.naming.mod_to_pkg_name(name, version)
         return cls._name
 
     @classproperty
