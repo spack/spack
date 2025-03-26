@@ -663,11 +663,9 @@ class CompilerSpec:
     def display_str(self):
         """Equivalent to {compiler.name}{@compiler.version} for Specs, without extra
         @= for readability."""
-        if self.spec.concrete:
-            return f"{self.name}@{self.version}"
-        elif self.versions != vn.any_version:
-            return f"{self.name}@{self.versions}"
-        return self.name
+        if self.versions != vn.any_version:
+            return self.spec.format("{name}{@version}")
+        return self.spec.format("{name}")
 
     def __lt__(self, other):
         if not isinstance(other, CompilerSpec):
