@@ -79,6 +79,12 @@ def setup_parser(subparser):
     list_scopes_parser.add_argument(
         "--non-platform", action="store_true", default=False, help="list only non-platform scopes"
     )
+    list_scopes_parser.add_argument(
+        "--included",
+        action="store_true",
+        default=False,
+        help="list only included scopes (overrides --file and --non-platform)",
+    )
 
     add_parser = sp.add_parser("add", help="add configuration parameters")
     add_parser.add_argument(
@@ -228,10 +234,16 @@ def config_list(args):
 
 
 def config_list_scopes(args):
+    if args.included and (args.file or args.non_platform):
+        tty.warn("`--included' overrides `--file' and `--non-platform'")
     scopes = (
-        spack.config.writable_scopes() if args.file else spack.config.scopes().reversed_values()
+        spack.config.scopes().reversed_values()
+        if (args.included or not args.file)
+        else spack.config.writable_scopes()
     )
-    if args.non_platform:
+    if args.included:
+        scopes = (i for s in scopes for i in s.included_scopes)
+    elif args.non_platform:
         scopes = (s for s in scopes if not s.is_platform_dependent)
     print(" ".join([s.name for s in scopes]))
 
