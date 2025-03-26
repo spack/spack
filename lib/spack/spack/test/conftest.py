@@ -243,13 +243,11 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
 
 @pytest.fixture
-def mock_git_package_changes(git, tmpdir, override_git_repos_cache_path):
+def mock_git_package_changes(git, tmpdir, override_git_repos_cache_path, monkeypatch):
     """Create a mock git repo with known structure of package edits
 
     The structure of commits in this repo is as follows::
 
-       o diff-test: modification to make manual download package
-       |
        o diff-test: add v1.2 (from a git ref)
        |
        o diff-test: add v1.1 (from source tarball)
@@ -261,8 +259,12 @@ def mock_git_package_changes(git, tmpdir, override_git_repos_cache_path):
     Important attributes of the repo for test coverage are: multiple package
     versions are added with some coming from a tarball and some from git refs.
     """
-    repo_path = str(tmpdir.mkdir("git_package_changes_repo"))
-    filename = "var/spack/repos/builtin/packages/diff-test/package.py"
+    filename = "diff-test/package.py"
+
+    repo_path, _ = spack.repo.create_repo(str(tmpdir.mkdir("myrepo")))
+    repo_cache = spack.util.file_cache.FileCache(str(tmpdir.mkdir("cache")))
+
+    repo = spack.repo.Repo(repo_path, cache=repo_cache)
 
     def commit(message):
         global commit_counter
@@ -276,7 +278,7 @@ def mock_git_package_changes(git, tmpdir, override_git_repos_cache_path):
         )
         commit_counter += 1
 
-    with working_dir(repo_path):
+    with working_dir(repo.packages_path):
         git("init")
 
         git("config", "user.name", "Spack")
@@ -307,17 +309,11 @@ def mock_git_package_changes(git, tmpdir, override_git_repos_cache_path):
         commit("diff-test: add v2.1.6")
         commits.append(latest_commit())
 
-        # convert pkg-a to a manual download package
-        shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-3.txt", filename)
-        git("add", filename)
-        commit("diff-test: modification to make manual download package")
-        commits.append(latest_commit())
-
         # The commits are ordered with the last commit first in the list
         commits = list(reversed(commits))
 
     # Return the git directory to install, the filename used, and the commits
-    yield repo_path, filename, commits
+    yield repo, filename, commits
 
 
 @pytest.fixture(autouse=True)
