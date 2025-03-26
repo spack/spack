@@ -50,12 +50,12 @@ class PyWaves(PythonPackage):
     depends_on("py-setuptools-scm@8:", type="build")
 
     depends_on("scons@4:", type="build", when="+docs")
-    depends_on("sphinx@7.1:", type="build", when="+docs")
-    depends_on("sphinx-argparse", type="build", when="+docs")
-    depends_on("sphinx-copybutton@0.5.1:", type="build", when="+docs")
-    depends_on("sphinx-book-theme", type="build", when="+docs")
-    depends_on("sphinx-design", type="build", when="+docs")
-    depends_on("sphinxcontrib-bibtex", type="build", when="+docs")
+    depends_on("py-sphinx@7.1:", type="build", when="+docs")
+    depends_on("py-sphinx-argparse", type="build", when="+docs")
+    depends_on("py-sphinx-copybutton@0.5.1:", type="build", when="+docs")
+    depends_on("py-sphinx-book-theme", type="build", when="+docs")
+    depends_on("py-sphinx-design", type="build", when="+docs")
+    depends_on("py-sphinxcontrib-bibtex", type="build", when="+docs")
 
     depends_on("py-h5netcdf", type=("run", "test"))
     depends_on("py-h5py", type=("run", "test"))
