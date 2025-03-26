@@ -44,10 +44,8 @@ class PyWaves(PythonPackage):
     depends_on("git", when="@develop", type="build")
     depends_on("py-pip", type="build")
     depends_on("py-build", type="build")
-    #depends_on("py-setuptools@64", type="build")
-    depends_on("py-setuptools", type="build")
-    #depends_on("py-setuptools-scm@8", type="build")
-    depends_on("py-setuptools-scm", type="build")
+    depends_on("py-setuptools@64", type="build")
+    depends_on("py-setuptools-scm@8", type="build")
 
     depends_on("py-h5netcdf", type="run")
     depends_on("py-h5py", type="run")
