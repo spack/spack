@@ -5,6 +5,8 @@ import tempfile
 
 from spack.package import *
 
+from lib.spack.spack.build_systems.python import PythonPipBuilder
+
 
 class PyTfKeras(PythonPackage):
     """The TF-Keras library is a pure TensorFlow implementation of Keras,
@@ -70,7 +72,9 @@ class PyTfKeras(PythonPackage):
     #     )
 
     def install(self, spec, prefix):
-        self.tmp_path = tempfile.mkdtemp(prefix="spack")
+        self.tmp_path = tempfile.mkdtemp(prefix="spack")  # TODO: ERROR: The 'build' command is only supported from within a workspace (below a directory having a WORKSPACE file).
+
+        # To fix this, we need a WORKSPACE file in the root of the source tree
         env["HOME"] = self.tmp_path
 
         args = [
@@ -82,13 +86,13 @@ class PyTfKeras(PythonPackage):
             "build",
             # Spack logs don't handle colored output well
             "--color=no",
-            "--jobs={0}".format(make_jobs),
+            f"--jobs={make_jobs}",
             # Enable verbose output for failures
             "--verbose_failures",
             "--spawn_strategy=local",
             # bazel uses system PYTHONPATH instead of spack paths
             "--action_env",
-            "PYTHONPATH={0}".format(env["PYTHONPATH"]),
+            f"PYTHONPATH={env['PYTHONPATH']}",
             "//tf_keras/tools/pip_package:build_pip_package",
         ]
 
@@ -99,6 +103,6 @@ class PyTfKeras(PythonPackage):
         build_pip_package("--src", buildpath)
 
         with working_dir(buildpath):
-            args = std_pip_args + ["--prefix=" + prefix, "."]
+            args = PythonPipBuilder.std_args(self) + ["--prefix=" + prefix, "."]
             pip(*args)
         remove_linked_tree(self.tmp_path)
