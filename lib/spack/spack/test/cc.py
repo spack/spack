@@ -216,16 +216,13 @@ def check_args_contents(cc, args, must_contain, must_not_contain):
             assert a not in cc_modified_args
 
 
-def check_env_var(executable, var, expected):
-    """Check environment variables updated by the passed compiler wrapper
-
-    This assumes that cc will print debug output when it's environment
-    contains SPACK_TEST_COMMAND=dump-env-<variable-to-debug>
-    """
-    executable = Executable(str(executable))
-    with set_env(SPACK_TEST_COMMAND="dump-env-" + var):
-        output = executable(*test_args, output=str).strip()
-        assert executable.path + ": " + var + ": " + expected == output
+def check_wrapper_var(exe, *args, var, expected):
+    """Check variables set by the compiler wrapper. This works by setting SPACK_TEST_COMMAND to
+    dump-var-<variable-to-debug>, which will print the variable and exit."""
+    executable = Executable(str(exe))
+    with set_env(SPACK_TEST_COMMAND=f"dump-var-{var}"):
+        output = executable(*args, output=str).strip()
+        assert f"{executable.path}: {var}: {expected}" == output
 
 
 def dump_mode(cc, args):
@@ -749,11 +746,22 @@ def test_system_path_cleanup(wrapper_environment, wrapper_dir):
     """
     cc = wrapper_dir / "cc"
     system_path = "/bin:/usr/bin:/usr/local/bin"
-    with set_env(SPACK_COMPILER_WRAPPER_PATH=str(wrapper_dir), SPACK_CC="true"):
+    with set_env(SPACK_COMPILER_WRAPPER_PATH=str(wrapper_dir)):
         with set_env(PATH=str(wrapper_dir) + ":" + system_path):
-            check_env_var(cc, "PATH", system_path)
+            check_wrapper_var(cc, *test_args, var="PATH", expected=system_path)
         with set_env(PATH=str(wrapper_dir) + "/:" + system_path):
-            check_env_var(cc, "PATH", system_path)
+            check_wrapper_var(cc, *test_args, var="PATH", expected=system_path)
+
+
+def test_language_from_flags(wrapper_environment, wrapper_dir):
+    """Tes that the compiler language mode is determined by -x/--language flags if present"""
+    cc = wrapper_dir / "cc"
+
+    for flag_value, lang in [("c", "CC"), ("c++", "CXX"), ("f77", "F77"), ("f95", "FC")]:
+        check_wrapper_var(cc, "-c", "file", "-x", flag_value, var="comp", expected=lang)
+        check_wrapper_var(cc, "-c", "file", f"-x{flag_value}", var="comp", expected=lang)
+        check_wrapper_var(cc, "-c", "file", f"--language={flag_value}", var="comp", expected=lang)
+        check_wrapper_var(cc, "-c", "file", "--language", flag_value, var="comp", expected=lang)
 
 
 def test_ld_deps_partial(wrapper_environment, wrapper_dir):

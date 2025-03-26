@@ -178,9 +178,10 @@ execute() {
                 unset IFS
                 exit
                 ;;
-            dump-env-*)
-                var=${SPACK_TEST_COMMAND#dump-env-}
+            dump-var-*)
+                var=${SPACK_TEST_COMMAND#dump-var-}
                 eval "printf '%s\n' \"\$0: \$var: \$$var\""
+                exit
                 ;;
             *)
                 die "Unknown test command: '$SPACK_TEST_COMMAND'"
@@ -296,9 +297,36 @@ fi
 # Note. SPACK_ALWAYS_XFLAGS are applied for all compiler invocations,
 # including version checks (SPACK_XFLAGS variants are not applied
 # for version checks).
-command="${0##*/}"
+command_from_argv0="${0##*/}"
+command="$command_from_argv0"
 comp="CC"
 vcheck_flags=""
+
+_command_from_flags() {
+    while [ $# -ne 0 ]; do
+        arg="$1"
+        shift
+        case "$arg" in
+            -x|--language)
+                _lang="$1"
+                shift ;;
+            -x*)
+                _lang="${arg#-x}" ;;
+            --language=*)
+                _lang="${arg#--language=}" ;;
+            *) continue ;;
+        esac
+    done
+
+    case "$_lang" in
+        c) command=cc ;;
+        c++|f77|f95) command="$_lang" ;;
+        *) command="$command_from_argv0" ;;  # drop unknown languages
+    esac
+}
+
+_command_from_flags "$@"
+
 case "$command" in
     cpp)
         mode=cpp
