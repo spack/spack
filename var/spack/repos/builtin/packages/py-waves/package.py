@@ -61,6 +61,8 @@ class PyWaves(PythonPackage):
     depends_on("scons@4", type="run")
     depends_on("py-xarray", type="run")
 
+    depends_on("py-pytest", type="test")
+
     def setup_build_environment(self, env):
         if not self.spec.version.isdevelop():
             env.set("SETUPTOOLS_SCM_PRETEND_VERSION", self.version)
@@ -68,3 +70,9 @@ class PyWaves(PythonPackage):
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
             python("-m build --no-isolation")
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
+        pytest = which("pytest")
+        pytest("waves")
