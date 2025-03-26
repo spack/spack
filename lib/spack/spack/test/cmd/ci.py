@@ -1978,6 +1978,13 @@ def test_ci_validate_git_versions_invalid(
         assert f"Invalid commit for diff-test@{version}" in err
 
 
+def mock_packages_path(path):
+    def packages_path():
+        return path
+
+    return packages_path
+
+
 @pytest.fixture
 def verify_standard_versions_valid(monkeypatch):
     def validate_standard_versions(pkg, versions):
@@ -2024,9 +2031,12 @@ def test_ci_verify_versions_valid(
     mock_git_package_changes,
     verify_standard_versions_valid,
     verify_git_versions_valid,
+    tmpdir,
 ):
-    repo_path, _, commits = mock_git_package_changes
-    monkeypatch.setattr(spack.paths, "prefix", repo_path)
+    repo, _, commits = mock_git_package_changes
+    spack.repo.PATH.put_first(repo)
+
+    monkeypatch.setattr(spack.repo, "packages_path", mock_packages_path(repo.packages_path))
 
     out = ci_cmd("verify-versions", commits[-1], commits[-3])
     assert "Validated diff-test@2.1.5" in out
@@ -2040,9 +2050,10 @@ def test_ci_verify_versions_standard_invalid(
     verify_standard_versions_invalid,
     verify_git_versions_invalid,
 ):
-    repo_path, _, commits = mock_git_package_changes
+    repo, _, commits = mock_git_package_changes
+    spack.repo.PATH.put_first(repo)
 
-    monkeypatch.setattr(spack.paths, "prefix", repo_path)
+    monkeypatch.setattr(spack.repo, "packages_path", mock_packages_path(repo.packages_path))
 
     out = ci_cmd("verify-versions", commits[-1], commits[-3], fail_on_error=False)
     assert "Invalid checksum found diff-test@2.1.5" in out
@@ -2050,8 +2061,10 @@ def test_ci_verify_versions_standard_invalid(
 
 
 def test_ci_verify_versions_manual_package(monkeypatch, mock_packages, mock_git_package_changes):
-    repo_path, _, commits = mock_git_package_changes
-    monkeypatch.setattr(spack.paths, "prefix", repo_path)
+    repo, _, commits = mock_git_package_changes
+    spack.repo.PATH.put_first(repo)
+
+    monkeypatch.setattr(spack.repo, "packages_path", mock_packages_path(repo.packages_path))
 
     pkg_class = spack.spec.Spec("diff-test").package_class
     monkeypatch.setattr(pkg_class, "manual_download", True)
