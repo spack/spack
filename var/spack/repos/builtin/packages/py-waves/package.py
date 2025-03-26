@@ -83,27 +83,18 @@ class PyWaves(PythonPackage):
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
+            # TODO: Patch upstream MANIFEST.in or pyproject.toml to include these files in py-build/pip package builds
             cp = which("cp")
             cp("-v", "pyproject.toml", "waves/")
             cp("-v", "README.rst", "waves/")
-            # TODO: Fix in upstream and make this a version specific patch (<0.12.9?)
-            echo = which("echo")
-            echo("waves/README.rst", ">>", "MANIFEST.in")
-            echo("waves/pyproject.toml", ">>", "MANIFEST.in")
 
             if "+docs" in self.spec:
                 scons = which("scons")
                 scons("html", "man")
-                # FIXME: Fix the built documentation source path and figure out what ``self.prefix.<something>`` is required
-                # to create a ``../site-packages/waves/docs`` directory
+                # FIXME: Is there a spack preferred API for including additional files in the build?
                 cp("-vr", "build/docs/html", "waves/docs/")
                 cp("-vr", "build/docs/man/waves.1", "waves/docs/")
 
-            find = which("find")
-            find(".", "-name", "pyproject.toml")
-            find(".", "-name", "README.rst")
-
-            # FIXME: Figure out how to use the python-global interface for the build front-end
             python("-m", "build", "--no-isolation")
 
     def install(self, spec, prefix):
