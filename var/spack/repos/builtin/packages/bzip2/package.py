@@ -77,6 +77,9 @@ class Bzip2(Package, SourcewarePackage):
                 filter_file(r"-O2 ", "-O0 ", makefile)
                 filter_file(r"-Ox ", "-O0 ", makefile)
 
+        if self.spec.satisfies("platform=windows"):
+            return
+
         # bzip2 comes with two separate Makefiles for static and dynamic builds
         # Tell both to use Spack's compiler wrapper instead of GCC
         filter_file(r"^CC=gcc", "CC={0}".format(spack_cc), "Makefile")
