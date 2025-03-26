@@ -32,7 +32,7 @@ def repro_dir(tmp_path):
 
 
 def test_get_added_versions_new_checksum(mock_git_package_changes):
-    repo_path, filename, commits = mock_git_package_changes
+    repo, filename, commits = mock_git_package_changes
 
     checksum_versions = {
         "3f6576971397b379d4205ae5451ff5a68edf6c103b2f03c4188ed7075fbb5f04": Version("2.1.5"),
@@ -41,7 +41,7 @@ def test_get_added_versions_new_checksum(mock_git_package_changes):
         "86993903527d9b12fc543335c19c1d33a93797b3d4d37648b5addae83679ecd8": Version("2.0.0"),
     }
 
-    with fs.working_dir(str(repo_path)):
+    with fs.working_dir(repo.packages_path):
         added_versions = ci.get_added_versions(
             checksum_versions, filename, from_ref=commits[-1], to_ref=commits[-2]
         )
@@ -50,7 +50,7 @@ def test_get_added_versions_new_checksum(mock_git_package_changes):
 
 
 def test_get_added_versions_new_commit(mock_git_package_changes):
-    repo_path, filename, commits = mock_git_package_changes
+    repo, filename, commits = mock_git_package_changes
 
     checksum_versions = {
         "74253725f884e2424a0dd8ae3f69896d5377f325": Version("2.1.6"),
@@ -60,9 +60,9 @@ def test_get_added_versions_new_commit(mock_git_package_changes):
         "86993903527d9b12fc543335c19c1d33a93797b3d4d37648b5addae83679ecd8": Version("2.0.0"),
     }
 
-    with fs.working_dir(str(repo_path)):
+    with fs.working_dir(repo.packages_path):
         added_versions = ci.get_added_versions(
-            checksum_versions, filename, from_ref=commits[2], to_ref=commits[1]
+            checksum_versions, filename, from_ref=commits[-2], to_ref=commits[-3]
         )
         assert len(added_versions) == 1
         assert added_versions[0] == Version("2.1.6")
