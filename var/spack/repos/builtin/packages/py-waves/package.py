@@ -50,9 +50,14 @@ class PyWaves(PythonPackage):
     depends_on("py-setuptools-scm@8:", type="build")
 
     depends_on("scons@4:", type="build", when="+docs")
+    # Conflicts with py-sphinx-book-theme dependencies sphinx@4:6
+    # Documentation should still build but the ``maximum_signature_line_length`` will have no effect on sphinx<7.1
+    #depends_on("py-sphinx@7.1:", type="build", when="+docs")
     depends_on("py-sphinx", type="build", when="+docs")
     depends_on("py-sphinx-argparse", type="build", when="+docs")
-    depends_on("py-sphinx-copybutton@0.5.1:", type="build", when="+docs")
+    # Only py-sphinx-copybutton build available in spack is 0.2.12
+    #depends_on("py-sphinx-copybutton@0.5.1:", type="build", when="+docs")
+    depends_on("py-sphinx-copybutton", type="build", when="+docs")
     depends_on("py-sphinx-book-theme", type="build", when="+docs")
     depends_on("py-sphinx-design", type="build", when="+docs")
     depends_on("py-sphinxcontrib-bibtex", type="build", when="+docs")
@@ -83,7 +88,9 @@ class PyWaves(PythonPackage):
         if "+docs" in self.spec:
             scons = which("scons")
             scons("html")
-            install_tree("docs", self.prefix.docs.html)
+            # FIXME: Fix the built documentation source path and figure out what ``self.prefix.<something>`` is required
+            # to create a ``../site-packages/waves/docs`` directory
+            install_tree("build/html/docs", self.prefix.docs)
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
