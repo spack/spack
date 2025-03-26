@@ -25,12 +25,10 @@ import spack.fetch_strategy
 import spack.hash_types as ht
 import spack.mirrors.mirror
 import spack.package_base
-import spack.paths
 import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.executable
-import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.timer as timer
 import spack.util.url as url_util
