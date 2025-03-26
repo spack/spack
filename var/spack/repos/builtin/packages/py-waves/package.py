@@ -50,7 +50,7 @@ class PyWaves(PythonPackage):
     depends_on("py-setuptools-scm@8:", type="build")
 
     depends_on("scons@4:", type="build", when="+docs")
-    depends_on("py-sphinx@7.1:", type="build", when="+docs")
+    depends_on("py-sphinx", type="build", when="+docs")
     depends_on("py-sphinx-argparse", type="build", when="+docs")
     depends_on("py-sphinx-copybutton@0.5.1:", type="build", when="+docs")
     depends_on("py-sphinx-book-theme", type="build", when="+docs")
