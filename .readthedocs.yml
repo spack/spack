@@ -1,5 +1,8 @@
 version: 2
 
+environment:
+  DOCS_DIR: lib/spack/docs
+
 build:
   os: "ubuntu-22.04"
   apt_packages:
@@ -13,7 +16,7 @@ build:
       - asdf global uv latest
       - uv venv
     install:
-      - uv pip install -r requirements.txt
+      - uv pip install -r $DOCS_DIR/requirements.txt
     build:
       html:
         - uv run sphinx-build -T -b html docs $READTHEDOCS_OUTPUT/html
@@ -24,7 +27,7 @@ sphinx:
 
 python:
   install:
-    - requirements: lib/spack/docs/requirements.txt
+    - requirements: $DOCS_DIR/requirements.txt
 
 search:
   ranking:
