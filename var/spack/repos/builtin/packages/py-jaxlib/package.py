@@ -278,9 +278,5 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
 
         python(*args)
 
-        if spec.satisfies("+rocm"):
-            for whl in glob.glob(join_path("dist", "*.whl")):
-                pip(*PythonPipBuilder.std_args(self), f"--prefix={self.prefix}", whl)
-        else:
-            whl = glob.glob(join_path("dist", "*.whl"))[0]
+        for whl in glob.glob(join_path("dist", "*.whl")):
             pip(*PythonPipBuilder.std_args(self), f"--prefix={self.prefix}", whl)
