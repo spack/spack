@@ -9,7 +9,7 @@
 `spack.lock` format
 ===================
 
-Spack environments have existed since Spack ``v0.12.0``, and there have been 4 different
+Spack environments have existed since Spack ``v0.12.0``, and there have been different
 ``spack.lock`` formats since then. The formats are documented here.
 
 The high-level format of a Spack lockfile hasn't changed much between versions, but the
@@ -53,8 +53,10 @@ upgrade Spack to use them.
      - ``v3``
      - ``v4``
      - ``v5``
+     - ``v6``
    * - ``v0.12:0.14``
      - ✅
+     -
      -
      -
      -
@@ -65,10 +67,12 @@ upgrade Spack to use them.
      -
      -
      -
+     -
    * - ``v0.17``
      - ✅
      - ✅
      - ✅
+     -
      -
      -
    * - ``v0.18:``
@@ -77,7 +81,16 @@ upgrade Spack to use them.
      - ✅
      - ✅
      -
-   * - ``v0.22:``
+     -
+   * - ``v0.22:v0.23``
+     - ✅
+     - ✅
+     - ✅
+     - ✅
+     - ✅
+     -
+   * - ``v1.0:``
+     - ✅
      - ✅
      - ✅
      - ✅
@@ -459,6 +472,78 @@ not be a part of the lockfile.
             }
         }
     }
+
+
+Version 6
+---------
+
+Version 6 uses specs where compilers are modeled as real dependencies, and not as a node attribute.
+It doesn't change the top-level lockfile format.
+
+As part of Spack v1.0, compilers stopped being a node attribute, and became a build-only dependency. Packages may
+declare a dependency on the c, cxx, or fortran languages, which are now treated as virtuals, and compilers would
+be providers for one or more of those languages. Compilers can also inject runtime dependency, on the node being
+compiled. The compiler-wrapper is explicitly represented as a node in the DAG, and enters the hash.
+
+.. code-block:: json
+
+    {
+      "_meta": {
+        "file-type": "spack-lockfile",
+        "lockfile-version": 6,
+        "specfile-version": 5
+      },
+      "spack": {
+        "version": "1.0.0.dev0",
+        "type": "git",
+        "commit": "395b34f17417132389a6a8ee4dbf831c4a04f642"
+      },
+      "roots": [
+        {
+          "hash": "tivmbe3xjw7oqv4c3jv3v4jw42a7cajq",
+          "spec": "zlib-ng"
+        }
+      ],
+      "concrete_specs": {
+        "tivmbe3xjw7oqv4c3jv3v4jw42a7cajq": {
+          "name": "zlib-ng",
+          "version": "2.2.3",
+          "<other attributes>": {}
+        }
+        "dependencies": [
+          {
+            "name": "compiler-wrapper",
+            "hash": "n5lamxu36f4cx4sm7m7gocalctve4mcx",
+            "parameters": {
+              "deptypes": [
+                "build"
+              ],
+              "virtuals": []
+            }
+          },
+          {
+            "name": "gcc",
+            "hash": "b375mbpprxze4vxy4ho7aixhuchsime2",
+            "parameters": {
+              "deptypes": [
+                "build"
+              ],
+              "virtuals": [
+                "c",
+                "cxx"
+              ]
+            }
+          },
+          {
+            "<other dependencies>": {}
+          }
+        ],
+        "annotations": {
+          "original_specfile_version": 5
+        },
+      }
+    }
+
 """
 
 from .environment import (

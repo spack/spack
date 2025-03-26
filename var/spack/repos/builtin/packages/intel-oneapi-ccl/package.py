@@ -27,6 +27,12 @@ class IntelOneapiCcl(IntelOneApiLibraryPackage):
     depends_on("intel-oneapi-mpi")
 
     version(
+        "2021.15.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/8f5d5e38-1626-41c1-9c20-44d966c43ae1/intel-oneccl-2021.15.0.401_offline.sh",
+        sha256="f6eefe959bcddc7b64bdc52d212ea0a0495c7a18c000f8b3707949695211131a",
+        expand=False,
+    )
+    version(
         "2021.14.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/88a7a6db-816c-4cd5-993f-821729da5648/intel-oneccl-2021.14.0.506_offline.sh",
         sha256="2a02ebf10e9b129df8538520b4b343c5ac30350ada6bd1f2bdc9b4ef0f46e165",

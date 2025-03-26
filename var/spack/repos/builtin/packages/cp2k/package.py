@@ -143,13 +143,26 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         " It build cp2k normally but put the executables in exe/cmake-build-* instead of the"
         " conventional location. This option is only relevant when regtests need to be run.",
     )
-
     variant(
         "grpp",
         default=False,
         description="Enable GRPP psuedo potentials",
         when="@2025.2: build_system=cmake",
     )
+    variant(
+        "hdf5",
+        default=False,
+        description="Enable HDF5 support",
+        when="@2025.2: build_system=cmake",
+    )
+    variant(
+        "trexio",
+        default=False,
+        description="Enable TrexIO support",
+        when="@2025.2: build_system=cmake",
+    )
+    variant("deepmd", default=False, description="Enable DeepMD-kit support")
+    conflicts("+deepmd", msg="DeepMD-kit is not yet available in Spack")
 
     with when("+cuda"):
         variant(
@@ -193,6 +206,9 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     depends_on("blas")
     depends_on("lapack")
     depends_on("fftw-api@3")
+
+    depends_on("hdf5+hl+fortran", when="+hdf5")
+    depends_on("trexio", when="+trexio")
 
     # Force openmp propagation on some providers of blas / fftw-api
     with when("+openmp"):
@@ -1056,6 +1072,9 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("CP2K_ENABLE_DBM_GPU", "dbm_gpu"),
             self.define_from_variant("CP2K_ENABLE_PW_GPU", "pw_gpu"),
             self.define_from_variant("CP2K_USE_GRPP", "grpp"),
+            self.define_from_variant("CP2K_USE_HDF5", "hdf5"),
+            self.define_from_variant("CP2K_USE_DEEPMD", "deepmd"),
+            self.define_from_variant("CP2K_USE_TREXIO", "trexio"),
         ]
 
         # we force the use elpa openmp threading support. might need to be revisited though

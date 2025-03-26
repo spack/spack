@@ -19,9 +19,30 @@ class Tioga(CMakePackage):
     # The original TIOGA repo has been abandoned,
     # so work on TIOGA has continued in the Exawind project
     version("develop", git="https://github.com/Exawind/tioga.git", branch="exawind")
-    version("1.2.0", git="https://github.com/Exawind/tioga.git", tag="v1.2.0")
-    version("1.1.0", git="https://github.com/Exawind/tioga.git", tag="v1.1.0")
-    version("1.0.0", git="https://github.com/Exawind/tioga.git", tag="v1.0.0")
+    version(
+        "1.3.0",
+        git="https://github.com/Exawind/tioga.git",
+        tag="v1.3.0",
+        commit="b1c018a1f8c266e5984a57cc69462625e92d6678",
+    )
+    version(
+        "1.2.0",
+        git="https://github.com/Exawind/tioga.git",
+        tag="v1.2.0",
+        commit="cbff5456ca339bae9ebe8e3e1aac5108695e8359",
+    )
+    version(
+        "1.1.0",
+        git="https://github.com/Exawind/tioga.git",
+        tag="v1.1.0",
+        commit="03f7515f10d9523c0b59dd270f310a3b7eb6ddef",
+    )
+    version(
+        "1.0.0",
+        git="https://github.com/Exawind/tioga.git",
+        tag="v1.0.0",
+        commit="d1f0ceb5db5cffecc3197a904fbf4d539d87e6a1",
+    )
     version("master", branch="master")
 
     depends_on("cxx", type="build")

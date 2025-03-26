@@ -142,7 +142,23 @@ class ConfigScope:
         self.sections = syaml.syaml_dict()
 
         #: names of any included scopes
-        self.included_scopes: List[str] = []
+        self._included_scopes: Optional[List["ConfigScope"]] = None
+
+    @property
+    def included_scopes(self) -> List["ConfigScope"]:
+        """Memoized list of included scopes, in the order they appear in this scope."""
+        if self._included_scopes is None:
+            self._included_scopes = []
+
+            includes = self.get_section("include")
+            if includes:
+                include_paths = [included_path(data) for data in includes["include"]]
+                for path in include_paths:
+                    included_scope = include_path_scope(path)
+                    if included_scope:
+                        self._included_scopes.append(included_scope)
+
+        return self._included_scopes
 
     def get_section_filename(self, section: str) -> str:
         raise NotImplementedError
@@ -460,36 +476,30 @@ class Configuration:
             scope: scope to be added
             priority: priority of the scope
         """
-        tty.debug(f"[CONFIGURATION: PUSH SCOPE]: {str(scope)}, priority={priority}", level=2)
-
         # TODO: As a follow on to #48784, change this to create a graph of the
         # TODO: includes AND ensure properly sorted such that the order included
         # TODO: at the highest level is reflected in the value of an option that
         # TODO: is set in multiple included files.
         # before pushing the scope itself, push any included scopes recursively, at same priority
-        includes = scope.get_section("include")
-        if includes:
-            include_paths = [included_path(data) for data in includes["include"]]
-            for path in reversed(include_paths):
-                included_scope = include_path_scope(path)
-                if not included_scope:
-                    continue
+        for included_scope in reversed(scope.included_scopes):
+            if _depth + 1 > MAX_RECURSIVE_INCLUDES:  # make sure we're not recursing endlessly
+                mark = ""
+                if hasattr(included_scope, "path") and syaml.marked(included_scope.path):
+                    mark = included_scope.path._start_mark  # type: ignore
+                raise RecursiveIncludeError(
+                    f"Maximum include recursion exceeded in {included_scope.name}", str(mark)
+                )
 
-                if _depth + 1 > MAX_RECURSIVE_INCLUDES:  # make sure we're not recursing endlessly
-                    mark = path.path._start_mark if syaml.marked(path.path) else ""  # type: ignore
-                    raise RecursiveIncludeError(
-                        f"Maximum include recursion exceeded in {path.path}", str(mark)
-                    )
+            # record this inclusion so that remove_scope() can use it
+            self.push_scope(included_scope, priority=priority, _depth=_depth + 1)
 
-                # record this inclusion so that remove_scope() can use it
-                scope.included_scopes.append(included_scope.name)
-                self.push_scope(included_scope, priority=priority, _depth=_depth + 1)
-
+        tty.debug(f"[CONFIGURATION: PUSH SCOPE]: {str(scope)}, priority={priority}", level=2)
         self.scopes.add(scope.name, value=scope, priority=priority)
 
     @_config_mutator
     def remove_scope(self, scope_name: str) -> Optional[ConfigScope]:
         """Removes a scope by name, and returns it. If the scope does not exist, returns None."""
+
         try:
             scope = self.scopes.remove(scope_name)
             tty.debug(f"[CONFIGURATION: REMOVE SCOPE]: {str(scope)}", level=2)
@@ -498,10 +508,11 @@ class Configuration:
             return None
 
         # transitively remove included scopes
-        for inc in scope.included_scopes:
-            assert inc in self.scopes, f"Included scope '{inc}' was never added to configuration!"
-            self.remove_scope(inc)
-        scope.included_scopes.clear()  # clean up includes for bookkeeping
+        for included_scope in scope.included_scopes:
+            assert (
+                included_scope.name in self.scopes
+            ), f"Included scope '{included_scope.name}' was never added to configuration!"
+            self.remove_scope(included_scope.name)
 
         return scope
 

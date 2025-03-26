@@ -7,7 +7,9 @@ import os
 import re
 import sys
 
-import spack.compilers
+import llnl.util.tty as tty
+
+import spack.compilers.config
 from spack.package import *
 
 
@@ -898,10 +900,14 @@ with '-Wl,-commons,use_dylibs' and without
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Use the spack compiler wrappers under MPI
         dependent_module = dependent_spec.package.module
-        env.set("OMPI_CC", dependent_module.spack_cc)
-        env.set("OMPI_CXX", dependent_module.spack_cxx)
-        env.set("OMPI_FC", dependent_module.spack_fc)
-        env.set("OMPI_F77", dependent_module.spack_f77)
+        for var_name, attr_name in (
+            ("OMPI_CC", "spack_cc"),
+            ("OMPI_CXX", "spack_cxx"),
+            ("OMPI_FC", "spack_fc"),
+            ("OMPI_F77", "spack_f77"),
+        ):
+            if hasattr(dependent_module, attr_name):
+                env.set(var_name, getattr(dependent_module, attr_name))
 
         # See https://www.open-mpi.org/faq/?category=building#installdirs
         for suffix in [
@@ -1084,9 +1090,15 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.extend(["--enable-debug"])
 
         # Package dependencies
-        for dep in ["libevent", "lustre", "singularity", "valgrind"]:
+        for dep in ["lustre", "singularity", "valgrind"]:
             if "^" + dep in spec:
                 config_args.append("--with-{0}={1}".format(dep, spec[dep].prefix))
+
+        # libevent support
+        if spec.satisfies("+internal-libevent"):
+            config_args.append("--with-libevent=internal")
+        elif "^libevent" in spec:
+            config_args.append("--with-libevent={0}".format(spec["libevent"].prefix))
 
         # PMIx support
         if spec.satisfies("+internal-pmix"):
@@ -1351,7 +1363,7 @@ with '-Wl,-commons,use_dylibs' and without
 
 
 def get_spack_compiler_spec(compiler):
-    spack_compilers = spack.compilers.find_compilers([os.path.dirname(compiler)])
+    spack_compilers = spack.compilers.config.find_compilers([os.path.dirname(compiler)])
     actual_compiler = None
     # check if the compiler actually matches the one we want
     for spack_compiler in spack_compilers:

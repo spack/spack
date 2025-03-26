@@ -58,6 +58,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
 
+    version("2.4.0", sha256="a51a472488290df12d1657db2e7118ab519743094f33650f910d92b54c56f315")
     version("2.3.0", sha256="0185970388aef1f1fae2a031edf060d5eac4eb6e6b1089e7e3b15a130edd8a31")
     version("2.2.0", sha256="bb16952a87127028031fd2b56781bea01ab4de7c3466f7b6a378c4d8895754b6")
     version("2.1.0", sha256="72593c037505dd76e8b5989358b7580a3fdb213051a406adb26a487d26c68c60")
@@ -71,9 +72,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("cxx", type="build")  # generated
 
     patch("fix_spack_cc_wrapper_in_cray_prgenv.patch", when="@2.0.0:")
-    patch("fix_chpl_shared_lib_path.patch", when="@2.1:2.2 +python-bindings")
-    patch("fix_chpl_shared_lib_path_2.3.patch", when="@2.2.1: +python-bindings")
-    patch("fix_chpl_line_length.patch")
+    patch("fix_chpl_shared_lib_path.patch", when="@2.1.1:2.2 +python-bindings")  # PR 26388
+    patch("fix_chpl_shared_lib_path_2.3.patch", when="@2.2.1:2.3 +python-bindings")  # PR 26388
+    patch("fix_chpl_line_length.patch", when="@:2.3.0")  # PRs 26357, 26381, 26491
     patch("fix_checkChplInstall.patch", when="@:2.3.0")  # PR 26317
     patch("fix_llvm_include_path_2.3.patch", when="@=2.3.0 llvm=bundled")  # PR 26402
 
@@ -142,7 +143,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         "curl": "curl",
         "hdf5": "hdf5+hl~mpi",
         "libevent": "libevent",
-        "protobuf": "py-protobuf",
+        "protobuf": "protobuf",
         "ssl": "openssl",
         "yaml": "libyaml@0.1",
         "zmq": "libzmq",
@@ -608,12 +609,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         # if working from a non-versioned release/branch (such as main)
         if not self.is_versioned_release():
             install("CMakeLists.txt", join_path(prefix.share, "chapel"))
+        install_tree("doc", join_path(prefix.share, "chapel", self._output_version_short, "doc"))
         install_tree(
-            "doc", join_path(self.prefix.share, "chapel", self._output_version_short, "doc")
-        )
-        install_tree(
-            "examples",
-            join_path(self.prefix.share, "chapel", self._output_version_short, "examples"),
+            "examples", join_path(prefix.share, "chapel", self._output_version_short, "examples")
         )
 
     def setup_chpl_platform(self, env):
@@ -839,7 +837,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     @llnl.util.lang.memoized
     def _output_version_short(self) -> str:
         if not self.is_versioned_release():
-            return self.get_chpl_version_from_cmakelists()[-2]
+            return ".".join(self.get_chpl_version_from_cmakelists().split(".")[:-1])
         spec_vers_str = str(self.spec.version.up_to(2))
         return spec_vers_str
 

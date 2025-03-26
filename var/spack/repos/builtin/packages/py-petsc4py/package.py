@@ -8,13 +8,13 @@ from spack.package import *
 class PyPetsc4py(PythonPackage):
     """This package provides Python bindings for the PETSc package."""
 
-    homepage = "https://gitlab.com/petsc/petsc4py"
+    homepage = "https://petsc.org/release/petsc4py"
     url = (
         "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc4py-3.20.0.tar.gz"
     )
     git = "https://gitlab.com/petsc/petsc.git"
 
-    maintainers("balay")
+    maintainers("balay", "jczhang07", "joseeroman")
 
     license("BSD-2-Clause")
 
@@ -94,6 +94,9 @@ class PyPetsc4py(PythonPackage):
 
     variant("mpi", default=True, description="Activates MPI support")
 
+    # Hack to fix https://github.com/spack/spack/issues/21451, where Petsc4Py expects LDSHARED
+    # to start with the same executable as get_config_var("CC")
+    patch("ldshared_319.patch", when="@3.19:")
     patch("ldshared.patch", when="@:3.18")
 
     depends_on("py-cython@3:", when="@3.20:", type="build")

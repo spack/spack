@@ -10,11 +10,17 @@ class PyWheel(Package, PythonExtension):
     """A built-package format for Python."""
 
     homepage = "https://github.com/pypa/wheel"
-    url = "https://files.pythonhosted.org/packages/py3/w/wheel/wheel-0.41.2-py3-none-any.whl"
+    url = "https://files.pythonhosted.org/packages/py3/w/wheel/wheel-0.45.1-py3-none-any.whl"
     list_url = "https://pypi.org/simple/wheel/"
 
     tags = ["build-tools"]
 
+    version("0.45.1", sha256="708e7481cc80179af0e556bbf0cc00b8444c7321e2700b8d8580231d13017248")
+    version("0.45.0", sha256="52f0baa5e6522155090a09c6bd95718cc46956d1b51d537ea5454249edb671c7")
+    version("0.44.0", sha256="2376a90c98cc337d18623527a97c31797bd02bad0033d41547043a1cbfbe448f")
+    version("0.43.0", sha256="55c570405f142630c6b9f72fe09d9b67cf1477fcf543ae5b8dcb1f5b7377da81")
+    version("0.42.0", sha256="177f9c9b0d45c47873b619f5b650346d632cdc35fb5e4d25058e09c9e581433d")
+    version("0.41.3", sha256="488609bc63a29322326e05560731bf7bfea8e48ad646e1f5e40d366607de0942")
     version("0.41.2", sha256="75909db2664838d015e3d9139004ee16711748a52c8f336b52882266540215d8")
     version("0.37.1", sha256="4bdcd7d840138086126cd09254dc6195fb4fc6f01c050a1d7236f2630db1d22a")
     version("0.37.0", sha256="21014b2bd93c6d0034b6ba5d35e4eb284340e09d63c59aef6fc14b0f346146fd")
@@ -30,6 +36,7 @@ class PyWheel(Package, PythonExtension):
 
     extends("python")
     depends_on("python +ctypes", type=("build", "run"))
+    depends_on("python@3.8:", when="@0.43.0:", type=("build", "run"))
     depends_on("python@3.7:", when="@0.38:", type=("build", "run"))
     depends_on("py-pip", type="build")
 

@@ -84,6 +84,11 @@ class Scorep(AutotoolsPackage):
 
     patch("gcc7.patch", when="@1.4:3")
     patch("gcc10.patch", when="@3.1:6.0")
+    patch(
+        "https://gitlab.com/score-p/scorep/-/commit/093ff84f0e155ac1db99bbaa312e028f89affddb.diff",
+        when="@7:8.4 +gcc-plugin",
+        sha256="d20b3046ba6a89ad9c106bcf372bceb1bd9ab780d4c7dd9e7373f0099b92d933",
+    )
 
     variant("mpi", default=True, description="Enable MPI support")
     variant("papi", default=True, description="Enable PAPI")
@@ -92,6 +97,7 @@ class Scorep(AutotoolsPackage):
     variant("unwind", default=False, description="Enable sampling via libunwind and lib wrapping")
     variant("cuda", default=False, description="Enable CUDA support")
     variant("hip", default=False, description="Enable ROCm/HIP support", when="@8.0:")
+    variant("gcc-plugin", default=True, description="Enable gcc-plugin", when="%gcc")
     # Dependencies for SCORE-P are quite tight. See the homepage for more
     # information. Starting with scorep 4.0 / cube 4.4, Score-P only depends on
     # two components of cube -- cubew and cubelib.
@@ -229,6 +235,13 @@ class Scorep(AutotoolsPackage):
         # -- wrwilliams 12/2024
         if spec.satisfies("^binutils"):
             config_args.append("--with-libbfd=%s" % spec["binutils"].prefix)
+
+        # when you build with gcc, you usually want to use the gcc-plugin!
+        # see, e.g., GNU Compiler Plug-In in https://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-5.0/html/installationfile.html
+        if "+gcc-plugin" in spec:
+            config_args.append("--enable-gcc-plugin")
+        else:
+            config_args.append("--disable-gcc-plugin")
 
         config_args.extend(
             [

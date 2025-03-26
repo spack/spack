@@ -70,12 +70,8 @@ class CachedCMakeBuilder(CMakeBuilder):
 
     @property
     def cache_name(self):
-        return "{0}-{1}-{2}@{3}.cmake".format(
-            self.pkg.name,
-            self.pkg.spec.architecture,
-            self.pkg.spec.compiler.name,
-            self.pkg.spec.compiler.version,
-        )
+        compiler_str = f"{self.spec['c'].name}-{self.spec['c'].version}"
+        return f"{self.pkg.name}-{self.spec.architecture.platform}-{compiler_str}.cmake"
 
     @property
     def cache_path(self):
@@ -118,7 +114,9 @@ class CachedCMakeBuilder(CMakeBuilder):
         # Fortran compiler is optional
         if "FC" in os.environ:
             spack_fc_entry = cmake_cache_path("CMAKE_Fortran_COMPILER", os.environ["FC"])
-            system_fc_entry = cmake_cache_path("CMAKE_Fortran_COMPILER", self.pkg.compiler.fc)
+            system_fc_entry = cmake_cache_path(
+                "CMAKE_Fortran_COMPILER", self.spec["fortran"].package.fortran
+            )
         else:
             spack_fc_entry = "# No Fortran compiler defined in spec"
             system_fc_entry = "# No Fortran compiler defined in spec"
@@ -134,8 +132,8 @@ class CachedCMakeBuilder(CMakeBuilder):
             "  " + cmake_cache_path("CMAKE_CXX_COMPILER", os.environ["CXX"]),
             "  " + spack_fc_entry,
             "else()\n",
-            "  " + cmake_cache_path("CMAKE_C_COMPILER", self.pkg.compiler.cc),
-            "  " + cmake_cache_path("CMAKE_CXX_COMPILER", self.pkg.compiler.cxx),
+            "  " + cmake_cache_path("CMAKE_C_COMPILER", self.spec["c"].package.cc),
+            "  " + cmake_cache_path("CMAKE_CXX_COMPILER", self.spec["cxx"].package.cxx),
             "  " + system_fc_entry,
             "endif()\n",
         ]
@@ -278,17 +276,24 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append("# ROCm")
             entries.append("#------------------{0}\n".format("-" * 30))
 
-            # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
-            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-            llvm_bin = spec["llvm-amdgpu"].prefix.bin
-            llvm_prefix = spec["llvm-amdgpu"].prefix
-            # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
-            # others point to /<path>/rocm-<ver>/llvm
-            if os.path.basename(os.path.normpath(llvm_prefix)) != "llvm":
-                llvm_bin = os.path.join(llvm_prefix, "llvm/bin/")
-            entries.append(
-                cmake_cache_filepath("CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "clang++"))
-            )
+            if spec.satisfies("^blt@0.7:"):
+                rocm_root = os.path.dirname(spec["llvm-amdgpu"].prefix)
+                entries.append(cmake_cache_path("ROCM_PATH", rocm_root))
+            else:
+                # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
+                entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
+                llvm_bin = spec["llvm-amdgpu"].prefix.bin
+                llvm_prefix = spec["llvm-amdgpu"].prefix
+                # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
+                # others point to /<path>/rocm-<ver>/llvm
+                if os.path.basename(os.path.normpath(llvm_prefix)) != "llvm":
+                    llvm_bin = os.path.join(llvm_prefix, "llvm/bin/")
+                entries.append(
+                    cmake_cache_filepath(
+                        "CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "amdclang++")
+                    )
+                )
+
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)

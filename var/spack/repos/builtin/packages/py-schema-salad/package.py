@@ -14,6 +14,10 @@ class PySchemaSalad(PythonPackage):
 
     license("Apache-2.0")
     version(
+        "8.8.20250205075315",
+        sha256="444a45509fb048347e0ec205b2af6390f0bb145f7183716ba6af2f75a22b8bdd",
+    )
+    version(
         "8.7.20241021092521",
         sha256="287b27adff70e55dd715bfbea18bb1a58fd73de14b4273be4038559308089cdf",
     )
@@ -33,18 +37,23 @@ class PySchemaSalad(PythonPackage):
     depends_on("py-ruamel-yaml@0.17.6:0.18", when="@8.4.20231113094720:", type=("build", "run"))
     depends_on("py-rdflib@4.2.2:6", type=("build", "run"))
     depends_on("py-mistune@2.0.3:2.0", type=("build", "run"))
-    depends_on("py-cachecontrol@0.11.7:0.12+filecache", type=("build", "run"))
+    depends_on(
+        "py-cachecontrol@0.11.7:0.12+filecache", when="@:8.7.20240718183047", type=("build", "run")
+    )
     depends_on(
         "py-cachecontrol@0.13.1:0.14+filecache",
         when="@8.7.20240820070935:8.7.20241021092521",
         type=("build", "run"),
     )
-
+    depends_on(
+        "py-cachecontrol@0.14:0.14+filecache", when="@8.8.20241204110045:", type=("build", "run")
+    )
     depends_on("py-setuptools-scm@6.2:+toml", type="build")
     depends_on("py-setuptools-scm@8.0.4:8+toml", when="@8.4.20231024070348:", type="build")
     depends_on("py-mypy@0.961", when="@8.3.20220717184004:8.3.20221028160159", type="build")
     depends_on("py-mypy@0.991", when="@8.3.20221209165047:8.4.20230201194352", type="build")
     depends_on("py-mypy@1.12.1", when="@8.7.20241021092521", type="build")
+    depends_on("py-mypy@1.15.0", when="@8.8.20250205075315", type="build")
     depends_on("py-black@19.10b0:", type="build")
     depends_on("py-black@19.10b0:24.10", when="@8.7.20241021092521:", type="build")
     depends_on("py-types-pkg-resources", when="@:8.4.20231117150958", type="build")

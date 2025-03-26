@@ -950,6 +950,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a generate -d 'ge
 complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a rebuild-index -d 'rebuild the buildcache index for the remote mirror'
 complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a rebuild -d 'rebuild a spec if it is not on the remote mirror'
 complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a reproduce-build -d 'generate instructions for reproducing the spec rebuild job'
+complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a verify-versions -d 'validate version checksum & commits between git refs'
 complete -c spack -n '__fish_spack_using_command ci' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci' -s h -l help -d 'show this help message and exit'
 
@@ -1016,6 +1017,12 @@ complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-file
 complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-url -r -f -a gpg_url
 complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-url -r -d 'URL to public GPG key for validating binary cache installs'
 
+# spack ci verify-versions
+set -g __fish_spack_optspecs_spack_ci_verify_versions h/help
+
+complete -c spack -n '__fish_spack_using_command ci verify-versions' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command ci verify-versions' -s h -l help -d 'show this help message and exit'
+
 # spack clean
 set -g __fish_spack_optspecs_spack_clean h/help s/stage d/downloads f/failures m/misc-cache p/python-cache b/bootstrap a/all
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 clean' -f -k -a '(__fish_spack_specs)'
@@ -1077,9 +1084,9 @@ set -g __fish_spack_optspecs_spack_compiler_find h/help mixed-toolchain no-mixed
 complete -c spack -n '__fish_spack_using_command compiler find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command compiler find' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command compiler find' -l mixed-toolchain -f -a mixed_toolchain
-complete -c spack -n '__fish_spack_using_command compiler find' -l mixed-toolchain -d 'Allow mixed toolchains (for example: clang, clang++, gfortran)'
+complete -c spack -n '__fish_spack_using_command compiler find' -l mixed-toolchain -d '(DEPRECATED) Allow mixed toolchains (for example: clang, clang++, gfortran)'
 complete -c spack -n '__fish_spack_using_command compiler find' -l no-mixed-toolchain -f -a mixed_toolchain
-complete -c spack -n '__fish_spack_using_command compiler find' -l no-mixed-toolchain -d 'Do not allow mixed toolchains (for example: clang, clang++, gfortran)'
+complete -c spack -n '__fish_spack_using_command compiler find' -l no-mixed-toolchain -d '(DEPRECATED) Do not allow mixed toolchains (for example: clang, clang++, gfortran)'
 complete -c spack -n '__fish_spack_using_command compiler find' -l scope -r -f -a '_builtin defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command compiler find' -l scope -r -d 'configuration scope to modify'
 complete -c spack -n '__fish_spack_using_command compiler find' -s j -l jobs -r -f -a jobs
@@ -1091,9 +1098,9 @@ set -g __fish_spack_optspecs_spack_compiler_add h/help mixed-toolchain no-mixed-
 complete -c spack -n '__fish_spack_using_command compiler add' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command compiler add' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command compiler add' -l mixed-toolchain -f -a mixed_toolchain
-complete -c spack -n '__fish_spack_using_command compiler add' -l mixed-toolchain -d 'Allow mixed toolchains (for example: clang, clang++, gfortran)'
+complete -c spack -n '__fish_spack_using_command compiler add' -l mixed-toolchain -d '(DEPRECATED) Allow mixed toolchains (for example: clang, clang++, gfortran)'
 complete -c spack -n '__fish_spack_using_command compiler add' -l no-mixed-toolchain -f -a mixed_toolchain
-complete -c spack -n '__fish_spack_using_command compiler add' -l no-mixed-toolchain -d 'Do not allow mixed toolchains (for example: clang, clang++, gfortran)'
+complete -c spack -n '__fish_spack_using_command compiler add' -l no-mixed-toolchain -d '(DEPRECATED) Do not allow mixed toolchains (for example: clang, clang++, gfortran)'
 complete -c spack -n '__fish_spack_using_command compiler add' -l scope -r -f -a '_builtin defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command compiler add' -l scope -r -d 'configuration scope to modify'
 complete -c spack -n '__fish_spack_using_command compiler add' -s j -l jobs -r -f -a jobs
@@ -1423,7 +1430,7 @@ complete -c spack -n '__fish_spack_using_command dev-build' -l deprecated -f -a 
 complete -c spack -n '__fish_spack_using_command dev-build' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack develop
-set -g __fish_spack_optspecs_spack_develop h/help p/path= b/build-directory= no-clone clone f/force=
+set -g __fish_spack_optspecs_spack_develop h/help p/path= b/build-directory= no-clone clone f/force= r/recursive
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 develop' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command develop' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command develop' -s h -l help -d 'show this help message and exit'
@@ -1434,9 +1441,11 @@ complete -c spack -n '__fish_spack_using_command develop' -s b -l build-director
 complete -c spack -n '__fish_spack_using_command develop' -l no-clone -f -a clone
 complete -c spack -n '__fish_spack_using_command develop' -l no-clone -d 'do not clone, the package already exists at the source path'
 complete -c spack -n '__fish_spack_using_command develop' -l clone -f -a clone
-complete -c spack -n '__fish_spack_using_command develop' -l clone -d 'clone the package even if the path already exists'
+complete -c spack -n '__fish_spack_using_command develop' -l clone -d '(default) clone the package unless the path already exists, use --force to overwrite'
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -f -a force
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -d 'remove any files or directories that block cloning source code'
+complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -f -a recursive
+complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -d 'traverse nodes of the graph to mark everything up to the root as a develop spec'
 
 # spack diff
 set -g __fish_spack_optspecs_spack_diff h/help json first a/attribute= ignore=
@@ -1818,7 +1827,7 @@ complete -c spack -n '__fish_spack_using_command find' -s c -l show-concretized 
 complete -c spack -n '__fish_spack_using_command find' -s f -l show-flags -f -a show_flags
 complete -c spack -n '__fish_spack_using_command find' -s f -l show-flags -d 'show spec compiler flags'
 complete -c spack -n '__fish_spack_using_command find' -l show-full-compiler -f -a show_full_compiler
-complete -c spack -n '__fish_spack_using_command find' -l show-full-compiler -d 'show full compiler specs'
+complete -c spack -n '__fish_spack_using_command find' -l show-full-compiler -d '(DEPRECATED) show full compiler specs. Currently it'"'"'s a no-op'
 complete -c spack -n '__fish_spack_using_command find' -s x -l explicit -f -a explicit
 complete -c spack -n '__fish_spack_using_command find' -s x -l explicit -d 'show only specs that were installed explicitly'
 complete -c spack -n '__fish_spack_using_command find' -s X -l implicit -f -a implicit
@@ -2896,7 +2905,7 @@ complete -c spack -n '__fish_spack_using_command stage' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command stage' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack style
-set -g __fish_spack_optspecs_spack_style h/help b/base= a/all r/root-relative U/no-untracked f/fix root= t/tool= s/skip=
+set -g __fish_spack_optspecs_spack_style h/help b/base= a/all r/root-relative U/no-untracked f/fix root= t/tool= s/skip= spec-strings
 
 complete -c spack -n '__fish_spack_using_command style' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command style' -s h -l help -d 'show this help message and exit'
@@ -2916,6 +2925,8 @@ complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -f -a to
 complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -d 'specify which tools to run (default: import, isort, black, flake8, mypy)'
 complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -f -a skip
 complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -d 'specify tools to skip (choose from import, isort, black, flake8, mypy)'
+complete -c spack -n '__fish_spack_using_command style' -l spec-strings -f -a spec_strings
+complete -c spack -n '__fish_spack_using_command style' -l spec-strings -d 'upgrade spec strings in Python, JSON and YAML files for compatibility with Spack v1.0 and v0.x. Example: spack style --spec-strings $(git ls-files). Note: this flag will be removed in Spack v1.0.'
 
 # spack tags
 set -g __fish_spack_optspecs_spack_tags h/help i/installed a/all

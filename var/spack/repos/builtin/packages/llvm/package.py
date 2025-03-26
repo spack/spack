@@ -7,7 +7,6 @@ import sys
 
 from llnl.util.lang import classproperty
 
-import spack.compilers
 from spack.build_systems.cmake import get_cmake_prefix_path
 from spack.operating_systems.mac_os import macos_sdk_path
 from spack.package import *
@@ -56,9 +55,10 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     version("main", branch="main")
 
     # Latest stable
-    version("19.1.7", sha256="59abea1c22e64933fad4de1671a61cdb934098793c7a31b333ff58dc41bff36c")
+    version("20.1.0", sha256="08bc382733777dda3c96259e3732ff96c1df98d0470c4f85b163274eae687f4f")
 
     # Previous stable series releases
+    version("19.1.7", sha256="59abea1c22e64933fad4de1671a61cdb934098793c7a31b333ff58dc41bff36c")
     version("19.1.6", sha256="f07fdcbb27b2b67aa95e5ddadf45406b33228481c250e65175066d36536a1ee2")
     version("19.1.5", sha256="e2204b9903cd9d7ee833a2f56a18bef40a33df4793e31cc090906b32cbd8a1f5")
     version("19.1.4", sha256="010e1fd3cabee8799bd2f8a6fbc68f28207494f315cf9da7057a2820f79fd531")
@@ -394,6 +394,9 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     provides("libllvm@4", when="@4.0.0:4")
     provides("libllvm@3", when="@3.0.0:3")
 
+    provides("c", "cxx", when="+clang")
+    provides("fortran", when="+flang")
+
     extends("python", when="+python")
 
     # Build dependency
@@ -495,9 +498,9 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
             },
         }.items():
             with when(v):
-                for comp in spack.compilers.supported_compilers():
-                    conflicts("%{0}{1}".format(comp, compiler_conflicts.get(comp, "")))
-        del v, compiler_conflicts, comp
+                for _name, _constraint in compiler_conflicts.items():
+                    conflicts(f"%{_name}{_constraint}")
+        del v, compiler_conflicts, _name, _constraint
 
     # libomptarget
     conflicts("+cuda", when="@15:")  # +cuda variant is obselete since LLVM 15
@@ -831,49 +834,69 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
             msg = "{0} compiler not found for {1}"
             assert key in compilers, msg.format(key, spec)
 
-    @property
-    def cc(self):
-        msg = "cannot retrieve C compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("c", None)
-        result = None
+    def _cc_path(self):
         if self.spec.satisfies("+clang"):
-            result = os.path.join(self.spec.prefix.bin, "clang")
-        return result
+            return os.path.join(self.spec.prefix.bin, "clang")
+        return None
 
-    @property
-    def cxx(self):
-        msg = "cannot retrieve C++ compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("cxx", None)
-        result = None
+    def _cxx_path(self):
         if self.spec.satisfies("+clang"):
-            result = os.path.join(self.spec.prefix.bin, "clang++")
-        return result
+            return os.path.join(self.spec.prefix.bin, "clang++")
+        return None
 
-    @property
-    def fc(self):
-        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("fc", None)
-        result = None
+    def _fortran_path(self):
         if self.spec.satisfies("+flang"):
-            result = os.path.join(self.spec.prefix.bin, "flang")
-        return result
+            return os.path.join(self.spec.prefix.bin, "flang")
+        return None
 
-    @property
-    def f77(self):
-        msg = "cannot retrieve Fortran 77 compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("f77", None)
-        result = None
-        if self.spec.satisfies("+flang"):
-            result = os.path.join(self.spec.prefix.bin, "flang")
-        return result
+    debug_flags = [
+        "-gcodeview",
+        "-gdwarf-2",
+        "-gdwarf-3",
+        "-gdwarf-4",
+        "-gdwarf-5",
+        "-gline-tables-only",
+        "-gmodules",
+        "-g",
+    ]
+
+    opt_flags = ["-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz", "-Og", "-O", "-O4"]
+
+    compiler_wrapper_link_paths = {
+        "c": os.path.join("clang", "clang"),
+        "cxx": os.path.join("clang", "clang++"),
+        "fortran": os.path.join("clang", "flang"),
+    }
+
+    implicit_rpath_libs = ["libclang"]
+
+    def _standard_flag(self, *, language, standard):
+        flags = {
+            "cxx": {
+                "11": [("@3.3:", "-std=c++11")],
+                "14": [("@3.5:", "-std=c++14")],
+                "17": [("@3.5:4", "-std=c++1z"), ("@5:", "-std=c++17")],
+                "20": [("@5:10", "-std=c++2a"), ("@11:", "-std=c++20")],
+                "23": [("@12:16", "-std=c++2b"), ("@17:", "-std=c++23")],
+            },
+            "c": {
+                "99": [("@:", "-std=c99")],
+                "11": [("@3.1:", "-std=c11")],
+                "17": [("@6:", "-std=c17")],
+                "23": [("@9:17", "-std=c2x"), ("@18:", "-std=c23")],
+            },
+        }
+        for condition, flag in flags[language][standard]:
+            if self.spec.satisfies(condition):
+                return flag
+        else:
+            raise RuntimeError(
+                f"{self.spec} does not support the '{standard}' standard "
+                f"for the '{language}' language"
+            )
+
+    def archspec_name(self):
+        return "clang"
 
     @property
     def libs(self):

@@ -36,6 +36,9 @@ class QtTools(QtPackage):
         description="Qt Widgets Designer for designing and building GUIs with Qt Widgets.",
     )
 
+    # use of relative path in https://github.com/qt/qttools/blob/6.8.2/.gitmodules
+    conflicts("+assistant", when="@6.8.2", msg="Incorrect git submodule prevents +assistant")
+
     depends_on("llvm +clang")
 
     depends_on("qt-base +network")
