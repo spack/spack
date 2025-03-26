@@ -40,15 +40,15 @@ class Glab(GoPackage):
         depends_on("go@1.24.1:", when="@1.54:")
         depends_on("go@1.23.4:", when="@1.52:")
         depends_on("go@1.23.2:", when="@1.48:")
-        depends_on("go@1.23:", when="@1.46:")
+        depends_on("go@1.23.0:", when="@1.46:")
         depends_on("go@1.22.5:", when="@1.44:")
         depends_on("go@1.22.4:", when="@1.42:")
         depends_on("go@1.22.3:", when="@1.41:")
-        depends_on("go@1.21:", when="@1.37:")
-        depends_on("go@1.19:", when="@1.35:")
-        depends_on("go@1.18:", when="@1.23:")
-        depends_on("go@1.17:", when="@1.22:")
-        depends_on("go@1.13:")
+        depends_on("go@1.21.0:", when="@1.37:")
+        depends_on("go@1.19.0:", when="@1.35:")
+        depends_on("go@1.18.0:", when="@1.23:")
+        depends_on("go@1.17.0:", when="@1.22:")
+        depends_on("go@1.13.0:")
 
     build_directory = "cmd/glab"
 
