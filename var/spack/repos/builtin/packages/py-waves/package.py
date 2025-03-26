@@ -39,6 +39,8 @@ class PyWaves(PythonPackage):
     version("develop", branch="main", get_full_repo=True)
     version("0.12.5", sha256="3868f1592a21e4b671ed31e66951151d73ff0535e0209c9621629994b25c0cd4")
 
+    variant("docs", default=False, description="Build HTML documentation")
+
     depends_on("python@3.9:", type=("build", "run"))
 
     depends_on("git", when="@develop", type="build")
@@ -47,16 +49,24 @@ class PyWaves(PythonPackage):
     depends_on("py-setuptools@64:", type="build")
     depends_on("py-setuptools-scm@8:", type="build")
 
-    depends_on("py-h5netcdf", type="run")
-    depends_on("py-h5py", type="run")
-    depends_on("py-matplotlib", type="run")
-    depends_on("py-networkx", type="run")
-    depends_on("py-numpy", type="run")
-    depends_on("py-pyyaml", type="run")
-    depends_on("py-salib@1:", type="run")
-    depends_on("py-scipy@1.7:", type="run")
-    depends_on("scons@4", type="run")
-    depends_on("py-xarray", type="run")
+    depends_on("scons@4:", type="build", when="+docs")
+    depends_on("sphinx@7.1:", type="build", when="+docs")
+    depends_on("sphinx-argparse", type="build", when="+docs")
+    depends_on("sphinx-copybutton@0.5.1:", type="build", when="+docs")
+    depends_on("sphinx-book-theme", type="build", when="+docs")
+    depends_on("sphinx-design", type="build", when="+docs")
+    depends_on("sphinxcontrib-bibtex", type="build", when="+docs")
+
+    depends_on("py-h5netcdf", type=("run", "test"))
+    depends_on("py-h5py", type=("run", "test"))
+    depends_on("py-matplotlib", type=("run", "test"))
+    depends_on("py-networkx", type=("run", "test"))
+    depends_on("py-numpy", type=("run", "test"))
+    depends_on("py-pyyaml", type=("run", "test"))
+    depends_on("py-salib@1:", type=("run", "test"))
+    depends_on("py-scipy@1.7:", type=("run", "test"))
+    depends_on("scons@4:", type=("run", "test"))
+    depends_on("py-xarray", type=("run", "test"))
 
     depends_on("py-pytest", type="test")
 
