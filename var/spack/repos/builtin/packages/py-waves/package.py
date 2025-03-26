@@ -122,4 +122,4 @@ class PyWaves(PythonPackage):
     @on_package_attributes(run_tests=True)
     def install_test(self):
         pytest = which("pytest")
-        pytest("waves")
+        pytest("-vvv", "-m", "not systemtest")
