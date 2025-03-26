@@ -19,7 +19,7 @@ class HpcBeeflow(PythonPackage):
     homepage = "https://github.com/lanl/bee"
     pypi = "hpc_beeflow/hpc_beeflow-0.1.10.tar.gz"
 
-    # maintainers("pagrubel")
+    maintainers("pagrubel")
 
     license("MIT")
 
@@ -45,7 +45,7 @@ class HpcBeeflow(PythonPackage):
     depends_on("py-requests-unixsocket@0.4.1:", when="@0.1.10:", type=("build", "run"))
     depends_on("py-python-daemon@2.3.1:", type=("build", "run"))
     depends_on("py-gunicorn@20.1.0:22", type=("build", "run"))
-    depends_on("py-typer@0.5.0:", type=("build", "run"))
+    depends_on("py-typer@=0.5.0", type=("build", "run"))
     depends_on("py-cffi@1.15.1:", type=("build", "run"))
     depends_on("py-celery+redis+sqlalchemy@5.3.4:", type=("build", "run"))
     depends_on("py-docutils@=0.18.1", type=("build", "run"))
