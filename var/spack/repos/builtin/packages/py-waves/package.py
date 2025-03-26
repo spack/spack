@@ -75,25 +75,52 @@ class PyWaves(PythonPackage):
 
     depends_on("py-pytest", type="test")
 
+    phases = ("build", "install")
+
     def setup_build_environment(self, env):
         if not self.spec.version.isdevelop():
             env.set("SETUPTOOLS_SCM_PRETEND_VERSION", self.version)
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
-            python("-m build --no-isolation")
+            cp = which("cp")
+            cp("-v", "pyproject.toml", "waves/")
+            cp("-v", "README.rst", "waves/")
 
-    @run_after("install")
-    def install_docs(self):
-        if "+docs" in self.spec:
-            scons = which("scons")
-            scons("html")
-            # FIXME: Fix the built documentation source path and figure out what ``self.prefix.<something>`` is required
-            # to create a ``../site-packages/waves/docs`` directory
-            install_tree("build/html/docs", self.prefix.docs)
+            if "+docs" in self.spec:
+                scons = which("scons")
+                scons("html", "man")
+                # FIXME: Fix the built documentation source path and figure out what ``self.prefix.<something>`` is required
+                # to create a ``../site-packages/waves/docs`` directory
+                cp("-vr", "build/docs/html", "waves/docs/")
+                cp("-vr", "build/docs/man/waves.1", "waves/docs/")
+
+            # FIXME: Figure out how to use the python-global interface for the build front-end
+            python("-m", "build", "--no-isolation")
+
+    def install(self, spec, prefix):
+        with working_dir(self.build_directory):
+            python(
+                # Using the spack default python package install options
+                "-m",
+                "pip",
+                "-vvv",
+                "--no-input",
+                "--no-cache-dir",
+                "--disable-pip-version-check",
+                "install",
+                "--no-deps",
+                "--ignore-installed",
+                "--no-build-isolation",
+                "--no-warn-script-location",
+                "--no-index",
+                f"--prefix={prefix}",
+                # TODO: Figure out how to override the positional '.' of the spack install options to use following
+                f"dist/waves-{self.version}.tar.gz",
+            )
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
-    def build_test(self):
+    def install_test(self):
         pytest = which("pytest")
         pytest("waves")
