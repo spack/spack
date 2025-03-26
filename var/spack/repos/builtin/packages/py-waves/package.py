@@ -28,7 +28,7 @@ class PyWaves(PythonPackage):
     studies with traditional software build systems.
     """
 
-    homepage = "https://github.com/lanl-aea/waves"
+    homepage = "https://lanl-aea.github.io/waves/"
     git = "https://github.com/lanl-aea/waves.git"
     url = "https://github.com/lanl-aea/waves/archive/refs/tags/0.12.5.tar.gz"
 
@@ -43,19 +43,23 @@ class PyWaves(PythonPackage):
 
     depends_on("py-pip", type="build")
     depends_on("py-build", type="build")
-    depends_on("py-setuptools@64", type="build")
-    depends_on("py-setuptools-scm@8", type="build")
+    #depends_on("py-setuptools@64", type="build")
+    depends_on("py-setuptools", type="build")
+    #depends_on("py-setuptools-scm@8", type="build")
+    depends_on("py-setuptools-scm", type="build")
 
-    #depends_on("py-h5netcdf", type="run")
-    #depends_on("py-h5py", type="run")
-    #depends_on("py-matplotlib", type="run")
-    #depends_on("py-networkx", type="run")
-    #depends_on("py-numpy", type="run")
-    #depends_on("py-pyyaml", type="run")
+    depends_on("py-h5netcdf", type="run")
+    depends_on("py-h5py", type="run")
+    depends_on("py-matplotlib", type="run")
+    depends_on("py-networkx", type="run")
+    depends_on("py-numpy", type="run")
+    depends_on("py-pyyaml", type="run")
     #depends_on("py-salib@1", type="run")
+    depends_on("py-salib", type="run")
     #depends_on("py-scipy@1.7", type="run")
-    #depends_on("scons@4", type="run")
-    #depends_on("py-xarray", type="run")
+    depends_on("py-scipy", type="run")
+    depends_on("scons@4", type="run")
+    depends_on("py-xarray", type="run")
 
     def setup_build_environment(self, env):
         if not self.spec.version.isdevelop():
