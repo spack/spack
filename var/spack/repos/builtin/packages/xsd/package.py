@@ -25,7 +25,8 @@ class Xsd(MakefilePackage):
 
     variant(
         "cxxstd",
-        default="14", values=("98", "11", "14"),
+        default="14",
+        values=("98", "11", "14"),
         multi=False,
         description="Use the specified C++ standard when building",
     )
