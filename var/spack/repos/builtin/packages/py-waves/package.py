@@ -7,6 +7,7 @@ import pathlib
 import shutil
 
 from spack.package import *
+from spack.version import Version
 
 
 class PyWaves(PythonPackage):
@@ -69,11 +70,11 @@ class PyWaves(PythonPackage):
 
     phases = ("edit", "build", "install")
 
-    # TODO: limit edit stage operations to ``@:0.12.8``. MANIFEST was patched in v0.12.9.
     def edit(self, spec, prefix):
-        with open("MANIFEST.in", "a") as manifest:
-            manifest.write("include waves/README.rst")
-            manifest.write("include waves/pyproject.toml")
+        if self.version < Version("0.12.9"):
+            with open("MANIFEST.in", "a") as manifest:
+                manifest.write("include waves/README.rst")
+                manifest.write("include waves/pyproject.toml")
 
     def setup_build_environment(self, env):
         if not self.spec.version.isdevelop():
@@ -111,7 +112,6 @@ class PyWaves(PythonPackage):
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
-            # TODO: install the man page to a spack recognized MANPATH
             python(
                 # Using the spack default python package install options
                 "-m",
@@ -128,7 +128,9 @@ class PyWaves(PythonPackage):
                 "--no-index",
                 f"--prefix={prefix}",
                 # TODO: Figure out how to override the positional '.' of the spack install options
-                # to use following
+                # to use the py-build output path instead of overriding the entire default install
+                # function Will require the follow on documentation installation logic to be a
+                # ``@run_after("install")`` function.
                 f"dist/waves-{self.version}.tar.gz",
             )
             if "+docs" in self.spec:
@@ -160,6 +162,16 @@ class PyWaves(PythonPackage):
     def install_test(self):
         site_packages_directory = list(pathlib.Path(self.prefix).rglob("**/site-packages"))[0]
         installed_package = site_packages_directory / "waves"
+        pytest_args = ["-vvv", "-n", "4", "-m", "not systemtest"]
+
+        # Until WAVES v0.12.9, the SALib minimum spec is >1. If spack installs SALib <1.4.6, the
+        # SALib unit tests fail when trying to import the missing "sobol" module. There is no
+        # upstream solution to skip the "sobol" tests without skiping the entire module's tests.
+        # Package is functional as long as the end user doesn't try to use the sobol sampler with
+        # SALib <1.4.6
+        if self.version < Version("0.12.9"):
+            pytest_args.append("--ignore=_tests/test_salib_sampler.py")
+
         with working_dir(installed_package):
             pytest = which("pytest")
-            pytest("-vvv", "-n", "4", "-m", "not systemtest")
+            pytest(*pytest_args)
