@@ -142,7 +142,7 @@ class Gaudi(CMakePackage, CudaPackage):
     #       ROOT does not like being exposed to LLVM symbols.
 
     # The Intel VTune dependency is taken aside because it requires a license
-    depends_on("intel-parallel-studio -mpi +vtune", when="+vtune")
+    depends_on("intel-oneapi-vtune", when="+vtune")
 
     def patch(self):
         # ensure an empty pytest.ini is present to prevent finding one
