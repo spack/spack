@@ -66,6 +66,14 @@ class PyWaves(PythonPackage):
 
     phases = ("install",)
 
+    # Limit import tests to the public API
+    import_modules = [
+        "waves",
+        "waves.exceptions",
+        "waves.parameter_generators",
+        "waves.scons_extensions",
+    ]
+
     def setup_build_environment(self, env):
         env.set("PREFIX", self.prefix)
         env.set("PKG_NAME", "waves"),
