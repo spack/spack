@@ -5,7 +5,7 @@ import tempfile
 
 from spack.package import *
 
-from lib.spack.spack.build_systems.python import PythonPipBuilder
+from spack.build_systems.python import PythonPipBuilder
 
 
 class PyTfKeras(PythonPackage):
