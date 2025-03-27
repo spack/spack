@@ -133,7 +133,10 @@ class PyWaves(PythonPackage):
                 f"dist/waves-{self.version}.tar.gz",
             )
             if "+docs" in self.spec:
-                man_page = pathlib.Path(self.prefix.site_packages_dir) / "waves/docs/waves.1"
+                site_packages_directory = list(pathlib.Path(self.prefix).rglob("**/site-packages"))[0]
+                installed_package = site_packages_directory / "waves"
+
+                man_page = installed_package / "docs/waves.1"
                 man_directory = pathlib.Path(self.prefix) / "man/man1"
                 man_directory.mkdir(
                     parents=True,
@@ -150,7 +153,8 @@ class PyWaves(PythonPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def install_test(self):
-        installed_package = pathlib.Path(self.prefix.site_packages_dir) / "waves"
+        site_packages_directory = list(pathlib.Path(self.prefix).rglob("**/site-packages"))[0]
+        installed_package = site_packages_directory / "waves"
         with working_dir(installed_package):
             pytest = which("pytest")
             pytest("-vvv", "-n", "4", "-m", "not systemtest")
