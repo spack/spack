@@ -59,7 +59,7 @@ class Msvc(Package, CompilerPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        if not exe.name.endswith(".exe") and not exe.name.endswith(".bat"):
+        if not exe.endswith(".exe") and not exe.endswith(".bat"):
             # Not on windows, can't possibly be msvc
             return
 
