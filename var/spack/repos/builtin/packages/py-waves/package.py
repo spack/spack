@@ -103,6 +103,7 @@ class PyWaves(PythonPackage):
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
+            # TODO: install the man page to a spack recognized MANPATH
             python(
                 # Using the spack default python package install options
                 "-m",
