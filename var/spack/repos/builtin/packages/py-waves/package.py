@@ -53,13 +53,14 @@ class PyWaves(PythonPackage):
     depends_on("py-setuptools-scm@8:", type="build")
 
     depends_on("scons@4:", type="build", when="+docs")
-    # Conflicts with py-sphinx-book-theme dependencies sphinx@4:6
+    # TODO: add upstream spec ``py-sphinx@7.1:`` when py-sphinx-book-theme build allows.
+    # Conflicts with py-sphinx-book-theme dependency spec sphinx@4:6
     # Documentation should still build but the ``maximum_signature_line_length`` will have no effect on sphinx<7.1
-    #depends_on("py-sphinx@7.1:", type="build", when="+docs")
     depends_on("py-sphinx", type="build", when="+docs")
     depends_on("py-sphinx-argparse", type="build", when="+docs")
+    # TODO: add upstream spec ``py-sphinx-copybutton@0.5.1:`` when available
     # Only py-sphinx-copybutton build available in spack is 0.2.12
-    #depends_on("py-sphinx-copybutton@0.5.1:", type="build", when="+docs")
+    # Documentation should still build but the copy button behavior may not work as nicely
     depends_on("py-sphinx-copybutton", type="build", when="+docs")
     depends_on("py-sphinx-book-theme", type="build", when="+docs")
     depends_on("py-sphinx-design", type="build", when="+docs")
