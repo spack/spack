@@ -228,32 +228,53 @@ class CompilerWrapper(Package):
             env.prepend_path("SPACK_COMPILER_WRAPPER_PATH", item)
 
     def setup_dependent_package(self, module, dependent_spec):
-        bin_dir = self.bin_dir()
+        if sys.platform != "win32":
+            bin_dir = self.bin_dir()
 
+            if dependent_spec.has_virtual_dependency("c"):
+                compiler_pkg = dependent_spec["c"].package
+                setattr(
+                    module,
+                    "spack_cc",
+                    str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["c"]),
+                )
+
+            if dependent_spec.has_virtual_dependency("cxx"):
+                compiler_pkg = dependent_spec["cxx"].package
+                setattr(
+                    module,
+                    "spack_cxx",
+                    str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["cxx"]),
+                )
+
+            if dependent_spec.has_virtual_dependency("fortran"):
+                compiler_pkg = dependent_spec["fortran"].package
+                setattr(
+                    module,
+                    "spack_fc",
+                    str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["fortran"]),
+                )
+                setattr(
+                    module,
+                    "spack_f77",
+                    str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["fortran"]),
+                )
+        else:
+            self._setup_win_dependent_package(module, dependent_spec)
+
+    def _setup_win_dependent_package(self, module, dependent_spec):
         if dependent_spec.has_virtual_dependency("c"):
             compiler_pkg = dependent_spec["c"].package
-            setattr(
-                module, "spack_cc", str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["c"])
-            )
+            setattr(module, "spack_cc", compiler_pkg.cc)
 
         if dependent_spec.has_virtual_dependency("cxx"):
             compiler_pkg = dependent_spec["cxx"].package
-            setattr(
-                module, "spack_cxx", str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["cxx"])
-            )
+            setattr(module, "spack_cxx", compiler_pkg.cxx)
 
         if dependent_spec.has_virtual_dependency("fortran"):
             compiler_pkg = dependent_spec["fortran"].package
-            setattr(
-                module,
-                "spack_fc",
-                str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["fortran"]),
-            )
-            setattr(
-                module,
-                "spack_f77",
-                str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["fortran"]),
-            )
+            setattr(module, "spack_fc", compiler_pkg.fortran)
+            setattr(module, "spack_f77", compiler_pkg.fortran)
 
     @property
     def disable_new_dtags(self) -> str:

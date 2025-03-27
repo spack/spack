@@ -33,6 +33,7 @@ class Msmpi(Package):
     patch("ifort_compat.patch")
 
     requires("platform=windows")
+    requires("%msvc")
 
     @classmethod
     def determine_version(cls, exe):
@@ -48,11 +49,10 @@ class Msmpi(Package):
         # MSMPI does not vendor compiler wrappers, instead arguments should
         # be manually supplied to compiler by consuming package
         # Note: This is not typical of MPI installations
-        dependent_module = dependent_spec.package.module
-        self.spec.mpicc = dependent_module.spack_cc
-        self.spec.mpicxx = dependent_module.spack_cxx
-        self.spec.mpifc = dependent_module.spack_fc
-        self.spec.mpif77 = dependent_module.spack_f77
+        self.spec.mpicc = dependent_spec["c"].package.cc
+        self.spec.mpicxx = dependent_spec["cxx"].package.cxx
+        self.spec.mpifc = dependent_spec["fortran"].package.fortran
+        self.spec.mpif77 = dependent_spec["fortran"].package.fortran
 
 
 class GenericBuilder(GenericBuilder):
