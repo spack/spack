@@ -67,7 +67,13 @@ class PyWaves(PythonPackage):
     depends_on("py-pytest", type="test")
     depends_on("py-pytest-xdist", type="test")
 
-    phases = ("build", "install")
+    phases = ("edit", "build", "install")
+
+    # TODO: limit edit stage operations to ``@:0.12.8``. MANIFEST was patched in v0.12.9.
+    def edit(self, spec, prefix):
+        with open("MANIFEST.in", "a") as manifest:
+            manifest.write("include waves/README.rst")
+            manifest.write("include waves/pyproject.toml")
 
     def setup_build_environment(self, env):
         if not self.spec.version.isdevelop():
