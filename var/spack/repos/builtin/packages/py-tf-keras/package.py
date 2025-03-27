@@ -3,9 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import tempfile
 
-from spack.package import *
-
 from spack.build_systems.python import PythonPipBuilder
+from spack.package import *
 
 
 class PyTfKeras(PythonPackage):
