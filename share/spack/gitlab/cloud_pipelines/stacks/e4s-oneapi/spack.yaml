@@ -162,21 +162,21 @@ spack:
   - wrf
   - xyce +mpi +shared +pymi +pymi_static_tpls
   # INCLUDED IN ECP DAV CPU
-  # - adios2
-  # - ascent
-  # - darshan-runtime
-  # - darshan-util
-  # - faodel
-  # - hdf5
-  # - libcatalyst
-  # - parallel-netcdf
+  - adios2
+  - ascent
+  - darshan-runtime
+  - darshan-util
+  - faodel
+  - hdf5
+  - libcatalyst
+  - parallel-netcdf
   # - py-cinemasci
-  # - sz
-  # - unifyfs
-  # - veloc
-  # - paraview +qt +examples
-  # - vtk-m ~openmp                 # +openmp: https://github.com/spack/spack/issues/31830
-  # - zfp
+  - sz
+  - unifyfs
+  - veloc
+  # - paraview +qt
+  - vtk-m ~openmp                   # +openmp: https://github.com/spack/spack/issues/31830
+  - zfp
   # --
   # - visit                         # vtk-9.2.6: https://github.com/spack/spack/issues/49623
   # --
