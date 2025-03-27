@@ -144,6 +144,7 @@ class PyWaves(PythonPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def install_test(self):
-        with working_dir(self.build_directory):
+        installed_package = pathlib.Path(self.prefix).rglob("**/waves/__init__.py")[0].parent
+        with working_dir(installed_package):
             pytest = which("pytest")
             pytest("-vvv", "-n", "4", "-m", "not systemtest")
