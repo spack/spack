@@ -7,7 +7,6 @@ import pathlib
 import shutil
 
 from spack.package import *
-from spack.version import Version
 
 
 class PyWaves(PythonPackage):
@@ -119,7 +118,7 @@ class PyWaves(PythonPackage):
         # upstream solution to skip the "sobol" tests without skiping the entire module's tests.
         # Package is functional as long as the end user doesn't try to use the sobol sampler with
         # SALib <1.4.6
-        if self.version < Version("0.12.9"):
+        if self.spec.satisfies("@:0.12.8"):
             custom_arguments.insert(0, "--ignore=_tests/test_salib_sampler.py")
 
         with working_dir(installed_package):
