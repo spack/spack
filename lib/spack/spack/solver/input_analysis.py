@@ -470,7 +470,7 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
             gen.fact(fn.max_dupes(package_name, 1))
         gen.newline()
 
-        gen.h2("Packages with at multiple possible nodes (build-tools)")
+        gen.h2("Packages with multiple possible nodes (build-tools)")
         default = spack.config.CONFIG.get("concretizer:duplicates:max_dupes:default", 2)
         for package_name in sorted(self.possible_dependencies() & build_tools):
             max_dupes = spack.config.CONFIG.get(

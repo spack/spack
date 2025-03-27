@@ -2997,8 +2997,36 @@ class SpackSolverSetup:
         """
         reuse = reuse or []
         check_packages_exist(specs)
+        self.gen = ProblemInstanceBuilder()
 
-        node_counter = create_counter(specs, tests=self.tests, possible_graph=self.possible_graph)
+        # Compute possible compilers first, so we can record which dependencies they might inject
+        _ = spack.compilers.config.all_compilers(init_config=True)
+
+        # Get compilers from buildcache only if injected through "reuse" specs
+        supported_compilers = spack.compilers.config.supported_compilers()
+        compilers_from_reuse = {
+            x for x in reuse if x.name in supported_compilers and not x.external
+        }
+        candidate_compilers, self.rejected_compilers = possible_compilers(
+            configuration=spack.config.CONFIG
+        )
+        for x in candidate_compilers:
+            if x.external or x in reuse:
+                continue
+            reuse.append(x)
+            for dep in x.traverse(root=False, deptype="run"):
+                reuse.extend(dep.traverse(deptype=("link", "run")))
+
+        candidate_compilers.update(compilers_from_reuse)
+        self.possible_compilers = list(candidate_compilers)
+        self.possible_compilers.sort()  # type: ignore[call-overload]
+
+        self.gen.h1("Runtimes")
+        injected_dependencies = self.define_runtime_constraints()
+
+        node_counter = create_counter(
+            specs + injected_dependencies, tests=self.tests, possible_graph=self.possible_graph
+        )
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
         self.libcs = sorted(all_libcs())  # type: ignore[type-var]
@@ -3021,7 +3049,6 @@ class SpackSolverSetup:
             if node.namespace is not None:
                 self.explicitly_required_namespaces[node.name] = node.namespace
 
-        self.gen = ProblemInstanceBuilder()
         self.gen.h1("Generic information")
         if using_libc_compatibility():
             for libc in self.libcs:
@@ -3049,27 +3076,6 @@ class SpackSolverSetup:
             )
 
         specs = tuple(specs)  # ensure compatible types to add
-
-        _ = spack.compilers.config.all_compilers(init_config=True)
-
-        # Get compilers from buildcache only if injected through "reuse" specs
-        supported_compilers = spack.compilers.config.supported_compilers()
-        compilers_from_reuse = {
-            x for x in reuse if x.name in supported_compilers and not x.external
-        }
-        candidate_compilers, self.rejected_compilers = possible_compilers(
-            configuration=spack.config.CONFIG
-        )
-        for x in candidate_compilers:
-            if x.external or x in reuse:
-                continue
-            reuse.append(x)
-            for dep in x.traverse(root=False, deptype="run"):
-                reuse.extend(dep.traverse(deptype=("link", "run")))
-
-        candidate_compilers.update(compilers_from_reuse)
-        self.possible_compilers = list(candidate_compilers)
-        self.possible_compilers.sort()  # type: ignore[call-overload]
 
         self.gen.h1("Reusable concrete specs")
         self.define_concrete_input_specs(specs, self.pkgs)
@@ -3142,9 +3148,6 @@ class SpackSolverSetup:
         self.gen.h1("Variant Values defined in specs")
         self.define_variant_values()
 
-        self.gen.h1("Runtimes")
-        self.define_runtime_constraints()
-
         self.gen.h1("Version Constraints")
         self.collect_virtual_constraints()
         self.define_version_constraints()
@@ -3178,8 +3181,10 @@ class SpackSolverSetup:
         path = os.path.join(parent_dir, "concretize.lp")
         parse_files([path], visit)
 
-    def define_runtime_constraints(self):
-        """Define the constraints to be imposed on the runtimes"""
+    def define_runtime_constraints(self) -> List[spack.spec.Spec]:
+        """Define the constraints to be imposed on the runtimes, and returns a list of
+        injected packages.
+        """
         recorder = RuntimePropertyRecorder(self)
 
         for compiler in self.possible_compilers:
@@ -3229,6 +3234,7 @@ class SpackSolverSetup:
                 )
 
         recorder.consume_facts()
+        return sorted(recorder.injected_dependencies)
 
     def literal_specs(self, specs):
         for spec in sorted(specs):
@@ -3493,6 +3499,7 @@ class RuntimePropertyRecorder:
         self._setup = setup
         self.rules = []
         self.runtime_conditions = set()
+        self.injected_dependencies = set()
         # State of this object set in the __call__ method, and reset after
         # each directive-like method
         self.current_package = None
@@ -3531,6 +3538,7 @@ class RuntimePropertyRecorder:
         if dependency_spec.versions != vn.any_version:
             self._setup.version_constraints.add((dependency_spec.name, dependency_spec.versions))
 
+        self.injected_dependencies.add(dependency_spec)
         body_str, node_variable = self.rule_body_from(when_spec)
 
         head_clauses = self._setup.spec_clauses(dependency_spec, body=False)
@@ -3686,20 +3694,21 @@ class RuntimePropertyRecorder:
         """Consume the facts collected by this object, and emits rules and
         facts for the runtimes.
         """
+        self._setup.gen.h2("Runtimes: declarations")
+        runtime_pkgs = sorted(
+            {x.name for x in self.injected_dependencies if not spack.repo.PATH.is_virtual(x.name)}
+        )
+        for runtime_pkg in runtime_pkgs:
+            self._setup.gen.fact(fn.runtime(runtime_pkg))
+        self._setup.gen.newline()
+
         self._setup.gen.h2("Runtimes: rules")
         self._setup.gen.newline()
         for rule in self.rules:
             self._setup.gen.append(rule)
+        self._setup.gen.newline()
 
-        self._setup.gen.h2("Runtimes: conditions")
-        for runtime_pkg in spack.repo.PATH.packages_with_tags("runtime"):
-            self._setup.gen.fact(fn.runtime(runtime_pkg))
-            self._setup.gen.fact(fn.possible_in_link_run(runtime_pkg))
-            self._setup.gen.newline()
-            # Inject version rules for runtimes (versions are declared based
-            # on the available compilers)
-            self._setup.pkg_version_rules(runtime_pkg)
-
+        self._setup.gen.h2("Runtimes: requirements")
         for imposed_spec, when_spec in sorted(self.runtime_conditions):
             msg = f"{when_spec} requires {imposed_spec} at runtime"
             _ = self._setup.condition(when_spec, imposed_spec=imposed_spec, msg=msg)
