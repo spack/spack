@@ -42,11 +42,8 @@ class Exciting(MakefilePackage):
     depends_on("mkl", when="+mkl")
     depends_on("mpi", when="+mpi")
     depends_on("scalapack", when="+scalapack")
-    # conflicts('%gcc@10:', msg='exciting cannot be built with GCC 10')
 
-    requires("%intel", when="^mkl", msg="Intel MKL only works with the Intel compiler")
-    requires("%intel", when="^intel-mkl", msg="Intel MKL only works with the Intel compiler")
-    requires("%intel", when="^intel-mpi", msg="Intel MPI only works with the Intel compiler")
+    conflicts("%intel")
 
     def patch(self):
         """Fix bad logic in m_makespectrum.f90 for the Oxygen release"""
