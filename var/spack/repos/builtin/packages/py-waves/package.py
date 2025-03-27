@@ -20,6 +20,9 @@
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
+import shutil
+import pathlib
+
 from spack.package import *
 
 
@@ -88,16 +91,23 @@ class PyWaves(PythonPackage):
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
             # TODO: Patch upstream MANIFEST.in or pyproject.toml to include these files in py-build/pip package builds
-            cp = which("cp")
-            cp("-v", "pyproject.toml", "waves/")
-            cp("-v", "README.rst", "waves/")
+            shutil.copy2("pyproject.toml", "waves/")
+            shutil.copy2("README.rst", "waves/")
 
             if "+docs" in self.spec:
                 scons = which("scons")
                 scons("html", "man")
                 # FIXME: Is there a spack preferred API for including additional files in the build?
-                cp("-vr", "build/docs/html", "waves/docs/")
-                cp("-vr", "build/docs/man/waves.1", "waves/docs/")
+                documentation_directory = pathlib.Path("waves/docs")
+                documentation_directory.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(
+                    pathlib.Path("build/docs/html"),
+                    documentation_directory,
+                    symlinks=False,
+                    dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns(".doctrees", "*.doctree", ".buildinfo"),
+                )
+                shutil.copy2(pathlib.Path("build/docs/man/waves.1"), documentation_directory)
 
             python("-m", "build", "--no-isolation")
 
@@ -122,6 +132,14 @@ class PyWaves(PythonPackage):
                 # TODO: Figure out how to override the positional '.' of the spack install options to use following
                 f"dist/waves-{self.version}.tar.gz",
             )
+            if "+docs" in self.spec:
+                man_page = pathlib.Path(self.prefix).rglob("**/waves.1")[0]
+                man_directory = pathlib.Path(self.prefix) / "man/man1"
+                man_directory.mkdir(parents=True, exists_ok=True)
+                share_man_directory = pathlib.Path(self.prefix) / "share/man/man1"
+                share_man_directory.mkdir(parents=True, exists_ok=True)
+                shutil.copy2(man_page, man_directory)
+                shutil.copy2(man_page, share_man_directory)
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
