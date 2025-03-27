@@ -257,6 +257,9 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("fftw", when="@2.1: +waves2amr")
     depends_on("fftw", when="@3.3.1: +fft")
 
+    depends_on("rocrand", when="+rocm")
+    depends_on("rocprim", when="+rocm")
+
     for arch in CudaPackage.cuda_arch_values:
         depends_on("hypre+cuda cuda_arch=%s" % arch, when="+cuda+hypre cuda_arch=%s" % arch)
     for arch in ROCmPackage.amdgpu_targets:

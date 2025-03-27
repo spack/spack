@@ -169,6 +169,10 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Patches and one-off conflicts
 
+    # Asio 1.34.0 removed io_context::work, used by HPX:
+    # https://github.com/chriskohlhoff/asio/commit/a70f2df321ff40c1809773c2c09986745abf8d20.
+    conflicts("^asio@1.34:", when="@:1.10")
+
     # Certain Asio headers don't compile with nvcc from 1.17.0 onwards with
     # C++17. Starting with CUDA 11.3 they compile again.
     conflicts("^asio@1.17.0:", when="+cuda cxxstd=17 ^cuda@:11.2")

@@ -12,15 +12,18 @@ spack:
       - target=x86_64_v3
       - '%oneapi'
       providers:
+        c: [intel-oneapi-compilers, gcc]
+        cxx: [intel-oneapi-compilers, gcc]
+        fortran: [intel-oneapi-compilers, gcc]
         blas: [openblas]
         tbb: [intel-tbb]
       variants: +mpi
     gl:
       require: osmesa
+    fortran:
+      require: intel-oneapi-compilers
     elfutils:
       variants: ~nls
-    gcc-runtime:
-      require: "target=x86_64_v3 %gcc"
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
@@ -32,10 +35,7 @@ spack:
     openblas:
       variants: threads=openmp
     trilinos:
-      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
-        +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
-        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
-        +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
     mpi:
@@ -48,6 +48,9 @@ spack:
     unzip:
       require:
       - 'target=x86_64_v3 %gcc'
+    py-maturin:
+      require:
+        - 'target=x86_64_v3 %gcc'
     binutils:
       require:
       - 'target=x86_64_v3 %gcc'

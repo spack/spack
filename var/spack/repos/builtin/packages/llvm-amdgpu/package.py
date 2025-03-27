@@ -6,17 +6,27 @@ import re
 import shutil
 
 from spack.package import *
+from spack.pkg.builtin.llvm import LlvmDetection
 
 
-class LlvmAmdgpu(CMakePackage, CompilerPackage):
+class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
     """Toolkit for the construction of highly optimized compilers,
     optimizers, and run-time environments."""
 
     homepage = "https://github.com/ROCm/llvm-project"
     git = "https://github.com/ROCm/llvm-project.git"
     url = "https://github.com/ROCm/llvm-project/archive/rocm-6.2.4.tar.gz"
-    tags = ["rocm"]
+    tags = ["rocm", "compiler"]
     executables = [r"amdclang", r"amdclang\+\+", r"amdflang", r"clang.*", r"flang.*", "llvm-.*"]
+
+    compiler_wrapper_link_paths = {
+        "c": "rocmcc/amdclang",
+        "cxx": "rocmcc/amdclang++",
+        "fortran": "rocmcc/amdflang",
+    }
+
+    stdcxx_libs = ("-lstdc++",)
+
     generator("ninja")
 
     maintainers("srekolam", "renjithravindrankannath", "haampie", "afzpatel")
@@ -50,6 +60,9 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
+
+    provides("c", "cxx")
+    provides("fortran")
 
     variant(
         "rocm-device-libs",
@@ -215,6 +228,13 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
         when="@master",
     )
 
+    def _standard_flag(self, *, language, standard):
+        flags = {
+            "cxx": {"11": "-std=c++11", "14": "-std=c++14", "17": "-std=c++17"},
+            "c": {"99": "-std=c99", "11": "-std=c1x"},
+        }
+        return flags[language][standard]
+
     def cmake_args(self):
         llvm_projects = ["clang", "lld", "clang-tools-extra", "compiler-rt"]
         llvm_runtimes = ["libcxx", "libcxxabi"]
@@ -341,3 +361,12 @@ class LlvmAmdgpu(CMakePackage, CompilerPackage):
             if "libclang_rt.asan-x86_64.so" in files:
                 env.prepend_path("LD_LIBRARY_PATH", root)
         env.prune_duplicate_paths("LD_LIBRARY_PATH")
+
+    def _cc_path(self):
+        return os.path.join(self.spec.prefix.bin, "amdclang")
+
+    def _cxx_path(self):
+        return os.path.join(self.spec.prefix.bin, "amdclang++")
+
+    def _fortran_path(self):
+        return os.path.join(self.spec.prefix.bin, "amdflang")

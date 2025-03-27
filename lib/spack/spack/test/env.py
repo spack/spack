@@ -969,3 +969,31 @@ spack:
         python_reqs = spack.config.get("packages")["python"]["require"]
         req_specs = set(x["spec"] for x in python_reqs)
         assert req_specs == set(["@3.11:"])
+
+
+def test_using_multiple_compilers_on_a_node_is_discouraged(
+    tmp_path, mutable_config, mock_packages
+):
+    """Tests that when we specify %<compiler> Spack tries to use that compiler for all the
+    languages needed by that node.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        """\
+spack:
+  specs:
+    - mpileaks%clang ^mpich%gcc
+  concretizer:
+    unify: true
+"""
+    )
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        mpileaks = e.concrete_roots()[0]
+
+    assert not mpileaks.satisfies("%gcc") and mpileaks.satisfies("%clang")
+    assert len(mpileaks.dependencies(virtuals=("c", "cxx"))) == 1
+
+    mpich = mpileaks["mpich"]
+    assert mpich.satisfies("%gcc") and not mpich.satisfies("%clang")
+    assert len(mpich.dependencies(virtuals=("c", "cxx"))) == 1
