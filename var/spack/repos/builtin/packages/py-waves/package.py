@@ -100,14 +100,21 @@ class PyWaves(PythonPackage):
                 scons("html", "man")
                 # FIXME: Is there a spack preferred API for including additional files in the build?
                 documentation_directory = pathlib.Path("waves/docs")
-                #documentation_directory.mkdir(parents=True, exist_ok=True)
-                shutil.copytree(
-                    pathlib.Path("build/docs/html"),
-                    documentation_directory,
-                    symlinks=False,
-                    #dirs_exist_ok=True,
-                    ignore=shutil.ignore_patterns(".doctrees", "*.doctree", ".buildinfo"),
-                )
+                try:
+                    shutil.copytree(
+                        pathlib.Path("build/docs/html"),
+                        documentation_directory,
+                        symlinks=False,
+                        dirs_exist_ok=True,
+                        ignore=shutil.ignore_patterns(".doctrees", "*.doctree", ".buildinfo"),
+                    )
+                except TypeError:
+                    shutil.copytree(
+                        pathlib.Path("build/docs/html"),
+                        documentation_directory,
+                        symlinks=False,
+                        ignore=shutil.ignore_patterns(".doctrees", "*.doctree", ".buildinfo"),
+                    )
                 shutil.copy2(pathlib.Path("build/docs/man/waves.1"), documentation_directory)
 
             python("-m", "build", "--no-isolation")
@@ -139,15 +146,15 @@ class PyWaves(PythonPackage):
 
                 man_page = installed_package / "docs/waves.1"
                 man_directory = pathlib.Path(self.prefix) / "man/man1"
-                man_directory.mkdir(
-                    parents=True,
-                    #exists_ok=True
-                )
+                try:
+                    man_directory.mkdir(parents=True, exists_ok=True)
+                except TypeError:
+                    man_directory.mkdir(parents=True)
                 share_man_directory = pathlib.Path(self.prefix) / "share/man/man1"
-                share_man_directory.mkdir(
-                    parents=True,
-                    #exists_ok=True
-                )
+                try:
+                    share_man_directory.mkdir(parents=True, exists_ok=True)
+                except TypeError:
+                    share_man_directory.mkdir(parents=True)
                 shutil.copy2(man_page, man_directory)
                 shutil.copy2(man_page, share_man_directory)
 
