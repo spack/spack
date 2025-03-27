@@ -170,15 +170,15 @@ spack:
   - hdf5
   - libcatalyst
   - parallel-netcdf
-  # - py-cinemasci
+  - py-cinemasci
   - sz
   - unifyfs
   - veloc
-  # - paraview +qt
   - vtk-m ~openmp                   # +openmp: https://github.com/spack/spack/issues/31830
   - zfp
   # --
-  # - visit                         # vtk-9.2.6: https://github.com/spack/spack/issues/49623
+  # - paraview +qt                  # llvm-17.0.6: https://github.com/spack/spack/issues/49625
+  # - visit                         # llvm-17.0.6: https://github.com/spack/spack/issues/49625
   # --
   # - chapel ~cuda ~rocm            # llvm-19.1.7: https://github.com/spack/spack/issues/49625
   # - cp2k +mpi                     # dbcsr-2.8.0: FAILED: src/CMakeFiles/dbcsr.dir/dbcsr_api.F-pp.f src/CMakeFiles/dbcsr.dir/dbcsr_api.F.o.ddi: 
