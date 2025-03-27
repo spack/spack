@@ -67,6 +67,7 @@ class Vtk(CMakePackage):
     variant("ffmpeg", default=False, description="Build with FFMPEG support")
     variant("mpi", default=True, description="Enable MPI support")
     variant("examples", default=False, description="Enable building & installing the VTK examples")
+    variant("versioned_install", default=False, description="Include version in library filenames")
 
     patch("gcc.patch", when="@6.1.0")
     # patch to fix some missing stl includes
@@ -462,6 +463,11 @@ class Vtk(CMakePackage):
                     cmake_args.append("-DModule_vtkIOParallelXdmf3:BOOL=ON")
                 else:
                     cmake_args.append("-DVTK_MODULE_ENABLE_VTK_IOParallelXdmf3:STRING=YES")
+
+        if "+versioned_install" in spec:
+            cmake_args.append("-DVTK_VERSIONED_INSTALL=ON")
+        else:
+            cmake_args.append("-DVTK_VERSIONED_INSTALL=OFF")
 
         cmake_args.append("-DVTK_RENDERING_BACKEND:STRING=" + opengl_ver)
 
