@@ -3,32 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install waves
-#
-# You can edit this file again by typing:
-#
-#     spack edit waves
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
-import shutil
 import pathlib
+import shutil
 
 from spack.package import *
 
 
 class PyWaves(PythonPackage):
-    """WAVES (LANL code C23004) is a computational science and engineering workflow tool that integrates parametric
-    studies with traditional software build systems.
+    """WAVES (LANL code C23004) is a computational science and engineering workflow tool that
+    integrates parametric studies with traditional software build systems.
     """
 
     homepage = "https://lanl-aea.github.io/waves/"
@@ -55,7 +38,8 @@ class PyWaves(PythonPackage):
     depends_on("scons@4:", type="build", when="+docs")
     # TODO: add upstream spec ``py-sphinx@7.1:`` when py-sphinx-book-theme build allows.
     # Conflicts with py-sphinx-book-theme dependency spec sphinx@4:6
-    # Documentation should still build but the ``maximum_signature_line_length`` will have no effect on sphinx<7.1
+    # Documentation should still build but the ``maximum_signature_line_length`` will have no
+    # effect on sphinx<7.1
     depends_on("py-sphinx", type="build", when="+docs")
     depends_on("py-sphinx-argparse", type="build", when="+docs")
     # TODO: add upstream spec ``py-sphinx-copybutton@0.5.1:`` when available
@@ -91,7 +75,8 @@ class PyWaves(PythonPackage):
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
-            # TODO: Patch upstream MANIFEST.in to include these files in py-build/pip package builds
+            # TODO: Patch upstream MANIFEST.in to include these files in py-build/pip package
+            # builds
             shutil.copy2("pyproject.toml", "waves/")
             shutil.copy2("README.rst", "waves/")
 
@@ -99,7 +84,8 @@ class PyWaves(PythonPackage):
                 scons = which("scons")
                 scons("html", "man")
                 documentation_directory = pathlib.Path("waves/docs")
-                # TODO: Force a recent enough minimum version of Python for the ``dirs_exist_ok`` keyword argument
+                # TODO: Force a recent enough minimum version of Python for the ``dirs_exist_ok``
+                # keyword argument
                 try:
                     shutil.copytree(
                         pathlib.Path("build/docs/html"),
@@ -137,22 +123,27 @@ class PyWaves(PythonPackage):
                 "--no-warn-script-location",
                 "--no-index",
                 f"--prefix={prefix}",
-                # TODO: Figure out how to override the positional '.' of the spack install options to use following
+                # TODO: Figure out how to override the positional '.' of the spack install options
+                # to use following
                 f"dist/waves-{self.version}.tar.gz",
             )
             if "+docs" in self.spec:
-                site_packages_directory = list(pathlib.Path(self.prefix).rglob("**/site-packages"))[0]
+                site_packages_directory = list(
+                    pathlib.Path(self.prefix).rglob("**/site-packages")
+                )[0]
                 installed_package = site_packages_directory / "waves"
 
                 man_page = installed_package / "docs/waves.1"
                 man_directory = pathlib.Path(self.prefix) / "man/man1"
-                # TODO: Force a recent enough minimum version of Python for the ``exists_ok`` keyword argument
+                # TODO: Force a recent enough minimum version of Python for the ``exists_ok``
+                # keyword argument
                 try:
                     man_directory.mkdir(parents=True, exists_ok=True)
                 except TypeError:
                     man_directory.mkdir(parents=True)
                 share_man_directory = pathlib.Path(self.prefix) / "share/man/man1"
-                # TODO: Force a recent enough minimum version of Python for the ``exists_ok`` keyword argument
+                # TODO: Force a recent enough minimum version of Python for the ``exists_ok``
+                # keyword argument
                 try:
                     share_man_directory.mkdir(parents=True, exists_ok=True)
                 except TypeError:
