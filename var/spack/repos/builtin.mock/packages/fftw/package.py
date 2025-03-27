@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -18,5 +17,7 @@ class Fftw(Package):
     version("1.0", md5="1234567890abcdef1234567890abcdef")
 
     variant("mpi", default=False, description="Enable MPI")
+
+    depends_on("c", type="build")
 
     depends_on("mpi", when="+mpi")

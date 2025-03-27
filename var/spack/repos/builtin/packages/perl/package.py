@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,35 +30,19 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     executables = [r"^perl(-?\d+.*)?$"]
 
+    # TODO: resolve the circular dependency between perl and libxcrypt.
+    unresolved_libraries = ["libcrypt.so.*"]
+
     # see https://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
 
-    # Maintenance releases (even numbers, preferred)
-    version(
-        "5.38.2",
-        sha256="a0a31534451eb7b83c7d6594a497543a54d488bc90ca00f5e34762577f40655e",
-        preferred=True,
-    )
-    version(
-        "5.38.0",
-        sha256="213ef58089d2f2c972ea353517dc60ec3656f050dcc027666e118b508423e517",
-        preferred=True,
-    )
-    version(
-        "5.36.3",
-        sha256="f2a1ad88116391a176262dd42dfc52ef22afb40f4c0e9810f15d561e6f1c726a",
-        preferred=True,
-    )
-    version(
-        "5.36.1",
-        sha256="68203665d8ece02988fc77dc92fccbb297a83a4bb4b8d07558442f978da54cc1",
-        preferred=True,
-    )
-    version(
-        "5.36.0",
-        sha256="e26085af8ac396f62add8a533c3a0ea8c8497d836f0689347ac5abd7b7a4e00a",
-        preferred=True,
-    )
+    # Maintenance releases (even numbers)
+    version("5.40.0", sha256="c740348f357396327a9795d3e8323bafd0fe8a5c7835fc1cbaba0cc8dfe7161f")
+    version("5.38.2", sha256="a0a31534451eb7b83c7d6594a497543a54d488bc90ca00f5e34762577f40655e")
+    version("5.38.0", sha256="213ef58089d2f2c972ea353517dc60ec3656f050dcc027666e118b508423e517")
+    version("5.36.3", sha256="f2a1ad88116391a176262dd42dfc52ef22afb40f4c0e9810f15d561e6f1c726a")
+    version("5.36.1", sha256="68203665d8ece02988fc77dc92fccbb297a83a4bb4b8d07558442f978da54cc1")
+    version("5.36.0", sha256="e26085af8ac396f62add8a533c3a0ea8c8497d836f0689347ac5abd7b7a4e00a")
 
     # End of life releases (deprecated)
     version(
@@ -186,6 +169,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         deprecated=True,
     )
 
+    depends_on("c", type="build")  # generated
+
     extendable = True
 
     if sys.platform != "win32":
@@ -281,7 +266,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     @classmethod
     def determine_version(cls, exe):
-        perl = spack.util.executable.Executable(exe)
+        perl = Executable(exe)
         output = perl("--version", output=str, error=str)
         if output:
             match = re.search(r"perl.*\(v([0-9.]+)\)", output)
@@ -292,7 +277,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     @classmethod
     def determine_variants(cls, exes, version):
         for exe in exes:
-            perl = spack.util.executable.Executable(exe)
+            perl = Executable(exe)
             output = perl("-V", output=str, error=str)
             variants = ""
             if output:
@@ -346,13 +331,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             try:
                 perm = os.stat(filename).st_mode
                 os.chmod(filename, perm | 0o200)
-            except IOError:
+            except OSError:
                 continue
 
     def nmake_arguments(self):
         args = []
         if self.spec.satisfies("%msvc"):
-            args.append("CCTYPE=%s" % self.compiler.short_msvc_version)
+            args.append("CCTYPE=%s" % self["msvc"].short_msvc_version)
         else:
             raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
         args.append("INST_TOP=%s" % windows_sfn(self.prefix.replace("/", "\\")))
@@ -399,7 +384,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # https://github.com/spack/spack/pull/3081 and
         # https://github.com/spack/spack/pull/4416
         if spec.satisfies("%intel"):
-            config_args.append("-Accflags={0}".format(self.compiler.cc_pic_flag))
+            config_args.append("-Accflags={0}".format(self["c"].pic_flag))
 
         if "+shared" in spec:
             config_args.append("-Duseshrplib")
@@ -473,17 +458,15 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     @run_after("install")
     def install_cpanm(self):
-        spec = self.spec
         maker = make
         cpan_dir = join_path("cpanm", "cpanm")
         if sys.platform == "win32":
             maker = nmake
             cpan_dir = join_path(self.stage.source_path, cpan_dir)
             cpan_dir = windows_sfn(cpan_dir)
-        if "+cpanm" in spec:
+        if "+cpanm" in self.spec:
             with working_dir(cpan_dir):
-                perl = spec["perl"].command
-                perl("Makefile.PL")
+                self.command("Makefile.PL")
                 maker()
                 maker("install")
 
@@ -517,7 +500,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if dependent_spec.package.is_extension:
             # perl extension builds can have a global perl
             # executable function
-            module.perl = self.spec["perl"].command
+            module.perl = self.command
 
             # Add variables for library directory
             module.perl_lib_dir = dependent_spec.prefix.lib.perl5
@@ -556,14 +539,14 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         kwargs = {"ignore_absent": True, "backup": False, "string": False}
 
         # Find the actual path to the installed Config.pm file.
-        perl = self.spec["perl"].command
-        config_dot_pm = perl(
+        config_dot_pm = self.command(
             "-MModule::Loaded", "-MConfig", "-e", "print is_loaded(Config)", output=str
         )
 
+        c_compiler = self["c"].cc
         with self.make_briefly_writable(config_dot_pm):
             match = "cc *=>.*"
-            substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
+            substitute = "cc => '{cc}',".format(cc=c_compiler)
             filter_file(match, substitute, config_dot_pm, **kwargs)
 
         # And the path Config_heavy.pl
@@ -572,11 +555,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         with self.make_briefly_writable(config_heavy):
             match = "^cc=.*"
-            substitute = "cc='{cc}'".format(cc=self.compiler.cc)
+            substitute = "cc='{cc}'".format(cc=c_compiler)
             filter_file(match, substitute, config_heavy, **kwargs)
 
             match = "^ld=.*"
-            substitute = "ld='{ld}'".format(ld=self.compiler.cc)
+            substitute = "ld='{ld}'".format(ld=c_compiler)
             filter_file(match, substitute, config_heavy, **kwargs)
 
             match = "^ccflags='"
@@ -621,17 +604,15 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             ext = ""
             if sys.platform == "win32":
                 ext = ".exe"
-            path = os.path.join(self.prefix.bin, "{0}{1}{2}".format(self.spec.name, ver, ext))
+            path = os.path.join(self.prefix.bin, f"{self.spec.name}{ver}{ext}")
             if os.path.exists(path):
                 return Executable(path)
         else:
-            msg = "Unable to locate {0} command in {1}"
-            raise RuntimeError(msg.format(self.spec.name, self.prefix.bin))
+            raise RuntimeError(f"Unable to locate {self.spec.name} command in {self.prefix.bin}")
 
     def test_version(self):
         """check version"""
-        perl = self.spec["perl"].command
-        out = perl("--version", output=str.split, error=str.split)
+        out = self.command("--version", output=str.split, error=str.split)
         expected = ["perl", str(self.spec.version)]
         for expect in expected:
             assert expect in out
@@ -641,6 +622,5 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         msg = "Hello, World!"
         options = ["-e", "use warnings; use strict;\nprint('%s\n');" % msg]
 
-        perl = self.spec["perl"].command
-        out = perl(*options, output=str.split, error=str.split)
+        out = self.command(*options, output=str.split, error=str.split)
         assert msg in out

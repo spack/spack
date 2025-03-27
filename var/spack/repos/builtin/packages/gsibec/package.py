@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -30,20 +29,19 @@ class Gsibec(CMakePackage):
     version("1.0.3", sha256="f104daf55705c5093a3d984073f082017bc9166f51ded36c7f7bb8adf233c916")
     version("1.0.2", sha256="7dc02f1f499e0d9f2843440f517d6c8e5d10ea084cbb2567ec198ba06816bc8b")
 
+    depends_on("fortran", type="build")  # generated
+
     depends_on("mpi", type=("build", "run"))
     depends_on("netcdf-c +mpi", type=("build", "run"))
     depends_on("netcdf-fortran", type=("build", "run"))
 
     depends_on("lapack", type=("build", "run"))
 
-    depends_on("ecbuild", type=("build"))
-    depends_on("jedi-cmake", type=("build"))
-    depends_on("sp", type=("build"))
+    depends_on("ecbuild", type="build")
+    depends_on("jedi-cmake", type="build")
+    depends_on("sp", type="build")
 
     def cmake_args(self):
-        args = []
-
-        mkl_providers = ["intel-mkl", "intel-oneapi-mkl", "intel-parallel-studio"]
-        args.append(self.define("ENABLE_MKL", self.spec["lapack"].name in mkl_providers))
-
-        return args
+        return [
+            self.define("ENABLE_MKL", self.spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl"))
+        ]

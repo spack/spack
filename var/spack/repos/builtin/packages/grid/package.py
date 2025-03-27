@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,6 +17,8 @@ class Grid(AutotoolsPackage):
     license("GPL-2.0-only")
 
     version("develop", branch="develop")
+
+    depends_on("cxx", type="build")  # generated
 
     variant(
         "comms",
@@ -74,24 +75,25 @@ class Grid(AutotoolsPackage):
         spec = self.spec
         args = ["--with-gmp", "--with-mpfr"]
 
-        if spec.satisfies("^intel-mkl"):
-            if "+fftw" in spec or "+lapack" in spec:
-                args.append("--enable-mkl")
+        if spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl") or spec.satisfies(
+            "^[virtuals=fftw-api] intel-oneapi-mkl"
+        ):
+            args.append("--enable-mkl")
         else:
-            if "+fftw" in spec:
-                args.append("--with-fftw={0}".format(self.spec["fftw-api"].prefix))
-            if "+lapack" in spec:
-                args.append("--enable-lapack={0}".format(self.spec["lapack"].prefix))
+            if spec.satisfies("+fftw"):
+                args.append(f"--with-fftw={self.spec['fftw-api'].prefix}")
+            if spec.satisfies("+lapack"):
+                args.append(f"--enable-lapack={self.spec['lapack'].prefix}")
                 # lapack is searched only as `-llapack`, so anything else
                 # wouldn't be found, causing an error.
-                args.append("LIBS={0}".format(self.spec["lapack"].libs.ld_flags))
+                args.append(f"LIBS={self.spec['lapack'].libs.ld_flags}")
 
         if "comms=none" not in spec:
             # The build system can easily get very confused about MPI support
             # and what linker to use.  In many case it'd end up building the
             # code with support for MPI but without using `mpicxx` or linking to
             # `-lmpi`, wreaking havoc.  Forcing `CXX` to be mpicxx should help.
-            args.extend(["CC={0}".format(spec["mpi"].mpicc), "CXX={0}".format(spec["mpi"].mpicxx)])
+            args.extend([f"CC={spec['mpi'].mpicc}", f"CXX={spec['mpi'].mpicxx}"])
 
         args += self.enable_or_disable("timers")
         args += self.enable_or_disable("chroma")
@@ -118,11 +120,11 @@ class Grid(AutotoolsPackage):
             args.extend(
                 [
                     "--enable-simd=GEN",
-                    "--enable-gen-simd-width={0}".format(spec.variants["gen-simd-width"].value),
+                    f"--enable-gen-simd-width={spec.variants['gen-simd-width'].value}",
                 ]
             )
 
-        args.append("--enable-comms={0}".format(spec.variants["comms"].value))
-        args.append("--enable-rng={0}".format(spec.variants["rng"].value))
+        args.append(f"--enable-comms={spec.variants['comms'].value}")
+        args.append(f"--enable-rng={spec.variants['rng'].value}")
 
         return args

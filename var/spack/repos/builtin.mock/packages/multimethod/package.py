@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,6 +25,7 @@ class Multimethod(MultimethodBase):
     variant("mpi", default=False, description="")
 
     depends_on("mpi", when="+mpi")
+    depends_on("c", type="build")
 
     #
     # These functions are only valid for versions 1, 3, and 4.
@@ -80,7 +80,7 @@ class Multimethod(MultimethodBase):
     def has_a_default(self):
         return "default"
 
-    @when("%gcc")
+    @when("%gcc@10:")
     def has_a_default(self):
         return "gcc"
 

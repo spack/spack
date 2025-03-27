@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,6 +17,9 @@ class Openfast(CMakePackage):
 
     version("develop", branch="dev")
     version("master", branch="main")
+    version("4.0.2", tag="v4.0.2", commit="fc1110183bcc87b16d93129edabdce6d30e3a497")
+    version("3.5.5", tag="v3.5.5", commit="b48e032303c12df6949c67ebffb7050b888db000")
+    version("3.5.4", tag="v3.5.4", commit="6a63db76978b0f703165391291963beb517d5a9e")
     version("3.5.3", tag="v3.5.3", commit="6a7a543790f3cad4a65b87242a619ac5b34b4c0f")
     version("3.4.1", tag="v3.4.1", commit="18704086dad861ab13daf804825da7c4b8d59428")
     version("3.4.0", tag="v3.4.0", commit="e8ec53f9c7f9d3f6a13bfb61dba12a0ca04d8a2f")
@@ -35,7 +37,16 @@ class Openfast(CMakePackage):
     version("2.0.0", tag="v2.0.0", commit="0769598a17e19b3ccd00a85cde389995f55024a8")
     version("1.0.0", tag="v1.0.0", commit="e788b9b18bd5ed96ea59d4bc0812d461bc430cfe")
 
+    with default_args(deprecated=True):
+        version("4.0.1", tag="v4.0.1", commit="89358f1843b62071ee1a8ca943c1b5277bcbd45a")
+        version("4.0.0", tag="v4.0.0", commit="da685d4997fd17ea845812c785325efa72edcf47")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     patch("hub_seg_fault.patch", when="@2.7:3.2")
+    patch("openmp.patch", when="@3.5.3:3.5.4")
 
     variant("shared", default=True, description="Build shared libraries")
     variant("double-precision", default=True, description="Treat REAL as double precision")
@@ -45,6 +56,8 @@ class Openfast(CMakePackage):
     variant("openmp", default=False, description="Enable OpenMP support")
     variant("netcdf", default=False, description="Enable NetCDF support")
     variant("rosco", default=False, description="Build ROSCO controller")
+    variant("fastfarm", default=False, description="Enable FAST.Farm capabilities")
+    variant("fpe-trap", default=False, description="Enable FPE trap in compiler options")
 
     depends_on("blas")
     depends_on("lapack")
@@ -71,7 +84,10 @@ class Openfast(CMakePackage):
                 self.define_from_variant("DOUBLE_PRECISION", "double-precision"),
                 self.define_from_variant("USE_DLL_INTERFACE", "dll-interface"),
                 self.define_from_variant("BUILD_OPENFAST_CPP_API", "cxx"),
+                self.define_from_variant("BUILD_OPENFAST_CPP_DRIVER", "cxx"),
                 self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
+                self.define_from_variant("BUILD_FASTFARM", "fastfarm"),
+                self.define_from_variant("FPE_TRAP_ENABLED", "fpe-trap"),
             ]
         )
 

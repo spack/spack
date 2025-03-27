@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -8,8 +7,6 @@ import os
 import socket
 import sys
 from os import environ as env
-
-import llnl.util.tty as tty
 
 from spack.package import *
 
@@ -59,6 +56,9 @@ class VtkH(CMakePackage, CudaPackage):
     version("0.5.4", sha256="92bf3741df7a15e36ff41a9a783f3b88eecc86e55cad1defba76f141baa2610b")
     version("0.5.3", sha256="0c4aae3bd2a5906738a6806de2b62ea2049ac8b40ebe7fc2ba25505272c2d359")
     version("0.5.2", sha256="db2e6250c0ece6381fc90540317ad7b5869dbcce0231ce9be125916a77bfdb25")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     variant("shared", default=True, description="Build vtk-h as shared libs")
     variant("mpi", default=True, description="build mpi support")
@@ -112,8 +112,9 @@ class VtkH(CMakePackage, CudaPackage):
         # if on llnl systems, we can use the SYS_TYPE
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
-        host_config_path = "{0}-{1}-{2}-vtkh-{3}.cmake".format(
-            socket.gethostname(), sys_type, spec.compiler, spec.dag_hash()
+        compiler_str = f"{self['cxx'].name}-{self['cxx'].version}"
+        host_config_path = (
+            f"{socket.gethostname()}-{sys_type}-{compiler_str}-vtkh-{spec.dag_hash()}.cmake"
         )
         dest_dir = spec.prefix
         host_config_path = os.path.abspath(join_path(dest_dir, host_config_path))
@@ -121,11 +122,9 @@ class VtkH(CMakePackage, CudaPackage):
 
     @run_before("cmake")
     def hostconfig(self):
+        """This method creates a 'host-config' file that specifies all of the options used to
+        configure and build vtkh."""
         spec = self.spec
-        """
-        This method creates a 'host-config' file that specifies
-        all of the options used to configure and build vtkh.
-        """
 
         if not os.path.isdir(spec.prefix):
             os.mkdir(spec.prefix)

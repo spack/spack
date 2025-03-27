@@ -1,10 +1,6 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import os
-
 from spack.package import *
 
 
@@ -45,6 +41,10 @@ class Claw(CMakePackage):
         "1.1.0", tag="v1.1.0", commit="16b165a443b11b025a77cad830b1280b8c9bcf01", submodules=True
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake@3.0:", type="build")
     depends_on("ant@1.9:", type="build")
     depends_on("bison", type="build")
@@ -82,8 +82,6 @@ class Claw(CMakePackage):
     def flag_handler(self, name, flags):
         if name == "cflags":
             compiler_spec = self.spec.compiler
-            if spack.compilers.is_mixed_toolchain(self.compiler):
-                compiler_spec = self._get_real_compiler_spec("cc") or compiler_spec
             if any(
                 [
                     compiler_spec.satisfies(s)
@@ -100,25 +98,3 @@ class Claw(CMakePackage):
         args = ["-DOMNI_CONF_OPTION=--with-libxml2=%s" % self.spec["libxml2"].prefix]
 
         return args
-
-    def _get_real_compiler_spec(self, language):
-        lang_compiler = getattr(self.compiler, language)
-
-        if not lang_compiler:
-            return None
-
-        for compiler_name in spack.compilers.supported_compilers():
-            compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
-            lang_version_fn = getattr(compiler_cls, "{0}_version".format(language))
-            for regexp in compiler_cls.search_regexps(language):
-                if regexp.match(os.path.basename(lang_compiler)):
-                    try:
-                        detected_version = lang_version_fn(lang_compiler)
-                        if detected_version:
-                            compiler_version = Version(detected_version)
-                            if compiler_version != Version("unknown"):
-                                return spack.spec.CompilerSpec(compiler_name, compiler_version)
-                    except Exception:
-                        continue
-
-        return None

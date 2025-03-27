@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -12,7 +11,13 @@ import spack.repo
 
 maintainers = spack.main.SpackCommand("maintainers")
 
-MAINTAINED_PACKAGES = ["maintainers-1", "maintainers-2", "maintainers-3", "py-extension1"]
+MAINTAINED_PACKAGES = [
+    "gcc-runtime",
+    "maintainers-1",
+    "maintainers-2",
+    "maintainers-3",
+    "py-extension1",
+]
 
 
 def split(output):
@@ -35,6 +40,8 @@ def test_all(mock_packages, capfd):
     with capfd.disabled():
         out = split(maintainers("--all"))
     assert out == [
+        "gcc-runtime:",
+        "haampie",
         "maintainers-1:",
         "user1,",
         "user2",
@@ -60,6 +67,8 @@ def test_all_by_user(mock_packages, capfd):
     with capfd.disabled():
         out = split(maintainers("--all", "--by-user"))
     assert out == [
+        "haampie:",
+        "gcc-runtime",
         "user0:",
         "maintainers-3",
         "user1:",
@@ -121,7 +130,7 @@ def test_maintainers_list_packages(mock_packages, capfd):
 
 
 def test_maintainers_list_fails(mock_packages, capfd):
-    out = maintainers("a", fail_on_error=False)
+    out = maintainers("pkg-a", fail_on_error=False)
     assert not out
     assert maintainers.returncode == 1
 

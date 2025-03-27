@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,6 +19,10 @@ class ScineQcmaquis(CMakePackage):
     version("3.1.4", branch="release-3.1.4")
     version("3.1.3", branch="release-3.1.3")
     version("3.1.2", branch="release-3.1.2")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
     variant(
         "symmetries",
         default="SU2U1PG,TwoU1PG",
@@ -38,11 +41,12 @@ class ScineQcmaquis(CMakePackage):
 
     depends_on("hdf5~mpi")
     depends_on("lapack")
-
     depends_on("blas")
-    for _pkg in ["openblas"] + list(INTEL_MATH_LIBRARIES):
-        with when(f"^[virtuals=blas] {_pkg}"):
-            depends_on(f"{_pkg}+ilp64 threads=openmp")
+
+    requires("^openblas +ilp64 threads=openmp", when="^[virtuals=blas,lapack] openblas")
+    requires(
+        "^intel-oneapi-mkl +ilp64 threads=openmp", when="^[virtuals=blas,lapack] intel-oneapi-mkl"
+    )
 
     depends_on("gsl")
     depends_on("boost+program_options+filesystem+system+thread+serialization+chrono @1.56:")

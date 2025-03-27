@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -12,16 +11,20 @@ class Pastix(CMakePackage, CudaPackage):
     based on direct methods"""
 
     homepage = "https://gitlab.inria.fr/solverstack/pastix/blob/master/README.md"
-    url = "https://files.inria.fr/pastix/releases/v6/pastix-6.3.2.tar.gz"
+    url = "https://files.inria.fr/pastix/releases/v6/pastix-6.4.0.tar.gz"
     git = "https://gitlab.inria.fr/solverstack/pastix.git"
     maintainers("fpruvost", "mfaverge", "ramet")
 
     version("master", branch="master", submodules=True)
+    version("6.4.0", sha256="891d426188eed56c1075fb34d2d80132593a1536ffc05cf333567f68a4811e55")
     version("6.3.2", sha256="c4da8802d1933eecf8c09d7e63c014c81ccf353fe623142e9f5c5fc65ed82ee0")
     version("6.3.1", sha256="290464d73b7d43356e4735a29932bf6f23a88e94ec7139ba7744c21e42c52681")
     version("6.3.0", sha256="a6bfec32a3279d7b24c5fc05885c6632d177e467f1584707c6fd7c42a8703c3e")
     version("6.2.2", sha256="cce9a1fe4678b5733c9f1a5a52f77b040eadc3e254418c6fb03d8ab37dede508")
     version("6.2.1", sha256="b680cbfc265df8cba18d3a7093fcc02e260198c4a2d6a86d1e684bb291e309dd")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # cmake's specific
     variant("shared", default=True, description="Build Pastix as a shared library")
@@ -82,11 +85,11 @@ class Pastix(CMakePackage, CudaPackage):
             args.extend([self.define("PASTIX_WITH_STARPU", "ON")])
             args.extend([self.define_from_variant("PASTIX_WITH_CUDA", "cuda")])
 
-        if "^intel-mkl" in spec or "^intel-parallel-studio+mkl" in spec:
+        if spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl"):
             args.extend([self.define("BLA_VENDOR", "Intel10_64lp_seq")])
-        elif "^netlib-lapack" in spec:
+        elif spec.satisfies("^[virtuals=lapack] netlib-lapack"):
             args.extend([self.define("BLA_VENDOR", "Generic")])
-        elif "^openblas" in spec:
+        elif spec.satisfies("^[virtuals=lapack] openblas"):
             args.extend([self.define("BLA_VENDOR", "OpenBLAS")])
 
         if spec.satisfies("+mpi"):

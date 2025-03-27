@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Low-level wrappers around clingo API."""
@@ -32,16 +31,30 @@ class AspObject:
     """Object representing a piece of ASP code."""
 
 
-def _id(thing: Any) -> Union[str, AspObject]:
+def _id(thing: Any) -> Union[str, int, AspObject]:
     """Quote string if needed for it to be a valid identifier."""
-    if isinstance(thing, AspObject):
+    if isinstance(thing, bool):
+        return f'"{thing}"'
+    elif isinstance(thing, (AspObject, int)):
         return thing
-    elif isinstance(thing, bool):
-        return f'"{str(thing)}"'
-    elif isinstance(thing, int):
-        return str(thing)
     else:
-        return f'"{str(thing)}"'
+        if isinstance(thing, str):
+            # escape characters that cannot be in clingo strings
+            thing = thing.replace("\\", r"\\")
+            thing = thing.replace("\n", r"\n")
+            thing = thing.replace('"', r"\"")
+        return f'"{thing}"'
+
+
+class AspVar(AspObject):
+    """Represents a variable in an ASP rule, allows for conditionally generating
+    rules"""
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def __str__(self) -> str:
+        return str(self.name)
 
 
 @lang.key_ordering
@@ -80,24 +93,9 @@ class AspFunction(AspObject):
         """
         return AspFunction(self.name, self.args + args)
 
-    def _argify(self, arg: Any) -> Any:
-        """Turn the argument into an appropriate clingo symbol"""
-        if isinstance(arg, bool):
-            return clingo().String(str(arg))
-        elif isinstance(arg, int):
-            return clingo().Number(arg)
-        elif isinstance(arg, AspFunction):
-            return clingo().Function(arg.name, [self._argify(x) for x in arg.args], positive=True)
-        return clingo().String(str(arg))
-
-    def symbol(self):
-        """Return a clingo symbol for this function"""
-        return clingo().Function(
-            self.name, [self._argify(arg) for arg in self.args], positive=True
-        )
-
     def __str__(self) -> str:
-        return f"{self.name}({', '.join(str(_id(arg)) for arg in self.args)})"
+        args = f"({','.join(str(_id(arg)) for arg in self.args)})"
+        return f"{self.name}{args}"
 
     def __repr__(self) -> str:
         return str(self)
@@ -230,6 +228,13 @@ class NodeArgument(NamedTuple):
     pkg: str
 
 
+class NodeFlag(NamedTuple):
+    flag_type: str
+    flag: str
+    flag_group: str
+    source: str
+
+
 def intermediate_repr(sym):
     """Returns an intermediate representation of clingo models for Spack's spec builder.
 
@@ -247,6 +252,13 @@ def intermediate_repr(sym):
         if sym.name == "node":
             return NodeArgument(
                 id=intermediate_repr(sym.arguments[0]), pkg=intermediate_repr(sym.arguments[1])
+            )
+        elif sym.name == "node_flag":
+            return NodeFlag(
+                flag_type=intermediate_repr(sym.arguments[0]),
+                flag=intermediate_repr(sym.arguments[1]),
+                flag_group=intermediate_repr(sym.arguments[2]),
+                source=intermediate_repr(sym.arguments[3]),
             )
     except RuntimeError:
         # This happens when using clingo w/ CFFI and trying to access ".name" for symbols

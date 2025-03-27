@@ -1,7 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os.path
+
 from spack.package import *
 
 
@@ -14,6 +15,9 @@ class Xl(Package, CompilerPackage):
     homepage = "https://www.ibm.com/support/knowledgecenter/SSXVZZ_16.1.1/com.ibm.compilers.linux.doc/welcome.html"
 
     variant("r", default=True, description="The _r version of compilers")
+
+    provides("c", "cxx")
+    provides("fortran")
 
     def install(self, spec, prefix):
         raise InstallError(
@@ -28,10 +32,52 @@ class Xl(Package, CompilerPackage):
     compiler_version_argument = "-qversion"
     compiler_version_regex = r"([0-9]?[0-9]\.[0-9])"
 
+    pic_flag = "-qpic"
+    openmp_flag = "-qsmp=omp"
+
+    debug_flags = ["-g", "-g0", "-g1", "-g2", "-g8", "-g9"]
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-O4", "-O5", "-Ofast"]
+    verbose_flag = "-V"
+
+    @property
+    def link_paths(self):
+        if self.spec.satisfies("~r"):
+            return {
+                "c": os.path.join("xl", "xlc"),
+                "cxx": os.path.join("xl", "xlc++"),
+                "fortran": os.path.join("xl", "xlf"),
+            }
+
+        return {
+            "c": os.path.join("xl", "xlc_r"),
+            "cxx": os.path.join("xl", "xlc++_r"),
+            "fortran": os.path.join("xl", "xlf_r"),
+        }
+
+    def _standard_flag(self, *, language, standard):
+        flags = {
+            "cxx": {
+                "11": [("@13.1:", "-qlanglvl=extended0x")],
+                "14": [("@16.1.1.8:", "-std=c++14")],
+            },
+            "c": {
+                "99": [("@10.1:13.0", "-qlanglvl=extc99"), ("@13.1:", "-std=gnu99")],
+                "11": [("@12.1:13.1.1", "-qlanglvl=extc1x"), ("@13.1.2:", "-std=gnu11")],
+            },
+        }
+        for condition, flag in flags[language][standard]:
+            if self.spec.satisfies(condition):
+                return flag
+        else:
+            raise RuntimeError(
+                f"{self.spec} does not support the '{standard}' standard "
+                f"for the '{language}' language"
+            )
+
     @classmethod
     def determine_variants(cls, exes, version_str):
-        _r_exes = [e for e in exes if "_r" in e]
-        _exes = [e for e in exes if "_r" not in e]
+        _r_exes = [e for e in exes if e.endswith("_r")]
+        _exes = [e for e in exes if not e.endswith("_r")]
 
         _r_compilers = cls.determine_compiler_paths(exes=_r_exes) if _r_exes else None
         _compilers = cls.determine_compiler_paths(exes=_exes) if _exes else None
@@ -42,24 +88,3 @@ class Xl(Package, CompilerPackage):
         if _compilers:
             results.append(("~r", {"compilers": _compilers}))
         return results
-
-    @property
-    def cc(self):
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"]["c"]
-        msg = "cannot retrieve C compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-
-    @property
-    def cxx(self):
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"]["cxx"]
-        msg = "cannot retrieve C++ compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-
-    @property
-    def fortran(self):
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"]["fortran"]
-        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
-        assert self.spec.concrete, msg

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -35,6 +34,8 @@ class Cosma(CMakePackage):
     version("2.2.0", sha256="1eb92a98110df595070a12193b9221eecf9d103ced8836c960f6c79a2bd553ca")
     version("2.0.7", sha256="8d70bfcbda6239b6a8fbeaca138790bbe58c0c3aa576879480d2632d4936cf7e")
     version("2.0.2", sha256="4f3354828bc718f3eef2f0098c3bdca3499297497a220da32db1acd57920c68d")
+
+    depends_on("cxx", type="build")  # generated
 
     # We just need the libraries of cuda and rocm, so no need to extend
     # CudaPackage or ROCmPackage.
@@ -81,24 +82,27 @@ class Cosma(CMakePackage):
     patch("fj-ssl2.patch", when="^fujitsu-ssl2")
 
     def setup_build_environment(self, env):
-        if "+cuda" in self.spec:
+        if self.spec.satisfies("+cuda"):
             env.set("CUDA_PATH", self.spec["cuda"].prefix)
 
     def cosma_blas_cmake_arg(self):
         query_to_cmake_arg = [
             ("+cuda", "CUDA"),
             ("+rocm", "ROCM"),
-            ("^intel-mkl", "MKL"),
-            ("^intel-oneapi-mkl", "MKL"),
-            ("^cray-libsci", "CRAY_LIBSCI"),
-            ("^netlib-lapack", "CUSTOM"),
-            ("^openblas", "OPENBLAS"),
-            ("^fujitsu-ssl2", "SSL2"),
+            ("^[virtuals=blas] intel-oneapi-mkl", "MKL"),
+            ("^[virtuals=blas] cray-libsci", "CRAY_LIBSCI"),
+            ("^[virtuals=blas] netlib-lapack", "CUSTOM"),
+            ("^[virtuals=blas] openblas", "OPENBLAS"),
+            ("^[virtuals=blas] fujitsu-ssl2", "SSL2"),
         ]
 
         if self.version >= Version("2.4.0"):
             query_to_cmake_arg.extend(
-                [("^blis", "BLIS"), ("^amdblis", "BLIS"), ("^atlas", "ATLAS")]
+                [
+                    ("^[virtuals=blas] blis", "BLIS"),
+                    ("^[virtuals=blas] amdblis", "BLIS"),
+                    ("^[virtuals=blas] atlas", "ATLAS"),
+                ]
             )
 
         for query, cmake_arg in query_to_cmake_arg:
@@ -110,11 +114,11 @@ class Cosma(CMakePackage):
     def cosma_scalapack_cmake_arg(self):
         spec = self.spec
 
-        if "~scalapack" in spec:
+        if spec.satisfies("~scalapack"):
             return "OFF"
-        elif "^intel-mkl" in spec or "^intel-oneapi-mkl" in spec:
+        elif spec.satisfies("^[virtuals=scalapack] intel-oneapi-mkl"):
             return "MKL"
-        elif "^cray-libsci" in spec:
+        elif spec.satisfies("^cray-libsci"):
             return "CRAY_LIBSCI"
 
         return "CUSTOM"

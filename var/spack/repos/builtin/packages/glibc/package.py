@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -68,6 +67,9 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
     version("2.6.1", sha256="6be7639ccad715d25eef560ce9d1637ef206fb9a162714f6ab8167fc0d971cae")
     version("2.5", sha256="16d3ac4e86eed75d85d80f1f214a6bd58d27f13590966b5ad0cc181df85a3493")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # Fix for newer GCC, related to -fno-common
     patch("locs.patch", when="@2.23:2.25")
     patch("locs-2.22.patch", when="@:2.22")
@@ -108,6 +110,8 @@ class Glibc(AutotoolsPackage, GNUMirrorPackage):
 
     # include_next <limits.h> not working
     patch("67fbfa5.patch", when="@:2.7")
+
+    conflicts("musl")
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("@:2.21"):
