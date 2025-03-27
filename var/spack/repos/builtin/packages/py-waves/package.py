@@ -25,7 +25,7 @@ class PyWaves(PythonPackage):
     version("develop", branch="main", get_full_repo=True)
     version("0.12.5", sha256="3868f1592a21e4b671ed31e66951151d73ff0535e0209c9621629994b25c0cd4")
 
-    variant("docs", default=False, description="Build HTML documentation")
+    variant("docs", default=False, description="Build and package HTML documentation and manpage")
 
     depends_on("python@3.9:", type=("build", "run"))
 
@@ -81,8 +81,6 @@ class PyWaves(PythonPackage):
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
-            # TODO: Patch upstream MANIFEST.in to include these files in py-build/pip package
-            # builds
             shutil.copy2("pyproject.toml", "waves/")
             shutil.copy2("README.rst", "waves/")
 
