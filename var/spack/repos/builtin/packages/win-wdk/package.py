@@ -116,7 +116,7 @@ class WinWdk(Package):
         This name is not properly formated so that Windows understands it as an executable
         We rename so as to allow Windows to run the WGL installer"""
         installer = glob.glob(os.path.join(self.stage.source_path, "linkid=**"))
-        if len(installer) > 1:
+        if len(installer)!= 1:
             raise RuntimeError(
                 "Fetch has failed, unable to determine installer path from:\n%s"
                 % "\n".join(installer)
