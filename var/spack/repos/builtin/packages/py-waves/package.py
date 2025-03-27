@@ -36,20 +36,20 @@ class PyWaves(PythonPackage):
     depends_on("py-setuptools@64:", type="build")
     depends_on("py-setuptools-scm@8:", type="build")
 
-    depends_on("scons@4:", type="build", when="+docs")
+    depends_on("scons@4:", type="build")
     # TODO: add upstream spec ``py-sphinx@7.1:`` when py-sphinx-book-theme build allows.
     # Conflicts with py-sphinx-book-theme dependency spec sphinx@4:6
     # Documentation should still build but the ``maximum_signature_line_length`` will have no
     # effect on sphinx<7.1
-    depends_on("py-sphinx", type="build", when="+docs")
-    depends_on("py-sphinx-argparse", type="build", when="+docs")
+    depends_on("py-sphinx", type="build")
+    depends_on("py-sphinx-argparse", type="build")
     # TODO: add upstream spec ``py-sphinx-copybutton@0.5.1:`` when available
     # Only py-sphinx-copybutton build available in spack is 0.2.12
     # Documentation should still build but the copy button behavior may not work as nicely
-    depends_on("py-sphinx-copybutton", type="build", when="+docs")
-    depends_on("py-sphinx-book-theme", type="build", when="+docs")
-    depends_on("py-sphinx-design", type="build", when="+docs")
-    depends_on("py-sphinxcontrib-bibtex", type="build", when="+docs")
+    depends_on("py-sphinx-copybutton", type="build")
+    depends_on("py-sphinx-book-theme", type="build")
+    depends_on("py-sphinx-design", type="build")
+    depends_on("py-sphinxcontrib-bibtex", type="build")
 
     depends_on("py-h5netcdf", type=("run", "test"))
     depends_on("py-h5py", type=("run", "test"))
@@ -68,50 +68,17 @@ class PyWaves(PythonPackage):
     depends_on("py-pytest", type="test")
     depends_on("py-pytest-xdist", type="test")
 
-    phases = ("edit", "build", "install")
-
-    def edit(self, spec, prefix):
-        if self.version < Version("0.12.9"):
-            with open("MANIFEST.in", "a") as manifest:
-                manifest.write("include waves/README.rst")
-                manifest.write("include waves/pyproject.toml")
+    phases = ("install",)
 
     def setup_build_environment(self, env):
+        env.set("PREFIX", self.prefix)
+        env.set("PKG_NAME", "waves"),
         if not self.spec.version.isdevelop():
             env.set("SETUPTOOLS_SCM_PRETEND_VERSION", self.version)
 
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            shutil.copy2("pyproject.toml", "waves/")
-            shutil.copy2("README.rst", "waves/")
-
-            if "+docs" in self.spec:
-                scons = which("scons")
-                scons("html", "man")
-                documentation_directory = pathlib.Path("waves/docs")
-                # TODO: Force a recent enough minimum version of Python for the ``dirs_exist_ok``
-                # keyword argument
-                try:
-                    shutil.copytree(
-                        pathlib.Path("build/docs/html"),
-                        documentation_directory,
-                        symlinks=False,
-                        dirs_exist_ok=True,
-                        ignore=shutil.ignore_patterns(".doctrees", "*.doctree", ".buildinfo"),
-                    )
-                except TypeError:
-                    shutil.copytree(
-                        pathlib.Path("build/docs/html"),
-                        documentation_directory,
-                        symlinks=False,
-                        ignore=shutil.ignore_patterns(".doctrees", "*.doctree", ".buildinfo"),
-                    )
-                shutil.copy2(pathlib.Path("build/docs/man/waves.1"), documentation_directory)
-
-            python("-m", "build", "--no-isolation")
-
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
+            python("-m", "build", "--no-isolation")
             python(
                 # Using the spack default python package install options
                 "-m",
@@ -133,36 +100,20 @@ class PyWaves(PythonPackage):
                 # ``@run_after("install")`` function.
                 f"dist/waves-{self.version}.tar.gz",
             )
-            if "+docs" in self.spec:
-                site_packages_directory = list(
-                    pathlib.Path(self.prefix).rglob("**/site-packages")
-                )[0]
-                installed_package = site_packages_directory / "waves"
+            scons = which("scons")
+            scons("html", "man")
 
-                man_page = installed_package / "docs/waves.1"
-                man_directory = pathlib.Path(self.prefix) / "man/man1"
-                # TODO: Force a recent enough minimum version of Python for the ``exists_ok``
-                # keyword argument
-                try:
-                    man_directory.mkdir(parents=True, exists_ok=True)
-                except TypeError:
-                    man_directory.mkdir(parents=True)
-                share_man_directory = pathlib.Path(self.prefix) / "share/man/man1"
-                # TODO: Force a recent enough minimum version of Python for the ``exists_ok``
-                # keyword argument
-                try:
-                    share_man_directory.mkdir(parents=True, exists_ok=True)
-                except TypeError:
-                    share_man_directory.mkdir(parents=True)
-                shutil.copy2(man_page, man_directory)
-                shutil.copy2(man_page, share_man_directory)
+            site_packages_directory = list(pathlib.Path(self.prefix).rglob("**/site-packages"))[0]
+            python_package_documentation = python.copy()
+            python_package_documentation.add_default_env("SP_DIR", site_packages_directory),
+            python_package_documentation("package_documentation.py")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def install_test(self):
         site_packages_directory = list(pathlib.Path(self.prefix).rglob("**/site-packages"))[0]
         installed_package = site_packages_directory / "waves"
-        pytest_args = ["-vvv", "-n", "4", "-m", "not systemtest"]
+        custom_arguments = ["-vvv", "-n", "4", "-m", "not systemtest"]
 
         # Until WAVES v0.12.9, the SALib minimum spec is >1. If spack installs SALib <1.4.6, the
         # SALib unit tests fail when trying to import the missing "sobol" module. There is no
@@ -170,8 +121,8 @@ class PyWaves(PythonPackage):
         # Package is functional as long as the end user doesn't try to use the sobol sampler with
         # SALib <1.4.6
         if self.version < Version("0.12.9"):
-            pytest_args.insert(0, "--ignore=_tests/test_salib_sampler.py")
+            custom_arguments.insert(0, "--ignore=_tests/test_salib_sampler.py")
 
         with working_dir(installed_package):
             pytest = which("pytest")
-            pytest(*pytest_args)
+            pytest(*custom_arguments)
