@@ -459,7 +459,7 @@ class Nvhpc(Package, CompilerPackage):
 
     # The NVHPC compilers use GNU headers and libraries, which also means they
     # need a compatible linker.
-    depends_on("binutils +ld", type="build, run")
+    depends_on("binutils +ld", type=("build", "run"))
     depends_on("gcc languages=c,c++,fortran", type="run")
 
     variant("blas", default=True, description="Enable BLAS")
