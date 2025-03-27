@@ -754,7 +754,7 @@ def test_system_path_cleanup(wrapper_environment, wrapper_dir):
 
 
 def test_language_from_flags(wrapper_environment, wrapper_dir):
-    """Tes that the compiler language mode is determined by -x/--language flags if present"""
+    """Test that the compiler language mode is determined by -x/--language flags if present"""
     cc = wrapper_dir / "cc"
 
     for flag_value, lang in [("c", "CC"), ("c++", "CXX"), ("f77", "F77"), ("f95", "FC")]:
