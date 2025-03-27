@@ -35,7 +35,6 @@ class PyWaves(PythonPackage):
     depends_on("py-build", type="build")
     depends_on("py-setuptools@64:", type="build")
     depends_on("py-setuptools-scm@8:", type="build")
-
     depends_on("scons@4:", type="build")
     # TODO: add upstream spec ``py-sphinx@7.1:`` when py-sphinx-book-theme build allows.
     # Conflicts with py-sphinx-book-theme dependency spec sphinx@4:6
