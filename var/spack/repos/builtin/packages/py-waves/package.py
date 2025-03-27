@@ -135,9 +135,15 @@ class PyWaves(PythonPackage):
             if "+docs" in self.spec:
                 man_page = pathlib.Path(self.prefix.site_packages_dir) / "waves/docs/waves.1"
                 man_directory = pathlib.Path(self.prefix) / "man/man1"
-                man_directory.mkdir(parents=True, exists_ok=True)
+                man_directory.mkdir(
+                    parents=True,
+                    #exists_ok=True
+                )
                 share_man_directory = pathlib.Path(self.prefix) / "share/man/man1"
-                share_man_directory.mkdir(parents=True, exists_ok=True)
+                share_man_directory.mkdir(
+                    parents=True,
+                    #exists_ok=True
+                )
                 shutil.copy2(man_page, man_directory)
                 shutil.copy2(man_page, share_man_directory)
 
