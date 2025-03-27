@@ -71,7 +71,10 @@ class PyTfKeras(PythonPackage):
     #     )
 
     def install(self, spec, prefix):
-        self.tmp_path = tempfile.mkdtemp(prefix="spack")  # TODO: ERROR: The 'build' command is only supported from within a workspace (below a directory having a WORKSPACE file).
+        self.tmp_path = tempfile.mkdtemp(
+            prefix="spack"
+        )  # TODO: ERROR: The 'build' command is only supported from
+        # within a workspace (below a directory having a WORKSPACE file).
 
         # To fix this, we need a WORKSPACE file in the root of the source tree
         env["HOME"] = self.tmp_path
