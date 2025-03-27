@@ -90,7 +90,7 @@ class PyWaves(PythonPackage):
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
-            # TODO: Patch upstream MANIFEST.in or pyproject.toml to include these files in py-build/pip package builds
+            # TODO: Patch upstream MANIFEST.in to include these files in py-build/pip package builds
             shutil.copy2("pyproject.toml", "waves/")
             shutil.copy2("README.rst", "waves/")
 
@@ -99,12 +99,12 @@ class PyWaves(PythonPackage):
                 scons("html", "man")
                 # FIXME: Is there a spack preferred API for including additional files in the build?
                 documentation_directory = pathlib.Path("waves/docs")
-                documentation_directory.mkdir(parents=True, exist_ok=True)
+                #documentation_directory.mkdir(parents=True, exist_ok=True)
                 shutil.copytree(
                     pathlib.Path("build/docs/html"),
                     documentation_directory,
                     symlinks=False,
-                    dirs_exist_ok=True,
+                    #dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns(".doctrees", "*.doctree", ".buildinfo"),
                 )
                 shutil.copy2(pathlib.Path("build/docs/man/waves.1"), documentation_directory)
@@ -133,7 +133,7 @@ class PyWaves(PythonPackage):
                 f"dist/waves-{self.version}.tar.gz",
             )
             if "+docs" in self.spec:
-                man_page = pathlib.Path(self.prefix).rglob("**/waves.1")[0]
+                man_page = pathlib.Path(self.prefix.site_packages_dir) / "waves/docs/waves.1"
                 man_directory = pathlib.Path(self.prefix) / "man/man1"
                 man_directory.mkdir(parents=True, exists_ok=True)
                 share_man_directory = pathlib.Path(self.prefix) / "share/man/man1"
@@ -144,7 +144,7 @@ class PyWaves(PythonPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def install_test(self):
-        installed_package = pathlib.Path(self.prefix).rglob("**/waves/__init__.py")[0].parent
+        installed_package = pathlib.Path(self.prefix.site_packages_dir) / "waves"
         with working_dir(installed_package):
             pytest = which("pytest")
             pytest("-vvv", "-n", "4", "-m", "not systemtest")
