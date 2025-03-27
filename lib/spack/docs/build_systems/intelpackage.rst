@@ -10,9 +10,9 @@ Intel
 
 .. contents::
 
-^^^^^^^^^^^^^^^^^^^^^^^^
-Intel packages in Spack
-^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Intel packages in Spack (DEPRECATED)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is an earlier version of Intel software development tools and has
 now been replaced by Intel oneAPI Toolkits.
@@ -313,7 +313,7 @@ Integrating external compilers
 
 For Spack to use external Intel compilers, you must tell it both *where* to
 find them and *when* to use them.  The present section documents the "where"
-aspect, involving ``compilers.yaml`` and, in most cases, long absolute paths.
+aspect, involving, in most cases, long absolute paths.
 The "when" aspect actually relates to `route 3`_ and requires explicitly
 stating the compiler as a spec component (in the form ``foo %intel`` or ``foo
 %intel@compilerversion``) when installing client packages or altering Spack's
@@ -327,7 +327,7 @@ Briefly, prepare your shell environment like you would if you were to use these
 compilers normally, i.e., typically by a ``module load ...`` or a shell
 ``source ...`` command, then use ``spack compiler find`` to make Spack aware of
 these compilers.  This will create a new entry in a suitably scoped and possibly new
-``compilers.yaml`` file. You could certainly create such a compiler entry
+``packages.yaml`` file. You could certainly create such a compiler entry
 manually, but this is error-prone due to the indentation and different data
 types involved.
 
@@ -335,7 +335,7 @@ The Intel compilers need and use the system's native GCC compiler (``gcc`` on
 most systems, ``clang`` on macOS) to provide certain functionality, notably to
 support C++. To provide a different GCC compiler for the Intel tools, or more
 generally set persistent flags for all invocations of the Intel compilers, locate
-the ``compilers.yaml`` entry that defines your Intel compiler, and, using a
+the ``packages.yaml`` entry that defines your Intel compiler, and, using a
 text editor, change one or both of the following:
 
 1. At the ``modules:`` tag, add a ``gcc`` module to the list.
@@ -367,12 +367,10 @@ Spack to use the newly configured compilers.
 Integrating external libraries
 """"""""""""""""""""""""""""""""""
 
-Configure external library-type packages (as opposed to compilers)
-in the files ``$SPACK_ROOT/etc/spack/packages.yaml`` or
-``~/.spack/packages.yaml``, following the Spack documentation under
+Configure external library-type packages following the Spack documentation under
 :ref:`External Packages <sec-external-packages>`.
 
-Similar to ``compilers.yaml``, the ``packages.yaml`` files define a package
+The ``packages.yaml`` files define a package
 external to Spack in terms of a Spack spec and resolve each such spec via
 either the ``paths`` or ``modules`` tokens to a specific pre-installed package
 version on the system.  Since Intel tools generally need environment variables
@@ -381,18 +379,6 @@ the ``modules`` token will be more sensible to use. It resolves the Spack-side
 spec to a modulefile generated and managed outside of Spack's purview,
 which Spack will load internally and transiently when the corresponding spec is
 called upon to compile client packages.
-
-Unlike for compilers, where ``spack find compilers [spec]`` generates an entry
-in an existing or new ``compilers.yaml`` file, Spack does not offer a command
-to generate an entirely new ``packages.yaml`` entry.  You must create
-new entries yourself in a text editor, though the command ``spack config
-[--scope=...] edit packages`` can help with selecting the proper file.
-See section
-:ref:`Configuration Scopes <configuration-scopes>`
-for an explanation about the different files
-and section
-:ref:`Build customization <packages-config>`
-for specifics and examples for ``packages.yaml`` files.
 
 .. If your system administrator did not provide modules for pre-installed Intel
    tools, you could do well to ask for them, because installing multiple copies
@@ -547,29 +533,7 @@ follow `the next section <intel-install-libs_>`_ instead.
    .. _`config-compiler-anticipated`:
 
    B. Add a new compiler section with the newly anticipated version at the
-      end of a ``compilers.yaml`` file in a suitable scope.  For example, run:
-
-      .. code-block:: console
-
-         $ spack config --scope=user/linux edit compilers
-
-      and append a stub entry:
-
-      .. code-block:: yaml
-
-         - compiler:
-             target:     x86_64
-             operating_system:   centos6
-             modules:    []
-             spec:       intel@18.0.3
-             paths:
-               cc:       /usr/bin/true
-               cxx:      /usr/bin/true
-               f77:      /usr/bin/true
-               fc:       /usr/bin/true
-
-      Replace ``18.0.3`` with the version that you determined in the preceding
-      step. The exact contents under ``paths:`` do not matter yet, but the paths must exist.
+      end of a ``packages.yaml`` file in a suitable scope.
 
    This temporary stub is required such that the ``intel-parallel-studio`` package
    can be installed for the ``intel`` compiler (which the package itself is going
@@ -602,7 +566,7 @@ follow `the next section <intel-install-libs_>`_ instead.
 
       $ spack spec zlib %intel@18.0.3
 
-   if there are problems, review and correct the compiler's ``compilers.yaml``
+   if there are problems, review and correct the compiler's ``packages.yaml``
    entry, be it still in stub form or already complete (as it would be for a
    re-installation).
 
@@ -618,7 +582,7 @@ follow `the next section <intel-install-libs_>`_ instead.
 
 5. Follow the same steps as under `Integrating external compilers`_ to tell
    Spack the minutiae for actually using those compilers with client packages.
-   If you placed a stub entry in a ``compilers.yaml`` file, now is the time to
+   If you placed a stub entry in a ``packages.yaml`` file, now is the time to
    edit it and fill in the particulars.
 
    * Under ``paths:``, give the full paths to the actual compiler binaries (``icc``,
