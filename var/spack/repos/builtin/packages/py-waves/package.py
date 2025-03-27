@@ -170,7 +170,7 @@ class PyWaves(PythonPackage):
         # Package is functional as long as the end user doesn't try to use the sobol sampler with
         # SALib <1.4.6
         if self.version < Version("0.12.9"):
-            pytest_args.append("--ignore=_tests/test_salib_sampler.py")
+            pytest_args.insert(0, "--ignore=_tests/test_salib_sampler.py")
 
         with working_dir(installed_package):
             pytest = which("pytest")
