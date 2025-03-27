@@ -27,44 +27,48 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
     version("2.4.7", sha256="04e96c2404ea70c590c546eba4202a4e12722c640016c12b9b2f1ce3d481e9a8")
     version("2.4.6", sha256="e3bd4d5d3d025a36c21dd6af7ea818a2afcd4dfc1ea5a17b39d7854bcd0c06e3")
     # Version released in 2011
-    version(
-        "2.4.2",
-        sha256="b38de44862a987293cd3d8dfae1c409d514b6c4e794ebc93648febf9afc38918",
-        deprecated=True,
-    )
+    with default_args(deprecated=True):
+        version("2.4.2", sha256="b38de44862a987293cd3d8dfae1c409d514b6c4e794ebc93648febf9afc38918")
 
-    depends_on("c", type="build")  # generated
+    variant("fortran", default=False, description="Build with Fortran support")
 
-    depends_on("m4@1.4.6:", type="build")
+    with default_args(type=("build", "test")):
+        depends_on("c")
+        depends_on("cxx")
+        depends_on("fortran", when="+fortran")
 
-    # the following are places in which libtool depends on findutils
-    # https://github.com/autotools-mirror/libtool/blob/v2.4.7/build-aux/ltmain.in#L3296
-    # https://github.com/autotools-mirror/libtool/blob/v2.4.6/build-aux/ltmain.in#L3278
-    # https://github.com/autotools-mirror/libtool/blob/v2.4.2/libltdl/config/ltmain.m4sh#L3028
-    depends_on("findutils", type="run")
+        depends_on("awk")
+        depends_on("binutils")
+        depends_on("coreutils")
+        depends_on("findutils")
+        depends_on("libc")
+        depends_on("m4@1.4.6:")
+        depends_on("grep+pcre")
+        depends_on("sed")
 
     with when("@develop"):
         depends_on("autoconf", type="build")
         depends_on("automake", type="build")
         depends_on("help2man", type="build")
-        depends_on("xz", type="build")
         depends_on("texinfo", type="build")
+        depends_on("xz", type="build")
         # Fix parsing of compiler output when collecting predeps and postdeps
         # https://lists.gnu.org/archive/html/bug-libtool/2016-03/msg00003.html
         patch("flag_space.patch")
 
-    with default_args(when="@2.5.1:", type="test"):
-        depends_on("autoconf@2.64:")
-        depends_on("automake")
-
-    with default_args(when="@2.4.6:", type="test"):
-        depends_on("autoconf@2.62:")
-        depends_on("automake")
-
-    with default_args(when="@2.4.2:", type="build"):
+    with default_args(type="test"):
+        depends_on("autoconf@2.64:", when="@2.5.1:")
+        depends_on("autoconf@2.62:", when="@2.4.6:")
         depends_on("autoconf")
+
         depends_on("automake")
-        depends_on("help2man")
+
+    with default_args(type="run"):
+        # the following are places in which libtool depends on findutils
+        # https://github.com/autotools-mirror/libtool/blob/v2.4.7/build-aux/ltmain.in#L3296
+        # https://github.com/autotools-mirror/libtool/blob/v2.4.6/build-aux/ltmain.in#L3278
+        # https://github.com/autotools-mirror/libtool/blob/v2.4.2/libltdl/config/ltmain.m4sh#L3028
+        depends_on("findutils")
 
     build_directory = "spack-build"
 
@@ -78,7 +82,7 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
         match = re.search(r"\(GNU libtool\)\s+(\S+)", output)
         return match.group(1) if match else None
 
-    @when("@2.4.2,develop")
+    @when("@develop")
     def autoreconf(self, spec, prefix):
         Executable("./bootstrap")()
 
@@ -128,13 +132,12 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
             self.setup_test_environment(env)
 
     def setup_test_environment(self, env):
-        """When Fortran is not provided, a few tests need to be skipped"""
-        if self.compiler.f77 is None:
+        """Disable certain tests based on variants"""
+        if self.spec.satisfies("~fortran") or self.compiler.f77 is None:
             env.set("F77", "no")
-        if self.compiler.fc is None:
+        if self.spec.satisfies("~fortran") or self.compiler.fc is None:
             env.set("FC", "no")
 
-    @when("@2.4.6")
     def check(self):
-        """installcheck of libtool-2.4.6 runs the full testsuite, skip 'make check'"""
+        """installcheck of libtool runs the full testsuite, skip 'make check'"""
         pass
