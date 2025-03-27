@@ -59,6 +59,10 @@ class Msvc(Package, CompilerPackage):
 
     @classmethod
     def determine_version(cls, exe):
+        if not exe.name.endswith(".exe"):
+            # Not on windows, can't possibly be msvc
+            return
+
         # MSVC compiler does not have a proper version argument
         # Errors out and prints version info with no args
         is_ifx = "ifx.exe" in str(exe)
