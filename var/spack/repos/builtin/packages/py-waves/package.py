@@ -98,8 +98,8 @@ class PyWaves(PythonPackage):
             if "+docs" in self.spec:
                 scons = which("scons")
                 scons("html", "man")
-                # FIXME: Is there a spack preferred API for including additional files in the build?
                 documentation_directory = pathlib.Path("waves/docs")
+                # TODO: Force a recent enough minimum version of Python for the ``dirs_exist_ok`` keyword argument
                 try:
                     shutil.copytree(
                         pathlib.Path("build/docs/html"),
@@ -146,11 +146,13 @@ class PyWaves(PythonPackage):
 
                 man_page = installed_package / "docs/waves.1"
                 man_directory = pathlib.Path(self.prefix) / "man/man1"
+                # TODO: Force a recent enough minimum version of Python for the ``exists_ok`` keyword argument
                 try:
                     man_directory.mkdir(parents=True, exists_ok=True)
                 except TypeError:
                     man_directory.mkdir(parents=True)
                 share_man_directory = pathlib.Path(self.prefix) / "share/man/man1"
+                # TODO: Force a recent enough minimum version of Python for the ``exists_ok`` keyword argument
                 try:
                     share_man_directory.mkdir(parents=True, exists_ok=True)
                 except TypeError:
