@@ -295,8 +295,9 @@ class URLFetchStrategy(FetchStrategy):
             )
 
     def _fetch_from_url(self, url):
-        if spack.config.get("config:url_fetch_method") == "curl":
-            return self._fetch_curl(url)
+        fetch_method = spack.config.get("config:url_fetch_method", "urllib")
+        if fetch_method.startswith("curl"):
+            return self._fetch_curl(url, config_args=fetch_method.split()[1:])
         else:
             return self._fetch_urllib(url)
 
@@ -345,7 +346,7 @@ class URLFetchStrategy(FetchStrategy):
         self._check_headers(str(response.headers))
 
     @_needs_stage
-    def _fetch_curl(self, url):
+    def _fetch_curl(self, url, config_args=[]):
         save_file = None
         partial_file = None
         if self.stage.save_filename:
@@ -374,7 +375,7 @@ class URLFetchStrategy(FetchStrategy):
             timeout = self.extra_options.get("timeout")
 
         base_args = web_util.base_curl_fetch_args(url, timeout)
-        curl_args = save_args + base_args + cookie_args
+        curl_args = config_args + save_args + base_args + cookie_args
 
         # Run curl but grab the mime type from the http headers
         curl = self.curl
