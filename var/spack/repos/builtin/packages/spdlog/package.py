@@ -106,7 +106,7 @@ class Spdlog(CMakePackage):
     # https://github.com/gabime/spdlog/issues/1897#issuecomment-832345800
     # https://github.com/gabime/spdlog/issues/2310#issuecomment-1069001016
     # https://github.com/gabime/spdlog/issues/2310
-    patch('fmt_ext_tweakme.patch', when="@1.4.0:")
+    patch("fmt_ext_tweakme.patch", when="@1.4.0:")
 
     conflicts("^fmt@11.1:", when="@:1.12")
 
