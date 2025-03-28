@@ -21,9 +21,6 @@ class SuperluMt(Package):
     version("4.0.1", tag="v4.0.1", commit="1300aec2a46327ecdd34fc7460d56e86e5431f79")
     version("3.1", sha256="407b544b9a92b2ed536b1e713e80f986824cf3016657a4bfc2f3e7d2a76ecab6")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("int64", default=False, description="Build with 64 bit integers")
     variant("pic", default=True, description="Build with position independent code")
     variant("blas", default=True, description="Build with external BLAS library")
@@ -31,6 +28,9 @@ class SuperluMt(Package):
     # Must choose one or the other
     variant("openmp", default=False, description="Build with OpenMP support")
     variant("pthread", default=True, description="Build with POSIX threads support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # NOTE: must link with a single-threaded BLAS library
     depends_on("blas", when="+blas")

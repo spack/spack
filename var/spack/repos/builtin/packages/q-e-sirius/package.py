@@ -26,10 +26,6 @@ class QESirius(CMakePackage):
         submodules=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("openmp", default=True, description="Enables OpenMP support")
     variant("libxc", default=False, description="Support functionals through libxc")
     variant("sirius_apps", default=False, description="Build SIRIUS standalone binaries")
@@ -42,6 +38,10 @@ class QESirius(CMakePackage):
         values=("parallel", "serial", "none"),
         multi=False,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("sirius +fortran")
     depends_on("sirius +apps", when="+sirius_apps")

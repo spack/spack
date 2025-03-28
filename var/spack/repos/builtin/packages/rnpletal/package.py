@@ -23,9 +23,6 @@ class Rnpletal(AutotoolsPackage):
     # which carry no version number.
     version("develop", sha256="2886f96393b64703fccf61b3dbc34e0fa45a79297232be76352f29cb83863d4d")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     maintainers("eschnett")
 
     variant(
@@ -51,6 +48,9 @@ class Rnpletal(AutotoolsPackage):
     )
 
     patch("corrections.diff")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("bison", type="build")
     depends_on("flex", type="build")

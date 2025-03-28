@@ -24,10 +24,6 @@ class Rmgdft(CMakePackage, CudaPackage):
     version("5.0.4", tag="v5.0.4", commit="30faadeff7dc896169d011910831263fb19eb965")
     version("5.0.1", tag="v5.0.1", commit="60b3ad64b09a4fccdd2b84052350e7947e3e8ad0")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "build_type",
         default="Release",
@@ -60,6 +56,10 @@ class Rmgdft(CMakePackage, CudaPackage):
     # RMGDFT 5.0.0 requires C++17 and increase the minimum gcc to 8
     compiler_warning17 = "RMGDFT 5.0.0 or later requires a compiler with support for C++17"
     conflicts("%gcc@:7", when="@5.0.0:", msg=compiler_warning17)
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake", type="build")
     depends_on("boost+filesystem+iostreams+thread+program_options+system", type="build")

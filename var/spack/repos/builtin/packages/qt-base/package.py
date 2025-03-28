@@ -170,9 +170,6 @@ class QtBase(QtPackage):
     version("6.2.4", sha256="657d1405b5e15afcf322cc75b881f62d6a56f16383707742a99eb87f53cb63de")
     version("6.2.3", sha256="2dd095fa82bff9e0feb7a9004c1b2fb910f79ecc6111aa64637c95a02b7a8abb")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("dbus", default=False, description="Build with D-Bus support.")
     variant(
         "framework", default=bool(MACOS_VERSION), description="Build as a macOS Framework package."
@@ -192,6 +189,9 @@ class QtBase(QtPackage):
     variant("gtk", default=False, when="+gui", description="Build with gtkplus.")
     variant("opengl", default=False, when="+gui", description="Build with OpenGL support.")
     variant("widgets", default=True, when="+gui", description="Build with widgets.")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Dependencies, then variant- and version-specific dependencies
     depends_on("cmake@3.21:", type="build", when="~shared")
