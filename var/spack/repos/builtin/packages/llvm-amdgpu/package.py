@@ -57,10 +57,6 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
         version("5.3.3", sha256="5296d5e474811c7d1e456cb6d5011db248b79b8d0512155e8a6c2aa5b5f12d38")
         version("5.3.0", sha256="4e3fcddb5b8ea8dcaa4417e0e31a9c2bbdc9e7d4ac3401635a636df32905c93e")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     provides("c", "cxx")
     provides("fortran")
 
@@ -88,6 +84,10 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
     provides("libllvm@16", when="@5.5:5.6")
     provides("libllvm@17", when="@5.7:6.1")
     provides("libllvm@18", when="@6.2:")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.13.4:", type="build")
     depends_on("python", type="build")

@@ -43,10 +43,6 @@ class Abinit(AutotoolsPackage):
     version("8.6.3", sha256="82e8d071088ab8dc1b3a24380e30b68c544685678314df1213180b449c84ca65")
     version("8.2.2", sha256="e43544a178d758b0deff3011c51ef7c957d7f2df2ce8543366d68016af9f3ea1")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=True, description="Builds with MPI support. Requires MPI2+")
     variant("openmp", default=False, description="Enables OpenMP threads. Use threaded FFTW3")
     variant("scalapack", default=False, description="Enables scalapack support. Requires MPI")
@@ -65,6 +61,10 @@ class Abinit(AutotoolsPackage):
     variant("install-tests", default=False, description="Install test cases")
 
     # Add dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("atompaw")
     depends_on("blas")
     depends_on("lapack")

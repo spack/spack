@@ -65,10 +65,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     version("5.0.1", sha256="caddec83ec284162a2cbc46877b0e5a9d2cca59fb4ab0ea35b0948d2492950bb")
     version("4.4.0", sha256="c2dc334a89df24ce5233b81b74740fc9f10bc181cd604109fd13f6ad2381fc73")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "development_files",
         default=True,
@@ -203,6 +199,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             when="cuda_arch={0}".format(_other_arch),
             msg="Paraview only accepts one architecture value",
         )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.3:", type="build")
     depends_on("cmake@3.21:", type="build", when="+rocm")

@@ -40,8 +40,6 @@ class Hpcc(MakefilePackage):
     version("develop", branch="main")
     version("1.5.0", sha256="0a6fef7ab9f3347e549fed65ebb98234feea9ee18aea0c8f59baefbe3cf7ffb8")
 
-    depends_on("c", type="build")  # generated
-
     variant(
         "fft",
         default="internal",
@@ -49,6 +47,8 @@ class Hpcc(MakefilePackage):
         values=("internal", "fftw2", "mkl"),
         multi=False,
     )
+
+    depends_on("c", type="build")  # generated
 
     depends_on("gmake", type="build")
     depends_on("mpi@1.1:")

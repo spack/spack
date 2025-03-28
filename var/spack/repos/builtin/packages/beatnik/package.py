@@ -20,14 +20,14 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop", submodules=True)
     version("main", branch="main", submodules=True)
 
-    depends_on("cxx", type="build")  # generated
-
     # Variants are primarily backends to build on GPU systems and pass the right
     # informtion to the packages we depend on
     variant("cuda", default=False, description="Use CUDA support from subpackages")
     variant("openmp", default=False, description="Use OpenMP support from subpackages")
 
     # Dependencies for all Beatnik versions
+    depends_on("cxx", type="build")  # generated
+
     depends_on("mpi")
     with when("+cuda"):
         depends_on("mpich +cuda", when="^[virtuals=mpi] mpich")

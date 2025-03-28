@@ -68,10 +68,6 @@ class Esmf(MakefilePackage, PythonExtension):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=True, description="Build with MPI support")
     variant("external-lapack", default=False, description="Build with external LAPACK library")
     variant("netcdf", default=True, description="Build with NetCDF support")
@@ -103,6 +99,10 @@ class Esmf(MakefilePackage, PythonExtension):
     # The way python is handled here is only avialable >=8.4.0
     # https://github.com/esmf-org/esmf/releases/tag/v8.4.0
     variant("python", default=False, description="Build python bindings", when="@8.4.0:")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Optional dependencies
     depends_on("mpi", when="+mpi")

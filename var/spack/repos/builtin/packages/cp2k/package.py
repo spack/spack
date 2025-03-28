@@ -56,10 +56,6 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     version("7.1", sha256="ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb")
     version("master", branch="master", submodules="True")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     generator("ninja")
 
     variant("mpi", default=True, description="Enable MPI support")
@@ -199,6 +195,10 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         values=[str(x) for x in HFX_LMAX_RANGE],
         multi=False,
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("python@3", type="build")
     depends_on("pkgconfig", type="build", when="build_system=cmake")

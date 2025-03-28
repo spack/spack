@@ -41,8 +41,6 @@ class Mbedtls(MakefilePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-
     variant("pic", default=False, description="Compile with position independent code.")
     variant(
         "build_type",
@@ -57,6 +55,8 @@ class Mbedtls(MakefilePackage):
         multi=True,
         description="What libraries to build",
     )
+
+    depends_on("c", type="build")  # generated
 
     depends_on("perl", type="test")
     depends_on("python@3:", type="test", when="@3:")

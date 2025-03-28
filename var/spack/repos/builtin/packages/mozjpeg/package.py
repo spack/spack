@@ -19,15 +19,15 @@ class Mozjpeg(CMakePackage):
 
     version("4.1.1", sha256="66b1b8d6b55d263f35f27f55acaaa3234df2a401232de99b6d099e2bb0a9d196")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     provides("jpeg")
 
     variant("shared", default=True, description="Build shared libs")
     variant("static", default=True, description="Build static libs")
     variant("jpeg8", default=False, description="Emulate libjpeg v8 API/ABI")
     variant("png", default=False, description="Enable PNG support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Can use either of these. But in the current version of the package
     # only nasm is used. In order to use yasm an environmental variable

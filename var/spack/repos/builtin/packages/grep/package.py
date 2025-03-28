@@ -20,11 +20,11 @@ class Grep(AutotoolsPackage):
     version("3.7", sha256="5c10da312460aec721984d5d83246d24520ec438dd48d7ab5a05dbc0d6d6823c")
     version("3.3", sha256="b960541c499619efd6afe1fa795402e4733c8e11ebf9fafccc0bb4bccdc5b514")
 
-    depends_on("c", type="build")  # generated
-
     variant("pcre", default=False, description="Enable Perl Compatible Regular Expression support")
 
     build_directory = "spack-build"
+
+    depends_on("c", type="build")  # generated
 
     depends_on("pcre2", when="@3.8:+pcre")
     depends_on("pcre", when="@:3.7+pcre")

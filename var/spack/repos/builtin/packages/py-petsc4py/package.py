@@ -89,15 +89,15 @@ class PyPetsc4py(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=True, description="Activates MPI support")
 
     # Hack to fix https://github.com/spack/spack/issues/21451, where Petsc4Py expects LDSHARED
     # to start with the same executable as get_config_var("CC")
     patch("ldshared_319.patch", when="@3.19:")
     patch("ldshared.patch", when="@:3.18")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("py-cython@3:", when="@3.20:", type="build")
     depends_on("py-cython@0.29.32:", when="^python@3.11:", type="build")

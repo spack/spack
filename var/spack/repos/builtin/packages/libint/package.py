@@ -42,10 +42,6 @@ class Libint(AutotoolsPackage):
     version("1.1.6", sha256="f201b0c621df678cfe8bdf3990796b8976ff194aba357ae398f2f29b0e2985a6")
     version("1.1.5", sha256="ec8cd4a4ba1e1a98230165210c293632372f0e573acd878ed62e5ec6f8b6174b")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("debug", default=False, description="Enable building with debug symbols")
     variant("fortran", default=False, description="Build & install Fortran bindings")
     variant(
@@ -64,6 +60,10 @@ class Libint(AutotoolsPackage):
     )
 
     # Build dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("autoconf@2.52:", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")

@@ -21,14 +21,14 @@ class Daos(SConsPackage):
         "2.2.0", tag="v2.2.0", commit="d2a1f2790c946659c9398926254e6203fd957b7c", submodules=True
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
     variant(
         "debug", default=False, description="Enable debugging info and strict compile warnings"
     )
 
     patch("0001-LIBPATH-fix-for-ALT_PREFIX.2.patch", when="@2.2.0:")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     depends_on("argobots@1.1:")
     depends_on("boost", type="build")
     depends_on("cmocka", type="build")

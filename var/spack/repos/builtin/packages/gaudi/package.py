@@ -44,8 +44,6 @@ class Gaudi(CMakePackage, CudaPackage):
     version("36.0", sha256="8a0458cef5b616532f9db7cca9fa0e892e602b64c9e93dc0cc6d972e03034830")
     version("35.0", sha256="c01b822f9592a7bf875b9997cbeb3c94dea97cb13d523c12649dbbf5d69b5fa6")
 
-    depends_on("cxx", type="build")
-
     conflicts("%gcc@:10", when="@39:", msg="Gaudi needs a c++20 capable compiler for this version")
     conflicts("+cuda", when="@:39.1", msg="Gaudi CUDA is only available in version 39.2 and later")
 
@@ -85,6 +83,7 @@ class Gaudi(CMakePackage, CudaPackage):
     patch("includes.patch", when="@37:38")
 
     # These dependencies are needed for a minimal Gaudi build
+    depends_on("cxx", type="build")
     depends_on("aida")
     # The boost components that are required for Gaudi
     boost_libs = "+".join(
