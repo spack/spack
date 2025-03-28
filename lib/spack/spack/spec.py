@@ -206,7 +206,7 @@ class InstallStatus(enum.Enum):
 
     installed = "@g{[+]}  "
     upstream = "@g{[^]}  "
-    external = "@g{[e]}  "
+    external = "@M{[e]}  "
     absent = "@K{ - }  "
     missing = "@r{[-]}  "
 
