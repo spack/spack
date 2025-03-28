@@ -137,7 +137,7 @@ _gcc = (
     """\
 from spack.package import *
 
-class Gcc(Package):
+class Gcc(CompilerPackage):
     has_code = False
 
     version("13.2.0")
@@ -193,7 +193,7 @@ _oneapi = (
     """\
 from spack.package import *
 
-class IntelOneapiCompilers(Package):
+class IntelOneapiCompilers(CompilerPackage):
     has_code = False
 
     version("2025.0.3")
@@ -298,14 +298,17 @@ class TestLinux(Platform):
 def pretend_linux(monkeypatch, tmpdir):
     pretend_glibc = Spec("glibc@=2.28")
     pretend_glibc.external_path = str(tmpdir.join("fake-libc").ensure(dir=True))
-    monkeypatch.setattr(spack.compilers.libraries.CompilerPropertyDetector, "default_libc", pretend_glibc)
+    def give_me_a_libc(*args, **kwargs):
+        return pretend_glibc
+
+    monkeypatch.setattr(spack.compilers.libraries.CompilerPropertyDetector, "default_libc", give_me_a_libc)
     with spack.platforms.use_platform(TestLinux()):
         yield
 
 
 def set_up_compiler_cfg():
     test_cfg = """\
-packages::
+packages:
   gcc:
     externals:
     - spec: "gcc@11.0.0 languages='c,c++,fortran' os=debian6 target=x86_64"
@@ -317,7 +320,7 @@ packages::
           fortran: /path1/bin/gfortran
   intel-oneapi-compilers:
     externals:
-    - spec: "oneapi@2025.0.3 os=debian6 target=x86_64"
+    - spec: "intel-oneapi-compilers@2025.0.3 os=debian6 target=x86_64"
       prefix: /path2
       extra_attributes:
         compilers:
@@ -328,7 +331,46 @@ packages::
     update_cfg_section("packages", test_cfg)
 
 
-def test_diamond_nomixing(concretize_scope, pretend_linux, test_repo):
+import spack.store
+import os
+from llnl.util.filesystem import copy_tree
+
+
+@pytest.fixture(scope="function")
+def empty_mock_store(
+    tmpdir_factory,
+    mock_wsdk_externals,
+    mock_repo_path,
+    mock_configuration_scopes,
+    _store_dir_and_cache,
+):
+    store_path, store_cache = _store_dir_and_cache
+    store_path.chmod(mode=0o555, rec=1)
+
+    if not os.path.exists(str(store_cache.join(".spack-db"))):
+        with spack.config.use_configuration(*mock_configuration_scopes):
+            with spack.store.use_store(str(store_path)) as store:
+                with spack.repo.use_repositories(mock_repo_path):
+                    store_path.chmod(mode=0o755, rec=1)
+                    store_path.chmod(mode=0o755, rec=1)
+
+        store_cache.chmod(mode=0o755, rec=1)
+        copy_tree(str(store_path), str(store_cache))
+        store_cache.chmod(mode=0o555, rec=1)
+
+    yield store_path
+
+
+@pytest.fixture(scope="function")
+def empty_database(empty_mock_store):
+    """This activates the mock store, packages, AND config."""
+    with spack.store.use_store(str(empty_mock_store)) as store:
+        yield store.db
+        # Force reading the database again between tests
+        store.db.last_seen_verifier = ""
+
+
+def test_diamond_nomixing(concretize_scope, test_repo, pretend_linux, enable_runtimes, empty_database):
     set_up_compiler_cfg()
     Spec("x1").concretized()
 
