@@ -1701,7 +1701,7 @@ class Spec:
         Known flags currently include "arch"
         """
 
-        if propagate and name in vt.reserved_names:
+        if propagate and name in vt.RESERVED_NAMES:
             raise UnsupportedPropagationError(
                 f"Propagation with '==' is not supported for '{name}'."
             )
@@ -3014,9 +3014,8 @@ class Spec:
         # but are not necessarily recorded by the package's class
         propagate_variants = [name for name, variant in spec.variants.items() if variant.propagate]
 
-        not_existing = set(spec.variants) - (
-            set(pkg_variants) | set(vt.reserved_names) | set(propagate_variants)
-        )
+        not_existing = set(spec.variants)
+        not_existing.difference_update(pkg_variants, vt.RESERVED_NAMES, propagate_variants)
 
         if not_existing:
             raise vt.UnknownVariantError(
@@ -4659,7 +4658,7 @@ def substitute_abstract_variants(spec: Spec):
         if name == "dev_path":
             spec.variants.substitute(vt.SingleValuedVariant(name, v._original_value))
             continue
-        elif name in vt.reserved_names:
+        elif name in vt.RESERVED_NAMES:
             continue
 
         variant_defs = spack.repo.PATH.get_pkg_class(spec.fullname).variant_definitions(name)
