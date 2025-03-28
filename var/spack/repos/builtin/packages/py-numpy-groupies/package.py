@@ -28,7 +28,8 @@ class PyNumpyGroupies(PythonPackage):
 
     # ptyhon 3.12 added in 0.11.2
     # https://github.com/ml31415/numpy-groupies/commit/cf42fd58b46e72abddd27c3ed15c8c094e0b6211
-    depends_on("python@3.7:3.11", type=("build", "run"), when="@:0.11.1")
+    depends_on("python@3.9:", type=("build", "run"), when="@0.10:")
+    depends_on("python@:3.11", type=("build", "run"), when="@:0.11.1")
     depends_on("python@3.9:", type=("build", "run"), when="@0.11.2:")
 
     depends_on("py-setuptools", type="build")
