@@ -111,7 +111,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
         filter_file("\tmake", "\t$(MAKE)", "src/seq_mv/Makefile")
 
     depends_on("c", type="build")
-    depends_on("cxx", type="build")
+    depends_on("cxx", type="build", when="+cuda")
+    depends_on("cxx", type="build", when="+rocm")
+    depends_on("cxx", type="build", when="+sycl")
     depends_on("fortran", type="build", when="+fortran")
 
     depends_on("mpi", when="+mpi")
