@@ -101,6 +101,9 @@ class Tau(Package):
         "rocprofv2", default=False, description="Activates ROCm rocprofiler support", when="@2.34:"
     )
     variant(
+        "rocprofiler-sdk", default=False, description="Activates ROCm rocprofiler support", when="@2.34.1:"
+    )
+    variant(
         "salt", default=False, description="Activates SALT source instrumentation", when="@2.34:"
     )
     variant("opencl", default=False, description="Activates OpenCL support")
@@ -175,6 +178,10 @@ class Tau(Package):
     depends_on("java", type="run")  # for paraprof
     depends_on("oneapi-level-zero", when="+level_zero")
     depends_on("dyninst@12.3.0:", when="+dyninst")
+    depends_on("rocprofiler-sdk@6.2.4:", when="+rocprofiler-sdk")
+    depends_on("hip", when="+rocprofiler-sdk")
+    depends_on("elfutils", when="+rocprofiler-sdk")
+    depends_on("comgr", when="+rocprofiler-sdk")
 
     conflicts("+comm", when="@:2.34 +python", msg="Bug in +comm with +python up to @2.34")
 
@@ -194,14 +201,17 @@ class Tau(Package):
     conflicts("+rocprofv2", when="+roctracer", msg="Rocprofv2 does not need roctracer")
     requires("+rocm", when="+rocprofiler", msg="Rocprofiler requires ROCm")
     requires("+rocm", when="+roctracer", msg="Roctracer requires ROCm")
-
+    requires("+rocm", when="+rocprofiler-sdk", msg="Rocprofiler-sdk requires ROCm")
+    
+    #rocm is always needed, it sets paths to ROCm libraries needed by ROCm profilers/tracers
     requires(
         "+rocprofiler",
         "+roctracer",
         "+rocprofv2",
+        "+rocprofiler-sdk",
         policy="one_of",
         when="+rocm",
-        msg="Using ROCm, select either +rocprofiler, +roctracer or +rocprofv2",
+        msg="Using ROCm, select either +rocprofiler, +roctracer, +rocprofv2 or +rocprofiler-sdk",
     )
 
     # https://github.com/UO-OACISS/tau2/commit/1d2cb6b
@@ -372,9 +382,15 @@ class Tau(Package):
             if spec.satisfies("@2.34:"):
                 options.append("-hip=%s" % spec["hip"].prefix)
 
+        if "+rocprofiler-sdk" in spec:
+            options.append("-rocprofsdk=%s" % spec["rocprofiler-sdk"].prefix)
+            options.append("-elfutils=%s" % spec["elfutils"].prefix)
+            options.append("-hip=%s" % spec["hip"].prefix)
+            options.append("-comgr=%s" % spec["comgr"].prefix)
+        
         if "+rocprofv2" in spec:
             options.append("-rocprofiler=%s" % spec["rocprofiler-dev"].prefix)
-            options.append("-rocprofv2")
+            options.append("-rocprofv2")        
 
         if "+adios2" in spec:
             options.append("-adios=%s" % spec["adios2"].prefix)
