@@ -276,7 +276,7 @@ class CompilerWrapper(Package):
                 return compiler_pkg.cxx
             elif language == "fortran":
                 return compiler_pkg.fortran
-        
+
         if dependent_spec.has_virtual_dependency("c"):
             setattr(module, "spack_cc", _spack_compiler_attribute(language="c"))
 
