@@ -28,7 +28,8 @@ class Mlpack(CMakePackage):
     version("4.1.0", sha256="e0c760baf15fd0af5601010b7cbc536e469115e9dd45f96712caa3b651b1852a")
     version("4.0.1", sha256="4c746936ed9da9f16744240ed7b9f2815d3abb90c904071a1d1a628a9bbfb3a5")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     variant("go", default=False, description="Build Go bindings", when="@4.5.1:")
     variant("julia", default=False, description="Build Julia bindings")
