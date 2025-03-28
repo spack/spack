@@ -12,4 +12,4 @@ class AppleGlu(AppleGlBase):
 
     provides("glu@1.3")
 
-    requires("platform=darwin", msg="Apple-GL is only available on Darwin, when using Apple Clang")
+    requires("platform=darwin", msg="Apple-GL is only available on Darwin")
