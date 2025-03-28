@@ -19,7 +19,7 @@ class PressioLog(Package):
     maintainers("fnrizzi", "cwschilly")
 
     version("main", branch="main")
-    version("0.15.0", branch="v0.15.0")
+    version("0.15.0", branch="0.15.0")
 
     def install(self, spec, prefix):
         install_tree("include", prefix.include)
