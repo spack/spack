@@ -228,41 +228,6 @@ class CompilerWrapper(Package):
             env.prepend_path("SPACK_COMPILER_WRAPPER_PATH", item)
 
     def setup_dependent_package(self, module, dependent_spec):
-        if sys.platform != "win32":
-            bin_dir = self.bin_dir()
-
-            if dependent_spec.has_virtual_dependency("c"):
-                compiler_pkg = dependent_spec["c"].package
-                setattr(
-                    module,
-                    "spack_cc",
-                    str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["c"]),
-                )
-
-            if dependent_spec.has_virtual_dependency("cxx"):
-                compiler_pkg = dependent_spec["cxx"].package
-                setattr(
-                    module,
-                    "spack_cxx",
-                    str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["cxx"]),
-                )
-
-            if dependent_spec.has_virtual_dependency("fortran"):
-                compiler_pkg = dependent_spec["fortran"].package
-                setattr(
-                    module,
-                    "spack_fc",
-                    str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["fortran"]),
-                )
-                setattr(
-                    module,
-                    "spack_f77",
-                    str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["fortran"]),
-                )
-        else:
-            self._setup_win_dependent_package(module, dependent_spec)
-
-    def _setup_win_dependent_package(self, module, dependent_spec):
         def _spack_compiler_attribute(*, language: str) -> str:
             compiler_pkg = dependent_spec[language].package
             if sys.platform != "win32":
