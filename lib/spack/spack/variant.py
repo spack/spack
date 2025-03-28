@@ -21,7 +21,7 @@ import spack.spec
 import spack.spec_parser
 
 #: These are variant names used by Spack internally; packages can't use them
-reserved_names = [
+RESERVED_NAMES = {
     "arch",
     "architecture",
     "dev_path",
@@ -31,7 +31,7 @@ reserved_names = [
     "patches",
     "platform",
     "target",
-]
+}
 
 special_variant_values = [None, "none", "*"]
 
@@ -832,7 +832,7 @@ def prevalidate_variant_value(
         only if the variant is a reserved variant.
     """
     # don't validate wildcards or variants with reserved names
-    if variant.value == ("*",) or variant.name in reserved_names or variant.propagate:
+    if variant.value == ("*",) or variant.name in RESERVED_NAMES or variant.propagate:
         return []
 
     # raise if there is no definition at all
