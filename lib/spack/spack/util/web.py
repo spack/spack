@@ -18,7 +18,7 @@ from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
 from typing import IO, Dict, Iterable, List, Optional, Set, Tuple, Union
 from urllib.error import HTTPError, URLError
-from urllib.request import HTTPSHandler, Request, build_opener
+from urllib.request import HTTPDefaultErrorHandler, HTTPSHandler, Request, build_opener
 
 import llnl.url
 from llnl.util import lang, tty
@@ -57,7 +57,7 @@ class DetailedHTTPError(HTTPError):
         return DetailedHTTPError, (self.req, self.code, self.msg, self.hdrs, None)
 
 
-class SpackHTTPDefaultErrorHandler(urllib.request.HTTPDefaultErrorHandler):
+class SpackHTTPDefaultErrorHandler(HTTPDefaultErrorHandler):
     def http_error_default(self, req, fp, code, msg, hdrs):
         raise DetailedHTTPError(req, code, msg, hdrs, fp)
 
