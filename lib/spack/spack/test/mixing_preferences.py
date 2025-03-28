@@ -7,7 +7,7 @@ import pytest
 
 import archspec.cpu
 
-import spack.compiler
+import spack.compilers.libraries
 import spack.config
 import spack.error
 import spack.operating_systems
@@ -258,11 +258,10 @@ def _create_test_repo(tmpdir, mutable_config):
 
 
 @pytest.fixture
-def enable_runtimes():
-    original = spack.solver.asp.WITH_RUNTIME
-    spack.solver.asp.WITH_RUNTIME = True
-    yield
-    spack.solver.asp.WITH_RUNTIME = original
+def enable_runtimes(monkeypatch):
+    def yes_we_are_using_it():
+        return True
+    monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", yes_we_are_using_it)
 
 
 @pytest.fixture
@@ -303,7 +302,7 @@ class TestLinux(Platform):
 def pretend_linux(monkeypatch, tmpdir):
     pretend_glibc = Spec("glibc@=2.28")
     pretend_glibc.external_path = str(tmpdir.join("fake-libc").ensure(dir=True))
-    monkeypatch.setattr(spack.compiler.Compiler, "default_libc", pretend_glibc)
+    monkeypatch.setattr(spack.compilers.libraries.CompilerPropertyDetector, "default_libc", pretend_glibc)
     with spack.platforms.use_platform(TestLinux()):
         yield
 
