@@ -126,6 +126,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     variant("custom-protobuf", default=False, description="Use vendored protobuf")
 
     conflicts("+cuda+rocm")
+    conflicts("+gloo+rocm")
     conflicts("+rocm", when="@2.6", msg="py-torch 2.6 support is not supported on Rocm releases")
     conflicts("+rocm", when="@2.4", msg="Rocm doesn't support py-torch 2.4 release")
     conflicts("+tensorpipe", when="+rocm ^hip@:5.1", msg="TensorPipe not supported until ROCm 5.2")
@@ -664,7 +665,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             # cmake/Modules_CUDA_fix/FindCUDNN.cmake
             env.set("CUDNN_INCLUDE_DIR", self.spec["cudnn"].prefix.include)
             env.set("CUDNN_LIBRARY", self.spec["cudnn"].libs[0])
-
 
         enable_or_disable("fbgemm")
         enable_or_disable("kineto")
