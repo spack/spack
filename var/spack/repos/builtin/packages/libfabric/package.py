@@ -131,6 +131,7 @@ class Libfabric(AutotoolsPackage, CudaPackage):
     depends_on("liburing@2.1:", when="+uring")
     depends_on("oneapi-level-zero", when="+level_zero")
     depends_on("libcxi", when="fabrics=cxi")
+    depends_on("xpmem", when="fabrics=xpmem")
 
     depends_on("m4", when="@main", type="build")
     depends_on("autoconf", when="@main", type="build")
@@ -214,6 +215,9 @@ class Libfabric(AutotoolsPackage, CudaPackage):
             args.append(f"--with-cassini-headers={self.spec['cassini-headers'].prefix.include}")
             args.append(f"--with-cxi-uapi-headers={self.spec['cxi-driver'].prefix.include}")
             args.append(f"--enable-cxi={self.spec['libcxi'].prefix}")
+
+        if self.spec.satisfies("fabrics=xpmem"):
+            args.append(f"--enable-xpmem={self.spec['xpmem'].prefix}")
 
         return args
 
