@@ -45,18 +45,20 @@ class PySetuptoolsScm(PythonPackage):
         depends_on("py-setuptools@34.4:")
 
         depends_on("py-tomli@1:2.0.2", when="@8.2.0: ^python@:3.10")
-        depends_on("py-tomli@1:", when="@8.0.0:8.1.0 ^python@:3.10")
-        depends_on("py-tomli@1:", when="@7.0.0:7.0.1")
+        depends_on("py-tomli@1:", when="@7.1.0:8.1.0 ^python@:3.10")
+        depends_on("py-tomli@1:", when="@7.0.0:7.0.5")
         depends_on("py-tomli@1:", when="+toml @6.3.0:6.4.2")
         depends_on("py-toml", when="+toml @6.1.1:6.2.0")
 
         depends_on("py-rich", when="@8.0.0:8.0.3")
 
         depends_on("py-importlib-metadata@4.6:", when="@8.0.0:8.0.2 ^python@:3.9")
-        depends_on("py-importlib-metadata", when="@7.0.0:7.0.1")
+        depends_on("py-importlib-metadata", when="@7 ^python@:3.7")
 
-        depends_on("py-typing-extensions", when="@8.0.0:8.0.2 ^python@:3.7")
-        depends_on("py-typing-extensions", when="@7.0.0:7.0.1,7.0.3:7.1.0")
+        depends_on("py-typing-extensions", when="@8.1.0: ^python@:3.9")
+        depends_on("py-typing-extensions", when="@8.0.4")
+        depends_on("py-typing-extensions", when="@8.0.0:8.0.3 ^python@:3.10")
+        depends_on("py-typing-extensions", when="@7")
 
         depends_on("py-packaging@20:", when="@6.3.0:8.0.1")
 

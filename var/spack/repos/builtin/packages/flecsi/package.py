@@ -55,8 +55,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
         description="Set Caliper Profiling Detail",
         multi=False,
     )
-    variant("kokkos", default=False, description="Enable Kokkos Support", when="@:2.3.1")
-    variant("openmp", default=False, description="Enable OpenMP Support", when="@:2.3.1")
+    variant("kokkos", default=False, description="Enable Kokkos Support", when="@:2.3")
+    variant("openmp", default=False, description="Enable OpenMP Support", when="@:2.3")
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
@@ -67,8 +67,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("graphviz", when="+graphviz")
     depends_on("hdf5+hl+mpi", when="+hdf5")
-    depends_on("metis@5.1.0:")
-    depends_on("parmetis@4.0.3:")
+    depends_on("metis@5.1.0:", when="@:2.3.1")
+    depends_on("parmetis@4.0.3:", when="@:2.3.1")
     depends_on("boost@1.70.0: cxxstd=17 +program_options +stacktrace")
 
     depends_on("cmake@3.15:")
@@ -83,7 +83,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     requires("^kokkos +cuda_constexpr +cuda_lambda", when="^kokkos +cuda")
     depends_on("kokkos +rocm", when="+kokkos +rocm")
     depends_on("kokkos +openmp", when="+kokkos +openmp")
-    requires("+openmp", when="@:2.3.1 ^kokkos +openmp")
+    requires("+openmp", when="@:2.3 ^kokkos +openmp")
     depends_on("legion@cr-20210122", when="backend=legion @2.0:2.1.0")
     depends_on("legion@cr-20230307", when="backend=legion @2.2.0:2.2.1")
     depends_on("legion@24.03.0:", when="backend=legion @2.2.2:")

@@ -14,21 +14,20 @@ from typing import Dict, List
 
 from llnl.util.lang import dedupe
 
-import spack.paths
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
 
 
-def make_pyvenv_cfg(python_spec: Spec, venv_prefix: str) -> str:
+def make_pyvenv_cfg(python_pkg: Package, venv_prefix: str) -> str:
     """Make a pyvenv_cfg file for a given (real) python command and venv prefix."""
-    python_cmd = python_spec.command.path
+    python_cmd = python_pkg.command.path
     lines = [
         # directory containing python command
         f"home = {os.path.dirname(python_cmd)}",
         # venv should not allow site packages from the real python to be loaded
         "include-system-site-packages = false",
         # version of the python command
-        f"version = {python_spec.version}",
+        f"version = {python_pkg.spec.version}",
         # the path to the python command
         f"executable = {python_cmd}",
         # command "used" to create the pyvenv.cfg
@@ -692,7 +691,7 @@ class Python(Package):
         config_args.append("--without-ensurepip")
 
         if "+pic" in spec:
-            cflags.append(self.compiler.cc_pic_flag)
+            cflags.append(self["c"].pic_flag)
 
         if "+ssl" in spec:
             config_args.append("--with-openssl={0}".format(spec["openssl"].prefix))
@@ -810,9 +809,9 @@ class Python(Package):
 
         filenames = [self.get_sysconfigdata_name(), self.config_vars["makefile_filename"]]
 
-        filter_file(spack_cc, self.compiler.cc, *filenames, **kwargs)
-        if spack_cxx and self.compiler.cxx:
-            filter_file(spack_cxx, self.compiler.cxx, *filenames, **kwargs)
+        filter_file(spack_cc, self["c"].cc, *filenames, **kwargs)
+        if spack_cxx:
+            filter_file(spack_cxx, self["cxx"].cxx, *filenames, **kwargs)
 
     @run_after("install")
     def symlink(self):
@@ -1269,6 +1268,11 @@ print(json.dumps(config))
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """
+        # The logic below is linux specific, and used to inject the compiler wrapper to
+        # compile Python extensions. Thus, it is not needed on Windows.
+        if sys.platform == "win32":
+            return
+
         # We need to make sure that the extensions are compiled and linked with
         # the Spack wrapper. Paths to the executables that are used for these
         # operations are normally taken from the sysconfigdata file, which we
@@ -1288,16 +1292,24 @@ print(json.dumps(config))
         # try to modify LDSHARED (LDCXXSHARED), the second variable, which is
         # used for linking, in a consistent manner.
 
-        for compile_var, link_var in [("CC", "LDSHARED"), ("CXX", "LDCXXSHARED")]:
+        for language, compile_var, link_var in [
+            ("c", "CC", "LDSHARED"),
+            ("cxx", "CXX", "LDCXXSHARED"),
+        ]:
+            if not dependent_spec.has_virtual_dependency(language):
+                continue
+
+            compiler_wrapper_pkg = dependent_spec["compiler-wrapper"].package
+            compiler_pkg = dependent_spec[language].package
+
             # First, we get the values from the sysconfigdata:
             config_compile = self.config_vars[compile_var]
             config_link = self.config_vars[link_var]
 
             # The dependent environment will have the compilation command set to
             # the following:
-            new_compile = join_path(
-                spack.paths.build_env_path,
-                dependent_spec.package.compiler.link_paths[compile_var.lower()],
+            new_compile = str(
+                compiler_wrapper_pkg.bin_dir() / compiler_pkg.compiler_wrapper_link_paths[language]
             )
 
             # Normally, the link command starts with the compilation command:
@@ -1369,20 +1381,15 @@ print(json.dumps(config))
             return
 
         with open(pyvenv_cfg, "w") as cfg_file:
-            cfg_file.write(make_pyvenv_cfg(self.spec["python"], projection))
+            cfg_file.write(make_pyvenv_cfg(self, projection))
 
     def test_hello_world(self):
         """run simple hello world program"""
-        # do not use self.command because we are also testing the run env
-        python = self.spec["python"].command
-
-        msg = "hello world!"
-        out = python("-c", f'print("{msg}")', output=str.split, error=str.split)
-        assert msg in out
+        out = self.command("-c", 'print("hello world!")', output=str.split, error=str.split)
+        assert "hello world!" in out
 
     def test_import_executable(self):
         """ensure import of installed executable works"""
-        python = self.spec["python"].command
-
+        python = self.command
         out = python("-c", "import sys; print(sys.executable)", output=str.split, error=str.split)
         assert self.spec.prefix in out

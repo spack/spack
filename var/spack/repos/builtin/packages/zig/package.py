@@ -16,6 +16,7 @@ class Zig(CMakePackage):
 
     license("MIT")
 
+    version("0.14.0", tag="0.14.0", commit="5ad91a646a753cc3eecd8751e61cf458dadd9ac4")
     version("0.13.0", tag="0.13.0", commit="cf90dfd3098bef5b3c22d5ab026173b3c357f2dd")
     version("0.12.0", tag="0.12.0", commit="a685ab1499d6560c523f0dbce2890dc140671e43")
     version("0.11.0", tag="0.11.0", commit="67709b638224ac03820226c6744d8b6ead59184c")

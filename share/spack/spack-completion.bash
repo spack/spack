@@ -687,7 +687,7 @@ _spack_ci() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="generate rebuild-index rebuild reproduce-build"
+        SPACK_COMPREPLY="generate rebuild-index rebuild reproduce-build verify-versions"
     fi
 }
 
@@ -707,6 +707,15 @@ _spack_ci_reproduce_build() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help --runtime --working-dir -s --autostart --use-local-head --gpg-file --gpg-url"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_ci_verify_versions() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
     else
         SPACK_COMPREPLY=""
     fi
@@ -985,7 +994,7 @@ _spack_dev_build() {
 _spack_develop() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -p --path -b --build-directory --no-clone --clone -f --force"
+        SPACK_COMPREPLY="-h --help -p --path -b --build-directory --no-clone --clone -f --force -r --recursive"
     else
         _all_packages
     fi

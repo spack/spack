@@ -121,8 +121,7 @@ class Pocl(CMakePackage):
         with working_dir(checkdir, create=True):
             source = join_path(os.path.dirname(self.module.__file__), "example1.c")
             cflags = spec["pocl"].headers.cpp_flags.split()
-            # ldflags = spec["pocl"].libs.ld_flags.split()
-            ldflags = ["-L%s" % spec["pocl"].prefix.lib, "-lOpenCL", "-lpoclu"]
+            ldflags = [f"-L{self.prefix.lib}", "-lOpenCL", "-lpoclu"]
             output = compile_c_and_execute(source, cflags, ldflags)
             compare_output_file(
                 output, join_path(os.path.dirname(self.module.__file__), "example1.out")

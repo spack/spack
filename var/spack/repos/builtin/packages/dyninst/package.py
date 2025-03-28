@@ -63,7 +63,6 @@ class Dyninst(CMakePackage):
         # package layout. Need to use tbb provided config instead.
         conflicts("^intel-tbb@2021.1:")
         conflicts("^intel-oneapi-tbb@2021.1:")
-        conflicts("^intel-parallel-studio")
 
     depends_on("tbb")
     requires("^[virtuals=tbb] intel-tbb@2019.9:", when="@13.0.0:")
@@ -81,7 +80,7 @@ class Dyninst(CMakePackage):
         sha256="0064d8d51bd01bd0035e1ebc49276f627ce6366d4524c92cf47d3c09b0031f96",
     )
 
-    requires("%gcc", when="@:13.0.0", msg="dyninst builds only with GCC")
+    requires("%gcc", when="@:12", msg="dyninst builds only with GCC")
 
     # No Mac support (including apple-clang)
     conflicts("platform=darwin", msg="macOS is not supported")

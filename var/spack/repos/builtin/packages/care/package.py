@@ -186,7 +186,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         compiler = self.compiler
         entries = super().initconfig_compiler_entries()
 
-        if spec.satisfies("+rocm"):
+        if spec.satisfies("+rocm ^blt@:0.6"):
             entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
         llnl_link_helpers(entries, spec, compiler)

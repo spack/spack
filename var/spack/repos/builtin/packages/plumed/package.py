@@ -244,7 +244,7 @@ class Plumed(AutotoolsPackage):
 
     def setup_dependent_package(self, module, dependent_spec):
         # Make plumed visible from dependent packages
-        module.plumed = dependent_spec["plumed"].command
+        module.plumed = self.command
 
     @property
     def plumed_inc(self):

@@ -428,6 +428,11 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls):
     for edge in s2.traverse_edges():
         assert isinstance(edge.virtuals, tuple), edge
 
+    # Ensure we can format {compiler} tokens
+    assert s2.format("{compiler}") != "none"
+    assert s2.format("{compiler.name}") == "gcc"
+    assert s2.format("{compiler.version}") != "none"
+
 
 def test_anchorify_1():
     """Test that anchorify replaces duplicate values with references to a single instance, and
@@ -497,3 +502,10 @@ def test_pickle_roundtrip_for_abstract_specs(spec_str):
     t = pickle.loads(pickle.dumps(s))
     assert s == t
     assert str(s) == str(t)
+
+
+def test_specfile_alias_is_updated():
+    """Tests that the SpecfileLatest alias gets updated on a Specfile version bump"""
+    specfile_class_name = f"SpecfileV{spack.spec.SPECFILE_FORMAT_VERSION}"
+    specfile_cls = getattr(spack.spec, specfile_class_name)
+    assert specfile_cls is spack.spec.SpecfileLatest
