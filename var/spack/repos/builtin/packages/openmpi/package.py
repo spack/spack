@@ -558,6 +558,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         when="@1.3:4",
         description="Prefix Open MPI to PATH and LD_LIBRARY_PATH on local and remote hosts",
     )
+    variant("ipv6", default=False, when="@4:", description="Enable IPv6 support")
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -1064,6 +1065,10 @@ with '-Wl,-commons,use_dylibs' and without
         # For v4 and lower
         if spec.satisfies("+orterunprefix"):
             config_args.append("--enable-orterun-prefix-by-default")
+
+        # Enable IPv6 support
+        if spec.satisfies("+ipv6"):
+            config_args.append("--enable-ipv6")
 
         # some scientific packages ignore deprecated/remove symbols. Re-enable
         # them for now, for discussion see
