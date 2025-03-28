@@ -16,6 +16,8 @@ class MpiSerial(AutotoolsPackage):
     # notify when the package is updated.
     maintainers("jedwards4b")
 
+    version("2.5.3", sha256="9575cc259a3e5f3f244c76e9b7464b59ed77159fdcb99ef7ae7019ac69ebb95e")
+    version("2.5.2", sha256="a9e828d34e379cfef5a95a06be683ea9ce0acc2fce794e0b9e9d920efeb38bf0")
     version("2.5.0", sha256="2faf459ea1f37020662067e7ab6c76b926501c4b94e8fdf77591c0040ba1f006")
     version("2.3.0", sha256="cc55e6bf0ae5e1d93aafa31ba91bfc13e896642a511c3101695ea05eccf97988")
 
@@ -54,6 +56,9 @@ class MpiSerial(AutotoolsPackage):
                 config_flags.append("-Wno-error=implicit-function-declaration")
         elif name == "fflags":
             config_flags.append(self.compiler.fc_pic_flag)
+            if spec.satisfies("%cce"):
+                # Makefile expects "mpi.mod", not "MPI.mod"
+                config_flags.append("-ef")
 
         return flags, None, (config_flags or None)
 
@@ -77,5 +82,3 @@ class MpiSerial(AutotoolsPackage):
         install("mpif.h", prefix.include)
         if os.path.isfile("mpi.mod"):
             install("mpi.mod", prefix.include)
-        if os.path.isfile("MPI.mod"):
-            install("MPI.mod", prefix.include)

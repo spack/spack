@@ -1960,6 +1960,23 @@ def test_edge_equality_does_not_depend_on_virtual_order():
     assert tuple(sorted(edge2.virtuals)) == edge1.virtuals
 
 
+def test_virtual_queries_work_for_strings_and_lists():
+    """Ensure that ``dependencies()`` works with both virtuals=str and virtuals=[str, ...]."""
+    parent, child = Spec("parent"), Spec("child")
+    parent._add_dependency(
+        child, depflag=dt.BUILD, virtuals=("cxx", "fortran")  # multi-char dep names
+    )
+
+    assert not parent.dependencies(virtuals="c")  # not in virtuals but shares a char with cxx
+
+    for lang in ["cxx", "fortran"]:
+        assert parent.dependencies(virtuals=lang)  # string arg
+        assert parent.edges_to_dependencies(virtuals=lang)  # string arg
+
+        assert parent.dependencies(virtuals=[lang])  # list arg
+        assert parent.edges_to_dependencies(virtuals=[lang])  # string arg
+
+
 def test_old_format_strings_trigger_error(default_mock_concretization):
     s = spack.concretize.concretize_one("pkg-a")
     with pytest.raises(SpecFormatStringError):

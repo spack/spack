@@ -654,7 +654,7 @@ def variant(
         msg += " @*r{{[{0}, variant '{1}']}}"
         return llnl.util.tty.color.colorize(msg.format(pkg.name, name))
 
-    if name in spack.variant.reserved_names:
+    if name in spack.variant.RESERVED_NAMES:
 
         def _raise_reserved_name(pkg):
             msg = "The name '%s' is reserved by Spack" % name
