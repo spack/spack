@@ -545,3 +545,7 @@ class Vtk(CMakePackage):
             examples = glob.glob("bin\\*.exe")
             for example in examples:
                 install(example, prefix.bin)
+
+    @when("+python")
+    def setup_run_environment(self, env):
+        env.prepend_path("PYTHONPATH", os.path.join(self.prefix,'lib','python{0}','site-packages').format(self.spec["python"].version.up_to(2)))
