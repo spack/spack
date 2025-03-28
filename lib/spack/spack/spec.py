@@ -1022,7 +1022,7 @@ class _EdgeMap(collections.abc.Mapping):
         parent: Optional[str] = None,
         child: Optional[str] = None,
         depflag: dt.DepFlag = dt.ALL,
-        virtuals: Optional[Sequence[str]] = None,
+        virtuals: Optional[Union[str, Sequence[str]]] = None,
     ) -> List[DependencySpec]:
         """Selects a list of edges and returns them.
 
@@ -1062,7 +1062,10 @@ class _EdgeMap(collections.abc.Mapping):
 
         # Filter by virtuals
         if virtuals is not None:
-            selected = (dep for dep in selected if any(v in dep.virtuals for v in virtuals))
+            if isinstance(virtuals, str):
+                selected = (dep for dep in selected if virtuals in dep.virtuals)
+            else:
+                selected = (dep for dep in selected if any(v in dep.virtuals for v in virtuals))
 
         return list(selected)
 
@@ -1602,7 +1605,11 @@ class Spec:
         ]
 
     def edges_to_dependencies(
-        self, name=None, depflag: dt.DepFlag = dt.ALL, *, virtuals: Optional[Sequence[str]] = None
+        self,
+        name=None,
+        depflag: dt.DepFlag = dt.ALL,
+        *,
+        virtuals: Optional[Union[str, Sequence[str]]] = None,
     ) -> List[DependencySpec]:
         """Returns a list of edges connecting this node in the DAG to children.
 
@@ -1644,7 +1651,7 @@ class Spec:
         name=None,
         deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL,
         *,
-        virtuals: Optional[Sequence[str]] = None,
+        virtuals: Optional[Union[str, Sequence[str]]] = None,
     ) -> List["Spec"]:
         """Returns a list of direct dependencies (nodes in the DAG)
 
