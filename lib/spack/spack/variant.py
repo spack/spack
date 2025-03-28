@@ -16,7 +16,7 @@ from typing import Any, Callable, Collection, Iterable, List, Optional, Tuple, T
 import llnl.util.lang as lang
 import llnl.util.tty.color
 
-import spack.error as error
+import spack.error
 import spack.spec
 import spack.spec_parser
 
@@ -251,7 +251,7 @@ def implicit_variant_conversion(method):
         # We don't care if types are different as long as I can convert other to type(self)
         try:
             other = type(self)(other.name, other._original_value, propagate=other.propagate)
-        except (error.SpecError, ValueError):
+        except (spack.error.SpecError, ValueError):
             return False
         return method(self, other)
 
@@ -626,7 +626,7 @@ class DisjointSetsOfValues(collections.abc.Sequence):
         # 'none' is a special value and can appear only in a set of
         # a single element
         if any("none" in s and s != set(("none",)) for s in self.sets):
-            raise error.SpecError(
+            raise spack.error.SpecError(
                 "The value 'none' represents the empty set,"
                 " and must appear alone in a set. Use the "
                 "method 'allow_empty_set' to add it."
@@ -634,7 +634,7 @@ class DisjointSetsOfValues(collections.abc.Sequence):
 
         # Sets should not intersect with each other
         if any(s1 & s2 for s1, s2 in itertools.combinations(self.sets, 2)):
-            raise error.SpecError("sets in input must be disjoint")
+            raise spack.error.SpecError("sets in input must be disjoint")
 
         #: Attribute used to track values which correspond to
         #: features which can be enabled or disabled as understood by the
@@ -704,7 +704,7 @@ class DisjointSetsOfValues(collections.abc.Sequence):
             format_args = {"variant": variant_name, "package": pkg_name, "values": values}
             msg = self.error_fmt + " @*r{{[{package}, variant '{variant}']}}"
             msg = llnl.util.tty.color.colorize(msg.format(**format_args))
-            raise error.SpecError(msg)
+            raise spack.error.SpecError(msg)
 
         return _disjoint_set_validator
 
@@ -890,11 +890,11 @@ class ConditionalVariantValues(lang.TypedMutableSequence):
     """A list, just with a different type"""
 
 
-class DuplicateVariantError(error.SpecError):
+class DuplicateVariantError(spack.error.SpecError):
     """Raised when the same variant occurs in a spec twice."""
 
 
-class UnknownVariantError(error.SpecError):
+class UnknownVariantError(spack.error.SpecError):
     """Raised when an unknown variant occurs in a spec."""
 
     def __init__(self, msg: str, unknown_variants: List[str]):
@@ -902,7 +902,7 @@ class UnknownVariantError(error.SpecError):
         self.unknown_variants = unknown_variants
 
 
-class InconsistentValidationError(error.SpecError):
+class InconsistentValidationError(spack.error.SpecError):
     """Raised if the wrong validator is used to validate a variant."""
 
     def __init__(self, vspec, variant):
@@ -910,7 +910,7 @@ class InconsistentValidationError(error.SpecError):
         super().__init__(msg.format(vspec, variant))
 
 
-class MultipleValuesInExclusiveVariantError(error.SpecError, ValueError):
+class MultipleValuesInExclusiveVariantError(spack.error.SpecError, ValueError):
     """Raised when multiple values are present in a variant that wants
     only one.
     """
@@ -922,15 +922,15 @@ class MultipleValuesInExclusiveVariantError(error.SpecError, ValueError):
         super().__init__(msg.format(variant, pkg_info))
 
 
-class InvalidVariantValueCombinationError(error.SpecError):
+class InvalidVariantValueCombinationError(spack.error.SpecError):
     """Raised when a variant has values '*' or 'none' with other values."""
 
 
-class InvalidVariantValueError(error.SpecError):
+class InvalidVariantValueError(spack.error.SpecError):
     """Raised when variants have invalid values."""
 
 
-class UnsatisfiableVariantSpecError(error.UnsatisfiableSpecError):
+class UnsatisfiableVariantSpecError(spack.error.UnsatisfiableSpecError):
     """Raised when a spec variant conflicts with package constraints."""
 
     def __init__(self, provided, required):
