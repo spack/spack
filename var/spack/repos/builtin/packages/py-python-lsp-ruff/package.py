@@ -19,6 +19,7 @@ class PyPythonLspRuff(PythonPackage):
 
     license("MIT")
 
+    version("main", branch="main")
     version("2.2.2", sha256="3f80bdb0b4a8ee24624596a1cff60b28cc37771773730f9bf7d946ddff9f0cac")
 
     depends_on("python@3.8:", type=("build", "run"))
