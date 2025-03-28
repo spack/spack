@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -179,7 +178,7 @@ class Slurm(AutotoolsPackage):
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str).rstrip()
-        match = re.search(r"slurm\s*([0-9.]+)", output)
+        match = re.search(r"slurm(?:-wlm)?\s*([0-9.]+)", output)
         return match.group(1) if match else None
 
     def flag_handler(self, name, flags):

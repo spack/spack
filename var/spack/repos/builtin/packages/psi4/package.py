@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -97,7 +96,7 @@ class Psi4(CMakePackage):
             "-I{0}".format(
                 " -I".join(
                     [
-                        os.path.join(spec["psi4"].prefix.include, "psi4"),
+                        os.path.join(self.prefix.include, "psi4"),
                         os.path.join(spec["boost"].prefix.include, "boost"),
                         os.path.join(spec["python"].headers.directories[0]),
                         spec["lapack"].prefix.include,

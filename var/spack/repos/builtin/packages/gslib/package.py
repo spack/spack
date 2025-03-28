@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -13,6 +12,7 @@ class Gslib(Package):
     git = "https://github.com/gslib/gslib.git"
 
     version("develop", branch="master")
+    version("1.0.9", tag="v1.0.9", commit="95acf5b42301d6cb48fda88d662f1d784b863089")
     version("1.0.7", tag="v1.0.7", commit="88f90cb96953527e3e833f8dbf2719273fc8346d")
     version("1.0.6", tag="v1.0.6", commit="1c2f74420fec36d5abe1d75f194a457c61f0df53")
     version("1.0.5", tag="v1.0.5", commit="1de2fba1d94e27e20f3bc3af6a3a35901e223ecd")
@@ -32,6 +32,7 @@ class Gslib(Package):
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+mpiio")
     depends_on("blas", when="+blas")
+    depends_on("gmake", type="build")
 
     conflicts("~mpi", when="+mpiio")
 

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,6 +27,8 @@ class Dealii(CMakePackage, CudaPackage):
     generator("make")
 
     version("master", branch="master")
+    version("9.6.2", sha256="1051e332de3822488e91c2b0460681052a3c4c5ac261cdd7a6af784869a25523")
+    version("9.6.1", sha256="9fcaa3968ac2eab41573b3614756a898a3ea91afcd9f3477ab2f30bb19aa669a")
     version("9.6.0", sha256="675323f0eb8eed2cfc93e2ced07a0ec5727c6a566ff9e7786c01a2ddcde17bed")
     version("9.5.2", sha256="7930e5218a9807d60cc05c300a3b70f36f4af22c3551a2cd1141fbab013bbaf1")
     version("9.5.1", sha256="a818b535e6488d3aef7853311657c7b4fadc29a9abe91b7b202b131aad630f5e")
@@ -53,9 +54,9 @@ class Dealii(CMakePackage, CudaPackage):
     version("8.2.1", sha256="d75674e45fe63cd9fa294460fe45228904d51a68f744dbb99cd7b60720f3b2a0")
     version("8.1.0", sha256="d666bbda2a17b41b80221d7029468246f2658051b8c00d9c5907cd6434c4df99")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     # Configuration variants
     variant(
@@ -257,7 +258,7 @@ class Dealii(CMakePackage, CudaPackage):
         arch_str = f"+cuda cuda_arch={_arch}"
         trilinos_spec = f"trilinos +wrapper {arch_str}"
         depends_on(trilinos_spec, when=f"@9.5:+trilinos {arch_str}")
-    depends_on("vtk", when="@9.6:+vtk")
+    depends_on("vtk@9:", when="@9.6:+vtk")
 
     # Explicitly provide a destructor in BlockVector,
     # otherwise deal.II may fail to build with Intel compilers.
@@ -387,12 +388,16 @@ class Dealii(CMakePackage, CudaPackage):
 
     # Check that the combination of variants makes sense
     # 64-bit BLAS:
-    for _package in ["openblas", "intel-mkl", "intel-parallel-studio+mkl"]:
-        conflicts(
-            "^{0}+ilp64".format(_package),
-            when="@:8.5.1",
-            msg="64bit BLAS is only supported from 9.0.0",
-        )
+    conflicts(
+        "^[virtuals=lapack] openblas+ilp64",
+        when="@:8.5.1",
+        msg="64bit BLAS is only supported from 9.0.0",
+    )
+    conflicts(
+        "^[virtuals=lapack] intel-oneapi-mkl+ilp64",
+        when="@:8.5.1",
+        msg="64bit BLAS is only supported from 9.0.0",
+    )
 
     # MPI requirements:
     for _package in [
@@ -504,10 +509,8 @@ class Dealii(CMakePackage, CudaPackage):
         # 64 bit indices
         options.append(self.define_from_variant("DEAL_II_WITH_64BIT_INDICES", "int64"))
 
-        if (
-            spec.satisfies("^openblas+ilp64")
-            or spec.satisfies("^intel-mkl+ilp64")
-            or spec.satisfies("^intel-parallel-studio+mkl+ilp64")
+        if spec.satisfies("^[virtuals=lapack] openblas+ilp64") or spec.satisfies(
+            "^[virtuals=lapack] intel-oneapi-mkl+ilp64"
         ):
             options.append(self.define("LAPACK_WITH_64BIT_BLAS_INDICES", True))
 
@@ -551,7 +554,7 @@ class Dealii(CMakePackage, CudaPackage):
                 )
             # Make sure we use the same compiler that Trilinos uses
             if spec.satisfies("+trilinos"):
-                options.extend([self.define("CMAKE_CXX_COMPILER", spec["trilinos"].kokkos_cxx)])
+                options.extend([self.define("CMAKE_CXX_COMPILER", self["trilinos"].kokkos_cxx)])
 
         # Complex support
         options.append(self.define_from_variant("DEAL_II_WITH_COMPLEX_VALUES", "complex"))
@@ -569,20 +572,9 @@ class Dealii(CMakePackage, CudaPackage):
             options.append(self.define_from_variant("DEAL_II_WITH_TBB", "threads"))
         else:
             options.append(self.define_from_variant("DEAL_II_WITH_THREADS", "threads"))
+
         if spec.satisfies("+threads"):
-            if spec.satisfies("^intel-parallel-studio+tbb"):
-                # deal.II/cmake will have hard time picking up TBB from Intel.
-                tbb_ver = ".".join(("%s" % spec["tbb"].version).split(".")[1:])
-                options.extend(
-                    [
-                        self.define("TBB_FOUND", True),
-                        self.define("TBB_VERSION", tbb_ver),
-                        self.define("TBB_INCLUDE_DIRS", ";".join(spec["tbb"].headers.directories)),
-                        self.define("TBB_LIBRARIES", spec["tbb"].libs.joined(";")),
-                    ]
-                )
-            else:
-                options.append(self.define("TBB_DIR", spec["tbb"].prefix))
+            options.append(self.define("TBB_DIR", spec["tbb"].prefix))
 
         # Optional dependencies for which library names are the same as CMake
         # variables:
@@ -684,7 +676,7 @@ class Dealii(CMakePackage, CudaPackage):
         # Add flags for machine vectorization, used when tutorials
         # and user code is built.
         # See https://github.com/dealii/dealii/issues/9164
-        options.append(self.define("DEAL_II_CXX_FLAGS", os.environ["SPACK_TARGET_ARGS"]))
+        options.append(self.define("DEAL_II_CXX_FLAGS", os.environ["SPACK_TARGET_ARGS_CXX"]))
 
         # platform introspection - needs to be disabled in some environments
         if spec.satisfies("+platform-introspection"):

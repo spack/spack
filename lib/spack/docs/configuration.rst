@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -12,9 +11,10 @@ Configuration Files
 Spack has many configuration files.  Here is a quick list of them, in
 case you want to skip directly to specific docs:
 
-* :ref:`compilers.yaml <compiler-config>`
+* :ref:`packages.yaml <compiler-config>`
 * :ref:`concretizer.yaml <concretizer-options>`
 * :ref:`config.yaml <config-yaml>`
+* :ref:`include.yaml <include-yaml>`
 * :ref:`mirrors.yaml <mirrors>`
 * :ref:`modules.yaml <modules>`
 * :ref:`packages.yaml <packages-config>`
@@ -95,7 +95,7 @@ are six configuration scopes. From lowest to highest:
    precedence over all other scopes.
 
 Each configuration directory may contain several configuration files,
-such as ``config.yaml``, ``compilers.yaml``, or ``mirrors.yaml``.  When
+such as ``config.yaml``, ``packages.yaml``, or ``mirrors.yaml``.  When
 configurations conflict, settings from higher-precedence scopes override
 lower-precedence settings.
 

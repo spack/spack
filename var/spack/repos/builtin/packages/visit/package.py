@@ -1,9 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 
 from spack.package import *
 
@@ -52,6 +52,7 @@ class Visit(CMakePackage):
     tags = ["radiuss"]
 
     maintainers("cyrush")
+    license("BSD-3-Clause")
 
     extendable = True
 
@@ -118,6 +119,9 @@ class Visit(CMakePackage):
     # Add dectection for py-pip and enable python extensions with building with GUI
     patch("19958-enable-python-and-check-pip.patch", when="@3.4:3.4.1 +python")
     patch("20127-remove-relink-visitmodule-py-setup.patch", when="@3.4.1 +python")
+
+    # Fix missing cmath include in QvisStripChart.C
+    patch("20270-missing-cmath-QvisStripChart.patch", when="@:3.4.2")
 
     conflicts(
         "+gui", when="^[virtuals=gl] osmesa", msg="GUI cannot be activated with OSMesa front-end"

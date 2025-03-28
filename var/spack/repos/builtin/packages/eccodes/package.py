@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -159,7 +158,7 @@ class Eccodes(CMakePackage):
         when="@:2.4.0+netcdf",
     )
 
-    @when("%nag+fortran")
+    @when("+fortran%nag")
     def patch(self):
         # A number of Fortran source files assume that the kinds of integer and
         # real variables are specified in bytes. However, the NAG compiler

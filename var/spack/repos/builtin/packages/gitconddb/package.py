@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -51,5 +50,5 @@ class Gitconddb(CMakePackage):
     conflicts("%gcc@:7.9", msg="GitCondDB requires GCC 8 or newer for C++17 support")
     conflicts("%apple-clang", when="@:0.1", msg="No Darwin support for clang in older versions")
     conflicts(
-        "%clang platform=darwin", when="@:0.1", msg="No Darwin support for clang in older versions"
+        "platform=darwin %clang", when="@:0.1", msg="No Darwin support for clang in older versions"
     )

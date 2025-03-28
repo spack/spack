@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -89,7 +88,7 @@ class MSBuildBuilder(MSBuildBuilder):
         # devenv is needed to convert ancient MSbuild project to modern
         # msbuild project so MSBuild versions older than 2010 can build this
         # project
-        devenv_path = os.path.join(self.pkg.compiler.vs_root, "Common7", "IDE")
+        devenv_path = os.path.join(self.pkg["msvc"].vs_root, "Common7", "IDE")
         env.prepend_path("PATH", devenv_path)
 
     @property

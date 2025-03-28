@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -30,7 +29,7 @@ class Rstudio(CMakePackage):
     depends_on("patchelf@0.9:")
     depends_on("yaml-cpp@:0.6.3")  # find_package fails with newest version
     depends_on("node-js")
-    depends_on("yarn")
+    depends_on("yarn@1")
     depends_on("pandoc@2.11.4:")
     depends_on("icu4c")
     depends_on("soci~static+boost+postgresql+sqlite")

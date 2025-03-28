@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -79,12 +78,7 @@ class Berkeleygw(MakefilePackage):
         depends_on("cray-fftw+openmp", when="^[virtuals=fftw-api] cray-fftw")
         depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("fujitsu-fftw+openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
-        depends_on("intel-mkl threads=openmp", when="^[virtuals=fftw-api] intel-mkl")
         depends_on("intel-oneapi-mkl threads=openmp", when="^[virtuals=fftw-api] intel-oneapi-mkl")
-        depends_on(
-            "intel-parallel-studio threads=openmp",
-            when="^[virtuals=fftw-api] intel-parallel-studio",
-        )
 
     with when("~openmp"):
         depends_on("acfl threads=none", when="^[virtuals=fftw-api] acfl")
@@ -93,11 +87,7 @@ class Berkeleygw(MakefilePackage):
         depends_on("cray-fftw~openmp", when="^[virtuals=fftw-api] cray-fftw")
         depends_on("fftw~openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("fujitsu-fftw~openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
-        depends_on("intel-mkl threads=none", when="^[virtuals=fftw-api] intel-mkl")
         depends_on("intel-oneapi-mkl threads=none", when="^[virtuals=fftw-api] intel-oneapi-mkl")
-        depends_on(
-            "intel-parallel-studio threads=none", when="^[virtuals=fftw-api] intel-parallel-studio"
-        )
 
     # in order to run the installed python scripts
     depends_on("python", type=("build", "run"), when="+python")
@@ -119,7 +109,7 @@ class Berkeleygw(MakefilePackage):
     def edit(self, spec, prefix):
         # archive is a tar file, despite the .gz expension
         tar = which("tar")
-        tar("-x", "-f", self.stage.archive_file, "--strip-components=1")
+        tar("-x", "-o", "-f", self.stage.archive_file, "--strip-components=1")
 
         # get generic arch.mk template
         if spec.satisfies("+mpi"):
@@ -138,10 +128,9 @@ class Berkeleygw(MakefilePackage):
         # use parallelization in tests
         filter_file(
             r"cd testsuite \&\& \$\(MAKE\) check$",
-            "cd testsuite && export BGW_TEST_MPI_NPROCS=2 OMP_NUM_THREADS=2 \
-             SAVETESTDIRS=yes TEMPDIRPATH=%s && \
-             $(MAKE) check-parallel"
-            % join_path(self.build_directory, "tmp"),
+            "cd testsuite && export BGW_TEST_MPI_NPROCS=2 OMP_NUM_THREADS=2 "
+            "SAVETESTDIRS=yes TEMPDIRPATH=%s && "
+            "$(MAKE) check-parallel" % join_path(self.build_directory, "tmp"),
             "Makefile",
         )
 

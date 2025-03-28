@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -320,7 +319,7 @@ java_binary(
                 )
 
             # Spack's logs don't handle colored output well
-            bazel = Executable(self.spec["bazel"].command.path)
+            bazel = Executable(self.command.path)
             bazel(
                 "--output_user_root=/tmp/spack/bazel/spack-test",
                 "build",
@@ -333,7 +332,7 @@ java_binary(
             assert exe(output=str) == "Hi!\n"
 
     def setup_dependent_package(self, module, dependent_spec):
-        module.bazel = Executable(self.spec["bazel"].command.path)
+        module.bazel = Executable(self.command.path)
 
     @property
     def parallel(self):

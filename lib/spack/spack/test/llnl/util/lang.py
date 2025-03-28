@@ -1,13 +1,11 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
+import os
 import re
 import sys
 from datetime import datetime, timedelta
-from textwrap import dedent
 
 import pytest
 
@@ -24,7 +22,7 @@ def now():
 def module_path(tmpdir):
     m = tmpdir.join("foo.py")
     content = """
-import os.path
+import os
 
 value = 1
 path = os.path.join('/usr', 'bin')
@@ -291,37 +289,6 @@ def test_grouped_exception():
     with h.forward("top-level"):
         raise TypeError("ok")
 
-    assert h.grouped_message(with_tracebacks=False) == dedent(
-        """\
-    due to the following failures:
-    inner method raised ValueError: wow!
-    top-level raised TypeError: ok"""
-    )
-
-    full_message = h.grouped_message(with_tracebacks=True)
-    no_line_numbers = re.sub(r"line [0-9]+,", "line xxx,", full_message)
-
-    assert (
-        no_line_numbers
-        == dedent(
-            """\
-    due to the following failures:
-    inner method raised ValueError: wow!
-      File "{0}", \
-line xxx, in test_grouped_exception
-        inner()
-      File "{0}", \
-line xxx, in inner
-        raise ValueError("wow!")
-
-    top-level raised TypeError: ok
-      File "{0}", \
-line xxx, in test_grouped_exception
-        raise TypeError("ok")
-    """
-        ).format(__file__)
-    )
-
 
 def test_grouped_exception_base_type():
     h = llnl.util.lang.GroupedExceptionHandler()
@@ -389,3 +356,44 @@ def test_fnmatch_multiple():
     assert not regex.match("libbar.so.1")
     assert not regex.match("libfoo.solibbar.so")
     assert not regex.match("libbaz.so")
+
+
+class TestPriorityOrderedMapping:
+    @pytest.mark.parametrize(
+        "elements,expected",
+        [
+            # Push out-of-order with explicit, and different, priorities
+            ([("b", 2), ("a", 1), ("d", 4), ("c", 3)], ["a", "b", "c", "d"]),
+            # Push in-order with priority=None
+            ([("a", None), ("b", None), ("c", None), ("d", None)], ["a", "b", "c", "d"]),
+            # Mix explicit and implicit priorities
+            ([("b", 2), ("c", None), ("a", 1), ("d", None)], ["a", "b", "c", "d"]),
+            ([("b", 10), ("c", None), ("a", -20), ("d", None)], ["a", "b", "c", "d"]),
+            ([("b", 10), ("c", None), ("a", 20), ("d", None)], ["b", "c", "a", "d"]),
+            # Adding the same key twice with different priorities
+            ([("b", 10), ("c", None), ("a", 20), ("d", None), ("a", -20)], ["a", "b", "c", "d"]),
+            # Adding the same key twice, no priorities
+            ([("b", None), ("a", None), ("b", None)], ["a", "b"]),
+        ],
+    )
+    def test_iteration_order(self, elements, expected):
+        """Tests that the iteration order respects priorities, no matter the insertion order."""
+        m = llnl.util.lang.PriorityOrderedMapping()
+        for key, priority in elements:
+            m.add(key, value=None, priority=priority)
+        assert list(m) == expected
+
+    def test_reverse_iteration(self):
+        """Tests that we can conveniently use reverse iteration"""
+        m = llnl.util.lang.PriorityOrderedMapping()
+        for key, value in [("a", 1), ("b", 2), ("c", 3)]:
+            m.add(key, value=value)
+
+        assert list(m) == ["a", "b", "c"]
+        assert list(reversed(m)) == ["c", "b", "a"]
+
+        assert list(m.keys()) == ["a", "b", "c"]
+        assert list(m.reversed_keys()) == ["c", "b", "a"]
+
+        assert list(m.values()) == [1, 2, 3]
+        assert list(m.reversed_values()) == [3, 2, 1]

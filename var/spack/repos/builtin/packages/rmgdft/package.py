@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,6 +15,7 @@ class Rmgdft(CMakePackage, CudaPackage):
     maintainers("elbriggs")
     tags = ["ecp", "ecp-apps"]
     version("master", branch="master")
+    version("develop", branch="develop")
     version("6.1.0", tag="v6.1.0", commit="4dd5862725006b35d3118705197f89f13b24b858")
     version("5.4.0", tag="v5.4.0", commit="471251b191abb5f6ffdca4333c1fcb2add3c52f2")
     version("5.3.1", tag="v5.3.1", commit="dd6217ed82a8fe335acd0c030023b539d1be920a")

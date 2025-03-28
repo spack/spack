@@ -1,17 +1,16 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Manage configuration swapping for bootstrapping purposes"""
 
 import contextlib
-import os.path
+import os
 import sys
 from typing import Any, Dict, Generator, MutableSequence, Sequence
 
 from llnl.util import tty
 
-import spack.compilers
+import spack.compilers.config
 import spack.config
 import spack.environment
 import spack.modules
@@ -142,9 +141,9 @@ def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
 
 
 def _add_compilers_if_missing() -> None:
-    arch = spack.spec.ArchSpec.frontend_arch()
-    if not spack.compilers.compilers_for_arch(arch):
-        spack.compilers.find_compilers()
+    arch = spack.spec.ArchSpec.default_arch()
+    if not spack.compilers.config.compilers_for_arch(arch):
+        spack.compilers.config.find_compilers()
 
 
 @contextlib.contextmanager

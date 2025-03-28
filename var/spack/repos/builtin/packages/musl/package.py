@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -48,6 +47,8 @@ class Musl(MakefilePackage):
     version("1.1.20", sha256="44be8771d0e6c6b5f82dd15662eb2957c9a3173a19a8b49966ac0542bbd40d61")
 
     depends_on("c", type="build")  # generated
+
+    conflicts("glibc")
 
     def patch(self):
         config = FileFilter("configure")

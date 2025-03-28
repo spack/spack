@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -65,6 +64,7 @@ class Libfuse(MesonPackage):
     depends_on("automake", type="build", when="@:2")
     depends_on("libtool", type="build", when="@:2")
     depends_on("gettext", type="build", when="@:2")
+    depends_on("gmake", type="build")
 
     provides("fuse")
     conflicts("+useroot", when="~system_install", msg="useroot requires system_install")
@@ -93,6 +93,13 @@ class Libfuse(MesonPackage):
         "https://github.com/libfuse/libfuse/commit/5a43d0f724c56f8836f3f92411e0de1b5f82db32.patch?full_index=1",
         sha256="94d5c6d9785471147506851b023cb111ef2081d1c0e695728037bbf4f64ce30a",
         when="@:2",
+    )
+    # fixed in v3.x, but some packages still require v2.x
+    # backport of https://github.com/libfuse/libfuse/commit/6b02a7082ae4c560427ff95b51aa8930bb4a6e1f
+    patch(
+        "fix_aarch64_compile.patch",
+        sha256="6ced88c987543d8e62614fa9bd796e7ede7238d55cc50910ece4355c9c4e57d6",
+        when="@:2 target=aarch64:",
     )
 
     executables = ["^fusermount3?$"]

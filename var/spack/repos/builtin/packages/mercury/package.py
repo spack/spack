@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -66,6 +65,7 @@ class Mercury(CMakePackage):
     with when("+ofi"):
         depends_on("libfabric@1.5:", when="@:2.0.1")
         depends_on("libfabric@1.7:", when="@2.1.0:")
+        conflicts("libfabric@2:", when="@:2.4.0")
     # openpa dependency is removed in 2.1.0
     depends_on("openpa@1.0.3:", when="@:2.0.1%gcc@:4.8")
     # We only need Boost preprocessor headers

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,6 +21,7 @@ class Ngspice(AutotoolsPackage):
 
     # Master version by default adds the experimental adms feature
     version("master", branch="master")
+    version("44", sha256="3865d13ab44f1f01f68c7ac0e0716984e45dce5a86d126603c26d8df30161e9b")
     version("43", sha256="14dd6a6f08531f2051c13ae63790a45708bd43f3e77886a6a84898c297b13699")
     version("42", sha256="737fe3846ab2333a250dfadf1ed6ebe1860af1d8a5ff5e7803c772cc4256e50a")
     version("41", sha256="1ce219395d2f50c33eb223a1403f8318b168f1e6d1015a7db9dbf439408de8c4")
@@ -72,12 +72,7 @@ class Ngspice(AutotoolsPackage):
         depends_on("cray-fftw+openmp", when="^[virtuals=fftw-api] cray-fftw")
         depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("fujitsu-fftw+openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
-        depends_on("intel-mkl threads=openmp", when="^[virtuals=fftw-api] intel-mkl")
         depends_on("intel-oneapi-mkl threads=openmp", when="^[virtuals=fftw-api] intel-oneapi-mkl")
-        depends_on(
-            "intel-parallel-studio threads=openmp",
-            when="^[virtuals=fftw-api] intel-parallel-studio",
-        )
 
     with when("+fft~openmp"):
         depends_on("acfl threads=none", when="^[virtuals=fftw-api] acfl")
@@ -86,11 +81,7 @@ class Ngspice(AutotoolsPackage):
         depends_on("cray-fftw~openmp", when="^[virtuals=fftw-api] cray-fftw")
         depends_on("fftw~openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("fujitsu-fftw~openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
-        depends_on("intel-mkl threads=none", when="^[virtuals=fftw-api] intel-mkl")
         depends_on("intel-oneapi-mkl threads=none", when="^[virtuals=fftw-api] intel-oneapi-mkl")
-        depends_on(
-            "intel-parallel-studio threads=none", when="^[virtuals=fftw-api] intel-parallel-studio"
-        )
 
     depends_on("readline", when="+readline build=bin")
 

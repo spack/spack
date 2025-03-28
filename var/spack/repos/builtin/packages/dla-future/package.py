@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -12,11 +11,22 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/eth-cscs/DLA-Future"
     url = "https://github.com/eth-cscs/DLA-Future/archive/v0.0.0.tar.gz"
     git = "https://github.com/eth-cscs/DLA-Future.git"
-    maintainers = ["rasolca", "albestro", "msimberg", "aurianer"]
+    maintainers = ["rasolca", "albestro", "msimberg", "aurianer", "RMeli"]
 
     license("BSD-3-Clause")
 
-    version("0.7.0", sha256="40a62bc70b0a06246a16348ce6701ccfab1f0c1ace99684de4bfc6c90776f8c6")
+    version("0.8.0", sha256="4c30c33ee22417514d839a75d99ae4c24860078fb595ee24ce4ebf45fbce5e69")
+    version("0.7.3", sha256="8c829b72f4ea9c924abdb6fe2ac7489304be4056ab76b8eba226c33ce7b7dc0e")
+    version(
+        "0.7.1",
+        sha256="651129686b7fb04178f230c763b371192f9cb91262ddb9959f722449715bdfe8",
+        deprecated=True,
+    )
+    version(
+        "0.7.0",
+        sha256="40a62bc70b0a06246a16348ce6701ccfab1f0c1ace99684de4bfc6c90776f8c6",
+        deprecated=True,
+    )
     version("0.6.0", sha256="85dfcee36ff28fa44da3134408c40ebd611bccff8a295982a7c78eaf982524d9")
     version("0.5.0", sha256="f964ee2a96bb58b3f0ee4563ae65fcd136e409a7c0e66beda33f926fc9515a8e")
     version("0.4.1", sha256="ba95f26475ad68da1f3a24d091dc1b925525e269e4c83c1eaf1d37d29b526666")
@@ -64,7 +74,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     generator("ninja")
 
     depends_on("cmake@3.22:", type="build")
-    depends_on("pkgconfig", type="build")
+    depends_on("pkgconfig", type=("build", "link"))
     depends_on("doxygen", type="build", when="+doc")
     depends_on("mpi")
 
@@ -125,11 +135,15 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     # Compilation problem triggered by the bundled fmt in Umpire together with
     # fmt 10, which only happens with GCC 9 and nvcc 11.2 and older:
     # https://github.com/eth-cscs/DLA-Future/issues/1044
-    conflicts("^fmt@10:", when="@:0.3.0 %gcc@9 +cuda ^cuda@:11.2 ^umpire@2022.10:")
+    conflicts("^fmt@10:", when="@:0.3.0 +cuda %gcc@9 ^cuda@:11.2 ^umpire@2022.10:")
 
     # Pedantic warnings, triggered by GCC 9 and 10, are always errors until 0.3.1:
     # https://github.com/eth-cscs/DLA-Future/pull/1043
     conflicts("%gcc@9:10", when="@:0.3.0")
+
+    # Compilation failure with ROCm introduced in 0.7.0 and fixed in 0.7.1:
+    # https://github.com/eth-cscs/DLA-Future/pull/1241
+    conflicts("+rocm ^hip@5.6:6.0", when="@0.7.0")
 
     depends_on("hdf5 +cxx+mpi+threadsafe+shared", when="+hdf5")
 
@@ -168,71 +182,41 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
         # BLAS/LAPACK
-        if spec.version <= Version("0.4") and spec["lapack"].name in INTEL_MATH_LIBRARIES:
+        if spec.version <= Version("0.4") and spec.satisfies(
+            "^[virtuals=lapack] intel-oneapi-mkl"
+        ):
             mkl_provider = spec["lapack"].name
 
             vmap = {
-                "intel-oneapi-mkl": {
-                    "threading": {
-                        "none": "sequential",
-                        "openmp": "gnu_thread",
-                        "tbb": "tbb_thread",
-                    },
-                    "mpi": {"intel-mpi": "intelmpi", "mpich": "mpich", "openmpi": "openmpi"},
-                },
-                "intel-mkl": {
-                    "threading": {"none": "seq", "openmp": "omp", "tbb": "tbb"},
-                    "mpi": {"intel-mpi": "mpich", "mpich": "mpich", "openmpi": "ompi"},
-                },
+                "threading": {"none": "sequential", "openmp": "gnu_thread", "tbb": "tbb_thread"},
+                "mpi": {"intel-oneapi-mpi": "intelmpi", "mpich": "mpich", "openmpi": "openmpi"},
             }
 
-            if mkl_provider not in vmap.keys():
-                raise RuntimeError(
-                    f"dla-future does not support {mkl_provider} as lapack provider"
-                )
-            mkl_mapper = vmap[mkl_provider]
-
-            mkl_threads = mkl_mapper["threading"][spec[mkl_provider].variants["threads"].value]
-            if mkl_provider == "intel-oneapi-mkl":
-                args += [
-                    self.define("DLAF_WITH_MKL", True),
-                    self.define("MKL_INTERFACE", "lp64"),
-                    self.define("MKL_THREADING", mkl_threads),
-                ]
-            elif mkl_provider == "intel-mkl":
-                args += [
-                    (
-                        self.define("DLAF_WITH_MKL", True)
-                        if spec.version <= Version("0.3")
-                        else self.define("DLAF_WITH_MKL_LEGACY", True)
-                    ),
-                    self.define("MKL_LAPACK_TARGET", f"mkl::mkl_intel_32bit_{mkl_threads}_dyn"),
-                ]
+            mkl_threads = vmap["threading"][spec["intel-oneapi-mkl"].variants["threads"].value]
+            args += [
+                self.define("DLAF_WITH_MKL", True),
+                self.define("MKL_INTERFACE", "lp64"),
+                self.define("MKL_THREADING", mkl_threads),
+            ]
 
             if spec.satisfies("+scalapack"):
                 try:
                     mpi_provider = spec["mpi"].name
                     if mpi_provider in ["mpich", "cray-mpich", "mvapich", "mvapich2"]:
-                        mkl_mpi = mkl_mapper["mpi"]["mpich"]
+                        mkl_mpi = vmap["mpi"]["mpich"]
                     else:
-                        mkl_mpi = mkl_mapper["mpi"][mpi_provider]
+                        mkl_mpi = vmap["mpi"][mpi_provider]
                 except KeyError:
                     raise RuntimeError(
                         f"dla-future does not support {spec['mpi'].name} as mpi provider with "
                         f"the selected scalapack provider {mkl_provider}"
                     )
 
-                if mkl_provider == "intel-oneapi-mkl":
-                    args.append(self.define("MKL_MPI", mkl_mpi))
-                elif mkl_provider == "intel-mkl":
-                    args.append(
-                        self.define(
-                            "MKL_SCALAPACK_TARGET",
-                            f"mkl::scalapack_{mkl_mpi}_intel_32bit_{mkl_threads}_dyn",
-                        )
-                    )
+                args.append(self.define("MKL_MPI", mkl_mpi))
         else:
-            args.append(self.define("DLAF_WITH_MKL", spec["lapack"].name in INTEL_MATH_LIBRARIES))
+            args.append(
+                self.define("DLAF_WITH_MKL", spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl"))
+            )
             add_dlaf_prefix = lambda x: x if spec.satisfies("@:0.6") else "DLAF_" + x
             args.append(
                 self.define(

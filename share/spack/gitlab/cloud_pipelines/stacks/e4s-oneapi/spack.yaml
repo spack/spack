@@ -4,22 +4,26 @@ spack:
   concretizer:
     reuse: false
     unify: false
+    static_analysis: false
 
   packages:
     all:
       require:
-      - "target=x86_64_v3"
-      - "%oneapi"
+      - target=x86_64_v3
+      - '%oneapi'
       providers:
+        c: [intel-oneapi-compilers, gcc]
+        cxx: [intel-oneapi-compilers, gcc]
+        fortran: [intel-oneapi-compilers, gcc]
         blas: [openblas]
         tbb: [intel-tbb]
       variants: +mpi
     gl:
       require: osmesa
+    fortran:
+      require: intel-oneapi-compilers
     elfutils:
       variants: ~nls
-    gcc-runtime:
-      require: "%gcc target=x86_64_v3"
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
@@ -31,39 +35,50 @@ spack:
     openblas:
       variants: threads=openmp
     trilinos:
-      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
-        +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
-        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
-        +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
     mpi:
-      require: 'mpich@4: target=x86_64_v3'
-    mpich:
-      require: '~wrapperrpath ~hwloc target=x86_64_v3'
+      require: intel-oneapi-mpi
+    intel-oneapi-mpi:
+      buildable: false
+      externals:
+      - spec: intel-oneapi-mpi@2021.13.1
+        prefix: /opt/intel/oneapi
     unzip:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
+    py-maturin:
+      require:
+        - 'target=x86_64_v3 %gcc'
     binutils:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
       variants: +ld +gold +headers +libiberty ~nls
     llvm:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
     ruby:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
     rust:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
     krb5:
-      require: '%gcc target=x86_64_v3'
-    papi:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
     openssh:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
     dyninst:
-      require: "%gcc target=x86_64_v3"
+      require:
+      - 'target=x86_64_v3 %gcc'
     bison:
-      require: '%gcc target=x86_64_v3'
+      require:
+      - 'target=x86_64_v3 %gcc'
     paraview:
-      require: "+examples %oneapi target=x86_64_v3"
+      require:
+      - +examples target=x86_64_v3
 
   specs:
   # CPU
@@ -113,6 +128,7 @@ spack:
   - laghos
   - lammps
   - legion
+  - libceed
   - libnrm
   - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp
   - libquo
@@ -127,7 +143,7 @@ spack:
   - nccmp
   - nco
   - netlib-scalapack
-  - nrm
+  - nrm ^py-scipy cflags="-Wno-error=incompatible-function-pointer-types" # py-scipy@1.8.1 fails without cflags here
   - nwchem
   - omega-h
   - openfoam

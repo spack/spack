@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,7 +16,7 @@ class VepCache(Package):
 
     license("Apache-2.0", checked_by="teaguesterling")
 
-    vep_versions = ["112", "111", "110"]
+    vep_versions = ["113", "112", "111", "110"]
     depends_on("vep", type="build")
     for major in vep_versions:
         version(major)

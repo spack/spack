@@ -1,11 +1,11 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import numbers
 
 import pytest
 
+import spack.concretize
 import spack.error
 import spack.repo
 import spack.spec
@@ -685,23 +685,6 @@ class TestVariantMapTest:
         c["shared"] = BoolValuedVariant("shared", True)
         assert str(c) == "+shared feebar=foo foo=bar,baz foobar=fee"
 
-    def test_concrete(self, mock_packages, config) -> None:
-        spec = Spec("pkg-a")
-        vm = VariantMap(spec)
-        assert not vm.concrete
-
-        # concrete if associated spec is concrete
-        spec.concretize()
-        assert vm.concrete
-
-        # concrete if all variants are present (even if spec not concrete)
-        spec._mark_concrete(False)
-        assert spec.variants.concrete
-
-        # remove a variant to test the condition
-        del spec.variants["foo"]
-        assert not spec.variants.concrete
-
 
 def test_disjoint_set_initialization_errors():
     # Constructing from non-disjoint sets should raise an exception
@@ -911,7 +894,7 @@ def test_concretize_variant_default_with_multiple_defs(
     pkg = spack.repo.PATH.get_pkg_class(pkg_name)
     pkg_defs = [vdef for _, vdef in pkg.variant_definitions("v")]
 
-    spec = spack.spec.Spec(f"{pkg_name}{spec}").concretized()
+    spec = spack.concretize.concretize_one(f"{pkg_name}{spec}")
     assert spec.satisfies(satisfies)
     assert spec.package.get_variant("v") is pkg_defs[def_id]
 

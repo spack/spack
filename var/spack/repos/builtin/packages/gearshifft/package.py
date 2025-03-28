@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -42,7 +41,7 @@ class Gearshifft(CMakePackage):
     depends_on("clfft@2.12.0:", when="+clfft")
     depends_on("fftw@3.3.4:~mpi~openmp", when="+fftw~openmp")
     depends_on("fftw@3.3.4:~mpi+openmp", when="+fftw+openmp")
-    depends_on("intel-mkl threads=openmp", when="+mkl")
+    depends_on("intel-oneapi-mkl threads=openmp", when="+mkl")
     depends_on("rocfft", when="+rocfft")
 
     def cmake_args(self):

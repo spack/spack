@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections.abc
@@ -11,6 +10,9 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.phase_callbacks
+import spack.spec
+import spack.util.prefix
+from spack.directives import depends_on
 
 from .cmake import CMakeBuilder, CMakePackage
 
@@ -68,12 +70,8 @@ class CachedCMakeBuilder(CMakeBuilder):
 
     @property
     def cache_name(self):
-        return "{0}-{1}-{2}@{3}.cmake".format(
-            self.pkg.name,
-            self.pkg.spec.architecture,
-            self.pkg.spec.compiler.name,
-            self.pkg.spec.compiler.version,
-        )
+        compiler_str = f"{self.spec['c'].name}-{self.spec['c'].version}"
+        return f"{self.pkg.name}-{self.spec.architecture.platform}-{compiler_str}.cmake"
 
     @property
     def cache_path(self):
@@ -116,7 +114,9 @@ class CachedCMakeBuilder(CMakeBuilder):
         # Fortran compiler is optional
         if "FC" in os.environ:
             spack_fc_entry = cmake_cache_path("CMAKE_Fortran_COMPILER", os.environ["FC"])
-            system_fc_entry = cmake_cache_path("CMAKE_Fortran_COMPILER", self.pkg.compiler.fc)
+            system_fc_entry = cmake_cache_path(
+                "CMAKE_Fortran_COMPILER", self.spec["fortran"].package.fortran
+            )
         else:
             spack_fc_entry = "# No Fortran compiler defined in spec"
             system_fc_entry = "# No Fortran compiler defined in spec"
@@ -132,8 +132,8 @@ class CachedCMakeBuilder(CMakeBuilder):
             "  " + cmake_cache_path("CMAKE_CXX_COMPILER", os.environ["CXX"]),
             "  " + spack_fc_entry,
             "else()\n",
-            "  " + cmake_cache_path("CMAKE_C_COMPILER", self.pkg.compiler.cc),
-            "  " + cmake_cache_path("CMAKE_CXX_COMPILER", self.pkg.compiler.cxx),
+            "  " + cmake_cache_path("CMAKE_C_COMPILER", self.spec["c"].package.cc),
+            "  " + cmake_cache_path("CMAKE_CXX_COMPILER", self.spec["cxx"].package.cxx),
             "  " + system_fc_entry,
             "endif()\n",
         ]
@@ -276,17 +276,24 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append("# ROCm")
             entries.append("#------------------{0}\n".format("-" * 30))
 
-            # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
-            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-            llvm_bin = spec["llvm-amdgpu"].prefix.bin
-            llvm_prefix = spec["llvm-amdgpu"].prefix
-            # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
-            # others point to /<path>/rocm-<ver>/llvm
-            if os.path.basename(os.path.normpath(llvm_prefix)) != "llvm":
-                llvm_bin = os.path.join(llvm_prefix, "llvm/bin/")
-            entries.append(
-                cmake_cache_filepath("CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "clang++"))
-            )
+            if spec.satisfies("^blt@0.7:"):
+                rocm_root = os.path.dirname(spec["llvm-amdgpu"].prefix)
+                entries.append(cmake_cache_path("ROCM_PATH", rocm_root))
+            else:
+                # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
+                entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
+                llvm_bin = spec["llvm-amdgpu"].prefix.bin
+                llvm_prefix = spec["llvm-amdgpu"].prefix
+                # Some ROCm systems seem to point to /<path>/rocm-<ver>/ and
+                # others point to /<path>/rocm-<ver>/llvm
+                if os.path.basename(os.path.normpath(llvm_prefix)) != "llvm":
+                    llvm_bin = os.path.join(llvm_prefix, "llvm/bin/")
+                entries.append(
+                    cmake_cache_filepath(
+                        "CMAKE_HIP_COMPILER", os.path.join(llvm_bin, "amdclang++")
+                    )
+                )
+
             archs = self.spec.variants["amdgpu_target"].value
             if archs[0] != "none":
                 arch_str = ";".join(archs)
@@ -294,12 +301,26 @@ class CachedCMakeBuilder(CMakeBuilder):
                 entries.append(cmake_cache_string("AMDGPU_TARGETS", arch_str))
                 entries.append(cmake_cache_string("GPU_TARGETS", arch_str))
 
+            if spec.satisfies("%gcc"):
+                entries.append(
+                    cmake_cache_string(
+                        "CMAKE_HIP_FLAGS", f"--gcc-toolchain={self.pkg.compiler.prefix}"
+                    )
+                )
+
         return entries
 
     def std_initconfig_entries(self):
         cmake_prefix_path_env = os.environ["CMAKE_PREFIX_PATH"]
         cmake_prefix_path = cmake_prefix_path_env.replace(os.pathsep, ";")
-
+        complete_rpath_list = ";".join(
+            [
+                self.pkg.spec.prefix.lib,
+                self.pkg.spec.prefix.lib64,
+                *os.environ.get("SPACK_COMPILER_EXTRA_RPATHS", "").split(":"),
+                *os.environ.get("SPACK_COMPILER_IMPLICIT_RPATHS", "").split(":"),
+            ]
+        )
         return [
             "#------------------{0}".format("-" * 60),
             "# !!!! This is a generated file, edit at own risk !!!!",
@@ -308,6 +329,8 @@ class CachedCMakeBuilder(CMakeBuilder):
             "#------------------{0}\n".format("-" * 60),
             cmake_cache_string("CMAKE_PREFIX_PATH", cmake_prefix_path),
             cmake_cache_string("CMAKE_INSTALL_RPATH_USE_LINK_PATH", "ON"),
+            cmake_cache_string("CMAKE_BUILD_RPATH", complete_rpath_list),
+            cmake_cache_string("CMAKE_INSTALL_RPATH", complete_rpath_list),
             self.define_cmake_cache_from_variant("CMAKE_BUILD_TYPE", "build_type"),
         ]
 
@@ -315,7 +338,9 @@ class CachedCMakeBuilder(CMakeBuilder):
         """This method is to be overwritten by the package"""
         return []
 
-    def initconfig(self, pkg, spec, prefix):
+    def initconfig(
+        self, pkg: "CachedCMakePackage", spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
+    ) -> None:
         cache_entries = (
             self.std_initconfig_entries()
             + self.initconfig_compiler_entries()
@@ -351,6 +376,10 @@ class CachedCMakePackage(CMakePackage):
     """
 
     CMakeBuilder = CachedCMakeBuilder
+
+    # These dependencies are assumed in the builder
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     def flag_handler(self, name, flags):
         if name in ("cflags", "cxxflags", "cppflags", "fflags"):

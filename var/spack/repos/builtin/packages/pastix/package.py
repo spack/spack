@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -86,11 +85,11 @@ class Pastix(CMakePackage, CudaPackage):
             args.extend([self.define("PASTIX_WITH_STARPU", "ON")])
             args.extend([self.define_from_variant("PASTIX_WITH_CUDA", "cuda")])
 
-        if "^intel-mkl" in spec or "^intel-parallel-studio+mkl" in spec:
+        if spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl"):
             args.extend([self.define("BLA_VENDOR", "Intel10_64lp_seq")])
-        elif "^netlib-lapack" in spec:
+        elif spec.satisfies("^[virtuals=lapack] netlib-lapack"):
             args.extend([self.define("BLA_VENDOR", "Generic")])
-        elif "^openblas" in spec:
+        elif spec.satisfies("^[virtuals=lapack] openblas"):
             args.extend([self.define("BLA_VENDOR", "OpenBLAS")])
 
         if spec.satisfies("+mpi"):

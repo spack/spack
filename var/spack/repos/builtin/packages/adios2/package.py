@@ -1,13 +1,14 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import tempfile
+import sys
 
 from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
+
+IS_WINDOWS = sys.platform == "win32"
 
 
 class Adios2(CMakePackage, CudaPackage, ROCmPackage):
@@ -78,7 +79,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     variant("zfp", default=True, description="Enable ZFP compression")
     variant("png", default=True, when="@2.4:", description="Enable PNG compression")
     variant("sz", default=True, when="@2.6:", description="Enable SZ compression")
-    variant("mgard", default=True, when="@2.8:", description="Enable MGARD compression")
+    variant("mgard", default=not IS_WINDOWS, when="@2.8:", description="Enable MGARD compression")
 
     # Rransport engines
     variant("sst", default=True, description="Enable the SST staging engine")
@@ -100,7 +101,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant(
         "libcatalyst",
-        default=True,
+        default=not IS_WINDOWS,
         when="@2.9:",
         description="Enable support for in situ visualization plugin using ParaView Catalyst",
     )
@@ -258,9 +259,9 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     def setup_build_environment(self, env):
         # https://github.com/ornladios/ADIOS2/issues/2228
-        if self.spec.satisfies("%gcc@10: +fortran"):
+        if self.spec.satisfies("+fortran %gcc@10:"):
             env.set("FFLAGS", "-fallow-argument-mismatch")
-        elif self.spec.satisfies("%fj +fortran"):
+        elif self.spec.satisfies("+fortran %fj"):
             env.set("FFLAGS", "-Ccpp")
 
     def cmake_args(self):
@@ -388,34 +389,29 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
                 exe = which(join_path(self.prefix.bin, cmd))
                 exe(*opts)
 
-    def test_examples(self):
-        """Build and run an example program"""
-        src_dir = self.test_suite.current_test_cache_dir.testing.install.C
-        test_stage_dir = self.test_suite.test_dir_for_spec(self.spec)
+    def test_install(self):
+        """Build and run an install tests"""
+        srcdir = self.test_suite.current_test_cache_dir.testing.install.C
+        blddir = self.test_suite.current_test_cache_dir.build_dir
 
-        # Create the build tree within this spec's test stage dir so it gets
-        # cleaned up automatically
-        build_dir = tempfile.mkdtemp(dir=test_stage_dir)
-
-        std_cmake_args = []
+        cmake = Executable(self.spec["cmake"].prefix.bin.cmake)
+        cmake_args = []
 
         if self.spec.satisfies("+mpi"):
             mpi_exec = join_path(self.spec["mpi"].prefix, "bin", "mpiexec")
-            std_cmake_args.append(f"-DMPIEXEC_EXECUTABLE={mpi_exec}")
+            cmake_args.append(f"-DMPIEXEC_EXECUTABLE={mpi_exec}")
 
-        built_programs = ["adios_c_mpi_test", "adios_adios2c_test", "adios_c_test"]
+        with working_dir(blddir, create=True):
+            with test_part(self, "test_install_build", purpose="ADIOS2 install test build app"):
+                cmake(srcdir, *cmake_args)
+                cmake(*(["--build", "."]))
 
-        with working_dir(build_dir):
-            with test_part(
-                self, "test_examples_build", purpose="build example against installed adios2"
-            ):
-                cmake(src_dir, *std_cmake_args)
-                make()
-
-            for p in built_programs:
-                exe = which(join_path(".", p))
+            for binary in ["adios_c_mpi_test", "adios_adios2c_test", "adios_c_test"]:
+                exe = which(join_path(".", binary))
                 if exe:
                     with test_part(
-                        self, f"test_examples_run_{p}", purpose=f"run built adios2 example {p}"
+                        self,
+                        f"test_install_run_{binary}",
+                        purpose=f"ADIOS2 install test run {binary}",
                     ):
                         exe()

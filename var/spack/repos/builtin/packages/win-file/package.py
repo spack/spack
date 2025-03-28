@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -22,6 +21,8 @@ class WinFile(Package):
     executables = ["^file$"]
 
     version("5.45", sha256="11b8f3abf647c711bc50ef8451c8d6e955f11c4afd8b0a98f2ac65e9b6e10d5e")
+
+    depends_on("c", type="build")
 
     @classmethod
     def determine_version(cls, exe):

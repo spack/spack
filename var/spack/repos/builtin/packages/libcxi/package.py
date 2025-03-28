@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -66,9 +65,15 @@ class Libcxi(AutotoolsPackage):
 
         if self.spec.satisfies("+level_zero"):
             args.append(f"--with-ze={self.spec['oneapi-level-zero'].prefix}")
+        else:
+            args.append("--without-ze")
         if self.spec.satisfies("+cuda"):
             args.append(f"--with-cuda={self.spec['cuda'].prefix}")
+        else:
+            args.append("--without-cuda")
         if self.spec.satisfies("+rocm"):
             args.append(f"--with-rocm={self.spec['hip'].prefix}")
+        else:
+            args.append("--without-rocm")
 
         return args

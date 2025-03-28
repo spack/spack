@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for config.yaml configuration file.
@@ -59,6 +58,15 @@ properties: Dict[str, Any] = {
                     {"type": "string"},  # deprecated
                 ]
             },
+            "concretization_cache": {
+                "type": "object",
+                "properties": {
+                    "enable": {"type": "boolean"},
+                    "url": {"type": "string"},
+                    "entry_limit": {"type": "integer", "minimum": 0},
+                    "size_limit": {"type": "integer", "minimum": 0},
+                },
+            },
             "install_hash_length": {"type": "integer", "minimum": 1},
             "install_path_scheme": {"type": "string"},  # deprecated
             "build_stage": {
@@ -107,8 +115,15 @@ properties: Dict[str, Any] = {
             {
                 "names": ["install_missing_compilers"],
                 "message": "The config:install_missing_compilers option has been deprecated in "
-                "Spack v0.23, and is currently ignored. It will be removed from config after "
+                "Spack v0.23, and is currently ignored. It will be removed from config in "
                 "Spack v1.0.",
+                "error": False,
+            },
+            {
+                "names": ["install_path_scheme"],
+                "message": "The config:install_path_scheme option was deprecated in Spack v0.16 "
+                "in favor of config:install_tree:projections:all. It will be removed in Spack "
+                "v1.0.",
                 "error": False,
             },
         ],

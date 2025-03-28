@@ -1,11 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
-import spack.error
 import spack.platforms
 from spack.package import *
 
@@ -407,6 +405,12 @@ class ArmplGcc(Package):
     provides("lapack")
     provides("fftw-api@3")
 
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
+    requires("^[virtuals=c,fortran] gcc", msg="armpl-gcc is only compatible with the GCC compiler")
+
+    depends_on("gmake", type="build")
+
     # Run the installer with the desired install directory
     def install(self, spec, prefix):
         if spec.platform == "darwin":
@@ -430,8 +434,6 @@ class ArmplGcc(Package):
                 # Unmount image
                 hdiutil("detach", mountpoint)
             return
-        if self.compiler.name != "gcc":
-            raise spack.error.SpackError(("Only compatible with GCC.\n"))
 
         with when("@:22"):
             armpl_version = spec.version.up_to(3).string.split("_")[0]

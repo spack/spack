@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,6 +17,7 @@ class PyAsdf(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("4.1.0", sha256="0ff44992c85fd768bd9a9512ab7f012afb52ddcee390e9caf67e30d404122da1")
     version("3.5.0", sha256="047ad7bdd8f40b04b8625abfd119a35d18b344301c60ea9ddf63964e7ce19669")
     version("2.15.0", sha256="686f1c91ebf987d41f915cfb6aa70940d7ad17f87ede0be70463147ad2314587")
     version("2.4.2", sha256="6ff3557190c6a33781dae3fd635a8edf0fa0c24c6aca27d8679af36408ea8ff2")
@@ -28,6 +28,8 @@ class PyAsdf(PythonPackage):
 
     with when("@3.5.0:"):
         depends_on("python@3.9:", type=("build", "run"))
+
+        depends_on("py-setuptools-scm@8: +toml", type="build")  # for version_file
 
         depends_on("py-asdf-standard@1.1.0:", type=("build", "run"))
         depends_on("py-importlib-metadata@4.11.4:", type=("build", "run"), when="^python@:3.11")

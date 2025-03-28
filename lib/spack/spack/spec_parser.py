@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Parser for spec literals
@@ -61,14 +60,19 @@ import json
 import pathlib
 import re
 import sys
-from typing import Iterator, List, Optional
+import traceback
+import warnings
+from typing import Iterator, List, Optional, Tuple
 
 from llnl.util.tty import color
 
 import spack.deptypes
 import spack.error
+import spack.paths
 import spack.spec
+import spack.util.spack_yaml
 import spack.version
+from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.tokenize import Token, TokenBase, Tokenizer
 
 #: Valid name for specs and variants. Here we are not using
@@ -97,6 +101,9 @@ VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VER
 
 #: Regex with groups to use for splitting (optionally propagated) key-value pairs
 SPLIT_KVP = re.compile(rf"^({NAME})(==?)(.*)$")
+
+#: Regex with groups to use for splitting %[virtuals=...] tokens
+SPLIT_COMPILER_TOKEN = re.compile(rf"^%\[virtuals=({VALUE}|{QUOTED_VALUE})]\s*(.*)$")
 
 #: A filename starts either with a "." or a "/" or a "{name}/, or on Windows, a drive letter
 #: followed by a colon and "\" or "." or {name}\
@@ -133,6 +140,11 @@ class SpecTokens(TokenBase):
     # Compilers
     COMPILER_AND_VERSION = rf"(?:%\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
     COMPILER = rf"(?:%\s*(?:{NAME}))"
+    COMPILER_AND_VERSION_WITH_VIRTUALS = (
+        rf"(?:%\[virtuals=(?:{VALUE}|{QUOTED_VALUE})\]"
+        rf"\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
+    )
+    COMPILER_WITH_VIRTUALS = rf"(?:%\[virtuals=(?:{VALUE}|{QUOTED_VALUE})\]\s*(?:{NAME}))"
     # FILENAME
     FILENAME = rf"(?:{FILENAME})"
     # Package name
@@ -205,6 +217,32 @@ class SpecTokenizationError(spack.error.SpecSyntaxError):
         super().__init__(message)
 
 
+def _warn_about_variant_after_compiler(literal_str: str, issues: List[str]):
+    """Issue a warning if variant or other token is preceded by a compiler token. The warning is
+    only issued if it's actionable: either we know the config file it originates from, or we have
+    call site that's not internal to Spack."""
+    ignore = [spack.paths.lib_path, spack.paths.bin_path]
+    mark = spack.util.spack_yaml.get_mark_from_yaml_data(literal_str)
+    issue_str = ", ".join(issues)
+    error = f"{issue_str} in `{literal_str}`"
+
+    # warning from config file
+    if mark:
+        warnings.warn(f"{mark.name}:{mark.line + 1}: {error}")
+        return
+
+    # warning from hopefully package.py
+    for frame in reversed(traceback.extract_stack()):
+        if frame.lineno and not any(frame.filename.startswith(path) for path in ignore):
+            warnings.warn_explicit(
+                error,
+                category=spack.error.SpackAPIWarning,
+                filename=frame.filename,
+                lineno=frame.lineno,
+            )
+            return
+
+
 class SpecParser:
     """Parse text into specs"""
 
@@ -243,26 +281,31 @@ class SpecParser:
                 raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str) from e
 
         initial_spec = initial_spec or spack.spec.Spec()
-        root_spec = SpecNodeParser(self.ctx, self.literal_str).parse(initial_spec)
+        root_spec, parser_warnings = SpecNodeParser(self.ctx, self.literal_str).parse(initial_spec)
         while True:
             if self.ctx.accept(SpecTokens.START_EDGE_PROPERTIES):
                 edge_properties = EdgeAttributeParser(self.ctx, self.literal_str).parse()
                 edge_properties.setdefault("depflag", 0)
                 edge_properties.setdefault("virtuals", ())
-                dependency = self._parse_node(root_spec)
+                dependency, warnings = self._parse_node(root_spec)
+                parser_warnings.extend(warnings)
                 add_dependency(dependency, **edge_properties)
 
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
-                dependency = self._parse_node(root_spec)
+                dependency, warnings = self._parse_node(root_spec)
+                parser_warnings.extend(warnings)
                 add_dependency(dependency, depflag=0, virtuals=())
 
             else:
                 break
 
+        if parser_warnings:
+            _warn_about_variant_after_compiler(self.literal_str, parser_warnings)
+
         return root_spec
 
     def _parse_node(self, root_spec):
-        dependency = SpecNodeParser(self.ctx, self.literal_str).parse()
+        dependency, parser_warnings = SpecNodeParser(self.ctx, self.literal_str).parse()
         if dependency is None:
             msg = (
                 "the dependency sigil and any optional edge attributes must be followed by a "
@@ -271,7 +314,7 @@ class SpecParser:
             raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
         if root_spec.concrete:
             raise spack.spec.RedundantSpecError(root_spec, "^" + str(dependency))
-        return dependency
+        return dependency, parser_warnings
 
     def all_specs(self) -> List["spack.spec.Spec"]:
         """Return all the specs that remain to be parsed"""
@@ -281,17 +324,16 @@ class SpecParser:
 class SpecNodeParser:
     """Parse a single spec node from a stream of tokens"""
 
-    __slots__ = "ctx", "has_compiler", "has_version", "literal_str"
+    __slots__ = "ctx", "has_version", "literal_str"
 
     def __init__(self, ctx, literal_str):
         self.ctx = ctx
         self.literal_str = literal_str
-        self.has_compiler = False
         self.has_version = False
 
     def parse(
         self, initial_spec: Optional["spack.spec.Spec"] = None
-    ) -> Optional["spack.spec.Spec"]:
+    ) -> Tuple["spack.spec.Spec", List[str]]:
         """Parse a single spec node from a stream of tokens
 
         Args:
@@ -300,11 +342,14 @@ class SpecNodeParser:
         Return
             The object passed as argument
         """
-        if not self.ctx.next_token or self.ctx.expect(SpecTokens.DEPENDENCY):
-            return initial_spec
+        parser_warnings: List[str] = []
+        last_compiler = None
 
         if initial_spec is None:
             initial_spec = spack.spec.Spec()
+
+        if not self.ctx.next_token or self.ctx.expect(SpecTokens.DEPENDENCY):
+            return initial_spec, parser_warnings
 
         # If we start with a package name we have a named spec, we cannot
         # accept another package name afterwards in a node
@@ -319,7 +364,7 @@ class SpecNodeParser:
             initial_spec.namespace = namespace
 
         elif self.ctx.accept(SpecTokens.FILENAME):
-            return FileParser(self.ctx).parse(initial_spec)
+            return FileParser(self.ctx).parse(initial_spec), parser_warnings
 
         def raise_parsing_error(string: str, cause: Optional[Exception] = None):
             """Raise a spec parsing error with token context."""
@@ -332,24 +377,40 @@ class SpecNodeParser:
             except Exception as e:
                 raise_parsing_error(str(e), e)
 
+        def warn_if_after_compiler(token: str):
+            """Register a warning for %compiler followed by +variant that will in the future apply
+            to the compiler instead of the current root."""
+            if last_compiler:
+                parser_warnings.append(f"`{token}` should go before `{last_compiler}`")
+
         while True:
-            if self.ctx.accept(SpecTokens.COMPILER):
-                if self.has_compiler:
-                    raise_parsing_error("Spec cannot have multiple compilers")
+            if (
+                self.ctx.accept(SpecTokens.COMPILER)
+                or self.ctx.accept(SpecTokens.COMPILER_AND_VERSION)
+                or self.ctx.accept(SpecTokens.COMPILER_WITH_VIRTUALS)
+                or self.ctx.accept(SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS)
+            ):
+                current_token = self.ctx.current_token
+                if current_token.kind in (
+                    SpecTokens.COMPILER_WITH_VIRTUALS,
+                    SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS,
+                ):
+                    m = SPLIT_COMPILER_TOKEN.match(current_token.value)
+                    assert m, "SPLIT_COMPILER_TOKEN and COMPILER_* do not agree."
+                    virtuals_str, compiler_str = m.groups()
+                    virtuals = tuple(virtuals_str.strip("'\" ").split(","))
+                else:
+                    virtuals = tuple()
+                    compiler_str = current_token.value[1:]
 
-                compiler_name = self.ctx.current_token.value[1:]
-                initial_spec.compiler = spack.spec.CompilerSpec(compiler_name.strip(), ":")
-                self.has_compiler = True
+                build_dependency = spack.spec.Spec(compiler_str)
+                if build_dependency.name in LEGACY_COMPILER_TO_BUILTIN:
+                    build_dependency.name = LEGACY_COMPILER_TO_BUILTIN[build_dependency.name]
 
-            elif self.ctx.accept(SpecTokens.COMPILER_AND_VERSION):
-                if self.has_compiler:
-                    raise_parsing_error("Spec cannot have multiple compilers")
-
-                compiler_name, compiler_version = self.ctx.current_token.value[1:].split("@")
-                initial_spec.compiler = spack.spec.CompilerSpec(
-                    compiler_name.strip(), compiler_version
+                initial_spec._add_dependency(
+                    build_dependency, depflag=spack.deptypes.BUILD, virtuals=virtuals, direct=True
                 )
-                self.has_compiler = True
+                last_compiler = self.ctx.current_token.value
 
             elif (
                 self.ctx.accept(SpecTokens.VERSION_HASH_PAIR)
@@ -364,14 +425,17 @@ class SpecNodeParser:
                 )
                 initial_spec.attach_git_version_lookup()
                 self.has_version = True
+                warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.accept(SpecTokens.BOOL_VARIANT):
                 variant_value = self.ctx.current_token.value[0] == "+"
                 add_flag(self.ctx.current_token.value[1:].strip(), variant_value, propagate=False)
+                warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.accept(SpecTokens.PROPAGATED_BOOL_VARIANT):
                 variant_value = self.ctx.current_token.value[0:2] == "++"
                 add_flag(self.ctx.current_token.value[2:].strip(), variant_value, propagate=True)
+                warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.accept(SpecTokens.KEY_VALUE_PAIR):
                 match = SPLIT_KVP.match(self.ctx.current_token.value)
@@ -379,6 +443,7 @@ class SpecNodeParser:
 
                 name, _, value = match.groups()
                 add_flag(name, strip_quotes_and_unescape(value), propagate=False)
+                warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.accept(SpecTokens.PROPAGATED_KEY_VALUE_PAIR):
                 match = SPLIT_KVP.match(self.ctx.current_token.value)
@@ -386,17 +451,19 @@ class SpecNodeParser:
 
                 name, _, value = match.groups()
                 add_flag(name, strip_quotes_and_unescape(value), propagate=True)
+                warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.expect(SpecTokens.DAG_HASH):
                 if initial_spec.abstract_hash:
                     break
                 self.ctx.accept(SpecTokens.DAG_HASH)
                 initial_spec.abstract_hash = self.ctx.current_token.value[1:]
+                warn_if_after_compiler(self.ctx.current_token.value)
 
             else:
                 break
 
-        return initial_spec
+        return initial_spec, parser_warnings
 
 
 class FileParser:
@@ -486,23 +553,18 @@ def parse_one_or_raise(
         text (str): text to be parsed
         initial_spec: buffer where to parse the spec. If None a new one will be created.
     """
-    stripped_text = text.strip()
-    parser = SpecParser(stripped_text)
+    parser = SpecParser(text)
     result = parser.next_spec(initial_spec)
-    last_token = parser.ctx.current_token
+    next_token = parser.ctx.next_token
 
-    if last_token is not None and last_token.end != len(stripped_text):
-        message = "a single spec was requested, but parsed more than one:"
-        message += f"\n{text}"
-        if last_token is not None:
-            underline = f"\n{' ' * last_token.end}{'^' * (len(text) - last_token.end)}"
-            message += color.colorize(f"@*r{{{underline}}}")
+    if next_token:
+        message = f"expected a single spec, but got more:\n{text}"
+        underline = f"\n{' ' * next_token.start}{'^' * len(next_token.value)}"
+        message += color.colorize(f"@*r{{{underline}}}")
         raise ValueError(message)
 
     if result is None:
-        message = "a single spec was requested, but none was parsed:"
-        message += f"\n{text}"
-        raise ValueError(message)
+        raise ValueError("expected a single spec, but got none")
 
     return result
 

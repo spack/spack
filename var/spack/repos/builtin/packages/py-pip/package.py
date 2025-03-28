@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -46,11 +45,16 @@ class PyPip(Package, PythonExtension):
     version("9.0.1", sha256="690b762c0a8460c303c089d5d0be034fb15a5ea2b75bdf565f40421f542fefb0")
 
     extends("python")
-    depends_on("python@3.8:", when="@24.1:", type=("build", "run"))
-    depends_on("python@3.7:", when="@22:", type=("build", "run"))
 
-    # Uses collections.MutableMapping
-    depends_on("python@:3.9", when="@:19.1", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@24.1:")
+        depends_on("python@3.7:", when="@22:")
+
+        # Uses pkgutil.ImpImporter
+        depends_on("python@:3.11", when="@:23.1.1")
+
+        # Uses collections.MutableMapping
+        depends_on("python@:3.9", when="@:19.1")
 
     resource(
         name="pip-bootstrap",
