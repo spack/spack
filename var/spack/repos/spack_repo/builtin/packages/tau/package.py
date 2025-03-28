@@ -101,7 +101,10 @@ class Tau(Package):
         "rocprofv2", default=False, description="Activates ROCm rocprofiler support", when="@2.34:"
     )
     variant(
-        "rocprofiler-sdk", default=False, description="Activates ROCm rocprofiler support", when="@2.34.1:"
+        "rocprofiler-sdk",
+        default=False,
+        description="Activates ROCm rocprofiler support",
+        when="@2.34.1:",
     )
     variant(
         "salt", default=False, description="Activates SALT source instrumentation", when="@2.34:"
@@ -202,8 +205,8 @@ class Tau(Package):
     requires("+rocm", when="+rocprofiler", msg="Rocprofiler requires ROCm")
     requires("+rocm", when="+roctracer", msg="Roctracer requires ROCm")
     requires("+rocm", when="+rocprofiler-sdk", msg="Rocprofiler-sdk requires ROCm")
-    
-    #rocm is always needed, it sets paths to ROCm libraries needed by ROCm profilers/tracers
+
+    # rocm is always needed, it sets paths to ROCm libraries needed by ROCm profilers/tracers
     requires(
         "+rocprofiler",
         "+roctracer",
@@ -387,10 +390,10 @@ class Tau(Package):
             options.append("-elfutils=%s" % spec["elfutils"].prefix)
             options.append("-hip=%s" % spec["hip"].prefix)
             options.append("-comgr=%s" % spec["comgr"].prefix)
-        
+
         if "+rocprofv2" in spec:
             options.append("-rocprofiler=%s" % spec["rocprofiler-dev"].prefix)
-            options.append("-rocprofv2")        
+            options.append("-rocprofv2")
 
         if "+adios2" in spec:
             options.append("-adios=%s" % spec["adios2"].prefix)
