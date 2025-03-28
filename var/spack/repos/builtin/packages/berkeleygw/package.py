@@ -78,12 +78,7 @@ class Berkeleygw(MakefilePackage):
         depends_on("cray-fftw+openmp", when="^[virtuals=fftw-api] cray-fftw")
         depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("fujitsu-fftw+openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
-        depends_on("intel-mkl threads=openmp", when="^[virtuals=fftw-api] intel-mkl")
         depends_on("intel-oneapi-mkl threads=openmp", when="^[virtuals=fftw-api] intel-oneapi-mkl")
-        depends_on(
-            "intel-parallel-studio threads=openmp",
-            when="^[virtuals=fftw-api] intel-parallel-studio",
-        )
 
     with when("~openmp"):
         depends_on("acfl threads=none", when="^[virtuals=fftw-api] acfl")
@@ -92,11 +87,7 @@ class Berkeleygw(MakefilePackage):
         depends_on("cray-fftw~openmp", when="^[virtuals=fftw-api] cray-fftw")
         depends_on("fftw~openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("fujitsu-fftw~openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
-        depends_on("intel-mkl threads=none", when="^[virtuals=fftw-api] intel-mkl")
         depends_on("intel-oneapi-mkl threads=none", when="^[virtuals=fftw-api] intel-oneapi-mkl")
-        depends_on(
-            "intel-parallel-studio threads=none", when="^[virtuals=fftw-api] intel-parallel-studio"
-        )
 
     # in order to run the installed python scripts
     depends_on("python", type=("build", "run"), when="+python")
