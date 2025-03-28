@@ -1771,7 +1771,7 @@ class SpackSolverSetup:
 
             # make a spec indicating whether the variant has this conditional value
             variant_has_value = spack.spec.Spec()
-            variant_has_value.variants[name] = spack.variant.AbstractVariant(name, value.value)
+            variant_has_value.variants[name] = vt.VariantBase(name, value.value)
 
             if value.when:
                 # the conditional value is always "possible", but it imposes its when condition as
