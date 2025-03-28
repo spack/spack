@@ -23,7 +23,7 @@ spack:
     fortran:
       require: intel-oneapi-compilers
     elfutils:
-      variants: +bzip2 ~nls +xz
+      variants: ~nls +xz
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
