@@ -19,6 +19,7 @@ class Hepmc3(CMakePackage):
 
     license("LGPL-3.0-or-later")
 
+    version("3.3.1", sha256="08240160b0f28dc3293aa4d61ce65e2d67cd597acf6faca439f2e46625f7e793")
     version("3.3.0", sha256="6f876091edcf7ee6d0c0db04e080056e89efc1a61abe62355d97ce8e735769d6")
     version("3.2.7", sha256="587faa6556cc54ccd89ad35421461b4761d7809bc17a2e72f5034daea142232b")
     version("3.2.6", sha256="248f3b5b36dd773844cbe73d51f60891458334b986b259754c59dbf4bbf1d525")
