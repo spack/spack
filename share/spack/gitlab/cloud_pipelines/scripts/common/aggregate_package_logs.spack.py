@@ -12,7 +12,7 @@ from llnl.util import tty
 def find_logs(prefix, filename):
     for root, _, files in os.walk(prefix):
         if filename in files:
-            yield        os.path.join(root, filename)
+            yield os.path.join(root, filename)
 
 
 if __name__ == "__main__":
