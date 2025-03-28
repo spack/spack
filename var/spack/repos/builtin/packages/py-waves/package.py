@@ -130,3 +130,10 @@ class PyWaves(PythonPackage):
         with working_dir(installed_package):
             pytest = which("pytest")
             pytest(*custom_arguments)
+
+    # TODO: Remove when the default PythonPackage test_imports is fixed
+    # https://github.com/spack/spack/issues/48527
+    # https://github.com/spack/spack/issues/45801
+    # https://github.com/spack/spack/pull/48394
+    def test_imports(self):
+        pass
