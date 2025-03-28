@@ -270,10 +270,6 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
         yield mock_repo_path
 
 
-def test_diamond(concretize_scope, test_repo):
-    Spec("x1").concretized()
-
-
 install = SpackCommand("install")
 solve = SpackCommand("solve")
 spec_cmd = SpackCommand("spec")
@@ -307,6 +303,36 @@ def pretend_linux(monkeypatch, tmpdir):
         yield
 
 
+def set_up_compiler_cfg():
+    test_cfg = """\
+packages::
+  gcc:
+    externals:
+    - spec: "gcc@11.0.0 languages='c,c++,fortran' os=debian6 target=x86_64"
+      prefix: /path1
+      extra_attributes:
+        compilers:
+          cc: /path1/bin/gcc
+          cxx: /path1/bin/g++
+          fortran: /path1/bin/gfortran
+  intel-oneapi-compilers:
+    externals:
+    - spec: "oneapi@2025.0.3 os=debian6 target=x86_64"
+      prefix: /path2
+      extra_attributes:
+        compilers:
+          cc: /path2/bin/clang
+          cxx: /path2/bin/clang++
+          fortran: /path2/bin/flang
+"""
+    update_cfg_section("packages", test_cfg)
+
+
+def test_diamond_nomixing(concretize_scope, pretend_linux, test_repo):
+    set_up_compiler_cfg()
+    Spec("x1").concretized()
+
+
 def test_mixing_fortran(
     mutable_mock_env_path,
     temporary_store,
@@ -318,37 +344,7 @@ def test_mixing_fortran(
     """The constraints for the compilers in this test repo should prevent
     mixing them in a DAG where all nodes depend on fortran.
     """
-    test_cfg = """\
-compilers::
-- compiler:
-    spec: gcc@11.0.0
-    paths:
-      cc: /usr/bin/gcc
-      cxx: /usr/bin/g++
-      f77: /usr/bin/gfortran
-      fc: /usr/bin/gfortran
-    flags: {}
-    operating_system: debian6
-    target: x86_64
-    modules: []
-    environment: {}
-    extra_rpaths: []
-- compiler:
-    spec: oneapi@2025.0.3
-    paths:
-      cc: /usr/bin/clang
-      cxx: /usr/bin/clang++
-      f77: /usr/bin/flang
-      fc: /usr/bin/flang
-    flags: {}
-    operating_system: debian6
-    target: x86_64
-    modules: []
-    environment: {}
-    extra_rpaths: []
-"""
-    update_cfg_section("compilers", test_cfg)
-
+    set_up_compiler_cfg()
     spec_cmd("--reuse", "x4%oneapi")
 
     with pytest.raises(spack.error.UnsatisfiableSpecError):
