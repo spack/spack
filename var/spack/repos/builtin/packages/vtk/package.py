@@ -548,4 +548,9 @@ class Vtk(CMakePackage):
 
     @when("+python")
     def setup_run_environment(self, env):
-        env.prepend_path("PYTHONPATH", os.path.join(self.prefix,'lib','python{0}','site-packages').format(self.spec["python"].version.up_to(2)))
+        env.prepend_path(
+            "PYTHONPATH",
+            os.path.join(self.prefix, "lib", "python{0}", "site-packages").format(
+                self.spec["python"].version.up_to(2)
+            ),
+        )
