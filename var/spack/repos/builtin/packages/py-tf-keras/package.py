@@ -71,19 +71,16 @@ class PyTfKeras(PythonPackage):
     #     )
 
     def install(self, spec, prefix):
-        self.tmp_path = tempfile.mkdtemp(
-            prefix="spack"
-        )  # TODO: ERROR: The 'build' command is only supported from
-        # within a workspace (below a directory having a WORKSPACE file).
-
-        # To fix this, we need a WORKSPACE file in the root of the source tree
-        env["HOME"] = self.tmp_path
+        # Create a temporary directory for Bazel output, outside the source tree
+        # Using a shorter path might help avoid path length issues on some systems
+        self.tmp_path = tempfile.mkdtemp(prefix="spack-bazel-")
+        env["HOME"] = self.tmp_path # Prevent Bazel from reading user's ~/.bazelrc
 
         args = [
             # Don't allow user or system .bazelrc to override build settings
             "--nohome_rc",
             "--nosystem_rc",
-            # Bazel does not work properly on NFS, switch to /tmp
+            # Redirect Bazel's user output root to the temporary directory
             "--output_user_root=" + self.tmp_path,
             "build",
             # Spack logs don't handle colored output well
@@ -91,20 +88,37 @@ class PyTfKeras(PythonPackage):
             f"--jobs={make_jobs}",
             # Enable verbose output for failures
             "--verbose_failures",
-            "--spawn_strategy=local",
-            # bazel uses system PYTHONPATH instead of spack paths
+            "--spawn_strategy=local", # Good default for Spack builds
+            # Pass Spack's Python path to Bazel actions
             "--action_env",
-            f"PYTHONPATH={env['PYTHONPATH']}",
+            f"PYTHONPATH={env.get('PYTHONPATH', '')}", # Use env.get for safety
+            # The target to build
             "//tf_keras/tools/pip_package:build_pip_package",
-        ]
+            ]
 
-        bazel(*args)
+        # Define the path where the pip package will be assembled
+        buildpath = os.path.join(self.stage.path, "spack-build") # Use self.stage.path for consistency
 
-        build_pip_package = Executable("bazel-bin/tf_keras/tools/pip_package/build_pip_package")
-        buildpath = join_path(self.stage.source_path, "spack-build")
-        build_pip_package("--src", buildpath)
+        # --- Critical Change: Run Bazel within the source directory ---
+        with working_dir(self.stage.source_path):
+            # Run the Bazel build command
+            bazel(*args)
 
+            # Define the executable path relative to the current (source) directory
+            build_pip_exe_path = os.path.join("bazel-bin", "tf_keras", "tools", "pip_package", "build_pip_package")
+            build_pip_package = Executable(build_pip_exe_path)
+
+            # Ensure the target directory for the pip package exists
+            mkdirp(buildpath)
+
+            # Run the script to assemble the pip package artifacts
+            build_pip_package("--src", buildpath)
+        # --- End of working_dir block ---
+
+        # Now, install the assembled package using pip
         with working_dir(buildpath):
-            args = PythonPipBuilder.std_args(self) + ["--prefix=" + prefix, "."]
-            pip(*args)
+            pip_args = PythonPipBuilder.std_args(self) + ["--prefix=" + prefix, "."]
+            pip(*pip_args)
+
+        # Clean up the temporary Bazel output directory
         remove_linked_tree(self.tmp_path)
