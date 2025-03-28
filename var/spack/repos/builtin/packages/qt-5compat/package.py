@@ -23,6 +23,7 @@ class Qt5compat(QtPackage):
     version("6.7.3", sha256="959634d1a6a53f9a483882e81da87ec182ff44d7747a0cc771c786b0f2cf52e0")
     version("6.7.2", sha256="331a1e617952217868beeef7964828500388abeeb502ea3436f16eec816426c4")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")
 
     depends_on("qt-base")
