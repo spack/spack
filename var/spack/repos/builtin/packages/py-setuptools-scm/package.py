@@ -17,6 +17,8 @@ class PySetuptoolsScm(PythonPackage):
     license("MIT")
 
     version("8.2.0", sha256="a18396a1bc0219c974d1a74612b11f9dce0d5bd8b1dc55c65f6ac7fd609e8c28")
+    version("8.1.0", sha256="42dea1b65771cba93b7a515d65a65d8246e560768a66b9106a592c8e7f26c8a7")
+    version("8.0.4", sha256="b5f43ff6800669595193fd09891564ee9d1d7dcb196cab4b2506d53a2e1c95c7")
     version("7.1.0", sha256="6c508345a771aad7d56ebff0e70628bf2b0ec7573762be9960214730de278f27")
     version("6.3.2", sha256="a49aa8081eeb3514eb9728fa5040f2eaa962d6c6f4ec9c32f6c1fba88f88a0f2")
     version("5.0.2", sha256="83a0cedd3449e3946307811a4c7b9d89c4b5fd464a2fb5eeccd0a5bb158ae5c8")
@@ -25,8 +27,6 @@ class PySetuptoolsScm(PythonPackage):
     version("1.15.6", sha256="49ab4685589986a42da85706b3311a2f74f1af567d39fee6cb1e088d7a75fb5f")
 
     with default_args(deprecated=True):
-        version("8.1.0", sha256="42dea1b65771cba93b7a515d65a65d8246e560768a66b9106a592c8e7f26c8a7")
-        version("8.0.4", sha256="b5f43ff6800669595193fd09891564ee9d1d7dcb196cab4b2506d53a2e1c95c7")
         version("7.0.5", sha256="031e13af771d6f892b941adb6ea04545bbf91ebc5ce68c78aaf3fff6e1fb4844")
         version("7.0.3", sha256="cf8ab8e235bed840cd4559b658af0d8e8a70896a191bbc510ee914ec5325332d")
         version("6.0.1", sha256="d1925a69cb07e9b29416a275b9fadb009a23c148ace905b2fb220649a6c18e92")
