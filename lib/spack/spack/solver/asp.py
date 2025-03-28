@@ -314,6 +314,7 @@ def get_msvc_runtime(compiler) -> Optional[spack.spec.Spec]:
         runtime_spec = spack.spec.Spec(f"msvc-toolset@={str(msc_version)}")
         runtime_spec.external_path = compiler.prefix
         return runtime_spec
+    return None
 
 
 def all_msvc_runtimes() -> Set[spack.spec.Spec]:
@@ -354,7 +355,7 @@ def using_libc_compatibility() -> bool:
 
 def using_msvc_compatibility() -> bool:
     """Returns True if we're using MSVC Toolset version
-     to determine binary compatibility"""
+    to determine binary compatibility"""
     return spack.platforms.host().name == "windows"
 
 
@@ -1019,7 +1020,9 @@ def _external_config_with_implicit_externals(configuration):
             if runtime_spec and runtime_spec not in seen:
                 seen.add(runtime_spec)
                 entry = {"spec": f"{runtime_spec}", "prefix": runtime_spec.external_path}
-                packages_yaml.setdefault(runtime_spec.name, {}).setdefault("externals", []).append(entry)
+                packages_yaml.setdefault(runtime_spec.name, {}).setdefault("externals", []).append(
+                    entry
+                )
     return packages_yaml
 
 
@@ -2576,7 +2579,11 @@ class SpackSolverSetup:
             elif using_msvc_compatibility():
                 clauses.append(fn.attr("needs_msvc_runtime"))
                 for runtime in self.msvc_runtimes:
-                    clauses.append(fn.attr("compatible_msvc_runtime", spec.name, runtime.name, runtime.version))
+                    clauses.append(
+                        fn.attr(
+                            "compatible_msvc_runtime", spec.name, runtime.name, runtime.version
+                        )
+                    )
         # add all clauses from dependencies
         if transitive:
             # TODO: Eventually distinguish 2 deps on the same pkg (build and link)
@@ -2610,9 +2617,13 @@ class SpackSolverSetup:
                         for msvc_runtime in self.msvc_runtimes:
                             if msvc_is_compatible(msvc_runtime, dep):
                                 clauses.append(
-                                    fn.attr("compatible_msvc_runtime", spec.name, msvc_runtime.name, msvc_runtime.version)
+                                    fn.attr(
+                                        "compatible_msvc_runtime",
+                                        spec.name,
+                                        msvc_runtime.name,
+                                        msvc_runtime.version,
+                                    )
                                 )
-                        
 
                     # We know dependencies are real for concrete specs. For abstract
                     # specs they just mean the dep is somehow in the DAG.
@@ -3306,7 +3317,7 @@ class SpackSolverSetup:
                         f"{current_msvc_runtime.name}@={current_msvc_runtime.version}",
                         when=f"%{compiler.name}@={compiler.version}",
                         type="link",
-                        description=f"MSC Toolset is {current_msvc_runtime} when using {compiler}"
+                        description=f"MSC Toolset is {current_msvc_runtime} when using {compiler}",
                     )
 
         recorder.consume_facts()
