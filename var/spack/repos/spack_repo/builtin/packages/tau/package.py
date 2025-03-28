@@ -103,7 +103,7 @@ class Tau(Package):
     variant(
         "rocprofiler-sdk",
         default=False,
-        description="Activates ROCm rocprofiler support",
+        description="Activates ROCm rocprofiler-sdk support",
         when="@2.34.1:",
     )
     variant(
