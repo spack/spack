@@ -65,6 +65,7 @@ class Geomodel(CMakePackage):
 
     conflicts("+fullsimlight", when="+fsl", msg="FSL triggers the build of the FullSimLight")
 
+    depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.16:", type="build")
