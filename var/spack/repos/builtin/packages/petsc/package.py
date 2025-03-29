@@ -292,9 +292,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             when="@3.20.2:3.20.4 ^hipsparse@6.0",
         )
 
-    # 3.8.0 has a build issue with MKL - so list this conflict explicitly
-    conflicts("^intel-mkl", when="@3.8.0")
-
     # These require +mpi
     mpi_msg = "Requires +mpi"
     conflicts("+cgns", when="~mpi", msg=mpi_msg)

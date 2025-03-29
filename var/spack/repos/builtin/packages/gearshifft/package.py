@@ -41,7 +41,7 @@ class Gearshifft(CMakePackage):
     depends_on("clfft@2.12.0:", when="+clfft")
     depends_on("fftw@3.3.4:~mpi~openmp", when="+fftw~openmp")
     depends_on("fftw@3.3.4:~mpi+openmp", when="+fftw+openmp")
-    depends_on("intel-mkl threads=openmp", when="+mkl")
+    depends_on("intel-oneapi-mkl threads=openmp", when="+mkl")
     depends_on("rocfft", when="+rocfft")
 
     def cmake_args(self):

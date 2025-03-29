@@ -3005,6 +3005,10 @@ class SpackSolverSetup:
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:
+            # concrete roots don't need their dependencies verified
+            if spec.concrete:
+                continue
+
             missing_deps = [
                 str(d)
                 for d in spec.traverse()

@@ -495,7 +495,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
         }
 
         dflags = ["-DNDEBUG"] if spec.satisfies("@:2023.2") else []
-        if fftw.name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
+        if fftw.name == "intel-oneapi-mkl":
             cppflags = ["-D__FFTW3_MKL", "-I{0}".format(fftw_header_dir)]
         else:
             cppflags = ["-D__FFTW3", "-I{0}".format(fftw_header_dir)]
@@ -705,7 +705,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
         if spec.satisfies("platform=darwin"):
             cppflags.extend(["-D__NO_STATM_ACCESS"])
 
-        if spec["blas"].name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
+        if spec["blas"].name == "intel-oneapi-mkl":
             cppflags += ["-D__MKL"]
         elif spec["blas"].name == "accelerate":
             cppflags += ["-D__ACCELERATE"]
@@ -725,8 +725,6 @@ class MakefileBuilder(makefile.MakefileBuilder):
             else:
                 mpi = spec["mpi:cxx"].libs
 
-            # while intel-mkl has a mpi variant and adds the scalapack
-            # libs to its libs, intel-oneapi-mkl does not.
             if spec["scalapack"].name == "intel-oneapi-mkl":
                 mpi_impl = "openmpi" if spec["mpi"].name in ["openmpi", "hpcx-mpi"] else "intelmpi"
                 scalapack = [
@@ -1098,7 +1096,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
         lapack = spec["lapack"]
         blas = spec["blas"]
 
-        if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+        if blas.name == "intel-oneapi-mkl":
             args += ["-DCP2K_BLAS_VENDOR=MKL"]
             if sys.platform == "darwin":
                 args += [

@@ -186,14 +186,13 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     # If a +cluster then mpi_family must be set
     with when("+cluster"):
         conflicts("mpi_family=none")
-        requires("mpi_family=mpich", when="^intel-oneapi-mpi")
-        requires("mpi_family=mpich", when="^intel-mpi")
-        requires("mpi_family=mpich", when="^mpich")
-        requires("mpi_family=mpich", when="^mvapich")
-        requires("mpi_family=mpich", when="^mvapich2")
-        requires("mpi_family=mpich", when="^cray-mpich")
-        requires("mpi_family=openmpi", when="^openmpi")
-        requires("mpi_family=openmpi", when="^hpcx-mpi")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] intel-oneapi-mpi")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] mpich")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] mvapich")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] mvapich2")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] cray-mpich")
+        requires("mpi_family=openmpi", when="^[virtuals=mpi] openmpi")
+        requires("mpi_family=openmpi", when="^[virtuals=mpi] hpcx-mpi")
 
     provides("fftw-api@3")
     provides("scalapack", when="+cluster")
