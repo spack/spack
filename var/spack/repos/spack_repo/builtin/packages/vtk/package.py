@@ -156,7 +156,13 @@ class Vtk(CMakePackage):
     depends_on("libxt", when="^[virtuals=gl] glx platform=linux")
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
-    depends_on("qt+opengl", when="+qt")
+    depends_on("qmake", when="@9.1: +qt")
+    with when("^[virtuals=qmake] qt-base"):
+        depends_on("qt-base+opengl+widgets")
+        depends_on("qt-quick3d")
+    with when("^[virtuals=qmake] qt"):
+        depends_on("qt+opengl")
+    depends_on("qt+opengl", when="@:9.0 +qt")
 
     depends_on("boost", when="+xdmf")
     depends_on("boost+mpi", when="+xdmf +mpi")
@@ -380,8 +386,8 @@ class Vtk(CMakePackage):
             cmake_args.extend(["-DCMAKE_MACOSX_RPATH=ON"])
 
         if "+qt" in spec:
-            qt_ver = spec["qt"].version.up_to(1)
-            qt_bin = spec["qt"].prefix.bin
+            qt_ver = spec["qmake"].version.up_to(1)
+            qt_bin = spec["qmake"].prefix.bin
             qmake_exe = os.path.join(qt_bin, "qmake")
 
             # https://github.com/martijnkoopman/Qt-VTK-viewer/blob/master/doc/Build-VTK.md
@@ -406,7 +412,7 @@ class Vtk(CMakePackage):
             # NOTE: The following definitions are required in order to allow
             # VTK to build with qt~webkit versions (see the documentation for
             # more info: http://www.vtk.org/Wiki/VTK/Tutorials/QtSetup).
-            if "~webkit" in spec["qt"]:
+            if "~webkit" in spec["qmake"]:
                 if spec.satisfies("@:8"):
                     cmake_args.extend(
                         [
