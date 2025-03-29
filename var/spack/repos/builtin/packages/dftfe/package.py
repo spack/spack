@@ -54,7 +54,7 @@ class Dftfe(CMakePackage):
             "-DSPGLIB_DIR={0}".format(spec["spglib"].prefix),
         ]
 
-        if spec.satisfies("^intel-mkl"):
+        if spec.satisfies("^[virtuals=scalapack] intel-oneapi-mkl"):
             args.append("-DWITH_INTEL_MKL=ON")
         else:
             args.append("-DWITH_INTEL_MKL=OFF")

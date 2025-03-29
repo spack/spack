@@ -23,4 +23,4 @@ class PyFluidsimCore(PythonPackage):
 
     with default_args(type="run"):
         depends_on("py-fluiddyn")
-        depends_on("py-importlib_metadata", when="^python@:3.9")
+        depends_on("py-importlib-metadata", when="^python@:3.9")

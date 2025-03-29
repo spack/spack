@@ -142,7 +142,7 @@ class IntelOneApiPackage(Package):
            $ source {prefix}/{component}/{version}/env/vars.sh
         """
         # Only if environment modifications are desired (default is +envmods)
-        if "~envmods" not in self.spec:
+        if "+envmods" in self.spec:
             env.extend(
                 EnvironmentModifications.from_sourcing_file(
                     self.component_prefix.env.join("vars.sh"), *self.env_script_args
@@ -311,4 +311,4 @@ class IntelOneApiStaticLibraryList:
 
 
 #: Tuple of Intel math libraries, exported to packages
-INTEL_MATH_LIBRARIES = ("intel-mkl", "intel-oneapi-mkl", "intel-parallel-studio")
+INTEL_MATH_LIBRARIES = ("intel-oneapi-mkl",)

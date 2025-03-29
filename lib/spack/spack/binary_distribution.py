@@ -110,6 +110,13 @@ class BuildCacheDatabase(spack_db.Database):
         self._write_transaction_impl = llnl.util.lang.nullcontext
         self._read_transaction_impl = llnl.util.lang.nullcontext
 
+    def _handle_old_db_versions_read(self, check, db, *, reindex: bool):
+        if not self.is_readable():
+            raise spack_db.DatabaseNotReadableError(
+                f"cannot read buildcache v{self.db_version} at {self.root}"
+            )
+        return self._handle_current_version_read(check, db)
+
 
 class FetchCacheError(Exception):
     """Error thrown when fetching the cache failed, usually a composite error list."""
@@ -242,7 +249,7 @@ class BinaryCacheIndex:
                 self._index_file_cache.init_entry(cache_key)
                 cache_path = self._index_file_cache.cache_path(cache_key)
                 with self._index_file_cache.read_transaction(cache_key):
-                    db._read_from_file(cache_path)
+                    db._read_from_file(pathlib.Path(cache_path))
             except spack_db.InvalidDatabaseVersionError as e:
                 tty.warn(
                     f"you need a newer Spack version to read the buildcache index for the "
@@ -923,7 +930,7 @@ class FileTypes:
     UNKNOWN = 2
 
 
-NOT_ISO8859_1_TEXT = re.compile(b"[\x00\x7F-\x9F]")
+NOT_ISO8859_1_TEXT = re.compile(b"[\x00\x7f-\x9f]")
 
 
 def file_type(f: IO[bytes]) -> int:
@@ -2529,10 +2536,10 @@ def install_root_node(
         allow_missing: when true, allows installing a node with missing dependencies
     """
     # Early termination
-    if spec.external or spec.virtual:
-        warnings.warn("Skipping external or virtual package {0}".format(spec.format()))
+    if spec.external or not spec.concrete:
+        warnings.warn("Skipping external or abstract spec {0}".format(spec.format()))
         return
-    elif spec.concrete and spec.installed and not force:
+    elif spec.installed and not force:
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
         return
 

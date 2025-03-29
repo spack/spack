@@ -67,6 +67,20 @@ def test_extends_spec(config, mock_packages):
     assert extender.package.extends(extendee)
 
 
+@pytest.mark.regression("48024")
+def test_conditionally_extends_transitive_dep(config, mock_packages):
+    spec = spack.spec.Spec("conditionally-extends-transitive-dep").concretized()
+
+    assert not spec.package.extendee_spec
+
+
+@pytest.mark.regression("48025")
+def test_conditionally_extends_direct_dep(config, mock_packages):
+    spec = spack.spec.Spec("conditionally-extends-direct-dep").concretized()
+
+    assert not spec.package.extendee_spec
+
+
 @pytest.mark.regression("34368")
 def test_error_on_anonymous_dependency(config, mock_packages):
     pkg = spack.repo.PATH.get_pkg_class("pkg-a")
@@ -206,7 +220,7 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
 )
 def test_redistribute_directive(test_repo, spec_str, distribute_src, distribute_bin):
     spec = spack.spec.Spec(spec_str)
-    assert spec.package_class.redistribute_source(spec) == distribute_src
+    assert spack.repo.PATH.get_pkg_class(spec.fullname).redistribute_source(spec) == distribute_src
     concretized_spec = spack.concretize.concretize_one(spec)
     assert concretized_spec.package.redistribute_binary == distribute_bin
 

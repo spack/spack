@@ -238,7 +238,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 os.environ["TBB_ROOT"] = spec["tbb"].prefix
 
             if "+kokkos" in spec and "+rocm" in spec and spec.satisfies("^kokkos@4:"):
-                options.append(f"-DCMAKE_CXX_COMPILER:BOOL={spec['hip'].prefix.bin.hipcc}")
+                options.append(f"-DCMAKE_CXX_COMPILER:FILEPATH={spec['hip'].prefix.bin.hipcc}")
 
             # Support for relocatable code
             if "~shared" in spec and "+fpic" in spec:
@@ -276,20 +276,16 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     def test_smoke_test(self):
         """Build and run ctests"""
-        spec = self.spec
-
-        if "+examples" not in spec:
+        if "+examples" not in self.spec:
             raise SkipTest("Package must be installed with +examples")
 
         testdir = "smoke_test_build"
         with working_dir(testdir, create=True):
-            cmake = Executable(spec["cmake"].prefix.bin.cmake)
-            ctest = Executable(spec["cmake"].prefix.bin.ctest)
-            cmakeExampleDir = spec["vtk-m"].prefix.share.doc.VTKm.examples.smoke_test
-
-            cmake(*([cmakeExampleDir, "-DVTKm_ROOT=" + spec["vtk-m"].prefix]))
-            cmake(*(["--build", "."]))
-            ctest(*(["--verbose"]))
+            cmake = Executable(self.spec["cmake"].prefix.bin.cmake)
+            ctest = Executable(self.spec["cmake"].prefix.bin.ctest)
+            cmake(self.prefix.share.doc.VTKm.examples.smoke_test, f"-DVTKm_ROOT={self.prefix}")
+            cmake("--build", ".")
+            ctest("--verbose")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

@@ -10,7 +10,7 @@ from typing import Any, Dict, Generator, MutableSequence, Sequence
 
 from llnl.util import tty
 
-import spack.compilers
+import spack.compilers.config
 import spack.config
 import spack.environment
 import spack.modules
@@ -141,9 +141,9 @@ def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
 
 
 def _add_compilers_if_missing() -> None:
-    arch = spack.spec.ArchSpec.frontend_arch()
-    if not spack.compilers.compilers_for_arch(arch):
-        spack.compilers.find_compilers()
+    arch = spack.spec.ArchSpec.default_arch()
+    if not spack.compilers.config.compilers_for_arch(arch):
+        spack.compilers.config.find_compilers()
 
 
 @contextlib.contextmanager

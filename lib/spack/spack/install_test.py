@@ -21,7 +21,6 @@ from llnl.string import plural
 from llnl.util.lang import nullcontext
 from llnl.util.tty.color import colorize
 
-import spack.build_environment
 import spack.config
 import spack.error
 import spack.package_base
@@ -398,7 +397,7 @@ class PackageTest:
         Args:
             kwargs (dict): arguments to be used by the test process
         """
-        import spack.build_environment
+        import spack.build_environment  # avoid circular dependency
 
         spack.build_environment.start_build_process(self.pkg, test_process, kwargs)
 
@@ -463,6 +462,8 @@ class PackageTest:
 
 @contextlib.contextmanager
 def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbose: bool = False):
+    import spack.build_environment  # avoid circular dependency
+
     wdir = "." if work_dir is None else work_dir
     tester = pkg.tester
     assert test_name and test_name.startswith(
@@ -566,7 +567,7 @@ def copy_test_files(pkg: Pb, test_spec: spack.spec.Spec):
 
     # copy test data into test stage data dir
     try:
-        pkg_cls = test_spec.package_class
+        pkg_cls = spack.repo.PATH.get_pkg_class(test_spec.fullname)
     except spack.repo.UnknownPackageError:
         tty.debug(f"{test_spec.name}: skipping test data copy since no package class found")
         return
@@ -623,7 +624,7 @@ def test_functions(
         vpkgs = virtuals(pkg)
         for vname in vpkgs:
             try:
-                classes.append((Spec(vname)).package_class)
+                classes.append(spack.repo.PATH.get_pkg_class(vname))
             except spack.repo.UnknownPackageError:
                 tty.debug(f"{vname}: virtual does not appear to have a package file")
 
@@ -668,7 +669,7 @@ def process_test_parts(pkg: Pb, test_specs: List[spack.spec.Spec], verbose: bool
 
             # grab test functions associated with the spec, which may be virtual
             try:
-                tests = test_functions(spec.package_class)
+                tests = test_functions(spack.repo.PATH.get_pkg_class(spec.fullname))
             except spack.repo.UnknownPackageError:
                 # Some virtuals don't have a package so we don't want to report
                 # them as not having tests when that isn't appropriate.

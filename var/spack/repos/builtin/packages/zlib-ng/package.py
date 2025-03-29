@@ -48,7 +48,7 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     build_system("autotools", "cmake", default="autotools")
 
     # fix building with NVHPC, see https://github.com/zlib-ng/zlib-ng/pull/1698
-    patch("pr-1698.patch", when="@2.1.4:2.1.6%nvhpc+opt")
+    patch("pr-1698.patch", when="@2.1.4:2.1.6+opt%nvhpc")
 
     with when("build_system=cmake"):
         depends_on("cmake@3.5.1:", type="build")
@@ -71,7 +71,7 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
     def flag_handler(self, name, flags):
         if name == "cflags" and self.spec.satisfies("+pic build_system=autotools"):
-            flags.append(self.compiler.cc_pic_flag)
+            flags.append(self["c"].pic_flag)
         return (flags, None, None)
 
 

@@ -33,6 +33,7 @@ class Cryptopp(MakefilePackage):
 
     variant("shared", default=True, description="Build shared object versions of libraries.")
 
+    depends_on("cxx", type="build")
     depends_on("gmake", type="build")
 
     def url_for_version(self, version):

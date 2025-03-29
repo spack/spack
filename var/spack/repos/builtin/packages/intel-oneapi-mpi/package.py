@@ -21,6 +21,18 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html"
 
     version(
+        "2021.15.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/6b6e395e-8f38-4da3-913d-90a2bcf41028/intel-mpi-2021.15.0.495_offline.sh",
+        sha256="d4ad297174ce3837444468645e13cfe78f11d9bf2ad9ade2057b2668cccd9385",
+        expand=False,
+    )
+    version(
+        "2021.14.2",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/201b2570-bc4f-41ee-a6c8-6f7a71a4b840/intel-mpi-2021.14.2.9_offline.sh",
+        sha256="b1cdaa6237f9976dd67b3590c34b66c57b1f8fc2f470b7f18b34575d7f9fae04",
+        expand=False,
+    )
+    version(
         "2021.14.1",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/1acd5e79-796c-401a-ab31-a3dc7b20c6a2/intel-mpi-2021.14.1.7_offline.sh",
         sha256="6459b9fc81fad9b9955de7fd9904e67fcf2ada3564ce0a74b9c14ea8fb533ddf",
@@ -194,11 +206,15 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         dependent_module = dependent_spec.package.module
-        env.set("I_MPI_CC", dependent_module.spack_cc)
-        env.set("I_MPI_CXX", dependent_module.spack_cxx)
-        env.set("I_MPI_F77", dependent_module.spack_f77)
-        env.set("I_MPI_F90", dependent_module.spack_fc)
-        env.set("I_MPI_FC", dependent_module.spack_fc)
+        for var_name, attr_name in (
+            ("I_MPI_CC", "spack_cc"),
+            ("I_MPI_CXX", "spack_cxx"),
+            ("I_MPI_FC", "spack_fc"),
+            ("I_MPI_F90", "spack_fc"),
+            ("I_MPI_F77", "spack_f77"),
+        ):
+            if hasattr(dependent_module, attr_name):
+                env.set(var_name, getattr(dependent_module, attr_name))
 
         # Set compiler wrappers for dependent build stage
         wrappers = self.wrapper_paths()
