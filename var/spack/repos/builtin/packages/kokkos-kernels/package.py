@@ -22,12 +22,10 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
-
     version("4.5.01", sha256="c111a6561f23a85af9850d1df1e9015f37a586f1da0be4b6fb1e98001d75e074")
     version("4.5.00", sha256="94726a64e349adf6cd276e9fdc1b2bf7ff81efec833e479a5d3024b83f165a59")
     version("4.4.01", sha256="4a32bc8330e0113856bdf181df94cc4f9902e3cebb5dc7cea5948f30df03bfa1")
     version("4.4.00", sha256="66d5c3f728a8c7689159c97006996164ea00fd39702476220e3dbf2a05c49e8f")
-
     version(
         "4.3.01",
         sha256="749553a6ea715ba1e56fa0b13b42866bb9880dba7a94e343eadf40d08c68fab8",
@@ -129,8 +127,61 @@ class KokkosKernels(CMakePackage, CudaPackage):
         url="https://github.com/kokkos/kokkos-kernels/archive/3.0.00.tar.gz",
     )
 
-    depends_on("cxx", type="build")  # generated
+    variant("shared", default=True, description="Build shared libraries")
+    variant(
+        "execspace_cuda",
+        default=False,
+        description="Whether to pre instantiate kernels for the execution space Kokkos::Cuda",
+    )
+    variant(
+        "execspace_openmp",
+        default=False,
+        description="Whether to pre instantiate kernels for the execution space "
+        "Kokkos::Experimental::OpenMPTarget",
+    )
+    variant(
+        "execspace_threads",
+        default=False,
+        description="Whether to pre instantiate kernels for the execution space Kokkos::Threads",
+    )
+    variant(
+        "execspace_serial",
+        default=False,
+        description="Whether to pre instantiate kernels for the execution space Kokkos::Serial",
+    )
+    variant(
+        "memspace_cudauvmspace",
+        default=False,
+        description="Whether to pre instantiate kernels for the memory space Kokkos::CudaUVMSpace",
+    )
+    variant(
+        "memspace_cudaspace",
+        default=False,
+        description="Whether to pre instantiate kernels for the memory space Kokkos::CudaSpace",
+    )
+    variant("serial", default=False, description="Enable serial backend")
+    variant("openmp", default=False, description="Enable OpenMP backend")
+    variant("threads", default=False, description="Enable C++ threads backend")
+    variant(
+        "ordinals", default="int", values=["int", "int64_t"], multi=True, description="Ordinals"
+    )
+    variant(
+        "offsets",
+        default="int,size_t",
+        values=["int", "size_t"],
+        multi=True,
+        description="Offsets",
+    )
+    variant("layouts", default="left", values=["left", "right"], description="Layouts")
+    variant(
+        "scalars",
+        default="double",
+        values=["float", "double", "complex_float", "complex_double"],
+        multi=True,
+        description="Scalars",
+    )
 
+    depends_on("cxx", type="build")
     depends_on("kokkos")
     depends_on("kokkos@master", when="@master")
     depends_on("kokkos@develop", when="@develop")
@@ -158,74 +209,18 @@ class KokkosKernels(CMakePackage, CudaPackage):
     depends_on("kokkos@3.2.00", when="@3.2.00")
     depends_on("kokkos@3.1.00", when="@3.1.00")
     depends_on("kokkos@3.0.00", when="@3.0.00")
-    depends_on("cmake@3.16:", type="build")
-
-    backends = {
-        "serial": (False, "enable Serial backend (default)"),
-        "cuda": (False, "enable Cuda backend"),
-        "openmp": (False, "enable OpenMP backend"),
-        "threads": (False, "enable C++ threads backend"),
-    }
-
-    for backend in backends:
-        deflt_bool, descr = backends[backend]
-        variant(backend.lower(), default=deflt_bool, description=descr)
-        depends_on("kokkos+%s" % backend.lower(), when="+%s" % backend.lower())
-
-    space_etis = {
-        "execspace_cuda": (
-            "auto",
-            "Whether to pre instantiate kernels for the execution space Kokkos::Cuda",
-            "cuda",
-        ),
-        "execspace_openmp": (
-            "auto",
-            "Whether to pre instantiate kernels for the execution space "
-            "Kokkos::Experimental::OpenMPTarget",
-            "openmp",
-        ),
-        "execspace_threads": (
-            "auto",
-            "Whether to build kernels for the execution space Kokkos::Threads",
-            "threads",
-        ),
-        "execspace_serial": (
-            "auto",
-            "Whether to build kernels for the execution space Kokkos::Serial",
-            "serial",
-        ),
-        "memspace_cudauvmspace": (
-            "auto",
-            "Whether to pre instantiate kernels for the memory space Kokkos::CudaUVMSpace",
-            "cuda",
-        ),
-        "memspace_cudaspace": (
-            "auto",
-            "Whether to pre instantiate kernels for the memory space Kokkos::CudaSpace",
-            "cuda",
-        ),
-    }
-    for eti in space_etis:
-        deflt, descr, backend_required = space_etis[eti]
-        variant(eti, default=deflt, description=descr)
-        depends_on("kokkos+%s" % backend_required, when="+%s" % eti)
-
-    # kokkos-kernels requires KOKKOS_LAMBDA to be available since 4.0.00
+    depends_on("kokkos+cuda", when="+execspace_cuda")
+    depends_on("kokkos+openmp", when="+execspace_openmp")
+    depends_on("kokkos+threads", when="+execspace_threads")
+    depends_on("kokkos+serial", when="+execspace_serial")
+    depends_on("kokkos+cuda", when="+memspace_cudauvmspace")
+    depends_on("kokkos+cuda", when="+memspace_cudaspace")
+    depends_on("kokkos+serial", when="+serial")
+    depends_on("kokkos+cuda", when="+cuda")
+    depends_on("kokkos+openmp", when="+openmp")
+    depends_on("kokkos+threads", when="+threads")
     depends_on("kokkos+cuda_lambda", when="@4.0.00:+cuda")
-
-    numeric_etis = {
-        "ordinals": (
-            "int",
-            "ORDINAL_",  # default, cmake name
-            ["int", "int64_t"],
-        ),  # allowed values
-        "offsets": ("int,size_t", "OFFSET_", ["int", "size_t"]),
-        "layouts": ("left", "LAYOUT", ["left", "right"]),
-        "scalars": ("double", "", ["float", "double", "complex_float", "complex_double"]),
-    }
-    for eti in numeric_etis:
-        deflt, cmake_name, vals = numeric_etis[eti]
-        variant(eti, default=deflt, description=eti, values=vals, multi=True)
+    depends_on("cmake@3.16:", type="build")
 
     tpls = {
         # variant name   #deflt   #spack name  #root var name  #supporting versions  #docstring
@@ -246,9 +241,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
     for tpl in tpls:
         deflt_bool, spackname, rootname, condition, descr = tpls[tpl]
         variant(tpl, default=deflt_bool, when=f"{condition}", description=descr)
-        depends_on(spackname, when="+%s" % tpl)
-
-    variant("shared", default=True, description="Build shared libraries")
+        depends_on(spackname, when=f"+{tpl}")
 
     patch("pr_2296_430.patch", when="@4.3.00:4.4.00")
     patch("pr_2296_400.patch", when="@4.0.00:4.2.01")
@@ -259,64 +252,49 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         spec = self.spec
-        options = []
+        options = [
+            self.define_from_variant("KokkosKernels_INST_EXECSPACE_CUDA", "execspace_cuda"),
+            self.define_from_variant("KokkosKernels_INST_EXECSPACE_OPENMP", "execspace_openmp"),
+            self.define_from_variant("KokkosKernels_INST_EXECSPACE_THREADS", "execspace_threads"),
+            self.define_from_variant("KokkosKernels_INST_EXECSPACE_SERIAL", "execspace_serial"),
+            self.define_from_variant("KokkosKernels_INST_EXECSPACE_SERIAL", "execspace_serial"),
+            self.define_from_variant(
+                "KokkosKernels_INST_MEMSPACE_CUDAUVMSPACE", "memspace_cudauvmspace"
+            ),
+            self.define_from_variant(
+                "KokkosKernels_INST_MEMSPACE_CUDASPACE", "memspace_cudaspace"
+            ),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+        ]
 
-        isdiy = spec.satisfies("+diy")
-        if isdiy:
-            options.append("-DSpack_WORKAROUND=On")
+        if spec.satisfies("+diy"):
+            options.append(self.define("Spack_WORKAROUND", True))
 
-        options.append("-DKokkos_ROOT=%s" % spec["kokkos"].prefix)
+        options.append(self.define("Kokkos_ROOT", spec["kokkos"].prefix))
         if spec.satisfies("^kokkos+rocm"):
-            options.append("-DCMAKE_CXX_COMPILER=%s" % spec["hip"].hipcc)
+            options.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
         else:
-            # Compiler weirdness due to nvcc_wrapper
-            options.append("-DCMAKE_CXX_COMPILER=%s" % self["kokkos"].kokkos_cxx)
+            options.append(self.define("CMAKE_CXX_COMPILER", self["kokkos"].kokkos_cxx))
 
         if self.run_tests:
-            options.append("-DKokkosKernels_ENABLE_TESTS=ON")
+            options.append(self.define("KokkosKernels_ENABLE_TESTS", True))
 
         for tpl in self.tpls:
-            on_flag = "+%s" % tpl
-            off_flag = "~%s" % tpl
             dflt, spackname, rootname, condition, descr = self.tpls[tpl]
-            if on_flag in self.spec:
-                options.append("-DKokkosKernels_ENABLE_TPL_%s=ON" % tpl.upper())
+            if spec.satisfies(f"+{tpl}"):
+                options.append(self.define(f"KokkosKernels_ENABLE_TPL_{tpl.upper()}", True))
                 if rootname:
-                    options.append("-D%s_ROOT=%s" % (rootname, spec[spackname].prefix))
+                    options.append(self.define(f"{rootname}_ROOT", spec[spackname].prefix))
                 else:
-                    pass  # this should get picked up automatically, we hope
-            elif off_flag in self.spec:
-                options.append("-DKokkosKernels_ENABLE_TPL_%s=OFF" % tpl.upper())
+                    pass
 
-        for eti in self.numeric_etis:
-            deflt, cmake_name, vals = self.numeric_etis[eti]
-            for val in vals:
-                keyval = "%s=%s" % (eti, val)
-                cmake_option = "KokkosKernels_INST_%s%s" % (cmake_name.upper(), val.upper())
-                if keyval in spec:
-                    options.append("-D%s=ON" % cmake_option)
-                else:
-                    options.append("-D%s=OFF" % cmake_option)
-
-        for eti in self.space_etis:
-            deflt, descr, _ = self.space_etis[eti]
-            if deflt == "auto":
-                value = spec.variants[eti].value
-                # spack does these as strings, not reg booleans
-                if str(value) == "True":
-                    options.append("-DKokkosKernels_INST_%s=ON" % eti.upper())
-                elif str(value) == "False":
-                    options.append("-DKokkosKernels_INST_%s=OFF" % eti.upper())
-                else:
-                    pass  # don't pass anything, let CMake decide
-            else:  # simple option
-                on_flag = "+%s" % eti
-                off_flag = "~%s" % eti
-                if on_flag in self.spec:
-                    options.append("-DKokkosKernels_INST_%s=ON" % eti.upper())
-                elif off_flag in self.spec:
-                    options.append("-DKokkosKernels_INST_%s=OFF" % eti.upper())
-
-        options.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+        for val in spec.variants["ordinals"].value:
+            options.append(self.define(f"KokkosKernels_INST_ORDINAL_{val.upper()}", True))
+        for val in spec.variants["offsets"].value:
+            options.append(self.define(f"KokkosKernels_INST_OFFSET_{val.upper()}", True))
+        for val in spec.variants["scalars"].value:
+            options.append(self.define(f"KokkosKernels_INST_{val.upper()}", True))
+        layout_value = spec.variants["layouts"].value
+        options.append(self.define(f"KokkosKernels_INST_LAYOUT{layout_value.upper()}", True))
 
         return options

@@ -14,12 +14,14 @@ class GtkDoc(AutotoolsPackage):
     pdf/man-pages with some extra work."""
 
     homepage = "https://wiki.gnome.org/DocumentationProject/GtkDoc"
-    url = "https://gitlab.gnome.org/GNOME/gtk-doc/-/archive/1.33.2/gtk-doc-1.33.2.tar.gz"
+    url = "https://download.gnome.org/sources/gtk-doc/1.33/gtk-doc-1.33.2.tar.xz"
+    list_url = "https://download.gnome.org/sources/gtk-doc/"
+    list_depth = 1
 
     license("GPL-2.0-or-later AND GFDL-1.1-or-later")
 
-    version("1.33.2", sha256="2d1b0cbd26edfcb54694b2339106a02a81d630a7dedc357461aeb186874cc7c0")
-    version("1.32", sha256="0890c1f00d4817279be51602e67c4805daf264092adc58f9c04338566e8225ba")
+    version("1.33.2", sha256="cc1b709a20eb030a278a1f9842a362e00402b7f834ae1df4c1998a723152bf43")
+    version("1.32", sha256="de0ef034fb17cb21ab0c635ec730d19746bce52984a6706e7bbec6fb5e0b907c")
 
     depends_on("c", type="build")  # generated
 
@@ -60,14 +62,8 @@ class GtkDoc(AutotoolsPackage):
         pass
 
     def url_for_version(self, version):
-        """Handle gnome's version-based custom URLs."""
-
-        if version <= Version("1.32"):
-            url = "https://gitlab.gnome.org/GNOME/gtk-doc/-/archive/GTK_DOC_{0}/gtk-doc-GTK_DOC_{0}.tar.gz"
-            return url.format(version.underscored)
-
-        url = "https://gitlab.gnome.org/GNOME/gtk-doc/-/archive/{0}/gtk-doc-{0}.tar.gz"
-        return url.format(version)
+        url = "https://download.gnome.org/sources/gtk-doc/{0}/gtk-doc-{1}.tar.xz"
+        return url.format(version.up_to(2), version)
 
     def configure_args(self):
         args = ["--with-xml-catalog={0}".format(self["docbook-xml"].catalog)]

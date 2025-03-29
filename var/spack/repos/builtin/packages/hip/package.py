@@ -343,7 +343,7 @@ class Hip(CMakePackage):
     patch("0014-remove-compiler-rt-linkage-for-host.6.0.patch", when="@6.0")
     patch("0014-remove-compiler-rt-linkage-for-host.6.1.patch", when="@6.1")
     patch("0015-reverting-operator-mixup-fix-for-slate.patch", when="@5.6:6.0")
-    patch("0018-reverting-hipMemoryType-with-memoryType.patch", when="@6.0:")
+    patch("0018-reverting-hipMemoryType-with-memoryType.patch", when="@6.0:6.2")
 
     # See https://github.com/ROCm/HIP/pull/3206
     patch(
@@ -499,9 +499,10 @@ class Hip(CMakePackage):
             # bin/.hipVersion file can still be parsed.
             # See also https://github.com/ROCm/HIP/issues/2223
             env.append_path(
-                "HIPCC_COMPILE_FLAGS_APPEND",
-                "--rocm-path={0}".format(paths["rocm-path"]),
-                separator=" ",
+                "HIPCC_COMPILE_FLAGS_APPEND", f"--rocm-path={paths['rocm-path']}", separator=" "
+            )
+            env.append_path(
+                "HIPCC_LINK_FLAGS_APPEND", f"--rocm-path={paths['rocm-path']}", separator=" "
             )
         elif self.spec.satisfies("+cuda"):
             env.set("CUDA_PATH", self.spec["cuda"].prefix)
@@ -517,6 +518,9 @@ class Hip(CMakePackage):
                 "HIPCC_COMPILE_FLAGS_APPEND",
                 f"--gcc-toolchain={self.compiler.prefix}",
                 separator=" ",
+            )
+            env.append_path(
+                "HIPCC_LINK_FLAGS_APPEND", f"--gcc-toolchain={self.compiler.prefix}", separator=" "
             )
             # This is picked up by CMake when using HIP as a CMake language.
             env.append_path("HIPFLAGS", f"--gcc-toolchain={self.compiler.prefix}", separator=" ")
@@ -561,6 +565,13 @@ class Hip(CMakePackage):
                 '"${ROCM_PATH}/llvm"',
                 self.spec["llvm-amdgpu"].prefix,
                 "clr/hipamd/hip-config-amd.cmake",
+                string=True,
+            )
+        if self.spec.satisfies("@6.3: +rocm"):
+            filter_file(
+                '"${ROCM_PATH}/llvm"',
+                self.spec["llvm-amdgpu"].prefix,
+                "clr/hipamd/hip-config-amd.cmake.in",
                 string=True,
             )
         perl = self.spec["perl"].command
