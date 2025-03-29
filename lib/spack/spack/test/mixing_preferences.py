@@ -157,7 +157,7 @@ class Gcc(CompilerPackage):
         )
         pkg("*").depends_on(
             f"gcc-runtime@{str(spec.version)}:",
-            when=f"%{str(spec)}",
+            when=f"^[deptypes=build] {spec.name}@{spec.versions}",
             type="link",
             description=f"If any package uses %{str(spec)}, "
             f"it depends on gcc-runtime@{str(spec.version)}:",
@@ -172,18 +172,21 @@ class Gcc(CompilerPackage):
         for fortran_virtual in ("fortran-rt", gfortran_str):
             pkg("*").depends_on(
                 fortran_virtual,
-                when=f"%{str(spec)}",
-                languages=["fortran"],
+                when=f"^[virtuals=fortran deptypes=build] {spec.name}@{spec.versions}",
                 type="link",
                 description=f"Add a dependency on '{gfortran_str}' for nodes compiled with "
                 f"{str(spec)} and using the 'fortran' language",
             )
         # The version of gcc-runtime is the same as the %gcc used to "compile" it
-        pkg("gcc-runtime").requires(f"@={str(spec.version)}", when=f"%{str(spec)}")
+        pkg("gcc-runtime").requires(
+            f"@{str(spec.versions)}", when=f"^[deptypes=build] {spec.name}@{spec.versions}"
+        )
 
         # If a node used %gcc@X.Y its dependencies must use gcc-runtime@:X.Y
         # (technically @:X is broader than ... <= @=X but this should work in practice)
-        pkg("*").propagate(f"%gcc@:{str(spec.version)}", when=f"%{str(spec)}")
+        pkg("*").propagate(
+            f"gcc@:{str(spec.version)}", when=f"^[deptypes=build] {spec.name}@{spec.versions}"
+        )
 """,
 )
 
@@ -208,7 +211,7 @@ class IntelOneapiCompilers(CompilerPackage):
         )
         pkg("*").depends_on(
             f"intel-oneapi-runtime@{str(spec.version)}:",
-            when=f"%{str(spec)}",
+            when=f"^[deptypes=build] {spec.name}@{spec.versions}",
             type="link",
             description=f"If any package uses %{str(spec)}, "
             f"it depends on intel-oneapi-runtime@{str(spec.version)}:",
@@ -217,14 +220,15 @@ class IntelOneapiCompilers(CompilerPackage):
         for fortran_virtual in ("fortran-rt", "libifcore@5"):
             pkg("*").depends_on(
                 fortran_virtual,
-                when=f"%{str(spec)}",
-                languages=["fortran"],
+                when=f"^[virtuals=fortran deptypes=build] {spec.name}@{spec.versions}",
                 type="link",
                 description=f"Add a dependency on 'libifcore' for nodes compiled with "
                 f"{str(spec)} and using the 'fortran' language",
             )
         # The version of intel-oneapi-runtime is the same as the %oneapi used to "compile" it
-        pkg("intel-oneapi-runtime").requires(f"@={str(spec.version)}", when=f"%{str(spec)}")
+        pkg("intel-oneapi-runtime").requires(
+            f"@{str(spec.versions)}", when=f"^[deptypes=build] {spec.name}@{spec.versions}"
+        )
 """,
 )
 
