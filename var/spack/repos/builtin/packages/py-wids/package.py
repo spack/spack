@@ -12,6 +12,7 @@ class PyWids(PythonPackage):
     pypi = "wids/wids-0.1.11.tar.gz"
 
     license("BSD-3-Clause")
+    maintainers("adamjstewart")
 
     version("0.1.11", sha256="b266230250f93396ee6075d76462d1087566819bdad48b194357dc8758d05eb9")
 
