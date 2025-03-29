@@ -25,8 +25,6 @@ class PyTfKeras(PythonPackage):
     # version("2.19.0", sha256="b09a407d87a4571ce1e8ca985cfc68483e3d63b2518a5d79a97ad92cb64dbe9c")
     version("2.18.0", sha256="ebf744519b322afead33086a2aba872245473294affd40973694f3eb7c7ad77d")
 
-    # build_system = PythonPipBuilder
-
     # Supported Python versions listed in multiple places:
     # * tf-keras/tools/pip_package/setup.py
     # * CONTRIBUTING.md
