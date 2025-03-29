@@ -1,8 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
-import tempfile
 
 from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
@@ -16,8 +14,8 @@ class PyTfKeras(PythonPackage):
      Keras 3 is being developed at keras-team/keras."""
 
     homepage = "https://github.com/keras-team/tf-keras"
-    # pypi = "tf-keras/tf_keras-2.18.0.tar.gz"
-    url = "https://github.com/keras-team/tf-keras/archive/refs/tags/v2.18.0.tar.gz"
+    pypi = "tf-keras/tf_keras-2.18.0.tar.gz"
+    # url = "https://github.com/keras-team/tf-keras/archive/refs/tags/v2.18.0.tar.gz"
 
     maintainers("jonas-eschle")
 
@@ -26,7 +24,7 @@ class PyTfKeras(PythonPackage):
     max_minor = 18
     version("2.18.0", sha256="ebf744519b322afead33086a2aba872245473294affd40973694f3eb7c7ad77d")
 
-    build_system = PythonPipBuilder
+    # build_system = PythonPipBuilder
 
     # Supported Python versions listed in multiple places:
     # * tf-keras/tools/pip_package/setup.py
@@ -59,56 +57,3 @@ class PyTfKeras(PythonPackage):
     depends_on("py-absl-py", type=("build", "run"))
     depends_on("py-h5py", type=("build", "run"))
 
-    # def patch(self):
-    #     infile = join_path(self.package_dir, "protobuf_build.patch")
-    #     with open(infile, "r") as source_file:
-    #         text = source_file.read()
-    #     with open("tf_keras/keras.bzl", mode="a") as f:
-    #         f.write(text)
-    #
-    #     filter_file(
-    #         'load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")',
-    #         'load("@org_keras//tf_keras:keras.bzl", "py_proto_library")',
-    #         "tf_keras/protobuf/BUILD",
-    #         string=True,
-    #     )
-
-    def install(self, spec, prefix):
-        # Just use default pip install behavior
-        super().install(spec, prefix)
-    # def install(self, spec, prefix):
-    #     self.tmp_path = tempfile.mkdtemp(prefix="spack")
-    #     env["TEST_TMPDIR"] = self.tmp_path
-    #     env["HOME"] = self.tmp_path
-    #
-    #     # Create a WORKSPACE file in the source directory
-    #     with open(join_path(self.stage.source_path, "WORKSPACE"), "w") as f:
-    #         f.write("# Empty WORKSPACE file for Bazel")
-    #
-    #     args = [
-    #         "--nohome_rc",
-    #         "--nosystem_rc",
-    #         "--output_user_root=" + self.tmp_path,
-    #         "build",
-    #         "--color=no",
-    #         f"--jobs={make_jobs}",
-    #         "--verbose_failures",
-    #         "--spawn_strategy=local",
-    #         "--action_env",
-    #         f"PYTHONPATH={env['PYTHONPATH']}",
-    #         # Make sure this path matches the actual structure in the GitHub repo
-    #         "//tf_keras/tools/pip_package:build_pip_package",
-    #         ]
-    #
-    #     with working_dir(self.stage.source_path):
-    #         bazel(*args)
-    #
-    #     # This path may need adjustment based on the actual GitHub repo structure
-    #     build_pip_package = Executable("bazel-bin/tf_keras/tools/pip_package/build_pip_package")
-    #     buildpath = join_path(self.stage.source_path, "spack-build")
-    #     build_pip_package("--src", buildpath)
-    #
-    #     with working_dir(buildpath):
-    #         args = PythonPipBuilder.std_args(self) + ["--prefix=" + prefix, "."]
-    #         pip(*args)
-    #     remove_linked_tree(self.tmp_path)
