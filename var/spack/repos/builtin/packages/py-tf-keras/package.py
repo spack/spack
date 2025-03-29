@@ -16,8 +16,8 @@ class PyTfKeras(PythonPackage):
      Keras 3 is being developed at keras-team/keras."""
 
     homepage = "https://github.com/keras-team/tf-keras"
-    pypi = "tf-keras/tf_keras-2.18.0.tar.gz"
-    # url = "https://github.com/keras-team/tf-keras/archive/refs/tags/v2.18.0.tar.gz"
+    # pypi = "tf-keras/tf_keras-2.18.0.tar.gz"
+    url = "https://github.com/keras-team/tf-keras/archive/refs/tags/v2.18.0.tar.gz"
 
     maintainers("jonas-eschle")
 
@@ -70,10 +70,9 @@ class PyTfKeras(PythonPackage):
     #         "tf_keras/protobuf/BUILD",
     #         string=True,
     #     )
-
     def install(self, spec, prefix):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
-        env["TEST_TMPDIR"] = self.tmp_path  # Add this line
+        env["TEST_TMPDIR"] = self.tmp_path
         env["HOME"] = self.tmp_path
 
         # Create a WORKSPACE file in the source directory
@@ -81,28 +80,24 @@ class PyTfKeras(PythonPackage):
             f.write("# Empty WORKSPACE file for Bazel")
 
         args = [
-            # Don't allow user or system .bazelrc to override build settings
             "--nohome_rc",
             "--nosystem_rc",
-            # Bazel does not work properly on NFS, switch to /tmp
             "--output_user_root=" + self.tmp_path,
             "build",
-            # Spack logs don't handle colored output well
             "--color=no",
             f"--jobs={make_jobs}",
-            # Enable verbose output for failures
             "--verbose_failures",
             "--spawn_strategy=local",
-            # bazel uses system PYTHONPATH instead of spack paths
             "--action_env",
             f"PYTHONPATH={env['PYTHONPATH']}",
+            # Make sure this path matches the actual structure in the GitHub repo
             "//tf_keras/tools/pip_package:build_pip_package",
             ]
 
-        # Add the working_dir context to ensure Bazel is called in the source directory
         with working_dir(self.stage.source_path):
             bazel(*args)
 
+        # This path may need adjustment based on the actual GitHub repo structure
         build_pip_package = Executable("bazel-bin/tf_keras/tools/pip_package/build_pip_package")
         buildpath = join_path(self.stage.source_path, "spack-build")
         build_pip_package("--src", buildpath)
