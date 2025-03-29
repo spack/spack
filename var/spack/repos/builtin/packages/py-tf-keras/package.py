@@ -42,7 +42,8 @@ class PyTfKeras(PythonPackage):
     depends_on("py-scipy", type=("build", "run"))
 
     depends_on("protobuf@3.20.3", type="build", when="@2.18")
-    depends_on("protobuf@4.23.0", type="build", when="@2.19:")
+    # TODO: uncomment for 2.19
+    # depends_on("protobuf@4.23.0", type="build", when="@2.19:")
     # the tf-keras versions are following along with TF versions
     for minor_ver in range(18, max_minor + 1):
         depends_on(f"py-tensorflow@2.{minor_ver}", type=("build", "run"), when=f"@2.{minor_ver}")
