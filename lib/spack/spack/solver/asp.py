@@ -36,6 +36,8 @@ from typing import (
 
 import archspec.cpu
 
+from operator import itemgetter, attrgetter
+
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import current_file_position
@@ -2916,7 +2918,7 @@ class SpackSolverSetup:
         """
         # Tell the concretizer about possible values from specs seen in spec_clauses().
         # We might want to order these facts by pkg and name if we are debugging.
-        for pkg_name, variant_def_id, value in sorted(self.variant_values_from_specs):
+        for pkg_name, variant_def_id, value in sorted(self.variant_values_from_specs, key = itemgetter(0,1)):
             try:
                 vid = self.variant_ids_by_def_id[variant_def_id]
             except KeyError:
