@@ -21,7 +21,8 @@ class PyTfKeras(PythonPackage):
     license("Apache-2.0", checked_by="jonas-eschle")
 
     max_minor = 19
-    version("2.19.0", sha256="b09a407d87a4571ce1e8ca985cfc68483e3d63b2518a5d79a97ad92cb64dbe9c")
+    # needs TF 2.19: https://github.com/spack/spack/pull/49440
+    # version("2.19.0", sha256="b09a407d87a4571ce1e8ca985cfc68483e3d63b2518a5d79a97ad92cb64dbe9c")
     version("2.18.0", sha256="ebf744519b322afead33086a2aba872245473294affd40973694f3eb7c7ad77d")
 
     # build_system = PythonPipBuilder
