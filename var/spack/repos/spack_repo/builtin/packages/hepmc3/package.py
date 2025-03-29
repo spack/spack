@@ -48,7 +48,8 @@ class Hepmc3(CMakePackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
-    depends_on("cmake@2.8.9:", type="build")
+    depends_on("cmake@2.8.9:", when="@:3.3.0", type="build")
+    depends_on("cmake@3.10:", when="@3.3.1:", type="build")
     with when("+rootio"):
         depends_on("root")
         depends_on("root cxxstd=11", when="@:3.2.3")
