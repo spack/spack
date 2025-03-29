@@ -32,7 +32,7 @@ class Molgw(MakefilePackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
-    variant("openmp", default=True, description="Build with OpenMP support")
+    variant("openmp", default=False, description="Build with OpenMP support")
     variant("scalapack", default=False, description="Build with ScaLAPACK support")
 
     depends_on("blas")
