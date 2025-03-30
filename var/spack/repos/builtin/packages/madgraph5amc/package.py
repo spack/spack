@@ -60,6 +60,7 @@ class Madgraph5amc(MakefilePackage):
     variant(
         "models",
         values=(
+            "None",
             "2HDM",
             "4Gen",
             "DY_SM",
@@ -87,7 +88,7 @@ class Madgraph5amc(MakefilePackage):
             "uutt_sch_4fermion",
             "uutt_tch_scalar",
         ),
-        default=None,
+        default="None",
         multi=True,
         description="Models that will be installed by Madgraph. These models can be used"
         "without them being installed first, then madgraph will download them"
@@ -190,7 +191,7 @@ class Madgraph5amc(MakefilePackage):
                 )
             mg5("install-pythia8-interface")
 
-        if spec.variants["models"].value:
+        if spec.variants["models"].value != ["None"]:
             with open("install-models", "w") as f:
                 f.write(
                     "\n".join([f"import model {model}" for model in spec.variants["models"].value])
