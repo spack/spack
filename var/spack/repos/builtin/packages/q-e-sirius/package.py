@@ -69,9 +69,9 @@ class QESirius(CMakePackage):
     depends_on("hdf5@1.8.16:+fortran+hl~mpi", when="hdf5=serial")
 
     with when("+openmp"):
-        depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
-        depends_on("openblas threads=openmp", when="^[virtuals=blas] openblas")
-        depends_on("intel-mkl threads=openmp", when="^[virtuals=blas] intel-mkl")
+        requires("^fftw+openmp", when="^[virtuals=fftw-api] fftw")
+        requires("^openblas threads=openmp", when="^[virtuals=blas] openblas")
+        requires("^intel-oneapi-mkl threads=openmp", when="^[virtuals=blas] intel-oneapi-mkl")
 
     def cmake_args(self):
         args = [
@@ -92,7 +92,7 @@ class QESirius(CMakePackage):
         # Work around spack issue #19970 where spack sets
         # rpaths for MKL just during make, but cmake removes
         # them during make install.
-        if self.spec["lapack"].name in INTEL_MATH_LIBRARIES:
+        if self.spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl"):
             args.append("-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON")
         spec = self.spec
         args.append(self.define("BLAS_LIBRARIES", spec["blas"].libs.joined(";")))

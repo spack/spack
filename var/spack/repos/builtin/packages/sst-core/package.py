@@ -61,10 +61,16 @@ class SstCore(AutotoolsPackage):
     variant(
         "curses",
         default=True,
-        when="@develop,master",
+        when="@develop,master,14.0.0:",
         description="Build support for interactive sst-info",
     )
 
+    variant("mempools", default=True, description="Use memory pools")
+    variant(
+        "debug",
+        default=False,
+        description="Enable additional debug output from core and components",
+    )
     variant("trackevents", default=False, description="Enable event and activity tracking")
     variant(
         "trackperf",
@@ -77,37 +83,44 @@ class SstCore(AutotoolsPackage):
     depends_on("python@:3.11", type=("build", "run", "link"))
     depends_on("mpi", when="+pdes_mpi")
     depends_on("zoltan", when="+zoltan")
-    depends_on("hdf5", when="+hdf5")
+    depends_on("hdf5 +cxx", when="+hdf5")
     depends_on("zlib-api", when="+zlib")
     depends_on("gettext")
-    depends_on("ncurses", when="+curses")
+    depends_on("ncurses", when="+curses", type=("build", "link"))
 
-    for version_name in ("master", "develop"):
-        depends_on("autoconf@1.68:", type="build", when="@{}".format(version_name))
-        depends_on("automake@1.11.1:", type="build", when="@{}".format(version_name))
-        depends_on("libtool@1.2.4:", type="build", when="@{}".format(version_name))
-        depends_on("m4", type="build", when="@{}".format(version_name))
+    with when("@develop,master,14.0.0"):
+        depends_on("autoconf@1.68:", type="build")
+        depends_on("automake@1.11.1:", type="build")
+        depends_on("libtool@1.2.4:", type="build")
+        depends_on("m4", type="build")
+
+    # Backport of https://github.com/sstsimulator/sst-core/pull/1110
+    with when("@14.0.0"):
+        patch("1110-ncurses_detection.patch", level=0)
 
     # force out-of-source builds
     build_directory = "spack-build"
 
-    @when("@develop,master")
+    # 14.0.0 could theoretically be avoided here, but introducing the patch
+    # (even with autogen changes) causes file created/modified time problems
+    # that cannot be easily circumvented with `touch`.
+    @when("@develop,master,14.0.0")
     def autoreconf(self, spec, prefix):
         bash = which("bash")
         bash("autogen.sh")
 
     def configure_args(self):
         args = []
-        if "+zoltan" in self.spec:
-            args.append("--with-zoltan=%s" % self.spec["zoltan"].prefix)
-        if "+hdf5" in self.spec:
-            args.append("--with-hdf5=%s" % self.spec["hdf5"].prefix)
-        if "+zlib" in self.spec:
-            args.append("--with-zlib=%s" % self.spec["zlib-api"].prefix)
-        if "+curses" in self.spec:
-            args.append("--with-curses={}".format(self.spec["ncurses"].prefix))
+        args.extend(self.with_or_without("zoltan", activation_value="prefix"))
+        args.extend(self.with_or_without("hdf5", activation_value="prefix"))
+        args.extend(
+            self.with_or_without(
+                "libz", activation_value=lambda _: self.spec["zlib-api"].prefix, variant="zlib"
+            )
+        )
+        args.extend(self.with_or_without("ncurses", activation_value="prefix", variant="curses"))
 
-        if "+pdes_mpi" in self.spec:
+        if self.spec.satisfies("+pdes_mpi"):
             args.append("--enable-mpi")
             env["CC"] = self.spec["mpi"].mpicc
             env["CXX"] = self.spec["mpi"].mpicxx
@@ -116,16 +129,15 @@ class SstCore(AutotoolsPackage):
         else:
             args.append("--disable-mpi")
 
-        if "+trackevents" in self.spec:
-            args.append("--enable-event-tracking")
-        if "+trackperf" in self.spec:
-            args.append("--enable-perf-tracking")
-        if "+preview" in self.spec:
-            args.append("--enable-preview-build")
-        if "+profile" in self.spec:
-            args.append("--enable-profile")
+        args.extend(self.enable_or_disable("mem-pools", variant="mempools"))
+        args.extend(self.enable_or_disable("debug"))
+        args.extend(self.enable_or_disable("event-tracking", variant="trackevents"))
+        args.extend(self.enable_or_disable("perf-tracking", variant="trackperf"))
+        args.extend(self.enable_or_disable("preview-build", variant="preview"))
+        args.extend(self.enable_or_disable("profile"))
 
-        args.append("--with-python=%s" % self.spec["python"].prefix)
+        # Required, so no need for with_or_without
+        args.append(f"--with-python={self.spec['python'].prefix}")
         return args
 
     def patch(self):

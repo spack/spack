@@ -44,6 +44,7 @@ class Rocminfo(CMakePackage):
     depends_on("cxx", type="build")
 
     depends_on("cmake@3:", type="build")
+    extends("python@3:")
 
     for ver in [
         "5.3.0",

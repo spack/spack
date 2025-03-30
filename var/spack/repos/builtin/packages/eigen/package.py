@@ -84,7 +84,11 @@ class Eigen(CMakePackage, ROCmPackage):
         env.prepend_path("CPATH", self.prefix.include.eigen3)
 
     def cmake_args(self):
-        args = []
+        args = [
+            self.define("EIGEN_BUILD_TESTING", self.run_tests),
+            self.define("EIGEN_LEAVE_TEST_IN_ALL_TARGET", self.run_tests),
+        ]
+
         if self.spec.satisfies("@:3.4"):
             # CMake fails without this flag
             # https://gitlab.com/libeigen/eigen/-/issues/1656

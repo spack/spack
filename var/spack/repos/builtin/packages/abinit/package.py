@@ -209,7 +209,7 @@ class Abinit(AutotoolsPackage):
         linalg = spec["lapack"].libs + spec["blas"].libs
 
         # linalg_flavor is selected using the virtual lapack provider
-        is_using_intel_libraries = spec["lapack"].name in INTEL_MATH_LIBRARIES
+        is_using_intel_libraries = spec["lapack"].name == "intel-oneapi-mkl"
 
         # These *must* be elifs, otherwise spack's lapack provider is ignored
         # linalg_flavor ends up as "custom", which is not supported by abinit@9.10.3:

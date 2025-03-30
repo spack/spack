@@ -177,7 +177,10 @@ class R(AutotoolsPackage):
 
         # R uses LAPACK in Fortran, which requires libmkl_gf_* when gfortran is used.
         # TODO: cleaning this up seem to require both compilers as dependencies and use variants.
-        if spec["lapack"].name in INTEL_MATH_LIBRARIES and "gfortran" in self.compiler.fc:
+        if (
+            spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl")
+            and "gfortran" in self.compiler.fc
+        ):
             xlp64 = "ilp64" if spec["lapack"].satisfies("+ilp64") else "lp64"
             blas_flags = blas_flags.replace(f"mkl_intel_{xlp64}", f"mkl_gf_{xlp64}")
             lapack_flags = lapack_flags.replace(f"mkl_intel_{xlp64}", f"mkl_gf_{xlp64}")
@@ -191,14 +194,12 @@ class R(AutotoolsPackage):
             f"LDFLAGS=-Wl,-rpath,{extra_rpath}",
             f"--with-blas={blas_flags}",
             f"--with-lapack={lapack_flags}",
-            # cannot disable docs with a normal configure option
             "ac_cv_path_PDFLATEX=",
             "ac_cv_path_PDFTEX=",
             "ac_cv_path_TEX=",
             "ac_cv_path_TEXI2DVI=",
+            f"--with-libintl-prefix={spec['gettext'].prefix}",
         ]
-
-        config_args.append("--with-libintl-prefix={0}".format(spec["gettext"].prefix))
 
         if "+X" in spec:
             config_args.append("--with-cairo")

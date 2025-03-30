@@ -18,6 +18,7 @@ class Libsmeagol(MakefilePackage):
     version("main", branch="main")
     version("1.2", commit="fefed1bb4fceca584c3014debb169e8ed4ce1289")
 
+    depends_on("fortran", type="build")
     depends_on("mpi")
     depends_on("blas")
 

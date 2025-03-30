@@ -131,7 +131,7 @@ spack:
 valid_environment_name_re = r"^\w[\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
-lockfile_format_version = 5
+lockfile_format_version = 6
 
 
 READER_CLS = {
@@ -140,6 +140,7 @@ READER_CLS = {
     3: spack.spec.SpecfileV2,
     4: spack.spec.SpecfileV3,
     5: spack.spec.SpecfileV4,
+    6: spack.spec.SpecfileV5,
 }
 
 
@@ -1128,11 +1129,6 @@ class Environment:
 
     @property
     def dev_specs(self):
-        if not self._dev_specs:
-            self._dev_specs = self._read_dev_specs()
-        return self._dev_specs
-
-    def _read_dev_specs(self):
         dev_specs = {}
         dev_config = spack.config.get("develop", {})
         for name, entry in dev_config.items():

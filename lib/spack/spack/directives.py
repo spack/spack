@@ -85,9 +85,6 @@ Patcher = Callable[[Union[Type[spack.package_base.PackageBase], Dependency]], No
 PatchesType = Union[Patcher, str, List[Union[Patcher, str]]]
 
 
-SUPPORTED_LANGUAGES = ("fortran", "cxx", "c")
-
-
 def _make_when_spec(value: WhenType) -> Optional[spack.spec.Spec]:
     """Create a ``Spec`` that indicates when a directive should be applied.
 
@@ -296,7 +293,8 @@ def _depends_on(
     deps_by_name = pkg.dependencies.setdefault(when_spec, {})
     dependency = deps_by_name.get(spec.name)
 
-    if spec.dependencies():
+    edges = spec.edges_to_dependencies()
+    if edges and not all(x.depflag == dt.BUILD for x in edges):
         raise DirectiveError(
             f"the '^' sigil cannot be used in 'depends_on' directives. Please reformulate "
             f"the directive below as multiple directives:\n\n"
@@ -373,9 +371,6 @@ def depends_on(
 
     """
     dep_spec = spack.spec.Spec(spec)
-    if dep_spec.name in SUPPORTED_LANGUAGES:
-        assert type == "build", "languages must be of 'build' type"
-        return _language(lang_spec_str=spec, when=when)
 
     def _execute_depends_on(pkg: Type[spack.package_base.PackageBase]):
         _depends_on(pkg, dep_spec, when=when, type=type, patches=patches)
@@ -462,8 +457,7 @@ def extends(spec, when=None, type=("build", "run"), patches=None):
         if dep_spec.name == "python" and not pkg.name == "python-venv":
             _depends_on(pkg, spack.spec.Spec("python-venv"), when=when, type=("build", "run"))
 
-        # TODO: the values of the extendees dictionary are not used. Remove in next refactor.
-        pkg.extendees[dep_spec.name] = (dep_spec, None)
+        pkg.extendees[dep_spec.name] = (dep_spec, when_spec)
 
     return _execute_extends
 
@@ -660,7 +654,7 @@ def variant(
         msg += " @*r{{[{0}, variant '{1}']}}"
         return llnl.util.tty.color.colorize(msg.format(pkg.name, name))
 
-    if name in spack.variant.reserved_names:
+    if name in spack.variant.RESERVED_NAMES:
 
         def _raise_reserved_name(pkg):
             msg = "The name '%s' is reserved by Spack" % name
@@ -909,21 +903,6 @@ def requires(*requirement_specs: str, policy="one_of", when=None, msg=None):
         requirement_list.append((requirements, policy, msg_with_name))
 
     return _execute_requires
-
-
-@directive("languages")
-def _language(lang_spec_str: str, *, when: Optional[Union[str, bool]] = None):
-    """Temporary implementation of language virtuals, until compilers are proper dependencies."""
-
-    def _execute_languages(pkg: Type[spack.package_base.PackageBase]):
-        when_spec = _make_when_spec(when)
-        if not when_spec:
-            return
-
-        languages = pkg.languages.setdefault(when_spec, set())
-        languages.add(lang_spec_str)
-
-    return _execute_languages
 
 
 class DependencyError(DirectiveError):
