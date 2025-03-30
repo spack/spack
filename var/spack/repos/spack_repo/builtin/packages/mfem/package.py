@@ -10,11 +10,12 @@ from spack_repo.builtin.build_systems.cuda import CudaPackage
 from spack_repo.builtin.build_systems.generic import Package
 from spack_repo.builtin.build_systems.rocm import ROCmPackage
 from spack_repo.builtin.build_systems.generic import GenericBuilder
-
+from spack_repo.builtin.build_systems.cmake import CMakeBuilder
+from spack_repo.builtin.build_systems.generic import GenericBuilder
 from spack.package import *
 
 
-class Mfem(Package, CudaPackage, ROCmPackage):
+class Mfem(Package, CMakePackage, CudaPackage, ROCmPackage):
     """Free, lightweight, scalable C++ library for finite element methods."""
 
     tags = ["fem", "finite-elements", "high-order", "amr", "hpc", "radiuss", "e4s"]
@@ -26,7 +27,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
-    build_system("generic", default="generic")
+    build_system("generic", "cmake", default="generic")
 
     # Recommended mfem builds to test when updating this file: see the shell
     # script 'test_builds.sh' in the same directory as this file.
@@ -200,7 +201,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     variant("gslib", default=False, description="Enable functionality based on GSLIB")
     variant("mpfr", default=False, description="Enable precise, 1D quadrature rules")
     variant("lapack", default=False, description="Use external blas/lapack routines")
-    variant("debug", default=False, description="Build debug instead of optimized version")
+    # CMake package has build_type variant instead
+    variant(
+        "debug",
+        default=False,
+        description="Build debug instead of optimized version",
+        when="build_system=generic",
+    )
     variant("netcdf", default=False, description="Enable Cubit/Genesis reader")
     variant("conduit", default=False, description="Enable binary data I/O using Conduit")
     variant("zlib", default=True, description="Support zip'd streams for I/O")
@@ -239,6 +246,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     conflicts("+shared", when="@:3.3.2")
     conflicts("~static~shared")
+    # CMake only handles one build mode at a time
+    conflicts("+shared+static", when="build_system=cmake")
     conflicts("~threadsafe", when="@:3+openmp")
 
     conflicts("+cuda", when="@:3")
@@ -521,6 +530,12 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch("mfem-4.7.patch", when="@4.7.0")
     patch("mfem-4.7-sundials-7.patch", when="@4.7.0+sundials ^sundials@7:")
 
+
+def str_to_timerid(timer_type):
+    timer_ids = {"auto": "-1", "std": "0", "posix": "2", "mac": "4", "mpi": "6"}
+    return timer_ids[timer_type]
+
+
 class AnyBuilder(BaseBuilder):
     @run_after("install")
     def cache_test_sources(self):
@@ -531,6 +546,7 @@ class AnyBuilder(BaseBuilder):
         make("examples/clean", parallel=False)
         extra_install_tests = [self.examples_src_dir, self.examples_data_dir]
         cache_extra_test_sources(self.pkg, extra_install_tests)
+
 
 # without splitting the cache_test_sources into AnyBuilder,
 # cache_extra_test_sources was not available in the GenericBuilder
@@ -720,7 +736,7 @@ class GenericBuilder(AnyBuilder, GenericBuilder):
         if "~static" in spec:
             options += ["STATIC=NO"]
         if "+shared" in spec:
-            options += ["SHARED=YES", "PICFLAG=%s" % (xcompiler + pkg.compiler.cxx_pic_flag)]
+            options += ["SHARED=YES", "PICFLAG=%s" % (xcompiler + self.pkg.compiler.cxx_pic_flag)]
 
         if "+mpi" in spec:
             options += ["MPICXX=%s" % spec["mpi"].mpicxx]
@@ -1092,10 +1108,9 @@ class GenericBuilder(AnyBuilder, GenericBuilder):
                 "UMPIRE_LIB=%s" % ld_flags_from_library_list(umpire_libs),
             ]
 
-        timer_ids = {"std": "0", "posix": "2", "mac": "4", "mpi": "6"}
         timer = spec.variants["timer"].value
         if timer != "auto":
-            options += ["MFEM_TIMER_TYPE=%s" % timer_ids[timer]]
+            options += ["MFEM_TIMER_TYPE=%s" % str_to_timerid(timer)]
 
         if "+conduit" in spec:
             conduit = spec["conduit"]
@@ -1390,3 +1405,55 @@ class GenericBuilder(AnyBuilder, GenericBuilder):
         flags += ["-L%s" % dir for dir in pkg_dirs_list if not self.is_sys_lib_path(dir)]
         flags += ["-l%s" % lib for lib in pkg_libs_list]
         return " ".join(flags)
+
+class CMakeBuilder(CMakeBuilder):
+    def cmake_args(self):
+        args = [
+            self.define_from_variant("MFEM_USE_MPI", "mpi"),
+            self.define_from_variant("MFEM_USE_METIS", "metis"),
+            self.define_from_variant("MFEM_USE_OPENMP", "openmp"),
+            self.define_from_variant("MFEM_USE_OCCA", "occa"),
+            self.define_from_variant("MFEM_USE_RAJA", "raja"),
+            self.define_from_variant("MFEM_USE_CEED", "libceed"),
+            self.define_from_variant("MFEM_USE_UMPIRE", "umpire"),
+            self.define_from_variant("MFEM_USE_AMGX", "amgx"),
+            self.define_from_variant("MFEM_THREAD_SAFE", "threadsafe"),
+            self.define_from_variant("MFEM_USE_SUPERLU", "superlu-dist"),
+            self.define_from_variant("MFEM_USE_STRUMPACK", "strumpack"),
+            self.define_from_variant("MFEM_USE_SUITESPARSE", "suite-sparse"),
+            self.define_from_variant("MFEM_USE_PETSC", "petsc"),
+            self.define_from_variant("MFEM_USE_MUMPS", "mumps"),
+            self.define_from_variant("MFEM_USE_SLEPC", "slepc"),
+            self.define_from_variant("MFEM_USE_SUNDIALS", "sundials"),
+            self.define_from_variant("MFEM_USE_PUMI", "pumi"),
+            self.define_from_variant("MFEM_USE_GSLIB", "gslib"),
+            self.define_from_variant("MFEM_USE_MPFR", "mpfr"),
+            self.define_from_variant("MFEM_USE_LAPACK", "lapack"),
+            self.define_from_variant("MFEM_USE_NETCDF", "netcdf"),
+            self.define_from_variant("MFEM_USE_CONDUIT", "conduit"),
+            self.define_from_variant("MFEM_USE_ZLIB", "zlib"),
+            self.define_from_variant("MFEM_USE_GNUTLS", "gnutls"),
+            self.define_from_variant("MFEM_USE_LIBUNWIND", "libunwind"),
+            self.define_from_variant("MFEM_USE_FMS", "fms"),
+            self.define_from_variant("MFEM_USE_GINKGO", "ginkgo"),
+            self.define_from_variant("MFEM_USE_HIOP", "hiop"),
+            self.define_from_variant("MFEM_ENABLE_EXAMPLES", "examples"),
+            self.define_from_variant("MFEM_ENABLE_MINIAPPS", "miniapps"),
+            self.define_from_variant("MFEM_USE_EXCEPTIONS", "exceptions"),
+            self.define_from_variant("MFEM_PRECISION", "precision"),
+            self.define("MFEM_ENABLE_TESTING", True),
+        ]
+        if "+shared" in self.spec:
+            args.append(self.define("BUILD_SHARED_LIBS", True))
+        else:
+            args.append(self.define("BUILD_SHARED_LIBS", False))
+
+        cxxstd = self.spec.variants["cxxstd"].value
+        if cxxstd != "auto":
+            args.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
+
+        timer = self.spec.variants["timer"].value
+        if timer != "auto":
+            args.append(self.define("MFEM_TIMER_TYPE", str_to_timerid(timer)))
+
+        return args
