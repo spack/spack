@@ -388,12 +388,16 @@ class Dealii(CMakePackage, CudaPackage):
 
     # Check that the combination of variants makes sense
     # 64-bit BLAS:
-    for _package in ["openblas", "intel-mkl", "intel-parallel-studio+mkl"]:
-        conflicts(
-            "^{0}+ilp64".format(_package),
-            when="@:8.5.1",
-            msg="64bit BLAS is only supported from 9.0.0",
-        )
+    conflicts(
+        "^[virtuals=lapack] openblas+ilp64",
+        when="@:8.5.1",
+        msg="64bit BLAS is only supported from 9.0.0",
+    )
+    conflicts(
+        "^[virtuals=lapack] intel-oneapi-mkl+ilp64",
+        when="@:8.5.1",
+        msg="64bit BLAS is only supported from 9.0.0",
+    )
 
     # MPI requirements:
     for _package in [
@@ -505,10 +509,8 @@ class Dealii(CMakePackage, CudaPackage):
         # 64 bit indices
         options.append(self.define_from_variant("DEAL_II_WITH_64BIT_INDICES", "int64"))
 
-        if (
-            spec.satisfies("^openblas+ilp64")
-            or spec.satisfies("^intel-mkl+ilp64")
-            or spec.satisfies("^intel-parallel-studio+mkl+ilp64")
+        if spec.satisfies("^[virtuals=lapack] openblas+ilp64") or spec.satisfies(
+            "^[virtuals=lapack] intel-oneapi-mkl+ilp64"
         ):
             options.append(self.define("LAPACK_WITH_64BIT_BLAS_INDICES", True))
 
@@ -570,20 +572,9 @@ class Dealii(CMakePackage, CudaPackage):
             options.append(self.define_from_variant("DEAL_II_WITH_TBB", "threads"))
         else:
             options.append(self.define_from_variant("DEAL_II_WITH_THREADS", "threads"))
+
         if spec.satisfies("+threads"):
-            if spec.satisfies("^intel-parallel-studio+tbb"):
-                # deal.II/cmake will have hard time picking up TBB from Intel.
-                tbb_ver = ".".join(("%s" % spec["tbb"].version).split(".")[1:])
-                options.extend(
-                    [
-                        self.define("TBB_FOUND", True),
-                        self.define("TBB_VERSION", tbb_ver),
-                        self.define("TBB_INCLUDE_DIRS", ";".join(spec["tbb"].headers.directories)),
-                        self.define("TBB_LIBRARIES", spec["tbb"].libs.joined(";")),
-                    ]
-                )
-            else:
-                options.append(self.define("TBB_DIR", spec["tbb"].prefix))
+            options.append(self.define("TBB_DIR", spec["tbb"].prefix))
 
         # Optional dependencies for which library names are the same as CMake
         # variables:

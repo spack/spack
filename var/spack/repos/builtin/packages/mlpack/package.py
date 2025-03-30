@@ -37,6 +37,8 @@ class Mlpack(CMakePackage):
     depends_on("cxx", type="build")  # generated
 
     # CMakeLists.txt
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on("cmake@3.6:", type="build")
     depends_on("armadillo@9.800:")
     depends_on("armadillo@10.8:", when="@4.5:")

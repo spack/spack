@@ -69,7 +69,7 @@ class Elmerfem(CMakePackage):
         else:
             args.append("-DWITH_MPI=OFF")
 
-        if self.spec.satisfies("^intel-mkl"):
+        if self.spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl"):
             args.append("-DWITH_MKL:BOOL=TRUE")
 
         if spec.satisfies("+openmp"):

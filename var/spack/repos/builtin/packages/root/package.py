@@ -35,6 +35,7 @@ class Root(CMakePackage):
     version("develop", branch="master")
 
     # Production version
+    version("6.34.06", sha256="a799d632dae5bb1ec87eae6ebc046a12268c6849f2a8837921c118fc51b6cff3")
     version("6.34.04", sha256="e320c5373a8e87bb29b7280954ca8355ad8c4295cf49235606f0c8b200acb374")
     version("6.34.02", sha256="166bec562e420e177aaf3133fa3fb09f82ecddabe8a2e1906345bad442513f94")
     version("6.34.00", sha256="f3b00f3db953829c849029c39d7660a956468af247efd946e89072101796ab03")
@@ -756,6 +757,7 @@ class Root(CMakePackage):
             define("tcmalloc", False),
             define_from_variant("tmva"),
             define_from_variant("unuran"),
+            define("use_gsl_cblas", False),
             define_from_variant("vc"),
             define_from_variant("vdt"),
             define_from_variant("veccore"),

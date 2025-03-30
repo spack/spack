@@ -85,12 +85,11 @@ class Molgw(MakefilePackage):
         flags["PREFIX"] = prefix
 
         # Set LAPACK and SCALAPACK
-        if (
-            spec["scalapack"].name in INTEL_MATH_LIBRARIES
-            or spec["lapack"].name in INTEL_MATH_LIBRARIES
-            or spec["blas"].name in INTEL_MATH_LIBRARIES
+        if spec.satisfies("^[virtuals=scalapack] intel-oneapi-mkl") or spec.satisfies(
+            "^[virtuals=lapack] intel-oneapi-mkl"
         ):
             flags["LAPACK"] = self._get_mkl_ld_flags(spec)
+            flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + " -DHAVE_MKL "
         else:
             flags["LAPACK"] = spec["lapack"].libs.ld_flags + " " + spec["blas"].libs.ld_flags
             if "+scalapack" in spec:
@@ -115,13 +114,6 @@ class Molgw(MakefilePackage):
         # Set CPPFLAGS
         if "+scalapack" in spec:
             flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + " -DHAVE_SCALAPACK -DHAVE_MPI "
-
-        if (
-            spec["lapack"].name in INTEL_MATH_LIBRARIES
-            or spec["scalapack"].name in INTEL_MATH_LIBRARIES
-            or spec["blas"].name in INTEL_MATH_LIBRARIES
-        ):
-            flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + " -DHAVE_MKL "
 
         # Write configuration file
         with open("my_machine.arch", "w") as f:

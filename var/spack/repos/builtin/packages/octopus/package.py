@@ -181,7 +181,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
         if "^fftw" in spec:
             args.append("--with-fftw-prefix=%s" % spec["fftw"].prefix)
-        elif spec["fftw-api"].name in INTEL_MATH_LIBRARIES:
+        elif spec.satisfies("^[virtuals=fftw-api] intel-oneapi-mkl"):
             # As of version 10.0, Octopus depends on fftw-api instead
             # of FFTW. If FFTW is not in the dependency tree, then
             # it ought to be MKL as it is currently the only providers

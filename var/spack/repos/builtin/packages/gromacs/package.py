@@ -529,9 +529,8 @@ class Gromacs(CMakePackage, CudaPackage):
     )
 
     # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
-    for _intel_pkg in INTEL_MATH_LIBRARIES:
-        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
-        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
+    requires("^[virtuals=fftw-api] intel-oneapi-mkl", when="^[virtuals=lapack] intel-oneapi-mkl")
+    requires("^[virtuals=lapack] intel-oneapi-mkl", when="^[virtuals=fftw-api] intel-oneapi-mkl")
 
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
@@ -911,9 +910,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             )
             options.append(f"-DNVSHMEM_ROOT={nvshmem_root}")
 
-        if self.spec["lapack"].name in INTEL_MATH_LIBRARIES:
-            # fftw-api@3 is provided by intel-mkl or intel-parallel-studio
-            # we use the mkl interface of gromacs
+        if self.spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl"):
+            # fftw-api@3 is provided by intel-oneapi-mkl
             options.append("-DGMX_FFT_LIBRARY=mkl")
             if self.spec.satisfies("@:2022"):
                 options.append(

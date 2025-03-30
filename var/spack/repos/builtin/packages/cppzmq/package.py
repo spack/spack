@@ -31,7 +31,8 @@ class Cppzmq(CMakePackage):
 
     variant("drafts", default=False, description="Build and install draft classes and methods")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.0.0:", type="build")
     depends_on("cmake@3.11:", type="build", when="@4.8:")

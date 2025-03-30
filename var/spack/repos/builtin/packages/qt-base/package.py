@@ -194,6 +194,8 @@ class QtBase(QtPackage):
     depends_on("cxx", type="build")  # generated
 
     # Dependencies, then variant- and version-specific dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on("cmake@3.21:", type="build", when="~shared")
     depends_on("cmake@3.21:", type="build", when="platform=darwin")
     depends_on("double-conversion")

@@ -93,13 +93,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     # https://gitlab.mpcdf.mpg.de/elpa/elpa/-/blob/master/documentation/PERFORMANCE_TUNING.md?ref_type=heads#builds-with-openmp-enabled
     with when("+openmp"):
         requires("^openblas threads=openmp", when="^[virtuals=blas,lapack] openblas")
-        requires("^intel-mkl threads=openmp", when="^[virtuals=blas,lapack] intel-mkl")
         requires(
             "^intel-oneapi-mkl threads=openmp", when="^[virtuals=blas,lapack] intel-oneapi-mkl"
-        )
-        requires(
-            "^intel-parallel-studio threads=openmp",
-            when="^[virtuals=blas,lapack] intel-parallel-studio",
         )
 
     # fails to build due to broken type-bound procedures in OMP parallel regions

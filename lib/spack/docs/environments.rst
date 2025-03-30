@@ -686,7 +686,7 @@ the environment.
    spack:
      include:
      - environment/relative/path/to/config.yaml
-     - https://github.com/path/to/raw/config/compilers.yaml
+     - https://github.com/path/to/raw/config/packages.yaml
      - /absolute/path/to/packages.yaml
      - path: /path/to/$os/$target/environment
        optional: true

@@ -83,7 +83,7 @@ class Itensor(MakefilePackage):
             vinc += " -DHAVE_LAPACK_CONFIG_H"
             vinc += " -DLAPACK_COMPLEX_STRUCTURE"
             filter_file("#PLATFORM=lapack", vinc, mf, string=True)
-        elif ltype == "intel-mkl":
+        elif ltype == "intel-oneapi-mkl":
             vpla = "PLATFORM=mkl"
             filter_file("#PLATFORM=lapack", vinc, mf, string=True)
 

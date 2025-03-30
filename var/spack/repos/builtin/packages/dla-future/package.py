@@ -182,71 +182,41 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
         # BLAS/LAPACK
-        if spec.version <= Version("0.4") and spec["lapack"].name in INTEL_MATH_LIBRARIES:
+        if spec.version <= Version("0.4") and spec.satisfies(
+            "^[virtuals=lapack] intel-oneapi-mkl"
+        ):
             mkl_provider = spec["lapack"].name
 
             vmap = {
-                "intel-oneapi-mkl": {
-                    "threading": {
-                        "none": "sequential",
-                        "openmp": "gnu_thread",
-                        "tbb": "tbb_thread",
-                    },
-                    "mpi": {"intel-mpi": "intelmpi", "mpich": "mpich", "openmpi": "openmpi"},
-                },
-                "intel-mkl": {
-                    "threading": {"none": "seq", "openmp": "omp", "tbb": "tbb"},
-                    "mpi": {"intel-mpi": "mpich", "mpich": "mpich", "openmpi": "ompi"},
-                },
+                "threading": {"none": "sequential", "openmp": "gnu_thread", "tbb": "tbb_thread"},
+                "mpi": {"intel-oneapi-mpi": "intelmpi", "mpich": "mpich", "openmpi": "openmpi"},
             }
 
-            if mkl_provider not in vmap.keys():
-                raise RuntimeError(
-                    f"dla-future does not support {mkl_provider} as lapack provider"
-                )
-            mkl_mapper = vmap[mkl_provider]
-
-            mkl_threads = mkl_mapper["threading"][spec[mkl_provider].variants["threads"].value]
-            if mkl_provider == "intel-oneapi-mkl":
-                args += [
-                    self.define("DLAF_WITH_MKL", True),
-                    self.define("MKL_INTERFACE", "lp64"),
-                    self.define("MKL_THREADING", mkl_threads),
-                ]
-            elif mkl_provider == "intel-mkl":
-                args += [
-                    (
-                        self.define("DLAF_WITH_MKL", True)
-                        if spec.version <= Version("0.3")
-                        else self.define("DLAF_WITH_MKL_LEGACY", True)
-                    ),
-                    self.define("MKL_LAPACK_TARGET", f"mkl::mkl_intel_32bit_{mkl_threads}_dyn"),
-                ]
+            mkl_threads = vmap["threading"][spec["intel-oneapi-mkl"].variants["threads"].value]
+            args += [
+                self.define("DLAF_WITH_MKL", True),
+                self.define("MKL_INTERFACE", "lp64"),
+                self.define("MKL_THREADING", mkl_threads),
+            ]
 
             if spec.satisfies("+scalapack"):
                 try:
                     mpi_provider = spec["mpi"].name
                     if mpi_provider in ["mpich", "cray-mpich", "mvapich", "mvapich2"]:
-                        mkl_mpi = mkl_mapper["mpi"]["mpich"]
+                        mkl_mpi = vmap["mpi"]["mpich"]
                     else:
-                        mkl_mpi = mkl_mapper["mpi"][mpi_provider]
+                        mkl_mpi = vmap["mpi"][mpi_provider]
                 except KeyError:
                     raise RuntimeError(
                         f"dla-future does not support {spec['mpi'].name} as mpi provider with "
                         f"the selected scalapack provider {mkl_provider}"
                     )
 
-                if mkl_provider == "intel-oneapi-mkl":
-                    args.append(self.define("MKL_MPI", mkl_mpi))
-                elif mkl_provider == "intel-mkl":
-                    args.append(
-                        self.define(
-                            "MKL_SCALAPACK_TARGET",
-                            f"mkl::scalapack_{mkl_mpi}_intel_32bit_{mkl_threads}_dyn",
-                        )
-                    )
+                args.append(self.define("MKL_MPI", mkl_mpi))
         else:
-            args.append(self.define("DLAF_WITH_MKL", spec["lapack"].name in INTEL_MATH_LIBRARIES))
+            args.append(
+                self.define("DLAF_WITH_MKL", spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl"))
+            )
             add_dlaf_prefix = lambda x: x if spec.satisfies("@:0.6") else "DLAF_" + x
             args.append(
                 self.define(

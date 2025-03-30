@@ -236,7 +236,9 @@ class Mumps(Package):
         # As of version 5.2.0, MUMPS is able to take advantage
         # of the GEMMT BLAS extension. MKL and amdblis are the only
         # known BLAS implementation supported.
-        if self.spec["blas"].name in INTEL_MATH_LIBRARIES and self.spec.satisfies("@5.2.0:"):
+        if self.spec.satisfies("^[virtuals=blas] intel-oneapi-mkl") and self.spec.satisfies(
+            "@5.2.0:"
+        ):
             optf.append("-DGEMMT_AVAILABLE")
 
         if "@5.2.0: ^amdblis@3.0:" in self.spec:
