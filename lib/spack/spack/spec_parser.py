@@ -72,6 +72,7 @@ import spack.paths
 import spack.spec
 import spack.util.spack_yaml
 import spack.version
+from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.tokenize import Token, TokenBase, Tokenizer
 
 #: Valid name for specs and variants. Here we are not using
@@ -100,6 +101,9 @@ VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VER
 
 #: Regex with groups to use for splitting (optionally propagated) key-value pairs
 SPLIT_KVP = re.compile(rf"^({NAME})(==?)(.*)$")
+
+#: Regex with groups to use for splitting %[virtuals=...] tokens
+SPLIT_COMPILER_TOKEN = re.compile(rf"^%\[virtuals=({VALUE}|{QUOTED_VALUE})]\s*(.*)$")
 
 #: A filename starts either with a "." or a "/" or a "{name}/, or on Windows, a drive letter
 #: followed by a colon and "\" or "." or {name}\
@@ -136,6 +140,11 @@ class SpecTokens(TokenBase):
     # Compilers
     COMPILER_AND_VERSION = rf"(?:%\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
     COMPILER = rf"(?:%\s*(?:{NAME}))"
+    COMPILER_AND_VERSION_WITH_VIRTUALS = (
+        rf"(?:%\[virtuals=(?:{VALUE}|{QUOTED_VALUE})\]"
+        rf"\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
+    )
+    COMPILER_WITH_VIRTUALS = rf"(?:%\[virtuals=(?:{VALUE}|{QUOTED_VALUE})\]\s*(?:{NAME}))"
     # FILENAME
     FILENAME = rf"(?:{FILENAME})"
     # Package name
@@ -315,12 +324,11 @@ class SpecParser:
 class SpecNodeParser:
     """Parse a single spec node from a stream of tokens"""
 
-    __slots__ = "ctx", "has_compiler", "has_version", "literal_str"
+    __slots__ = "ctx", "has_version", "literal_str"
 
     def __init__(self, ctx, literal_str):
         self.ctx = ctx
         self.literal_str = literal_str
-        self.has_compiler = False
         self.has_version = False
 
     def parse(
@@ -376,24 +384,32 @@ class SpecNodeParser:
                 parser_warnings.append(f"`{token}` should go before `{last_compiler}`")
 
         while True:
-            if self.ctx.accept(SpecTokens.COMPILER):
-                if self.has_compiler:
-                    raise_parsing_error("Spec cannot have multiple compilers")
+            if (
+                self.ctx.accept(SpecTokens.COMPILER)
+                or self.ctx.accept(SpecTokens.COMPILER_AND_VERSION)
+                or self.ctx.accept(SpecTokens.COMPILER_WITH_VIRTUALS)
+                or self.ctx.accept(SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS)
+            ):
+                current_token = self.ctx.current_token
+                if current_token.kind in (
+                    SpecTokens.COMPILER_WITH_VIRTUALS,
+                    SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS,
+                ):
+                    m = SPLIT_COMPILER_TOKEN.match(current_token.value)
+                    assert m, "SPLIT_COMPILER_TOKEN and COMPILER_* do not agree."
+                    virtuals_str, compiler_str = m.groups()
+                    virtuals = tuple(virtuals_str.strip("'\" ").split(","))
+                else:
+                    virtuals = tuple()
+                    compiler_str = current_token.value[1:]
 
-                compiler_name = self.ctx.current_token.value[1:]
-                initial_spec.compiler = spack.spec.CompilerSpec(compiler_name.strip(), ":")
-                self.has_compiler = True
-                last_compiler = self.ctx.current_token.value
+                build_dependency = spack.spec.Spec(compiler_str)
+                if build_dependency.name in LEGACY_COMPILER_TO_BUILTIN:
+                    build_dependency.name = LEGACY_COMPILER_TO_BUILTIN[build_dependency.name]
 
-            elif self.ctx.accept(SpecTokens.COMPILER_AND_VERSION):
-                if self.has_compiler:
-                    raise_parsing_error("Spec cannot have multiple compilers")
-
-                compiler_name, compiler_version = self.ctx.current_token.value[1:].split("@")
-                initial_spec.compiler = spack.spec.CompilerSpec(
-                    compiler_name.strip(), compiler_version
+                initial_spec._add_dependency(
+                    build_dependency, depflag=spack.deptypes.BUILD, virtuals=virtuals, direct=True
                 )
-                self.has_compiler = True
                 last_compiler = self.ctx.current_token.value
 
             elif (

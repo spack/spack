@@ -80,9 +80,8 @@ class RocmCmake(CMakePackage):
         """Test cmake"""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=True):
-            prefixes = ";".join([self.spec["rocm-cmake"].prefix])
-            cc_options = ["-DCMAKE_PREFIX_PATH=" + prefixes, "."]
-            cmake = which(self.spec["cmake"].prefix.bin.cmake)
+            cc_options = [f"-DCMAKE_PREFIX_PATH={self.prefix}", "."]
+            cmake = self.spec["cmake"].command
             cmake(*cc_options)
             make()
             make("clean")

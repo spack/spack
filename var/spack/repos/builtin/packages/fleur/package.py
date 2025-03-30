@@ -16,6 +16,7 @@ class Fleur(Package):
     license("MIT")
 
     version("develop", branch="develop")
+    version("7.2", tag="MaX-R7.2", commit="447eed3b7ec3de5fcdfbd232cd1eda4caefb51d3")
     version("5.1", tag="MaX-R5.1", commit="a482abd9511b16412c2222e2ac1b1a303acd454b")
     version("5.0", tag="MaX-R5", commit="f2df362c3dad6ef39938807ea14e4ec4cb677723")
     version("4.0", tag="MaX-R4", commit="ea0db7877451e6240124e960c5546318c9ab3953")
@@ -53,7 +54,7 @@ class Fleur(Package):
     depends_on("lapack")
     depends_on("libxml2")
     depends_on("mpi", when="+mpi")
-    depends_on("intel-mkl", when="fft=mkl")
+    depends_on("intel-oneapi-mkl", when="fft=mkl")
     depends_on("fftw-api", when="fft=fftw")
     depends_on("scalapack", when="+scalapack")
     depends_on("libxc", when="+external_libxc")
@@ -108,9 +109,9 @@ class Fleur(Package):
         options["-includedir"].append(join_path(spec["libxml2"].prefix.include, "libxml2"))
 
         if spec.satisfies("fft=mkl"):
-            options["-link"].append(spec["intel-mkl"].libs.link_flags)
-            options["-libdir"].append(spec["intel-mkl"].prefix.lib)
-            options["-includedir"].append(spec["intel-mkl"].prefix.include)
+            options["-link"].append(spec["intel-oneapi-mkl"].libs.link_flags)
+            options["-libdir"].append(spec["intel-oneapi-mkl"].prefix.lib)
+            options["-includedir"].append(spec["intel-oneapi-mkl"].prefix.include)
         if spec.satisfies("fft=fftw"):
             options["-link"].append(spec["fftw-api"].libs.link_flags)
             options["-libdir"].append(spec["fftw-api"].prefix.lib)

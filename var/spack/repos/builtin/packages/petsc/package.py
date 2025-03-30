@@ -15,7 +15,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     homepage = "https://petsc.org"
     url = "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-3.20.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
-    maintainers("balay", "barrysmith", "jedbrown")
+    maintainers("balay", "jczhang07", "joseeroman")
 
     tags = ["e4s"]
 
@@ -291,9 +291,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             "0001-Handle-the-hipsparse-api-changes-for-rocm-6.0.patch",
             when="@3.20.2:3.20.4 ^hipsparse@6.0",
         )
-
-    # 3.8.0 has a build issue with MKL - so list this conflict explicitly
-    conflicts("^intel-mkl", when="@3.8.0")
 
     # These require +mpi
     mpi_msg = "Requires +mpi"

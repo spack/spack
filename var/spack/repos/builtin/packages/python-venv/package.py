@@ -54,7 +54,7 @@ class PythonVenv(Package):
     def command(self):
         """Returns a python Executable instance"""
         python_name = "python" if self.spec.satisfies("platform=windows") else "python3"
-        return which(python_name, path=self.bindir)
+        return which(python_name, path=self.bindir, required=True)
 
     def _get_path(self, name) -> str:
         return self.command(

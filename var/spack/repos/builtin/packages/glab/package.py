@@ -15,6 +15,8 @@ class Glab(GoPackage):
 
     license("MIT")
 
+    version("1.55.0", sha256="21f58698b92035461e8e8ba9040429f4b5a0f6d528d8333834ef522a973384c8")
+    version("1.54.0", sha256="99f5dd785041ad26c8463ae8630e98a657aa542a2bb02333d50243dd5cfdf9cb")
     version("1.53.0", sha256="2930aa5dd76030cc6edcc33483bb49dd6a328eb531d0685733ca7be7b906e915")
     version("1.52.0", sha256="585495e53d3994172fb927218627b7470678bc766320cb52f4b4204238677dde")
     version("1.51.0", sha256="6a95d827004fee258aacb49a427875e3b505b063cc578933d965cd56481f5a19")
@@ -34,19 +36,37 @@ class Glab(GoPackage):
     version("1.21.1", sha256="8bb35c5cf6b011ff14d1eaa9ab70ec052d296978792984250e9063b006ee4d50")
     version("1.20.0", sha256="6beb0186fa50d0dea3b05fcfe6e4bc1f9be0c07aa5fa15b37ca2047b16980412")
 
-    depends_on("go@1.13:", type="build")
-    depends_on("go@1.17:", type="build", when="@1.22:")
-    depends_on("go@1.18:", type="build", when="@1.23:")
-    depends_on("go@1.19:", type="build", when="@1.35:")
-    depends_on("go@1.21:", type="build", when="@1.37:")
-    depends_on("go@1.22.3:", type="build", when="@1.41:")
-    depends_on("go@1.22.4:", type="build", when="@1.42:")
-    depends_on("go@1.22.5:", type="build", when="@1.44:")
-    depends_on("go@1.23:", type="build", when="@1.46:")
-    depends_on("go@1.23.2:", type="build", when="@1.48:")
-    depends_on("go@1.23.4:", type="build", when="@1.52:")
+    with default_args(type="build"):
+        depends_on("go@1.24.1:", when="@1.54:")
+        depends_on("go@1.23.4:", when="@1.52:")
+        depends_on("go@1.23.2:", when="@1.48:")
+        depends_on("go@1.23.0:", when="@1.46:")
+        depends_on("go@1.22.5:", when="@1.44:")
+        depends_on("go@1.22.4:", when="@1.42:")
+        depends_on("go@1.22.3:", when="@1.41:")
+        depends_on("go@1.21.0:", when="@1.37:")
+        depends_on("go@1.19.0:", when="@1.35:")
+        depends_on("go@1.18.0:", when="@1.23:")
+        depends_on("go@1.17.0:", when="@1.22:")
+        depends_on("go@1.13.0:")
 
     build_directory = "cmd/glab"
+
+    # Required to correctly set the version
+    # https://gitlab.com/gitlab-org/cli/-/blob/v1.55.0/Makefile?ref_type=tags#L44
+    @property
+    def build_args(self):
+        extra_ldflags = [f"-X 'main.version=v{self.version}'"]
+
+        args = super().build_args
+
+        if "-ldflags" in args:
+            ldflags_index = args.index("-ldflags") + 1
+            args[ldflags_index] = args[ldflags_index] + " " + " ".join(extra_ldflags)
+        else:
+            args.extend(["-ldflags", " ".join(extra_ldflags)])
+
+        return args
 
     @run_after("install")
     def install_completions(self):

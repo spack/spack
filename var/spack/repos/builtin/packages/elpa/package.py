@@ -24,6 +24,12 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
 
     version(
+        "2025.01.001", sha256="3ef0c6aed9a3e05db6efafe6e14d66eb88b2a1354d61e765b7cde0d3d5f3951e"
+    )
+    version(
+        "2024.05.001", sha256="9caf41a3e600e2f6f4ce1931bd54185179dade9c171556d0c9b41bbc6940f2f6"
+    )
+    version(
         "2024.03.001", sha256="41c6cbf56d2dac26443faaba8a77307d261bf511682a64b96e24def77c813622"
     )
     version(
@@ -87,13 +93,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     # https://gitlab.mpcdf.mpg.de/elpa/elpa/-/blob/master/documentation/PERFORMANCE_TUNING.md?ref_type=heads#builds-with-openmp-enabled
     with when("+openmp"):
         requires("^openblas threads=openmp", when="^[virtuals=blas,lapack] openblas")
-        requires("^intel-mkl threads=openmp", when="^[virtuals=blas,lapack] intel-mkl")
         requires(
             "^intel-oneapi-mkl threads=openmp", when="^[virtuals=blas,lapack] intel-oneapi-mkl"
-        )
-        requires(
-            "^intel-parallel-studio threads=openmp",
-            when="^[virtuals=blas,lapack] intel-parallel-studio",
         )
 
     # fails to build due to broken type-bound procedures in OMP parallel regions

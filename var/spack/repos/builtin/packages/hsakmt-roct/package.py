@@ -100,7 +100,7 @@ class HsakmtRoct(CMakePackage):
             prefixes = ";".join(
                 [
                     self.spec["libdrm"].prefix,
-                    self.spec["hsakmt-roct"].prefix,
+                    self.prefix,
                     self.spec["numactl"].prefix,
                     self.spec["pkgconfig"].prefix,
                     self.spec["llvm-amdgpu"].prefix,
@@ -108,7 +108,7 @@ class HsakmtRoct(CMakePackage):
                     self.spec["ncurses"].prefix,
                 ]
             )
-            hsakmt_path = ";".join([self.spec["hsakmt-roct"].prefix])
+            hsakmt_path = ";".join([self.prefix])
             cc_options = [
                 "-DCMAKE_PREFIX_PATH=" + prefixes,
                 "-DLIBHSAKMT_PATH=" + hsakmt_path,

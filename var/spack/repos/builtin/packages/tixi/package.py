@@ -67,7 +67,7 @@ class Tixi(CMakePackage):
                 env.prepend_path("PYTHONPATH", self.spec.prefix.share.tixi.python)
 
             # allow ctypes to find the tixi library
-            libs = ":".join(self.spec["tixi"].libs.directories)
+            libs = ":".join(self.libs.directories)
             if sys.platform == "darwin":
                 env.prepend_path("DYLD_FALLBACK_LIBRARY_PATH", libs)
             else:

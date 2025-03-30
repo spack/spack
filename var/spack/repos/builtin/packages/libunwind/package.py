@@ -50,7 +50,7 @@ class Libunwind(AutotoolsPackage):
 
     variant(
         "components",
-        values=any_combination_of("coredump", "ptrace", "setjump"),
+        values=any_combination_of("coredump", "ptrace", "setjmp"),
         description="Build specified libunwind libraries",
     )
 

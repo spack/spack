@@ -75,7 +75,7 @@ class Itk(CMakePackage):
     )
 
     def cmake_args(self):
-        use_mkl = self.spec["fftw-api"].name in INTEL_MATH_LIBRARIES
+        use_mkl = self.spec.satisfies("^[virtuals=fftw-api] intel-oneapi-mkl")
         args = [
             self.define("BUILD_TESTING", False),
             self.define("BUILD_SHARED_LIBS", True),
