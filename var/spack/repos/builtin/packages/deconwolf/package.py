@@ -21,7 +21,7 @@ class Deconwolf(CMakePackage):
     version("0.4.5", tag="v0.4.5")
 
     patch(
-        "https://github.com/elgw/deconwolf/commit/c5f28dd3d6ef532b6963127e551da1d7b4f33f83.patch",
+        "https://github.com/elgw/deconwolf/commit/c5f28dd3d6ef532b6963127e551da1d7b4f33f83.patch?full_index=1",
         sha256="d67096f7d2c7ddc764884e3cb09b0a6bbbca7eca5253512e73bc8d7eff89a1fc",
         when="@0.4.5",
     )
