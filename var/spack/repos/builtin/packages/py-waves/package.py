@@ -134,4 +134,5 @@ class PyWaves(PythonPackage):
     # https://github.com/spack/spack/issues/45801
     # https://github.com/spack/spack/pull/48394
     def test_imports(self):
+        """Skip import tests while waiting for spack PythonPackage bugfix"""
         pass
