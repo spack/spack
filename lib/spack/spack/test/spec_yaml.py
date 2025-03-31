@@ -496,6 +496,10 @@ e: *id002
         "hdf5~~mpi++shared",
         "hdf5 cflags==-g foo==bar cxxflags==-O3",
         "hdf5 cflags=-g foo==bar cxxflags==-O3",
+        "hdf5%gcc",
+        "hdf5%cmake",
+        "hdf5^gcc",
+        "hdf5^cmake",
     ],
 )
 def test_pickle_roundtrip_for_abstract_specs(spec_str):
