@@ -576,6 +576,11 @@ attr("node_version_satisfies", node(X, BuildDependency), Constraint) :-
   attr("build_requirement", ParentNode, build_requirement("node_version_satisfies", BuildDependency, Constraint)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
+attr("variant_set", node(X, BuildDependency), Variant, Value) :-
+  attr("build_requirement", ParentNode, build_requirement("variant_set", BuildDependency, Variant, Value)),
+  build_requirement(ParentNode, node(X, BuildDependency)).
+
+attr("depends_on",  node(X, Parent), node(Y, BuildDependency), "build") :- build_requirement(node(X, Parent), node(Y, BuildDependency)).
 
 1 { attr("provider_set", node(X, BuildDependency), node(0..Y-1, Virtual)) : max_dupes(Virtual, Y) } 1 :-
   attr("build_requirement", ParentNode, build_requirement("provider_set", BuildDependency, Virtual)),
