@@ -67,11 +67,8 @@ class Pmix(AutotoolsPackage):
         sha256="145f05a6c621bfb3fc434776b615d7e6d53260cc9ba340a01f55b383e07c842e",
         deprecated=True,
     )
-    version(
-        "3.2.3",
-        sha256="9b835f23c2f94a193c14012ee68b3657a61c568598cdd1212a3716b32d41a135",
-        deprecated=True,
-    )
+    # rhel9/rocky9 still distributing pmix@3.2.3
+    version("3.2.3", sha256="9b835f23c2f94a193c14012ee68b3657a61c568598cdd1212a3716b32d41a135")
     version(
         "3.2.2",
         sha256="7e7fafe2b338dab42a94002d99330a5bb0ebbdd06381ec65953a87c94db3dd23",
