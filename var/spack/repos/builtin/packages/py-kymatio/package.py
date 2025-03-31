@@ -9,7 +9,7 @@ class PyKymatio(PythonPackage):
     """Wavelet scattering transforms in Python with GPU acceleration."""
 
     homepage = "https://www.kymat.io"
-    pypi = "kymatio/kymatio-0.3.0-py3-none-any.whl"
+    url = "https://files.pythonhosted.org/packages/py3/k/kymatio/kymatio-0.3.0-py3-none-any.whl"
 
     maintainers("LydDeb")
 
