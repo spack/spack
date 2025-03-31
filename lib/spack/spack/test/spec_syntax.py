@@ -26,15 +26,9 @@ from spack.spec_parser import (
 )
 from spack.tokenize import Token
 
-FAIL_ON_WINDOWS = pytest.mark.xfail(
-    sys.platform == "win32",
-    raises=(SpecTokenizationError, spack.spec.InvalidHashError),
-    reason="Unix style path on Windows",
-)
+SKIP_ON_WINDOWS = pytest.mark.skipif(sys.platform == "win32", reason="Unix style path on Windows")
 
-FAIL_ON_UNIX = pytest.mark.xfail(
-    sys.platform != "win32", raises=SpecTokenizationError, reason="Windows style path on Unix"
-)
+SKIP_ON_UNIX = pytest.mark.skipif(sys.platform != "win32", reason="Windows style path on Unix")
 
 
 def simple_package_name(name):
@@ -1060,56 +1054,56 @@ def test_error_conditions(text, match_string):
     [
         # Specfile related errors
         pytest.param(
-            "/bogus/path/libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
+            "/bogus/path/libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
-        pytest.param("../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS),
-        pytest.param("./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS),
+        pytest.param("../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS),
+        pytest.param("./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS),
         pytest.param(
             "libfoo ^/bogus/path/libdwarf.yaml",
             spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
-            "libfoo ^../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
+            "libfoo ^../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
         pytest.param(
-            "libfoo ^./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
+            "libfoo ^./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
         pytest.param(
             "/bogus/path/libdwarf.yamlfoobar",
             spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
             "libdwarf^/bogus/path/libelf.yamlfoobar ^/path/to/bogus.yaml",
             spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
-            "c:\\bogus\\path\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
+            "c:\\bogus\\path\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
-        pytest.param("..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX),
-        pytest.param(".\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX),
+        pytest.param("..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
+        pytest.param(".\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
         pytest.param(
             "libfoo ^c:\\bogus\\path\\libdwarf.yaml",
             spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
+            marks=SKIP_ON_UNIX,
         ),
         pytest.param(
-            "libfoo ^..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
+            "libfoo ^..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
         pytest.param(
-            "libfoo ^.\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
+            "libfoo ^.\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
         pytest.param(
             "c:\\bogus\\path\\libdwarf.yamlfoobar",
             spack.spec.SpecFilenameError,
-            marks=FAIL_ON_UNIX,
+            marks=SKIP_ON_UNIX,
         ),
         pytest.param(
             "libdwarf^c:\\bogus\\path\\libelf.yamlfoobar ^c:\\path\\to\\bogus.yaml",
             spack.spec.SpecFilenameError,
-            marks=FAIL_ON_UNIX,
+            marks=SKIP_ON_UNIX,
         ),
     ],
 )

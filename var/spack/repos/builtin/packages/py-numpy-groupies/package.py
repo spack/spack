@@ -23,10 +23,16 @@ class PyNumpyGroupies(PythonPackage):
 
     license("BSD-2-Clause")
 
+    version("0.11.2", sha256="2fda978c4d28d2f1633a63972f425d0a7f2f12a75505d215b41b6de712e2ec4b")
     version("0.9.20", sha256="923a382d6bc6876384b58a9c0503b05b9d36a660f329695c2d33e4f93fcbbe3d")
 
-    depends_on("python@3.7:", type=("build", "run"))
+    # ptyhon 3.12 added in 0.11.2
+    # https://github.com/ml31415/numpy-groupies/commit/cf42fd58b46e72abddd27c3ed15c8c094e0b6211
+    depends_on("python@3.9:", type=("build", "run"), when="@0.10:")
+    depends_on("python@:3.11", type=("build", "run"), when="@:0.11.1")
+    depends_on("python@3.9:", type=("build", "run"), when="@0.11.2:")
 
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools-scm", type="build", when="@0.11.2:")
 
     depends_on("py-numpy", type=("build", "run"))

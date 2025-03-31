@@ -20,3 +20,6 @@ packages:
       cxx: [msvc]
       mpi: [msmpi]
       gl: [wgl]
+  mpi:
+    require:
+    - one_of: [msmpi]
