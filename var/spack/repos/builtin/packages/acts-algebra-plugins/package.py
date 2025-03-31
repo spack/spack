@@ -16,6 +16,7 @@ class ActsAlgebraPlugins(CMakePackage):
 
     license("MPL-2.0", checked_by="stephenswat")
 
+    version("0.27.0", sha256="c2081b399b7f4e004bebd5bf8250ed9596b113002fe445bca7fdac24d2c5932c")
     version("0.26.2", sha256="0170f22e1a75493b86464f27991117bc2c5a9d52554c75786e321d4c591990e7")
     version("0.26.1", sha256="8eb1e9e28ec2839d149b6a6bddd0f983b0cdf71c286c0aeb67ede31727c5b7d3")
     version("0.26.0", sha256="301702e3d0a3d12e46ae6d949f3027ddebd0b1167cbb3004d9a4a5697d3adc7f")
@@ -40,8 +41,10 @@ class ActsAlgebraPlugins(CMakePackage):
 
     depends_on("cmake@3.14:", type="build")
     depends_on("vecmem@1.5.0:", when="+vecmem")
+    depends_on("vecmem@1.14.0:", when="+vecmem @0.27:")
     depends_on("eigen@3.4.0:", when="+eigen")
     depends_on("vc@1.4.3:", when="+vc")
+    depends_on("vc@1.4.5:", when="+vc @0.27:")
     depends_on("root@6.18.0:", when="+smatrix")
     depends_on("fastor@0.6.4:", when="+fastor")
 
