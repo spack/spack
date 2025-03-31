@@ -269,7 +269,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             ]
         )
         if self.spec.satisfies("@7.0:"):
-            makefile_inc.extend(["FLEX       = %s" % flex_path,"BISON      = %s" % bison_path,])
+            makefile_inc.extend(["FLEX       = %s" % flex_path, "BISON      = %s" % bison_path])
         else:
             makefile_inc.extend(
                 [
