@@ -13,8 +13,6 @@ import spack.main
 import spack.util.pattern
 import spack.version
 
-pytestmark = [pytest.mark.usefixtures("mock_packages")]
-
 compiler = spack.main.SpackCommand("compiler")
 
 
@@ -145,6 +143,8 @@ done
     assert new_compiler.version == spack.version.Version(expected_version)
 
 
+# TODO/RepoSplit: Need to resolve how to set up the test and or mock package
+# TODO/RepoSplit:   so this test passes.
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 @pytest.mark.regression("17590")
 def test_compiler_find_prefer_no_suffix(no_packages_yaml, working_env, compilers_dir):
@@ -156,9 +156,6 @@ def test_compiler_find_prefer_no_suffix(no_packages_yaml, working_env, compilers
     os.environ["PATH"] = str(compilers_dir)
     output = compiler("find", "--scope=site")
 
-    # TODO/RepoSplit: IF clang is important, need to investigate what more than
-    # TODO/RepoSplit: determine_spec_details and validate_detected_spec needs to
-    # TODO/RepoSplit: be pulled from builtin's llvm package.
     assert "llvm@11.0.0" in output
     assert "gcc@8.4.0" in output
 
