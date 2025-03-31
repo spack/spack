@@ -174,7 +174,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         if self.spec.satisfies("+mpi"):
             cflags.append("-DSCOTCH_PTHREAD_MPI")
-            cflags.append("-DSCOTCH_MPI_ASYNC_COLL")
+            if self.spec.satisfies("@7.0:"):
+                cflags.append("-DSCOTCH_MPI_ASYNC_COLL")
 
         if self.spec.satisfies("platform=linux"):
             cflags.append("-DCOMMON_PTHREAD_AFFINITY_LINUX")
