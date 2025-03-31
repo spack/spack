@@ -16,6 +16,9 @@ class Sendme(CargoPackage):
     license("Apache-2.0 OR MIT")
 
     version("main", branch="main")
+    version("0.25.0", tag="v0.25.0", commit="b9081f52632e3190e46dd5eeeca58c8a1646f107")
+    version("0.24.0", tag="v0.24.0", commit="fdb03b324cbe8d4e4ceb25c628df75f88d0edf93")
     version("0.23.0", tag="v0.23.0", commit="39f6111d8c3a973ea1f54a3c47aad07014de854b")
+    depends_on("rust@1.81:", type="build")
 
     sanity_check_is_file = [join_path("bin", "sendme")]
