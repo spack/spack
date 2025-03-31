@@ -67,7 +67,9 @@ fi
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 @pytest.mark.regression("11678,13138")
-def test_compiler_find_without_paths(no_packages_yaml, working_env, mock_executable):
+def test_compiler_find_without_paths(
+    mock_packages, no_packages_yaml, working_env, mock_executable
+):
     """Tests that 'spack compiler find' looks into PATH by default, if no specific path
     is given.
     """
@@ -109,7 +111,7 @@ def test_removing_compilers_from_multiple_scopes(mutable_config, mock_packages):
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
-def test_compiler_add(mutable_config, mock_executable):
+def test_compiler_add(mock_packages, mutable_config, mock_executable):
     """Tests that we can add a compiler to configuration."""
     expected_version = "4.5.3"
     gcc_path = mock_executable(
@@ -145,7 +147,9 @@ done
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 @pytest.mark.regression("17590")
-def test_compiler_find_prefer_no_suffix(no_packages_yaml, working_env, compilers_dir):
+def test_compiler_find_prefer_no_suffix(
+    mock_packages, no_packages_yaml, working_env, compilers_dir
+):
     """Ensure that we'll pick 'clang' over 'clang-gpu' when there is a choice."""
     clang_path = compilers_dir / "clang"
     shutil.copy(clang_path, clang_path.parent / "clang-gpu")
@@ -166,7 +170,7 @@ def test_compiler_find_prefer_no_suffix(no_packages_yaml, working_env, compilers
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
-def test_compiler_find_path_order(no_packages_yaml, working_env, compilers_dir):
+def test_compiler_find_path_order(mock_packages, no_packages_yaml, working_env, compilers_dir):
     """Ensure that we look for compilers in the same order as PATH, when there are duplicates"""
     new_dir = compilers_dir / "first_in_path"
     new_dir.mkdir()
@@ -232,7 +236,7 @@ def test_compiler_list_empty(no_packages_yaml, working_env, compilers_dir):
     ],
 )
 def test_compilers_shows_packages_yaml(
-    external, expected, no_packages_yaml, working_env, compilers_dir
+    mock_packages, external, expected, no_packages_yaml, working_env, compilers_dir
 ):
     """Spack should see a single compiler defined from packages.yaml"""
     external["prefix"] = external["prefix"].format(prefix=os.path.dirname(compilers_dir))
