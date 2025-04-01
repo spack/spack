@@ -49,6 +49,7 @@ class PyNetcdf4(PythonPackage):
     depends_on("netcdf-c+mpi", when="+mpi")
     depends_on("hdf5@1.8.0:+hl~mpi", when="~mpi")
     depends_on("hdf5@1.8.0:+hl+mpi", when="+mpi")
+    depends_on("mpi", when="+mpi")
 
     # The installation script tries to find hdf5 using pkg-config. However, the
     # version of hdf5 installed with Spack does not have pkg-config files.
