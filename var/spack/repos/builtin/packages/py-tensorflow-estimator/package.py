@@ -49,6 +49,7 @@ class PyTensorflowEstimator(Package):
         depends_on("py-pandas")
         depends_on("py-six")
         for ver in [
+            "2.15",
             "2.14",
             "2.13",
             "2.12",
