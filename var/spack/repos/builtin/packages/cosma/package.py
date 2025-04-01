@@ -37,7 +37,6 @@ class Cosma(CMakePackage):
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")
 
     # We just need the libraries of cuda and rocm, so no need to extend
     # CudaPackage or ROCmPackage.
