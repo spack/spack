@@ -17,13 +17,13 @@ class PyAtropos(PythonPackage):
 
     version("1.1.22", sha256="05e40cb9337421479c692e1154b962fbf811d7939b72c197a024929b7ae88b78")
 
-    depends_on("c", type="build")  # generated
-
     depends_on("python@3.3:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-cython@0.25.2:", type="build")
     depends_on("py-tqdm", type=("build", "run"), when="+tqdm")
     depends_on("py-pysam", type=("build", "run"), when="+pysam")
+
+    depends_on("c", type="build")  # generated
 
     variant("tqdm", default=False, description="Enable progress bar")
     variant("pysam", default=False, description="Enable bam file parsing")

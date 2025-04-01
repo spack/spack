@@ -79,9 +79,6 @@ class PyTorchvision(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     desc = "Enable support for native encoding/decoding of {} formats in torchvision.io"
     variant("png", default=True, description=desc.format("PNG"))
     variant("jpeg", default=True, description=desc.format("JPEG"))
@@ -93,6 +90,9 @@ class PyTorchvision(PythonPackage):
     # torchvision does not yet support disabling giflib:
     # https://github.com/pytorch/vision/pull/8406#discussion_r1590926939
     # variant("gif", default=False, description=desc.format("GIF"), when="@0.19:")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     with default_args(type=("build", "link", "run")):
         # Based on PyPI wheel availability

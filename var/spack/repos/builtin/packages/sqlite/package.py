@@ -56,7 +56,6 @@ class Sqlite(AutotoolsPackage, NMakePackage):
     version("3.27.0", sha256="dbfb0fb4fc32569fa427d3658e888f5e3b84a0952f706ccab1fd7c62a54f10f0")
     version("3.26.0", sha256="5daa6a3fb7d1e8c767cd59c4ded8da6e4b00c61d3b466d0685e35c4dd6d7bf5d")
 
-    depends_on("c", type="build")  # generated
     # All versions prior to 3.26.0 are vulnerable to Magellan when FTS
     # is enabled, see https://blade.tencent.com/magellan/index_en.html
 
@@ -90,6 +89,9 @@ class Sqlite(AutotoolsPackage, NMakePackage):
         when=f"{function_condition}",
     )
     variant("rtree", default=True, description="Build with Rtree module")
+
+    depends_on("c", type="build")  # generated
+
     depends_on("zlib-api")
     depends_on("tcl", when="platform=windows")
 

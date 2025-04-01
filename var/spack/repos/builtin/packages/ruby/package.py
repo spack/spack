@@ -38,10 +38,10 @@ class Ruby(AutotoolsPackage, NMakePackage):
     version("2.5.3", sha256="9828d03852c37c20fa333a0264f2490f07338576734d910ee3fd538c9520846c")
     version("2.2.0", sha256="7671e394abfb5d262fbcd3b27a71bf78737c7e9347fa21c39e58b0bb9c4840fc")
 
+    build_system("autotools", "nmake", default="autotools")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    build_system("autotools", "nmake", default="autotools")
 
     for _platform_condition in ("platform=linux", "platform=darwin"):
         with when(_platform_condition):

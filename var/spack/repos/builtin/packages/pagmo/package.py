@@ -23,9 +23,6 @@ class Pagmo(CMakePackage):
 
     version("1.1.7", sha256="6d8fab89ef9d5d5f30f148225bf9b84b2e5a38997f3d68b85547840e9fd95172")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("examples", default=False, description="Build examples")
     variant("cxx", default=True, description="Build the C++ interface")
     variant("python", default=True, description="Build Python bindings")
@@ -44,6 +41,9 @@ class Pagmo(CMakePackage):
     variant("pykep", default=False, description="Enable support for pykep")
 
     extends("python", when="+python")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Concretization in Spack is currently broken
     # depends_on('boost+system+serialization+thread')

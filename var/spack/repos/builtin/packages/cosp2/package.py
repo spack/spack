@@ -20,10 +20,10 @@ class Cosp2(MakefilePackage):
 
     version("master", branch="master")
 
-    depends_on("c", type="build")  # generated
-
     variant("double", default=True, description="Build with double precision.")
     variant("mpi", default=True, description="Build with MPI Support")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
 

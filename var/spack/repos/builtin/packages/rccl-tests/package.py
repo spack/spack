@@ -21,9 +21,9 @@ class RcclTests(MakefilePackage):
     version("develop", branch="develop", preferred=True)
     version("master", branch="master")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("mpi", default=True, description="with MPI support")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("hip")
     depends_on("rccl")

@@ -81,9 +81,6 @@ class Curl(NMakePackage, AutotoolsPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     default_tls = "openssl"
     if sys.platform == "darwin":
         default_tls = "secure_transport"
@@ -127,6 +124,9 @@ class Curl(NMakePackage, AutotoolsPackage):
     )
 
     conflicts("platform=linux", when="tls=secure_transport", msg="Only supported on macOS")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type="build", when="platform=darwin")
     depends_on("pkgconfig", type="build", when="platform=linux")

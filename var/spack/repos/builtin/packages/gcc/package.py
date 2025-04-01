@@ -136,9 +136,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         version("4.9.1", sha256="d334781a124ada6f38e63b545e2a3b8c2183049515a1abab6d513f109f1d717e")
         version("4.8.4", sha256="4a80aa23798b8e9b5793494b8c976b39b8d9aa2e53cd5ed5534aff662a7f8695")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     # We specifically do not add 'all' variant here because:
     # (i) Ada, D, Go, Jit, and Objective-C++ are not default languages.
     # In that respect, the name 'all' is rather misleading.
@@ -193,6 +190,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     variant(
         "profiled", default=False, description="Use Profile Guided Optimization", when="+bootstrap"
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("flex", type="build", when="@master")
 

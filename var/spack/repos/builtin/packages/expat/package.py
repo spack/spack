@@ -158,9 +158,6 @@ class Expat(AutotoolsPackage, CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     build_system("autotools", "cmake", default="autotools")
 
     # Version 2.2.2 introduced a requirement for a high quality
@@ -183,6 +180,9 @@ class Expat(AutotoolsPackage, CMakePackage):
         description="Build expat as shared if true, static if false",
         when="build_system=cmake",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("libbsd", when="@2.2.1:+libbsd")
 

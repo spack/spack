@@ -1190,7 +1190,7 @@ class PyclingoDriver:
                 problem_repr += "\n" + f.read()
 
         result = None
-        conc_cache_enabled = spack.config.get("config:concretization_cache:enable", True)
+        conc_cache_enabled = spack.config.get("config:concretization_cache:enable", False)
         if conc_cache_enabled:
             result, concretization_stats = CONC_CACHE.fetch(problem_repr)
 

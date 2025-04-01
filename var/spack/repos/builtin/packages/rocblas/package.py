@@ -45,10 +45,6 @@ class Rocblas(CMakePackage):
         version("5.3.3", sha256="62a3b5f415bd8e0dcd0d68233d379f1a928ec0349977c32b4eea72ae5004e805")
         version("5.3.0", sha256="8ea7269604cba949a6ea84b78dc92a44fa890427db88334da6358813f6512e34")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant(
@@ -68,6 +64,10 @@ class Rocblas(CMakePackage):
     # https://github.com/ROCm/HIP/issues/2678
     # https://github.com/ROCm/hipamd/blob/rocm-5.2.x/include/hip/amd_detail/host_defines.h#L50
     conflicts("%gcc@12", when="@5.2")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.16.8:", type="build")
 

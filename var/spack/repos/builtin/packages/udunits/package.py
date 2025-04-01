@@ -35,11 +35,11 @@ class Udunits(AutotoolsPackage):
         deprecated=True,
     )
 
+    variant("shared", default=True, description="Build shared library")
+
     depends_on("c", type="build")  # generated
 
     depends_on("expat")
-
-    variant("shared", default=True, description="Build shared library")
 
     @property
     def libs(self):

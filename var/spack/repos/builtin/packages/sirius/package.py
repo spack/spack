@@ -34,10 +34,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     version("7.3.1", sha256="8bf9848b8ebf0b43797fd359adf8c84f00822de4eb677e3049f22baa72735e98")
     version("7.3.0", sha256="69b5cf356adbe181be6c919032859c4e0160901ff42a885d7e7ea0f38cc772e2")
 
-    depends_on("cxx", type="build")
-    depends_on("c", type="build")
-    depends_on("fortran", type="build")
-
     variant("shared", default=True, description="Build shared libraries")
     variant("openmp", default=True, description="Build with OpenMP support")
     variant("fortran", default=False, description="Build Fortran bindings")
@@ -72,6 +68,10 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         )
         conflicts("+tests~pugixml")
     depends_on("pugixml", when="+pugixml")
+
+    depends_on("cxx", type="build")
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("cmake@3.23:", type="build")
     depends_on("mpi")
