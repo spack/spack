@@ -22,6 +22,9 @@ class PyWaves(PythonPackage):
     license("BSD-3-Clause", checked_by="kbrindley")
 
     version("main", branch="main", get_full_repo=True)
+    version("0.12.8", sha256="6055b4e92075c0168bf9d85b75375f2f40fa37cd3be2dce80a9b304f3523dc81")
+    version("0.12.7", sha256="53d4f389351b89eb9f852f7a999a9119384aa9b62a21c27920de006f37a2e7c4")
+    version("0.12.6", sha256="f25ec014b04319512d4227f7f6fb788056de60e5686795d9b5c189f1cc61b7f2")
     version("0.12.5", sha256="3868f1592a21e4b671ed31e66951151d73ff0535e0209c9621629994b25c0cd4")
 
     depends_on("python@3.9:", type=("build", "run"))
