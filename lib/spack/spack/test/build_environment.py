@@ -812,6 +812,7 @@ gcc:
         ),
     ],
 )
+@pytest.mark.not_on_windows("Windows doesn't use the compiler-wrapper")
 def test_extra_rpaths_is_set(
     working_env, mutable_config, mock_packages, gcc_config, expected_rpaths
 ):
