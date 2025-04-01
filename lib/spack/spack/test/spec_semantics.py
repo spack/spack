@@ -634,7 +634,7 @@ class TestSpecSemantics:
         b = Spec("multivalue-variant foo=bar,baz")
         assert not a.satisfies(b)
 
-    def test_multivalued_variant_2(self, default_mock_concretization):
+    def test_multivalued_variant_2(self):
         a = Spec("multivalue-variant foo=bar")
         b = Spec("multivalue-variant foo=bar,baz")
         # The specs are abstract and they **could** be constrained
@@ -642,11 +642,12 @@ class TestSpecSemantics:
         # An abstract spec can instead be constrained
         assert a.constrain(b)
 
+    def test_multivalued_variant_3(self, default_mock_concretization):
         a = default_mock_concretization("multivalue-variant foo=bar,baz")
         b = Spec("multivalue-variant foo=bar,baz,quux")
         assert not a.satisfies(b)
 
-    def test_multivalued_variant_3(self, default_mock_concretization):
+    def test_multivalued_variant_4(self):
         a = Spec("multivalue-variant foo=bar,baz")
         b = Spec("multivalue-variant foo=bar,baz,quux")
         # The specs are abstract and they **could** be constrained
@@ -658,7 +659,7 @@ class TestSpecSemantics:
         with pytest.raises(InvalidVariantValueError):
             spack.concretize.concretize_one(a)
 
-    def test_multivalued_variant_4(self, default_mock_concretization):
+    def test_multivalued_variant_5(self):
         # This time we'll try to set a single-valued variant
         a = Spec("multivalue-variant fee=bar")
         b = Spec("multivalue-variant fee=baz")
