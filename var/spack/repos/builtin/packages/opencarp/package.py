@@ -88,7 +88,7 @@ class Opencarp(CMakePackage):
         "9.0",
         "8.2",
         "8.1",
-        "7.0"
+        "7.0",
     ]:
         depends_on("py-carputils@oc" + ver, when="@" + ver + " +carputils")
         depends_on("meshtool@oc" + ver, when="@" + ver + " +meshtool")
