@@ -133,7 +133,7 @@ class Visit(CMakePackage):
     conflicts("mpi", when="~mpi")
 
     # VTK flavors
-    depends_on("vtk +opengl2")
+    depends_on("vtk +opengl2 +versioned_install")
     depends_on("vtk@8.1:8", when="@:3.3")
     depends_on("vtk@9.2.6", when="@3.4:")
     depends_on("vtk +qt", when="+gui")
