@@ -211,23 +211,18 @@ spack:
   - py-scikit-learn
   - py-scipy
   - py-seaborn
-  # - py-horovod      # error
-  # - py-jax          # error
-  # - py-matplotlib   # error
-  # - py-tensorflow   # error
-  # - py-torch        # error
 
   - aml +level_zero
   - amrex +sycl
   - arborx +sycl ^kokkos +sycl +openmp cxxstd=17
   - cabana +sycl ^kokkos +sycl +openmp cxxstd=17
   - ginkgo +sycl
-  - heffte +sycl
   - kokkos +sycl +openmp cxxstd=17
   - sundials +sycl +examples-install cxxstd=17
   - tau +mpi +opencl +level_zero +syscall
   - upcxx +level_zero
   # --
+  # - heffte +sycl                                    # heffte-2.4.1: intel-oneapi-mkl-2024.2.2-yevdna3rfdezkcm6vz4r3gtrz4grkts3/mkl/2024.2/lib//libmkl_sycl_rng.so: undefined reference to `__host_std::sycl_host_floor(sycl::_V1::vec<float, 4>)'
   # - hpctoolkit +level_zero                          # hpctoolkit-2024.01.1: gpu/intel/level0/level0-command-process.c:94:61: error: illegal initializer type 'atomic_int' (aka '_Atomic(int)')
   # - hypre +sycl                                     # hypre-2.32.0: gpu/intel/level0/level0-command-process.c:94:61: error: illegal initializer type 'atomic_int' (aka '_Atomic(int)')
   # - kokkos-kernels ^kokkos +sycl +openmp cxxstd=17  # kokkos-kernels-4.5.01: /opt/intel/oneapi/compiler/2025.1/bin/compiler/../../include/sycl/group_algorithm.hpp:598:31: error: SYCL kernel cannot call an undefined function without SYCL_EXTERNAL attribute
