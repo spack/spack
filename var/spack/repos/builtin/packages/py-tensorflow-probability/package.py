@@ -58,7 +58,6 @@ class PyTensorflowProbability(Package):
     depends_on("py-dm-tree", when="@0.12:", type=("build", "run"))
 
     # tensorflow_probability/python/__init__.py
-
     variant("tf", default=False, description="Build with TensorFlow support")
     with when("+tf"):
         depends_on("py-tf-keras@2.18:", when="@0.25:", type=("build", "run"))
@@ -71,9 +70,12 @@ class PyTensorflowProbability(Package):
         depends_on("py-tensorflow@2.11:2", when="@0.19", type=("build", "run"))
 
     # jaxlib is not required, as it's already a dependency of py-jax
+    # no real minimum version, setup.py doesn't specify one.
+    # The README only specifies that it is "tested and stable against".
+    # If needed, this versions could be relaxed.
     variant("jax", default=False, description="Build with JAX support")
     with when("+jax"):
-        depends_on("py-jax@0.4.35:0.4", when="@0.25", type=("build", "run"))
+        depends_on("py-jax@0.4.35:0.5", when="@0.25", type=("build", "run"))
         depends_on("py-jax@0.4.25:0.4", when="@0.24", type=("build", "run"))
         depends_on("py-jax@0.4.20:0.4", when="@0.23", type=("build", "run"))
         depends_on("py-jax@0.4.16:0.4", when="@0.22", type=("build", "run"))

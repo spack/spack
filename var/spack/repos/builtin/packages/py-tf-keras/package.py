@@ -43,6 +43,7 @@ class PyTfKeras(PythonPackage):
     # TODO: uncomment for 2.19
     # depends_on("protobuf@4.23.0", type="build", when="@2.19:")
     # the tf-keras versions are following along with TF versions
+    # as defined in oss_setup.py
     for minor_ver in range(18, max_minor + 1):
         depends_on(f"py-tensorflow@2.{minor_ver}", type=("build", "run"), when=f"@2.{minor_ver}")
         # depends_on(f"py-tensorboard@2.{minor_ver}",
