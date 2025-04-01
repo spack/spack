@@ -39,8 +39,6 @@ class ComposableKernel(CMakePackage):
         version("5.4.3", commit="bb3d9546f186e39cefedc3e7f01d88924ba20168")
         version("5.4.0", commit="236bd148b98c7f1ec61ee850fcc0c5d433576305")
 
-    depends_on("cxx", type="build")  # generated
-
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
         "amdgpu_target",
@@ -48,6 +46,8 @@ class ComposableKernel(CMakePackage):
         sticky=True,
         description="set gpu targets",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("python", type="build")
     depends_on("z3", type="build")

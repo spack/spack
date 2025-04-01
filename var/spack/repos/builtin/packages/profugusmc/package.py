@@ -16,12 +16,12 @@ class Profugusmc(CMakePackage, CudaPackage):
 
     version("master", branch="master")
 
+    variant("mpi", default=True, description="Enable MPI")
+    variant("cuda", default=False, description="Enable CUDA")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("mpi", default=True, description="Enable MPI")
-    variant("cuda", default=False, description="Enable CUDA")
 
     depends_on("blas")
     depends_on("lapack")

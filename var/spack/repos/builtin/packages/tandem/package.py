@@ -25,8 +25,6 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
     )
     version("1.0", tag="v1.0", commit="eccab10cbdf5842ed9903fac7a023be5e2779f36", submodules=True)
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
     patch("fix_v1.0_compilation.diff", when="@1.0")
 
     maintainers("dmay23", "Thomas-Ulrich")
@@ -46,6 +44,8 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
     variant("libxsmm", default=False, description="Install libxsmm-generator")
     variant("python", default=False, description="installs python and numpy")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     depends_on("mpi")
 
     for var in ["openmpi", "mpich", "mvapich", "mvapich2", "mvapich2-gdr"]:

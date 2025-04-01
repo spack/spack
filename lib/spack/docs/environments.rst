@@ -686,7 +686,8 @@ the environment.
    spack:
      include:
      - environment/relative/path/to/config.yaml
-     - https://github.com/path/to/raw/config/packages.yaml
+     - path: https://github.com/path/to/raw/config/compilers.yaml
+       sha256: 26e871804a92cd07bb3d611b31b4156ae93d35b6a6d6e0ef3a67871fcb1d258b
      - /absolute/path/to/packages.yaml
      - path: /path/to/$os/$target/environment
        optional: true
@@ -700,11 +701,11 @@ with the ``optional`` clause and conditional with the ``when`` clause. (See
 
 Files are listed using paths to individual files or directories containing them.
 Path entries may be absolute or relative to the environment or specified as 
-URLs. URLs to individual files need link to the **raw** form of the file's 
+URLs. URLs to individual files must link to the **raw** form of the file's 
 contents (e.g., `GitHub
 <https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files#viewing-or-copying-the-raw-file-content>`_ 
 or `GitLab
-<https://docs.gitlab.com/ee/api/repository_files.html#get-raw-file-from-repository>`_).
+<https://docs.gitlab.com/ee/api/repository_files.html#get-raw-file-from-repository>`_) **and** include a valid sha256 for the file.
 Only the ``file``, ``ftp``, ``http`` and ``https`` protocols (or schemes) are
 supported. Spack-specific, environment and user path variables can be used.
 (See :ref:`config-file-variables` for more information.)

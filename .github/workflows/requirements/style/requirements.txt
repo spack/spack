@@ -1,6 +1,6 @@
 black==25.1.0
 clingo==5.7.1
-flake8==7.1.2
+flake8==7.2.0
 isort==6.0.1
 mypy==1.15.0
 types-six==1.17.0.20250304

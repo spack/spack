@@ -27,9 +27,6 @@ class Grass(AutotoolsPackage):
     version("7.8.1", sha256="6ae578fd67afcce7abec4ba4505dcc55b3d2dfe0ca46b99d966cb148c654abb3")
     version("7.8.0", sha256="4b1192294e959ffd962282344e4ff325c4472f73abe605e246a1da3beda7ccfa")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("cxx", default=True, description="Support C++ functionality")
     variant("tiff", default=False, description="Support TIFF functionality")
     variant("png", default=False, description="Support PNG functionality")
@@ -56,6 +53,9 @@ class Grass(AutotoolsPackage):
     variant("netcdf", default=False, description="Enable NetCDF support")
     variant("geos", default=False, description="Enable GEOS support")
     variant("x", default=False, description="Use the X Window System")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # https://htmlpreview.github.io/?https://github.com/OSGeo/grass/blob/master/REQUIREMENTS.html
     # General requirements

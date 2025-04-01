@@ -66,8 +66,6 @@ class Libfabric(AutotoolsPackage, CudaPackage):
     version("1.5.0", sha256="88a8ad6772f11d83e5b6f7152a908ffcb237af273a74a1bd1cb4202f577f1f23")
     version("1.4.2", sha256="5d027d7e4e34cb62508803e51d6bd2f477932ad68948996429df2bfff37ca2a5")
 
-    depends_on("c", type="build")  # generated
-
     fabrics = (
         "cxi",
         "efa",
@@ -119,6 +117,8 @@ class Libfabric(AutotoolsPackage, CudaPackage):
     # Fix for the inline assembly problem for the Nvidia compilers
     # https://github.com/ofiwg/libfabric/pull/7665
     patch("nvhpc-symver.patch", when="@1.6.0:1.14.0 %nvhpc")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("rdma-core", when="fabrics=verbs")
     depends_on("rdma-core", when="@1.10.0: fabrics=efa")

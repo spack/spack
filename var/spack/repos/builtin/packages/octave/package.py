@@ -52,10 +52,6 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     version("4.0.2", sha256="39cd8fd36c218fc00adace28d74a6c7c9c6faab7113a5ba3c4372324c755bdc1")
     version("4.0.0", sha256="4c7ee0957f5dd877e3feb9dfe07ad5f39b311f9373932f0d2a289dc97cca3280")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     # patches
     # see https://savannah.gnu.org/bugs/?50234
     patch("patch_4.2.1_inline.diff", when="@4.2.1")
@@ -86,6 +82,10 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     variant("zlib", default=False, description="Use zlib")
 
     # Required dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("blas")
     depends_on("lapack")
     # Octave does not configure with sed from darwin:

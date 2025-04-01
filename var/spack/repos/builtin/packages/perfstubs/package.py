@@ -24,10 +24,11 @@ class Perfstubs(CMakePackage):
 
     version("master", branch="master")
 
+    variant("static", default=False, description="Build static executable support")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-    variant("static", default=False, description="Build static executable support")
 
     def cmake_args(self):
         args = [self.define_from_variant("PERFSTUBS_USE_STATIC", "static")]

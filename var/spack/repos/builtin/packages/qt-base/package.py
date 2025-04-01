@@ -190,6 +190,9 @@ class QtBase(QtPackage):
     variant("opengl", default=False, when="+gui", description="Build with OpenGL support.")
     variant("widgets", default=True, when="+gui", description="Build with widgets.")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # Dependencies, then variant- and version-specific dependencies
     depends_on("c", type="build")
     depends_on("cxx", type="build")
