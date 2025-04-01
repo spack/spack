@@ -567,26 +567,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.16:")
     depends_on("cmake@3.20:", when="llvm=bundled")
 
-    # ensure we can map the spack compiler name to one of the ones we recognize
-    requires(
-        "%aocc",
-        "%apple-clang",
-        "%arm",
-        "%clang",
-        "%cce",
-        "%cray-prgenv-cray",
-        "%cray-prgenv-gnu",
-        "%cray-prgenv-intel",
-        "%cray-prgenv-pgi",
-        "%dpcpp",
-        "%gcc",
-        "%intel",
-        "%llvm",
-        "%oneapi",
-        "%rocmcc",
-        policy="one_of",
-    )
-
     def unset_chpl_env_vars(self, env):
         # Clean the environment from any pre-set CHPL_ variables that affect the build
         for var in self.chpl_env_vars:
