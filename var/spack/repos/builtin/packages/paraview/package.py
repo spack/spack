@@ -392,6 +392,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("generator=ninja", when="%xl")
     conflicts("generator=ninja", when="%xl_r")
 
+    # Versions 5.13.0-5.13.2 do not compile with Intel classic compilers
+    conflicts("%intel", when="@5.13:5.13.2")
+
     def url_for_version(self, version):
         _urlfmt = "http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}"
         # Handle ParaView version-based custom URLs
