@@ -25,12 +25,12 @@ class Masa(AutotoolsPackage):
     version("0.43.0", tag="0.43.0")
     version("0.42.0", tag="0.42.0")
 
+    variant("fortran", default=False, description="Compile with Fortran interfaces")
+    variant("python", default=False, description="Compile with Python interfaces")
+
     depends_on("c", type="build")
     depends_on("cxx", type="build")
     depends_on("fortran", type="build", when="+fortran")
-
-    variant("fortran", default=False, description="Compile with Fortran interfaces")
-    variant("python", default=False, description="Compile with Python interfaces")
 
     depends_on("gettext")
     depends_on("metaphysicl")

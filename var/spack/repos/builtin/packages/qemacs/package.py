@@ -23,8 +23,6 @@ class Qemacs(MakefilePackage):
 
     conflicts("%apple-clang", msg="Incompatible with Apple Clang's default linker.")
 
-    depends_on("which", type="build")
-
     variant("doc", default=True, description="Install documentation")
     variant("plugins", default=False, description="Enable plugin support")
     variant("X", default=False, description="Build with X11 support")
@@ -35,6 +33,8 @@ class Qemacs(MakefilePackage):
     conflicts("+plugins", when="platform=freebsd")
     conflicts("+plugins", when="platform=darwin")
     conflicts("+plugins", when="platform=windows")
+
+    depends_on("which", type="build")
 
     depends_on("libx11", type="link", when="+X")
     depends_on("libxcb", type="link", when="+X")

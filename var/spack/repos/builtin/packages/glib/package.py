@@ -67,15 +67,15 @@ class Glib(MesonPackage):
     version("2.60.7", sha256="8b12c0af569afd3b71200556ad751bad4cf4bf7bc4b5f880638459a42ca86310")
     version("2.58.3", sha256="8f43c31767e88a25da72b52a40f3301fefc49a665b56dc10ee7cc9565cbe7481")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("libmount", default=False, description="Build with libmount support")
     variant(
         "tracing",
         values=any_combination_of("dtrace", "systemtap"),
         description="Enable tracing support",
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     with default_args(type="build"):
         depends_on("meson@1.4:", when="@2.83:")

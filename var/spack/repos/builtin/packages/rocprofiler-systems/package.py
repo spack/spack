@@ -41,10 +41,6 @@ class RocprofilerSystems(CMakePackage):
         submodules=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "rocm",
         default=True,
@@ -89,6 +85,10 @@ class RocprofilerSystems(CMakePackage):
     )
 
     extends("python", when="+python")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # hard dependencies
     depends_on("cmake@3.16:", type="build")

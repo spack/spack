@@ -32,9 +32,6 @@ class Cairo(AutotoolsPackage, MesonPackage):
     version("1.14.8", sha256="d1f2d98ae9a4111564f6de4e013d639cf77155baf2556582295a0f00a9bc5e20")
     version("1.14.0", sha256="2cf5f81432e77ea4359af9dcd0f4faf37d015934501391c311bfd2d19a0134b7")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # 1.17.4 is the last autotools based version. From 1.18.0 onward it is meson only
     build_system(
         conditional("meson", when="@1.18.0:"),
@@ -103,6 +100,9 @@ class Cairo(AutotoolsPackage, MesonPackage):
     depends_on("pkgconfig", type="build")
 
     # non build system specific dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("freetype", when="+ft")
     depends_on("libpng", when="+png")
     depends_on("glib")

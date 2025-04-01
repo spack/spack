@@ -19,9 +19,9 @@ class Exampm(CMakePackage):
 
     version("master", branch="master")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Build shared libraries")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("mpi")
     depends_on("kokkos@3.0:")

@@ -16,9 +16,9 @@ class Gnds(CMakePackage):
 
     version("0.0.1", sha256="4c8faaa01a3e6fb08ec3e8e126a76f75b5442509a46b993e325ec79dd9f04879")
 
-    depends_on("cxx", type="build")
-
     variant("shared", default=True, description="Build shared libraries")
+
+    depends_on("cxx", type="build")
 
     depends_on("pugixml")
 

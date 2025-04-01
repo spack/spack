@@ -22,9 +22,9 @@ class Haccabana(CMakePackage):
 
     version("master", branch="master")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Build shared libraries")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.9:", type="build")
     depends_on("kokkos@3.0:")

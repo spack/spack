@@ -94,9 +94,6 @@ class Libarchive(AutotoolsPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "libs",
         default="static,shared",
@@ -131,6 +128,9 @@ class Libarchive(AutotoolsPackage):
         description="What executables to build",
     )
     variant("iconv", default=True, description="Support iconv")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("bzip2", when="compression=bz2lib")
     depends_on("lz4", when="compression=lz4")

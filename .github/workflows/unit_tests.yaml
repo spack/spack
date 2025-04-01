@@ -19,9 +19,6 @@ jobs:
         on_develop:
         - ${{ github.ref == 'refs/heads/develop' }}
         include:
-        - python-version: '3.6'
-          os: ubuntu-20.04
-          on_develop: ${{ github.ref == 'refs/heads/develop' }}
         - python-version: '3.7'
           os: ubuntu-22.04
           on_develop: ${{ github.ref == 'refs/heads/develop' }}

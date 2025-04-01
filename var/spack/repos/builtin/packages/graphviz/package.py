@@ -40,9 +40,6 @@ class Graphviz(AutotoolsPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # Language bindings
     language_bindings = ["java"]
 
@@ -107,6 +104,9 @@ class Graphviz(AutotoolsPackage):
         patch("fix-quartz-darwin.patch", when="@:2.47.2")
 
     # Language dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     for lang in language_bindings:
         depends_on("swig", when=("+" + lang))
         depends_on(lang, when=("+" + lang))

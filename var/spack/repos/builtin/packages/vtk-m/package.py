@@ -52,9 +52,6 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     version("1.2.0", sha256="44596e88b844e7626248fb8e96a38be25a0e585a22256b1c859208b23ef45171")
     version("1.1.0", sha256="55f42c417d3a41893230b2fd3b5c192daeee689a2193de10bf22a1ef5c24c7ad")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("shared", default=False, description="build shared libs")
 
     variant("doubleprecision", default=True, description="enable double precision")
@@ -87,6 +84,9 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("tbb", default=(sys.platform == "darwin"), description="build TBB support")
     variant("sycl", default=False, description="Build with SYCL backend")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.12:", type="build")  # CMake >= 3.12
     depends_on("cmake@3.18:", when="+rocm", type="build")  # CMake >= 3.18

@@ -27,8 +27,6 @@ class Votca(CMakePackage):
     version("2022.1", sha256="358119b2645fe60f88ca621aed508c49fb61f88d29d3e3fa24b5b831ed4a66ec")
     version("2022", sha256="7991137098ff4511f4ca2c6f1b6c45f53d92d9f84e5c0d0e32fbc31768f73a83")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("mkl", default=False, description="Build with MKL support")
     variant(
         "new-gmx", default=False, description="Build against gromacs>2019 - no tabulated kernels"
@@ -38,6 +36,8 @@ class Votca(CMakePackage):
     conflicts("votca-tools")
     conflicts("votca-csg")
     conflicts("votca-xtp")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.13:", type="build")
     depends_on("expat")
