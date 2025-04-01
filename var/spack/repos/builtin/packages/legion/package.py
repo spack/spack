@@ -28,6 +28,7 @@ class Legion(CMakePackage, ROCmPackage):
 
     maintainers("pmccormick", "streichler", "elliottslaughter")
     tags = ["e4s"]
+    version("25.03.0", tag="legion-25.03.0", commit="04716e3b3686d4af71e6a4398dfbe8cd869c057b")
     version("24.12.0", tag="legion-24.12.0", commit="2f087ebe433a19f9a3abd05382f951027933bad9")
     version("24.09.0", tag="legion-24.09.0", commit="4a03402467547b99530042cfe234ceec2cd31b2e")
     version("24.06.0", tag="legion-24.06.0", commit="3f27977943626ef23038ef0049b7ad1b389caad1")
@@ -35,15 +36,60 @@ class Legion(CMakePackage, ROCmPackage):
     version("23.12.0", tag="legion-23.12.0", commit="8fea67ee694a5d9fb27232a7976af189d6c98456")
     version("23.09.0", tag="legion-23.09.0", commit="7304dfcf9b69005dd3e65e9ef7d5bd49122f9b49")
     version("23.06.0", tag="legion-23.06.0", commit="7b5ff2fb9974511c28aec8d97b942f26105b5f6d")
-    version("23.03.0", tag="legion-23.03.0", commit="12f6051c9d75229d00ac0b31d6be1ff2014f7e6a")
-    version("22.12.0", tag="legion-22.12.0", commit="9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5")
-    version("22.09.0", tag="legion-22.09.0", commit="5b6e013ad74fa6b4c5a24cbb329c676b924550a9")
-    version("22.06.0", tag="legion-22.06.0", commit="f721be968fb969339334b07a3175a0400700eced")
-    version("22.03.0", tag="legion-22.03.0", commit="bf6ce4560c99397da4a5cf61a306b521ec7069d0")
-    version("21.12.0", tag="legion-21.12.0", commit="e1443112edaa574804b3b9d2a24803e937b127fd")
-    version("21.09.0", tag="legion-21.09.0", commit="5a991b714cf55c3eaa513c7a18abb436d86a0a90")
-    version("21.06.0", tag="legion-21.06.0", commit="30e00fa6016527c4cf60025a461fb7865f8def6b")
-    version("21.03.0", tag="legion-21.03.0", commit="0cf9ddd60c227c219c8973ed0580ddc5887c9fb2")
+    version(
+        "23.03.0",
+        tag="legion-23.03.0",
+        commit="12f6051c9d75229d00ac0b31d6be1ff2014f7e6a",
+        deprecated=True,
+    )
+    version(
+        "22.12.0",
+        tag="legion-22.12.0",
+        commit="9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5",
+        deprecated=True,
+    )
+    version(
+        "22.09.0",
+        tag="legion-22.09.0",
+        commit="5b6e013ad74fa6b4c5a24cbb329c676b924550a9",
+        deprecated=True,
+    )
+    version(
+        "22.06.0",
+        tag="legion-22.06.0",
+        commit="f721be968fb969339334b07a3175a0400700eced",
+        deprecated=True,
+    )
+    version(
+        "22.03.0",
+        tag="legion-22.03.0",
+        commit="bf6ce4560c99397da4a5cf61a306b521ec7069d0",
+        deprecated=True,
+    )
+    version(
+        "21.12.0",
+        tag="legion-21.12.0",
+        commit="e1443112edaa574804b3b9d2a24803e937b127fd",
+        deprecated=True,
+    )
+    version(
+        "21.09.0",
+        tag="legion-21.09.0",
+        commit="5a991b714cf55c3eaa513c7a18abb436d86a0a90",
+        deprecated=True,
+    )
+    version(
+        "21.06.0",
+        tag="legion-21.06.0",
+        commit="30e00fa6016527c4cf60025a461fb7865f8def6b",
+        deprecated=True,
+    )
+    version(
+        "21.03.0",
+        tag="legion-21.03.0",
+        commit="0cf9ddd60c227c219c8973ed0580ddc5887c9fb2",
+        deprecated=True,
+    )
     version("stable", branch="stable")
     version("master", branch="master")
 
@@ -56,19 +102,29 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
-    depends_on("cmake@3.16:", type="build")
+    depends_on("cmake@3.16:", when="@21.03.0:24.12.0", type="build")
+    depends_on("cmake@3.22:", when="@25.03.0:", type="build")
+    depends_on("cmake@3.22:", when="@stable", type="build")
     # TODO: Need to spec version of MPI v3 for use of the low-level MPI transport
     # layer. At present the MPI layer is still experimental and we discourge its
     # use for general (not legion development) use cases.
     depends_on("mpi", when="network=mpi")
     depends_on("mpi", when="network=gasnet")  # MPI is required to build gasnet (needs mpicc).
     depends_on("ucx", when="network=ucx")
+    depends_on("ucc", when="network=ucx @25.03.0:")
+    depends_on("ucc", when="network=ucx @stable")
+    depends_on("ucc+cuda+nccl", when="network=ucx +cuda @25.03.0:")
+    depends_on("ucc+cuda+nccl", when="network=ucx +cuda @stable")
+    depends_on("ucc+rocm+rccl", when="network=ucx +rocm @25.03.0:")
+    depends_on("ucc+rocm+rccl", when="network=ucx +rocm @stable")
     depends_on("ucx", when="conduit=ucx")
     depends_on("mpi", when="conduit=mpi")
     depends_on("cuda@10.0:11.9", when="+cuda_unsupported_compiler @21.03.0:23.03.0")
     depends_on("cuda@10.0:11.9", when="+cuda @21.03.0:23.03.0")
-    depends_on("cuda@10.0:", when="+cuda_unsupported_compiler")
-    depends_on("cuda@10.0:", when="+cuda")
+    depends_on("cuda@11.7:", when="+cuda_unsupported_compiler @23.06.0:")
+    depends_on("cuda@11.7:", when="+cuda @23.06.0:")
+    depends_on("cuda@11.7:", when="+cuda_unsupported_compiler @stable")
+    depends_on("cuda@11.7:", when="+cuda @stable")
     depends_on("hip@5.1:5.7", when="+rocm @23.03.0:23.12.0")
     depends_on("hip@5.1:", when="+rocm")
     depends_on("hdf5", when="+hdf5")
@@ -76,14 +132,15 @@ class Legion(CMakePackage, ROCmPackage):
 
     # cuda-centric
     cuda_arch_list = CudaPackage.cuda_arch_values
-    for nvarch in cuda_arch_list:
+    for arch in cuda_arch_list:
+        depends_on(f"ucc cuda_arch={arch}", when=f"network=ucx +cuda cuda_arch={arch}")
         depends_on(
-            f"kokkos@3.3.01:+cuda+cuda_lambda+wrapper cuda_arch={nvarch}",
-            when=f"+kokkos+cuda cuda_arch={nvarch} %gcc",
+            f"kokkos@3.3.01:+cuda+cuda_lambda+wrapper cuda_arch={arch}",
+            when=f"+kokkos+cuda cuda_arch={arch} %gcc",
         )
         depends_on(
-            f"kokkos@3.3.01:+cuda+cuda_lambda~wrapper cuda_arch={nvarch}",
-            when=f"+kokkos+cuda cuda_arch={nvarch} %clang",
+            f"kokkos@3.3.01:+cuda+cuda_lambda~wrapper cuda_arch={arch}",
+            when=f"+kokkos+cuda cuda_arch={arch} %clang",
         )
 
     depends_on("kokkos@3.3.01:~cuda", when="+kokkos~cuda")
@@ -120,6 +177,7 @@ class Legion(CMakePackage, ROCmPackage):
     )
 
     for arch in ROCmPackage.amdgpu_targets:
+        depends_on(f"ucc amdgpu_target={arch}", when=f"network=ucx +rocm amdgpu_target={arch}")
         depends_on(f"kokkos@3.3.01:+rocm amdgpu_target={arch}", when=f"+rocm amdgpu_target={arch}")
 
     depends_on("kokkos@3.3.01:+rocm", when="+kokkos+rocm")
@@ -303,7 +361,9 @@ class Legion(CMakePackage, ROCmPackage):
     )
     variant("prof", default=False, description="Install Rust Legion prof")
 
-    depends_on("rust@1.74:", type="build", when="+prof")
+    depends_on("rust@1.74:", type="build", when="@21.03.0:24.12.0 +prof")
+    depends_on("rust@1.84:", type="build", when="@25.03.0: +prof")
+    depends_on("rust@1.84:", type="build", when="@stable +prof")
 
     variant("gc", default=False, description="Enable garbage collector logging")
     variant(
