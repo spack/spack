@@ -35,9 +35,6 @@ class Rocmlir(CMakePackage):
     with default_args(deprecated=True):
         version("5.3.0", sha256="e8471a13cb39d33adff34730d3162adaa5d20f9544d61a6a94b39b9b5762ad6d")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
     variant(
         "build_type",
         default="Release",
@@ -54,6 +51,9 @@ class Rocmlir(CMakePackage):
                 string=True,
             )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
     depends_on("python", type="build")
     depends_on("z3", type="link")
     depends_on("zlib-api", type="link")

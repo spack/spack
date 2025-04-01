@@ -15,9 +15,6 @@ class Stream(MakefilePackage):
 
     version("5.10")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("openmp", default=False, description="Build with OpenMP support")
 
     variant("stream_array_size", default="none", description="Size of work arrays in elements")
@@ -33,6 +30,9 @@ class Stream(MakefilePackage):
         values=("none", "float", "double", "int", "long"),
         description="Datatype of arrays elements",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")

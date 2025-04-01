@@ -26,9 +26,9 @@ class Remhos(MakefilePackage):
     version("develop", branch="master")
     version("1.0", sha256="e60464a867fe5b1fd694fbb37bb51773723427f071c0ae26852a2804c08bbb32")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("metis", default=True, description="Enable/disable METIS support")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("mfem+mpi+metis", when="+metis")
     depends_on("mfem+mpi~metis", when="~metis")

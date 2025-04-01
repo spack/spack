@@ -39,10 +39,6 @@ class CcsQcd(MakefilePackage):
     version("master", branch="master")
     version("1.2.1", commit="d7c6b6923f35a824e997ba8db5bd12dc20dda45c")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "class",
         default=1,
@@ -53,6 +49,10 @@ class CcsQcd(MakefilePackage):
         " sizes for the HPCI FS evaluation.",
         multi=False,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi")
 

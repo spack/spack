@@ -24,9 +24,6 @@ class Qucs(AutotoolsPackage):
     version("0.0.19", sha256="45c6434fde24c533e63550675ac21cdbd3cc6cbba29b82a1dc3f36e7dd4b3b3e")
     version("0.0.18", sha256="3609a18b57485dc9f19886ac6694667f3251702175bd1cbbbea37981b2c482a7")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # Can use external simulators:
     variant(
         "simulators",
@@ -35,6 +32,9 @@ class Qucs(AutotoolsPackage):
         values=("qucs", "ngspice", "xyce"),
         description="Circuits simulators (builtin qucsator and external ngspice, xyce)",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("flex@2.5.9:", type="build")
     depends_on("bison@2.5:", type="build")

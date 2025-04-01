@@ -61,8 +61,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             "1.0.2u", sha256="ecd0c6ffb493dd06707d38b14bb4d8c2288bb7033735606569d8f90f89669d16"
         )
 
-    depends_on("c", type="build")  # generated
-
     # On Cray DVS mounts, we can't make symlinks to /etc/ssl/openssl.cnf,
     # either due to a bug or because DVS is not intended to be POSIX compliant.
     # Therefore, stick to system agnostic certs=mozilla.
@@ -82,6 +80,8 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     variant("shared", default=True, description="Build shared library version")
     with when("platform=windows"):
         variant("dynamic", default=False, description="Link with MSVC's dynamic runtime library")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("zlib-api")
     depends_on("perl@5.14.0:", type=("build", "test"))

@@ -21,9 +21,9 @@ class PyPylikwid(PythonPackage):
 
     version("0.4.0", sha256="f7894a6d7ebcea7da133ef639599a314f850f55cd6c5ffdd630bb879bd2aa0b8")
 
-    depends_on("c", type="build")  # generated
-
     variant("cuda", default=False, description="with Nvidia GPU profiling support")
+
+    depends_on("c", type="build")  # generated
 
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")

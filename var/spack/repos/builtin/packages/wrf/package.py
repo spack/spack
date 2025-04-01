@@ -114,9 +114,6 @@ class Wrf(Package):
         url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "build_type",
         default="dmpar",
@@ -240,6 +237,9 @@ class Wrf(Package):
         sha256="7c6487aefaa6cda0fff3976e78da07b09d2ba6c005d649f35a0f8f1694a0b2bb",
         when="@4.5: %arm",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")

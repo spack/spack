@@ -63,8 +63,6 @@ class FluxCore(AutotoolsPackage):
     version("0.29.0", sha256="c13b40e82d66356e75208a689a495ca01f0a013e2e45ac8ea202ed8224987323")
     version("0.28.0", sha256="9a784def7186b0036091bd8d6d8fe5bc3425ab2927e1465e1c9ad266631c285d")
 
-    depends_on("c", type="build")  # generated
-
     # Avoid the infinite symlink issue
     # This workaround is documented in PR #3543
     build_directory = "spack-build"
@@ -76,6 +74,8 @@ class FluxCore(AutotoolsPackage):
     # Restrict flux to Linux based platforms where builds are possible.
     conflicts("platform=darwin", msg="flux-core does not support MacOS based platforms.")
     conflicts("platform=windows", msg="flux-core does not support Windows based platforms.")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("libarchive+iconv", when="@0.38.0:")
     depends_on("ncurses@6.2:", when="@0.32.0:")

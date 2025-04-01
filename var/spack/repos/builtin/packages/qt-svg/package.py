@@ -38,10 +38,10 @@ class QtSvg(QtPackage):
     version("6.4.0", sha256="375eb69f320121e42d5dc107f9455008980c149646931b8ace19e6bc235dcd80")
     version("6.3.2", sha256="781055bca458be46ef69f2fff147a00226e41f3a23d02c91238b0328a7156518")
 
+    variant("widgets", default=False, description="Build SVG widgets.")
+
     depends_on("c", type="build")
     depends_on("cxx", type="build")
-
-    variant("widgets", default=False, description="Build SVG widgets.")
 
     depends_on("qt-base +gui")
     depends_on("qt-base +widgets", when="+widgets")

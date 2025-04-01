@@ -20,9 +20,6 @@ class ScineQcmaquis(CMakePackage):
     version("3.1.3", branch="release-3.1.3")
     version("3.1.2", branch="release-3.1.2")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
     variant(
         "symmetries",
         default="SU2U1PG,TwoU1PG",
@@ -39,6 +36,9 @@ class ScineQcmaquis(CMakePackage):
 
     root_cmakelists_dir = "dmrg"
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
     depends_on("hdf5~mpi")
     depends_on("lapack")
     depends_on("blas")

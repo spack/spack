@@ -106,13 +106,13 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("arpack", default=True, description="Enables Arpack wrappers")
     variant("blopex", default=False, description="Enables BLOPEX wrappers")
     variant("hpddm", default=False, description="Enables HPDDM wrappers")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # NOTE: make sure PETSc and SLEPc use the same python.
     depends_on("python@2.6:2.8,3.4:", type="build")

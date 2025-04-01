@@ -406,10 +406,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         "1.0", sha256="cf75e56852caebe90231d295806ac3441f37dc6d9ad17b1381791ebb78e21564"
     )  # libmpi.so.0.0.0
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     patch("ad_lustre_rwcontig_open_source.patch", when="@1.6.5")
     patch("llnl-platforms.patch", when="@1.6.5")
     patch("configure.patch", when="@1.10.1")
@@ -608,6 +604,10 @@ with '-Wl,-commons,use_dylibs' and without
     provides("mpi@:2.2", when="@1.7.3:1.7.4")
     provides("mpi@:3.0", when="@1.7.5:1.10.7")
     provides("mpi@:3.1", when="@2.0.0:")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     if sys.platform != "darwin":
         depends_on("numactl")

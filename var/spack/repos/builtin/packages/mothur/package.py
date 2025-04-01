@@ -22,7 +22,6 @@ class Mothur(MakefilePackage):
     version("1.40.5", sha256="a0fbdfa68b966d7adc4560e3787506a0dad8b47b4b996c2663cd6c0b416d101a")
     version("1.39.5", sha256="9f1cd691e9631a2ab7647b19eb59cd21ea643f29b22cde73d7f343372dfee342")
 
-    depends_on("cxx", type="build")  # generated
     maintainers("snehring")
 
     variant(
@@ -35,6 +34,7 @@ class Mothur(MakefilePackage):
         "gsl", default=False, description="Build with the gnu scientific libaries", when="@1.43.0:"
     )
 
+    depends_on("cxx", type="build")  # generated
     depends_on("boost+iostreams+filesystem+system", when="+boost")
     depends_on("gsl", when="+gsl")
     depends_on("hdf5+cxx", when="+hdf5")

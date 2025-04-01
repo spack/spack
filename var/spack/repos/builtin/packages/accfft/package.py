@@ -17,10 +17,10 @@ class Accfft(CMakePackage, CudaPackage):
 
     version("develop", branch="master")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("pnetcdf", default=True, description="Add support for parallel NetCDF")
     variant("shared", default=True, description="Enables the build of shared libraries")
+
+    depends_on("cxx", type="build")  # generated
 
     # See: http://accfft.org/articles/install/#installing-dependencies
     depends_on("fftw precision=float,double ~mpi+openmp")

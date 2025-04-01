@@ -60,10 +60,6 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("0.3.0", tag="v0.3.0", commit="20068ccab4b4f70055918b4f17960ec3ed6dbce8")
     version("0.2.9", tag="v0.2.9", commit="9e9a54ede3326817c05f35922738516e43b5ec3d")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build", when="+fortran")
-
     # https://github.com/spack/spack/issues/31829
     patch("examples-oneapi.patch", when="@0.6.1 +examples %oneapi")
 
@@ -114,6 +110,10 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     # Dependencies
     # -----------------------------------------------------------------------
     # Basics
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
+
     depends_on("cmake@3.14:", type="build")
     depends_on("cmake@3.18:", type="build", when="@0.7.0:")
     depends_on("cmake@3.21:", type="build", when="+rocm")
