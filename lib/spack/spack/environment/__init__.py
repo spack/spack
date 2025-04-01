@@ -543,14 +543,6 @@ compiled. The compiler-wrapper is explicitly represented as a node in the DAG, a
         },
       }
     }
-
-Version 7
----------
-
-Version 7 does not change the lockfile format itself, but reflects
-a change in the specfile format. This adds the ``direct`` key for
-direct dependency edges. These are not relevant for environment
-behavior and merely require a change of specfile reader.
 """
 
 from .environment import (

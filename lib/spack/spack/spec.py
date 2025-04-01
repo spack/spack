@@ -186,7 +186,7 @@ CLEARSIGN_FILE_REGEX = re.compile(
 )
 
 #: specfile format version. Must increase monotonically
-SPECFILE_FORMAT_VERSION = 6
+SPECFILE_FORMAT_VERSION = 5
 
 
 class InstallStatus(enum.Enum):
@@ -2779,10 +2779,8 @@ class Spec:
             spec = SpecfileV3.load(data)
         elif int(data["spec"]["_meta"]["version"]) == 4:
             spec = SpecfileV4.load(data)
-        elif int(data["spec"]["_meta"]["version"]) == 5:
-            spec = SpecfileV5.load(data)
         else:
-            spec = SpecfileV6.load(data)
+            spec = SpecfileV5.load(data)
 
         # Any git version should
         for s in spec.traverse():
@@ -5292,22 +5290,18 @@ class SpecfileV5(SpecfileV4):
     def legacy_compiler(cls, node):
         raise RuntimeError("The 'compiler' option is unexpected in specfiles at v5 or greater")
 
-
-class SpecfileV6(SpecfileV5):
-    SPEC_VERSION = 6
-
     @classmethod
     def extract_info_from_dep(cls, elt, hash):
         dep_hash = elt[hash.name]
         deptypes = elt["parameters"]["deptypes"]
         hash_type = hash.name
         virtuals = elt["parameters"]["virtuals"]
-        direct = elt["parameters"]["direct"]
+        direct = elt["parameters"].get("direct", True)
         return dep_hash, deptypes, hash_type, virtuals, direct
 
 
 #: Alias to the latest version of specfiles
-SpecfileLatest = SpecfileV6
+SpecfileLatest = SpecfileV5
 
 
 class LazySpecCache(collections.defaultdict):
