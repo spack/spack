@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.package import PythonPackage, depends_on, maintainers, version
 
 
 class PyTfKeras(PythonPackage):
