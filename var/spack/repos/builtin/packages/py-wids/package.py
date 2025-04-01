@@ -1,20 +1,20 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack.package import *
 
 
-class PyWebdataset(PythonPackage):
-    """Python-based I/O for deep learning problems."""
+class PyWids(PythonPackage):
+    """High performance storage and I/O for deep learning and data processing."""
 
-    homepage = "https://github.com/webdataset/webdataset"
-    pypi = "webdataset/webdataset-0.1.62.tar.gz"
+    homepage = "http://github.com/webdataset/webdataset"
+    pypi = "wids/wids-0.1.11.tar.gz"
 
     license("BSD-3-Clause")
     maintainers("adamjstewart")
 
-    version("0.2.111", sha256="5b2835386a25601307a9ded9bcc0dbd1e81a9eee017784152528e77dd8619511")
-    version("0.1.62", sha256="78b6c7810116d6875fa1ed8eb2dea29a54b86fde014cc2069f4c08fc3530ceb5")
+    version("0.1.11", sha256="b266230250f93396ee6075d76462d1087566819bdad48b194357dc8758d05eb9")
 
     depends_on("py-setuptools@45:", type="build")
 

@@ -13,6 +13,7 @@ class Spdlog(CMakePackage):
 
     license("MIT")
 
+    version("1.15.1", sha256="25c843860f039a1600f232c6eb9e01e6627f7d030a2ae5e232bdd3c9205d26cc")
     version("1.15.0", sha256="9962648c9b4f1a7bbc76fd8d9172555bad1871fdb14ff4f842ef87949682caa5")
     version("1.14.1", sha256="1586508029a7d0670dfcb2d97575dcdc242d3868a259742b69f100801ab4e16b")
     version("1.13.0", sha256="534f2ee1a4dcbeb22249856edfb2be76a1cf4f708a20b0ac2ed090ee24cfdbc9")
@@ -58,10 +59,27 @@ class Spdlog(CMakePackage):
     depends_on("cmake@3.10:", when="@1.8.0:", type="build")
     depends_on("cmake@3.11:", when="@1.13.0:", type="build")
 
+    # Although spdlog often works with fmt versions different than the
+    # internal version, it is best to assume the internal fmt version
+    # is the minimum version for compatibility
     depends_on("fmt@5.3:")
     depends_on("fmt@7:", when="@1.7:")
     depends_on("fmt@8:", when="@1.9:")
-    depends_on("fmt@9:", when="@1.11:")
+
+    # https://github.com/gabime/spdlog/releases/tag/v1.11.0
+    # https://github.com/gabime/spdlog/releases/tag/v1.12.0
+    # Compatibility between spdlog@1.11 and fmt@10 is provided
+    # by the patch below
+    depends_on("fmt@9.1.0:10", when="@1.11:1.13")
+
+    # https://github.com/gabime/spdlog/releases/tag/v1.14.0
+    depends_on("fmt@10.2.1:10", when="@1.14")
+
+    # https://github.com/gabime/spdlog/releases/tag/v1.15.0
+    depends_on("fmt@11.0.2:11", when="@1.15.0")
+
+    # https://github.com/gabime/spdlog/releases/tag/v1.15.1
+    depends_on("fmt@11.1.3:11", when="@1.15.1:")
 
     # spdlog@1.11.0 with fmt@10  https://github.com/gabime/spdlog/pull/2694
     patch(
@@ -82,6 +100,14 @@ class Spdlog(CMakePackage):
         sha256="5ed92f4c131fd31eb3d28390615ecff3ade3789cdecfd3db18cadb07cc8095e3",
         when="@1.13.0:1.15.0",
     )
+
+    # Setting the cmake flag as well as the tweakme is the correct way to ensure dependents use an
+    # external fmt. conda-forge and homebrew both follow this approach
+    # https://github.com/gabime/spdlog/issues/1897#issuecomment-832345800
+    # https://github.com/gabime/spdlog/issues/2310#issuecomment-1069001016
+    # https://github.com/gabime/spdlog/issues/2310
+    patch("fmt_ext_tweakme.patch", when="@1.4.0:")
+
     conflicts("^fmt@11.1:", when="@:1.12")
 
     def cmake_args(self):

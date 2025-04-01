@@ -355,6 +355,15 @@ class Cmake(Package):
                 filter_file("mpc++_r)", "mpc++_r mpiFCC)", f, string=True)
                 filter_file("mpifc)", "mpifc mpifrt)", f, string=True)
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # CMake 4.0.0 breaks compatibility with CMake projects requiring a CMake
+        # < 3.5. However, many projects that specify a minimum requirement for
+        # versions older than 3.5 are actually compatible with newer CMake
+        # and do not use CMake 3.4 or older features. This allows those
+        # projects to use a newer CMake
+        if self.spec.satisfies("@4:"):
+            env.set("CMAKE_POLICY_VERSION_MINIMUM", "3.5")
+
     def setup_dependent_package(self, module, dependent_spec):
         """Called before cmake packages's install() methods."""
 

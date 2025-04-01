@@ -19,6 +19,7 @@ class Scotch(CMakePackage, MakefilePackage):
 
     maintainers("pghysels")
 
+    version("7.0.7", sha256="02084471d2ca525f8a59b4bb8c607eb5cca452d6a38cf5c89f5f92f7edc1a5b5")
     version("7.0.6", sha256="b44acd0d2f53de4b578fa3a88944cccc45c4d2961cd8cefa9b9a1d5431de8e2b")
     version("7.0.4", sha256="8ef4719d6a3356e9c4ca7fefd7e2ac40deb69779a5c116f44da75d13b3d2c2c3")
     version("7.0.3", sha256="5b5351f0ffd6fcae9ae7eafeccaa5a25602845b9ffd1afb104db932dd4d4f3c5")
@@ -159,7 +160,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             cflags.append("-DINTSIZE64")
             cflags.append("-DIDXSIZE64")  # SCOTCH_Idx typedef: indices for addressing
         else:
-            cflags.append("-DIDXSIZE32")  # SCOTCH_Idx typedef: indices for addressing
+            cflags.append("-DINTSIZE32")
+            cflags.append("-DIDXSIZE64")  # SCOTCH_Idx typedef: indices for addressing
 
         if self.spec.satisfies("platform=darwin"):
             cflags.extend(["-Drestrict=__restrict"])
@@ -169,6 +171,14 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             # vendored dependency. Prefix its internal symbols so they won't
             # conflict with another installation.
             cflags.append("-DSCOTCH_METIS_PREFIX")
+
+        if self.spec.satisfies("+mpi"):
+            cflags.append("-DSCOTCH_PTHREAD_MPI")
+            if self.spec.satisfies("@7.0:"):
+                cflags.append("-DSCOTCH_MPI_ASYNC_COLL")
+
+        if self.spec.satisfies("platform=linux"):
+            cflags.append("-DCOMMON_PTHREAD_AFFINITY_LINUX")
 
         # Library Build Type #
         if "+shared" in self.spec:
@@ -256,11 +266,18 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 "MV        = mv",
                 "CP        = cp",
                 "CFLAGS    = %s" % " ".join(cflags),
-                "LEX       = %s -Pscotchyy -olex.yy.c" % flex_path,
-                "YACC      = %s -pscotchyy -y -b y" % bison_path,
                 "prefix    = %s" % self.prefix,
             ]
         )
+        if self.spec.satisfies("@7.0:"):
+            makefile_inc.extend(["FLEX       = %s" % flex_path, "BISON      = %s" % bison_path])
+        else:
+            makefile_inc.extend(
+                [
+                    "LEX       = %s -Pscotchyy -olex.yy.c" % flex_path,
+                    "YACC      = %s -pscotchyy -y -b y" % bison_path,
+                ]
+            )
 
         with working_dir("src"):
             with open("Makefile.inc", "w") as fh:
