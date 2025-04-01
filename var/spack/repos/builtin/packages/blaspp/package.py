@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -63,7 +62,7 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cmake@3.15.0:", type="build")
     depends_on("blas")
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
     depends_on("rocblas", when="+rocm")
     depends_on("intel-oneapi-mkl", when="+sycl")
     depends_on("intel-oneapi-mkl threads=openmp", when="+sycl")

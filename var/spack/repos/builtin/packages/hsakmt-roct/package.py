@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -101,7 +100,7 @@ class HsakmtRoct(CMakePackage):
             prefixes = ";".join(
                 [
                     self.spec["libdrm"].prefix,
-                    self.spec["hsakmt-roct"].prefix,
+                    self.prefix,
                     self.spec["numactl"].prefix,
                     self.spec["pkgconfig"].prefix,
                     self.spec["llvm-amdgpu"].prefix,
@@ -109,7 +108,7 @@ class HsakmtRoct(CMakePackage):
                     self.spec["ncurses"].prefix,
                 ]
             )
-            hsakmt_path = ";".join([self.spec["hsakmt-roct"].prefix])
+            hsakmt_path = ";".join([self.prefix])
             cc_options = [
                 "-DCMAKE_PREFIX_PATH=" + prefixes,
                 "-DLIBHSAKMT_PATH=" + hsakmt_path,

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,7 +8,7 @@ from spack.package import *
 class PySlepc4py(PythonPackage):
     """This package provides Python bindings for the SLEPc package."""
 
-    homepage = "https://gitlab.com/slepc/slepc4py"
+    homepage = "https://slepc.upv.es/slepc4py-current/docs"
     url = "https://slepc.upv.es/download/distrib/slepc4py-3.17.1.tar.gz"
     git = "https://gitlab.com/slepc/slepc.git"
 

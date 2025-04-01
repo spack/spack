@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,6 +19,15 @@ class Detray(CMakePackage):
 
     license("MPL-2.0", checked_by="stephenswat")
 
+    version("0.94.0", sha256="a04e8193757846df50d0fbec858744dd66629a98be8ffc6faa04c2ab51770492")
+    version("0.93.0", sha256="7d56771d213649de836905efbb21b5be59cc966b00417b0b1fa85bfe12ac92da")
+    version("0.92.0", sha256="512669c1ea51936b0fe871fb5a33450b54161e811e48cc51445dc83fe3338c42")
+    version("0.91.0", sha256="6aa822f8bdc7339286d2255079a00ecc3204c0e194c5cf9d0fc5b9262c3cfb39")
+    version("0.90.0", sha256="f965429c33622a48c5a7b007086e22125ddd384860c4de3e010d72e05b5cca70")
+    version("0.89.0", sha256="b893b7f5434c1c9951433876ef43d1db1b08d36749f062e261b4e6d48e77d5db")
+    version("0.88.1", sha256="89134c86c6857cb3a821181e3bb0565ebb726dd8b1245678db1681483d792cf9")
+    version("0.88.0", sha256="bda15501c9c96af961e24ce243982f62051c535b9fe458fb28336a19b54eb47d")
+    version("0.87.0", sha256="2d4a76432dd6ddbfc00b88b5d482072e471fefc264b60748bb1f9a123963576e")
     version("0.86.0", sha256="98350c94e8a2395b8712b7102fd449536857e8158b38a96cc913c79b70301170")
     version("0.85.0", sha256="a0121a27fd08243d4a6aab060e8ab379ad5129e96775b45f6a683835767fa8e7")
     version("0.84.0", sha256="b1d133a97dc90b1513f8c1ef235ceaa542d80243028a41f59a79300c7d71eb25")
@@ -73,11 +81,12 @@ class Detray(CMakePackage):
     depends_on("vecmem@1.8.0:", when="@0.76:")
     depends_on("covfie@0.10.0:")
     depends_on("nlohmann-json@3.11.0:", when="+json")
-    depends_on("dfelibs@20211029:")
+    depends_on("dfelibs@20211029:", when="@:0.88")
     depends_on("acts-algebra-plugins@0.18.0: +vecmem")
     depends_on("acts-algebra-plugins +vc", when="+vc")
     depends_on("acts-algebra-plugins +eigen", when="+eigen")
     depends_on("acts-algebra-plugins +smatrix", when="+smatrix")
+    depends_on("acts-algebra-plugins@0.26.0:", when="@0.87:")
 
     # Detray imposes requirements on the C++ standard values used by Algebra
     # Plugins.

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tools to produce reports of spec installations"""
@@ -78,7 +77,6 @@ class InfoCollector:
                 "packages": [],
             }
             spec_record["properties"].append(Property("architecture", input_spec.architecture))
-            spec_record["properties"].append(Property("compiler", input_spec.compiler))
             self.init_spec_record(input_spec, spec_record)
             self.specs.append(spec_record)
 

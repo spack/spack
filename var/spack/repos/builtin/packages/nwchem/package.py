@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -14,10 +13,13 @@ class Nwchem(Package):
 
     homepage = "https://nwchemgit.github.io"
     url = "https://github.com/nwchemgit/nwchem/releases/download/v7.2.0-release/nwchem-7.2.0-release.revision-d0d141fd-srconly.2023-03-10.tar.bz2"
+    git = "https://github.com/nwchemgit/nwchem.git"
 
     tags = ["ecp", "ecp-apps"]
 
     maintainers("jeffhammond")
+
+    version("master", branch="master")
 
     version(
         "7.2.3",
@@ -69,6 +71,9 @@ class Nwchem(Package):
     variant(
         "elpa", default=False, description="Enable optimised diagonalisation routines from ELPA"
     )
+
+    # https://github.com/nwchemgit/nwchem/pull/1034
+    patch("oneapi2025.patch", when="@7.2.3 %oneapi@2025:")
 
     # This patch is for the modification of the build system (e.g. compiler flags) and
     # Fortran syntax to enable the compilation with Fujitsu compilers. The modification

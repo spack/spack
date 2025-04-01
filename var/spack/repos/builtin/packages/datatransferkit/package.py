@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -47,7 +46,7 @@ class Datatransferkit(CMakePackage):
     depends_on("trilinos+openmp", when="+openmp")
     depends_on("trilinos+stratimikos+belos", when="@master")
     depends_on("trilinos@13:13.4.1", when="@3.1-rc2:3.1-rc3")
-    depends_on("trilinos@14.2:", when="@3.1.0:")
+    depends_on("trilinos@14.2:16.0", when="@3.1.0:")
 
     def cmake_args(self):
         spec = self.spec

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -59,9 +58,9 @@ class Costa(CMakePackage):
 
         if spec.satisfies("~scalapack"):
             return "OFF"
-        elif spec.satisfies("^intel-mkl") or spec.satisfies("^intel-oneapi-mkl"):
+        elif spec.satisfies("^[virtuals=scalapack] intel-oneapi-mkl"):
             return "MKL"
-        elif spec.satisfies("^cray-libsci"):
+        elif spec.satisfies("^[virtuals=scalapack] cray-libsci"):
             return "CRAY_LIBSCI"
 
         return "CUSTOM"

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -87,7 +86,7 @@ class Arrayfire(CMakePackage, CudaPackage):
             ]
             args.append(self.define("CUDA_architecture_build_targets", arch_list))
 
-        if self.spec["blas"].name in INTEL_MATH_LIBRARIES:
+        if self.spec.satisfies("^[virtuals=blas] intel-oneapi-mkl"):
             if self.version >= Version("3.8.0"):
                 args.append(self.define("AF_COMPUTE_LIBRARY", "Intel-MKL"))
             else:

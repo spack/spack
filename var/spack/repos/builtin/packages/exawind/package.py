@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,8 +18,15 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     license("Apache-2.0")
 
     version("master", branch="main", submodules=True)
-    version("1.1.0", tag="v1.1.0", submodules=True)
-    version("1.0.0", tag="v1.0.0", submodules=True)
+    version(
+        "1.2.0", tag="v1.2.0", commit="4c49c7775c580b6bd2556e6c00fd13c08737d5eb", submodules=True
+    )
+    version(
+        "1.1.0", tag="v1.1.0", commit="c8823f19fc8d19ea051df0ff68780e56981a7f94", submodules=True
+    )
+    version(
+        "1.0.0", tag="v1.0.0", commit="85718893d2510c8a2e8c8e94c768ce6a67f94703", submodules=True
+    )
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
@@ -55,7 +61,7 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
             when="+nalu_wind_gpu+rocm amdgpu_target=%s" % arch,
         )
 
-    depends_on("nalu-wind+hypre+fsi+openfast+tioga")
+    depends_on("nalu-wind+hypre+openfast+tioga")
     depends_on("amr-wind+netcdf+mpi+tiny_profile")
     depends_on("trilinos")
     depends_on("yaml-cpp@0.6:")
@@ -122,9 +128,9 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
             # Manually turn off device self.defines to solve Kokkos issues in Nalu-Wind headers
             env.append_flags("CXXFLAGS", "-U__HIP_DEVICE_COMPILE__ -DDESUL_HIP_RDC")
         if self.spec.satisfies("+cuda"):
-            env.set("OMPI_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-            env.set("MPICH_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-            env.set("MPICXX_CXX", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+            env.set("OMPI_CXX", self["kokkos-nvcc-wrapper"].kokkos_cxx)
+            env.set("MPICH_CXX", self["kokkos-nvcc-wrapper"].kokkos_cxx)
+            env.set("MPICXX_CXX", self["kokkos-nvcc-wrapper"].kokkos_cxx)
         if self.spec.satisfies("+rocm"):
             env.set("OMPI_CXX", self.spec["hip"].hipcc)
             env.set("MPICH_CXX", self.spec["hip"].hipcc)

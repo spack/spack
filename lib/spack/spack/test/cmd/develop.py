@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -9,6 +8,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.package_base
@@ -16,6 +16,7 @@ import spack.spec
 import spack.stage
 import spack.util.git
 import spack.util.path
+from spack.error import SpackError
 from spack.main import SpackCommand
 
 add = SpackCommand("add")
@@ -139,7 +140,8 @@ class TestDevelop:
             self.check_develop(e, spack.spec.Spec("mpich@=1.0"), path)
 
             # Check modifications actually worked
-            assert spack.spec.Spec("mpich@1.0").concretized().satisfies("dev_path=%s" % abspath)
+            result = spack.concretize.concretize_one("mpich@1.0")
+            assert result.satisfies("dev_path=%s" % abspath)
 
     def test_develop_canonicalize_path_no_args(self, monkeypatch):
         env("create", "test")
@@ -158,6 +160,7 @@ class TestDevelop:
             # Create path to allow develop to modify env
             fs.mkdirp(abspath)
             develop("--no-clone", "-p", path, "mpich@1.0")
+            self.check_develop(e, spack.spec.Spec("mpich@=1.0"), path)
 
             # Remove path to ensure develop with no args runs staging code
             os.rmdir(abspath)
@@ -166,7 +169,8 @@ class TestDevelop:
             self.check_develop(e, spack.spec.Spec("mpich@=1.0"), path)
 
             # Check modifications actually worked
-            assert spack.spec.Spec("mpich@1.0").concretized().satisfies("dev_path=%s" % abspath)
+            result = spack.concretize.concretize_one("mpich@1.0")
+            assert result.satisfies("dev_path=%s" % abspath)
 
 
 def _git_commit_list(git_repo_dir):
@@ -191,7 +195,7 @@ def test_develop_full_git_repo(
         spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
     )
 
-    spec = spack.spec.Spec("git-test-commit@1.2").concretized()
+    spec = spack.concretize.concretize_one("git-test-commit@1.2")
     try:
         spec.package.do_stage()
         commits = _git_commit_list(spec.package.stage[0].source_path)
@@ -214,3 +218,56 @@ def test_develop_full_git_repo(
         develop_dir = spec.variants["dev_path"].value
         commits = _git_commit_list(develop_dir)
         assert len(commits) > 1
+
+
+def test_recursive(mutable_mock_env_path, install_mockery, mock_fetch):
+    env("create", "test")
+
+    with ev.read("test") as e:
+        add("indirect-mpich@1.0")
+        e.concretize()
+        specs = e.all_specs()
+
+        assert len(specs) > 1
+        develop("--recursive", "mpich")
+
+        expected_dev_specs = ["mpich", "direct-mpich", "indirect-mpich"]
+        for spec in expected_dev_specs:
+            assert spec in e.dev_specs
+
+
+def test_develop_fails_with_multiple_concrete_versions(
+    mutable_mock_env_path, install_mockery, mock_fetch
+):
+    env("create", "test")
+
+    with ev.read("test") as e:
+        add("indirect-mpich@1.0")
+        add("indirect-mpich@0.9")
+        e.unify = False
+        e.concretize()
+
+        with pytest.raises(SpackError) as develop_error:
+            develop("indirect-mpich", fail_on_error=True)
+
+        error_str = "has multiple concrete instances in the graph"
+        assert error_str in str(develop_error.value)
+
+
+def test_concretize_dev_path_with_at_symbol_in_env(mutable_mock_env_path, tmpdir, mock_packages):
+    spec_like = "develop-test@develop"
+
+    develop_dir = tmpdir.mkdir("build@location")
+    env("create", "test_at_sym")
+
+    with ev.read("test_at_sym") as e:
+        add(spec_like)
+        develop(f"--path={develop_dir}", spec_like)
+        e.concretize()
+        result = e.concrete_roots()
+
+        assert len(result) == 1
+        cspec = result[0]
+        assert cspec.satisfies(spec_like), cspec
+        assert cspec.is_develop, cspec
+        assert develop_dir in cspec.variants["dev_path"], cspec

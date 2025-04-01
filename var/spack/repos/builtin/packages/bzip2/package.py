@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -77,6 +76,9 @@ class Bzip2(Package, SourcewarePackage):
                 filter_file(r"-O ", "-O0 ", makefile)
                 filter_file(r"-O2 ", "-O0 ", makefile)
                 filter_file(r"-Ox ", "-O0 ", makefile)
+
+        if self.spec.satisfies("platform=windows"):
+            return
 
         # bzip2 comes with two separate Makefiles for static and dynamic builds
         # Tell both to use Spack's compiler wrapper instead of GCC
@@ -171,7 +173,7 @@ class Bzip2(Package, SourcewarePackage):
     @run_after("install")
     def install_pkgconfig(self):
         # Add pkgconfig file after installation
-        libdir = self.spec["bzip2"].libs.directories[0]
+        libdir = self.libs.directories[0]
         pkg_path = join_path(self.prefix.lib, "pkgconfig")
         mkdirp(pkg_path)
 

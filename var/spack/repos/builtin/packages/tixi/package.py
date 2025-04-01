@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -68,7 +67,7 @@ class Tixi(CMakePackage):
                 env.prepend_path("PYTHONPATH", self.spec.prefix.share.tixi.python)
 
             # allow ctypes to find the tixi library
-            libs = ":".join(self.spec["tixi"].libs.directories)
+            libs = ":".join(self.libs.directories)
             if sys.platform == "darwin":
                 env.prepend_path("DYLD_FALLBACK_LIBRARY_PATH", libs)
             else:

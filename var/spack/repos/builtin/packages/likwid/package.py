@@ -1,12 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
 import os
-
-import llnl.util.tty as tty
 
 import spack.tengine
 from spack.package import *
@@ -107,6 +104,7 @@ class Likwid(Package):
     # depends_on('gnuplot', type='run')
 
     depends_on("perl", type=("build", "run"))
+    depends_on("gmake", type="build")
 
     def patch(self):
         files = glob.glob("perl/*.*") + glob.glob("bench/perl/*.*")
@@ -168,10 +166,7 @@ class Likwid(Package):
             supported_compilers = {"gcc": "GCCPOWER"}
         if self.compiler.name not in supported_compilers:
             raise RuntimeError(
-                "{0} is not a supported compiler \
-            to compile Likwid".format(
-                    self.compiler.name
-                )
+                "{0} is not a supported compiler to compile Likwid".format(self.compiler.name)
             )
 
         filter_file(
@@ -265,8 +260,8 @@ class Likwid(Package):
     @run_after("install")
     def caveats(self):
         if self.spec.satisfies("accessmode=accessdaemon"):
-            perm_script = "spack_perms_fix.sh"
-            perm_script_path = join_path(self.spec.prefix, perm_script)
+            perm_script = "spack_likwid_fix_perms.sh.j2"
+            perm_script_path = join_path(self.spec.prefix.bin, perm_script)
             daemons = glob.glob(join_path(self.spec.prefix, "sbin", "*"))
             with open(perm_script_path, "w") as f:
                 env = spack.tengine.make_environment(dirs=self.package_dir)

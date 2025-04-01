@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -57,13 +56,11 @@ class AwsOfiNccl(AutotoolsPackage):
 
     # To enable this plug-in to work with NCCL add it to the LD_LIBRARY_PATH
     def setup_run_environment(self, env):
-        aws_ofi_nccl_home = self.spec.prefix
-        env.append_path("LD_LIBRARY_PATH", aws_ofi_nccl_home.lib)
+        env.append_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     # To enable this plug-in to work with NCCL add it to the LD_LIBRARY_PATH
     def setup_dependent_run_environment(self, env, dependent_spec):
-        aws_ofi_nccl_home = self.spec["aws-ofi-nccl"].prefix
-        env.append_path("LD_LIBRARY_PATH", aws_ofi_nccl_home.lib)
+        env.append_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     def configure_args(self):
         spec = self.spec

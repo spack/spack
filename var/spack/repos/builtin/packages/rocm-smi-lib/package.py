@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,6 +23,8 @@ class RocmSmiLib(CMakePackage):
     libraries = ["librocm_smi64"]
 
     version("master", branch="master")
+    version("6.3.2", sha256="29a9190143dfcbafeac93d8064b00c9320dbca57a3344adb009ec17d9b09d036")
+    version("6.3.1", sha256="0f45e4823e361a1c6ac560eabf6000c3b59e08bcd96e87150149149e861c6a63")
     version("6.3.0", sha256="573cfb759f8c7700fdcb0c28d045aed0f2d950692bb66a10bd589b89b8f48d0f")
     version("6.2.4", sha256="eb8986dd571f5862c2db693398c0dbec28e2754f764f6bd3cfb21be7699e4452")
     version("6.2.1", sha256="28543d099fa44b4b79644533644aba4b67fa48d477628dd5802c3b50cc78583a")
@@ -69,8 +70,14 @@ class RocmSmiLib(CMakePackage):
         "6.2.0",
         "6.2.1",
         "6.2.4",
+        "6.3.0",
+        "6.3.1",
+        "6.3.2",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
+
+    for ver in ["6.1.0", "6.1.1", "6.1.2", "6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2"]:
+        depends_on("llvm-amdgpu", when=f"@{ver}+asan")
 
     patch(
         "https://github.com/ROCm/rocm_smi_lib/commit/11f12b86517d0e9868f4d16d74d4e8504c3ba7da.patch?full_index=1",
@@ -89,6 +96,15 @@ class RocmSmiLib(CMakePackage):
         if self.spec.satisfies("@5.7.0:"):
             args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
         return args
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("@6.1: +asan"):
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     @classmethod
     def determine_version(cls, lib):

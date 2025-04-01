@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
@@ -8,6 +7,7 @@ import errno
 import fnmatch
 import glob
 import hashlib
+import io
 import itertools
 import numbers
 import os
@@ -21,6 +21,7 @@ import tempfile
 from contextlib import contextmanager
 from itertools import accumulate
 from typing import (
+    IO,
     Callable,
     Deque,
     Dict,
@@ -76,7 +77,6 @@ __all__ = [
     "install_tree",
     "is_exe",
     "join_path",
-    "last_modification_time_recursive",
     "library_extensions",
     "mkdirp",
     "partition_path",
@@ -670,7 +670,7 @@ def copy(src, dest, _permissions=False):
         _permissions (bool): for internal use only
 
     Raises:
-        IOError: if *src* does not match any files or directories
+        OSError: if *src* does not match any files or directories
         ValueError: if *src* matches multiple files but *dest* is
             not a directory
     """
@@ -681,7 +681,7 @@ def copy(src, dest, _permissions=False):
 
     files = glob.glob(src)
     if not files:
-        raise IOError("No such file or directory: '{0}'".format(src))
+        raise OSError("No such file or directory: '{0}'".format(src))
     if len(files) > 1 and not os.path.isdir(dest):
         raise ValueError(
             "'{0}' matches multiple files but '{1}' is not a directory".format(src, dest)
@@ -712,7 +712,7 @@ def install(src, dest):
         dest (str): the destination file or directory
 
     Raises:
-        IOError: if *src* does not match any files or directories
+        OSError: if *src* does not match any files or directories
         ValueError: if *src* matches multiple files but *dest* is
             not a directory
     """
@@ -750,7 +750,7 @@ def copy_tree(
         _permissions (bool): for internal use only
 
     Raises:
-        IOError: if *src* does not match any files or directories
+        OSError: if *src* does not match any files or directories
         ValueError: if *src* is a parent directory of *dest*
     """
     if _permissions:
@@ -764,7 +764,7 @@ def copy_tree(
 
     files = glob.glob(src)
     if not files:
-        raise IOError("No such file or directory: '{0}'".format(src))
+        raise OSError("No such file or directory: '{0}'".format(src))
 
     # For Windows hard-links and junctions, the source path must exist to make a symlink. Add
     # all symlinks to this list while traversing the tree, then when finished, make all
@@ -845,7 +845,7 @@ def install_tree(src, dest, symlinks=True, ignore=None):
         ignore (typing.Callable): function indicating which files to ignore
 
     Raises:
-        IOError: if *src* does not match any files or directories
+        OSError: if *src* does not match any files or directories
         ValueError: if *src* is a parent directory of *dest*
     """
     copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
@@ -1471,15 +1471,36 @@ def set_executable(path):
 
 
 @system_path_filter
-def last_modification_time_recursive(path):
-    path = os.path.abspath(path)
-    times = [os.stat(path).st_mtime]
-    times.extend(
-        os.lstat(os.path.join(root, name)).st_mtime
-        for root, dirs, files in os.walk(path)
-        for name in dirs + files
-    )
-    return max(times)
+def recursive_mtime_greater_than(path: str, time: float) -> bool:
+    """Returns true if any file or dir recursively under `path` has mtime greater than `time`."""
+    # use bfs order to increase likelihood of early return
+    queue: Deque[str] = collections.deque([path])
+
+    if os.stat(path).st_mtime > time:
+        return True
+
+    while queue:
+        current = queue.popleft()
+
+        try:
+            entries = os.scandir(current)
+        except OSError:
+            continue
+
+        with entries:
+            for entry in entries:
+                try:
+                    st = entry.stat(follow_symlinks=False)
+                except OSError:
+                    continue
+
+                if st.st_mtime > time:
+                    return True
+
+                if entry.is_dir(follow_symlinks=False):
+                    queue.append(entry.path)
+
+    return False
 
 
 @system_path_filter
@@ -1741,8 +1762,7 @@ def find(
 
 
 def _log_file_access_issue(e: OSError, path: str) -> None:
-    errno_name = errno.errorcode.get(e.errno, "UNKNOWN")
-    tty.debug(f"find must skip {path}: {errno_name} {e}")
+    tty.debug(f"find must skip {path}: {e}")
 
 
 def _file_id(s: os.stat_result) -> Tuple[int, int]:
@@ -2436,26 +2456,69 @@ class WindowsSimulatedRPath:
     and vis versa.
     """
 
-    def __init__(self, package, link_install_prefix=True):
+    def __init__(
+        self,
+        package,
+        base_modification_prefix: Optional[Union[str, pathlib.Path]] = None,
+        link_install_prefix: bool = True,
+    ):
         """
         Args:
             package (spack.package_base.PackageBase): Package requiring links
+            base_modification_prefix (str|pathlib.Path): Path representation indicating
+                the root directory in which to establish the simulated rpath, ie where the
+                symlinks that comprise the "rpath" behavior will be installed.
+
+                Note: This is a mutually exclusive option with `link_install_prefix` using
+                both is an error.
+
+                Default: None
             link_install_prefix (bool): Link against package's own install or stage root.
                 Packages that run their own executables during build and require rpaths to
-                the build directory during build time require this option. Default: install
+                the build directory during build time require this option.
+
+                Default: install
                 root
+
+                Note: This is a mutually exclusive option with `base_modification_prefix`, using
+                both is an error.
         """
         self.pkg = package
-        self._addl_rpaths = set()
+        self._addl_rpaths: set[str] = set()
+        if link_install_prefix and base_modification_prefix:
+            raise RuntimeError(
+                "Invalid combination of arguments given to WindowsSimulated RPath.\n"
+                "Select either `link_install_prefix` to create an install prefix rpath"
+                " or specify a `base_modification_prefix` for any other link type. "
+                "Specifying both arguments is invalid."
+            )
+        if not (link_install_prefix or base_modification_prefix):
+            raise RuntimeError(
+                "Insufficient arguments given to WindowsSimulatedRpath.\n"
+                "WindowsSimulatedRPath requires one of link_install_prefix"
+                " or base_modification_prefix to be specified."
+                " Neither was provided."
+            )
+
         self.link_install_prefix = link_install_prefix
-        self._additional_library_dependents = set()
+        if base_modification_prefix:
+            self.base_modification_prefix = pathlib.Path(base_modification_prefix)
+        else:
+            self.base_modification_prefix = pathlib.Path(self.pkg.prefix)
+        self._additional_library_dependents: set[pathlib.Path] = set()
+        if not self.link_install_prefix:
+            tty.debug(f"Generating rpath for non install context: {base_modification_prefix}")
 
     @property
     def library_dependents(self):
         """
         Set of directories where package binaries/libraries are located.
         """
-        return set([pathlib.Path(self.pkg.prefix.bin)]) | self._additional_library_dependents
+        base_pths = set()
+        if self.link_install_prefix:
+            base_pths.add(pathlib.Path(self.pkg.prefix.bin))
+        base_pths |= self._additional_library_dependents
+        return base_pths
 
     def add_library_dependent(self, *dest):
         """
@@ -2471,6 +2534,12 @@ class WindowsSimulatedRPath:
                 new_pth = pathlib.Path(pth).parent
             else:
                 new_pth = pathlib.Path(pth)
+            path_is_in_prefix = new_pth.is_relative_to(self.base_modification_prefix)
+            if not path_is_in_prefix:
+                raise RuntimeError(
+                    f"Attempting to generate rpath symlink out of rpath context:\
+{str(self.base_modification_prefix)}"
+                )
             self._additional_library_dependents.add(new_pth)
 
     @property
@@ -2557,6 +2626,33 @@ class WindowsSimulatedRPath:
         if "windows-system" not in getattr(self.pkg, "tags", []):
             for library, lib_dir in itertools.product(self.rpaths, self.library_dependents):
                 self._link(library, lib_dir)
+
+
+def make_package_test_rpath(pkg, test_dir: Union[str, pathlib.Path]):
+    """Establishes a temp Windows simulated rpath for the pkg in the testing directory
+    so an executable can test the libraries/executables with proper access
+    to dependent dlls
+
+    Note: this is a no-op on all other platforms besides Windows
+
+    Args:
+        pkg (spack.package_base.PackageBase): the package for which the rpath should be computed
+        test_dir: the testing directory in which we should construct an rpath
+    """
+    # link_install_prefix as false ensures we're not linking into the install prefix
+    mini_rpath = WindowsSimulatedRPath(pkg, link_install_prefix=False)
+    # add the testing directory as a location to install rpath symlinks
+    mini_rpath.add_library_dependent(test_dir)
+
+    # check for whether build_directory is available, if not
+    # assume the stage root is the build dir
+    build_dir_attr = getattr(pkg, "build_directory", None)
+    build_directory = build_dir_attr if build_dir_attr else pkg.stage.path
+    # add the build dir & build dir bin
+    mini_rpath.add_rpath(os.path.join(build_directory, "bin"))
+    mini_rpath.add_rpath(os.path.join(build_directory))
+    # construct rpath
+    mini_rpath.establish_link()
 
 
 @system_path_filter
@@ -2785,6 +2881,20 @@ def keep_modification_time(*filenames):
     for f, mtime in mtimes.items():
         if os.path.exists(f):
             os.utime(f, (os.path.getatime(f), mtime))
+
+
+@contextmanager
+def temporary_file_position(stream):
+    orig_pos = stream.tell()
+    yield
+    stream.seek(orig_pos)
+
+
+@contextmanager
+def current_file_position(stream: IO[str], loc: int, relative_to=io.SEEK_CUR):
+    with temporary_file_position(stream):
+        stream.seek(loc, relative_to)
+        yield
 
 
 @contextmanager

@@ -1,11 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import subprocess
 
-import spack.compiler
 from spack.package import *
 
 
@@ -39,6 +37,13 @@ class Mapl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("2.54.2", sha256="70b7be425d07a7be7d9bb0e53b93a372887a048caf23260e0ae602ca6e3670ed")
+    version("2.54.1", sha256="2430ded45a98989e9100037f54cf22f5a5083e17196514b3667d3003413e49e1")
+    version("2.53.2", sha256="0f294a5289541b0028773f8e5ab2bf04734ec09241baa5a3dcea0e939d40336f")
+    version("2.53.1", sha256="8371a75d4d81294eb9d99d66702f8cf62d4bd954cec3e247e1afae621b4e4726")
+    version("2.53.0", sha256="68c24e6c0e3340645b1fb685972c96ef80746d5a289572c9883e520680708ebe")
+    version("2.52.0", sha256="c30be3a6ed3fca40aea903e10ee51e2fb50b4ef2445fdc959d4871baf3c20585")
+    version("2.51.2", sha256="f6df2be24d0c113af3d0424b674d970621660bf11e59a699373f014a14d0716e")
     version("2.51.1", sha256="337dba3980de1d5e603361ecf8f001c5bf99d0addecbeb5c207f3604183ca623")
     version("2.51.0", sha256="56213d845f5287e599213aab1dea60bf6b64c29cd8093313639304b270c45676")
     version("2.50.3", sha256="506f73d511b6a63645bbf953bf04f663da06f5069cb559340786e9fe8eeb170f")
@@ -250,9 +255,9 @@ class Mapl(CMakePackage):
     conflicts("%gcc@13:", when="@:2.44")
 
     # MAPL can use ifx only from MAPL 2.51 onwards and only supports
-    # ifx 2025.0 and newer due to bugs in ifx
-    conflicts("%oneapi@:2024")
-    conflicts("%oneapi", when="@:2.50")
+    # ifx 2025.0 and newer due to bugs in ifx.
+    conflicts("%oneapi@2025:", when="@:2.50")
+    conflicts("^[virtuals=fortran] intel-oneapi-compilers")
 
     variant("flap", default=False, description="Build with FLAP support", when="@:2.39")
     variant("pflogger", default=True, description="Build with pFlogger support")
@@ -373,13 +378,10 @@ class Mapl(CMakePackage):
 
         # Compatibility flags for gfortran
         fflags = []
-        if self.compiler.name in ["gcc", "clang", "apple-clang"]:
+        if self["fortran"].name == "gcc":
             fflags.append("-ffree-line-length-none")
-            gfortran_major_ver = int(
-                spack.compiler.get_compiler_version_output(self.compiler.fc, "-dumpversion").split(
-                    "."
-                )[0]
-            )
+
+            gfortran_major_ver = int(self.spec["fortran"].version[0])
             if gfortran_major_ver >= 10:
                 fflags.append("-fallow-invalid-boz")
                 fflags.append("-fallow-argument-mismatch")

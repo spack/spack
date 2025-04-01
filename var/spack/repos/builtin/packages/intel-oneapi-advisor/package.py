@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,6 +23,12 @@ class IntelOneapiAdvisor(IntelOneApiLibraryPackageWithSdk):
         "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/advisor.html"
     )
 
+    version(
+        "2025.1.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/d9566edf-d6dd-4b85-9dda-efdf0ebb199a/intel-advisor-2025.1.0.507_offline.sh",
+        sha256="7c1222acaef7661e1a444f20627022c0595c21db4678ce26a5922612ddbd868c",
+        expand=False,
+    )
     version(
         "2025.0.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/fe95ae4a-3692-4e31-919d-3e7bdf5832f1/intel-advisor-2025.0.0.798_offline.sh",

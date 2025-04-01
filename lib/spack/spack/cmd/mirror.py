@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -493,7 +492,7 @@ def extend_with_additional_versions(specs, num_versions):
         mirror_specs = spack.mirrors.utils.get_all_versions(specs)
     else:
         mirror_specs = spack.mirrors.utils.get_matching_versions(specs, num_versions=num_versions)
-    mirror_specs = [x.concretized() for x in mirror_specs]
+    mirror_specs = [spack.concretize.concretize_one(x) for x in mirror_specs]
     return mirror_specs
 
 
@@ -516,16 +515,15 @@ def extend_with_dependencies(specs):
 
 def concrete_specs_from_cli_or_file(args):
     tty.msg("Concretizing input specs")
-    with spack.concretize.disable_compiler_existence_check():
-        if args.specs:
-            specs = spack.cmd.parse_specs(args.specs, concretize=True)
-            if not specs:
-                raise SpackError("unable to parse specs from command line")
+    if args.specs:
+        specs = spack.cmd.parse_specs(args.specs, concretize=True)
+        if not specs:
+            raise SpackError("unable to parse specs from command line")
 
-        if args.file:
-            specs = specs_from_text_file(args.file, concretize=True)
-            if not specs:
-                raise SpackError("unable to parse specs from file '{}'".format(args.file))
+    if args.file:
+        specs = specs_from_text_file(args.file, concretize=True)
+        if not specs:
+            raise SpackError("unable to parse specs from file '{}'".format(args.file))
     return specs
 
 
@@ -546,7 +544,7 @@ class IncludeFilter:
         package does not explicitly forbid redistributing source."""
         if self.private:
             return True
-        elif x.package_class.redistribute_source(x):
+        elif spack.repo.PATH.get_pkg_class(x.fullname).redistribute_source(x):
             return True
         else:
             tty.debug(

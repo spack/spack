@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,7 +21,12 @@ class PyNumpy(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.2.4", sha256="9ba03692a45d3eef66559efe1d1096c4b9b75c0986b5dff5530c378fb8331d4f")
+    version("2.2.3", sha256="dbdc15f0c81611925f382dfa97b3bd0bc2c1ce19d4fe50482cb0ddc12ba30020")
+    version("2.2.2", sha256="ed6906f61834d687738d25988ae117683705636936cc605be0bb208b23df4d8f")
+    version("2.2.1", sha256="45681fd7128c8ad1c379f0ca0776a8b0c6583d2f69889ddac01559dfe4390918")
     version("2.2.0", sha256="140dd80ff8981a583a60980be1a655068f8adebf7a45a06a6858c873fcdcd4a0")
+    version("2.1.3", sha256="aa08e04e08aaf974d4458def539dece0d28146d866a39da5639596f4921fd761")
     version("2.1.2", sha256="13532a088217fa624c99b843eeb54640de23b3414b14aa66d023805eb731066c")
     version("2.1.1", sha256="d0cf7d55b1051387807405b3898efafa862997b4cba8aa5dbe657be794afeafd")
     version("2.1.0", sha256="7dc90da0081f7e1da49ec4e398ede6a8e9cc4f5ebe5f9e06b443ed889ee9aaa2")
@@ -285,10 +289,10 @@ class PyNumpy(PythonPackage):
         blas = spec["blas"].libs.names[0]
         lapack = spec["lapack"].libs.names[0]
 
-        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+        if spec["blas"].name == "intel-oneapi-mkl":
             blas = "mkl-dynamic-lp64-seq"
 
-        if spec["lapack"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+        if spec["lapack"].name == "intel-oneapi-mkl":
             lapack = "mkl-dynamic-lp64-seq"
 
         if spec["blas"].name in ["blis", "amdblis"]:
@@ -317,7 +321,8 @@ class PyNumpy(PythonPackage):
     @when("@1.26:")
     def config_settings(self, spec, prefix):
         blas, lapack = self.blas_lapack_pkg_config()
-        return {
+
+        settings = {
             "builddir": "build",
             "compile-args": f"-j{make_jobs}",
             "setup-args": {
@@ -330,6 +335,22 @@ class PyNumpy(PythonPackage):
                 # "-Dcpu-dispatch": "none",
             },
         }
+
+        # Disable AVX512 features for Intel Classic compilers
+        # https://numpy.org/doc/stable/reference/simd/build-options.html
+        # https://github.com/numpy/numpy/issues/27840
+        # https://github.com/matplotlib/matplotlib/issues/28762
+        archs = ("x86_64_v4:", "cannonlake:", "mic_knl")
+        if any([self.spec.satisfies(f"target={arch} %intel") for arch in archs]):
+            intel_setup_args = {
+                "-Dcpu-dispatch": (
+                    "MAX -AVX512F -AVX512CD -AVX512_KNL -AVX512_KNM -AVX512_SKX "
+                    + "-AVX512_CLX -AVX512_CNL -AVX512_ICL -AVX512_SPR"
+                )
+            }
+            settings["setup-args"].update(intel_setup_args)
+
+        return settings
 
     def blas_lapack_site_cfg(self) -> None:
         """Write a site.cfg file to configure BLAS/LAPACK."""
@@ -368,11 +389,7 @@ class PyNumpy(PythonPackage):
 
         # Tell numpy where to find BLAS/LAPACK libraries
         with open("site.cfg", "w") as f:
-            if (
-                "^intel-mkl" in spec
-                or "^intel-parallel-studio+mkl" in spec
-                or "^intel-oneapi-mkl" in spec
-            ):
+            if "^intel-oneapi-mkl" in spec:
                 f.write("[mkl]\n")
                 # FIXME: as of @1.11.2, numpy does not work with separately
                 # specified threading and interface layers. A workaround is a
@@ -476,11 +493,7 @@ class PyNumpy(PythonPackage):
         # https://github.com/numpy/numpy/pull/13132
         # https://numpy.org/doc/1.25/user/building.html#accelerated-blas-lapack-libraries
         # https://numpy.org/doc/1.25/user/building.html#blas
-        if (
-            spec["blas"].name == "intel-mkl"
-            or spec["blas"].name == "intel-parallel-studio"
-            or spec["blas"].name == "intel-oneapi-mkl"
-        ):
+        if spec["blas"].name == "intel-oneapi-mkl":
             blas = "mkl"
         elif spec["blas"].name == "blis" or spec["blas"].name == "amdblis":
             blas = "blis"
@@ -496,11 +509,7 @@ class PyNumpy(PythonPackage):
         env.set("NPY_BLAS_ORDER", blas)
 
         # https://numpy.org/doc/1.25/user/building.html#lapack
-        if (
-            spec["lapack"].name == "intel-mkl"
-            or spec["lapack"].name == "intel-parallel-studio"
-            or spec["lapack"].name == "intel-oneapi-mkl"
-        ):
+        if spec["lapack"].name == "intel-oneapi-mkl":
             lapack = "mkl"
         elif spec["lapack"].name == "openblas":
             lapack = "openblas"

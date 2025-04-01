@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,5 +21,6 @@ class PyDaskExpr(PythonPackage):
 
     # Can't do circular run-time dependencies yet?
     # depends_on("py-dask@2024.7.1", type="run")
-    depends_on("py-pyarrow@7: +dataset", type="run")
+    depends_on("py-pyarrow@7:", type="run")
+    depends_on("arrow+dataset")
     depends_on("py-pandas@2:", type="run")

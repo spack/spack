@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -84,7 +83,7 @@ class Itensor(MakefilePackage):
             vinc += " -DHAVE_LAPACK_CONFIG_H"
             vinc += " -DLAPACK_COMPLEX_STRUCTURE"
             filter_file("#PLATFORM=lapack", vinc, mf, string=True)
-        elif ltype == "intel-mkl":
+        elif ltype == "intel-oneapi-mkl":
             vpla = "PLATFORM=mkl"
             filter_file("#PLATFORM=lapack", vinc, mf, string=True)
 

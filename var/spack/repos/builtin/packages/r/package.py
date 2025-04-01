@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,6 +23,7 @@ class R(AutotoolsPackage):
 
     license("GPL-2.0-or-later")
 
+    version("4.4.2", sha256="1578cd603e8d866b58743e49d8bf99c569e81079b6a60cf33cdf7bdffeb817ec")
     version("4.4.1", sha256="b4cb675deaaeb7299d3b265d218cde43f192951ce5b89b7bb1a5148a36b2d94d")
     version("4.4.0", sha256="ace4125f9b976d2c53bcc5fca30c75e30d4edc401584859cbadb080e72b5f030")
     version("4.3.3", sha256="80851231393b85bf3877ee9e39b282e750ed864c5ec60cbd68e6e139f0520330")
@@ -96,6 +96,7 @@ class R(AutotoolsPackage):
     depends_on("zlib-api")
     depends_on("zlib@1.2.5:", when="^[virtuals=zlib-api] zlib")
     depends_on("texinfo", type="build")
+    depends_on("gettext")
 
     with when("+X"):
         depends_on("cairo+X+gobject+pdf")
@@ -176,7 +177,10 @@ class R(AutotoolsPackage):
 
         # R uses LAPACK in Fortran, which requires libmkl_gf_* when gfortran is used.
         # TODO: cleaning this up seem to require both compilers as dependencies and use variants.
-        if spec["lapack"].name in INTEL_MATH_LIBRARIES and "gfortran" in self.compiler.fc:
+        if (
+            spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl")
+            and "gfortran" in self.compiler.fc
+        ):
             xlp64 = "ilp64" if spec["lapack"].satisfies("+ilp64") else "lp64"
             blas_flags = blas_flags.replace(f"mkl_intel_{xlp64}", f"mkl_gf_{xlp64}")
             lapack_flags = lapack_flags.replace(f"mkl_intel_{xlp64}", f"mkl_gf_{xlp64}")
@@ -190,11 +194,11 @@ class R(AutotoolsPackage):
             f"LDFLAGS=-Wl,-rpath,{extra_rpath}",
             f"--with-blas={blas_flags}",
             f"--with-lapack={lapack_flags}",
-            # cannot disable docs with a normal configure option
             "ac_cv_path_PDFLATEX=",
             "ac_cv_path_PDFTEX=",
             "ac_cv_path_TEX=",
             "ac_cv_path_TEXI2DVI=",
+            f"--with-libintl-prefix={spec['gettext'].prefix}",
         ]
 
         if "+X" in spec:
@@ -233,6 +237,20 @@ class R(AutotoolsPackage):
 
     @run_after("install")
     def copy_makeconf(self):
+        # Ensure full library flags are included in Makeconf
+        for _lib, _pkg in [
+            ("lzma", "xz"),
+            ("bz2", "bzip2"),
+            ("z", "zlib-api"),
+            ("tirpc", "libtirpc"),
+            ("icuuc", "icu4c"),
+        ]:
+            filter_file(
+                f"-l{_lib}",
+                f"-L{self.spec[_pkg].libs.directories[0]} -l{_lib}",
+                join_path(self.etcdir, "Makeconf"),
+            )
+
         # Make a copy of Makeconf because it will be needed to properly build R
         # dependencies in Spack.
         src_makeconf = join_path(self.etcdir, "Makeconf")

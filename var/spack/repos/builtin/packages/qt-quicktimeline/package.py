@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,6 +15,7 @@ class QtQuicktimeline(QtPackage):
 
     license("BSD-3-Clause")
 
+    version("6.8.2", sha256="74050e1b87495a500b66d114ba2311e9d2feb5bdadb46979b6986aedf93cd97e")
     version("6.8.1", sha256="29d79b17c0de962ce5dc9f2984eb89b701946522537cf5c90ca803c75148de19")
     version("6.8.0", sha256="3128c0f1a9e944c52ac8d080ecab7e7ed2a37e67cd06ab573dc178b3f8832fb4")
     version("6.7.3", sha256="81ce374a22bf00d53d0a9d5293d6495a224137e9427e4d4913d87f2f0adc5a58")
@@ -40,7 +40,8 @@ class QtQuicktimeline(QtPackage):
     version("6.2.4", sha256="d73cb33e33f0b7a1825b863c22e6b552ae86aa841bcb805a41aca02526a4e8bc")
     version("6.2.3", sha256="bbb913398d8fb6b5b20993b5e02317de5c1e4b23a5357dd5d08a237ada6cc7e2")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     for _v in QtBase.versions:
         v = str(_v)

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,6 +19,7 @@ class Actsvg(CMakePackage):
 
     license("MPL-2.0")
 
+    version("0.4.51", sha256="937385f7703c0d2d9c0af03bd5083d3f1fdac17ff573476a5fc5b1f8e3cd98b7")
     version("0.4.50", sha256="c97fb1cc75cbf23caebd3c6fb8716354bdbd0a77ad39dc43dae963692f3256e1")
     version("0.4.48", sha256="0f230c31c64b939e4d311afd997dbaa87a375454cf1595661a449b97943412c9")
     version("0.4.47", sha256="11924fddbdd01f6337875797dc3a97b62be565688e678485e992bcfc9bfb142f")

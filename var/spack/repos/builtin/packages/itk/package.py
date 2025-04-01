@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -76,7 +75,7 @@ class Itk(CMakePackage):
     )
 
     def cmake_args(self):
-        use_mkl = self.spec["fftw-api"].name in INTEL_MATH_LIBRARIES
+        use_mkl = self.spec.satisfies("^[virtuals=fftw-api] intel-oneapi-mkl")
         args = [
             self.define("BUILD_TESTING", False),
             self.define("BUILD_SHARED_LIBS", True),

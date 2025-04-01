@@ -1,9 +1,6 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import sys
 
 from spack.package import *
 
@@ -25,6 +22,7 @@ class Veclibfort(Package):
 
     depends_on("c", type="build")  # generated
     depends_on("fortran", type="build")  # generated
+    depends_on("gmake", type="build")
 
     variant("shared", default=True, description="Build shared libraries as well as static libs.")
 
@@ -47,9 +45,6 @@ class Veclibfort(Package):
         return HeaderList([])
 
     def install(self, spec, prefix):
-        if sys.platform != "darwin":
-            raise InstallError("vecLibFort can be installed on macOS only")
-
         filter_file(r"^PREFIX=.*", "", "Makefile")
 
         make_args = []
@@ -57,13 +52,13 @@ class Veclibfort(Package):
         if spec.satisfies("%gcc@6:"):
             make_args += ["CFLAGS=-flax-vector-conversions"]
 
-        make_args += ["PREFIX=%s" % prefix, "install"]
+        make_args += [f"PREFIX={prefix}", "install"]
 
         make(*make_args)
 
         # test
         fc = which("fc")
         flags = ["-o", "tester", "-O", "tester.f90"]
-        flags.extend(spec["veclibfort"].libs.ld_flags.split())
+        flags.extend(self.libs.ld_flags.split())
         fc(*flags)
         Executable("./tester")()

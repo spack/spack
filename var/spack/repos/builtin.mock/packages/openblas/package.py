@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,6 +17,8 @@ class Openblas(Package):
     version("0.2.13", md5="b1190f3d3471685f17cfd1ec1d252ac9")
 
     variant("shared", default=True, description="Build shared libraries")
+
+    depends_on("c", type="build")
 
     # See #20019 for this conflict
     conflicts("%gcc@:4.4", when="@0.2.14:")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -7,12 +6,57 @@ import os
 import re
 import sys
 
-import spack.compilers
-from spack.build_environment import dso_suffix
+import spack.compilers.config
+import spack.package_base
 from spack.package import *
 
 
-class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
+class MpichEnvironmentModifications(spack.package_base.PackageBase):
+    """Collects the environment modifications that are usually needed for the life-cycle of
+    MPICH, and derivatives.
+    """
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        dependent_module = dependent_spec.package.module
+        for var_name, attr_name in (
+            ("MPICH_CC", "spack_cc"),
+            ("MPICH_CXX", "spack_cxx"),
+            ("MPICH_FC", "spack_fc"),
+            ("MPICH_F90", "spack_fc"),
+            ("MPICH_F77", "spack_f77"),
+        ):
+            if hasattr(dependent_module, attr_name):
+                env.set(var_name, getattr(dependent_module, attr_name))
+
+    def setup_build_environment(self, env):
+        env.unset("F90")
+        env.unset("F90FLAGS")
+
+    def setup_run_environment(self, env):
+        self.setup_mpi_wrapper_variables(env)
+
+    def setup_dependent_package(self, module, dependent_spec):
+        spec = self.spec
+        spec.mpicc = join_path(self.prefix.bin, "mpicc")
+        spec.mpicxx = join_path(self.prefix.bin, "mpicxx")
+        # Some derived packages define the "fortran" variant, most don't. Checking on the
+        # presence of ~fortran makes us default to add fortran wrappers if the variant is
+        # not declared.
+        if spec.satisfies("~fortran"):
+            return
+        spec.mpifc = join_path(self.prefix.bin, "mpif90")
+        spec.mpif77 = join_path(self.prefix.bin, "mpif77")
+
+    def setup_mpi_wrapper_variables(self, env):
+        # Because MPI implementations provide compilers, they have to add to
+        # their run environments the code to make the compilers available.
+        env.set("MPICC", join_path(self.prefix.bin, "mpicc"))
+        env.set("MPICXX", join_path(self.prefix.bin, "mpicxx"))
+        env.set("MPIF77", join_path(self.prefix.bin, "mpif77"))
+        env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
+
+
+class Mpich(MpichEnvironmentModifications, AutotoolsPackage, CudaPackage, ROCmPackage):
     """MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""
 
@@ -31,6 +75,7 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     license("mpich2")
 
     version("develop", submodules=True)
+    version("4.3.0", sha256="5e04132984ad83cab9cc53f76072d2b5ef5a6d24b0a9ff9047a8ff96121bcc63")
     version("4.2.3", sha256="7a019180c51d1738ad9c5d8d452314de65e828ee240bcb2d1f80de9a65be88a8")
     version("4.2.2", sha256="883f5bb3aeabf627cb8492ca02a03b191d09836bbe0f599d8508351179781d41")
     version("4.2.1", sha256="23331b2299f287c3419727edc2df8922d7e7abbb9fd0ac74e03b9966f9ad42d7")
@@ -337,7 +382,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
     @classmethod
     def determine_variants(cls, exes, version):
         def get_spack_compiler_spec(compiler):
-            spack_compilers = spack.compilers.find_compilers([os.path.dirname(compiler)])
+            spack_compilers = spack.compilers.config.find_compilers([os.path.dirname(compiler)])
             actual_compiler = None
             # check if the compiler actually matches the one we want
             for spack_compiler in spack_compilers:
@@ -449,43 +494,10 @@ supported, and netmod is ignored if device is ch3:sock.""",
         return flags, None, None
 
     def setup_build_environment(self, env):
-        env.unset("F90")
-        env.unset("F90FLAGS")
-
+        MpichEnvironmentModifications.setup_build_environment(self, env)
         if "pmi=cray" in self.spec:
             env.set("CRAY_PMI_INCLUDE_OPTS", "-I" + self.spec["cray-pmi"].headers.directories[0])
             env.set("CRAY_PMI_POST_LINK_OPTS", "-L" + self.spec["cray-pmi"].libs.directories[0])
-
-    def setup_run_environment(self, env):
-        # Because MPI implementations provide compilers, they have to add to
-        # their run environments the code to make the compilers available.
-        env.set("MPICC", join_path(self.prefix.bin, "mpicc"))
-        env.set("MPICXX", join_path(self.prefix.bin, "mpic++"))
-        env.set("MPIF77", join_path(self.prefix.bin, "mpif77"))
-        env.set("MPIF90", join_path(self.prefix.bin, "mpif90"))
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        dependent_module = dependent_spec.package.module
-        env.set("MPICH_CC", dependent_module.spack_cc)
-        env.set("MPICH_CXX", dependent_module.spack_cxx)
-        env.set("MPICH_F77", dependent_module.spack_f77)
-        env.set("MPICH_F90", dependent_module.spack_fc)
-        env.set("MPICH_FC", dependent_module.spack_fc)
-
-    def setup_dependent_package(self, module, dependent_spec):
-        spec = self.spec
-
-        spec.mpicc = join_path(self.prefix.bin, "mpicc")
-        spec.mpicxx = join_path(self.prefix.bin, "mpic++")
-
-        if "+fortran" in spec:
-            spec.mpifc = join_path(self.prefix.bin, "mpif90")
-            spec.mpif77 = join_path(self.prefix.bin, "mpif77")
-
-        spec.mpicxx_shared_libs = [
-            join_path(self.prefix.lib, "libmpicxx.{0}".format(dso_suffix)),
-            join_path(self.prefix.lib, "libmpi.{0}".format(dso_suffix)),
-        ]
 
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
@@ -495,25 +507,6 @@ supported, and netmod is ignored if device is ch3:sock.""",
         # Else bootstrap with autotools
         bash = which("bash")
         bash("./autogen.sh")
-
-    @run_before("autoreconf")
-    def die_without_fortran(self):
-        # Until we can pass variants such as +fortran through virtual
-        # dependencies depends_on('mpi'), require Fortran compiler to
-        # avoid delayed build errors in dependents.
-        # The user can work around this by disabling Fortran explicitly
-        # with ~fortran
-
-        f77 = self.compiler.f77
-        fc = self.compiler.fc
-
-        fortran_missing = f77 is None or fc is None
-
-        if "+fortran" in self.spec and fortran_missing:
-            raise InstallError(
-                "mpich +fortran requires Fortran compilers. Configure "
-                "Fortran compiler or disable Fortran support with ~fortran"
-            )
 
     def configure_args(self):
         spec = self.spec
@@ -549,8 +542,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
                 )
             )
 
-        if "~fortran" in spec:
-            config_args.append("--disable-fortran")
+        config_args.extend(self.enable_or_disable("fortran"))
 
         if "+slurm" in spec:
             config_args.append("--with-slurm=yes")

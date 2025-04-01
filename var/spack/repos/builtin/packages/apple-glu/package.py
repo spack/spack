@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -13,7 +12,4 @@ class AppleGlu(AppleGlBase):
 
     provides("glu@1.3")
 
-    requires(
-        "%apple-clang platform=darwin",
-        msg="Apple-GLU is only available on Darwin, when using Apple Clang",
-    )
+    requires("platform=darwin", msg="Apple-GL is only available on Darwin")

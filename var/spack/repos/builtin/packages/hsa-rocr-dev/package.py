@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,6 +23,8 @@ class HsaRocrDev(CMakePackage):
     libraries = ["libhsa-runtime64"]
 
     version("master", branch="master")
+    version("6.3.2", sha256="aaecaa7206b6fa1d5d7b8f7c1f7c5057a944327ba4779448980d7e7c7122b074")
+    version("6.3.1", sha256="547ceeeda9a41cdffa21e57809dc5834f94938a0a2809c283aebcbcf01901df0")
     version("6.3.0", sha256="8fd6bcd6a5afd0ae5a59e33b786a525f575183d38c34049c2dab6b9270a1ca3b")
     version("6.2.4", sha256="b7aa0055855398d1228c39a6f4feb7d7be921af4f43d82855faf0b531394bb9b")
     version("6.2.1", sha256="dbe477b323df636f5e3221471780da156c938ec00dda4b50639aa8d7fb9248f4")
@@ -105,6 +106,8 @@ class HsaRocrDev(CMakePackage):
         "6.2.1",
         "6.2.4",
         "6.3.0",
+        "6.3.1",
+        "6.3.2",
         "master",
     ]:
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
@@ -127,6 +130,8 @@ class HsaRocrDev(CMakePackage):
         "6.2.1",
         "6.2.4",
         "6.3.0",
+        "6.3.1",
+        "6.3.2",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
@@ -149,6 +154,17 @@ class HsaRocrDev(CMakePackage):
         else:
             ver = None
         return ver
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("@5.7: +asan"):
+            numa_inc = self.spec["numactl"].prefix.include
+            numa_lib = self.spec["numactl"].prefix.lib
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", f"-fsanitize=address -shared-libasan -I{numa_inc} -L{numa_lib}")
+            env.set("CXXFLAGS", f"-fsanitize=address -shared-libasan -I{numa_inc} -L{numa_lib}")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     def cmake_args(self):
         spec = self.spec
@@ -181,6 +197,8 @@ class HsaRocrDev(CMakePackage):
             args.append(self.define("ROCM_PATCH_VERSION", "60100"))
         if self.spec.satisfies("@6.2"):
             args.append(self.define("ROCM_PATCH_VERSION", "60200"))
+        if self.spec.satisfies("@6.3"):
+            args.append(self.define("ROCM_PATCH_VERSION", "60300"))
         if self.spec.satisfies("@5.7.0:"):
             args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
 

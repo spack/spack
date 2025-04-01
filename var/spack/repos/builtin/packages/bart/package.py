@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -53,7 +52,7 @@ class Bart(MakefilePackage, CudaPackage):
         if spec["blas"].name == "openblas":
             env["OPENBLAS"] = "1"
 
-        elif spec["blas"].name in INTEL_MATH_LIBRARIES:
+        elif spec.satisfies("^[virtuals=blas] intel-oneapi-mkl"):
             env["MKL"] = "1"
             env["MKL_BASE"] = spec["mkl"].prefix.mkl
         else:

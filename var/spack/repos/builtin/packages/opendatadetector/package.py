@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,7 +23,8 @@ class Opendatadetector(CMakePackage):
     version("v2", tag="v2", commit="7041ae086dff4ee4a8d5b65f5d9559acc6dbec47")
     version("v1", tag="v1", commit="81c43c6511723c13c15327479082d3dcfa1947c7")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")  # because of DD4hep
+    depends_on("cxx", type="build")
 
     depends_on("dd4hep")
     depends_on("root")
@@ -36,5 +36,5 @@ class Opendatadetector(CMakePackage):
 
     def setup_run_environment(self, env):
         env.set("OPENDATADETECTOR_DATA", join_path(self.prefix.share, "OpenDataDetector"))
-        for d in self.libs.directories:
-            env.prepend_path("LD_LIBRARY_PATH", d)
+        for lib_path in [self.prefix.lib, self.prefix.lib64]:
+            env.prepend_path("LD_LIBRARY_PATH", lib_path)

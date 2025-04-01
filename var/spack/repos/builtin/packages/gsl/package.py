@@ -1,8 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 
 from spack.package import *
 
@@ -16,6 +16,10 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/gsl"
     gnu_mirror_path = "gsl/gsl-2.3.tar.gz"
+    maintainers("cessenat")
+
+    tags = ["hpc"]
+    executables = ["^gsl-config$"]
 
     license("GPL-3.0-or-later")
 
@@ -39,7 +43,8 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
 
     # from https://dev.gentoo.org/~mgorny/dist/gsl-2.3-cblas.patch.bz2
     patch("gsl-2.3-cblas.patch", when="@2.3:2.5+external-cblas")
-    patch("gsl-2.6-cblas.patch", when="@2.6: +external-cblas")
+    patch("gsl-2.6-cblas.patch", when="@2.6:2.7 +external-cblas")
+    patch("gsl-2.8-cblas.patch", when="@2.8: +external-cblas")
 
     conflicts("+external-cblas", when="@:2.2")
 
@@ -70,3 +75,9 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
         # cmake looks for GSL_ROOT_DIR to find GSL so this helps pick the spack one
         # when there are multiple installations (e.g. a system one and a spack one)
         env.set("GSL_ROOT_DIR", self.prefix)
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"\s*(\d[\d\.]+)", output)
+        return match.group(1) if match else None

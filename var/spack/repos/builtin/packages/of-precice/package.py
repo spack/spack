@@ -1,11 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-
-import llnl.util.tty as tty
 
 from spack.package import *
 from spack.pkg.builtin.openfoam import add_extra_files
@@ -57,7 +54,7 @@ class OfPrecice(Package):
         # it takes a very long time to rebuild!
         tty.info(
             "Build for "
-            + self.spec["openfoam"].format("{name}{@version}{%compiler}{compiler_flags}{variants}")
+            + self.spec["openfoam"].format("{name}{@version}{compiler_flags}{variants}{%compiler}")
         )
 
     def configure(self, spec, prefix):

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -134,7 +133,7 @@ def test_check_prefix_manifest(tmpdir):
 
     spec = spack.spec.Spec("libelf")
     spec._mark_concrete()
-    spec.prefix = prefix
+    spec.set_prefix(prefix)
 
     results = spack.verify.check_spec_manifest(spec)
     assert results.has_errors()

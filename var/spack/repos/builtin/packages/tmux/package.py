@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,8 +19,11 @@ class Tmux(AutotoolsPackage):
 
     license("ISC")
 
+    version("3.5a", sha256="16216bd0877170dfcc64157085ba9013610b12b082548c7c9542cc0103198951")
+    version("3.5", sha256="2fe01942e7e7d93f524a22f2c883822c06bc258a4d61dba4b407353d7081950f")
     version("3.4", sha256="551ab8dea0bf505c0ad6b7bb35ef567cdde0ccb84357df142c254f35a23e19aa")
     version("3.3a", sha256="e4fd347843bd0772c4f48d6dde625b0b109b7a380ff15db21e97c11a4dcdf93f")
+    version("3.3", sha256="b2382ac391f6a1c5b93293016cdc9488337d9a04b9d611ae05eac164740351dc")
     version("3.2a", sha256="551553a4f82beaa8dadc9256800bcc284d7c000081e47aa6ecbb6ff36eacd05f")
     version("3.2", sha256="664d345338c11cbe429d7ff939b92a5191e231a7c1ef42f381cebacb1e08a399")
     version("3.1c", sha256="918f7220447bef33a1902d4faff05317afd9db4ae1c9971bef5c787ac6c88386")
@@ -49,6 +51,9 @@ class Tmux(AutotoolsPackage):
         "utf8proc", default=False, description="Build with UTF-8 support from utf8proc library"
     )
     variant("static", default=False, description="Create a static build")
+    variant(
+        "jemalloc", default=False, description="Use jemalloc for memory allocation", when="@3.5:"
+    )
 
     # used by configure to e.g. find libtinfo
     depends_on("pkgconfig", type="build")
@@ -56,6 +61,7 @@ class Tmux(AutotoolsPackage):
     depends_on("ncurses")
 
     depends_on("utf8proc", when="+utf8proc")
+    depends_on("jemalloc", when="+jemalloc")
 
     depends_on("automake", when="@master")
     depends_on("autoconf", when="@master")
@@ -67,7 +73,7 @@ class Tmux(AutotoolsPackage):
     patch(
         "https://github.com/tmux/tmux/commit/775789fbd5c4f3aa93061480cd64e61daf7fb689.patch?full_index=1",
         sha256="c1b61a1244f758480578888d3f89cac470271c376ea0879996b81e10b397cad0",
-        when="@2.4:",
+        when="@2.4:3.4",
     )
 
     @run_before("autoreconf")
@@ -81,5 +87,6 @@ class Tmux(AutotoolsPackage):
 
         options.extend(self.enable_or_disable("utf8proc"))
         options.extend(self.enable_or_disable("static"))
+        options.extend(self.enable_or_disable("jemalloc"))
 
         return options
