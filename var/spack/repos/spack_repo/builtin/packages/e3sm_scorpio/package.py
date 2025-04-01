@@ -14,6 +14,7 @@ class E3smScorpio(CMakePackage):
     url = "https://github.com/E3SM-Project/scorpio/archive/refs/tags/scorpio-v1.4.1.tar.gz"
 
     maintainers("xylar", "altheaden")
+
     version("1.6.7", sha256="ae7b0eb9d1d48331f3103a9b226855ad46916152ff569f25c6f82b17211008f3")
     version("1.6.6", sha256="19672bbe987e57c548161f11f0b7c267943969f2e60a9639181d3a040aedff53")
     version("1.6.5", sha256="b81af12f3cadec25898c9b102775f77457f3dd95b878ee6c7edaf6eb0b16d4fc")
@@ -34,11 +35,9 @@ class E3smScorpio(CMakePackage):
 
     variant("timing", default=False, description="Enable GPTL timing")
     variant("mpi", default=True, description="Enable MPI")
-    variant("internal-timing", default=False,
-            description="Gather and print GPL timing stats")
+    variant("internal-timing", default=False, description="Gather and print GPL timing stats")
     variant("tools", default=False, description="Enable SCORPIO tools")
-    variant("malloc", default=True,
-            description="Use native malloc (instead of bget package)")
+    variant("malloc", default=True, description="Use native malloc (instead of bget package)")
 
     depends_on("gptl", when="+timing")
     depends_on("mpi", when="+mpi")
@@ -62,18 +61,21 @@ class E3smScorpio(CMakePackage):
             args.append(define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
             args.append(define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
             args.append(define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc))
-            args.extend([
-                define("PnetCDF_C_PATH", spec["parallel-netcdf"].prefix),
-                define("PnetCDF_Fortran_PATH", spec["parallel-netcdf"].prefix),
-            ])
+            args.extend(
+                [
+                    define("PnetCDF_C_PATH", spec["parallel-netcdf"].prefix),
+                    define("PnetCDF_Fortran_PATH", spec["parallel-netcdf"].prefix),
+                ]
+            )
 
-        args.extend([
-            define_from_variant("WITH_PNETCDF", "mpi"),
-            define_from_variant("PIO_ENABLE_TIMING", "timing"),
-            define_from_variant("PIO_ENABLE_INTERNAL_TIMING",
-                                "internal-timing"),
-            define_from_variant("PIO_ENABLE_TOOLS", "tools"),
-            define_from_variant("PIO_USE_MALLOC", "malloc"),
-        ])
+        args.extend(
+            [
+                define_from_variant("WITH_PNETCDF", "mpi"),
+                define_from_variant("PIO_ENABLE_TIMING", "timing"),
+                define_from_variant("PIO_ENABLE_INTERNAL_TIMING", "internal-timing"),
+                define_from_variant("PIO_ENABLE_TOOLS", "tools"),
+                define_from_variant("PIO_USE_MALLOC", "malloc"),
+            ]
+        )
 
         return args
