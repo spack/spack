@@ -76,7 +76,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
-    variant("axom", default=False, description="Enable/Disable AXOM to use Sidre for scalable checkpointing")
+    variant(
+        "axom",
+        default=False,
+        description="Enable/Disable AXOM to use Sidre for scalable checkpointing",
+    )
 
     variant("jsrun", default=False, description="Enable/Disable jsrun command for testing")
     variant("shared", default=False, description="Enable/Disable shared libraries")
