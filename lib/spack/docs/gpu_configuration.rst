@@ -72,7 +72,7 @@ This is in combination with the following compiler definition:
    packages:
      llvm-amdgpu:
        externals:
-       - spec: rocmcc@=5.3.0
+       - spec: llvm-amdgpu@=5.3.0
          prefix: /opt/rocm-5.3.0
          compilers:
            c: /opt/rocm-5.3.0/bin/amdclang
