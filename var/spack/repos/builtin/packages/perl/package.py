@@ -169,9 +169,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-
     extendable = True
+
+    depends_on("c", type="build")  # generated
 
     if sys.platform != "win32":
         depends_on("gmake", type="build")

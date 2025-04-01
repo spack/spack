@@ -40,8 +40,6 @@ class Fenics(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-
     dolfin_versions = ["2019.1.0", "2018.1.0", "2017.2.0", "2016.2.0"]
 
     variant("python", default=True, description="Compile with Python interface")
@@ -117,6 +115,7 @@ class Fenics(CMakePackage):
     depends_on("py-fenics-ffc@master", type=("build", "run"), when="@master+python")
 
     # package dependencies
+    depends_on("cxx", type="build")  # generated
     depends_on("python@3.5:", type=("build", "run"), when="+python")
     depends_on("eigen@3.2.0:")
     depends_on("pkgconfig", type="build")

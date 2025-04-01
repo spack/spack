@@ -187,9 +187,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("mkl", default=False, description="Build with MKL support")
     variant("jemalloc", default=False, description="Build with jemalloc as malloc support")
     variant("gcp", default=False, description="Build with Google Cloud Platform support")
@@ -222,6 +219,9 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         default=sys.platform.startswith("linux"),
         description="Build kernels into separate shared objects",
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     extends("python")
 

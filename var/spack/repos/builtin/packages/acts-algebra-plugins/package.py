@@ -23,8 +23,6 @@ class ActsAlgebraPlugins(CMakePackage):
     version("0.25.0", sha256="bb0cba6e37558689d780a6de8f749abb3b96f8cd9e0c8851474eb4532e1e98b8")
     version("0.24.0", sha256="f44753e62b1ba29c28ab86b282ab67ac6028a0f9fe41e599b7fc6fc50b586b62")
 
-    depends_on("cxx", type="build")  # generated
-
     _cxxstd_values = (
         conditional("17", when="@:0.25"),
         conditional("20", when="@0:"),
@@ -38,6 +36,8 @@ class ActsAlgebraPlugins(CMakePackage):
     variant("vecmem", default=False, description="Enables the vecmem plugin")
     variant("vc", default=False, description="Enables the Vc plugin")
     variant("fastor", default=False, description="Enables the Fastor plugin")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.14:", type="build")
     depends_on("vecmem@1.5.0:", when="+vecmem")

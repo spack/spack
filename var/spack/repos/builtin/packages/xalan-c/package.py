@@ -21,9 +21,6 @@ class XalanC(CMakePackage):
 
     version("1.12", sha256="ee7d4b0b08c5676f5e586c7154d94a5b32b299ac3cbb946e24c4375a25552da7")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "transcoder",
         default="default",
@@ -31,6 +28,9 @@ class XalanC(CMakePackage):
         multi=False,
         description="Use the default UTF-16 transcoder or ICU",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("xerces-c@3:")
     depends_on("icu4c", type="link", when="transcoder=icu")

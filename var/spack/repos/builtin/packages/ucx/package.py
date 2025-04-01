@@ -55,9 +55,6 @@ class Ucx(AutotoolsPackage, CudaPackage):
     version("1.2.1", sha256="fc63760601c03ff60a2531ec3c6637e98f5b743576eb410f245839c84a0ad617")
     version("1.2.0", sha256="1e1a62d6d0f89ce59e384b0b5b30b416b8fd8d7cedec4182a5319d0dfddf649c")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     simd_values = ("avx", "sse41", "sse42")
 
     variant("assertions", default=False, description="Enable assertions")
@@ -127,6 +124,9 @@ class Ucx(AutotoolsPackage, CudaPackage):
     variant("verbs", default=False, description="Build OpenFabrics support")
     variant("xpmem", default=False, description="Enable XPMEM support")
     variant("gtest", default=False, description="Build and install Googletest")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("binutils+ld", when="%aocc", type="build")
     depends_on("binutils", when="+backtrace_detail")

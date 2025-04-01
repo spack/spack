@@ -40,9 +40,6 @@ class Rocthrust(CMakePackage):
         version("5.3.3", sha256="0c2fc8d437efaf5c4c859d97adb049d4025025d0be0e0908f59a8112508234e5")
         version("5.3.0", sha256="0e11b12f208d2751e3e507e3a32403c9bd45da4e191671d765d33abd727d9b96")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     # the rocthrust library itself is header-only, but the build_type and amdgpu_target
@@ -53,6 +50,10 @@ class Rocthrust(CMakePackage):
         values=auto_or_any_combination_of(*amdgpu_targets),
         sticky=True,
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("cmake@3.10.2:", type="build")
 
     depends_on("googletest@1.10.0:", type="test")

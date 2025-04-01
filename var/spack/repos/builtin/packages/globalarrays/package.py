@@ -34,10 +34,6 @@ class Globalarrays(AutotoolsPackage):
     version("5.6.1", sha256="b324deed49f930f55203e1d18294ce07dd02680b9ac0728ebc54f94a12557ebc")
     version("5.6", sha256="a228dfbae9a6cfaae34694d7e56f589ac758e959b58f4bc49e6ef44058096767")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     variant("cxx", default=False, description="Enable C++")
     variant("scalapack", default=False, description="Enable SCALAPACK")
     variant(
@@ -46,6 +42,10 @@ class Globalarrays(AutotoolsPackage):
         default="mpi-ts",
         description="ARMCI runtime",
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("mpi")
     depends_on("blas")

@@ -30,10 +30,6 @@ class Goma(CMakePackage):
     version("release", branch="release")
     version("main", branch="main")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Problem size variants
     variant(
         "max_conc",
@@ -79,6 +75,10 @@ class Goma(CMakePackage):
     variant("suite-sparse", default=True, description="Build with UMFPACK support")
 
     # Required dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("mpi")
     depends_on("seacas+applications")
     depends_on("trilinos+mpi+epetra+aztec+amesos+stratimikos+teko+mumps+superlu-dist+ml~exodus")

@@ -54,10 +54,6 @@ class Dealii(CMakePackage, CudaPackage):
     version("8.2.1", sha256="d75674e45fe63cd9fa294460fe45228904d51a68f744dbb99cd7b60720f3b2a0")
     version("8.1.0", sha256="d666bbda2a17b41b80221d7029468246f2658051b8c00d9c5907cd6434c4df99")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     # Configuration variants
     variant(
         "build_type",
@@ -127,6 +123,10 @@ class Dealii(CMakePackage, CudaPackage):
     variant("threads", default=True, description="Compile with multi-threading via TBB")
     variant("trilinos", default=True, description="Compile with Trilinos (only with MPI)")
     variant("vtk", default=True, when="@9.6:", description="Compile with VTK")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     # Required dependencies: Light version
     depends_on("blas")

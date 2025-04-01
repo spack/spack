@@ -20,13 +20,13 @@ class PyDace(PythonPackage):
     version("master", branch="master", submodules=True)
     version("0.15.1", sha256="69bfdbbd5c7177f2926a874f5fa82fcdef61fc532c022b4bc12e1e9218724093")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "counters",
         description="Optional requirements that enable performance counter collection.",
         default=False,
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("python@3.6:3.12", type=("build", "run"))
     depends_on("py-setuptools", type="build")
