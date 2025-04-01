@@ -14,8 +14,7 @@ class Scorep(AutotoolsPackage):
     homepage = "https://www.vi-hps.org/projects/score-p"
     url = "https://perftools.pages.jsc.fz-juelich.de/cicd/scorep/tags/scorep-7.1/scorep-7.1.tar.gz"
     maintainers("wrwilliams")
-    version("9.0-rc3", sha256="47accde35b6ba5d0fbcb45fb9fb634b5e4830ff1386c81742648c60702b769d9")
-    version("9.0-rc2", sha256="bb6f6de2df21b440650a475679fc1393adf884c7ef5ef6972c3307f6583e0a79")
+    version("9.0", sha256="5d0a5db4cc6f31c30ae03c7e6f6245e83667b0ff38a7041ffe8b2e8e581e0997")
     version("8.4", sha256="7bbde9a0721d27cc6205baf13c1626833bcfbabb1f33b325a2d67976290f7f8a")
     version("8.3", sha256="76c914e6319221c059234597a3bc53da788ed679179ac99c147284dcefb1574a")
     # version 8.2 was immediately superseded before it hit Spack
@@ -104,6 +103,9 @@ class Scorep(AutotoolsPackage):
         description="Enable debug info lookup via binutils",
         when="^binutils",
     )
+    # Putting this in as preparation. F08 support exists in 9.0 but configure does not respect
+    # --enable-mpi-f08 and will not until 9.1.
+    variant("mpi_f08", default=True, description="Enable MPI F08 support", when="@9.1: +mpi")
     # Dependencies for SCORE-P are quite tight. See the homepage for more
     # information. Starting with scorep 4.0 / cube 4.4, Score-P only depends on
     # two components of cube -- cubew and cubelib.
@@ -122,10 +124,10 @@ class Scorep(AutotoolsPackage):
     # SCOREP 8
     depends_on("binutils", type="link", when="@8:")
     depends_on("otf2@3:", when="@8:")
-    depends_on("cubew@4.8.2:", when="@8.3:")
-    depends_on("cubelib@4.8.2:", when="@8.3:")
-    depends_on("cubew@4.8:", when="@8:8.2")
-    depends_on("cubelib@4.8:", when="@8:8.2")
+    depends_on("cubew@4.8.2:4.8.99", when="@8.3:")
+    depends_on("cubelib@4.8.2:4.8.99", when="@8.3:")
+    depends_on("cubew@4.8:4.8.99", when="@8:8.2")
+    depends_on("cubelib@4.8:4.8.99", when="@8:8.2")
     # fall through to Score-P 7's OPARI2, no new release
     # SCOREP 7
     depends_on("otf2@2.3:2.3.99", when="@7.0:7")
