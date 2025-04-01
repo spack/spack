@@ -45,6 +45,8 @@ def test_direct_dependencies(cli_args, expected, mock_packages):
     assert expected == result
 
 
+# TODO/RepoSplit: Need to resolve concretization error for unsatisfiable
+# TODO/RepoSplit:   "mpileaks ^mpich" for this test to pass.
 @pytest.mark.db
 def test_direct_installed_dependencies(mock_packages, database):
     with color_when(False):
@@ -59,6 +61,8 @@ def test_direct_installed_dependencies(mock_packages, database):
     assert expected == hashes
 
 
+# TODO/RepoSplit: Need to resolve concretization error for unsatisfiable
+# TODO/RepoSplit:   "mpileaks ^mpich" for this test to pass.
 @pytest.mark.db
 def test_transitive_installed_dependencies(mock_packages, database):
     with color_when(False):
