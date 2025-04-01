@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -99,7 +98,7 @@ def setup_parser(subparser):
         "--show-full-compiler",
         action="store_true",
         dest="show_full_compiler",
-        help="show full compiler specs",
+        help="(DEPRECATED) show full compiler specs. Currently it's a no-op",
     )
     implicit_explicit = subparser.add_mutually_exclusive_group()
     implicit_explicit.add_argument(
@@ -279,7 +278,6 @@ def display_env(env, args, decorator, results):
             # these enforce details in the root specs to show what the user asked for
             namespaces=True,
             show_flags=True,
-            show_full_compiler=True,
             decorator=root_decorator,
             variants=True,
         )
@@ -302,7 +300,6 @@ def display_env(env, args, decorator, results):
             decorator=lambda s, f: color.colorize("@*{%s}" % f),
             namespace=True,
             show_flags=True,
-            show_full_compiler=True,
             variants=True,
         )
         print()

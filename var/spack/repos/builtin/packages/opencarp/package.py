@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -54,14 +53,14 @@ class Opencarp(CMakePackage):
     )
     version("master", branch="master", submodules=False, no_cache=True)
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("carputils", default=False, description="Installs the carputils framework")
     variant("meshtool", default=False, description="Installs the meshtool software")
 
     # Patch removing problematic steps in CMake process
     patch("opencarp7.patch", when="@7.0")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("git", type=("build", "run"))
     depends_on("petsc")

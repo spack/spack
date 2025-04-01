@@ -1,9 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 
 from spack.package import *
 
@@ -52,6 +52,7 @@ class Visit(CMakePackage):
     tags = ["radiuss"]
 
     maintainers("cyrush")
+    license("BSD-3-Clause")
 
     extendable = True
 
@@ -77,14 +78,9 @@ class Visit(CMakePackage):
     version("3.1.1", sha256="0b60ac52fd00aff3cf212a310e36e32e13ae3ca0ddd1ea3f54f75e4d9b6c6cf0")
     version("3.0.1", sha256="a506d4d83b8973829e68787d8d721199523ce7ec73e7594e93333c214c2c12bd")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     root_cmakelists_dir = "src"
+    # Prefer ninja generator
     generator("ninja", "make")
-    # Temporary fix for now due to issue installing with ninja generator
-    conflicts("generator=ninja", when="+python")
 
     variant("gui", default=True, description="Enable VisIt's GUI")
     variant("adios2", default=True, description="Enable ADIOS2 file format")
@@ -118,10 +114,18 @@ class Visit(CMakePackage):
 
     # Add dectection for py-pip and enable python extensions with building with GUI
     patch("19958-enable-python-and-check-pip.patch", when="@3.4:3.4.1 +python")
+    patch("20127-remove-relink-visitmodule-py-setup.patch", when="@3.4.1 +python")
+
+    # Fix missing cmath include in QvisStripChart.C
+    patch("20270-missing-cmath-QvisStripChart.patch", when="@:3.4.2")
 
     conflicts(
         "+gui", when="^[virtuals=gl] osmesa", msg="GUI cannot be activated with OSMesa front-end"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.14.7:", type="build")
     depends_on("cmake@3.24:", type="build", when="@3.4:")
@@ -411,3 +415,6 @@ class Visit(CMakePackage):
         output = Executable(exe)("-version", output=str, error=str)
         match = re.search(r"\s*(\d[\d\.]+)\.", output)
         return match.group(1) if match else None
+
+    # see https://github.com/visit-dav/visit/issues/20055
+    unresolved_libraries = ["*"]

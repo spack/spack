@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,8 +27,6 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     version("1.17", sha256="3e04ad027c5b6ebd67c616eec13e66fbedb3d4d8cbe19cc29dadde44b92bda55")
     version("1.16", sha256="b977fc10ac7a72d987d48136251aeb332f2dced1aabd50d6d56bdf72e2b79101")
 
-    depends_on("c", type="build")  # generated
-
     variant(
         "ssl", default="openssl", values=("gnutls", "openssl"), description="Specify SSL backend"
     )
@@ -37,6 +34,8 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     variant("libpsl", default=False, description="Enable support for libpsl cookie checking")
     variant("pcre", default=False, description="Enable PCRE style regular expressions")
     variant("python", default=False, description="Enable Python support")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("gnutls", when="ssl=gnutls")
     depends_on("openssl", when="ssl=openssl")

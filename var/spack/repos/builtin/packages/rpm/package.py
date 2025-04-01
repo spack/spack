@@ -1,9 +1,7 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
 
 from spack.package import *
 
@@ -27,9 +25,6 @@ class Rpm(AutotoolsPackage):
     version("4.18.2", sha256="8be0a812b2e707c72ae486b54db18ae211dd4158ad35e32b308d662c59a75e85")
     version("4.16.1.2", sha256="3d2807807a8ccaa92a8ced74e09b5bf5b2417a5bbf9bee4abc7c6aa497547bf3")
     version("4.16.0", sha256="a62b744e3404b107e8467e1a36ff0f2bf9e5c1b748dbfeb36db54bbb859446ea")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     variant(
         "crypto",
@@ -56,6 +51,9 @@ class Rpm(AutotoolsPackage):
     variant("gpg", default=False, description="Install gpg for using cryptographic signatures")
     variant("openmp", default=True, description="OpenMP multithreading support")
     variant("nls", default=False, description="Enable native language support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Always required
     depends_on("popt")
@@ -94,7 +92,6 @@ class Rpm(AutotoolsPackage):
     depends_on("bzip2")
     depends_on("gzip")
     depends_on("xz")
-    depends_on("lzma")
     with when("+zstd"):
         depends_on("zstd")
         depends_on("zstd@1.3.8:", when="@4.17:")

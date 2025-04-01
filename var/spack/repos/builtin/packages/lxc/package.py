@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -37,8 +36,4 @@ class Lxc(AutotoolsPackage):
     depends_on("m4", type="build")
 
     def configure_args(self):
-        args = [
-            "bashcompdir="
-            + join_path(self.spec["lxc"].prefix, "share", "bash-completion", "completions")
-        ]
-        return args
+        return [f"bashcompdir={join_path(self.prefix, 'share', 'bash-completion', 'completions')}"]

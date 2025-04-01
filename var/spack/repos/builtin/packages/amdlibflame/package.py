@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # ----------------------------------------------------------------------------\
@@ -62,10 +61,6 @@ class Amdlibflame(CMakePackage, LibflameBase):
     version("3.0", sha256="d94e08b688539748571e6d4c1ec1ce42732eac18bd75de989234983c33f01ced")
     version("2.2", sha256="12b9c1f92d2c2fa637305aaa15cf706652406f210eaa5cbc17aaea9fcfa576dc")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("ilp64", default=False, when="@3.0.1: ", description="Build with ILP64 support")
     variant(
         "vectorization",
@@ -99,6 +94,10 @@ class Amdlibflame(CMakePackage, LibflameBase):
     patch("libflame-pkgconfig.patch", when="@4.2")
 
     provides("flame@5.2", when="@2:")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("python+pythoncmd", type="build")
     depends_on("gmake@4:", when="@3.0.1,3.1:", type="build")
@@ -203,8 +202,8 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             args.append("--enable-void-return-complex")
 
         if spec.satisfies("@3.0:3.1 %aocc"):
-            """To enabled Fortran to C calling convention for
-            complex types when compiling with aocc flang"""
+            # To enable Fortran to C calling convention for complex types when compiling with
+            # aocc flang
             args.append("--enable-f2c-dotc")
 
         if spec.satisfies("@3.0.1: +ilp64"):

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,8 +23,6 @@ class Lazyten(CMakePackage):
     #
     version("develop", branch="master")
     version("0.4.1", sha256="696d151382993c13d04516c77db3ea712a70e3cb449539b9e79abc78cf245ae4")
-
-    depends_on("cxx", type="build")  # generated
 
     #
     # Variants
@@ -56,6 +53,8 @@ class Lazyten(CMakePackage):
     #
     # Dependencies
     #
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3:", type="build")
 
     depends_on("krims@develop", when="@develop")

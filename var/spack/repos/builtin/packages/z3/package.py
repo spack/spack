@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,10 +27,10 @@ class Z3(CMakePackage):
     version("4.8.7", sha256="8c1c49a1eccf5d8b952dadadba3552b0eac67482b8a29eaad62aa7343a0732c3")
     version("4.5.0", sha256="aeae1d239c5e06ac183be7dd853775b84698db1265cb2258e5918a28372d4a0c")
 
+    variant("python", default=False, description="Enable python binding")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("python", default=False, description="Enable python binding")
     depends_on("python", type="build", when="~python")
     depends_on("python", type=("build", "run"), when="+python")
     depends_on("py-setuptools", type=("run"), when="+python")

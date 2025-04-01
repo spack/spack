@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,8 +8,6 @@ import shutil
 import socket
 import sys
 from os import environ as env
-
-import llnl.util.tty as tty
 
 from spack.package import *
 
@@ -90,10 +87,6 @@ class Ascent(CMakePackage, CudaPackage):
         "0.6.0", tag="v0.6.0", commit="9ade37b0a9ea495e45adb25cda7498c0bf9465c5", submodules=True
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     ###########################################################################
     # package variants
     ###########################################################################
@@ -151,9 +144,21 @@ class Ascent(CMakePackage, CudaPackage):
     # https://github.com/Alpine-DAV/ascent/pull/1123
     patch("ascent-find-raja-pr1123.patch", when="@0.9.0")
 
+    # patch for fix typo in coord_type
+    # https://github.com/Alpine-DAV/ascent/pull/1408
+    patch(
+        "https://github.com/Alpine-DAV/ascent/pull/1408.patch?full_index=1",
+        when="@0.9.3 %oneapi@2025:",
+        sha256="7de7f51e57f3d743c39ad80d8783a4eb482be1def51eb2d3f9259246c661f164",
+    )
+
     ##########################################################################
     # package dependencies
     ###########################################################################
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14,3.18.2:", type="build")
 
@@ -371,8 +376,9 @@ class Ascent(CMakePackage, CudaPackage):
         # if on llnl systems, we can use the SYS_TYPE
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
-        host_config_path = "{0}-{1}-{2}-ascent-{3}.cmake".format(
-            socket.gethostname(), sys_type, spec.compiler, spec.dag_hash()
+        compiler_str = f"{self['c'].name}-{self['c'].version}"
+        host_config_path = (
+            f"{socket.gethostname()}-{sys_type}-{compiler_str}" f"-ascent-{spec.dag_hash()}.cmake"
         )
         dest_dir = spec.prefix
         host_config_path = os.path.abspath(join_path(dest_dir, host_config_path))
@@ -471,6 +477,9 @@ class Ascent(CMakePackage, CudaPackage):
         if cflags:
             cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
         cxxflags = cppflags + " ".join(spec.compiler_flags["cxxflags"])
+        if spec.satisfies("%oneapi@2025:"):
+            cxxflags += "-Wno-error=missing-template-arg-list-after-template-kw "
+            cxxflags += "-Wno-missing-template-arg-list-after-template-kw"
         if cxxflags:
             cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
         fflags = " ".join(spec.compiler_flags["fflags"])

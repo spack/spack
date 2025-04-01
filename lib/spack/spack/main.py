@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -15,7 +14,6 @@ import inspect
 import io
 import operator
 import os
-import os.path
 import pstats
 import re
 import shlex
@@ -48,7 +46,8 @@ import spack.store
 import spack.util.debug
 import spack.util.environment
 import spack.util.lock
-from spack.error import SpackError
+
+from .enums import ConfigScopePriority
 
 #: names of profile statistics
 stat_names = pstats.Stats.sort_arg_dict_default
@@ -166,7 +165,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         # lazily add all commands to the parser when needed.
         add_all_commands(self)
 
-        """Print help on subcommands in neatly formatted sections."""
+        # Print help on subcommands in neatly formatted sections.
         formatter = self._get_formatter()
 
         # Create a list of subcommand actions. Argparse internals are nasty!
@@ -505,16 +504,16 @@ def make_argument_parser(**kwargs):
     return parser
 
 
-def send_warning_to_tty(message, *args):
+def showwarning(message, category, filename, lineno, file=None, line=None):
     """Redirects messages to tty.warn."""
-    tty.warn(message)
+    if category is spack.error.SpackAPIWarning:
+        tty.warn(f"{filename}:{lineno}: {message}")
+    else:
+        tty.warn(message)
 
 
 def setup_main_options(args):
     """Configure spack globals based on the basic options."""
-    # Assign a custom function to show warnings
-    warnings.showwarning = send_warning_to_tty
-
     # Set up environment based on args.
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
@@ -731,7 +730,7 @@ def _compatible_sys_types():
     with the current host.
     """
     host_platform = spack.platforms.host()
-    host_os = str(host_platform.operating_system("default_os"))
+    host_os = str(host_platform.default_operating_system())
     host_target = archspec.cpu.host()
     compatible_targets = [host_target] + host_target.ancestors
 
@@ -858,6 +857,38 @@ def resolve_alias(cmd_name: str, cmd: List[str]) -> Tuple[str, List[str]]:
     return cmd_name, cmd
 
 
+def add_command_line_scopes(
+    cfg: spack.config.Configuration, command_line_scopes: List[str]
+) -> None:
+    """Add additional scopes from the --config-scope argument, either envs or dirs.
+
+    Args:
+        cfg: configuration instance
+        command_line_scopes: list of configuration scope paths
+
+    Raises:
+        spack.error.ConfigError: if the path is an invalid configuration scope
+    """
+    for i, path in enumerate(command_line_scopes):
+        name = f"cmd_scope_{i}"
+        scopes = ev.environment_path_scopes(name, path)
+        if scopes is None:
+            if os.path.isdir(path):  # directory with config files
+                cfg.push_scope(
+                    spack.config.DirectoryConfigScope(name, path, writable=False),
+                    priority=ConfigScopePriority.CUSTOM,
+                )
+                spack.config._add_platform_scope(
+                    cfg, name, path, priority=ConfigScopePriority.CUSTOM, writable=False
+                )
+                continue
+            else:
+                raise spack.error.ConfigError(f"Invalid configuration scope: {path}")
+
+        for scope in scopes:
+            cfg.push_scope(scope, priority=ConfigScopePriority.CUSTOM)
+
+
 def _main(argv=None):
     """Logic for the main entry point for the Spack command.
 
@@ -878,9 +909,10 @@ def _main(argv=None):
     # main() is tricky to get right, so be careful where you put things.
     #
     # Things in this first part of `main()` should *not* require any
-    # configuration. This doesn't include much -- setting up th parser,
+    # configuration. This doesn't include much -- setting up the parser,
     # restoring some key environment variables, very simple CLI options, etc.
     # ------------------------------------------------------------------------
+    warnings.showwarning = showwarning
 
     # Create a parser with a simple positional argument first.  We'll
     # lazily load the subcommand(s) we need later. This allows us to
@@ -926,8 +958,10 @@ def _main(argv=None):
 
     # Push scopes from the command line last
     if args.config_scopes:
-        spack.config._add_command_line_scopes(spack.config.CONFIG, args.config_scopes)
-    spack.config.CONFIG.push_scope(spack.config.InternalConfigScope("command_line"))
+        add_command_line_scopes(spack.config.CONFIG, args.config_scopes)
+    spack.config.CONFIG.push_scope(
+        spack.config.InternalConfigScope("command_line"), priority=ConfigScopePriority.COMMAND_LINE
+    )
     setup_main_options(args)
 
     # ------------------------------------------------------------------------
@@ -973,6 +1007,7 @@ def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
     args, unknown = parser.parse_known_args(main_args.command)
     # we need to inherit verbose since the install command checks for it
     args.verbose = main_args.verbose
+    args.lines = main_args.lines
 
     # Now that we know what command this is and what its args are, determine
     # whether we can continue with a bad environment and raise if not.
@@ -1012,7 +1047,7 @@ def main(argv=None):
     try:
         return _main(argv)
 
-    except SpackError as e:
+    except spack.error.SpackError as e:
         tty.debug(e)
         e.die()  # gracefully die on any SpackErrors
 

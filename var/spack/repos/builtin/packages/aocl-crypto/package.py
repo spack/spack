@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # ----------------------------------------------------------------------------
@@ -44,8 +43,6 @@ class AoclCrypto(CMakePackage):
     )
     version("4.2", sha256="2bdbedd8ab1b28632cadff237f4abd776e809940ad3633ad90fc52ce225911fe")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
     variant("examples", default=False, description="Build examples")
     variant("ipp", default=False, description="Build Intel IPP library")
 
@@ -56,6 +53,8 @@ class AoclCrypto(CMakePackage):
         when="@5.0",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     depends_on("cmake@3.22:", type="build")
     depends_on("openssl@3.1.5:")
     depends_on("intel-oneapi-ippcp@2021.12.0:", when="+ipp")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,8 +32,6 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     version("0.30.0", sha256="0f4032409d20d00991b5d14fe0b2b928baca4a13c5a1b16eab91f61f9273e58d")
     version("0.29.0", sha256="da9912f0286d1a54051cc19cf8bdbdcd732795636274c95f376db72a88e52d85")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("blas", default=True, description="Build with BLAS support")
     variant(
         "dispatcher",
@@ -51,6 +48,8 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     variant("cppbenchmarks", default=False, description="Build CPP benchmark examples")
 
     extends("python")
+
+    depends_on("cxx", type="build")  # generated
 
     # hard dependencies
     depends_on("cmake@3.21:3.24,3.25.2:", type="build")

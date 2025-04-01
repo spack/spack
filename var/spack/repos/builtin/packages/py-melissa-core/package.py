@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,9 +22,6 @@ class PyMelissaCore(PythonPackage):
     version("joss", tag="JOSS_v2", commit="20bbe68c1a7b73aa2ea3ad35681c332c7a5fc516")
     version("sc23", tag="SC23", commit="8bb5b6817d4abe4eaa5893552d711150e53535f3")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # define variants for the deep learning server (torch, tf)
     variant(
         "torch", default=False, description="Install Deep Learning requirements with Pytorch only"
@@ -33,6 +29,9 @@ class PyMelissaCore(PythonPackage):
     variant(
         "tf", default=False, description="Install Deep Learning requirements with TensorFlow only"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("python@3.8.0:", type=("build", "run"))
     depends_on("py-setuptools@46.4:", type=("build"))

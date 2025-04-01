@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -29,15 +28,21 @@ class Pcre2(AutotoolsPackage, CMakePackage):
     version("10.31", sha256="e07d538704aa65e477b6a392b32ff9fc5edf75ab9a40ddfc876186c4ff4d68ac")
     version("10.20", sha256="332e287101c9e9567d1ed55391b338b32f1f72c5b5ee7cc81ef2274a53ad487a")
 
-    depends_on("c", type="build")
+    variant("multibyte", default=True, description="Enable support for 16 and 32 bit characters")
+    variant("jit", default=False, description="Enable Just-In-Time compiling support")
+    variant(
+        "pic",
+        default=True,
+        description="Build the static library with the option position independent code enabled",
+    )
 
-    variant("multibyte", default=True, description="Enable support for 16 and 32 bit characters.")
-    variant("jit", default=False, description="enable Just-In-Time compiling support")
     # Building static+shared can cause naming colisions and other problems
     # for dependents on Windows. It generally does not cause problems on
     # other systems, so this variant is not exposed for non-Windows.
-    variant("shared", default=True, description="build shared pcre2", when="platform=windows")
+    variant("shared", default=True, description="Build shared pcre2", when="platform=windows")
     build_system("autotools", "cmake", default="autotools")
+
+    depends_on("c", type="build")
 
     with when("build_system=cmake"):
         depends_on("zlib")
@@ -60,6 +65,10 @@ class Pcre2(AutotoolsPackage, CMakePackage):
 
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+    def build_environment(self, env):
+        if "+pic" in self.spec:
+            env.append_flags("CFLAGS", self.compiler.cc_pic_flag)
+
     def configure_args(self):
         args = []
 
@@ -79,6 +88,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         args.append(self.define_from_variant("PCRE2_BUILD_PCRE2_16", "multibyte"))
         args.append(self.define_from_variant("PCRE2_BUILD_PCRE2_32", "multibyte"))
         args.append(self.define_from_variant("PCRE2_SUPPORT_JIT", "jit"))
+        args.append(self.define_from_variant("PCRE2_STATIC_PIC", "pic"))
         # Don't need to check for on or off, just if the variant is available
         # If not specified, the build system will build both static and shared
         # by default, this is in parity with the autotools build, so on

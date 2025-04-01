@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,6 +19,7 @@ class Ffmpeg(AutotoolsPackage):
     license("LGPL-2.1-or-later AND GPL-2.0-or-later", when="+gpl", checked_by="wdconinc")
 
     version("master", branch="master")
+    version("7.1", sha256="fd59e6160476095082e94150ada5a6032d7dcc282fe38ce682a00c18e7820528")
     version("7.0.2", sha256="1ed250407ea8f955cca2f1139da3229fbc13032a0802e4b744be195865ff1541")
     version("7.0", sha256="a24d9074bf5523a65aaa9e7bd02afe4109ce79d69bd77d104fed3dab4b934d7a")
     version("6.1.1", sha256="5e3133939a61ef64ac9b47ffd29a5ea6e337a4023ef0ad972094b4da844e3a20")
@@ -41,9 +41,6 @@ class Ffmpeg(AutotoolsPackage):
     version("2.8.21", sha256="782c3af1a1ee8945be0800edc39b1d1199ee6a8f31c74b65230795f11911b0d8")
     version("2.8.15", sha256="35647f6c1f6d4a1719bc20b76bf4c26e4ccd665f46b5676c0e91c5a04622ee21")
     version("1.0.10", sha256="1dbde434c3b5c573d3b2ffc1babe3814f781c10c4bc66193a4132a44c9715176")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     # Licensing
     variant(
@@ -95,6 +92,9 @@ class Ffmpeg(AutotoolsPackage):
     variant("libx264", default=False, description="H.264 encoding")
 
     conflicts("@1", when="platform=darwin target=aarch64:", msg="requires gas-preprocessor")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("alsa-lib", when="platform=linux")
     depends_on("iconv")

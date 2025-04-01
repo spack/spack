@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -40,10 +39,10 @@ class Pango(MesonPackage):
             "1.42.4", sha256="1d2b74cd63e8bd41961f2f8d952355aa0f9be6002b52c8aa7699d9f5da597c9d"
         )
 
+    variant("X", default=False, description="Enable an X toolkit")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("X", default=False, description="Enable an X toolkit")
 
     depends_on("meson@0.48:", type="build", when="@1.43:")
     depends_on("meson@0.50:", type="build", when="@1.44.4:")
@@ -55,6 +54,8 @@ class Pango(MesonPackage):
     depends_on("harfbuzz")
     depends_on("harfbuzz+coretext", when="platform=darwin")
     depends_on("cairo+ft+fc")
+    # quartz needed even when ~X on the new cairo versions
+    requires("^cairo+quartz", when="^cairo@1.17.8: platform=darwin")
     depends_on("cairo~X", when="~X")
     depends_on("cairo+X", when="+X")
     depends_on("libxft", when="+X")
@@ -86,6 +87,7 @@ class Pango(MesonPackage):
     depends_on("fribidi@1.0.6:", when="@1.49:")
     depends_on("harfbuzz@2.6.0:", when="@1.49:")
     depends_on("json-glib@1.6.0:", when="@1.49:")
+    depends_on("gmake", type="build")
 
     def url_for_version(self, version):
         url = "http://ftp.gnome.org/pub/GNOME/sources/pango/{0}/pango-{1}.tar.xz"

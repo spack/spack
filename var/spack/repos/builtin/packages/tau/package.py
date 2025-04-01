@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -57,10 +56,6 @@ class Tau(Package):
     version("2.24", sha256="5d28e8b26561c7cd7d0029b56ec0f95fc26803ac0b100c98e00af0b02e7f55e2")
     version("2.23.1", sha256="31a4d0019cec6ef57459a9cd18a220f0130838a5f1a0b5ea7879853f5a38cf88")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Disable some default dependencies on Darwin/OSX
     darwin_default = False
     if sys.platform != "darwin":
@@ -105,6 +100,9 @@ class Tau(Package):
     variant(
         "rocprofv2", default=False, description="Activates ROCm rocprofiler support", when="@2.34:"
     )
+    variant(
+        "salt", default=False, description="Activates SALT source instrumentation", when="@2.34:"
+    )
     variant("opencl", default=False, description="Activates OpenCL support")
     variant("fortran", default=darwin_default, description="Activates Fortran support")
     variant("io", default=True, description="Activates POSIX I/O support")
@@ -134,6 +132,10 @@ class Tau(Package):
         default=False,
         description="Do not add -no-pie while linking with Ubuntu.",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("gmake", type="build")
     depends_on("cmake@3.14:", type="build", when="%clang")
@@ -168,10 +170,13 @@ class Tau(Package):
     depends_on("hsa-rocr-dev", when="+rocm")
     depends_on("rocm-smi-lib", when="@2.32.1: +rocm")
     depends_on("rocm-core", when="@2.34: +rocm")
+    depends_on("salt", when="+salt", type="run")
     depends_on("hip", when="@2.34: +roctracer")
     depends_on("java", type="run")  # for paraprof
     depends_on("oneapi-level-zero", when="+level_zero")
     depends_on("dyninst@12.3.0:", when="+dyninst")
+
+    conflicts("+comm", when="@:2.34 +python", msg="Bug in +comm with +python up to @2.34")
 
     # Elf only required from 2.28.1 on
     conflicts("+elf", when="@:2.28.0")
@@ -324,8 +329,8 @@ class Tau(Package):
                 env["F77"] = spec["mpi"].mpif77
                 env["FC"] = spec["mpi"].mpifc
             if spec["mpi"].name == "intel-oneapi-mpi":
-                options.append("-mpiinc=%s/include" % spec["mpi"].package.component_prefix)
-                options.append("-mpilib=%s/lib" % spec["mpi"].package.component_prefix)
+                options.append("-mpiinc=%s/include" % self["mpi"].component_prefix)
+                options.append("-mpilib=%s/lib" % self["mpi"].component_prefix)
             else:
                 options.append("-mpiinc=%s" % spec["mpi"].prefix.include)
                 options.append("-mpilib=%s" % spec["mpi"].prefix.lib)
@@ -602,3 +607,6 @@ class Tau(Package):
         ):
             rocm_test_dir = join_path(self.test_suite.current_test_cache_dir, self.rocm_test)
             self._run_rocm_test("test_rocm", "Testing rocm", rocm_test_dir)
+
+    # tau contains various prebuilt binaries with missing system dependencies
+    unresolved_libraries = ["*"]

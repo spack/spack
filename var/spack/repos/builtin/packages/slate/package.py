@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -7,10 +6,10 @@ from spack.package import *
 
 
 class Slate(CMakePackage, CudaPackage, ROCmPackage):
-    """The Software for Linear Algebra Targeting Exascale (SLATE) project is
-    to provide fundamental dense linear algebra capabilities to the US
+    """The Software for Linear Algebra Targeting Exascale (SLATE) project
+    provides fundamental dense linear algebra capabilities to the US
     Department of Energy and to the high-performance computing (HPC) community
-    at large. To this end, SLATE will provide basic dense matrix operations
+    at large. To this end, SLATE provides basic dense matrix operations
     (e.g., matrix multiplication, rank-k update, triangular solve), linear
     systems solvers, least square solvers, singular value and eigenvalue
     solvers."""
@@ -57,10 +56,6 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         "2020.10.00", sha256="ff58840cdbae2991d100dfbaf3ef2f133fc2f43fc05f207dc5e38a41137882ab"
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     patch("omp.patch", when="@2023.11.05")
 
     variant(
@@ -69,6 +64,10 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     variant("openmp", default=True, description="Build with OpenMP support.")
     variant("shared", default=True, description="Build shared library")
     variant("sycl", default=False, description="Build with SYCL backend")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # The runtime dependency on cmake is needed by the stand-alone tests (spack test).
     depends_on("cmake", type="run")
@@ -166,8 +165,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     def cache_test_sources(self):
         if self.spec.satisfies("@2020.10.00"):
             return
-        """Copy the example source files after the package is installed to an
-        install test subdirectory for use during `spack test run`."""
+        # Copy the example source files after the package is installed to an
+        # install test subdirectory for use during `spack test run`.
         cache_extra_test_sources(self, ["examples"])
 
     def mpi_launcher(self):

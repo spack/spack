@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,10 +27,10 @@ class Ferret(Package):
     version("7.2", sha256="21c339b1bafa6939fc869428d906451f130f7e77e828c532ab9488d51cf43095")
     version("6.96", sha256="7eb87156aa586cfe838ab83f08b2102598f9ab62062d540a5da8c9123816331a")
 
+    variant("datasets", default=False, description="Install Ferret standard datasets")
+
     depends_on("c", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("datasets", default=False, description="Install Ferret standard datasets")
 
     depends_on("hdf5+hl")
     depends_on("netcdf-c")
@@ -40,6 +39,7 @@ class Ferret(Package):
     depends_on("zlib-api")
     depends_on("libx11")
     depends_on("curl")
+    depends_on("gmake", type="build")
 
     # Make Java dependency optional with older versions of Ferret
     patch(

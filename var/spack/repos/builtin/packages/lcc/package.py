@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,10 +23,10 @@ class Lcc(CMakePackage):
     version("1.0.1", sha256="fa13364dcdf3b1f8d80fc768f0e7ad3849f8d98091fb96926100a6764f836020")
     version("1.0.0", sha256="750ce09e809a4e85ae3219fd537dc84a923fe3d3683b26b5d915eccfd1f0120c")
 
+    variant("shared", default=False, description="Build shared libs")
+
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("shared", default=False, description="Build shared libs")
 
     depends_on("cmake@3.10:", type="build")
     depends_on("bml")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -35,9 +34,6 @@ class Sensei(CMakePackage):
     version("1.1.0", sha256="769e0b5db50be25666c0d13176a7e4f89cbffe19cdc12349437d0efff615b200")
     version("1.0.0", sha256="5b8609352048e048e065a7b99f615a602f84b3329085e40274341488ef1b9522")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Enables shared libraries")
     variant("ascent", default=False, description="Build with ParaView-Catalyst support")
     variant("catalyst", default=False, description="Build with ParaView-Catalyst support")
@@ -55,6 +51,9 @@ class Sensei(CMakePackage):
     variant(
         "miniapps", default=False, description="Enable the parallel 3D and oscillators miniapps"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # All SENSEI versions up to 2.1.1 support only Python 2, so in this case
     # Paraview 6 cannot be used since it requires Python 3. Starting from

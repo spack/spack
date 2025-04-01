@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,8 +25,6 @@ class Libssh2(AutotoolsPackage, CMakePackage):
         "1.4.3", sha256="eac6f85f9df9db2e6386906a6227eb2cd7b3245739561cad7d6dc1d5d021b96d"
     )  # CentOS7
 
-    depends_on("c", type="build")
-
     build_system("autotools", "cmake", default="autotools")
 
     variant(
@@ -37,6 +34,8 @@ class Libssh2(AutotoolsPackage, CMakePackage):
         values=("openssl", conditional("mbedtls", when="@1.8:")),
     )
     variant("shared", default=True, description="Build shared libraries")
+
+    depends_on("c", type="build")
 
     with when("build_system=cmake"):
         depends_on("cmake@2.8.11:", type="build")

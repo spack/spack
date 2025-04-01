@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -54,7 +53,7 @@ class Draco(CMakePackage):
     variant("parmetis", default=True, description="Enable Parmetis support")
     variant("pythontools", default=False, description="Enable support for extra python tools")
     variant("qt", default=False, description="Enable Qt support")
-    variant("superlu_dist", default=True, description="Enable SuperLU-DIST support")
+    variant("superlu-dist", default=True, description="Enable SuperLU-DIST support")
 
     depends_on("cmake@3.9:", when="@:6", type="build")
     depends_on("cmake@3.11:", when="@7.0.0:7.1", type="build")
@@ -77,9 +76,10 @@ class Draco(CMakePackage):
     depends_on("lapack", when="+lapack")
     depends_on("libquo@1.3.1:", when="@7.4.0:+libquo")
     depends_on("metis", when="+parmetis")
+    depends_on("metis@5:+no_warning", when="@7.19:+parmetis")
     depends_on("parmetis", when="+parmetis")
     depends_on("qt", when="+qt", type=("build", "link", "run"))
-    depends_on("superlu-dist@:5", when="@:7.6+superlu_dist")
+    depends_on("superlu-dist@:5", when="@:7.6+superlu-dist")
     depends_on("py-matplotlib", when="+pythontools", type=("run"))
 
     conflicts("+cuda", when="@:7.6")

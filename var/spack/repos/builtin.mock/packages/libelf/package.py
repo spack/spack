@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -15,6 +14,8 @@ class Libelf(Package):
     version("0.8.10", md5="9db4d36c283d9790d8fa7df1f4d7b4d9")
 
     patch("local.patch", when="@0.8.10")
+
+    depends_on("c", type="build")
 
     def install(self, spec, prefix):
         touch(prefix.libelf)

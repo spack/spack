@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,11 +22,11 @@ class Cernlib(CMakePackage):
         sha256="7006475d9c38254cb94ce75e556a319fea3b3155087780ea522003103771474e",
     )
 
+    variant("shared", default=True, description="Build shared libraries")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("shared", default=True, description="Build shared libraries")
 
     depends_on("freetype")
     depends_on("motif")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,8 +22,6 @@ class NimrodAai(CMakePackage):
     version("23.9", sha256="34f7ee00bbbe9a6d08304473e8893af9bd94af8dbd0bbd50b8b441057023e179")
     version("23.6", sha256="de7e5c5cc2ad97dc0e66628d29c8153fa807821a316eb9aa8ee21a39c69df800")
 
-    depends_on("fortran", type="build")  # generated
-
     variant("debug", default=False, description="Whether to enable debug code")
     variant("openacc", default=False, description="Whether to enable OpenACC")
     variant(
@@ -41,6 +38,8 @@ class NimrodAai(CMakePackage):
         default=False,
         description="Whether to enable trapping of floating point exceptions",
     )
+
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake", type="build")
     depends_on("mpi", when="+mpi")

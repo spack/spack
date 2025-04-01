@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and otherargs
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.args
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -43,9 +42,6 @@ class Gimp(AutotoolsPackage):
             "2.10.24", sha256="bd1bb762368c0dd3175cf05006812dd676949c3707e21f4e6857435cb435989e"
         )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("doc", default=True, description="Build documentation with gtk-doc")
     variant("ghostscript", default=True, description="Build with ghostscript support")
     variant("jpegxl", default=True, description="Build with JPEG XL image format support")
@@ -65,6 +61,9 @@ class Gimp(AutotoolsPackage):
     variant("libxpm", default=True, description="Build with libxpm support")
     variant("webp", default=True, description="Build with WebP support")
     # variant("python",      default=False, description="Build with Python bindings")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # ref. https://www.gimp.org/source/
     depends_on("gettext", type="build")

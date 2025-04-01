@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -32,9 +31,6 @@ class Bufr(CMakePackage):
     version("11.5.0", sha256="d154839e29ef1fe82e58cf20232e9f8a4f0610f0e8b6a394b7ca052e58f97f43")
     version("11.4.0", sha256="946482405e675b99e8e0c221d137768f246076f5e9ba92eed6cae47fb68b7a26")
 
-    depends_on("c", type="build")
-    depends_on("fortran", type="build")
-
     # Patch to not add "-c" to ranlib flags when using llvm-ranlib on Apple systems
     patch("cmakelists-apple-llvm-ranlib.patch", when="@11.5.0:11.6.0")
     # C test does not explicity link to -lm causing DSO error when building shared libs
@@ -48,6 +44,9 @@ class Bufr(CMakePackage):
     variant("utils", default=True, description="Build utilities", when="@12.1:")
 
     extends("python", when="+python")
+
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("python@3:", type=("build", "run"), when="+python")
     depends_on("py-setuptools", type="build", when="+python")

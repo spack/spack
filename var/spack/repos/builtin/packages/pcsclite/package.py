@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,10 +21,10 @@ class Pcsclite(AutotoolsPackage):
     version("master", branch="master")
     version("1.9.8", sha256="502d80c557ecbee285eb99fe8703eeb667bcfe067577467b50efe3420d1b2289")
 
-    depends_on("c", type="build")  # generated
-
     # no libudev/systemd package currently in spack
     variant("libudev", default=False, description="Build with libudev")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("flex", type="build")
     depends_on("libusb")

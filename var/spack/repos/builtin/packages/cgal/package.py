@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,9 +32,6 @@ class Cgal(CMakePackage):
     version("4.9", sha256="63ac5df71f912f34f2f0f2e54a303578df51f4ec2627db593a65407d791f9039")
     version("4.7", sha256="50bd0a1cad7a8957b09012f831eebaf7d670e2a3467e8f365ec0c71fa5436369")
     version("4.6.3", sha256="e338027b8767c0a7a6e4fd8679182d1b83b5b1a0da0a1fe4546e7c0ca094fc21")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
 
     # @5: is header only and doesn't build shared libs
     variant(
@@ -72,6 +68,9 @@ class Cgal(CMakePackage):
     # not depend on gmp & mpfr.
     # More details here https://github.com/CGAL/cgal/issues/8606
     variant("gmp", default=True, description="Enable the GMP backend", when="@6:")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # Upper bound follows CGAL's @6: CMakeLists.txt
     depends_on("cmake@3.12:3.29", type="build", when="@6:")

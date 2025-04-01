@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -29,9 +28,9 @@ class PyAstropy(PythonPackage):
     version("1.1.2", sha256="6f0d84cd7dfb304bb437dda666406a1d42208c16204043bc920308ff8ffdfad1")
     version("1.1.post1", sha256="64427ec132620aeb038e4d8df94d6c30df4cc8b1c42a6d8c5b09907a31566a21")
 
-    depends_on("c", type="build")  # generated
-
     variant("all", default=False, when="@3.2:", description="Enable all functionality")
+
+    depends_on("c", type="build")  # generated
 
     # Required dependencies
     depends_on("python@3.10:", when="@6.1.0:", type=("build", "run"))

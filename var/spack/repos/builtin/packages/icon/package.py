@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,10 +23,6 @@ class Icon(AutotoolsPackage):
     version("2024.07", sha256="f53043ba1b36b8c19d0d2617ab601c3b9138b90f8ff8ca6db0fd079665eb5efa")
     version("2024.01-1", sha256="3e57608b7e1e3cf2f4cb318cfe2fdb39678bd53ca093955d99570bd6d7544184")
     version("2024.01", sha256="d9408fdd6a9ebf5990298e9a09c826e8c15b1e79b45be228f7a5670a3091a613")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     # Model Features:
     variant("atmo", default=True, description="Enable the atmosphere component")
@@ -100,6 +95,10 @@ class Icon(AutotoolsPackage):
     # Optimization Features:
     variant("mixed-precision", default=False, description="Enable mixed-precision dynamical core")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("python", type="build")
     depends_on("perl", type="build")
     depends_on("cmake@3.18:", type="build")
@@ -130,6 +129,7 @@ class Icon(AutotoolsPackage):
             "atmo",
             "les",
             "upatmo",
+            "ocean",
             "jsbach",
             "waves",
             "aes",
@@ -241,7 +241,7 @@ class Icon(AutotoolsPackage):
                 ]
             )
 
-            if self.spec.satisfies("%oneapi+coupling"):
+            if self.spec.satisfies("+coupling%oneapi"):
                 flags["ICON_YAC_CFLAGS"].extend(["-O2", "-fp-model precise"])
 
             if self.spec.satisfies("+ocean"):
@@ -269,7 +269,7 @@ class Icon(AutotoolsPackage):
                     ["-acc=gpu", "-gpu=cc{0}".format(self.nvidia_targets[gpu])]
                 )
 
-            if self.spec.satisfies("%nvhpc@:23.9+coupling"):
+            if self.spec.satisfies("+coupling%nvhpc@:23.9"):
                 args.append("yac_cv_fc_is_contiguous_works=yes")
 
         else:

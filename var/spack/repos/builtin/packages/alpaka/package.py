@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -49,8 +48,6 @@ class Alpaka(CMakePackage, CudaPackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "backend",
         multi=True,
@@ -73,6 +70,8 @@ class Alpaka(CMakePackage, CudaPackage):
     )
 
     variant("examples", default=False, description="Build alpaka examples")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("boost@1.65.1:", when="@0.4.0:0.8.0")
     depends_on("boost@1.74:", when="@0.9.0:")

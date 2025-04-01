@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -47,9 +46,6 @@ class Grpc(CMakePackage):
     version("1.24.3", sha256="c84b3fa140fcd6cce79b3f9de6357c5733a0071e04ca4e65ba5f8d306f10f033")
     version("1.23.1", sha256="dd7da002b15641e4841f20a1f3eb1e359edb69d5ccf8ac64c362823b05f523d9")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("shared", default=False, description="Build shared instead of static libraries")
     variant(
         "codegen",
@@ -63,6 +59,9 @@ class Grpc(CMakePackage):
         multi=False,
         description="Use the specified C++ standard when building.",
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("protobuf")
     depends_on("protobuf@3.22:", when="@1.55:")

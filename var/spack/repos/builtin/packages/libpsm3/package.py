@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,12 +21,12 @@ class Libpsm3(AutotoolsPackage):
     )
     version("11.4.1.0", sha256="272adb9ec10edf709bfcfccc6b6e9296d25d892c36b845ad577caeb82b70c9ac")
 
-    depends_on("c", type="build")  # generated
-
     variant("atomics", default=True, description="Enable atomics")
     variant("debug", default=False, description="Enable debugging")
     variant("sockets", default=True, description="Enable PSM3 sockets")
     variant("verbs", default=False, description="Enable PSM3 verbs")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

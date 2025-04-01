@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -40,8 +39,6 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     version("1.2.1", sha256="8cba9b48e919035176d3b7bbfc2c110df6f07803256626f1dad8d9dde16ab77a")
     version("1.2.0", sha256="20942314bd90064d9775f63b0e58a8ea146af5260a4c84d0854f9f968077c170")
     version("1.1.0", sha256="1f28bbe58d8f0da600d60c3a74a644d75ac777b20a018a5c1c6030a470e8a1c9")
-
-    depends_on("cxx", type="build")
 
     generator("ninja")
 
@@ -97,6 +94,8 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     variant("async_cuda", default=False, description="Enable CUDA Futures.")
 
     # Build dependencies
+    depends_on("cxx", type="build")
+
     depends_on("python", type=("build", "test", "run"))
     depends_on("pkgconfig", type="build")
     depends_on("git", type="build")
@@ -169,6 +168,10 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("hwloc@1.6:")
 
     # Patches and one-off conflicts
+
+    # Asio 1.34.0 removed io_context::work, used by HPX:
+    # https://github.com/chriskohlhoff/asio/commit/a70f2df321ff40c1809773c2c09986745abf8d20.
+    conflicts("^asio@1.34:", when="@:1.10")
 
     # Certain Asio headers don't compile with nvcc from 1.17.0 onwards with
     # C++17. Starting with CUDA 11.3 they compile again.

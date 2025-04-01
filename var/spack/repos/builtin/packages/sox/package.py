@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -14,9 +13,9 @@ class Sox(AutotoolsPackage):
 
     version("14.4.2", sha256="81a6956d4330e75b5827316e44ae381e6f1e8928003c6aa45896da9041ea149c")
 
-    depends_on("c", type="build")
-
     variant("mp3", default=False, description="Build with mp3 support")
+
+    depends_on("c", type="build")
 
     depends_on("bzip2")
     depends_on("flac")

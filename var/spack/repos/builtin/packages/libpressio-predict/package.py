@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -19,10 +18,10 @@ class LibpressioPredict(CMakePackage):
     version("0.0.2", sha256="02323e03c832cd1f116136347c6b2b52e5c04485fcd57aeb588b6f1923c62a60")
     version("0.0.0", sha256="b3c08be05e3b49542929e4d3849c232d1343c66c9f785b312bb37196dc530035")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("bin", default=True, description="build the command line tools")
     variant("shared", default=True, description="build shared libaries")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("libpressio-tools@0.4.2:", when="@:0.0.3")
     depends_on("libpressio@0.96.3:", when="@:0.0.2")

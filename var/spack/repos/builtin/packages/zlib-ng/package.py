@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,6 +19,8 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
     license("Zlib")
 
+    version("2.2.3", sha256="f2fb245c35082fe9ea7a22b332730f63cf1d42f04d84fe48294207d033cba4dd")
+    version("2.2.2", sha256="fcb41dd59a3f17002aeb1bb21f04696c9b721404890bb945c5ab39d2cb69654c")
     version("2.2.1", sha256="ec6a76169d4214e2e8b737e0850ba4acb806c69eeace6240ed4481b9f5c57cdf")
     version("2.1.7", sha256="59e68f67cbb16999842daeb517cdd86fc25b177b4affd335cd72b76ddc2a46d8")
     version("2.1.6", sha256="a5d504c0d52e2e2721e7e7d86988dec2e290d723ced2307145dedd06aeb6fef2")
@@ -27,9 +28,6 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     version("2.1.4", sha256="a0293475e6a44a3f6c045229fe50f69dc0eebc62a42405a51f19d46a5541e77a")
     version("2.0.7", sha256="6c0853bb27738b811f2b4d4af095323c3d5ce36ceed6b50e5f773204fb8f7200")
     version("2.0.0", sha256="86993903527d9b12fc543335c19c1d33a93797b3d4d37648b5addae83679ecd8")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     variant("compat", default=True, description="Enable compatibility API")
     variant("opt", default=True, description="Enable optimizations")
@@ -42,12 +40,15 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
     provides("zlib-api", when="+compat")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # Default to autotools, since cmake would result in circular dependencies if it's not
     # reused.
     build_system("autotools", "cmake", default="autotools")
 
     # fix building with NVHPC, see https://github.com/zlib-ng/zlib-ng/pull/1698
-    patch("pr-1698.patch", when="@2.1.4:2.1.6%nvhpc+opt")
+    patch("pr-1698.patch", when="@2.1.4:2.1.6+opt%nvhpc")
 
     with when("build_system=cmake"):
         depends_on("cmake@3.5.1:", type="build")
@@ -70,7 +71,7 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
 
     def flag_handler(self, name, flags):
         if name == "cflags" and self.spec.satisfies("+pic build_system=autotools"):
-            flags.append(self.compiler.cc_pic_flag)
+            flags.append(self["c"].pic_flag)
         return (flags, None, None)
 
 

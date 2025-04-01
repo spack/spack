@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,12 +22,12 @@ class Latte(CMakePackage):
     version("1.2.1", sha256="a21dda5ebdcefa56e9ff7296d74ef03f89c200d2e110a02af7a84612668bf702")
     version("1.0.1", sha256="67b2957639ad8e36b69bc6ea9a13085183a881562af9ca6d2b90b412ff073789")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=True, description="Build with mpi")
     variant("progress", default=False, description="Use progress for fast")
     variant("shared", default=True, description="Build shared libs")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.1:", type="build")
     depends_on("blas")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,8 +32,6 @@ class PyCartopy(PythonPackage):
     version("0.17.0", sha256="424bd9e9ddef6e48cbdee694ce589ec431be8591f15b6cb93cb2b333a29b2c61")
     version("0.16.0", sha256="f23dffa101f43dd91e866a49ebb5f5048be2a24ab8a921a5c07edabde746d9a4")
 
-    depends_on("cxx", type="build")
-
     variant("epsg", default=False, when="@:0.19", description="Add support for epsg.io")
     variant(
         "ows",
@@ -42,6 +39,8 @@ class PyCartopy(PythonPackage):
         description="Add support for Open Geospatial Consortium (OGC) web service",
     )
     variant("plotting", default=False, description="Add plotting functionality")
+
+    depends_on("cxx", type="build")
 
     # Based on wheel availability on PyPI
     with default_args(type=("build", "link", "run")):

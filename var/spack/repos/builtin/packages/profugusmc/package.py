@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -17,12 +16,12 @@ class Profugusmc(CMakePackage, CudaPackage):
 
     version("master", branch="master")
 
+    variant("mpi", default=True, description="Enable MPI")
+    variant("cuda", default=False, description="Enable CUDA")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("mpi", default=True, description="Enable MPI")
-    variant("cuda", default=False, description="Enable CUDA")
 
     depends_on("blas")
     depends_on("lapack")

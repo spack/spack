@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -51,7 +50,7 @@ def test_list_long(capsys):
 def test_list_long_with_pytest_arg(capsys):
     with capsys.disabled():
         output = spack_test("--list-long", cmd_test_py)
-    print(output)
+
     assert "unit_test.py::\n" in output
     assert "test_list" in output
     assert "test_list_with_pytest_arg" in output

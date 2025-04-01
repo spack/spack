@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -57,7 +56,6 @@ class PyDevito(PythonPackage):
 
     depends_on("mpi", type=("build", "run"), when="+mpi")
 
-    depends_on("intel-parallel-studio", type="run", when="%intel@:2021.1.1")
     depends_on("intel-oneapi-compilers", type="run", when="%intel@2021.1.2:")
 
     patch("4.8.1.patch", when="@4.8.1")

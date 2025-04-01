@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -32,8 +31,6 @@ class Hpgmg(MakefilePackage):
     )
     version("0.3", sha256="12a65da216fec91daea78594ae4b5a069c8f1a700f1ba21eed9f45a79a68c793")
 
-    depends_on("c", type="build")  # generated
-
     variant("fe", default=False, description="Build finite element solver")
     variant(
         "fv",
@@ -43,6 +40,8 @@ class Hpgmg(MakefilePackage):
     )
     variant("cuda", default=False, description="Build with CUDA")
     variant("debug", default=False, description="Build in debug mode")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("petsc", when="+fe")
     depends_on("mpi", when="+fe")

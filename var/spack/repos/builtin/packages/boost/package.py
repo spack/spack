@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -30,6 +29,7 @@ class Boost(Package):
     license("BSL-1.0")
 
     version("develop", branch="develop", submodules=True)
+    version("1.87.0", sha256="af57be25cb4c4f4b413ed692fe378affb4352ea50fbe294a11ef548f4d527d89")
     version("1.86.0", sha256="1bed88e40401b2cb7a1f76d4bab499e352fa4d0c5f31c0dbae64e24d34d7513b")
     version("1.85.0", sha256="7009fe1faa1697476bdc7027703a2badb84e849b7b0baad5086b087b971f8617")
     version("1.84.0", sha256="cc4b893acf645c9d4b698e9a0f08ca8846aa5d6c68275c14c3e7949c24109454")
@@ -80,9 +80,6 @@ class Boost(Package):
     version("1.41.0", sha256="1ef94e6749eaf13318284b4f629be063544c7015b45e38113b975ac1945cc726")
     version("1.40.0", sha256="36cf4a239b587067a4923fdf6e290525a14c3af29829524fa73f3dec6841530c")
     version("1.39.0", sha256="44785eae8c6cce61a29a8a51f9b737e57b34d66baa7c0bcd4af188832b8018fd")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
 
     with_default_variants = "boost" + "".join(
         [
@@ -240,6 +237,9 @@ class Boost(Package):
         description="Default symbol visibility in compiled libraries " "(1.69.0 or later)",
     )
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     # Unicode support
     depends_on("icu4c", when="+icu")
     depends_on("icu4c cxxstd=11", when="+icu cxxstd=11")
@@ -287,6 +287,9 @@ class Boost(Package):
 
     # boost-python in 1.72.0 broken with cxxstd=98
     conflicts("cxxstd=98", when="+mpi+python @1.72.0")
+
+    # boost-mpi depends on boost-python since 1.87.0
+    conflicts("~python", when="+mpi @1.87.0:")
 
     # Container's Extended Allocators were not added until 1.56.0
     conflicts("+container", when="@:1.55")
@@ -439,6 +442,14 @@ class Boost(Package):
         "https://www.boost.org/patches/1_82_0/0002-filesystem-fix-win-smbv1-dir-iterator.patch",
         sha256="738ba8e0d7b5cdcf5fae4998f9450b51577bbde1bb0d220a0721551609714ca4",
         when="@1.82.0 platform=windows",
+    )
+
+    # https://github.com/boostorg/context/pull/280
+    patch(
+        "https://github.com/boostorg/context/commit/d11cbccc87da5d6d41c04f3949e18d49c43e62fc.patch?full_index=1",
+        sha256="e2d37f9e35e8e238977de9af32604a8e1c2648d153df1d568935a20216b5c67f",
+        when="@1.87.0",
+        working_dir="libs/context",
     )
 
     def patch(self):

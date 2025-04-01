@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -27,10 +26,6 @@ class Unifyfs(AutotoolsPackage):
     version("1.0.1", sha256="d92800778661b15ab50275c4efe345a6c60d8f1802a0d5909fda38db91b12116")
     version("1.0", sha256="c9ad0d15d382773841a3dab89c661fbdcfd686ec37fa263eb22713f6404258f5")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "auto-mount",
         default=True,
@@ -51,6 +46,10 @@ class Unifyfs(AutotoolsPackage):
         description="Enable support for LD_PRELOAD library",
     )
     variant("spath", default=True, description="Use spath library to normalize relative paths")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("autoconf", type="build")
     depends_on("automake@1.15:", type="build")
@@ -113,10 +112,12 @@ class Unifyfs(AutotoolsPackage):
         if self.spec.satisfies("%oneapi"):
             env.append_flags("CFLAGS", "-Wno-unused-function")
 
-    @when("%cce@11.0.3:")
     def patch(self):
-        filter_file("-Werror", "", "client/src/Makefile.in")
-        filter_file("-Werror", "", "client/src/Makefile.am")
+        if self.spec.satisfies("%cce@11.0.3:"):
+            filter_file("-Werror", "", "client/src/Makefile.in")
+            filter_file("-Werror", "", "client/src/Makefile.am")
+        if self.spec.satisfies("@2.0 %oneapi@2025:"):
+            filter_file("static int asprintf", "int asprintf", "examples/src/testutil.c")
 
     @when("@develop")
     def autoreconf(self, spec, prefix):

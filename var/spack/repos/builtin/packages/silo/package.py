@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,6 +15,7 @@ class Silo(AutotoolsPackage):
     url = "https://wci.llnl.gov/sites/wci/files/2021-01/silo-4.10.2.tgz"
     maintainers("patrickb314")
 
+    version("main", branch="main")
     version(
         "4.11.1",
         preferred=True,
@@ -50,10 +50,6 @@ class Silo(AutotoolsPackage):
     version("4.9", sha256="90f3d069963d859c142809cfcb034bc83eb951f61ac02ccb967fc8e8d0409854")
     version("4.8", sha256="c430c1d33fcb9bc136a99ad473d535d6763bd1357b704a915ba7b1081d58fb21")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("python", default=True, description="Enable Python support")
     variant("fortran", default=True, description="Enable Fortran support")
     variant("shared", default=True, description="Build shared libraries")
@@ -64,6 +60,11 @@ class Silo(AutotoolsPackage):
     variant("hzip", default=True, description="Enable hzip support")
     variant("fpzip", default=True, description="Enable fpzip support")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
+    depends_on("python", type=("build", "link"), when="+python")
     depends_on("perl", type="build")
     depends_on("m4", type="build", when="+shared")
     depends_on("autoconf", type="build", when="+shared")
@@ -128,6 +129,8 @@ class Silo(AutotoolsPackage):
             if spec.satisfies("%oneapi"):
                 flags.append("-Wno-error=int")
                 flags.append("-Wno-error=int-conversion")
+            if spec.satisfies("+python"):
+                flags.append(f"-I {spec['python'].headers.directories[0]}")
             if "+hdf5" in spec:
                 # @:4.10 can use up to the 1.10 API
                 if "@:4.10" in spec:

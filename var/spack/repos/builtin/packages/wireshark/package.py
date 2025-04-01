@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,13 +20,13 @@ class Wireshark(CMakePackage):
     version("3.0.8", sha256="b4bd8189934d82330a053c5b10398f2b625b1e1c8818831ab61739b2d7aa7561")
     version("2.6.0", sha256="711c7f01d27a8817d58277a5487cef3e3c7bab1c8caaf8f4c92aa21015b9117f")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("libssh", default=False, description="Build with libssh")
     variant("nghttp2", default=False, description="Build with nghttp2")
     variant("qt", default=False, description="Build with qt")
     variant("headers", default=True, description="Install headers")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("bison", type="build")
     depends_on("c-ares")

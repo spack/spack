@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -38,8 +37,6 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")
-
     # Allowed C++ standard
     variant(
         "cxxstd",
@@ -64,6 +61,8 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         deflt, descr = kokkos_backends[backend]
         variant(backend.lower(), default=deflt, description=descr)
     variant("trilinos", default=False, when="@:1.5", description="use Kokkos from Trilinos")
+
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.12:", type="build")
     depends_on("cmake@3.16:", type="build", when="@1.0:")
@@ -111,22 +110,15 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("~serial", when="+trilinos")
 
     def cmake_args(self):
-        spec = self.spec
-
-        if "+trilinos" in spec:
-            kokkos_spec = spec["trilinos"]
-        else:
-            kokkos_spec = spec["kokkos"]
-
+        kokkos_pkg = self["trilinos"] if self.spec.satisfies("+trilinos") else self["kokkos"]
         options = [
-            f"-DKokkos_ROOT={kokkos_spec.prefix}",
+            self.define("Kokkos_ROOT", kokkos_pkg.prefix),
             self.define_from_variant("ARBORX_ENABLE_MPI", "mpi"),
         ]
-
-        if spec.satisfies("+cuda"):
-            options.append(f"-DCMAKE_CXX_COMPILER={kokkos_spec.kokkos_cxx}")
-        if spec.satisfies("+rocm"):
-            options.append("-DCMAKE_CXX_COMPILER=%s" % spec["hip"].hipcc)
+        if self.spec.satisfies("+cuda"):
+            options.append(self.define("CMAKE_CXX_COMPILER", kokkos_pkg.kokkos_cxx))
+        if self.spec.satisfies("+rocm"):
+            options.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
 
         return options
 

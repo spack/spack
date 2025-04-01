@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,6 +20,7 @@ class FluxCore(AutotoolsPackage):
     license("LGPL-3.0-only")
 
     version("master", branch="master")
+    version("0.67.0", sha256="9406e776cbeff971881143fd1b94c42ec912e5b226401d2d3d91d766dd81de8c")
     version("0.66.0", sha256="0a25cfb1ebc033c249614eb2350c6fb57b00cdf3c584d0759c787f595c360daa")
     version("0.65.0", sha256="a60bc7ed13b8e6d09e99176123a474aad2d9792fff6eb6fd4da2a00e1d2865ab")
     version("0.64.0", sha256="0334d6191915f1b89b70cdbf14f24200f8899da31090df5f502020533b304bb3")
@@ -63,8 +63,6 @@ class FluxCore(AutotoolsPackage):
     version("0.29.0", sha256="c13b40e82d66356e75208a689a495ca01f0a013e2e45ac8ea202ed8224987323")
     version("0.28.0", sha256="9a784def7186b0036091bd8d6d8fe5bc3425ab2927e1465e1c9ad266631c285d")
 
-    depends_on("c", type="build")  # generated
-
     # Avoid the infinite symlink issue
     # This workaround is documented in PR #3543
     build_directory = "spack-build"
@@ -76,6 +74,8 @@ class FluxCore(AutotoolsPackage):
     # Restrict flux to Linux based platforms where builds are possible.
     conflicts("platform=darwin", msg="flux-core does not support MacOS based platforms.")
     conflicts("platform=windows", msg="flux-core does not support Windows based platforms.")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("libarchive+iconv", when="@0.38.0:")
     depends_on("ncurses@6.2:", when="@0.32.0:")
@@ -91,11 +91,13 @@ class FluxCore(AutotoolsPackage):
     # `link` dependency on python due to Flux's `pymod` module
     depends_on("python@3.6:", type=("build", "link", "run"))
     # Use of distutils in configure script dropped in v0.55
-    depends_on("python@:3.11", when="@:0.54", type=("build", "link", "run"))
+    # Detection of cffi version fixed in v0.68
+    depends_on("python@:3.11", when="@:0.67", type=("build", "link", "run"))
     depends_on("py-cffi@1.1:", type=("build", "run"))
     depends_on("py-pyyaml@3.10:", type=("build", "run"))
     depends_on("py-jsonschema@2.3:", type=("build", "run"), when="@:0.58.0")
     depends_on("py-ply", type=("build", "run"), when="@0.46.1:")
+    depends_on("py-setuptools", type="build", when="@0.67.0:")
     depends_on("jansson@2.10:")
     depends_on("pkgconfig")
     depends_on("lz4")

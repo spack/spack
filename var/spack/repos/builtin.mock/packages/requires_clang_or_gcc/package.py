@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,3 +15,5 @@ class RequiresClangOrGcc(Package):
     version("0.9", md5="abcd456789abcdef0123456789abcdef")
 
     requires("%gcc", "%clang", policy="one_of")
+
+    depends_on("c", type="build")

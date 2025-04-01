@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,11 +32,11 @@ class Matio(AutotoolsPackage):
     version("1.5.3", sha256="85ba46e192331473dc4d8a9d266679f8f81e60c06debdc4b6f9d7906bad46257")
     version("1.5.2", sha256="db02d0fb3373c3d766a606309b17e64a5d8da55610e921a9f1a0ec171e911d45")
 
-    depends_on("c", type="build")  # generated
-
     variant("zlib", default=True, description="support for compressed mat files")
     variant("hdf5", default=True, description="support for version 7.3 mat files via hdf5")
     variant("shared", default=True, description="Enables the build of shared libraries.")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("zlib-api", when="+zlib")
     depends_on("hdf5", when="+hdf5")

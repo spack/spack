@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -27,8 +26,6 @@ class Cbqn(MakefilePackage):
     version("develop", branch="develop")
     version("0.7.0", tag="v0.7.0")
 
-    depends_on("c", type="build")
-
     variant("repl", default=True, description="Enable built-in REPL")
     variant("ffi", default=True, description="Enable FFI support")
     variant(
@@ -38,6 +35,8 @@ class Cbqn(MakefilePackage):
         multi=False,
         description="Make target to use.",
     )
+
+    depends_on("c", type="build")
 
     depends_on("cxx", when="+repl", type="build")
     depends_on("libffi", when="+ffi")

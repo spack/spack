@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,6 +16,7 @@ class Nccl(MakefilePackage, CudaPackage):
     maintainers("adamjstewart")
     libraries = ["libnccl.so"]
 
+    version("2.23.4-1", sha256="6b946b70a9d2d01871842cbd15ec56488d358abe9a0f3767e372fddc3e241ba7")
     version("2.22.3-1", sha256="45151629a9494460e73375281e8b0fe379141528879301899ece9b776faca024")
     version("2.21.5-1", sha256="1923596984d85e310b5b6c52b2c72a1b93da57218f2bc5a5c7ac3d59297a3303")
     version("2.20.3-1", sha256="19456bd63ca7d23a8319cbbdbaaf6c25949dd51161a9f8809f6b7453282983dd")
@@ -53,10 +53,10 @@ class Nccl(MakefilePackage, CudaPackage):
     version("2.3.7-1", sha256="e6eff80d9d2db13c61f8452e1400ca2f098d2dfe42857cb23413ce081c5b9e9b")
     version("2.3.5-5", sha256="bac9950b4d3980c25baa8e3e4541d2dfb4d21edf32ad3b89022d04920357142f")
 
+    variant("cuda", default=True, description="Build with CUDA")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("cuda", default=True, description="Build with CUDA")
 
     depends_on("rdma-core")
 

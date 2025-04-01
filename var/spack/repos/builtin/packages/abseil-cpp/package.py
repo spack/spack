@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -69,8 +68,6 @@ class AbseilCpp(CMakePackage):
     version("20181200", sha256="e2b53bfb685f5d4130b84c4f3050c81bf48c497614dc85d91dbd3ed9129bce6d")
     version("20180600", sha256="794d483dd9a19c43dc1fbbe284ce8956eb7f2600ef350dac4c602f9b4eb26e90")
 
-    depends_on("cxx", type="build")  # generated
-
     # Avoid export of testonly target absl::test_allocator in CMake builds
     patch(
         "https://github.com/abseil/abseil-cpp/commit/779a3565ac6c5b69dd1ab9183e500a27633117d5.patch?full_index=1",
@@ -89,12 +86,14 @@ class AbseilCpp(CMakePackage):
         description="C++ standard used during compilation",
     )
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.16:", when="@20240722:", type="build")
     depends_on("cmake@3.10:", when="@20220907:", type="build")
     depends_on("cmake@3.5:", when="@20190312:", type="build")
     depends_on("cmake@3.1:", type="build")
 
-    depends_on("googletest", type="build", when="@20220623:")
+    depends_on("googletest~absl", type="test", when="@20220623:")
 
     def cmake_args(self):
         run_tests = self.run_tests and self.spec.satisfies("@20220623:")

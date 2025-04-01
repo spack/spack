@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -86,9 +85,6 @@ class KokkosLegacy(Package):
         sha256="7b4ac81021d6868f4eb8e2a1cb92ba76bad9c3f197403b8b1eac0f11c983247c",
         deprecated=True,
     )
-
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant("debug", default=False, description="Build debug version of Kokkos")
 
@@ -229,6 +225,9 @@ class KokkosLegacy(Package):
         " in version 2.5.00 through 2.7.00.",
     )
 
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Specify that v1.x is required as v2.x has API changes
     depends_on("hwloc@:1")
     depends_on("qthreads", when="+qthreads")
@@ -236,6 +235,7 @@ class KokkosLegacy(Package):
 
     # generate_makefile.bash calls cmake
     depends_on("cmake@3.10:", type="build")
+    depends_on("gmake", type="build")
 
     def install(self, spec, prefix):
         generate = which(join_path(self.stage.source_path, "generate_makefile.bash"))

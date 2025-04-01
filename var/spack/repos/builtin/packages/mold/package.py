@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,6 +15,11 @@ class Mold(CMakePackage):
 
     license("MIT")
 
+    version("2.37.1", sha256="b8e36086c95bd51e9829c9755c138f5c4daccdd63b6c35212b84229419f3ccbe")
+    version("2.37.0", sha256="28372bbc2ce069aa0362ba84ad5d1b0f2c0bcf84e95a0f533ecf79cb3aff232c")
+    version("2.36.0", sha256="3f57fe75535500ecce7a80fa1ba33675830b7d7deb1e5ee9a737e2bc43cdb1c7")
+    version("2.35.1", sha256="912b90afe7fde03e53db08d85a62c7b03a57417e54afc72c08e2fa07cab421ff")
+    version("2.35.0", sha256="2703f1c88c588523815886478950bcae1ef02190dc4787e0d120a293b1a46e3b")
     version("2.34.1", sha256="a8cf638045b4a4b2697d0bcc77fd96eae93d54d57ad3021bf03b0333a727a59d")
     version("2.34.0", sha256="6067f41f624c32cb0f4e959ae7fabee5dd71dd06771e2c069c2b3a6a8eca3c8c")
     version("2.33.0", sha256="37b3aacbd9b6accf581b92ba1a98ca418672ae330b78fe56ae542c2dcb10a155")

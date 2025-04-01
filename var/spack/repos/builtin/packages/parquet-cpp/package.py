@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,9 +16,9 @@ class ParquetCpp(CMakePackage):
 
     version("1.4.0", sha256="52899be6c9dc49a14976d4ad84597243696c3fa2882e5c802b56e912bfbcc7ce")
 
-    depends_on("cxx", type="build")  # generated
-
     depends_on("arrow")
+
+    depends_on("cxx", type="build")  # generated
 
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')

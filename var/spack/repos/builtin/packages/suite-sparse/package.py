@@ -1,9 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
+import os
 
 from spack.package import *
 
@@ -19,6 +18,7 @@ class SuiteSparse(Package):
 
     license("Apache-2.0")
 
+    version("7.8.3", sha256="ce39b28d4038a09c14f21e02c664401be73c0cb96a9198418d6a98a7db73a259")
     version("7.7.0", sha256="529b067f5d80981f45ddf6766627b8fc5af619822f068f342aab776e683df4f3")
     version("7.3.1", sha256="b512484396a80750acf3082adc1807ba0aabb103c2e09be5691f46f14d0a9718")
     version("7.2.1", sha256="304e959a163ff74f8f4055dade3e0b5498d9aa3b1c483633bb400620f521509f")
@@ -44,10 +44,6 @@ class SuiteSparse(Package):
     version("4.5.5", sha256="80d1d9960a6ec70031fecfe9adfe5b1ccd8001a7420efb50d6fa7326ef14af91")
     version("4.5.3", sha256="b6965f9198446a502cde48fb0e02236e75fa5700b94c7306fc36599d57b563f4")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "pic",
         default=True,
@@ -65,6 +61,12 @@ class SuiteSparse(Package):
     # flags does not seem to be used, which leads to linking errors on Linux.
     # Support for TBB has been removed in version 5.11
     variant("tbb", default=False, description="Build with Intel TBB", when="@4.5.3:5.10")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
+    depends_on("gmake", type="build")
 
     depends_on("blas")
     depends_on("lapack")
@@ -218,10 +220,8 @@ class SuiteSparse(Package):
             make_args += [f"CFLAGS+={self.compiler.c11_flag}"]
 
         # 64bit blas in UMFPACK:
-        if (
-            spec.satisfies("^openblas+ilp64")
-            or spec.satisfies("^intel-mkl+ilp64")
-            or spec.satisfies("^intel-parallel-studio+mkl+ilp64")
+        if spec.satisfies("^[virtuals=lapack] openblas+ilp64") or spec.satisfies(
+            "^[virtuals=lapack] intel-oneapi-mkl+ilp64"
         ):
             make_args.append('UMFPACK_CONFIG=-DLONGBLAS="long long"')
 
@@ -270,7 +270,7 @@ class SuiteSparse(Package):
                 ]
             make_args += [f"CMAKE_OPTIONS={' '.join(cmake_args)}"]
 
-        if spec.satisfies("%gcc platform=darwin"):
+        if spec.satisfies("platform=darwin %gcc"):
             make_args += ["LDLIBS=-lm"]
 
         if "%cce" in spec:

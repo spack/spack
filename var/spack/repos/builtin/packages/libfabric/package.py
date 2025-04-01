@@ -1,12 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import re
 
-import spack.platforms.cray
 from spack.package import *
 
 
@@ -24,6 +22,8 @@ class Libfabric(AutotoolsPackage, CudaPackage):
     license("GPL-2.0-or-later")
 
     version("main", branch="main")
+    version("2.1.0", sha256="97df312779e2d937246d2f46385b700e0958ed796d6fed7aae77e2d18923e19f")
+    version("2.0.0", sha256="1a8e40f1f331d6ee2e9ace518c0088a78c8a838968f8601c2b77fd012a7bf0f5")
     version("1.22.0", sha256="485e6cafa66c9e4f6aa688d2c9526e274c47fda3a783cf1dd8f7c69a07e2d5fe")
     version("1.21.1", sha256="54befa6697352f3179c79c4a79225ae71694f29eefad5d0d5a14b5444ff986dd")
     version("1.21.0", sha256="0c1b7b830d9147f661e5d7f359250b85b5a9885c330464cd3b5e5d35b86551c7")
@@ -66,12 +66,11 @@ class Libfabric(AutotoolsPackage, CudaPackage):
     version("1.5.0", sha256="88a8ad6772f11d83e5b6f7152a908ffcb237af273a74a1bd1cb4202f577f1f23")
     version("1.4.2", sha256="5d027d7e4e34cb62508803e51d6bd2f477932ad68948996429df2bfff37ca2a5")
 
-    depends_on("c", type="build")  # generated
-
     fabrics = (
-        conditional("cxi", when=spack.platforms.cray.slingshot_network()),
+        "cxi",
         "efa",
         "gni",
+        "lnx",
         "mlx",
         "mrail",
         "opx",
@@ -90,9 +89,6 @@ class Libfabric(AutotoolsPackage, CudaPackage):
         "xpmem",
     )
 
-    # CXI is a closed source package and only exists when an external.
-    conflicts("fabrics=cxi")
-
     variant(
         "fabrics",
         default="sockets,tcp,udp",
@@ -106,10 +102,9 @@ class Libfabric(AutotoolsPackage, CudaPackage):
     #   device file can only be opened once per process, however, and thus it
     #   frequently conflicts with MPI.
     variant("kdreg", default=False, description="Enable kdreg on supported Cray platforms")
-
     variant("debug", default=False, description="Enable debugging")
-
     variant("uring", default=False, when="@1.17.0:", description="Enable uring support")
+    variant("level_zero", default=False, description="Enable Level Zero support")
 
     # For version 1.9.0:
     # headers: fix forward-declaration of enum fi_collective_op with C++
@@ -123,6 +118,8 @@ class Libfabric(AutotoolsPackage, CudaPackage):
     # https://github.com/ofiwg/libfabric/pull/7665
     patch("nvhpc-symver.patch", when="@1.6.0:1.14.0 %nvhpc")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("rdma-core", when="fabrics=verbs")
     depends_on("rdma-core", when="@1.10.0: fabrics=efa")
     depends_on("opa-psm2", when="fabrics=psm2")
@@ -132,14 +129,20 @@ class Libfabric(AutotoolsPackage, CudaPackage):
     depends_on("uuid", when="fabrics=opx")
     depends_on("numactl", when="fabrics=opx")
     depends_on("liburing@2.1:", when="+uring")
+    depends_on("oneapi-level-zero", when="+level_zero")
+    depends_on("libcxi", when="fabrics=cxi")
+    depends_on("xpmem", when="fabrics=xpmem")
 
     depends_on("m4", when="@main", type="build")
     depends_on("autoconf", when="@main", type="build")
     depends_on("automake", when="@main", type="build")
     depends_on("libtool", when="@main", type="build")
+    depends_on("json-c", when="fabrics=cxi")
+    depends_on("curl", when="fabrics=cxi")
 
     conflicts("@1.9.0", when="platform=darwin", msg="This distribution is missing critical files")
     conflicts("fabrics=opx", when="@:1.14.99")
+    conflicts("fabrics=lnx", when="@:1")
     conflicts(
         "fabrics=opx",
         when="@1.20.0",
@@ -162,9 +165,8 @@ class Libfabric(AutotoolsPackage, CudaPackage):
             variants = []
             output = Executable(exe)("--list", output=str, error=os.devnull)
             # fabrics
-            fabrics = get_options_from_variant(cls, "fabrics")
             used_fabrics = []
-            for fabric in fabrics:
+            for fabric in cls.fabrics:
                 match = re.search(r"^%s:.*\n.*version: (\S+)" % fabric, output, re.MULTILINE)
                 if match:
                     used_fabrics.append(fabric)
@@ -179,15 +181,13 @@ class Libfabric(AutotoolsPackage, CudaPackage):
 
     # To enable this package add it to the LD_LIBRARY_PATH
     def setup_run_environment(self, env):
-        libfabric_home = self.spec["libfabric"].prefix
-        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib)
-        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib64)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
 
     # To enable this package add it to the LD_LIBRARY_PATH
     def setup_dependent_run_environment(self, env, dependent_spec):
-        libfabric_home = self.spec["libfabric"].prefix
-        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib)
-        env.prepend_path("LD_LIBRARY_PATH", libfabric_home.lib64)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
 
     @when("@main")
     def autoreconf(self, spec, prefix):
@@ -195,46 +195,32 @@ class Libfabric(AutotoolsPackage, CudaPackage):
         bash("./autogen.sh")
 
     def configure_args(self):
-        args = []
-
-        args.extend(self.enable_or_disable("debug"))
-
-        if self.spec.satisfies("+kdreg"):
-            args.append("--with-kdreg=yes")
-        else:
-            args.append("--with-kdreg=no")
-
-        if self.spec.satisfies("+uring"):
-            args.append("--with-uring=yes")
+        args = [
+            *self.enable_or_disable("debug"),
+            *self.with_or_without("kdreg"),
+            *self.with_or_without("uring"),
+            *self.with_or_without("cuda", activation_value="prefix"),
+            *self.with_or_without("ze", variant="level_zero"),
+        ]
 
         for fabric in [f if isinstance(f, str) else f[0].value for f in self.fabrics]:
-            if "fabrics=" + fabric in self.spec:
-                args.append("--enable-{0}=yes".format(fabric))
+            if f"fabrics={fabric}" in self.spec:
+                args.append(f"--enable-{fabric}")
             else:
-                args.append("--enable-{0}=no".format(fabric))
+                args.append(f"--disable-{fabric}")
 
-        if self.spec.satisfies("+cuda"):
-            args.append(f"--with-cuda={self.spec['cuda'].prefix}")
+        if self.spec.satisfies("fabrics=cxi"):
+            args.append(f"--with-json-c={self.spec['json-c'].prefix}")
+            args.append(f"--with-curl={self.spec['curl'].prefix}")
+            args.append(f"--with-cassini-headers={self.spec['cassini-headers'].prefix.include}")
+            args.append(f"--with-cxi-uapi-headers={self.spec['cxi-driver'].prefix.include}")
+            args.append(f"--enable-cxi={self.spec['libcxi'].prefix}")
+
+        if self.spec.satisfies("fabrics=xpmem"):
+            args.append(f"--enable-xpmem={self.spec['xpmem'].prefix}")
 
         return args
 
     def installcheck(self):
         fi_info = Executable(self.prefix.bin.fi_info)
         fi_info()
-
-
-# This code gets all the fabric names from the variants list
-# Idea taken from the AutotoolsPackage source.
-def get_options_from_variant(self, name):
-    values = self.variants[name][0].values
-    explicit_values = []
-    if getattr(values, "feature_values", None):
-        values = values.feature_values
-    for value in sorted(values):
-        if hasattr(value, "when"):
-            if value.when is True:
-                # Explicitly extract the True value for downstream use
-                explicit_values.append("{0}".format(value))
-        else:
-            explicit_values.append(value)
-    return explicit_values

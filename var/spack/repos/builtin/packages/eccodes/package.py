@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -45,7 +44,7 @@ class Eccodes(CMakePackage):
     git = "https://github.com/ecmwf/eccodes.git"
     list_url = "https://confluence.ecmwf.int/display/ECC/Releases"
 
-    maintainers("skosukhin", "victoria-cherkas", "dominichofer", "climbfuji")
+    maintainers("skosukhin", "victoria-cherkas", "climbfuji")
 
     license("Apache-2.0")
 
@@ -67,10 +66,6 @@ class Eccodes(CMakePackage):
     version("2.13.0", sha256="c5ce1183b5257929fc1f1c8496239e52650707cfab24f4e0e1f1a471135b8272")
     version("2.5.0", sha256="18ab44bc444168fd324d07f7dea94f89e056f5c5cd973e818c8783f952702e4e")
     version("2.2.0", sha256="1a4112196497b8421480e2a0a1164071221e467853486577c4f07627a702f4c3")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant("tools", default=False, description="Build the command line tools")
     variant("netcdf", default=False, description="Enable GRIB to NetCDF conversion tool")
@@ -97,6 +92,10 @@ class Eccodes(CMakePackage):
         values=any_combination_of(*_definitions.keys()),
         description="List of extra definitions to install",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("netcdf-c", when="+netcdf")
     # Cannot be built with openjpeg@2.0.x.
@@ -159,7 +158,7 @@ class Eccodes(CMakePackage):
         when="@:2.4.0+netcdf",
     )
 
-    @when("%nag+fortran")
+    @when("+fortran%nag")
     def patch(self):
         # A number of Fortran source files assume that the kinds of integer and
         # real variables are specified in bytes. However, the NAG compiler

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,6 +25,18 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
         "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onedal.html"
     )
 
+    version(
+        "2025.4.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/e4da59ef-aa3a-4223-b3a0-4728014113e6/intel-onedal-2025.4.0.655_offline.sh",
+        sha256="844248e3d4e30ce9eae94bb7a6cc13ad91a419e5251d753eff07d899628b8173",
+        expand=False,
+    )
+    version(
+        "2025.0.1",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/928ba1dd-c2bc-41f6-a35f-8de41ddf055a/intel-onedal-2025.0.1.19_offline.sh",
+        sha256="40d9926cf0daba1334bcbcfca72dc9313a62a2e066a7248938f97f2d2ff0a85b",
+        expand=False,
+    )
     version(
         "2025.0.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/d9f2cdb2-93ec-4c78-a3fb-a59d27050c16/intel-onedal-2025.0.0.958_offline.sh",
