@@ -182,7 +182,7 @@ spack:
   # - cp2k +mpi                     # dbcsr-2.8.0: FAILED: src/CMakeFiles/dbcsr.dir/dbcsr_api.F-pp.f src/CMakeFiles/dbcsr.dir/dbcsr_api.F.o.ddi: 
   # - dealii                        # taskflow@3.7.0: cmake: Taskflow currently supports the following compilers: g++ v7.0 or above, clang++ v6.0 or above
   # - exago +mpi ~ipopt +hiop ~python +raja ^hiop+raja~sparse # raja-0.14.0: RAJA/pattern/kernel/Tile.hpp:174:30: error: no member named 'block_id' in 'IterableTiler<Iterable>'
-  # - exaworks                      # py-maturin
+  # - exaworks                      # py-maturin: rust-lld: error: undefined symbol: _intel_fast_memcpy
   # - fftx                          # fftx-1.2.0: https://github.com/spack/spack/issues/49621
   # - fpm                           # fpm-0.10.0: /tmp/ifx1305151083OkWTRB/ifxqBG60i.i90: error #6405: The same named entity from different modules and/or program units cannot be referenced.   [TOML_TABLE]; fpm.F90(32048): error #7002: Error in opening the compiled module file.  Check INCLUDE paths.   [FPM_MANIFEST_PREPROCESS]
   # - geopm-runtime                 # concretize: c-blosc2: conflicts with '%oneapi';
@@ -199,19 +199,19 @@ spack:
   # PYTHON PACKAGES
   - opencv +python3
   - py-mpi4py
-  - py-notebook
   - py-numpy
   - py-openai
-  - py-plotly
   - py-pooch
   - py-pytest
   - py-scikit-learn
   - py-scipy
   - py-seaborn
   # --
-  # - py-jupyterlab                                   # py-maturin
-  # - py-numba                                        # llvm-14.0.6: https://github.com/spack/spack/issues/49625
-  # - py-pandas                                       # llvm-14.0.6: https://github.com/spack/spack/issues/49625
+  # - py-jupyterlab                 # py-maturin: rust-lld: error: undefined symbol: _intel_fast_memcpy
+  # - py-notebook                   # py-maturin: rust-lld: error: undefined symbol: _intel_fast_memcpy
+  # - py-numba                      # llvm-14.0.6: https://github.com/spack/spack/issues/49625
+  # - py-pandas                     # llvm-14.0.6: https://github.com/spack/spack/issues/49625
+  # - py-plotly                     # py-maturin: rust-lld: error: undefined symbol: _intel_fast_memcpy
 
   - aml +level_zero
   - amrex +sycl
