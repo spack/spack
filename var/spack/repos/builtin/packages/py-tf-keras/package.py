@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack.package import PythonPackage, maintainers, version, depends_on
 
 
 class PyTfKeras(PythonPackage):
@@ -52,8 +52,6 @@ class PyTfKeras(PythonPackage):
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("pil", type=("build", "run"))
     depends_on("py-numpy@1.26.0:2.0", type=("build", "run"), when="@2.18:")
-
-    depends_on("bazel", type="build")
 
     depends_on("py-six", type=("build", "run"))
     depends_on("py-absl-py", type=("build", "run"))
