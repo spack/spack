@@ -17,6 +17,8 @@ class PyAbslPy(PythonPackage):
 
     license("Apache-2.0")
 
+    version("2.1.0", sha256="7820790efbb316739cde8b4e19357243fc3608a152024288513dd968d7d959ff")
+    version("2.0.0", sha256="d9690211c5fcfefcdd1a45470ac2b5c5acd45241c3af71eed96bc5441746c0d5")
     version("1.4.0", sha256="d2c244d01048ba476e7c080bd2c6df5e141d211de80223460d5b3b8a2a58433d")
     version("1.2.0", sha256="f568809938c49abbda89826223c992b630afd23c638160ad7840cfe347710d97")
     version("1.1.0", sha256="3aa39f898329c2156ff525dfa69ce709e42d77aab18bf4917719d6f260aa6a08")
