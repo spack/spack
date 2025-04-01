@@ -2057,10 +2057,7 @@ EMPTY_FLG = Spec().compiler_flags
     "spec,expected_tuplified",
     [
         # simple, no dependencies
-        [
-            ("a"),
-            ((("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),), ((0, 1, 0, ()),)),
-        ],
+        [("a"), ((("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),), ())],
         # with some node attributes
         [
             ("a@1.0 +foo cflags='-O3 -g'"),
@@ -2077,7 +2074,7 @@ EMPTY_FLG = Spec().compiler_flags
                         None,
                     ),
                 ),
-                ((0, 1, 0, ()),),
+                (),
             ),
         ],
         # single edge case
@@ -2088,7 +2085,7 @@ EMPTY_FLG = Spec().compiler_flags
                     ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, ()), (1, 2, 0, ())),
+                ((0, 1, 0, ()),),
             ),
         ],
         # root with multiple deps
@@ -2101,7 +2098,7 @@ EMPTY_FLG = Spec().compiler_flags
                     ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, ()), (1, 2, 0, ()), (1, 3, 0, ()), (1, 4, 0, ())),
+                ((0, 1, 0, ()), (0, 2, 0, ()), (0, 3, 0, ())),
             ),
         ],
         # root with multiple build deps
@@ -2114,7 +2111,7 @@ EMPTY_FLG = Spec().compiler_flags
                     ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, ()), (1, 2, dt.BUILD, ()), (1, 3, dt.BUILD, ()), (1, 4, dt.BUILD, ())),
+                ((0, 1, dt.BUILD, ()), (0, 2, dt.BUILD, ()), (0, 3, dt.BUILD, ())),
             ),
         ],
         # dependencies with dependencies
@@ -2132,12 +2129,11 @@ EMPTY_FLG = Spec().compiler_flags
                 ),
                 (
                     (0, 1, 0, ()),
-                    (1, 2, 0, ()),
-                    (1, 3, 0, ()),
-                    (2, 4, dt.BUILD, ()),
+                    (0, 2, 0, ()),
+                    (1, 3, dt.BUILD, ()),
+                    (1, 4, dt.BUILD, ()),
                     (2, 5, dt.BUILD, ()),
-                    (3, 6, dt.BUILD, ()),
-                    (3, 7, dt.BUILD, ()),
+                    (2, 6, dt.BUILD, ()),
                 ),
             ),
         ],

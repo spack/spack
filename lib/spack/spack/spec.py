@@ -3815,8 +3815,7 @@ class Spec:
         #   2. A generator over canonical edges
         #
         # Canonical edges have consistent ids defined by breadth-first traversal order. That is,
-        # the fake edge from nothing to the root is (0, 1), the root is always 1, dependencies of
-        # the root are 2, 3, 4, 5, etc., and so on.
+        # the root is always 0, dependencies of the root are 1, 2, 3, etc., and so on.
         #
         # The three cases are:
         #
@@ -3839,19 +3838,14 @@ class Spec:
         # need for the complexity here. It was not clear at the time of writing that how
         # much optimization was possible in `spack.traverse`.
 
-        def yield_root_edge():
-            yield 0  # id of None (parent of root)
-            yield 1  # id of root
-            yield 0  # depflag on fake edge
-            yield ()  # virtuals on fake edge
-
         if not self._dependencies:
             # Spec has no dependencies -- simplest case
             def nodes():
                 yield self._cmp_node  # just yield this node
 
             def edges():
-                yield yield_root_edge
+                return
+                yield
 
         elif not any(
             dep.spec._dependencies for deplist in self._dependencies.values() for dep in deplist
@@ -3879,15 +3873,12 @@ class Spec:
                     yield edge.spec._cmp_node
 
             def edges():
-                # yield root edge consistent with what traverse would do.
-                yield yield_root_edge
-
                 # we've already sorted to yield dependency nodes in order, now yield
                 # edges for comparison in the same order, with BFS-consistent ids
-                for i, edge in enumerate(sorted_edges, start=2):
+                for i, edge in enumerate(sorted_edges, start=1):
 
                     def yield_edge(i=i, edge=edge):
-                        yield 1  # id of root
+                        yield 0  # id of root
                         yield i  # id of dependency in BFS order
                         yield edge.depflag
                         yield edge.virtuals
@@ -3900,7 +3891,6 @@ class Spec:
             # We need a way to compare edges consistently between two arbitrary specs.
             # node_ids generates consistent node ids based on BFS traversal order.
             node_ids = collections.defaultdict(lambda: len(node_ids))
-            node_ids[id(None)]  # None (parent of root) is always node id 0
 
             # To avoid traversing twice, we put edges in this list as we yield the nodes.
             # edges() yields the edge functions later, if necessary.
@@ -3914,6 +3904,10 @@ class Spec:
                     if id(edge.spec) not in node_ids:
                         yield edge.spec._cmp_node
                         node_ids[id(edge.spec)]
+
+                    # skip fake edge to root
+                    if edge.parent is None:
+                        continue
 
                     # create "edges" with the ids we generated above
                     def yield_edge(edge=edge):
