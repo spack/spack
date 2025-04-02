@@ -328,6 +328,7 @@ def test_buildcache_create_install(
     )
 
     assert os.path.exists(manifest_path)
+    cache_entry.read_manifest(verify_signature=False)
     spec_blob_record = cache_entry.get_blob_record(BuildcacheComponent.SPEC)
     tarball_blob_record = cache_entry.get_blob_record(BuildcacheComponent.TARBALL)
 

@@ -6,6 +6,7 @@ import codecs
 import datetime
 import json
 import os
+import pathlib
 import shutil
 import tempfile
 from typing import NamedTuple
@@ -292,7 +293,7 @@ def migrate(
         fd.write(contents)
 
     db = bindist.BuildCacheDatabase(tmpdir)
-    db._read_from_file(index_path)
+    db._read_from_file(pathlib.Path(index_path))
 
     specs_to_migrate = [
         s
