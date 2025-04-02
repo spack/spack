@@ -11,6 +11,7 @@ from llnl.util.link_tree import LinkTree
 
 import spack.util.path
 from spack.build_environment import dso_suffix
+from spack.compilers.libraries import CompilerPropertyDetector
 from spack.package import (
     EnvironmentModifications,
     Executable,
@@ -219,10 +220,36 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
             )
 
         # query the compiler for the library path
+<<<<<<< HEAD:var/spack/repos/spack_repo/builtin/build_systems/oneapi.py
+<<<<<<< HEAD:var/spack/repos/spack_repo/builtin/build_systems/oneapi.py
+        with CompilerPropertyDetector(self["c"].spec).compiler_environment():
+            omp_lib_path = Executable(self["c"].cc)(
+                "--print-file-name", f"{libname}.{dso_suffix}", output=str
+            ).strip()
+||||||| parent of 15700f5e99 (Workaround for broken oneapi library search):lib/spack/spack/build_systems/oneapi.py
         with self.compiler.compiler_environment():
             omp_lib_path = Executable(self.compiler.cc)(
                 "--print-file-name", f"{libname}.{dso_suffix}", output=str
             ).strip()
+=======
+        # TODO: Why does the following line find no libraries?
+        # with self.compiler.compiler_environment():
+        omp_lib_path = Executable(self.compiler.cc)(
+            "--print-file-name", f"{libname}.{dso_suffix}", output=str
+        ).strip()
+>>>>>>> 15700f5e99 (Workaround for broken oneapi library search):lib/spack/spack/build_systems/oneapi.py
+||||||| parent of b6b6acdd76 (Update compiler_environment in oneapi build system):lib/spack/spack/build_systems/oneapi.py
+        # TODO: Why does the following line find no libraries?
+        # with self.compiler.compiler_environment():
+        omp_lib_path = Executable(self.compiler.cc)(
+            "--print-file-name", f"{libname}.{dso_suffix}", output=str
+        ).strip()
+=======
+        with CompilerPropertyDetector(self["c"].spec).compiler_environment():
+            omp_lib_path = Executable(self["c"].cc)(
+                "--print-file-name", f"{libname}.{dso_suffix}", output=str
+            ).strip()
+>>>>>>> b6b6acdd76 (Update compiler_environment in oneapi build system):lib/spack/spack/build_systems/oneapi.py
 
         # Newer versions of clang do not give the full path to libomp. If that's
         # the case, look in a path relative to the compiler where libomp is
