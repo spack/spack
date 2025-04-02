@@ -52,9 +52,9 @@ class Diy(CMakePackage):
             ctest = Executable(spec["cmake"].prefix.bin.ctest)
 
             cmake(
-                spec["diy"].prefix.share.DIY.examples.smoke_test,
+                self.prefix.share.DIY.examples.smoke_test,
                 f"-DMPI_HOME={spec['mpi'].prefix}",
-                f"-DCMAKE_PREFIX_PATH={spec['diy'].prefix}",
+                f"-DCMAKE_PREFIX_PATH={self.prefix}",
             )
             cmake("--build", ".")
             ctest("--verbose")

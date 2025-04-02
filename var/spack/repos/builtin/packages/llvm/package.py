@@ -7,7 +7,6 @@ import sys
 
 from llnl.util.lang import classproperty
 
-import spack.compilers
 from spack.build_systems.cmake import get_cmake_prefix_path
 from spack.operating_systems.mac_os import macos_sdk_path
 from spack.package import *
@@ -28,7 +27,7 @@ class LlvmDetection(PackageBase):
         reject = re.compile(
             r"-(vscode|cpp|cl|ocl|gpu|tidy|rename|scan-deps|format|refactor|offload|"
             r"check|query|doc|move|extdef|apply|reorder|change-namespace|"
-            r"include-fixer|import-test|dap|server)"
+            r"include-fixer|import-test|dap|server|PerfectShuffle)"
         )
         return [x for x in exes_in_prefix if not reject.search(x)]
 
@@ -54,7 +53,21 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     license("Apache-2.0")
 
     version("main", branch="main")
+
+    # Latest stable
+    version("20.1.0", sha256="08bc382733777dda3c96259e3732ff96c1df98d0470c4f85b163274eae687f4f")
+
+    # Previous stable series releases
     version("19.1.7", sha256="59abea1c22e64933fad4de1671a61cdb934098793c7a31b333ff58dc41bff36c")
+    version("19.1.6", sha256="f07fdcbb27b2b67aa95e5ddadf45406b33228481c250e65175066d36536a1ee2")
+    version("19.1.5", sha256="e2204b9903cd9d7ee833a2f56a18bef40a33df4793e31cc090906b32cbd8a1f5")
+    version("19.1.4", sha256="010e1fd3cabee8799bd2f8a6fbc68f28207494f315cf9da7057a2820f79fd531")
+    version("19.1.3", sha256="e5106e2bef341b3f5e41340e4b6c6a58259f4021ad801acf14e88f1a84567b05")
+    version("19.1.2", sha256="622cb6c5e95a3bb7e9876c4696a65671f235bd836cfd0c096b272f6c2ada41e7")
+    version("19.1.1", sha256="115dfd98a353d05bffdab3f80db22f159da48aca0124e8c416f437adcd54b77f")
+    version("19.1.0", sha256="0a08341036ca99a106786f50f9c5cb3fbe458b3b74cab6089fd368d0edb2edfe")
+
+    # Final releases of previous versions
     version("18.1.8", sha256="09c08693a9afd6236f27a2ebae62cda656eba19021ef3f94d59e931d662d4856")
     version("17.0.6", sha256="81494d32e6f12ea6f73d6d25424dbd2364646011bb8f7e345ca870750aa27de1")
     version("16.0.6", sha256="56b2f75fdaa95ad5e477a246d3f0d164964ab066b4619a01836ef08e475ec9d5")
@@ -70,28 +83,8 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     version("6.0.1", sha256="aefadceb231f4c195fe6d6cd3b1a010b269c8a22410f339b5a089c2e902aa177")
     version("5.0.2", sha256="fe87aa11558c08856739bfd9bd971263a28657663cb0c3a0af01b94f03b0b795")
 
+    # Deprecated older non-final releases
     with default_args(deprecated=True):
-        version(
-            "19.1.6", sha256="f07fdcbb27b2b67aa95e5ddadf45406b33228481c250e65175066d36536a1ee2"
-        )
-        version(
-            "19.1.5", sha256="e2204b9903cd9d7ee833a2f56a18bef40a33df4793e31cc090906b32cbd8a1f5"
-        )
-        version(
-            "19.1.4", sha256="010e1fd3cabee8799bd2f8a6fbc68f28207494f315cf9da7057a2820f79fd531"
-        )
-        version(
-            "19.1.3", sha256="e5106e2bef341b3f5e41340e4b6c6a58259f4021ad801acf14e88f1a84567b05"
-        )
-        version(
-            "19.1.2", sha256="622cb6c5e95a3bb7e9876c4696a65671f235bd836cfd0c096b272f6c2ada41e7"
-        )
-        version(
-            "19.1.1", sha256="115dfd98a353d05bffdab3f80db22f159da48aca0124e8c416f437adcd54b77f"
-        )
-        version(
-            "19.1.0", sha256="0a08341036ca99a106786f50f9c5cb3fbe458b3b74cab6089fd368d0edb2edfe"
-        )
         version(
             "18.1.7", sha256="b60df7cbe02cef2523f7357120fb0d46cbb443791cde3a5fb36b82c335c0afc9"
         )
@@ -209,9 +202,6 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
         version("6.0.0", sha256="1946ec629c88d30122afa072d3c6a89cc5d5e4e2bb28dc63b2f9ebcc7917ee64")
         version("5.0.1", sha256="84ca454abf262579814a2a2b846569f6e0cb3e16dc33ca3642b4f1dff6fbafd3")
         version("5.0.0", sha256="1f1843315657a4371d8ca37f01265fa9aae17dbcf46d2d0a95c1fdb3c6a4bab6")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
 
     variant(
         "clang", default=True, description="Build the LLVM C/C++/Objective-C compiler frontend"
@@ -401,7 +391,13 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     provides("libllvm@4", when="@4.0.0:4")
     provides("libllvm@3", when="@3.0.0:3")
 
+    provides("c", "cxx", when="+clang")
+    provides("fortran", when="+flang")
+
     extends("python", when="+python")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
@@ -502,9 +498,9 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
             },
         }.items():
             with when(v):
-                for comp in spack.compilers.supported_compilers():
-                    conflicts("%{0}{1}".format(comp, compiler_conflicts.get(comp, "")))
-        del v, compiler_conflicts, comp
+                for _name, _constraint in compiler_conflicts.items():
+                    conflicts(f"%{_name}{_constraint}")
+        del v, compiler_conflicts, _name, _constraint
 
     # libomptarget
     conflicts("+cuda", when="@15:")  # +cuda variant is obselete since LLVM 15
@@ -838,49 +834,69 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
             msg = "{0} compiler not found for {1}"
             assert key in compilers, msg.format(key, spec)
 
-    @property
-    def cc(self):
-        msg = "cannot retrieve C compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("c", None)
-        result = None
+    def _cc_path(self):
         if self.spec.satisfies("+clang"):
-            result = os.path.join(self.spec.prefix.bin, "clang")
-        return result
+            return os.path.join(self.spec.prefix.bin, "clang")
+        return None
 
-    @property
-    def cxx(self):
-        msg = "cannot retrieve C++ compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("cxx", None)
-        result = None
+    def _cxx_path(self):
         if self.spec.satisfies("+clang"):
-            result = os.path.join(self.spec.prefix.bin, "clang++")
-        return result
+            return os.path.join(self.spec.prefix.bin, "clang++")
+        return None
 
-    @property
-    def fc(self):
-        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("fc", None)
-        result = None
+    def _fortran_path(self):
         if self.spec.satisfies("+flang"):
-            result = os.path.join(self.spec.prefix.bin, "flang")
-        return result
+            return os.path.join(self.spec.prefix.bin, "flang")
+        return None
 
-    @property
-    def f77(self):
-        msg = "cannot retrieve Fortran 77 compiler [spec is not concrete]"
-        assert self.spec.concrete, msg
-        if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("f77", None)
-        result = None
-        if self.spec.satisfies("+flang"):
-            result = os.path.join(self.spec.prefix.bin, "flang")
-        return result
+    debug_flags = [
+        "-gcodeview",
+        "-gdwarf-2",
+        "-gdwarf-3",
+        "-gdwarf-4",
+        "-gdwarf-5",
+        "-gline-tables-only",
+        "-gmodules",
+        "-g",
+    ]
+
+    opt_flags = ["-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz", "-Og", "-O", "-O4"]
+
+    compiler_wrapper_link_paths = {
+        "c": os.path.join("clang", "clang"),
+        "cxx": os.path.join("clang", "clang++"),
+        "fortran": os.path.join("clang", "flang"),
+    }
+
+    implicit_rpath_libs = ["libclang"]
+
+    def _standard_flag(self, *, language, standard):
+        flags = {
+            "cxx": {
+                "11": [("@3.3:", "-std=c++11")],
+                "14": [("@3.5:", "-std=c++14")],
+                "17": [("@3.5:4", "-std=c++1z"), ("@5:", "-std=c++17")],
+                "20": [("@5:10", "-std=c++2a"), ("@11:", "-std=c++20")],
+                "23": [("@12:16", "-std=c++2b"), ("@17:", "-std=c++23")],
+            },
+            "c": {
+                "99": [("@:", "-std=c99")],
+                "11": [("@3.1:", "-std=c11")],
+                "17": [("@6:", "-std=c17")],
+                "23": [("@9:17", "-std=c2x"), ("@18:", "-std=c23")],
+            },
+        }
+        for condition, flag in flags[language][standard]:
+            if self.spec.satisfies(condition):
+                return flag
+        else:
+            raise RuntimeError(
+                f"{self.spec} does not support the '{standard}' standard "
+                f"for the '{language}' language"
+            )
+
+    def archspec_name(self):
+        return "clang"
 
     @property
     def libs(self):

@@ -147,10 +147,6 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         "0.1.3", tag="v0.1.3", commit="cc347edeb17f5f30f694aa47f395d17369a2e449", submodules=True
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Some projects importing both camp and umpire targets end up with conflicts in BLT targets
     # import. This is not addressing the root cause, which will be addressed in BLT@5.4.0 and will
     # require adapting umpire build system.
@@ -219,6 +215,10 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("asan", default=False, description="Enable ASAN")
     variant("sanitizer_tests", default=False, description="Enable address sanitizer tests")
     variant("fmt_header_only", default=True, description="Link to header-only fmt target")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.23:", when="@2024.07.0:", type="build")
     depends_on("cmake@3.23:", when="@2022.10.0: +rocm", type="build")
@@ -324,7 +324,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super().initconfig_compiler_entries()
 
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm ^blt@:0.6"):
             entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
         option_prefix = "UMPIRE_" if spec.satisfies("@2022.03.0:") else ""

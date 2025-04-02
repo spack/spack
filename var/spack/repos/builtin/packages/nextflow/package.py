@@ -14,6 +14,11 @@ class Nextflow(Package):
     maintainers("dialvarezs", "marcodelapierre")
 
     version(
+        "24.10.5",
+        sha256="a9733a736cfecdd70e504b942e823da7005f9afc288902e67afe86b43dc9bcdb",
+        expand=False,
+    )
+    version(
         "24.10.3",
         sha256="01110949bb3256bf6cbf1d4b3ea17369491b3f693b6d86a0c9ab8171b1619ba0",
         expand=False,

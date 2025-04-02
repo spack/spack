@@ -34,8 +34,6 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "build_type",
         default="Release",
@@ -118,6 +116,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("+lld", when="+gold")
     conflicts("+gold", when="platform=darwin", msg="gold does not work on Darwin")
     conflicts("+lld", when="platform=darwin", msg="lld does not work on Darwin")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.17.0:", type="build")
     depends_on("cmake@3.21.0:", type="build", when="@0.103:")
@@ -204,7 +204,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     # Note that for Power systems we want the environment to add +powerpc
     # When using a GCC compiler
-    depends_on("opencv@4.1.0: +powerpc", when="+vision %gcc arch=ppc64le:")
+    depends_on("opencv@4.1.0: +powerpc", when="+vision arch=ppc64le: %gcc")
 
     depends_on("cnpy", when="+numpy")
     depends_on("nccl", when="@0.94:0.98.2 +cuda")
@@ -410,7 +410,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             # a shell, which expects :
 
         # Add support for OpenMP with external (Brew) clang
-        if spec.satisfies("%clang platform=darwin"):
+        if spec.satisfies("platform=darwin %clang"):
             clang = self.compiler.cc
             clang_bin = os.path.dirname(clang)
             clang_root = os.path.dirname(clang_bin)

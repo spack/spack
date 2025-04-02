@@ -30,7 +30,6 @@ import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
 from llnl.util.lang import classproperty, memoized
 
-import spack.compilers
 import spack.config
 import spack.dependency
 import spack.deptypes as dt
@@ -48,9 +47,11 @@ import spack.spec
 import spack.store
 import spack.url
 import spack.util.environment
+import spack.util.executable
 import spack.util.path
 import spack.util.web
 import spack.variant
+from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.resource import Resource
@@ -125,9 +126,10 @@ class WindowsRPath:
         # Spack should in general not modify things it has not installed
         # we can reasonably expect externals to have their link interface properly established
         if sys.platform == "win32" and not self.spec.external:
-            self.win_rpath.add_library_dependent(*self.win_add_library_dependent())
-            self.win_rpath.add_rpath(*self.win_add_rpath())
-            self.win_rpath.establish_link()
+            win_rpath = fsys.WindowsSimulatedRPath(self)
+            win_rpath.add_library_dependent(*self.win_add_library_dependent())
+            win_rpath.add_rpath(*self.win_add_rpath())
+            win_rpath.establish_link()
 
 
 #: Registers which are the detectable packages, by repo and package name
@@ -586,6 +588,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     """
 
+    compiler = DeprecatedCompiler()
+
     #
     # These are default values for instance variables.
     #
@@ -742,7 +746,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Set up timing variables
         self._fetch_time = 0.0
 
-        self.win_rpath = fsys.WindowsSimulatedRPath(self)
         super().__init__()
 
     def __getitem__(self, key: str) -> "PackageBase":
@@ -1287,12 +1290,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if not self.extendees:
             return None
 
-        deps = []
-
         # If the extendee is in the spec's deps already, return that.
-        for dep in self.spec.traverse(deptype=("link", "run")):
-            if dep.name in self.extendees:
-                deps.append(dep)
+        deps = [
+            dep
+            for dep in self.spec.dependencies(deptype=("link", "run"))
+            for d, when in self.extendees.values()
+            if dep.satisfies(d) and self.spec.satisfies(when)
+        ]
 
         if deps:
             assert len(deps) == 1
@@ -1369,14 +1373,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def home(self):
         return self.prefix
 
-    @property  # type: ignore[misc]
-    @memoized
-    def compiler(self):
-        """Get the spack.compiler.Compiler object used to build this package"""
-        if not self.spec.concrete:
-            raise ValueError("Can only get a compiler for a concrete package.")
-
-        return spack.compilers.compiler_for_spec(self.spec.compiler, self.spec.architecture)
+    @property
+    def command(self) -> spack.util.executable.Executable:
+        """Returns the main executable for this package."""
+        path = os.path.join(self.home.bin, self.spec.name)
+        if fsys.is_exe(path):
+            return spack.util.executable.Executable(path)
+        raise RuntimeError(f"Unable to locate {self.spec.name} command in {self.home.bin}")
 
     def url_version(self, version):
         """
@@ -1489,7 +1492,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         self.stage.create()
 
         # Fetch/expand any associated code.
-        if self.has_code:
+        if self.has_code and not self.spec.external:
             self.do_fetch(mirror_only)
             self.stage.expand_archive()
         else:
@@ -1819,17 +1822,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return resource_stage_folder
 
     def do_test(self, dirty=False, externals=False):
-        if self.test_requires_compiler:
-            compilers = spack.compilers.compilers_for_spec(
-                self.spec.compiler, arch_spec=self.spec.architecture
+        if self.test_requires_compiler and not any(
+            lang in self.spec for lang in ("c", "cxx", "fortran")
+        ):
+            tty.error(
+                f"Skipping tests for package {self.spec}, since a compiler is required, "
+                f"but not available"
             )
-            if not compilers:
-                tty.error(
-                    "Skipping tests for package %s\n"
-                    % self.spec.format("{name}-{version}-{hash:7}")
-                    + "Package test requires missing compiler %s" % self.spec.compiler
-                )
-                return
+            return
 
         kwargs = {
             "dirty": dirty,

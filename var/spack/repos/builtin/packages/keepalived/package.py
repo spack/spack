@@ -33,5 +33,4 @@ class Keepalived(AutotoolsPackage):
     depends_on("openssl")
 
     def configure_args(self):
-        args = ["--with-systemdsystemunitdir=" + self.spec["keepalived"].prefix.lib.systemd.system]
-        return args
+        return [f"--with-systemdsystemunitdir={self.prefix.lib.systemd.system}"]

@@ -33,8 +33,6 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     version("6.0.2", sha256="bdbceeae515f737131f0391ee3b7d2f7b655e3cf446e4303d93f083c59053587")
     version("6.0.0", sha256="cc4c7970601edbaa7f630b7ea24ae85beaeae466ef3e5ba63e11eab52465c157")
 
-    depends_on("cxx", type="build")  # generated
-
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
         "amdgpu_target",
@@ -48,6 +46,9 @@ class Hipsparselt(CMakePackage, ROCmPackage):
         sticky=True,
     )
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    depends_on("cxx", type="build")  # generated
+
     for ver in [
         "6.0.0",
         "6.0.2",
@@ -90,6 +91,8 @@ class Hipsparselt(CMakePackage, ROCmPackage):
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
+        if self.spec.satisfies("+asan"):
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
         env.set("TENSILE_ROCM_ASSEMBLER_PATH", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
         env.set(
             "TENSILE_ROCM_OFFLOAD_BUNDLER_PATH",

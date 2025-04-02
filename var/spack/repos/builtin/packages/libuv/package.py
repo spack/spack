@@ -112,7 +112,7 @@ class Libuv(CMakePackage, AutotoolsPackage):
     # Tries to build an Objective-C file with GCC's C frontend
     # https://github.com/libuv/libuv/issues/2805
     conflicts(
-        "%gcc platform=darwin",
+        "platform=darwin %gcc",
         when="@:1.37.9",
         msg="libuv does not compile with GCC on macOS yet, use clang. "
         "See: https://github.com/libuv/libuv/issues/2805",

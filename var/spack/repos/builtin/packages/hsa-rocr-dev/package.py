@@ -46,12 +46,12 @@ class HsaRocrDev(CMakePackage):
         version("5.3.3", sha256="aca88d90f169f35bd65ce3366b8670c7cdbe3abc0a2056eab805d0192cfd7130")
         version("5.3.0", sha256="b51dbedbe73390e0be748b92158839c82d7fa0e514fede60aa7696dc498facf0")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("shared", default=True, description="Build shared or static library")
     variant("image", default=True, description="build with or without image support")
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3:", type="build")
     depends_on("pkgconfig", type="build")
@@ -154,6 +154,17 @@ class HsaRocrDev(CMakePackage):
         else:
             ver = None
         return ver
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("@5.7: +asan"):
+            numa_inc = self.spec["numactl"].prefix.include
+            numa_lib = self.spec["numactl"].prefix.lib
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", f"-fsanitize=address -shared-libasan -I{numa_inc} -L{numa_lib}")
+            env.set("CXXFLAGS", f"-fsanitize=address -shared-libasan -I{numa_inc} -L{numa_lib}")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     def cmake_args(self):
         spec = self.spec

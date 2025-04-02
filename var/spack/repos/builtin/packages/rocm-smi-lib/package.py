@@ -46,11 +46,11 @@ class RocmSmiLib(CMakePackage):
         version("5.3.3", sha256="c2c2a377c2e84f0c40297a97b6060dddc49183c2771b833ebe91ed98a98e4119")
         version("5.3.0", sha256="8f72ad825a021d5199fb73726b4975f20682beb966e0ec31b53132bcd56c5408")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Build shared or static library")
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3:", type="build")
     depends_on("python@3:", type=("build", "run"))
@@ -76,6 +76,9 @@ class RocmSmiLib(CMakePackage):
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
+    for ver in ["6.1.0", "6.1.1", "6.1.2", "6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2"]:
+        depends_on("llvm-amdgpu", when=f"@{ver}+asan")
+
     patch(
         "https://github.com/ROCm/rocm_smi_lib/commit/11f12b86517d0e9868f4d16d74d4e8504c3ba7da.patch?full_index=1",
         sha256="62be7262f6e1e71bf82a03f500a424a536638f04e913d0f4b477f60e8e1190fd",
@@ -93,6 +96,15 @@ class RocmSmiLib(CMakePackage):
         if self.spec.satisfies("@5.7.0:"):
             args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
         return args
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("@6.1: +asan"):
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     @classmethod
     def determine_version(cls, lib):

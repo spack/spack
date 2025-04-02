@@ -22,8 +22,6 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
     )
     version("develop", submodules=False, branch="develop")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("klu", default=True, description="Use KLU, AMD and COLAMD Libraries from SuiteSparse")
     variant(
         "lusol",
@@ -31,6 +29,8 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
         when="@develop:",
         description="Build the LUSOL Library. Requires fortran",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("suite-sparse", when="+klu")
 

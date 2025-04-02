@@ -27,13 +27,13 @@ class OpenradiossStarter(CMakePackage):
     maintainers("kjrstory")
     version("main", branch="main")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("sp", default=False, description="Using single precision option")
     variant("debug", default=False, description="Debug Option")
     variant("static_link", default=False, description="Static_link Option")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@2.8:", type="build")
     depends_on("perl", type="build")

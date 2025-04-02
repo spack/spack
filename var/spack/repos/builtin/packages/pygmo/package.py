@@ -20,10 +20,10 @@ class Pygmo(CMakePackage):
     version("master", branch="master")
     version("2.18.0", sha256="9f081cc973297894af09f713f889870ac452bfb32b471f9f7ba08a5e0bb9a125")
 
+    variant("shared", default=True, description="Build shared libraries")
+
     depends_on("c", type="build")
     depends_on("cxx", type="build")
-
-    variant("shared", default=True, description="Build shared libraries")
 
     # Run-time dependencies
     # https://github.com/esa/pygmo2/blob/master/doc/install.rst#dependencies

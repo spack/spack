@@ -60,10 +60,6 @@ class FoamExtend(Package):
     version("3.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git", deprecated=True)
     version("3.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.0.git", deprecated=True)
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # variant('int64', default=False,
     #         description='Compile with 64-bit label')
     variant("float32", default=False, description="Compile with 32-bit scalar (single-precision)")
@@ -76,6 +72,10 @@ class FoamExtend(Package):
     variant(
         "source", default=True, description="Install library/application sources and tutorials"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi")
     depends_on("python")

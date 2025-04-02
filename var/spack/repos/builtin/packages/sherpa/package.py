@@ -35,10 +35,6 @@ class Sherpa(CMakePackage, AutotoolsPackage):
         conditional("cmake", when="@3:"), conditional("autotools", when="@:2"), default="cmake"
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     _cxxstd_values = (conditional("11", "14", "17", when="@:"), conditional("20", when="@3:"))
     variant(
         "cxxstd",
@@ -84,6 +80,10 @@ class Sherpa(CMakePackage, AutotoolsPackage):
     variant("cms", default=False, description="Append CXXFLAGS used by CMS experiment")
 
     # Note that the delphes integration seems utterly broken: https://sherpa.hepforge.org/trac/ticket/305
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # autotools dependencies are needed at runtime to compile processes
     depends_on("autoconf", when="@:2")

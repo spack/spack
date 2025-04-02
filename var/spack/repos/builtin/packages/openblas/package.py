@@ -141,7 +141,7 @@ class Openblas(CMakePackage, MakefilePackage):
 
     # Fixes compilation error on POWER8 with GCC 7
     # https://github.com/OpenMathLib/OpenBLAS/pull/1098
-    patch("power8.patch", when="@0.2.18:0.2.19 %gcc@7.1.0: target=power8")
+    patch("power8.patch", when="@0.2.18:0.2.19 target=power8 %gcc@7.1.0:")
 
     # Change file comments to work around clang 3.9 assembler bug
     # https://github.com/OpenMathLib/OpenBLAS/pull/982
@@ -322,7 +322,7 @@ class Openblas(CMakePackage, MakefilePackage):
         spec = self.spec
 
         # Look for openblas{symbol_suffix}
-        name = ["libopenblas", "openblas"]
+        name = self.libraries
         search_shared = bool(spec.variants["shared"].value)
         suffix = spec.variants["symbol_suffix"].value
         if suffix != "none":

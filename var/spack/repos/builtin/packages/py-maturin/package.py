@@ -45,3 +45,4 @@ class PyMaturin(PythonPackage):
     # https://patchwork.yoctoproject.org/project/oe-core/patch/8803dc101b641c948805cab9e5784c38f43b0e51.1702791173.git.tim.orling@konsulko.com/
     # This seems to still be an issue for others
     depends_on("bzip2")
+    depends_on("c", type="build")

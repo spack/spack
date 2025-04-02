@@ -22,8 +22,6 @@ class Portage(CMakePackage):
     version("3.0.0", sha256="7a5a21ffbc35fa54a5136d937cfda6f836c7496ff2b5adf54deb4107501333da")
     version("master", branch="master", submodules=True)
 
-    depends_on("cxx", type="build")  # generated
-
     variant("mpi", default=True, description="Support MPI")
     variant("tangram", default=False, description="Use Tangram interface reconstruction package")
     variant("jali", default=False, description="Include support for Jali mesh framework")
@@ -37,6 +35,8 @@ class Portage(CMakePackage):
     )
     variant("openmp", default=False, description="Enable on-node parallelism using OpenMP")
     variant("cuda", default=False, description="Enable GPU parallelism using CUDA")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.13:", type="build")
 

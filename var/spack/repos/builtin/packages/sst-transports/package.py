@@ -12,7 +12,7 @@ class SstTransports(CMakePackage):
     homepage = "https://github.com/sstsimulator"
     git = "https://github.com/jjwilke/sst-transports.git"
 
-    maintainers("jjwilke")
+    maintainers("berquist", "jmlapre")
 
     license("BSD-3-Clause")
 

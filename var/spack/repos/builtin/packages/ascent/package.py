@@ -87,10 +87,6 @@ class Ascent(CMakePackage, CudaPackage):
         "0.6.0", tag="v0.6.0", commit="9ade37b0a9ea495e45adb25cda7498c0bf9465c5", submodules=True
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     ###########################################################################
     # package variants
     ###########################################################################
@@ -159,6 +155,10 @@ class Ascent(CMakePackage, CudaPackage):
     ##########################################################################
     # package dependencies
     ###########################################################################
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14,3.18.2:", type="build")
 
@@ -376,8 +376,9 @@ class Ascent(CMakePackage, CudaPackage):
         # if on llnl systems, we can use the SYS_TYPE
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
-        host_config_path = "{0}-{1}-{2}-ascent-{3}.cmake".format(
-            socket.gethostname(), sys_type, spec.compiler, spec.dag_hash()
+        compiler_str = f"{self['c'].name}-{self['c'].version}"
+        host_config_path = (
+            f"{socket.gethostname()}-{sys_type}-{compiler_str}" f"-ascent-{spec.dag_hash()}.cmake"
         )
         dest_dir = spec.prefix
         host_config_path = os.path.abspath(join_path(dest_dir, host_config_path))

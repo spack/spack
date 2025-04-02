@@ -56,10 +56,6 @@ class Tau(Package):
     version("2.24", sha256="5d28e8b26561c7cd7d0029b56ec0f95fc26803ac0b100c98e00af0b02e7f55e2")
     version("2.23.1", sha256="31a4d0019cec6ef57459a9cd18a220f0130838a5f1a0b5ea7879853f5a38cf88")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Disable some default dependencies on Darwin/OSX
     darwin_default = False
     if sys.platform != "darwin":
@@ -137,6 +133,10 @@ class Tau(Package):
         description="Do not add -no-pie while linking with Ubuntu.",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("gmake", type="build")
     depends_on("cmake@3.14:", type="build", when="%clang")
     depends_on("cmake@3.14:", type="build", when="%aocc")
@@ -175,6 +175,8 @@ class Tau(Package):
     depends_on("java", type="run")  # for paraprof
     depends_on("oneapi-level-zero", when="+level_zero")
     depends_on("dyninst@12.3.0:", when="+dyninst")
+
+    conflicts("+comm", when="@:2.34 +python", msg="Bug in +comm with +python up to @2.34")
 
     # Elf only required from 2.28.1 on
     conflicts("+elf", when="@:2.28.0")

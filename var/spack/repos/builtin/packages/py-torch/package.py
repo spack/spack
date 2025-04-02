@@ -69,9 +69,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         "1.4.1", tag="v1.4.1", commit="74044638f755cd8667bedc73da4dbda4aa64c948", deprecated=True
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     is_darwin = sys.platform == "darwin"
 
     # All options are defined in CMakeLists.txt.
@@ -151,6 +148,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     )
 
     # Required dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     # Based on PyPI wheel availability
     with default_args(type=("build", "link", "run")):
         depends_on("python@3.9:3.13", when="@2.5:")
@@ -175,6 +175,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("py-typing-extensions@4.8:", when="@2.2:")
         depends_on("py-typing-extensions@3.6.2.1:", when="@1.7:")
         depends_on("py-setuptools")
+        depends_on("py-sympy@1.13.1", when="@2.5:")
         depends_on("py-sympy", when="@2:")
         depends_on("py-networkx", when="@2:")
         depends_on("py-jinja2", when="@2:")
@@ -285,7 +286,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("magma+cuda", when="+magma+cuda")
     depends_on("magma+rocm", when="+magma+rocm")
     depends_on("numactl", when="+numa")
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
     depends_on("valgrind", when="+valgrind")
     with when("+rocm"):
         depends_on("hsa-rocr-dev")
@@ -661,14 +662,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         elif self.spec["lapack"].name in ["libflame", "amdlibflame"]:
             env.set("BLAS", "FLAME")
             env.set("WITH_BLAS", "FLAME")
-        elif self.spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+        elif self.spec["blas"].name == "intel-oneapi-mkl":
             env.set("BLAS", "MKL")
             env.set("WITH_BLAS", "mkl")
-            # help find MKL
-            if self.spec["mkl"].name == "intel-oneapi-mkl":
-                env.set("INTEL_MKL_DIR", self.spec["mkl"].prefix.mkl.latest)
-            else:
-                env.set("INTEL_MKL_DIR", self.spec["mkl"].prefix.mkl)
+            env.set("INTEL_MKL_DIR", self.spec["mkl"].prefix.mkl.latest)
         elif self.spec["blas"].name == "openblas":
             env.set("BLAS", "OpenBLAS")
             env.set("WITH_BLAS", "open")

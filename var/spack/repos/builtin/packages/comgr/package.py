@@ -52,15 +52,15 @@ class Comgr(CMakePackage):
         version("5.3.3", sha256="6a4ef69e672a077b5909977248445f0eedf5e124af9812993a4d444be030c78b")
         version("5.3.0", sha256="072f849d79476d87d31d62b962e368762368d540a9da02ee2675963dc4942b2c")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     # Disable the hip compile tests.  Spack should not be using
     # /opt/rocm, and this breaks the build when /opt/rocm exists.
     patch("hip-tests.patch", when="@:4.2.0")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.13.4:", type="build")
 
@@ -135,6 +135,15 @@ class Comgr(CMakePackage):
         if self.spec.satisfies("@5.7:"):
             args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
         return args
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("@5.7: +asan"):
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+            env.set("ASAN_OPTIONS", "detect_leaks=0")
+            env.set("CFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
+            env.set("LDFLAGS", "-fuse-ld=lld")
 
     @classmethod
     def determine_version(cls, lib):

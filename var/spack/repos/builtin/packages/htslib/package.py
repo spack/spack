@@ -15,6 +15,7 @@ class Htslib(AutotoolsPackage):
 
     license("MIT AND BSD-3-Clause-Modification")
 
+    version("1.21", sha256="84b510e735f4963641f26fd88c8abdee81ff4cb62168310ae716636aac0f1823")
     version("1.20", sha256="e52d95b14da68e0cfd7d27faf56fef2f88c2eaf32a2be51c72e146e3aa928544")
     version("1.19.1", sha256="222d74d3574fb67b158c6988c980eeaaba8a0656f5e4ffb76b5fa57f035933ec")
     version("1.19", sha256="8751c40c4fa7d1f23a6864c5b20a73744f8be68239535ae7729c5f7d394d0736")
@@ -37,9 +38,6 @@ class Htslib(AutotoolsPackage):
     version("1.3.1", sha256="49d53a2395b8cef7d1d11270a09de888df8ba06f70fe68282e8235ee04124ae6")
     version("1.2", sha256="125c01421d5131afb4c3fd2bc9c7da6f4f1cd9ab5fc285c076080b9aca24bffc")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "libcurl",
         default=True,
@@ -55,6 +53,9 @@ class Htslib(AutotoolsPackage):
     variant("s3", default=True, description="enable s3 url support", when="@1.5:+libcurl")
     variant("plugins", default=False, description="enable support for separately compiled plugins")
     variant("pic", default=True, description="Compile with PIC support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("zlib-api")
     depends_on("bzip2", when="@1.4:")

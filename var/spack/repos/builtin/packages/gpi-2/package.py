@@ -36,10 +36,6 @@ class Gpi2(AutotoolsPackage):
     version("1.0.2", sha256="b03b4ac9f0715279b2a5e064fd85047cb640a85c2361d732930307f8bbf2aeb8")
     version("1.0.1", sha256="b1341bb39e7e70334d7acf831fe7f2061376e7516b44d18b31797748c2a169a3")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("fortran", default=False, description="Enable Fortran modules")
     variant("mpi", default=False, description="Enable MPI support")
     variant(
@@ -59,6 +55,10 @@ class Gpi2(AutotoolsPackage):
         description="List of lauchers for which support is enabled; "
         "'auto', 'none' or 'pbs' use 'gaspi_run.ssh'",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("autoconf", type="build", when="@1.4.0:")  # autogen.sh - autoreconf
     depends_on("automake", type="build", when="@1.4.0:")  # autogen.sh - automake

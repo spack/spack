@@ -44,9 +44,6 @@ class Qthreads(AutotoolsPackage):
     version("1.11", sha256="dbde6c7cb7de7e89921e47363d09cecaebf775c9d090496c2be8350355055571")
     version("1.10", sha256="29fbc2e54bcbc814c1be13049790ee98c505f22f22ccee34b7c29a4295475656")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     patch("restrict.patch", when="@:1.10")
     patch("trap.patch", when="@:1.10")
 
@@ -66,6 +63,9 @@ class Qthreads(AutotoolsPackage):
         description="Specify number of bytes to use in a stack",
         values=is_integer,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("hwloc@1.0:1", when="@:1.15 +hwloc")
     depends_on("hwloc@1.5:2", when="@1.16: +hwloc")

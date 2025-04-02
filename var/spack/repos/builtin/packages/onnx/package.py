@@ -19,6 +19,7 @@ class Onnx(CMakePackage):
     license("Apache-2.0", checked_by="wdconinc")
 
     version("master", branch="master")
+    version("1.17.0", sha256="8d5e983c36037003615e5a02d36b18fc286541bf52de1a78f6cf9f32005a820e")
     version("1.16.2", sha256="84fc1c3d6133417f8a13af6643ed50983c91dacde5ffba16cc8bb39b22c2acbb")
     version("1.16.1", sha256="0e6aa2c0a59bb2d90858ad0040ea1807117cc2f05b97702170f18e6cd6b66fb3")
     version("1.16.0", sha256="0ce153e26ce2c00afca01c331a447d86fbf21b166b640551fe04258b4acfc6a4")
@@ -69,10 +70,12 @@ class Onnx(CMakePackage):
         "1.1.0_2018-04-19", commit="7e1bed51cc508a25b22130de459830b5d5063c41", deprecated=True
     )  # py-torch@0.4.0
 
+    depends_on("c", type="build")  # FIXME: note https://github.com/onnx/onnx/pull/6826
     depends_on("cxx", type="build")
 
     generator("ninja")
     depends_on("cmake@3.1:", type="build")
+    depends_on("cmake@3.14:", type="build", when="@1.17:")
     depends_on("python", type="build")
     depends_on("protobuf")
 

@@ -28,10 +28,10 @@ class Libvpx(AutotoolsPackage):
         deprecated=True,
     )
 
+    variant("pic", default=True, description="Produce position-independent code (for shared libs)")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("pic", default=True, description="Produce position-independent code (for shared libs)")
 
     depends_on("yasm")
 

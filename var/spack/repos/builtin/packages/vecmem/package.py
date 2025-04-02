@@ -16,6 +16,7 @@ class Vecmem(CMakePackage, CudaPackage):
 
     license("MPL-2.0-no-copyleft-exception")
 
+    version("1.14.0", sha256="3fac19e2766e5f997712b0799bd820f65c17ea9cddcb9e765cbdf214f41c4783")
     version("1.13.0", sha256="fc21cea04140e1210c83a32579b0a7194601889b6c895404214ac55ce547342b")
     version("1.12.0", sha256="59a5ef061fc9949c3159cb920a717dee7aa1e9a98b3672495200071d3d4b61cf")
     version("1.11.0", sha256="8f4ef9b50da45ea245291e2a4fef86025245150df4a4654ecb708a20adec5c42")
@@ -58,14 +59,19 @@ class Vecmem(CMakePackage, CudaPackage):
     version("0.2.0", sha256="33aea135989684e325cb097e455ff0f9d1a9e85ff32f671e3b3ed6cc036176ac")
     version("0.1.0", sha256="19e24e3262aa113cd4242e7b94e2de34a4b362e78553730a358f64351c6a0a01")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("hip", default=False, description="Build the vecmem::hip library")
     variant("sycl", default=False, description="Build the vecmem::sycl library")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.17:", type="build")
     depends_on("hip", when="+hip")
     depends_on("sycl", when="+sycl")
+
+    # NOTE: this package uses a non-standard "SYCLCXX" environment variable which we can
+    # set easily only by requiring the OneAPI compiler, as this is automatically capable
+    # of compiling SYCL code.
+    requires("%oneapi", when="+sycl")
 
     # FIXME: due to #29447, googletest is not available to cmake when building with --test,
     # and we can choose between always depending on googletest, or using FetchContent

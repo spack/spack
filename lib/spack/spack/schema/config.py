@@ -58,6 +58,15 @@ properties: Dict[str, Any] = {
                     {"type": "string"},  # deprecated
                 ]
             },
+            "concretization_cache": {
+                "type": "object",
+                "properties": {
+                    "enable": {"type": "boolean"},
+                    "url": {"type": "string"},
+                    "entry_limit": {"type": "integer", "minimum": 0},
+                    "size_limit": {"type": "integer", "minimum": 0},
+                },
+            },
             "install_hash_length": {"type": "integer", "minimum": 1},
             "install_path_scheme": {"type": "string"},  # deprecated
             "build_stage": {
@@ -91,7 +100,7 @@ properties: Dict[str, Any] = {
             "allow_sgid": {"type": "boolean"},
             "install_status": {"type": "boolean"},
             "binary_index_root": {"type": "string"},
-            "url_fetch_method": {"type": "string", "enum": ["urllib", "curl"]},
+            "url_fetch_method": {"type": "string", "pattern": r"^urllib$|^curl( .*)*"},
             "additional_external_search_paths": {"type": "array", "items": {"type": "string"}},
             "binary_index_ttl": {"type": "integer", "minimum": 0},
             "aliases": {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}},
