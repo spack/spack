@@ -12,22 +12,26 @@ class PySetuptoolsScm(PythonPackage):
     pypi = "setuptools_scm/setuptools_scm-4.1.2.tar.gz"
     tags = ["build-tools"]
 
+    maintainers("RobertMaaskant")
+
     license("MIT")
 
     version("8.2.0", sha256="a18396a1bc0219c974d1a74612b11f9dce0d5bd8b1dc55c65f6ac7fd609e8c28")
     version("8.1.0", sha256="42dea1b65771cba93b7a515d65a65d8246e560768a66b9106a592c8e7f26c8a7")
     version("8.0.4", sha256="b5f43ff6800669595193fd09891564ee9d1d7dcb196cab4b2506d53a2e1c95c7")
     version("7.1.0", sha256="6c508345a771aad7d56ebff0e70628bf2b0ec7573762be9960214730de278f27")
-    version("7.0.5", sha256="031e13af771d6f892b941adb6ea04545bbf91ebc5ce68c78aaf3fff6e1fb4844")
-    version("7.0.3", sha256="cf8ab8e235bed840cd4559b658af0d8e8a70896a191bbc510ee914ec5325332d")
     version("6.3.2", sha256="a49aa8081eeb3514eb9728fa5040f2eaa962d6c6f4ec9c32f6c1fba88f88a0f2")
-    version("6.0.1", sha256="d1925a69cb07e9b29416a275b9fadb009a23c148ace905b2fb220649a6c18e92")
     version("5.0.2", sha256="83a0cedd3449e3946307811a4c7b9d89c4b5fd464a2fb5eeccd0a5bb158ae5c8")
     version("4.1.2", sha256="a8994582e716ec690f33fec70cca0f85bd23ec974e3f783233e4879090a7faa8")
     version("3.5.0", sha256="5bdf21a05792903cafe7ae0c9501182ab52497614fa6b1750d9dbae7b60c1a87")
-    version("3.3.3", sha256="bd25e1fb5e4d603dcf490f1fde40fb4c595b357795674c3e5cb7f6217ab39ea5")
-    version("3.1.0", sha256="1191f2a136b5e86f7ca8ab00a97ef7aef997131f1f6d4971be69a1ef387d8b40")
     version("1.15.6", sha256="49ab4685589986a42da85706b3311a2f74f1af567d39fee6cb1e088d7a75fb5f")
+
+    with default_args(deprecated=True):
+        version("7.0.5", sha256="031e13af771d6f892b941adb6ea04545bbf91ebc5ce68c78aaf3fff6e1fb4844")
+        version("7.0.3", sha256="cf8ab8e235bed840cd4559b658af0d8e8a70896a191bbc510ee914ec5325332d")
+        version("6.0.1", sha256="d1925a69cb07e9b29416a275b9fadb009a23c148ace905b2fb220649a6c18e92")
+        version("3.3.3", sha256="bd25e1fb5e4d603dcf490f1fde40fb4c595b357795674c3e5cb7f6217ab39ea5")
+        version("3.1.0", sha256="1191f2a136b5e86f7ca8ab00a97ef7aef997131f1f6d4971be69a1ef387d8b40")
 
     # Basically a no-op in setuptools_scm 7+, toml support is always built
     variant("toml", default=True, description="Build with TOML support")
@@ -38,6 +42,8 @@ class PySetuptoolsScm(PythonPackage):
         depends_on("python@3.6:", when="@6:")
         depends_on("python@2.7:2.8,3.5:", when="@4:")
         depends_on("python@2.7:2.8,3.4:")
+
+        depends_on("python@:3.10", when="@:7.0.5")
 
         depends_on("py-setuptools@61:", when="@8:")
         depends_on("py-setuptools@45:", when="@6:")

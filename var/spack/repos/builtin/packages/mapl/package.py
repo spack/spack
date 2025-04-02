@@ -160,9 +160,6 @@ class Mapl(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("fortran", type="build")
-
     # Versions later than 3.14 remove FindESMF.cmake
     # from ESMA_CMake.
     resource(
@@ -279,6 +276,9 @@ class Mapl(CMakePackage):
     # https://github.com/JCSDA/spack-stack/issues/769
     conflicts("+pflogger", when="@:2.40.3 %intel@2021.7:")
     conflicts("+extdata2g", when="@:2.40.3 %intel@2021.7:")
+
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("cmake@3.24:", type="build", when="@2.51:")
     depends_on("cmake@3.23:", type="build", when="@2.50")

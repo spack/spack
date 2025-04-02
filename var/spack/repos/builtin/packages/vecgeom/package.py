@@ -88,9 +88,6 @@ class Vecgeom(CMakePackage, CudaPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     _cxxstd_values = (conditional("11", "14", when="@:1.1"), "17", conditional("20", when="@1.2:"))
     variant(
         "cxxstd",
@@ -105,6 +102,9 @@ class Vecgeom(CMakePackage, CudaPackage):
     variant("root", default=False, description="Support ROOT geometry construction")
     variant("shared", default=True, description="Build shared libraries")
     variant("surface", default=False, when="@2:", description="Use surface frame representation")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("veccore")
     depends_on("veccore@0.8.1:", when="+cuda")

@@ -70,9 +70,6 @@ class Podio(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     _cxxstd_values = (conditional("17", when="@:1.2"), conditional("20", when="@0.14.1:"))
     variant(
         "cxxstd",
@@ -98,6 +95,9 @@ class Podio(CMakePackage):
         description="Build the RDataSource for reading podio collections",
         when="@1.0.2:",
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("root@6.08.06: cxxstd=17", when="cxxstd=17")
     depends_on("root@6.14:", when="+datasource")

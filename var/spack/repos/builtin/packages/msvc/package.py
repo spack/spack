@@ -52,7 +52,7 @@ class Msvc(Package, CompilerPackage):
     # compiler wrappers
     compiler_wrapper_link_paths = {"c": "", "cxx": "", "fortran": ""}
 
-    provides("c", "cxx")
+    provides("c", "cxx", "fortran")
     requires("platform=windows", msg="MSVC is only supported on Windows")
 
     @classmethod
@@ -119,6 +119,9 @@ class Msvc(Package, CompilerPackage):
 
         env.set("CC", self.cc)
         env.set("CXX", self.cxx)
+        if self.fortran:
+            env.set("FC", self.fortran)
+            env.set("F77", self.fortran)
 
     def init_msvc(self):
         # To use the MSVC compilers, VCVARS must be invoked

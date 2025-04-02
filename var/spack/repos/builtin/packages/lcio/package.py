@@ -48,9 +48,6 @@ class Lcio(CMakePackage):
     version("2.13.2", sha256="9f153ba13e56ee16795378f9192678d40df1faca51d00aaa8fb80547bfecb8d8")
     version("2.13.1", sha256="aa572e2ba38c0cadd6a92fa933c3ed97e21d016c7982578d3f293901169f4ec0")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant(
         "cxxstd",
         default="17",
@@ -68,6 +65,9 @@ class Lcio(CMakePackage):
     variant("jar", default=False, description="Turn on to build/install lcio.jar")
     variant("rootdict", default=True, description="Turn on to build/install ROOT dictionary.")
     variant("examples", default=False, description="Turn on to build LCIO examples")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("sio@0.0.2:", when="@2.14:")
     depends_on("sio@0.1:", when="@2.16:")

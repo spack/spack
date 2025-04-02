@@ -61,13 +61,13 @@ class PyPyside2(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "doc",
         default=False,
         description="Enables the generation of html and man page documentation",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     # see https://wiki.qt.io/Qt_for_Python#Python_compatibility_matrix
     depends_on("python@2.7.0:2.7,3.5.0:3.5,3.6.1:3.8", when="@:5.15.0", type=("build", "run"))

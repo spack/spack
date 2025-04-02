@@ -12,8 +12,8 @@ from spack.package import *
 class RocmOpencl(CMakePackage):
     """OpenCL: Open Computing Language on ROCclr"""
 
-    homepage = "https://github.com/ROCm/ROCm-OpenCL-Runtime"
-    git = "https://github.com/ROCm/ROCm-OpenCL-Runtime.git"
+    homepage = "https://github.com/ROCm/clr"
+    git = "https://github.com/ROCm/clr.git"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")

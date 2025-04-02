@@ -1409,27 +1409,29 @@ that executables will run without the need to set ``LD_LIBRARY_PATH``.
 
 .. code-block:: yaml
 
-  compilers:
-    - compiler:
-        spec: gcc@4.9.3
-        paths:
-          cc: /opt/gcc/bin/gcc
-          c++: /opt/gcc/bin/g++
-          f77: /opt/gcc/bin/gfortran
-          fc: /opt/gcc/bin/gfortran
-        environment:
-          unset:
-            - BAD_VARIABLE
-          set:
-            GOOD_VARIABLE_NUM: 1
-            GOOD_VARIABLE_STR: good
-          prepend_path:
-            PATH: /path/to/binutils
-          append_path:
-            LD_LIBRARY_PATH: /opt/gcc/lib
-        extra_rpaths:
-        - /path/to/some/compiler/runtime/directory
-        - /path/to/some/other/compiler/runtime/directory
+  packages:
+    gcc:
+      externals:
+      - spec: gcc@4.9.3
+        prefix: /opt/gcc
+        extra_attributes:
+          compilers:
+            c: /opt/gcc/bin/gcc
+            cxx: /opt/gcc/bin/g++
+            fortran: /opt/gcc/bin/gfortran
+          environment:
+            unset:
+              - BAD_VARIABLE
+            set:
+              GOOD_VARIABLE_NUM: 1
+              GOOD_VARIABLE_STR: good
+            prepend_path:
+              PATH: /path/to/binutils
+            append_path:
+              LD_LIBRARY_PATH: /opt/gcc/lib
+          extra_rpaths:
+          - /path/to/some/compiler/runtime/directory
+          - /path/to/some/other/compiler/runtime/directory
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^

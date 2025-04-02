@@ -39,9 +39,6 @@ class AoclLibmem(CMakePackage):
     )
     version("4.2", sha256="4ff5bd8002e94cc2029ef1aeda72e7cf944b797c7f07383656caa93bcb447569")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("logging", default=False, description="Enable/Disable logger")
     variant("tunables", default=False, description="Enable/Disable user input")
     variant("shared", default=True, description="build shared library")
@@ -59,6 +56,9 @@ class AoclLibmem(CMakePackage):
         sha256="43453a83f322de7c89264439b2e9cbde855e50f550e13ebc884d13d959002092",
         when="@5.0",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.22:", type="build")
 

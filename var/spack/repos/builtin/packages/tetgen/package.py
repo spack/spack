@@ -41,9 +41,6 @@ class Tetgen(Package):
         url="http://www.tetgen.org/files/tetgen1.4.3.tar.gz",
     )
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("gmake", type="build")
-
     variant("pic", default=True, description="Builds the library in pic mode.")
     variant("debug", default=False, description="Builds the library in debug mode.")
     variant(
@@ -54,6 +51,9 @@ class Tetgen(Package):
     )
 
     patch("tetgen-1.5.0-free.patch", when="@1.5.0")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("gmake", type="build")
 
     def patch(self):
         cflags = "-g -O0" if "+debug" in self.spec else "-g0 -O3"

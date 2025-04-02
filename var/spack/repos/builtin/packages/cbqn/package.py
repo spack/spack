@@ -26,8 +26,6 @@ class Cbqn(MakefilePackage):
     version("develop", branch="develop")
     version("0.7.0", tag="v0.7.0")
 
-    depends_on("c", type="build")
-
     variant("repl", default=True, description="Enable built-in REPL")
     variant("ffi", default=True, description="Enable FFI support")
     variant(
@@ -37,6 +35,8 @@ class Cbqn(MakefilePackage):
         multi=False,
         description="Make target to use.",
     )
+
+    depends_on("c", type="build")
 
     depends_on("cxx", when="+repl", type="build")
     depends_on("libffi", when="+ffi")
