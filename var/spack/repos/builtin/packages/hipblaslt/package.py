@@ -28,10 +28,6 @@ class Hipblaslt(CMakePackage):
     version("6.0.2", sha256="e281a1a7760fab8c3e0baafe17950cf43c422184e3226e3c14eb06e50c69d421")
     version("6.0.0", sha256="6451b6fdf7f24787628190bbe8f2208c929546b68b692d8355d2f18bea7ca7db")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("cmake@3.25.2:", type="build", when="@6.2.0:")
-
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant(
@@ -41,6 +37,11 @@ class Hipblaslt(CMakePackage):
         sticky=True,
     )
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("cmake@3.25.2:", type="build", when="@6.2.0:")
+
     for ver in [
         "6.0.0",
         "6.0.2",

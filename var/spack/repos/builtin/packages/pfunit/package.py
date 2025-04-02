@@ -78,9 +78,6 @@ class Pfunit(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("fortran", type="build")
-
     variant("mpi", default=False, description="Enable MPI")
     variant(
         "use_comm_world",
@@ -110,6 +107,9 @@ class Pfunit(CMakePackage):
         description="The build type to build",
         values=("Debug", "Release"),
     )
+
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("doxygen", type="build", when="+docs")
 

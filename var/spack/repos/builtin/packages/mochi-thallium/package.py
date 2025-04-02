@@ -57,8 +57,6 @@ class MochiThallium(CMakePackage):
     version("0.3.1", sha256="61403b1ba5f4d205408e6a7e04c785df6dea02f59fe9fa1742db05aa752cc8a0")
     version("0.3", sha256="4f9f78e52c1725f6ea5f933d7548bde36729dd9eff08f58fe7fe40682bc5f748")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "cereal",
         default=True,
@@ -66,6 +64,8 @@ class MochiThallium(CMakePackage):
         when="@0.4.1:",
     )
     conflicts("~cereal", when="@0.14.0:", msg="Thallium 0.14.0 and above requires Cereal")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type=("build"))
     depends_on("mochi-margo@0.18.0:", when="@0.14.0:")

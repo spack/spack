@@ -37,8 +37,6 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")
-
     # Allowed C++ standard
     variant(
         "cxxstd",
@@ -63,6 +61,8 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         deflt, descr = kokkos_backends[backend]
         variant(backend.lower(), default=deflt, description=descr)
     variant("trilinos", default=False, when="@:1.5", description="use Kokkos from Trilinos")
+
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.12:", type="build")
     depends_on("cmake@3.16:", type="build", when="@1.0:")

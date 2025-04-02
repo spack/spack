@@ -68,10 +68,6 @@ class Scorep(AutotoolsPackage):
         deprecated="true",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     def url_for_version(self, version):
         if version < Version("7.0"):
             return "https://www.vi-hps.org/cms/upload/packages/scorep/scorep-{0}.tar.gz".format(
@@ -101,6 +97,10 @@ class Scorep(AutotoolsPackage):
     # Dependencies for SCORE-P are quite tight. See the homepage for more
     # information. Starting with scorep 4.0 / cube 4.4, Score-P only depends on
     # two components of cube -- cubew and cubelib.
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # SCOREP 8
     depends_on("binutils", type="link", when="@8:")
@@ -213,15 +213,17 @@ class Scorep(AutotoolsPackage):
         # If autodetection fails for +shmem with one of these available to spack, please add
         # a "if spec.satisfies():" clause for said package.
 
-        if spec.satisfies("^intel-mpi") or spec.satisfies("^intel-oneapi-mpi"):
+        if spec.satisfies("^[virtuals=mpi] intel-oneapi-mpi"):
             config_args.append("--with-mpi=intel3")
         elif (
-            spec.satisfies("^mpich")
-            or spec.satisfies("^mvapich2")
-            or spec.satisfies("^cray-mpich")
+            spec.satisfies("^[virtuals=mpi] mpich")
+            or spec.satisfies("^[virtuals=mpi] mvapich2")
+            or spec.satisfies("^[virtuals=mpi] cray-mpich")
         ):
             config_args.append("--with-mpi=mpich3")
-        elif spec.satisfies("^openmpi") or spec.satisfies("^hpcx-mpi"):
+        elif spec.satisfies("^[virtuals=mpi] openmpi") or spec.satisfies(
+            "^[virtuals=mpi] hpcx-mpi"
+        ):
             config_args.append("--with-mpi=openmpi")
         elif "~mpi" in spec:
             config_args.append("--without-mpi")

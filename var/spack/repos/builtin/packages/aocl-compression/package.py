@@ -49,9 +49,6 @@ class AoclCompression(CMakePackage):
     )
     version("4.2", sha256="a18b3e7f64a8105c1500dda7b4c343e974b5e26bfe3dd838a1c1acf82a969c6f")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Build shared library")
     variant("zlib", default=True, description="Build zlib library")
     variant("bzip2", default=True, description="Build bzip2 library")
@@ -73,6 +70,9 @@ class AoclCompression(CMakePackage):
         multi=False,
     )
     variant("enable_fast_math", default=False, description="Enable fast-math optimizations")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.22:", type="build")
 

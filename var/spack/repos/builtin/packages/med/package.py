@@ -42,16 +42,16 @@ class Med(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("api23", default=True, description="Enable API2.3")
     variant("mpi", default=True, description="Enable MPI")
     variant("shared", default=False, description="Builds a shared version of the library")
     variant("fortran", default=False, description="Enable Fortran support")
     variant("doc", default=False, description="Install documentation")
     variant("python", default=False, description="Build Python bindings")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("hdf5@:1.8.22", when="@3.2.0")
     depends_on("hdf5@1.10.2:1.10.7", when="@4")

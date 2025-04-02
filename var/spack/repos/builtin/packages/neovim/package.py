@@ -79,13 +79,13 @@ class Neovim(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-
     variant(
         "no_luajit",
         default=False,
         description="use lua rather than luajit as lua language provider",
     )
+
+    depends_on("c", type="build")  # generated
 
     # depend on virtual, lua-luajit-openresty preferred
     depends_on("lua-lang")

@@ -43,9 +43,6 @@ class Rocfft(CMakePackage):
         version("5.3.3", sha256="678c18710578c1fb36a0009311bb79de7607c3468f9102cfba56a866ebb7ff78")
         version("5.3.0", sha256="d655c5541c4aff4267e80e36d002fc3a55c2f84a0ae8631197c12af3bf03fa7d")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant(
@@ -65,6 +62,9 @@ class Rocfft(CMakePackage):
     conflicts("+asan", when="os=rhel9")
     conflicts("+asan", when="os=centos7")
     conflicts("+asan", when="os=centos8")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.16:", type="build")
     depends_on("python@3.6:", type="build")

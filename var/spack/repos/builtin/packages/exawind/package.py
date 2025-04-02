@@ -28,13 +28,13 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
         "1.0.0", tag="v1.0.0", commit="85718893d2510c8a2e8c8e94c768ce6a67f94703", submodules=True
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("amr_wind_gpu", default=False, description="Enable AMR-Wind on the GPU")
     variant("nalu_wind_gpu", default=False, description="Enable Nalu-Wind on the GPU")
     variant("sycl", default=False, description="Enable SYCL backend for AMR-Wind")
     variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on(

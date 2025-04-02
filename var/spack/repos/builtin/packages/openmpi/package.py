@@ -44,10 +44,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     # Current
     version(
-        "5.0.6", sha256="bd4183fcbc43477c254799b429df1a6e576c042e74a2d2f8b37d537b2ff98157"
-    )  # libmpi.so.40.40.6
+        "5.0.7", sha256="119f2009936a403334d0df3c0d74d5595a32d99497f9b1d41e90019fee2fc2dd"
+    )  # libmpi.so.40.40.7
 
     # Still supported
+    version(
+        "5.0.6", sha256="bd4183fcbc43477c254799b429df1a6e576c042e74a2d2f8b37d537b2ff98157"
+    )  # libmpi.so.40.40.6
     version(
         "5.0.5", sha256="6588d57c0a4bd299a24103f4e196051b29e8b55fbda49e11d5b3d32030a32776"
     )  # libmpi.so.40.40.5
@@ -403,10 +406,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         "1.0", sha256="cf75e56852caebe90231d295806ac3441f37dc6d9ad17b1381791ebb78e21564"
     )  # libmpi.so.0.0.0
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     patch("ad_lustre_rwcontig_open_source.patch", when="@1.6.5")
     patch("llnl-platforms.patch", when="@1.6.5")
     patch("configure.patch", when="@1.10.1")
@@ -555,6 +554,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         when="@1.3:4",
         description="Prefix Open MPI to PATH and LD_LIBRARY_PATH on local and remote hosts",
     )
+    variant("ipv6", default=False, when="@4:", description="Enable IPv6 support")
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -604,6 +604,10 @@ with '-Wl,-commons,use_dylibs' and without
     provides("mpi@:2.2", when="@1.7.3:1.7.4")
     provides("mpi@:3.0", when="@1.7.5:1.10.7")
     provides("mpi@:3.1", when="@2.0.0:")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     if sys.platform != "darwin":
         depends_on("numactl")
@@ -1061,6 +1065,10 @@ with '-Wl,-commons,use_dylibs' and without
         # For v4 and lower
         if spec.satisfies("+orterunprefix"):
             config_args.append("--enable-orterun-prefix-by-default")
+
+        # Enable IPv6 support
+        if spec.satisfies("+ipv6"):
+            config_args.append("--enable-ipv6")
 
         # some scientific packages ignore deprecated/remove symbols. Re-enable
         # them for now, for discussion see

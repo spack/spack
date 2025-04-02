@@ -83,3 +83,12 @@ def tests_compiler_conversion_modules(mock_compiler):
     compiler_spec = CompilerFactory.from_legacy_yaml(mock_compiler)[0]
     assert compiler_spec.external
     assert compiler_spec.external_modules == modules
+
+
+@pytest.mark.regression("49717")
+def tests_compiler_conversion_corrupted_paths(mock_compiler):
+    """Tests that compiler entries with corrupted path do not raise"""
+    mock_compiler["paths"] = {"cc": "gcc", "cxx": "g++", "fc": "gfortran", "f77": "gfortran"}
+    # Test this call doesn't raise
+    compiler_spec = CompilerFactory.from_legacy_yaml(mock_compiler)
+    assert compiler_spec == []

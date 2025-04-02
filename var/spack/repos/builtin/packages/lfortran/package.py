@@ -25,12 +25,12 @@ class Lfortran(CMakePackage):
         url="https://lfortran.github.io/tarballs/release/lfortran-0.19.0.tar.gz",
     )
 
+    variant("llvm", default=True, description="Build with LLVM support")
+    variant("stacktrace", default=True, description="Build with stacktrace support")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("llvm", default=True, description="Build with LLVM support")
-    variant("stacktrace", default=True, description="Build with stacktrace support")
 
     depends_on("python@3:", type="build", when="@main")
     depends_on("cmake", type="build")

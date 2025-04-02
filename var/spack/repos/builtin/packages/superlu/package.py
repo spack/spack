@@ -41,10 +41,6 @@ class Superlu(CMakePackage, Package):
             url="https://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_4.2.tar.gz",
         )
 
-    depends_on("c", type="build")
-    depends_on("fortran", type="build", when="+fortran")
-    depends_on("metis", when="@6:")
-
     build_system(
         conditional("cmake", when="@5:"), conditional("generic", when="@:4"), default="cmake"
     )
@@ -53,6 +49,10 @@ class Superlu(CMakePackage, Package):
 
     variant("pic", default=True, description="Build with position independent code")
     variant("fortran", default=True, description="Build fortran interface")
+
+    depends_on("c", type="build")
+    depends_on("fortran", type="build", when="+fortran")
+    depends_on("metis", when="@6:")
 
     depends_on("blas")
     conflicts(

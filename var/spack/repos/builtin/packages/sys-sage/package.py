@@ -21,8 +21,6 @@ class SysSage(CMakePackage):
     version("master", branch="master")
     version("develop", branch="develop")
 
-    depends_on("cxx", type="build")  # generated
-
     conflicts("%gcc@:7", msg="gcc can be used from version 8 and above")
 
     variant(
@@ -56,6 +54,8 @@ class SysSage(CMakePackage):
         description="builds the caps-numa-benchmark. If turned on, includes Linux-specific "
         "libraries.",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.22:", type="build")
     depends_on("libxml2@2.9.13:")

@@ -42,9 +42,9 @@ class Libxkbcommon(MesonPackage, AutotoolsPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-
     variant("wayland", default=False, description="Enable Wayland support")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("meson@0.41:", type="build", when="@0.9:")
     depends_on("meson@0.49:", type="build", when="@1.0:")

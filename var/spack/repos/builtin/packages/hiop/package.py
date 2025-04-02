@@ -72,10 +72,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
     version("develop", branch="develop")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("jsrun", default=False, description="Enable/Disable jsrun command for testing")
     variant("shared", default=False, description="Enable/Disable shared libraries")
     variant("mpi", default=True, description="Enable/Disable MPI")
@@ -94,6 +90,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         when="+cuda @0.7.1:",
         description="Enable/disable cuSovler LU refactorization",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("lapack")
     depends_on("blas")
     depends_on("cmake@3.18:", type="build")

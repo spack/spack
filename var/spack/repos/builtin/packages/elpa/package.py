@@ -54,10 +54,6 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         "2021.05.001", sha256="a4f1a4e3964f2473a5f8177f2091a9da5c6b5ef9280b8272dfefcbc3aad44d41"
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("openmp", default=True, description="Activates OpenMP support")
     variant("mpi", default=True, description="Activates MPI support")
 
@@ -77,6 +73,10 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
         when="@:2025.01.001",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("autoconf@2.71:", type="build", when="@master")
     depends_on("automake", type="build", when="@master")
 
@@ -93,13 +93,8 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     # https://gitlab.mpcdf.mpg.de/elpa/elpa/-/blob/master/documentation/PERFORMANCE_TUNING.md?ref_type=heads#builds-with-openmp-enabled
     with when("+openmp"):
         requires("^openblas threads=openmp", when="^[virtuals=blas,lapack] openblas")
-        requires("^intel-mkl threads=openmp", when="^[virtuals=blas,lapack] intel-mkl")
         requires(
             "^intel-oneapi-mkl threads=openmp", when="^[virtuals=blas,lapack] intel-oneapi-mkl"
-        )
-        requires(
-            "^intel-parallel-studio threads=openmp",
-            when="^[virtuals=blas,lapack] intel-parallel-studio",
         )
 
     # fails to build due to broken type-bound procedures in OMP parallel regions

@@ -66,10 +66,6 @@ class Starpu(AutotoolsPackage):
     version("git-1.3", branch="starpu-1.3")
     version("git-1.4", branch="starpu-1.4")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("shared", default=True, description="Build STARPU as a shared library")
     variant("fast", default=True, description="Disable runtime assertions")
     variant("debug", default=False, description="Enable debug symbols")
@@ -85,6 +81,10 @@ class Starpu(AutotoolsPackage):
     variant("examples", default=True, description="Enable Examples")
     variant("papi", default=False, description="Enable PAPI support", when="@master:")
     variant("blocking", default=False, description="Enable blocking drivers support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
     depends_on("autoconf", type="build")

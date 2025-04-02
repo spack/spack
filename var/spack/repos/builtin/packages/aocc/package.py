@@ -58,13 +58,13 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
         url="https://download.amd.com/developer/eula/aocc-compiler/aocc-compiler-3.2.0.tar",
     )
 
-    depends_on("c", type="build")  # generated
-
     provides("c", "cxx")
     provides("fortran")
 
     # Licensing
     license_url = "https://www.amd.com/en/developer/aocc/aocc-compiler/eula.html"
+
+    depends_on("c", type="build")  # generated
 
     depends_on("libxml2")
     depends_on("zlib-api")

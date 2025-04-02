@@ -48,8 +48,6 @@ class Alpaka(CMakePackage, CudaPackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "backend",
         multi=True,
@@ -72,6 +70,8 @@ class Alpaka(CMakePackage, CudaPackage):
     )
 
     variant("examples", default=False, description="Build alpaka examples")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("boost@1.65.1:", when="@0.4.0:0.8.0")
     depends_on("boost@1.74:", when="@0.9.0:")

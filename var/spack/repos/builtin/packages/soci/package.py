@@ -27,8 +27,6 @@ class Soci(CMakePackage):
         url="https://github.com/SOCI/soci/archive/3.2.2.tar.gz",
     )
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "cxxstd",
         default=11,
@@ -41,6 +39,8 @@ class Soci(CMakePackage):
     variant("boost", default=False, description="Build with Boost support")
     variant("sqlite", default=False, description="Build with SQLite support")
     variant("postgresql", default=False, description="Build with PostgreSQL support")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("boost", when="+boost")
     depends_on("sqlite", when="+sqlite")
