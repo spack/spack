@@ -24,9 +24,9 @@ class Libxsmm(MakefilePackage):
     # 2.0 release is planned for Jan / Feb 2024. This commit from main is added
     # as a stable version that supports other targets than x86. Remove this
     # after 2.0 release.
+    version("main", branch="main")
     version("main-2024-09", commit="e0c4a2389afba36c453233ad7de07bd92c715bec")
     version("main-2023-11", commit="0d9be905527ba575c14ca5d3b4c9673916c868b2")
-    version("main", branch="main")
     version("1.17-cp2k", commit="6f883620f58afdeebab28039fc9cf580e76a5ec6")
     version(
         "1.17",
