@@ -3834,7 +3834,7 @@ class SpecBuilder:
         provider_spec = self._specs[provider_node]
         dependencies = [x for x in dependencies if id(x.spec) == id(provider_spec)]
         assert len(dependencies) == 1, f"{virtual}: {provider_node.pkg}"
-        dependencies[0].update_virtuals((virtual,))
+        dependencies[0].update_virtuals(virtual)
 
     def reorder_flags(self):
         """For each spec, determine the order of compiler flags applied to it.
