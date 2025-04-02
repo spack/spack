@@ -42,7 +42,7 @@ class Nektools(Package):
     # Variant for MAXNEL, we need to read this from user
     variant(
         "MAXNEL",
-        default=150000,
+        default="150000",
         description="Maximum number of elements for Nek5000 tools.",
         values=is_integral,
     )

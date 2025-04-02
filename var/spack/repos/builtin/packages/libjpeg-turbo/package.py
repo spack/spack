@@ -68,7 +68,7 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
 
     variant(
         "libs",
-        default=("shared", "static"),
+        default="shared,static",
         values=("shared", "static"),
         multi=True,
         description="Build shared libs, static libs, or both",

@@ -37,7 +37,7 @@ class Ip(CMakePackage):
     variant("shared", default=False, description="Build shared library", when="@4.1:")
     variant(
         "precision",
-        default=("4", "d"),
+        default="4,d",
         values=("4", "d"),
         multi=True,
         description="Set precision (_4/_d library versions)",
@@ -45,7 +45,7 @@ class Ip(CMakePackage):
     )
     variant(
         "precision",
-        default=("4", "d"),
+        default="4,d",
         values=("4", "d", "8"),
         multi=True,
         description="Set precision (_4/_d/_8 library versions)",

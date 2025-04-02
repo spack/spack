@@ -34,11 +34,13 @@ import collections
 import collections.abc
 import os
 import re
+import warnings
 from typing import Any, Callable, List, Optional, Tuple, Type, Union
 
 import llnl.util.tty.color
 
 import spack.deptypes as dt
+import spack.error
 import spack.fetch_strategy
 import spack.package_base
 import spack.patch
@@ -620,7 +622,7 @@ def conditional(*values: List[Any], when: Optional[WhenType] = None):
 @directive("variants")
 def variant(
     name: str,
-    default: Optional[Any] = None,
+    default: Optional[Union[bool, str]] = None,
     description: str = "",
     values: Optional[Union[collections.abc.Sequence, Callable[[Any], bool]]] = None,
     multi: Optional[bool] = None,
@@ -649,6 +651,18 @@ def variant(
     Raises:
         DirectiveError: If arguments passed to the directive are invalid
     """
+
+    if default is not None and not isinstance(default, (bool, str)):
+        if isinstance(default, (list, tuple)):
+            did_you_mean = f"default={','.join(str(x) for x in default)!r}"
+        else:
+            did_you_mean = f"default={str(default)!r}"
+        warnings.warn(
+            f"default value for variant '{name}' is not a boolean or string: default={default!r}. "
+            f"Did you mean {did_you_mean}?",
+            stacklevel=3,
+            category=spack.error.SpackAPIWarning,
+        )
 
     def format_error(msg, pkg):
         msg += " @*r{{[{0}, variant '{1}']}}"

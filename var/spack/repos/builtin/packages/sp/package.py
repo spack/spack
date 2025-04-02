@@ -26,7 +26,7 @@ class Sp(CMakePackage):
     variant("pic", default=False, description="Enable position-independent code (PIC)")
     variant(
         "precision",
-        default=("4", "d"),
+        default="4,d",
         values=("4", "d", "8"),
         multi=True,
         description="Library versions: 4=4-byte reals, d=8-byte reals, 8=8-byte ints and reals",

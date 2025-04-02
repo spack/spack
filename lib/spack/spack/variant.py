@@ -64,7 +64,7 @@ class Variant:
     """
 
     name: str
-    default: Any
+    default: Union[bool, str]
     description: str
     values: Optional[Collection]  #: if None, valid values are defined only by validators
     multi: bool
@@ -77,7 +77,7 @@ class Variant:
         self,
         name: str,
         *,
-        default: Any,
+        default: Union[bool, str],
         description: str,
         values: Union[Collection, Callable] = (True, False),
         multi: bool = False,
@@ -200,7 +200,7 @@ class Variant:
         """
         return self.make_variant(self.default)
 
-    def make_variant(self, value) -> "AbstractVariant":
+    def make_variant(self, value: Union[str, bool]) -> "AbstractVariant":
         """Factory that creates a variant holding the value passed as
         a parameter.
 
@@ -298,7 +298,7 @@ class AbstractVariant:
     _value: ValueType
     _original_value: Any
 
-    def __init__(self, name: str, value: Any, propagate: bool = False):
+    def __init__(self, name: str, value: ValueType, propagate: bool = False) -> None:
         self.name = name
         self.propagate = propagate
 
