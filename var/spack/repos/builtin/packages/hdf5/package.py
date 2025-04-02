@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import sys
+import time
 
 import llnl.util.lang
 
@@ -741,6 +742,7 @@ int main(int argc, char **argv) {{
 
         expected = f"HDF5 version {self._output_version} {self._output_version}\n"
 
+        time.sleep(360)
         with working_dir(checkdir, create=True):
             with open(prog, "w") as f:
                 f.write(source.format(fmt, arg_line1, arg_line2))
