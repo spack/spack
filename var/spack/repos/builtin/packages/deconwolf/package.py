@@ -10,8 +10,8 @@ class Deconwolf(CMakePackage):
     """deconwolf is a software for 3-D deconvolution of fluorescent wide-field images."""
 
     homepage = "https://deconwolf.fht.org/"
-    git = "https://github.com/elgw/deconwolf.git"
     url = "https://github.com/elgw/deconwolf/archive/refs/tags/v0.4.5.tar.gz"
+    git = "https://github.com/elgw/deconwolf.git"
 
     maintainers("dacolombo")
 
