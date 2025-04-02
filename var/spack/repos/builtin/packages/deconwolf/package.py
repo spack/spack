@@ -17,7 +17,7 @@ class Deconwolf(CMakePackage):
 
     license("GPL-3.0-only")
 
-    version("0.4.5", tag="v0.4.5")
+    version("0.4.5", tag="v0.4.5", commit="ca062c49eedd6bf60fcd9804df467e64cfc3c113")
 
     patch(
         "https://github.com/elgw/deconwolf/commit/c5f28dd3d6ef532b6963127e551da1d7b4f33f83.patch?full_index=1",
