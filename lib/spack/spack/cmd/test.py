@@ -65,6 +65,12 @@ def setup_parser(subparser):
     run_parser.add_argument(
         "--help-cdash", action="store_true", help="show usage instructions for CDash reporting"
     )
+    run_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=None,
+        help="maximum allotted time (in seconds) for the tests to run",
+    )
 
     cd_group = run_parser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ["clean", "dirty"])
@@ -204,6 +210,7 @@ def test_run(args):
             dirty=args.dirty,
             fail_first=args.fail_first,
             externals=args.externals,
+            timeout=args.timeout,
         )
 
 

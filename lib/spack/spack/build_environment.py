@@ -39,6 +39,7 @@ import re
 import sys
 import traceback
 import types
+import warnings
 from collections import defaultdict
 from enum import Flag, auto
 from itertools import chain
@@ -1218,7 +1219,7 @@ def _setup_pkg_and_run(
             input_pipe.close()
 
 
-def start_build_process(pkg, function, kwargs):
+def start_build_process(pkg, function, kwargs, *, timeout: Optional[int] = None):
     """Create a child process to do part of a spack build.
 
     Args:
@@ -1254,8 +1255,8 @@ def start_build_process(pkg, function, kwargs):
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin, "fileno"):
             input_fd = Connection(os.dup(sys.stdin.fileno()))
-        mflags = os.environ.get("MAKEFLAGS", False)
-        if mflags:
+        mflags = os.environ.get("MAKEFLAGS", None)
+        if mflags is not None:
             m = re.search(r"--jobserver-[^=]*=(\d),(\d)", mflags)
             if m:
                 jobserver_fd1 = Connection(int(m.group(1)))
@@ -1295,13 +1296,16 @@ def start_build_process(pkg, function, kwargs):
         typ = "exit" if p.exitcode >= 0 else "signal"
         return f"{typ} {abs(p.exitcode)}"
 
+    p.join(timeout=timeout)
+    if p.is_alive():
+        warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
+        p.terminate()
+        p.join()  # Ensure the process has fully stopped
+
     try:
         child_result = read_pipe.recv()
     except EOFError:
-        p.join()
         raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(p)})")
-
-    p.join()
 
     # If returns a StopPhase, raise it
     if isinstance(child_result, spack.error.StopPhase):

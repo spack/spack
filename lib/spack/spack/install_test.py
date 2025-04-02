@@ -391,7 +391,7 @@ class PackageTest:
             if self.test_failures:
                 raise TestFailure(self.test_failures)
 
-    def stand_alone_tests(self, kwargs):
+    def stand_alone_tests(self, kwargs, timeout: Optional[int] = None) -> None:
         """Run the package's stand-alone tests.
 
         Args:
@@ -399,7 +399,9 @@ class PackageTest:
         """
         import spack.build_environment  # avoid circular dependency
 
-        spack.build_environment.start_build_process(self.pkg, test_process, kwargs)
+        spack.build_environment.start_build_process(
+            self.pkg, test_process, kwargs, timeout=timeout
+        )
 
     def parts(self) -> int:
         """The total number of (checked) test parts."""
@@ -884,6 +886,7 @@ class TestSuite:
         dirty: bool = False,
         fail_first: bool = False,
         externals: bool = False,
+        timeout: Optional[int] = None,
     ):
         self.write_reproducibility_data()
         for spec in self.specs:
@@ -905,7 +908,7 @@ class TestSuite:
                 fs.mkdirp(test_dir)
 
                 # run the package tests
-                spec.package.do_test(dirty=dirty, externals=externals)
+                spec.package.do_test(dirty=dirty, externals=externals, timeout=timeout)
 
                 # Clean up on success
                 if remove_directory:
