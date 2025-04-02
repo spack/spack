@@ -82,7 +82,7 @@ class BlisBase(MakefilePackage):
 
     def edit(self, spec, prefix):
         # To ensure auto should always be the last argument for base and derived class
-        config_args = self.configure_args() + ["auto"]
+        config_args = self.configure_args() + ["generic"]
         configure("--prefix={0}".format(prefix), *config_args)
 
     @run_after("install")
