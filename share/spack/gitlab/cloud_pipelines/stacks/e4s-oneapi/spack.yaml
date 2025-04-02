@@ -131,7 +131,6 @@ spack:
   - pruners-ninja
   - pumi
   - py-h5py
-  - py-jupyterhub
   - py-libensemble
   - py-petsc4py
   - qthreads scheduler=distrib
@@ -193,6 +192,7 @@ spack:
   # - nek5000 +mpi ~visit           # nek5000-19.0: RuntimeError: Cannot build example: short_tests/eddy.
   # - plasma                        # concretizer: requires("%gcc@4.9:", when="@17.1:")
   # - py-deephyper                  # py-numpy-1.25.2: numpy/distutils/checks/cpu_avx512_knl.c:21:37: error: call to undeclared function '_mm512_exp2a23_pd'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+  # - py-jupyterhub                 # py-maturin: rust-lld: error: undefined symbol: _intel_fast_memcpy
   # - warpx ~qed +python ~python_ipo compute=sycl ^py-amrex ~ipo # warpx-25.03: https://github.com/spack/spack/issues/49620
   # - wps                           # wps-4.5: InstallError: Compiler not recognized nor supported.
 
