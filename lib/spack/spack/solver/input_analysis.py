@@ -18,8 +18,6 @@ import spack.spec
 import spack.store
 from spack.error import SpackError
 
-RUNTIME_TAG = "runtime"
-
 
 class PossibleGraph(NamedTuple):
     real_pkgs: Set[str]
@@ -50,7 +48,8 @@ class PossibleDependencyGraph:
     ) -> PossibleGraph:
         """Returns the set of possible dependencies, and the set of possible virtuals.
 
-        Both sets always include runtime packages, which may be injected by compilers.
+        Runtime packages, which may be injected by compilers, needs to be added to specs if
+        the dependency is not explicit in the package.py recipe.
 
         Args:
             transitive: return transitive dependencies if True, only direct dependencies if False
@@ -70,14 +69,9 @@ class NoStaticAnalysis(PossibleDependencyGraph):
     def __init__(self, *, configuration: spack.config.Configuration, repo: spack.repo.RepoPath):
         self.configuration = configuration
         self.repo = repo
-        self.runtime_pkgs = set(self.repo.packages_with_tags(RUNTIME_TAG))
-        self.runtime_virtuals = set()
         self._platform_condition = spack.spec.Spec(
             f"platform={spack.platforms.host()} target={archspec.cpu.host().family}:"
         )
-        for x in self.runtime_pkgs:
-            pkg_class = self.repo.get_pkg_class(x)
-            self.runtime_virtuals.update(pkg_class.provided_virtual_names())
 
         try:
             self.libc_pkgs = [x.name for x in self.providers_for("libc")]
@@ -214,8 +208,6 @@ class NoStaticAnalysis(PossibleDependencyGraph):
             for root, children in edges.items():
                 real_packages.update(x for x in children if self._is_possible(pkg_name=x))
 
-        virtuals.update(self.runtime_virtuals)
-        real_packages = real_packages | self.runtime_pkgs
         return PossibleGraph(real_pkgs=real_packages, virtuals=virtuals, edges=edges)
 
     def _package_list(self, specs: Tuple[Union[spack.spec.Spec, str], ...]) -> List[str]:
@@ -470,7 +462,7 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
             gen.fact(fn.max_dupes(package_name, 1))
         gen.newline()
 
-        gen.h2("Packages with at multiple possible nodes (build-tools)")
+        gen.h2("Packages with multiple possible nodes (build-tools)")
         default = spack.config.CONFIG.get("concretizer:duplicates:max_dupes:default", 2)
         for package_name in sorted(self.possible_dependencies() & build_tools):
             max_dupes = spack.config.CONFIG.get(
