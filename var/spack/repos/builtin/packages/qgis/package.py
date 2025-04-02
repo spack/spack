@@ -64,9 +64,6 @@ class Qgis(CMakePackage):
     version("3.4.15", sha256="81c93b72adbea41bd765294c0cdb09476a632d8b3f90101abc409ca9ea7fb04d")
     version("3.4.14", sha256="e138716c7ea84011d3b28fb9c75e6a79322fb66f532246393571906a595d7261")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("3d", default=False, description="Build QGIS 3D library")
     variant("analysis", default=True, description="Build QGIS analysis library")
     variant("apidoc", default=False, description="Build QGIS API doxygen documentation")
@@ -115,6 +112,9 @@ class Qgis(CMakePackage):
     )
     variant("thread_local", default=True, description="Use std::thread_local")
     variant("txt2tags", default=False, description="Generate PDF for txt2tags documentation")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Ref. for dependencies:
     # https://github.com/qgis/QGIS/blob/master/INSTALL.md
@@ -198,7 +198,7 @@ class Qgis(CMakePackage):
     @run_before("cmake", when="^py-pyqt5")
     def fix_pyqt5_cmake(self):
         cmfile = FileFilter(join_path("cmake", "FindPyQt5.cmake"))
-        pyqtpath = join_path(self.spec["py-pyqt5"].package.module.python_platlib, "PyQt5")
+        pyqtpath = join_path(self["py-pyqt5"].module.python_platlib, "PyQt5")
         cmfile.filter(
             'SET(PYQT5_MOD_DIR "${Python_SITEARCH}/PyQt5")',
             'SET(PYQT5_MOD_DIR "' + pyqtpath + '")',

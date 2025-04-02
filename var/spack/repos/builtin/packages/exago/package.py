@@ -59,10 +59,6 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     )
     version("kpp2", tag="kpp2", commit="1da764d80a2db793f4c43ca50e50981f7ed3880a", submodules=True)
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Progrmming model options
     variant("mpi", default=True, description="Enable/Disable MPI")
     variant("raja", default=False, description="Enable/Disable RAJA")
@@ -95,7 +91,12 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         msg="#18 - builds with hiop and without MPI cause compile time errors",
     )
     conflicts("+python~mpi", msg="#16 - Python wrapper requires MPI enabled")
+
     # Dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("python@3.6:3.10", when="@1.3.0:1.5+python")
     depends_on("py-pytest", type=("build", "run"), when="@1.5.0:+python")
     depends_on("py-mpi4py", when="@1.3.0:+mpi+python")

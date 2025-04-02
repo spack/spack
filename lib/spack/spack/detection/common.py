@@ -224,6 +224,7 @@ def update_configuration(
             pkg_config["buildable"] = False
         pkg_to_cfg[package_name] = pkg_config
 
+    scope = scope or spack.config.default_modify_scope()
     pkgs_cfg = spack.config.get("packages", scope=scope)
     pkgs_cfg = spack.schema.merge_yaml(pkgs_cfg, pkg_to_cfg)
     spack.config.set("packages", pkgs_cfg, scope=scope)
@@ -310,7 +311,7 @@ class WindowsKitExternalPaths:
 
     @staticmethod
     def find_windows_kit_bin_paths(
-        kit_base: Union[Optional[str], Optional[list]] = None
+        kit_base: Union[Optional[str], Optional[list]] = None,
     ) -> List[str]:
         """Returns Windows kit bin directory per version"""
         kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base
@@ -325,7 +326,7 @@ class WindowsKitExternalPaths:
 
     @staticmethod
     def find_windows_kit_lib_paths(
-        kit_base: Union[Optional[str], Optional[list]] = None
+        kit_base: Union[Optional[str], Optional[list]] = None,
     ) -> List[str]:
         """Returns Windows kit lib directory per version"""
         kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base

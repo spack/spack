@@ -158,8 +158,6 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         "0.4.0", tag="v0.4.0", commit="31b2a48192542c2da426885baa5af0ed57606b78", submodules="True"
     )
 
-    depends_on("cxx", type="build")  # generated
-
     # export targets when building pre-2.4.0 release with BLT 0.4.0+
     patch(
         "https://github.com/LLNL/RAJA/commit/eca1124ee4af380d6613adc6012c307d1fd4176b.patch?full_index=1",
@@ -173,6 +171,13 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         "https://github.com/LLNL/RAJA/commit/406eb8dee05a41eb32c421c375688a4863b60642.patch?full_index=1",
         sha256="d9ce5ef038555cbccb330a9016b7be77e56ae0660583cba955dab9d0297a4b07",
         when="^hip@6.0",
+    )
+
+    # Fix compilation issue reported by Intel from their new compiler version
+    patch(
+        "https://github.com/LLNL/RAJA/pull/1668.patch?full_index=1",
+        sha256="c0548fc5220f24082fb2592d5b4e8b7c8c783b87906d5f0950d53953d25161f6",
+        when="@2024.02.1:2024.02.99 %oneapi@2025:",
     )
 
     variant("openmp", default=False, description="Build OpenMP backend")
@@ -200,6 +205,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         default=False,
         description="Run all the tests, including those known to fail.",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("blt", type="build")
     depends_on("blt@0.6.2:", type="build", when="@2024.02.1:")
@@ -288,7 +295,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super().initconfig_compiler_entries()
 
-        if spec.satisfies("+rocm"):
+        if spec.satisfies("+rocm ^blt@:0.6"):
             entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
         llnl_link_helpers(entries, spec, compiler)

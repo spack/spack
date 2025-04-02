@@ -7,8 +7,6 @@ import platform
 import re
 from glob import glob
 
-import llnl.util.tty as tty
-
 from spack.package import *
 
 # FIXME Remove hack for polymorphic versions
@@ -23,6 +21,16 @@ from spack.package import *
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    "12.8.0": {
+        "Linux-aarch64": (
+            "5bc211f00c4f544da6e3fc3a549b3eb0a7e038439f5f3de71caa688f2f6b132c",
+            "https://developer.download.nvidia.com/compute/cuda/12.8.0/local_installers/cuda_12.8.0_570.86.10_linux_sbsa.run",
+        ),
+        "Linux-x86_64": (
+            "610867dcd6d94c4e36c4924f1d01b9db28ec08164e8af6c764f21b84200695f8",
+            "https://developer.download.nvidia.com/compute/cuda/12.8.0/local_installers/cuda_12.8.0_570.86.10_linux.run",
+        ),
+    },
     "12.6.3": {
         "Linux-aarch64": (
             "213ea63a6357020978a8b0a79a8c9d12a2a5941afa1cdc69d5a3f933fa8bed04",
@@ -682,6 +690,9 @@ class Cuda(Package):
     # Mojave support -- only macOS High Sierra 10.13 is supported.
     conflicts("arch=darwin-mojave-x86_64")
 
+    # cuda-12.8 libcusolver.so requires log2f@GLIBC_2.27
+    conflicts("glibc@:2.26", when="@12.8:")
+
     variant(
         "dev", default=False, description="Enable development dependencies, i.e to use cuda-gdb"
     )
@@ -719,7 +730,8 @@ class Cuda(Package):
             env.append_path("LD_LIBRARY_PATH", libxml2_home.lib)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set("CUDAHOSTCXX", dependent_spec.package.compiler.cxx)
+        if "cxx" in dependent_spec:
+            env.set("CUDAHOSTCXX", dependent_spec["cxx"].package.cxx)
         env.set("CUDA_HOME", self.prefix)
         env.set("NVHPC_CUDA_HOME", self.prefix)
 
@@ -741,7 +753,7 @@ class Cuda(Package):
                 os.remove("/tmp/cuda-installer.log")
             except OSError:
                 if spec.satisfies("@10.1:"):
-                    tty.die(
+                    raise InstallError(
                         "The cuda installer will segfault due to the "
                         "presence of /tmp/cuda-installer.log "
                         "please remove the file and try again "

@@ -24,6 +24,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     license("MIT")
 
     version("master", branch="master")
+    version("6.3.2", sha256="5d9e662c7d67f4c814cad70476b57651df5ae6b65f371ca6dbb5aa51d9eeb6f5")
     version("6.3.1", sha256="b709df2d0115748ed004d0cddce829cb0f9ec3761eb855e61f0097cab04e4806")
     version("6.3.0", sha256="08a0c800f531247281b4dbe8de9567a6fde4f432829a451a720d0b0a3c711059")
     version("6.2.4", sha256="308b81230498b01046f7fc3299a9e9c2c5456d80fd71a94f490ad97f51ed9de8")
@@ -46,8 +47,6 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         version("5.3.3", sha256="fd1662cd5b1e1bce9db53b320c0fe614179cd196251efc2ef3365d38922b5cdc")
         version("5.3.0", sha256="ebbe2009b86b688809b6b4d5c3929fc589db455218d54a37790f21339147c5df")
 
-    depends_on("cxx", type="build")  # generated
-
     # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
@@ -65,6 +64,8 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.5:", type="build")
 
@@ -91,6 +92,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         "6.2.4",
         "6.3.0",
         "6.3.1",
+        "6.3.2",
         "master",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
@@ -117,7 +119,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec["hip"].satisfies("@5.2:"):
             args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip))
 
-        if self.spec.satisfies("@5.2.0:"):
+        if self.spec.satisfies("@5.2.0:6.3.1"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
 
         if self.spec.satisfies("@5.3.0:"):

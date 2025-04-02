@@ -17,6 +17,7 @@ class Fmt(CMakePackage):
 
     license("MIT")
 
+    version("11.1.4", sha256="49b039601196e1a765e81c5c9a05a61ed3d33f23b3961323d7322e4fe213d3e6")
     version("11.1.3", sha256="7df2fd3426b18d552840c071c977dc891efe274051d2e7c47e2c83c3918ba6df")
     version("11.1.2", sha256="ef54df1d4ba28519e31bf179f6a4fb5851d684c328ca051ce5da1b52bf8b1641")
     version("11.1.1", sha256="a25124e41c15c290b214c4dec588385153c91b47198dbacda6babce27edc4b45")
@@ -49,9 +50,6 @@ class Fmt(CMakePackage):
     version("3.0.0", sha256="1b050b66fa31b74f1d75a14f15e99e728ab79572f176a53b2f8ad7c201c30ceb")
     version("master", branch="master")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant(
         "cxxstd",
         default="11",
@@ -61,6 +59,9 @@ class Fmt(CMakePackage):
     )
     variant("shared", default=False, description="Build shared library")
     variant("pic", default=True, description="Build position-independent code")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.1.0:", type="build")
 
@@ -118,12 +119,7 @@ class Fmt(CMakePackage):
             args.append("-DBUILD_SHARED_LIBS=ON")
 
         if spec.satisfies("+pic"):
-            args.extend(
-                [
-                    "-DCMAKE_C_FLAGS={0}".format(self.compiler.cc_pic_flag),
-                    "-DCMAKE_CXX_FLAGS={0}".format(self.compiler.cxx_pic_flag),
-                ]
-            )
+            args.append(self.define("CMAKE_POSITION_INDEPENDENT_CODE", True))
 
         args.append("-DCMAKE_CXX_STANDARD={0}".format(spec.variants["cxxstd"].value))
         # Require standard at configure time to guarantee the

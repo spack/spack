@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
 
 from spack.package import *
 
@@ -30,8 +29,6 @@ class Sarus(CMakePackage):
     version("1.0.1", commit="abb8c314a196207204826f7b60e5064677687405")
     version("1.0.0", commit="d913b1d0ef3729f9f41ac5bd06dd5615c407ced4")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "ssh",
         default=False,
@@ -40,6 +37,8 @@ class Sarus(CMakePackage):
         "Requires a static version of the glibc libraries "
         "(including libcrypt) to be available on the system",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("expat", type="build")
     depends_on("squashfs", type=("build", "run"))

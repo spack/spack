@@ -48,11 +48,11 @@ class Fortrilinos(CMakePackage):
     )
     version("master", branch="master")
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("hl", default=True, description="Build high-level Trilinos wrappers")
     variant("shared", default=True, description="Build shared libraries")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Trilinos version dependencies
     depends_on("trilinos@14.0", when="@2.3")

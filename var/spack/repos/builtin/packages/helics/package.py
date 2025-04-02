@@ -22,6 +22,7 @@ class Helics(CMakePackage):
     version("develop", branch="develop", submodules=True)
     version("main", branch="main", submodules=True)
     version("master", branch="main", submodules=True)
+    version("3.6.1", sha256="d607c1b47dd5ae32f3076c4aa4aa584d37b6056a9bd049234494698ed95cd70f")
     version("3.6.0", sha256="e111ac5d92e808f27e330afd1f8b8ca4d86adf6ccd74e3280f2d40fb3e0e2ce9")
     version("3.5.3", sha256="f9ace240510b18caf642f55d08f9009a9babb203fbc032ec7d7d8aa6fd5e1553")
     version("3.5.2", sha256="c2604694698a1e33c4a68f3d1c5ab0a228ef2bfca1b0d3bae94801dbd3b11048")
@@ -49,9 +50,6 @@ class Helics(CMakePackage):
     version("2.5.0", sha256="6f4f9308ebb59d82d71cf068e0d9d66b6edfa7792d61d54f0a61bf20dd2a7428")
     version("2.4.2", sha256="957856f06ed6d622f05dfe53df7768bba8fe2336d841252f5fac8345070fa5cb")
     version("2.4.1", sha256="ac077e9efe466881ea366721cb31fb37ea0e72a881a717323ba4f3cdda338be4")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     variant("apps", default=True, description="Install the HELICS apps executables")
     variant("apps_lib", default=True, description="Install the HELICS apps library")
@@ -86,6 +84,8 @@ class Helics(CMakePackage):
     )
 
     # Build dependency
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     depends_on("git", type="build", when="@master:")
     depends_on("cmake@3.4:", type="build", when="@:2")
     depends_on("cmake@3.10:", type="build", when="@3.0.0:3.2.1")

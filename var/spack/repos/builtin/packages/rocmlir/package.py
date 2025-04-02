@@ -17,6 +17,7 @@ class Rocmlir(CMakePackage):
 
     maintainers("srekolam", "afzpatel", "renjithravindrankannath")
 
+    version("6.3.2", sha256="5911e880a66faecb08d242efa3e5eb6f8ce32cb21ea09dec36f4aef111c395fb")
     version("6.3.1", sha256="b9e0ea8cfb83c20553b1ec1556752958afaa421a8d7326b1da748395ba7b75ac")
     version("6.3.0", sha256="8dd167250e138fac0609f4ed06fc6a4dca5edad346166a291f20b4dad99bbd0b")
     version("6.2.4", sha256="3283685431fd59e20a6ac5737df22c7c7421901779a2a0b6dbd6c1ab1f1b5adb")
@@ -34,9 +35,6 @@ class Rocmlir(CMakePackage):
     with default_args(deprecated=True):
         version("5.3.0", sha256="e8471a13cb39d33adff34730d3162adaa5d20f9544d61a6a94b39b9b5762ad6d")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
     variant(
         "build_type",
         default="Release",
@@ -53,6 +51,9 @@ class Rocmlir(CMakePackage):
                 string=True,
             )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
     depends_on("python", type="build")
     depends_on("z3", type="link")
     depends_on("zlib-api", type="link")
@@ -78,6 +79,7 @@ class Rocmlir(CMakePackage):
         "6.2.4",
         "6.3.0",
         "6.3.1",
+        "6.3.2",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")

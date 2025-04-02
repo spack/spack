@@ -38,9 +38,6 @@ class Cgns(CMakePackage):
     version("3.3.1", sha256="81093693b2e21a99c5640b82b267a495625b663d7b8125d5f1e9e7aaa1f8d469")
     version("3.3.0", sha256="8422c67994f8dc6a2f201523a14f6c7d7e16313bdd404c460c16079dbeafc662")
 
-    depends_on("c", type="build")
-    depends_on("fortran", type="build", when="+fortran")
-
     variant("hdf5", default=True, description="Enable HDF5 interface")
     variant("fortran", default=False, description="Enable Fortran interface")
     variant("base_scope", default=False, description="Enable base scope")
@@ -54,6 +51,9 @@ class Cgns(CMakePackage):
     variant("mem_debug", default=False, description="Enable memory debugging option")
     variant("tools", default=False, description="Enable CGNS tools")
     variant("pic", default=False, description="Produce position-independent code")
+
+    depends_on("c", type="build")
+    depends_on("fortran", type="build", when="+fortran")
 
     depends_on("cmake@3.20:", when="@4.5:", type="build")
     depends_on("cmake@3.12:", when="@4.3:", type="build")
@@ -81,6 +81,8 @@ class Cgns(CMakePackage):
     # copied from https://github.com/CGNS/CGNS/pull/757
     # (adjusted an include from tk-private/generic/tkInt.h to tkInt.h)
     patch("gcc14.patch", when="@:4.4.0 %gcc@14:")
+    # "wrong" include for spack (tk-private) from the patch above made it into the official version
+    patch("cgns-4.5-tk-private.patch", when="@4.5.0")
 
     def cmake_args(self):
         spec = self.spec

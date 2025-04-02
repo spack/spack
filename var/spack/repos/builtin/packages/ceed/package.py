@@ -293,7 +293,7 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     depends_on("remhos@1.0", when="@3.0.0+mfem")
 
     # If using gcc version <= 4.8 build suite-sparse version <= 5.1.0
-    depends_on("suite-sparse@:5.1.0", when="@3.0.0%gcc@:4.8+mfem+petsc")
+    depends_on("suite-sparse@:5.1.0", when="@3.0.0+mfem+petsc%gcc@:4.8")
 
     # ceed-2.0
     depends_on("mfem@3.4.0+mpi+examples+miniapps", when="@2.0.0+mfem~petsc")
@@ -305,7 +305,7 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     depends_on("hypre~internal-superlu~superlu-dist", when="@2.0.0+mfem+quickbuild")
 
     # If using gcc version <= 4.8 build suite-sparse version <= 5.1.0
-    depends_on("suite-sparse@:5.1.0", when="@2.0.0%gcc@:4.8+mfem+petsc")
+    depends_on("suite-sparse@:5.1.0", when="@2.0.0+mfem+petsc%gcc@:4.8")
 
     # ceed-1.0
     depends_on("mfem@3.3.2+mpi+examples+miniapps", when="@1.0.0+mfem")
@@ -319,4 +319,4 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     depends_on("hypre~internal-superlu", when="@1.0.0+mfem")
 
     # If using gcc version <= 4.8 build suite-sparse version <= 5.1.0
-    depends_on("suite-sparse@:5.1.0", when="@1.0.0%gcc@:4.8+mfem")
+    depends_on("suite-sparse@:5.1.0", when="@1.0.0+mfem%gcc@:4.8")

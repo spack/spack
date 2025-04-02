@@ -18,6 +18,6 @@ class Gccxml(CMakePackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    patch("darwin-gcc.patch", when="%gcc platform=darwin")
+    patch("darwin-gcc.patch", when="platform=darwin %gcc")
     # taken from https://github.com/gccxml/gccxml/issues/11#issuecomment-140334118
     patch("gcc-5.patch", when="%gcc@5:")

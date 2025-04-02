@@ -26,14 +26,14 @@ class Rosco(CMakePackage):
     version("2.6.0", sha256="ca1c1a6ac53e8220b107accccfb8b5299772c38b7c77cd8d2ba383e9825daeaa")
     version("2.5.1", sha256="55fe7bba612321baa6e089ee1156ef4db2e3bccf1b69534829b06f3367fff05d")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("shared", default=False, description="Build shared libraries")
     variant("pic", default=False, description="Position independent code")
 
     patch("intel-oneapi-2x.patch", when="@2.5:2.8%oneapi")
     patch("intel-oneapi-29.patch", when="@2.9.0:2.9.1%oneapi")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     @property
     def root_cmakelists_dir(self):

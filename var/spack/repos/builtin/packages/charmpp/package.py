@@ -44,10 +44,6 @@ class Charmpp(Package):
     version("6.6.0", sha256="c916010f2d4cc2c6bd30ea19764839d0298fb56d1696d8ff08d9fa9a61dfb1c9")
     version("6.5.1", sha256="68aa43e2a6e476e116a7e80e385c25c6ac6497807348025505ba8bfa256ed34a")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Support OpenMPI; see
     # <https://github.com/UIUC-PPL/charm/issues/1206>
     # Patch is no longer needed in versions 6.8.0+
@@ -113,6 +109,10 @@ class Charmpp(Package):
     variant("shared", default=True, description="Enable shared link support")
     variant("production", default=True, description="Build charm++ with all optimizations")
     variant("tracing", default=False, description="Enable tracing modules")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Versions 7.0.0+ use CMake by default when it's available. It's more
     # robust.
@@ -276,7 +276,7 @@ class Charmpp(Package):
     #            build-target=LIBS backend={0}'.format(b))
 
     def install(self, spec, prefix):
-        if not ("backend=mpi" in self.spec) or not ("backend=netlrts" in self.spec):
+        if "backend=mpi" not in self.spec or "backend=netlrts" not in self.spec:
             if self.spec.satisfies("+pthreads"):
                 raise InstallError(
                     "The pthreads option is only available on the Netlrts and MPI network layers."
@@ -396,7 +396,7 @@ class Charmpp(Package):
                         copy(filepath, tmppath)
                         os.remove(filepath)
                         os.rename(tmppath, filepath)
-                    except (IOError, OSError):
+                    except OSError:
                         pass
 
         tmp_path = join_path(builddir, "tmp")

@@ -35,11 +35,7 @@ class Sherpa(CMakePackage, AutotoolsPackage):
         conditional("cmake", when="@3:"), conditional("autotools", when="@:2"), default="cmake"
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
-    _cxxstd_values = ("11", "14", "17")
+    _cxxstd_values = (conditional("11", "14", "17", when="@:"), conditional("20", when="@3:"))
     variant(
         "cxxstd",
         default="11",
@@ -53,7 +49,12 @@ class Sherpa(CMakePackage, AutotoolsPackage):
     variant("python", default=False, description="Enable Python API")
     variant("hepmc2", default=True, when="@:2", description="Enable HepMC (version 2.x) support")
     variant("hepmc3", default=True, description="Enable HepMC (version 3.x) support")
-    variant("hepmc3root", default=False, description="Enable HepMC (version 3.1+) ROOT support")
+    variant(
+        "hepmc3root",
+        default=False,
+        description="Enable HepMC (version 3.1+) ROOT support",
+        when="+root",
+    )
     variant("rivet", default=False, description="Enable Rivet support")
     variant("fastjet", default=True, when="@:2", description="Enable FASTJET")
     variant("openloops", default=False, description="Enable OpenLoops")
@@ -79,6 +80,10 @@ class Sherpa(CMakePackage, AutotoolsPackage):
     variant("cms", default=False, description="Append CXXFLAGS used by CMS experiment")
 
     # Note that the delphes integration seems utterly broken: https://sherpa.hepforge.org/trac/ticket/305
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # autotools dependencies are needed at runtime to compile processes
     depends_on("autoconf", when="@:2")
@@ -114,7 +119,8 @@ class Sherpa(CMakePackage, AutotoolsPackage):
     filter_compiler_wrappers("share/SHERPA-MC/makelibs")
 
     for std in _cxxstd_values:
-        depends_on("root cxxstd=" + std, when="+root cxxstd=" + std)
+        for v in std:
+            depends_on(f"root cxxstd={v.value}", when=f"+root cxxstd={v.value}")
 
     def patch(self):
         filter_file(

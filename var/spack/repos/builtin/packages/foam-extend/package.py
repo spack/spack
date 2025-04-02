@@ -32,8 +32,6 @@ import glob
 import os
 import re
 
-import llnl.util.tty as tty
-
 from spack.package import *
 from spack.pkg.builtin.openfoam import (
     OpenfoamArch,
@@ -41,7 +39,6 @@ from spack.pkg.builtin.openfoam import (
     rewrite_environ_files,
     write_environ,
 )
-from spack.util.environment import EnvironmentModifications
 
 
 class FoamExtend(Package):
@@ -63,10 +60,6 @@ class FoamExtend(Package):
     version("3.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git", deprecated=True)
     version("3.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.0.git", deprecated=True)
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # variant('int64', default=False,
     #         description='Compile with 64-bit label')
     variant("float32", default=False, description="Compile with 32-bit scalar (single-precision)")
@@ -79,6 +72,10 @@ class FoamExtend(Package):
     variant(
         "source", default=True, description="Install library/application sources and tutorials"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi")
     depends_on("python")
@@ -173,7 +170,7 @@ class FoamExtend(Package):
         if minimal:
             # pre-build or minimal environment
             tty.info("foam-extend minimal env {0}".format(self.prefix))
-            env.set("FOAM_INST_DIR", os.path.dirname(self.projectdir)),
+            env.set("FOAM_INST_DIR", os.path.dirname(self.projectdir))
             env.set("FOAM_PROJECT_DIR", self.projectdir)
             env.set("WM_PROJECT_DIR", self.projectdir)
             for d in ["wmake", self.archbin]:  # bin added automatically

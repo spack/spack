@@ -31,10 +31,10 @@ class Trexio(AutotoolsPackage, CMakePackage):
     version("2.1.0", sha256="232866c943b98fa8a42d34b55e940f7501634eb5bd426555ba970f5c09775e83")
     version("2.0.0", sha256="6eeef2da44259718b43991eedae4b20d4f90044e38f3b44a8beea52c38b14cb4")
 
+    variant("hdf5", default=True, description="Enable HDF5 support")
+
     depends_on("c", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("hdf5", default=True, description="Enable HDF5 support")
 
     depends_on("emacs@26.0:", type="build", when="@master")
     depends_on("python@3.6:", type="build", when="@master")
@@ -47,18 +47,16 @@ class Trexio(AutotoolsPackage, CMakePackage):
     depends_on("hdf5@1.8:+hl", when="@:2.3.0 +hdf5")
     depends_on("hdf5@1.8:", when="+hdf5")
 
-    # Append -lhdf5_hl to LIBS when hdf5 variant is activated
-    # or use --without-hdf5 option otherwise.
-
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         config_args = []
         if "+hdf5" in self.spec:
-            if self.spec("@:2.3.0"):
+            if self.spec.satisfies("@:2.3.0"):
+                # Autotools should take care of adding the necessary flags for HDF5
+                # In older versions, it is not always the case for "hdf5_hl"
+                # Append -lhdf5_hl to LIBS when hdf5 variant is activated
                 config_args.append("LIBS=-lhdf5_hl")
-            else:
-                config.args.append("LIBS=-lhdf5")
         else:
             config_args.append("--without-hdf5")
 

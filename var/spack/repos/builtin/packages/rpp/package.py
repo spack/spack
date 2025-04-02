@@ -27,6 +27,7 @@ class Rpp(CMakePackage):
 
     maintainers("srekolam", "afzpatel")
     license("MIT")
+    version("6.3.2", sha256="05f0e063c61f5039661a4d5a80113ebb7b9782d0958c29375a8e1e2e759b88bc")
     version("6.3.1", sha256="6e7da82bf7b6d642d605370329e4e719af10bb5c6af30079b5d0b60cdcb91a48")
     version("6.3.0", sha256="130a6bd2fc4278956c6450a3c49243651576b1031e6a485aa62453b9dc3b4d51")
     version("6.2.4", sha256="e733350e938ce8d2f7d6d43d2bfd0febd270d52673bafa0265ed97bb850289de")
@@ -47,7 +48,6 @@ class Rpp(CMakePackage):
         version("0.98", sha256="191b5d89bf990ae22b5ef73675b89ed4371c3ce342ab9cc65383fa12ef13086e")
         version("0.97", sha256="8ce1a869ff67a29579d87d399d8b0bd97bf12ae1b6b1ca1f161cb8a262fb9939")
 
-    depends_on("cxx", type="build")  # generated
     variant(
         "build_type",
         default="Release",
@@ -136,6 +136,7 @@ class Rpp(CMakePackage):
                 string=True,
             )
 
+    depends_on("cxx", type="build")  # generated
     depends_on("cmake@3.5:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on(Boost.with_default_variants)
@@ -170,6 +171,7 @@ class Rpp(CMakePackage):
                 "6.2.4",
                 "6.3.0",
                 "6.3.1",
+                "6.3.2",
             ]:
                 depends_on("hip@" + ver, when="@" + ver)
         with when("@:1.2"):

@@ -23,7 +23,7 @@ class Rrdtool(AutotoolsPackage):
     depends_on("perl-extutils-makemaker")
 
     def configure_args(self):
-        return ["--with-systemdsystemunitdir=" + self.spec["rrdtool"].prefix.lib.systemd.system]
+        return [f"--with-systemdsystemunitdir={self.prefix.lib.systemd.system}"]
 
     def flag_handler(self, name, flags):
         if name == "ldlibs" and "intl" in self.spec["gettext"].libs.names:

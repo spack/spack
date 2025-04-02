@@ -436,8 +436,8 @@ def _dump_annotated(handler, data, stream=None):
     width = max(clen(a) for a in _ANNOTATIONS)
     formats = ["%%-%ds  %%s\n" % (width + cextra(a)) for a in _ANNOTATIONS]
 
-    for f, a, l in zip(formats, _ANNOTATIONS, lines):
-        stream.write(f % (a, l))
+    for fmt, annotation, line in zip(formats, _ANNOTATIONS, lines):
+        stream.write(fmt % (annotation, line))
 
     if getvalue:
         return getvalue()
@@ -495,3 +495,25 @@ class SpackYAMLError(spack.error.SpackError):
 
     def __init__(self, msg, yaml_error):
         super().__init__(msg, str(yaml_error))
+
+
+def get_mark_from_yaml_data(obj):
+    """Try to get ``spack.util.spack_yaml`` mark from YAML data.
+
+    We try the object, and if that fails we try its first member (if it's a container).
+
+    Returns:
+        mark if one is found, otherwise None.
+    """
+    # mark of object itelf
+    mark = getattr(obj, "_start_mark", None)
+    if mark:
+        return mark
+
+    # mark of first member if it is a container
+    if isinstance(obj, (list, dict)):
+        first_member = next(iter(obj), None)
+        if first_member:
+            mark = getattr(first_member, "_start_mark", None)
+
+    return mark

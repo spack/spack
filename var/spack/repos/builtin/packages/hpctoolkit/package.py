@@ -6,8 +6,6 @@ import configparser
 import os
 import tempfile
 
-import llnl.util.tty as tty
-
 import spack.build_systems.autotools
 import spack.build_systems.meson
 from spack.package import *
@@ -51,9 +49,6 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     version("2020.03.01", commit="94ede4e6fa1e05e6f080be8dc388240ea027f769", deprecated=True)
     version("2019.12.28", commit="b4e1877ff96069fd8ed0fdf0e36283a5b4b62240", deprecated=True)
     version("2019.08.14", commit="6ea44ed3f93ede2d0a48937f288a2d41188a277c", deprecated=True)
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     # Options for MPI and hpcprof-mpi.  We always support profiling
     # MPI applications.  These options add hpcprof-mpi, the MPI
@@ -118,6 +113,12 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
         when="build_system=autotools",
     )
     variant("viewer", default=True, description="Include hpcviewer.")
+    variant(
+        "docs",
+        default=False,
+        description="Include extra documentation (user's manual)",
+        when="@develop",
+    )
 
     variant(
         "python", default=False, description="Support unwinding Python source.", when="@2023.03:"
@@ -128,6 +129,9 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
         conditional("autotools", when="@:2024.01"),
         default="autotools",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     with when("@2024.01: build_system=autotools"):
         depends_on("autoconf", type="build")
@@ -184,6 +188,10 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
 
     depends_on("zlib-api")
     depends_on("zlib+shared", when="^[virtuals=zlib-api] zlib")
+
+    depends_on("py-docutils", type="build", when="@develop")
+    depends_on("py-sphinx", type="build", when="+docs")
+    depends_on("py-myst-parser@0.19:", type="build", when="+docs")
 
     depends_on("cuda", when="+cuda")
     depends_on("oneapi-level-zero", when="+level_zero")
@@ -402,6 +410,8 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         spec = self.spec
 
         args = [
+            "-Dmanpages=enabled",
+            "-Dmanual=" + ("enabled" if spec.satisfies("+docs") else "disabled"),
             "-Dhpcprof_mpi=" + ("enabled" if spec.satisfies("+mpi") else "disabled"),
             "-Dpython=" + ("enabled" if spec.satisfies("+python") else "disabled"),
             "-Dpapi=" + ("enabled" if spec.satisfies("+papi") else "disabled"),

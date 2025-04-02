@@ -21,7 +21,8 @@ install = spack.main.SpackCommand("install")
 @pytest.mark.db
 def test_gc_without_build_dependency(mutable_database):
     assert "There are no unused specs." in gc("-yb")
-    assert "There are no unused specs." in gc("-y")
+    # 'gcc' is a pure build dependency in the DB
+    assert "There are no unused specs." not in gc("-y")
 
 
 @pytest.mark.db
@@ -60,7 +61,7 @@ def test_gc_with_environment(mutable_database, mutable_mock_env_path):
         add("cmake")
         install()
         assert mutable_database.query_local("cmake")
-        output = gc("-y")
+        output = gc("-by")
     assert "Restricting garbage collection" in output
     assert "There are no unused specs" in output
 
@@ -139,7 +140,7 @@ def test_gc_except_specific_environments(mutable_database, mutable_mock_env_path
 def test_gc_except_nonexisting_dir_env(mutable_database, mutable_mock_env_path, tmpdir):
     output = gc("-ye", tmpdir.strpath, fail_on_error=False)
     assert "No such environment" in output
-    gc.returncode == 1
+    assert gc.returncode == 1
 
 
 @pytest.mark.db

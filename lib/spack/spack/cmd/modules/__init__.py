@@ -383,8 +383,10 @@ def modules_cmd(parser, args, module_type, callbacks=callbacks):
         query = " ".join(str(s) for s in args.constraint_specs)
         msg = f"the constraint '{query}' matches multiple packages:\n"
         for s in specs:
-            spec_fmt = "{hash:7} {name}{@version}{%compiler}"
-            spec_fmt += "{compiler_flags}{variants}{arch=architecture}"
+            spec_fmt = (
+                "{hash:7} {name}{@version}{compiler_flags}{variants}"
+                "{arch=architecture} {%compiler}"
+            )
             msg += "\t" + s.cformat(spec_fmt) + "\n"
         tty.die(msg, "In this context exactly *one* match is needed.")
 

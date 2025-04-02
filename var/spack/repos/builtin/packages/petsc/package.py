@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-import llnl.util.tty as tty
-
 from spack.package import *
 
 
@@ -17,11 +15,13 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     homepage = "https://petsc.org"
     url = "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-3.20.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
-    maintainers("balay", "barrysmith", "jedbrown")
+    maintainers("balay", "jczhang07", "joseeroman")
 
     tags = ["e4s"]
 
     version("main", branch="main")
+    version("3.22.4", sha256="c32e9c606b858ff587949ddc5f28da8934b00c41ab1f6d9be5001a705bef62ee")
+    version("3.22.3", sha256="88c0d465a3bd688cb17ebf06a17c06d6e9cc457fa6b9643d217389424e6bd795")
     version("3.22.2", sha256="83624de0178b42d37ca1f7f905e1093556c6919fe5accd3e9f11d00a66e11256")
     version("3.22.1", sha256="7117d3ae6827f681ed9737939d4e86896b4751e27cca941bb07e5703f19a0a7b")
     version("3.22.0", sha256="2c03f7c0f7ad2649240d4989355cf7fb7f211b75156cd7d424e1d9dd7dfb290b")
@@ -170,10 +170,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Activates MPI support")
     variant("double", default=True, description="Switches between single and double precision")
@@ -292,9 +288,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             when="@3.20.2:3.20.4 ^hipsparse@6.0",
         )
 
-    # 3.8.0 has a build issue with MKL - so list this conflict explicitly
-    conflicts("^intel-mkl", when="@3.8.0")
-
     # These require +mpi
     mpi_msg = "Requires +mpi"
     conflicts("+cgns", when="~mpi", msg=mpi_msg)
@@ -335,9 +328,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     patch("disable-DEPRECATED_ENUM.diff", when="@3.14.1 +cuda")
     patch("revert-3.18.0-ver-format-for-dealii.patch", when="@3.18.0")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("diffutils", type="build")
-    # not listed as a "build" dependency - so that slepc build gets the same dependency
-    depends_on("gmake")
+    depends_on("gmake", type="build")
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
@@ -358,6 +354,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     with when("+rocm"):
         depends_on("rocm-core")
         depends_on("hipblas")
+        depends_on("hipblas-common", when="^hipblas@6.3.0:")
         depends_on("hipsparse")
         depends_on("hipsolver")
         depends_on("rocsparse")
@@ -465,8 +462,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("kokkos", when="+kokkos")
     depends_on("kokkos~complex_align", when="+kokkos+complex")
     depends_on("kokkos-kernels", when="+kokkos")
-    conflicts("kokkos@4.5:", when="@:3.22")
-    conflicts("kokkos-kernels@4.5:", when="@:3.22")
+    conflicts("kokkos@4.5:", when="@:3.22 +kokkos")
+    conflicts("kokkos-kernels@4.5:", when="@:3.22 +kokkos")
     for cuda_arch in CudaPackage.cuda_arch_values:
         depends_on(
             "kokkos+cuda+cuda_lambda cuda_arch=%s" % cuda_arch,
@@ -583,13 +580,16 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
         if "+sycl" in spec:
             sycl_compatible_compilers = ["icpx"]
-            if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
+            if os.path.basename(self.compiler.cxx) not in sycl_compatible_compilers:
                 raise InstallError("PETSc's SYCL GPU Backend requires oneAPI CXX (icpx) compiler.")
             options.append("--with-sycl=1")
             options.append("--with-syclc=" + self.compiler.cxx)
             options.append("SYCLPPFLAGS=-Wno-tautological-constant-compare")
         else:
             options.append("--with-sycl=0")
+
+        if spec.satisfies("^cuda@12.8.0"):
+            options.append("CUDAPPFLAGS=-Wno-deprecated-gpu-targets")
 
         if "trilinos" in spec:
             if spec.satisfies("^trilinos+boost"):
@@ -609,14 +609,14 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if "+exodusii+fortran" in spec and "+fortran" in spec:
             options.append("--with-exodusii-fortran-bindings")
 
+        direct_dependencies = {
+            *(spec.name for spec in spec.dependencies()),
+            *(virtual for edge in spec.edges_to_dependencies() for virtual in edge.virtuals),
+        }
         # tuple format (spacklibname, petsclibname, useinc, uselib)
         # default: 'gmp', => ('gmp', 'gmp', True, True)
         # any other combination needs a full tuple
         # if not (useinc || uselib): usedir - i.e (False, False)
-        direct_dependencies = []
-        for dep in spec.dependencies():
-            direct_dependencies.append(dep.name)
-            direct_dependencies.extend(set(vspec.name for vspec in dep.package.virtuals_provided))
         for library in (
             ("cuda", "cuda", False, False),
             ("hip", "hip", True, False),
@@ -720,7 +720,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 hip_ipkgs.extend(["rocrand"])
             else:
                 hip_lpkgs.extend(["rocrand"])
-            if spec.satisfies("^hipblas@6.3.0:"):
+            if spec.satisfies("^hipblas-common"):
                 hip_ipkgs.extend(["hipblas-common"])
             hip_inc = ""
             hip_lib = ""
