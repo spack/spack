@@ -26,4 +26,4 @@ class LibpthreadStubs(AutotoolsPackage, XorgPackage):
         url="https://xcb.freedesktop.org/dist/libpthread-stubs-0.3.tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")

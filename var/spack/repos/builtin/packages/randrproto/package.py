@@ -17,7 +17,7 @@ class Randrproto(AutotoolsPackage, XorgPackage):
 
     version("1.5.0", sha256="8f8a716d6daa6ba05df97d513960d35a39e040600bf04b313633f11679006fab")
 
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")
 
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
