@@ -146,7 +146,7 @@ class Zoltan(AutotoolsPackage):
                 config_args.append("--with-id-type=ulong")
             else:
                 config_args.append("--with-id-type=uint")
-        
+
         if "+scotch" in spec:
             scotch_prefix = spec["scotch"].prefix
             config_args.extend(
