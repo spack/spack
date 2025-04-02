@@ -36,7 +36,9 @@ class Portage(CMakePackage):
     variant("openmp", default=False, description="Enable on-node parallelism using OpenMP")
     variant("cuda", default=False, description="Enable GPU parallelism using CUDA")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("cmake@3.13:", type="build")
 
