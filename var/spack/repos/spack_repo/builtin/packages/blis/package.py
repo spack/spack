@@ -37,6 +37,7 @@ class BlisBase(MakefilePackage):
         multi=True,
         description="Build shared libs, static libs or both",
     )
+    variant("config", default="auto", description="CPU architecture configuration")
 
     # TODO: add cpu variants. Currently using auto.
     # If one knl, should the default be memkind ?
@@ -82,7 +83,8 @@ class BlisBase(MakefilePackage):
 
     def edit(self, spec, prefix):
         # To ensure auto should always be the last argument for base and derived class
-        config_args = self.configure_args() + ["generic"]
+        mconfig = self.spec.variants["config"].value
+        config_args = self.configure_args() + [mconfig]
         configure("--prefix={0}".format(prefix), *config_args)
 
     @run_after("install")
