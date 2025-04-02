@@ -201,14 +201,15 @@ class Tau(Package):
 
     conflicts("+rocprofiler", when="+roctracer", msg="Use either rocprofiler or roctracer")
     conflicts("+rocprofiler", when="+rocprofv2", msg="Use either rocprofiler or rocprofv2")
-    conflicts("+rocprofiler", when="+rocprofiler-sdk", msg="Use either rocprofiler or rocprofiler-sdk")
-    
+    conflicts(
+        "+rocprofiler", when="+rocprofiler-sdk", msg="Use either rocprofiler or rocprofiler-sdk"
+    )
+
     conflicts("+roctracer", when="+rocprofv2", msg="Use either roctracer or rocprofv2")
     conflicts("+roctracer", when="+rocprofiler-sdk", msg="Use either roctracer or rocprofiler-sdk")
-    
+
     conflicts("+rocprofv2", when="+rocprofiler-sdk", msg="Use either rocprofv2 or rocprofiler-sdk")
 
-    
     requires("+rocm", when="+rocprofiler", msg="Rocprofiler requires ROCm")
     requires("+rocm", when="+roctracer", msg="Roctracer requires ROCm")
     requires("+rocm", when="+rocprofiler-sdk", msg="Rocprofiler-sdk requires ROCm")
