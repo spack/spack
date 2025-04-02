@@ -39,7 +39,9 @@ class FenicsDolfinx(CMakePackage):
 
     variant("slepc", default=False, description="slepc support")
     variant("adios2", default=False, description="adios2 support")
+    variant("petsc", default=True, description="PETSc support")
 
+    depends_on("petsc", when="+slepc")
     depends_on("cmake@3.21:", when="@0.9:", type="build")
     depends_on("cmake@3.19:", when="@:0.8", type="build")
     depends_on("pkgconfig", type="build")
@@ -49,7 +51,7 @@ class FenicsDolfinx(CMakePackage):
     depends_on("pugixml")
     depends_on("spdlog", when="@0.9:")
 
-    depends_on("petsc+mpi+shared")
+    depends_on("petsc+mpi+shared", when="+petsc")
     depends_on("slepc", when="+slepc")
 
     depends_on("adios2@2.8.1:+mpi", when="@0.9: +adios2")
