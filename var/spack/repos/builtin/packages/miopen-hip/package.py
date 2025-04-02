@@ -20,6 +20,7 @@ class MiopenHip(CMakePackage):
     libraries = ["libMIOpen"]
 
     license("MIT")
+    version("6.3.3", sha256="755beaec2e97aa4fafcdb07e4becbcddcb0c3cef6af256a04716d46e90c2f520")
     version("6.3.2", sha256="7abda3b437e396a1611a6f63e73ab1656d45d5405194504136c0ccbb75b81fea")
     version("6.3.1", sha256="edb82a74086fb96f8d7ee9e50a180302f716332cd0dff96bf7244bdc6fab5895")
     version("6.3.0", sha256="171834978d6316a5ec7607d4b10c7c69e5bfe9064edae8bdb9b207e578b41c1d")
@@ -103,6 +104,7 @@ class MiopenHip(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
@@ -147,6 +149,7 @@ class MiopenHip(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"composable-kernel@{ver}", when=f"@{ver} +ck")
     for ver in ["5.4.0", "5.4.3", "5.5.0"]:
@@ -163,11 +166,12 @@ class MiopenHip(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"roctracer-dev@{ver}", when=f"@{ver}")
-    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2"]:
+    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
         depends_on(f"rocrand@{ver}", when=f"@{ver}")
-    for ver in ["6.3.0", "6.3.1", "6.3.2"]:
+    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
         depends_on(f"hipblas@{ver}", when=f"@{ver}")
         depends_on(f"hipblaslt@{ver}", when=f"@{ver}")
 
