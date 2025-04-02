@@ -48,7 +48,6 @@ class Rpp(CMakePackage):
         version("0.98", sha256="191b5d89bf990ae22b5ef73675b89ed4371c3ce342ab9cc65383fa12ef13086e")
         version("0.97", sha256="8ce1a869ff67a29579d87d399d8b0bd97bf12ae1b6b1ca1f161cb8a262fb9939")
 
-    depends_on("cxx", type="build")  # generated
     variant(
         "build_type",
         default="Release",
@@ -137,6 +136,7 @@ class Rpp(CMakePackage):
                 string=True,
             )
 
+    depends_on("cxx", type="build")  # generated
     depends_on("cmake@3.5:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on(Boost.with_default_variants)

@@ -17,9 +17,6 @@ class Muparser(CMakePackage, Package):
     version("2.2.6.1", sha256="d2562853d972b6ddb07af47ce8a1cdeeb8bb3fa9e8da308746de391db67897b3")
     version("2.2.5", sha256="0666ef55da72c3e356ca85b6a0084d56b05dd740c3c21d26d372085aa2c6e708")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # Replace std::auto_ptr by std::unique_ptr
     # https://github.com/beltoforion/muparser/pull/46
     patch("auto_ptr.patch", when="@2.2.5")
@@ -37,6 +34,9 @@ class Muparser(CMakePackage, Package):
     # Non-CMake build system is not supported by windows
     conflicts("platform=windows", when="@:2.2.5")
     build_system(conditional("cmake", when="@2.2.6:"), "generic", default="cmake")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     def cmake_args(self):
         return [

@@ -388,9 +388,9 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
 
     fetch_method = spack.config.get("config:url_fetch_method")
     tty.debug("Using '{0}' to fetch {1} into {2}".format(fetch_method, url, path))
-    if fetch_method == "curl":
+    if fetch_method.startswith("curl"):
         curl_exe = curl or require_curl()
-        curl_args = ["-O"]
+        curl_args = fetch_method.split()[1:] + ["-O"]
         curl_args.extend(base_curl_fetch_args(url))
 
         # Curl automatically downloads file contents as filename
@@ -436,15 +436,14 @@ def url_exists(url, curl=None):
     url_result = urllib.parse.urlparse(url)
 
     # Use curl if configured to do so
-    use_curl = spack.config.get(
-        "config:url_fetch_method", "urllib"
-    ) == "curl" and url_result.scheme not in ("gs", "s3")
+    fetch_method = spack.config.get("config:url_fetch_method", "urllib")
+    use_curl = fetch_method.startswith("curl") and url_result.scheme not in ("gs", "s3")
     if use_curl:
         curl_exe = curl or require_curl()
 
         # Telling curl to fetch the first byte (-r 0-0) is supposed to be
         # portable.
-        curl_args = ["--stderr", "-", "-s", "-f", "-r", "0-0", url]
+        curl_args = fetch_method.split()[1:] + ["--stderr", "-", "-s", "-f", "-r", "0-0", url]
         if not spack.config.get("config:verify_ssl"):
             curl_args.append("-k")
         _ = curl_exe(*curl_args, fail_on_error=False, output=os.devnull)

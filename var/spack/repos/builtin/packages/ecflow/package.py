@@ -29,10 +29,6 @@ class Ecflow(CMakePackage):
     version("4.12.0", sha256="566b797e8d78e3eb93946b923ef540ac61f50d4a17c9203d263c4fd5c39ab1d1")
     version("4.11.1", sha256="b3bcc1255939f87b9ba18d802940e08c0cf6379ca6aeec1fef7bd169b0085d6c")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("ssl", default=True, description="Enable SSL")
     variant(
         "static_boost", default=False, description="Use also static boost libraries when compiling"
@@ -41,6 +37,10 @@ class Ecflow(CMakePackage):
     variant("pic", default=False, description="Enable position-independent code (PIC)")
 
     extends("python")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("python@3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")

@@ -47,8 +47,6 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         version("5.3.3", sha256="fd1662cd5b1e1bce9db53b320c0fe614179cd196251efc2ef3365d38922b5cdc")
         version("5.3.0", sha256="ebbe2009b86b688809b6b4d5c3929fc589db455218d54a37790f21339147c5df")
 
-    depends_on("cxx", type="build")  # generated
-
     # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
@@ -66,6 +64,8 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.5:", type="build")
 

@@ -26,9 +26,6 @@ class Swipl(CMakePackage):
     version("8.2.0", sha256="d8c9f3adb9cd997a5fed7b5f5dbfe971d2defda969b9066ada158e4202c09c3c")
     version("8.0.3", sha256="cee59c0a477c8166d722703f6e52f962028f3ac43a5f41240ecb45dbdbe2d6ae")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("gmp", default=True, description="bignum and rational number support")
     variant("xpce", default=True, description="GUI support")
     variant("ssl", default=True, description="SSL support")
@@ -37,6 +34,9 @@ class Swipl(CMakePackage):
     variant("unwind", default=True, description="Build with stack traces in crash reports")
     variant("html", default=True, description="Install the HTML documentation")
     variant("pdfdoc", default=False, description="Build the PDF documentation")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("uuid")
     depends_on("readline")

@@ -21,10 +21,6 @@ class Wps(Package):
     version("4.3", sha256="1913cb24de549f029d65635feea27f3304a8f42ec025954a0887651fc89d1e9e")
     version("4.2", sha256="3e175d033355d3e7638be75bc7c0bc0de6da299ebd175a9bbc1b7a121acd0168")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Serial variant recommended in WRF/WPS docs
     variant(
         "build_type",
@@ -41,6 +37,10 @@ class Wps(Package):
     patch("patches/4.3/arch.configure.defaults.patch", when="@=4.3")
     patch("patches/4.3.1/arch.configure.defaults.patch", when="@4.3.1")
     patch("patches/4.4/configure.patch", when="@4.4:")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # According to:
     # http://www2.mmm.ucar.edu/wrf/users/docs/user_guide_v4/v4.0/users_guide_chap2.html#_Required_Compilers_and_1

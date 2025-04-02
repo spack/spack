@@ -21,8 +21,6 @@ class AutodockGpu(MakefilePackage, CudaPackage):
 
     version("develop", branch="develop")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "device",
         default="cuda",
@@ -32,6 +30,8 @@ class AutodockGpu(MakefilePackage, CudaPackage):
     )
     variant("overlap", default=False, description="Overlap CPU and GPU operations")
     variant("cuda", default=True, description="Build with CUDA")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cuda")
 

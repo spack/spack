@@ -17,9 +17,6 @@ class Ucc(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("1.3.0", sha256="b56379abe5f1c125bfa83be305d78d81a64aa271b7b5fff0ac17b86725ff3acf")
     version("1.2.0", sha256="c1552797600835c0cf401b82dc89c4d27d5717f4fb805d41daca8e19f65e509d")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("cuda", default=False, description="Enable CUDA TL")
     variant("nccl", default=False, description="Enable NCCL TL", when="+cuda")
     variant("rccl", default=False, description="Enable RCCL TL", when="+rocm")
@@ -30,6 +27,9 @@ class Ucc(AutotoolsPackage, CudaPackage, ROCmPackage):
         sha256="f99d1ba6b94360375d2ea59b04de9cbf6bb3290458bc86ce13891ba90522f7e2",
         when="@1.2.0 +cuda",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

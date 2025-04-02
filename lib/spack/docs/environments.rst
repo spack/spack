@@ -667,11 +667,11 @@ a ``packages.yaml`` file) could contain:
      # ...
      packages:
        all:
-         compiler: [intel]
+         providers:
+           mpi: [openmpi]
      # ...
 
-This configuration sets the default compiler for all packages to
-``intel``.
+This configuration sets the default mpi provider to be openmpi.
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Included configurations

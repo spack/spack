@@ -754,11 +754,17 @@ class DependencySpec:
         self.depflag = new
         return True
 
-    def update_virtuals(self, virtuals: Iterable[str]) -> bool:
+    def update_virtuals(self, virtuals: Union[str, Iterable[str]]) -> bool:
         """Update the list of provided virtuals"""
         old = self.virtuals
-        self.virtuals = tuple(sorted(set(virtuals).union(self.virtuals)))
-        return old != self.virtuals
+        if isinstance(virtuals, str):
+            union = {virtuals, *self.virtuals}
+        else:
+            union = {*virtuals, *self.virtuals}
+        if len(union) == len(old):
+            return False
+        self.virtuals = tuple(sorted(union))
+        return True
 
     def copy(self) -> "DependencySpec":
         """Return a copy of this edge"""
@@ -1041,7 +1047,7 @@ class _EdgeMap(collections.abc.Mapping):
             parent: name of the parent package
             child: name of the child package
             depflag: allowed dependency types in flag form
-            virtuals: list of virtuals on the edge
+            virtuals: list of virtuals or specific virtual on the edge
         """
         if not depflag:
             return []
@@ -1590,7 +1596,11 @@ class Spec:
         return deps[0]
 
     def edges_from_dependents(
-        self, name=None, depflag: dt.DepFlag = dt.ALL, *, virtuals: Optional[List[str]] = None
+        self,
+        name=None,
+        depflag: dt.DepFlag = dt.ALL,
+        *,
+        virtuals: Optional[Union[str, Sequence[str]]] = None,
     ) -> List[DependencySpec]:
         """Return a list of edges connecting this node in the DAG
         to parents.

@@ -44,8 +44,6 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
     version("5.2.1", sha256="679148f497e0bff2c1adce42dee5a23f746e71321c33ebb0f641a302e30c2a80")
     version("5.2.0", sha256="f7357d7455a1670229b3cca021da71dd5d13b789db62743c20624bdffc9cc4a5")
 
-    depends_on("c", type="build")  # generated
-
     variant("pic", default=False, description="Compile with position independent code.")
 
     variant(
@@ -55,6 +53,8 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
         multi=True,
         description="Build shared libs, static libs or both",
     )
+
+    depends_on("c", type="build")  # generated
 
     # xz-5.2.7/src/liblzma/common/common.h:56 uses attribute __symver__ instead of
     # __asm__(.symver) for newer GCC releases.

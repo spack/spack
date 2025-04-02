@@ -42,11 +42,10 @@ class Zfp(CMakePackage, CudaPackage):
         url="https://github.com/LLNL/zfp/archive/0.5.1/zfp-0.5.1.tar.gz",
     )
 
+    # Dependencies
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    # Dependencies
     depends_on("cmake@3.9.0:", type="build")
     depends_on("cuda@7:", type=("build", "test", "run"), when="+cuda")
     depends_on("python", type=("build", "test", "run"), when="+python")

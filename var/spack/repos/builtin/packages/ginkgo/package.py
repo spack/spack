@@ -43,9 +43,6 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     version("1.1.0", commit="b9bec8225442b3eb2a85a870efa112ab767a17fb")  # v1.1.0
     version("1.0.0", commit="45244641e0c2b19ba33aecd25153c0bddbcbe1a0")  # v1.0.0
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Build shared libraries")
     variant("full_optimizations", default=False, description="Compile with all optimizations")
     variant("openmp", default=sys.platform != "darwin", description="Build with OpenMP")
@@ -57,6 +54,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "half_precision", default=True, description="Enable half-precision support", when="@1.9.0:"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.9:", type="build", when="@:1.3.0")
     depends_on("cmake@3.13:", type="build", when="@1.4.0:1.6.0")

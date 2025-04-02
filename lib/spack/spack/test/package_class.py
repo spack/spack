@@ -111,14 +111,13 @@ def mpi_names(mock_inspector):
         ("dtbuild1", {"allowed_deps": dt.LINK}, {"dtbuild1", "dtlink2"}),
     ],
 )
-def test_possible_dependencies(pkg_name, fn_kwargs, expected, mock_runtimes, mock_inspector):
+def test_possible_dependencies(pkg_name, fn_kwargs, expected, mock_inspector):
     """Tests possible nodes of mpileaks, under different scenarios."""
-    expected.update(mock_runtimes)
     result, *_ = mock_inspector.possible_dependencies(pkg_name, **fn_kwargs)
     assert expected == result
 
 
-def test_possible_dependencies_virtual(mock_inspector, mock_packages, mock_runtimes, mpi_names):
+def test_possible_dependencies_virtual(mock_inspector, mock_packages, mpi_names):
     expected = set(mpi_names)
     for name in mpi_names:
         expected.update(
@@ -126,7 +125,6 @@ def test_possible_dependencies_virtual(mock_inspector, mock_packages, mock_runti
             for dep in mock_packages.get_pkg_class(name).dependencies_by_name()
             if not mock_packages.is_virtual(dep)
         )
-    expected.update(mock_runtimes)
     expected.update(s.name for s in mock_packages.providers_for("c"))
 
     real_pkgs, *_ = mock_inspector.possible_dependencies(
@@ -146,7 +144,6 @@ def test_possible_dependencies_with_multiple_classes(
     pkgs = ["dt-diamond", "mpileaks"]
     expected = set(mpileaks_possible_deps)
     expected.update({"dt-diamond", "dt-diamond-left", "dt-diamond-right", "dt-diamond-bottom"})
-    expected.update(mock_packages.packages_with_tags("runtime"))
 
     real_pkgs, *_ = mock_inspector.possible_dependencies(*pkgs, allowed_deps=dt.ALL)
     assert set(expected) == real_pkgs

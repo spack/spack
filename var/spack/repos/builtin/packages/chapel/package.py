@@ -68,9 +68,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     sanity_check_is_dir = ["bin", join_path("lib", "chapel"), join_path("share", "chapel")]
     sanity_check_is_file = [join_path("bin", "chpl")]
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     patch("fix_spack_cc_wrapper_in_cray_prgenv.patch", when="@2.0.0:")
     patch("fix_chpl_shared_lib_path.patch", when="@2.1.1:2.2 +python-bindings")  # PR 26388
     patch("fix_chpl_shared_lib_path_2.3.patch", when="@2.2.1:2.3 +python-bindings")  # PR 26388
@@ -520,6 +517,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         )
 
     # Add dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("doxygen@1.8.17:", when="+chpldoc")
 

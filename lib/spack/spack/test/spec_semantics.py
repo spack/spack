@@ -1948,6 +1948,18 @@ def test_edge_equality_does_not_depend_on_virtual_order():
     assert tuple(sorted(edge2.virtuals)) == edge1.virtuals
 
 
+def test_update_virtuals():
+    parent, child = Spec("parent"), Spec("child")
+    edge = DependencySpec(parent, child, depflag=0, virtuals=("mpi", "lapack"))
+    assert edge.update_virtuals("blas")
+    assert edge.virtuals == ("blas", "lapack", "mpi")
+    assert edge.update_virtuals(("c", "fortran", "mpi", "lapack"))
+    assert edge.virtuals == ("blas", "c", "fortran", "lapack", "mpi")
+    assert not edge.update_virtuals("mpi")
+    assert not edge.update_virtuals(("c", "fortran", "mpi", "lapack"))
+    assert edge.virtuals == ("blas", "c", "fortran", "lapack", "mpi")
+
+
 def test_virtual_queries_work_for_strings_and_lists():
     """Ensure that ``dependencies()`` works with both virtuals=str and virtuals=[str, ...]."""
     parent, child = Spec("parent"), Spec("child")

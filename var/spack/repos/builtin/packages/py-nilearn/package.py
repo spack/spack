@@ -27,11 +27,11 @@ class PyNilearn(PythonPackage):
     version("0.6.2", sha256="cfc6cfda59a6f4247189f8ccf92e364de450460a15c0ec21bdb857c420dd198c")
     version("0.4.2", sha256="5049363eb6da2e7c35589477dfc79bf69929ca66de2d7ed2e9dc07acf78636f4")
 
+    variant("plotting", default=False, description="Enable plotting functionalities")
+
     depends_on("py-hatchling", when="@0.10.1:", type="build")
     depends_on("py-hatch-vcs", when="@0.10.1:", type="build")
     depends_on("py-setuptools", when="@:0.10.0", type="build")
-
-    variant("plotting", default=False, description="Enable plotting functionalities")
 
     depends_on("py-joblib@1:", when="@0.10:", type=("build", "run"))
     depends_on("py-joblib@0.15:", when="@0.9.1:", type=("build", "run"))

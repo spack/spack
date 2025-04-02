@@ -59,10 +59,10 @@ class Vecmem(CMakePackage, CudaPackage):
     version("0.2.0", sha256="33aea135989684e325cb097e455ff0f9d1a9e85ff32f671e3b3ed6cc036176ac")
     version("0.1.0", sha256="19e24e3262aa113cd4242e7b94e2de34a4b362e78553730a358f64351c6a0a01")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("hip", default=False, description="Build the vecmem::hip library")
     variant("sycl", default=False, description="Build the vecmem::sycl library")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.17:", type="build")
     depends_on("hip", when="+hip")

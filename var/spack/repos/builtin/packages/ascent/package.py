@@ -87,10 +87,6 @@ class Ascent(CMakePackage, CudaPackage):
         "0.6.0", tag="v0.6.0", commit="9ade37b0a9ea495e45adb25cda7498c0bf9465c5", submodules=True
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     ###########################################################################
     # package variants
     ###########################################################################
@@ -159,6 +155,10 @@ class Ascent(CMakePackage, CudaPackage):
     ##########################################################################
     # package dependencies
     ###########################################################################
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14,3.18.2:", type="build")
 

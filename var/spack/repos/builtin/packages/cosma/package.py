@@ -55,6 +55,8 @@ class Cosma(CMakePackage):
     with when("+rocm"):
         variant("rccl", default=False, description="Use rocm rccl")
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.22:", type="build")
     depends_on("mpi@3:")
     depends_on("blas", when="~cuda ~rocm")

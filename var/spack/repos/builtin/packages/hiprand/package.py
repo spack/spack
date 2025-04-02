@@ -47,9 +47,6 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
         version("5.3.3", sha256="f72626b00d61ed2925b3124b7f094ccfaf7750f02bee6bac6b79317e1c5576ef")
         version("5.3.0", sha256="6fd9b3a719bf4c228657cb2a0ff283eb7d777ba31bfffe5a26589d588f89a279")
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
@@ -73,6 +70,9 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
         description="CMake build type",
     )
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.10.2:", type="build")
 

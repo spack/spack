@@ -43,8 +43,6 @@ class Benchmark(CMakePackage):
     version("1.1.0", sha256="e7334dd254434c6668e33a54c8f839194c7c61840d52f4b6258eee28e9f3b20e")
     version("1.0.0", sha256="d2206c263fc1a7803d4b10e164e0c225f6bcf0d5e5f20b87929f137dee247b54")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "build_type",
         default="RelWithDebInfo",
@@ -60,6 +58,8 @@ class Benchmark(CMakePackage):
     variant(
         "shared", default=True, sticky=True, description="Build the libraries as shared objects"
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@2.8.11:", type="build", when="@:1.1.0")
     depends_on("cmake@2.8.12:", type="build", when="@1.2.0:1.4")

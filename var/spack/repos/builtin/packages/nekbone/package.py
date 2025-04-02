@@ -26,13 +26,13 @@ class Nekbone(Package):
         extension=".tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Variants
     variant("mpi", default=True, description="Build with MPI")
 
     # dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("mpi", when="+mpi")
 
     @run_before("install")
