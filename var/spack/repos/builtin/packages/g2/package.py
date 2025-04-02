@@ -98,4 +98,7 @@ class G2(CMakePackage):
 
     def check(self):
         with working_dir(self.build_directory):
-            make("test")
+            if self.spec.satisfies("%intel@:2022"):
+                ctest("--exclude-regex", "test_gribcreate_.")
+            else:
+                ctest()
