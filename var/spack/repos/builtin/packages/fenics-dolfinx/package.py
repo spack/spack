@@ -78,6 +78,7 @@ class FenicsDolfinx(CMakePackage):
     def cmake_args(self):
         return [
             self.define("DOLFINX_SKIP_BUILD_TESTS", True),
+            self.define_from_variant("DOLFINX_ENABLE_PETSC", "petsc"),
             self.define_from_variant("DOLFINX_ENABLE_SLEPC", "slepc"),
             self.define_from_variant("DOLFINX_ENABLE_ADIOS2", "adios2"),
             self.define("DOLFINX_UFCX_PYTHON", False),
