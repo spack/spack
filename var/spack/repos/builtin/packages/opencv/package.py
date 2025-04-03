@@ -48,9 +48,6 @@ class Opencv(CMakePackage, CudaPackage):
     version("3.3.1", sha256="5dca3bb0d661af311e25a72b04a7e4c22c47c1aa86eb73e70063cd378a2aa6ee")
     version("3.3.0", sha256="8bb312b9d9fd17336dc1f8b3ac82f021ca50e2034afc866098866176d985adc6")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     contrib_vers = [
         "3.3.0",
         "3.3.1",
@@ -741,6 +738,9 @@ class Opencv(CMakePackage, CudaPackage):
     )
     variant("nonfree", default=False, description="Enable non-free algorithms")
     variant("contrib", default=True, description="Enable OpenCV contrib modules")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # Required (dependencies)
     depends_on("cmake@3.5.1:", type="build")

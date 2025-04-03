@@ -639,7 +639,15 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
             dirs = ", ".join([str(x) for x in sorted(bin_dirs)])
             raise RuntimeError(f"executables found in multiple dirs: {dirs}")
         bin_dir = bin_dirs.pop()
-        prefix_parts = bin_dir.parts[: bin_dir.parts.index("compiler")]
+
+        # Some sites symlink the bindir to the top level of the prefix
+        if "compiler" in bin_dir.parts:
+            # Normal installation
+            prefix_parts = bin_dir.parts[: bin_dir.parts.index("compiler")]
+        else:
+            # Executables from top level bin dir as symlinks
+            prefix_parts = bin_dir.parts[:-1]
+
         computed_prefix = pathlib.Path(*prefix_parts)
         extra_attributes["prefix"] = str(computed_prefix)
 

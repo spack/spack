@@ -83,9 +83,6 @@ class IntelTbb(CMakePackage, MakefilePackage):
     version("4.4.1", sha256="05737bf6dd220b31aad63d77ca59c742271f81b4cc6643aa6f93d37450ae32b5")
     version("4.4", sha256="93c74b6054c69c86fa49d0fce7c50061fc907cb198a7237b8dd058298fd40c0e")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     build_system(
         conditional("makefile", when="@:2020.3"),
         conditional("cmake", when="@2021:"),
@@ -120,6 +117,9 @@ class IntelTbb(CMakePackage, MakefilePackage):
 
     # Testing version ranges inside when clauses was fixed in e9ee9eaf.
     # See: #8957 and #13989.
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Build and install CMake config files if we're new enough.
     # CMake support started in 2017.7.

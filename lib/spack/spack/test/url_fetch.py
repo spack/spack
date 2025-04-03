@@ -109,6 +109,26 @@ def test_fetch_options(tmp_path, mock_archive):
             assert filecmp.cmp(fetcher.archive_file, mock_archive.archive_file)
 
 
+def test_fetch_curl_options(tmp_path, mock_archive, monkeypatch):
+    with spack.config.override("config:url_fetch_method", "curl -k -q"):
+        fetcher = fs.URLFetchStrategy(
+            url=mock_archive.url, fetch_options={"cookie": "True", "timeout": 10}
+        )
+
+        def check_args(*args, **kwargs):
+            # Raise StopIteration to avoid running the rest of the fetch method
+            # args[0] is `which curl`, next two are our config options
+            assert args[1:3] == ("-k", "-q")
+            raise StopIteration
+
+        monkeypatch.setattr(type(fetcher.curl), "__call__", check_args)
+
+        with Stage(fetcher, path=str(tmp_path)):
+            assert fetcher.archive_file is None
+            with pytest.raises(StopIteration):
+                fetcher.fetch()
+
+
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
 def test_archive_file_errors(tmp_path, mutable_config, mock_archive, _fetch_method):
     """Ensure FetchStrategy commands may only be used as intended"""

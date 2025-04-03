@@ -30,8 +30,6 @@ class Malt(CMakePackage):
         url="https://github.com/memtt/malt/archive/v1.2.1.tar.gz",
     )
 
-    depends_on("cxx", type="build")
-
     # Variants
     variant(
         "nodejs",
@@ -46,6 +44,8 @@ class Malt(CMakePackage):
     )
 
     # Dependencies
+    depends_on("cxx", type="build")
+
     depends_on("node-js@18:", type=("build", "run"), when="+nodejs")
     depends_on("libelf")
     depends_on("libunwind")

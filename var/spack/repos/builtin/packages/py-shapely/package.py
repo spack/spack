@@ -20,6 +20,7 @@ class PyShapely(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.1.0", sha256="2cbe90e86fa8fc3ca8af6ffb00a77b246b918c7cf28677b7c21489b678f6b02e")
     version("2.0.7", sha256="28fe2997aab9a9dc026dc6a355d04e85841546b2a5d232ed953e3321ab958ee5")
     version("2.0.6", sha256="997f6159b1484059ec239cacaa53467fd8b5564dabe186cd84ac2944663b0bf6")
     version("2.0.5", sha256="bff2366bc786bfa6cb353d6b47d0443c570c32776612e527ee47b6df63fcfe32")
@@ -53,7 +54,8 @@ class PyShapely(PythonPackage):
         depends_on("py-setuptools@:63", when="@:1")
 
     with default_args(type=("build", "link", "run")):
-        depends_on("py-numpy@1.14:2", when="@2.0.6:")
+        depends_on("py-numpy@1.21:", when="@2.1:")
+        depends_on("py-numpy@1.14:2", when="@2.0.6:2.0")
         # https://github.com/shapely/shapely/issues/2098
         depends_on("py-numpy@1.14:2.0", when="@2.0.4:2.0.5")
         # https://github.com/shapely/shapely/issues/1972
@@ -61,6 +63,7 @@ class PyShapely(PythonPackage):
         depends_on("py-numpy@:1", when="@1")
 
     # setup.py
+    depends_on("geos@3.9:", when="@2.1:")
     depends_on("geos@3.5:", when="@2:")
     depends_on("geos@3.3:", when="@:1")
 

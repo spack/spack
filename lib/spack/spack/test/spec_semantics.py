@@ -626,43 +626,32 @@ class TestSpecSemantics:
         with pytest.raises(spack.spec_parser.SpecParsingError, match="Propagation"):
             Spec(spec_string)
 
-    def test_unsatisfiable_multi_value_variant(self, default_mock_concretization):
+    def test_multivalued_variant_1(self, default_mock_concretization):
         # Semantics for a multi-valued variant is different
         # Depending on whether the spec is concrete or not
 
-        a = default_mock_concretization('multivalue-variant foo="bar"')
-        spec_str = 'multivalue-variant foo="bar,baz"'
-        b = Spec(spec_str)
+        a = default_mock_concretization("multivalue-variant foo=bar")
+        b = Spec("multivalue-variant foo=bar,baz")
         assert not a.satisfies(b)
-        assert not a.satisfies(spec_str)
-        # A concrete spec cannot be constrained further
-        with pytest.raises(UnsatisfiableSpecError):
-            a.constrain(b)
 
-        a = Spec('multivalue-variant foo="bar"')
-        spec_str = 'multivalue-variant foo="bar,baz"'
-        b = Spec(spec_str)
+    def test_multivalued_variant_2(self):
+        a = Spec("multivalue-variant foo=bar")
+        b = Spec("multivalue-variant foo=bar,baz")
         # The specs are abstract and they **could** be constrained
         assert a.satisfies(b)
-        assert a.satisfies(spec_str)
         # An abstract spec can instead be constrained
         assert a.constrain(b)
 
-        a = default_mock_concretization('multivalue-variant foo="bar,baz"')
-        spec_str = 'multivalue-variant foo="bar,baz,quux"'
-        b = Spec(spec_str)
+    def test_multivalued_variant_3(self, default_mock_concretization):
+        a = default_mock_concretization("multivalue-variant foo=bar,baz")
+        b = Spec("multivalue-variant foo=bar,baz,quux")
         assert not a.satisfies(b)
-        assert not a.satisfies(spec_str)
-        # A concrete spec cannot be constrained further
-        with pytest.raises(UnsatisfiableSpecError):
-            a.constrain(b)
 
-        a = Spec('multivalue-variant foo="bar,baz"')
-        spec_str = 'multivalue-variant foo="bar,baz,quux"'
-        b = Spec(spec_str)
+    def test_multivalued_variant_4(self):
+        a = Spec("multivalue-variant foo=bar,baz")
+        b = Spec("multivalue-variant foo=bar,baz,quux")
         # The specs are abstract and they **could** be constrained
         assert a.intersects(b)
-        assert a.intersects(spec_str)
         # An abstract spec can instead be constrained
         assert a.constrain(b)
         # ...but will fail during concretization if there are
@@ -670,15 +659,14 @@ class TestSpecSemantics:
         with pytest.raises(InvalidVariantValueError):
             spack.concretize.concretize_one(a)
 
+    def test_multivalued_variant_5(self):
         # This time we'll try to set a single-valued variant
-        a = Spec('multivalue-variant fee="bar"')
-        spec_str = 'multivalue-variant fee="baz"'
-        b = Spec(spec_str)
+        a = Spec("multivalue-variant fee=bar")
+        b = Spec("multivalue-variant fee=baz")
         # The specs are abstract and they **could** be constrained,
         # as before concretization I don't know which type of variant
         # I have (if it is not a BV)
         assert a.intersects(b)
-        assert a.intersects(spec_str)
         # A variant cannot be parsed as single-valued until we try to
         # concretize. This means that we can constrain the variant above
         assert a.constrain(b)
@@ -1958,6 +1946,35 @@ def test_edge_equality_does_not_depend_on_virtual_order():
     assert edge1 == edge2
     assert tuple(sorted(edge1.virtuals)) == edge1.virtuals
     assert tuple(sorted(edge2.virtuals)) == edge1.virtuals
+
+
+def test_update_virtuals():
+    parent, child = Spec("parent"), Spec("child")
+    edge = DependencySpec(parent, child, depflag=0, virtuals=("mpi", "lapack"))
+    assert edge.update_virtuals("blas")
+    assert edge.virtuals == ("blas", "lapack", "mpi")
+    assert edge.update_virtuals(("c", "fortran", "mpi", "lapack"))
+    assert edge.virtuals == ("blas", "c", "fortran", "lapack", "mpi")
+    assert not edge.update_virtuals("mpi")
+    assert not edge.update_virtuals(("c", "fortran", "mpi", "lapack"))
+    assert edge.virtuals == ("blas", "c", "fortran", "lapack", "mpi")
+
+
+def test_virtual_queries_work_for_strings_and_lists():
+    """Ensure that ``dependencies()`` works with both virtuals=str and virtuals=[str, ...]."""
+    parent, child = Spec("parent"), Spec("child")
+    parent._add_dependency(
+        child, depflag=dt.BUILD, virtuals=("cxx", "fortran")  # multi-char dep names
+    )
+
+    assert not parent.dependencies(virtuals="c")  # not in virtuals but shares a char with cxx
+
+    for lang in ["cxx", "fortran"]:
+        assert parent.dependencies(virtuals=lang)  # string arg
+        assert parent.edges_to_dependencies(virtuals=lang)  # string arg
+
+        assert parent.dependencies(virtuals=[lang])  # list arg
+        assert parent.edges_to_dependencies(virtuals=[lang])  # string arg
 
 
 def test_old_format_strings_trigger_error(default_mock_concretization):

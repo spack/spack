@@ -777,3 +777,54 @@ def test_optimization_flags_are_using_node_target(default_mock_concretization, m
 
     assert len(actions) == 1 and isinstance(actions[0], spack.util.environment.SetEnv)
     assert actions[0].value == "-march=x86-64 -mtune=generic"
+
+
+@pytest.mark.regression("49827")
+@pytest.mark.parametrize(
+    "gcc_config,expected_rpaths",
+    [
+        (
+            """\
+gcc:
+  externals:
+  - spec: gcc@14.2.0 languages=c
+    prefix: /fake/path1
+    extra_attributes:
+      compilers:
+        c: /fake/path1
+      extra_rpaths:
+      - /extra/rpaths1
+      - /extra/rpaths2
+""",
+            "/extra/rpaths1:/extra/rpaths2",
+        ),
+        (
+            """\
+gcc:
+  externals:
+  - spec: gcc@14.2.0 languages=c
+    prefix: /fake/path1
+    extra_attributes:
+      compilers:
+        c: /fake/path1
+""",
+            None,
+        ),
+    ],
+)
+@pytest.mark.not_on_windows("Windows doesn't use the compiler-wrapper")
+def test_extra_rpaths_is_set(
+    working_env, mutable_config, mock_packages, gcc_config, expected_rpaths
+):
+    """Tests that using a compiler with an 'extra_rpaths' section will set the corresponding
+    SPACK_COMPILER_EXTRA_RPATHS variable for the wrapper.
+    """
+    cfg_data = syaml.load_config(gcc_config)
+    spack.config.set("packages", cfg_data)
+    mpich = spack.concretize.concretize_one("mpich %gcc@14")
+    spack.build_environment.setup_package(mpich.package, dirty=False)
+
+    if expected_rpaths is not None:
+        assert os.environ["SPACK_COMPILER_EXTRA_RPATHS"] == expected_rpaths
+    else:
+        assert "SPACK_COMPILER_EXTRA_RPATHS" not in os.environ

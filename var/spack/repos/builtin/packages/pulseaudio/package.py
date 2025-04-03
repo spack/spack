@@ -23,14 +23,14 @@ class Pulseaudio(AutotoolsPackage):
 
     version("13.0", sha256="961b23ca1acfd28f2bc87414c27bb40e12436efcf2158d29721b1e89f3f28057")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("alsa", default=False, description="alsa support")
     variant("fftw", default=False, description="FFTW support")
     variant("gconf", default=False, description="Gconf support")
     variant("openssl", default=False, description="openSSL support (used for Airtunes/RAOP)")
     variant("x11", default=False, description="x11 support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("alsa-lib@1.0.19:", when="+alsa")
     depends_on("dbus@1.4.12:")

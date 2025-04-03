@@ -32,6 +32,7 @@ class Parmmg(CMakePackage):
 
     variant("vtk", default=False, description="Build with VTK support")
     variant("shared", default=True, description="Build shared libraries")
+    variant("pic", default=True, description="Build with position independent code")
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -42,8 +43,6 @@ class Parmmg(CMakePackage):
     depends_on("metis")
     depends_on("vtk", when="+vtk")
     depends_on("mpi")
-
-    variant("pic", default=True, description="Build with position independent code")
 
     def cmake_args(self):
         args = [

@@ -28,6 +28,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
     version("develop", branch="develop")
 
+    version("4.6.00", sha256="be72cf7fc6ef6b99c614f29b945960013a2aaa23859bfe1a560d8d9aa526ec9c")
     version("4.5.01", sha256="52d003ffbbe05f30c89966e4009c017efb1662b02b2b73190670d3418719564c")
     version("4.5.00", sha256="cbfb742feeb9e649db9eca0394e6ca9a22aa017a1e6aab8576990772a0e3135b")
     version("4.4.01", sha256="3413f0cb39912128d91424ebd92e8832009e7eeaf6fa8da58e99b0d37860d972")
@@ -202,6 +203,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "zen": "ZEN",
         "zen2": "ZEN2",
         "zen3": "ZEN3",
+        "zen4": "ZEN4",
         "steamroller": "KAVERI",
         "excavator": "CARIZO",
         "power7": "POWER7",

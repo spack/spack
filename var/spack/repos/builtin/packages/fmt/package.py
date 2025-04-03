@@ -50,9 +50,6 @@ class Fmt(CMakePackage):
     version("3.0.0", sha256="1b050b66fa31b74f1d75a14f15e99e728ab79572f176a53b2f8ad7c201c30ceb")
     version("master", branch="master")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant(
         "cxxstd",
         default="11",
@@ -62,6 +59,9 @@ class Fmt(CMakePackage):
     )
     variant("shared", default=False, description="Build shared library")
     variant("pic", default=True, description="Build position-independent code")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.1.0:", type="build")
 

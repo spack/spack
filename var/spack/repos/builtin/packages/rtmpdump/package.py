@@ -17,9 +17,9 @@ class Rtmpdump(MakefilePackage):
 
     version("2021-02-19", commit="f1b83c10d8beb43fcc70a6e88cf4325499f25857")
 
-    depends_on("c", type="build")  # generated
-
     variant("tls", default="openssl", description="TLS backend", values=("gnutls", "openssl"))
+
+    depends_on("c", type="build")  # generated
 
     depends_on("openssl@:3", when="tls=openssl")
     depends_on("gnutls", when="tls=gnutls")

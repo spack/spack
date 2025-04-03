@@ -41,11 +41,11 @@ class GdkPixbuf(MesonPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-
     variant("tiff", default=False, description="Enable TIFF support(partially broken)")
     # Man page creation was getting docbook errors, see issue #18853
     variant("man", default=False, description="Enable man page creation")
+
+    depends_on("c", type="build")
 
     with default_args(type="build"):
         depends_on("meson@0.55.3:")
