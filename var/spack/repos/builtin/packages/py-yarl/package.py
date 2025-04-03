@@ -14,6 +14,7 @@ class PyYarl(PythonPackage):
 
     license("Apache-2.0")
 
+    version("1.18.3", sha256="ac1801c45cbf77b6c99242eeff4fffb5e4e73a800b5c4ad4fc0be5def634d2e1")
     version("1.9.2", sha256="04ab9d4b9f587c06d801c2abfe9317b77cdf996c65a90d5e84ecc45010823571")
     version("1.8.1", sha256="af887845b8c2e060eb5605ff72b6f2dd2aab7a761379373fd89d314f4752abbf")
     version("1.7.2", sha256="45399b46d60c253327a460e99856752009fcee5f5d3c80b2f7c0cae1c38d56dd")
@@ -22,13 +23,16 @@ class PyYarl(PythonPackage):
 
     depends_on("c", type="build")  # generated
 
+    depends_on("py-expandvars", type="build", when="@1.18:")
     depends_on("py-setuptools@40:", type="build", when="@1.7.2:")
     depends_on("py-setuptools", type="build")
     depends_on("py-cython", type="build")
 
-    depends_on("py-multidict@4.0:", type=("build", "run"))
-    depends_on("py-idna@2.0:", type=("build", "run"))
-    depends_on("py-typing-extensions@3.7.4:", when="@1.7.2: ^python@:3.7", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-multidict@4.0:")
+        depends_on("py-propcache@0.2.1:", when="@1.18:")
+        depends_on("py-idna@2.0:")
+        depends_on("py-typing-extensions@3.7.4:", when="@1.7.2: ^python@:3.7")
 
     @run_before("install")
     def fix_cython(self):

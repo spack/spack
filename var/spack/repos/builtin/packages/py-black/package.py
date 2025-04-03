@@ -69,7 +69,9 @@ class PyBlack(PythonPackage):
 
         depends_on("py-colorama@0.4.3:", when="+colorama")
         depends_on("py-uvloop@0.15.2:", when="+uvloop")
-        depends_on("py-aiohttp@3.7.4:", when="+d")
+        with when("+d"):
+            depends_on("py-aiohttp@3.10:", when="@24.10")
+            depends_on("py-aiohttp@3.7.4:")
         depends_on("py-ipython@7.8:", when="+jupyter")
         depends_on("py-tokenize-rt@3.2:", when="+jupyter")
 
