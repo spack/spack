@@ -188,7 +188,7 @@ default:
 
 .generate-neoverse_v1:
   extends: [ ".generate-base" ]
-  tags: ["spack", "public", "medium", "aarch64", "graviton3"]
+  tags: ["spack", "public", "medium", "aarch64", "neoverse_v1"]
 
 .generate-neoverse-v2:
   extends: [ ".generate-base" ]
