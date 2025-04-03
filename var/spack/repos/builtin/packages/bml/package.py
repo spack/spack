@@ -37,7 +37,6 @@ class Bml(CMakePackage):
     depends_on("blas")
     depends_on("lapack")
 
-    # build shared libraries for bml, on by default
     variant("shared", default=True, description="Build shared libs")
 
     # define mpi variant, on by default
