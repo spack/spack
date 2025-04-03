@@ -24,6 +24,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("6.3.3", sha256="8f645a5c9298170e71354437188eeca8272ff2b98077e9f34d1ca0fd7f27b7f8")
     version("6.3.2", sha256="6e86d4f8657e13665e37fdf3174c3a30f4c7dff2c4e2431d1be110cd7d463971")
     version("6.3.1", sha256="77a1845254d738c43a48bc52fa3e94499ed83535b5771408ff476122bc4b7b7c")
     version("6.3.0", sha256="72604c1896e42e65ea2b3e905159af6ec5eede6a353678009c47d0a24f462c92")
@@ -47,10 +48,6 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
         version("5.3.3", sha256="1ce093fc6bc021ad4fe0b0b93f9501038a7a5a16b0fd4fc485d65cbd220a195e")
         version("5.3.0", sha256="873d55749479873994679840906c4257316dfb09a6200411204ad4a8c2480565")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
@@ -68,6 +65,10 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.5:", type="build")
 
@@ -94,6 +95,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"rocm-cmake@{ver}", when=f"+rocm @{ver}")
         depends_on(f"rocm-openmp-extras@{ver}", type="test", when=f"+rocm @{ver}")
@@ -122,6 +124,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
         "master",
         "develop",
     ]:
@@ -130,7 +133,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     for tgt in ROCmPackage.amdgpu_targets:
         depends_on(f"rocblas amdgpu_target={tgt}", when=f"+rocm amdgpu_target={tgt}")
         depends_on(f"rocsolver amdgpu_target={tgt}", when=f"+rocm amdgpu_target={tgt}")
-    for ver in ["6.3.0", "6.3.1", "6.3.2"]:
+    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
         depends_on(f"hipblas-common@{ver}", when=f"@{ver}")
 
     @classmethod

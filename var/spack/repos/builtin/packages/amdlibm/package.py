@@ -43,12 +43,12 @@ class Amdlibm(SConsPackage):
     version("3.0", sha256="eb26b5e174f43ce083928d0d8748a6d6d74853333bba37d50057aac2bef7c7aa")
     version("2.2", commit="4033e022da428125747e118ccd6fdd9cee21c470")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("verbose", default=False, description="Building with verbosity", when="@:4.1")
 
     # Mandatory dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("python@3.6.1:", type=("build", "run"))
     depends_on("scons@3.1.2:", type=("build"))
     depends_on("mpfr", type=("link"))

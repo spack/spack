@@ -247,7 +247,7 @@ class Openloops(Package):
         description="Number of parallel jobs to run. "
         + "Set to 1 if compiling a large number"
         + "of processes (e.g. lcg.coll)",
-        default=0,
+        default="0",
     )
     depends_on("python", type=("build", "run"))
 

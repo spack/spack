@@ -37,9 +37,6 @@ class Gmt(CMakePackage, AutotoolsPackage):
         url="ftp://ftp.soest.hawaii.edu/gmt/gmt-4.5.18-src.tar.bz2",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "ghostscript",
         default=False,
@@ -64,6 +61,9 @@ class Gmt(CMakePackage, AutotoolsPackage):
     )
 
     # Required dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     with when("build_system=cmake"):
         generator("ninja")
         depends_on("cmake@2.8.12:", type="build")

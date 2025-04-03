@@ -28,9 +28,6 @@ class Libunwind(AutotoolsPackage):
     version("1.3.1", sha256="43997a3939b6ccdf2f669b50fdb8a4d3205374728c2923ddc2354c65260214f8")
     version("1.2.1", sha256="3f3ecb90e28cbe53fba7a4a27ccce7aad188d3210bb1964a923a731a27a75acb")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("docs", default=True, description="Build man page")
     variant(
         "libs",
@@ -77,6 +74,9 @@ class Libunwind(AutotoolsPackage):
         default=False,
         description="Support zlib compressed symbol tables " "(1.5 and later).",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # The libunwind releases contain the autotools generated files,
     # but the git repo snapshots do not.

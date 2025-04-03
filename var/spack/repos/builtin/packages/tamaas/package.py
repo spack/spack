@@ -28,8 +28,6 @@ class Tamaas(SConsPackage):
     version("2.3.1", sha256="7d63e374cbc7b5b93578ece7be5c084d1c2f0dbe1d57c4f0c8abd5ff5fff9ab0")
     version("2.3.0", sha256="0529e015c6cb5bbabaea5dce6efc5ec0f2aa76c00541f0d90ad0e2e3060a4520")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("python", default=True, description="Provide Python bindings for Tamaas")
     variant(
         "solvers",
@@ -38,6 +36,8 @@ class Tamaas(SConsPackage):
         description="Enables extra Scipy-based nonlinear solvers",
     )
     variant("petsc", default=False, when="@2.8.0:", description="Additional PETSc solvers")
+
+    depends_on("cxx", type="build")  # generated
 
     # Python 3.6 causes unicode issues with scons
     depends_on("python@3.7:", type="build", when="~python")

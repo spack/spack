@@ -70,6 +70,7 @@ class Onnx(CMakePackage):
         "1.1.0_2018-04-19", commit="7e1bed51cc508a25b22130de459830b5d5063c41", deprecated=True
     )  # py-torch@0.4.0
 
+    depends_on("c", type="build")  # FIXME: note https://github.com/onnx/onnx/pull/6826
     depends_on("cxx", type="build")
 
     generator("ninja")

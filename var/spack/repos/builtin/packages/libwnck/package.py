@@ -20,6 +20,7 @@ class Libwnck(MesonPackage, AutotoolsPackage):
 
     license("GPLv2", checked_by="teaguesterling")
 
+    version("43.2", sha256="55a7444ec1fbb95c086d40967388f231b5c0bbc8cffaa086bf9290ae449e51d5")
     version("43.0", sha256="905bcdb85847d6b8f8861e56b30cd6dc61eae67ecef4cd994a9f925a26a2c1fe")
     version("40.1", sha256="03134fa114ef3fbe34075aa83678f58aa2debe9fcef4ea23c0779e28601d6611")
     version("3.36.0", sha256="bc508150b3ed5d22354b0e6774ad4eee465381ebc0ace45eb0e2d3a4186c925f")

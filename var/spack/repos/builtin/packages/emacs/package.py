@@ -27,6 +27,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     sanity_check_is_dir = ["share/emacs"]
 
     version("master", branch="master")
+    version("30.1", sha256="54404782ea5de37e8fcc4391fa9d4a41359a4ba9689b541f6bc97dd1ac283f6c")
     version("29.4", sha256="1adb1b9a2c6cdb316609b3e86b0ba1ceb523f8de540cfdda2aec95b6a5343abf")
     version("29.3", sha256="2de8df5cab8ac697c69a1c46690772b0cf58fe7529f1d1999582c67d927d22e4")
     version("29.2", sha256="ac8773eb17d8b3c0c4a3bccbb478f7c359266b458563f9a5e2c23c53c05e4e59")

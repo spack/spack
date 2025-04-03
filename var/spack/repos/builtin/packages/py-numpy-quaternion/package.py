@@ -27,10 +27,10 @@ class PyNumpyQuaternion(PythonPackage):
         url="https://pypi.io/packages/source/n/numpy-quaternion/numpy-quaternion-2021.11.4.15.26.3.tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-
     variant("scipy", default=True, description="Build with scipy support")
     variant("numba", default=True, description="Build with numba support")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("python@3.10:", when="@2024:")
 

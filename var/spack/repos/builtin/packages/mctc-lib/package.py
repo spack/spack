@@ -23,9 +23,9 @@ class MctcLib(MesonPackage, CMakePackage):
     version("0.3.1", sha256="a5032a0bbbbacc952037c5215b71aa6b438767a84bafb60fda25ba43c8835513")
     version("0.3.0", sha256="81f3edbf322e6e28e621730a796278498b84af0f221f785c537a315312059bf0")
 
-    depends_on("fortran", type="build")  # generated
-
     variant("json", default=False, description="Enable support for JSON")
+
+    depends_on("fortran", type="build")  # generated
 
     depends_on("meson@0.57.2:", type="build", when="build_system=meson")
 

@@ -30,7 +30,6 @@ import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
 from llnl.util.lang import classproperty, memoized
 
-import spack.compilers
 import spack.config
 import spack.dependency
 import spack.deptypes as dt
@@ -52,6 +51,7 @@ import spack.util.executable
 import spack.util.path
 import spack.util.web
 import spack.variant
+from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.resource import Resource
@@ -587,6 +587,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     specific build systems.
 
     """
+
+    compiler = DeprecatedCompiler()
 
     #
     # These are default values for instance variables.
@@ -1379,15 +1381,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             return spack.util.executable.Executable(path)
         raise RuntimeError(f"Unable to locate {self.spec.name} command in {self.home.bin}")
 
-    @property  # type: ignore[misc]
-    @memoized
-    def compiler(self):
-        """Get the spack.compiler.Compiler object used to build this package"""
-        if not self.spec.concrete:
-            raise ValueError("Can only get a compiler for a concrete package.")
-
-        return spack.compilers.compiler_for_spec(self.spec.compiler, self.spec.architecture)
-
     def url_version(self, version):
         """
         Given a version, this returns a string that should be substituted
@@ -1499,7 +1492,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         self.stage.create()
 
         # Fetch/expand any associated code.
-        if self.has_code:
+        if self.has_code and not self.spec.external:
             self.do_fetch(mirror_only)
             self.stage.expand_archive()
         else:
@@ -1829,17 +1822,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return resource_stage_folder
 
     def do_test(self, dirty=False, externals=False):
-        if self.test_requires_compiler:
-            compilers = spack.compilers.compilers_for_spec(
-                self.spec.compiler, arch_spec=self.spec.architecture
+        if self.test_requires_compiler and not any(
+            lang in self.spec for lang in ("c", "cxx", "fortran")
+        ):
+            tty.error(
+                f"Skipping tests for package {self.spec}, since a compiler is required, "
+                f"but not available"
             )
-            if not compilers:
-                tty.error(
-                    "Skipping tests for package %s\n"
-                    % self.spec.format("{name}-{version}-{hash:7}")
-                    + "Package test requires missing compiler %s" % self.spec.compiler
-                )
-                return
+            return
 
         kwargs = {
             "dirty": dirty,

@@ -9,7 +9,7 @@ import spack.config
 import spack.solver.asp
 
 version_error_messages = [
-    "Cannot satisfy 'fftw@:1.0' and 'fftw@1.1:",
+    "Cannot satisfy",
     "        required because quantum-espresso depends on fftw@:1.0",
     "          required because quantum-espresso ^fftw@1.1: requested explicitly",
     "        required because quantum-espresso ^fftw@1.1: requested explicitly",

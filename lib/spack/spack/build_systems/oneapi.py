@@ -311,4 +311,4 @@ class IntelOneApiStaticLibraryList:
 
 
 #: Tuple of Intel math libraries, exported to packages
-INTEL_MATH_LIBRARIES = ("intel-mkl", "intel-oneapi-mkl", "intel-parallel-studio")
+INTEL_MATH_LIBRARIES = ("intel-oneapi-mkl",)
