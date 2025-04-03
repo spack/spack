@@ -27,9 +27,6 @@ class Elk(MakefilePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # what linear algebra packages to use? the choices are
     # internal - use internal libraries
     # generic  - use spack-provided blas and lapack
@@ -76,16 +73,15 @@ class Elk(MakefilePackage):
     variant("libxc", default=True, description="Link to Libxc functional library")
     variant("w90", default=False, description="wannier90 support, requires wannier90 library")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("blas", when="linalg=generic")
     depends_on("lapack", when="linalg=generic")
 
     depends_on("mkl", when="linalg=mkl")
     with when("linalg=mkl +openmp"):
-        depends_on("intel-mkl threads=openmp", when="^[virtuals=mkl] intel-mkl")
         depends_on("intel-oneapi-mkl threads=openmp", when="^[virtuals=mkl] intel-oneapi-mkl")
-        depends_on(
-            "intel-parallel-studio threads=openmp", when="^[virtuals=mkl] intel-parallel-studio"
-        )
 
     depends_on("openblas", when="linalg=openblas")
     depends_on("openblas threads=openmp", when="linalg=openblas +openmp")
@@ -200,8 +196,6 @@ class Elk(MakefilePackage):
                 config["SRC_FFT"] += " cfftifc_mkl.f90"
             cp = which("cp")
             mkl_prefix = spec["mkl"].prefix
-            if spec.satisfies("^intel-mkl"):
-                mkl_prefix = mkl_prefix.mkl
             cp(
                 join_path(mkl_prefix.include, "mkl_dfti.f90"),
                 join_path(self.build_directory, "src"),

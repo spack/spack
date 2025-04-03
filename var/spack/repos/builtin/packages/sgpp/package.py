@@ -23,7 +23,6 @@ class Sgpp(SConsPackage):
     version("3.3.0", sha256="ca4d5b79f315b425ce69b04940c141451a76848bf1bd7b96067217304c68e2d4")
     version("3.2.0", sha256="dab83587fd447f92ed8546eacaac6b8cbe65b8db5e860218c0fa2e42f776962d")
 
-    depends_on("cxx", type="build")  # generated
     # Note: Older versions of SGpp required Python 2 (and offered Python 2 bindings) and have
     # thus been removed from this list as Spack now requires Python 3.
     # The last spack release with support for Python 2 is v0.19 - there, the spack package
@@ -70,6 +69,7 @@ class Sgpp(SConsPackage):
     variant("mpi", default=False, description="Enables support for MPI-distributed operations")
 
     # Mandatory dependencies
+    depends_on("cxx", type="build")  # generated
     depends_on("scons@3:", type="build")
     depends_on("zlib-api", type="link")
     # Python dependencies

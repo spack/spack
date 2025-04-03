@@ -11,12 +11,15 @@ class PyWebdataset(PythonPackage):
     pypi = "webdataset/webdataset-0.1.62.tar.gz"
 
     license("BSD-3-Clause")
+    maintainers("adamjstewart")
 
+    version("0.2.111", sha256="5b2835386a25601307a9ded9bcc0dbd1e81a9eee017784152528e77dd8619511")
     version("0.1.62", sha256="78b6c7810116d6875fa1ed8eb2dea29a54b86fde014cc2069f4c08fc3530ceb5")
 
-    with default_args(type=("build", "link", "run")):
-        depends_on("python@3.6:")
+    depends_on("py-setuptools@45:", type="build")
 
-    # setup.py and requires.txt
-    depends_on("py-braceexpand")
-    depends_on("py-numpy")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.10:")
+        depends_on("py-braceexpand")
+        depends_on("py-numpy")
+        depends_on("py-pyyaml")

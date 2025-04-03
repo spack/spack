@@ -175,10 +175,6 @@ class Cdo(AutotoolsPackage):
         url="https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # patches
     # see https://code.mpimet.mpg.de/boards/1/topics/15594
     patch(
@@ -216,6 +212,10 @@ class Cdo(AutotoolsPackage):
     variant("fftw3", default=True, description="Enable support for fftw3")
     variant("magics", default=False, description="Enable Magics library support")
     variant("openmp", default=True, description="Enable OpenMP support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
 

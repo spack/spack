@@ -49,8 +49,6 @@ class Edm4hep(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-
     _cxxstd_values = (conditional("17", when="@:0.99.0"), conditional("20", when="@0.10:"))
     variant(
         "cxxstd",
@@ -66,6 +64,8 @@ class Edm4hep(CMakePackage):
         description="Build edm4hep with JSON support and edm4hep2json",
         when="@0.99.2:",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.3:", type="build")
     depends_on("cmake@3.23:", type="build", when="@0.10.3:")

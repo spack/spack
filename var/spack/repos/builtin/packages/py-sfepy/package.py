@@ -20,12 +20,12 @@ class PySfepy(PythonPackage):
 
     version("2021.3", sha256="b2a760b0f3277ac223ff25821a4156b48d06b3769e6a9a3bd0bffef5a43cbe17")
 
-    depends_on("c", type="build")  # generated
-
     variant("petsc", default=False, description="Enable PETSc support")
     variant("slepc", default=False, description="Enable SLEPc support")
     variant("pyamg", default=False, description="Enable PyAMG support")
     variant("mumps", default=False, description="Enable MUMPS support")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-setuptools", type="build")

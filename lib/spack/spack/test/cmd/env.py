@@ -3065,14 +3065,26 @@ def test_stack_view_activate_from_default(
 
 def test_envvar_set_in_activate(tmp_path, mock_packages, install_mockery):
     spack_yaml = tmp_path / "spack.yaml"
+    env_vars_yaml = tmp_path / "env_vars.yaml"
+
+    env_vars_yaml.write_text(
+        """
+env_vars:
+  set:
+    CONFIG_ENVAR_SET_IN_ENV_LOAD: "True"
+"""
+    )
+
     spack_yaml.write_text(
         """
 spack:
+  include:
+  - env_vars.yaml
   specs:
     - cmake%gcc
   env_vars:
     set:
-      ENVAR_SET_IN_ENV_LOAD: "True"
+      SPACK_ENVAR_SET_IN_ENV_LOAD: "True"
 """
     )
 
@@ -3083,12 +3095,16 @@ spack:
     test_env = ev.read("test")
     output = env("activate", "--sh", "test")
 
-    assert "ENVAR_SET_IN_ENV_LOAD=True" in output
+    assert "SPACK_ENVAR_SET_IN_ENV_LOAD=True" in output
+    assert "CONFIG_ENVAR_SET_IN_ENV_LOAD=True" in output
 
     with test_env:
-        with spack.util.environment.set_env(ENVAR_SET_IN_ENV_LOAD="True"):
+        with spack.util.environment.set_env(
+            SPACK_ENVAR_SET_IN_ENV_LOAD="True", CONFIG_ENVAR_SET_IN_ENV_LOAD="True"
+        ):
             output = env("deactivate", "--sh")
-            assert "unset ENVAR_SET_IN_ENV_LOAD" in output
+            assert "unset SPACK_ENVAR_SET_IN_ENV_LOAD" in output
+            assert "unset CONFIG_ENVAR_SET_IN_ENV_LOAD" in output
 
 
 def test_stack_view_no_activate_without_default(
@@ -4270,7 +4286,7 @@ def test_env_include_packages_url(
     """Test inclusion of a (GitHub) URL."""
     develop_url = "https://github.com/fake/fake/blob/develop/"
     default_packages = develop_url + "etc/fake/defaults/packages.yaml"
-    sha256 = "a422e35b3a18869d0611a4137b37314131749ecdc070a7cd7183f488da81201a"
+    sha256 = "8b69d9c6e983dfb8bac2ddc3910a86265cffdd9c85f905c716d426ec5b0d9847"
     spack_yaml = tmpdir.join("spack.yaml")
     with spack_yaml.open("w") as f:
         f.write(

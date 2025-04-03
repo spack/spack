@@ -80,10 +80,6 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
         "1.7.0", tag="v1.7.0", commit="898277c93d884d4e7ca1ffcf3bbea81d22364f26", deprecated=True
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     is_linux = sys.platform.startswith("linux")
     variant("shared", default=True, description="Build shared libraries")
     variant("adiak", default=True, description="Enable Adiak support")
@@ -107,6 +103,10 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("tests", default=False, description="Enable tests")
     variant("tools", default=True, description="Enable tools")
     variant("python", default=False, when="@v2.12:", description="Build Python bindings")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("adiak@0.1:0", when="@2.2:2.10 +adiak")
     depends_on("adiak@0.4:0", when="@2.11: +adiak")

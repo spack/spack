@@ -690,6 +690,9 @@ class Cuda(Package):
     # Mojave support -- only macOS High Sierra 10.13 is supported.
     conflicts("arch=darwin-mojave-x86_64")
 
+    # cuda-12.8 libcusolver.so requires log2f@GLIBC_2.27
+    conflicts("glibc@:2.26", when="@12.8:")
+
     variant(
         "dev", default=False, description="Enable development dependencies, i.e to use cuda-gdb"
     )
@@ -727,7 +730,8 @@ class Cuda(Package):
             env.append_path("LD_LIBRARY_PATH", libxml2_home.lib)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set("CUDAHOSTCXX", dependent_spec.package.compiler.cxx)
+        if "cxx" in dependent_spec:
+            env.set("CUDAHOSTCXX", dependent_spec["cxx"].package.cxx)
         env.set("CUDA_HOME", self.prefix)
         env.set("NVHPC_CUDA_HOME", self.prefix)
 

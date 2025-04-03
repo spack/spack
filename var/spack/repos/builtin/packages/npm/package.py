@@ -20,6 +20,7 @@ class Npm(Package):
 
     license("Artistic-2.0")
 
+    version("11.2.0", sha256="1a947c2f9f3bc8c227dd3d30c39338214598dd7da6b4771b7c735c56401d5fb8")
     version("11.1.0", sha256="0f144846f78cc0eb230b0e228f736d5c06362e4ea867c72f059790568454abb7")
     version("10.9.2", sha256="5cd1e5ab971ea6333f910bc2d50700167c5ef4e66da279b2a3efc874c6b116e4")
     version("9.9.4", sha256="640bdd76a0b9d92e9da6e391abae75fd2f168478e416847f3acdb8373737e0ee")

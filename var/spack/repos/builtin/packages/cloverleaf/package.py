@@ -23,10 +23,6 @@ class Cloverleaf(MakefilePackage):
     version("master", branch="master", submodules=True)
     version("1.1", sha256="de87f7ee6b917e6b3d243ccbbe620370c62df890e3ef7bdbab46569b57be132f")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "build",
         default="ref",
@@ -35,6 +31,10 @@ class Cloverleaf(MakefilePackage):
     )
     variant("ieee", default=False, description="Build with IEEE standards")
     variant("debug", default=False, description="Build with DEBUG flags")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi", when="build=cuda")
     depends_on("mpi", when="build=mpi_only")

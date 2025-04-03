@@ -14,6 +14,7 @@ class PyTorchmetrics(PythonPackage):
     license("Apache-2.0")
     maintainers("adamjstewart")
 
+    version("1.7.0", sha256="7a26d5cb73a6ae51ab5cb514aa4dc0543af7287a507719986a06e15df12ea68b")
     version("1.6.3", sha256="be59ffe9e9abf12ac12c3ac4383b2fc7731ad2bf3748ae1b06e8dea34e9f8a65")
     version("1.6.2", sha256="a3fa6372dbf01183d0f6fda2159e9526fb62818aa3630660909c290425f67df6")
     version("1.6.1", sha256="a5dc236694b392180949fdd0a0fcf2b57135c8b600e557c725e077eb41e53e64")
@@ -71,7 +72,6 @@ class PyTorchmetrics(PythonPackage):
         depends_on("py-torch@1.10:", when="@1.3:")
         depends_on("py-torch@1.8.1:", when="@0.11:")
         depends_on("py-torch@1.3.1:")
-        depends_on("py-typing-extensions", when="@0.9: ^python@:3.8")
         depends_on("py-lightning-utilities@0.8:", when="@1.1:")
         depends_on("py-lightning-utilities@0.7:", when="@1:")
 
@@ -84,6 +84,7 @@ class PyTorchmetrics(PythonPackage):
         # Historical dependencies
         depends_on("py-pretty-errors@1.2.25", when="@1.4.0")
         depends_on("py-pydeprecate@0.3", when="@0.7:0.8")
+        depends_on("py-typing-extensions", when="@0.9: ^python@:3.8")
 
         with when("+image"):
             depends_on("py-lpips", when="@:1.2.0")

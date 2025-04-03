@@ -20,19 +20,17 @@ class Ligra(MakefilePackage):
     version("1.1", sha256="a7311b96fabc286a8f1250d8a6e2d1b1e4545c720fa6bb4acf7ed31211fcc99a")
     version("1.0", sha256="fb39ae0a3eddb26f37b8cc0a543648575a50bcc488cecd4a5f1beaaf2458736c")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("openmp", default=True, description="Build with OpenMP")
     variant("mkl", default=False, description="Build with Intel MKL")
     # TODO: Add cilk variant when spack has a cilk plus package created.
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("mkl", when="+mkl")
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("+openmp"):
             env.set("OPENMP", "1")
-        # when +mkl, MKLROOT will be defined by intel-mkl package,
-        # triggering a build with mkl support
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", self.prefix.apps)

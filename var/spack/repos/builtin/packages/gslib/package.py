@@ -12,6 +12,7 @@ class Gslib(Package):
     git = "https://github.com/gslib/gslib.git"
 
     version("develop", branch="master")
+    version("1.0.9", tag="v1.0.9", commit="95acf5b42301d6cb48fda88d662f1d784b863089")
     version("1.0.7", tag="v1.0.7", commit="88f90cb96953527e3e833f8dbf2719273fc8346d")
     version("1.0.6", tag="v1.0.6", commit="1c2f74420fec36d5abe1d75f194a457c61f0df53")
     version("1.0.5", tag="v1.0.5", commit="1de2fba1d94e27e20f3bc3af6a3a35901e223ecd")
@@ -21,12 +22,12 @@ class Gslib(Package):
     version("1.0.1", tag="v1.0.1", commit="d16685f24551b7efd69e58d96dc76aec75239ea3")
     version("1.0.0", tag="v1.0.0", commit="9533e652320a3b26a72c36487ae265b02072cd48")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=True, description="Build with MPI")
     variant("mpiio", default=True, description="Build with MPI I/O")
     variant("blas", default=False, description="Build with BLAS")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+mpiio")

@@ -42,10 +42,10 @@ class PyNumba(PythonPackage):
         deprecated=True,
     )
 
+    variant("tbb", default=False, description="Build with Intel Threading Building Blocks")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("tbb", default=False, description="Build with Intel Threading Building Blocks")
 
     # Be careful that the bounds given in setup.py are exclusive on the upper bound
     # i.e., [min, max)

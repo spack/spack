@@ -42,12 +42,12 @@ class AoclUtils(CMakePackage):
     version("4.2", sha256="1294cdf275de44d3a22fea6fc4cd5bf66260d0a19abb2e488b898aaf632486bd")
     version("4.1", sha256="660746e7770dd195059ec25e124759b126ee9f060f43302d13354560ca76c02c")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("doc", default=False, description="enable documentation")
     variant("tests", default=False, description="enable testing")
     variant("shared", default=True, when="@4.2:", description="build shared library")
     variant("examples", default=False, description="enable examples")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.22:", type="build")
     depends_on("doxygen", when="+doc")
