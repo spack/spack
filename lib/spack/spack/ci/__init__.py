@@ -1327,7 +1327,7 @@ def run_standalone_tests(
         return
 
     test_args = ["spack", "--color=always", "--backtrace", "--verbose", "test", "run"]
-    if fail_fast is True:
+    if fail_fast:
         test_args.append("--fail-fast")
 
     if timeout is not None:

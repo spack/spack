@@ -1255,7 +1255,7 @@ def start_build_process(pkg, function, kwargs, *, timeout: Optional[int] = None)
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin, "fileno"):
             input_fd = Connection(os.dup(sys.stdin.fileno()))
-        mflags = os.environ.get("MAKEFLAGS", None)
+        mflags = os.environ.get("MAKEFLAGS")
         if mflags is not None:
             m = re.search(r"--jobserver-[^=]*=(\d),(\d)", mflags)
             if m:
