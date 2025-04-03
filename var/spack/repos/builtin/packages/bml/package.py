@@ -43,7 +43,6 @@ class Bml(CMakePackage):
     depends_on("mpi", when="+mpi")
     conflicts("+mpi", when="@:1.2.2")
 
-    # define magma variant
     variant("magma", default=False, description="Build with magma support")
     depends_on("magma", when="+magma")
     conflicts("+magma", when="@1.1.0:", msg="Must use master branch of bml")
