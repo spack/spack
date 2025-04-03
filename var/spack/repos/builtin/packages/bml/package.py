@@ -58,9 +58,6 @@ class Bml(CMakePackage):
     depends_on("cuda", when="+cusolver")
 
     def setup_build_environment(self, env):
-        """
-        Set environment variables.
-        """
         if "+magma" in self.spec:
             env.set("MAGMA_ROOT", self.spec["magma"].prefix)
 
