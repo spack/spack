@@ -14,8 +14,6 @@ class StandaloneTimeout(Package):
     version("1.0", md5="123456789abcdef0123456789abcdefg")
     version("0.9", md5="0123456789abcdef0123456789abcdef")
 
-    provides("standalone-ifc")
-
     def test_timeout(self):
         """simple timeout test"""
         import time
