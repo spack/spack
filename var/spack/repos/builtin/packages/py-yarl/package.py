@@ -30,7 +30,7 @@ class PyYarl(PythonPackage):
 
     with default_args(type=("build", "run")):
         depends_on("py-multidict@4.0:")
-        depends_on("py-propcache@0.2.1:", when="@1.18:")
+        depends_on("py-propcache@0.2:", when="@1.14:")
         depends_on("py-idna@2.0:")
         depends_on("py-typing-extensions@3.7.4:", when="@1.7.2: ^python@:3.7")
 
