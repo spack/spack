@@ -85,9 +85,10 @@ from spack.util.executable import which
 
 from .enums import InstallRecordStatus
 from .url_buildcache import (
-    INDEX_HASH_FILE,
+    BlobRecord,
     BuildcacheComponent,
     BuildcacheEntryError,
+    BuildcacheManifest,
     InvalidMetadataFile,
     MirrorForSpec,
     MirrorURLAndVersion,
@@ -705,23 +706,41 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
         index_string = f.read()
         index_hash = compute_hash(index_string)
 
-    # Write the hash out to a local file
-    index_hash_path = os.path.join(temp_dir, INDEX_HASH_FILE)
-    with open(index_hash_path, "w", encoding="utf-8") as f:
-        f.write(index_hash)
+    cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
 
-    # Push the index itself
+    index_blob_record = BlobRecord(
+        os.stat(index_json_path).st_size, "index-v7", "none", "sha256", index_hash
+    )
+    index_manifest = {
+        "version": cache_class.get_layout_version(),
+        "data": [index_blob_record.to_json()],
+    }
+
+    index_blob_url = url_util.join(
+        cache_prefix,
+        *cache_class.get_relative_path_components(BuildcacheComponent.BLOBS),
+        "sha256",
+        index_hash[:2],
+        index_hash,
+    )
+
+    # Push the index blob itself
     web_util.push_to_url(
         index_json_path,
-        url_util.join(cache_prefix, buildcache_relative_specs_url(), spack_db.INDEX_JSON_FILE),
+        index_blob_url,
         keep_original=False,
         extra_args={"ContentType": "application/json", "CacheControl": "no-cache"},
     )
 
-    # Push the hash
+    # write the manifest to a temporary location
+    manifest_path = os.path.join(temp_dir, "index.manifest.json")
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(index_manifest, f)
+
+    # Push the index manifest
     web_util.push_to_url(
-        index_hash_path,
-        url_util.join(cache_prefix, buildcache_relative_specs_url(), INDEX_HASH_FILE),
+        manifest_path,
+        url_util.join(cache_prefix, buildcache_relative_specs_url(), "index.manifest.json"),
         keep_original=False,
         extra_args={"ContentType": "text/plain", "CacheControl": "no-cache"},
     )
@@ -792,7 +811,7 @@ def _specs_from_cache_aws_cli(cache_prefix):
             )
         )
         aws(*sync_command_args, output=os.devnull, error=os.devnull)
-        file_list = fsys.find(tmpspecsdir, ["*.manifest.json"])
+        file_list = fsys.find(tmpspecsdir, ["*.spec.manifest.json"])
         read_fn = file_read_method
     except Exception:
         tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
@@ -827,7 +846,7 @@ def _specs_from_cache_fallback(url: str):
         file_list = [
             url_util.join(url_to_list, entry)
             for entry in web_util.list_url(url_to_list)
-            if entry.endswith("manifest.json")
+            if entry.endswith("spec.manifest.json")
         ]
         read_fn = url_read_method
     except Exception as err:
@@ -2606,54 +2625,25 @@ class DefaultIndexFetcher(IndexFetcher):
         self.urlopen = urlopen
         self.headers = {"User-Agent": web_util.SPACK_USER_AGENT}
 
-    def get_remote_hash(self):
-        # Failure to fetch index.json.hash is not fatal
-        cache_class = get_url_buildcache_class(layout_version=self.layout_version)
-        index_components = cache_class.get_relative_path_components(BuildcacheComponent.INDEX_HASH)
-        url_index_hash = url_util.join(self.url, *index_components)
-        try:
-            response = self.urlopen(urllib.request.Request(url_index_hash, headers=self.headers))
-            remote_hash = response.read(64)
-        except OSError:
-            return None
-
-        # Validate the hash
-        if not re.match(rb"[a-f\d]{64}$", remote_hash):
-            return None
-        return remote_hash.decode("utf-8")
-
-    def conditional_fetch(self) -> FetchIndexResult:
-        # Do an intermediate fetch for the hash
-        # and a conditional fetch for the contents
-
-        # Early exit if our cache is up to date.
-        if self.local_hash and self.local_hash == self.get_remote_hash():
-            return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
-
-        # Otherwise, download index.json
+    def get_remote_manifest(self) -> Tuple[BlobRecord, Optional[str]]:
         cache_class = get_url_buildcache_class(layout_version=self.layout_version)
         index_components = cache_class.get_relative_path_components(BuildcacheComponent.INDEX)
-        url_index = url_util.join(self.url, *index_components)
+        url_index_manifest = url_util.join(self.url, *index_components)
 
         try:
-            response = self.urlopen(urllib.request.Request(url_index, headers=self.headers))
+            response = self.urlopen(
+                urllib.request.Request(url_index_manifest, headers=self.headers)
+            )
+            manifest_data = codecs.getreader("utf-8")(response).read()
         except OSError as e:
-            raise FetchIndexError(f"Could not fetch index from {url_index}", e) from e
+            raise FetchIndexError(
+                f"Could not read index manifest from {url_index_manifest}"
+            ) from e
 
-        try:
-            result = codecs.getreader("utf-8")(response).read()
-        except (ValueError, OSError) as e:
-            raise FetchIndexError(f"Remote index {url_index} is invalid") from e
-
-        computed_hash = compute_hash(result)
-
-        # We don't handle computed_hash != remote_hash here, which can happen
-        # when remote index.json and index.json.hash are out of sync, or if
-        # the hash algorithm changed.
-        # The most likely scenario is that we got index.json got updated
-        # while we fetched index.json.hash. Warning about an issue thus feels
-        # wrong, as it's more of an issue with race conditions in the cache
-        # invalidation strategy.
+        manifest = BuildcacheManifest.from_json(json.loads(manifest_data))
+        blob_record = manifest.get_blob_records(
+            cache_class.component_to_content_type(BuildcacheComponent.INDEX)
+        )[0]
 
         # For now we only handle etags on http(s), since 304 error handling
         # in s3:// is not there yet.
@@ -2663,6 +2653,38 @@ class DefaultIndexFetcher(IndexFetcher):
             etag = web_util.parse_etag(
                 response.headers.get("Etag", None) or response.headers.get("etag", None)
             )
+
+        return (blob_record, etag)
+
+    def conditional_fetch(self) -> FetchIndexResult:
+        # Fetch the manifest, and if the hash is different, fetch the contents
+        index_blob_record, etag = self.get_remote_manifest()
+
+        # Early exit if our cache is up to date.
+        if self.local_hash and self.local_hash == index_blob_record.checksum:
+            return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
+
+        # Otherwise, download the index blob
+        cache_class = get_url_buildcache_class(layout_version=self.layout_version)
+        cache_entry = cache_class(self.url)
+
+        try:
+            staged_blob_path = cache_entry.fetch_blob(index_blob_record)
+        except BuildcacheEntryError as e:
+            raise FetchIndexError(f"Could not fetch index blob from {self.url}") from e
+
+        with open(staged_blob_path, encoding="utf-8") as fd:
+            result = fd.read()
+
+        computed_hash = compute_hash(result)
+
+        if computed_hash != index_blob_record.checksum:
+            raise FetchIndexError(
+                f"Index hash mismatch in DefaultIndexFetcher, expected "
+                f"{index_blob_record.checksum}, got {computed_hash}"
+            )
+
+        cache_entry.destroy()
 
         return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
 
@@ -2698,12 +2720,34 @@ class EtagIndexFetcher(IndexFetcher):
         except (ValueError, OSError) as e:
             raise FetchIndexError(f"Remote index {url} is invalid", e) from e
 
+        manifest = BuildcacheManifest.from_json(json.loads(result))
+        blob_record = manifest.get_blob_records(
+            cache_class.component_to_content_type(BuildcacheComponent.INDEX)
+        )[0]
+        cache_entry = cache_class(self.url)
+
+        try:
+            staged_blob_path = cache_entry.fetch_blob(blob_record)
+        except BuildcacheEntryError as e:
+            raise FetchIndexError(f"Could not fetch index blob from {self.url}") from e
+
+        with open(staged_blob_path, encoding="utf-8") as fd:
+            blob_result = fd.read()
+
+        computed_hash = compute_hash(blob_result)
+
+        if computed_hash != blob_record.checksum:
+            raise FetchIndexError(f"Remote index at {url} is invalid")
+
         headers = response.headers
         etag_header_value = headers.get("Etag", None) or headers.get("etag", None)
+
+        cache_entry.destroy()
+
         return FetchIndexResult(
             etag=web_util.parse_etag(etag_header_value),
-            hash=compute_hash(result),
-            data=result,
+            hash=computed_hash,
+            data=blob_result,
             fresh=False,
         )
 

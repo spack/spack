@@ -28,7 +28,7 @@ import spack.util.web as web_util
 from spack.database import INDEX_JSON_FILE
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 
-INDEX_HASH_FILE = "index.json.hash"
+INDEX_MANIFEST_FILE = "index.manifest.json"
 
 
 class BuildcacheComponent(enum.Enum):
@@ -37,7 +37,6 @@ class BuildcacheComponent(enum.Enum):
     INDICES = enum.auto()
     KEYS = enum.auto()
     INDEX = enum.auto()
-    INDEX_HASH = enum.auto()
     SPEC = enum.auto()
     TARBALL = enum.auto()
 
@@ -151,8 +150,7 @@ class URLBuildcacheEntry:
     COMPONENT_PATHS = {
         BuildcacheComponent.BLOBS: ["blobs"],
         BuildcacheComponent.INDICES: [f"v{LAYOUT_VERSION}", "specs"],
-        BuildcacheComponent.INDEX: [f"v{LAYOUT_VERSION}", "specs", INDEX_JSON_FILE],
-        BuildcacheComponent.INDEX_HASH: [f"v{LAYOUT_VERSION}", "specs", INDEX_HASH_FILE],
+        BuildcacheComponent.INDEX: [f"v{LAYOUT_VERSION}", "specs", INDEX_MANIFEST_FILE],
         BuildcacheComponent.KEYS: [f"v{LAYOUT_VERSION}", "keys", "_pgp"],
         BuildcacheComponent.SPECS: [f"v{LAYOUT_VERSION}", "specs"],
     }
@@ -183,7 +181,7 @@ class URLBuildcacheEntry:
     @classmethod
     def get_manifest_filename(cls, spec: spack.spec.Spec) -> str:
         spec_formatted = spec.format_path("{name}-{version}-{hash}")
-        return f"{spec_formatted}.manifest.json"
+        return f"{spec_formatted}.spec.manifest.json"
 
     @classmethod
     def get_manifest_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
@@ -533,7 +531,6 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         BuildcacheComponent.BLOBS: ["build_cache"],
         BuildcacheComponent.INDICES: ["build_cache"],
         BuildcacheComponent.INDEX: ["build_cache", INDEX_JSON_FILE],
-        BuildcacheComponent.INDEX_HASH: ["build_cache", INDEX_HASH_FILE],
         BuildcacheComponent.KEYS: ["build_cache", "keys", "_pgp"],
         BuildcacheComponent.SPECS: ["build_cache"],
     }

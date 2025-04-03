@@ -16,6 +16,7 @@ import urllib.error
 import urllib.request
 import urllib.response
 from pathlib import Path, PurePath
+from typing import Optional
 
 import jsonschema
 import pytest
@@ -36,18 +37,20 @@ import spack.oci.image
 import spack.paths
 import spack.repo
 import spack.spec
+import spack.stage
 import spack.store
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.binary_distribution import INDEX_HASH_FILE, CannotListKeys, GenerateIndexError
+from spack.binary_distribution import CannotListKeys, GenerateIndexError
 from spack.database import INDEX_JSON_FILE
 from spack.installer import PackageInstaller
 from spack.paths import test_path
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 from spack.spec import Spec
 from spack.url_buildcache import (
+    INDEX_MANIFEST_FILE,
     BuildcacheComponent,
     URLBuildcacheEntry,
     URLBuildcacheEntryV2,
@@ -665,23 +668,42 @@ def test_etag_fetching_404():
         fetcher.conditional_fetch()
 
 
-def test_default_index_fetch_200():
+def test_default_index_fetch_200(monkeypatch, tmp_path):
     index_json = '{"Hello": "World"}'
     index_json_hash = bindist.compute_hash(index_json)
 
+    index_manifest = {
+        "version": bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION,
+        "data": [
+            {
+                "content-length": 0,
+                "content-type": "index-v7",
+                "compression": "none",
+                "checksum-algorithm": "sha256",
+                "checksum": index_json_hash,
+            }
+        ]
+    }
+
+    index_path = tmp_path / "doesntmatter"
+
+    def fetch_patch(stage, mirror_only: bool = False, err_msg: Optional[str] = None):
+        print(f"Ok {stage.name} is fetching stuff!")
+        with open(index_path, "w") as fd:
+            fd.write(index_json)
+
+    @property
+    def save_filename_patch(stage):
+        return str(index_path)
+
+    monkeypatch.setattr(spack.stage.Stage, "fetch", fetch_patch)
+    monkeypatch.setattr(spack.stage.Stage, "save_filename", save_filename_patch)
+
     def urlopen(request: urllib.request.Request):
         url = request.get_full_url()
-        if url.endswith(INDEX_HASH_FILE):
+        if url.endswith(INDEX_MANIFEST_FILE):
             return urllib.response.addinfourl(  # type: ignore[arg-type]
-                io.BytesIO(index_json_hash.encode()),
-                headers={},  # type: ignore[arg-type]
-                url=url,
-                code=200,
-            )
-
-        elif url.endswith(INDEX_JSON_FILE):
-            return urllib.response.addinfourl(
-                io.BytesIO(index_json.encode()),
+                io.BytesIO(json.dumps(index_manifest).encode()),
                 headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
                 url=url,
                 code=200,
