@@ -190,7 +190,7 @@ class Root(CMakePackage):
     variant("arrow", default=False, description="Enable Arrow interface")
     variant("cuda", when="@6.08.00:", default=False, description="Enable CUDA support")
     variant("cudnn", when="@6.20.02:", default=False, description="Enable cuDNN support")
-    variant("daos", default=False, description="Enable RNTuple support for DAOS storage")
+    variant("daos", default=False, description="Enable RNTuple support for DAOS storage", when="@6.26:")
     variant("davix", default=True, description="Compile with external Davix")
     variant("dcache", default=False, description="Enable support for dCache")
     variant("emacs", default=False, description="Enable Emacs support")
