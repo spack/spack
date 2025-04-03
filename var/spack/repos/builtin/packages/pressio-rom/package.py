@@ -8,7 +8,7 @@ from os.path import join as pjoin
 from spack.package import *
 
 
-class Pressio(Package):
+class PressioRom(Package):
     """
     Pressio is an ecosystem for developing, applying and
     using projection-based model reduction (pROM) methods.
@@ -18,8 +18,8 @@ class Pressio(Package):
     adoption and usability.
     """
 
-    homepage = "https://pressio.github.io/pressio/"
-    git = "https://github.com/pressio/pressio.git"
+    homepage = "https://pressio.github.io/pressio-rom/"
+    git = "https://github.com/pressio/pressio-rom.git"
 
     license("BSD-3-Clause")
     maintainers("fnrizzi", "cwschilly")
@@ -38,11 +38,11 @@ class Pressio(Package):
 
         if str(spec.version) in self.supported_versions:
             # Add symlinks to pressio-ops headers inside main include/pressio directory
-            pressio_include = pjoin(include_dir, "pressio")
+            pressio_includes = pjoin(include_dir, "pressio")
             ops_include = pjoin(self.spec["pressio-ops"].prefix.include, "pressio")
             for item in os.listdir(ops_include):
                 src_item = pjoin(ops_include, item)
-                dest_item = pjoin(pressio_include, item)
+                dest_item = pjoin(pressio_includes, item)
                 symlink(src_item, dest_item, target_is_directory=os.path.isdir(src_item))
 
             # Add symlink to pressio-log headers in include/pressio-log
