@@ -309,3 +309,26 @@ def test_test_output_multiple_specs(
     # part result summaries, you'll have to look at the "test-out.txt" files
     # for each spec.
     assert "1 failed, 2 passed of 3 specs" in out
+
+
+def test_test_timeout(mock_test_stage, mock_packages, mock_archive, mock_fetch, install_mockery):
+    """Confirm the stand-alone test times out."""
+    install("standalone-timeout", fail_on_error=False)
+
+    # Make sure the timeout value is less than the sleep in the mock package.
+    out = spack_test("run", "--timeout", "10", "standalone-timeout", fail_on_error=False)
+
+    # Make sure the test actually failed.
+    assert "1 failed of 1 spec" in out
+
+    # Grab test stage directory contents.
+    stage_files = os.listdir(mock_test_stage)
+    testdir = os.path.join(mock_test_stage, stage_files[0])
+    testdir_files = os.listdir(testdir)
+    testlogs = [name for name in testdir_files if str(name).endswith("test-out.txt")]
+
+    # Grab the output from the test log of the spec to ensure received the timeout signal.
+    outfile = os.path.join(testdir, testlogs[0])
+    with open(outfile, "r", encoding="utf-8") as f:
+        test_log = f.read()
+    assert "Test failure: The process has stopped unexpectedly (signal 15)" in test_log
