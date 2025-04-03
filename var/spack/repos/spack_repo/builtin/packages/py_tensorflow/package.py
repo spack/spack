@@ -489,6 +489,12 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # https://github.com/tensorflow/tensorflow/issues/62416
     conflicts("%clang@17:", when="@:2.14")
 
+    patch(
+        "https://github.com/tensorflow/tensorflow/pull/90558.patch?full_index=1",
+        sha256="2fdde22c00b3e412dbba69acf4535094ddf452f65441fd547a855a66dc517828",
+        when="@2.19:",
+    )
+
     # https://github.com/tensorflow/tensorflow/issues/94277
     # https://github.com/tensorflow/tensorflow/pull/94289
     patch("h5py-3.13.0.patch", when="@2.18")
