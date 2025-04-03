@@ -35,18 +35,21 @@ class Mpip(AutotoolsPackage):
     variant(
         "maxargs",
         values=int,
-        default=32,
+        default="32",
         description="Set number of command line arguments in report",
     )
 
     variant(
-        "stackdepth", values=int, default=8, description="Specify maximum report stacktrace depth"
+        "stackdepth",
+        values=int,
+        default="8",
+        description="Specify maximum report stacktrace depth",
     )
 
     variant(
         "internal_stackdepth",
         values=int,
-        default=3,
+        default="3",
         description="Specify number of internal stack frames",
     )
 
