@@ -67,6 +67,7 @@ class Opencarp(CMakePackage):
 
     depends_on("git", type=("build", "run"))
     depends_on("petsc")
+    depends_on("petsc@:3.22.5", when="@:17.0")
     depends_on("binutils")
     depends_on("gengetopt")
     depends_on("pkgconfig")
