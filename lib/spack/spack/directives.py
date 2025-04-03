@@ -622,7 +622,7 @@ def conditional(*values: List[Any], when: Optional[WhenType] = None):
 @directive("variants")
 def variant(
     name: str,
-    default: Optional[Union[bool, str]] = None,
+    default: Optional[Union[bool, str, Tuple[str, ...]]] = None,
     description: str = "",
     values: Optional[Union[collections.abc.Sequence, Callable[[Any], bool]]] = None,
     multi: Optional[bool] = None,
@@ -652,7 +652,13 @@ def variant(
         DirectiveError: If arguments passed to the directive are invalid
     """
 
-    if default is not None and not isinstance(default, (bool, str)):
+    # This validation can be removed at runtime and enforced with an audit in Spack v1.0.
+    # For now it's a warning to let people migrate faster.
+    if not (
+        default is None
+        or type(default) in (bool, str)
+        or (type(default) is tuple and all(type(x) is str for x in default))
+    ):
         if isinstance(default, (list, tuple)):
             did_you_mean = f"default={','.join(str(x) for x in default)!r}"
         else:
@@ -679,7 +685,11 @@ def variant(
     # Ensure we have a sequence of allowed variant values, or a
     # predicate for it.
     if values is None:
-        if str(default).upper() in ("TRUE", "FALSE"):
+        if (
+            default in (True, False)
+            or type(default) is str
+            and default.upper() in ("TRUE", "FALSE")
+        ):
             values = (True, False)
         else:
             values = lambda x: True
@@ -712,12 +722,15 @@ def variant(
     # or the empty string, as the former indicates that a default
     # was not set while the latter will make the variant unparsable
     # from the command line
+    if isinstance(default, tuple):
+        default = ",".join(default)
+
     if default is None or default == "":
 
         def _raise_default_not_set(pkg):
             if default is None:
-                msg = "either a default was not explicitly set, " "or 'None' was used"
-            elif default == "":
+                msg = "either a default was not explicitly set, or 'None' was used"
+            else:
                 msg = "the default cannot be an empty string"
             raise DirectiveError(format_error(msg, pkg))
 
