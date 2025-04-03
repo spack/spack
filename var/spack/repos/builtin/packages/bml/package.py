@@ -39,7 +39,6 @@ class Bml(CMakePackage):
 
     variant("shared", default=True, description="Build shared libs")
 
-    # define mpi variant, on by default
     variant("mpi", default=True, description="Build with MPI Support")
     depends_on("mpi", when="+mpi")
     conflicts("+mpi", when="@:1.2.2")
