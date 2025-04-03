@@ -29,6 +29,8 @@ class PyYarl(PythonPackage):
     depends_on("py-cython", type="build")
 
     with default_args(type=("build", "run")):
+        depends_on("python@3.9:", when="@1.15.3:")
+        depends_on("python@3.7:", when="@1.8:")
         depends_on("py-multidict@4.0:")
         depends_on("py-propcache@0.2:", when="@1.14:")
         depends_on("py-idna@2.0:")
