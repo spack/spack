@@ -14,7 +14,6 @@ case you want to skip directly to specific docs:
 * :ref:`compilers.yaml <compiler-config>`
 * :ref:`concretizer.yaml <concretizer-options>`
 * :ref:`config.yaml <config-yaml>`
-* :ref:`env_vars.yaml <env_vars_yaml>`
 * :ref:`include.yaml <include-yaml>`
 * :ref:`mirrors.yaml <mirrors>`
 * :ref:`modules.yaml <modules>`
