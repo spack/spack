@@ -19,8 +19,6 @@ class CbtfLanl(CMakePackage):
     version("1.9.4", branch="1.9.4")
     version("1.9.3", branch="1.9.3")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "build_type",
         default="RelWithDebInfo",
@@ -31,6 +29,8 @@ class CbtfLanl(CMakePackage):
     variant(
         "runtime", default=False, description="build only the runtime libraries and collectors."
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.0.2:", type="build")
 

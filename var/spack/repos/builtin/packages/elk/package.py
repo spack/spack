@@ -27,9 +27,6 @@ class Elk(MakefilePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # what linear algebra packages to use? the choices are
     # internal - use internal libraries
     # generic  - use spack-provided blas and lapack
@@ -75,6 +72,9 @@ class Elk(MakefilePackage):
     variant("openmp", default=True, description="Enable OpenMP support")
     variant("libxc", default=True, description="Link to Libxc functional library")
     variant("w90", default=False, description="wannier90 support, requires wannier90 library")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("blas", when="linalg=generic")
     depends_on("lapack", when="linalg=generic")

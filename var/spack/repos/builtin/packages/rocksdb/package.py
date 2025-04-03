@@ -31,9 +31,6 @@ class Rocksdb(MakefilePackage):
     version("5.16.6", sha256="f0739edce1707568bdfb36a77638fd5bae287ca21763ce3e56cf0bfae8fff033")
     version("5.15.10", sha256="26d5d4259fa352ae1604b5b4d275f947cacc006f4f7d2ef0b815056601b807c0")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("bz2", default=False, description="Enable bz2 compression support")
     variant("lz4", default=True, description="Enable lz4 compression support")
     variant("shared", default=True, description="Build shared library")
@@ -44,6 +41,9 @@ class Rocksdb(MakefilePackage):
     variant("tbb", default=False, description="Enable Intel TBB support")
     variant("werror", default=False, description="Build with -Werror")
     variant("rtti", default=False, description="Build with RTTI")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("bash", type="build")
     # Depends on coreutil's install command (e.g., Alpine's Busybox version does not work)

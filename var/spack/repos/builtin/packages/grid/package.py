@@ -18,8 +18,6 @@ class Grid(AutotoolsPackage):
 
     version("develop", branch="develop")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "comms",
         default="mpi",
@@ -45,6 +43,8 @@ class Grid(AutotoolsPackage):
     )
     variant("timers", default=True, description="System dependent high-resolution timers")
     variant("chroma", default=False, description="Chroma regression tests")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

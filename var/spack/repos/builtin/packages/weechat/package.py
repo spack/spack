@@ -17,15 +17,15 @@ class Weechat(CMakePackage):
 
     version("2.9", sha256="3a78063b76c42ba306eacf8f74cb8c9a260f8a61d1915d0b5d76f11d2be69a53")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("perl", default=False, description="Include perl support")
     variant("lua", default=False, description="Include lua support")
     variant("ruby", default=False, description="Include ruby support")
     variant("tcl", default=False, description="Include Tcl support")
     variant("guile", default=False, description="Include guile support")
     variant("php", default=False, description="Include php support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3:", type="build")
     depends_on("python@3.5:")

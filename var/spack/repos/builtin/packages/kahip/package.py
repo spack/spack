@@ -40,9 +40,6 @@ class Kahip(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "deterministic",
         default=False,
@@ -50,6 +47,9 @@ class Kahip(CMakePackage):
         description="Compile with the deterministic seed",
     )
     variant("metis", default=False, description="metis support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("scons", type="build", when="@2:2.10")
     depends_on("argtable")

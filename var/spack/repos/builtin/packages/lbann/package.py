@@ -34,8 +34,6 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "build_type",
         default="Release",
@@ -118,6 +116,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("+lld", when="+gold")
     conflicts("+gold", when="platform=darwin", msg="gold does not work on Darwin")
     conflicts("+lld", when="platform=darwin", msg="lld does not work on Darwin")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.17.0:", type="build")
     depends_on("cmake@3.21.0:", type="build", when="@0.103:")

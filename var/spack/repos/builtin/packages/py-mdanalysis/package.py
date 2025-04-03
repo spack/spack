@@ -26,15 +26,15 @@ class PyMdanalysis(PythonPackage):
     version("2.4.3", sha256="c4fbdc414e4fdda69052fff2a6e412180fe6fa90a42c24793beee04123648c92")
     version("2.4.2", sha256="ae2ee5627391e73f74eaa3c547af3ec6ab8b040d27dedffe3a7ece8e0cd27636")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "analysis",
         default=True,
         description="Enable analysis packages: matplotlib, scipy, seaborn",
     )
     variant("extra_formats", default=False, description="Support extra formats")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("python@3.9:", type=("build", "run"), when="@2.5.0:")
     depends_on("python@3.8:", type=("build", "run"))

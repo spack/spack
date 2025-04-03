@@ -34,6 +34,8 @@ class Mlpack(CMakePackage):
     variant("r", default=False, description="Build R bindings")
     variant("shared", default=True, description="Build shared libraries")
 
+    depends_on("cxx", type="build")  # generated
+
     # CMakeLists.txt
     depends_on("c", type="build")
     depends_on("cxx", type="build")

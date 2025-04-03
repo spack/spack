@@ -68,10 +68,6 @@ class Scorep(AutotoolsPackage):
         deprecated="true",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     def url_for_version(self, version):
         if version < Version("7.0"):
             return "https://www.vi-hps.org/cms/upload/packages/scorep/scorep-{0}.tar.gz".format(
@@ -101,6 +97,10 @@ class Scorep(AutotoolsPackage):
     # Dependencies for SCORE-P are quite tight. See the homepage for more
     # information. Starting with scorep 4.0 / cube 4.4, Score-P only depends on
     # two components of cube -- cubew and cubelib.
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # SCOREP 8
     depends_on("binutils", type="link", when="@8:")

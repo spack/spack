@@ -28,8 +28,6 @@ class Knem(AutotoolsPackage):
         url="https://gitlab.inria.fr/knem/knem/uploads/59375c38537e6ff2d94209f190c54aa6/knem-1.1.3.tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-
     variant("hwloc", default=True, description="Enable hwloc in the user-space tools")
 
     patch(
@@ -37,6 +35,8 @@ class Knem(AutotoolsPackage):
         sha256="a422277f02247bde680d4a3c8ccb8c05498a79109ba1ade4a037bedd6efe3c79",
         when="@1.1.4",
     )
+
+    depends_on("c", type="build")  # generated
 
     depends_on("hwloc", when="+hwloc")
     depends_on("pkgconfig", type="build", when="+hwloc")
