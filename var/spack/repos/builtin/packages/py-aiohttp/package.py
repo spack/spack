@@ -34,7 +34,7 @@ class PyAiohttp(PythonPackage):
     depends_on("py-setuptools@46.4:", type="build")
 
     with default_args(type=("build", "run")):
-        depends_on("py-aiohappyeyeballs@2.5.0:", when="@3.11:")
+        depends_on("py-aiohappyeyeballs@2.3:", when="@3.10:")
         depends_on("py-propcache@0.2.0:", when="@3.11:")
         depends_on("py-attrs@17.3.0:")
         depends_on("py-charset-normalizer@2:3", when="@3.8.4:")
