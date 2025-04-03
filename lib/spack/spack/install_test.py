@@ -960,7 +960,7 @@ class TestSuite:
             raise TestSuiteFailure(failures)
 
     def test_status(self, spec: spack.spec.Spec, externals: bool) -> TestStatus:
-        """Determine the overall test results status for the spec.
+        """Returns the overall test results status for the spec.
 
         Args:
             spec: instance of the spec under test

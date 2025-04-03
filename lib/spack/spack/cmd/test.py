@@ -69,7 +69,7 @@ def setup_parser(subparser):
         "--timeout",
         type=int,
         default=None,
-        help="maximum allotted time (in seconds) for the tests to run",
+        help="maximum time (in seconds) that tests are allowed to run",
     )
 
     cd_group = run_parser.add_mutually_exclusive_group()

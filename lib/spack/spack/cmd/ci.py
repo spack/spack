@@ -164,7 +164,7 @@ def setup_parser(subparser):
         "--timeout",
         type=int,
         default=None,
-        help="maximum allotted time (in seconds) for the tests to run",
+        help="maximum time (in seconds) that tests are allowed to run",
     )
     rebuild.set_defaults(func=ci_rebuild)
     spack.cmd.common.arguments.add_common_arguments(rebuild, ["jobs"])

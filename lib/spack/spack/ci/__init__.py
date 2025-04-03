@@ -1311,7 +1311,7 @@ def run_standalone_tests(
         log_file: test log file name if NOT CDash reporting
         job_spec: spec that was built
         repro_dir: reproduction directory
-        timeout: maximum allotted time (in seconds) for tests to run
+        timeout: maximum time (in seconds) that tests are allowed to run
     """
     if cdash and log_file:
         tty.msg(f"The test log file {log_file} option is ignored with CDash reporting")

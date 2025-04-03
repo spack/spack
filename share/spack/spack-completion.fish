@@ -997,7 +997,7 @@ complete -c spack -n '__fish_spack_using_command ci rebuild' -s t -l tests -d 'r
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -f -a fail_fast
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -d 'stop stand-alone tests after the first failure'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l timeout -r -f -a timeout
-complete -c spack -n '__fish_spack_using_command ci rebuild' -l timeout -r -d 'maximum allotted time (in seconds) for the tests to run'
+complete -c spack -n '__fish_spack_using_command ci rebuild' -l timeout -r -d 'maximum time (in seconds) that tests are allowed to run'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
@@ -2980,7 +2980,7 @@ complete -c spack -n '__fish_spack_using_command test run' -l cdash-buildstamp -
 complete -c spack -n '__fish_spack_using_command test run' -l help-cdash -f -a help_cdash
 complete -c spack -n '__fish_spack_using_command test run' -l help-cdash -d 'show usage instructions for CDash reporting'
 complete -c spack -n '__fish_spack_using_command test run' -l timeout -r -f -a timeout
-complete -c spack -n '__fish_spack_using_command test run' -l timeout -r -d 'maximum allotted time (in seconds) for the tests to run'
+complete -c spack -n '__fish_spack_using_command test run' -l timeout -r -d 'maximum time (in seconds) that tests are allowed to run'
 complete -c spack -n '__fish_spack_using_command test run' -l clean -f -a dirty
 complete -c spack -n '__fish_spack_using_command test run' -l clean -d 'unset harmful variables in the build environment (default)'
 complete -c spack -n '__fish_spack_using_command test run' -l dirty -f -a dirty
