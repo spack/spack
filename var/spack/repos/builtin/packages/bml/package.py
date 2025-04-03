@@ -48,7 +48,6 @@ class Bml(CMakePackage):
     depends_on("magma", when="+magma")
     conflicts("+magma", when="@1.1.0:", msg="Must use master branch of bml")
 
-    # define cusolver variant, requires that bml be built with magma
     variant(
         "cusolver",
         default=False,
