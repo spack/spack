@@ -45,7 +45,9 @@ class Libffi(AutotoolsPackage):
         when="@3.4.3:3.4.4",
     )
 
-    conflicts("%apple-clang@17.0.0", when="@:3.4.6", msg="Newer libffi required for Apple Clang 17.0.0")
+    conflicts(
+        "%apple-clang@17.0.0", when="@:3.4.6", msg="Newer libffi required for Apple Clang 17.0.0"
+    )
 
     @property
     def headers(self):
