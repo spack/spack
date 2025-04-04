@@ -638,7 +638,7 @@ class TestSpecSemantics:
         a = Spec("multivalue-variant foo=bar")
         b = Spec("multivalue-variant foo=bar,baz")
         # The specs are abstract and they **could** be constrained
-        assert a.satisfies(b)
+        assert b.satisfies(a) and not a.satisfies(b)
         # An abstract spec can instead be constrained
         assert a.constrain(b)
 
