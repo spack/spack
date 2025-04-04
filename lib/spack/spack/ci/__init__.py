@@ -623,10 +623,9 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
     try:
         package_metadata_root = pathlib.Path(spack.store.STORE.layout.metadata_path(job_spec))
         if not package_metadata_root.is_dir():
-            pkg_cls = spack.repo.PATH.get_pkg_class(job_spec.name)
-            job_pkg = pkg_cls(job_spec)
+            job_pkg = job_spec.package
 
-            package_metadata_root = job_pkg.stage.path
+            package_metadata_root = pathlib.Path(job_pkg.stage.path)
             archive_files = spack.builder.create(job_pkg).archive_files
             tty.warn("Package not installed, falling back to use stage dir")
             tty.debug(f"stage dir: {package_metadata_root}")
@@ -635,7 +634,7 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
             archive_files = []
             archive_root = package_metadata_root / "archived-files"
             if archive_root.is_dir():
-                archive_files = [str(f) for f in archive_root.rglob("*") if f.is_file()]
+                archive_files = [str(f) for f in archive_root.rglob("*") if os.path.isfile(f)]
             else:
                 msg = "Cannot copy package archived files: archived-files must be a directory"
                 tty.warn(msg)

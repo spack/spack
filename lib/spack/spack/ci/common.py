@@ -49,7 +49,7 @@ def is_gzipped(path):
         path: path to file to test
 
     Returns:
-        Trye if file is gzipped, otherwise False
+        True if file is gzipped, otherwise False
     """
     with open(path, "rb") as fd:
         return compression.GZipFileType.matches_magic(fd)
@@ -66,7 +66,7 @@ def copy_files_to_artifacts(src, artifacts_dir, *, compress_artifacts=False):
     try:
         if compress_artifacts and not is_gzipped(src):
             # Compress and copy in one step
-            src_name = os.path.dirname(src)
+            src_name = os.path.basename(src)
             zipped = os.path.join(artifacts_dir, f"{src_name}.gz")
             with open(src, "rb") as fin, gzip.open(zipped, "wb") as fout:
                 fout.writelines(fin)
